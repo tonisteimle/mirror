@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Playground Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #111;
+      color: #999;
+      line-height: 1.7;
+      padding: 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 { font-size: 36px; font-weight: 400; color: #eee; margin-bottom: 8px; }
+    h2 { font-size: 20px; font-weight: 500; color: #ccc; margin: 48px 0 16px; }
+    p { margin-bottom: 20px; max-width: 600px; }
+
+    .playground-container {
+      margin: 24px 0 48px;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 13px;
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mirror Playground Demo</h1>
+  <p>
+    Interaktive Code-Beispiele direkt in der Dokumentation.
+    Tippe im Editor und sieh das Ergebnis sofort.
+  </p>
+
+  <!-- ============================================ -->
+  <!-- Beispiel 1: Hello World -->
+  <!-- ============================================ -->
+  <h2>1. Hello World</h2>
+  <p>
+    Dein erstes Mirror-Element. Ein blauer Button mit Text.
+    Probiere andere Farben: <code>#22c55e</code> (grün), <code>#ef4444</code> (rot).
+  </p>
+
+  <div class="playground-container">
+    <div class="mirror-playground"
+         data-code="Button bg #3B82F6 pad 12 24 rad 8 col white
+  'Click me'"
+         data-height="200"
+         data-title="Hello World">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Beispiel 2: Components & Nesting -->
+  <!-- ============================================ -->
+  <h2>2. Verschachtelung</h2>
+  <p>
+    Einrückung = Hierarchie. Das innere Element ist ein Kind des äußeren.
+    Füge eine weitere <code>Text</code>-Zeile hinzu.
+  </p>
+
+  <div class="playground-container">
+    <div class="mirror-playground"
+         data-code="Card bg #1f1f1f pad 24 rad 12
+  Text size 20 weight 600 col white 'Dashboard'
+  Text size 14 col #888 'Willkommen zurück'"
+         data-height="220"
+         data-title="Nesting">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Beispiel 3: Design Tokens -->
+  <!-- ============================================ -->
+  <h2>3. Design Tokens</h2>
+  <p>
+    Tokens beginnen mit <code>$</code> und speichern wiederverwendbare Werte.
+    Ändere <code>$primary</code> und sieh wie alle Buttons sich anpassen.
+  </p>
+
+  <div class="playground-container">
+    <div class="mirror-playground"
+         data-code="$primary: #3B82F6
+$spacing: 16
+
+Row gap $spacing
+  Button bg $primary pad 12 24 rad 8 col white 'Save'
+  Button bg $primary pad 12 24 rad 8 col white 'Cancel'"
+         data-height="280"
+         data-title="Tokens">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Beispiel 4: Component Definition -->
+  <!-- ============================================ -->
+  <h2>4. Komponenten definieren</h2>
+  <p>
+    Ein <code>:</code> nach dem Namen macht es zur Definition.
+    Nutze den Namen ohne <code>:</code> um Instanzen zu erstellen.
+  </p>
+
+  <div class="playground-container">
+    <div class="mirror-playground"
+         data-code="PrimaryBtn: pad 12 24 bg #3B82F6 rad 8 col white
+SecondaryBtn: pad 12 24 bg #27272a rad 8 col white
+
+Column gap 12
+  PrimaryBtn 'Bestätigen'
+  SecondaryBtn 'Abbrechen'
+  PrimaryBtn 'Speichern'"
+         data-height="320"
+         data-title="Components">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Beispiel 5: Komplexeres Layout -->
+  <!-- ============================================ -->
+  <h2>5. Card Layout</h2>
+  <p>
+    Ein realistisches Beispiel: Stat-Cards wie in einem Dashboard.
+    Experimentiere mit <code>gap</code>, <code>pad</code> und Farben.
+  </p>
+
+  <div class="playground-container">
+    <div class="mirror-playground"
+         data-code="$card-bg: #1a1a1a
+$text-muted: #71717A
+
+StatCard: bg $card-bg pad 20 rad 12 grow
+  Label: size 12 col $text-muted upper
+  Value: size 28 weight 700 col white
+
+Row gap 16
+  StatCard
+    Label 'Umsatz'
+    Value '€12,450'
+  StatCard
+    Label 'Nutzer'
+    Value '2,847'
+  StatCard
+    Label 'Projekte'
+    Value '143'"
+         data-height="350"
+         data-title="Dashboard Cards">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Script: Würde normalerweise das Bundle laden -->
+  <!-- ============================================ -->
+  <script>
+    // In der echten Doku:
+    // <script src="mirror-playground.js"><\/script>
+    //
+    // Das Bundle initialisiert automatisch alle Elemente mit
+    // class="mirror-playground" und data-code Attribut.
+    //
+    // Alternativ manuell:
+    // MirrorPlayground.render('#my-container', {
+    //   code: 'Button "Hello"',
+    //   height: 200
+    // });
+
+    console.log('Demo loaded. In production, include mirror-playground.js bundle.')
+  </script>
+
+  <p style="margin-top: 64px; padding-top: 24px; border-top: 1px solid #333; color: #666;">
+    <strong>Hinweis:</strong> Dies ist eine Demo-Seite. Für die echte Funktion muss
+    das <code>mirror-playground.js</code> Bundle geladen werden.
+    Build mit: <code>npm run build:embed</code>
+  </p>
+</body>
+</html>
