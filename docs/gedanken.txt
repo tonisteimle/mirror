@@ -1,0 +1,62 @@
+tabelle
+
+table header, footer, zebra
+	header
+	row bor 1px #534 bg
+	col
+	footer
+	
+	Name		Vorname
+	
+	
+	
+	button bg #856, mar l-r 1 #856, cen, "Label"
+	
+	button bg #856 mar l-r 1 #856 cen "Label"
+
+
+Dropdown "Options"
+	Content
+		Item "Alle"
+		Item "Keine"
+	
+	
+Wenn das die Komponente ist
+	
+Dropdown pad ...
+	Selector "Select" bg ...
+	List bg ...
+		Item "Item 1" bg ...
+
+Und das die Verwendung
+
+Dropdown "Schön"
+	Item "Mega"
+	
+Das heisst das system müsste in der lage sein (generell) abzuleiten was man hier überschreibt oder?
+	
+Header
+	Logo
+	Icons
+		Icongroup1
+		Icongroup2
+
+
+button: styles... (achtung eigene komponente -> für müssen also auch eigene komponenten namen geben können siehe später)
+	label: "Label"
+input email: styles ..
+input password: ...
+
+input email
+input password
+button submit "Submit"
+
+events
+	submit onclick
+		if $email.value and $password.value
+			button.label = "Ok"
+			dialog.close
+			
+			
+			
+	

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Tutorial</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0A0A0F;
+      color: #E4E4E7;
+      line-height: 1.6;
+      padding: 60px 24px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: #71717A;
+      margin-bottom: 40px;
+    }
+
+    .intro {
+      font-size: 18px;
+      color: #A1A1AA;
+      margin-bottom: 80px;
+      max-width: 600px;
+      line-height: 1.8;
+    }
+
+    .step {
+      margin-bottom: 80px;
+    }
+
+    .step-number {
+      font-size: 14px;
+      font-weight: 600;
+      color: #3B82F6;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 32px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 16px;
+      margin-top: 32px;
+    }
+
+    .goal {
+      font-size: 18px;
+      color: #A1A1AA;
+      margin-bottom: 32px;
+      padding-left: 16px;
+      border-left: 3px solid #3B82F6;
+    }
+
+    pre {
+      background: #18181B;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .inline-code {
+      background: #27272A;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .comment { color: #6B7280; }
+    .component { color: #4ADE80; }
+    .property { color: #60A5FA; }
+    .value { color: #FBBF24; }
+    .string { color: #F472B6; }
+    .keyword { color: #C084FC; }
+    .token { color: #22D3EE; }
+
+    .rule-box {
+      background: #1E1E2E;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+    }
+
+    .rule-box h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #3B82F6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .rule-box p {
+      color: #A1A1AA;
+      font-size: 15px;
+    }
+
+    .rule-box ul {
+      list-style: none;
+      margin-top: 12px;
+    }
+
+    .rule-box li {
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+      color: #A1A1AA;
+    }
+
+    .rule-box li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #3B82F6;
+    }
+
+    .result-box {
+      background: linear-gradient(135deg, #1E3A5F 0%, #1E1E2E 100%);
+      border: 1px solid #3B82F6;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+    }
+
+    .result-box p {
+      color: #93C5FD;
+      font-size: 16px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #27272A;
+      margin: 80px 0;
+    }
+
+    .preview {
+      background: #0F0F14;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 32px;
+      margin: 24px 0;
+    }
+
+    .preview-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #71717A;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #71717A;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .grid pre {
+      margin-bottom: 0;
+    }
+
+    p {
+      color: #A1A1AA;
+      margin-bottom: 16px;
+    }
+
+    .footer {
+      margin-top: 120px;
+      padding-top: 40px;
+      border-top: 1px solid #27272A;
+      color: #52525B;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tutorial</h1>
+    <p class="subtitle">Mirror lernen mit einem durchgängigen Beispiel</p>
+
+    <p class="intro">
+      In diesem Tutorial bauen wir eine <strong>Task-App</strong> Schritt für Schritt auf.
+      Jeder Schritt führt ein neues Konzept ein. Am Ende hast du eine funktionierende
+      App mit Liste, Status-Wechsel und Interaktivität.
+    </p>
+
+    <!-- SCHRITT 1 -->
+    <section class="step">
+      <div class="step-number">Schritt 1</div>
+      <h2>Die erste Komponente</h2>
+
+      <p class="goal">
+        Wir wollen einen einfachen Task anzeigen – nur Text in einer Box.
+      </p>
+
+      <pre><span class="component">Task</span> <span class="string">"Einkaufen gehen"</span></pre>
+
+      <p>Das ist alles. Eine Komponente mit Inhalt.</p>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Eine Zeile = eine Komponente. Der Text in Anführungszeichen ist der Inhalt.</p>
+        <ul>
+          <li><code class="inline-code">Task</code> – Name der Komponente</li>
+          <li><code class="inline-code">"Einkaufen gehen"</code> – Textinhalt</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 2 -->
+    <section class="step">
+      <div class="step-number">Schritt 2</div>
+      <h2>Styling hinzufügen</h2>
+
+      <p class="goal">
+        Der Task soll wie eine Karte aussehen – mit Hintergrund, Abstand und abgerundeten Ecken.
+      </p>
+
+      <pre><span class="component">Task</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#1E1E2E</span> <span class="property">rad</span> <span class="value">8</span> <span class="string">"Einkaufen gehen"</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Properties stehen zwischen Komponente und Inhalt. Jede Property hat einen Wert.</p>
+        <ul>
+          <li><code class="inline-code">pad 16</code> – 16px Innenabstand</li>
+          <li><code class="inline-code">bg #1E1E2E</code> – Hintergrundfarbe</li>
+          <li><code class="inline-code">rad 8</code> – 8px Eckenradius</li>
+        </ul>
+      </div>
+
+      <p>Reihenfolge: <strong>Komponente → Properties → Inhalt</strong></p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 3 -->
+    <section class="step">
+      <div class="step-number">Schritt 3</div>
+      <h2>Wiederverwendbar machen</h2>
+
+      <p class="goal">
+        Wir wollen mehrere Tasks mit dem gleichen Styling. Dafür definieren wir Task als wiederverwendbare Komponente.
+      </p>
+
+      <div class="label">Definition</div>
+      <pre><span class="component">Task:</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#1E1E2E</span> <span class="property">rad</span> <span class="value">8</span></pre>
+
+      <div class="label">Verwendung</div>
+      <pre><span class="component">Task</span> <span class="string">"Einkaufen gehen"</span>
+<span class="component">Task</span> <span class="string">"E-Mails beantworten"</span>
+<span class="component">Task</span> <span class="string">"Meeting vorbereiten"</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Ein <strong>Doppelpunkt</strong> nach dem Namen macht aus einer Verwendung eine Definition.</p>
+        <ul>
+          <li><code class="inline-code">Task:</code> – Definition (mit Doppelpunkt)</li>
+          <li><code class="inline-code">Task</code> – Verwendung (ohne Doppelpunkt)</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 4 -->
+    <section class="step">
+      <div class="step-number">Schritt 4</div>
+      <h2>Eine Liste bauen</h2>
+
+      <p class="goal">
+        Die Tasks sollen untereinander stehen, mit Abstand dazwischen.
+      </p>
+
+      <pre><span class="component">TaskList:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="component">Task</span> <span class="string">"Einkaufen gehen"</span>
+  <span class="component">Task</span> <span class="string">"E-Mails beantworten"</span>
+  <span class="component">Task</span> <span class="string">"Meeting vorbereiten"</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p><strong>Einrückung</strong> (2 Spaces) macht Elemente zu Kindern. Layout-Properties steuern die Anordnung.</p>
+        <ul>
+          <li><code class="inline-code">ver</code> – Vertikal anordnen (untereinander)</li>
+          <li><code class="inline-code">gap 8</code> – 8px Abstand zwischen Kindern</li>
+          <li>Einrückung – Task ist Kind von TaskList</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 5 -->
+    <section class="step">
+      <div class="step-number">Schritt 5</div>
+      <h2>Design-Tokens einführen</h2>
+
+      <p class="goal">
+        Farben und Abstände sollen zentral definiert sein, damit wir sie leicht ändern können.
+      </p>
+
+      <div class="label">Tokens definieren</div>
+      <pre><span class="token">$bg-card</span>: <span class="value">#1E1E2E</span>
+<span class="token">$radius</span>: <span class="value">8</span>
+<span class="token">$spacing</span>: <span class="value">16</span></pre>
+
+      <div class="label">Tokens verwenden</div>
+      <pre><span class="component">Task:</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">bg</span> <span class="token">$bg-card</span> <span class="property">rad</span> <span class="token">$radius</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Alles mit <code class="inline-code">$</code> ist eine Referenz. Tokens sind globale Design-Variablen.</p>
+        <ul>
+          <li><code class="inline-code">$name: wert</code> – Token definieren</li>
+          <li><code class="inline-code">$name</code> – Token verwenden</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 6 -->
+    <section class="step">
+      <div class="step-number">Schritt 6</div>
+      <h2>Checkbox hinzufügen</h2>
+
+      <p class="goal">
+        Jeder Task braucht eine Checkbox links vom Text.
+      </p>
+
+      <pre><span class="component">Task:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">ver-cen</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">bg</span> <span class="token">$bg-card</span> <span class="property">rad</span> <span class="token">$radius</span>
+  <span class="component">Checkbox:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">2</span> <span class="property">boc</span> <span class="value">#444</span>
+  <span class="component">Label:</span></pre>
+
+      <div class="label">Verwendung</div>
+      <pre><span class="component">Task</span>
+  <span class="component">Checkbox</span>
+  <span class="component">Label</span> <span class="string">"Einkaufen gehen"</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Komponenten können Kind-Slots definieren. Bei der Verwendung werden sie gefüllt.</p>
+        <ul>
+          <li><code class="inline-code">hor</code> – Horizontal anordnen (nebeneinander)</li>
+          <li><code class="inline-code">ver-cen</code> – Vertikal zentrieren</li>
+          <li><code class="inline-code">Checkbox:</code> und <code class="inline-code">Label:</code> – Slots für Kinder</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 7 -->
+    <section class="step">
+      <div class="step-number">Schritt 7</div>
+      <h2>States für die Checkbox</h2>
+
+      <p class="goal">
+        Die Checkbox soll zwei Zustände haben: unchecked und checked.
+      </p>
+
+      <pre><span class="component">Checkbox:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">2</span>
+  <span class="keyword">state</span> <span class="value">unchecked</span>
+    <span class="property">boc</span> <span class="value">#444</span>
+    <span class="property">bg</span> <span class="value">transparent</span>
+  <span class="keyword">state</span> <span class="value">checked</span>
+    <span class="property">boc</span> <span class="value">#3B82F6</span>
+    <span class="property">bg</span> <span class="value">#3B82F6</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>States definieren verschiedene visuelle Zustände einer Komponente.</p>
+        <ul>
+          <li><code class="inline-code">state name</code> – State definieren</li>
+          <li>Properties darunter (eingerückt) – Styling für diesen State</li>
+          <li>Gemeinsame Properties stehen vor den States</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 8 -->
+    <section class="step">
+      <div class="step-number">Schritt 8</div>
+      <h2>Klick-Interaktion</h2>
+
+      <p class="goal">
+        Ein Klick auf die Checkbox soll den State wechseln.
+      </p>
+
+      <pre><span class="component">Checkbox:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">2</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span>
+  <span class="keyword">state</span> <span class="value">unchecked</span>
+    <span class="property">boc</span> <span class="value">#444</span>
+    <span class="property">bg</span> <span class="value">transparent</span>
+  <span class="keyword">state</span> <span class="value">checked</span>
+    <span class="property">boc</span> <span class="value">#3B82F6</span>
+    <span class="property">bg</span> <span class="value">#3B82F6</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Events lösen Aktionen aus. <code class="inline-code">toggle</code> wechselt zwischen den States.</p>
+        <ul>
+          <li><code class="inline-code">onclick</code> – Bei Klick</li>
+          <li><code class="inline-code">toggle</code> – Zwischen States wechseln</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 9 -->
+    <section class="step">
+      <div class="step-number">Schritt 9</div>
+      <h2>Text durchstreichen wenn erledigt</h2>
+
+      <p class="goal">
+        Wenn die Checkbox checked ist, soll der Text durchgestrichen und ausgegraut sein.
+      </p>
+
+      <pre><span class="component">Task:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">ver-cen</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">bg</span> <span class="token">$bg-card</span> <span class="property">rad</span> <span class="token">$radius</span>
+  <span class="keyword">state</span> <span class="value">pending</span>
+  <span class="keyword">state</span> <span class="value">done</span>
+  <span class="component">Checkbox:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">2</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span>
+  <span class="component">Label:</span> <span class="keyword">if</span> <span class="value">done</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#666</span> <span class="property">line-through</span></pre>
+
+      <p>Hmm, das funktioniert so nicht direkt. Wir brauchen eine Variable die den Status trackt.</p>
+
+      <h3>Besser: Mit Variable</h3>
+
+      <pre><span class="component">Task:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">ver-cen</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">bg</span> <span class="token">$bg-card</span> <span class="property">rad</span> <span class="token">$radius</span>
+  <span class="component">Checkbox</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">done</span> <span class="keyword">to</span> <span class="keyword">not</span> <span class="token">$done</span>
+  <span class="component">Label</span> <span class="keyword">if</span> <span class="token">$done</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#666</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Bedingte Properties mit <code class="inline-code">if ... then</code>. Variablen mit <code class="inline-code">assign</code> ändern.</p>
+        <ul>
+          <li><code class="inline-code">assign done to not $done</code> – Wert umschalten</li>
+          <li><code class="inline-code">if $done then col #666</code> – Bedingte Property</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 10 -->
+    <section class="step">
+      <div class="step-number">Schritt 10</div>
+      <h2>Dynamische Task-Liste</h2>
+
+      <p class="goal">
+        Die Tasks sollen aus einer Datenliste kommen, nicht hardcoded sein.
+      </p>
+
+      <div class="label">Daten (als Token/Variable)</div>
+      <pre><span class="token">$tasks</span>: [
+  { <span class="property">title</span>: <span class="string">"Einkaufen gehen"</span>, <span class="property">done</span>: <span class="value">false</span> },
+  { <span class="property">title</span>: <span class="string">"E-Mails beantworten"</span>, <span class="property">done</span>: <span class="value">true</span> },
+  { <span class="property">title</span>: <span class="string">"Meeting vorbereiten"</span>, <span class="property">done</span>: <span class="value">false</span> }
+]</pre>
+
+      <div class="label">Iteration</div>
+      <pre><span class="component">TaskList</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+    <span class="component">Task</span>
+      <span class="component">Checkbox</span> <span class="keyword">if</span> <span class="token">$task.done</span> <span class="keyword">then</span> <span class="property">bg</span> <span class="value">#3B82F6</span>
+      <span class="component">Label</span> <span class="token">$task.title</span> <span class="keyword">if</span> <span class="token">$task.done</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#666</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p><code class="inline-code">each</code> iteriert über eine Liste. <code class="inline-code">$item.property</code> greift auf Felder zu.</p>
+        <ul>
+          <li><code class="inline-code">each $task in $tasks</code> – Für jeden Task</li>
+          <li><code class="inline-code">$task.title</code> – Titel des aktuellen Tasks</li>
+          <li><code class="inline-code">$task.done</code> – Done-Status des aktuellen Tasks</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 11 -->
+    <section class="step">
+      <div class="step-number">Schritt 11</div>
+      <h2>Header mit Titel</h2>
+
+      <p class="goal">
+        Die App braucht einen Header mit Titel und Zähler für offene Tasks.
+      </p>
+
+      <pre><span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span> <span class="property">pad</span> <span class="token">$spacing</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">24</span> <span class="property">weight</span> <span class="value">600</span>
+  <span class="component">Counter:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">col</span> <span class="value">#888</span></pre>
+
+      <div class="label">Verwendung</div>
+      <pre><span class="component">App</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">24</span>
+  <span class="component">Header</span>
+    <span class="component">Title</span> <span class="string">"Meine Tasks"</span>
+    <span class="component">Counter</span> <span class="string">"3 offen"</span>
+  <span class="component">TaskList</span>
+    <span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+      <span class="component">Task</span> ...</pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p><code class="inline-code">between</code> verteilt Kinder mit maximalem Abstand (Space-Between).</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SCHRITT 12 -->
+    <section class="step">
+      <div class="step-number">Schritt 12</div>
+      <h2>Add-Button mit Dialog</h2>
+
+      <p class="goal">
+        Ein Button soll einen Dialog öffnen, um neue Tasks hinzuzufügen.
+      </p>
+
+      <pre><span class="component">Header</span>
+  <span class="component">Title</span> <span class="string">"Meine Tasks"</span>
+  <span class="component">AddButton</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">rad</span> <span class="value">6</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">AddDialog</span> <span class="string">"+ Neu"</span>
+
+<span class="component">AddDialog:</span>
+  <span class="component">Overlay:</span> <span class="property">full</span> <span class="property">bg</span> <span class="value">#00000080</span> <span class="property">cen</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">bg</span> <span class="value">#1E1E2E</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">w</span> <span class="value">300</span>
+    <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
+    <span class="component">Input:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#2A2A3E</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#444</span>
+    <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span>
+      <span class="component">Cancel:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">16</span> <span class="keyword">onclick</span> <span class="keyword">close</span>
+      <span class="component">Submit:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">rad</span> <span class="value">6</span></pre>
+
+      <div class="rule-box">
+        <h4>Die Regel</h4>
+        <p>Overlay-Aktionen steuern die Sichtbarkeit von Dialogen und Modals.</p>
+        <ul>
+          <li><code class="inline-code">open AddDialog</code> – Dialog öffnen</li>
+          <li><code class="inline-code">close</code> – Aktuellen Dialog schließen</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- FINALE -->
+    <section class="step">
+      <div class="step-number">Ergebnis</div>
+      <h2>Die komplette App</h2>
+
+      <p class="goal">
+        Alle Teile zusammen – eine funktionsfähige Task-App.
+      </p>
+
+      <pre><span class="comment">// Tokens</span>
+<span class="token">$bg-card</span>: <span class="value">#1E1E2E</span>
+<span class="token">$primary</span>: <span class="value">#3B82F6</span>
+<span class="token">$spacing</span>: <span class="value">16</span>
+<span class="token">$radius</span>: <span class="value">8</span>
+
+<span class="comment">// Komponenten</span>
+<span class="component">Task:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">ver-cen</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">bg</span> <span class="token">$bg-card</span> <span class="property">rad</span> <span class="token">$radius</span>
+  <span class="component">Checkbox:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">2</span> <span class="property">boc</span> <span class="value">#444</span>
+  <span class="component">Label:</span>
+
+<span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">24</span> <span class="property">weight</span> <span class="value">600</span>
+  <span class="component">AddButton:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">16</span> <span class="property">bg</span> <span class="token">$primary</span> <span class="property">rad</span> <span class="value">6</span>
+
+<span class="comment">// Layout</span>
+<span class="component">App</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">24</span> <span class="property">pad</span> <span class="value">24</span>
+  <span class="component">Header</span>
+    <span class="component">Title</span> <span class="string">"Meine Tasks"</span>
+    <span class="component">AddButton</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">AddDialog</span> <span class="string">"+ Neu"</span>
+  <span class="component">TaskList</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
+    <span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+      <span class="component">Task</span>
+        <span class="component">Checkbox</span> <span class="keyword">if</span> <span class="token">$task.done</span> <span class="keyword">then</span> <span class="property">bg</span> <span class="token">$primary</span> <span class="property">boc</span> <span class="token">$primary</span>
+        <span class="component">Label</span> <span class="token">$task.title</span> <span class="keyword">if</span> <span class="token">$task.done</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#666</span></pre>
+
+      <div class="result-box">
+        <p><strong>Gelernt:</strong> Komponenten, Properties, Layout, Tokens, States, Events, Aktionen, Bedingungen, Iteratoren.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Mirror Tutorial
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Referenz</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0A0A0F;
+      color: #E4E4E7;
+      line-height: 1.6;
+      padding: 60px 24px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: #71717A;
+      margin-bottom: 80px;
+    }
+
+    .section {
+      margin-bottom: 80px;
+    }
+
+    .section-number {
+      font-size: 14px;
+      font-weight: 600;
+      color: #3B82F6;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 32px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-top: 40px;
+      margin-bottom: 16px;
+    }
+
+    h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #A1A1AA;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    .lead {
+      font-size: 18px;
+      color: #A1A1AA;
+      margin-bottom: 32px;
+      max-width: 700px;
+    }
+
+    p {
+      color: #A1A1AA;
+      margin-bottom: 16px;
+    }
+
+    pre {
+      background: #18181B;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .inline-code {
+      background: #27272A;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #E4E4E7;
+    }
+
+    .comment { color: #6B7280; }
+    .component { color: #4ADE80; }
+    .property { color: #60A5FA; }
+    .value { color: #FBBF24; }
+    .string { color: #F472B6; }
+    .keyword { color: #C084FC; }
+    .token { color: #22D3EE; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      background: #18181B;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #27272A;
+    }
+
+    th {
+      background: #1F1F23;
+      font-weight: 600;
+      color: #A1A1AA;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td {
+      color: #E4E4E7;
+      font-size: 14px;
+    }
+
+    td code {
+      background: #27272A;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #71717A;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      margin-top: 24px;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #1E3A5F 0%, #1E1E2E 100%);
+      border: 1px solid #3B82F6;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+    }
+
+    .highlight-box p {
+      color: #93C5FD;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .slots-states {
+      display: flex;
+      gap: 24px;
+      margin: 16px 0;
+      flex-wrap: wrap;
+    }
+
+    .slots-states-item {
+      background: #1F1F23;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .slots-states-item strong {
+      color: #A1A1AA;
+      margin-right: 8px;
+    }
+
+    .slots-states-item span {
+      color: #4ADE80;
+    }
+
+    .divider {
+      height: 1px;
+      background: #27272A;
+      margin: 80px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .grid pre {
+      margin-bottom: 0;
+    }
+
+    .quick-ref {
+      background: #18181B;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .quick-ref-category {
+      color: #3B82F6;
+      font-weight: 600;
+    }
+
+    .quick-ref-items {
+      color: #E4E4E7;
+    }
+
+    .footer {
+      margin-top: 120px;
+      padding-top: 40px;
+      border-top: 1px solid #27272A;
+      color: #52525B;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mirror Referenz</h1>
+    <p class="subtitle">Vollständige Syntax-Referenz</p>
+
+    <!-- SECTION 1: SYNTAX BASICS -->
+    <section class="section">
+      <div class="section-number">Abschnitt 1</div>
+      <h2>Syntax Grundlagen</h2>
+
+      <h3>Zeilenstruktur</h3>
+      <pre><span class="component">ComponentName</span> <span class="property">property</span> <span class="value">value</span> <span class="property">property</span> <span class="value">value</span> <span class="string">"text content"</span></pre>
+
+      <h3>Einrückung</h3>
+      <p>Kinder werden mit <strong>2 Spaces</strong> eingerückt:</p>
+      <pre><span class="component">Parent</span>
+  <span class="component">Child</span>
+    <span class="component">Grandchild</span></pre>
+
+      <h3>Kommentare</h3>
+      <pre><span class="comment">// Dies ist ein Kommentar</span>
+<span class="component">Button</span> <span class="string">"Click"</span>  <span class="comment">// Inline-Kommentar</span></pre>
+
+      <h3>Strings</h3>
+      <p>Doppelte Anführungszeichen für Textinhalt:</p>
+      <pre><span class="component">Button</span> <span class="string">"Click me"</span>
+<span class="component">Label</span> <span class="string">"Hello World"</span></pre>
+
+      <h3>Zahlen</h3>
+      <p>Zahlen sind standardmäßig Pixel. Verwende <code class="inline-code">%</code> für Prozent:</p>
+      <pre><span class="property">w</span> <span class="value">200</span>       <span class="comment">// 200px</span>
+<span class="property">w</span> <span class="value">50%</span>       <span class="comment">// 50%</span>
+<span class="property">h</span> <span class="value">100</span>       <span class="comment">// 100px</span>
+<span class="property">pad</span> <span class="value">16</span>      <span class="comment">// 16px</span></pre>
+
+      <h3>Dimension Shorthand</h3>
+      <p>Die ersten zwei Zahlen nach dem Komponenten-Namen werden automatisch als Breite und Höhe interpretiert:</p>
+      <pre><span class="comment">// Shorthand</span>
+<span class="component">Box</span> <span class="value">300</span> <span class="value">400</span> <span class="property">pad</span> <span class="value">16</span>           <span class="comment">// w 300, h 400</span>
+<span class="component">Card</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span>               <span class="comment">// nur w 200</span>
+
+<span class="comment">// Äquivalent zu</span>
+<span class="component">Box</span> <span class="property">w</span> <span class="value">300</span> <span class="property">h</span> <span class="value">400</span> <span class="property">pad</span> <span class="value">16</span>
+<span class="component">Card</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span>
+
+<span class="comment">// Mischen möglich</span>
+<span class="component">Panel</span> <span class="value">300</span> <span class="property">h</span> <span class="value">400</span>              <span class="comment">// w implizit, h explizit</span></pre>
+
+      <div class="highlight-box">
+        <p><strong>Konsistent mit Image:</strong> Bei <code>Image</code> wird der String als <code>src</code> interpretiert, gefolgt von Breite und Höhe: <code>Image "foto.jpg" 800 600</code></p>
+      </div>
+
+      <h3>Farben</h3>
+      <p>Hex-Notation, optional mit Alpha:</p>
+      <pre><span class="property">col</span> <span class="value">#3B82F6</span>        <span class="comment">// RGB</span>
+<span class="property">col</span> <span class="value">#3B82F680</span>      <span class="comment">// RGBA (50% Transparenz)</span>
+<span class="property">col</span> <span class="value">#FFF</span>          <span class="comment">// Kurzform</span></pre>
+
+      <h3>Komponenten-Namen</h3>
+      <pre><span class="component">Button</span> <span class="string">"Click"</span>    <span class="comment">// Großbuchstabe → Komponente</span>
+<span class="component">header</span> <span class="property">hor</span>        <span class="comment">// Kleinbuchstabe → Element</span></pre>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 2: TOKENS & REFERENCES -->
+    <section class="section">
+      <div class="section-number">Abschnitt 2</div>
+      <h2>Tokens & Referenzen</h2>
+
+      <h3>Tokens (Design-Variablen)</h3>
+      <p>Definiere wiederverwendbare Werte:</p>
+      <pre><span class="comment">// Farben</span>
+<span class="token">$primary</span>: <span class="value">#3B82F6</span>
+<span class="token">$background</span>: <span class="value">#0A0A0A</span>
+<span class="token">$text</span>: <span class="value">#FFFFFF</span>
+<span class="token">$text-muted</span>: <span class="value">#888888</span>
+
+<span class="comment">// Abstände</span>
+<span class="token">$spacing</span>: <span class="value">16</span>
+<span class="token">$spacing-lg</span>: <span class="value">24</span>
+<span class="token">$radius</span>: <span class="value">8</span>
+
+<span class="comment">// Fonts</span>
+<span class="token">$font</span>: <span class="string">"Inter"</span></pre>
+
+      <div class="label">Verwendung</div>
+      <pre><span class="component">Button</span> <span class="property">col</span> <span class="token">$primary</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">rad</span> <span class="token">$radius</span>
+<span class="component">Card</span> <span class="property">col</span> <span class="token">$background</span></pre>
+
+      <h3>Komponenten-Property-Referenzen</h3>
+      <p>Referenziere Properties von definierten Komponenten:</p>
+      <pre><span class="comment">// Komponente definieren</span>
+<span class="component">Card:</span> <span class="property">rad</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">20</span> <span class="property">col</span> <span class="value">#2A2A3E</span>
+
+<span class="comment">// Properties referenzieren</span>
+<span class="component">Button</span> <span class="property">rad</span> <span class="component">Card.rad</span> <span class="property">col</span> <span class="component">Card.col</span></pre>
+
+      <div class="label">Design-System-Pattern</div>
+      <pre><span class="comment">// Design-Primitives definieren</span>
+<span class="component">Spacing:</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
+<span class="component">Radius:</span> <span class="property">rad</span> <span class="value">8</span>
+<span class="component">Colors:</span> <span class="property">col</span> <span class="value">#1E1E2E</span>
+
+<span class="comment">// Überall verwenden</span>
+<span class="component">Card</span> <span class="property">pad</span> <span class="component">Spacing.pad</span> <span class="property">gap</span> <span class="component">Spacing.gap</span> <span class="property">rad</span> <span class="component">Radius.rad</span> <span class="property">col</span> <span class="component">Colors.col</span></pre>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 3: PROPERTIES -->
+    <section class="section">
+      <div class="section-number">Abschnitt 3</div>
+      <h2>Properties</h2>
+
+      <h3>Layout-Richtung</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>hor</code></td><td>Horizontales Layout (Zeile)</td><td><code>Header hor</code></td></tr>
+        <tr><td><code>ver</code></td><td>Vertikales Layout (Spalte)</td><td><code>Sidebar ver</code></td></tr>
+      </table>
+
+      <h3>Ausrichtung</h3>
+      <p>Absolute Ausrichtung (funktioniert unabhängig von <code class="inline-code">hor</code>/<code class="inline-code">ver</code>):</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>hor-l</code></td><td>Links ausrichten</td></tr>
+        <tr><td><code>hor-cen</code></td><td>Horizontal zentrieren</td></tr>
+        <tr><td><code>hor-r</code></td><td>Rechts ausrichten</td></tr>
+        <tr><td><code>ver-t</code></td><td>Oben ausrichten</td></tr>
+        <tr><td><code>ver-cen</code></td><td>Vertikal zentrieren</td></tr>
+        <tr><td><code>ver-b</code></td><td>Unten ausrichten</td></tr>
+        <tr><td><code>between</code></td><td>Gleichmäßig verteilen</td></tr>
+        <tr><td><code>cen</code></td><td>Beide Achsen zentrieren</td></tr>
+      </table>
+
+      <h3>Abstände</h3>
+      <h4>Gap</h4>
+      <pre><span class="property">gap</span> <span class="value">16</span>          <span class="comment">// Abstand zwischen Kindern</span></pre>
+
+      <h4>Padding</h4>
+      <pre><span class="property">pad</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
+<span class="property">pad</span> <span class="value">16</span> <span class="value">12</span>       <span class="comment">// Vertikal, Horizontal</span>
+<span class="property">pad</span> <span class="value">16</span> <span class="value">12</span> <span class="value">8</span> <span class="value">4</span>   <span class="comment">// Oben, Rechts, Unten, Links</span>
+<span class="property">pad</span> <span class="property">l</span> <span class="value">16</span>        <span class="comment">// Nur links</span>
+<span class="property">pad</span> <span class="property">r</span> <span class="value">16</span>        <span class="comment">// Nur rechts</span>
+<span class="property">pad</span> <span class="property">u</span> <span class="value">16</span>        <span class="comment">// Nur oben</span>
+<span class="property">pad</span> <span class="property">d</span> <span class="value">16</span>        <span class="comment">// Nur unten</span>
+<span class="property">pad</span> <span class="property">l-r</span> <span class="value">16</span>      <span class="comment">// Links und rechts</span>
+<span class="property">pad</span> <span class="property">u-d</span> <span class="value">16</span>      <span class="comment">// Oben und unten</span></pre>
+
+      <h4>Margin</h4>
+      <pre><span class="property">mar</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
+<span class="property">mar</span> <span class="property">l-r</span> <span class="value">24</span>      <span class="comment">// Links und rechts</span></pre>
+
+      <h3>Größen</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>w</code></td><td>Breite</td><td><code>w 200</code>, <code>w 50%</code>, <code>w auto</code>, <code>w full</code></td></tr>
+        <tr><td><code>h</code></td><td>Höhe</td><td><code>h 48</code>, <code>h 100%</code>, <code>h full</code></td></tr>
+        <tr><td><code>minw</code></td><td>Mindestbreite</td><td><code>minw 100</code></td></tr>
+        <tr><td><code>maxw</code></td><td>Maximalbreite</td><td><code>maxw 500</code></td></tr>
+        <tr><td><code>minh</code></td><td>Mindesthöhe</td><td><code>minh 50</code></td></tr>
+        <tr><td><code>maxh</code></td><td>Maximalhöhe</td><td><code>maxh 300</code></td></tr>
+        <tr><td><code>full</code></td><td>100% Breite und Höhe</td><td><code>Container full</code></td></tr>
+        <tr><td><code>grow</code></td><td>Flex grow (Platz füllen)</td><td><code>Content grow</code></td></tr>
+      </table>
+
+      <div class="highlight-box">
+        <p><strong>w full / h full:</strong> <code>w full</code> setzt <code>width: 100%</code>, <code>h full</code> setzt <code>height: 100%</code>. Das Keyword <code>full</code> ist nur für <code>w</code> und <code>h</code> verfügbar.</p>
+      </div>
+
+      <h3>Farben (Unified Color System)</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>col</code></td><td>Komponenten-Farbe (kontextabhängig)</td><td><code>col #3B82F6</code></td></tr>
+        <tr><td><code>boc</code></td><td>Rahmenfarbe</td><td><code>boc #333333</code></td></tr>
+      </table>
+
+      <div class="highlight-box">
+        <p><strong>Unified Color:</strong> <code>col</code> ist die einzige Farb-Property. Bei Container-Komponenten (Box, Button, Card) wird <code>col</code> zur Hintergrundfarbe. Bei Text-Komponenten (Text, Label, Title) wird <code>col</code> zur Textfarbe.</p>
+      </div>
+
+      <pre><span class="comment">// Container: col → backgroundColor</span>
+<span class="component">Button</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="string">"Click"</span>  <span class="comment">// Blauer Hintergrund</span>
+<span class="component">Card</span> <span class="property">col</span> <span class="value">#1E1E1E</span>            <span class="comment">// Dunkler Hintergrund</span>
+
+<span class="comment">// Text: col → color</span>
+<span class="component">Text</span> <span class="property">col</span> <span class="value">#FFFFFF</span> <span class="string">"Hello"</span>   <span class="comment">// Weiße Schrift</span>
+<span class="component">Label</span> <span class="property">col</span> <span class="value">#888888</span>          <span class="comment">// Graue Schrift</span>
+
+<span class="comment">// Container mit Text: Sugar Syntax</span>
+<span class="component">Button</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="string">"Click"</span> <span class="property">col</span> <span class="value">#FFFFFF</span>
+<span class="comment">// ↑ Erste col → Button-Hintergrund, zweite col → Text-Farbe</span></pre>
+
+      <h3>Rahmen (Compound Properties)</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>bor</code></td><td>Rahmen (compound)</td><td><code>bor 1</code>, <code>bor 1 solid #333</code></td></tr>
+        <tr><td><code>bor</code></td><td>Mit Richtung</td><td><code>bor l 2</code>, <code>bor l-r 1 dashed #333</code></td></tr>
+        <tr><td><code>boc</code></td><td>Rahmenfarbe (separat)</td><td><code>boc #333</code></td></tr>
+        <tr><td><code>rad</code></td><td>Eckenradius</td><td><code>rad 8</code></td></tr>
+        <tr><td><code>rad</code></td><td>Pro-Ecke Radius</td><td><code>rad 8 8 0 0</code></td></tr>
+      </table>
+
+      <div class="highlight-box">
+        <p><strong>Compound Syntax:</strong> <code>bor</code> kann mehrere Werte in beliebiger Reihenfolge annehmen: Richtung (<code>l r u d l-r u-d</code>), Breite (Zahl), Stil (<code>solid dashed dotted</code>), Farbe (<code>#hex</code>). Der Parser erkennt die Typen automatisch.</p>
+      </div>
+
+      <pre><span class="comment">// Einfacher Rahmen</span>
+<span class="component">Card</span> <span class="property">bor</span> <span class="value">1</span>                        <span class="comment">// 1px solid</span>
+<span class="component">Card</span> <span class="property">bor</span> <span class="value">1</span> <span class="value">#333</span>                   <span class="comment">// 1px solid #333</span>
+<span class="component">Card</span> <span class="property">bor</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>        <span class="comment">// 2px dashed #3B82F6</span>
+
+<span class="comment">// Mit Richtung</span>
+<span class="component">Sidebar</span> <span class="property">bor</span> <span class="property">l</span> <span class="value">1</span> <span class="value">#333</span>             <span class="comment">// Nur links</span>
+<span class="component">Header</span> <span class="property">bor</span> <span class="property">d</span> <span class="value">1</span> <span class="value">#333</span>              <span class="comment">// Nur unten</span>
+<span class="component">Card</span> <span class="property">bor</span> <span class="property">l-r</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>   <span class="comment">// Links und rechts</span>
+
+<span class="comment">// Flexible Reihenfolge (alle äquivalent)</span>
+<span class="component">Box</span> <span class="property">bor</span> <span class="value">1</span> <span class="value">solid</span> <span class="value">#333</span>
+<span class="component">Box</span> <span class="property">bor</span> <span class="value">#333</span> <span class="value">1</span> <span class="value">solid</span>
+<span class="component">Box</span> <span class="property">bor</span> <span class="value">solid</span> <span class="value">#333</span> <span class="value">1</span>
+
+<span class="comment">// Eckenradius</span>
+<span class="component">Card</span> <span class="property">rad</span> <span class="value">12</span>                       <span class="comment">// Alle Ecken</span>
+<span class="component">Tag</span> <span class="property">rad</span> <span class="value">99</span>                        <span class="comment">// Pill-Form</span></pre>
+
+      <h3>Typografie</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>size</code></td><td>Schriftgröße (px)</td><td><code>size 14</code></td></tr>
+        <tr><td><code>weight</code></td><td>Schriftstärke</td><td><code>weight 600</code></td></tr>
+        <tr><td><code>line</code></td><td>Zeilenhöhe</td><td><code>line 1.5</code></td></tr>
+        <tr><td><code>font</code></td><td>Schriftfamilie</td><td><code>font "Inter"</code></td></tr>
+        <tr><td><code>align</code></td><td>Textausrichtung</td><td><code>align center</code></td></tr>
+        <tr><td><code>italic</code></td><td>Kursiv</td><td><code>italic</code></td></tr>
+        <tr><td><code>underline</code></td><td>Unterstrichen</td><td><code>underline</code></td></tr>
+        <tr><td><code>uppercase</code></td><td>Großbuchstaben</td><td><code>uppercase</code></td></tr>
+        <tr><td><code>lowercase</code></td><td>Kleinbuchstaben</td><td><code>lowercase</code></td></tr>
+        <tr><td><code>truncate</code></td><td>Mit Ellipsis abschneiden</td><td><code>truncate</code></td></tr>
+      </table>
+
+      <h3>Visuals</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>opacity</code></td><td>Transparenz (0-1)</td><td><code>opacity 0.5</code></td></tr>
+        <tr><td><code>shadow</code></td><td>Schatten</td><td><code>shadow "0 4px 12px rgba(0,0,0,0.15)"</code></td></tr>
+        <tr><td><code>cursor</code></td><td>Mauszeiger</td><td><code>cursor pointer</code></td></tr>
+        <tr><td><code>pointer</code></td><td>Pointer Events</td><td><code>pointer none</code></td></tr>
+        <tr><td><code>z</code></td><td>Z-Index</td><td><code>z 100</code></td></tr>
+      </table>
+
+      <h3>Sichtbarkeit & Zustand</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>visible</code></td><td>Sichtbarkeit</td><td><code>visible true</code>, <code>visible false</code></td></tr>
+        <tr><td><code>hidden</code></td><td>Element verstecken (boolean)</td><td><code>hidden</code></td></tr>
+        <tr><td><code>disabled</code></td><td>Element deaktivieren</td><td><code>disabled</code>, <code>disabled true</code></td></tr>
+      </table>
+
+      <h3>HTML Primitives</h3>
+      <p>Bestimmte Elemente benötigen native HTML-Tags für ihre Funktionalität. Diese werden mit einem <strong>Keyword</strong> markiert:</p>
+
+      <div class="highlight-box">
+        <p><strong>Syntax:</strong> <code>Keyword Name? "Wert" Properties</code><br>
+        Der Name ist optional und macht die Komponente wiederverwendbar.</p>
+      </div>
+
+      <h4>Image</h4>
+      <p>Der String wird als <code>src</code> interpretiert, gefolgt von Breite und Höhe:</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>(String)</code></td><td>Bildquelle</td><td><code>"foto.jpg"</code></td></tr>
+        <tr><td><code>w h</code></td><td>Breite/Höhe nach String</td><td><code>300 200</code></td></tr>
+        <tr><td><code>fit</code></td><td>Object fit</td><td><code>fit cover</code>, <code>fit contain</code></td></tr>
+        <tr><td><code>alt</code></td><td>Alt-Text</td><td><code>alt "Beschreibung"</code></td></tr>
+      </table>
+      <pre><span class="comment">// Anonym</span>
+<span class="component">Image</span> <span class="string">"photo.jpg"</span> <span class="value">200</span> <span class="value">150</span> <span class="property">fit</span> <span class="value">cover</span> <span class="property">rad</span> <span class="value">8</span>
+
+<span class="comment">// Mit Name (wiederverwendbar)</span>
+<span class="component">Image</span> <span class="component">Avatar</span> <span class="string">"avatar.jpg"</span> <span class="value">48</span> <span class="value">48</span> <span class="property">rad</span> <span class="value">24</span>
+
+<span class="comment">// Später einfach:</span>
+<span class="component">Avatar</span></pre>
+
+      <h4>Input</h4>
+      <p>Der String wird als <code>placeholder</code> interpretiert:</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>(String)</code></td><td>Placeholder-Text</td><td><code>"Email eingeben..."</code></td></tr>
+        <tr><td><code>type</code></td><td>Input-Typ</td><td><code>type password</code>, <code>type email</code></td></tr>
+        <tr><td><code>w</code></td><td>Breite</td><td><code>w 200</code></td></tr>
+      </table>
+      <pre><span class="comment">// Anonym</span>
+<span class="component">Input</span> <span class="string">"Email eingeben..."</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1E1E1E</span> <span class="property">rad</span> <span class="value">6</span>
+
+<span class="comment">// Mit Name</span>
+<span class="component">Input</span> <span class="component">EmailField</span> <span class="string">"Email"</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#444</span>
+
+<span class="comment">// Password</span>
+<span class="component">Input</span> <span class="string">"Passwort"</span> <span class="property">type</span> <span class="value">password</span> <span class="property">w</span> <span class="value">200</span></pre>
+
+      <h4>Textarea</h4>
+      <p>Der String wird als <code>placeholder</code> interpretiert:</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>(String)</code></td><td>Placeholder-Text</td><td><code>"Nachricht..."</code></td></tr>
+        <tr><td><code>rows</code></td><td>Zeilenanzahl</td><td><code>rows 5</code></td></tr>
+      </table>
+      <pre><span class="component">Textarea</span> <span class="string">"Nachricht schreiben..."</span> <span class="property">w</span> <span class="value">300</span> <span class="property">h</span> <span class="value">150</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1E1E1E</span>
+
+<span class="component">Textarea</span> <span class="component">MessageField</span> <span class="string">"Deine Nachricht..."</span> <span class="property">rows</span> <span class="value">5</span></pre>
+
+      <h4>Link</h4>
+      <p>Der String wird als <code>href</code> interpretiert:</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>(String)</code></td><td>URL</td><td><code>"https://example.com"</code></td></tr>
+        <tr><td><code>target</code></td><td>Link-Target</td><td><code>target _blank</code></td></tr>
+      </table>
+      <pre><span class="component">Link</span> <span class="string">"https://example.com"</span> <span class="property">col</span> <span class="value">#3B82F6</span>
+  <span class="string">"Zur Website"</span>
+
+<span class="component">Link</span> <span class="component">HomeLink</span> <span class="string">"https://home.com"</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">hover-col</span> <span class="value">#2563EB</span>
+  <span class="property">icon</span> <span class="string">"home"</span>
+  <span class="string">"Startseite"</span></pre>
+
+      <h4>Button</h4>
+      <p>Natives Button-Element für Formulare und Accessibility:</p>
+      <pre><span class="component">Button</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="string">"Absenden"</span> <span class="property">col</span> <span class="value">#FFF</span> <span class="property">rad</span> <span class="value">6</span>
+
+<span class="component">Button</span> <span class="component">SubmitBtn</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">hover-col</span> <span class="value">#2563EB</span>
+  <span class="string">"Speichern"</span></pre>
+
+      <h3>Icons</h3>
+      <p>Lucide Icons:</p>
+      <pre><span class="property">icon</span> <span class="string">"search"</span>
+<span class="property">icon</span> <span class="string">"user"</span> <span class="property">size</span> <span class="value">20</span>
+<span class="property">icon</span> <span class="string">"arrow-right"</span></pre>
+      <p>Alle Icons: <a href="https://lucide.dev/icons" style="color: #3B82F6;">lucide.dev/icons</a></p>
+
+      <h3>Hover-States</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>hover-col</code></td><td>Farbe bei Hover (kontextabhängig wie col)</td><td><code>hover-col #333</code></td></tr>
+        <tr><td><code>hover-boc</code></td><td>Rahmenfarbe bei Hover</td><td><code>hover-boc #555</code></td></tr>
+        <tr><td><code>hover-bor</code></td><td>Rahmenbreite bei Hover</td><td><code>hover-bor 2</code></td></tr>
+        <tr><td><code>hover-rad</code></td><td>Eckenradius bei Hover</td><td><code>hover-rad 12</code></td></tr>
+        <tr><td><code>hover-opacity</code></td><td>Transparenz bei Hover</td><td><code>hover-opacity 0.8</code></td></tr>
+        <tr><td><code>hover-scale</code></td><td>Skalierung bei Hover</td><td><code>hover-scale 1.05</code></td></tr>
+      </table>
+      <pre><span class="component">Button</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">hover-col</span> <span class="value">#3B82F6</span>
+<span class="component">Card</span> <span class="property">hover-scale</span> <span class="value">1.02</span> <span class="property">hover-opacity</span> <span class="value">0.9</span></pre>
+
+      <h3>Modifiers</h3>
+      <p>Vordefinierte Style-Shortcuts:</p>
+      <table>
+        <tr><th>Modifier</th><th>Beschreibung</th></tr>
+        <tr><td><code>-primary</code></td><td>Primärer Stil (blauer Hintergrund, weißer Text)</td></tr>
+        <tr><td><code>-secondary</code></td><td>Sekundärer Stil (grauer Hintergrund)</td></tr>
+        <tr><td><code>-outlined</code></td><td>Transparenter Hintergrund, Rahmen</td></tr>
+        <tr><td><code>-ghost</code></td><td>Komplett transparent</td></tr>
+        <tr><td><code>-filled</code></td><td>Gefüllter Hintergrund</td></tr>
+        <tr><td><code>-disabled</code></td><td>50% Transparenz, nicht klickbar</td></tr>
+        <tr><td><code>-rounded</code></td><td>Vollständig gerundet (Pill-Form)</td></tr>
+      </table>
+      <pre><span class="component">Button</span> <span class="property">-primary</span> <span class="string">"Submit"</span>
+<span class="component">Button</span> <span class="property">-outlined</span> <span class="string">"Cancel"</span>
+<span class="component">Button</span> <span class="property">-disabled</span> <span class="string">"Nicht verfügbar"</span></pre>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 4: COMPONENT DEFINITION -->
+    <section class="section">
+      <div class="section-number">Abschnitt 4</div>
+      <h2>Komponenten-Definition</h2>
+
+      <h3>Komponenten definieren</h3>
+      <p>Verwende <code class="inline-code">:</code> um eine wiederverwendbare Vorlage zu erstellen:</p>
+      <pre><span class="comment">// Definition</span>
+<span class="component">Button:</span> <span class="property">hor</span> <span class="property">hor-cen</span> <span class="property">ver-cen</span> <span class="property">h</span> <span class="value">40</span> <span class="property">pad</span> <span class="property">l-r</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">col</span> <span class="value">#3B82F6</span>
+
+<span class="comment">// Verwendung</span>
+<span class="component">Button</span> <span class="string">"Click me"</span>
+<span class="component">Button</span> <span class="string">"Submit"</span></pre>
+
+      <h3>Vererbung</h3>
+      <p>Verwende <code class="inline-code">from</code> um Komponenten zu erweitern:</p>
+      <pre><span class="component">Button:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">rad</span> <span class="value">8</span>
+<span class="component">DangerButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">col</span> <span class="value">#EF4444</span>
+<span class="component">GhostButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">col</span> <span class="value">transparent</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#3B82F6</span>
+<span class="component">SmallButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">pad</span> <span class="value">8</span> <span class="property">size</span> <span class="value">12</span></pre>
+
+      <h3>Komponenten mit Kindern (Slots)</h3>
+      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1E1E1E</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span> <span class="property">col</span> <span class="value">#FFF</span>
+  <span class="component">Description:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">col</span> <span class="value">#9CA3AF</span>
+  <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span></pre>
+
+      <div class="label">Inline oder Expanded verwenden</div>
+      <div class="grid">
+        <div>
+          <pre><span class="comment">// Inline</span>
+<span class="component">Card</span> <span class="component">Title</span> <span class="string">"Welcome"</span> <span class="component">Description</span> <span class="string">"Get started"</span></pre>
+        </div>
+        <div>
+          <pre><span class="comment">// Expanded</span>
+<span class="component">Card</span>
+  <span class="component">Title</span> <span class="string">"Welcome"</span>
+  <span class="component">Description</span> <span class="string">"Get started"</span>
+  <span class="component">Actions</span>
+    <span class="component">Button</span> <span class="string">"Learn more"</span></pre>
+        </div>
+      </div>
+
+      <h3>Flacher Zugriff</h3>
+      <p>Greife auf verschachtelte Elemente direkt per Namen zu, unabhängig von der Hierarchie:</p>
+      <pre><span class="comment">// Definition mit Verschachtelung</span>
+<span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span> <span class="property">h</span> <span class="value">60</span> <span class="property">pad</span> <span class="property">l-r</span> <span class="value">24</span>
+  <span class="component">Left:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">ver-cen</span>
+    <span class="component">Logo:</span> <span class="property">w</span> <span class="value">120</span> <span class="property">h</span> <span class="value">32</span>
+    <span class="component">Nav:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span>
+      <span class="component">Link:</span> <span class="property">col</span> <span class="value">#888</span>
+  <span class="component">Right:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span>
+    <span class="component">Avatar:</span> <span class="property">w</span> <span class="value">36</span> <span class="property">h</span> <span class="value">36</span> <span class="property">rad</span> <span class="value">18</span>
+
+<span class="comment">// Verwendung - direkt auf Logo zugreifen (egal wie tief)</span>
+<span class="component">Header</span>
+  <span class="component">Logo</span> <span class="property">col</span> <span class="value">#FF0000</span>              <span class="comment">// Modifiziert Logo in Left</span>
+  <span class="component">Avatar</span> <span class="property">col</span> <span class="value">#3B82F6</span>            <span class="comment">// Modifiziert Avatar in Right</span></pre>
+
+      <div class="highlight-box">
+        <p><strong>Wichtig:</strong> Namen müssen innerhalb einer Komponente eindeutig sein. Bei Duplikaten gibt der Parser einen Fehler aus.</p>
+      </div>
+
+      <h3>List Items (Neue Instanzen)</h3>
+      <p>Verwende <code class="inline-code">-</code> um neue Instanzen eines Elements zu erstellen:</p>
+      <pre><span class="comment">// Definition</span>
+<span class="component">Dropdown:</span> <span class="property">ver</span> <span class="property">w</span> <span class="value">200</span>
+  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#2A2A3E</span>
+  <span class="component">Menu:</span> <span class="property">ver</span>
+    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span>
+
+<span class="comment">// Verwendung - füge mehrere Items hinzu</span>
+<span class="component">Dropdown</span>
+  <span class="component">Trigger</span> <span class="string">"Optionen"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Alle anzeigen"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Nur aktive"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Archivierte"</span></pre>
+
+      <p>Das <code class="inline-code">-</code> funktioniert wie bei YAML-Listen: Jedes <code class="inline-code">-</code> erstellt eine neue Instanz.</p>
+
+      <div class="label">Kombination: Flacher Zugriff + List Items</div>
+      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
+  <span class="component">Tags:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">wrap</span>
+    <span class="component">Tag:</span> <span class="property">pad</span> <span class="value">4</span> <span class="value">8</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">size</span> <span class="value">12</span>
+
+<span class="comment">// Verwendung</span>
+<span class="component">Card</span>
+  <span class="component">Title</span> <span class="string">"Projekt Alpha"</span>        <span class="comment">// Flach: modifiziert Title</span>
+  <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"React"</span>                <span class="comment">// Neu: fügt Tag hinzu</span>
+  <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"TypeScript"</span>           <span class="comment">// Neu: weiterer Tag</span>
+  <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"UI"</span> <span class="property">col</span> <span class="value">#10B981</span>        <span class="comment">// Neu: Tag mit anderem Hintergrund</span></pre>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 5: INTERACTIVITY -->
+    <section class="section">
+      <div class="section-number">Abschnitt 5</div>
+      <h2>Interaktivität</h2>
+
+      <h3>States</h3>
+      <p>Definiere mehrere visuelle Zustände:</p>
+      <pre><span class="component">Toggle:</span> <span class="property">w</span> <span class="value">52</span> <span class="property">h</span> <span class="value">28</span> <span class="property">rad</span> <span class="value">14</span> <span class="property">pad</span> <span class="value">2</span>
+  <span class="keyword">state</span> <span class="value">off</span>
+    <span class="property">col</span> <span class="value">#333</span>
+  <span class="keyword">state</span> <span class="value">on</span>
+    <span class="property">col</span> <span class="value">#3B82F6</span>
+  <span class="component">Knob:</span> <span class="property">w</span> <span class="value">24</span> <span class="property">h</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">white</span></pre>
+
+      <h3>Events</h3>
+      <table>
+        <tr><th>Event</th><th>Beschreibung</th></tr>
+        <tr><td><code>onclick</code></td><td>Klick-Event</td></tr>
+        <tr><td><code>onhover</code></td><td>Hover-Event</td></tr>
+        <tr><td><code>onchange</code></td><td>Wert geändert</td></tr>
+        <tr><td><code>oninput</code></td><td>Input-Event (bei jedem Tastendruck)</td></tr>
+        <tr><td><code>onfocus</code></td><td>Fokus erhalten</td></tr>
+        <tr><td><code>onblur</code></td><td>Fokus verloren</td></tr>
+        <tr><td><code>onkeydown</code></td><td>Taste gedrückt</td></tr>
+        <tr><td><code>onkeyup</code></td><td>Taste losgelassen</td></tr>
+        <tr><td><code>onload</code></td><td>Geladen</td></tr>
+      </table>
+
+      <h3>Actions</h3>
+      <table>
+        <tr><th>Action</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>toggle</td><td><code>toggle</code></td><td><code>onclick toggle</code></td></tr>
+        <tr><td>open</td><td><code>open Name [anim] [ms]</code></td><td><code>onclick open Dialog slide-up 300</code></td></tr>
+        <tr><td>close</td><td><code>close [Name] [anim] [ms]</code></td><td><code>onclick close Dialog fade 150</code></td></tr>
+        <tr><td>show</td><td><code>show Name</code></td><td><code>onclick show Tooltip</code></td></tr>
+        <tr><td>hide</td><td><code>hide Name</code></td><td><code>onclick hide Tooltip</code></td></tr>
+        <tr><td>change</td><td><code>change self to state</code></td><td><code>onclick change self to active</code></td></tr>
+        <tr><td>page</td><td><code>page Name</code></td><td><code>onclick page Dashboard</code></td></tr>
+        <tr><td>assign</td><td><code>assign $var to expr</code></td><td><code>onclick assign $count to $count + 1</code></td></tr>
+      </table>
+
+      <h4>Overlay-Animationen</h4>
+      <p>Verfügbare Animationen für <code>open</code> und <code>close</code>:</p>
+      <table>
+        <tr><th>Animation</th><th>Beschreibung</th></tr>
+        <tr><td><code>slide-up</code></td><td>Gleitet von unten ein</td></tr>
+        <tr><td><code>slide-down</code></td><td>Gleitet von oben ein</td></tr>
+        <tr><td><code>slide-left</code></td><td>Gleitet von rechts ein</td></tr>
+        <tr><td><code>slide-right</code></td><td>Gleitet von links ein</td></tr>
+        <tr><td><code>fade</code></td><td>Blendet ein/aus</td></tr>
+        <tr><td><code>scale</code></td><td>Skaliert ein/aus</td></tr>
+        <tr><td><code>none</code></td><td>Keine Animation</td></tr>
+      </table>
+
+      <h4>Overlay-Positionierung</h4>
+      <p>Verfügbare Positionen für <code>open</code>:</p>
+      <table>
+        <tr><th>Position</th><th>Beschreibung</th></tr>
+        <tr><td><code>below</code></td><td>Unterhalb des Triggers</td></tr>
+        <tr><td><code>above</code></td><td>Oberhalb des Triggers</td></tr>
+        <tr><td><code>left</code></td><td>Links vom Trigger</td></tr>
+        <tr><td><code>right</code></td><td>Rechts vom Trigger</td></tr>
+        <tr><td><code>center</code></td><td>Zentriert im Viewport</td></tr>
+      </table>
+
+      <pre><span class="comment">// Overlay unterhalb öffnen</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Dropdown</span> <span class="keyword">below</span> <span class="keyword">fade</span> <span class="value">150</span> <span class="string">"Menu"</span>
+
+<span class="comment">// Dialog zentriert öffnen</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Dialog</span> <span class="keyword">center</span> <span class="keyword">scale</span> <span class="value">200</span> <span class="string">"Open"</span></pre>
+
+      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Toggle"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">SettingsDialog</span> <span class="keyword">slide-up</span> <span class="value">300</span> <span class="string">"Settings"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="component">SettingsDialog</span> <span class="keyword">fade</span> <span class="value">150</span> <span class="string">"Schließen"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Abbrechen"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">page</span> <span class="component">Home</span> <span class="string">"Go Home"</span></pre>
+
+      <h3>Bedingte Anzeige</h3>
+      <pre><span class="comment">// Einfach</span>
+<span class="keyword">if</span> <span class="token">$isLoggedIn</span>
+  <span class="component">Avatar</span>
+
+<span class="comment">// Mit else</span>
+<span class="keyword">if</span> <span class="token">$isLoggedIn</span>
+  <span class="component">Avatar</span>
+<span class="keyword">else</span>
+  <span class="component">Button</span> <span class="string">"Login"</span>
+
+<span class="comment">// Verschachtelt</span>
+<span class="keyword">if</span> <span class="token">$user</span>
+  <span class="keyword">if</span> <span class="token">$user.isAdmin</span>
+    <span class="component">AdminPanel</span>
+  <span class="keyword">else</span>
+    <span class="component">UserPanel</span></pre>
+
+      <h3>Bedingte Properties</h3>
+      <pre><span class="comment">// Einfach</span>
+<span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#333</span>
+
+<span class="comment">// Mehrere Properties</span>
+<span class="component">Card</span> <span class="keyword">if</span> <span class="token">$isSelected</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">bor</span> <span class="value">2</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">bor</span> <span class="value">0</span>
+
+<span class="comment">// Komplexe Bedingung</span>
+<span class="component">Button</span> <span class="keyword">if</span> <span class="token">$count</span> > <span class="value">0</span> <span class="keyword">and</span> <span class="token">$enabled</span> <span class="keyword">then</span> <span class="property">opacity</span> <span class="value">1</span> <span class="keyword">else</span> <span class="property">opacity</span> <span class="value">0.5</span></pre>
+
+      <h3>Iteratoren</h3>
+      <pre><span class="comment">// Einfach</span>
+<span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+  <span class="component">TaskCard</span>
+
+<span class="comment">// Mit Property-Zugriff</span>
+<span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+  <span class="component">TaskCard</span>
+    <span class="component">Label</span> <span class="token">$task.title</span>
+    <span class="component">Status</span> <span class="token">$task.status</span>
+
+<span class="comment">// Verschachtelt</span>
+<span class="keyword">each</span> <span class="token">$category</span> <span class="keyword">in</span> <span class="token">$categories</span>
+  <span class="component">Section</span>
+    <span class="component">Title</span> <span class="token">$category.name</span>
+    <span class="keyword">each</span> <span class="token">$item</span> <span class="keyword">in</span> <span class="token">$category.items</span>
+      <span class="component">Item</span> <span class="token">$item.name</span></pre>
+
+      <h3>Event-Objekt-Zugriff</h3>
+      <pre><span class="comment">// Input-Wert</span>
+<span class="component">Input</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$text</span> <span class="keyword">to</span> <span class="token">$event.value</span>
+
+<span class="comment">// Checkbox-Status</span>
+<span class="component">Checkbox</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$isActive</span> <span class="keyword">to</span> <span class="token">$event.checked</span></pre>
+
+      <table>
+        <tr><th>Kurzform</th><th>Entspricht</th></tr>
+        <tr><td><code>$event.value</code></td><td><code>$event.target.value</code></td></tr>
+        <tr><td><code>$event.checked</code></td><td><code>$event.target.checked</code></td></tr>
+      </table>
+
+      <h3>Expressions</h3>
+      <pre><span class="comment">// Inkrement</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="token">$count</span> + <span class="value">1</span>
+
+<span class="comment">// Berechnung</span>
+<span class="component">Label</span> <span class="token">$price</span> * <span class="token">$quantity</span>
+
+<span class="comment">// In Bedingungen</span>
+<span class="keyword">if</span> <span class="token">$count</span> >= <span class="value">10</span>
+  <span class="string">"Maximum erreicht"</span></pre>
+
+      <table>
+        <tr><th>Typ</th><th>Operatoren</th></tr>
+        <tr><td>Arithmetik</td><td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td></tr>
+        <tr><td>Vergleich</td><td><code>==</code>, <code>!=</code>, <code>></code>, <code><</code>, <code>>=</code>, <code><=</code></td></tr>
+        <tr><td>Logik</td><td><code>and</code>, <code>or</code>, <code>not</code></td></tr>
+      </table>
+
+      <h3>Bedingte Actions</h3>
+      <pre><span class="keyword">onclick</span> <span class="keyword">if</span> <span class="token">$isLoggedIn</span>
+  <span class="keyword">page</span> <span class="component">Dashboard</span>
+<span class="keyword">else</span>
+  <span class="keyword">open</span> <span class="component">LoginDialog</span></pre>
+
+      <h3>Benannte Instanzen</h3>
+      <p>Gib Komponenten einen Namen, um sie später zu referenzieren:</p>
+      <pre><span class="comment">// Typ + Name = Benannte Instanz</span>
+<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span> <span class="property">w</span> <span class="value">full</span>
+<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span> <span class="property">type</span> <span class="value">password</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
+
+<span class="comment">// Verwenden</span>
+<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span>
+  <span class="component">Input</span> <span class="component">Email</span>
+  <span class="component">Input</span> <span class="component">Password</span>
+  <span class="component">Button</span> <span class="component">Submit</span></pre>
+
+      <h3>Komponenten-Properties</h3>
+      <p>Jede Komponente hat intrinsische Properties. Zugriff mit Dot-Notation:</p>
+
+      <h4>Property lesen</h4>
+      <pre><span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>                    <span class="comment">// Truthy-Check</span>
+<span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span> == <span class="string">"test@test.com"</span>  <span class="comment">// Vergleich</span>
+<span class="keyword">if</span> <span class="component">Checkbox</span>.<span class="property">checked</span>               <span class="comment">// Boolean</span>
+<span class="keyword">if</span> <span class="component">Panel</span>.<span class="property">visible</span>                  <span class="comment">// Sichtbarkeit</span></pre>
+
+      <h4>Property schreiben</h4>
+      <pre><span class="component">Submit</span>.<span class="property">label</span> = <span class="string">"Sending..."</span>
+<span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
+<span class="component">Panel</span>.<span class="property">visible</span> = <span class="value">false</span>
+<span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Fehler!"</span></pre>
+
+      <div class="highlight-box">
+        <p><strong>Komponenten SIND der State.</strong> Kein separates State-Management nötig. <code>Email.value</code> statt <code>$formData.email</code>.</p>
+      </div>
+
+      <h4>Intrinsische Properties</h4>
+      <table>
+        <tr><th>Komponente</th><th>Properties</th></tr>
+        <tr><td>Alle</td><td><code>.visible</code>, <code>.disabled</code>, <code>.opacity</code>, <code>.col</code></td></tr>
+        <tr><td>Input / Textarea</td><td><code>.value</code>, <code>.placeholder</code>, <code>.focus</code></td></tr>
+        <tr><td>Button</td><td><code>.label</code>, <code>.loading</code></td></tr>
+        <tr><td>Checkbox / Switch</td><td><code>.checked</code></td></tr>
+        <tr><td>Dialog / Overlay</td><td><code>.open</code>, <code>.close</code></td></tr>
+        <tr><td>Text / Label</td><td><code>.text</code></td></tr>
+        <tr><td>Image</td><td><code>.src</code>, <code>.alt</code></td></tr>
+      </table>
+
+      <h3>Zentrale Events</h3>
+      <p>Trenne Struktur von Verhalten mit dem <code class="inline-code">events</code> Block:</p>
+
+      <pre><span class="comment">// === KOMPONENTEN ===</span>
+<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span>
+<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span>
+<span class="component">Text</span> <span class="component">Error</span>: <span class="property">col</span> <span class="value">#EF4444</span> <span class="property">visible</span> <span class="value">false</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">col</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
+
+<span class="comment">// === LAYOUT ===</span>
+<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span>
+  <span class="component">Input</span> <span class="component">Email</span>
+  <span class="component">Input</span> <span class="component">Password</span>
+  <span class="component">Text</span> <span class="component">Error</span>
+  <span class="component">Button</span> <span class="component">Submit</span>
+
+<span class="comment">// === VERHALTEN ===</span>
+<span class="keyword">events</span>
+  <span class="component">Email</span> <span class="keyword">onchange</span>
+    <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">false</span>
+
+  <span class="component">Submit</span> <span class="keyword">onclick</span>
+    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span> <span class="keyword">and</span> <span class="component">Password</span>.<span class="property">value</span>
+      <span class="component">Submit</span>.<span class="property">label</span> = <span class="string">"Sending..."</span>
+      <span class="keyword">page</span> <span class="component">Dashboard</span>
+    <span class="keyword">else</span>
+      <span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Bitte alle Felder ausfüllen"</span>
+      <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span></pre>
+
+      <div class="highlight-box">
+        <p><strong>Inline vs. Zentral:</strong> Einfache Events inline (<code>onclick toggle</code>), komplexe Logik im <code>events</code> Block.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 6: LIBRARY COMPONENTS -->
+    <section class="section">
+      <div class="section-number">Abschnitt 6</div>
+      <h2>Library-Komponenten</h2>
+      <p class="lead">Vordefinierte interaktive Komponenten mit eingebautem Verhalten.</p>
+
+      <h3>Overlays</h3>
+
+      <h4>Dropdown</h4>
+      <pre><span class="component">Dropdown</span>
+  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+    <span class="string">"Options"</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-col</span> <span class="value">#333</span>
+      <span class="string">"Profile"</span>
+    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-col</span> <span class="value">#333</span>
+      <span class="string">"Settings"</span>
+    <span class="component">Separator:</span> <span class="property">h</span> <span class="value">1</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">mar</span> <span class="property">u-d</span> <span class="value">4</span>
+    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-col</span> <span class="value">#EF4444</span> <span class="property">col</span> <span class="value">#FF6B6B</span>
+      <span class="string">"Logout"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content, Item, Separator</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>closed, open</span></div>
+      </div>
+
+      <h4>Dialog</h4>
+      <pre><span class="component">Dialog</span>
+  <span class="component">Trigger</span>
+    <span class="component">Button</span> <span class="string">"Open Dialog"</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">w</span> <span class="value">400</span>
+    <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
+      <span class="string">"Confirm"</span>
+    <span class="string">"Are you sure?"</span>
+    <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span>
+      <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Cancel"</span>
+      <span class="component">Button</span> <span class="property">-primary</span> <span class="string">"Confirm"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>closed, open</span></div>
+      </div>
+
+      <h4>Tooltip</h4>
+      <pre><span class="component">Tooltip</span>
+  <span class="component">Trigger</span>
+    <span class="component">Button</span> <span class="string">"Hover me"</span>
+  <span class="component">Content:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">size</span> <span class="value">12</span>
+    <span class="string">"Tooltip text"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
+      </div>
+
+      <h4>Popover</h4>
+      <pre><span class="component">Popover</span>
+  <span class="component">Trigger</span>
+    <span class="component">Button</span> <span class="string">"Click me"</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">w</span> <span class="value">200</span>
+    <span class="string">"Popover content"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>closed, open</span></div>
+      </div>
+
+      <h4>ContextMenu</h4>
+      <pre><span class="component">ContextMenu</span>
+  <span class="component">Trigger:</span> <span class="property">w</span> <span class="value">200</span> <span class="property">h</span> <span class="value">150</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">hor-cen</span> <span class="property">ver-cen</span>
+    <span class="string">"Rechtsklick hier"</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span>
+    <span class="component">Item:</span> <span class="string">"Copy"</span>
+    <span class="component">Item:</span> <span class="string">"Paste"</span>
+    <span class="component">Separator:</span>
+    <span class="component">Item:</span> <span class="string">"Delete"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content, Item, Separator</span></div>
+      </div>
+
+      <h4>HoverCard</h4>
+      <pre><span class="component">HoverCard</span>
+  <span class="component">Trigger</span>
+    <span class="component">Link</span> <span class="string">"@username"</span>
+  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">w</span> <span class="value">300</span>
+    <span class="component">Avatar</span> <span class="property">src</span> <span class="string">"avatar.jpg"</span>
+    <span class="component">Name:</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"John Doe"</span>
+    <span class="component">Bio:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">col</span> <span class="value">#888</span> <span class="string">"Developer"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
+      </div>
+
+      <h3>Navigation</h3>
+
+      <h4>Tabs</h4>
+      <pre><span class="component">Tabs</span>
+  <span class="component">TabList:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">4</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">pad</span> <span class="value">4</span> <span class="property">rad</span> <span class="value">8</span>
+    <span class="component">Tab:</span> <span class="string">"Overview"</span>
+    <span class="component">Tab:</span> <span class="string">"Details"</span>
+    <span class="component">Tab:</span> <span class="string">"Settings"</span>
+  <span class="component">TabContent:</span>
+    <span class="component">Panel:</span> <span class="property">pad</span> <span class="value">16</span>
+      <span class="string">"Overview content"</span>
+    <span class="component">Panel:</span> <span class="property">pad</span> <span class="value">16</span>
+      <span class="string">"Details content"</span>
+    <span class="component">Panel:</span> <span class="property">pad</span> <span class="value">16</span>
+      <span class="string">"Settings content"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>TabList, Tab, TabContent, Panel</span></div>
+      </div>
+
+      <h4>Accordion</h4>
+      <pre><span class="component">Accordion</span>
+  <span class="component">AccordionItem:</span>
+    <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">hor</span> <span class="property">ver-cen</span> <span class="property">between</span>
+      <span class="string">"Section 1"</span>
+    <span class="component">Content:</span> <span class="property">pad</span> <span class="value">16</span>
+      <span class="string">"Section 1 content"</span>
+  <span class="component">AccordionItem:</span>
+    <span class="component">Trigger:</span> <span class="string">"Section 2"</span>
+    <span class="component">Content:</span> <span class="string">"Section 2 content"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>AccordionItem, Trigger, Content</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>collapsed, expanded</span></div>
+      </div>
+
+      <h4>Collapsible</h4>
+      <pre><span class="component">Collapsible</span>
+  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span>
+    <span class="string">"Click to expand"</span>
+  <span class="component">Content:</span> <span class="property">pad</span> <span class="value">12</span>
+    <span class="string">"Collapsible content"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>collapsed, expanded</span></div>
+      </div>
+
+      <h3>Formular</h3>
+
+      <h4>Input</h4>
+      <pre><span class="component">Input</span>
+  <span class="component">Label:</span> <span class="string">"Email"</span>
+  <span class="component">Field:</span> <span class="property">placeholder</span> <span class="string">"your@email.com"</span> <span class="property">type</span> <span class="string">"email"</span>
+  <span class="component">Hint:</span> <span class="string">"Wir teilen deine Email nie"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Label, Field, Hint, Error</span></div>
+      </div>
+
+      <h4>Select</h4>
+      <pre><span class="component">Select</span>
+  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+    <span class="string">"Option wählen"</span>
+  <span class="component">Content:</span>
+    <span class="component">Item</span> <span class="property">value</span> <span class="string">"1"</span> <span class="string">"Option 1"</span>
+    <span class="component">Item</span> <span class="property">value</span> <span class="string">"2"</span> <span class="string">"Option 2"</span>
+    <span class="component">Item</span> <span class="property">value</span> <span class="string">"3"</span> <span class="string">"Option 3"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content, Item</span></div>
+      </div>
+
+      <h4>Checkbox</h4>
+      <pre><span class="component">Checkbox</span>
+  <span class="component">Indicator:</span> <span class="property">w</span> <span class="value">18</span> <span class="property">h</span> <span class="value">18</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+  <span class="component">Label:</span> <span class="string">"AGB akzeptieren"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Indicator, Label</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>unchecked, checked</span></div>
+      </div>
+
+      <h4>Switch</h4>
+      <pre><span class="component">Switch</span>
+  <span class="component">Track:</span> <span class="property">w</span> <span class="value">44</span> <span class="property">h</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#333</span>
+  <span class="component">Thumb:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">10</span> <span class="property">col</span> <span class="value">white</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Thumb</span></div>
+        <div class="slots-states-item"><strong>States:</strong> <span>off, on</span></div>
+      </div>
+
+      <h4>Slider</h4>
+      <pre><span class="component">Slider</span> <span class="property">min</span> <span class="value">0</span> <span class="property">max</span> <span class="value">100</span> <span class="property">step</span> <span class="value">1</span>
+  <span class="component">Track:</span> <span class="property">h</span> <span class="value">4</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">2</span>
+  <span class="component">Range:</span> <span class="property">col</span> <span class="value">#3B82F6</span>
+  <span class="component">Thumb:</span> <span class="property">w</span> <span class="value">16</span> <span class="property">h</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">col</span> <span class="value">white</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Range, Thumb</span></div>
+      </div>
+
+      <h3>Feedback</h3>
+
+      <h4>Toast</h4>
+      <pre><span class="component">Toast</span>
+  <span class="component">Title:</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"Erfolg"</span>
+  <span class="component">Description:</span> <span class="string">"Änderungen gespeichert."</span>
+  <span class="component">Close:</span> <span class="property">icon</span> <span class="string">"x"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Title, Description, Close</span></div>
+      </div>
+
+      <h4>Progress</h4>
+      <pre><span class="component">Progress</span> <span class="property">value</span> <span class="value">65</span> <span class="property">max</span> <span class="value">100</span>
+  <span class="component">Track:</span> <span class="property">h</span> <span class="value">8</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">4</span>
+  <span class="component">Indicator:</span> <span class="property">col</span> <span class="value">#3B82F6</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Indicator</span></div>
+      </div>
+
+      <h4>Avatar</h4>
+      <pre><span class="component">Avatar</span>
+  <span class="component">Image:</span> <span class="property">src</span> <span class="string">"avatar.jpg"</span>
+  <span class="component">Fallback:</span> <span class="string">"JD"</span></pre>
+      <div class="slots-states">
+        <div class="slots-states-item"><strong>Slots:</strong> <span>Image, Fallback</span></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 7: QUICK REFERENCE -->
+    <section class="section">
+      <div class="section-number">Abschnitt 7</div>
+      <h2>Schnellreferenz</h2>
+
+      <div class="quick-ref">
+<span class="quick-ref-category">LAYOUT</span>      <span class="quick-ref-items">hor ver gap between wrap</span>
+<span class="quick-ref-category">ALIGN</span>       <span class="quick-ref-items">hor-l hor-cen hor-r ver-t ver-cen ver-b cen</span>
+<span class="quick-ref-category">SPACING</span>     <span class="quick-ref-items">pad mar (+ l r u d l-r u-d)</span>
+<span class="quick-ref-category">SIZE</span>        <span class="quick-ref-items">w h minw maxw minh maxh full grow           → w full, h full = 100%</span>
+<span class="quick-ref-category">SHORTHAND</span>   <span class="quick-ref-items">Box 300 400 pad 16            → Box w 300 h 400 pad 16</span>
+<span class="quick-ref-category">COLOR</span>       <span class="quick-ref-items">col (unified) boc             → col: Container=backgroundColor, Text=color</span>
+<span class="quick-ref-category">BORDER</span>      <span class="quick-ref-items">bor [dir] [w] [style] [col]  → bor l 2 dashed #333</span>
+            <span class="quick-ref-items">rad                          → rad 8</span>
+<span class="quick-ref-category">TYPE</span>        <span class="quick-ref-items">size weight line font align italic underline uppercase lowercase truncate</span>
+<span class="quick-ref-category">VISUAL</span>      <span class="quick-ref-items">opacity shadow cursor pointer z</span>
+<span class="quick-ref-category">VISIBLE</span>     <span class="quick-ref-items">visible hidden</span>
+<span class="quick-ref-category">PRIMITIVES</span>  <span class="quick-ref-items">Image Input Textarea Link Button   → Keyword Name? "value" props</span>
+<span class="quick-ref-category">IMAGE</span>       <span class="quick-ref-items">Image "url" w h fit alt            → Image Avatar "pic.jpg" 48 48</span>
+<span class="quick-ref-category">INPUT</span>       <span class="quick-ref-items">Input "placeholder" type w         → Input EmailField "Email" w 200</span>
+<span class="quick-ref-category">TEXTAREA</span>    <span class="quick-ref-items">Textarea "placeholder" rows        → Textarea "Message" rows 5</span>
+<span class="quick-ref-category">LINK</span>        <span class="quick-ref-items">Link "href" target                 → Link "https://..." target _blank</span>
+<span class="quick-ref-category">ICON</span>        <span class="quick-ref-items">icon</span>
+<span class="quick-ref-category">HOVER</span>       <span class="quick-ref-items">hover-col hover-boc hover-bor hover-rad hover-opacity hover-scale</span>
+<span class="quick-ref-category">MODIFIER</span>    <span class="quick-ref-items">-primary -secondary -outlined -ghost -disabled -rounded</span>
+
+<span class="quick-ref-category">TOKENS</span>      <span class="quick-ref-items">$name: value          → $primary: #3B82F6</span>
+<span class="quick-ref-category">REFERENCE</span>   <span class="quick-ref-items">Component.prop        → Card.rad</span>
+<span class="quick-ref-category">DEFINE</span>      <span class="quick-ref-items">Name: props           → Button: pad 12 col #3B82F6</span>
+<span class="quick-ref-category">INHERIT</span>     <span class="quick-ref-items">Name from Parent: props → DangerBtn from Button: col #EF4444</span>
+<span class="quick-ref-category">INSTANCE</span>    <span class="quick-ref-items">Type Name: props      → Input Email: placeholder "Email"</span>
+<span class="quick-ref-category">COMP.PROP</span>   <span class="quick-ref-items">Name.property         → Email.value, Submit.disabled</span>
+
+<span class="quick-ref-category">STATE</span>       <span class="quick-ref-items">state name            → state active</span>
+<span class="quick-ref-category">EVENTS</span>      <span class="quick-ref-items">onclick onhover onchange oninput onfocus onblur onkeydown onkeyup onload</span>
+<span class="quick-ref-category">EVENTSBLK</span>   <span class="quick-ref-items">events                → events-Block für zentrale Event-Handler</span>
+<span class="quick-ref-category">ACTIONS</span>     <span class="quick-ref-items">toggle | open X [pos] [anim] [ms] | close [X] [anim] [ms] | show X | hide X | page X</span>
+<span class="quick-ref-category">ANIMATIONS</span>  <span class="quick-ref-items">slide-up | slide-down | slide-left | slide-right | fade | scale | none</span>
+<span class="quick-ref-category">POSITIONS</span>   <span class="quick-ref-items">below | above | left | right | center</span>
+<span class="quick-ref-category">ASSIGN</span>      <span class="quick-ref-items">assign $var to expr   → assign $count to $count + 1</span>
+<span class="quick-ref-category">SETPROP</span>     <span class="quick-ref-items">Name.prop = value     → Submit.disabled = true (im events Block)</span>
+<span class="quick-ref-category">$EVENT</span>      <span class="quick-ref-items">$event.value          → $event.target.value</span>
+            <span class="quick-ref-items">$event.checked        → $event.target.checked</span>
+
+<span class="quick-ref-category">CONDITION</span>   <span class="quick-ref-items">if $cond              → if $isLoggedIn</span>
+<span class="quick-ref-category">ELSE</span>        <span class="quick-ref-items">else                  → else</span>
+<span class="quick-ref-category">CONDPROP</span>    <span class="quick-ref-items">if $x then p v else   → if $active then col #3B82F6 else col #333</span>
+<span class="quick-ref-category">ITERATOR</span>    <span class="quick-ref-items">each $x in $list      → each $task in $tasks</span>
+
+<span class="quick-ref-category">OPERATORS</span>   <span class="quick-ref-items">== != > < >= <=       (comparison)</span>
+            <span class="quick-ref-items">and or not            (logical)</span>
+            <span class="quick-ref-items">+ - * /               (arithmetic)</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Mirror Referenz
+    </footer>
+  </div>
+</body>
+</html>
