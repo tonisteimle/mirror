@@ -1599,10 +1599,13 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
         So far we've built static UIs. Now let's add behavior – events, actions, and state changes.
       </p>
 
+      <p>
+        Traditional UI frameworks separate event handling into JavaScript callbacks, Redux actions, or hook functions. Mirror takes a different approach: <strong>behavior belongs where you see it</strong>. Events and actions are written directly on the component, making the connection between UI and behavior immediately visible.
+      </p>
+
       <h3 id="events">Events</h3>
       <p>
         Events are written directly on the component. An event triggers an action.
-      </p>
 
       <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span></pre>
 
@@ -1671,6 +1674,10 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
         </div>
       </div>
 
+      <p class="why">
+        <strong>Why built-in actions?</strong> Instead of writing custom JavaScript handlers, Mirror provides semantic actions that describe <em>intent</em>. <code>toggle</code> means "switch states", <code>open</code> means "show an overlay". This keeps code readable and allows Mirror to handle the implementation details – state management, transitions, accessibility.
+      </p>
+
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add <code class="inline-code">onclick toggle</code> to make the button change between states when clicked.</p>
@@ -1691,10 +1698,13 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
         Components can have multiple visual states. Each state defines different styling that applies when the state is active.
       </p>
 
+      <p>
+        Events trigger actions, but where does the visual change happen? In Mirror, components can define <strong>states</strong> – named configurations of properties. When a state becomes active, its properties override the defaults. This separates "what triggers a change" (events) from "what the change looks like" (states).
+      </p>
+
       <h3 id="defining-states">Defining States</h3>
       <p>
         Use the <code class="inline-code">state</code> keyword to define named states with their styling:
-      </p>
 
       <div class="example">
         <div class="example-row">
@@ -1726,7 +1736,11 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
 
       <h3 id="system-states">System States</h3>
       <p>
-        Some states are automatic – they're bound to browser pseudo-classes and don't need explicit event handlers:
+        Some states are automatic – they're bound to browser pseudo-classes and don't need explicit event handlers. Mirror recognizes certain state names and automatically connects them to CSS pseudo-classes like <code>:hover</code>, <code>:focus</code>, and <code>:active</code>.
+      </p>
+
+      <p class="why">
+        <strong>Why system states?</strong> Instead of writing <code>onmouseenter</code>/<code>onmouseleave</code> handlers to toggle hover styling, just define <code>state hover</code> and Mirror generates the appropriate CSS. This is both cleaner and more performant than JavaScript-based hover effects.
       </p>
 
       <div class="rule-box">
@@ -1785,10 +1799,13 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
         Give components a name to reference them later. Read and write their properties. Build interactive forms.
       </p>
 
+      <p>
+        We've learned how events trigger actions. But how do we know <em>what</em> the user entered in a form? How do we change a button's text dynamically? Named instances solve this: give a component a name, and you can access its properties from anywhere.
+      </p>
+
       <h3 id="naming-components">Naming Components</h3>
       <p>
         Add a name after the component type to create a named instance:
-      </p>
 
       <pre><span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Enter email"</span>
 <span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Enter password"</span> <span class="property">type</span> <span class="value">password</span>
@@ -1855,6 +1872,21 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
       <div class="highlight-box">
         <p><strong>Components ARE the state.</strong> No separate state management needed. <code class="inline-code">Email.value</code> is the email – simple as that.</p>
       </div>
+
+      <p class="why">
+        <strong>Why this approach?</strong> Traditional frameworks require separate state variables (<code>useState</code>) that mirror UI values. In Mirror, the component <em>is</em> the source of truth. This eliminates the "state/UI sync problem" that plagues many applications.
+      </p>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Create a form where clicking Submit shows an alert with the Email value (use <code class="inline-code">if Email.value</code> to check if it's filled).</p>
+        <div class="mirror-editor" data-code="Input Email: placeholder &quot;Enter email&quot;
+Button Submit: col #2271c1 pad 12 rad 8 &quot;Submit&quot;
+
+Form col #1a1a23 pad 24 rad 12 gap 16 w 300
+  Email
+  Submit" data-preview-height="180"></div>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -1866,10 +1898,13 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
         Dialogs, popovers, tooltips – UI elements that appear above the main content. Mirror provides built-in overlay components with automatic positioning and closing behavior.
       </p>
 
+      <p>
+        Many interactions require showing content "on top" of the current UI – confirmation dialogs, dropdown menus, help tooltips. Instead of implementing z-index management, click-outside-to-close, and positioning logic yourself, Mirror provides overlay primitives that handle these behaviors automatically.
+      </p>
+
       <h3 id="dialog">Dialog</h3>
       <p>
         A modal dialog that blocks interaction with the rest of the page. Define a trigger button and the dialog content:
-      </p>
 
       <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">SettingsDialog</span> <span class="string">"Open Settings"</span>
 
@@ -1977,6 +2012,10 @@ Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
         Elements can animate when appearing, disappearing, or continuously. Define entrance, exit, and looping animations.
       </p>
 
+      <p>
+        Static UI feels lifeless. Animations communicate state changes, guide attention, and make interfaces feel responsive. But animation code is often verbose and scattered. Mirror centralizes animation definitions on the component itself – declare once, animate automatically whenever visibility changes.
+      </p>
+
       <h3 id="show-hide-animations">Show & Hide Animations</h3>
       <p>
         Use <code class="inline-code">show</code> and <code class="inline-code">hide</code> blocks to define how an element animates in and out:
@@ -2059,10 +2098,13 @@ Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
         Show or hide components based on conditions. Change properties dynamically. React to data.
       </p>
 
+      <p>
+        Real interfaces adapt to context. A navigation changes when logged in. A button disables when a form is invalid. An error message appears only when needed. Mirror's conditional logic lets you express these rules declaratively – state your conditions, and the UI updates automatically.
+      </p>
+
       <h3 id="if-else">Conditional Rendering</h3>
       <p>
         Use <code class="inline-code">if</code> and <code class="inline-code">else</code> to show different content based on a condition:
-      </p>
 
       <pre><span class="keyword">if</span> <span class="token">$isLoggedIn</span>
   <span class="component">Avatar</span> <span class="property">src</span> <span class="token">$user.avatar</span>
@@ -2077,6 +2119,10 @@ Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
       <h3 id="conditional-properties">Conditional Properties</h3>
       <p>
         Change a single property based on a condition using inline <code class="inline-code">if then else</code>:
+      </p>
+
+      <p class="why">
+        <strong>Block vs inline:</strong> Use <code>if</code>/<code>else</code> blocks when you want to show <em>different components</em>. Use inline <code>if then else</code> when the component stays the same but a <em>property changes</em>.
       </p>
 
       <pre><span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#333</span> <span class="string">"Status"</span>
@@ -2144,10 +2190,13 @@ Button pad 12 rad 8 onclick assign $isActive to not $isActive
         Render components for each item in a list. Access properties with dot notation. Bind data to the UI.
       </p>
 
+      <p>
+        So far we've worked with static content. But real apps display dynamic data – lists of users, products, messages. Instead of manually repeating components, Mirror's <code>each</code> iterator generates UI from data arrays. Change the data, and the UI updates automatically.
+      </p>
+
       <h3 id="each-iterator">The Each Iterator</h3>
       <p>
         Use <code class="inline-code">each</code> to create a component for every item in a list:
-      </p>
 
       <pre><span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
   <span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
@@ -2260,10 +2309,13 @@ Counter hor gap 12 ver-cen
         For complex interactions, separate structure from behavior. Define all event handlers in one place.
       </p>
 
+      <p>
+        Inline events work well for simple interactions. But as forms grow complex – with validation, error handling, and multi-step flows – scattering <code>onclick</code> handlers throughout your code becomes hard to maintain. The <code>events</code> block gathers all behavior in one place, creating a clear separation between <em>what the UI looks like</em> and <em>how it behaves</em>.
+      </p>
+
       <h3 id="events-block-syntax">The Events Block</h3>
       <p>
         Use the <code class="inline-code">events</code> keyword to create a dedicated block for event handlers:
-      </p>
 
       <pre><span class="comment">// === COMPONENTS ===</span>
 <span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span>
@@ -2310,6 +2362,22 @@ Counter hor gap 12 ver-cen
         Structure and behavior separated. All interactions in one place.
         Reads like prose: "When Submit is clicked..."
       </p>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Move the <code class="inline-code">onclick</code> handler to a centralized events block.</p>
+        <div class="mirror-editor" data-code="Input Search: placeholder &quot;Search...&quot;
+Text Result: col #888 &quot;Type to search&quot;
+
+Form col #1a1a23 pad 24 rad 12 gap 16 w 300
+  Search
+  Result
+
+// Add events block here:
+// events
+//   Search oninput
+//     Result.text = Search.value" data-preview-height="180"></div>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -2321,10 +2389,13 @@ Counter hor gap 12 ver-cen
         Components can define named positions for children. On usage, these slots are filled with content.
       </p>
 
+      <p>
+        Good components are flexible. A <code>Card</code> should accept any header, any body, any actions. Slots let you define <em>where</em> content goes without prescribing <em>what</em> that content is. This creates truly reusable components that adapt to any use case.
+      </p>
+
       <h3 id="defining-slots">Defining Slots</h3>
       <p>
         Child components with a colon become named slots:
-      </p>
 
       <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">12</span>
   <span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span>
@@ -2386,6 +2457,21 @@ Counter hor gap 12 ver-cen
         Without <code class="inline-code">-</code> you modify an existing element.
         With <code class="inline-code">-</code> you create a new instance.
       </p>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Create a <code class="inline-code">Panel</code> component with slots for <code class="inline-code">Header</code>, <code class="inline-code">Body</code>, and <code class="inline-code">Footer</code>. Then use it with custom content.</p>
+        <div class="mirror-editor" data-code="Panel: col #1a1a23 pad 16 rad 8 gap 12
+  Header: weight 600
+  Body: col #888
+  Footer: hor hor-r
+
+Panel
+  Header &quot;My Panel&quot;
+  Body &quot;Some content here...&quot;
+  Footer
+    Button col #2271c1 pad 8 16 rad 6 &quot;OK&quot;" data-preview-height="180"></div>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -2402,28 +2488,22 @@ Counter hor gap 12 ver-cen
         We want to build a dashboard screen with a header, some metrics tiles, and a footer. Instead of detailing every component upfront, we start with just the structure. The first usage of each component implicitly defines it.
       </p>
 
-      <div class="mirror-editor" data-code="Dashboard
-    Header
-    Content
-        Tile
-            Value &quot;2.7 Mio&quot;
-            Label &quot;Revenue&quot;
-        Tile
-            Value &quot;16&quot;
-            Label &quot;Employees&quot;
-        Tile
-            Value &quot;40&quot;
-            Label &quot;Customers&quot;
-        Tile
-            Value &quot;89%&quot;
-            Label &quot;Satisfaction&quot;
-        Tile
-            Value &quot;12&quot;
-            Label &quot;Projects&quot;
-        Tile
-            Value &quot;3&quot;
-            Label &quot;Locations&quot;
-    Footer" data-preview-height="280"></div>
+      <pre><span class="component">Dashboard</span>
+    <span class="component">Header</span>
+    <span class="component">Content</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"2.7 Mio"</span>
+            <span class="component">Label</span> <span class="string">"Revenue"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"16"</span>
+            <span class="component">Label</span> <span class="string">"Employees"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"40"</span>
+            <span class="component">Label</span> <span class="string">"Customers"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"89%"</span>
+            <span class="component">Label</span> <span class="string">"Satisfaction"</span>
+    <span class="component">Footer</span></pre>
 
       <p>
         We now have a complete component hierarchy. The first Tile defines the structure (Value + Label), and all subsequent Tiles inherit it automatically. No styling yet – just pure structure.
@@ -2434,34 +2514,34 @@ Counter hor gap 12 ver-cen
         Now we flesh out the details: Header gets a logo and navigation, Footer gets a copyright text, and we add layout properties to arrange elements horizontally.
       </p>
 
-      <div class="mirror-editor" data-code="Dashboard
-    Header hor fill
-        Logo &quot;Acme Inc&quot;
-        Nav hor gap 16
-            Link &quot;Dashboard&quot;
-            Link &quot;Projects&quot;
-            Link &quot;Team&quot;
-    Content hor wrap gap 16
-        Tile
-            Value &quot;2.7 Mio&quot;
-            Label &quot;Revenue&quot;
-        Tile
-            Value &quot;16&quot;
-            Label &quot;Employees&quot;
-        Tile
-            Value &quot;40&quot;
-            Label &quot;Customers&quot;
-        Tile
-            Value &quot;89%&quot;
-            Label &quot;Satisfaction&quot;
-        Tile
-            Value &quot;12&quot;
-            Label &quot;Projects&quot;
-        Tile
-            Value &quot;3&quot;
-            Label &quot;Locations&quot;
-    Footer
-        Text &quot;© 2025 Acme Inc&quot;" data-preview-height="320"></div>
+      <pre><span class="component">Dashboard</span>
+    <span class="component">Header</span> <span class="property">hor</span> <span class="property">fill</span>
+        <span class="component">Logo</span> <span class="string">"Acme Inc"</span>
+        <span class="component">Nav</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">16</span>
+            <span class="component">Link</span> <span class="string">"Dashboard"</span>
+            <span class="component">Link</span> <span class="string">"Projects"</span>
+            <span class="component">Link</span> <span class="string">"Team"</span>
+    <span class="component">Content</span> <span class="property">hor</span> <span class="property">wrap</span> <span class="property">gap</span> <span class="value">16</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"2.7 Mio"</span>
+            <span class="component">Label</span> <span class="string">"Revenue"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"16"</span>
+            <span class="component">Label</span> <span class="string">"Employees"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"40"</span>
+            <span class="component">Label</span> <span class="string">"Customers"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"89%"</span>
+            <span class="component">Label</span> <span class="string">"Satisfaction"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"12"</span>
+            <span class="component">Label</span> <span class="string">"Projects"</span>
+        <span class="component">Tile</span>
+            <span class="component">Value</span> <span class="string">"3"</span>
+            <span class="component">Label</span> <span class="string">"Locations"</span>
+    <span class="component">Footer</span>
+        <span class="component">Text</span> <span class="string">"© 2025 Acme Inc"</span></pre>
 
       <p>
         The Header now has a logo and navigation. Content arranges tiles horizontally with wrapping. Footer shows copyright text. Layout properties like <code class="inline-code">hor</code>, <code class="inline-code">fill</code>, and <code class="inline-code">gap</code> control arrangement.
