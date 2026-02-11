@@ -1589,6 +1589,807 @@ ContactForm col #1a1a23 pad 24 rad 12 gap 16 w 320
 
     <div class="divider"></div>
 
+    <!-- ============================================ -->
+    <!-- INTERAKTIVITÄT -->
+    <!-- ============================================ -->
+
+    <section class="concept" id="interaktivitaet">
+      <h2>Interactivity</h2>
+      <p class="lead">
+        So far we've built static UIs. Now let's add behavior – events, actions, and state changes.
+      </p>
+
+      <h3 id="events">Events</h3>
+      <p>
+        Events are written directly on the component. An event triggers an action.
+      </p>
+
+      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span></pre>
+
+      <p>
+        <code class="inline-code">onclick</code> is the event. <code class="inline-code">toggle</code> is the action.
+        The pattern is always: <code class="inline-code">Component event action</code>.
+      </p>
+
+      <div class="rule-box">
+        <h4>Available Events</h4>
+        <ul>
+          <li><code class="inline-code">onclick</code> – when clicked</li>
+          <li><code class="inline-code">onchange</code> – when value changes (inputs, selects)</li>
+          <li><code class="inline-code">oninput</code> – while typing (real-time)</li>
+          <li><code class="inline-code">onfocus</code> – when element gains focus</li>
+          <li><code class="inline-code">onblur</code> – when element loses focus</li>
+          <li><code class="inline-code">onkeydown</code> / <code class="inline-code">onkeyup</code> – keyboard events</li>
+          <li><code class="inline-code">onload</code> – when component loads</li>
+        </ul>
+      </div>
+
+      <h3 id="actions">Actions</h3>
+      <p>
+        Actions define what happens when an event fires. Mirror provides several built-in actions for common patterns.
+      </p>
+
+      <div class="rule-box">
+        <h4>Built-in Actions</h4>
+        <ul>
+          <li><code class="inline-code">toggle</code> – switch between states</li>
+          <li><code class="inline-code">toggle ComponentName</code> – toggle another component's visibility</li>
+          <li><code class="inline-code">open DialogName</code> – open an overlay/dialog</li>
+          <li><code class="inline-code">close</code> – close current overlay</li>
+          <li><code class="inline-code">show ComponentName</code> – make component visible</li>
+          <li><code class="inline-code">hide ComponentName</code> – hide component</li>
+          <li><code class="inline-code">page PageName</code> – navigate to page</li>
+          <li><code class="inline-code">assign $var to value</code> – set a variable</li>
+        </ul>
+      </div>
+
+      <div class="example">
+        <div class="example-row">
+          <div class="example-code">
+            <div class="label">Examples</div>
+            <pre><span class="comment">// Toggle own state</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span>
+
+<span class="comment">// Open a dialog</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Settings</span> <span class="string">"Settings"</span>
+
+<span class="comment">// Navigate to page</span>
+<span class="component">Link</span> <span class="keyword">onclick</span> <span class="keyword">page</span> <span class="component">Dashboard</span> <span class="string">"Go to Dashboard"</span>
+
+<span class="comment">// Increment counter</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="token">$count</span> + <span class="value">1</span> <span class="string">"+"</span></pre>
+          </div>
+          <div class="example-result">
+            <div class="label">Result</div>
+            <div class="preview preview-dark preview-col">
+              <div class="p-button" style="background:#27272A;">Dark Mode</div>
+              <div class="p-button" style="background:#27272A;">Settings</div>
+              <div class="p-button" style="background:#27272A;">Go to Dashboard</div>
+              <div class="p-button" style="background:#2271c1;">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Add <code class="inline-code">onclick toggle</code> to make the button change between states when clicked.</p>
+        <div class="mirror-editor" data-code="Button col #2271c1 pad 12 rad 8 &quot;Click me&quot;
+  state default
+    col #2271c1
+  state active
+    col #10B981" data-preview-height="80"></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- STATES -->
+    <section class="concept" id="states">
+      <h2>States</h2>
+      <p class="lead">
+        Components can have multiple visual states. Each state defines different styling that applies when the state is active.
+      </p>
+
+      <h3 id="defining-states">Defining States</h3>
+      <p>
+        Use the <code class="inline-code">state</code> keyword to define named states with their styling:
+      </p>
+
+      <div class="example">
+        <div class="example-row">
+          <div class="example-code">
+            <div class="label">Mirror</div>
+            <pre><span class="component">Tab:</span> <span class="property">pad</span> <span class="value">12 16</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="keyword">state</span> <span class="value">inactive</span>
+    <span class="property">col</span> <span class="value">transparent</span>
+  <span class="keyword">state</span> <span class="value">active</span>
+    <span class="property">col</span> <span class="value">#2271c1</span></pre>
+          </div>
+          <div class="example-result">
+            <div class="label">Result (both states)</div>
+            <div class="preview preview-dark">
+              <div class="p-stack-h p-gap-8">
+                <div style="padding:12px 16px; border-radius:8px; background:transparent; color:#888; font-size:14px; border: 1px solid #333;">Inactive</div>
+                <div style="padding:12px 16px; border-radius:8px; background:#2271c1; color:white; font-size:14px;">Active</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Use <code class="inline-code">onclick toggle</code> to switch between states:
+      </p>
+
+      <pre><span class="component">Tab</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Settings"</span></pre>
+
+      <h3 id="system-states">System States</h3>
+      <p>
+        Some states are automatic – they're bound to browser pseudo-classes and don't need explicit event handlers:
+      </p>
+
+      <div class="rule-box">
+        <h4>Automatic States</h4>
+        <ul>
+          <li><code class="inline-code">hover</code> – when mouse hovers over element</li>
+          <li><code class="inline-code">focus</code> – when element has keyboard focus</li>
+          <li><code class="inline-code">active</code> – when being clicked/pressed</li>
+          <li><code class="inline-code">disabled</code> – when element is disabled</li>
+        </ul>
+      </div>
+
+      <pre><span class="component">Button:</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="keyword">state</span> <span class="value">hover</span>
+    <span class="property">col</span> <span class="value">#1a5ba8</span>    <span class="comment">// darker blue on hover</span>
+  <span class="keyword">state</span> <span class="value">active</span>
+    <span class="property">col</span> <span class="value">#144d8c</span>    <span class="comment">// even darker when pressed</span>
+  <span class="keyword">state</span> <span class="value">disabled</span>
+    <span class="property">col</span> <span class="value">#333</span>
+    <span class="property">opacity</span> <span class="value">0.5</span></pre>
+
+      <h3 id="hover-shorthand">Hover Shorthand</h3>
+      <p>
+        For simple hover effects, you can use hover properties directly without defining a state:
+      </p>
+
+      <pre><span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">hover-col</span> <span class="value">#252530</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="string">"Hover over me"</span></pre>
+
+      <div class="rule-box">
+        <h4>Hover Properties</h4>
+        <ul>
+          <li><code class="inline-code">hover-col</code> – background color on hover</li>
+          <li><code class="inline-code">hover-boc</code> – border color on hover</li>
+          <li><code class="inline-code">hover-bor</code> – border width on hover</li>
+          <li><code class="inline-code">hover-rad</code> – border radius on hover</li>
+          <li><code class="inline-code">hover-opacity</code> – opacity on hover</li>
+          <li><code class="inline-code">hover-scale</code> – scale transform on hover</li>
+        </ul>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Add a <code class="inline-code">hover-col</code> property to change the card's background on hover.</p>
+        <div class="mirror-editor" data-code="Card col #1A1A23 pad 16 rad 8
+  Text &quot;Hover over me&quot;" data-preview-height="100"></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- NAMED INSTANCES & COMPONENT PROPERTIES -->
+    <section class="concept" id="instances">
+      <h2>Named Instances</h2>
+      <p class="lead">
+        Give components a name to reference them later. Read and write their properties. Build interactive forms.
+      </p>
+
+      <h3 id="naming-components">Naming Components</h3>
+      <p>
+        Add a name after the component type to create a named instance:
+      </p>
+
+      <pre><span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Enter email"</span>
+<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Enter password"</span> <span class="property">type</span> <span class="value">password</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Login"</span></pre>
+
+      <p>
+        Now you can reference these components: <code class="inline-code">Email.value</code>, <code class="inline-code">Password.value</code>, <code class="inline-code">Submit.disabled</code>.
+      </p>
+
+      <h3 id="component-properties">Component Properties</h3>
+      <p>
+        Every component has intrinsic properties you can read and write:
+      </p>
+
+      <div class="grid">
+        <div>
+          <div class="label">Reading</div>
+          <pre><span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
+<span class="keyword">if</span> <span class="component">Checkbox</span>.<span class="property">checked</span>
+<span class="keyword">if</span> <span class="component">Panel</span>.<span class="property">visible</span></pre>
+        </div>
+        <div>
+          <div class="label">Writing</div>
+          <pre><span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
+<span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span>
+<span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Invalid"</span></pre>
+        </div>
+      </div>
+
+      <div class="rule-box">
+        <h4>Common Properties</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>All components</strong></td>
+            <td><code>.visible</code>, <code>.disabled</code>, <code>.opacity</code>, <code>.col</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>Input / Textarea</strong></td>
+            <td><code>.value</code>, <code>.placeholder</code>, <code>.focus</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>Button</strong></td>
+            <td><code>.label</code>, <code>.loading</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>Checkbox / Switch</strong></td>
+            <td><code>.checked</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>Dialog / Overlay</strong></td>
+            <td><code>.open</code>, <code>.close</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><strong>Text / Label</strong></td>
+            <td><code>.text</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;"><strong>Image</strong></td>
+            <td><code>.src</code>, <code>.alt</code></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <p><strong>Components ARE the state.</strong> No separate state management needed. <code class="inline-code">Email.value</code> is the email – simple as that.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- OVERLAYS -->
+    <section class="concept" id="overlays">
+      <h2>Overlays</h2>
+      <p class="lead">
+        Dialogs, popovers, tooltips – UI elements that appear above the main content. Mirror provides built-in overlay components with automatic positioning and closing behavior.
+      </p>
+
+      <h3 id="dialog">Dialog</h3>
+      <p>
+        A modal dialog that blocks interaction with the rest of the page. Define a trigger button and the dialog content:
+      </p>
+
+      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">SettingsDialog</span> <span class="string">"Open Settings"</span>
+
+<span class="component">Dialog</span> <span class="component">SettingsDialog</span>: <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">w</span> <span class="value">400</span>
+  <span class="component">Title</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"Settings"</span>
+  <span class="component">Text</span> <span class="property">col</span> <span class="value">#888</span> <span class="string">"Configure your preferences here."</span>
+  <span class="component">Actions</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span>
+    <span class="component">Button</span> <span class="property">col</span> <span class="value">#333</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Cancel"</span>
+    <span class="component">Button</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Save"</span></pre>
+
+      <p>
+        <code class="inline-code">open SettingsDialog</code> shows the dialog. <code class="inline-code">close</code> hides it.
+        Dialogs automatically close when clicking outside or pressing Escape.
+      </p>
+
+      <h3 id="overlay-positioning">Positioning</h3>
+      <p>
+        Overlays can be positioned relative to their trigger element:
+      </p>
+
+      <pre><span class="comment">// Position below the trigger</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Menu</span> <span class="keyword">below</span> <span class="string">"Options"</span>
+
+<span class="comment">// Position above</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Tooltip</span> <span class="keyword">above</span> <span class="string">"Help"</span>
+
+<span class="comment">// Center in viewport (default for dialogs)</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Modal</span> <span class="keyword">center</span> <span class="string">"Open Modal"</span></pre>
+
+      <div class="rule-box">
+        <h4>Position Keywords</h4>
+        <ul>
+          <li><code class="inline-code">below</code> – below the trigger (dropdowns)</li>
+          <li><code class="inline-code">above</code> – above the trigger (tooltips)</li>
+          <li><code class="inline-code">left</code> – to the left of trigger</li>
+          <li><code class="inline-code">right</code> – to the right of trigger</li>
+          <li><code class="inline-code">center</code> – centered in viewport (modals)</li>
+        </ul>
+      </div>
+
+      <h3 id="dropdown">Dropdown</h3>
+      <p>
+        A menu that opens below its trigger:
+      </p>
+
+      <pre><span class="component">Dropdown</span>
+  <span class="component">Trigger</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+    <span class="string">"Select option"</span>
+  <span class="component">Content</span>: <span class="property">ver</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span>
+    <span class="component">Item</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-col</span> <span class="value">#333</span>
+      <span class="string">"Profile"</span>
+    <span class="component">Item</span> <span class="string">"Settings"</span>
+    <span class="component">Item</span> <span class="string">"Logout"</span></pre>
+
+      <h3 id="tooltip">Tooltip</h3>
+      <p>
+        A small hint that appears on hover:
+      </p>
+
+      <pre><span class="component">Tooltip</span>
+  <span class="component">Trigger</span>
+    <span class="component">Button</span> <span class="property">icon</span> <span class="value">help</span> <span class="string">"?"</span>
+  <span class="component">Content</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">size</span> <span class="value">12</span>
+    <span class="string">"Click to get help"</span></pre>
+
+      <h3 id="overlay-animations">Animations</h3>
+      <p>
+        Overlays can have entrance and exit animations:
+      </p>
+
+      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Panel</span> <span class="keyword">fade</span> <span class="value">200</span> <span class="string">"Open"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Menu</span> <span class="keyword">slide-down</span> <span class="value">150</span> <span class="string">"Menu"</span></pre>
+
+      <div class="rule-box">
+        <h4>Animation Keywords</h4>
+        <ul>
+          <li><code class="inline-code">fade</code> – fade in/out</li>
+          <li><code class="inline-code">scale</code> – scale from center</li>
+          <li><code class="inline-code">slide-up</code> / <code class="inline-code">slide-down</code> – vertical slide</li>
+          <li><code class="inline-code">slide-left</code> / <code class="inline-code">slide-right</code> – horizontal slide</li>
+          <li><code class="inline-code">none</code> – no animation</li>
+        </ul>
+        <p style="margin-top: 8px;">Add a number for duration in milliseconds: <code class="inline-code">fade 200</code></p>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Create a button that opens a dialog. Add a close button inside the dialog.</p>
+        <div class="mirror-editor" data-code="Button col #2271c1 pad 12 rad 8 onclick open MyDialog &quot;Open Dialog&quot;
+
+Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
+  Title size 18 weight 600 &quot;Hello!&quot;
+  Text col #888 &quot;This is a dialog.&quot;
+  Button col #333 onclick close &quot;Close&quot;" data-preview-height="120"></div>
+      </div>
+    </section>
+
+
+    <div class="divider"></div>
+
+    <!-- ANIMATIONS -->
+    <section class="concept" id="animationen">
+      <h2>Animations</h2>
+      <p class="lead">
+        Elements can animate when appearing, disappearing, or continuously. Define entrance, exit, and looping animations.
+      </p>
+
+      <h3 id="show-hide-animations">Show & Hide Animations</h3>
+      <p>
+        Use <code class="inline-code">show</code> and <code class="inline-code">hide</code> blocks to define how an element animates in and out:
+      </p>
+
+      <pre><span class="component">Panel</span> <span class="property">hidden</span>
+  <span class="keyword">show</span> <span class="value">fade</span> <span class="value">slide-up</span> <span class="value">300</span>
+  <span class="keyword">hide</span> <span class="value">fade</span> <span class="value">200</span>
+  <span class="component">Content</span>
+    <span class="component">Text</span> <span class="string">"Animated content"</span></pre>
+
+      <p>
+        The panel starts hidden (<code class="inline-code">hidden</code>). When it becomes visible, it fades in and slides up (300ms).
+        When hiding, it fades out (200ms). Animations can be combined: <code class="inline-code">fade slide-up</code>.
+      </p>
+
+      <h3 id="animation-types">Animation Types</h3>
+      <div class="grid">
+        <div>
+          <div class="label">Entrance/Exit</div>
+          <pre><span class="value">fade</span>        <span class="comment">// opacity</span>
+<span class="value">scale</span>       <span class="comment">// grow/shrink</span>
+<span class="value">slide-up</span>    <span class="comment">// from bottom</span>
+<span class="value">slide-down</span>  <span class="comment">// from top</span>
+<span class="value">slide-left</span>  <span class="comment">// from right</span>
+<span class="value">slide-right</span> <span class="comment">// from left</span>
+<span class="value">none</span>        <span class="comment">// instant</span></pre>
+        </div>
+        <div>
+          <div class="label">Continuous</div>
+          <pre><span class="value">spin</span>   <span class="comment">// rotation (loaders)</span>
+<span class="value">pulse</span>  <span class="comment">// opacity pulse</span>
+<span class="value">bounce</span> <span class="comment">// vertical bounce</span></pre>
+        </div>
+      </div>
+
+      <h3 id="continuous-animations">Continuous Animations</h3>
+      <p>
+        Use the <code class="inline-code">animate</code> block for looping animations:
+      </p>
+
+      <pre><span class="component">Loader</span> <span class="property">w</span> <span class="value">24</span> <span class="property">h</span> <span class="value">24</span>
+  <span class="keyword">animate</span> <span class="value">spin</span> <span class="value">1000</span>
+  <span class="component">Icon</span> <span class="property">icon</span> <span class="value">loader</span></pre>
+
+      <p>
+        The icon rotates continuously, completing one full rotation every 1000ms.
+      </p>
+
+      <h3 id="animation-example">Complete Example</h3>
+      <p>
+        An expandable card with animations:
+      </p>
+
+      <pre><span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="component">Header</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="component">Details</span>
+    <span class="component">Title</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"Click to expand"</span>
+    <span class="component">Icon</span> <span class="property">icon</span> <span class="value">chevron-down</span>
+  <span class="component">Details</span> <span class="property">hidden</span>
+    <span class="keyword">show</span> <span class="value">fade</span> <span class="value">slide-down</span> <span class="value">200</span>
+    <span class="keyword">hide</span> <span class="value">fade</span> <span class="value">150</span>
+    <span class="component">Text</span> <span class="property">col</span> <span class="value">#888</span> <span class="property">pad</span> <span class="property">u</span> <span class="value">12</span> <span class="string">"Here are the details..."</span></pre>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Add a <code class="inline-code">show</code> animation to make the content fade in when revealed.</p>
+        <div class="mirror-editor" data-code="Card col #1A1A23 pad 16 rad 8 ver gap 12
+  Button col #333 onclick toggle Content &quot;Toggle Content&quot;
+  Content hidden
+    Text col #888 &quot;This content can be toggled&quot;" data-preview-height="140"></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- CONDITIONAL LOGIC -->
+    <section class="concept" id="conditionals">
+      <h2>Conditional Logic</h2>
+      <p class="lead">
+        Show or hide components based on conditions. Change properties dynamically. React to data.
+      </p>
+
+      <h3 id="if-else">Conditional Rendering</h3>
+      <p>
+        Use <code class="inline-code">if</code> and <code class="inline-code">else</code> to show different content based on a condition:
+      </p>
+
+      <pre><span class="keyword">if</span> <span class="token">$isLoggedIn</span>
+  <span class="component">Avatar</span> <span class="property">src</span> <span class="token">$user.avatar</span>
+  <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$isLoggedIn</span> <span class="keyword">to</span> <span class="value">false</span> <span class="string">"Logout"</span>
+<span class="keyword">else</span>
+  <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">page</span> <span class="component">Login</span> <span class="string">"Sign In"</span></pre>
+
+      <p>
+        The condition can be any expression: a variable, a comparison, or a logical combination.
+      </p>
+
+      <h3 id="conditional-properties">Conditional Properties</h3>
+      <p>
+        Change a single property based on a condition using inline <code class="inline-code">if then else</code>:
+      </p>
+
+      <pre><span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#333</span> <span class="string">"Status"</span>
+
+<span class="component">Badge</span> <span class="keyword">if</span> <span class="token">$count</span> > <span class="value">0</span> <span class="keyword">then</span> <span class="property">visible</span> <span class="keyword">else</span> <span class="property">hidden</span> <span class="token">$count</span>
+
+<span class="component">Text</span> <span class="keyword">if</span> <span class="token">$error</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#EF4444</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$message</span></pre>
+
+      <h3 id="operators">Operators</h3>
+      <p>
+        Mirror supports comparison, logical, and arithmetic operators:
+      </p>
+
+      <div class="grid">
+        <div>
+          <div class="label">Comparison</div>
+          <pre><span class="keyword">if</span> <span class="token">$count</span> == <span class="value">0</span>
+<span class="keyword">if</span> <span class="token">$count</span> != <span class="value">0</span>
+<span class="keyword">if</span> <span class="token">$count</span> > <span class="value">10</span>
+<span class="keyword">if</span> <span class="token">$count</span> >= <span class="value">10</span>
+<span class="keyword">if</span> <span class="token">$count</span> < <span class="value">5</span>
+<span class="keyword">if</span> <span class="token">$count</span> <= <span class="value">5</span></pre>
+        </div>
+        <div>
+          <div class="label">Logical</div>
+          <pre><span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">and</span> <span class="token">$b</span>
+<span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">or</span> <span class="token">$b</span>
+<span class="keyword">if</span> <span class="keyword">not</span> <span class="token">$isDisabled</span>
+<span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">and</span> <span class="keyword">not</span> <span class="token">$b</span>
+<span class="keyword">if</span> (<span class="token">$a</span> <span class="keyword">or</span> <span class="token">$b</span>) <span class="keyword">and</span> <span class="token">$c</span></pre>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="label">Arithmetic</div>
+          <pre><span class="token">$price</span> * <span class="token">$quantity</span>
+<span class="token">$total</span> - <span class="token">$discount</span>
+<span class="token">$count</span> + <span class="value">1</span>
+<span class="token">$value</span> / <span class="value">100</span></pre>
+        </div>
+        <div>
+          <div class="label">String Comparison</div>
+          <pre><span class="keyword">if</span> <span class="token">$status</span> == <span class="string">"active"</span>
+<span class="keyword">if</span> <span class="token">$role</span> != <span class="string">"admin"</span></pre>
+        </div>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Add a conditional property to change the button color based on <code class="inline-code">$isActive</code>.</p>
+        <div class="mirror-editor" data-code="$isActive: true
+
+Button pad 12 rad 8 onclick assign $isActive to not $isActive
+  if $isActive then &quot;Active&quot; else &quot;Inactive&quot;" data-preview-height="80"></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- LISTS & DATA -->
+    <section class="concept" id="lists">
+      <h2>Lists & Data</h2>
+      <p class="lead">
+        Render components for each item in a list. Access properties with dot notation. Bind data to the UI.
+      </p>
+
+      <h3 id="each-iterator">The Each Iterator</h3>
+      <p>
+        Use <code class="inline-code">each</code> to create a component for every item in a list:
+      </p>
+
+      <pre><span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+  <span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
+    <span class="component">Title</span> <span class="token">$task.title</span>
+    <span class="component">Status</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$task.status</span></pre>
+
+      <p>
+        The iterator variable (<code class="inline-code">$task</code>) is only available within the block. You can access nested properties with dot notation: <code class="inline-code">$task.title</code>, <code class="inline-code">$task.user.name</code>.
+      </p>
+
+      <div class="example">
+        <div class="example-row">
+          <div class="example-code">
+            <div class="label">Data + Template</div>
+            <pre><span class="token">$users</span>: [
+  { <span class="property">name</span>: <span class="string">"Alice"</span>, <span class="property">role</span>: <span class="string">"Admin"</span> },
+  { <span class="property">name</span>: <span class="string">"Bob"</span>, <span class="property">role</span>: <span class="string">"Editor"</span> },
+  { <span class="property">name</span>: <span class="string">"Carol"</span>, <span class="property">role</span>: <span class="string">"Viewer"</span> }
+]
+
+<span class="component">UserList</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="keyword">each</span> <span class="token">$user</span> <span class="keyword">in</span> <span class="token">$users</span>
+    <span class="component">Row</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">6</span>
+      <span class="component">Name</span> <span class="token">$user.name</span>
+      <span class="component">Role</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$user.role</span></pre>
+          </div>
+          <div class="example-result">
+            <div class="label">Result</div>
+            <div class="preview preview-dark preview-col" style="gap: 8px;">
+              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
+                <span>Alice</span><span style="color:#888;">Admin</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
+                <span>Bob</span><span style="color:#888;">Editor</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
+                <span>Carol</span><span style="color:#888;">Viewer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 id="nested-iteration">Nested Iteration</h3>
+      <p>
+        Iterators can be nested for hierarchical data:
+      </p>
+
+      <pre><span class="keyword">each</span> <span class="token">$category</span> <span class="keyword">in</span> <span class="token">$categories</span>
+  <span class="component">Section</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
+    <span class="component">Title</span> <span class="property">size</span> <span class="value">16</span> <span class="property">weight</span> <span class="value">600</span> <span class="token">$category.name</span>
+    <span class="keyword">each</span> <span class="token">$item</span> <span class="keyword">in</span> <span class="token">$category.items</span>
+      <span class="component">Item</span> <span class="property">pad</span> <span class="value">8</span> <span class="token">$item.name</span></pre>
+
+      <h3 id="data-binding">Data Binding</h3>
+      <p>
+        Variables are reactive. Display them directly, and the UI updates automatically when they change:
+      </p>
+
+      <pre><span class="comment">// Display variable</span>
+<span class="component">Counter</span> <span class="token">$count</span>
+<span class="component">Greeting</span> <span class="string">"Hello, "</span> <span class="token">$name</span>
+<span class="component">Price</span> <span class="token">$amount</span> <span class="string">" €"</span>
+
+<span class="comment">// Change with assign</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="token">$count</span> + <span class="value">1</span> <span class="string">"+"</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="value">0</span> <span class="string">"Reset"</span></pre>
+
+      <h3 id="event-data">The $event Object</h3>
+      <p>
+        In event handlers, <code class="inline-code">$event</code> contains information about what happened:
+      </p>
+
+      <pre><span class="comment">// Get input value</span>
+<span class="component">Input</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$name</span> <span class="keyword">to</span> <span class="token">$event.value</span>
+
+<span class="comment">// Get checkbox state</span>
+<span class="component">Checkbox</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$agreed</span> <span class="keyword">to</span> <span class="token">$event.checked</span>
+
+<span class="comment">// Real-time input binding</span>
+<span class="component">Input</span> <span class="keyword">oninput</span> <span class="keyword">assign</span> <span class="token">$search</span> <span class="keyword">to</span> <span class="token">$event.value</span></pre>
+
+      <div class="rule-box">
+        <h4>$event Properties</h4>
+        <ul>
+          <li><code class="inline-code">$event.value</code> – current value (inputs, textareas)</li>
+          <li><code class="inline-code">$event.checked</code> – checked state (checkboxes)</li>
+          <li><code class="inline-code">$event.target</code> – the element that triggered the event</li>
+        </ul>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Create a counter with + and - buttons that modify <code class="inline-code">$count</code>.</p>
+        <div class="mirror-editor" data-code="$count: 0
+
+Counter hor gap 12 ver-cen
+  Button col #333 pad 8 16 rad 6 onclick assign $count to $count - 1 &quot;-&quot;
+  Text size 24 weight 600 $count
+  Button col #2271c1 pad 8 16 rad 6 onclick assign $count to $count + 1 &quot;+&quot;" data-preview-height="80"></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- CENTRALIZED EVENTS -->
+    <section class="concept" id="events-block">
+      <h2>Centralized Events</h2>
+      <p class="lead">
+        For complex interactions, separate structure from behavior. Define all event handlers in one place.
+      </p>
+
+      <h3 id="events-block-syntax">The Events Block</h3>
+      <p>
+        Use the <code class="inline-code">events</code> keyword to create a dedicated block for event handlers:
+      </p>
+
+      <pre><span class="comment">// === COMPONENTS ===</span>
+<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span>
+<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span> <span class="property">type</span> <span class="value">password</span>
+<span class="component">Text</span> <span class="component">Error</span>: <span class="property">col</span> <span class="value">#EF4444</span> <span class="property">visible</span> <span class="value">false</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Login"</span>
+
+<span class="comment">// === LAYOUT ===</span>
+<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">12</span>
+  <span class="component">Input</span> <span class="component">Email</span>
+  <span class="component">Input</span> <span class="component">Password</span>
+  <span class="component">Text</span> <span class="component">Error</span>
+  <span class="component">Button</span> <span class="component">Submit</span>
+
+<span class="comment">// === BEHAVIOR ===</span>
+<span class="keyword">events</span>
+  <span class="component">Email</span> <span class="keyword">onchange</span>
+    <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">false</span>
+
+  <span class="component">Submit</span> <span class="keyword">onclick</span>
+    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span> <span class="keyword">and</span> <span class="component">Password</span>.<span class="property">value</span>
+      <span class="component">Submit</span>.<span class="property">label</span> = <span class="string">"Sending..."</span>
+      <span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
+      <span class="keyword">page</span> <span class="component">Dashboard</span>
+    <span class="keyword">else</span>
+      <span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Please fill in all fields"</span>
+      <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span></pre>
+
+      <h3 id="inline-vs-centralized">Inline vs. Centralized</h3>
+      <p>
+        Use inline events for simple actions, centralized events for complex logic:
+      </p>
+
+      <pre><span class="comment">// Inline – simple toggle</span>
+<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span>
+
+<span class="comment">// Centralized – validation, multiple actions</span>
+<span class="keyword">events</span>
+  <span class="component">Submit</span> <span class="keyword">onclick</span>
+    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
+      <span class="comment">// validate, call API, navigate...</span></pre>
+
+      <p class="why">
+        Structure and behavior separated. All interactions in one place.
+        Reads like prose: "When Submit is clicked..."
+      </p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SLOTS -->
+    <section class="concept" id="slots">
+      <h2>Slots – Named Children</h2>
+      <p class="lead">
+        Components can define named positions for children. On usage, these slots are filled with content.
+      </p>
+
+      <h3 id="defining-slots">Defining Slots</h3>
+      <p>
+        Child components with a colon become named slots:
+      </p>
+
+      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">12</span>
+  <span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">20</span> <span class="property">weight</span> <span class="value">600</span>
+  <span class="component">Body:</span> <span class="property">col</span> <span class="value">#9CA3AF</span>
+  <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span></pre>
+
+      <h3 id="filling-slots">Filling Slots</h3>
+      <p>
+        When using the component, reference slot names to fill them:
+      </p>
+
+      <pre><span class="component">Card</span>
+  <span class="component">Header</span>
+    <span class="component">Badge</span> <span class="property">col</span> <span class="value">#10B981</span> <span class="string">"New"</span>
+    <span class="component">Icon</span> <span class="property">icon</span> <span class="value">more-vertical</span>
+  <span class="component">Title</span> <span class="string">"Project Alpha"</span>
+  <span class="component">Body</span> <span class="string">"A new project with great potential."</span>
+  <span class="component">Actions</span>
+    <span class="component">Button</span> <span class="property">col</span> <span class="value">#333</span> <span class="string">"Cancel"</span>
+    <span class="component">Button</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Save"</span></pre>
+
+      <h3 id="flat-access">Flat Access</h3>
+      <p>
+        Access nested elements directly by name, no matter how deep they are:
+      </p>
+
+      <pre><span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span>
+  <span class="component">Left:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">16</span>
+    <span class="component">Logo:</span> <span class="property">w</span> <span class="value">100</span>
+    <span class="component">Nav:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="component">Right:</span>
+    <span class="component">Avatar:</span> <span class="property">w</span> <span class="value">36</span> <span class="property">rad</span> <span class="value">18</span>
+
+<span class="comment">// Usage – direct access to nested elements</span>
+<span class="component">Header</span>
+  <span class="component">Logo</span> <span class="property">col</span> <span class="value">#FF0000</span>       <span class="comment">// finds Logo in Left</span>
+  <span class="component">Avatar</span> <span class="property">col</span> <span class="value">#2271c1</span>     <span class="comment">// finds Avatar in Right</span></pre>
+
+      <p class="why">
+        You don't need to repeat the hierarchy. Names are flat, structure is preserved.
+        This makes components easy to use without knowing their internal structure.
+      </p>
+
+      <h3 id="list-items">Creating Multiple Items</h3>
+      <p>
+        Use <code class="inline-code">-</code> to create new instances instead of modifying existing ones:
+      </p>
+
+      <pre><span class="component">Menu:</span> <span class="property">ver</span> <span class="property">w</span> <span class="value">200</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8 12</span>
+
+<span class="component">Menu</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Profile"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Settings"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="property">col</span> <span class="value">#EF4444</span> <span class="string">"Logout"</span></pre>
+
+      <p>
+        Without <code class="inline-code">-</code> you modify an existing element.
+        With <code class="inline-code">-</code> you create a new instance.
+      </p>
+    </section>
+
+    <div class="divider"></div>
+
     <!-- TUTORIAL: DASHBOARD EXAMPLE -->
     <section class="concept" id="tutorial-dashboard">
       <h2>Tutorial: Building a Dashboard</h2>
@@ -1854,806 +2655,6 @@ Dashboard
         This progression – from quick sketch to production-ready design system – happens naturally. Start messy, refine as you go. Mirror supports both rapid prototyping and clean architecture.
       </p>
 
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- ============================================ -->
-    <!-- INTERAKTIVITÄT -->
-    <!-- ============================================ -->
-
-    <section class="concept" id="interaktivitaet">
-      <h2>Interactivity</h2>
-      <p class="lead">
-        So far we've built static UIs. Now let's add behavior – events, actions, and state changes.
-      </p>
-
-      <h3 id="events">Events</h3>
-      <p>
-        Events are written directly on the component. An event triggers an action.
-      </p>
-
-      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span></pre>
-
-      <p>
-        <code class="inline-code">onclick</code> is the event. <code class="inline-code">toggle</code> is the action.
-        The pattern is always: <code class="inline-code">Component event action</code>.
-      </p>
-
-      <div class="rule-box">
-        <h4>Available Events</h4>
-        <ul>
-          <li><code class="inline-code">onclick</code> – when clicked</li>
-          <li><code class="inline-code">onchange</code> – when value changes (inputs, selects)</li>
-          <li><code class="inline-code">oninput</code> – while typing (real-time)</li>
-          <li><code class="inline-code">onfocus</code> – when element gains focus</li>
-          <li><code class="inline-code">onblur</code> – when element loses focus</li>
-          <li><code class="inline-code">onkeydown</code> / <code class="inline-code">onkeyup</code> – keyboard events</li>
-          <li><code class="inline-code">onload</code> – when component loads</li>
-        </ul>
-      </div>
-
-      <h3 id="actions">Actions</h3>
-      <p>
-        Actions define what happens when an event fires. Mirror provides several built-in actions for common patterns.
-      </p>
-
-      <div class="rule-box">
-        <h4>Built-in Actions</h4>
-        <ul>
-          <li><code class="inline-code">toggle</code> – switch between states</li>
-          <li><code class="inline-code">toggle ComponentName</code> – toggle another component's visibility</li>
-          <li><code class="inline-code">open DialogName</code> – open an overlay/dialog</li>
-          <li><code class="inline-code">close</code> – close current overlay</li>
-          <li><code class="inline-code">show ComponentName</code> – make component visible</li>
-          <li><code class="inline-code">hide ComponentName</code> – hide component</li>
-          <li><code class="inline-code">page PageName</code> – navigate to page</li>
-          <li><code class="inline-code">assign $var to value</code> – set a variable</li>
-        </ul>
-      </div>
-
-      <div class="example">
-        <div class="example-row">
-          <div class="example-code">
-            <div class="label">Examples</div>
-            <pre><span class="comment">// Toggle own state</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span>
-
-<span class="comment">// Open a dialog</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Settings</span> <span class="string">"Settings"</span>
-
-<span class="comment">// Navigate to page</span>
-<span class="component">Link</span> <span class="keyword">onclick</span> <span class="keyword">page</span> <span class="component">Dashboard</span> <span class="string">"Go to Dashboard"</span>
-
-<span class="comment">// Increment counter</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="token">$count</span> + <span class="value">1</span> <span class="string">"+"</span></pre>
-          </div>
-          <div class="example-result">
-            <div class="label">Result</div>
-            <div class="preview preview-dark preview-col">
-              <div class="p-button" style="background:#27272A;">Dark Mode</div>
-              <div class="p-button" style="background:#27272A;">Settings</div>
-              <div class="p-button" style="background:#27272A;">Go to Dashboard</div>
-              <div class="p-button" style="background:#2271c1;">+</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Add <code class="inline-code">onclick toggle</code> to make the button change between states when clicked.</p>
-        <div class="mirror-editor" data-code="Button col #2271c1 pad 12 rad 8 &quot;Click me&quot;
-  state default
-    col #2271c1
-  state active
-    col #10B981" data-preview-height="80"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- STATES -->
-    <section class="concept" id="states">
-      <h2>States</h2>
-      <p class="lead">
-        Components can have multiple visual states. Each state defines different styling that applies when the state is active.
-      </p>
-
-      <h3 id="defining-states">Defining States</h3>
-      <p>
-        Use the <code class="inline-code">state</code> keyword to define named states with their styling:
-      </p>
-
-      <div class="example">
-        <div class="example-row">
-          <div class="example-code">
-            <div class="label">Mirror</div>
-            <pre><span class="component">Tab:</span> <span class="property">pad</span> <span class="value">12 16</span> <span class="property">rad</span> <span class="value">8</span>
-  <span class="keyword">state</span> <span class="value">inactive</span>
-    <span class="property">col</span> <span class="value">transparent</span>
-  <span class="keyword">state</span> <span class="value">active</span>
-    <span class="property">col</span> <span class="value">#2271c1</span></pre>
-          </div>
-          <div class="example-result">
-            <div class="label">Result (both states)</div>
-            <div class="preview preview-dark">
-              <div class="p-stack-h p-gap-8">
-                <div style="padding:12px 16px; border-radius:8px; background:transparent; color:#888; font-size:14px; border: 1px solid #333;">Inactive</div>
-                <div style="padding:12px 16px; border-radius:8px; background:#2271c1; color:white; font-size:14px;">Active</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <p>
-        Use <code class="inline-code">onclick toggle</code> to switch between states:
-      </p>
-
-      <pre><span class="component">Tab</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Settings"</span></pre>
-
-      <h3 id="system-states">System States</h3>
-      <p>
-        Some states are automatic – they're bound to browser pseudo-classes and don't need explicit event handlers:
-      </p>
-
-      <div class="rule-box">
-        <h4>Automatic States</h4>
-        <ul>
-          <li><code class="inline-code">hover</code> – when mouse hovers over element</li>
-          <li><code class="inline-code">focus</code> – when element has keyboard focus</li>
-          <li><code class="inline-code">active</code> – when being clicked/pressed</li>
-          <li><code class="inline-code">disabled</code> – when element is disabled</li>
-        </ul>
-      </div>
-
-      <pre><span class="component">Button:</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">8</span>
-  <span class="keyword">state</span> <span class="value">hover</span>
-    <span class="property">col</span> <span class="value">#1a5ba8</span>    <span class="comment">// darker blue on hover</span>
-  <span class="keyword">state</span> <span class="value">active</span>
-    <span class="property">col</span> <span class="value">#144d8c</span>    <span class="comment">// even darker when pressed</span>
-  <span class="keyword">state</span> <span class="value">disabled</span>
-    <span class="property">col</span> <span class="value">#333</span>
-    <span class="property">opacity</span> <span class="value">0.5</span></pre>
-
-      <h3 id="hover-shorthand">Hover Shorthand</h3>
-      <p>
-        For simple hover effects, you can use hover properties directly without defining a state:
-      </p>
-
-      <pre><span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">hover-col</span> <span class="value">#252530</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
-  <span class="string">"Hover over me"</span></pre>
-
-      <div class="rule-box">
-        <h4>Hover Properties</h4>
-        <ul>
-          <li><code class="inline-code">hover-col</code> – background color on hover</li>
-          <li><code class="inline-code">hover-boc</code> – border color on hover</li>
-          <li><code class="inline-code">hover-bor</code> – border width on hover</li>
-          <li><code class="inline-code">hover-rad</code> – border radius on hover</li>
-          <li><code class="inline-code">hover-opacity</code> – opacity on hover</li>
-          <li><code class="inline-code">hover-scale</code> – scale transform on hover</li>
-        </ul>
-      </div>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Add a <code class="inline-code">hover-col</code> property to change the card's background on hover.</p>
-        <div class="mirror-editor" data-code="Card col #1A1A23 pad 16 rad 8
-  Text &quot;Hover over me&quot;" data-preview-height="100"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- OVERLAYS -->
-    <section class="concept" id="overlays">
-      <h2>Overlays</h2>
-      <p class="lead">
-        Dialogs, popovers, tooltips – UI elements that appear above the main content. Mirror provides built-in overlay components with automatic positioning and closing behavior.
-      </p>
-
-      <h3 id="dialog">Dialog</h3>
-      <p>
-        A modal dialog that blocks interaction with the rest of the page. Define a trigger button and the dialog content:
-      </p>
-
-      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">SettingsDialog</span> <span class="string">"Open Settings"</span>
-
-<span class="component">Dialog</span> <span class="component">SettingsDialog</span>: <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">w</span> <span class="value">400</span>
-  <span class="component">Title</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"Settings"</span>
-  <span class="component">Text</span> <span class="property">col</span> <span class="value">#888</span> <span class="string">"Configure your preferences here."</span>
-  <span class="component">Actions</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span>
-    <span class="component">Button</span> <span class="property">col</span> <span class="value">#333</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Cancel"</span>
-    <span class="component">Button</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="string">"Save"</span></pre>
-
-      <p>
-        <code class="inline-code">open SettingsDialog</code> shows the dialog. <code class="inline-code">close</code> hides it.
-        Dialogs automatically close when clicking outside or pressing Escape.
-      </p>
-
-      <h3 id="overlay-positioning">Positioning</h3>
-      <p>
-        Overlays can be positioned relative to their trigger element:
-      </p>
-
-      <pre><span class="comment">// Position below the trigger</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Menu</span> <span class="keyword">below</span> <span class="string">"Options"</span>
-
-<span class="comment">// Position above</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Tooltip</span> <span class="keyword">above</span> <span class="string">"Help"</span>
-
-<span class="comment">// Center in viewport (default for dialogs)</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Modal</span> <span class="keyword">center</span> <span class="string">"Open Modal"</span></pre>
-
-      <div class="rule-box">
-        <h4>Position Keywords</h4>
-        <ul>
-          <li><code class="inline-code">below</code> – below the trigger (dropdowns)</li>
-          <li><code class="inline-code">above</code> – above the trigger (tooltips)</li>
-          <li><code class="inline-code">left</code> – to the left of trigger</li>
-          <li><code class="inline-code">right</code> – to the right of trigger</li>
-          <li><code class="inline-code">center</code> – centered in viewport (modals)</li>
-        </ul>
-      </div>
-
-      <h3 id="dropdown">Dropdown</h3>
-      <p>
-        A menu that opens below its trigger:
-      </p>
-
-      <pre><span class="component">Dropdown</span>
-  <span class="component">Trigger</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
-    <span class="string">"Select option"</span>
-  <span class="component">Content</span>: <span class="property">ver</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span>
-    <span class="component">Item</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-col</span> <span class="value">#333</span>
-      <span class="string">"Profile"</span>
-    <span class="component">Item</span> <span class="string">"Settings"</span>
-    <span class="component">Item</span> <span class="string">"Logout"</span></pre>
-
-      <h3 id="tooltip">Tooltip</h3>
-      <p>
-        A small hint that appears on hover:
-      </p>
-
-      <pre><span class="component">Tooltip</span>
-  <span class="component">Trigger</span>
-    <span class="component">Button</span> <span class="property">icon</span> <span class="value">help</span> <span class="string">"?"</span>
-  <span class="component">Content</span>: <span class="property">pad</span> <span class="value">8 12</span> <span class="property">col</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">size</span> <span class="value">12</span>
-    <span class="string">"Click to get help"</span></pre>
-
-      <h3 id="overlay-animations">Animations</h3>
-      <p>
-        Overlays can have entrance and exit animations:
-      </p>
-
-      <pre><span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Panel</span> <span class="keyword">fade</span> <span class="value">200</span> <span class="string">"Open"</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">open</span> <span class="component">Menu</span> <span class="keyword">slide-down</span> <span class="value">150</span> <span class="string">"Menu"</span></pre>
-
-      <div class="rule-box">
-        <h4>Animation Keywords</h4>
-        <ul>
-          <li><code class="inline-code">fade</code> – fade in/out</li>
-          <li><code class="inline-code">scale</code> – scale from center</li>
-          <li><code class="inline-code">slide-up</code> / <code class="inline-code">slide-down</code> – vertical slide</li>
-          <li><code class="inline-code">slide-left</code> / <code class="inline-code">slide-right</code> – horizontal slide</li>
-          <li><code class="inline-code">none</code> – no animation</li>
-        </ul>
-        <p style="margin-top: 8px;">Add a number for duration in milliseconds: <code class="inline-code">fade 200</code></p>
-      </div>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Create a button that opens a dialog. Add a close button inside the dialog.</p>
-        <div class="mirror-editor" data-code="Button col #2271c1 pad 12 rad 8 onclick open MyDialog &quot;Open Dialog&quot;
-
-Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
-  Title size 18 weight 600 &quot;Hello!&quot;
-  Text col #888 &quot;This is a dialog.&quot;
-  Button col #333 onclick close &quot;Close&quot;" data-preview-height="120"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- CONDITIONAL LOGIC -->
-    <section class="concept" id="conditionals">
-      <h2>Conditional Logic</h2>
-      <p class="lead">
-        Show or hide components based on conditions. Change properties dynamically. React to data.
-      </p>
-
-      <h3 id="if-else">Conditional Rendering</h3>
-      <p>
-        Use <code class="inline-code">if</code> and <code class="inline-code">else</code> to show different content based on a condition:
-      </p>
-
-      <pre><span class="keyword">if</span> <span class="token">$isLoggedIn</span>
-  <span class="component">Avatar</span> <span class="property">src</span> <span class="token">$user.avatar</span>
-  <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$isLoggedIn</span> <span class="keyword">to</span> <span class="value">false</span> <span class="string">"Logout"</span>
-<span class="keyword">else</span>
-  <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">page</span> <span class="component">Login</span> <span class="string">"Sign In"</span></pre>
-
-      <p>
-        The condition can be any expression: a variable, a comparison, or a logical combination.
-      </p>
-
-      <h3 id="conditional-properties">Conditional Properties</h3>
-      <p>
-        Change a single property based on a condition using inline <code class="inline-code">if then else</code>:
-      </p>
-
-      <pre><span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#333</span> <span class="string">"Status"</span>
-
-<span class="component">Badge</span> <span class="keyword">if</span> <span class="token">$count</span> > <span class="value">0</span> <span class="keyword">then</span> <span class="property">visible</span> <span class="keyword">else</span> <span class="property">hidden</span> <span class="token">$count</span>
-
-<span class="component">Text</span> <span class="keyword">if</span> <span class="token">$error</span> <span class="keyword">then</span> <span class="property">col</span> <span class="value">#EF4444</span> <span class="keyword">else</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$message</span></pre>
-
-      <h3 id="operators">Operators</h3>
-      <p>
-        Mirror supports comparison, logical, and arithmetic operators:
-      </p>
-
-      <div class="grid">
-        <div>
-          <div class="label">Comparison</div>
-          <pre><span class="keyword">if</span> <span class="token">$count</span> == <span class="value">0</span>
-<span class="keyword">if</span> <span class="token">$count</span> != <span class="value">0</span>
-<span class="keyword">if</span> <span class="token">$count</span> > <span class="value">10</span>
-<span class="keyword">if</span> <span class="token">$count</span> >= <span class="value">10</span>
-<span class="keyword">if</span> <span class="token">$count</span> < <span class="value">5</span>
-<span class="keyword">if</span> <span class="token">$count</span> <= <span class="value">5</span></pre>
-        </div>
-        <div>
-          <div class="label">Logical</div>
-          <pre><span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">and</span> <span class="token">$b</span>
-<span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">or</span> <span class="token">$b</span>
-<span class="keyword">if</span> <span class="keyword">not</span> <span class="token">$isDisabled</span>
-<span class="keyword">if</span> <span class="token">$a</span> <span class="keyword">and</span> <span class="keyword">not</span> <span class="token">$b</span>
-<span class="keyword">if</span> (<span class="token">$a</span> <span class="keyword">or</span> <span class="token">$b</span>) <span class="keyword">and</span> <span class="token">$c</span></pre>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div>
-          <div class="label">Arithmetic</div>
-          <pre><span class="token">$price</span> * <span class="token">$quantity</span>
-<span class="token">$total</span> - <span class="token">$discount</span>
-<span class="token">$count</span> + <span class="value">1</span>
-<span class="token">$value</span> / <span class="value">100</span></pre>
-        </div>
-        <div>
-          <div class="label">String Comparison</div>
-          <pre><span class="keyword">if</span> <span class="token">$status</span> == <span class="string">"active"</span>
-<span class="keyword">if</span> <span class="token">$role</span> != <span class="string">"admin"</span></pre>
-        </div>
-      </div>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Add a conditional property to change the button color based on <code class="inline-code">$isActive</code>.</p>
-        <div class="mirror-editor" data-code="$isActive: true
-
-Button pad 12 rad 8 onclick assign $isActive to not $isActive
-  if $isActive then &quot;Active&quot; else &quot;Inactive&quot;" data-preview-height="80"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- LISTS & DATA -->
-    <section class="concept" id="lists">
-      <h2>Lists & Data</h2>
-      <p class="lead">
-        Render components for each item in a list. Access properties with dot notation. Bind data to the UI.
-      </p>
-
-      <h3 id="each-iterator">The Each Iterator</h3>
-      <p>
-        Use <code class="inline-code">each</code> to create a component for every item in a list:
-      </p>
-
-      <pre><span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
-  <span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
-    <span class="component">Title</span> <span class="token">$task.title</span>
-    <span class="component">Status</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$task.status</span></pre>
-
-      <p>
-        The iterator variable (<code class="inline-code">$task</code>) is only available within the block. You can access nested properties with dot notation: <code class="inline-code">$task.title</code>, <code class="inline-code">$task.user.name</code>.
-      </p>
-
-      <div class="example">
-        <div class="example-row">
-          <div class="example-code">
-            <div class="label">Data + Template</div>
-            <pre><span class="token">$users</span>: [
-  { <span class="property">name</span>: <span class="string">"Alice"</span>, <span class="property">role</span>: <span class="string">"Admin"</span> },
-  { <span class="property">name</span>: <span class="string">"Bob"</span>, <span class="property">role</span>: <span class="string">"Editor"</span> },
-  { <span class="property">name</span>: <span class="string">"Carol"</span>, <span class="property">role</span>: <span class="string">"Viewer"</span> }
-]
-
-<span class="component">UserList</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
-  <span class="keyword">each</span> <span class="token">$user</span> <span class="keyword">in</span> <span class="token">$users</span>
-    <span class="component">Row</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">6</span>
-      <span class="component">Name</span> <span class="token">$user.name</span>
-      <span class="component">Role</span> <span class="property">col</span> <span class="value">#888</span> <span class="token">$user.role</span></pre>
-          </div>
-          <div class="example-result">
-            <div class="label">Result</div>
-            <div class="preview preview-dark preview-col" style="gap: 8px;">
-              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
-                <span>Alice</span><span style="color:#888;">Admin</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
-                <span>Bob</span><span style="color:#888;">Editor</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; padding:12px; background:#1A1A23; border-radius:6px;">
-                <span>Carol</span><span style="color:#888;">Viewer</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <h3 id="nested-iteration">Nested Iteration</h3>
-      <p>
-        Iterators can be nested for hierarchical data:
-      </p>
-
-      <pre><span class="keyword">each</span> <span class="token">$category</span> <span class="keyword">in</span> <span class="token">$categories</span>
-  <span class="component">Section</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">8</span>
-    <span class="component">Title</span> <span class="property">size</span> <span class="value">16</span> <span class="property">weight</span> <span class="value">600</span> <span class="token">$category.name</span>
-    <span class="keyword">each</span> <span class="token">$item</span> <span class="keyword">in</span> <span class="token">$category.items</span>
-      <span class="component">Item</span> <span class="property">pad</span> <span class="value">8</span> <span class="token">$item.name</span></pre>
-
-      <h3 id="data-binding">Data Binding</h3>
-      <p>
-        Variables are reactive. Display them directly, and the UI updates automatically when they change:
-      </p>
-
-      <pre><span class="comment">// Display variable</span>
-<span class="component">Counter</span> <span class="token">$count</span>
-<span class="component">Greeting</span> <span class="string">"Hello, "</span> <span class="token">$name</span>
-<span class="component">Price</span> <span class="token">$amount</span> <span class="string">" €"</span>
-
-<span class="comment">// Change with assign</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="token">$count</span> + <span class="value">1</span> <span class="string">"+"</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">assign</span> <span class="token">$count</span> <span class="keyword">to</span> <span class="value">0</span> <span class="string">"Reset"</span></pre>
-
-      <h3 id="event-data">The $event Object</h3>
-      <p>
-        In event handlers, <code class="inline-code">$event</code> contains information about what happened:
-      </p>
-
-      <pre><span class="comment">// Get input value</span>
-<span class="component">Input</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$name</span> <span class="keyword">to</span> <span class="token">$event.value</span>
-
-<span class="comment">// Get checkbox state</span>
-<span class="component">Checkbox</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$agreed</span> <span class="keyword">to</span> <span class="token">$event.checked</span>
-
-<span class="comment">// Real-time input binding</span>
-<span class="component">Input</span> <span class="keyword">oninput</span> <span class="keyword">assign</span> <span class="token">$search</span> <span class="keyword">to</span> <span class="token">$event.value</span></pre>
-
-      <div class="rule-box">
-        <h4>$event Properties</h4>
-        <ul>
-          <li><code class="inline-code">$event.value</code> – current value (inputs, textareas)</li>
-          <li><code class="inline-code">$event.checked</code> – checked state (checkboxes)</li>
-          <li><code class="inline-code">$event.target</code> – the element that triggered the event</li>
-        </ul>
-      </div>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Create a counter with + and - buttons that modify <code class="inline-code">$count</code>.</p>
-        <div class="mirror-editor" data-code="$count: 0
-
-Counter hor gap 12 ver-cen
-  Button col #333 pad 8 16 rad 6 onclick assign $count to $count - 1 &quot;-&quot;
-  Text size 24 weight 600 $count
-  Button col #2271c1 pad 8 16 rad 6 onclick assign $count to $count + 1 &quot;+&quot;" data-preview-height="80"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- ANIMATIONS -->
-    <section class="concept" id="animationen">
-      <h2>Animations</h2>
-      <p class="lead">
-        Elements can animate when appearing, disappearing, or continuously. Define entrance, exit, and looping animations.
-      </p>
-
-      <h3 id="show-hide-animations">Show & Hide Animations</h3>
-      <p>
-        Use <code class="inline-code">show</code> and <code class="inline-code">hide</code> blocks to define how an element animates in and out:
-      </p>
-
-      <pre><span class="component">Panel</span> <span class="property">hidden</span>
-  <span class="keyword">show</span> <span class="value">fade</span> <span class="value">slide-up</span> <span class="value">300</span>
-  <span class="keyword">hide</span> <span class="value">fade</span> <span class="value">200</span>
-  <span class="component">Content</span>
-    <span class="component">Text</span> <span class="string">"Animated content"</span></pre>
-
-      <p>
-        The panel starts hidden (<code class="inline-code">hidden</code>). When it becomes visible, it fades in and slides up (300ms).
-        When hiding, it fades out (200ms). Animations can be combined: <code class="inline-code">fade slide-up</code>.
-      </p>
-
-      <h3 id="animation-types">Animation Types</h3>
-      <div class="grid">
-        <div>
-          <div class="label">Entrance/Exit</div>
-          <pre><span class="value">fade</span>        <span class="comment">// opacity</span>
-<span class="value">scale</span>       <span class="comment">// grow/shrink</span>
-<span class="value">slide-up</span>    <span class="comment">// from bottom</span>
-<span class="value">slide-down</span>  <span class="comment">// from top</span>
-<span class="value">slide-left</span>  <span class="comment">// from right</span>
-<span class="value">slide-right</span> <span class="comment">// from left</span>
-<span class="value">none</span>        <span class="comment">// instant</span></pre>
-        </div>
-        <div>
-          <div class="label">Continuous</div>
-          <pre><span class="value">spin</span>   <span class="comment">// rotation (loaders)</span>
-<span class="value">pulse</span>  <span class="comment">// opacity pulse</span>
-<span class="value">bounce</span> <span class="comment">// vertical bounce</span></pre>
-        </div>
-      </div>
-
-      <h3 id="continuous-animations">Continuous Animations</h3>
-      <p>
-        Use the <code class="inline-code">animate</code> block for looping animations:
-      </p>
-
-      <pre><span class="component">Loader</span> <span class="property">w</span> <span class="value">24</span> <span class="property">h</span> <span class="value">24</span>
-  <span class="keyword">animate</span> <span class="value">spin</span> <span class="value">1000</span>
-  <span class="component">Icon</span> <span class="property">icon</span> <span class="value">loader</span></pre>
-
-      <p>
-        The icon rotates continuously, completing one full rotation every 1000ms.
-      </p>
-
-      <h3 id="animation-example">Complete Example</h3>
-      <p>
-        An expandable card with animations:
-      </p>
-
-      <pre><span class="component">Card</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span>
-  <span class="component">Header</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="component">Details</span>
-    <span class="component">Title</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"Click to expand"</span>
-    <span class="component">Icon</span> <span class="property">icon</span> <span class="value">chevron-down</span>
-  <span class="component">Details</span> <span class="property">hidden</span>
-    <span class="keyword">show</span> <span class="value">fade</span> <span class="value">slide-down</span> <span class="value">200</span>
-    <span class="keyword">hide</span> <span class="value">fade</span> <span class="value">150</span>
-    <span class="component">Text</span> <span class="property">col</span> <span class="value">#888</span> <span class="property">pad</span> <span class="property">u</span> <span class="value">12</span> <span class="string">"Here are the details..."</span></pre>
-
-      <div class="exercise">
-        <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Add a <code class="inline-code">show</code> animation to make the content fade in when revealed.</p>
-        <div class="mirror-editor" data-code="Card col #1A1A23 pad 16 rad 8 ver gap 12
-  Button col #333 onclick toggle Content &quot;Toggle Content&quot;
-  Content hidden
-    Text col #888 &quot;This content can be toggled&quot;" data-preview-height="140"></div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- NAMED INSTANCES & COMPONENT PROPERTIES -->
-    <section class="concept" id="instances">
-      <h2>Named Instances</h2>
-      <p class="lead">
-        Give components a name to reference them later. Read and write their properties. Build interactive forms.
-      </p>
-
-      <h3 id="naming-components">Naming Components</h3>
-      <p>
-        Add a name after the component type to create a named instance:
-      </p>
-
-      <pre><span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Enter email"</span>
-<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Enter password"</span> <span class="property">type</span> <span class="value">password</span>
-<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Login"</span></pre>
-
-      <p>
-        Now you can reference these components: <code class="inline-code">Email.value</code>, <code class="inline-code">Password.value</code>, <code class="inline-code">Submit.disabled</code>.
-      </p>
-
-      <h3 id="component-properties">Component Properties</h3>
-      <p>
-        Every component has intrinsic properties you can read and write:
-      </p>
-
-      <div class="grid">
-        <div>
-          <div class="label">Reading</div>
-          <pre><span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
-<span class="keyword">if</span> <span class="component">Checkbox</span>.<span class="property">checked</span>
-<span class="keyword">if</span> <span class="component">Panel</span>.<span class="property">visible</span></pre>
-        </div>
-        <div>
-          <div class="label">Writing</div>
-          <pre><span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
-<span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span>
-<span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Invalid"</span></pre>
-        </div>
-      </div>
-
-      <div class="rule-box">
-        <h4>Common Properties</h4>
-        <table style="width:100%; border-collapse: collapse; font-size: 12px;">
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>All components</strong></td>
-            <td><code>.visible</code>, <code>.disabled</code>, <code>.opacity</code>, <code>.col</code></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>Input / Textarea</strong></td>
-            <td><code>.value</code>, <code>.placeholder</code>, <code>.focus</code></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>Button</strong></td>
-            <td><code>.label</code>, <code>.loading</code></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>Checkbox / Switch</strong></td>
-            <td><code>.checked</code></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>Dialog / Overlay</strong></td>
-            <td><code>.open</code>, <code>.close</code></td>
-          </tr>
-          <tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 4px 0;"><strong>Text / Label</strong></td>
-            <td><code>.text</code></td>
-          </tr>
-          <tr>
-            <td style="padding: 4px 0;"><strong>Image</strong></td>
-            <td><code>.src</code>, <code>.alt</code></td>
-          </tr>
-        </table>
-      </div>
-
-      <div class="highlight-box">
-        <p><strong>Components ARE the state.</strong> No separate state management needed. <code class="inline-code">Email.value</code> is the email – simple as that.</p>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- CENTRALIZED EVENTS -->
-    <section class="concept" id="events-block">
-      <h2>Centralized Events</h2>
-      <p class="lead">
-        For complex interactions, separate structure from behavior. Define all event handlers in one place.
-      </p>
-
-      <h3 id="events-block-syntax">The Events Block</h3>
-      <p>
-        Use the <code class="inline-code">events</code> keyword to create a dedicated block for event handlers:
-      </p>
-
-      <pre><span class="comment">// === COMPONENTS ===</span>
-<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span>
-<span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span> <span class="property">type</span> <span class="value">password</span>
-<span class="component">Text</span> <span class="component">Error</span>: <span class="property">col</span> <span class="value">#EF4444</span> <span class="property">visible</span> <span class="value">false</span>
-<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Login"</span>
-
-<span class="comment">// === LAYOUT ===</span>
-<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">12</span>
-  <span class="component">Input</span> <span class="component">Email</span>
-  <span class="component">Input</span> <span class="component">Password</span>
-  <span class="component">Text</span> <span class="component">Error</span>
-  <span class="component">Button</span> <span class="component">Submit</span>
-
-<span class="comment">// === BEHAVIOR ===</span>
-<span class="keyword">events</span>
-  <span class="component">Email</span> <span class="keyword">onchange</span>
-    <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">false</span>
-
-  <span class="component">Submit</span> <span class="keyword">onclick</span>
-    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span> <span class="keyword">and</span> <span class="component">Password</span>.<span class="property">value</span>
-      <span class="component">Submit</span>.<span class="property">label</span> = <span class="string">"Sending..."</span>
-      <span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
-      <span class="keyword">page</span> <span class="component">Dashboard</span>
-    <span class="keyword">else</span>
-      <span class="component">Error</span>.<span class="property">text</span> = <span class="string">"Please fill in all fields"</span>
-      <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span></pre>
-
-      <h3 id="inline-vs-centralized">Inline vs. Centralized</h3>
-      <p>
-        Use inline events for simple actions, centralized events for complex logic:
-      </p>
-
-      <pre><span class="comment">// Inline – simple toggle</span>
-<span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">toggle</span> <span class="string">"Dark Mode"</span>
-
-<span class="comment">// Centralized – validation, multiple actions</span>
-<span class="keyword">events</span>
-  <span class="component">Submit</span> <span class="keyword">onclick</span>
-    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
-      <span class="comment">// validate, call API, navigate...</span></pre>
-
-      <p class="why">
-        Structure and behavior separated. All interactions in one place.
-        Reads like prose: "When Submit is clicked..."
-      </p>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- SLOTS -->
-    <section class="concept" id="slots">
-      <h2>Slots – Named Children</h2>
-      <p class="lead">
-        Components can define named positions for children. On usage, these slots are filled with content.
-      </p>
-
-      <h3 id="defining-slots">Defining Slots</h3>
-      <p>
-        Child components with a colon become named slots:
-      </p>
-
-      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">12</span>
-  <span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span>
-  <span class="component">Title:</span> <span class="property">size</span> <span class="value">20</span> <span class="property">weight</span> <span class="value">600</span>
-  <span class="component">Body:</span> <span class="property">col</span> <span class="value">#9CA3AF</span>
-  <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span></pre>
-
-      <h3 id="filling-slots">Filling Slots</h3>
-      <p>
-        When using the component, reference slot names to fill them:
-      </p>
-
-      <pre><span class="component">Card</span>
-  <span class="component">Header</span>
-    <span class="component">Badge</span> <span class="property">col</span> <span class="value">#10B981</span> <span class="string">"New"</span>
-    <span class="component">Icon</span> <span class="property">icon</span> <span class="value">more-vertical</span>
-  <span class="component">Title</span> <span class="string">"Project Alpha"</span>
-  <span class="component">Body</span> <span class="string">"A new project with great potential."</span>
-  <span class="component">Actions</span>
-    <span class="component">Button</span> <span class="property">col</span> <span class="value">#333</span> <span class="string">"Cancel"</span>
-    <span class="component">Button</span> <span class="property">col</span> <span class="value">#2271c1</span> <span class="string">"Save"</span></pre>
-
-      <h3 id="flat-access">Flat Access</h3>
-      <p>
-        Access nested elements directly by name, no matter how deep they are:
-      </p>
-
-      <pre><span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span>
-  <span class="component">Left:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">16</span>
-    <span class="component">Logo:</span> <span class="property">w</span> <span class="value">100</span>
-    <span class="component">Nav:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span>
-  <span class="component">Right:</span>
-    <span class="component">Avatar:</span> <span class="property">w</span> <span class="value">36</span> <span class="property">rad</span> <span class="value">18</span>
-
-<span class="comment">// Usage – direct access to nested elements</span>
-<span class="component">Header</span>
-  <span class="component">Logo</span> <span class="property">col</span> <span class="value">#FF0000</span>       <span class="comment">// finds Logo in Left</span>
-  <span class="component">Avatar</span> <span class="property">col</span> <span class="value">#2271c1</span>     <span class="comment">// finds Avatar in Right</span></pre>
-
-      <p class="why">
-        You don't need to repeat the hierarchy. Names are flat, structure is preserved.
-        This makes components easy to use without knowing their internal structure.
-      </p>
-
-      <h3 id="list-items">Creating Multiple Items</h3>
-      <p>
-        Use <code class="inline-code">-</code> to create new instances instead of modifying existing ones:
-      </p>
-
-      <pre><span class="component">Menu:</span> <span class="property">ver</span> <span class="property">w</span> <span class="value">200</span> <span class="property">col</span> <span class="value">#1A1A23</span> <span class="property">rad</span> <span class="value">8</span>
-  <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8 12</span>
-
-<span class="component">Menu</span>
-  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Profile"</span>
-  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Settings"</span>
-  <span class="keyword">-</span> <span class="component">Item</span> <span class="property">col</span> <span class="value">#EF4444</span> <span class="string">"Logout"</span></pre>
-
-      <p>
-        Without <code class="inline-code">-</code> you modify an existing element.
-        With <code class="inline-code">-</code> you create a new instance.
-      </p>
     </section>
 
     <div class="divider"></div>
