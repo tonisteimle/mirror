@@ -348,11 +348,11 @@
     <!-- COMPONENTS -->
     <section class="concept" id="components">
       <h2>Components</h2>
+      <p class="lead">
+        You've seen that Mirror code is compact. Now let's understand why: everything is a component, and components are defined by usage.
+      </p>
 
       <h3 id="all-elements-are-components">All Elements are Components</h3>
-      <p>
-        Central definition is the default in Mirror: components for structures, tokens for values.
-      </p>
       <p>
         Every element is a component. The first usage defines it, subsequent ones inherit.
       </p>
@@ -838,7 +838,7 @@ Row gap 8
     <section class="concept" id="typography">
       <h2>Typography</h2>
       <p class="lead">
-        Control text appearance with size, weight, font family, and more.
+        Components define structure, tokens define values. Now let's look at the properties that control how text appears.
       </p>
 
       <h3 id="text-basics">Text Basics</h3>
@@ -1117,7 +1117,7 @@ Row gap 8
     <section class="concept" id="layout-basics">
       <h2>Layout</h2>
       <p class="lead">
-        Arrange elements with minimal syntax. Direction, spacing, alignment – all in a few characters.
+        You know how to style text. Now let's arrange elements in space – rows, columns, grids, and alignment.
       </p>
 
       <p>
@@ -1460,7 +1460,7 @@ Row gap 8
     <section class="concept" id="forms">
       <h2>Forms</h2>
       <p class="lead">
-        Create interactive form elements using HTML primitives with the <code class="inline-code">as</code> syntax.
+        With components, tokens, typography, and layout you can build any static UI. But users need to input data. That's where form elements come in.
       </p>
 
       <p>
@@ -1901,7 +1901,7 @@ Form col #1a1a23 pad 24 rad 12 gap 16 w 300
     <section class="concept" id="overlays">
       <h2>Overlays</h2>
       <p class="lead">
-        Dialogs, popovers, tooltips – UI elements that appear above the main content. Mirror provides built-in overlay components with automatic positioning and closing behavior.
+        You can now trigger actions and access component properties. A common pattern is showing content that floats above the UI – dialogs, menus, tooltips.
       </p>
 
       <p>
@@ -2015,7 +2015,7 @@ Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
     <section class="concept" id="animationen">
       <h2>Animations</h2>
       <p class="lead">
-        Elements can animate when appearing, disappearing, or continuously. Define entrance, exit, and looping animations.
+        Overlays appear and disappear. But abrupt changes feel jarring. Animations smooth the transitions and bring your UI to life.
       </p>
 
       <p>
@@ -2101,7 +2101,7 @@ Dialog MyDialog: col #1A1A23 pad 24 rad 12 w 300 ver gap 16
     <section class="concept" id="conditionals">
       <h2>Conditional Logic</h2>
       <p class="lead">
-        Show or hide components based on conditions. Change properties dynamically. React to data.
+        You control what appears and how it animates. Now let's control when – showing different content based on conditions.
       </p>
 
       <p>
@@ -2312,7 +2312,7 @@ Counter hor gap 12 ver-cen
     <section class="concept" id="events-block">
       <h2>Centralized Events</h2>
       <p class="lead">
-        For complex interactions, separate structure from behavior. Define all event handlers in one place.
+        As your UI grows with conditionals and data-driven lists, inline events can clutter the code. Let's organize them.
       </p>
 
       <p>
@@ -2392,7 +2392,7 @@ Form col #1a1a23 pad 24 rad 12 gap 16 w 300
     <section class="concept" id="slots">
       <h2>Slots – Named Children</h2>
       <p class="lead">
-        Components can define named positions for children. On usage, these slots are filled with content.
+        We've organized behavior with centralized events. Now let's make components more flexible by defining where content can be inserted.
       </p>
 
       <p>
@@ -2648,7 +2648,7 @@ Dashboard $bg-col pad 24 gap 24
             Value &quot;89%&quot;
             Label &quot;Satisfaction&quot;
     Footer
-        FooterText &quot;© 2025 Acme Inc&quot; $muted-col size 12" data-preview-height="350"></div>
+        Text &quot;© 2025 Acme Inc&quot; $muted-col size 12" data-preview-height="350"></div>
 
       <p>
         Now all colors are defined in one place. Change <code class="inline-code">$card-col</code> and all tiles update. The suffix <code class="inline-code">-col</code> tells Mirror to apply it as a color property – no need to write <code class="inline-code">col $card-col</code>.
@@ -2881,6 +2881,8 @@ Tile: $card-col pad 20 $card-rad gap 8
 Value: $text-col size 28 weight bold
 Label: $muted-col size 12
 Welcome: $card-col pad 16 $card-rad hor gap 12 ver-cen
+WelcomeTitle: $text-col
+WelcomeText: $muted-col size 14
 FooterText: $muted-col size 12
 
 // === DASHBOARD ===
@@ -2898,8 +2900,8 @@ Dashboard
 
     if $isLoggedIn
         Welcome
-            Text $text-col &quot;Welcome back!&quot;
-            Text $muted-col size 14 &quot;Here's your dashboard.&quot;
+            WelcomeTitle &quot;Welcome back!&quot;
+            WelcomeText &quot;Here's your dashboard.&quot;
 
     Content
         Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;
@@ -2942,12 +2944,13 @@ Logo: $text-col size 20 weight bold
 Nav: hor gap 16
 Link: $muted-col
 Content: grid 2 gap 16
-Tile: $card-col pad 20 $card-rad gap 4
+Tile: $card-col pad 20 $card-rad gap 8
     state hover
         $card-hover-col
 Value: $text-col size 28 weight bold
 Label: $muted-col size 12
 Trend: size 12 $success-col
+Row: hor gap 8 ver-cen
 FooterText: $muted-col size 12
 
 // === DASHBOARD ===
@@ -2962,7 +2965,7 @@ Dashboard
         each $metric in $metrics
             Tile
                 Value $metric.value
-                Row hor gap 8 ver-cen
+                Row
                     Label $metric.label
                     Trend $metric.trend
     Footer
@@ -3068,27 +3071,26 @@ Link: $muted-col
     state hover
         $text-col
 Button: $primary-col pad 8 16 rad 6
-Badge: $success-col pad 4 12 $card-rad size 11
+Badge: $success-col pad 4 12 $card-rad size 12
 
 Content: grid 2 gap 16
-Tile: $card-col pad 20 $card-rad gap 6
+Tile: $card-col pad 20 $card-rad gap 8
     show fade slide-up 300
     state hover
         $card-hover-col
 Value: $text-col size 28 weight bold
 Label: $muted-col size 12
 
-Footer: hor hor-r
 FooterText: $muted-col size 12
 
 SettingsDialog Dialog: $card-col pad 24 $card-rad w 340 gap 16
     show fade scale 200
     hide fade 150
-Title: $text-col size 18 weight 600
-Field: gap 6
-FieldLabel: $muted-col size 11 uppercase
-Actions: hor gap 8 hor-r
-SecondaryBtn: $card-col pad 8 16 rad 6
+    Title: $text-col size 18 weight 600
+    Field: gap 6
+    FieldLabel: $muted-col size 11 uppercase
+    Actions: hor gap 8 hor-r
+    SecondaryBtn: $card-col pad 8 16 rad 6
 
 Email as Input: placeholder &quot;your@email.com&quot; type email
 
