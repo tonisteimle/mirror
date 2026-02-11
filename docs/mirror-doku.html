@@ -2655,6 +2655,356 @@ Dashboard
         This progression – from quick sketch to production-ready design system – happens naturally. Start messy, refine as you go. Mirror supports both rapid prototyping and clean architecture.
       </p>
 
+      <h3 id="step7-interactivity">Step 7: Add Interactivity</h3>
+      <p>
+        Our dashboard is static. Let's add a Settings button that opens a dialog. We use <code class="inline-code">onclick open</code> to trigger the overlay.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg-col: #0f0f14
+$card-col: #1a1a23
+$text-col: #fff
+$muted-col: #888
+$primary-col: #2271c1
+
+// === COMPONENTS ===
+Dashboard: $bg-col pad 24 gap 24
+Header: hor fill ver-cen
+Logo: $text-col size 20 weight bold
+Nav: hor gap 16
+Link: $muted-col
+Content: hor wrap gap 16
+Tile: $card-col pad 20 rad 12 gap 8
+    state hover
+        col #252530
+Value: $text-col size 28 weight bold
+Label: $muted-col size 12
+Button: $primary-col pad 8 16 rad 6
+
+// Settings Dialog
+SettingsDialog Dialog: $card-col pad 24 rad 12 w 320 gap 16
+    Title: $text-col size 18 weight 600
+    Text: $muted-col size 14
+
+// === DASHBOARD ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+        Nav
+            Link &quot;Dashboard&quot;
+            Link &quot;Projects&quot;
+        Button onclick open SettingsDialog &quot;Settings&quot;
+    Content
+        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;
+        Tile Value &quot;16&quot; Label &quot;Employees&quot;
+        Tile Value &quot;40&quot; Label &quot;Customers&quot;
+        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;
+
+// === DIALOG ===
+SettingsDialog
+    Title &quot;Settings&quot;
+    Text &quot;Configure your dashboard preferences.&quot;
+    Button onclick close &quot;Close&quot;" data-preview-height="400"></div>
+
+      <p>
+        Click the Settings button to open the dialog. The <code class="inline-code">onclick open SettingsDialog</code> action references the dialog by name. Inside the dialog, <code class="inline-code">onclick close</code> dismisses it.
+      </p>
+
+      <h3 id="step8-named-instances">Step 8: Named Instances</h3>
+      <p>
+        To build a working form, we need to reference input values. Named instances let us access component properties like <code class="inline-code">Email.value</code>.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg-col: #0f0f14
+$card-col: #1a1a23
+$text-col: #fff
+$muted-col: #888
+$primary-col: #2271c1
+
+// === COMPONENTS ===
+Dashboard: $bg-col pad 24 gap 24
+Header: hor fill ver-cen
+Logo: $text-col size 20 weight bold
+Button: $primary-col pad 8 16 rad 6
+SecondaryBtn: $card-col pad 8 16 rad 6
+
+// Settings Dialog with Form
+SettingsDialog Dialog: $card-col pad 24 rad 12 w 360 gap 16
+    Title: $text-col size 18 weight 600
+    Field: gap 6
+    FieldLabel: $muted-col size 12 uppercase
+    Actions: hor gap 8 hor-r
+
+// Named Inputs
+Email as Input: placeholder &quot;Enter email&quot; type email
+Notifications as Input: placeholder &quot;On / Off&quot;
+
+// === DASHBOARD ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+        Button onclick open SettingsDialog &quot;Settings&quot;
+
+// === DIALOG ===
+SettingsDialog
+    Title &quot;Settings&quot;
+    Field
+        FieldLabel &quot;Email&quot;
+        Email
+    Field
+        FieldLabel &quot;Notifications&quot;
+        Notifications
+    Actions
+        SecondaryBtn onclick close &quot;Cancel&quot;
+        Button onclick close &quot;Save&quot;" data-preview-height="420"></div>
+
+      <p>
+        <code class="inline-code">Email as Input:</code> creates a named input. We can now reference <code class="inline-code">Email.value</code> in event handlers or conditionals. The form fields are properly labeled and structured.
+      </p>
+
+      <h3 id="step9-conditional">Step 9: Conditional Content</h3>
+      <p>
+        Show different content based on conditions. Here we display a welcome message only when the user is logged in.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg-col: #0f0f14
+$card-col: #1a1a23
+$text-col: #fff
+$muted-col: #888
+$primary-col: #2271c1
+$success-col: #10B981
+
+// === STATE ===
+$isLoggedIn: true
+
+// === COMPONENTS ===
+Dashboard: $bg-col pad 24 gap 24
+Header: hor fill ver-cen
+Logo: $text-col size 20 weight bold
+Button: $primary-col pad 8 16 rad 6
+Badge: $success-col pad 4 12 rad 12 size 12
+Content: hor wrap gap 16
+Tile: $card-col pad 20 rad 12 gap 8
+Value: $text-col size 28 weight bold
+Label: $muted-col size 12
+Welcome: $card-col pad 16 rad 8 hor gap 12 ver-cen
+
+// === DASHBOARD ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+        if $isLoggedIn
+            Badge &quot;Online&quot;
+        Button onclick assign $isLoggedIn to not $isLoggedIn
+            if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;
+
+    if $isLoggedIn
+        Welcome
+            Text $text-col &quot;Welcome back!&quot;
+            Text $muted-col size 14 &quot;Here's your dashboard.&quot;
+
+    Content
+        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;
+        Tile Value &quot;16&quot; Label &quot;Employees&quot;
+        Tile Value &quot;40&quot; Label &quot;Customers&quot;" data-preview-height="380"></div>
+
+      <p>
+        Click the Login/Logout button to toggle <code class="inline-code">$isLoggedIn</code>. The welcome message and badge appear conditionally. The button label changes using inline <code class="inline-code">if then else</code>.
+      </p>
+
+      <h3 id="step10-data">Step 10: Data-Driven Content</h3>
+      <p>
+        Instead of hardcoding tiles, we use <code class="inline-code">each</code> to iterate over a data array. This makes the dashboard dynamic and maintainable.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg-col: #0f0f14
+$card-col: #1a1a23
+$text-col: #fff
+$muted-col: #888
+
+// === DATA ===
+$metrics: [
+    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot;, trend: &quot;+12%&quot; },
+    { value: &quot;16&quot;, label: &quot;Employees&quot;, trend: &quot;+2&quot; },
+    { value: &quot;40&quot;, label: &quot;Customers&quot;, trend: &quot;+5&quot; },
+    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot;, trend: &quot;+3%&quot; },
+    { value: &quot;12&quot;, label: &quot;Projects&quot;, trend: &quot;-1&quot; },
+    { value: &quot;3&quot;, label: &quot;Locations&quot;, trend: &quot;0&quot; }
+]
+
+// === COMPONENTS ===
+Dashboard: $bg-col pad 24 gap 24
+Header: hor fill ver-cen
+Logo: $text-col size 20 weight bold
+Content: grid 3 gap 16
+Tile: $card-col pad 20 rad 12 gap 4
+    state hover
+        col #252530
+Value: $text-col size 28 weight bold
+Label: $muted-col size 12
+Trend: size 12 col #10B981
+
+// === DASHBOARD ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+    Content
+        each $metric in $metrics
+            Tile
+                Value $metric.value
+                Row hor gap 8 ver-cen
+                    Label $metric.label
+                    Trend $metric.trend" data-preview-height="400"></div>
+
+      <p>
+        The <code class="inline-code">each $metric in $metrics</code> loop creates a tile for every item in the array. We access nested properties with dot notation: <code class="inline-code">$metric.value</code>, <code class="inline-code">$metric.label</code>. Adding a new metric is just adding to the data array.
+      </p>
+
+      <h3 id="step11-animations">Step 11: Add Animations</h3>
+      <p>
+        Polish the experience with animations. Tiles fade in on load, the settings dialog slides up smoothly.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg-col: #0f0f14
+$card-col: #1a1a23
+$text-col: #fff
+$muted-col: #888
+$primary-col: #2271c1
+
+// === COMPONENTS ===
+Dashboard: $bg-col pad 24 gap 24
+Header: hor fill ver-cen
+Logo: $text-col size 20 weight bold
+Button: $primary-col pad 8 16 rad 6
+Content: grid 3 gap 16
+Tile: $card-col pad 20 rad 12 gap 8
+    show fade slide-up 300
+    state hover
+        col #252530
+Value: $text-col size 28 weight bold
+Label: $muted-col size 12
+
+// Animated Dialog
+SettingsDialog Dialog: $card-col pad 24 rad 12 w 320 gap 16
+    show fade scale 200
+    hide fade 150
+    Title: $text-col size 18 weight 600
+    Text: $muted-col
+
+// === DASHBOARD ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+        Button onclick open SettingsDialog &quot;Settings&quot;
+    Content
+        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;
+        Tile Value &quot;16&quot; Label &quot;Employees&quot;
+        Tile Value &quot;40&quot; Label &quot;Customers&quot;
+        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;
+
+SettingsDialog
+    Title &quot;Settings&quot;
+    Text &quot;Your preferences here.&quot;
+    Button onclick close &quot;Close&quot;" data-preview-height="400"></div>
+
+      <p>
+        Tiles animate with <code class="inline-code">show fade slide-up 300</code> when they appear. The dialog uses <code class="inline-code">show fade scale 200</code> for a smooth entrance and <code class="inline-code">hide fade 150</code> for exit. Animations are defined once and inherited.
+      </p>
+
+      <h3 id="step12-final">Step 12: The Complete Dashboard</h3>
+      <p>
+        Here's our final dashboard combining everything: tokens, components, states, events, conditionals, data binding, and animations.
+      </p>
+
+      <div class="mirror-editor" data-code="// === TOKENS ===
+$bg: #0f0f14
+$card: #1a1a23
+$card-hover: #252530
+$text: #fff
+$muted: #888
+$primary: #2271c1
+$success: #10B981
+
+// === DATA ===
+$metrics: [
+    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },
+    { value: &quot;16&quot;, label: &quot;Employees&quot; },
+    { value: &quot;40&quot;, label: &quot;Customers&quot; },
+    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }
+]
+$isLoggedIn: true
+
+// === COMPONENTS ===
+Dashboard: col $bg pad 24 gap 24
+Header: hor fill ver-cen
+Logo: col $text size 20 weight bold
+Nav: hor gap 12
+NavLink: col $muted size 14
+    state hover
+        col $text
+Button: col $primary pad 8 16 rad 6
+Badge: col $success pad 4 12 rad 12 size 11
+
+Content: grid 2 gap 16
+Tile: col $card pad 20 rad 12 gap 6
+    show fade slide-up 300
+    state hover
+        col $card-hover
+Value: col $text size 28 weight bold
+Label: col $muted size 12
+
+Footer: hor hor-r
+FooterText: col $muted size 12
+
+SettingsDialog Dialog: col $card pad 24 rad 12 w 340 gap 16
+    show fade scale 200
+    hide fade 150
+Title: col $text size 18 weight 600
+Field: gap 6
+FieldLabel: col $muted size 11 uppercase
+Actions: hor gap 8 hor-r
+SecondaryBtn: col #333 pad 8 16 rad 6
+
+Email as Input: placeholder &quot;your@email.com&quot; type email
+
+// === LAYOUT ===
+Dashboard
+    Header
+        Logo &quot;Acme Inc&quot;
+        Nav
+            NavLink &quot;Dashboard&quot;
+            NavLink &quot;Projects&quot;
+            NavLink &quot;Team&quot;
+        if $isLoggedIn
+            Badge &quot;Online&quot;
+        Button onclick open SettingsDialog &quot;Settings&quot;
+
+    Content
+        each $m in $metrics
+            Tile
+                Value $m.value
+                Label $m.label
+
+    Footer
+        FooterText &quot;© 2025 Acme Inc&quot;
+
+SettingsDialog
+    Title &quot;Settings&quot;
+    Field
+        FieldLabel &quot;Email notifications&quot;
+        Email
+    Actions
+        SecondaryBtn onclick close &quot;Cancel&quot;
+        Button onclick close &quot;Save&quot;" data-preview-height="500"></div>
+
+      <p class="why">
+        From a simple hierarchy to a complete, interactive dashboard – all in Mirror. The code is readable, the structure is clear, and everything is reusable. This is UI prototyping at its best.
+      </p>
+
     </section>
 
     <div class="divider"></div>
