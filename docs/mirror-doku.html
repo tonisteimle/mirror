@@ -1120,10 +1120,13 @@ Row gap 8
         Arrange elements with minimal syntax. Direction, spacing, alignment – all in a few characters.
       </p>
 
+      <p>
+        CSS layout requires remembering incantations: <code>display: flex</code>, <code>flex-direction: row</code>, <code>justify-content: space-between</code>, <code>align-items: center</code>. Mirror reduces this to single keywords. <code>hor</code> makes things horizontal. <code>between</code> distributes space. <code>ver-cen</code> centers vertically. The names describe what you see, not which CSS property to use.
+      </p>
+
       <h3 id="direction">Direction</h3>
       <p>
         By default, children stack vertically. Use <code class="inline-code">hor</code> for horizontal layout.
-      </p>
 
       <div class="grid">
         <div>
@@ -1460,11 +1463,14 @@ Row gap 8
         Create interactive form elements using HTML primitives with the <code class="inline-code">as</code> syntax.
       </p>
 
+      <p>
+        Some UI elements need native HTML behavior – text inputs that accept keyboard input, links that navigate, images that load from URLs. Mirror wraps these as primitives. The <code>as</code> syntax lets you create named versions of these primitives, which you can then reference elsewhere. <code>Email as Input:</code> creates an input you can later access as <code>Email.value</code> – the name becomes its identity in the system.
+      </p>
+
       <h3 id="primitive-types">HTML Primitives</h3>
       <p>
         Mirror supports HTML form primitives: <code class="inline-code">Input</code>, <code class="inline-code">Textarea</code>, <code class="inline-code">Button</code>, <code class="inline-code">Image</code>, and <code class="inline-code">Link</code>.
         Use the <code class="inline-code">as</code> keyword to create named components based on these primitives.
-      </p>
 
       <h3 id="as-syntax">The <code class="inline-code">as</code> Syntax</h3>
       <p>
