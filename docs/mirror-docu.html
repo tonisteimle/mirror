@@ -978,6 +978,7 @@
       <h3 id="direction">Direction</h3>
       <p>
         By default, children stack vertically. Use <code class="inline-code">hor</code> for hor layout.
+      </p>
 
       <div class="grid">
         <div>
@@ -1222,7 +1223,6 @@
       </p>
 
       <div class="mirror-editor" data-code="Textarea Bio: &quot;Tell us about yourself&quot;, rows 4&#10;&#10;ProfileForm gap 12, w 300&#10;  Bio" data-preview-height="100"></div>
-      </div>
 
       <h3 id="styled-inputs">Styling Inputs</h3>
       <p>
@@ -1230,7 +1230,6 @@
       </p>
 
       <div class="mirror-editor" data-code="Input StyledInput: pad 12 16, col #0a0a0f, bor 2 #3B82F6, rad 8&#10;&#10;Form gap 12&#10;  StyledInput &quot;Highlighted input&quot;" data-preview-height="100"></div>
-      </div>
 
       <h3 id="image-link">Image and Link</h3>
       <p>
@@ -1238,7 +1237,6 @@
       </p>
 
       <div class="mirror-editor" data-code="Image Avatar: w 48, h 48, rad 24, fit cover&#10;Link ProfileLink: col #3B82F6&#10;&#10;UserCard hor, gap 12, ver-cen&#10;  Avatar &quot;https://i.pravatar.cc/48&quot;&#10;  ProfileLink &quot;/profile&quot;, &quot;View Profile&quot;" data-preview-height="150"></div>
-      </div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
@@ -1281,6 +1279,7 @@
       <h3 id="events">Events</h3>
       <p>
         Events are written directly on the component. An event triggers an action.
+      </p>
 
       <div class="mirror-editor" data-code="Button onclick toggle &quot;Dark Mode&quot;" data-preview-height="60"></div>
 
@@ -2271,10 +2270,6 @@
       </p>
 
       <div class="mirror-editor" data-code="Volume as Slider: min 0, max 100, value 65, step 1&#10;  Track h 6, col #333, rad 3&#10;  Range col #2271c1&#10;  Thumb 18 18, rad 9, col white, shadow sm" data-preview-height="100"></div>
-          </div>
-          <div style="width: 18px; height: 18px; background: white; border-radius: 9px; position: absolute; top: -6px; left: calc(65% - 9px); box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
-        </div>
-      </div>
 
       <div class="rule-box">
         <h4>Slider Slots</h4>
@@ -2305,8 +2300,6 @@
       </p>
 
       <div class="mirror-editor" data-code="UploadProgress as Progress: value 75, max 100, w 300, h 8, rad 4, col #333&#10;  Indicator col #10B981" data-preview-height="80"></div>
-        </div>
-      </div>
 
       <div class="rule-box">
         <h4>Progress Slots</h4>
@@ -2328,11 +2321,6 @@
       </p>
 
       <div class="mirror-editor" data-code="SuccessToast as Toast: hor, gap 12, ver-cen, pad 16, col #1A1A23, rad 8, bor 1 #333&#10;  Icon icon &quot;check-circle&quot;, col #10B981&#10;  Info ver&#10;    Title weight 600, &quot;Success&quot;&#10;    Description col #fff, size 13, &quot;Your changes have been saved.&quot;&#10;  Action &quot;Undo&quot;&#10;  Close onclick close&#10;    Icon icon &quot;x&quot;, size 14, col #666" data-preview-height="200"></div>
-            <div style="color: #fff; font-size: 13px;">Your changes have been saved.</div>
-          </div>
-          <span style="color: #666; cursor: pointer;">×</span>
-        </div>
-      </div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
