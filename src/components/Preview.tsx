@@ -22,7 +22,7 @@ export const Preview = memo(function Preview({
   onPageNavigate
 }: PreviewProps) {
   if (nodes.length === 0) {
-    return <div style={{ height: '100%', backgroundColor: colors.preview }} />
+    return <div style={{ height: '100%', backgroundColor: colors.preview, color: '#fff' }} />
   }
 
   // Render function for overlays
@@ -36,8 +36,9 @@ export const Preview = memo(function Preview({
         <TemplateRegistryProvider registry={registry}>
           <OverlayRegistryProvider>
             <div style={{
-              height: '100%',
+              minHeight: '100%',
               backgroundColor: colors.preview,
+              color: '#fff',
               overflow: 'auto',
               position: 'relative',
             }}>
@@ -47,7 +48,7 @@ export const Preview = memo(function Preview({
                 justifyContent: 'center',
                 alignItems: 'center',
                 width: '100%',
-                height: '100%',
+                minHeight: '100%',
                 padding: '16px',
                 boxSizing: 'border-box',
               }}>

@@ -6,7 +6,7 @@ export const colors = {
   panel: '#1a1a1a',        // Panel background (darker)
   panelHover: '#333333',   // Panel hover/active state (was #33343A)
   tabActive: '#272727',    // Selected tab background (was #27292f)
-  lineActive: '#272727',   // Active line in editor (was #27292f)
+  lineActive: '#1a1a1a',   // Active line in editor (same as panel)
   border: '#3A3A3A',       // Borders (was #3A3B41)
   text: '#FFFFFF',         // Primary text
   textMuted: '#6B6B6B',    // Muted text

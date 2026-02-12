@@ -12,6 +12,7 @@ import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { createEditorKeymaps, type KeymapCallbacks } from './keymaps'
 import { dslAutocomplete } from './dsl-autocomplete'
 import { createPanelKeymap } from './panel-keymap'
+import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
 import { isInsideString, getCharBefore } from './utils'
 import type { ValuePickerType } from '../data/dsl-properties'
 import type { ColorPanelState } from '../hooks/useColorPanel'
@@ -181,6 +182,8 @@ export interface EditorExtensionsConfig {
   autoCompleteTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>
   /** Update listener extension */
   updateListener: ReturnType<typeof EditorView.updateListener.of>
+  /** Color swatch configuration (optional) */
+  colorSwatchConfig?: ColorSwatchConfig
 }
 
 /**
@@ -198,6 +201,7 @@ export function createEditorExtensions(config: EditorExtensionsConfig) {
     getCurrentTab,
     autoCompleteTimeoutRef,
     updateListener,
+    colorSwatchConfig,
   } = config
 
   // Create editor keymaps
@@ -219,7 +223,7 @@ export function createEditorExtensions(config: EditorExtensionsConfig) {
     getSelectedValue,
   })
 
-  return [
+  const extensions = [
     lineNumbers(),
     highlightActiveLine(),
     highlightActiveLineGutter(),
@@ -234,6 +238,13 @@ export function createEditorExtensions(config: EditorExtensionsConfig) {
     dslHighlighter,
     updateListener,
   ]
+
+  // Add color swatches if configured
+  if (colorSwatchConfig) {
+    extensions.push(createColorSwatchPlugin(colorSwatchConfig))
+  }
+
+  return extensions
 }
 
 /**

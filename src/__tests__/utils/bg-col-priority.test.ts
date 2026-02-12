@@ -23,22 +23,25 @@ describe('col and bg property behavior', () => {
   })
 
   describe('bg property (always background color)', () => {
-    it('should use bg for background color on any component', () => {
+    it('should use bg for background color with auto-contrast on Box', () => {
       const style = propertiesToStyle({ bg: '#FF0000' }, false, 'Box')
       expect(style.backgroundColor).toBe('#FF0000')
-      expect(style.color).toBeUndefined()
+      // Box gets auto-contrast (white text on red background)
+      expect(style.color).toBe('#fff')
     })
 
-    it('should use bg for background color on Button', () => {
+    it('should use bg for background color on Button with auto-contrast', () => {
       const style = propertiesToStyle({ bg: '#5C33CF' }, false, 'Button')
       expect(style.backgroundColor).toBe('#5C33CF')
-      expect(style.color).toBeUndefined()
+      // Button gets auto-contrast text color (white on dark background)
+      expect(style.color).toBe('#fff')
     })
 
-    it('should use bg for background color on Card', () => {
-      const style = propertiesToStyle({ bg: '#FFFFFF' }, false, 'Card')
-      expect(style.backgroundColor).toBe('#FFFFFF')
-      expect(style.color).toBeUndefined()
+    it('should use bg for background color on Card with auto-contrast', () => {
+      const style = propertiesToStyle({ bg: '#1F2937' }, false, 'Card')
+      expect(style.backgroundColor).toBe('#1F2937')
+      // Card gets auto-contrast text color (white on dark background)
+      expect(style.color).toBe('#fff')
     })
   })
 
@@ -56,17 +59,43 @@ describe('col and bg property behavior', () => {
     })
   })
 
-  describe('no auto-contrast (explicit colors only)', () => {
-    it('should not set auto-contrast text color when only bg is set', () => {
+  describe('auto-contrast for interactive components', () => {
+    it('should set auto-contrast text color for Button with dark bg', () => {
       const style = propertiesToStyle({ bg: '#000000' }, false, 'Button')
       expect(style.backgroundColor).toBe('#000000')
-      expect(style.color).toBeUndefined() // No auto-contrast
+      expect(style.color).toBe('#fff') // White text on dark background
     })
 
-    it('should not set auto-contrast for light backgrounds', () => {
-      const style = propertiesToStyle({ bg: '#FFFFFF' }, false, 'Card')
+    it('should set auto-contrast text color for Button with light bg', () => {
+      const style = propertiesToStyle({ bg: '#FFFFFF' }, false, 'Button')
       expect(style.backgroundColor).toBe('#FFFFFF')
-      expect(style.color).toBeUndefined() // No auto-contrast
+      expect(style.color).toBe('#000') // Black text on light background
+    })
+
+    it('should not set auto-contrast for unknown custom components', () => {
+      // Custom components not in the AUTO_CONTRAST list don't get auto-contrast
+      const style = propertiesToStyle({ bg: '#000000' }, false, 'MyCustomWidget')
+      expect(style.backgroundColor).toBe('#000000')
+      expect(style.color).toBeUndefined()
+    })
+
+    it('should not override explicit col when bg is set', () => {
+      const style = propertiesToStyle({ bg: '#000000', col: '#FF0000' }, false, 'Button')
+      expect(style.backgroundColor).toBe('#000000')
+      expect(style.color).toBe('#FF0000') // Explicit col is preserved
+    })
+
+    it('should set auto-contrast for Tile container', () => {
+      const style = propertiesToStyle({ bg: '#3281d1' }, false, 'Tile')
+      expect(style.backgroundColor).toBe('#3281d1')
+      // Tile gets white text on blue background, inherited by children
+      expect(style.color).toBe('#fff')
+    })
+
+    it('should set auto-contrast for Box container', () => {
+      const style = propertiesToStyle({ bg: '#1F2937' }, false, 'Box')
+      expect(style.backgroundColor).toBe('#1F2937')
+      expect(style.color).toBe('#fff')
     })
   })
 })

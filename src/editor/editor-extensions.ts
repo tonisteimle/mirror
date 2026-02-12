@@ -12,6 +12,7 @@ import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { dslAutocomplete, type DSLAutocompleteOptions } from './dsl-autocomplete'
 import { createEditorKeymaps, type KeymapConfig } from './keymaps'
 import { createPanelKeymap, type PanelKeymapConfig } from './panel-keymap'
+import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
 
 /**
  * Configuration for creating editor extensions.
@@ -34,6 +35,9 @@ export interface EditorExtensionsConfig {
 
   /** Whether to highlight active line (default: true) */
   highlightActiveLine?: boolean
+
+  /** Color swatch configuration (optional) */
+  colorSwatchConfig?: ColorSwatchConfig
 }
 
 /**
@@ -71,6 +75,7 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
     onDocChange,
     lineNumbers: showLineNumbers = true,
     highlightActiveLine: showHighlightActiveLine = true,
+    colorSwatchConfig,
   } = config
 
   const extensions: Extension[] = []
@@ -101,6 +106,11 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
   // DSL syntax highlighting
   extensions.push(dslTheme)
   extensions.push(dslHighlighter)
+
+  // Color swatches (inline color previews)
+  if (colorSwatchConfig) {
+    extensions.push(createColorSwatchPlugin(colorSwatchConfig))
+  }
 
   // Update listener for document changes
   extensions.push(createUpdateListener(onDocChange))

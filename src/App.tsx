@@ -47,6 +47,7 @@ function App() {
             highlightLine={app.editor.highlightLine}
             parsing={app.parsing}
             autoCompleteMode={app.editor.autoCompleteMode}
+            onPreviewChange={app.setPreviewOverride}
           />
         </EditorActionsProvider>
 

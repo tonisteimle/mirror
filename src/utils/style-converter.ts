@@ -5,14 +5,61 @@
  * Color System:
  * - col → always text color (style.color)
  * - bg → always background color (style.backgroundColor)
- * No magic logic based on component type.
+ *
+ * Auto-Contrast:
+ * - For interactive components (Button, Btn, etc.) with bg but no col,
+ *   automatically set a contrasting text color (white on dark, black on light)
  */
 
 import type React from 'react'
 import type { DSLProperties } from '../types/dsl-properties'
+import { getContrastTextColor } from './color'
 
 // Re-export for backwards compatibility
 export type { DSLProperties }
+
+// Track loaded Google Fonts to avoid duplicate requests
+const loadedGoogleFonts = new Set<string>()
+
+/**
+ * Load a Google Font dynamically
+ */
+function loadGoogleFont(fontFamily: string) {
+  // Extract font name from CSS font-family value (e.g., '"Inter"' -> 'Inter')
+  const fontName = fontFamily.replace(/["']/g, '').split(',')[0].trim()
+
+  // Skip system fonts and already loaded fonts
+  const systemFonts = ['system-ui', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy',
+                       'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana',
+                       'Courier New', 'Monaco', 'Consolas', 'ui-sans-serif', 'ui-serif']
+  if (systemFonts.some(sf => fontName.toLowerCase() === sf.toLowerCase())) return
+  if (loadedGoogleFonts.has(fontName)) return
+  if (typeof document === 'undefined') return
+
+  loadedGoogleFonts.add(fontName)
+
+  const link = document.createElement('link')
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@100;200;300;400;500;600;700;800;900&display=swap`
+  link.rel = 'stylesheet'
+  document.head.appendChild(link)
+}
+
+/**
+ * Components that should get automatic text contrast when bg is set.
+ * This ensures text is readable on colored backgrounds.
+ * The text color is inherited by all children.
+ */
+const AUTO_CONTRAST_COMPONENTS = new Set([
+  // Interactive elements
+  'Button', 'Btn', 'PrimaryBtn', 'SecondaryBtn', 'DangerBtn', 'GhostBtn',
+  'Primary-Button', 'Secondary-Button', 'Danger-Button', 'Ghost-Button',
+  'Tab', 'MenuItem', 'ListItem', 'Option', 'Chip', 'Badge', 'Tag',
+  // Container elements - text color inherited by children
+  'Box', 'Card', 'Panel', 'Tile', 'Container', 'Section', 'Header', 'Footer',
+  'Sidebar', 'Content', 'Main', 'Nav', 'Menu', 'Item', 'Row', 'Column', 'Col',
+  'Grid', 'Stack', 'Flex', 'Actions', 'Dashboard', 'Alert', 'Toast',
+  'Dialog', 'Modal', 'Popup', 'Dropdown', 'Tooltip', 'Popover'
+])
 
 /**
  * Check if properties contain any hover styles
@@ -125,6 +172,13 @@ export function propertiesToStyle(
         break
       case 'ver':
         style.flexDirection = 'column'
+        break
+      case 'stacked':
+        // Stacked layout: all children occupy same space, stacked on top of each other
+        // Uses CSS Grid with all children in cell 1/1
+        style.display = 'grid'
+        style.gridTemplateColumns = '1fr'
+        style.gridTemplateRows = '1fr'
         break
 
       // Alignment - main axis
@@ -363,9 +417,12 @@ export function propertiesToStyle(
           style.fontWeight = Number(value)
         }
         break
-      case 'font':
-        style.fontFamily = String(value)
+      case 'font': {
+        const fontValue = String(value)
+        style.fontFamily = fontValue
+        loadGoogleFont(fontValue)
         break
+      }
       case 'line':
         style.lineHeight = Number(value)
         break
@@ -505,6 +562,20 @@ export function propertiesToStyle(
   // Add CSS transition for smooth hover effects
   if (hasHoverStyles(properties)) {
     style.transition = 'all 0.15s ease'
+  }
+
+  // Auto-contrast: For interactive components with bg but no explicit col,
+  // automatically set a contrasting text color for readability
+  if (
+    style.backgroundColor &&
+    !style.color &&
+    componentName &&
+    AUTO_CONTRAST_COMPONENTS.has(componentName)
+  ) {
+    const contrastColor = getContrastTextColor(String(style.backgroundColor))
+    if (contrastColor) {
+      style.color = contrastColor
+    }
   }
 
   return style

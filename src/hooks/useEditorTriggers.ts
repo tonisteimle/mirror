@@ -11,6 +11,7 @@ import type { Extension } from '@codemirror/state'
 import { getCharBefore } from '../editor/utils'
 import { handleTriggerCharacter, type TriggerHandlers, type TriggerState } from '../editor/trigger-handlers'
 import type { ColorPanelState } from './useColorPanel'
+import type { InlinePanelState } from './useInlinePanel'
 
 export interface EditorTriggerConfig {
   /** Callback for document changes */
@@ -25,6 +26,18 @@ export interface EditorTriggerConfig {
   closeColorPanel: () => void
   /** Update color panel filter */
   updateColorPanelFilter: (filter: string) => void
+  /** Get current icon panel state (optional - for inline icon picker) */
+  getIconPanelState?: () => InlinePanelState
+  /** Close the icon panel */
+  closeIconPanel?: () => void
+  /** Update icon panel filter */
+  updateIconPanelFilter?: (filter: string) => void
+  /** Get current font panel state (optional - for inline font picker) */
+  getFontPanelState?: () => InlinePanelState
+  /** Close the font panel */
+  closeFontPanel?: () => void
+  /** Update font panel filter */
+  updateFontPanelFilter?: (filter: string) => void
 }
 
 export interface UseEditorTriggersReturn {
@@ -133,6 +146,64 @@ export function useEditorTriggers(config: EditorTriggerConfig): UseEditorTrigger
         }
 
         updateColorPanelFilter(filter)
+      }
+
+      // Update icon panel filter if open
+      const {
+        getIconPanelState,
+        closeIconPanel,
+        updateIconPanelFilter,
+      } = configRef.current
+
+      if (getIconPanelState && closeIconPanel && updateIconPanelFilter) {
+        const iconPanelState = getIconPanelState()
+        if (iconPanelState.isOpen) {
+          const doc = update.state.doc
+
+          if (cursorPos < iconPanelState.triggerPos) {
+            closeIconPanel()
+            return
+          }
+
+          const filter = doc.sliceString(iconPanelState.triggerPos, cursorPos)
+
+          // Close panel on newline (but allow spaces in filter for multi-word search)
+          if (filter.includes('\n')) {
+            closeIconPanel()
+            return
+          }
+
+          updateIconPanelFilter(filter)
+        }
+      }
+
+      // Update font panel filter if open
+      const {
+        getFontPanelState,
+        closeFontPanel,
+        updateFontPanelFilter,
+      } = configRef.current
+
+      if (getFontPanelState && closeFontPanel && updateFontPanelFilter) {
+        const fontPanelState = getFontPanelState()
+        if (fontPanelState.isOpen) {
+          const doc = update.state.doc
+
+          if (cursorPos < fontPanelState.triggerPos) {
+            closeFontPanel()
+            return
+          }
+
+          const filter = doc.sliceString(fontPanelState.triggerPos, cursorPos)
+
+          // Close panel on newline (but allow spaces in filter for multi-word search)
+          if (filter.includes('\n')) {
+            closeFontPanel()
+            return
+          }
+
+          updateFontPanelFilter(filter)
+        }
       }
     }
   }), [scheduleTrigger])

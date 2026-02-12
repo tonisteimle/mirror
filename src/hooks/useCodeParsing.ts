@@ -28,23 +28,49 @@ const emptyParseResult: ParseResult = {
   commands: [],
 }
 
+/**
+ * Preview override for live picker preview.
+ * When set, the preview value temporarily replaces text at the specified range.
+ */
+export interface PreviewOverride {
+  /** Start position in layoutCode */
+  from: number
+  /** End position in layoutCode (cursor position) */
+  to: number
+  /** Value to preview (e.g. selected color, font) */
+  value: string
+}
+
 export function useCodeParsing(
   tokensCode: string,
   componentsCode: string,
   layoutCode: string,
-  debounceMs = 150
+  debounceMs = 150,
+  previewOverride?: PreviewOverride | null
 ): UseCodeParsingReturn {
+  // Apply preview override to layout code if present
+  const effectiveLayoutCode = useMemo(() => {
+    if (!previewOverride) return layoutCode
+    const { from, to, value } = previewOverride
+    return layoutCode.slice(0, from) + value + layoutCode.slice(to)
+  }, [layoutCode, previewOverride])
+
   // Merge tokens (first) + components (second) + layout (third) for parsing
   const mergedCode = useMemo(() => {
     const parts = []
     if (tokensCode.trim()) parts.push(tokensCode)
     if (componentsCode.trim()) parts.push(componentsCode)
-    if (layoutCode.trim()) parts.push(layoutCode)
+    if (effectiveLayoutCode.trim()) parts.push(effectiveLayoutCode)
     return parts.join('\n\n')
-  }, [tokensCode, componentsCode, layoutCode])
+  }, [tokensCode, componentsCode, effectiveLayoutCode])
 
   // Debounce merged code to avoid parsing on every keystroke
-  const debouncedCode = useDebouncedValue(mergedCode, debounceMs)
+  // Skip debouncing when preview is active for instant feedback
+  const shouldSkipDebounce = !!previewOverride
+  const debouncedCode = useDebouncedValue(
+    mergedCode,
+    shouldSkipDebounce ? 0 : debounceMs
+  )
 
   const parseResult = useMemo(() => {
     if (!debouncedCode.trim()) {

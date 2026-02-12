@@ -32,6 +32,7 @@ export function inferPropertyFromTokenName(tokenName: string): string | null {
   if (name.endsWith('-rad')) return 'rad'
   if (name.endsWith('-gap')) return 'gap'
   if (name.endsWith('-col')) return 'col'
+  if (name.endsWith('-bg')) return 'bg'
   if (name.endsWith('-boc')) return 'boc'
   if (name.endsWith('-bor')) return 'bor'
 
@@ -43,10 +44,26 @@ export function inferPropertyFromTokenName(tokenName: string): string | null {
 }
 
 /**
- * Infer default color property from component type.
- * All components use 'col' for color.
+ * Text components - shorthand colors become 'col' (text color)
+ * Also includes Icon since icon color is text-like (fills the glyph)
  */
-export function inferColorProperty(_componentName: string, _properties: Record<string, unknown>): string {
-  // All colors are 'col' - no bg property exists
-  return 'col'
+const TEXT_COMPONENTS = new Set([
+  'Text', 'Label', 'Title', 'Heading', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  'Paragraph', 'P', 'Span', 'Link', 'A', 'Value', 'Description', 'Caption',
+  'Subtitle', 'Hint', 'Error', 'Message',
+  'Icon' // Icon color fills the glyph, like text
+])
+
+/**
+ * Infer default color property from component type.
+ * - Text components: 'col' (text color)
+ * - Container components: 'bg' (background color)
+ */
+export function inferColorProperty(componentName: string, _properties: Record<string, unknown>): string {
+  // Text components use col for text color
+  if (TEXT_COMPONENTS.has(componentName)) {
+    return 'col'
+  }
+  // All other components (containers) use bg for background color
+  return 'bg'
 }

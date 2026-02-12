@@ -68,6 +68,10 @@ export type { PanelKeymapConfig } from './panel-keymap'
 export { createEditorExtensions, createMinimalExtensions } from './editor-extensions'
 export type { EditorExtensionsConfig } from './editor-extensions'
 
+// Color swatches
+export { createColorSwatchPlugin } from './color-swatches'
+export type { ColorSwatchConfig } from './color-swatches'
+
 // Constants
 export {
   TRIGGER_DELAY_MS,

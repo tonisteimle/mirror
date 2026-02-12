@@ -147,13 +147,52 @@ export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
 
 /**
  * Creates the space keymap.
- * Space no longer triggers pickers - use # for colors and $ for tokens instead.
- * Inline autocomplete handles property suggestions.
+ * Space after 'font' or 'icon' triggers the appropriate picker automatically.
+ * This provides a seamless experience where users type "font " and immediately
+ * see the font picker.
  */
-export function createSpaceKeymap(_config: KeymapConfig): Extension {
-  // Space now just inserts normally - no picker triggering
-  // This lets autocomplete handle property suggestions
-  return keymap.of([])
+export function createSpaceKeymap(config: KeymapConfig): Extension {
+  const { callbacks } = config
+
+  return keymap.of([{
+    key: ' ',
+    run: (view: EditorView) => {
+      const textBefore = getTextBeforeCursor(view)
+
+      // Don't trigger inside strings
+      if (isInsideString(textBefore)) return false
+
+      // Check if we just typed "font" (with word boundary)
+      if (/\bfont$/.test(textBefore)) {
+        // Insert space first
+        const pos = view.state.selection.main.head
+        view.dispatch({
+          changes: { from: pos, to: pos, insert: ' ' },
+          selection: { anchor: pos + 1 }
+        })
+
+        // Open font picker after short delay
+        setTimeout(callbacks.openFontPicker, PICKER_OPEN_DELAY_MS)
+        return true
+      }
+
+      // Check if we just typed "icon" (with word boundary)
+      if (/\bicon$/.test(textBefore)) {
+        // Insert space first
+        const pos = view.state.selection.main.head
+        view.dispatch({
+          changes: { from: pos, to: pos, insert: ' ' },
+          selection: { anchor: pos + 1 }
+        })
+
+        // Open icon picker after short delay
+        setTimeout(callbacks.openIconPicker, PICKER_OPEN_DELAY_MS)
+        return true
+      }
+
+      return false // Let default space handling occur
+    }
+  }])
 }
 
 /**

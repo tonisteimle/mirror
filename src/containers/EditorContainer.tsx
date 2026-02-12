@@ -1,6 +1,6 @@
 import { EditorPanel, type EditorTab } from '../components/EditorPanel'
 import { EditorErrorBoundary } from '../components/boundaries'
-import type { UseCodeParsingReturn } from '../hooks/useCodeParsing'
+import type { UseCodeParsingReturn, PreviewOverride } from '../hooks/useCodeParsing'
 
 interface EditorContainerProps {
   width: number
@@ -15,6 +15,7 @@ interface EditorContainerProps {
   highlightLine?: number
   parsing: UseCodeParsingReturn
   autoCompleteMode: 'always' | 'delay' | 'off'
+  onPreviewChange?: (override: PreviewOverride | null) => void
   // Note: onOpenAiAssistant, onClear, onClean are now provided via EditorActionsContext
 }
 
@@ -31,6 +32,7 @@ export function EditorContainer({
   highlightLine,
   parsing,
   autoCompleteMode,
+  onPreviewChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -47,6 +49,7 @@ export function EditorContainer({
         highlightLine={highlightLine}
         designTokens={parsing.parseResult.tokens}
         autoCompleteMode={autoCompleteMode}
+        onPreviewChange={onPreviewChange}
       />
     </EditorErrorBoundary>
   )

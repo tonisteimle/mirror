@@ -28,7 +28,7 @@
 // All known properties (short forms)
 export const PROPERTIES = new Set([
   // Layout
-  'hor', 'ver', 'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'cen', 'grid', 'rows',
+  'hor', 'ver', 'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'cen', 'grid', 'rows', 'stacked',
   // Alignment
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   // Sizing
@@ -95,7 +95,7 @@ export function splitDirectionCombo(value: string): string[] {
 
 // Properties by type
 export const BOOLEAN_PROPERTIES = new Set([
-  'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'fill', 'cen',
+  'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'fill', 'cen', 'stacked',
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   'hidden', 'visible'

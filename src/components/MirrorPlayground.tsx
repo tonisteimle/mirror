@@ -158,6 +158,7 @@ const createStyles = (theme: typeof themes.dark, height: number, layout: 'horizo
       flex: 1,
       padding: '16px',
       backgroundColor: theme.previewBg,
+      color: theme.text,
       overflow: 'auto',
       display: 'flex',
       alignItems: 'flex-start',

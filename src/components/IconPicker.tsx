@@ -4,6 +4,7 @@ import { colors } from '../theme'
 import { usePickerBehavior } from '../hooks/usePickerBehavior'
 import { BasePicker, PickerList, PickerFooter, PickerSearch } from './picker'
 import type { Position } from '../types/common'
+import { searchIcons } from '../data/icon-synonyms'
 
 interface IconPickerProps {
   isOpen: boolean
@@ -13,12 +14,13 @@ interface IconPickerProps {
 }
 
 // Get all icon names from Lucide
+// Filter: PascalCase names, exclude "Icon" suffix duplicates, exclude utilities
 const allIconNames = Object.keys(LucideIcons).filter(
   key =>
-    key !== 'default' &&
-    key !== 'createLucideIcon' &&
-    key !== 'icons' &&
-    typeof (LucideIcons as Record<string, unknown>)[key] === 'function'
+    /^[A-Z]/.test(key) &&
+    !key.endsWith('Icon') &&
+    key !== 'Icon' &&
+    !!(LucideIcons as Record<string, unknown>)[key]
 )
 
 // Convert PascalCase to kebab-case for DSL
@@ -77,17 +79,11 @@ export const IconPicker = memo(function IconPicker({
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('Beliebt')
 
-  // Filter icons based on query
+  // Filter icons based on query with synonym support
   const filteredIcons = useMemo(() => {
     if (query) {
-      const lowerQuery = query.toLowerCase()
-      return allIconNames
-        .filter(
-          name =>
-            name.toLowerCase().includes(lowerQuery) ||
-            toKebabCase(name).includes(lowerQuery)
-        )
-        .slice(0, 100) // Limit results for performance
+      // Use searchIcons with synonym support, sorted by relevance
+      return searchIcons(allIconNames, query).slice(0, 100)
     }
     // Show category icons when not searching
     return iconCategories[activeCategory] || popularIcons

@@ -168,7 +168,7 @@ export function PanelList({
   listRef,
 }: {
   children: React.ReactNode
-  listRef?: React.RefObject<HTMLDivElement>
+  listRef?: React.RefObject<HTMLDivElement | null>
 }) {
   return (
     <div

@@ -25,6 +25,8 @@ export interface GenerateOptions {
   onClick?: (id: string) => void
   /** Callback for page navigation */
   onPageNavigate?: (targetPage: string) => void
+  /** Parent has stacked layout - children should use grid-area: 1/1 */
+  parentStacked?: boolean
 }
 
 /**

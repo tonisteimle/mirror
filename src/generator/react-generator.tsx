@@ -555,6 +555,15 @@ function LibraryComponentRendererInner({ node, options }: LibraryComponentRender
       return <span key={node.id} data-id={node.id} className={node.name} style={style}>{textContent || generateReactElement(node.children, options)}</span>
     }
 
+    // Render children or content (content is used when children is empty)
+    const renderContent = () => {
+      if (node.children.length > 0) {
+        return node.children.map(child => generateReactElement([child], options))
+      }
+      // Use content as text if no children
+      return node.content ? sanitizeTextContent(node.content) : null
+    }
+
     // Check if the library component needs interactive behavior (e.g., onclick handlers)
     if (needsInteractiveComponent(node)) {
       const hoverStyles = hasHoverStyles(node.properties) ? extractHoverStyles(node.properties) : {}
@@ -567,14 +576,14 @@ function LibraryComponentRendererInner({ node, options }: LibraryComponentRender
           hoverStyle={hoverStyles}
           highlightStyle={highlightStyle}
         >
-          {node.children.map(child => generateReactElement([child], options))}
+          {renderContent()}
         </InteractiveComponent>
       )
     }
 
     return (
       <div key={node.id} data-id={node.id} className={node.name} style={style}>
-        {node.children.map(child => generateReactElement([child], options))}
+        {renderContent()}
       </div>
     )
   }
@@ -622,6 +631,11 @@ function prepareNodeContext(
     node.children.some(child => child.name !== INTERNAL_NODES.TEXT)
   const baseStyle = propertiesToStyle(node.properties, hasRealChildren, node.name, node._libraryType)
   let style = baseStyle
+
+  // If parent is stacked, child occupies same grid cell (stacking effect)
+  if (options.parentStacked) {
+    style = { ...style, gridArea: '1 / 1' }
+  }
 
   // Apply continuous animation if defined
   if (node.continuousAnimation) {
@@ -736,8 +750,13 @@ function generateReactElementWithoutLibrary(
     const ctx = prepareNodeContext(node, options)
     const { iconName } = ctx
 
+    // Pass parentStacked to direct children only if this node has stacked layout
+    // Reset parentStacked for non-stacked nodes to prevent propagation to grandchildren
+    const childOptions = node.properties.stacked
+      ? { ...options, parentStacked: true }
+      : { ...options, parentStacked: undefined }
     const children = node.children.length > 0
-      ? generateReactElementWithoutLibrary(node.children, options)
+      ? generateReactElementWithoutLibrary(node.children, childOptions)
       : (ctx.imageSrc ? null : node.content)
 
     // Primitive props for extracted renderers
@@ -795,8 +814,13 @@ function renderSingleNode(node: ASTNode, options: GenerateOptions): React.ReactN
   const ctx = prepareNodeContext(node, options)
   const { iconName, iconSize, iconColor, imageElement, hoverStyles } = ctx
 
+  // Pass parentStacked to direct children only if this node has stacked layout
+  // Reset parentStacked for non-stacked nodes to prevent propagation to grandchildren
+  const childOptions = node.properties.stacked
+    ? { ...options, parentStacked: true }
+    : { ...options, parentStacked: undefined }
   const children = node.children.length > 0
-    ? generateReactElement(node.children, options)
+    ? generateReactElement(node.children, childOptions)
     : (ctx.imageSrc ? null : node.content)
 
   // Primitive props for extracted renderers

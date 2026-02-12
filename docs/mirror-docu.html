@@ -404,7 +404,7 @@
       <p>
         Everything in Mirror is a component. Every component has a name – this is how you reuse it later.
       </p>
-      <div class="mirror-editor" data-code="Button &quot;Hello World&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Button &quot;Hello World&quot;"></div>
       <p>
         <code class="inline-code">Button</code> is the component name, <code class="inline-code">"Hello World"</code> is its content.
       </p>
@@ -413,25 +413,25 @@
       <p>
         Properties style a component. They are written as name-value pairs directly after the component name. Colors can be written directly without a property name.
       </p>
-      <div class="mirror-editor" data-code="Row gap 12&#10;  Button #2271c1 pad 12 24 rad 8 &quot;Short form&quot;&#10;  Button color #2271c1 padding 12 24 radius 8 &quot;Long form&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Row gap 12&#10;  Button #2271c1 pad 12 24 rad 8 &quot;Short form&quot;&#10;  Button bg #2271c1 padding 12 24 radius 8 &quot;Long form&quot;"></div>
       <p>
-        <code class="inline-code">#2271c1</code> sets the color directly. <code class="inline-code">padding</code> adds spacing (vertical horizontal), <code class="inline-code">radius</code> rounds corners. Values are in pixels. Properties can be shortened to three letters: <code class="inline-code">col</code>, <code class="inline-code">pad</code>, <code class="inline-code">rad</code>.
+        <code class="inline-code">#2271c1</code> sets the background color. <code class="inline-code">padding</code> adds spacing (vertical horizontal), <code class="inline-code">radius</code> rounds corners. Values are in pixels. Properties can be shortened to three letters: <code class="inline-code">bg</code>, <code class="inline-code">pad</code>, <code class="inline-code">rad</code>.
       </p>
 
       <h4>3. Reuse and Override</h4>
       <p>
         Components remember their styling. Use them again and they inherit everything. Override only what's different.
       </p>
-      <div class="mirror-editor" data-code="Row hor gap 12&#10;  Button #2271c1 pad 12 24 rad 8 &quot;Hello World&quot;&#10;  Button &quot;Save&quot;&#10;  Button #c12271 &quot;Delete&quot;" data-preview-height="70"></div>
+      <div class="mirror-editor" data-code="Row hor gap 12&#10;  Button #2271c1 pad 12 24 rad 8 &quot;Hello World&quot;&#10;  Button &quot;Save&quot;&#10;  Button #c12271 &quot;Delete&quot;"></div>
       <p>
-        The first <code class="inline-code">Button</code> defines the style. The second inherits it. The third overrides <code class="inline-code">col</code> to red.
+        The first <code class="inline-code">Button</code> defines the style. The second inherits it. The third overrides <code class="inline-code">bg</code> to red.
       </p>
 
       <h4>4. Layouts and Children</h4>
       <p>
         Components can contain other components. Indentation (2 spaces) defines hierarchy. Layout properties arrange children.
       </p>
-      <div class="mirror-editor" data-code="Tile ver #3281d1 pad 20 rad 12 gap 8&#10;  Label #fff size 12 &quot;Revenue&quot;&#10;  Value size 28 weight bold &quot;2.7 Mio&quot;" data-preview-height="110"></div>
+      <div class="mirror-editor" data-code="Tile ver #3281d1 pad 20 rad 12 gap 8&#10;  Label size 12 &quot;Revenue&quot;&#10;  Value size 28 weight bold &quot;2.7 Mio&quot;"></div>
       <p>
         <code class="inline-code">ver</code> arranges children vertically, <code class="inline-code">gap</code> adds spacing. <code class="inline-code">Label</code> and <code class="inline-code">Value</code> are children of <code class="inline-code">Tile</code>.
       </p>
@@ -440,7 +440,7 @@
       <p>
         Add <code class="inline-code">:</code> after a name to define a template. Templates can have child placeholders that get filled when used.
       </p>
-      <div class="mirror-editor" data-code="Tile: ver col #3281d1 pad 20 rad 12 gap 8&#10;  Label col #fff size 12&#10;  Value size 28 weight bold&#10;&#10;Dashboard grid 3 gap 16&#10;  Tile Label &quot;Revenue&quot; Value &quot;2.7 Mio&quot;&#10;  Tile Label &quot;Customers&quot; Value &quot;40&quot;&#10;  Tile Label &quot;Growth&quot; Value &quot;+12%&quot;&#10;  Tile Label &quot;Users&quot; Value &quot;1.2k&quot;&#10;  Tile Label &quot;Orders&quot; Value &quot;89&quot;&#10;  Tile Label &quot;Rating&quot; Value &quot;4.8&quot;" data-preview-height="240"></div>
+      <div class="mirror-editor" data-code="Tile: ver bg #3281d1 pad 20 rad 12 gap 8&#10;  Label size 12&#10;  Value size 28 weight bold&#10;&#10;Dashboard grid 3 gap 16&#10;  Tile Label &quot;Revenue&quot; Value &quot;2.7 Mio&quot;&#10;  Tile Label &quot;Customers&quot; Value &quot;40&quot;&#10;  Tile Label &quot;Growth&quot; Value &quot;+12%&quot;&#10;  Tile Label &quot;Users&quot; Value &quot;1.2k&quot;&#10;  Tile Label &quot;Orders&quot; Value &quot;89&quot;&#10;  Tile Label &quot;Rating&quot; Value &quot;4.8&quot;"></div>
       <p>
         <code class="inline-code">Tile:</code> defines the template. Each <code class="inline-code">Tile</code> usage fills in the <code class="inline-code">Label</code> and <code class="inline-code">Value</code> content.
       </p>
@@ -449,7 +449,7 @@
       <p>
         Components can have different visual states. Properties inside a state override the defaults when that state is active.
       </p>
-      <div class="mirror-editor" data-code="Button #2271c1 pad 12 24 rad 8 &quot;Hover me&quot;&#10;  state hover&#10;    col #1d5ba0&#10;  state active&#10;    col #174a83" data-preview-height="70"></div>
+      <div class="mirror-editor" data-code="Button #2271c1 pad 12 24 rad 8 &quot;Hover me&quot;&#10;  state hover&#10;    bg #1d5ba0&#10;  state active&#10;    bg #174a83"></div>
       <p>
         <code class="inline-code">state hover</code> changes color on hover. <code class="inline-code">state active</code> changes it when pressed.
       </p>
@@ -458,7 +458,7 @@
       <p>
         Events trigger actions. <code class="inline-code">onclick</code> runs when the user clicks, <code class="inline-code">onchange</code> when a value changes.
       </p>
-      <div class="mirror-editor" data-code="Button #2271c1 pad 12 24 rad 8 &quot;Click me&quot;&#10;  state hover&#10;    col #1d5ba0&#10;  onclick alert &quot;It works!&quot;" data-preview-height="70"></div>
+      <div class="mirror-editor" data-code="Button #2271c1 pad 12 24 rad 8 &quot;Click me&quot;&#10;  state hover&#10;    bg #1d5ba0&#10;  onclick alert &quot;It works!&quot;"></div>
       <p>
         <code class="inline-code">onclick alert "It works!"</code> shows a message when clicked.
       </p>
@@ -467,7 +467,7 @@
       <p>
         Actions can show, hide, or toggle elements. Use the element's name as the target.
       </p>
-      <div class="mirror-editor" data-code="Box ver #3281d1 pad 20 rad 12 gap 12&#10;  Button #2271c1 pad 10 16 rad 6 &quot;Show/Hide Details&quot;&#10;    state hover&#10;      col #1d5ba0&#10;    onclick toggle Details&#10;  Details ver #0f0f14 pad 16 rad 8 gap 4&#10;    Text #fff &quot;Here are the details.&quot;&#10;    Text #fff &quot;They appear and disappear.&quot;" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Box ver #3281d1 pad 20 rad 12 gap 12&#10;  Button #2271c1 pad 10 16 rad 6 &quot;Show/Hide Details&quot;&#10;    state hover&#10;      col #1d5ba0&#10;    onclick toggle Details&#10;  Details ver #222 pad 16 rad 8 gap 4&#10;    Text &quot;Here are the details.&quot;&#10;    Text &quot;They appear and disappear.&quot;"></div>
       <p>
         <code class="inline-code">toggle Details</code> shows or hides <code class="inline-code">Details</code> on each click.
       </p>
@@ -476,18 +476,9 @@
       <p>
         The <code class="inline-code">hidden</code> property makes an element invisible at the start. It appears when toggled or shown.
       </p>
-      <div class="mirror-editor" data-code="Box ver #3281d1 pad 20 rad 12 gap 12&#10;  Button #2271c1 pad 10 16 rad 6 &quot;Show Message&quot;&#10;    state hover&#10;      col #1d5ba0&#10;    onclick toggle Message&#10;  Message hidden #fff &quot;Hello! Click again to hide.&quot;" data-preview-height="140"></div>
+      <div class="mirror-editor" data-code="Box ver #3281d1 pad 20 rad 12 gap 12&#10;  Button #2271c1 pad 10 16 rad 6 &quot;Show Message&quot;&#10;    state hover&#10;      col #1d5ba0&#10;    onclick toggle Message&#10;  Message hidden &quot;Hello! Click again to hide.&quot;"></div>
       <p>
         <code class="inline-code">Message hidden</code> starts invisible. Click the button to reveal it.
-      </p>
-
-      <h4>10. Library Components</h4>
-      <p>
-        Mirror includes pre-built interactive components like Tabs, Accordion, and Dialog. Use <code class="inline-code">as</code> to create them – all behavior is automatic.
-      </p>
-      <div class="mirror-editor" data-code="MyTabs as Tabs:&#10;  Tabs hor, #1A1A23, pad 4, rad 8&#10;    Tab &quot;Code&quot;&#10;    Tab &quot;Preview&quot;&#10;    Tab &quot;Output&quot;&#10;  TabContent pad 16, &quot;Write your code here&quot;&#10;  TabContent pad 16, &quot;See the preview&quot;&#10;  TabContent pad 16, &quot;View the output&quot;" data-preview-height="120"></div>
-      <p>
-        <code class="inline-code">as Tabs</code> activates the Tabs behavior. Click the tabs – switching works automatically.
       </p>
 
       <p style="margin-top: 32px;">
@@ -508,7 +499,7 @@
         Every element is a component. The first usage defines it, subsequent ones inherit.
       </p>
 
-      <div class="mirror-editor" data-code="Row gap 8&#10;  Button bg #2271c1, pad 8 16, rad 8, &quot;Next&quot;&#10;  Button &quot;Save&quot;&#10;  Button &quot;Cancel&quot;&#10;  Button &quot;Delete&quot;" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="Row gap 8&#10;  Button bg #2271c1, pad 8 16, rad 8, &quot;Next&quot;&#10;  Button &quot;Save&quot;&#10;  Button &quot;Cancel&quot;&#10;  Button &quot;Delete&quot;"></div>
 
       <p>
         The first button sets background (<code class="inline-code">bg</code>), padding, and radius. The following ones inherit this definition. Use <code class="inline-code">col</code> to set text color explicitly.
@@ -517,7 +508,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Change the color to red (<code class="inline-code">#c14022</code>) and the pad to <code class="inline-code">12 24</code>.</p>
-        <div class="mirror-editor" data-code="Button #2271c1, pad 8 16, rad 8, &quot;Click me&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Button #2271c1, pad 8 16, rad 8, &quot;Click me&quot;"></div>
       </div>
 
       <h3 id="implicit-explicit-definition">Implicit versus Explicit Definition</h3>
@@ -525,7 +516,7 @@
         The example above shows how you can define and display components directly while designing. Later, you might want to separate definition from usage. The only change needed is a colon:
       </p>
 
-      <div class="mirror-editor" data-code="Button: bg #2271c1, pad 8 16, rad 8&#10;&#10;Button &quot;Next&quot;&#10;Button &quot;Save&quot;&#10;Button &quot;Cancel&quot;&#10;Button &quot;Delete&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Button: bg #2271c1, pad 8 16, rad 8&#10;&#10;Row hor, gap 8&#10;  Button &quot;Next&quot;&#10;  Button &quot;Save&quot;&#10;  Button &quot;Cancel&quot;&#10;  Button &quot;Delete&quot;"></div>
 
       <p>
         The colon makes the difference: with a colon, the component is defined but not rendered. Without a colon, it is rendered. The definition can then be moved to a separate file if desired.
@@ -534,7 +525,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Define a <code class="inline-code">Card:</code> with dark background and padding, then use it twice.</p>
-        <div class="mirror-editor" data-code="// Define your Card here&#10;&#10;Card&#10;Card" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="// Define your Card here&#10;&#10;Card&#10;Card"></div>
       </div>
 
       <h3 id="hierarchical-structure">Hierarchical Structure</h3>
@@ -542,7 +533,7 @@
         Interfaces are hierarchical: a card contains a title and text, a header contains a logo and navigation. In HTML, this means nested tags – opening tags, closing tags, and the actual content somewhere in between. In Mirror, indentation expresses this hierarchy directly. The visual structure of the code matches the visual structure of the UI. No closing tags, no tag soup – just clear nesting through whitespace.
       </p>
 
-      <div class="mirror-editor" data-code="Footer pad 16, hor, between&#10;  Save-Area hor, gap 8&#10;    Button &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area hor, gap 8&#10;    Button &quot;Back&quot;&#10;    Button &quot;Next&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="Footer pad 16, hor, between, #1a1a1a, rad 8&#10;  Save-Area hor, gap 8&#10;    Button #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area hor, gap 8&#10;    Button #333, pad 8 16, rad 6, &quot;Back&quot;&#10;    Button &quot;Next&quot;"></div>
 
       <p>
         <code class="inline-code">hor</code> arranges children horizontally, <code class="inline-code">between</code> distributes available space between them. Indented elements are children of their parent.
@@ -551,7 +542,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a third button "Delete" to the Save-Area. Notice how subsequent buttons inherit from the first one!</p>
-        <div class="mirror-editor" data-code="Footer pad 16, hor, between, #1a1a1a, rad 8&#10;  Save-Area hor, gap 8&#10;    Button col #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area hor, gap 8&#10;    Button col #333, &quot;Back&quot;&#10;    Button &quot;Next&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Footer pad 16, hor, between, #1a1a1a, rad 8&#10;  Save-Area hor, gap 8&#10;    Button bg #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area hor, gap 8&#10;    Button bg #333, &quot;Back&quot;&#10;    Button &quot;Next&quot;"></div>
       </div>
 
       <h3 id="components-in-components">Components in Components</h3>
@@ -559,26 +550,26 @@
         The same result is achieved when components are defined separately:
       </p>
 
-      <div class="mirror-editor" data-code="Footer: pad 16, hor, between&#10;Save-Area: hor, gap 8&#10;Navigation-Area: hor, gap 8" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Footer: pad 16, hor, between, #1a1a1a, rad 8&#10;Save-Area: hor, gap 8&#10;Navigation-Area: hor, gap 8&#10;&#10;Footer&#10;  Save-Area&#10;    Button #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;  Navigation-Area&#10;    Button #333, pad 8 16, rad 6, &quot;Next&quot;"></div>
 
       <p>
         These components can then be combined freely:
       </p>
 
-      <div class="mirror-editor" data-code="Footer&#10;  Save-Area&#10;    Button &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area&#10;    Button &quot;Back&quot;&#10;    Button &quot;Next&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="Footer&#10;  Save-Area&#10;    Button &quot;Save&quot;&#10;    Button &quot;Cancel&quot;&#10;  Navigation-Area&#10;    Button &quot;Back&quot;&#10;    Button &quot;Next&quot;"></div>
 
       <p>
         Since components are not tightly coupled, they accept different children:
       </p>
 
-      <div class="mirror-editor" data-code="Footer&#10;  Button &quot;Save&quot;&#10;  Button &quot;Cancel&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Footer&#10;  Button &quot;Save&quot;&#10;  Button &quot;Cancel&quot;"></div>
 
       <h3 id="individual-instances">Customizing Instances</h3>
       <p>
         Each usage of a component can be customized inline:
       </p>
 
-      <div class="mirror-editor" data-code="Button &quot;Next&quot; #5ba8f5" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Button #5ba8f5, pad 8 16, rad 6, &quot;Next&quot;"></div>
 
       <p>
         The label becomes "Next" and the background changes to #5ba8f5. Properties added at usage override the component definition.
@@ -589,18 +580,18 @@
         For reusable variants, components can be derived from each other:
       </p>
 
-      <div class="mirror-editor" data-code="// Base button&#10;Button: pad 8 16, rad 8&#10;&#10;// Variants&#10;Primary-Button from Button: col #2271c1&#10;Secondary-Button from Button: col transparent, bor 1 #2271c1&#10;Danger-Button from Button: col #c14022" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="// Base button&#10;Button: pad 8 16, rad 8&#10;&#10;// Variants&#10;Primary-Button from Button: bg #2271c1&#10;Secondary-Button from Button: bg transparent, bor 1 #2271c1&#10;Danger-Button from Button: bg #c14022&#10;&#10;Row hor, gap 8&#10;  Primary-Button &quot;Save&quot;&#10;  Secondary-Button &quot;Cancel&quot;&#10;  Danger-Button &quot;Delete&quot;"></div>
 
       <p>
         With <code class="inline-code">from</code>, a component inherits all properties from the base. New properties are added or override existing ones.
       </p>
 
-      <div class="mirror-editor" data-code="Actions hor, gap 12&#10;  Primary-Button &quot;Save&quot;&#10;  Secondary-Button &quot;Cancel&quot;&#10;  Danger-Button &quot;Delete&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Actions hor, gap 12&#10;  Primary-Button &quot;Save&quot;&#10;  Secondary-Button &quot;Cancel&quot;&#10;  Danger-Button &quot;Delete&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a <code class="inline-code">GhostBtn</code> variant with transparent background and a blue border.</p>
-        <div class="mirror-editor" data-code="Btn: pad 8 16, rad 8&#10;&#10;PrimaryBtn from Btn: col #2271c1&#10;DangerBtn from Btn: col #c14022&#10;&#10;// Add GhostBtn here (hint: col transparent, bor 1 #2271c1)&#10;&#10;Row gap 8&#10;  PrimaryBtn &quot;Save&quot;&#10;  DangerBtn &quot;Delete&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="Btn: pad 8 16, rad 8&#10;&#10;PrimaryBtn from Btn: bg #2271c1&#10;DangerBtn from Btn: bg #c14022&#10;&#10;// Add GhostBtn here (hint: col transparent, bor 1 #2271c1)&#10;&#10;Row gap 8&#10;  PrimaryBtn &quot;Save&quot;&#10;  DangerBtn &quot;Delete&quot;"></div>
       </div>
 
       <h3 id="component-states">States</h3>
@@ -608,7 +599,7 @@
         Components can define <code class="inline-code">state</code> blocks for different visual appearances. Use <code class="inline-code">onclick toggle</code> to switch between them. System states (<code class="inline-code">hover</code>, <code class="inline-code">focus</code>, <code class="inline-code">active</code>, <code class="inline-code">disabled</code>) activate automatically.
       </p>
 
-      <div class="mirror-editor" data-code="Button: pad 12 24, col #2271c1, rad 8&#10;  state hover&#10;    col #3388e8" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Button: pad 12 24, bg #2271c1, rad 8&#10;  state hover&#10;    bg #3388e8&#10;&#10;Button &quot;Hover me&quot;"></div>
 
       <p>
         See <a href="#states">States section</a> for details on defining states, system states, and hover shorthand.
@@ -617,7 +608,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a <code class="inline-code">state hover</code> with a lighter blue (<code class="inline-code">#5ba8f5</code>).</p>
-        <div class="mirror-editor" data-code="Button: #2271c1, pad 8 16, rad 8&#10;&#10;// Add hover state here&#10;&#10;Button &quot;Hover me&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="Button: #2271c1, pad 8 16, rad 8&#10;&#10;// Add hover state here&#10;&#10;Button &quot;Hover me&quot;"></div>
       </div>
 
       <h3 id="combining-states-inheritance">Combining States and Inheritance</h3>
@@ -630,21 +621,21 @@
         The base button defines three child elements: <code class="inline-code">IconLeft</code>, <code class="inline-code">Label</code>, and <code class="inline-code">IconRight</code>. Both icons are hidden by default. It also defines two states: <code class="inline-code">hover</code> and <code class="inline-code">disabled</code>.
       </p>
 
-      <div class="mirror-editor" data-code="Button:&#10;  hor, gap 8, pad 12 24, rad 8, col #2271c1, col #FFF&#10;  IconLeft icon /check, hidden&#10;  Label &quot;Button&quot;&#10;  IconRight icon /chevron-right, hidden&#10;&#10;  state hover&#10;    col #1a5a9e&#10;&#10;  state disabled&#10;    col #94A3B8, col #64748B, opa 0.6" data-preview-height="275"></div>
+      <div class="mirror-editor" data-code="Button:&#10;  hor, gap 8, pad 12 24, rad 8, col #2271c1&#10;  IconLeft icon check, hidden&#10;  Label &quot;Button&quot;&#10;  IconRight icon chevron-right, hidden&#10;&#10;  state hover&#10;    bg #1a5a9e&#10;&#10;  state disabled&#10;    col #94A3B8, opa 0.6&#10;&#10;Row hor, gap 12&#10;  Button&#10;  Button IconLeft visible, Label &quot;Confirm&quot;&#10;  Button disabled, Label &quot;Disabled&quot;"></div>
 
       <h4>Variants</h4>
       <p>
         Each variant inherits all elements and states from the base. It only specifies what's different.
       </p>
 
-      <div class="mirror-editor" data-code="// Shows the left icon, changes the label&#10;Primary-Button from Button:&#10;  IconLeft visible&#10;  Label &quot;Next&quot;&#10;&#10;// Different colors, different hover state&#10;Secondary-Button from Button:&#10;  col #E2E8F0, col #1E293B&#10;  state hover&#10;    col #CBD5E1&#10;&#10;// Transparent with border&#10;Ghost-Button from Button:&#10;  col transparent, col #2271c1, bor 1 #2271c1&#10;  state hover&#10;    col #2271c110&#10;&#10;// Icon only, no label&#10;Icon-Button from Button:&#10;  pad 12, rad 100&#10;  IconLeft visible, icon /plus&#10;  Label hidden" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="Button: hor, gap 8, pad 12 24, rad 8, col #2271c1&#10;  IconLeft icon check, hidden&#10;  Label &quot;Button&quot;&#10;&#10;Primary-Button from Button:&#10;  IconLeft visible&#10;&#10;Secondary-Button from Button:&#10;  col #E2E8F0, textCol #1E293B&#10;&#10;Ghost-Button from Button:&#10;  col transparent, textCol #2271c1, bor 1 #2271c1&#10;&#10;Row hor, gap 12&#10;  Primary-Button Label &quot;Next&quot;&#10;  Secondary-Button Label &quot;Cancel&quot;&#10;  Ghost-Button Label &quot;Info&quot;"></div>
 
       <h4>Usage</h4>
       <p>
         Variants can be used directly, or further customized at instantiation. The <code class="inline-code">disabled</code> state is inherited from the base and available on all variants.
       </p>
 
-      <div class="mirror-editor" data-code="Page:&#10;  ver, gap 16, pad 32&#10;&#10;  Primary-Button&#10;  Secondary-Button Label &quot;Cancel&quot;&#10;  Ghost-Button Label &quot;Learn more&quot;, IconRight visible&#10;  Icon-Button&#10;  Primary-Button disabled" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Page:&#10;  ver, gap 16, pad 32&#10;&#10;  Primary-Button&#10;  Secondary-Button Label &quot;Cancel&quot;&#10;  Ghost-Button Label &quot;Learn more&quot;, IconRight visible&#10;  Icon-Button&#10;  Primary-Button disabled"></div>
 
     </section>
 
@@ -665,11 +656,11 @@
       <div class="grid">
         <div>
           <div class="label">Shorthand</div>
-          <div class="mirror-editor" data-code="Box 300 400, pad 16&#10;Card 200, pad 8&#10;Panel 300, h 400" data-preview-height="60"></div>
+          <div class="mirror-editor" data-code="Row hor, gap 8&#10;  Box 80 50, #2271c1, rad 8, cen&#10;    Text size 11, &quot;80×50&quot;&#10;  Card 60, #333, rad 8, cen&#10;    Text size 11, &quot;60&quot;"></div>
         </div>
         <div>
           <div class="label">Equivalent</div>
-          <div class="mirror-editor" data-code="Box w 300, h 400, pad 16&#10;Card w 200, pad 8&#10;Panel w 300, h 400" data-preview-height="60"></div>
+          <div class="mirror-editor" data-code="Row hor, gap 8&#10;  Box w 80, h 50, #2271c1, rad 8, cen&#10;    Text size 11, &quot;80×50&quot;&#10;  Card w 60, #333, rad 8, cen&#10;    Text size 11, &quot;60&quot;"></div>
         </div>
       </div>
 
@@ -684,7 +675,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Simplify this code using dimension shorthand – remove <code class="inline-code">w</code> and <code class="inline-code">h</code> keywords.</p>
-        <div class="mirror-editor" data-code="Card w 280, h 180, ver, #3281d1, rad 12, pad 16, gap 8&#10;  Title weight 600, &quot;Project Alpha&quot;&#10;  Text #fff, &quot;A description here&quot;" data-preview-height="140"></div>
+        <div class="mirror-editor" data-code="Card w 280, h 180, ver, #3281d1, rad 12, pad 16, gap 8&#10;  Title weight 600, &quot;Project Alpha&quot;&#10;  Text &quot;A description here&quot;"></div>
       </div>
 
       <h3 id="image-shorthand">Image Shorthand</h3>
@@ -692,14 +683,14 @@
         For <code class="inline-code">Image</code>, the string is the source URL, followed by optional dimensions:
       </p>
 
-      <div class="mirror-editor" data-code="Gallery hor gap 16&#10;  Image &quot;https://picsum.photos/id/10/200/150&quot; 200 150, rad 8&#10;  Image &quot;https://picsum.photos/id/20/120/80&quot; 120 80, rad 8&#10;  Image &quot;https://picsum.photos/id/64/48/48&quot; 48 48, rad 24" data-preview-height="180"></div>
+      <div class="mirror-editor" data-code="Gallery hor gap 16&#10;  Image &quot;https://picsum.photos/id/10/200/150&quot; 200 150, rad 8&#10;  Image &quot;https://picsum.photos/id/20/120/80&quot; 120 80, rad 8&#10;  Image &quot;https://picsum.photos/id/64/48/48&quot; 48 48, rad 24"></div>
 
       <h3 id="opacity">Transparency</h3>
       <p>
         Use <code class="inline-code">op</code> for opacity (0–100):
       </p>
 
-      <div class="mirror-editor" data-code="Container hor gap 16&#10;  Overlay 80 80 col #000 op 50 rad 8&#10;  Overlay 80 80 col #2271c1 op 75 rad 8&#10;  Overlay 80 80 col #fff op 25 rad 8" data-preview-height="120"></div>
+      <div class="mirror-editor" data-code="Container hor gap 16&#10;  Overlay 80 80 col #000 op 50 rad 8&#10;  Overlay 80 80 col #2271c1 op 75 rad 8&#10;  Overlay 80 80 col #fff op 25 rad 8"></div>
 
     </section>
 
@@ -720,7 +711,7 @@
         A token is a named value that can be used throughout the design. Tokens start with <code class="inline-code">$</code>.
       </p>
 
-      <div class="mirror-editor" data-code="$primary-col: #2271c1&#10;$default-rad: 8&#10;$default-pad: 16&#10;&#10;Button $primary-col, $default-rad, $default-pad, &quot;Save&quot;&#10;Link $primary-col, &quot;Learn more&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$primary-col: #2271c1&#10;$default-rad: 8&#10;$default-pad: 16&#10;&#10;Button $primary-col, $default-rad, $default-pad, &quot;Save&quot;&#10;Link $primary-col, &quot;Learn more&quot;"></div>
 
       <p>
         Change <code class="inline-code">$primary-col</code> once, and every element using it updates. The suffix in the name (<code class="inline-code">-col</code>, <code class="inline-code">-rad</code>, <code class="inline-code">-pad</code>) tells Mirror which property it represents.
@@ -729,7 +720,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Change <code class="inline-code">$primary</code> to purple (<code class="inline-code">#8B5CF6</code>) and watch both buttons update.</p>
-        <div class="mirror-editor" data-code="$primary: #2271c1&#10;$radius: 8&#10;&#10;Row gap 8&#10;  Button col $primary, rad $radius, pad 8 16, &quot;Save&quot;&#10;  Button &quot;Cancel&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="$primary: #2271c1&#10;$radius: 8&#10;&#10;Row gap 8&#10;  Button bg $primary, rad $radius, pad 8 16, &quot;Save&quot;&#10;  Button &quot;Cancel&quot;"></div>
       </div>
 
       <h3 id="type-suffixes">Type Suffixes</h3>
@@ -737,7 +728,7 @@
         The suffix tells Mirror the type. With a typed suffix, the property name can be omitted:
       </p>
 
-      <div class="mirror-editor" data-code="// Without suffix – property required&#10;$blue: #2271c1&#10;Button col $blue&#10;&#10;// With suffix – Mirror knows it's a color&#10;$blue-col: #2271c1&#10;Button $blue-col" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="// Without suffix – property required&#10;$blue: #2271c1&#10;&#10;// With suffix – Mirror infers the property&#10;$blue-col: #2271c1&#10;&#10;Row hor, gap 12&#10;  Button bg $blue, pad 8 16, rad 8, &quot;bg $blue&quot;&#10;  Button $blue-col, pad 8 16, rad 8, &quot;$blue-col&quot;"></div>
 
       <p>
         Available suffixes:
@@ -794,7 +785,7 @@
         When you use typed suffixes consistently, your components become cleaner and more readable. Here's a practical example – a styled card using multiple typed tokens:
       </p>
 
-      <div class="mirror-editor" data-code="// Design tokens with type suffixes&#10;$primary-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #94a3b8&#10;$card-pad: 20&#10;$card-rad: 12&#10;$card-gap: 12&#10;$title-size: 18&#10;&#10;// Use tokens directly – no property names needed&#10;Card ver $primary-col $card-pad $card-rad $card-gap&#10;  Title $text-col $title-size weight 600, &quot;Project Status&quot;&#10;  Text $muted-col, &quot;Last updated: Today&quot;" data-preview-height="140"></div>
+      <div class="mirror-editor" data-code="// Design tokens with type suffixes&#10;$primary-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #94a3b8&#10;$card-pad: 20&#10;$card-rad: 12&#10;$card-gap: 12&#10;$title-size: 18&#10;&#10;// Use tokens directly – no property names needed&#10;Card ver $primary-bg $card-pad $card-rad $card-gap&#10;  Title $text-col $title-size weight 600, &quot;Project Status&quot;&#10;  Text $muted-col, &quot;Last updated: Today&quot;"></div>
 
       <p>
         Without type suffixes, you'd need to specify every property name explicitly: <code class="inline-code">col $primary</code>, <code class="inline-code">pad $padding</code>, <code class="inline-code">rad $radius</code>. The suffixes let Mirror infer the property from the token name.
@@ -809,7 +800,7 @@
         That's what <strong>Component Definitions</strong> are for. While tokens store individual values, definitions bundle multiple properties into reusable components:
       </p>
 
-      <div class="mirror-editor" data-code="// Tokens: single values&#10;$primary-col: #2271c1&#10;$card-pad: 16&#10;$card-rad: 8&#10;&#10;// Definitions: property combinations&#10;Heading: size 24 weight 600&#10;Subheading: size 16 weight 500 col #94a3b8&#10;Body: size 14 col #e2e8f0&#10;&#10;// Use both together&#10;Card ver $primary-col $card-pad $card-rad gap 8&#10;  Heading &quot;Dashboard&quot;&#10;  Subheading &quot;Welcome back&quot;&#10;  Body &quot;Here's your daily summary.&quot;" data-preview-height="160"></div>
+      <div class="mirror-editor" data-code="// Tokens: single values&#10;$primary-col: #2271c1&#10;$card-pad: 16&#10;$card-rad: 8&#10;&#10;// Definitions: property combinations&#10;Heading: size 24 weight 600&#10;Subheading: size 16 weight 500 col #94a3b8&#10;Body: size 14 col #e2e8f0&#10;&#10;// Use both together&#10;Card ver $primary-bg $card-pad $card-rad gap 8&#10;  Heading &quot;Dashboard&quot;&#10;  Subheading &quot;Welcome back&quot;&#10;  Body &quot;Here's your daily summary.&quot;"></div>
 
       <p>
         Think of it this way: <strong>Tokens</strong> are your design system's raw materials (colors, spacing, sizes). <strong>Definitions</strong> are the recipes that combine those materials into consistent patterns (text styles, button variants, card layouts).
@@ -820,18 +811,18 @@
         Design systems often organize tokens in layers. Base tokens define raw values. Semantic tokens assign meaning. Component tokens connect to specific UI elements.
       </p>
 
-      <div class="mirror-editor" data-code="// 1. Base colors – raw palette&#10;$blue-500: #2271c1&#10;$blue-600: #1a5a9e&#10;$slate-100: #F1F5F9&#10;&#10;// 2. Semantic tokens – meaning&#10;$primary-col: $blue-500&#10;$primary-hover-col: $blue-600&#10;$surface-col: $slate-100&#10;&#10;// 3. Component tokens – specific usage&#10;$button-col: $primary-col&#10;$button-hover-col: $primary-hover-col&#10;$card-col: $surface-col" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="// 1. Base colors&#10;$blue-500: #2271c1&#10;$blue-600: #1a5a9e&#10;$slate-800: #1e293b&#10;&#10;// 2. Semantic tokens&#10;$primary-col: $blue-500&#10;$primary-hover-col: $blue-600&#10;$card-col: $slate-800&#10;&#10;// 3. Usage&#10;Card $card-col, pad 16, rad 8, gap 8&#10;  Text &quot;Change $blue-500 → all updates&quot;&#10;  Button $primary-col, pad 8 16, rad 6, hover-col $primary-hover-col, &quot;Primary&quot;"></div>
 
       <p>
         This structure allows changes at any level. Swap <code class="inline-code">$blue-500</code> for a different shade, and all primary elements update. Reassign <code class="inline-code">$primary-col</code> to a different base color, and the meaning stays intact. Change <code class="inline-code">$button-col</code> independently if buttons need a unique treatment.
       </p>
 
-      <div class="mirror-editor" data-code="Button $button-col&#10;  state hover&#10;    $button-hover-col" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="$btn-col: #2271c1&#10;$btn-hover-col: #1a5a9e&#10;&#10;Button: $btn-col, pad 8 16, rad 8&#10;  state hover&#10;    $btn-hover-col&#10;&#10;Button &quot;Hover me&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a <code class="inline-code">$danger</code> color token and use it on a second button.</p>
-        <div class="mirror-editor" data-code="$primary: #2271c1&#10;$radius: 8&#10;&#10;Row gap 8&#10;  Button col $primary, rad $radius, pad 8 16, &quot;Save&quot;&#10;  // Add danger button here" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="$primary: #2271c1&#10;$radius: 8&#10;&#10;Row gap 8&#10;  Button bg $primary, rad $radius, pad 8 16, &quot;Save&quot;&#10;  // Add danger button here"></div>
       </div>
 
     </section>
@@ -845,12 +836,7 @@
         Any component with a string becomes text. Properties control how it looks.
       </p>
 
-      <div class="mirror-editor" data-code="Title size 24, weight 600, &quot;Welcome back&quot;&#10;Subtitle size 14, col #71717A, &quot;Here's what happened&quot;" data-preview-height="60"></div>
-
-      <div class="preview preview-col" style="gap: 4px;">
-        <span style="font-size: 24px; font-weight: 600; color: white;">Welcome back</span>
-        <span style="font-size: 14px; color: #71717A;">Here's what happened</span>
-      </div>
+      <div class="mirror-editor" data-code="Title size 24, weight 600, &quot;Welcome back&quot;&#10;Subtitle size 14, col #71717A, &quot;Here's what happened&quot;"></div>
 
       <h3 id="text-properties">Text Properties</h3>
 
@@ -874,13 +860,19 @@
         <code class="inline-code">col</code> is always text color. <code class="inline-code">bg</code> is always background color. Simple and explicit.
       </p>
 
-      <div class="mirror-editor" data-code="Button bg #2271c1 col #FFF &quot;Blue background, white text&quot;&#10;Title col #2271c1 &quot;Blue text&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Box gap 8&#10;  Button bg #2271c1 col #FFF &quot;Blue background, white text&quot;&#10;  Title col #2271c1 &quot;Blue text&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a card with a large bold title and a smaller muted description.</p>
-        <div class="mirror-editor" data-code="Card #3281d1, pad 16, rad 8, gap 4&#10;  Title size 18, weight 600, &quot;Card Title&quot;&#10;  Description size 13, #fff, &quot;This is a description&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="Card #3281d1, pad 16, rad 8, gap 4&#10;  Title size 18, weight 600, &quot;Card Title&quot;&#10;  Description size 13, &quot;This is a description&quot;"></div>
       </div>
+
+      <h4>Product Card with Image</h4>
+      <p>
+        Combine images with cards for rich content:
+      </p>
+      <div class="mirror-editor" data-code="ProductCard w 200, bg #1a1a1a, rad 12, overflow hidden&#10;  Image &quot;https://picsum.photos/id/96/200/150&quot; w fill, h 150, fit cover&#10;  Info ver, pad 12, gap 4&#10;    Name weight 600, &quot;Wireless Headphones&quot;&#10;    Price col #10B981, &quot;$129&quot;"></div>
 
       <h3 id="inline-spans">Inline Spans</h3>
       <p>
@@ -896,14 +888,14 @@
         </ul>
       </div>
 
-      <div class="mirror-editor" data-code="Box gap 8&#10;  Box &quot;This is *important*:bold and this is *emphasized*:italic&quot;&#10;  Box &quot;Click *here*:underline to continue&quot;" data-preview-height="90"></div>
+      <div class="mirror-editor" data-code="Box gap 8&#10;  Box &quot;This is *important*:bold and this is *emphasized*:italic&quot;&#10;  Box &quot;Click *here*:underline to continue&quot;"></div>
 
       <h4>Custom Style Tokens</h4>
       <p>
         Define a token with multiple style properties and apply it to inline spans.
       </p>
 
-      <div class="mirror-editor" data-code="$warning: col #EF4444 weight 700&#10;$highlight: col #22C55E italic&#10;&#10;Box gap 8&#10;  Box &quot;There is a *critical error*:$warning in your code&quot;&#10;  Box &quot;This feature is *new*:$highlight in version 2.0&quot;" data-preview-height="90"></div>
+      <div class="mirror-editor" data-code="$warning: col #EF4444 weight 700&#10;$highlight: col #22C55E italic&#10;&#10;Box gap 8&#10;  Box &quot;There is a *critical error*:$warning in your code&quot;&#10;  Box &quot;This feature is *new*:$highlight in version 2.0&quot;"></div>
 
       <p>
         <strong>Note:</strong> <code class="inline-code">*text*</code> without <code class="inline-code">:style</code> is treated as normal text. Use <code class="inline-code">\*</code> to escape a literal asterisk.
@@ -914,33 +906,33 @@
         <code class="inline-code">icon</code> displays a Lucide icon. Use the icon name from <a href="https://lucide.dev/icons" target="_blank" style="color: #5ba8f5;">lucide.dev/icons</a>.
       </p>
 
-      <div class="mirror-editor" data-code="Icon icon &quot;home&quot;&#10;Icon icon &quot;settings&quot;&#10;Icon icon &quot;user&quot;&#10;Icon icon &quot;search&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Row hor, gap 16&#10;  Icon icon &quot;home&quot;&#10;  Icon icon &quot;settings&quot;&#10;  Icon icon &quot;user&quot;&#10;  Icon icon &quot;search&quot;"></div>
 
       <h4>Icon Size and Color</h4>
       <p>
         Icons inherit text color from <code class="inline-code">col</code>. Use <code class="inline-code">size</code> to change the icon size.
       </p>
 
-      <div class="mirror-editor" data-code="Small icon &quot;star&quot;, size 16, col #71717A&#10;Medium icon &quot;star&quot;, size 24, col #F4F4F5&#10;Large icon &quot;star&quot;, size 32, col #FBBF24" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Row hor, gap 12, ver-cen&#10;  Small icon &quot;star&quot;, size 16, col #71717A&#10;  Medium icon &quot;star&quot;, size 24, col #F4F4F5&#10;  Large icon &quot;star&quot;, size 32, col #FBBF24"></div>
 
       <h4>Icons in Buttons</h4>
       <p>
         Combine icons with text in buttons. Use <code class="inline-code">hor</code> and <code class="inline-code">gap</code> to arrange them.
       </p>
 
-      <div class="mirror-editor" data-code="Button hor, gap 8, ver-cen, col #2271c1, pad 8 16, rad 6&#10;  Icon icon &quot;download&quot;, size 16&#10;  Label &quot;Download&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Button hor, gap 8, ver-cen, bg #2271c1, pad 8 16, rad 6&#10;  Icon icon &quot;download&quot;, size 16&#10;  Label &quot;Download&quot;"></div>
 
       <h4>Icon-only Buttons</h4>
       <p>
         For icon-only buttons, use <code class="inline-code">cen</code> to cen the icon and set equal w and height.
       </p>
 
-      <div class="mirror-editor" data-code="IconButton: w 36, h 36, rad 6, col #27272A, cen&#10;&#10;Row hor, gap 8&#10;  IconButton&#10;    Icon icon &quot;bold&quot;, size 16&#10;  IconButton&#10;    Icon icon &quot;italic&quot;, size 16&#10;  IconButton&#10;    Icon icon &quot;underline&quot;, size 16" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="IconButton: w 36, h 36, rad 6, bg #3F3F46, cen&#10;&#10;Row hor, gap 8&#10;  IconButton&#10;    Icon icon &quot;bold&quot;, size 16&#10;  IconButton&#10;    Icon icon &quot;italic&quot;, size 16&#10;  IconButton&#10;    Icon icon &quot;underline&quot;, size 16"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a button with a "plus" icon and the text "Add item".</p>
-        <div class="mirror-editor" data-code="Button #2271c1, pad 8 16, rad 6, &quot;Add&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Button #2271c1, pad 8 16, rad 6, &quot;Add&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -983,11 +975,11 @@
       <div class="grid">
         <div>
           <div class="label">Vertical (default)</div>
-          <div class="mirror-editor" data-code="Menu&#10;  Item &quot;Dashboard&quot;&#10;  Item &quot;Projects&quot;&#10;  Item &quot;Settings&quot;" data-preview-height="100"></div>
+          <div class="mirror-editor" data-code="Menu&#10;  Item &quot;Dashboard&quot;&#10;  Item &quot;Projects&quot;&#10;  Item &quot;Settings&quot;"></div>
         </div>
         <div>
           <div class="label">Horizontal</div>
-          <div class="mirror-editor" data-code="Tabs hor&#10;  Tab &quot;Overview&quot;&#10;  Tab &quot;Details&quot;&#10;  Tab &quot;History&quot;" data-preview-height="100"></div>
+          <div class="mirror-editor" data-code="Tabs hor&#10;  Tab &quot;Overview&quot;&#10;  Tab &quot;Details&quot;&#10;  Tab &quot;History&quot;"></div>
         </div>
       </div>
 
@@ -1000,12 +992,12 @@
         <code class="inline-code">gap</code> sets the space between children. Without gap, elements touch each other.
       </p>
 
-      <div class="mirror-editor" data-code="Actions hor, gap 12&#10;  Button col #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;  Button &quot;Cancel&quot;&#10;  Button &quot;Delete&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Actions hor, gap 12&#10;  Button bg #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;  Button &quot;Cancel&quot;&#10;  Button &quot;Delete&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a ver menu with 16px gap between items.</p>
-        <div class="mirror-editor" data-code="Menu ver&#10;  Item #27272A, pad 12 16, rad 6, &quot;Dashboard&quot;&#10;  Item &quot;Projects&quot;&#10;  Item &quot;Settings&quot;" data-preview-height="160"></div>
+        <div class="mirror-editor" data-code="Menu ver&#10;  Item #27272A, pad 12 16, rad 6, &quot;Dashboard&quot;&#10;  Item &quot;Projects&quot;&#10;  Item &quot;Settings&quot;"></div>
       </div>
 
       <h3 id="alignment">Alignment</h3>
@@ -1021,14 +1013,14 @@
         </ul>
       </div>
 
-      <div class="mirror-editor" data-code="Header hor, ver-cen, gap 12, pad 16, col #2271c1&#10;  Logo weight 600, &quot;App&quot;&#10;  Status col #22c55e, w 8, h 8, rad 4" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Header hor, ver-cen, gap 12, pad 16, bg #2271c1&#10;  Logo weight 600, &quot;App&quot;&#10;  Status col #22c55e, w 8, h 8, rad 4"></div>
 
       <h3 id="distribution">Distribution</h3>
       <p>
         <code class="inline-code">between</code> distributes space between children, pushing them apart. Useful for headers with logo and navigation, or footers with actions on both sides.
       </p>
 
-      <div class="mirror-editor" data-code="Header hor, between, ver-cen, pad 16, col #2271c1&#10;  Logo weight 600, &quot;Mirror&quot;&#10;  Nav hor, gap 16&#10;    Link &quot;Docs&quot;&#10;    Link &quot;GitHub&quot;" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="Header hor, between, ver-cen, pad 16, bg #2271c1&#10;  Logo weight 600, &quot;Mirror&quot;&#10;  Nav hor, gap 16&#10;    Link &quot;Docs&quot;&#10;    Link &quot;GitHub&quot;"></div>
 
       <p>
         Use <code class="inline-code">hor-between</code> and <code class="inline-code">ver-between</code> for explicit axis control.
@@ -1037,28 +1029,34 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a footer with "Back" on the left and "Next" on the right.</p>
-        <div class="mirror-editor" data-code="Footer hor, pad 16, #3281d1, rad 8&#10;  Button #27272A, pad 8 16, rad 6, &quot;Back&quot;&#10;  Button #2271c1, &quot;Next&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Footer hor, pad 16, #3281d1, rad 8&#10;  Button #27272A, pad 8 16, rad 6, &quot;Back&quot;&#10;  Button #2271c1, &quot;Next&quot;"></div>
       </div>
+
+      <h4>Hero Section with Image</h4>
+      <p>
+        Combine layout, image, and text for a hero banner:
+      </p>
+      <div class="mirror-editor" data-code="Hero hor, between, ver-cen, bg #1a1a1a, pad 32, rad 16, gap 24&#10;  Content ver, gap 12&#10;    Title size 24, weight bold, &quot;Build faster&quot;&#10;    Text col #888, &quot;Design and prototype in one tool.&quot;&#10;    Button bg #2271c1, pad 12 24, rad 8, &quot;Get Started&quot;&#10;  Image &quot;https://picsum.photos/id/180/200/150&quot; rad 12"></div>
 
       <h3 id="wrap">Wrap</h3>
       <p>
         <code class="inline-code">wrap</code> allows children to wrap to the next line when they don't fit. Essential for tag lists, galleries, or responsive layouts.
       </p>
 
-      <div class="mirror-editor" data-code="Tags hor, wrap, gap 8&#10;  Tag col #27272A, pad 4 8, rad 4, &quot;React&quot;&#10;  Tag &quot;TypeScript&quot;&#10;  Tag &quot;Node.js&quot;&#10;  Tag &quot;GraphQL&quot;&#10;  Tag &quot;PostgreSQL&quot;&#10;  Tag &quot;Docker&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="Tags hor, wrap, gap 8&#10;  Tag bg #27272A, pad 4 8, rad 4, &quot;React&quot;&#10;  Tag &quot;TypeScript&quot;&#10;  Tag &quot;Node.js&quot;&#10;  Tag &quot;GraphQL&quot;&#10;  Tag &quot;PostgreSQL&quot;&#10;  Tag &quot;Docker&quot;"></div>
 
       <h3 id="grow-shrink">Grow and Shrink</h3>
       <p>
         <code class="inline-code">grow</code> makes an element expand to fill available space. <code class="inline-code">shrink 0</code> prevents an element from shrinking.
       </p>
 
-      <div class="mirror-editor" data-code="SearchBar hor, gap 8, pad 8, col #2271c1, rad 8&#10;  Input grow, col #27272A, pad 8 12, rad 4, placeholder &quot;Search...&quot;&#10;  Button shrink 0, col #2271c1, pad 8 16, rad 4, &quot;Go&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="SearchBar hor, gap 8, pad 8, col #2271c1, rad 8&#10;  Input grow, bg #27272A, pad 8 12, rad 4, placeholder &quot;Search...&quot;&#10;  Button shrink 0, bg #2271c1, pad 8 16, rad 4, &quot;Go&quot;"></div>
 
       <p>
         Common pattern: sidebar with fixed width, main content that grows.
       </p>
 
-      <div class="mirror-editor" data-code="Layout hor, gap 16&#10;  Sidebar w 200, shrink 0&#10;  Main grow" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Layout hor, gap 16&#10;  Sidebar w 200, shrink 0&#10;  Main grow"></div>
 
       <h3 id="grid">Grid</h3>
       <p>
@@ -1066,25 +1064,25 @@
       </p>
 
       <h4>Equal Columns</h4>
-      <div class="mirror-editor" data-code="Cards grid 3, gap 16&#10;  Card col #2271c1, pad 16, rad 8, &quot;One&quot;&#10;  Card &quot;Two&quot;&#10;  Card &quot;Three&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Cards grid 3, gap 16&#10;  Card bg #2271c1, pad 16, rad 8, &quot;One&quot;&#10;  Card &quot;Two&quot;&#10;  Card &quot;Three&quot;"></div>
 
       <h4>Custom Column Widths</h4>
-      <div class="mirror-editor" data-code="Layout grid 250 auto, gap 16&#10;  Sidebar col #2271c1, pad 16, rad 8, &quot;Sidebar (250px)&quot;&#10;  Main col #27272A, pad 16, rad 8, &quot;Main (auto)&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Layout grid 250 auto, gap 16&#10;  Sidebar bg #2271c1, pad 16, rad 8, &quot;Sidebar (250px)&quot;&#10;  Main bg #27272A, pad 16, rad 8, &quot;Main (auto)&quot;"></div>
 
       <h4>Percentage Widths</h4>
-      <div class="mirror-editor" data-code="Layout grid 30% 70%, gap 16&#10;  Left &quot;30%&quot;&#10;  Right &quot;70%&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Layout grid 30% 70%, gap 16&#10;  Left #2271c1, pad 16, rad 8, cen, &quot;30%&quot;&#10;  Right #333, pad 16, rad 8, cen, &quot;70%&quot;"></div>
 
       <h4>Auto-fill Grid</h4>
       <p>
         <code class="inline-code">grid auto 200</code> creates as many 200px columns as fit, automatically wrapping.
       </p>
 
-      <div class="mirror-editor" data-code="Gallery grid auto 150, gap 12&#10;  Thumb col #2271c1, h 100, rad 8, cen, &quot;1&quot;&#10;  Thumb &quot;2&quot;&#10;  Thumb &quot;3&quot;&#10;  Thumb &quot;4&quot;&#10;  Thumb &quot;5&quot;" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="Gallery grid auto 150, gap 12&#10;  Image &quot;https://picsum.photos/id/10/150/100&quot; rad 8&#10;  Image &quot;https://picsum.photos/id/20/150/100&quot; rad 8&#10;  Image &quot;https://picsum.photos/id/30/150/100&quot; rad 8&#10;  Image &quot;https://picsum.photos/id/40/150/100&quot; rad 8&#10;  Image &quot;https://picsum.photos/id/50/150/100&quot; rad 8"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a 2x2 grid of cards with 12px gap.</p>
-        <div class="mirror-editor" data-code="Cards&#10;  Card #3281d1, pad 16, rad 8, &quot;Card 1&quot;&#10;  Card &quot;Card 2&quot;&#10;  Card &quot;Card 3&quot;&#10;  Card &quot;Card 4&quot;" data-preview-height="200"></div>
+        <div class="mirror-editor" data-code="Cards&#10;  Card #3281d1, pad 16, rad 8, &quot;Card 1&quot;&#10;  Card &quot;Card 2&quot;&#10;  Card &quot;Card 3&quot;&#10;  Card &quot;Card 4&quot;"></div>
       </div>
 
       <h3 id="scroll">Scroll</h3>
@@ -1097,21 +1095,21 @@
         Use <code class="inline-code">scroll</code> for vertically scrollable content like chat messages or long lists:
       </p>
 
-      <div class="mirror-editor" data-code="ChatFeed h 300, scroll, ver, gap 8&#10;  each $msg in $messages&#10;    Message col #1A1A23, pad 12, rad 8, $msg.text" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="ChatFeed h 150, scroll, ver, gap 8, #1a1a1a, pad 8, rad 8&#10;  Message #333, pad 12, rad 8, &quot;Hey, how are you?&quot;&#10;  Message #2271c1, pad 12, rad 8, &quot;I'm good, thanks!&quot;&#10;  Message #333, pad 12, rad 8, &quot;Want to grab lunch?&quot;&#10;  Message #2271c1, pad 12, rad 8, &quot;Sure, sounds great!&quot;&#10;  Message #333, pad 12, rad 8, &quot;Meet at 12:30?&quot;"></div>
 
       <h4>Horizontal Carousel</h4>
       <p>
         <code class="inline-code">scroll-hor</code> enables hor scrolling. Add <code class="inline-code">snap</code> to make items snap into place:
       </p>
 
-      <div class="mirror-editor" data-code="Carousel scroll-hor, snap, hor, gap 16&#10;  Slide 280 180, col #1A1A23, rad 12, shrink 0, cen, &quot;Slide 1&quot;&#10;  Slide &quot;Slide 2&quot;&#10;  Slide &quot;Slide 3&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Carousel scroll-hor, snap, hor, gap 16&#10;  Slide 280 180, col #1A1A23, rad 12, shrink 0, cen, &quot;Slide 1&quot;&#10;  Slide &quot;Slide 2&quot;&#10;  Slide &quot;Slide 3&quot;"></div>
 
       <h4>Both Directions</h4>
       <p>
         <code class="inline-code">scroll-both</code> allows scrolling in both directions – useful for maps or large canvases:
       </p>
 
-      <div class="mirror-editor" data-code="MapView 400 300, scroll-both&#10;  LargeMap 1200 900" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="MapView w full, h 150, scroll-both, #1a1a1a, rad 8&#10;  Canvas 600 400, #222&#10;    Pin 50 80, #EF4444, w 20, h 20, rad 10&#10;    Pin 200 150, #10B981, w 20, h 20, rad 10&#10;    Pin 400 100, #2271c1, w 20, h 20, rad 10&#10;    Text 100 200, col #666, &quot;Scroll to explore →&quot;"></div>
 
       <div class="rule-box">
         <h4>Scroll Properties</h4>
@@ -1127,7 +1125,34 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a hor carousel of 4 cards with snap scrolling. Each card should be 220px wide.</p>
-        <div class="mirror-editor" data-code="Carousel hor, gap 12&#10;  Card 220 140, #3281d1, rad 8, shrink 0, cen, &quot;1&quot;&#10;  Card &quot;2&quot;&#10;  Card &quot;3&quot;&#10;  Card &quot;4&quot;" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="Carousel hor, gap 12&#10;  Card 220 140, #3281d1, rad 8, shrink 0, cen, &quot;1&quot;&#10;  Card &quot;2&quot;&#10;  Card &quot;3&quot;&#10;  Card &quot;4&quot;"></div>
+      </div>
+
+      <h3 id="stacked">Stacked Layout</h3>
+      <p>
+        Use <code class="inline-code">stacked</code> to layer children on top of each other. Perfect for text overlays on images, badges, or loading states.
+      </p>
+
+      <div class="mirror-editor" data-code="ImageCard stacked, w 300, h 200, rad 12, overflow hidden&#10;  Image &quot;https://picsum.photos/id/15/300/200&quot; fit cover&#10;  Overlay ver, hor-l, ver-b, pad 16, gap 4&#10;    Title weight 600, &quot;Mountain View&quot;&#10;    Location col #ccc, size 13, &quot;Swiss Alps&quot;" data-preview-height="240"></div>
+
+      <p>
+        All children occupy the same space. Use alignment (<code class="inline-code">hor-l</code>, <code class="inline-code">ver-b</code>) and padding to position the overlay content.
+      </p>
+
+      <h4>Badge Overlay</h4>
+      <div class="mirror-editor" data-code="Avatar stacked, 80 80&#10;  Image &quot;https://i.pravatar.cc/80&quot; rad 40&#10;  Badge bg #10B981, 20 20, rad 10, ver-b, hor-r" data-preview-height="120"></div>
+
+      <h4>Loading State</h4>
+      <div class="mirror-editor" data-code="Card stacked, 200 120, bg #1a1a1a, rad 8&#10;  Content ver, cen, gap 8&#10;    Title weight 600, &quot;Dashboard&quot;&#10;    Text col #888, size 13, &quot;Loading data...&quot;&#10;  Loader bg #00000080, cen&#10;    Text &quot;⏳&quot;" data-preview-height="160"></div>
+
+      <div class="rule-box">
+        <h4>Stacked Tips</h4>
+        <ul>
+          <li>First child is the bottom layer, last child is on top</li>
+          <li>Use <code class="inline-code">overflow hidden</code> on parent to clip children</li>
+          <li>Combine with <code class="inline-code">ver-t/cen/b</code> and <code class="inline-code">hor-l/cen/r</code> to position layers</li>
+          <li>Add semi-transparent backgrounds (<code class="inline-code">#00000080</code>) for overlay effects</li>
+        </ul>
       </div>
 
       <div class="rule-box">
@@ -1143,6 +1168,7 @@
           <li><code class="inline-code">grow</code> / <code class="inline-code">shrink 0</code> – Flex behavior</li>
           <li><code class="inline-code">grid N</code> – N equal columns</li>
           <li><code class="inline-code">grid auto N</code> – Auto-fill with min Npx</li>
+          <li><code class="inline-code">stacked</code> – Layer children on top of each other</li>
         </ul>
       </div>
 
@@ -1202,7 +1228,7 @@
         Add a name after the primitive keyword to create a referenceable component. The syntax is: <code class="inline-code">Primitive Name: properties</code>
       </p>
 
-      <div class="mirror-editor" data-code="Input Email: &quot;Enter email&quot;, type email&#10;Input Password: &quot;Password&quot;, type password&#10;&#10;LoginForm col #2271c1, pad 24, rad 12, gap 16, w 300&#10;  Email&#10;  Password&#10;  Button col #2271c1, pad 12 24, rad 6, &quot;Login&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="Input Email: &quot;Enter email&quot;, type email&#10;Input Password: &quot;Password&quot;, type password&#10;&#10;LoginForm col #2271c1, pad 24, rad 12, gap 16, w 300&#10;  Email&#10;  Password&#10;  Button bg #2271c1, pad 12 24, rad 6, &quot;Login&quot;"></div>
 
       <p>
         Now you can reference these by name: <code class="inline-code">Email.value</code>, <code class="inline-code">Password.value</code>.
@@ -1213,7 +1239,7 @@
         Use the <code class="inline-code">type</code> property to specify the input type.
       </p>
 
-      <div class="mirror-editor" data-code="Input Username: &quot;Username&quot;, type text&#10;Input Email: &quot;Email&quot;, type email&#10;Input Password: &quot;Password&quot;, type password&#10;Input Age: &quot;Age&quot;, type number" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Input Username: &quot;Username&quot;, type text&#10;Input Email: &quot;Email&quot;, type email&#10;Input Password: &quot;Password&quot;, type password&#10;Input Age: &quot;Age&quot;, type number&#10;&#10;Form gap 12, w 280&#10;  Username&#10;  Email&#10;  Password&#10;  Age"></div>
 
       
 
@@ -1222,26 +1248,62 @@
         For multi-line text input, use <code class="inline-code">Textarea</code>.
       </p>
 
-      <div class="mirror-editor" data-code="Textarea Bio: &quot;Tell us about yourself&quot;, rows 4&#10;&#10;ProfileForm gap 12, w 300&#10;  Bio" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Textarea Bio: &quot;Tell us about yourself&quot;, rows 4&#10;&#10;ProfileForm gap 12, w 300&#10;  Bio"></div>
 
       <h3 id="styled-inputs">Styling Inputs</h3>
       <p>
         Apply the same styling properties as any other component.
       </p>
 
-      <div class="mirror-editor" data-code="Input StyledInput: pad 12 16, col #0a0a0f, bor 2 #3B82F6, rad 8&#10;&#10;Form gap 12&#10;  StyledInput &quot;Highlighted input&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Input StyledInput: pad 12 16, bg #0a0a0f, bor 2 #3B82F6, rad 8&#10;&#10;Form gap 12&#10;  StyledInput &quot;Highlighted input&quot;"></div>
 
-      <h3 id="image-link">Image and Link</h3>
+      <h3 id="image">Image</h3>
       <p>
-        Create named images and links the same way.
+        Display images with <code class="inline-code">Image</code>. The first string is the source URL:
       </p>
 
-      <div class="mirror-editor" data-code="Image Avatar: w 48, h 48, rad 24, fit cover&#10;Link ProfileLink: col #3B82F6&#10;&#10;UserCard hor, gap 12, ver-cen&#10;  Avatar &quot;https://i.pravatar.cc/48&quot;&#10;  ProfileLink &quot;/profile&quot;, &quot;View Profile&quot;" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="Image &quot;https://picsum.photos/id/42/300/200&quot;"></div>
+
+      <h4>Dimensions</h4>
+      <p>
+        Numbers after the URL set width and height. Add <code class="inline-code">rad</code> for rounded corners:
+      </p>
+
+      <div class="mirror-editor" data-code="Row hor, gap 16&#10;  Image &quot;https://picsum.photos/id/64/80/80&quot; 80 80, rad 8&#10;  Image &quot;https://picsum.photos/id/64/80/80&quot; 80 80, rad 40"></div>
+
+      <h4>Object Fit</h4>
+      <p>
+        Use <code class="inline-code">fit</code> to control how images fill their container:
+      </p>
+
+      <div class="rule-box">
+        <ul>
+          <li><code class="inline-code">fit cover</code> – Fill container, crop if needed (default for most cases)</li>
+          <li><code class="inline-code">fit contain</code> – Fit entire image, may leave space</li>
+          <li><code class="inline-code">fit fill</code> – Stretch to fill (may distort)</li>
+        </ul>
+      </div>
+
+      <div class="mirror-editor" data-code="Row hor, gap 16&#10;  Box ver, gap 4&#10;    Image &quot;https://picsum.photos/id/29/200/300&quot; 100 100, rad 8, fit cover&#10;    Text size 11, col #888, &quot;cover&quot;&#10;  Box ver, gap 4&#10;    Image &quot;https://picsum.photos/id/29/200/300&quot; 100 100, rad 8, fit contain, bg #333&#10;    Text size 11, col #888, &quot;contain&quot;"></div>
+
+      <h4>Named Images</h4>
+      <p>
+        Create reusable image definitions with <code class="inline-code">Image Name:</code>:
+      </p>
+
+      <div class="mirror-editor" data-code="Image Avatar: 48 48, rad 24, fit cover&#10;&#10;UserRow hor, gap 12, ver-cen, bg #1a1a1a, pad 12, rad 8&#10;  Avatar &quot;https://i.pravatar.cc/48?u=1&quot;&#10;  Text &quot;Alice&quot;"></div>
+
+      <h3 id="link">Link</h3>
+      <p>
+        Create clickable links with <code class="inline-code">Link</code>. The first string is the URL, followed by the label:
+      </p>
+
+      <div class="mirror-editor" data-code="Nav hor, gap 16&#10;  Link &quot;#home&quot;, &quot;Home&quot;&#10;  Link &quot;#about&quot;, col #888, &quot;About&quot;&#10;  Link &quot;#contact&quot;, col #888, &quot;Contact&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
-        <p class="exercise-task">Create a contact form with Name, Email, Message (textarea), and a Submit button.</p>
-        <div class="mirror-editor" data-code="Input named Name: &quot;Your name&quot;&#10;Input named Email: &quot;Your email&quot;, type email&#10;&#10;ContactForm #3281d1, pad 24, rad 12, gap 16, w 320&#10;  Name&#10;  Email&#10;  Button #2271c1, pad 12 24, rad 6, &quot;Send Message&quot;" data-preview-height="260"></div>
+        <p class="exercise-task">Create a user profile card with avatar, name, and a "View Profile" link.</p>
+        <div class="mirror-editor" data-code="Image Avatar: 64 64, rad 32, fit cover&#10;&#10;ProfileCard hor, gap 16, ver-cen, bg #1a1a1a, pad 16, rad 12&#10;  Avatar &quot;https://i.pravatar.cc/64&quot;&#10;  Info ver, gap 4&#10;    Name weight 600, &quot;Alice Chen&quot;&#10;    Link &quot;#profile&quot;, col #3B82F6, size 13, &quot;View Profile&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -1281,7 +1343,7 @@
         Events are written directly on the component. An event triggers an action.
       </p>
 
-      <div class="mirror-editor" data-code="Button onclick toggle &quot;Dark Mode&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Button #2271c1, pad 12, rad 8, onclick toggle, &quot;Dark Mode&quot;"></div>
 
       <p>
         <code class="inline-code">onclick</code> is the event. <code class="inline-code">toggle</code> is the action.
@@ -1291,7 +1353,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the button to toggle between states.</p>
-        <div class="mirror-editor" data-code="Button: #2271c1, pad 12, rad 8&#10;  state default&#10;    &quot;Dark Mode Off&quot;&#10;  state active&#10;    col #1a1a23&#10;    &quot;Dark Mode On&quot;&#10;&#10;Button onclick toggle" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Button: #2271c1, pad 12, rad 8&#10;  state default&#10;    &quot;Dark Mode Off&quot;&#10;  state active&#10;    bg #1a1a23&#10;    &quot;Dark Mode On&quot;&#10;&#10;Button onclick toggle"></div>
       </div>
 
       <div class="rule-box">
@@ -1331,7 +1393,7 @@
         <div class="example-row">
           <div class="example-code">
             <div class="label">Examples</div>
-            <div class="mirror-editor" data-code="// Toggle own state&#10;Button onclick toggle &quot;Dark Mode&quot;&#10;&#10;// Open a dialog&#10;Button onclick open Settings &quot;Settings&quot;&#10;&#10;// Navigate to page&#10;Link onclick page Dashboard &quot;Go to Dashboard&quot;&#10;&#10;// Increment counter&#10;Button onclick assign $count to $count + 1 &quot;+&quot;" data-preview-height="60"></div>
+            <div class="mirror-editor" data-code="$count: 0&#10;&#10;Row hor, gap 12, ver-cen&#10;  Button #2271c1, pad 8 16, rad 8, onclick toggle&#10;    state default&#10;      &quot;Light Mode&quot;&#10;    state active&#10;      #10B981&#10;      &quot;Dark Mode&quot;&#10;  Text #888, &quot;Count: &quot; + $count&#10;  Button #333, pad 8 16, rad 8, onclick assign $count to $count + 1, &quot;+&quot;"></div>
           </div>
           <div class="example-result">
             <div class="label">Result</div>
@@ -1347,7 +1409,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add <code class="inline-code">onclick toggle</code> to make the button change between states when clicked.</p>
-        <div class="mirror-editor" data-code="Button #2271c1, pad 12, rad 8, &quot;Click me&quot;&#10;  state default&#10;    col #2271c1&#10;  state active&#10;    col #10B981" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Button #2271c1, pad 12, rad 8, &quot;Click me&quot;&#10;  state default&#10;    col #2271c1&#10;  state active&#10;    bg #10B981"></div>
       </div>
 
       <h3 id="conditional-actions">Conditional Actions</h3>
@@ -1355,20 +1417,20 @@
         Actions can include inline conditions. Execute different actions based on state:
       </p>
 
-      <div class="mirror-editor" data-code="Button onclick if $isLoggedIn page Dashboard else open LoginDialog &quot;Continue&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$isLoggedIn: false&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Text if $isLoggedIn then &quot;Welcome back!&quot; else &quot;Please log in&quot;&#10;  Row hor, gap 8&#10;    Button #2271c1, pad 8 16, rad 8, onclick assign $isLoggedIn to not $isLoggedIn&#10;      if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;&#10;    Button #333, pad 8 16, rad 8, if $isLoggedIn then &quot;Dashboard&quot; else &quot;Sign Up&quot;"></div>
 
       <p>
         The pattern is: <code class="inline-code">onclick if condition action else action</code>
       </p>
 
-      <div class="mirror-editor" data-code="// More examples&#10;Button onclick if $cart.count &gt; 0 page Checkout else open EmptyCartWarning &quot;Checkout&quot;&#10;&#10;Link onclick if $hasChanges open ConfirmDialog else page Home &quot;Leave&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$cartCount: 2&#10;&#10;Row hor, gap 12, ver-cen&#10;  Text #888, &quot;Cart: &quot; + $cartCount + &quot; items&quot;&#10;  Button #333, pad 8, rad 6, onclick assign $cartCount to $cartCount + 1, &quot;+&quot;&#10;  Button #333, pad 8, rad 6, onclick assign $cartCount to $cartCount - 1, &quot;-&quot;&#10;  Button pad 8 16, rad 8, if $cartCount &gt; 0 then #10B981 else #666&#10;    if $cartCount &gt; 0 then &quot;Checkout&quot; else &quot;Cart Empty&quot;"></div>
 
       <h3 id="change-action">The Change Action</h3>
       <p>
         While <code class="inline-code">toggle</code> switches between states, <code class="inline-code">change</code> explicitly sets a specific state:
       </p>
 
-      <div class="mirror-editor" data-code="// Set self to a specific state&#10;Button onclick change self to active &quot;Activate&quot;&#10;&#10;// Change another component's state&#10;Button onclick change Panel to expanded &quot;Expand Panel&quot;&#10;&#10;// Multiple states&#10;Tab: pad 12&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    col #2271c1&#10;  state disabled&#10;    opacity 0.5&#10;&#10;Tab onclick change self to active &quot;Tab 1&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="Tab: pad 12 16, rad 8&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    bg #2271c1&#10;  state disabled&#10;    opa 50&#10;&#10;Tabs hor, gap 4, #1a1a1a, pad 4, rad 8&#10;  Tab onclick change self to active, &quot;Active&quot;&#10;  Tab onclick change self to inactive, &quot;Inactive&quot;&#10;  Tab disabled, &quot;Disabled&quot;"></div>
 
       <p class="why">
         <strong>toggle vs change:</strong> Use <code>toggle</code> when switching between exactly two states (like on/off). Use <code>change</code> when you need to set a specific state, especially when there are more than two states or when you want explicit control.
@@ -1377,7 +1439,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a button that navigates to "Dashboard" if <code class="inline-code">$loggedIn</code> is true, otherwise opens a "LoginPrompt" dialog.</p>
-        <div class="mirror-editor" data-code="$loggedIn: false&#10;&#10;Button #2271c1, pad 12, rad 8, onclick toggle, &quot;Toggle Login&quot;&#10;&#10;Text #fff&#10;  if $loggedIn then &quot;You are logged in&quot; else &quot;Please log in&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="$loggedIn: false&#10;&#10;Box gap 12&#10;  Button #2271c1, pad 12, rad 8, onclick toggle, &quot;Toggle Login&quot;&#10;  Text&#10;    if $loggedIn then &quot;You are logged in&quot; else &quot;Please log in&quot;"></div>
       </div>
 
     </section>
@@ -1402,12 +1464,13 @@
       <h3 id="defining-states">Defining States</h3>
       <p>
         Use the <code class="inline-code">state</code> keyword to define named states with their styling:
+      </p>
 
       <div class="example">
         <div class="example-row">
           <div class="example-code">
             <div class="label">Mirror</div>
-            <div class="mirror-editor" data-code="Tab: pad 12 16, rad 8&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    col #2271c1" data-preview-height="125"></div>
+            <div class="mirror-editor" data-code="Tab: pad 12 16, rad 8&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    bg #2271c1&#10;&#10;Row hor, gap 4&#10;  Tab inactive, &quot;Inactive&quot;&#10;  Tab active, &quot;Active&quot;"></div>
           </div>
           <div class="example-result">
             <div class="label">Result (both states)</div>
@@ -1423,7 +1486,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the tabs to toggle their state.</p>
-        <div class="mirror-editor" data-code="Tab: pad 12 16, rad 8&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    col #2271c1&#10;&#10;Tabs hor, gap 8&#10;  Tab onclick toggle, &quot;Dashboard&quot;&#10;  Tab onclick toggle, &quot;Settings&quot;&#10;  Tab onclick toggle, &quot;Profile&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Tab: pad 12 16, rad 8&#10;  state inactive&#10;    col transparent&#10;  state active&#10;    bg #2271c1&#10;&#10;Tabs hor, gap 8&#10;  Tab onclick toggle, &quot;Dashboard&quot;&#10;  Tab onclick toggle, &quot;Settings&quot;&#10;  Tab onclick toggle, &quot;Profile&quot;"></div>
       </div>
 
       <h3 id="system-states">System States</h3>
@@ -1444,7 +1507,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Hover over the button, then click and hold to see all three states.</p>
-        <div class="mirror-editor" data-code="Button: col #2271c1, pad 12, rad 8&#10;  state hover&#10;    col #1a5ba8&#10;  state active&#10;    col #144d8c&#10;&#10;Button &quot;Hover &amp; Click Me&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Button: bg #2271c1, pad 12, rad 8&#10;  state hover&#10;    bg #1a5ba8&#10;  state active&#10;    bg #144d8c&#10;&#10;Button &quot;Hover &amp; Click Me&quot;"></div>
       </div>
 
       <h3 id="hover-shorthand">Hover Shorthand</h3>
@@ -1452,7 +1515,7 @@
         For simple hover effects, you can use hover properties directly without defining a state:
       </p>
 
-      <div class="mirror-editor" data-code="Card col #1A1A23, hover-col #3281d1, pad 16, rad 8&#10;  &quot;Hover over me&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Card bg #1A1A23, hover-bg #3281d1, pad 16, rad 8&#10;  &quot;Hover over me&quot;"></div>
 
       <div class="rule-box">
         <h4>Hover Properties</h4>
@@ -1469,7 +1532,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a <code class="inline-code">hover-col</code> property to change the card's background on hover.</p>
-        <div class="mirror-editor" data-code="Card #1A1A23, pad 16, rad 8&#10;  Text &quot;Hover over me&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="Card #1A1A23, pad 16, rad 8&#10;  Text &quot;Hover over me&quot;"></div>
       </div>
     </section>
 
@@ -1486,7 +1549,7 @@
         Named instances solve this: give a component a name, and you can access its properties or target it for styling. Use the <code class="inline-code">named</code> keyword:
       </p>
 
-      <div class="mirror-editor" data-code="Input named Email: placeholder &quot;Enter email&quot;&#10;Input named Password: placeholder &quot;Enter password&quot;, type password&#10;Button named Submit: col #2271c1, &quot;Login&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Input named Email: placeholder &quot;Enter email&quot;, #1a1a1a, pad 12, rad 8, bor 1 #333&#10;Input named Password: placeholder &quot;Password&quot;, type password&#10;Button named Submit: bg #2271c1, pad 12, rad 8&#10;&#10;Form ver, gap 12, w 280&#10;  Email&#10;  Password&#10;  Submit &quot;Login&quot;&#10;  Text #888, size 12, &quot;Email: &quot; + Email.value"></div>
 
       <p>
         Now you can reference these components: <code class="inline-code">Email.value</code>, <code class="inline-code">Password.value</code>, <code class="inline-code">Submit.disabled</code>.
@@ -1497,35 +1560,26 @@
         Named instances can also be targeted for styling. Consider a footer with multiple buttons – which one should turn red when you write <code class="inline-code">Footer Button #F00</code>? Mirror can't know. Name them:
       </p>
 
-      <div class="mirror-editor" data-code="Footer: pad 16, hor, between&#10;  Button named Save: &quot;Save&quot;&#10;  Button named Cancel: &quot;Cancel&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Footer: pad 16, hor, between, #1a1a1a, rad 8&#10;  Button named Save: #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;  Button named Cancel: #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;&#10;Footer"></div>
 
       <p>
         Now you can target specific instances:
       </p>
 
-      <div class="mirror-editor" data-code="Footer Save #5ba8f5" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Footer: pad 16, hor, between, #1a1a1a, rad 8&#10;  Button named Save: pad 8 16, rad 6, &quot;Save&quot;&#10;  Button named Cancel: #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;&#10;Footer&#10;  Save #10B981  // Target Save specifically"></div>
 
       <p>
         Mirror finds <code class="inline-code">Save</code> within Footer and changes its color. Named instances can also be hidden:
       </p>
 
-      <div class="mirror-editor" data-code="Footer&#10;  Cancel hidden" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Footer: pad 16, hor, between, #1a1a1a, rad 8&#10;  Button named Save: #2271c1, pad 8 16, rad 6, &quot;Save&quot;&#10;  Button named Cancel: #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;&#10;Footer&#10;  Cancel hidden  // Only Save is visible"></div>
 
       <h3 id="component-properties">Component Properties</h3>
       <p>
         Every component has intrinsic properties you can read and write:
       </p>
 
-      <div class="grid">
-        <div>
-          <div class="label">Reading</div>
-          <div class="mirror-editor" data-code="if Email.value&#10;if Checkbox.checked&#10;if Panel.visible" data-preview-height="60"></div>
-        </div>
-        <div>
-          <div class="label">Writing</div>
-          <div class="mirror-editor" data-code="Submit.disabled = true&#10;Error.visible = true&#10;Error.text = &quot;Invalid&quot;" data-preview-height="60"></div>
-        </div>
-      </div>
+      <div class="mirror-editor" data-code="Input named Email: #1a1a1a, pad 12, rad 8, bor 1 #333&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Email placeholder &quot;Type something...&quot;&#10;  Text #888, size 13&#10;    if Email.value then &quot;You typed: &quot; + Email.value else &quot;Input is empty&quot;&#10;  Button pad 8 16, rad 6&#10;    if Email.value then #2271c1 else #333&#10;    if Email.value then &quot;Submit&quot; else &quot;Enter text first&quot;"></div>
 
       <div class="rule-box">
         <h4>Common Properties</h4>
@@ -1572,7 +1626,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a form where clicking Submit shows an alert with the Email value (use <code class="inline-code">if Email.value</code> to check if it's filled).</p>
-        <div class="mirror-editor" data-code="Input named Email: placeholder &quot;Enter email&quot;&#10;Button named Submit: #2271c1, pad 12, rad 8, &quot;Submit&quot;&#10;&#10;Form #3281d1, pad 24, rad 12, gap 16, w 300&#10;  Email&#10;  Submit" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="Input named Email: placeholder &quot;Enter email&quot;&#10;Button named Submit: #2271c1, pad 12, rad 8, &quot;Submit&quot;&#10;&#10;Form #3281d1, pad 24, rad 12, gap 16, w 300&#10;  Email&#10;  Submit"></div>
       </div>
     </section>
 
@@ -1592,8 +1646,9 @@
       <h3 id="dialog">Dialog</h3>
       <p>
         A modal dialog that blocks interaction with the rest of the page. Define a trigger button and the dialog content:
+      </p>
 
-      <div class="mirror-editor" data-code="Button onclick open SettingsDialog, &quot;Open Settings&quot;&#10;&#10;SettingsDialog as Dialog: col #1A1A23, pad 24, rad 12, w 400&#10;  Title size 18, weight 600, &quot;Settings&quot;&#10;  Text col #fff, &quot;Configure your preferences here.&quot;&#10;  Actions hor, gap 8, hor-r&#10;    Button col #333, onclick close, &quot;Cancel&quot;&#10;    Button col #2271c1, onclick close, &quot;Save&quot;" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Button onclick open SettingsDialog, &quot;Open Settings&quot;&#10;&#10;SettingsDialog as Dialog: bg #1A1A23, pad 24, rad 12, w 400&#10;  Title size 18, weight 600, &quot;Settings&quot;&#10;  Text &quot;Configure your preferences here.&quot;&#10;  Actions hor, gap 8, hor-r&#10;    Button bg #333, onclick close, &quot;Cancel&quot;&#10;    Button bg #2271c1, onclick close, &quot;Save&quot;"></div>
 
       <p>
         <code class="inline-code">open SettingsDialog</code> shows the dialog. <code class="inline-code">close</code> hides it.
@@ -1603,7 +1658,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the button to open the dialog. Close it with the buttons or click outside.</p>
-        <div class="mirror-editor" data-code="SettingsDialog as Dialog: col #1A1A23, pad 24, rad 12, w 320&#10;  Title size 18, weight 600, &quot;Settings&quot;&#10;  Text col #888, &quot;Configure your preferences here.&quot;&#10;  Actions hor, gap 8, hor-r&#10;    Button col #333, onclick close, &quot;Cancel&quot;&#10;    Button col #2271c1, onclick close, &quot;Save&quot;&#10;&#10;Button onclick open SettingsDialog center, &quot;Open Settings&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="SettingsDialog as Dialog: bg #1A1A23, pad 24, rad 12, w 320&#10;  Title size 18, weight 600, &quot;Settings&quot;&#10;  Text col #888, &quot;Configure your preferences here.&quot;&#10;  Actions hor, gap 8, hor-r&#10;    Button bg #333, onclick close, &quot;Cancel&quot;&#10;    Button bg #2271c1, onclick close, &quot;Save&quot;&#10;&#10;Button onclick open SettingsDialog center, &quot;Open Settings&quot;"></div>
       </div>
 
       <h3 id="overlay-positioning">Positioning</h3>
@@ -1611,7 +1666,7 @@
         Overlays can be positioned relative to their trigger element:
       </p>
 
-      <div class="mirror-editor" data-code="// Position below the trigger&#10;Button onclick open Menu below &quot;Options&quot;&#10;&#10;// Position above&#10;Button onclick open Tooltip above &quot;Help&quot;&#10;&#10;// Center in viewport (default for dialogs)&#10;Button onclick open Modal center &quot;Open Modal&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="Menu as Dropdown:&#10;  Trigger #333, pad 8 12, rad 6&#10;    &quot;Options ▼&quot;&#10;  Content #1a1a1a, pad 4, rad 8, bor 1 #333&#10;    Item pad 8 12, rad 4, hover-col #333, &quot;Profile&quot;&#10;    Item &quot;Settings&quot;&#10;    Item #EF4444, &quot;Logout&quot;&#10;&#10;Row hor, gap 8&#10;  Menu"></div>
 
       <div class="rule-box">
         <h4>Position Keywords</h4>
@@ -1629,21 +1684,21 @@
         A menu that opens below its trigger:
       </p>
 
-      <div class="mirror-editor" data-code="OptionsMenu as Dropdown:&#10;  Trigger: pad 8 12, col #1A1A23, rad 6, bor 1 #333&#10;    &quot;Select option&quot;&#10;  Content: ver, col #1A1A23, rad 8, pad 4&#10;    Item: pad 8 12, rad 4, hover-col #333&#10;      &quot;Profile&quot;&#10;    Item &quot;Settings&quot;&#10;    Item &quot;Logout&quot;" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="OptionsMenu as Dropdown:&#10;  Trigger: pad 8 12, bg #1A1A23, rad 6, bor 1 #333&#10;    &quot;Select option&quot;&#10;  Content: ver, bg #1A1A23, rad 8, pad 4&#10;    Item: pad 8 12, rad 4, hover-bg #333&#10;      &quot;Profile&quot;&#10;    Item &quot;Settings&quot;&#10;    Item &quot;Logout&quot;"></div>
 
       <h3 id="tooltip">Tooltip</h3>
       <p>
         A small hint that appears on hover:
       </p>
 
-      <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button icon help, &quot;?&quot;&#10;  Content: pad 8 12, col #333, rad 6, size 12&#10;    &quot;Click to get help&quot;" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button icon help, &quot;?&quot;&#10;  Content: pad 8 12, bg #333, rad 6, size 12&#10;    &quot;Click to get help&quot;"></div>
 
       <h3 id="overlay-animations">Animations</h3>
       <p>
         Overlays can have entrance and exit animations:
       </p>
 
-      <div class="mirror-editor" data-code="Button onclick open Panel fade 200 &quot;Open&quot;&#10;Button onclick open Menu slide-down 150 &quot;Menu&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="FadeDialog as Dialog: #1a1a1a, pad 24, rad 12, w 250&#10;  show fade 200&#10;  Title weight 600, &quot;Fade Animation&quot;&#10;  Button #333, onclick close, &quot;Close&quot;&#10;&#10;ScaleDialog as Dialog: #1a1a1a, pad 24, rad 12, w 250&#10;  show fade scale 200&#10;  Title weight 600, &quot;Scale Animation&quot;&#10;  Button #333, onclick close, &quot;Close&quot;&#10;&#10;Row hor, gap 8&#10;  Button #2271c1, pad 8 16, rad 8, onclick open FadeDialog, &quot;Fade&quot;&#10;  Button #333, pad 8 16, rad 8, onclick open ScaleDialog, &quot;Scale&quot;"></div>
 
       <div class="rule-box">
         <h4>Animation Keywords</h4>
@@ -1660,7 +1715,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a button that opens a dialog. Add a close button inside the dialog.</p>
-        <div class="mirror-editor" data-code="Button #2271c1, pad 12, rad 8, onclick open MyDialog, &quot;Open Dialog&quot;&#10;&#10;MyDialog as Dialog: #1A1A23, pad 24, rad 12, w 300, ver, gap 16&#10;  Title size 18, weight 600, &quot;Hello!&quot;&#10;  Text #fff, &quot;This is a dialog.&quot;&#10;  Button #333, onclick close, &quot;Close&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="Button #2271c1, pad 12, rad 8, onclick open MyDialog, &quot;Open Dialog&quot;&#10;&#10;MyDialog as Dialog: #1A1A23, pad 24, rad 12, w 300, ver, gap 16&#10;  Title size 18, weight 600, &quot;Hello!&quot;&#10;  Text &quot;This is a dialog.&quot;&#10;  Button #333, onclick close, &quot;Close&quot;"></div>
       </div>
     </section>
 
@@ -1683,7 +1738,7 @@
         Use <code class="inline-code">show</code> and <code class="inline-code">hide</code> blocks to define how an element animates in and out:
       </p>
 
-      <div class="mirror-editor" data-code="Panel hidden&#10;  show fade slide-up 300&#10;  hide fade 200&#10;  Content&#10;    Text &quot;Animated content&quot;" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Button #2271c1, pad 8 16, rad 6, onclick toggle Panel, &quot;Toggle Panel&quot;&#10;  Panel hidden, #333, pad 16, rad 8&#10;    show fade slide-up 300&#10;    hide fade 150&#10;    Text &quot;This panel fades and slides!&quot;"></div>
 
       <p>
         The panel starts hidden (<code class="inline-code">hidden</code>). When it becomes visible, it fades in and slides up (300ms).
@@ -1691,23 +1746,14 @@
       </p>
 
       <h3 id="animation-types">Animation Types</h3>
-      <div class="grid">
-        <div>
-          <div class="label">Entrance/Exit</div>
-          <div class="mirror-editor" data-code="fade        // opacity&#10;scale       // grow/shrink&#10;slide-up    // from bottom&#10;slide-down  // from top&#10;slide-left  // from right&#10;slide-right // from left&#10;none        // instant" data-preview-height="60"></div>
-        </div>
-        <div>
-          <div class="label">Continuous</div>
-          <div class="mirror-editor" data-code="spin   // rotation (loaders)&#10;pulse  // opacity pulse&#10;bounce // ver bounce" data-preview-height="60"></div>
-        </div>
-      </div>
+      <div class="mirror-editor" data-code="Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Button #333, pad 8 16, rad 6, onclick toggle Box, &quot;Toggle Animation&quot;&#10;  Box hidden, hor, gap 8&#10;    show fade slide-up 300&#10;    Tile #2271c1, 60 60, rad 8, cen, &quot;fade&quot;&#10;    Tile #10B981, 60 60, rad 8, cen, &quot;slide&quot;&#10;    Tile #EF4444, 60 60, rad 8, cen, &quot;scale&quot;"></div>
 
       <h3 id="continuous-animations">Continuous Animations</h3>
       <p>
         Use the <code class="inline-code">animate</code> block for looping animations:
       </p>
 
-      <div class="mirror-editor" data-code="Loader 24 24&#10;  animate spin 1000&#10;  Icon icon loader" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="Loader 24 24&#10;  animate spin 1000&#10;  Icon icon loader"></div>
 
       <p>
         The icon rotates continuously, completing one full rotation every 1000ms.
@@ -1718,12 +1764,12 @@
         An expandable card with animations:
       </p>
 
-      <div class="mirror-editor" data-code="Card col #1A1A23, pad 16, rad 8&#10;  Header hor, between, ver-cen, onclick toggle Details&#10;    Title weight 600, &quot;Click to expand&quot;&#10;    Icon icon chevron-down&#10;  Details hidden&#10;    show fade slide-down 200&#10;    hide fade 150&#10;    Text col #fff, pad u 12, &quot;Here are the details...&quot;" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Card bg #1A1A23, pad 16, rad 8&#10;  Header hor, between, ver-cen, onclick toggle Details&#10;    Title weight 600, &quot;Click to expand&quot;&#10;    Icon icon chevron-down&#10;  Details hidden&#10;    show fade slide-down 200&#10;    hide fade 150&#10;    Text pad u 12, &quot;Here are the details...&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a <code class="inline-code">show</code> animation to make the content fade in when revealed.</p>
-        <div class="mirror-editor" data-code="Card #1A1A23, pad 16, rad 8, ver, gap 12&#10;  Button #333, onclick toggle Content, &quot;Toggle Content&quot;&#10;  Content hidden&#10;    Text #fff, &quot;This content can be toggled&quot;" data-preview-height="140"></div>
+        <div class="mirror-editor" data-code="Card #1A1A23, pad 16, rad 8, ver, gap 12&#10;  Button #333, onclick toggle Content, &quot;Toggle Content&quot;&#10;  Content hidden&#10;    Text &quot;This content can be toggled&quot;"></div>
       </div>
     </section>
 
@@ -1743,11 +1789,12 @@
       <h3 id="if-else">Conditional Rendering</h3>
       <p>
         Use <code class="inline-code">if</code> and <code class="inline-code">else</code> to show different content based on a condition:
+      </p>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click Login/Logout to toggle the state and see the UI change.</p>
-        <div class="mirror-editor" data-code="$isLoggedIn: false&#10;&#10;Header hor, between, ver-cen, #1A1A23, pad 16, rad 8&#10;  Logo &quot;MyApp&quot;&#10;  if $isLoggedIn&#10;    Button onclick assign $isLoggedIn to false, &quot;Logout&quot;&#10;  else&#10;    Button #2271c1, onclick assign $isLoggedIn to true, &quot;Login&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="$isLoggedIn: false&#10;&#10;Header hor, between, ver-cen, #1A1A23, pad 16, rad 8&#10;  Logo &quot;MyApp&quot;&#10;  if $isLoggedIn&#10;    Button onclick assign $isLoggedIn to false, &quot;Logout&quot;&#10;  else&#10;    Button #2271c1, onclick assign $isLoggedIn to true, &quot;Login&quot;"></div>
       </div>
 
       <p>
@@ -1763,39 +1810,19 @@
         <strong>Block vs inline:</strong> Use <code>if</code>/<code>else</code> blocks when you want to show <em>different components</em>. Use inline <code>if then else</code> when the component stays the same but a <em>property changes</em>.
       </p>
 
-      <div class="mirror-editor" data-code="Button if $isActive then col #2271c1 else col #333 &quot;Status&quot;&#10;&#10;Badge if $count &gt; 0 then visible else hidden $count&#10;&#10;Text if $error then col #EF4444 else col #fff $message" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$isActive: true&#10;$count: 3&#10;&#10;Row hor, gap 12, ver-cen&#10;  Button pad 8 16, rad 8, onclick assign $isActive to not $isActive&#10;    if $isActive then #2271c1 else #333&#10;    if $isActive then &quot;Active&quot; else &quot;Inactive&quot;&#10;  Badge if $count &gt; 0 then #10B981 else #333, pad 4 12, rad 12, $count&#10;  Button #333, pad 8, rad 6, onclick assign $count to $count + 1, &quot;+&quot;"></div>
 
       <h3 id="operators">Operators</h3>
       <p>
         Mirror supports comparison, logical, and arithmetic operators:
       </p>
 
-      <div class="grid">
-        <div>
-          <div class="label">Comparison</div>
-          <div class="mirror-editor" data-code="if $count == 0&#10;if $count != 0&#10;if $count &gt; 10&#10;if $count &gt;= 10&#10;if $count 5&#10;if $count 5" data-preview-height="60"></div>
-        </div>
-        <div>
-          <div class="label">Logical</div>
-          <div class="mirror-editor" data-code="if $a and $b&#10;if $a or $b&#10;if not $isDisabled&#10;if $a and not $b&#10;if ($a or $b) and $c" data-preview-height="60"></div>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div>
-          <div class="label">Arithmetic</div>
-          <div class="mirror-editor" data-code="$price * $quantity&#10;$total - $discount&#10;$count + 1&#10;$value / 100" data-preview-height="60"></div>
-        </div>
-        <div>
-          <div class="label">String Comparison</div>
-          <div class="mirror-editor" data-code="if $status == &quot;active&quot;&#10;if $role != &quot;admin&quot;" data-preview-height="60"></div>
-        </div>
-      </div>
+      <div class="mirror-editor" data-code="$x: 5&#10;$y: 10&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 8&#10;  Text &quot;x = &quot; + $x + &quot;, y = &quot; + $y&#10;  Text if $x &lt; $y then #10B981 else #EF4444&#10;    if $x &lt; $y then &quot;x &lt; y ✓&quot; else &quot;x &gt;= y&quot;&#10;  Text &quot;x + y = &quot; + ($x + $y)&#10;  Text &quot;x * y = &quot; + ($x * $y)&#10;  Row hor, gap 8&#10;    Button #333, pad 8, rad 6, onclick assign $x to $x + 1, &quot;x++&quot;&#10;    Button #333, pad 8, rad 6, onclick assign $y to $y - 1, &quot;y--&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Add a conditional property to change the button color based on <code class="inline-code">$isActive</code>.</p>
-        <div class="mirror-editor" data-code="$isActive: true&#10;&#10;Button pad 12, rad 8, onclick assign $isActive to not $isActive&#10;  if $isActive then &quot;Active&quot; else &quot;Inactive&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="$isActive: true&#10;&#10;Button pad 12, rad 8, onclick assign $isActive to not $isActive&#10;  if $isActive then &quot;Active&quot; else &quot;Inactive&quot;"></div>
       </div>
     </section>
 
@@ -1815,8 +1842,9 @@
       <h3 id="each-iterator">The Each Iterator</h3>
       <p>
         Use <code class="inline-code">each</code> to create a component for every item in a list:
+      </p>
 
-      <div class="mirror-editor" data-code="each $task in $tasks&#10;  Card col #1A1A23, pad 16, rad 8&#10;    Title $task.title&#10;    Status col #fff, $task.status" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="$tasks: [&#10;  { title: &quot;Design mockup&quot;, done: true },&#10;  { title: &quot;Build prototype&quot;, done: false },&#10;  { title: &quot;User testing&quot;, done: false }&#10;]&#10;&#10;List ver, gap 8&#10;  each $task in $tasks&#10;    Card #1a1a1a, pad 12, rad 8, hor, gap 12, ver-cen&#10;      Icon if $task.done then #10B981 else #333&#10;        icon if $task.done then check else circle&#10;      Text $task.title"></div>
 
       <p>
         The iterator variable (<code class="inline-code">$task</code>) is only available within the block. You can access nested properties with dot notation: <code class="inline-code">$task.title</code>, <code class="inline-code">$task.user.name</code>.
@@ -1826,7 +1854,7 @@
         <div class="example-row">
           <div class="example-code">
             <div class="label">Data + Template</div>
-            <div class="mirror-editor" data-code="$users: [&#10;  { name: &quot;Alice&quot;, role: &quot;Admin&quot; },&#10;  { name: &quot;Bob&quot;, role: &quot;Editor&quot; },&#10;  { name: &quot;Carol&quot;, role: &quot;Viewer&quot; }&#10;]&#10;&#10;UserList ver, gap 8&#10;  each $user in $users&#10;    Row hor, between, pad 12, col #1A1A23, rad 6&#10;      Name $user.name&#10;      Role col #fff, $user.role" data-preview-height="275"></div>
+            <div class="mirror-editor" data-code="$users: [&#10;  { name: &quot;Alice&quot;, role: &quot;Admin&quot;, avatar: &quot;https://i.pravatar.cc/32?u=alice&quot; },&#10;  { name: &quot;Bob&quot;, role: &quot;Editor&quot;, avatar: &quot;https://i.pravatar.cc/32?u=bob&quot; },&#10;  { name: &quot;Carol&quot;, role: &quot;Viewer&quot;, avatar: &quot;https://i.pravatar.cc/32?u=carol&quot; }&#10;]&#10;&#10;UserList ver, gap 8&#10;  each $user in $users&#10;    Row hor, between, ver-cen, pad 12, bg #1A1A23, rad 6&#10;      Left hor, gap 10, ver-cen&#10;        Image $user.avatar, 32 32, rad 16&#10;        Name $user.name&#10;      Role col #888, $user.role"></div>
           </div>
           <div class="example-result">
             <div class="label">Result</div>
@@ -1840,21 +1868,21 @@
         Iterators can be nested for hierarchical data:
       </p>
 
-      <div class="mirror-editor" data-code="each $category in $categories&#10;  Section ver, gap 8&#10;    Title size 16, weight 600, $category.name&#10;    each $item in $category.items&#10;      Item pad 8, $item.name" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="$menu: [&#10;  { name: &quot;Starters&quot;, items: [&quot;Soup&quot;, &quot;Salad&quot;] },&#10;  { name: &quot;Mains&quot;, items: [&quot;Pasta&quot;, &quot;Steak&quot;, &quot;Fish&quot;] }&#10;]&#10;&#10;Menu ver, gap 16&#10;  each $cat in $menu&#10;    Section ver, gap 4&#10;      Title weight 600, #2271c1, $cat.name&#10;      each $item in $cat.items&#10;        Item #1a1a1a, pad 8 12, rad 6, $item"></div>
 
       <h3 id="data-binding">Data Binding</h3>
       <p>
         Variables are reactive. Display them directly, and the UI updates automatically when they change:
       </p>
 
-      <div class="mirror-editor" data-code="// Display variable&#10;Counter $count&#10;Greeting &quot;Hello, &quot; $name&#10;Price $amount &quot; €&quot;&#10;&#10;// Change with assign&#10;Button onclick assign $count to $count + 1 &quot;+&quot;&#10;Button onclick assign $count to 0 &quot;Reset&quot;" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$name: &quot;World&quot;&#10;$count: 0&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Text size 18, &quot;Hello, &quot; + $name + &quot;!&quot;&#10;  Text #888, &quot;Count: &quot; + $count&#10;  Row hor, gap 8&#10;    Button #2271c1, pad 8 16, rad 6, onclick assign $count to $count + 1, &quot;+1&quot;&#10;    Button #333, pad 8 16, rad 6, onclick assign $count to 0, &quot;Reset&quot;&#10;    Button #333, pad 8 16, rad 6, onclick assign $name to &quot;Mirror&quot;, &quot;Change Name&quot;"></div>
 
       <h3 id="event-data">The $event Object</h3>
       <p>
         In event handlers, <code class="inline-code">$event</code> contains information about what happened:
       </p>
 
-      <div class="mirror-editor" data-code="// Get input value&#10;Input onchange assign $name to $event.value&#10;&#10;// Get checkbox state&#10;Checkbox onchange assign $agreed to $event.checked&#10;&#10;// Real-time input binding&#10;Input oninput assign $search to $event.value" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$search: &quot;&quot;&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Input #333, pad 12, rad 8, bor 1 #444, placeholder &quot;Type to search...&quot;, oninput assign $search to $event.value&#10;  Text #888, size 13&#10;    if $search then &quot;Searching for: &quot; + $search else &quot;Start typing...&quot;"></div>
 
       <div class="rule-box">
         <h4>$event Properties</h4>
@@ -1868,7 +1896,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a counter with + and - buttons that modify <code class="inline-code">$count</code>.</p>
-        <div class="mirror-editor" data-code="$count: 0&#10;&#10;Counter hor, gap 12, ver-cen&#10;  Button #333, pad 8 16, rad 6, onclick assign $count to $count - 1, &quot;-&quot;&#10;  Text size 24, weight 600, $count&#10;  Button #2271c1, pad 8 16, rad 6, onclick assign $count to $count + 1, &quot;+&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="$count: 0&#10;&#10;Counter hor, gap 12, ver-cen&#10;  Button #333, pad 8 16, rad 6, onclick assign $count to $count - 1, &quot;-&quot;&#10;  Text size 24, weight 600, $count&#10;  Button #2271c1, pad 8 16, rad 6, onclick assign $count to $count + 1, &quot;+&quot;"></div>
       </div>
     </section>
 
@@ -1888,13 +1916,14 @@
       <h3 id="events-block-syntax">The Events Block</h3>
       <p>
         Use the <code class="inline-code">events</code> keyword to create a dedicated block for event handlers:
+      </p>
 
-      <div class="mirror-editor" data-code="// === COMPONENTS ===&#10;Input Email: placeholder &quot;Email&quot;&#10;Input Password: placeholder &quot;Password&quot;, type password&#10;Text Error: col #EF4444, visible false&#10;Button Submit: col #2271c1, &quot;Login&quot;&#10;&#10;// === LAYOUT ===&#10;LoginForm: ver, gap 16, pad 24, col #1A1A23, rad 12&#10;  Input Email&#10;  Input Password&#10;  Text Error&#10;  Button Submit&#10;&#10;// === BEHAVIOR ===&#10;events&#10;  Email onchange&#10;    Error.visible = false&#10;&#10;  Submit onclick&#10;    if Email.value and Password.value&#10;      Submit.label = &quot;Sending...&quot;&#10;      Submit.disabled = true&#10;      page Dashboard&#10;    else&#10;      Error.text = &quot;Please fill in all fields&quot;&#10;      Error.visible = true" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="// === COMPONENTS ===&#10;Input Email: placeholder &quot;Email&quot;&#10;Input Password: placeholder &quot;Password&quot;, type password&#10;Text Error: col #EF4444, visible false&#10;Button Submit: bg #2271c1, &quot;Login&quot;&#10;&#10;// === LAYOUT ===&#10;LoginForm: ver, gap 16, pad 24, col #1A1A23, rad 12&#10;  Input Email&#10;  Input Password&#10;  Text Error&#10;  Button Submit&#10;&#10;// === BEHAVIOR ===&#10;events&#10;  Email onchange&#10;    Error.visible = false&#10;&#10;  Submit onclick&#10;    if Email.value and Password.value&#10;      Submit.label = &quot;Sending...&quot;&#10;      Submit.disabled = true&#10;      page Dashboard&#10;    else&#10;      Error.text = &quot;Please fill in all fields&quot;&#10;      Error.visible = true"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Try submitting without filling fields, then fill both and submit.</p>
-        <div class="mirror-editor" data-code="$error: &quot;&quot;&#10;&#10;Input Email: placeholder &quot;Email&quot;, rad 6, pad 8&#10;Input Password: placeholder &quot;Password&quot;, type password, rad 6, pad 8&#10;Error: col #EF4444, size 13&#10;Button Submit: col #2271c1, pad 12, rad 6, &quot;Login&quot;&#10;&#10;LoginForm ver, gap 12, pad 24, col #1A1A23, rad 12, w 280&#10;  Input Email&#10;  Input Password&#10;  if $error&#10;    Error $error&#10;  Button Submit&#10;&#10;events&#10;  Email onchange&#10;    assign $error to &quot;&quot;&#10;  Submit onclick&#10;    if Email.value and Password.value&#10;      assign $error to &quot;&quot;&#10;      Submit.label = &quot;Success!&quot;&#10;    else&#10;      assign $error to &quot;Please fill all fields&quot;" data-preview-height="220"></div>
+        <div class="mirror-editor" data-code="$error: &quot;&quot;&#10;&#10;Input Email: placeholder &quot;Email&quot;, rad 6, pad 8&#10;Input Password: placeholder &quot;Password&quot;, type password, rad 6, pad 8&#10;Error: col #EF4444, size 13&#10;Button Submit: bg #2271c1, pad 12, rad 6, &quot;Login&quot;&#10;&#10;LoginForm ver, gap 12, pad 24, col #1A1A23, rad 12, w 280&#10;  Input Email&#10;  Input Password&#10;  if $error&#10;    Error $error&#10;  Button Submit&#10;&#10;events&#10;  Email onchange&#10;    assign $error to &quot;&quot;&#10;  Submit onclick&#10;    if Email.value and Password.value&#10;      assign $error to &quot;&quot;&#10;      Submit.label = &quot;Success!&quot;&#10;    else&#10;      assign $error to &quot;Please fill all fields&quot;"></div>
       </div>
 
       <h3 id="inline-vs-centralized">Inline vs. Centralized</h3>
@@ -1902,7 +1931,7 @@
         Use inline events for simple actions, centralized events for complex logic:
       </p>
 
-      <div class="mirror-editor" data-code="// Inline – simple toggle&#10;Button onclick toggle &quot;Dark Mode&quot;&#10;&#10;// Centralized – validation, multiple actions&#10;events&#10;  Submit onclick&#10;    if Email.value&#10;      // validate, call API, navigate..." data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="$mode: &quot;light&quot;&#10;&#10;// Simple: inline works fine&#10;Row hor, gap 8&#10;  Button #2271c1, pad 8 16, rad 8, onclick assign $mode to if $mode == &quot;light&quot; then &quot;dark&quot; else &quot;light&quot;&#10;    if $mode == &quot;light&quot; then &quot;☀ Light&quot; else &quot;🌙 Dark&quot;&#10;  Text #888, &quot;Mode: &quot; + $mode"></div>
 
       <p class="why">
         Structure and behavior separated. All interactions in one place.
@@ -1912,7 +1941,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Move the <code class="inline-code">onclick</code> handler to a centralized events block.</p>
-        <div class="mirror-editor" data-code="Input Search: placeholder &quot;Search...&quot;&#10;Text Result: #fff, &quot;Type to search&quot;&#10;&#10;Form #3281d1, pad 24, rad 12, gap 16, w 300&#10;  Search&#10;  Result&#10;&#10;// Add events block here:&#10;// events&#10;//   Search oninput&#10;//     Result.text = Search.value" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="Input Search: placeholder &quot;Search...&quot;&#10;Text Result: &quot;Type to search&quot;&#10;&#10;Form #3281d1, pad 24, rad 12, gap 16, w 300&#10;  Search&#10;  Result&#10;&#10;// Add events block here:&#10;// events&#10;//   Search oninput&#10;//     Result.text = Search.value"></div>
       </div>
     </section>
 
@@ -1932,22 +1961,23 @@
       <h3 id="defining-slots">Defining Slots</h3>
       <p>
         Child components with a colon become named slots:
+      </p>
 
-      <div class="mirror-editor" data-code="Card: ver, pad 24, gap 16, col #1A1A23, rad 12&#10;  Header: hor, between, ver-cen&#10;  Title: size 20, weight 600&#10;  Body: col #9CA3AF&#10;  Actions: hor, gap 8, hor-r" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="Card: ver, pad 24, gap 16, bg #1A1A23, rad 12&#10;  Header: hor, between, ver-cen&#10;  Title: size 20, weight 600&#10;  Body: col #9CA3AF&#10;  Actions: hor, gap 8, hor-r"></div>
 
       <h3 id="filling-slots">Filling Slots</h3>
       <p>
         When using the component, reference slot names to fill them:
       </p>
 
-      <div class="mirror-editor" data-code="Card&#10;  Header&#10;    Badge col #10B981, &quot;New&quot;&#10;    Icon icon more-vertical&#10;  Title &quot;Project Alpha&quot;&#10;  Body &quot;A new project with great potential.&quot;&#10;  Actions&#10;    Button col #333, &quot;Cancel&quot;&#10;    Button col #2271c1, &quot;Save&quot;" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="Card: ver, pad 24, gap 16, bg #1A1A23, rad 12&#10;  Header: hor, between, ver-cen&#10;  Title: size 20, weight 600&#10;  Body: col #9CA3AF&#10;  Actions: hor, gap 8, hor-r&#10;&#10;Card&#10;  Header&#10;    Badge bg #10B981, pad 4 8, rad 4, size 12, &quot;New&quot;&#10;    Icon icon more-vertical&#10;  Title &quot;Project Alpha&quot;&#10;  Body &quot;A new project with great potential.&quot;&#10;  Actions&#10;    Button bg #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;    Button bg #2271c1, &quot;Save&quot;"></div>
 
       <h3 id="flat-access">Flat Access</h3>
       <p>
         Access nested elements directly by name, no matter how deep they are:
       </p>
 
-      <div class="mirror-editor" data-code="Header: hor, between&#10;  Left: hor, gap 16&#10;    Logo: w 100&#10;    Nav: hor, gap 8&#10;  Right:&#10;    Avatar: w 36, rad 18&#10;&#10;// Usage – direct access to nested elements&#10;Header&#10;  Logo col #FF0000       // finds Logo in Left&#10;  Avatar col #2271c1     // finds Avatar in Right" data-preview-height="275"></div>
+      <div class="mirror-editor" data-code="Header: hor, between, pad 12, bg #1a1a1a, rad 8&#10;  Left: hor, gap 16, ver-cen&#10;    Logo: w 100, h 32&#10;    Nav: hor, gap 8&#10;  Right:&#10;    Avatar: w 36, h 36, rad 18&#10;&#10;// Usage – direct access to nested elements&#10;Header&#10;  Logo bg #EF4444&#10;  Avatar bg #2271c1"></div>
 
       <p class="why">
         You don't need to repeat the hierarchy. Names are flat, structure is preserved.
@@ -1959,7 +1989,7 @@
         Use <code class="inline-code">-</code> to create new instances instead of modifying existing ones:
       </p>
 
-      <div class="mirror-editor" data-code="Menu: ver, w 200, col #1A1A23, rad 8&#10;  Item: pad 8 12&#10;&#10;Menu&#10;  - Item &quot;Profile&quot;&#10;  - Item &quot;Settings&quot;&#10;  - Item col #EF4444, &quot;Logout&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="Menu: ver, w 200, bg #1A1A23, rad 8&#10;  Item: pad 8 12&#10;&#10;Menu&#10;  - Item &quot;Profile&quot;&#10;  - Item &quot;Settings&quot;&#10;  - Item col #EF4444, &quot;Logout&quot;"></div>
 
       <p>
         Without <code class="inline-code">-</code> you modify an existing element.
@@ -1969,7 +1999,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a <code class="inline-code">Panel</code> component with slots for <code class="inline-code">Header</code>, <code class="inline-code">Body</code>, and <code class="inline-code">Footer</code>. Then use it with custom content.</p>
-        <div class="mirror-editor" data-code="Panel: #3281d1, pad 16, rad 8, gap 12&#10;  Header: weight 600&#10;  Body: #fff&#10;  Footer: hor, hor-r&#10;&#10;Panel&#10;  Header &quot;My Panel&quot;&#10;  Body &quot;Some content here...&quot;&#10;  Footer&#10;    Button #2271c1, pad 8 16, rad 6, &quot;OK&quot;" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="Panel: #3281d1, pad 16, rad 8, gap 12&#10;  Header: weight 600&#10;  Body:&#10;  Footer: hor, hor-r&#10;&#10;Panel&#10;  Header &quot;My Panel&quot;&#10;  Body &quot;Some content here...&quot;&#10;  Footer&#10;    Button #2271c1, pad 8 16, rad 6, &quot;OK&quot;"></div>
       </div>
     </section>
 
@@ -2020,7 +2050,7 @@
         Organize content into switchable panels. Only one panel is visible at a time. Keyboard navigation (arrow keys) is built-in.
       </p>
 
-      <div class="mirror-editor" data-code="MainTabs as Tabs:&#10;  Tabs hor, gap 4, col #1A1A23, pad 4, rad 8&#10;    Tab &quot;Overview&quot;&#10;    Tab &quot;Details&quot;&#10;    Tab &quot;Settings&quot;&#10;  TabContent pad 16&#10;    &quot;Overview content goes here.&quot;&#10;  TabContent pad 16&#10;    &quot;Details content goes here.&quot;&#10;  TabContent pad 16&#10;    &quot;Settings content goes here.&quot;" data-preview-height="275"></div>
+      <div class="mirror-editor" data-code="MainTabs as Tabs:&#10;  Tabs hor, gap 4, bg #1A1A23, pad 4, rad 8&#10;    Tab &quot;Overview&quot;&#10;    Tab &quot;Details&quot;&#10;    Tab &quot;Settings&quot;&#10;  TabContent pad 16&#10;    &quot;Overview content goes here.&quot;&#10;  TabContent pad 16&#10;    &quot;Details content goes here.&quot;&#10;  TabContent pad 16&#10;    &quot;Settings content goes here.&quot;"></div>
 
       
 
@@ -2039,12 +2069,12 @@
       </div>
 
       <h4>Styling Tab States</h4>
-      <div class="mirror-editor" data-code="EditorTabs as Tabs:&#10;  Tabs hor, gap 0, bor-b 1, boc #333&#10;    Tab: pad 12 16&#10;      state inactive&#10;        col transparent&#10;        bor-b 2, boc transparent&#10;      state active&#10;        col transparent&#10;        bor-b 2, boc #2271c1&#10;    Tab &quot;Files&quot;&#10;    Tab &quot;Edits&quot;&#10;    Tab &quot;History&quot;&#10;  TabContent &quot;Files content&quot;&#10;  TabContent &quot;Edits content&quot;&#10;  TabContent &quot;History content&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="EditorTabs as Tabs:&#10;  Tabs hor, gap 0, bor-b 1, boc #333&#10;    Tab: pad 12 16&#10;      state inactive&#10;        col transparent&#10;        bor-b 2, boc transparent&#10;      state active&#10;        col transparent&#10;        bor-b 2, boc #2271c1&#10;    Tab &quot;Files&quot;&#10;    Tab &quot;Edits&quot;&#10;    Tab &quot;History&quot;&#10;  TabContent &quot;Files content&quot;&#10;  TabContent &quot;Edits content&quot;&#10;  TabContent &quot;History content&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create tabs for "Code", "Preview", and "Output". Style the active tab with a colored bottom border.</p>
-        <div class="mirror-editor" data-code="MyTabs as Tabs:&#10;  Tabs hor, #1A1A23, pad 4, rad 8&#10;    Tab &quot;Code&quot;&#10;    Tab &quot;Preview&quot;&#10;    Tab &quot;Output&quot;&#10;  TabContent pad 16, &quot;Write your code here&quot;&#10;  TabContent pad 16, &quot;See the preview&quot;&#10;  TabContent pad 16, &quot;View the output&quot;" data-preview-height="160"></div>
+        <div class="mirror-editor" data-code="MyTabs as Tabs:&#10;  Tabs hor, #1A1A23, pad 4, rad 8&#10;    Tab &quot;Code&quot;&#10;    Tab &quot;Preview&quot;&#10;    Tab &quot;Output&quot;&#10;  TabContent pad 16, &quot;Write your code here&quot;&#10;  TabContent pad 16, &quot;See the preview&quot;&#10;  TabContent pad 16, &quot;View the output&quot;"></div>
       </div>
 
       <!-- ===================== ACCORDION ===================== -->
@@ -2053,7 +2083,7 @@
         Collapsible sections where only one (or multiple) can be open at a time. Great for FAQs, settings panels, or navigation menus.
       </p>
 
-      <div class="mirror-editor" data-code="FAQ as Accordion:&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;What is Mirror?&quot;&#10;      Icon icon &quot;chevron-down&quot;, size 16&#10;    Content pad 0 16 16 16&#10;      Text col #fff, &quot;Mirror is a description language for user interfaces.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;How do I get started?&quot;&#10;      Icon icon &quot;chevron-down&quot;, size 16&#10;    Content pad 0 16 16 16&#10;      Text col #fff, &quot;Start by creating components and adding properties.&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="FAQ as Accordion:&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;What is Mirror?&quot;&#10;      Icon icon &quot;chevron-down&quot;, size 16&#10;    Content pad 0 16 16 16&#10;      Text &quot;Mirror is a description language for user interfaces.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;How do I get started?&quot;&#10;      Icon icon &quot;chevron-down&quot;, size 16&#10;    Content pad 0 16 16 16&#10;      Text &quot;Start by creating components and adding properties.&quot;"></div>
 
       
 
@@ -2076,12 +2106,12 @@
         By default, opening one item closes others. Add <code class="inline-code">multiple</code> to allow several open at once:
       </p>
 
-      <div class="mirror-editor" data-code="FAQ as Accordion: multiple&#10;  // Items can now be independently open/closed" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="FAQ as Accordion: multiple&#10;  // Items can now be independently open/closed"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the FAQ items to expand/collapse them. Only one stays open at a time.</p>
-        <div class="mirror-editor" data-code="FAQ as Accordion: col #1A1A23, rad 8&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;What is Mirror?&quot;&#10;      Icon icon chevron-down, size 16, col #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Mirror is a description language for user interfaces.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;How do I get started?&quot;&#10;      Icon icon chevron-down, size 16, col #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Start by creating components and adding properties.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;Is it free?&quot;&#10;      Icon icon chevron-down, size 16, col #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Yes, Mirror is completely free and open source.&quot;&#10;&#10;FAQ" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="FAQ as Accordion: col #1A1A23, rad 8&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;What is Mirror?&quot;&#10;      Icon icon chevron-down, size 16, bg #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Mirror is a description language for user interfaces.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;How do I get started?&quot;&#10;      Icon icon chevron-down, size 16, bg #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Start by creating components and adding properties.&quot;&#10;  AccordionItem&#10;    Trigger pad 16, hor, between, ver-cen&#10;      Text weight 500, &quot;Is it free?&quot;&#10;      Icon icon chevron-down, size 16, bg #666&#10;    Content pad 0 16 16 16&#10;      Text col #888, &quot;Yes, Mirror is completely free and open source.&quot;&#10;&#10;FAQ"></div>
       </div>
 
       <!-- ===================== DROPDOWN ===================== -->
@@ -2090,7 +2120,7 @@
         A menu that appears below its trigger on click. Closes automatically when clicking outside or selecting an item.
       </p>
 
-      <div class="mirror-editor" data-code="UserMenu as Dropdown:&#10;  Trigger pad 8 12, col #1A1A23, rad 6, bor 1 #333, hor, gap 8, ver-cen&#10;    Text &quot;Options&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 14&#10;  Content ver, col #1A1A23, rad 8, pad 4, bor 1 #333, minw 150&#10;    Item pad 8 12, rad 4, hover-col #333, &quot;Profile&quot;&#10;    Item &quot;Settings&quot;&#10;    Separator h 1, col #333, mar u-d 4&#10;    Item col #EF4444, &quot;Logout&quot;" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="UserMenu as Dropdown:&#10;  Trigger pad 8 12, bg #1A1A23, rad 6, bor 1 #333, hor, gap 8, ver-cen&#10;    Text &quot;Options&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 14&#10;  Content ver, bg #1A1A23, rad 8, pad 4, bor 1 #333, minw 150&#10;    Item pad 8 12, rad 4, hover-bg #333, &quot;Profile&quot;&#10;    Item &quot;Settings&quot;&#10;    Separator h 1, bg #333, mar u-d 4&#10;    Item bg #EF4444, &quot;Logout&quot;"></div>
 
       
 
@@ -2112,7 +2142,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a dropdown with "Edit", "Duplicate", and "Delete" options. Make "Delete" red.</p>
-        <div class="mirror-editor" data-code="ActionsMenu as Dropdown:&#10;  Trigger #1A1A23, pad 8 12, rad 6, bor 1 #333&#10;    &quot;Actions&quot;&#10;  Content #1A1A23, rad 8, pad 4, ver&#10;    Item pad 8 12, rad 4, hover-col #333, &quot;Edit&quot;&#10;    Item &quot;Duplicate&quot;&#10;    Item #EF4444, &quot;Delete&quot;" data-preview-height="180"></div>
+        <div class="mirror-editor" data-code="ActionsMenu as Dropdown:&#10;  Trigger #1A1A23, pad 8 12, rad 6, bor 1 #333&#10;    &quot;Actions&quot;&#10;  Content #1A1A23, rad 8, pad 4, ver&#10;    Item pad 8 12, rad 4, hover-bg #333, &quot;Edit&quot;&#10;    Item &quot;Duplicate&quot;&#10;    Item #EF4444, &quot;Delete&quot;"></div>
       </div>
 
       <!-- ===================== SELECT ===================== -->
@@ -2121,7 +2151,7 @@
         A styled dropdown for selecting a single value. Replaces native <code>&lt;select&gt;</code> with full styling control.
       </p>
 
-      <div class="mirror-editor" data-code="Country as Select:&#10;  Trigger pad 10 14, col #1A1A23, rad 6, bor 1 #333, w 200, hor, between, ver-cen&#10;    Text &quot;Select country...&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 14, col #666&#10;  Options col #1A1A23, rad 8, pad 4, bor 1 #333&#10;    Option value &quot;de&quot;, pad 8 12, rad 4, hover-col #333, &quot;Germany&quot;&#10;    Option value &quot;fr&quot;, &quot;France&quot;&#10;    Option value &quot;uk&quot;, &quot;United Kingdom&quot;&#10;    Option value &quot;us&quot;, &quot;United States&quot;" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="Country as Select:&#10;  Trigger pad 10 14, bg #1A1A23, rad 6, bor 1 #333, w 200, hor, between, ver-cen&#10;    Text &quot;Select country...&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 14, bg #666&#10;  Options bg #1A1A23, rad 8, pad 4, bor 1 #333&#10;    Option value &quot;de&quot;, pad 8 12, rad 4, hover-bg #333, &quot;Germany&quot;&#10;    Option value &quot;fr&quot;, &quot;France&quot;&#10;    Option value &quot;uk&quot;, &quot;United Kingdom&quot;&#10;    Option value &quot;us&quot;, &quot;United States&quot;"></div>
 
       <div class="rule-box">
         <h4>Select Slots</h4>
@@ -2143,12 +2173,12 @@
         Access the selected value via <code class="inline-code">SelectName.value</code>:
       </p>
 
-      <div class="mirror-editor" data-code="Country as Select:&#10;  // ... slots&#10;&#10;Text &quot;Selected: &quot; Country.value" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Language as Select:&#10;  Trigger #1a1a1a, pad 8 12, rad 6, bor 1 #333&#10;    &quot;Choose language&quot;&#10;  Options #1a1a1a, pad 4, rad 8, bor 1 #333&#10;    Option value en, pad 8, rad 4, hover-col #333, &quot;English&quot;&#10;    Option value de, &quot;Deutsch&quot;&#10;    Option value fr, &quot;Français&quot;&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  Language&#10;  Text #888, size 13, &quot;Selected: &quot; + Language.value"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the select to open options. Choose a country and see the value update.</p>
-        <div class="mirror-editor" data-code="Country as Select:&#10;  Trigger pad 10 14, col #1A1A23, rad 6, bor 1 #333, w 200, hor, between, ver-cen&#10;    Text &quot;Select country...&quot;&#10;    Icon icon chevron-down, size 14, col #666&#10;  Options col #1A1A23, rad 8, pad 4, bor 1 #333&#10;    Option value de, pad 8 12, rad 4, hover-col #333, &quot;Germany&quot;&#10;    Option value fr, &quot;France&quot;&#10;    Option value uk, &quot;United Kingdom&quot;&#10;    Option value us, &quot;United States&quot;&#10;&#10;Form ver, gap 12&#10;  Country&#10;  Text col #888, size 13, &quot;Selected: &quot; + Country.value" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="Country as Select:&#10;  Trigger pad 10 14, bg #1A1A23, rad 6, bor 1 #333, w 200, hor, between, ver-cen&#10;    Text &quot;Select country...&quot;&#10;    Icon icon chevron-down, size 14, bg #666&#10;  Options bg #1A1A23, rad 8, pad 4, bor 1 #333&#10;    Option value de, pad 8 12, rad 4, hover-bg #333, &quot;Germany&quot;&#10;    Option value fr, &quot;France&quot;&#10;    Option value uk, &quot;United Kingdom&quot;&#10;    Option value us, &quot;United States&quot;&#10;&#10;Form ver, gap 12&#10;  Country&#10;  Text col #888, size 13, &quot;Selected: &quot; + Country.value"></div>
       </div>
 
       <!-- ===================== TOOLTIP ===================== -->
@@ -2157,12 +2187,12 @@
         A small hint that appears on hover. Automatically positioned to stay visible.
       </p>
 
-      <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button col #333, pad 8, rad 6&#10;      Icon icon &quot;help-circle&quot;, size 16&#10;  Content pad 8 12, col #333, rad 6, size 12&#10;    &quot;Click for help&quot;" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button bg #333, pad 8, rad 6&#10;      Icon icon &quot;help-circle&quot;, size 16&#10;  Content pad 8 12, bg #333, rad 6, size 12&#10;    &quot;Click for help&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Hover over the icons to see their tooltips.</p>
-        <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button col #333, pad 8, rad 6&#10;      Icon icon help-circle, size 16&#10;  Content pad 8 12, col #333, rad 6, size 12&#10;    &quot;Click for help&quot;&#10;&#10;InfoTip as Tooltip:&#10;  Trigger&#10;    Button col #333, pad 8, rad 6&#10;      Icon icon info, size 16&#10;  Content pad 8 12, col #333, rad 6, size 12&#10;    &quot;More information&quot;&#10;&#10;Row hor, gap 12&#10;  HelpTip&#10;  InfoTip" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="HelpTip as Tooltip:&#10;  Trigger&#10;    Button bg #333, pad 8, rad 6&#10;      Icon icon help-circle, size 16&#10;  Content pad 8 12, bg #333, rad 6, size 12&#10;    &quot;Click for help&quot;&#10;&#10;InfoTip as Tooltip:&#10;  Trigger&#10;    Button bg #333, pad 8, rad 6&#10;      Icon icon info, size 16&#10;  Content pad 8 12, bg #333, rad 6, size 12&#10;    &quot;More information&quot;&#10;&#10;Row hor, gap 12&#10;  HelpTip&#10;  InfoTip"></div>
       </div>
 
       <div class="rule-box">
@@ -2181,12 +2211,12 @@
         Like Tooltip but opens on click and can contain interactive content.
       </p>
 
-      <div class="mirror-editor" data-code="SharePopover as Popover:&#10;  Trigger&#10;    Button col #2271c1, pad 8 16, rad 6, &quot;Share&quot;&#10;  Content ver, gap 12, pad 16, col #1A1A23, rad 8, w 240, bor 1 #333&#10;    Title weight 600, &quot;Share this project&quot;&#10;    Input placeholder &quot;Enter email...&quot;&#10;    Button col #2271c1, pad 8 16, rad 6, &quot;Send Invite&quot;" data-preview-height="175"></div>
+      <div class="mirror-editor" data-code="SharePopover as Popover:&#10;  Trigger&#10;    Button bg #2271c1, pad 8 16, rad 6, &quot;Share&quot;&#10;  Content ver, gap 12, pad 16, bg #1A1A23, rad 8, w 240, bor 1 #333&#10;    Title weight 600, &quot;Share this project&quot;&#10;    Input placeholder &quot;Enter email...&quot;&#10;    Button bg #2271c1, pad 8 16, rad 6, &quot;Send Invite&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the Share button to open the popover. Click outside to close it.</p>
-        <div class="mirror-editor" data-code="SharePopover as Popover:&#10;  Trigger&#10;    Button col #2271c1, pad 8 16, rad 6, &quot;Share&quot;&#10;  Content ver, gap 12, pad 16, col #1A1A23, rad 8, w 220, bor 1 #333&#10;    Title weight 600, &quot;Share Project&quot;&#10;    Input placeholder &quot;Enter email...&quot;&#10;    Button col #2271c1, pad 8, rad 6, &quot;Send&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="SharePopover as Popover:&#10;  Trigger&#10;    Button bg #2271c1, pad 8 16, rad 6, &quot;Share&quot;&#10;  Content ver, gap 12, pad 16, bg #1A1A23, rad 8, w 220, bor 1 #333&#10;    Title weight 600, &quot;Share Project&quot;&#10;    Input placeholder &quot;Enter email...&quot;&#10;    Button bg #2271c1, pad 8, rad 6, &quot;Send&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -2209,12 +2239,12 @@
         A styled checkbox with customizable indicator.
       </p>
 
-      <div class="mirror-editor" data-code="Terms as Checkbox: hor, gap 8, ver-cen&#10;  Indicator w 18, h 18, rad 4, bor 1 #555, cen&#10;    state unchecked&#10;      col transparent&#10;    state checked&#10;      col #2271c1, boc #2271c1&#10;      Icon icon &quot;check&quot;, size 12&#10;  Text &quot;I agree to the terms&quot;" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Terms as Checkbox: hor, gap 8, ver-cen&#10;  Indicator w 18, h 18, rad 4, bor 1 #555, cen&#10;    state unchecked&#10;      col transparent&#10;    state checked&#10;      col #2271c1, boc #2271c1&#10;      Icon icon &quot;check&quot;, size 12&#10;  Text &quot;I agree to the terms&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the checkbox to toggle it. The button enables when checked.</p>
-        <div class="mirror-editor" data-code="Terms as Checkbox: hor, gap 8, ver-cen&#10;  Indicator w 18, h 18, rad 4, bor 1 #555, cen&#10;    state unchecked&#10;      col transparent&#10;    state checked&#10;      col #2271c1, boc #2271c1&#10;      Icon icon check, size 12&#10;  Text &quot;I agree to the terms&quot;&#10;&#10;Form ver, gap 16&#10;  Terms&#10;  Button if Terms.checked then col #2271c1 else col #333, pad 12, rad 8, &quot;Continue&quot;" data-preview-height="120"></div>
+        <div class="mirror-editor" data-code="Terms as Checkbox: hor, gap 8, ver-cen&#10;  Indicator w 18, h 18, rad 4, bor 1 #555, cen&#10;    state unchecked&#10;      col transparent&#10;    state checked&#10;      col #2271c1, boc #2271c1&#10;      Icon icon check, size 12&#10;  Text &quot;I agree to the terms&quot;&#10;&#10;Form ver, gap 16&#10;  Terms&#10;  Button if Terms.checked then bg #2271c1 else bg #333, pad 12, rad 8, &quot;Continue&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -2234,7 +2264,7 @@
         Access the checked state via <code class="inline-code">CheckboxName.checked</code>:
       </p>
 
-      <div class="mirror-editor" data-code="Terms as Checkbox:&#10;  // ... slots&#10;&#10;Button if Terms.checked then col #2271c1 else col #666, opa 50% &quot;Continue&quot;" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="AgreeTerms as Checkbox: hor, gap 8, ver-cen&#10;  Box 20 20, rad 4, bor 1 #666&#10;    state checked&#10;      #2271c1, bor 0&#10;      Icon icon check, size 14, #fff&#10;  Text &quot;I agree to the terms&quot;&#10;&#10;Card #1a1a1a, pad 16, rad 8, gap 12&#10;  AgreeTerms&#10;  Button pad 8 16, rad 8, if AgreeTerms.checked then #2271c1 else #333, &quot;Continue&quot;"></div>
 
       <!-- ===================== SWITCH ===================== -->
       <h3 id="lib-switch">Switch</h3>
@@ -2242,7 +2272,7 @@
         A toggle switch for binary settings. More visual than a checkbox.
       </p>
 
-      <div class="mirror-editor" data-code="DarkMode as Switch: w 44, h 24, rad 12, pad 2&#10;  state off&#10;    col #333&#10;  state on&#10;    col #2271c1&#10;  Thumb 20 20, rad 10, col white" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="DarkMode as Switch: w 44, h 24, rad 12, pad 2&#10;  state off&#10;    col #333&#10;  state on&#10;    col #2271c1&#10;  Thumb 20 20, rad 10, col white"></div>
 
       <div class="rule-box">
         <h4>Switch Slots</h4>
@@ -2260,7 +2290,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create a Switch with a "Dark Mode" label. Change the track color to green when on.</p>
-        <div class="mirror-editor" data-code="Row hor, gap 12, ver-cen&#10;  DarkMode as Switch: w 44, h 24, rad 12, pad 2, #333&#10;    Thumb 20 20, rad 10, col white&#10;  Text &quot;Dark Mode&quot;" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Row hor, gap 12, ver-cen&#10;  DarkMode as Switch: w 44, h 24, rad 12, pad 2, #333&#10;    Thumb 20 20, rad 10, col white&#10;  Text &quot;Dark Mode&quot;"></div>
       </div>
 
       <!-- ===================== SLIDER ===================== -->
@@ -2269,7 +2299,7 @@
         A range input for selecting a value within a range.
       </p>
 
-      <div class="mirror-editor" data-code="Volume as Slider: min 0, max 100, value 65, step 1&#10;  Track h 6, col #333, rad 3&#10;  Range col #2271c1&#10;  Thumb 18 18, rad 9, col white, shadow sm" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Volume as Slider: min 0, max 100, value 65, step 1&#10;  Track h 6, bg #333, rad 3&#10;  Range bg #2271c1&#10;  Thumb 18 18, rad 9, col white, shadow sm"></div>
 
       <div class="rule-box">
         <h4>Slider Slots</h4>
@@ -2290,7 +2320,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Drag the slider to change the volume. The value updates live.</p>
-        <div class="mirror-editor" data-code="Volume as Slider: min 0, max 100, value 65, step 1&#10;  Track h 6, col #333, rad 3&#10;  Range col #2271c1&#10;  Thumb 18 18, rad 9, col white&#10;&#10;Row hor, gap 16, ver-cen&#10;  Text col #888, size 13, &quot;Volume:&quot;&#10;  Volume w 180&#10;  Text col #fff, weight 600, Volume.value" data-preview-height="80"></div>
+        <div class="mirror-editor" data-code="Volume as Slider: min 0, max 100, value 65, step 1&#10;  Track h 6, bg #333, rad 3&#10;  Range bg #2271c1&#10;  Thumb 18 18, rad 9, col white&#10;&#10;Row hor, gap 16, ver-cen&#10;  Text col #888, size 13, &quot;Volume:&quot;&#10;  Volume w 180&#10;  Text weight 600, Volume.value"></div>
       </div>
 
       <!-- ===================== PROGRESS ===================== -->
@@ -2299,7 +2329,7 @@
         A progress indicator showing completion status.
       </p>
 
-      <div class="mirror-editor" data-code="UploadProgress as Progress: value 75, max 100, w 300, h 8, rad 4, col #333&#10;  Indicator col #10B981" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="UploadProgress as Progress: value 75, max 100, w 300, h 8, rad 4, col #333&#10;  Indicator bg #10B981"></div>
 
       <div class="rule-box">
         <h4>Progress Slots</h4>
@@ -2320,12 +2350,12 @@
         A notification message that appears temporarily.
       </p>
 
-      <div class="mirror-editor" data-code="SuccessToast as Toast: hor, gap 12, ver-cen, pad 16, col #1A1A23, rad 8, bor 1 #333&#10;  Icon icon &quot;check-circle&quot;, col #10B981&#10;  Info ver&#10;    Title weight 600, &quot;Success&quot;&#10;    Description col #fff, size 13, &quot;Your changes have been saved.&quot;&#10;  Action &quot;Undo&quot;&#10;  Close onclick close&#10;    Icon icon &quot;x&quot;, size 14, col #666" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="SuccessToast as Toast: hor, gap 12, ver-cen, pad 16, bg #1A1A23, rad 8, bor 1 #333&#10;  Icon icon &quot;check-circle&quot;, bg #10B981&#10;  Info ver&#10;    Title weight 600, &quot;Success&quot;&#10;    Description size 13, &quot;Your changes have been saved.&quot;&#10;  Action &quot;Undo&quot;&#10;  Close onclick close&#10;    Icon icon &quot;x&quot;, size 14, bg #666"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the button to show a toast notification.</p>
-        <div class="mirror-editor" data-code="SuccessToast as Toast: hor, gap 12, ver-cen, pad 16, col #1A1A23, rad 8, bor 1 #333&#10;  Icon icon check-circle, col #10B981&#10;  Info ver&#10;    Title weight 600, &quot;Saved&quot;&#10;    Text col #888, size 13, &quot;Your changes are saved.&quot;&#10;&#10;Button col #2271c1, pad 12, rad 8, onclick show SuccessToast, &quot;Save Changes&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="SuccessToast as Toast: hor, gap 12, ver-cen, pad 16, bg #1A1A23, rad 8, bor 1 #333&#10;  Icon icon check-circle, bg #10B981&#10;  Info ver&#10;    Title weight 600, &quot;Saved&quot;&#10;    Text col #888, size 13, &quot;Your changes are saved.&quot;&#10;&#10;Button bg #2271c1, pad 12, rad 8, onclick show SuccessToast, &quot;Save Changes&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -2346,7 +2376,7 @@
         User avatar with image and fallback initials.
       </p>
 
-      <div class="mirror-editor" data-code="UserAvatar as Avatar: w 48, h 48, rad 24&#10;  Image src &quot;https://i.pravatar.cc/48&quot;&#10;  Fallback cen, weight 600, col #2271c1, &quot;JD&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="UserAvatar as Avatar: w 48, h 48, rad 24&#10;  Image src &quot;https://i.pravatar.cc/48&quot;&#10;  Fallback cen, weight 600, bg #2271c1, &quot;JD&quot;"></div>
 
       <div class="rule-box">
         <h4>Avatar Slots</h4>
@@ -2357,12 +2387,12 @@
       </div>
 
       <h4>Avatar Sizes</h4>
-      <div class="mirror-editor" data-code="SmallAvatar as Avatar: w 32, h 32, rad 16, size 12&#10;MediumAvatar as Avatar: w 48, h 48, rad 24, size 16&#10;LargeAvatar as Avatar: w 64, h 64, rad 32, size 20" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="SmallAvatar from Avatar: 32 32, rad 16, size 12&#10;MediumAvatar from Avatar: 48 48, rad 24, size 14&#10;LargeAvatar from Avatar: 64 64, rad 32, size 18&#10;&#10;Row hor, gap 16, ver-cen&#10;  SmallAvatar #2271c1, cen&#10;    Fallback &quot;SM&quot;&#10;  MediumAvatar #10B981, cen&#10;    Fallback &quot;MD&quot;&#10;  LargeAvatar #EF4444, cen&#10;    Fallback &quot;LG&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Create an Avatar with a fallback showing "AB" and a blue background.</p>
-        <div class="mirror-editor" data-code="UserAvatar as Avatar: w 48, h 48, rad 24, #2271c1, cen&#10;  Fallback weight 600, &quot;AB&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="UserAvatar as Avatar: w 48, h 48, rad 24, #2271c1, cen&#10;  Fallback weight 600, &quot;AB&quot;"></div>
       </div>
 
       <!-- ===================== ALERTDIALOG ===================== -->
@@ -2371,12 +2401,12 @@
         A modal dialog for important confirmations. Requires explicit user action to dismiss.
       </p>
 
-      <div class="mirror-editor" data-code="DeleteConfirm as AlertDialog:&#10;  Trigger&#10;    Button col #EF4444, pad 8 16, rad 6, &quot;Delete&quot;&#10;  Content ver, gap 16, pad 24, col #1A1A23, rad 12, w 400&#10;    Title weight 600, size 18, &quot;Are you sure?&quot;&#10;    Description col #9CA3AF, &quot;This action cannot be undone. This will permanently delete your account.&quot;&#10;    Actions hor, gap 8, hor-r&#10;      Cancel col #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;      Action col #EF4444, pad 8 16, rad 6, &quot;Delete&quot;" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="DeleteConfirm as AlertDialog:&#10;  Trigger&#10;    Button bg #EF4444, pad 8 16, rad 6, &quot;Delete&quot;&#10;  Content ver, gap 16, pad 24, bg #1A1A23, rad 12, w 400&#10;    Title weight 600, size 18, &quot;Are you sure?&quot;&#10;    Description col #9CA3AF, &quot;This action cannot be undone. This will permanently delete your account.&quot;&#10;    Actions hor, gap 8, hor-r&#10;      Cancel bg #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;      Action bg #EF4444, pad 8 16, rad 6, &quot;Delete&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click Delete to open the confirmation dialog.</p>
-        <div class="mirror-editor" data-code="DeleteConfirm as AlertDialog:&#10;  Trigger&#10;    Button col #EF4444, pad 8 16, rad 6, &quot;Delete&quot;&#10;  Content ver, gap 16, pad 24, col #1A1A23, rad 12, w 320&#10;    Title weight 600, size 18, &quot;Delete item?&quot;&#10;    Description col #888, &quot;This cannot be undone.&quot;&#10;    Actions hor, gap 8, hor-r&#10;      Cancel col #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;      Action col #EF4444, pad 8 16, rad 6, &quot;Delete&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="DeleteConfirm as AlertDialog:&#10;  Trigger&#10;    Button bg #EF4444, pad 8 16, rad 6, &quot;Delete&quot;&#10;  Content ver, gap 16, pad 24, bg #1A1A23, rad 12, w 320&#10;    Title weight 600, size 18, &quot;Delete item?&quot;&#10;    Description col #888, &quot;This cannot be undone.&quot;&#10;    Actions hor, gap 8, hor-r&#10;      Cancel bg #333, pad 8 16, rad 6, &quot;Cancel&quot;&#10;      Action bg #EF4444, pad 8 16, rad 6, &quot;Delete&quot;"></div>
       </div>
 
       <div class="rule-box">
@@ -2402,7 +2432,7 @@
         A structured form field with label, input, hint, and error message.
       </p>
 
-      <div class="mirror-editor" data-code="EmailField as FormField: ver, gap 6&#10;  Label size 13, weight 500, &quot;Email&quot;&#10;  Field placeholder &quot;your@email.com&quot;, type email, pad 10 12, col #1A1A23, rad 6, bor 1 #333&#10;  Hint size 12, col #666, &quot;We'll never share your email.&quot;&#10;  Error size 12, col #EF4444, hidden, &quot;Please enter a valid email&quot;" data-preview-height="125"></div>
+      <div class="mirror-editor" data-code="EmailField as FormField: ver, gap 6&#10;  Label size 13, weight 500, &quot;Email&quot;&#10;  Field placeholder &quot;your@email.com&quot;, type email, pad 10 12, bg #1A1A23, rad 6, bor 1 #333&#10;  Hint size 12, col #666, &quot;We'll never share your email.&quot;&#10;  Error size 12, col #EF4444, hidden, &quot;Please enter a valid email&quot;"></div>
 
       
 
@@ -2422,7 +2452,7 @@
         A group of mutually exclusive options. Only one can be selected at a time.
       </p>
 
-      <div class="mirror-editor" data-code="PlanSelector as RadioGroup: ver, gap 8&#10;  Item value &quot;free&quot;, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Free&quot;&#10;  Item value &quot;pro&quot;&#10;    Indicator&#10;    Label &quot;Pro - $9/month&quot;&#10;  Item value &quot;enterprise&quot;&#10;    Indicator&#10;    Label &quot;Enterprise - $29/month&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="PlanSelector as RadioGroup: ver, gap 8&#10;  Item value &quot;free&quot;, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Free&quot;&#10;  Item value &quot;pro&quot;&#10;    Indicator&#10;    Label &quot;Pro - $9/month&quot;&#10;  Item value &quot;enterprise&quot;&#10;    Indicator&#10;    Label &quot;Enterprise - $29/month&quot;"></div>
 
       
 
@@ -2447,7 +2477,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click options to select them. Only one can be selected.</p>
-        <div class="mirror-editor" data-code="PlanSelector as RadioGroup: ver, gap 8&#10;  Item value free, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Free&quot;&#10;  Item value pro, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Pro - $9/month&quot;&#10;&#10;PlanSelector" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="PlanSelector as RadioGroup: ver, gap 8&#10;  Item value free, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Free&quot;&#10;  Item value pro, hor, gap 8, ver-cen&#10;    Indicator w 18, h 18, rad 9, bor 1 #555, cen&#10;      state selected&#10;        boc #2271c1&#10;        Dot w 10, h 10, rad 5, col #2271c1&#10;    Label &quot;Pro - $9/month&quot;&#10;&#10;PlanSelector"></div>
       </div>
 
       <!-- ===================== HOVERCARD ===================== -->
@@ -2456,7 +2486,7 @@
         A card that appears on hover, showing additional information. Useful for previewing user profiles or link details.
       </p>
 
-      <div class="mirror-editor" data-code="UserPreview as HoverCard:&#10;  Trigger&#10;    Link col #3B82F6, &quot;@johndoe&quot;&#10;  Content ver, gap 12, pad 16, col #1A1A23, rad 8, w 280, bor 1 #333&#10;    Header hor, gap 12, ver-cen&#10;      Avatar 48 48, rad 24, col #2271c1, cen, &quot;JD&quot;&#10;      Info ver&#10;        Name weight 600, &quot;John Doe&quot;&#10;        Handle col #666, size 13, &quot;@johndoe&quot;&#10;    Bio col #9CA3AF, size 13, &quot;Senior Developer at Acme Inc. Building great products.&quot;" data-preview-height="250"></div>
+      <div class="mirror-editor" data-code="UserPreview as HoverCard:&#10;  Trigger&#10;    Link col #3B82F6, &quot;@johndoe&quot;&#10;  Content ver, gap 12, pad 16, bg #1A1A23, rad 8, w 280, bor 1 #333&#10;    Header hor, gap 12, ver-cen&#10;      Avatar 48 48, rad 24, bg #2271c1, cen, &quot;JD&quot;&#10;      Info ver&#10;        Name weight 600, &quot;John Doe&quot;&#10;        Handle col #666, size 13, &quot;@johndoe&quot;&#10;    Bio col #9CA3AF, size 13, &quot;Senior Developer at Acme Inc. Building great products.&quot;"></div>
 
       <div class="rule-box">
         <h4>HoverCard Slots</h4>
@@ -2472,7 +2502,7 @@
         A single collapsible section. Unlike Accordion, each Collapsible is independent.
       </p>
 
-      <div class="mirror-editor" data-code="Details as Collapsible:&#10;  Trigger pad 12 16, col #1A1A23, rad 8, hor, between, ver-cen&#10;    Text weight 500, &quot;Show details&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 16&#10;  Content pad 12 16, col #1A1A23, rad 0 0 8 8, mar u -8&#10;    Text col #9CA3AF, &quot;Here are the hidden details that appear when expanded.&quot;" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="Details as Collapsible:&#10;  Trigger pad 12 16, bg #1A1A23, rad 8, hor, between, ver-cen&#10;    Text weight 500, &quot;Show details&quot;&#10;    Icon icon &quot;chevron-down&quot;, size 16&#10;  Content pad 12 16, bg #1A1A23, rad 0 0 8 8, mar u -8&#10;    Text col #9CA3AF, &quot;Here are the hidden details that appear when expanded.&quot;"></div>
 
       
 
@@ -2495,7 +2525,7 @@
         A menu that appears on right-click. Useful for providing context-specific actions.
       </p>
 
-      <div class="mirror-editor" data-code="FileMenu as ContextMenu:&#10;  Trigger&#10;    Card pad 24, col #1A1A23, rad 8&#10;      Text &quot;Right-click me&quot;&#10;  Content ver, col #1A1A23, rad 8, pad 4, bor 1 #333, minw 160&#10;    Item pad 8 12, rad 4, hover-col #333, hor, gap 8&#10;      Icon icon &quot;copy&quot;, size 14&#10;      &quot;Copy&quot;&#10;    Item hor, gap 8&#10;      Icon icon &quot;scissors&quot;, size 14&#10;      &quot;Cut&quot;&#10;    Item hor, gap 8&#10;      Icon icon &quot;clipboard&quot;, size 14&#10;      &quot;Paste&quot;&#10;    Separator h 1, col #333, mar u-d 4&#10;    Item col #EF4444, hor, gap 8&#10;      Icon icon &quot;trash-2&quot;, size 14&#10;      &quot;Delete&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="FileMenu as ContextMenu:&#10;  Trigger&#10;    Card pad 24, bg #1A1A23, rad 8&#10;      Text &quot;Right-click me&quot;&#10;  Content ver, bg #1A1A23, rad 8, pad 4, bor 1 #333, minw 160&#10;    Item pad 8 12, rad 4, hover-bg #333, hor, gap 8&#10;      Icon icon &quot;copy&quot;, size 14&#10;      &quot;Copy&quot;&#10;    Item hor, gap 8&#10;      Icon icon &quot;scissors&quot;, size 14&#10;      &quot;Cut&quot;&#10;    Item hor, gap 8&#10;      Icon icon &quot;clipboard&quot;, size 14&#10;      &quot;Paste&quot;&#10;    Separator h 1, bg #333, mar u-d 4&#10;    Item bg #EF4444, hor, gap 8&#10;      Icon icon &quot;trash-2&quot;, size 14&#10;      &quot;Delete&quot;"></div>
 
       <div class="rule-box">
         <h4>ContextMenu Slots</h4>
@@ -2523,7 +2553,7 @@
         We want to build a dashboard screen with a header, some metrics tiles, and a footer. Instead of detailing every component upfront, we start with just the structure. The first usage of each component implicitly defines it.
       </p>
 
-      <div class="mirror-editor" data-code="Dashboard&#10;    Header&#10;    Content&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        Tile Value &quot;40&quot; Label &quot;Customers&quot;&#10;        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;&#10;    Footer" data-preview-height="200"></div>
+      <div class="mirror-editor" data-code="Dashboard&#10;    Header&#10;    Content&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        Tile Value &quot;40&quot; Label &quot;Customers&quot;&#10;        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;&#10;    Footer"></div>
 
       <p>
         We now have a complete component hierarchy. The first Tile defines the structure (Value + Label), and all subsequent Tiles inherit it automatically. No styling yet – just pure structure.
@@ -2534,7 +2564,7 @@
         Now we flesh out the details: Header gets a logo and navigation, Footer gets a copyright text, and we add layout properties to arrange elements horizontally.
       </p>
 
-      <div class="mirror-editor" data-code="Dashboard&#10;    Header hor, fill&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav hor, gap 16&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;            Link &quot;Team&quot;&#10;    Content hor, wrap, gap 16&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        Tile Value &quot;40&quot; Label &quot;Customers&quot;&#10;        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;&#10;    Footer Text &quot;© 2025 Acme Inc&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="Dashboard&#10;    Header hor, fill&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav hor, gap 16&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;            Link &quot;Team&quot;&#10;    Content hor, wrap, gap 16&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        Tile Value &quot;40&quot; Label &quot;Customers&quot;&#10;        Tile Value &quot;89%&quot; Label &quot;Satisfaction&quot;&#10;    Footer Text &quot;© 2025 Acme Inc&quot;"></div>
 
       <p>
         The Header now has a logo and navigation. Content arranges tiles horizontally with wrapping. Footer shows copyright text. Layout properties like <code class="inline-code">hor</code>, <code class="inline-code">fill</code>, and <code class="inline-code">gap</code> control arrangement.
@@ -2546,7 +2576,7 @@
       </p>
 
       <p><strong>Changes:</strong></p>
-      <div class="mirror-editor" data-code="// Dashboard: add ver layout, background, padding, gap&#10;Dashboard ver, col #0f0f14, pad 24, gap 24&#10;&#10;// Logo: add color, size, weight&#10;Logo &quot;Acme Inc&quot;, #fff, size 20, weight bold&#10;&#10;// Links: first one white (#fff), others muted (#fff)&#10;Link &quot;Dashboard&quot;, #fff&#10;Link &quot;Projects&quot;, #fff&#10;&#10;// Content: use grid instead of hor wrap&#10;Content grid 2, gap 16&#10;&#10;// First Tile: ver layout, background, padding, radius, gap&#10;Tile ver, col #2271c1, pad 20, rad 12, gap 8&#10;    Value &quot;2.7 Mio&quot;, #fff, size 28, weight bold&#10;    Label &quot;Revenue&quot;, #fff, size 12" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="// Dashboard: add ver layout, background, padding, gap&#10;Dashboard ver, bg #0f0f14, pad 24, gap 24&#10;&#10;// Logo: add size, weight&#10;Logo &quot;Acme Inc&quot;, size 20, weight bold&#10;&#10;// Links: first active, second muted (#aaa)&#10;Link &quot;Dashboard&quot;&#10;Link &quot;Projects&quot;, #aaa&#10;&#10;// Content: use grid instead of hor wrap&#10;Content grid 2, gap 16&#10;&#10;// First Tile: ver layout, background, padding, radius, gap&#10;Tile ver, bg #2271c1, pad 20, rad 12, gap 8&#10;    Value &quot;2.7 Mio&quot;, size 28, weight bold&#10;    Label &quot;Revenue&quot;, size 12"></div>
 
       <p>
         All four tiles look identical because they inherit from the first definition. Same for Value and Label inside.
@@ -2558,7 +2588,7 @@
       </p>
 
       <p><strong>Add to Tile:</strong></p>
-      <div class="mirror-editor" data-code="Tile ver, col #2271c1, pad 20, rad 12, gap 8&#10;    state hover&#10;        col #3281d1&#10;    Value ..." data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="Tile: ver, #2271c1, pad 20, rad 12, gap 8&#10;  state hover&#10;    #3281d1&#10;Value: size 28, weight bold&#10;Label: #aaa, size 12&#10;&#10;Tile&#10;  Value &quot;42&quot;&#10;  Label &quot;Projects&quot;"></div>
 
       <p>
         The hover state is defined once on the first Tile. All tiles inherit it automatically.
@@ -2570,10 +2600,10 @@
       </p>
 
       <p><strong>Add token definitions at the top:</strong></p>
-      <div class="mirror-editor" data-code="$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #fff&#10;$card-rad: 12" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #fff&#10;$card-rad: 12"></div>
 
       <p><strong>Replace hard-coded values:</strong></p>
-      <div class="mirror-editor" data-code="// Before:&#10;Dashboard ver, col #0f0f14 ...&#10;Tile ver, col #2271c1, pad 20, rad 12 ...&#10;&#10;// After:&#10;Dashboard ver, $bg-col ...&#10;Tile ver, $card-col, pad 20, $card-rad ..." data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-rad: 12&#10;&#10;Dashboard: ver, $bg-col, pad 24&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;&#10;Dashboard&#10;  Tile&#10;    Text size 28, weight bold, &quot;2.7 Mio&quot;&#10;    Text #aaa, size 12, &quot;Revenue&quot;"></div>
 
       <p>
         The suffix <code class="inline-code">-col</code> tells Mirror to apply it as a color property – no need to write <code class="inline-code">col $card-col</code>. Change <code class="inline-code">$card-col</code> and all tiles update.
@@ -2585,10 +2615,10 @@
       </p>
 
       <p><strong>Add component definitions (after tokens):</strong></p>
-      <div class="mirror-editor" data-code="Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;    state hover&#10;        $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12" data-preview-height="275"></div>
+      <div class="mirror-editor" data-code="Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;    state hover&#10;        $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12"></div>
 
       <p><strong>Content becomes pure structure:</strong></p>
-      <div class="mirror-editor" data-code="Dashboard&#10;    Header&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;    Content&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        ..." data-preview-height="250"></div>
+      <div class="mirror-editor" data-code="Dashboard&#10;    Header&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;    Content&#10;        Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;        Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;        ..."></div>
 
       <p>
         Now content contains only structure and text – no styling. All visual decisions live in definitions.
@@ -2600,10 +2630,10 @@
       </p>
 
       <p><strong>Add new token and dialog component:</strong></p>
-      <div class="mirror-editor" data-code="$primary-col: #2271c1&#10;&#10;Button: $primary-col, pad 8 16, rad 6&#10;&#10;// Dialog with content – not instantiated on page&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Text $muted-col, &quot;Configure your preferences.&quot;&#10;    Button onclick close, &quot;Close&quot;" data-preview-height="225"></div>
+      <div class="mirror-editor" data-code="$primary-col: #2271c1&#10;&#10;Button: $primary-col, pad 8 16, rad 6&#10;&#10;// Dialog with content – not instantiated on page&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Text $muted-col, &quot;Configure your preferences.&quot;&#10;    Button onclick close, &quot;Close&quot;"></div>
 
       <p><strong>Add button to Header:</strong></p>
-      <div class="mirror-editor" data-code="Header&#10;    ...&#10;    Button onclick open SettingsDialog center &quot;Settings&quot;" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="$card-col: #2271c1&#10;$text-col: #fff&#10;&#10;Header: hor, fill, ver-cen, #0f0f14, pad 16, rad 8&#10;Logo: $text-col, size 20, weight bold&#10;Button: $card-col, pad 8 16, rad 6&#10;&#10;SettingsDialog: ver, $card-col, pad 24, rad 12, w 280, gap 12&#10;  Title $text-col, weight 600, &quot;Settings&quot;&#10;  Button #333, onclick close, &quot;Close&quot;&#10;&#10;Header&#10;  Logo &quot;Acme Inc&quot;&#10;  Button onclick open SettingsDialog center, &quot;Settings&quot;"></div>
 
       <p>
         <code class="inline-code">onclick open SettingsDialog center</code> opens the dialog centered in the viewport. The dialog content is defined in Components – no need to instantiate it on the page. Inside the dialog, <code class="inline-code">onclick close</code> dismisses it.
@@ -2612,7 +2642,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click Settings to open the dialog. Try the Close button and clicking outside.</p>
-        <div class="mirror-editor" data-code="$card-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;$card-rad: 12&#10;$primary-col: #2271c1&#10;&#10;Button: $primary-col, pad 8 16, rad 6&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;  Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;  Text $muted-col, &quot;Configure your preferences.&quot;&#10;  Button onclick close, &quot;Close&quot;&#10;&#10;Header hor, fill, ver-cen, #0f0f14, pad 16, rad 8&#10;  Logo #fff, size 20, weight bold, &quot;Acme Inc&quot;&#10;  Button onclick open SettingsDialog center, &quot;Settings&quot;" data-preview-height="100"></div>
+        <div class="mirror-editor" data-code="$card-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;$card-rad: 12&#10;$primary-col: #2271c1&#10;&#10;Button: $primary-col, pad 8 16, rad 6&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;  Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;  Text $muted-col, &quot;Configure your preferences.&quot;&#10;  Button onclick close, &quot;Close&quot;&#10;&#10;Header hor, fill, ver-cen, #0f0f14, pad 16, rad 8&#10;  Logo size 20, weight bold, &quot;Acme Inc&quot;&#10;  Button onclick open SettingsDialog center, &quot;Settings&quot;"></div>
       </div>
 
       <h3 id="step8-named-instances">Step 8: Named Instances</h3>
@@ -2621,7 +2651,7 @@
       </p>
 
       <p><strong>Expand SettingsDialog with form fields (in Components):</strong></p>
-      <div class="mirror-editor" data-code="SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Field gap 6&#10;        FieldLabel $muted-col, size 12, uppercase, &quot;Email&quot;&#10;        Input named Email, placeholder &quot;Enter email&quot;, type email&#10;    StatusText $muted-col, size 12&#10;        if Email.value then &quot;Email: &quot; + Email.value else &quot;Enter your email&quot;&#10;    Actions hor, gap 8, hor-r&#10;        SecondaryBtn $card-col, pad 8 16, rad 6, onclick close, &quot;Cancel&quot;&#10;        Button onclick close, &quot;Save&quot;" data-preview-height="250"></div>
+      <div class="mirror-editor" data-code="SettingsDialog: ver, $card-col, pad 24, $card-rad, w 320, gap 16&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Field gap 6&#10;        FieldLabel $muted-col, size 12, uppercase, &quot;Email&quot;&#10;        Input named Email, placeholder &quot;Enter email&quot;, type email&#10;    StatusText $muted-col, size 12&#10;        if Email.value then &quot;Email: &quot; + Email.value else &quot;Enter your email&quot;&#10;    Actions hor, gap 8, hor-r&#10;        SecondaryBtn $card-col, pad 8 16, rad 6, onclick close, &quot;Cancel&quot;&#10;        Button onclick close, &quot;Save&quot;"></div>
 
       <p>
         <code class="inline-code">Input named Email</code> creates a named instance. <code class="inline-code">Email.value</code> references its value – it updates live as you type.
@@ -2633,10 +2663,10 @@
       </p>
 
       <p><strong>Add state token and new components:</strong></p>
-      <div class="mirror-editor" data-code="$isLoggedIn: true&#10;$success-col: #10B981&#10;&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;Welcome: $card-col, pad 16, $card-rad, hor, gap 12" data-preview-height="60"></div>
+      <div class="mirror-editor" data-code="$isLoggedIn: true&#10;$success-col: #10B981&#10;&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;Welcome: $card-col, pad 16, $card-rad, hor, gap 12"></div>
 
       <p><strong>Add conditional elements:</strong></p>
-      <div class="mirror-editor" data-code="Header&#10;    ...&#10;    if $isLoggedIn&#10;        Badge &quot;Online&quot;&#10;    Button onclick assign $isLoggedIn to not $isLoggedIn&#10;        if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;&#10;&#10;if $isLoggedIn&#10;    Welcome&#10;        WelcomeTitle &quot;Welcome back!&quot;&#10;        WelcomeText &quot;Here's your dashboard.&quot;" data-preview-height="275"></div>
+      <div class="mirror-editor" data-code="Header&#10;    ...&#10;    if $isLoggedIn&#10;        Badge &quot;Online&quot;&#10;    Button onclick assign $isLoggedIn to not $isLoggedIn&#10;        if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;&#10;&#10;if $isLoggedIn&#10;    Welcome&#10;        WelcomeTitle &quot;Welcome back!&quot;&#10;        WelcomeText &quot;Here's your dashboard.&quot;"></div>
 
       <p>
         <code class="inline-code">if $isLoggedIn</code> shows/hides blocks. The button uses <code class="inline-code">onclick assign</code> to toggle the value. Inline <code class="inline-code">if then else</code> changes the button label.
@@ -2645,7 +2675,7 @@
       <div class="exercise">
         <div class="exercise-label">Try it</div>
         <p class="exercise-task">Click the Login/Logout button to toggle the state. Watch the badge and welcome message appear/disappear.</p>
-        <div class="mirror-editor" data-code="$isLoggedIn: true&#10;$success-col: #10B981&#10;$card-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;&#10;Button: $card-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, rad 12, size 12&#10;&#10;Page ver, gap 16, #0f0f14, pad 16, rad 8&#10;  Header hor, fill, ver-cen&#10;    Logo $text-col, size 20, weight bold, &quot;Acme Inc&quot;&#10;    if $isLoggedIn&#10;      Badge &quot;Online&quot;&#10;    Button onclick assign $isLoggedIn to not $isLoggedIn&#10;      if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;&#10;  if $isLoggedIn&#10;    Welcome $card-col, pad 16, rad 12, hor, gap 12&#10;      WelcomeTitle $text-col, weight 600, &quot;Welcome back!&quot;&#10;      WelcomeText $muted-col, &quot;Here's your dashboard.&quot;" data-preview-height="140"></div>
+        <div class="mirror-editor" data-code="$isLoggedIn: true&#10;$success-col: #10B981&#10;$card-col: #2271c1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;&#10;Button: $card-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, rad 12, size 12&#10;&#10;Page ver, gap 16, #0f0f14, pad 16, rad 8&#10;  Header hor, fill, ver-cen&#10;    Logo $text-col, size 20, weight bold, &quot;Acme Inc&quot;&#10;    if $isLoggedIn&#10;      Badge &quot;Online&quot;&#10;    Button onclick assign $isLoggedIn to not $isLoggedIn&#10;      if $isLoggedIn then &quot;Logout&quot; else &quot;Login&quot;&#10;  if $isLoggedIn&#10;    Welcome $card-col, pad 16, rad 12, hor, gap 12&#10;      WelcomeTitle $text-col, weight 600, &quot;Welcome back!&quot;&#10;      WelcomeText $muted-col, &quot;Here's your dashboard.&quot;"></div>
       </div>
 
       <h3 id="step10-data">Step 10: Data-Driven Content</h3>
@@ -2654,10 +2684,10 @@
       </p>
 
       <p><strong>Add data array:</strong></p>
-      <div class="mirror-editor" data-code="$metrics: [&#10;    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;    { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;    { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]" data-preview-height="150"></div>
+      <div class="mirror-editor" data-code="$metrics: [&#10;    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;    { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;    { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]"></div>
 
       <p><strong>Replace hardcoded tiles with loop:</strong></p>
-      <div class="mirror-editor" data-code="// Before:&#10;Content&#10;    Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;    Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;    ...&#10;&#10;// After:&#10;Content&#10;    each $metric in $metrics&#10;        Tile&#10;            Value $metric.value&#10;            Label $metric.label" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="// Before:&#10;Content&#10;    Tile Value &quot;2.7 Mio&quot; Label &quot;Revenue&quot;&#10;    Tile Value &quot;16&quot; Label &quot;Employees&quot;&#10;    ...&#10;&#10;// After:&#10;Content&#10;    each $metric in $metrics&#10;        Tile&#10;            Value $metric.value&#10;            Label $metric.label"></div>
 
       <p>
         Access nested properties with dot notation: <code class="inline-code">$metric.value</code>. Adding a new metric is just adding to the data array.
@@ -2669,10 +2699,10 @@
       </p>
 
       <p><strong>Add show/hide animations to Tile:</strong></p>
-      <div class="mirror-editor" data-code="Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;    show fade slide-up 300&#10;    state hover&#10;        $card-hover-col" data-preview-height="100"></div>
+      <div class="mirror-editor" data-code="$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;&#10;Tile: ver, $card-col, pad 20, rad 12, gap 8&#10;  show fade slide-up 300&#10;  state hover&#10;    $card-hover-col&#10;&#10;Row hor, gap 12&#10;  Tile&#10;    Text size 28, weight bold, &quot;42&quot;&#10;    Text #aaa, size 12, &quot;Projects&quot;&#10;  Tile&#10;    Text size 28, weight bold, &quot;89%&quot;&#10;    Text #aaa, size 12, &quot;Score&quot;"></div>
 
       <p><strong>Add animations to Dialog:</strong></p>
-      <div class="mirror-editor" data-code="SettingsDialog: ...&#10;    show fade scale 200&#10;    hide fade 150" data-preview-height="80"></div>
+      <div class="mirror-editor" data-code="MyDialog: ver, #2271c1, pad 24, rad 12, w 280, gap 12&#10;  show fade scale 200&#10;  hide fade 150&#10;  Title weight 600, &quot;Animated Dialog&quot;&#10;  Button #333, onclick close, &quot;Close&quot;&#10;&#10;Button #2271c1, pad 8 16, rad 8, onclick open MyDialog, &quot;Open&quot;"></div>
 
       <p>
         <code class="inline-code">show fade slide-up 300</code> animates tiles when they appear. <code class="inline-code">hide fade 150</code> animates the dialog exit. Animations are defined once and inherited.
@@ -2683,12 +2713,12 @@
         Here's our final dashboard combining everything: tokens, components, states, events, conditionals, data binding, and animations.
       </p>
 
-      <div class="mirror-editor" data-code="// === TOKENS ===&#10;$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #fff&#10;$primary-col: #2271c1&#10;$success-col: #10B981&#10;$card-rad: 12&#10;&#10;// === DATA ===&#10;$metrics: [&#10;    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;    { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;    { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]&#10;$isLoggedIn: true&#10;&#10;// === COMPONENTS ===&#10;Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill, ver-cen&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;    state hover&#10;        $text-col&#10;Button: $primary-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;    show fade slide-up 300&#10;    state hover&#10;        $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12&#10;FooterText: $muted-col, size 12&#10;&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 340, gap 16&#10;    show fade scale 200&#10;    hide fade 150&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Field gap 6&#10;        FieldLabel $muted-col, size 11, uppercase, &quot;Email notifications&quot;&#10;        Input Email, placeholder &quot;your@email.com&quot;, type email&#10;    Actions hor, gap 8, hor-r&#10;        SecondaryBtn $card-col, pad 8 16, rad 6, onclick close, &quot;Cancel&quot;&#10;        Button onclick close, &quot;Save&quot;&#10;&#10;// === LAYOUT ===&#10;Dashboard&#10;    Header&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;            Link &quot;Team&quot;&#10;        if $isLoggedIn&#10;            Badge &quot;Online&quot;&#10;        Button onclick open SettingsDialog center &quot;Settings&quot;&#10;&#10;    Content&#10;        each $m in $metrics&#10;            Tile Value $m.value Label $m.label&#10;&#10;    Footer&#10;        FooterText &quot;© 2025 Acme Inc&quot;" data-preview-height="300"></div>
+      <div class="mirror-editor" data-code="// === TOKENS ===&#10;$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #fff&#10;$primary-col: #2271c1&#10;$success-col: #10B981&#10;$card-rad: 12&#10;&#10;// === DATA ===&#10;$metrics: [&#10;    { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;    { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;    { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;    { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]&#10;$isLoggedIn: true&#10;&#10;// === COMPONENTS ===&#10;Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill, ver-cen&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;    state hover&#10;        $text-col&#10;Button: $primary-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;    show fade slide-up 300&#10;    state hover&#10;        $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12&#10;FooterText: $muted-col, size 12&#10;&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 340, gap 16&#10;    show fade scale 200&#10;    hide fade 150&#10;    Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;    Field gap 6&#10;        FieldLabel $muted-col, size 11, uppercase, &quot;Email notifications&quot;&#10;        Input Email, placeholder &quot;your@email.com&quot;, type email&#10;    Actions hor, gap 8, hor-r&#10;        SecondaryBtn $card-col, pad 8 16, rad 6, onclick close, &quot;Cancel&quot;&#10;        Button onclick close, &quot;Save&quot;&#10;&#10;// === LAYOUT ===&#10;Dashboard&#10;    Header&#10;        Logo &quot;Acme Inc&quot;&#10;        Nav&#10;            Link &quot;Dashboard&quot;&#10;            Link &quot;Projects&quot;&#10;            Link &quot;Team&quot;&#10;        if $isLoggedIn&#10;            Badge &quot;Online&quot;&#10;        Button onclick open SettingsDialog center &quot;Settings&quot;&#10;&#10;    Content&#10;        each $m in $metrics&#10;            Tile Value $m.value Label $m.label&#10;&#10;    Footer&#10;        FooterText &quot;© 2025 Acme Inc&quot;"></div>
 
       <div class="exercise">
         <div class="exercise-label">Live Dashboard</div>
         <p class="exercise-task">Interact with the complete dashboard: hover tiles, open the Settings dialog, change values.</p>
-        <div class="mirror-editor" data-code="// Tokens&#10;$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;$primary-col: #2271c1&#10;$success-col: #10B981&#10;$card-rad: 12&#10;&#10;// Data&#10;$metrics: [&#10;  { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;  { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;  { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;  { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]&#10;$isLoggedIn: true&#10;&#10;// Components&#10;Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill, ver-cen&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;  state hover&#10;    $text-col&#10;Button: $primary-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;  show fade slide-up 300&#10;  state hover&#10;    $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12&#10;FooterText: $muted-col, size 12&#10;&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 340, gap 16&#10;  show fade scale 200&#10;  Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;  Text $muted-col, &quot;Configure your preferences.&quot;&#10;  Button onclick close, &quot;Close&quot;&#10;&#10;// Layout&#10;Dashboard&#10;  Header&#10;    Logo &quot;Acme Inc&quot;&#10;    Nav&#10;      Link &quot;Dashboard&quot;&#10;      Link &quot;Projects&quot;&#10;      Link &quot;Team&quot;&#10;    if $isLoggedIn&#10;      Badge &quot;Online&quot;&#10;    Button onclick open SettingsDialog center, &quot;Settings&quot;&#10;  Content&#10;    each $m in $metrics&#10;      Tile Value $m.value Label $m.label&#10;  Footer&#10;    FooterText &quot;© 2025 Acme Inc&quot;" data-preview-height="280"></div>
+        <div class="mirror-editor" data-code="// Tokens&#10;$bg-col: #0f0f14&#10;$card-col: #2271c1&#10;$card-hover-col: #3281d1&#10;$text-col: #fff&#10;$muted-col: #aaa&#10;$primary-col: #2271c1&#10;$success-col: #10B981&#10;$card-rad: 12&#10;&#10;// Data&#10;$metrics: [&#10;  { value: &quot;2.7 Mio&quot;, label: &quot;Revenue&quot; },&#10;  { value: &quot;16&quot;, label: &quot;Employees&quot; },&#10;  { value: &quot;40&quot;, label: &quot;Customers&quot; },&#10;  { value: &quot;89%&quot;, label: &quot;Satisfaction&quot; }&#10;]&#10;$isLoggedIn: true&#10;&#10;// Components&#10;Dashboard: ver, $bg-col, pad 24, gap 24&#10;Header: hor, fill, ver-cen&#10;Logo: $text-col, size 20, weight bold&#10;Nav: hor, gap 16&#10;Link: $muted-col&#10;  state hover&#10;    $text-col&#10;Button: $primary-col, pad 8 16, rad 6&#10;Badge: $success-col, pad 4 12, $card-rad, size 12&#10;Content: grid 2, gap 16&#10;Tile: ver, $card-col, pad 20, $card-rad, gap 8&#10;  show fade slide-up 300&#10;  state hover&#10;    $card-hover-col&#10;Value: $text-col, size 28, weight bold&#10;Label: $muted-col, size 12&#10;FooterText: $muted-col, size 12&#10;&#10;SettingsDialog: ver, $card-col, pad 24, $card-rad, w 340, gap 16&#10;  show fade scale 200&#10;  Title $text-col, size 18, weight 600, &quot;Settings&quot;&#10;  Text $muted-col, &quot;Configure your preferences.&quot;&#10;  Button onclick close, &quot;Close&quot;&#10;&#10;// Layout&#10;Dashboard&#10;  Header&#10;    Logo &quot;Acme Inc&quot;&#10;    Nav&#10;      Link &quot;Dashboard&quot;&#10;      Link &quot;Projects&quot;&#10;      Link &quot;Team&quot;&#10;    if $isLoggedIn&#10;      Badge &quot;Online&quot;&#10;    Button onclick open SettingsDialog center, &quot;Settings&quot;&#10;  Content&#10;    each $m in $metrics&#10;      Tile Value $m.value Label $m.label&#10;  Footer&#10;    FooterText &quot;© 2025 Acme Inc&quot;"></div>
       </div>
 
       <p class="why">

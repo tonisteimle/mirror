@@ -571,12 +571,13 @@ events
       expect(text.properties.col).toBe('#FFFFFF')
     })
 
-    it('infers color property as col for Box', () => {
+    it('infers color property as bg for Box (container)', () => {
       const result = parse('Box #3B82F6')
 
       expect(result.nodes.length).toBe(1)
       const box = result.nodes[0]
-      expect(box.properties.col).toBe('#3B82F6')
+      // Box is a container, so shorthand color becomes bg (background)
+      expect(box.properties.bg).toBe('#3B82F6')
     })
 
     it('infers color property for Icon component as col', () => {
@@ -613,7 +614,8 @@ Box $card-rad #1F2937`)
       expect(result.nodes.length).toBe(1)
       const box = result.nodes[0]
       expect(box.properties.rad).toBe(12)
-      expect(box.properties.col).toBe('#1F2937')
+      // Box is a container, so shorthand color becomes bg
+      expect(box.properties.bg).toBe('#1F2937')
     })
 
     it('infers col property from token name ending in -col', () => {

@@ -420,6 +420,23 @@
   <span class="component">Card</span>
   <span class="component">Card</span></pre>
 
+      <h3>Stacked Layout</h3>
+      <p>Kinder übereinander stapeln – für Overlays, Badges, Loading-States:</p>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>stacked</code></td><td>Kinder übereinander</td><td><code>Card stacked</code></td></tr>
+      </table>
+      <pre><span class="comment">// Bild mit Text-Overlay</span>
+<span class="component">Card</span> <span class="property">stacked</span> <span class="value">300</span> <span class="value">200</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">overflow</span> <span class="value">hidden</span>
+  <span class="component">Image</span> <span class="string">"foto.jpg"</span> <span class="property">fit</span> <span class="value">cover</span>
+  <span class="component">Overlay</span> <span class="property">ver</span> <span class="property">ver-b</span> <span class="property">pad</span> <span class="value">16</span>
+    <span class="component">Title</span> <span class="string">"Titel"</span>
+
+<span class="comment">// Avatar mit Badge</span>
+<span class="component">Avatar</span> <span class="property">stacked</span> <span class="value">64</span> <span class="value">64</span>
+  <span class="component">Image</span> <span class="string">"avatar.jpg"</span> <span class="property">rad</span> <span class="value">32</span>
+  <span class="component">Badge</span> <span class="property">bg</span> <span class="value">#10B981</span> <span class="value">16</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">ver-b</span> <span class="property">hor-r</span></pre>
+
       <h3>HTML Primitives</h3>
       <p>Bestimmte Elemente benötigen native HTML-Tags für ihre Funktionalität. Diese werden mit einem <strong>Keyword</strong> markiert:</p>
 

@@ -57,6 +57,7 @@ const styles = {
   },
   previewWrapper: {
     backgroundColor: colors.preview,
+    color: '#fff',
     minHeight: '120px',
   },
   error: {
@@ -81,7 +82,7 @@ const styles = {
 export const EmbeddableEditor = memo(function EmbeddableEditor({
   initialCode,
   prelude = '',
-  previewHeight = 200,
+  previewHeight,
   readOnly = false,
 }: EmbeddableEditorProps) {
   const [code, setCode] = useState(initialCode.trim())
@@ -94,6 +95,9 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   const keymapCallbacksRef = useRef<KeymapCallbacks | null>(null)
   const designTokensRef = useRef<Map<string, unknown>>(new Map())
 
+  // Ref for swatch click handler (used by color swatch plugin)
+  const swatchClickRef = useRef<((start: number, end: number, color: string) => void) | null>(null)
+
   // Panel hooks
   const colorPanel = useColorPanel(editorViewRef)
   const colorPanelRef = useRef(colorPanel)
@@ -104,12 +108,16 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   pickerRef.current = picker // Update ref on each render
 
   const {
+    colorPickerOpen, colorPickerPosition,
     commandPaletteOpen, commandPalettePosition, commandPaletteQuery,
     fontPickerOpen, fontPickerPosition,
     iconPickerOpen, iconPickerPosition,
     tokenPickerOpen, tokenPickerPosition, tokenPickerPropertyContext,
     openPicker, closePicker,
   } = picker
+
+  // Local state for swatch-triggered color panel
+  const [swatchColorSelectedIndex, setSwatchColorSelectedIndex] = useState(0)
 
   // Parse design tokens from prelude
   const designTokens = useMemo(() => {
@@ -171,6 +179,23 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   const insertIcon = useMemo(() => createInsertHandler(['?']), [createInsertHandler])
   const insertToken = useMemo(() => createInsertHandler(['?', '$']), [createInsertHandler])
 
+  // Swatch click handler - opens color picker to replace existing color
+  swatchClickRef.current = useCallback((start: number, end: number, color: string) => {
+    const view = editorViewRef.current
+    if (!view) return
+
+    // Move cursor to end of color value so picker position is correct
+    view.dispatch({
+      selection: { anchor: end }
+    })
+
+    // Open color picker with replaceRange in context
+    openPicker('color', {
+      currentColor: color,
+      replaceRange: { from: start, to: end }
+    })
+  }, [openPicker])
+
   // Keymap callbacks - update ref on each render
   const keymapCallbacks: KeymapCallbacks = useMemo(() => ({
     openColorPicker: colorPanel.open,
@@ -229,6 +254,10 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
       autocompleteOptions: {
         getDesignTokens: () => designTokensRef.current,
       },
+      colorSwatchConfig: {
+        onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
+        getDesignTokens: () => designTokensRef.current,
+      },
     })
 
     const state = EditorState.create({
@@ -284,7 +313,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
         ref={editorContainerRef}
         style={styles.editorWrapper}
       />
-      <div style={{ ...styles.previewWrapper, minHeight: `${previewHeight}px` }}>
+      <div style={{ ...styles.previewWrapper, ...(previewHeight ? { minHeight: `${previewHeight}px` } : {}) }}>
         {previewContent}
       </div>
 
@@ -300,6 +329,23 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
             selectedIndex={colorPanel.state.selectedIndex}
             onSelectedIndexChange={colorPanel.setSelectedIndex}
             onSelectedValueChange={colorPanel.setSelectedValue}
+          />
+        )}
+
+        {/* Color picker triggered by swatch click */}
+        {colorPickerOpen && (
+          <InlineColorPanel
+            isOpen={true}
+            position={colorPickerPosition}
+            onClose={closePicker}
+            onSelect={(value) => {
+              const ctx = picker.getContext()
+              picker.insertAtCursor(value, { replaceRange: ctx.replaceRange ?? undefined })
+              closePicker()
+            }}
+            filter=""
+            selectedIndex={swatchColorSelectedIndex}
+            onSelectedIndexChange={setSwatchColorSelectedIndex}
           />
         )}
 
@@ -325,7 +371,6 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
               insertFont(value)
               closePicker()
             }}
-            tokens={prelude}
           />
         )}
 

@@ -74,7 +74,8 @@ const MirrorEditorAPI = {
     elements.forEach((el) => {
       const code = el.getAttribute('data-code') || ''
       const prelude = el.getAttribute('data-prelude') || ''
-      const previewHeight = parseInt(el.getAttribute('data-preview-height') || '200', 10)
+      const previewHeightAttr = el.getAttribute('data-preview-height')
+      const previewHeight = previewHeightAttr ? parseInt(previewHeightAttr, 10) : undefined
       const readOnly = el.hasAttribute('data-readonly')
 
       this.render(el as HTMLElement, { code, prelude, previewHeight, readOnly })

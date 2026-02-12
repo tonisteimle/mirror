@@ -43,19 +43,26 @@ describe('Sugar Handlers', () => {
   })
 
   describe('Color Handler', () => {
-    it('assigns color to col property', () => {
+    it('assigns color to bg property for containers', () => {
       const result = parse('Box #FF0000')
+      // Box is a container, shorthand color becomes bg (background)
+      expect(result.nodes[0].properties.bg).toBe('#FF0000')
+    })
+
+    it('assigns color to col property for text components', () => {
+      const result = parse('Text #FF0000')
+      // Text is a text component, shorthand color becomes col (text color)
       expect(result.nodes[0].properties.col).toBe('#FF0000')
     })
 
     it('handles 3-digit hex colors', () => {
       const result = parse('Box #FFF')
-      expect(result.nodes[0].properties.col).toBe('#FFF')
+      expect(result.nodes[0].properties.bg).toBe('#FFF')
     })
 
     it('handles colors with alpha', () => {
       const result = parse('Box #FF000080')
-      expect(result.nodes[0].properties.col).toBe('#FF000080')
+      expect(result.nodes[0].properties.bg).toBe('#FF000080')
     })
   })
 

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useMemo } from 'react'
+import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { logger } from '../services/logger'
 import { parse } from '../parser/parser'
 import type { ASTNode } from '../parser/parser'
@@ -13,7 +13,7 @@ import { useEditorState } from './useEditorState'
 import { usePanelResize } from './usePanelResize'
 import { useAiAssistant } from './useAiAssistant'
 import { useDialogs } from './useDialogs'
-import { useCodeParsing } from './useCodeParsing'
+import { useCodeParsing, type PreviewOverride } from './useCodeParsing'
 import type { EditorActions } from '../contexts'
 
 /**
@@ -35,8 +35,11 @@ export function useAppState() {
   // Dialogs (error, settings)
   const dialogs = useDialogs()
 
-  // Code parsing
-  const parsing = useCodeParsing(tokensCode, componentsCode, layoutCode)
+  // Live preview for pickers (color, font, icon)
+  const [previewOverride, setPreviewOverride] = useState<PreviewOverride | null>(null)
+
+  // Code parsing (with preview support)
+  const parsing = useCodeParsing(tokensCode, componentsCode, layoutCode, 150, previewOverride)
 
   // AI Assistant
   const ai = useAiAssistant({
@@ -279,6 +282,10 @@ export function useAppState() {
     setLayoutCode,
     setComponentsCode,
     setTokensCode,
+
+    // Live preview
+    previewOverride,
+    setPreviewOverride,
 
     // Actions
     editorActions,

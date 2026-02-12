@@ -10,17 +10,31 @@ import { EditorView } from '@codemirror/view'
 import { createEditorExtensions, type KeymapCallbacks } from '../editor'
 import type { ValuePickerType } from '../data/dsl-properties'
 import { InlineColorPanel } from './InlineColorPanel'
+import { InlineIconPanel } from './InlineIconPanel'
+import { InlineFontPanel } from './InlineFontPanel'
 import { CommandPalette } from './CommandPalette'
-import { FontPicker } from './FontPicker'
-import { LazyIconPicker } from './LazyIconPicker'
 import { TokenPicker } from './TokenPicker'
 import { PickerErrorBoundary } from './picker'
 import { colors } from '../theme'
 import type { TabType } from '../validation'
 import { usePickerState } from '../hooks/usePickerState'
 import { useColorPanel } from '../hooks/useColorPanel'
+import { useInlinePanel } from '../hooks/useInlinePanel'
 import { useImageDragDrop } from '../hooks/useImageDragDrop'
 import { useEditorTriggers } from '../hooks/useEditorTriggers'
+import { searchIcons } from '../data/icon-synonyms'
+import type { PreviewOverride } from '../hooks/useCodeParsing'
+import * as LucideIcons from 'lucide-react'
+
+// Get all icon names for counting filtered results
+// Filter: PascalCase names, exclude "Icon" suffix duplicates, exclude utilities
+const allIconNames = Object.keys(LucideIcons).filter(
+  key =>
+    /^[A-Z]/.test(key) &&
+    !key.endsWith('Icon') &&
+    key !== 'Icon' &&
+    !!(LucideIcons as Record<string, unknown>)[key]
+)
 
 // Re-export for backwards compatibility
 export { getStoredImageUrl } from '../utils/image-upload'
@@ -35,6 +49,7 @@ interface PromptPanelProps {
   tokensCode?: string
   designTokens?: Map<string, unknown>
   autoCompleteMode?: 'always' | 'delay' | 'off'
+  onPreviewChange?: (override: PreviewOverride | null) => void
 }
 
 export interface PromptPanelRef {
@@ -51,6 +66,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     tokensCode = '',
     designTokens,
     autoCompleteMode = 'always',
+    onPreviewChange,
   }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<EditorView | null>(null)
@@ -77,18 +93,114 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
 
     // Panel hooks
     const colorPanel = useColorPanel(editorRef)
+    const iconPanel = useInlinePanel({ editorRef })
+    const fontPanel = useInlinePanel({ editorRef })
     const picker = usePickerState(editorRef)
 
     // Ref for color panel setState (needed for keymap closures)
     const colorPanelSetStateRef = useRef(colorPanel.setState)
     colorPanelSetStateRef.current = colorPanel.setState
+
+    // Ref for icon panel setState (needed for keymap closures)
+    const iconPanelSetStateRef = useRef(iconPanel.setState)
+    iconPanelSetStateRef.current = iconPanel.setState
+
+    // Ref for font panel setState (needed for keymap closures)
+    const fontPanelSetStateRef = useRef(fontPanel.setState)
+    fontPanelSetStateRef.current = fontPanel.setState
+
     const {
+      colorPickerOpen, colorPickerPosition,
       commandPaletteOpen, commandPalettePosition, commandPaletteQuery,
       fontPickerOpen, fontPickerPosition,
-      iconPickerOpen, iconPickerPosition,
       tokenPickerOpen, tokenPickerPosition, tokenPickerPropertyContext,
       openPicker, closePicker,
     } = picker
+
+    // Helper to count filtered icons (for keymap navigation bounds)
+    const getIconItemCount = useCallback(() => {
+      const filter = iconPanel.state.filter.replace(/^["']/, '')
+      if (filter) {
+        return Math.min(searchIcons(allIconNames, filter).length, 36)
+      }
+      return 36 // Popular icons count
+    }, [iconPanel.state.filter])
+
+    // Helper to count filtered fonts (for keymap navigation bounds)
+    const getFontItemCount = useCallback(() => {
+      // Max fonts shown is 20 (defined in InlineFontPanel)
+      return 20
+    }, [])
+
+    // Local state for swatch-triggered color panel
+    const [swatchColorSelectedIndex, setSwatchColorSelectedIndex] = useState(0)
+
+    // Live preview: emit preview override when picker selection changes
+    useEffect(() => {
+      if (!onPreviewChange) return
+
+      // Check if color panel is open and has a selected value
+      if (colorPanel.state.isOpen && colorPanel.selectedValueRef.current) {
+        const { triggerPos } = colorPanel.state
+        const view = editorRef.current
+        if (view) {
+          const cursorPos = view.state.selection.main.head
+          onPreviewChange({
+            from: triggerPos,
+            to: cursorPos,
+            value: colorPanel.selectedValueRef.current,
+          })
+        }
+        return
+      }
+
+      // Check if icon panel is open and has a selected value
+      if (iconPanel.state.isOpen && iconPanel.selectedValueRef.current) {
+        const { triggerPos } = iconPanel.state
+        const view = editorRef.current
+        if (view) {
+          const cursorPos = view.state.selection.main.head
+          onPreviewChange({
+            from: triggerPos,
+            to: cursorPos,
+            value: iconPanel.selectedValueRef.current,
+          })
+        }
+        return
+      }
+
+      // Check if font panel is open and has a selected value
+      if (fontPanel.state.isOpen && fontPanel.selectedValueRef.current) {
+        const { triggerPos } = fontPanel.state
+        const view = editorRef.current
+        if (view) {
+          const cursorPos = view.state.selection.main.head
+          onPreviewChange({
+            from: triggerPos,
+            to: cursorPos,
+            value: fontPanel.selectedValueRef.current,
+          })
+        }
+        return
+      }
+
+      // No picker open or no selection - clear preview
+      onPreviewChange(null)
+    }, [
+      onPreviewChange,
+      colorPanel.state.isOpen,
+      colorPanel.state.selectedIndex,
+      colorPanel.state.triggerPos,
+      iconPanel.state.isOpen,
+      iconPanel.state.selectedIndex,
+      iconPanel.state.triggerPos,
+      fontPanel.state.isOpen,
+      fontPanel.state.selectedIndex,
+      fontPanel.state.triggerPos,
+    ])
+
+    // Ref for swatch click handler
+    const swatchClickRef = useRef<((start: number, end: number, color: string) => void) | null>(null)
 
     // Image drag & drop
     useImageDragDrop({ containerRef, editorRef })
@@ -107,7 +219,15 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       getColorPanelState: () => colorPanel.state,
       closeColorPanel: colorPanel.close,
       updateColorPanelFilter: colorPanel.updateFilter,
-    }), [onChange, colorPanel, openPicker])
+      // Icon panel
+      getIconPanelState: () => iconPanel.stateRef.current,
+      closeIconPanel: iconPanel.close,
+      updateIconPanelFilter: iconPanel.updateFilter,
+      // Font panel
+      getFontPanelState: () => fontPanel.stateRef.current,
+      closeFontPanel: fontPanel.close,
+      updateFontPanelFilter: fontPanel.updateFilter,
+    }), [onChange, colorPanel, openPicker, iconPanel, fontPanel])
 
     const {
       triggerExtension,
@@ -172,20 +292,37 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           colorPanel.open()
           break
         case 'font':
-          openPicker('font')
+          fontPanel.open('font')
           break
         case 'icon':
-          openPicker('icon')
+          iconPanel.open('icon')
           break
       }
-    }, [colorPanel, openPicker])
+    }, [colorPanel, fontPanel, iconPanel])
+
+    // Swatch click handler - opens color picker to replace existing color
+    swatchClickRef.current = useCallback((start: number, end: number, color: string) => {
+      const view = editorRef.current
+      if (!view) return
+
+      // Move cursor to end of color value so picker position is correct
+      view.dispatch({
+        selection: { anchor: end }
+      })
+
+      // Open color picker with replaceRange in context
+      openPicker('color', {
+        currentColor: color,
+        replaceRange: { from: start, to: end }
+      })
+    }, [openPicker])
 
     // Keep callback refs updated
     callbackRefs.current = {
       openColorPicker: colorPanel.open,
       openCommandPalette: (query = '') => openPicker('command', { query }),
-      openFontPicker: () => openPicker('font'),
-      openIconPicker: () => openPicker('icon'),
+      openFontPicker: () => fontPanel.open('font'),
+      openIconPicker: () => iconPanel.open('icon'),
       openTokenPicker: (ctx?: string) => openPicker('token', { propertyContext: ctx }),
       handleValuePickerNeeded,
     }
@@ -214,9 +351,26 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           getColorPanelState: () => colorPanel.stateRef.current,
           setColorPanelState: (fn) => colorPanelSetStateRef.current(fn),
           getSelectedValue: () => colorPanel.selectedValueRef.current,
+          // Icon panel config
+          getIconPanelState: () => iconPanel.stateRef.current,
+          setIconPanelState: (fn) => iconPanelSetStateRef.current(fn),
+          getIconSelectedValue: () => iconPanel.selectedValueRef.current,
+          getIconItemCount,
+          // Font panel config
+          getFontPanelState: () => fontPanel.stateRef.current,
+          setFontPanelState: (fn) => fontPanelSetStateRef.current(fn),
+          getFontSelectedValue: () => fontPanel.selectedValueRef.current,
+          getFontItemCount,
         },
         autocompleteOptions: {
           onValuePickerNeeded: (type: ValuePickerType) => callbackRefs.current.handleValuePickerNeeded(type),
+          getDesignTokens: () => designTokensRef.current ?? new Map(),
+          // Suppress autocomplete when inline panel (font, icon) is open
+          isAutocompleteSuppressed: () =>
+            iconPanel.stateRef.current.isOpen || fontPanel.stateRef.current.isOpen,
+        },
+        colorSwatchConfig: {
+          onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
           getDesignTokens: () => designTokensRef.current ?? new Map(),
         },
       })
@@ -345,6 +499,23 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           onSelectedValueChange={colorPanel.setSelectedValue}
         />
 
+        {/* Color picker triggered by swatch click */}
+        {colorPickerOpen && (
+          <InlineColorPanel
+            isOpen={true}
+            position={colorPickerPosition}
+            onClose={closePicker}
+            onSelect={(value) => {
+              const ctx = picker.getContext()
+              picker.insertAtCursor(value, { replaceRange: ctx.replaceRange ?? undefined })
+              closePicker()
+            }}
+            filter=""
+            selectedIndex={swatchColorSelectedIndex}
+            onSelectedIndexChange={setSwatchColorSelectedIndex}
+          />
+        )}
+
         {/* Command Palette */}
         <CommandPalette
           isOpen={commandPaletteOpen}
@@ -354,27 +525,29 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           initialQuery={commandPaletteQuery}
         />
 
-        {/* Font Picker */}
-        <PickerErrorBoundary onClose={closePicker} pickerName="FontPicker">
-          <FontPicker
-            isOpen={fontPickerOpen}
-            onClose={closePicker}
-            onSelect={insertFont}
-            position={fontPickerPosition}
-            tokens={tokensCode}
-            defaultToTokens={tab !== 'tokens'}
-          />
-        </PickerErrorBoundary>
+        {/* Inline Font Panel */}
+        <InlineFontPanel
+          isOpen={fontPanel.state.isOpen}
+          onClose={fontPanel.close}
+          onSelect={fontPanel.selectValue}
+          position={fontPanel.state.position}
+          filter={fontPanel.state.filter}
+          selectedIndex={fontPanel.state.selectedIndex}
+          onSelectedIndexChange={fontPanel.setSelectedIndex}
+          onSelectedValueChange={fontPanel.setSelectedValue}
+        />
 
-        {/* Icon Picker - Lazy loaded */}
-        <PickerErrorBoundary onClose={closePicker} pickerName="IconPicker">
-          <LazyIconPicker
-            isOpen={iconPickerOpen}
-            onClose={closePicker}
-            onSelect={insertIcon}
-            position={iconPickerPosition}
-          />
-        </PickerErrorBoundary>
+        {/* Inline Icon Panel */}
+        <InlineIconPanel
+          isOpen={iconPanel.state.isOpen}
+          onClose={iconPanel.close}
+          onSelect={iconPanel.selectValue}
+          position={iconPanel.state.position}
+          filter={iconPanel.state.filter}
+          selectedIndex={iconPanel.state.selectedIndex}
+          onSelectedIndexChange={iconPanel.setSelectedIndex}
+          onSelectedValueChange={iconPanel.setSelectedValue}
+        />
 
         {/* Token Picker */}
         <PickerErrorBoundary onClose={closePicker} pickerName="TokenPicker">

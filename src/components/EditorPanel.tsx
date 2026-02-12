@@ -7,6 +7,7 @@ import { colors } from '../theme'
 import { PromptPanel, type PromptPanelRef } from './PromptPanel'
 import { useEditorActions } from '../contexts'
 import { generateDSLViaJSON, hasApiKey } from '../lib/ai'
+import type { PreviewOverride } from '../hooks/useCodeParsing'
 
 export type EditorTab = 'layout' | 'components' | 'tokens'
 
@@ -23,6 +24,7 @@ interface EditorPanelProps {
   highlightLine?: number
   designTokens?: Map<string, unknown>
   autoCompleteMode: 'always' | 'delay' | 'off'
+  onPreviewChange?: (override: PreviewOverride | null) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -38,6 +40,7 @@ export const EditorPanel = memo(function EditorPanel({
   highlightLine,
   designTokens,
   autoCompleteMode,
+  onPreviewChange,
 }: EditorPanelProps) {
   // Get editor actions from context instead of props
   const { onClear, onClean } = useEditorActions()
@@ -149,6 +152,7 @@ export const EditorPanel = memo(function EditorPanel({
             tokensCode={tokensCode}
             designTokens={designTokens}
             autoCompleteMode={autoCompleteMode}
+            onPreviewChange={activeTab === 'layout' ? onPreviewChange : undefined}
           />
         </div>
 

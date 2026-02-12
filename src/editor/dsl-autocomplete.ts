@@ -15,6 +15,8 @@ import { FUZZY_SCORE_CACHE_SIZE, PICKER_OPEN_DELAY_MS, MAX_AUTOCOMPLETE_OPTIONS 
 export interface DSLAutocompleteOptions {
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
   getDesignTokens?: () => Map<string, unknown>
+  /** Return true to suppress autocomplete (e.g., when inline panel is open) */
+  isAutocompleteSuppressed?: () => boolean
 }
 
 /**
@@ -183,6 +185,9 @@ export function getPropertyContextForToken(textBefore: string): string | null {
  */
 function createDSLCompletionSource(options: DSLAutocompleteOptions) {
   return (context: CompletionContext): CompletionResult | null => {
+    // Don't show autocomplete when inline panel (font, icon) is open
+    if (options.isAutocompleteSuppressed?.()) return null
+
     const line = context.state.doc.lineAt(context.pos)
     const textBefore = line.text.slice(0, context.pos - line.from)
 
