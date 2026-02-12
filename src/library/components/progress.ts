@@ -10,15 +10,15 @@ export const ProgressComponent: LibraryComponent = {
       required: false,
       multiple: false,
       defaultProps: {
-        bg: '#3B82F6'
+        bg: '$primary'
       }
     }
   ],
   defaultStates: [],
   actions: ['change'],
   definitions: `// Progress
-Progress: w 300 h 8 rad 4 bg #333 hor
-ProgressIndicator: h 8 rad 4 bg #3B82F6 w 150`,
+Progress: w 300 h 8 rad 4 bg $border hor
+ProgressIndicator: h 8 rad 4 bg $primary w 150`,
   layoutExample: `Progress
   ProgressIndicator`
 }

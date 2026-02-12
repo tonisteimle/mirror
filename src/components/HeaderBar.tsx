@@ -26,11 +26,11 @@ export function HeaderBar({
       paddingLeft: '20px',
       paddingRight: '16px',
     }}>
-      <img src="/Logo.png" alt="mirror" style={{ height: '24px', marginTop: '-4px', marginLeft: '-2px' }} />
+      <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="mirror" style={{ height: '24px', marginTop: '-4px', marginLeft: '-2px' }} />
       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         {/* Tutorial Link */}
         <IconButton
-          onClick={() => window.open('/docs/concepts.html', '_blank')}
+          onClick={() => window.open('/mirror/mirror-docu.html', '_blank')}
           title="Tutorial"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

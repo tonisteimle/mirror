@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { ASTNode, ComponentTemplate } from '../parser/parser'
 import {
   generateReactElement,
@@ -12,22 +13,12 @@ import { colors } from '../theme'
 interface PreviewProps {
   nodes: ASTNode[]
   registry: Map<string, ComponentTemplate>
-  inspectMode: boolean
-  hoveredId: string | null
-  selectedId: string | null
-  onHover: (id: string | null) => void
-  onSelect: (id: string) => void
   onPageNavigate?: (pageName: string) => void
 }
 
-export function Preview({
+export const Preview = memo(function Preview({
   nodes,
   registry,
-  inspectMode,
-  hoveredId,
-  selectedId,
-  onHover,
-  onSelect,
   onPageNavigate
 }: PreviewProps) {
   if (nodes.length === 0) {
@@ -36,13 +27,7 @@ export function Preview({
 
   // Render function for overlays
   const renderOverlayNode = (node: ASTNode) => {
-    return generateReactElement([node], {
-      inspectMode: false,
-      hoveredId: null,
-      selectedId: null,
-      onHover: undefined,
-      onClick: undefined,
-    })
+    return generateReactElement([node], {})
   }
 
   return (
@@ -56,22 +41,6 @@ export function Preview({
               overflow: 'auto',
               position: 'relative',
             }}>
-              {inspectMode && (
-                <div style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  padding: '4px 8px',
-                  backgroundColor: '#3B82F6',
-                  color: '#FFFFFF',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  zIndex: 100,
-                }}>
-                  Inspect Mode (Shift)
-                </div>
-              )}
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -82,13 +51,7 @@ export function Preview({
                 padding: '16px',
                 boxSizing: 'border-box',
               }}>
-                {generateReactElement(nodes, {
-                  inspectMode,
-                  hoveredId,
-                  selectedId,
-                  onHover,
-                  onClick: onSelect,
-                })}
+                {generateReactElement(nodes, {})}
               </div>
             </div>
             <OverlayPortal renderNode={renderOverlayNode} />
@@ -97,4 +60,4 @@ export function Preview({
       </ComponentRegistryProvider>
     </BehaviorRegistryProvider>
   )
-}
+})

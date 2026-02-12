@@ -69,7 +69,7 @@ function createMockView(options: {
 describe('editor/utils', () => {
   describe('isInsideString', () => {
     it('returns false for text without quotes', () => {
-      expect(isInsideString('Button -primary')).toBe(false)
+      expect(isInsideString('Button col #3B82F6')).toBe(false)
     })
 
     it('returns false for text with even number of quotes', () => {
@@ -103,14 +103,14 @@ describe('editor/utils', () => {
   describe('getTextBeforeCursor', () => {
     it('returns text before cursor on line', () => {
       const view = createMockView({
-        cursorPos: 10,
-        lineText: 'Button -primary',
+        cursorPos: 11,
+        lineText: 'Button col #3B82F6',
         cursorLine: 0,
       })
 
       const result = getTextBeforeCursor(view)
 
-      expect(result).toBe('Button -pr')
+      expect(result).toBe('Button col ')
     })
 
     it('returns empty string at start of line', () => {
@@ -127,14 +127,14 @@ describe('editor/utils', () => {
 
     it('returns full line when cursor at end', () => {
       const view = createMockView({
-        cursorPos: 15,
-        lineText: 'Button -primary',
+        cursorPos: 18,
+        lineText: 'Button col #3B82F6',
         cursorLine: 0,
       })
 
       const result = getTextBeforeCursor(view)
 
-      expect(result).toBe('Button -primary')
+      expect(result).toBe('Button col #3B82F6')
     })
 
     it('handles multiline document', () => {
@@ -211,12 +211,12 @@ describe('editor/utils', () => {
     it('returns current line object', () => {
       const view = createMockView({
         cursorPos: 10,
-        lineText: 'Button -primary',
+        lineText: 'Button col #3B82F6',
       })
 
       const result = getCurrentLine(view)
 
-      expect(result.text).toBe('Button -primary')
+      expect(result.text).toBe('Button col #3B82F6')
     })
 
     it('calls lineAt with cursor position', () => {
@@ -240,17 +240,17 @@ describe('editor/utils', () => {
     it('adds space when previous char is not whitespace', () => {
       const view = createMockView({ content: 'Button', cursorPos: 6 })
 
-      const result = prepareInsertText(view, '-primary', 6)
+      const result = prepareInsertText(view, 'col #blue', 6)
 
-      expect(result).toBe(' -primary')
+      expect(result).toBe(' col #blue')
     })
 
     it('does not add space after space', () => {
       const view = createMockView({ content: 'Button ', cursorPos: 7 })
 
-      const result = prepareInsertText(view, '-primary', 7)
+      const result = prepareInsertText(view, 'col #blue', 7)
 
-      expect(result).toBe('-primary')
+      expect(result).toBe('col #blue')
     })
 
     it('does not add space after newline', () => {
@@ -274,30 +274,30 @@ describe('editor/utils', () => {
     it('dispatches change with correct parameters', () => {
       const view = createMockView({ content: 'Button ', cursorPos: 7 })
 
-      insertTextWithSpacing(view, '-primary', 7)
+      insertTextWithSpacing(view, 'col #blue', 7)
 
       expect(view.dispatch).toHaveBeenCalledWith({
-        changes: { from: 7, to: 7, insert: '-primary' },
+        changes: { from: 7, to: 7, insert: 'col #blue' },
       })
     })
 
     it('adds space when needed', () => {
       const view = createMockView({ content: 'Button', cursorPos: 6 })
 
-      insertTextWithSpacing(view, '-primary', 6)
+      insertTextWithSpacing(view, 'col #blue', 6)
 
       expect(view.dispatch).toHaveBeenCalledWith({
-        changes: { from: 6, to: 6, insert: ' -primary' },
+        changes: { from: 6, to: 6, insert: ' col #blue' },
       })
     })
 
     it('replaces text range when toPos specified', () => {
-      const view = createMockView({ content: 'Button -pri', cursorPos: 11 })
+      const view = createMockView({ content: 'Button col #', cursorPos: 11 })
 
-      insertTextWithSpacing(view, '-primary', 7, 11)
+      insertTextWithSpacing(view, 'col #blue', 7, 11)
 
       expect(view.dispatch).toHaveBeenCalledWith({
-        changes: { from: 7, to: 11, insert: '-primary' },
+        changes: { from: 7, to: 11, insert: 'col #blue' },
       })
     })
   })

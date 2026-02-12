@@ -8,6 +8,7 @@ import type { PageData } from '../components/PageSidebar'
 import { validateProject, formatValidationErrors } from '../schemas/project'
 import { STORAGE_KEYS, UI } from '../constants'
 import { z } from 'zod'
+import { logger } from '../services/logger'
 
 export interface ProjectState {
   pages: PageData[]
@@ -41,6 +42,7 @@ export function useProjectStorage(
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Auto-save to localStorage with debounce
+  // Note: pages array is now always up-to-date (Single Source of Truth in usePageManager)
   useEffect(() => {
     // Clear previous timeout
     if (saveTimeoutRef.current) {
@@ -50,9 +52,7 @@ export function useProjectStorage(
     // Debounce save
     saveTimeoutRef.current = setTimeout(() => {
       const projectData = {
-        pages: state.pages.map(p =>
-          p.id === state.currentPageId ? { ...p, layoutCode: state.layoutCode } : p
-        ),
+        pages: state.pages,
         currentPageId: state.currentPageId,
         componentsCode: state.componentsCode,
         tokensCode: state.tokensCode,
@@ -65,15 +65,14 @@ export function useProjectStorage(
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [state.pages, state.currentPageId, state.layoutCode, state.componentsCode, state.tokensCode])
+  }, [state.pages, state.currentPageId, state.componentsCode, state.tokensCode])
 
   // Export project to file
+  // Note: pages array is now always up-to-date (Single Source of Truth in usePageManager)
   const exportProject = useCallback(() => {
     const projectData = {
       version: 1,
-      pages: state.pages.map(p =>
-        p.id === state.currentPageId ? { ...p, layoutCode: state.layoutCode } : p
-      ),
+      pages: state.pages,
       currentPageId: state.currentPageId,
       componentsCode: state.componentsCode,
       tokensCode: state.tokensCode,
@@ -85,7 +84,7 @@ export function useProjectStorage(
     a.download = 'mirror-project.json'
     a.click()
     URL.revokeObjectURL(url)
-  }, [state.pages, state.currentPageId, state.layoutCode, state.componentsCode, state.tokensCode])
+  }, [state.pages, state.currentPageId, state.componentsCode, state.tokensCode])
 
   // Import project from file
   const importProject = useCallback(() => {
@@ -126,7 +125,7 @@ export function useProjectStorage(
               details: err.message,
             })
           } else {
-            console.error('Failed to import project:', err)
+            logger.storage.error('Failed to import project', err)
             onError({
               title: 'Import fehlgeschlagen',
               message: 'Die Datei konnte nicht importiert werden.',

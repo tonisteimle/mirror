@@ -1,94 +1,68 @@
 /**
- * Error Dialog Tests
+ * ErrorDialog Component Tests
+ *
+ * Using the test kit for concise, readable tests.
  */
-
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import {
+  componentTest,
+  errorDialogProps,
+  screen,
+  fireEvent,
+  describe,
+  it,
+  expect,
+} from './kit'
 import { ErrorDialog } from '../components/ErrorDialog'
 
+const test = componentTest(ErrorDialog, errorDialogProps)
+
 describe('ErrorDialog', () => {
-  it('should not render when isOpen is false', () => {
-    render(
-      <ErrorDialog
-        isOpen={false}
-        message="Test error"
-        onClose={() => {}}
-      />
-    )
+  // ===========================================
+  // Visibility Tests
+  // ===========================================
 
-    expect(screen.queryByRole('alertdialog')).toBeNull()
+  test.whenNotRendered({ isOpen: false }).describe('should not render when isOpen is false')
+
+  describe('when open', () => {
+    it('renders dialog with default title', () => {
+      test.render({ isOpen: true })
+      expect(screen.getByRole('alertdialog')).toBeDefined()
+      expect(screen.getByText('Fehler')).toBeDefined()
+    })
+
+    it('renders message', () => {
+      test.render({ isOpen: true, message: 'Something went wrong' })
+      expect(screen.getByText('Something went wrong')).toBeDefined()
+    })
+
+    it('renders custom title', () => {
+      test.render({ isOpen: true, title: 'Custom Error Title' })
+      expect(screen.getByText('Custom Error Title')).toBeDefined()
+    })
+
+    it('renders details when provided', () => {
+      test.render({ isOpen: true, details: 'Stack trace here' })
+      expect(screen.getByText('Details anzeigen')).toBeDefined()
+      expect(screen.getByText('Stack trace here')).toBeDefined()
+    })
   })
 
-  it('should render when isOpen is true', () => {
-    render(
-      <ErrorDialog
-        isOpen={true}
-        message="Test error message"
-        onClose={() => {}}
-      />
-    )
+  // ===========================================
+  // Interaction Tests
+  // ===========================================
 
-    expect(screen.getByRole('alertdialog')).toBeDefined()
-    expect(screen.getByText('Fehler')).toBeDefined()
-    expect(screen.getByText('Test error message')).toBeDefined()
-  })
+  describe('interactions', () => {
+    it('calls onClose when OK button clicked', () => {
+      const { props } = test.render({ isOpen: true })
+      fireEvent.click(screen.getByText('OK'))
+      expect(props.onClose).toHaveBeenCalled()
+    })
 
-  it('should display custom title', () => {
-    render(
-      <ErrorDialog
-        isOpen={true}
-        title="Custom Error Title"
-        message="Test message"
-        onClose={() => {}}
-      />
-    )
-
-    expect(screen.getByText('Custom Error Title')).toBeDefined()
-  })
-
-  it('should display details when provided', () => {
-    render(
-      <ErrorDialog
-        isOpen={true}
-        message="Test message"
-        details="Stack trace here"
-        onClose={() => {}}
-      />
-    )
-
-    expect(screen.getByText('Details anzeigen')).toBeDefined()
-    expect(screen.getByText('Stack trace here')).toBeDefined()
-  })
-
-  it('should call onClose when OK button is clicked', () => {
-    const onClose = vi.fn()
-
-    render(
-      <ErrorDialog
-        isOpen={true}
-        message="Test message"
-        onClose={onClose}
-      />
-    )
-
-    fireEvent.click(screen.getByText('OK'))
-    expect(onClose).toHaveBeenCalled()
-  })
-
-  it('should call onClose when backdrop is clicked', () => {
-    const onClose = vi.fn()
-
-    const { container } = render(
-      <ErrorDialog
-        isOpen={true}
-        message="Test message"
-        onClose={onClose}
-      />
-    )
-
-    // Find and click the backdrop (first child div)
-    const backdrop = container.firstChild as HTMLElement
-    fireEvent.click(backdrop)
-    expect(onClose).toHaveBeenCalled()
+    it('calls onClose when backdrop clicked', () => {
+      const { props, container } = test.render({ isOpen: true })
+      const backdrop = container.firstChild as HTMLElement
+      fireEvent.click(backdrop)
+      expect(props.onClose).toHaveBeenCalled()
+    })
   })
 })

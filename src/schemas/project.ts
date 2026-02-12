@@ -37,7 +37,7 @@ export function validateProject(data: unknown): Project {
  * Safely validates project data without throwing.
  * Returns success/error result object.
  */
-export function safeValidateProject(data: unknown): z.SafeParseReturnType<unknown, Project> {
+export function safeValidateProject(data: unknown) {
   return ProjectSchema.safeParse(data)
 }
 
@@ -52,10 +52,10 @@ export function isValidProject(data: unknown): data is Project {
  * Formats Zod validation errors into user-friendly messages.
  */
 export function formatValidationErrors(error: z.ZodError): string {
-  return error.errors
-    .map(err => {
-      const path = err.path.length > 0 ? `${err.path.join('.')}: ` : ''
-      return `${path}${err.message}`
+  return error.issues
+    .map((issue: z.ZodIssue) => {
+      const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''
+      return `${path}${issue.message}`
     })
     .join('\n')
 }

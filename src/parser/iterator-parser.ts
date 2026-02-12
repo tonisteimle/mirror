@@ -64,7 +64,6 @@ export function parseIterator(
     type: 'component',
     name: INTERNAL_NODES.ITERATOR,
     id: ctx.generateId('iter'),
-    modifiers: [],
     properties: {},
     children: [],
     iteration: {

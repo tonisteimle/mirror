@@ -39,7 +39,7 @@ export const TooltipBehavior: BehaviorHandler = {
                 {content.content || content.children.map(child =>
                   renderFn(child, { skipLibraryHandling: true })
                 )}
-                <Tooltip.Arrow style={{ fill: content.properties.bg as string || '#1E1E1E' }} />
+                <Tooltip.Arrow style={{ fill: content.properties.col as string || '#1E1E1E' }} />
               </Tooltip.Content>
             ))}
           </Tooltip.Portal>

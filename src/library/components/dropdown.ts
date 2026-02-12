@@ -13,10 +13,10 @@ export const DropdownComponent: LibraryComponent = {
         hor: true,
         gap: 8,
         pad: 8,
-        bg: '#252525',
+        bg: '$surface-hover',
         rad: 6,
         bor: 1,
-        boc: '#444'
+        boc: '$border-hover'
       }
     },
     {
@@ -25,7 +25,7 @@ export const DropdownComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 8,
         pad: 4,
         minw: 180
@@ -40,7 +40,7 @@ export const DropdownComponent: LibraryComponent = {
         gap: 8,
         pad: 8,
         rad: 4,
-        'hover-bg': '#3B82F6'
+        'hover-bg': '$primary'
       }
     },
     {
@@ -49,7 +49,7 @@ export const DropdownComponent: LibraryComponent = {
       multiple: true,
       defaultProps: {
         h: 1,
-        bg: '#333',
+        bg: '$border',
         mar: 4
       }
     }
@@ -57,10 +57,10 @@ export const DropdownComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Dropdown
-DropdownTrigger: hor ver-cen gap 8 pad 8 12 bg #252525 rad 6 bor 1 boc #444 hover-bg #333
-DropdownContent: ver bg #1E1E1E rad 8 pad 4 minw 180 bor 1 boc #333
-DropdownItem: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #3B82F6
-DropdownSeparator: h 1 bg #333 mar 4`,
+DropdownTrigger: hor ver-cen gap 8 pad 8 12 bg $surface-hover rad 6 bor 1 boc $border-hover hover-bg $border
+DropdownContent: ver bg $surface rad 8 pad 4 minw 180 bor 1 boc $border
+DropdownItem: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg $primary
+DropdownSeparator: h 1 bg $border mar 4`,
   layoutExample: `Dropdown
   state closed
   DropdownTrigger
@@ -76,7 +76,7 @@ DropdownSeparator: h 1 bg #333 mar 4`,
       icon "settings"
       "Settings"
     DropdownSeparator
-    DropdownItem col #EF4444
+    DropdownItem bg $error
       icon "log-out"
       "Logout"`
 }

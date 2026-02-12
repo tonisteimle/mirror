@@ -1,40 +1,63 @@
 import { ValidationService } from '../validation'
-import { API } from '../constants'
+import { API, STORAGE_KEYS } from '../constants'
 import { jsonToMirror, LLM_SCHEMA } from '../converter/json-to-mirror'
 import { validateLLMOutput } from '../schemas/llm-output'
+import { logger } from '../services/logger'
 
-// API key management - SESSION-ONLY for security
-// Keys are NOT persisted to localStorage to prevent XSS exposure
-let OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || ''
+// API key management - persisted to localStorage for convenience
+// For a local prototyping tool like Mirror, this is acceptable
+let OPENROUTER_API_KEY = ''
 
-/**
- * Set the API key for the current session only.
- * The key is stored in memory and will be lost on page refresh.
- * This is intentional for security - localStorage is vulnerable to XSS attacks.
- */
-export function setApiKey(key: string): void {
-  OPENROUTER_API_KEY = key
+// Load API key from localStorage on module initialization
+try {
+  const stored = localStorage.getItem(STORAGE_KEYS.API_KEY)
+  if (stored) {
+    OPENROUTER_API_KEY = stored
+  }
+} catch {
+  // localStorage not available (SSR, etc.)
 }
 
 /**
- * Get the current API key (session-only)
+ * Set the API key and persist it to localStorage.
+ */
+export function setApiKey(key: string): void {
+  OPENROUTER_API_KEY = key
+  try {
+    if (key) {
+      localStorage.setItem(STORAGE_KEYS.API_KEY, key)
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.API_KEY)
+    }
+  } catch {
+    // localStorage not available
+  }
+}
+
+/**
+ * Get the current API key
  */
 export function getApiKey(): string {
   return OPENROUTER_API_KEY
 }
 
 /**
- * Check if an API key is set for this session
+ * Check if an API key is set
  */
 export function hasApiKey(): boolean {
   return Boolean(OPENROUTER_API_KEY)
 }
 
 /**
- * Clear the API key from memory
+ * Clear the API key from memory and localStorage
  */
 export function clearApiKey(): void {
   OPENROUTER_API_KEY = ''
+  try {
+    localStorage.removeItem(STORAGE_KEYS.API_KEY)
+  } catch {
+    // localStorage not available
+  }
 }
 
 // Store for active request cancellation
@@ -91,7 +114,9 @@ const validator = new ValidationService({
 })
 
 const DSL_DOCS = `
-Du bist ein UI-Designer-Assistent für <>mirror. Du generierst Code in einer speziellen DSL für UI-Design.
+Du bist ein UI-Designer-Assistent für Mirror. Du generierst Code in einer speziellen DSL für UI-Prototyping.
+
+**Wichtig:** Mirror ist für schnelles Prototyping gedacht, nicht für produktionsreife Frontends. Der generierte Code dient der visuellen Validierung von Ideen und kann als Ausgangspunkt für AI-gestützte Weiterentwicklung dienen.
 
 ## Philosophie
 
@@ -102,7 +127,7 @@ Mirror trennt **WAS** (Struktur) von **WIE** (Styling):
 
 Prinzipien:
 - Hierarchie durch Einrückung (2 Spaces)
-- Tailwind-ähnlich aber lesbar: pad statt padding, bg statt background
+- Tailwind-ähnlich aber lesbar: pad statt padding, col für Farben
 - Styling einmal definieren, überall verwenden
 - Überschreiben bei Bedarf erlaubt
 
@@ -131,8 +156,8 @@ $spacing: 16
 
 Verwendung mit \`$name\`:
 \`\`\`
-Button: bg $primary rad $radius pad $spacing col $text
-Card: bg $surface bor 1 boc $border rad $radius
+Button: col $primary rad $radius pad $spacing col $text
+Card: col $surface bor 1 boc $border rad $radius
 \`\`\`
 
 WICHTIG: Verwende Tokens statt Magic Numbers für Konsistenz!
@@ -143,14 +168,14 @@ NUR die Hauptkomponente hat einen Doppelpunkt. Kinder haben KEINEN Doppelpunkt:
 
 RICHTIG:
 \`\`\`
-Card: ver pad 16 bg #1E1E1E rad 8 gap 8
+Card: ver pad 16 col #1E1E1E rad 8 gap 8
   Title size 18 weight 600 col #FFF
   Description size 14 col #9CA3AF
 \`\`\`
 
 FALSCH (Kinder mit Doppelpunkt):
 \`\`\`
-Card: ver pad 16 bg #1E1E1E rad 8 gap 8
+Card: ver pad 16 col #1E1E1E rad 8 gap 8
   Title: size 18 weight 600 col #FFF
   Description: size 14 col #9CA3AF
 \`\`\`
@@ -161,7 +186,7 @@ NUR Komponenten mit Doppelpunkt werden zu wiederverwendbaren Templates:
 
 \`\`\`
 // RICHTIG: Erstellt ein wiederverwendbares Template MIT Kindern
-Footer: pad 16 bg #242424 hor gap 16
+Footer: pad 16 col #242424 hor gap 16
   Button "Okay"
   Button "Cancel"
 
@@ -170,8 +195,8 @@ Footer  // <- Bekommt alle Properties UND alle Kinder (2 Buttons)
 
 \`\`\`
 // Wenn Komponente OHNE Kinder definiert ist:
-Container: bg #111
-Button: bg #222 "Label1"
+Container: col #111
+Button: col #222 "Label1"
 
 Container  // <- Zeigt nur den Container, KEINE Kinder
 
@@ -187,13 +212,13 @@ Der Clean-Button extrahiert Komponenten inkl. Kinder aus dem Layout:
 
 Vorher (Layout):
 \`\`\`
-Mycontainer bg #111
-  Mybutton bg #222 "Label1"
+Mycontainer col #111
+  Mybutton col #222 "Label1"
   Mybutton "Label2"
 \`\`\`
 
 Nachher:
-- Components: Mycontainer: bg #111 + Kinder, Mybutton: bg #222 "Label1"
+- Components: Mycontainer: col #111 + Kinder, Mybutton: col #222 "Label1"
 - Layout: Mycontainer
 
 ## Syntax
@@ -204,8 +229,8 @@ Nachher:
 - Strings: "Text"
 - Farben: #3B82F6 (Hex bevorzugt, aber Farbnamen wie white, black werden automatisch konvertiert)
 
-RICHTIG: Button: pad 12 bg #3B82F6 col #FFFFFF
-FALSCH: Button: pad=12 bg=#3B82F6
+RICHTIG: Button: pad 12 col #3B82F6 textCol #FFFFFF
+FALSCH: Button: pad=12 col=#3B82F6
 
 ## Properties
 
@@ -223,7 +248,7 @@ Spacing - Richtungen sind NUR l, r, u, d (NICHT hor/ver!):
 - mar funktioniert gleich wie pad
 FALSCH: pad hor 16, pad ver 16, pad horizontal 16
 RICHTIG: pad l-r 16, pad u-d 16, pad l 16
-Farben: bg #1A1A1A, col #FFFFFF
+Farben: col #1A1A1A, col #FFFFFF
 Border:
 - bor 2 = alle Seiten 2px solid
 - bor u-d 2 = nur oben und unten
@@ -233,7 +258,7 @@ Border:
 Typography: size 14, weight 600, font "Inter"
 Icons: icon "search", icon "plus", icon "user" (Lucide Icon Namen - kebab-case, z.B. "arrow-right", "chevron-down")
 Images: src "https://example.com/photo.jpg", alt "Beschreibung", fit cover/contain/fill (default: cover)
-Hover (mit automatischer CSS Transition): hover-bg #333, hover-col #FFF, hover-boc #555
+Hover (mit automatischer CSS Transition): hover-col #333, hover-boc #555
 
 ## Bilder
 
@@ -255,22 +280,22 @@ UserAvatar: src $avatar-url w 40 h 40 rad 99
 ## Komponenten definieren (in Components Tab)
 
 \`\`\`
-Button: hor hor-cen ver-cen h 40 pad l-r 16 rad 8 bg #3B82F6 col #FFF size 14 weight 500
+Button: hor hor-cen ver-cen h 40 pad l-r 16 rad 8 col #3B82F6 col #FFF size 14 weight 500
 \`\`\`
 
 ## Komponenten ableiten mit "from"
 
 \`\`\`
-Button: pad 12 bg #3B82F6 rad 8 col #FFF
-DangerButton: from Button bg #EF4444
-GhostButton: from Button bg transparent col #3B82F6
+Button: pad 12 col #3B82F6 rad 8 col #FFF
+DangerButton: from Button col #EF4444
+GhostButton: from Button col transparent col #3B82F6
 \`\`\`
 
 ## Komponenten mit Kindern (Slots)
 
 Definiere Komponenten mit Kind-Elementen (IMMER mit :):
 \`\`\`
-ProductTile: ver pad 12 bg #1E1E1E rad 8 gap 8
+ProductTile: ver pad 12 col #1E1E1E rad 8 gap 8
   Name size 14 col #FFFFFF
   Price size 16 weight 600 col #10B981
 \`\`\`
@@ -290,16 +315,16 @@ ProductTile
 ## Beispiel Components Tab
 
 \`\`\`
-Button: hor hor-cen ver-cen h 40 pad l-r 16 rad 8 bg #3B82F6 col #FFF size 14 weight 500
-DangerButton: from Button bg #EF4444
+Button: hor hor-cen ver-cen h 40 pad l-r 16 rad 8 col #3B82F6 col #FFF size 14 weight 500
+DangerButton: from Button col #EF4444
 
-Header: hor between ver-cen h 56 pad l-r 24 bg #1A1A1A
+Header: hor between ver-cen h 56 pad l-r 24 col #1A1A1A
   Logo size 20 weight 700 col #FFF
   Nav hor ver-cen gap 8
 
 Content: ver grow pad 32 gap 16
 
-Card: ver pad 16 bg #1E1E1E rad 12 gap 8
+Card: ver pad 16 col #1E1E1E rad 12 gap 8
   Title size 18 weight 600 col #FFF
   Description size 14 col #9CA3AF
 \`\`\`
@@ -332,7 +357,7 @@ $radius: 8
 
 --- COMPONENTS ---
 List: ver gap 16
-Button: hor ver-cen h 40 pad l-r 16 rad 8 bg $primary col $text
+Button: hor ver-cen h 40 pad l-r 16 rad 8 col $primary col $text
 
 --- LAYOUT ---
 List
@@ -352,7 +377,7 @@ List
 6. TOKENS: Variablen mit $name: wert
 7. COMPONENTS: Definitionen mit : und Styling (verwende $tokens!)
 8. LAYOUT: NUR Komponentennamen und Strings!
-   - VERBOTEN: Properties (hor, ver, pad, bg, col, etc.)
+   - VERBOTEN: Properties (hor, ver, pad, col, etc.)
    - VERBOTEN: Doppelpunkt nach Namen
    - RICHTIG: Button "Click"
    - FALSCH: Button: "Click"
@@ -363,18 +388,18 @@ List
 ### States
 Komponenten können mehrere Zustände haben:
 \`\`\`
-Button: bg #333 pad 12 rad 8 col #FFF
+Button: col #333 pad 12 rad 8 col #FFF
   state normal
-    bg #333
+    col #333
   state active
-    bg #0066FF
+    col #0066FF
   onclick
     toggle self
 \`\`\`
 
 ### Variablen
 \`\`\`
-Counter: ver gap 8 pad 16 bg #222
+Counter: ver gap 8 pad 16 col #222
   count = 0
   selected = false
 \`\`\`
@@ -398,7 +423,7 @@ Panel onclick
 
 ### Page-Navigation
 \`\`\`
-Button: bg $primary pad 12 rad 8 col #FFF
+Button: col $primary pad 12 rad 8 col #FFF
   onclick page Dashboard
 
 Button "Zum Dashboard"
@@ -408,78 +433,93 @@ Button "Zum Dashboard"
 
 Die Library enthält Komponenten mit eingebauter Logik. Sie haben vordefinierte Slots.
 
+**WICHTIG:** Library-Komponenten müssen mit der \`as\`-Syntax benannt werden:
+\`\`\`
+MeinDialog as Dialog:    // Richtig - benennt die Instanz
+Dialog                   // Falsch - erzeugt eine Warnung
+\`\`\`
+
 ### Dropdown
 \`\`\`
-Dropdown
-  Trigger: hor gap 8 pad 8 12 bg $surface rad 6 bor 1 boc $border
+UserMenu as Dropdown:
+  Trigger: hor gap 8 pad 8 12 col $surface rad 6 bor 1 boc $border
     icon "chevron-down"
     "Menü"
-  Content: ver bg $surface rad 8 pad 4
-    Item: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg $primary
+  Content: ver col $surface rad 8 pad 4
+    Item: hor ver-cen gap 8 pad 8 12 rad 4 hover-col $primary
       icon "user"
       "Profil"
-    Item: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg $primary
+    Item: hor ver-cen gap 8 pad 8 12 rad 4 hover-col $primary
       icon "settings"
       "Einstellungen"
-    Separator: h 1 bg $border mar u-d 4
-    Item: col #EF4444 hover-bg #EF444420
+    Separator: h 1 col $border mar u-d 4
+    Item: col #EF4444 hover-col #EF444420
       icon "log-out"
       "Logout"
+
+// Referenzieren in Actions:
+Button onclick open UserMenu "Menü öffnen"
 \`\`\`
 
 ### Dialog
 \`\`\`
-Dialog
+ConfirmDialog as Dialog:
   Trigger
     Button "Dialog öffnen"
-  Content: ver gap 16 pad 24 bg $surface rad 12 w 400
+  Content: ver gap 16 pad 24 col $surface rad 12 w 400
     Title "Bestätigung"
     "Möchtest du fortfahren?"
     Row hor gap 8
-      Button bg $border "Abbrechen"
-        onclick close
+      Button col $border onclick close "Abbrechen"
       Button "Bestätigen"
+
+// Referenzieren in Actions:
+Button onclick open ConfirmDialog "Bestätigen"
+Button onclick close ConfirmDialog "Schliessen"
 \`\`\`
 
 ### Tabs
 \`\`\`
-Tabs
-  TabList: hor gap 4 bg $surface pad 4 rad 8
+MainTabs as Tabs:
+  Tabs: hor gap 4 col $surface pad 4 rad 8
     Tab "Übersicht"
     Tab "Details"
     Tab "Einstellungen"
   TabContent
-    Panel
-      "Inhalt der Übersicht"
-    Panel
-      "Inhalt der Details"
-    Panel
-      "Inhalt der Einstellungen"
+    "Inhalt der Übersicht"
+  TabContent
+    "Inhalt der Details"
+  TabContent
+    "Inhalt der Einstellungen"
 \`\`\`
 
-### Weitere Library-Komponenten
-- Accordion - Auf/Zuklappbare Sektionen
-- Collapsible - Einzelne auf/zuklappbare Sektion
-- Tooltip - Hover-Info
-- Popover - Klick-Popup
-- AlertDialog - Bestätigungs-Dialog
-- Select - Auswahl-Dropdown
-- Switch - Toggle-Schalter
-- Checkbox - Checkbox
-- RadioGroup - Radio-Buttons
-- Slider - Schieberegler
-- Toast - Benachrichtigung
-- Progress - Fortschrittsbalken
-- Avatar - Profilbild
-- ContextMenu - Rechtsklick-Menü
-- HoverCard - Hover-Popup
+### Weitere Library-Komponenten (immer mit as-Syntax benennen)
+- MyAccordion as Accordion: - Auf/Zuklappbare Sektionen
+- MyCollapsible as Collapsible: - Einzelne auf/zuklappbare Sektion
+- MyTooltip as Tooltip: - Hover-Info
+- MyPopover as Popover: - Klick-Popup
+- MyAlertDialog as AlertDialog: - Bestätigungs-Dialog
+- MySelect as Select: - Auswahl-Dropdown
+- MySwitch as Switch: - Toggle-Schalter
+- MyCheckbox as Checkbox: - Checkbox
+- MyRadioGroup as RadioGroup: - Radio-Buttons
+- MySlider as Slider: - Schieberegler
+- MyToast as Toast: - Benachrichtigung
+- MyProgress as Progress: - Fortschrittsbalken
+- MyAvatar as Avatar: - Profilbild
+- MyContextMenu as ContextMenu: - Rechtsklick-Menü
+- MyHoverCard as HoverCard: - Hover-Popup
 
 ### Library-Slots
 Library-Komponenten haben Standard-Slots:
 - Dropdown: Trigger, Content, Item, Separator
 - Dialog: Trigger, Content
-- Tabs: TabList, Tab, TabContent, Panel
+- Tabs: Tabs (für Tab-Liste), Tab, TabContent
 - Accordion: AccordionItem, Trigger, Content
+- Select: Trigger, Options, Option
+- FormField: Label, Field, Hint, Error
+- Checkbox: Indicator, Label
+- Switch: Track, Thumb
 `
 
 export interface GeneratedCode {
@@ -523,7 +563,7 @@ export async function generateDSL(
   }
 
   if (!hasApiKey()) {
-    throw new Error('Kein API Key gesetzt. Bitte API Key in der Header-Leiste eingeben.')
+    throw new Error('Kein API Key gesetzt. Bitte OpenRouter API Key in den Einstellungen eingeben (Zahnrad-Icon oben rechts).')
   }
 
   const response = await fetchWithTimeout(API.ENDPOINT, {
@@ -569,13 +609,13 @@ export async function generateDSL(
 
   // Log validation info for debugging
   if (validationResult.corrections.length > 0) {
-    console.log(`[Validation] Applied ${validationResult.corrections.length} corrections`)
+    logger.ai.info(`Applied ${validationResult.corrections.length} corrections`)
   }
   if (validationResult.errors.length > 0) {
-    console.warn('[Validation] Errors:', validationResult.errors.map(e => e.message))
+    logger.ai.warn('Validation errors', validationResult.errors.map(e => e.message))
   }
   if (validationResult.warnings.length > 0) {
-    console.log('[Validation] Warnings:', validationResult.warnings.map(w => w.message))
+    logger.ai.info('Validation warnings', validationResult.warnings.map(w => w.message))
   }
 
   return {
@@ -593,59 +633,103 @@ export async function generateDSL(
 // Alternative: JSON AST Approach
 // =============================================================================
 
-const JSON_SYSTEM_PROMPT = `Du bist ein UI-Designer. Generiere UI als JSON AST.
+const JSON_SYSTEM_PROMPT = `Du bist ein UI-Designer. Generiere UI-Komponenten als JSON AST.
+
+## WICHTIGSTE REGEL: NUR TOKENS VERWENDEN!
+- Verwende AUSSCHLIESSLICH Design-Tokens ($name-suffix) für alle Werte
+- NIEMALS hardcoded Farben (#FFFFFF), Zahlen (12, 16) oder Werte direkt setzen
+- Wenn ein passender Token fehlt, wähle den nächstbesten vorhandenen Token
+
+## Token-Konventionen (SUFFIXE!)
+Tokens haben das Format: $name-suffix
+
+- Farben: $primary-col, $secondary-col, $text-col, $text-muted-col, $error-col, $success-col
+- Hintergründe: $page-bg, $surface-bg, $elevated-bg, $input-bg
+- Rahmen: $default-boc, $hover-boc, $focus-boc
+- Abstände: $xs-space, $sm-space, $md-space, $lg-space, $xl-space, $2xl-space
+- Radien: $xs-rad, $sm-rad, $md-rad, $lg-rad, $xl-rad, $full-rad
+- Schatten: $sm-shadow, $md-shadow, $lg-shadow
+- Schriftgrössen: $xs-size, $sm-size, $base-size, $lg-size, $xl-size, $2xl-size
+- Schriftstärken: $normal-weight, $medium-weight, $semibold-weight, $bold-weight
+
+## Verfügbare Komponenten (Radix-basiert)
+Nutze diese semantischen Komponenten statt primitiver Box/Text:
+- **Button** - Für Aktionen (primary, secondary, ghost Varianten)
+- **Input** - Texteingabe mit Label
+- **Checkbox** - Auswahlbox
+- **Switch** - Toggle-Schalter
+- **Select** - Dropdown-Auswahl
+- **Dialog** - Modal-Fenster
+- **Card** - Container mit Rahmen/Schatten
+- **Tabs** - Tab-Navigation
+- **Avatar** - Benutzer-Bild
+- **Badge** - Status-Label
+- **Alert** - Hinweis-Box
+- **Separator** - Trennlinie
 
 ## Schema
 ${LLM_SCHEMA}
 
 ## Regeln
-1. Antworte NUR mit validem JSON - keine Erklärungen, kein Markdown
-2. Das Root-Objekt hat die Struktur: { "nodes": [...] }
-3. Jeder Node braucht: type: "component", name, properties, children
-4. Text-Content kommt in "content" (nicht in children)
-5. Verschachtelung über "children" Array
+1. NUR valides JSON - keine Erklärungen
+2. Root: { "nodes": [...] }
+3. IMMER Tokens verwenden: col "$color-surface" statt col "#1E1E1E"
+4. Semantische Komponenten bevorzugen
 
-## Beispiele
+## Beispiele mit Tokens (SUFFIX-Format!)
 
-Login-Formular:
-{
-  "nodes": [{
-    "type": "component",
-    "name": "Box",
-    "properties": { "ver": true, "gap": 16, "pad": 24, "col": "#1F2937", "rad": 12 },
-    "children": [
-      { "type": "component", "name": "Text", "properties": { "size": 24, "weight": 700, "col": "#FFFFFF" }, "content": "Login", "children": [] },
-      { "type": "component", "name": "Input", "instanceName": "Email", "properties": { "placeholder": "Email" }, "children": [] },
-      { "type": "component", "name": "Input", "instanceName": "Password", "properties": { "type": "password", "placeholder": "Password" }, "children": [] },
-      { "type": "component", "name": "Button", "properties": { "col": "#3B82F6", "rad": 8 }, "content": "Sign In", "children": [] }
-    ]
-  }]
-}
+### Button
+{"type":"component","name":"Button","properties":{"pad":"$md-space","col":"$primary-col","col":"$text-col","rad":"$md-rad"},"content":"Klick mich","children":[]}
 
-Card mit Icon:
-{
-  "nodes": [{
-    "type": "component",
-    "name": "Box",
-    "properties": { "hor": true, "gap": 12, "pad": 16, "col": "#1F2937", "rad": 8, "ver-cen": true },
-    "children": [
-      { "type": "component", "name": "Icon", "properties": { "icon": "user", "size": 24, "col": "#9CA3AF" }, "children": [] },
-      { "type": "component", "name": "Text", "properties": { "size": 14, "col": "#FFFFFF" }, "content": "Profile", "children": [] }
-    ]
-  }]
-}
+### Card
+{"type":"component","name":"Card","properties":{"ver":true,"pad":"$lg-space","col":"$surface-bg","rad":"$lg-rad","gap":"$md-space","shadow":"$md-shadow"},"children":[
+  {"type":"component","name":"Text","properties":{"size":"$lg-size","weight":"$bold-weight","col":"$text-col"},"content":"Titel","children":[]}
+]}
 
-Generiere NUR JSON, keine Erklärungen.`
+### Input mit Label
+{"type":"component","name":"Box","properties":{"ver":true,"gap":"$sm-space"},"children":[
+  {"type":"component","name":"Text","properties":{"size":"$sm-size","weight":"$medium-weight","col":"$text-col"},"content":"E-Mail","children":[]},
+  {"type":"component","name":"Input","instanceName":"Email","properties":{"placeholder":"name@beispiel.de","pad":"$md-space","col":"$input-bg","col":"$text-col","rad":"$md-rad","bor":1,"boc":"$default-boc"},"children":[]}
+]}
+
+### Login-Formular
+{"nodes":[{"type":"component","name":"Card","properties":{"ver":true,"gap":"$lg-space","pad":"$xl-space","w":400,"col":"$surface-bg","rad":"$lg-rad","shadow":"$lg-shadow"},"children":[
+  {"type":"component","name":"Text","properties":{"size":"$2xl-size","weight":"$bold-weight","col":"$text-col","hor-cen":true},"content":"Anmelden","children":[]},
+  {"type":"component","name":"Box","properties":{"ver":true,"gap":"$md-space"},"children":[
+    {"type":"component","name":"Input","instanceName":"Email","properties":{"type":"email","placeholder":"E-Mail","pad":"$md-space","col":"$input-bg","col":"$text-col","rad":"$md-rad","bor":1,"boc":"$default-boc"},"children":[]},
+    {"type":"component","name":"Input","instanceName":"Password","properties":{"type":"password","placeholder":"Passwort","pad":"$md-space","col":"$input-bg","col":"$text-col","rad":"$md-rad","bor":1,"boc":"$default-boc"},"children":[]}
+  ]},
+  {"type":"component","name":"Button","properties":{"pad":"$md-space","col":"$primary-col","col":"$text-col","rad":"$md-rad","w":"full","hor-cen":true},"content":"Einloggen","children":[]}
+]}]}
+
+Generiere NUR JSON mit Tokens (SUFFIX-Format!), keine Erklärungen.`
 
 /**
  * Alternative DSL generation using JSON AST approach
  * The LLM generates JSON (which it knows well), then we convert to Mirror DSL
  */
 export async function generateDSLViaJSON(
-  userPrompt: string
+  userPrompt: string,
+  designSystem?: { tokens: string; components: string }
 ): Promise<GeneratedCode> {
   if (!hasApiKey()) {
-    throw new Error('Kein API Key gesetzt. Bitte API Key in der Header-Leiste eingeben.')
+    throw new Error('Kein API Key gesetzt. Bitte OpenRouter API Key in den Einstellungen eingeben (Zahnrad-Icon oben rechts).')
+  }
+
+  // Build user message with design system context if available
+  let userMessage = userPrompt
+  if (designSystem?.tokens || designSystem?.components) {
+    const contextParts: string[] = []
+
+    if (designSystem.tokens.trim()) {
+      contextParts.push(`## Mein Design-System (Tokens)\nVerwende diese Farben, Abstände und Werte:\n\`\`\`\n${designSystem.tokens.trim()}\n\`\`\``)
+    }
+
+    if (designSystem.components.trim()) {
+      contextParts.push(`## Meine Komponenten-Definitionen\nVerwende diese vordefinierten Komponenten als Basis:\n\`\`\`\n${designSystem.components.trim()}\n\`\`\``)
+    }
+
+    userMessage = `${contextParts.join('\n\n')}\n\n## Aufgabe\n${userPrompt}\n\nWICHTIG: Verwende die oben definierten Tokens (z.B. $primary, $surface) und Komponenten-Stile!`
   }
 
   const response = await fetchWithTimeout(API.ENDPOINT, {
@@ -665,7 +749,7 @@ export async function generateDSLViaJSON(
         },
         {
           role: 'user',
-          content: userPrompt
+          content: userMessage
         }
       ],
       max_tokens: API.MAX_TOKENS,
@@ -694,7 +778,7 @@ export async function generateDSLViaJSON(
   try {
     rawAst = JSON.parse(jsonContent)
   } catch {
-    console.error('[JSON Parse Error]', jsonContent.substring(0, 200))
+    logger.ai.error('JSON Parse Error', jsonContent.substring(0, 200))
     throw new Error('LLM hat kein valides JSON generiert')
   }
 

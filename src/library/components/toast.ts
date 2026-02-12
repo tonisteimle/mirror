@@ -20,7 +20,7 @@ export const ToastComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         size: 13,
-        col: '#A0A0A0'
+        col: '$text-dim'
       }
     },
     {
@@ -31,7 +31,7 @@ export const ToastComponent: LibraryComponent = {
         pad: 4,
         pad_l: 8,
         pad_r: 8,
-        bg: '#333',
+        bg: '$border',
         rad: 4,
         size: 12
       }
@@ -46,12 +46,12 @@ export const ToastComponent: LibraryComponent = {
   defaultStates: ['hidden', 'visible'],
   actions: ['show', 'hide'],
   definitions: `// Toast
-Toast: hor bg #1E1E1E rad 8 pad 16 gap 16 ver-cen between w 360 bor 1 boc #333
+Toast: hor bg $surface rad 8 pad 16 gap 16 ver-cen between w 360 bor 1 boc $border
 ToastContent: ver gap 4
 ToastTitle: weight 600 size 14
-ToastDescription: size 13 col #A0A0A0
-ToastAction: pad 4 8 bg #333 rad 4 size 12 hover-bg #444
-ToastClose: pad 4 hover-bg #333 rad 4`,
+ToastDescription: size 13 col $text-dim
+ToastAction: pad 4 8 bg $border rad 4 size 12 hover-bg $border-hover
+ToastClose: pad 4 hover-bg $border rad 4`,
   layoutExample: `Toast
   state hidden
   if visible
@@ -61,5 +61,5 @@ ToastClose: pad 4 hover-bg #333 rad 4`,
   ToastAction "Undo"
   ToastClose
     onclick hide
-    icon "x" col #888`
+    icon "x" col $text-muted`
 }

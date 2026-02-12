@@ -189,3 +189,82 @@ body {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(0.95); }
 }
+
+/* ============================================
+   Element Animations (show/hide/animate)
+   ============================================ */
+
+/* Continuous animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Note: @keyframes spin already defined at line 25 */
+
+/* Animation utility classes for element show/hide */
+.mirror-anim-fade-in {
+  animation: fadeIn var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-fade-out {
+  animation: fadeOut var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-up-in {
+  animation: content-slide-up var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-up-out {
+  animation: content-slide-up-out var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-down-in {
+  animation: content-slide-down var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-down-out {
+  animation: content-slide-down-out var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-left-in {
+  animation: content-slide-left var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-left-out {
+  animation: content-slide-left-out var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-right-in {
+  animation: content-slide-right var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-slide-right-out {
+  animation: content-slide-right-out var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-scale-in {
+  animation: scaleIn var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+.mirror-anim-scale-out {
+  animation: content-scale-out var(--mirror-anim-duration, 300ms) ease-out forwards;
+}
+
+/* Continuous animation classes */
+.mirror-anim-spin {
+  animation: spin var(--mirror-anim-duration, 1000ms) linear infinite;
+}
+
+.mirror-anim-pulse {
+  animation: pulse var(--mirror-anim-duration, 1000ms) ease-in-out infinite;
+}
+
+.mirror-anim-bounce {
+  animation: bounce var(--mirror-anim-duration, 1000ms) ease-in-out infinite;
+}

@@ -19,7 +19,10 @@ export function parseValue(ctx: ParserContext): string | number | boolean | null
 
   if (token.type === 'NUMBER') {
     ctx.advance()
-    return parseInt(token.value, 10)
+    // Use parseFloat to handle decimal numbers like 0.5
+    const num = parseFloat(token.value)
+    // Return as integer if it's a whole number, otherwise keep as float
+    return Number.isInteger(num) ? Math.floor(num) : num
   }
   if (token.type === 'STRING') {
     ctx.advance()
@@ -47,11 +50,21 @@ export function parseValue(ctx: ParserContext): string | number | boolean | null
 }
 
 /**
- * Parse an expression: $count, $count + 1, $user.avatar, 42, etc.
+ * Parse an expression: $count, $count + 1, $user.avatar, 42, not $flag, etc.
  */
 export function parseExpression(ctx: ParserContext): Expression | null {
   const token = ctx.current()
   if (!token) return null
+
+  // Handle 'not' operator (unary negation)
+  if (token.type === 'CONTROL' && token.value === 'not') {
+    ctx.advance() // consume 'not'
+    const operand = parseExpression(ctx)
+    if (operand) {
+      return { type: 'unary', operator: 'not', operand }
+    }
+    return null
+  }
 
   // Variable reference with optional property access
   if (token.type === 'TOKEN_REF') {

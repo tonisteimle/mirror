@@ -14,11 +14,28 @@ import type {
   VariableDeclaration,
   EventHandler,
   ActionStatement,
-  Conditional
+  Conditional,
+  AnimationDefinition
 } from './types'
 import { parseValue, parseExpression } from './expression-parser'
 import { parseCondition } from './condition-parser'
-import { ANIMATION_KEYWORDS, POSITION_KEYWORDS } from '../dsl/properties'
+import { ACTION_KEYWORDS, ANIMATION_KEYWORDS, POSITION_KEYWORDS } from '../dsl/properties'
+
+// Helper to check if a token is an action keyword
+function isActionKeyword(ctx: ParserContext): boolean {
+  const token = ctx.current()
+  // ACTION_KEYWORDS are tokenized as COMPONENT_NAME
+  // show/hide are also valid actions but tokenized as ANIMATION_ACTION
+  return (token?.type === 'COMPONENT_NAME' && ACTION_KEYWORDS.has(token.value)) ||
+         (token?.type === 'ANIMATION_ACTION' && (token.value === 'show' || token.value === 'hide'))
+}
+
+// Helper to check if a token is a position keyword
+// Position keywords can be tokenized as COMPONENT_NAME or PROPERTY (e.g., 'center' is also a flex property)
+function isPositionKeyword(ctx: ParserContext): boolean {
+  const token = ctx.current()
+  return (token?.type === 'COMPONENT_NAME' || token?.type === 'PROPERTY') && POSITION_KEYWORDS.has(token.value)
+}
 
 /**
  * Parse a state definition: state name \n properties...
@@ -30,7 +47,9 @@ export function parseStateDefinition(ctx: ParserContext, baseIndent: number): St
   ctx.advance() // consume 'state'
 
   // Next should be the state name
-  if (ctx.current()?.type !== 'ACTION' && ctx.current()?.type !== 'COMPONENT_NAME') {
+  // Accept COMPONENT_NAME or PROPERTY tokens (for system states like 'disabled' which are also properties)
+  const currentToken = ctx.current()
+  if (currentToken?.type !== 'COMPONENT_NAME' && currentToken?.type !== 'PROPERTY') {
     return null
   }
   const stateName = ctx.advance().value
@@ -146,9 +165,9 @@ function parseInlineAssignment(ctx: ParserContext): ActionStatement | null {
  * Parse 'change X to Y' action details.
  */
 function parseChangeDetails(ctx: ParserContext, action: ActionStatement): void {
-  if (ctx.current()?.type === 'ACTION' && ctx.current()?.value === 'to') {
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()?.value === 'to') {
     ctx.advance() // consume 'to'
-    if (ctx.current()?.type === 'COMPONENT_NAME' || ctx.current()?.type === 'ACTION') {
+    if (ctx.current()?.type === 'COMPONENT_NAME') {
       action.toState = ctx.advance().value
     }
   }
@@ -158,7 +177,7 @@ function parseChangeDetails(ctx: ParserContext, action: ActionStatement): void {
  * Parse 'assign X to expr' action details.
  */
 function parseAssignDetails(ctx: ParserContext, action: ActionStatement): void {
-  if (ctx.current()?.type === 'ACTION' && ctx.current()?.value === 'to') {
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()?.value === 'to') {
     ctx.advance() // consume 'to'
     const expr = parseExpression(ctx)
     if (expr) {
@@ -174,9 +193,7 @@ function parseOpenCloseDetails(ctx: ParserContext, action: ActionStatement): voi
   if (!ctx.current()) return
 
   // Position keyword (below, above, left, right, center)
-  if (ctx.current()?.type === 'POSITION') {
-    action.position = ctx.advance().value as ActionStatement['position']
-  } else if (ctx.current()?.type === 'COMPONENT_NAME' && POSITION_KEYWORDS.has(ctx.current()!.value)) {
+  if (isPositionKeyword(ctx)) {
     action.position = ctx.advance().value as ActionStatement['position']
   }
 
@@ -209,7 +226,8 @@ export function parseAction(ctx: ParserContext): ActionStatement | null {
     return parseInlineAssignment(ctx)
   }
 
-  if (token.type !== 'ACTION') return null
+  // Check if it's an action keyword (now tokenized as COMPONENT_NAME)
+  if (!isActionKeyword(ctx)) return null
 
   const actionLine = token.line
   const actionType = ctx.advance().value as ActionStatement['type']
@@ -222,6 +240,13 @@ export function parseAction(ctx: ParserContext): ActionStatement | null {
   // Parse target
   if (actionType === 'assign') {
     if (ctx.current()?.type === 'TOKEN_REF' || ctx.current()?.type === 'COMPONENT_NAME') {
+      action.target = ctx.advance().value
+    }
+  } else if (actionType === 'alert') {
+    // Alert accepts a string message as target
+    if (ctx.current()?.type === 'STRING') {
+      action.target = ctx.advance().value
+    } else if (ctx.current()?.type === 'COMPONENT_NAME') {
       action.target = ctx.advance().value
     }
   } else if (ctx.current()?.type === 'COMPONENT_NAME') {
@@ -261,7 +286,7 @@ export function parseEventHandler(ctx: ParserContext, baseIndent: number): Event
   }
 
   // Check for inline action on same line
-  if (ctx.current()?.type === 'ACTION') {
+  if (isActionKeyword(ctx)) {
     const action = parseAction(ctx)
     if (action) handler.actions.push(action)
   }
@@ -338,4 +363,53 @@ export function parseEventHandler(ctx: ParserContext, baseIndent: number): Event
   }
 
   return handler
+}
+
+/**
+ * Parse an animation action: show fade slide-up 300, hide fade 200, animate spin 1000
+ *
+ * Syntax:
+ *   show [animation...] [duration]
+ *   hide [animation...] [duration]
+ *   animate [animation] [duration]
+ */
+export function parseAnimationAction(ctx: ParserContext): AnimationDefinition | null {
+  const token = ctx.current()
+  if (!token || token.type !== 'ANIMATION_ACTION') return null
+
+  const actionLine = token.line
+  const actionType = ctx.advance().value as 'show' | 'hide' | 'animate'
+
+  const animDef: AnimationDefinition = {
+    type: actionType,
+    animations: [],
+    line: actionLine
+  }
+
+  // Parse animation names and duration
+  while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
+    const current = ctx.current()!
+
+    if (current.type === 'ANIMATION') {
+      // Animation keyword (fade, slide-up, spin, etc.)
+      animDef.animations.push(ctx.advance().value)
+    } else if (current.type === 'COMPONENT_NAME' && ANIMATION_KEYWORDS.has(current.value)) {
+      // Animation might be tokenized as COMPONENT_NAME
+      animDef.animations.push(ctx.advance().value)
+    } else if (current.type === 'NUMBER') {
+      // Duration in ms
+      animDef.duration = parseInt(ctx.advance().value, 10)
+      break // Duration is always last
+    } else {
+      // Unknown token, stop parsing
+      break
+    }
+  }
+
+  // Default duration if not specified
+  if (animDef.duration === undefined) {
+    animDef.duration = actionType === 'animate' ? 1000 : 300
+  }
+
+  return animDef
 }

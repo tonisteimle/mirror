@@ -31,17 +31,10 @@ describe('slot-parser', () => {
     })
 
     it('parses child with properties', () => {
-      const ctx = createContext('Title bg #F00')
+      const ctx = createContext('Title col #F00')
       const result = parseInlineChildSlot(ctx, 'Card')
       expect(result?.name).toBe('Title')
-      expect(result?.properties.bg).toBe('#F00')
-    })
-
-    it('parses child with modifiers', () => {
-      const ctx = createContext('Title -bold')
-      const result = parseInlineChildSlot(ctx, 'Card')
-      expect(result?.name).toBe('Title')
-      expect(result?.modifiers).toContain('-bold')
+      expect(result?.properties.col).toBe('#F00')
     })
 
     it('parses child with multiple properties', () => {
@@ -114,12 +107,6 @@ describe('slot-parser', () => {
       expect(result?.properties.size).toBe(20)
     })
 
-    it('parses nested child with modifiers', () => {
-      const ctx = createContext('Icon -small')
-      const result = parseNestedInlineChild(ctx, 'Button')
-      expect(result?.modifiers).toContain('-small')
-    })
-
     it('generates unique id', () => {
       const ctx = createContext('Subtitle')
       const result = parseNestedInlineChild(ctx, 'Title')
@@ -143,18 +130,12 @@ describe('slot-parser', () => {
 
   describe('template registration', () => {
     it('registers child with properties as template', () => {
-      const ctx = createContext('Title bg #F00 "Text"')
+      const ctx = createContext('Title col #F00 "Text"')
       parseInlineChildSlot(ctx, 'Card')
       expect(ctx.registry.has('Title')).toBe(true)
     })
 
-    it('registers child with modifiers as template', () => {
-      const ctx = createContext('Button -primary')
-      parseInlineChildSlot(ctx, 'Form')
-      expect(ctx.registry.has('Button')).toBe(true)
-    })
-
-    it('does not register child without properties or modifiers', () => {
+    it('does not register child without properties', () => {
       const ctx = createContext('Simple "text"')
       parseInlineChildSlot(ctx, 'Card')
       // Check if it has any definition worth registering

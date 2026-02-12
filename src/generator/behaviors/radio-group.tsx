@@ -40,6 +40,7 @@ export const RadioGroupBehavior: BehaviorHandler = {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    // bg → background color (not col)
                     backgroundColor: value === item.id ? '#3B82F6' : (radio.properties.bg as string || '#252525'),
                     borderColor: value === item.id ? '#3B82F6' : (radio.properties.boc as string || '#444'),
                     transition: 'all 0.2s'

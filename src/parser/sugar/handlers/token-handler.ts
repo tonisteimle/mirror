@@ -8,7 +8,7 @@
 
 import type { SugarHandler, SugarContext, SugarResult } from '../types'
 import { isTokenSequence } from '../../types'
-import { inferPropertyFromTokenName } from '../../property-inference'
+import { inferPropertyFromTokenName, isColorValue } from '../../property-inference'
 import { applyTokenSequenceSpacing } from '../../property-parser'
 
 /**
@@ -29,7 +29,14 @@ export const tokenHandler: SugarHandler = {
     const { ctx, node, token } = context
     const tokenName = ctx.advance().value
     const tokenValue = ctx.designTokens.get(tokenName)
-    const inferredProp = inferPropertyFromTokenName(tokenName)
+    let inferredProp = inferPropertyFromTokenName(tokenName)
+
+    // Value-based inference: if name inference fails, check if value is a color
+    if (!inferredProp && tokenValue !== undefined) {
+      if (typeof tokenValue === 'string' && isColorValue(tokenValue)) {
+        inferredProp = 'col'
+      }
+    }
 
     if (inferredProp && tokenValue !== undefined) {
       // Apply the token value to the inferred property
@@ -58,9 +65,12 @@ export const tokenHandler: SugarHandler = {
     }
 
     if (tokenValue !== undefined && !inferredProp) {
-      // Token exists but couldn't infer property - warn
-      ctx.errors.push(
-        `Warning: Line ${token.line + 1}: Token "$${tokenName}" used without property - couldn't infer from name`
+      // Token exists but couldn't infer property - warn with helpful hint
+      ctx.addWarning(
+        'S006',
+        `Token "$${tokenName}" used without property - couldn't infer from name`,
+        token,
+        `Add a suffix like '-col', '-pad', '-rad', or use: col $${tokenName}`
       )
       return { handled: true }
     }
@@ -68,8 +78,11 @@ export const tokenHandler: SugarHandler = {
     // Token not found - warn only for simple tokens (not property access like $item.name)
     // Property access tokens (containing '.') are runtime variables from iterators
     if (!tokenName.includes('.')) {
-      ctx.errors.push(
-        `Warning: Line ${token.line + 1}: Token "$${tokenName}" not defined`
+      ctx.addWarning(
+        'S001',
+        `Token "$${tokenName}" is not defined`,
+        token,
+        `Define it with: $${tokenName}: <value>`
       )
     }
     return { handled: true }

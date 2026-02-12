@@ -126,10 +126,10 @@ export interface DSLProperties {
   // ============================================
   // Colors
   // ============================================
-  /** Background color */
-  bg?: string
-  /** Text/foreground color */
+  /** Text color (always applies to text) */
   col?: string
+  /** Background color (always applies to background) */
+  bg?: string
   /** Border color */
   boc?: string
 
@@ -180,22 +180,28 @@ export interface DSLProperties {
   fit?: ObjectFit
 
   // ============================================
-  // Overflow
+  // Overflow / Scroll
   // ============================================
-  /** Enable scrolling both directions */
+  /** Enable vertical scrolling (default) */
   scroll?: boolean
+  /** Enable vertical scrolling (explicit) */
+  'scroll-ver'?: boolean
   /** Enable horizontal scrolling */
-  'scroll-x'?: boolean
-  /** Enable vertical scrolling */
-  'scroll-y'?: boolean
+  'scroll-hor'?: boolean
+  /** Enable scrolling in both directions */
+  'scroll-both'?: boolean
+  /** Scroll snap - items snap into view */
+  snap?: boolean
   /** Clip overflow content */
   clip?: boolean
 
   // ============================================
   // Hover States
   // ============================================
-  /** Background color on hover */
+  /** Text color on hover */
   'hover-col'?: string
+  /** Background color on hover */
+  'hover-bg'?: string
   /** Border color on hover */
   'hover-boc'?: string
   /** Border width on hover */

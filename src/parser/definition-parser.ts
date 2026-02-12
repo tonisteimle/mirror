@@ -20,12 +20,11 @@ import { createTextNode } from './parser-utils'
 export function parseComponentDefinition(ctx: ParserContext): void {
   const componentName = ctx.advance().value
   const template: ComponentTemplate = {
-    modifiers: [],
     properties: {},
     children: []
   }
 
-  // Check for "from" keyword: PrimaryButton: from Button bg #EF4444
+  // Check for "from" keyword: PrimaryButton: from Button col #EF4444
   if (ctx.current()?.type === 'KEYWORD' && ctx.current()?.value === 'from') {
     ctx.advance() // consume 'from'
 
@@ -36,7 +35,6 @@ export function parseComponentDefinition(ctx: ParserContext): void {
       // Apply base component template if it exists
       if (ctx.registry.has(baseComponentName)) {
         const baseTemplate = ctx.registry.get(baseComponentName)!
-        template.modifiers = [...baseTemplate.modifiers]
         template.properties = { ...baseTemplate.properties }
         if (baseTemplate.content) {
           template.content = baseTemplate.content
@@ -75,9 +73,7 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
       continue
     }
 
-    if (token.type === 'MODIFIER') {
-      template.modifiers.push(ctx.advance().value)
-    } else if (token.type === 'PROPERTY') {
+    if (token.type === 'PROPERTY') {
       const propName = ctx.advance().value
 
       // Handle pad/mar/bor with directions or CSS shorthand
@@ -88,8 +84,20 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
         }
 
         const values: number[] = []
-        while (ctx.current()?.type === 'NUMBER') {
-          values.push(parseInt(ctx.advance().value, 10))
+        while (ctx.current()?.type === 'NUMBER' || ctx.current()?.type === 'TOKEN_REF') {
+          if (ctx.current()?.type === 'NUMBER') {
+            values.push(parseInt(ctx.advance().value, 10))
+          } else {
+            // Token reference - resolve immediately
+            const tokenName = ctx.advance().value
+            const tokenValue = ctx.designTokens.get(tokenName)
+            if (typeof tokenValue === 'number') {
+              values.push(tokenValue)
+            } else {
+              // Token not found or not a number - skip silently
+              // (token might be defined later or have wrong type)
+            }
+          }
         }
 
         applySpacingToProperties(template.properties, propName, values, directions)
@@ -105,12 +113,39 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
         if (ctx.current()?.type === 'STRING') {
           template.properties['font'] = ctx.advance().value
         }
+      } else if (propName === 'weight') {
+        // Special handling for weight: accepts NUMBER or 'bold' keyword
+        const next = ctx.current()
+        if (next?.type === 'NUMBER') {
+          template.properties['weight'] = parseInt(ctx.advance().value, 10)
+        } else if (next?.type === 'COMPONENT_NAME' && next.value === 'bold') {
+          ctx.advance()
+          template.properties['weight'] = 700  // Convert 'bold' to numeric weight
+        } else if (next?.type === 'TOKEN_REF') {
+          const tokenName = ctx.advance().value
+          const tokenValue = ctx.designTokens.get(tokenName)
+          if (typeof tokenValue === 'number') {
+            template.properties['weight'] = tokenValue
+          }
+        } else {
+          template.properties['weight'] = 700  // Default bold weight
+        }
       } else {
         const next = ctx.current()
         if (next && (next.type === 'NUMBER' || next.type === 'COLOR')) {
           template.properties[propName] = next.type === 'NUMBER'
             ? parseInt(ctx.advance().value, 10)
             : ctx.advance().value
+        } else if (next?.type === 'TOKEN_REF') {
+          // Token reference like $bg-card
+          const tokenName = ctx.advance().value
+          const tokenValue = ctx.designTokens.get(tokenName)
+          if (tokenValue !== undefined && typeof tokenValue !== 'object') {
+            template.properties[propName] = tokenValue
+          } else {
+            // Store as reference for runtime resolution
+            template.properties[propName] = `$${tokenName}`
+          }
         } else if (next?.type === 'COMPONENT_NAME' && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
           // CSS color keyword like 'transparent', 'white', etc.
           template.properties[propName] = ctx.advance().value
@@ -118,6 +153,26 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
           template.properties[propName] = true
         }
       }
+    } else if (token.type === 'COLOR') {
+      // Bare color → col property (shorthand syntax)
+      template.properties['col'] = ctx.advance().value
+    } else if (token.type === 'TOKEN_REF') {
+      // Bare token reference → try to infer property from token name or value
+      const tokenName = ctx.advance().value
+      const tokenValue = ctx.designTokens.get(tokenName)
+
+      // Check if token name ends with -col suffix
+      if (tokenName.toLowerCase().endsWith('-col')) {
+        if (typeof tokenValue === 'string') {
+          template.properties['col'] = tokenValue
+        } else {
+          template.properties['col'] = `$${tokenName}`
+        }
+      } else if (typeof tokenValue === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(tokenValue)) {
+        // Token value is a color → col property
+        template.properties['col'] = tokenValue
+      }
+      // Otherwise skip (token might be for other purposes)
     } else if (token.type === 'STRING') {
       const stringToken = token
       const stringValue = ctx.advance().value
@@ -146,8 +201,21 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
           } else {
             textNode.properties[propName] = true
           }
-        } else if (afterToken.type === 'MODIFIER') {
-          textNode.modifiers.push(ctx.advance().value)
+        } else if (afterToken.type === 'COLOR') {
+          // Bare color after string → text color
+          textNode.properties['col'] = ctx.advance().value
+        } else if (afterToken.type === 'NUMBER') {
+          // Bare number after string → font size
+          textNode.properties['size'] = parseInt(ctx.advance().value, 10)
+        } else if (afterToken.type === 'TOKEN_REF') {
+          // Bare token ref after string → could be color or size
+          const tokenName = ctx.advance().value
+          const tokenValue = ctx.designTokens.get(tokenName)
+          if (typeof tokenValue === 'string') {
+            textNode.properties['col'] = tokenValue
+          } else if (typeof tokenValue === 'number') {
+            textNode.properties['size'] = tokenValue
+          }
         } else {
           break
         }
@@ -249,7 +317,16 @@ export function parseTokenDefinition(ctx: ParserContext): void {
   } else if (valueTokens.length === 1) {
     // Single token - store as simple value for backwards compatibility
     const token = valueTokens[0]
-    if (token.type === 'COLOR') {
+    if (token.type === 'JSON_VALUE') {
+      // Parse JSON array/object value
+      try {
+        const jsonValue = JSON.parse(token.value)
+        ctx.designTokens.set(tokenName, jsonValue)
+      } catch {
+        // If JSON parsing fails, store as string
+        ctx.designTokens.set(tokenName, token.value)
+      }
+    } else if (token.type === 'COLOR') {
       ctx.designTokens.set(tokenName, token.value)
     } else if (token.type === 'NUMBER') {
       ctx.designTokens.set(tokenName, parseInt(token.value, 10))

@@ -28,10 +28,19 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 }
 
+// Safely check for dev mode (works outside Vite too)
+function isDev(): boolean {
+  try {
+    return import.meta.env?.DEV ?? false
+  } catch {
+    return false
+  }
+}
+
 // Default config - debug disabled in production
 const config: LoggerConfig = {
   enabled: true,
-  minLevel: import.meta.env.DEV ? 'debug' : 'info',
+  minLevel: isDev() ? 'debug' : 'info',
   categories: null, // All categories enabled
 }
 

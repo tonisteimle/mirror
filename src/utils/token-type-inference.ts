@@ -13,6 +13,7 @@
  */
 
 import type { TokenValueType, TypedToken } from '../types/token-types'
+import { resolveTokenReferences } from './token-parser'
 
 // CSS color keywords
 const CSS_COLOR_KEYWORDS = new Set([
@@ -107,30 +108,7 @@ function inferTypeFromSimpleValue(value: string): TokenValueType | null {
 }
 
 
-/**
- * Resolve token references in a value string.
- * e.g., "l-r $base-pad" with tokenMap { "base-pad": "16" } → "l-r 16"
- *
- * Handles recursive resolution up to a depth limit to prevent infinite loops.
- */
-function resolveTokenReferences(
-  value: string,
-  tokenMap: Map<string, string>,
-  maxDepth = 5
-): string {
-  if (maxDepth <= 0) return value
-
-  return value.replace(/\$([a-zA-Z][\w-]*)/g, (match, name) => {
-    const resolved = tokenMap.get(name)
-    if (resolved === undefined) return match // Keep original if not found
-
-    // Recursively resolve nested references
-    if (resolved.includes('$')) {
-      return resolveTokenReferences(resolved, tokenMap, maxDepth - 1)
-    }
-    return resolved
-  })
-}
+// resolveTokenReferences is now imported from ./token-parser
 
 /**
  * Parse tokens from code and infer their types.

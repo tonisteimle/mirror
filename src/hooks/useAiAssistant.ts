@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { generateDSLViaJSON } from '../lib/ai'
+import { generateDSLViaJSON, hasApiKey } from '../lib/ai'
 
 export interface UseAiAssistantReturn {
   isGenerating: boolean
@@ -21,9 +21,18 @@ export function useAiAssistant(options: UseAiAssistantOptions = {}): UseAiAssist
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
   const openAssistant = useCallback((pos: { x: number; y: number }) => {
+    // Check if API key is configured
+    if (!hasApiKey()) {
+      options.onError?.({
+        title: 'API Key fehlt',
+        message: 'Bitte trage zuerst einen OpenRouter API Key in den Einstellungen ein.',
+        details: 'Klicke auf das Zahnrad-Icon oben rechts und gib deinen Key ein. Du bekommst einen Key auf openrouter.ai/keys',
+      })
+      return
+    }
     setPosition(pos)
     setIsOpen(true)
-  }, [])
+  }, [options])
 
   const closeAssistant = useCallback(() => {
     setIsOpen(false)

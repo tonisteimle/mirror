@@ -29,6 +29,10 @@ export const SwitchBehavior: BehaviorHandler = {
       backgroundColor: '#FFFFFF'
     }
 
+    // Get colors from node properties or use defaults
+    const onColor = node.properties['on-bg'] as string || '#3B82F6'
+    const offColor = rootStyle.backgroundColor || '#333333'
+
     return (
       <Switch.Root
         checked={isChecked}
@@ -36,7 +40,7 @@ export const SwitchBehavior: BehaviorHandler = {
         style={{
           ...rootStyle,
           cursor: 'pointer',
-          backgroundColor: isChecked ? '#3B82F6' : (rootStyle.backgroundColor || '#333'),
+          backgroundColor: isChecked ? onColor : offColor,
           transition: 'background-color 0.2s'
         }}
       >

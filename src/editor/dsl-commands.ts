@@ -15,20 +15,20 @@ const libraryCommands: DSLCommand[] = [
     name: 'Dropdown',
     syntax: `Dropdown
   state closed
-  Trigger hor ver-cen gap 8 pad 8 12 bg #252525 rad 6 bor 1 boc #444 hover-bg #333
+  Trigger hor ver-cen gap 8 pad 8 12 col #252525 rad 6 bor 1 boc #444 hover-col #333
     onclick toggle
     icon "chevron-down"
     "Options"
-  Content ver bg #1E1E1E rad 8 pad 4 minw 180 bor 1 boc #333
+  Content ver col #1E1E1E rad 8 pad 4 minw 180 bor 1 boc #333
     if open
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #3B82F6
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #3B82F6
       icon "user"
       "Profile"
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #3B82F6
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #3B82F6
       icon "settings"
       "Settings"
-    Separator h 1 bg #333 mar 4
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #EF4444 col #EF4444
+    Separator h 1 col #333 mar 4
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #EF4444 col #EF4444
       icon "log-out"
       "Logout"`,
     description: 'Dropdown menu with items',
@@ -39,21 +39,21 @@ const libraryCommands: DSLCommand[] = [
     name: 'Dialog',
     syntax: `Dialog
   state closed
-  Trigger pad 12 bg #3B82F6 col #FFF rad 6 hover-bg #2563EB
+  Trigger pad 12 col #3B82F6 col #FFF rad 6 hover-col #2563EB
     onclick open
     "Open Dialog"
-  Overlay bg #00000080
+  Overlay col #00000080
     if open
     onclick close
-  Content ver bg #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
+  Content ver col #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
     if open
     Title size 18 weight 600 "Settings"
     Description size 14 col #888 "Configure your preferences here."
     Box hor gap 8 hor-r
-      Close pad 8 12 bg #333 rad 6 hover-bg #444
+      Close pad 8 12 col #333 rad 6 hover-col #444
         onclick close
         "Cancel"
-      Close pad 8 12 bg #3B82F6 col #FFF rad 6 hover-bg #2563EB
+      Close pad 8 12 col #3B82F6 col #FFF rad 6 hover-col #2563EB
         onclick close
         "Save"`,
     description: 'Modal dialog with overlay',
@@ -63,9 +63,9 @@ const libraryCommands: DSLCommand[] = [
   {
     name: 'Tooltip',
     syntax: `Tooltip
-  Trigger pad 8 bg #333 rad 6
+  Trigger pad 8 col #333 rad 6
     icon "info" size 16
-  Content pad 8 12 bg #1E1E1E rad 6 bor 1 boc #333 size 12
+  Content pad 8 12 col #1E1E1E rad 6 bor 1 boc #333 size 12
     "Helpful information here"`,
     description: 'Tooltip on hover',
     category: 'Components',
@@ -75,14 +75,14 @@ const libraryCommands: DSLCommand[] = [
     name: 'Popover',
     syntax: `Popover
   state closed
-  Trigger pad 8 12 bg #333 rad 6 hover-bg #444
+  Trigger pad 8 12 col #333 rad 6 hover-col #444
     onclick toggle
     "Click me"
-  Content ver gap 12 pad 16 bg #1E1E1E rad 8 bor 1 boc #333 w 240
+  Content ver gap 12 pad 16 col #1E1E1E rad 8 bor 1 boc #333 w 240
     if open
     Title size 14 weight 600 "Popover Title"
     Description size 13 col #888 "Some content goes here."
-    Close pad 8 12 bg #3B82F6 col #FFF rad 6 hover-bg #2563EB
+    Close pad 8 12 col #3B82F6 col #FFF rad 6 hover-col #2563EB
       onclick close
       "Got it"`,
     description: 'Interactive popup',
@@ -93,21 +93,21 @@ const libraryCommands: DSLCommand[] = [
     name: 'AlertDialog',
     syntax: `AlertDialog
   state closed
-  Trigger pad 12 bg #EF4444 col #FFF rad 6 hover-bg #DC2626
+  Trigger pad 12 col #EF4444 col #FFF rad 6 hover-col #DC2626
     onclick open
     "Delete"
-  Overlay bg #00000080
+  Overlay col #00000080
     if open
     onclick close
-  Content ver bg #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
+  Content ver col #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
     if open
     Title size 18 weight 600 "Are you sure?"
     Description size 14 col #888 "This action cannot be undone."
     Box hor gap 8 hor-r
-      Cancel pad 8 12 bg #333 rad 6 hover-bg #444
+      Cancel pad 8 12 col #333 rad 6 hover-col #444
         onclick close
         "Cancel"
-      Action pad 8 12 bg #EF4444 col #FFF rad 6 hover-bg #DC2626
+      Action pad 8 12 col #EF4444 col #FFF rad 6 hover-col #DC2626
         onclick close
         "Delete"`,
     description: 'Confirmation dialog',
@@ -117,17 +117,17 @@ const libraryCommands: DSLCommand[] = [
   {
     name: 'ContextMenu',
     syntax: `ContextMenu
-  Trigger pad 24 bg #252525 rad 8 bor 1 boc #333
+  Trigger pad 24 col #252525 rad 8 bor 1 boc #333
     "Right-click here"
-  Content ver bg #1E1E1E rad 8 pad 4 minw 160 bor 1 boc #333
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #333
+  Content ver col #1E1E1E rad 8 pad 4 minw 160 bor 1 boc #333
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #333
       icon "copy"
       "Copy"
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #333
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #333
       icon "clipboard"
       "Paste"
-    Separator h 1 bg #333 mar 4
-    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #EF4444 col #EF4444
+    Separator h 1 col #333 mar 4
+    Item hor ver-cen gap 8 pad 8 12 rad 4 hover-col #EF4444 col #EF4444
       icon "trash"
       "Delete"`,
     description: 'Right-click menu',
@@ -139,9 +139,9 @@ const libraryCommands: DSLCommand[] = [
     syntax: `HoverCard
   Trigger col #3B82F6 hover-col #2563EB
     "@username"
-  Content ver gap 12 pad 16 bg #1E1E1E rad 8 bor 1 boc #333 w 280
+  Content ver gap 12 pad 16 col #1E1E1E rad 8 bor 1 boc #333 w 280
     Box hor gap 12
-      Avatar w 48 h 48 rad 24 bg #333
+      Avatar w 48 h 48 rad 24 col #333
         Fallback "UN"
       Box ver gap 2
         Title size 14 weight 600 "User Name"
@@ -185,7 +185,7 @@ const libraryCommands: DSLCommand[] = [
     syntax: `Accordion ver
   Item ver bor d 1 boc #333
     state closed
-    Trigger hor between ver-cen pad 16 hover-bg #252525
+    Trigger hor between ver-cen pad 16 hover-col #252525
       onclick toggle
       "Question 1?"
       icon "chevron-down"
@@ -194,7 +194,7 @@ const libraryCommands: DSLCommand[] = [
       "Answer to question 1"
   Item ver bor d 1 boc #333
     state closed
-    Trigger hor between ver-cen pad 16 hover-bg #252525
+    Trigger hor between ver-cen pad 16 hover-col #252525
       onclick toggle
       "Question 2?"
       icon "chevron-down"
@@ -209,7 +209,7 @@ const libraryCommands: DSLCommand[] = [
     name: 'Collapsible',
     syntax: `Collapsible ver gap 8
   state closed
-  Trigger hor ver-cen gap 8 pad 8 hover-bg #252525 rad 4
+  Trigger hor ver-cen gap 8 pad 8 hover-col #252525 rad 4
     onclick toggle
     icon "chevron-right"
     "Show more"
@@ -226,18 +226,18 @@ const libraryCommands: DSLCommand[] = [
     name: 'Select',
     syntax: `Select
   state closed
-  Trigger hor between ver-cen pad 8 12 bg #1E1E1E rad 6 bor 1 boc #333 minw 180
+  Trigger hor between ver-cen pad 8 12 col #1E1E1E rad 6 bor 1 boc #333 minw 180
     onclick toggle
     "Select option..."
     icon "chevron-down"
-  Content ver bg #1E1E1E rad 8 pad 4 bor 1 boc #333
+  Content ver col #1E1E1E rad 8 pad 4 bor 1 boc #333
     if open
     Group ver
       Label pad 8 size 11 col #666 uppercase "Category"
-      Item pad 8 12 rad 4 hover-bg #3B82F6
+      Item pad 8 12 rad 4 hover-col #3B82F6
         onclick close
         "Option 1"
-      Item pad 8 12 rad 4 hover-bg #3B82F6
+      Item pad 8 12 rad 4 hover-col #3B82F6
         onclick close
         "Option 2"`,
     description: 'Select dropdown',
@@ -246,10 +246,10 @@ const libraryCommands: DSLCommand[] = [
   },
   {
     name: 'Switch',
-    syntax: `Switch w 44 h 24 rad 12 bg #333 pad 2
+    syntax: `Switch w 44 h 24 rad 12 col #333 pad 2
   state off
   onclick toggle
-  Thumb w 20 h 20 rad 10 bg #FFF
+  Thumb w 20 h 20 rad 10 col #FFF
     if on
     mar_l 20`,
     description: 'Toggle switch',
@@ -276,13 +276,13 @@ const libraryCommands: DSLCommand[] = [
   Item hor ver-cen gap 8
     onclick change to option1
     Radio w 20 h 20 rad 10 bor 2 boc #444 ver cen
-      Box w 10 h 10 rad 5 bg #3B82F6
+      Box w 10 h 10 rad 5 col #3B82F6
         if option1
     "Option 1"
   Item hor ver-cen gap 8
     onclick change to option2
     Radio w 20 h 20 rad 10 bor 2 boc #444 ver cen
-      Box w 10 h 10 rad 5 bg #3B82F6
+      Box w 10 h 10 rad 5 col #3B82F6
         if option2
     "Option 2"`,
     description: 'Radio button group',
@@ -292,9 +292,9 @@ const libraryCommands: DSLCommand[] = [
   {
     name: 'Slider',
     syntax: `Slider hor ver-cen w 200 h 20
-  Track h 4 bg #333 rad 2 grow
-  Range h 4 bg #3B82F6 rad 2 w 100
-  Thumb w 20 h 20 rad 10 bg #FFF bor 2 boc #3B82F6 mar_l 90`,
+  Track h 4 col #333 rad 2 grow
+  Range h 4 col #3B82F6 rad 2 w 100
+  Thumb w 20 h 20 rad 10 col #FFF bor 2 boc #3B82F6 mar_l 90`,
     description: 'Slider input',
     category: 'Components',
     keywords: ['slider', 'range', 'schieberegler', 'wert']
@@ -303,11 +303,11 @@ const libraryCommands: DSLCommand[] = [
   // Feedback
   {
     name: 'Toast',
-    syntax: `Toast hor gap 12 pad 16 bg #1E1E1E rad 8 bor 1 boc #333 w 360
+    syntax: `Toast hor gap 12 pad 16 col #1E1E1E rad 8 bor 1 boc #333 w 360
   Box ver gap 4 grow
     Title size 14 weight 600 "Success!"
     Description size 13 col #888 "Your changes have been saved."
-  Action pad 6 8 bg #333 rad 4 hover-bg #444 size 12
+  Action pad 6 8 col #333 rad 4 hover-col #444 size 12
     "Undo"`,
     description: 'Notification toast',
     category: 'Components',
@@ -315,15 +315,15 @@ const libraryCommands: DSLCommand[] = [
   },
   {
     name: 'Progress',
-    syntax: `Progress h 8 bg #333 rad 4 w 200
-  Indicator h 8 bg #3B82F6 rad 4 w 120`,
+    syntax: `Progress h 8 col #333 rad 4 w 200
+  Indicator h 8 col #3B82F6 rad 4 w 120`,
     description: 'Progress bar',
     category: 'Components',
     keywords: ['progress', 'loading', 'fortschritt', 'laden', 'bar']
   },
   {
     name: 'Avatar',
-    syntax: `Avatar w 48 h 48 rad 24 bg #333 ver cen
+    syntax: `Avatar w 48 h 48 rad 24 col #333 ver cen
   Image "avatar.jpg" 48 48 rad 24 fit cover
   Fallback size 16 weight 600 col #FFF "AB"`,
     description: 'Avatar with fallback',
@@ -367,8 +367,9 @@ export const dslCommands: DSLCommand[] = [
   { name: 'maxw', syntax: 'maxw 400', description: 'Maximum width', category: 'Size', keywords: ['max-width', 'maximalbreite'] },
   { name: 'full', syntax: 'full', description: '100% width & height', category: 'Size', keywords: ['fullscreen', 'voll', 'komplett'] },
 
-  // Colors
-  { name: 'col', syntax: 'col #333', description: 'Color (background/text)', category: 'Colors', keywords: ['color', 'farbe', 'background', 'hintergrund', 'text', 'schrift', 'textfarbe'] },
+  // Colors: col = text color, bg = background color
+  { name: 'col', syntax: 'col #333', description: 'Text color', category: 'Colors', keywords: ['color', 'farbe', 'text', 'schrift', 'textfarbe'] },
+  { name: 'bg', syntax: 'bg #333', description: 'Background color', category: 'Colors', keywords: ['background', 'hintergrund', 'bgcolor', 'hintergrundfarbe'] },
   { name: 'boc', syntax: 'boc #666', description: 'Border color', category: 'Colors', keywords: ['border-color', 'rahmenfarbe'] },
 
   // Border
@@ -381,9 +382,9 @@ export const dslCommands: DSLCommand[] = [
   { name: 'weight', syntax: 'weight 600', description: 'Font weight', category: 'Typography', keywords: ['font-weight', 'bold', 'fett', 'dick'] },
   { name: 'font', syntax: 'font "Inter"', description: 'Font family', category: 'Typography', keywords: ['font-family', 'schriftart'] },
 
-  // Hover
+  // Hover: hover-col = text color, hover-bg = background color
+  { name: 'hover-col', syntax: 'hover-col #FFF', description: 'Text color on hover', category: 'Hover', keywords: ['hover', 'color', 'text', 'textfarbe'] },
   { name: 'hover-bg', syntax: 'hover-bg #444', description: 'Background on hover', category: 'Hover', keywords: ['hover', 'background', 'hintergrund'] },
-  { name: 'hover-col', syntax: 'hover-col #FFF', description: 'Text color on hover', category: 'Hover', keywords: ['hover', 'color', 'text'] },
 
   // Events
   { name: 'onclick', syntax: 'onclick\n  ', description: 'Click event handler', category: 'Events', keywords: ['click', 'klick', 'event', 'aktion'] },
@@ -394,7 +395,7 @@ export const dslCommands: DSLCommand[] = [
   { name: 'onhover', syntax: 'onhover\n  ', description: 'Hover event handler', category: 'Events', keywords: ['hover', 'mouse', 'maus'] },
 
   // States
-  { name: 'state', syntax: 'state default\n  bg #333', description: 'Define a state', category: 'States', keywords: ['state', 'zustand', 'status'] },
+  { name: 'state', syntax: 'state default\n  col #333', description: 'Define a state', category: 'States', keywords: ['state', 'zustand', 'status'] },
   { name: 'state visible', syntax: 'state visible\n  \nstate hidden\n  ', description: 'Visible/hidden states', category: 'States', keywords: ['visible', 'hidden', 'sichtbar', 'versteckt'] },
 
   // Icon

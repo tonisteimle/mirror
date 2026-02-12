@@ -21,15 +21,18 @@ test.describe('Mirror App - Basic Functionality', () => {
   test('should switch between tabs', async ({ page }) => {
     // Click Components tab
     await page.getByRole('button', { name: 'Components' }).click()
-    await expect(page.getByRole('button', { name: 'Components' })).toHaveCSS('border-bottom-color', 'rgb(91, 168, 245)')
+    // Active tab has brighter text color and heavier font weight
+    await expect(page.getByRole('button', { name: 'Components' })).toHaveCSS('font-weight', '600')
 
     // Click Tokens tab
     await page.getByRole('button', { name: 'Tokens' }).click()
-    await expect(page.getByRole('button', { name: 'Tokens' })).toHaveCSS('border-bottom-color', 'rgb(91, 168, 245)')
+    await expect(page.getByRole('button', { name: 'Tokens' })).toHaveCSS('font-weight', '600')
+    // Previous tab should be inactive
+    await expect(page.getByRole('button', { name: 'Components' })).toHaveCSS('font-weight', '500')
 
     // Click Page tab
     await page.getByRole('button', { name: 'Page' }).click()
-    await expect(page.getByRole('button', { name: 'Page' })).toHaveCSS('border-bottom-color', 'rgb(91, 168, 245)')
+    await expect(page.getByRole('button', { name: 'Page' })).toHaveCSS('font-weight', '600')
   })
 })
 
@@ -192,46 +195,27 @@ test.describe('Mirror App - Tokens', () => {
     await page.reload()
   })
 
-  test('should have default tokens', async ({ page }) => {
+  test('should start with empty tokens', async ({ page }) => {
     await page.getByRole('button', { name: 'Tokens' }).click()
 
-    await expect(page.locator('.cm-content')).toContainText('$primary')
-    await expect(page.locator('.cm-content')).toContainText('$bg')
-    await expect(page.locator('.cm-content')).toContainText('$text')
+    // Token editor should be empty by default
+    const content = await page.locator('.cm-content').textContent()
+    expect(content?.trim()).toBe('')
   })
 
-  test('should use tokens in layout', async ({ page }) => {
-    // Go to Page tab
-    await page.getByRole('button', { name: 'Page' }).click()
-
+  test('should create tokens in tokens tab', async ({ page }) => {
+    // Go to Tokens tab
+    await page.getByRole('button', { name: 'Tokens' }).click()
     const editor = page.locator('.cm-editor')
     await editor.click()
 
-    // Type component - after "Box " PropertyPicker opens, close it first
-    await page.keyboard.type('Box ')
-    await page.keyboard.press('Escape')
-    await page.waitForTimeout(50)
+    // Create a token
+    await page.keyboard.type(':primary #3B82F6')
+    await page.waitForTimeout(300)
 
-    // Continue typing the properties
-    await editor.click()
-    await page.keyboard.type('bg ')
-    // ColorPicker opens after "bg " showing tokens - click on $primary token
-    await page.waitForTimeout(100)
-
-    // Click on the $primary token in the ColorPicker
-    await page.click('text=$primary')
-    await page.waitForTimeout(50)
-
-    // Now continue with the text content
-    await editor.click()
-    await page.keyboard.press('Enter')
-    await page.keyboard.type('  "Token Test"')
-
-    await page.waitForTimeout(500)
-
-    // Preview should render (no error)
-    const preview = page.locator('[style*="flex: 1"]').last()
-    await expect(preview).toContainText('Token Test')
+    // Verify the token was created
+    await expect(page.locator('.cm-content')).toContainText(':primary')
+    await expect(page.locator('.cm-content')).toContainText('#3B82F6')
   })
 })
 
@@ -272,33 +256,3 @@ test.describe('Mirror App - Auto-Save', () => {
   })
 })
 
-test.describe('Mirror App - AI Assistant', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
-    await page.reload()
-  })
-
-  test('should open AI assistant panel with ? key', async ({ page }) => {
-    const editor = page.locator('.cm-editor')
-    await editor.click()
-
-    // Press ? to open AI assistant
-    await page.keyboard.type('?')
-
-    // Check AI assistant panel is visible
-    await expect(page.locator('text=AI Assistent')).toBeVisible()
-    await expect(page.getByPlaceholder('Was möchtest du erstellen?')).toBeVisible()
-  })
-
-  test('should close AI assistant panel with Escape', async ({ page }) => {
-    const editor = page.locator('.cm-editor')
-    await editor.click()
-
-    await page.keyboard.type('?')
-    await expect(page.locator('text=AI Assistent')).toBeVisible()
-
-    await page.keyboard.press('Escape')
-    await expect(page.locator('text=AI Assistent')).not.toBeVisible()
-  })
-})

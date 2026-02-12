@@ -59,7 +59,6 @@ export function propsToString(p: Record<string, string | number | boolean>): str
   if (p.grow) parts.push('grow')
 
   // Colors
-  if (p.bg) parts.push(`bg ${p.bg}`)
   if (p.col) parts.push(`col ${p.col}`)
   if (p.boc) parts.push(`boc ${p.boc}`)
 
@@ -87,7 +86,6 @@ export function propsToString(p: Record<string, string | number | boolean>): str
   if (p.icon) parts.push(`icon "${p.icon}"`)
 
   // Hover states
-  if (p['hover-bg']) parts.push(`hover-bg ${p['hover-bg']}`)
   if (p['hover-col']) parts.push(`hover-col ${p['hover-col']}`)
   if (p['hover-boc']) parts.push(`hover-boc ${p['hover-boc']}`)
 

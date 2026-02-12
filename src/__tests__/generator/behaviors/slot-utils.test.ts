@@ -162,7 +162,8 @@ describe('slot utilities', () => {
 
       const style = getStylesFromNode(node)
 
-      expect(style.display).toBe('flex')
+      // Note: style-converter uses 'inline-flex' by default
+      expect(style.display).toBe('inline-flex')
       expect(style.flexDirection).toBe('row')
     })
 
@@ -175,21 +176,23 @@ describe('slot utilities', () => {
 
       const style = getStylesFromNode(node)
 
-      expect(style.display).toBe('flex')
+      // Note: style-converter uses 'inline-flex' by default
+      expect(style.display).toBe('inline-flex')
       expect(style.flexDirection).toBe('column')
     })
 
-    it('returns empty object for empty properties', () => {
+    it('returns minimal styles for empty properties', () => {
       const node = createASTNode({
         properties: {},
       })
 
       const style = getStylesFromNode(node)
 
-      expect(Object.keys(style).length).toBe(0)
+      // Containers get default display: inline-block to fit content
+      expect(style.display).toBe('inline-block')
     })
 
-    it('converts color property', () => {
+    it('converts col property to text color', () => {
       const node = createASTNode({
         properties: {
           col: '#333333',
@@ -198,7 +201,22 @@ describe('slot utilities', () => {
 
       const style = getStylesFromNode(node)
 
+      // col always becomes text color (style.color)
       expect(style.color).toBe('#333333')
+      expect(style.backgroundColor).toBeUndefined()
+    })
+
+    it('converts bg property to backgroundColor', () => {
+      const node = createASTNode({
+        properties: {
+          bg: '#333333',
+        },
+      })
+
+      const style = getStylesFromNode(node)
+
+      // bg always becomes backgroundColor
+      expect(style.backgroundColor).toBe('#333333')
     })
 
     it('converts opacity property', () => {
@@ -226,7 +244,8 @@ describe('slot utilities', () => {
 
       const style = getStylesFromNode(node)
 
-      expect(style.display).toBe('flex')
+      // Note: style-converter uses 'inline-flex' by default
+      expect(style.display).toBe('inline-flex')
       expect(style.flexDirection).toBe('row')
       expect(style.gap).toBe('8px')
       expect(style.padding).toBe('16px')

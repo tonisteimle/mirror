@@ -13,16 +13,16 @@ export const SwitchComponent: LibraryComponent = {
         w: 20,
         h: 20,
         rad: 10,
-        bg: '#FFFFFF'
+        col: '$text'
       }
     }
   ],
   defaultStates: ['off', 'on'],
   actions: ['toggle'],
   definitions: `// Switch Components
-Switch: hor w 44 h 24 rad 12 bg #333 pad 2
-SwitchOn: hor w 44 h 24 rad 12 bg #3B82F6 pad 2 hor-r
-SwitchThumb: w 20 h 20 rad 10 bg #FFF`,
+Switch: hor w 44 h 24 rad 12 bg $border pad 2
+SwitchOn: hor w 44 h 24 rad 12 bg $primary pad 2 hor-r
+SwitchThumb: w 20 h 20 rad 10`,
   layoutExample: `Switch
   state off
   SwitchThumb

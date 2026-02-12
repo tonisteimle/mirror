@@ -48,8 +48,6 @@ export const token = {
     createToken('COMPONENT_NAME', value, { line, column }),
   keyword: (value: string, line = 0, column = 0): Token =>
     createToken('KEYWORD', value, { line, column }),
-  modifier: (value: string, line = 0, column = 0): Token =>
-    createToken('MODIFIER', value, { line, column }),
   tokenRef: (value: string, line = 0, column = 0): Token =>
     createToken('TOKEN_REF', value, { line, column }),
   direction: (value: string, line = 0, column = 0): Token =>
@@ -78,7 +76,6 @@ export function createASTNode(overrides: Partial<ASTNode> = {}): ASTNode {
     type: 'component',
     name: 'Box',
     id: 'box1',
-    modifiers: [],
     properties: {},
     children: [],
     ...overrides,
@@ -139,7 +136,6 @@ export function createComponentTemplate(
   overrides: Partial<ComponentTemplate> = {}
 ): ComponentTemplate {
   return {
-    modifiers: [],
     properties: {},
     children: [],
     ...overrides,
@@ -204,7 +200,6 @@ export function compareCondition(
 export function createStyleMixin(overrides: Partial<StyleMixin> = {}): StyleMixin {
   return {
     properties: {},
-    modifiers: [],
     ...overrides,
   }
 }

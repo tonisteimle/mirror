@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { colors } from '../theme'
-import { STORAGE_KEYS } from '../constants'
 import { setApiKey, getApiKey, hasApiKey } from '../lib/ai'
 
 export type AutoCompleteMode = 'always' | 'delay' | 'off'
@@ -45,10 +44,9 @@ export function SettingsDialog({
   }, [apiKeyValue])
 
   const handleClearApiKey = useCallback(() => {
-    setApiKey('')
+    setApiKey('')  // Also removes from localStorage
     setApiKeyValue('')
     setHasKey(false)
-    localStorage.removeItem(STORAGE_KEYS.API_KEY)
   }, [])
 
   const maskedKey = hasKey

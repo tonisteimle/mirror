@@ -16,8 +16,7 @@ export const AvatarComponent: LibraryComponent = {
       required: false,
       multiple: false,
       defaultProps: {
-        bg: '#3B82F6',
-        col: '#FFFFFF',
+        bg: '$primary',
         weight: 600
       }
     }
@@ -25,9 +24,9 @@ export const AvatarComponent: LibraryComponent = {
   defaultStates: ['loading', 'loaded', 'error'],
   actions: [],
   definitions: `// Avatar
-Avatar: w 48 h 48 rad 24 ver cen bg #333
+Avatar: w 48 h 48 rad 24 ver cen bg $border
 AvatarImage: w 48 h 48 rad 24 fit cover
-AvatarFallback: w 48 h 48 rad 24 bg #3B82F6 col #FFF weight 600 ver cen`,
+AvatarFallback: w 48 h 48 rad 24 bg $primary weight 600 ver cen`,
   layoutExample: `Avatar
   AvatarImage src "https://example.com/avatar.jpg"
   AvatarFallback "JD"`

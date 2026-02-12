@@ -15,7 +15,8 @@ import type {
 } from './types'
 import { parseExpression } from './expression-parser'
 import { parseCondition } from './condition-parser'
-import { ANIMATION_KEYWORDS, POSITION_KEYWORDS } from '../dsl/properties'
+import { parseAction } from './state-parser'
+import { ACTION_KEYWORDS } from '../dsl/properties'
 
 /**
  * Parse the `events` block.
@@ -117,17 +118,9 @@ function parseCentralizedEventHandler(ctx: ParserContext, baseIndent: number): C
           if (conditional) {
             handler.actions.push(conditional)
           }
-        }
-        // Check for property assignment: Component.property = value
-        else if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.peek(1)?.type === 'ASSIGNMENT') {
-          const action = parsePropertyAssignment(ctx)
-          if (action) {
-            handler.actions.push(action)
-          }
-        }
-        // Check for action keyword (open, close, toggle, page, etc.)
-        else if (ctx.current()?.type === 'ACTION') {
-          const action = parseActionStatement(ctx)
+        } else {
+          // Property assignment or action keyword
+          const action = parseEventAction(ctx)
           if (action) {
             handler.actions.push(action)
           }
@@ -151,6 +144,49 @@ function parseCentralizedEventHandler(ctx: ParserContext, baseIndent: number): C
 }
 
 /**
+ * Parse a single event action (property assignment or action keyword).
+ */
+function parseEventAction(ctx: ParserContext): ActionStatement | null {
+  // Check for property assignment: Component.property = value
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.peek(1)?.type === 'ASSIGNMENT') {
+    return parsePropertyAssignment(ctx)
+  }
+  // Check for action keyword: open, close, toggle, etc. (now tokenized as COMPONENT_NAME)
+  const token = ctx.current()
+  if (token?.type === 'COMPONENT_NAME' && ACTION_KEYWORDS.has(token.value)) {
+    return parseAction(ctx)
+  }
+  return null
+}
+
+/**
+ * Parse actions in an indented block until indent decreases.
+ */
+function parseActionsBlock(ctx: ParserContext, baseIndent: number): ActionStatement[] {
+  const actions: ActionStatement[] = []
+
+  while (ctx.current()?.type === 'INDENT') {
+    const actionIndent = parseInt(ctx.current()!.value, 10)
+    if (actionIndent > baseIndent) {
+      ctx.advance() // consume indent
+
+      const action = parseEventAction(ctx)
+      if (action) {
+        actions.push(action)
+      }
+
+      if (ctx.current()?.type === 'NEWLINE') {
+        ctx.advance()
+      }
+    } else {
+      break
+    }
+  }
+
+  return actions
+}
+
+/**
  * Parse a conditional block within centralized events.
  * Syntax: `if condition` followed by indented then-actions, optionally followed by `else` block
  */
@@ -170,34 +206,8 @@ function parseConditionalBlock(ctx: ParserContext, baseIndent: number): Conditio
     ctx.advance()
   }
 
-  // Parse then-actions (deeper indent)
-  while (ctx.current()?.type === 'INDENT') {
-    const actionIndent = parseInt(ctx.current()!.value, 10)
-    if (actionIndent > baseIndent) {
-      ctx.advance() // consume indent
-
-      // Check for property assignment
-      if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.peek(1)?.type === 'ASSIGNMENT') {
-        const action = parsePropertyAssignment(ctx)
-        if (action) {
-          conditional.thenActions.push(action)
-        }
-      }
-      // Check for action keyword
-      else if (ctx.current()?.type === 'ACTION') {
-        const action = parseActionStatement(ctx)
-        if (action) {
-          conditional.thenActions.push(action)
-        }
-      }
-
-      if (ctx.current()?.type === 'NEWLINE') {
-        ctx.advance()
-      }
-    } else {
-      break
-    }
-  }
+  // Parse then-actions
+  conditional.thenActions = parseActionsBlock(ctx, baseIndent)
 
   // Check for 'else'
   if (ctx.current()?.type === 'INDENT') {
@@ -208,37 +218,13 @@ function parseConditionalBlock(ctx: ParserContext, baseIndent: number): Conditio
 
       if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'else') {
         ctx.advance() // consume 'else'
-        conditional.elseActions = []
 
         if (ctx.current()?.type === 'NEWLINE') {
           ctx.advance()
         }
 
         // Parse else-actions
-        while (ctx.current()?.type === 'INDENT') {
-          const actionIndent = parseInt(ctx.current()!.value, 10)
-          if (actionIndent > baseIndent) {
-            ctx.advance() // consume indent
-
-            if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.peek(1)?.type === 'ASSIGNMENT') {
-              const action = parsePropertyAssignment(ctx)
-              if (action) {
-                conditional.elseActions.push(action)
-              }
-            } else if (ctx.current()?.type === 'ACTION') {
-              const action = parseActionStatement(ctx)
-              if (action) {
-                conditional.elseActions.push(action)
-              }
-            }
-
-            if (ctx.current()?.type === 'NEWLINE') {
-              ctx.advance()
-            }
-          } else {
-            break
-          }
-        }
+        conditional.elseActions = parseActionsBlock(ctx, baseIndent)
       } else {
         ctx.pos = savedPos // rewind
       }
@@ -272,59 +258,4 @@ function parsePropertyAssignment(ctx: ParserContext): ActionStatement | null {
     value: expr ?? undefined,
     line
   }
-}
-
-/**
- * Parse an action statement: open, close, toggle, page, etc.
- */
-function parseActionStatement(ctx: ParserContext): ActionStatement | null {
-  const line = ctx.current()!.line
-  const actionType = ctx.advance().value // open, close, toggle, page, etc.
-
-  const action: ActionStatement = {
-    type: actionType as ActionStatement['type'],
-    line
-  }
-
-  // Get target (component name)
-  if (ctx.current()?.type === 'COMPONENT_NAME') {
-    action.target = ctx.advance().value
-  }
-
-  // For 'change X to Y'
-  if (actionType === 'change' && ctx.current()?.type === 'ACTION' && ctx.current()?.value === 'to') {
-    ctx.advance() // consume 'to'
-    if (ctx.current()?.type === 'COMPONENT_NAME' || ctx.current()?.type === 'ACTION') {
-      action.toState = ctx.advance().value
-    }
-  }
-
-  // For open/close: optionally parse position, animation and duration
-  if ((actionType === 'open' || actionType === 'close') && ctx.current()) {
-    // Position keyword (below, above, left, right, center)
-    if (ctx.current()?.type === 'POSITION') {
-      action.position = ctx.advance().value as ActionStatement['position']
-    } else if (ctx.current()?.type === 'COMPONENT_NAME' && POSITION_KEYWORDS.has(ctx.current()!.value)) {
-      action.position = ctx.advance().value as ActionStatement['position']
-    }
-
-    // Animation keyword (slide-up, fade, scale, etc.)
-    if (ctx.current()?.type === 'ANIMATION') {
-      action.animation = ctx.advance().value
-      // Optional: duration in ms
-      if (ctx.current()?.type === 'NUMBER') {
-        action.duration = parseInt(ctx.advance().value, 10)
-      }
-    } else if (ctx.current()?.type === 'COMPONENT_NAME' || ctx.current()?.type === 'PROPERTY') {
-      const maybeAnimation = ctx.current()!.value
-      if (ANIMATION_KEYWORDS.has(maybeAnimation)) {
-        action.animation = ctx.advance().value
-        if (ctx.current()?.type === 'NUMBER') {
-          action.duration = parseInt(ctx.advance().value, 10)
-        }
-      }
-    }
-  }
-
-  return action
 }

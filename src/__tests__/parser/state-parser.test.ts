@@ -39,17 +39,17 @@ describe('state-parser', () => {
     })
 
     it('parses state with properties', () => {
-      const ctx = createContext('state hover\n  bg #F00')
+      const ctx = createContext('state hover\n  col #F00')
       const result = parseStateDefinition(ctx, 0)
       expect(result?.name).toBe('hover')
-      expect(result?.properties.bg).toBe('#F00')
+      expect(result?.properties.col).toBe('#F00')
     })
 
     it('parses state with multiple properties', () => {
-      const ctx = createContext('state active\n  bg #00F\n  opacity 50')
+      const ctx = createContext('state active\n  col #00F\n  opacity 50')
       const result = parseStateDefinition(ctx, 0)
       expect(result?.name).toBe('active')
-      expect(result?.properties.bg).toBe('#00F')
+      expect(result?.properties.col).toBe('#00F')
       expect(result?.properties.opacity).toBe(50)
     })
 

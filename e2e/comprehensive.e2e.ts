@@ -764,7 +764,9 @@ test.describe('Comprehensive Editor Tests', () => {
 
     test('rapid color input', async ({ page }) => {
       await clearAndType(page, 'col #')
-      await page.keyboard.type('AABBCC', { delay: 5 })
+      // Wait for color picker to fully open before typing
+      await page.waitForTimeout(200)
+      await page.keyboard.type('AABBCC', { delay: 10 })
       await page.waitForTimeout(100)
       await page.keyboard.press('Enter')
 

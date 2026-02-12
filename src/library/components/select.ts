@@ -14,20 +14,20 @@ export const SelectComponent: LibraryComponent = {
         'align_main': 'between',
         'align_cross': 'cen',
         pad: 12,
-        bg: '#252525',
+        bg: '$surface-hover',
         bor: 1,
-        boc: '#444',
+        boc: '$border-hover',
         rad: 6,
         minw: 180
       }
     },
     {
-      name: 'Content',
+      name: 'Options',
       required: true,
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 8,
         pad: 4
       }
@@ -49,11 +49,11 @@ export const SelectComponent: LibraryComponent = {
         pad_u: 8,
         pad_d: 4,
         size: 11,
-        col: '#888'
+        col: '$text-muted'
       }
     },
     {
-      name: 'Item',
+      name: 'Option',
       required: true,
       multiple: true,
       defaultProps: {
@@ -63,29 +63,29 @@ export const SelectComponent: LibraryComponent = {
         pad_l: 12,
         pad_r: 12,
         rad: 4,
-        'hover-bg': '#3B82F6'
+        'hover-bg': '$primary'
       }
     }
   ],
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Select Components
-SelectTrigger: hor between ver-cen pad 12 bg #252525 bor 1 boc #444 rad 6 minw 180 hover-bg #333
-SelectContent: ver bg #1E1E1E rad 8 pad 4 bor 1 boc #333
+SelectTrigger: hor between ver-cen pad 12 bg $surface-hover bor 1 boc $border-hover rad 6 minw 180 hover-bg $border
+SelectOptions: ver bg $surface rad 8 pad 4 bor 1 boc $border
 SelectGroup: ver
-SelectLabel: pad 8 12 size 11 col #888
-SelectItem: hor ver-cen pad 8 12 rad 4 hover-bg #3B82F6`,
+SelectLabel: pad 8 12 size 11 col $text-muted
+SelectOption: hor ver-cen pad 8 12 rad 4 hover-bg $primary`,
   layoutExample: `Select
   state closed
   SelectTrigger
     onclick toggle
     "Select option..."
     icon "chevron-down"
-  SelectContent
+  SelectOptions
     if open
     SelectGroup
       SelectLabel "Category"
-      SelectItem "Option 1"
-      SelectItem "Option 2"
-      SelectItem "Option 3"`
+      SelectOption "Option 1"
+      SelectOption "Option 2"
+      SelectOption "Option 3"`
 }

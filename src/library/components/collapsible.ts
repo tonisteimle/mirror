@@ -14,7 +14,7 @@ export const CollapsibleComponent: LibraryComponent = {
         'align_main': 'between',
         'align_cross': 'cen',
         pad: 12,
-        bg: '#252525',
+        bg: '$surface-hover',
         rad: 6
       }
     },
@@ -32,7 +32,7 @@ export const CollapsibleComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Collapsible
-CollapsibleTrigger: hor between ver-cen pad 12 bg #252525 rad 6 hover-bg #333
+CollapsibleTrigger: hor between ver-cen pad 12 bg $surface-hover rad 6 hover-bg $border
 CollapsibleContent: ver pad 12 gap 8`,
   layoutExample: `Collapsible
   state closed

@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import { useMemo, useCallback, memo } from 'react'
 import { colors } from '../theme'
-import { usePickerBehavior } from '../hooks/usePickerBehavior'
-import { BasePicker, PickerList, PickerFooter, PickerSearch } from './picker'
+import { usePickerWithSearch } from '../hooks/usePickerWithSearch'
+import { BasePicker, PickerList, PickerFooter, PickerSearch, PickerItem, EmptyState } from './picker'
 import type { Position } from '../types/common'
-import { parseTokensWithTypes } from '../utils/token-type-inference'
+import { parseTokens } from '../utils/token-parser'
 import { isTokenTypeValidForProperty } from '../data/property-token-types'
-import type { TypedToken } from '../types/token-types'
+import type { ParsedToken } from '../utils/token-parser'
 
 interface TokenPickerProps {
   isOpen: boolean
@@ -30,7 +30,7 @@ const TYPE_STYLES: Record<string, { bg: string; color: string; label: string }> 
   unknown: { bg: '#6B728020', color: '#6B7280', label: '?' },
 }
 
-function TokenTypeIndicator({ token }: { token: TypedToken }) {
+function TokenTypeIndicator({ token }: { token: ParsedToken }) {
   if (token.type === 'color') {
     return (
       <div
@@ -68,69 +68,43 @@ function TokenTypeIndicator({ token }: { token: TypedToken }) {
   )
 }
 
+// Stable callback for searchable fields
+const getTokenSearchableFields = (token: ParsedToken) => [token.name, token.value]
+
 export const TokenPicker = memo(function TokenPicker({ isOpen, onClose, onSelect, position, tokensCode, propertyContext }: TokenPickerProps) {
-  const [search, setSearch] = useState('')
-
   // Parse tokens with type inference
-  const allTokens = useMemo(() => parseTokensWithTypes(tokensCode), [tokensCode])
+  const allTokens = useMemo(() => parseTokens(tokensCode), [tokensCode])
 
-  // Filter tokens by property context and search term
-  const filteredTokens = useMemo(() => {
-    let tokens = allTokens
+  // First filter by property context if provided
+  const contextFilteredTokens = useMemo(() => {
+    if (!propertyContext) return allTokens
+    return allTokens.filter(t => isTokenTypeValidForProperty(propertyContext, t.type))
+  }, [allTokens, propertyContext])
 
-    // First filter by property context if provided
-    if (propertyContext) {
-      tokens = tokens.filter(t => isTokenTypeValidForProperty(propertyContext, t.type))
-    }
-
-    // Then filter by search term
-    if (search) {
-      const searchLower = search.toLowerCase()
-      tokens = tokens.filter(
-        t =>
-          t.name.toLowerCase().includes(searchLower) ||
-          t.value.toLowerCase().includes(searchLower)
-      )
-    }
-
-    return tokens
-  }, [allTokens, propertyContext, search])
-
-  // Reset search on open
-  useEffect(() => {
-    if (isOpen) {
-      setSearch('')
-    }
-  }, [isOpen])
-
-  const handleSelect = useCallback(
-    (index: number) => {
-      if (filteredTokens[index]) {
-        onSelect(`$${filteredTokens[index].name}`)
-        onClose()
-      }
-    },
-    [filteredTokens, onSelect, onClose]
+  // Handle token selection - format as $tokenName
+  const handleTokenSelect = useCallback(
+    (token: ParsedToken) => onSelect(`$${token.name}`),
+    [onSelect]
   )
 
+  // Combined search, filter, and navigation
   const {
+    query: search,
+    setQuery: setSearch,
+    filteredItems: filteredTokens,
     selectedIndex,
     setSelectedIndex,
     listRef,
     inputRef,
     handleKeyDown,
-    resetSelection,
-  } = usePickerBehavior({
+    handleSelect,
+  } = usePickerWithSearch({
     isOpen,
     onClose,
-    itemCount: filteredTokens.length,
-    onSelect: handleSelect,
+    items: contextFilteredTokens,
+    getSearchableFields: getTokenSearchableFields,
+    onSelectItem: handleTokenSelect,
   })
-
-  // Reset selection when filter changes
-  useEffect(() => {
-    resetSelection()
-  }, [search, resetSelection])
 
   return (
     <BasePicker
@@ -160,37 +134,22 @@ export const TokenPicker = memo(function TokenPicker({ isOpen, onClose, onSelect
       {/* Token list */}
       <PickerList ref={listRef} padding="4px">
         {filteredTokens.length === 0 ? (
-          <div
-            style={{
-              padding: '16px',
-              textAlign: 'center',
-              color: colors.textMuted,
-              fontSize: '12px',
-            }}
-          >
+          <EmptyState>
             {allTokens.length === 0
               ? 'Keine Tokens definiert'
               : propertyContext
                 ? `Keine passenden Tokens für "${propertyContext}"`
                 : 'Kein Token gefunden'}
-          </div>
+          </EmptyState>
         ) : (
           filteredTokens.map((token, index) => (
-            <div
+            <PickerItem
               key={token.name}
-              data-index={index}
-              data-selected={index === selectedIndex}
+              index={index}
+              isSelected={index === selectedIndex}
               onClick={() => handleSelect(index)}
               onMouseEnter={() => setSelectedIndex(index)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 10px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                backgroundColor: index === selectedIndex ? colors.selected : 'transparent',
-              }}
+              style={{ gap: '10px', padding: '8px 10px', borderRadius: '4px' }}
             >
               {/* Type indicator */}
               <TokenTypeIndicator token={token} />
@@ -219,7 +178,7 @@ export const TokenPicker = memo(function TokenPicker({ isOpen, onClose, onSelect
                   {token.value}
                 </div>
               </div>
-            </div>
+            </PickerItem>
           ))
         )}
       </PickerList>

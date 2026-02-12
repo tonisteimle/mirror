@@ -5,7 +5,9 @@
 export {
   composeConditionalStyles,
   composeFinalStyle,
-  createHighlightStyle
+  createHighlightStyle,
+  getAnimationStyle,
+  getAnimationClasses
 } from './style-composer'
 
 export {

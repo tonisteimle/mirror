@@ -17,7 +17,7 @@
 
 import type { ParserContext } from './parser-context'
 import type { ASTNode, ConditionExpr } from './types'
-import { parseStateDefinition, parseVariableDeclaration, parseEventHandler } from './state-parser'
+import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction } from './state-parser'
 import { parseCondition } from './condition-parser'
 import { createTextNode } from './parser-utils'
 import { isTokenSequence } from './types'
@@ -64,16 +64,70 @@ export function parseChildren(
       if (childIndent > baseIndent) {
         ctx.advance() // consume indent
 
-        // Check if it's just a string (text content)
+        // Check if it's strings with properties (inline text styling)
+        // Handles: "Normal" "bold" weight 600 "normal again"
         if (ctx.current()?.type === 'STRING') {
-          const stringToken = ctx.current()!
-          const textNode = createTextNode(
-            ctx.advance().value,
-            ctx.generateId.bind(ctx),
-            stringToken.line,
-            stringToken.column
-          )
-          instanceChildren.push(textNode)
+          // Process all consecutive strings with their properties
+          while (ctx.current()?.type === 'STRING') {
+            const stringToken = ctx.current()!
+            const textNode = createTextNode(
+              ctx.advance().value,
+              ctx.generateId.bind(ctx),
+              stringToken.line,
+              stringToken.column
+            )
+
+            // Parse properties after this string (stop at next STRING or NEWLINE)
+            while (
+              ctx.current() &&
+              ctx.current()!.type !== 'NEWLINE' &&
+              ctx.current()!.type !== 'EOF' &&
+              ctx.current()!.type !== 'STRING'
+            ) {
+              const afterToken = ctx.current()!
+              if (afterToken.type === 'PROPERTY') {
+                const propName = ctx.advance().value
+                // Parse property value
+                const valueToken = ctx.current()
+                if (valueToken?.type === 'NUMBER') {
+                  textNode.properties[propName] = parseInt(ctx.advance().value, 10)
+                } else if (valueToken?.type === 'COLOR') {
+                  textNode.properties[propName] = ctx.advance().value
+                } else if (valueToken?.type === 'TOKEN_REF') {
+                  const tokenName = ctx.advance().value
+                  const tokenValue = ctx.designTokens.get(tokenName)
+                  if (tokenValue !== undefined && !isTokenSequence(tokenValue)) {
+                    textNode.properties[propName] = tokenValue
+                  }
+                } else if (valueToken?.type === 'STRING') {
+                  textNode.properties[propName] = ctx.advance().value
+                } else {
+                  // Boolean property (no value)
+                  textNode.properties[propName] = true
+                }
+              } else if (afterToken.type === 'COLOR') {
+                // Bare color → text color
+                textNode.properties['col'] = ctx.advance().value
+              } else if (afterToken.type === 'NUMBER') {
+                // Bare number → font size
+                textNode.properties['size'] = parseInt(ctx.advance().value, 10)
+              } else if (afterToken.type === 'TOKEN_REF') {
+                // Bare token ref → could be color or size
+                const tokenName = ctx.advance().value
+                const tokenValue = ctx.designTokens.get(tokenName)
+                if (typeof tokenValue === 'string') {
+                  textNode.properties['col'] = tokenValue
+                } else if (typeof tokenValue === 'number') {
+                  textNode.properties['size'] = tokenValue
+                }
+              } else {
+                // Unknown token - stop parsing properties
+                break
+              }
+            }
+
+            instanceChildren.push(textNode)
+          }
 
           if (ctx.current()?.type === 'NEWLINE') {
             ctx.advance()
@@ -93,6 +147,22 @@ export function parseChildren(
           if (handler) {
             if (!node.eventHandlers) node.eventHandlers = []
             node.eventHandlers.push(handler)
+          }
+        }
+        // V6: Check for animation action (show/hide/animate)
+        else if (ctx.current()?.type === 'ANIMATION_ACTION') {
+          const animDef = parseAnimationAction(ctx)
+          if (animDef) {
+            if (animDef.type === 'show') {
+              node.showAnimation = animDef
+            } else if (animDef.type === 'hide') {
+              node.hideAnimation = animDef
+            } else if (animDef.type === 'animate') {
+              node.continuousAnimation = animDef
+            }
+          }
+          if (ctx.current()?.type === 'NEWLINE') {
+            ctx.advance()
           }
         }
         // V2: Check for variable declaration ($name = value)
@@ -304,6 +374,48 @@ function parseConditionalProperties(
 }
 
 /**
+ * Parse a child inside a conditional block (handles nested if, components, strings).
+ */
+function parseConditionalBlockChild(
+  ctx: ParserContext,
+  innerIndent: number,
+  componentName: string,
+  parseComponentFn: ComponentParserFn
+): ASTNode | null {
+  // Check for nested 'if' conditional
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'if') {
+    const ifLine = ctx.current()!.line
+    ctx.advance() // consume 'if'
+    const nestedCondition = parseCondition(ctx)
+
+    if (ctx.current()?.type === 'NEWLINE') {
+      ctx.advance()
+    }
+
+    return parseConditionalChildren(ctx, nestedCondition, ifLine, innerIndent, componentName, parseComponentFn)
+  }
+
+  // Check for string content
+  if (ctx.current()?.type === 'STRING') {
+    const stringToken = ctx.current()!
+    const textNode = createTextNode(
+      ctx.advance().value,
+      ctx.generateId.bind(ctx),
+      stringToken.line,
+      stringToken.column
+    )
+    return textNode
+  }
+
+  // Parse component
+  if (ctx.current()?.type === 'COMPONENT_NAME') {
+    return parseComponentFn(ctx, innerIndent, componentName)
+  }
+
+  return null
+}
+
+/**
  * Parse conditional child components (if/else with component children).
  */
 function parseConditionalChildren(
@@ -318,7 +430,6 @@ function parseConditionalChildren(
     type: 'component',
     name: INTERNAL_NODES.CONDITIONAL,
     id: ctx.generateId('cond'),
-    modifiers: [],
     properties: {},
     children: [],
     condition: condition || undefined,
@@ -329,7 +440,7 @@ function parseConditionalChildren(
     const thenIndent = parseInt(ctx.current()!.value, 10)
     if (thenIndent > childIndent) {
       ctx.advance()
-      const thenChild = parseComponentFn(ctx, thenIndent, componentName)
+      const thenChild = parseConditionalBlockChild(ctx, thenIndent, componentName, parseComponentFn)
       if (thenChild) {
         condNode.children.push(thenChild)
       }
@@ -358,7 +469,7 @@ function parseConditionalChildren(
           const elseChildIndent = parseInt(ctx.current()!.value, 10)
           if (elseChildIndent > childIndent) {
             ctx.advance()
-            const elseChild = parseComponentFn(ctx, elseChildIndent, componentName)
+            const elseChild = parseConditionalBlockChild(ctx, elseChildIndent, componentName, parseComponentFn)
             if (elseChild) {
               condNode.elseChildren.push(elseChild)
             }

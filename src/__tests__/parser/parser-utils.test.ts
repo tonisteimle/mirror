@@ -269,13 +269,13 @@ describe('parser-utils', () => {
       const commands: SelectionCommand[] = [{
         type: 'modify',
         targetId: 'box1',
-        property: 'bg',
+        property: 'col',
         value: '#FF0000',
       }]
 
       applyCommands(nodes, commands, generateId)
 
-      expect(nodes[0].properties.bg).toBe('#FF0000')
+      expect(nodes[0].properties.col).toBe('#FF0000')
     })
 
     it('applies addChild command', () => {
@@ -286,7 +286,6 @@ describe('parser-utils', () => {
         component: {
           type: 'component',
           name: 'Text',
-          modifiers: [],
           properties: {},
           children: [],
         },
@@ -310,7 +309,6 @@ describe('parser-utils', () => {
         component: {
           type: 'component',
           name: 'Divider',
-          modifiers: [],
           properties: {},
           children: [],
         },
@@ -332,7 +330,6 @@ describe('parser-utils', () => {
         component: {
           type: 'component',
           name: 'Header',
-          modifiers: [],
           properties: {},
           children: [],
         },
@@ -350,42 +347,29 @@ describe('parser-utils', () => {
       const commands: SelectionCommand[] = [{
         type: 'modify',
         targetId: 'missing',
-        property: 'bg',
+        property: 'col',
         value: '#FF0000',
       }]
 
       applyCommands(nodes, commands, generateId)
 
-      expect(nodes[0].properties.bg).toBeUndefined()
+      expect(nodes[0].properties.col).toBeUndefined()
     })
   })
 
   describe('createTemplateFromNode', () => {
-    it('creates template with modifiers', () => {
-      const node = createASTNode({
-        modifiers: ['-primary', '-large'],
-        properties: {},
-      })
-
-      const template = createTemplateFromNode(node)
-
-      expect(template.modifiers).toEqual(['-primary', '-large'])
-    })
-
     it('creates template with properties', () => {
       const node = createASTNode({
-        modifiers: [],
-        properties: { bg: '#FFF', pad: 16 },
+        properties: { col: '#FFF', pad: 16 },
       })
 
       const template = createTemplateFromNode(node)
 
-      expect(template.properties).toEqual({ bg: '#FFF', pad: 16 })
+      expect(template.properties).toEqual({ col: '#FFF', pad: 16 })
     })
 
     it('creates template with content', () => {
       const node = createASTNode({
-        modifiers: [],
         properties: {},
         content: 'Button Text',
       })
@@ -407,33 +391,22 @@ describe('parser-utils', () => {
   })
 
   describe('applyTemplate', () => {
-    it('applies template modifiers to node', () => {
-      const registry = new Map([
-        ['Button', createComponentTemplate({ modifiers: ['-primary'] })],
-      ])
-      const node = createASTNode({ name: 'Button', modifiers: [], properties: {} })
-
-      applyTemplate(registry, node, 'Button', 'Button')
-
-      expect(node.modifiers).toEqual(['-primary'])
-    })
-
     it('applies template properties to node', () => {
       const registry = new Map([
-        ['Card', createComponentTemplate({ properties: { rad: 8, bg: '#FFF' } })],
+        ['Card', createComponentTemplate({ properties: { rad: 8, col: '#FFF' } })],
       ])
-      const node = createASTNode({ name: 'Card', modifiers: [], properties: {} })
+      const node = createASTNode({ name: 'Card', properties: {} })
 
       applyTemplate(registry, node, 'Card', 'Card')
 
-      expect(node.properties).toEqual({ rad: 8, bg: '#FFF' })
+      expect(node.properties).toEqual({ rad: 8, col: '#FFF' })
     })
 
     it('applies template content to node', () => {
       const registry = new Map([
         ['Button', createComponentTemplate({ content: 'Click me' })],
       ])
-      const node = createASTNode({ name: 'Button', modifiers: [], properties: {} })
+      const node = createASTNode({ name: 'Button', properties: {} })
 
       applyTemplate(registry, node, 'Button', 'Button')
 
@@ -442,39 +415,37 @@ describe('parser-utils', () => {
 
     it('prefers scoped name over unscoped', () => {
       const registry = new Map([
-        ['Card.Button', createComponentTemplate({ modifiers: ['-scoped'] })],
-        ['Button', createComponentTemplate({ modifiers: ['-unscoped'] })],
+        ['Card.Button', createComponentTemplate({ properties: { col: '#scoped' } })],
+        ['Button', createComponentTemplate({ properties: { col: '#unscoped' } })],
       ])
-      const node = createASTNode({ name: 'Button', modifiers: [], properties: {} })
+      const node = createASTNode({ name: 'Button', properties: {} })
 
       applyTemplate(registry, node, 'Card.Button', 'Button')
 
-      expect(node.modifiers).toEqual(['-scoped'])
+      expect(node.properties.col).toEqual('#scoped')
     })
 
     it('falls back to unscoped name', () => {
       const registry = new Map([
-        ['Button', createComponentTemplate({ modifiers: ['-default'] })],
+        ['Button', createComponentTemplate({ properties: { col: '#default' } })],
       ])
-      const node = createASTNode({ name: 'Button', modifiers: [], properties: {} })
+      const node = createASTNode({ name: 'Button', properties: {} })
 
       applyTemplate(registry, node, 'Card.Button', 'Button')
 
-      expect(node.modifiers).toEqual(['-default'])
+      expect(node.properties.col).toEqual('#default')
     })
 
     it('does nothing when no template found', () => {
       const registry = new Map<string, ReturnType<typeof createComponentTemplate>>()
       const node = createASTNode({
         name: 'Custom',
-        modifiers: ['-original'],
-        properties: { bg: 'blue' },
+        properties: { col: 'blue' },
       })
 
       applyTemplate(registry, node, 'Custom', 'Custom')
 
-      expect(node.modifiers).toEqual(['-original'])
-      expect(node.properties).toEqual({ bg: 'blue' })
+      expect(node.properties).toEqual({ col: 'blue' })
     })
   })
 })

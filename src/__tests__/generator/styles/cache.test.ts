@@ -29,7 +29,7 @@ describe('style-cache', () => {
     it('computes and caches a new style', () => {
       const computeFn = vi.fn(() => ({ color: 'red' }))
 
-      const result = getCachedStyle('Button', { bg: 'red' }, ['-primary'], computeFn)
+      const result = getCachedStyle('Button', { bg: 'red' }, [], computeFn)
 
       expect(result).toEqual({ color: 'red' })
       expect(computeFn).toHaveBeenCalledTimes(1)
@@ -56,15 +56,6 @@ describe('style-cache', () => {
       expect(computeFn).toHaveBeenCalledTimes(2)
     })
 
-    it('recomputes when modifiers differ', () => {
-      const computeFn = vi.fn(() => ({ display: 'flex' }))
-
-      getCachedStyle('Button', {}, ['-primary'], computeFn)
-      getCachedStyle('Button', {}, ['-secondary'], computeFn)
-
-      expect(computeFn).toHaveBeenCalledTimes(2)
-    })
-
     it('recomputes when component name differs', () => {
       const computeFn = vi.fn(() => ({ padding: '8px' }))
 
@@ -83,14 +74,6 @@ describe('style-cache', () => {
       expect(computeFn).toHaveBeenCalledTimes(1)
     })
 
-    it('creates stable cache keys for modifiers in different order', () => {
-      const computeFn = vi.fn(() => ({ opacity: 0.5 }))
-
-      getCachedStyle('Button', {}, ['-large', '-primary'], computeFn)
-      getCachedStyle('Button', {}, ['-primary', '-large'], computeFn)
-
-      expect(computeFn).toHaveBeenCalledTimes(1)
-    })
   })
 
   describe('TTL expiration', () => {

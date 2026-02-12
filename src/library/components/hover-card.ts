@@ -17,7 +17,7 @@ export const HoverCardComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 8,
         pad: 16,
         w: 280
@@ -27,14 +27,14 @@ export const HoverCardComponent: LibraryComponent = {
   defaultStates: ['hidden', 'visible'],
   actions: ['show', 'hide'],
   definitions: `// HoverCard
-HoverCardTrigger: col #3B82F6
-HoverCardContent: ver bg #1E1E1E rad 8 pad 16 w 280 gap 12 bor 1 boc #333
+HoverCardTrigger: col $primary
+HoverCardContent: ver bg $surface rad 8 pad 16 w 280 gap 12 bor 1 boc $border
 HoverCardHeader: hor gap 12 ver-cen
-HoverCardAvatar: w 48 h 48 rad 24 bg #3B82F6
+HoverCardAvatar: w 48 h 48 rad 24 bg $primary
 HoverCardInfo: ver gap 2
 HoverCardName: weight 600
-HoverCardHandle: size 12 col #888
-HoverCardBio: size 14 col #A0A0A0`,
+HoverCardHandle: size 12 col $text-muted
+HoverCardBio: size 14 col $text-dim`,
   layoutExample: `HoverCard
   state hidden
   HoverCardTrigger

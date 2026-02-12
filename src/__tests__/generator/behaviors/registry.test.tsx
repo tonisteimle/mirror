@@ -168,17 +168,26 @@ describe('behavior registry', () => {
         wrapper: BehaviorRegistryProvider,
       })
 
+      // Default state returned by getState is 'closed' (but internally undefined)
       expect(result.current.getState('dropdown1')).toBe('closed')
 
+      // First toggle: undefined → 'open' (for hidden elements: becomes visible)
       act(() => {
         result.current.toggle('dropdown1')
       })
       expect(result.current.getState('dropdown1')).toBe('open')
 
+      // Second toggle: 'open' → 'closed'
       act(() => {
         result.current.toggle('dropdown1')
       })
       expect(result.current.getState('dropdown1')).toBe('closed')
+
+      // Third toggle: 'closed' → 'open'
+      act(() => {
+        result.current.toggle('dropdown1')
+      })
+      expect(result.current.getState('dropdown1')).toBe('open')
     })
 
     it('toggle works independently for multiple components', () => {
@@ -186,16 +195,24 @@ describe('behavior registry', () => {
         wrapper: BehaviorRegistryProvider,
       })
 
+      // First toggle on dropdown1: undefined → 'open'
       act(() => {
         result.current.toggle('dropdown1')
       })
       expect(result.current.getState('dropdown1')).toBe('open')
-      expect(result.current.getState('dropdown2')).toBe('closed')
+      expect(result.current.getState('dropdown2')).toBe('closed') // still default
 
+      // Second toggle on dropdown1: 'open' → 'closed'
+      act(() => {
+        result.current.toggle('dropdown1')
+      })
+      expect(result.current.getState('dropdown1')).toBe('closed')
+
+      // First toggle on dropdown2: undefined → 'open'
       act(() => {
         result.current.toggle('dropdown2')
       })
-      expect(result.current.getState('dropdown1')).toBe('open')
+      expect(result.current.getState('dropdown1')).toBe('closed')
       expect(result.current.getState('dropdown2')).toBe('open')
     })
   })

@@ -12,11 +12,11 @@ export const AlertDialogComponent: LibraryComponent = {
       defaultProps: {}
     },
     {
-      name: 'Overlay',
+      name: 'Backdrop',
       required: false,
       multiple: false,
       defaultProps: {
-        bg: '#00000080'
+        bg: '$overlay'
       }
     },
     {
@@ -25,7 +25,7 @@ export const AlertDialogComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 12,
         pad: 24,
         w: 400,
@@ -39,7 +39,7 @@ export const AlertDialogComponent: LibraryComponent = {
       defaultProps: {
         size: 18,
         weight: 600,
-        col: '#FFFFFF'
+        col: '$text'
       }
     },
     {
@@ -48,7 +48,7 @@ export const AlertDialogComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         size: 14,
-        col: '#A0A0A0'
+        col: '$text-dim'
       }
     },
     {
@@ -59,8 +59,7 @@ export const AlertDialogComponent: LibraryComponent = {
         pad: 8,
         pad_l: 16,
         pad_r: 16,
-        bg: '#333',
-        col: '#FFF',
+        bg: '$border',
         rad: 6
       }
     },
@@ -72,8 +71,7 @@ export const AlertDialogComponent: LibraryComponent = {
         pad: 8,
         pad_l: 16,
         pad_r: 16,
-        bg: '#EF4444',
-        col: '#FFF',
+        bg: '$error',
         rad: 6
       }
     }
@@ -81,20 +79,20 @@ export const AlertDialogComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// AlertDialog
-AlertDialogTrigger: pad 8 12 bg #EF4444 col #FFF rad 6 hover-bg #DC2626
-AlertDialogOverlay: bg #00000080
-AlertDialogContent: ver bg #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
+AlertDialogTrigger: pad 8 12 bg $error rad 6 hover-bg $error-hover
+AlertDialogBackdrop: bg $overlay
+AlertDialogContent: ver bg $surface rad 12 pad 24 w 400 gap 16 bor 1 boc $border
 AlertDialogTitle: size 18 weight 600
-AlertDialogDescription: size 14 col #A0A0A0
+AlertDialogDescription: size 14 col $text-dim
 AlertDialogActions: hor gap 12 hor-r
-AlertDialogCancel: pad 8 16 bg #333 rad 6 hover-bg #444
-AlertDialogAction: pad 8 16 bg #EF4444 col #FFF rad 6 hover-bg #DC2626`,
+AlertDialogCancel: pad 8 16 bg $border rad 6 hover-bg $border-hover
+AlertDialogAction: pad 8 16 bg $error rad 6 hover-bg $error-hover`,
   layoutExample: `AlertDialog
   state closed
   AlertDialogTrigger
     onclick open
     "Delete Account"
-  AlertDialogOverlay
+  AlertDialogBackdrop
     if open
     onclick close
   AlertDialogContent

@@ -14,6 +14,7 @@ import type { ASTNode } from './types'
 import { isTokenSequence } from './types'
 import type { Token } from './lexer'
 import { CSS_COLOR_KEYWORDS, splitDirections, applySpacingToProperties } from './parser-utils'
+import { STRING_PROPERTIES, BOOLEAN_PROPERTIES } from '../dsl/properties'
 
 /**
  * Resolve a component property reference like "Card.pad" or "$Card.pad".
@@ -31,9 +32,30 @@ function resolveComponentPropertyRef(
   const compTemplate = ctx.registry.get(componentName)
 
   if (compTemplate) {
-    return compTemplate.properties[propPath]
+    const value = compTemplate.properties[propPath]
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return value
+    }
   }
   return undefined
+}
+
+/**
+ * Try to resolve a component property reference and assign to node.properties.
+ * Returns true if resolved and assigned, false otherwise.
+ */
+function tryAssignResolvedRef(
+  ctx: ParserContext,
+  node: ASTNode,
+  propName: string,
+  refValue: string
+): boolean {
+  const resolved = resolveComponentPropertyRef(ctx, refValue)
+  if (resolved !== undefined) {
+    node.properties[propName] = resolved
+    return true
+  }
+  return false
 }
 
 /**
@@ -69,10 +91,22 @@ export function applyTokenSequenceSpacing(
 }
 
 /**
+ * Property name aliases: long form → short form
+ */
+const PROPERTY_ALIASES: Record<string, string> = {
+  'padding': 'pad',
+  'margin': 'mar',
+  'radius': 'rad',
+  'color': 'col',
+}
+
+/**
  * Parse a property and its value.
  */
 export function parsePropertyValue(ctx: ParserContext, node: ASTNode): void {
-  const propName = ctx.advance().value
+  const rawPropName = ctx.advance().value
+  // Normalize long property names to short form
+  const propName = PROPERTY_ALIASES[rawPropName] || rawPropName
 
   // Special handling for pad/mar with directions or CSS shorthand
   if (propName === 'pad' || propName === 'mar') {
@@ -83,12 +117,20 @@ export function parsePropertyValue(ctx: ParserContext, node: ASTNode): void {
     parseLayoutProperty(ctx, node, propName)
   } else if (propName === 'cen') {
     parseCenterProperty(ctx, node)
+  } else if (propName === 'rad') {
+    parseRadiusProperty(ctx, node)
   } else if (propName === 'icon' || propName === 'font') {
     parseStringProperty(ctx, node, propName)
   } else if (propName === 'fit') {
     parseFitProperty(ctx, node)
   } else if (propName === 'w' || propName === 'h') {
     parseDimensionProperty(ctx, node, propName)
+  } else if (propName === 'weight') {
+    parseWeightProperty(ctx, node)
+  } else if (propName === 'grid') {
+    parseGridProperty(ctx, node)
+  } else if (propName === 'pointer' || propName === 'cursor') {
+    parsePointerProperty(ctx, node, propName)
   } else {
     parseGenericProperty(ctx, node, propName)
   }
@@ -96,25 +138,13 @@ export function parsePropertyValue(ctx: ParserContext, node: ASTNode): void {
 
 /**
  * Parse pad/mar property with directions and CSS shorthand.
+ * Supports multiple direction+value pairs: pad t-b 8 l-r 16
  */
 function parsePadMarProperty(ctx: ParserContext, node: ASTNode, propName: string): void {
-  const directions: string[] = []
+  let hasAppliedAny = false
 
-  while (ctx.current()?.type === 'DIRECTION') {
-    directions.push(...splitDirections(ctx.advance().value))
-  }
-
-  const values: number[] = []
-  while (ctx.current()?.type === 'NUMBER') {
-    values.push(parseInt(ctx.advance().value, 10))
-    if (values.length === 1 && ctx.current()?.type === 'TOKEN_DEF') {
-      const tokenName = ctx.advance().value
-      ctx.designTokens.set(tokenName, values[0])
-    }
-  }
-
-  // Handle token references
-  if (values.length === 0 && directions.length === 0 && ctx.current()?.type === 'TOKEN_REF') {
+  // Handle token references first (before any directions or numbers)
+  if (ctx.current()?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
     const tokenValue = ctx.designTokens.get(tokenName)
 
@@ -123,26 +153,75 @@ function parsePadMarProperty(ctx: ParserContext, node: ASTNode, propName: string
       applyTokenSequenceSpacing(expandedTokens, node, propName)
       return
     } else if (typeof tokenValue === 'number') {
-      values.push(tokenValue)
+      node.properties[propName] = tokenValue
+      return
     } else if (tokenValue === undefined) {
       const resolved = resolveComponentPropertyRef(ctx, tokenName)
       if (typeof resolved === 'number') {
-        values.push(resolved)
+        node.properties[propName] = resolved
+        return
       }
     }
   }
 
   // Handle component property reference without $: Card.pad
-  if (values.length === 0 && directions.length === 0 &&
-      ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()!.value.includes('.')) {
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()!.value.includes('.')) {
     const resolved = resolveComponentPropertyRef(ctx, ctx.advance().value)
     if (typeof resolved === 'number') {
-      values.push(resolved)
+      node.properties[propName] = resolved
+      return
     }
   }
 
-  // Apply values to properties
-  applySpacingToProperties(node.properties, propName, values, directions)
+  // Parse direction+value pairs or CSS shorthand
+  // Support both: "pad 8 16" (CSS shorthand) and "pad t-b 8 l-r 16" (direction pairs)
+  while (ctx.current() &&
+         ctx.current()!.type !== 'NEWLINE' &&
+         ctx.current()!.type !== 'EOF' &&
+         ctx.current()!.type !== 'PROPERTY' &&
+         ctx.current()!.type !== 'COMPONENT_NAME' &&
+         ctx.current()!.type !== 'STRING' &&
+         ctx.current()!.type !== 'COLOR' &&
+         ctx.current()!.type !== 'COMMA') {
+    const token = ctx.current()!
+
+    if (token.type === 'DIRECTION') {
+      // Collect directions
+      const directions: string[] = []
+      while (ctx.current()?.type === 'DIRECTION') {
+        directions.push(...splitDirections(ctx.advance().value))
+      }
+
+      // Get the value for these directions
+      if (ctx.current()?.type === 'NUMBER') {
+        const value = parseInt(ctx.advance().value, 10)
+        for (const dir of directions) {
+          node.properties[`${propName}_${dir}`] = value
+        }
+        hasAppliedAny = true
+      }
+    } else if (token.type === 'NUMBER') {
+      // CSS shorthand - collect all numbers
+      const values: number[] = []
+      while (ctx.current()?.type === 'NUMBER') {
+        values.push(parseInt(ctx.advance().value, 10))
+        if (values.length === 1 && ctx.current()?.type === 'TOKEN_DEF') {
+          const tokenName = ctx.advance().value
+          ctx.designTokens.set(tokenName, values[0])
+        }
+      }
+      applySpacingToProperties(node.properties, propName, values, [])
+      hasAppliedAny = true
+      break // CSS shorthand consumes all remaining numbers
+    } else {
+      break
+    }
+  }
+
+  // If nothing was applied, set the property to true
+  if (!hasAppliedAny) {
+    node.properties[propName] = true
+  }
 }
 
 /**
@@ -158,11 +237,24 @@ function parseBorderProperty(ctx: ParserContext, node: ASTNode): void {
          ctx.current()!.type !== 'NEWLINE' &&
          ctx.current()!.type !== 'EOF' &&
          ctx.current()!.type !== 'PROPERTY' &&
-         ctx.current()!.type !== 'COMPONENT_NAME' &&
          ctx.current()!.type !== 'STRING') {
     const token = ctx.current()!
 
-    if (token.type === 'DIRECTION') {
+    // Handle COMPONENT_NAME with dot (property reference) vs regular COMPONENT_NAME
+    if (token.type === 'COMPONENT_NAME') {
+      if (token.value.includes('.')) {
+        // Property reference like Card.bor
+        const resolved = resolveComponentPropertyRef(ctx, ctx.advance().value)
+        if (typeof resolved === 'number') {
+          width = resolved
+        } else if (typeof resolved === 'string') {
+          color = resolved
+        }
+      } else {
+        // Regular component name - stop parsing border
+        break
+      }
+    } else if (token.type === 'DIRECTION') {
       directions.push(...splitDirections(ctx.advance().value))
     } else if (token.type === 'NUMBER') {
       width = parseInt(ctx.advance().value, 10)
@@ -177,6 +269,14 @@ function parseBorderProperty(ctx: ParserContext, node: ASTNode): void {
         width = tokenValue
       } else if (typeof tokenValue === 'string') {
         color = tokenValue
+      } else {
+        // Try component property reference from token: $Card.bor
+        const resolved = resolveComponentPropertyRef(ctx, tokenName)
+        if (typeof resolved === 'number') {
+          width = resolved
+        } else if (typeof resolved === 'string') {
+          color = resolved
+        }
       }
     } else {
       break
@@ -225,15 +325,178 @@ export function parseLayoutProperty(ctx: ParserContext, node: { properties: Reco
 }
 
 /**
+ * Parse grid property.
+ * Syntax: grid [count] [widths...] [rows heights...] gap N
+ * Examples:
+ *   grid 4 gap 16           → 4 equal columns
+ *   grid 20% 80% gap 16     → 2 columns with percentages
+ *   grid 200 auto 30%       → 3 columns with mixed units
+ *   grid auto 250           → auto-fill with min 250px
+ *   grid 2 rows 100 200     → 2 columns with explicit row heights
+ */
+function parseGridProperty(ctx: ParserContext, node: ASTNode): void {
+  const columns: string[] = []
+  const rows: string[] = []
+  let parsingRows = false
+  let isAutoFill = false
+
+  // Parse values until we hit a different property, newline, or EOF
+  while (ctx.current() &&
+         ctx.current()!.type !== 'NEWLINE' &&
+         ctx.current()!.type !== 'EOF' &&
+         ctx.current()!.type !== 'COMMA') {
+    const token = ctx.current()!
+
+    // Check for 'rows' keyword
+    if (token.type === 'PROPERTY' && token.value === 'rows') {
+      ctx.advance()
+      parsingRows = true
+      continue
+    }
+
+    // Check for 'gap' - stop parsing grid values
+    if (token.type === 'PROPERTY' && token.value === 'gap') {
+      break
+    }
+
+    // Check for other properties - stop parsing
+    if (token.type === 'PROPERTY') {
+      break
+    }
+
+    // Check for 'auto' keyword
+    if (token.type === 'COMPONENT_NAME' && token.value === 'auto') {
+      ctx.advance()
+      // If 'auto' is the first value, it means auto-fill mode
+      // Otherwise, it's just an 'auto' column width
+      if (columns.length === 0 && !parsingRows) {
+        isAutoFill = true
+      } else if (parsingRows) {
+        rows.push('auto')
+      } else {
+        columns.push('auto')
+      }
+      continue
+    }
+
+    // Parse number or percentage
+    if (token.type === 'NUMBER') {
+      const value = ctx.advance().value
+      if (parsingRows) {
+        rows.push(value)
+      } else {
+        columns.push(value)
+      }
+      continue
+    }
+
+    // Anything else, break
+    break
+  }
+
+  // Store parsed grid values
+  if (isAutoFill && columns.length === 1) {
+    // Auto-fill: grid auto 250 → repeat(auto-fill, minmax(250px, 1fr))
+    node.properties['grid'] = `auto ${columns[0]}`
+  } else if (columns.length === 1 && !columns[0].includes('%')) {
+    // Single number without % means column count: grid 4
+    node.properties['grid'] = columns[0]
+  } else if (columns.length > 0) {
+    // Multiple values or percentages: grid 20% 80% or grid 200 300 200
+    node.properties['grid'] = columns.join(' ')
+  }
+
+  // Store row values if present
+  if (rows.length > 0) {
+    node.properties['grid_rows'] = rows.join(' ')
+  }
+}
+
+/**
+ * Parse pointer/cursor property.
+ * Accepts: pointer, none, auto, grab, etc.
+ */
+function parsePointerProperty(ctx: ParserContext, node: ASTNode, propName: string): void {
+  const next = ctx.current()
+  // Accept COMPONENT_NAME (pointer, auto, grab), ANIMATION (none), or STRING
+  if (next?.type === 'COMPONENT_NAME' || next?.type === 'ANIMATION' || next?.type === 'STRING') {
+    node.properties[propName] = ctx.advance().value
+  } else {
+    // Boolean - just the property name without value
+    node.properties[propName] = true
+  }
+}
+
+/**
+ * Parse radius property.
+ * Supports CSS shorthand: rad 8 (all corners) or rad 8 8 0 0 (top-left, top-right, bottom-right, bottom-left)
+ */
+function parseRadiusProperty(ctx: ParserContext, node: ASTNode): void {
+  const values: number[] = []
+
+  // Handle component property reference: Card.rad
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()!.value.includes('.')) {
+    if (tryAssignResolvedRef(ctx, node, 'rad', ctx.advance().value)) {
+      return
+    }
+  }
+
+  // Handle token reference: $radius
+  if (ctx.current()?.type === 'TOKEN_REF') {
+    const tokenName = ctx.advance().value
+    const tokenValue = ctx.designTokens.get(tokenName)
+    if (typeof tokenValue === 'number') {
+      node.properties['rad'] = tokenValue
+      return
+    }
+    // Try component property reference from token: $Card.rad
+    if (tryAssignResolvedRef(ctx, node, 'rad', tokenName)) {
+      return
+    }
+  }
+
+  // Collect all consecutive numbers
+  while (ctx.current()?.type === 'NUMBER' && values.length < 4) {
+    values.push(parseInt(ctx.advance().value, 10))
+  }
+
+  if (values.length === 0) {
+    node.properties['rad'] = 8  // Default border radius
+  } else if (values.length === 1) {
+    node.properties['rad'] = values[0]
+  } else if (values.length === 2) {
+    // 2 values: top-left/bottom-right, top-right/bottom-left
+    node.properties['rad_tl'] = values[0]
+    node.properties['rad_br'] = values[0]
+    node.properties['rad_tr'] = values[1]
+    node.properties['rad_bl'] = values[1]
+  } else if (values.length === 3) {
+    // 3 values: top-left, top-right/bottom-left, bottom-right
+    node.properties['rad_tl'] = values[0]
+    node.properties['rad_tr'] = values[1]
+    node.properties['rad_bl'] = values[1]
+    node.properties['rad_br'] = values[2]
+  } else if (values.length === 4) {
+    // 4 values: top-left, top-right, bottom-right, bottom-left
+    node.properties['rad_tl'] = values[0]
+    node.properties['rad_tr'] = values[1]
+    node.properties['rad_br'] = values[2]
+    node.properties['rad_bl'] = values[3]
+  }
+}
+
+/**
  * Parse center property.
  * Exported for use in definition-parser.ts.
  */
 export function parseCenterProperty(ctx: ParserContext, node: { properties: Record<string, unknown> }): void {
+  // cen centers both axes by default
   node.properties['align_main'] = 'cen'
+  node.properties['align_cross'] = 'cen'
+  // If followed by another cen, consume it (backwards compatibility)
   const next = ctx.current()
   if (next?.type === 'PROPERTY' && next.value === 'cen') {
     ctx.advance()
-    node.properties['align_cross'] = 'cen'
   }
 }
 
@@ -248,12 +511,42 @@ function parseStringProperty(ctx: ParserContext, node: ASTNode, propName: string
 }
 
 /**
+ * Parse weight property.
+ * Accepts numeric values (400, 600, 700) or 'bold' keyword.
+ */
+function parseWeightProperty(ctx: ParserContext, node: ASTNode): void {
+  const next = ctx.current()
+  if (next?.type === 'NUMBER') {
+    node.properties['weight'] = parseInt(ctx.advance().value, 10)
+  } else if (next?.type === 'COMPONENT_NAME' && next.value === 'bold') {
+    ctx.advance()
+    node.properties['weight'] = 700  // Convert 'bold' to numeric weight
+  } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {
+    // Component property reference: Card.weight
+    if (tryAssignResolvedRef(ctx, node, 'weight', ctx.advance().value)) {
+      return
+    }
+    node.properties['weight'] = 700  // Default if not resolved
+  } else if (next?.type === 'TOKEN_REF') {
+    const tokenName = ctx.advance().value
+    const tokenValue = ctx.designTokens.get(tokenName)
+    if (typeof tokenValue === 'number') {
+      node.properties['weight'] = tokenValue
+    } else if (tryAssignResolvedRef(ctx, node, 'weight', tokenName)) {
+      return
+    }
+  } else {
+    node.properties['weight'] = 700  // Default bold weight
+  }
+}
+
+/**
  * Parse fit property.
  */
 function parseFitProperty(ctx: ParserContext, node: ASTNode): void {
   const next = ctx.current()
   if (next?.type === 'COMPONENT_NAME' || next?.type === 'STRING') {
-    node.properties['fit'] = ctx.advance().value
+    node.properties['fit'] = ctx.advance().value as import('../types/dsl-properties').ObjectFit
   }
 }
 
@@ -272,16 +565,10 @@ function parseDimensionProperty(ctx: ParserContext, node: ASTNode, propName: str
     if (tokenValue !== undefined) {
       node.properties[propName] = tokenValue
     } else {
-      const resolved = resolveComponentPropertyRef(ctx, tokenName)
-      if (resolved !== undefined) {
-        node.properties[propName] = resolved
-      }
+      tryAssignResolvedRef(ctx, node, propName, tokenName)
     }
   } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {
-    const resolved = resolveComponentPropertyRef(ctx, ctx.advance().value)
-    if (resolved !== undefined) {
-      node.properties[propName] = resolved
-    }
+    tryAssignResolvedRef(ctx, node, propName, ctx.advance().value)
   }
 }
 
@@ -291,9 +578,16 @@ function parseDimensionProperty(ctx: ParserContext, node: ASTNode, propName: str
 function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: string): void {
   const next = ctx.current()
 
+  // Boolean properties don't consume values - they just get set to true
+  // The following token (like a string) should be left for child parsing
+  if (BOOLEAN_PROPERTIES.has(propName)) {
+    node.properties[propName] = true
+    return
+  }
+
   if (next && (next.type === 'NUMBER' || next.type === 'COLOR')) {
     const rawValue = next.type === 'NUMBER'
-      ? parseInt(ctx.advance().value, 10)
+      ? parseFloat(ctx.advance().value)
       : ctx.advance().value
     node.properties[propName] = rawValue
 
@@ -301,7 +595,13 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
       const tokenName = ctx.advance().value
       ctx.designTokens.set(tokenName, rawValue)
     }
+  } else if (next?.type === 'STRING') {
+    // Handle string values for properties like href, src, placeholder, etc.
+    node.properties[propName] = ctx.advance().value
   } else if (next?.type === 'COMPONENT_NAME' && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
+    node.properties[propName] = ctx.advance().value
+  } else if (next?.type === 'COMPONENT_NAME' && STRING_PROPERTIES.has(propName)) {
+    // Handle COMPONENT_NAME values for string properties (e.g., align center, fit cover)
     node.properties[propName] = ctx.advance().value
   } else if (next?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
@@ -312,7 +612,7 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
         const expandedTokens = ctx.expandTokenSequence(tokenValue.tokens)
         for (const token of expandedTokens) {
           if (token.type === 'NUMBER') {
-            node.properties[propName] = parseInt(token.value, 10)
+            node.properties[propName] = parseFloat(token.value)
             break
           } else if (token.type === 'COLOR') {
             node.properties[propName] = token.value
@@ -326,16 +626,10 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
         node.properties[propName] = tokenValue
       }
     } else {
-      const resolved = resolveComponentPropertyRef(ctx, tokenName)
-      if (resolved !== undefined) {
-        node.properties[propName] = resolved
-      }
+      tryAssignResolvedRef(ctx, node, propName, tokenName)
     }
   } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {
-    const resolved = resolveComponentPropertyRef(ctx, ctx.advance().value)
-    if (resolved !== undefined) {
-      node.properties[propName] = resolved
-    }
+    tryAssignResolvedRef(ctx, node, propName, ctx.advance().value)
   } else {
     node.properties[propName] = true
   }

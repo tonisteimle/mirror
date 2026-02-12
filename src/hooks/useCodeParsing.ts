@@ -1,15 +1,15 @@
 import { useMemo, useCallback } from 'react'
 import { parse } from '../parser/parser'
 import { useDebouncedValue } from './useDebouncedValue'
-import type { ASTNode } from '../parser/parser'
+import type { ASTNode, ComponentTemplate, TokenValue, StyleMixin, SelectionCommand } from '../parser/types'
 
 export interface ParseResult {
   nodes: ASTNode[]
   errors: unknown[]
-  registry: Map<string, unknown>
-  tokens: Map<string, unknown>
-  styles: Map<string, unknown>
-  commands: unknown[]
+  registry: Map<string, ComponentTemplate>
+  tokens: Map<string, TokenValue>
+  styles: Map<string, StyleMixin>
+  commands: SelectionCommand[]
 }
 
 export interface UseCodeParsingReturn {

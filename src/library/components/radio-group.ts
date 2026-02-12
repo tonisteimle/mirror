@@ -24,8 +24,8 @@ export const RadioGroupComponent: LibraryComponent = {
         h: 20,
         rad: 10,
         bor: 2,
-        boc: '#444',
-        bg: '#252525'
+        boc: '$border-hover',
+        bg: '$surface-hover'
       }
     },
     {
@@ -36,7 +36,7 @@ export const RadioGroupComponent: LibraryComponent = {
         w: 10,
         h: 10,
         rad: 5,
-        bg: '#3B82F6'
+        bg: '$primary'
       }
     }
   ],
@@ -45,9 +45,9 @@ export const RadioGroupComponent: LibraryComponent = {
   definitions: `// RadioGroup
 RadioGroup: ver gap 12
 RadioItem: hor gap 8 ver-cen
-RadioCircle: w 20 h 20 rad 10 bor 2 boc #444 bg #252525 ver cen
-RadioSelected: w 20 h 20 rad 10 bor 2 boc #3B82F6 bg #252525 ver cen
-RadioDot: w 10 h 10 rad 5 bg #3B82F6
+RadioCircle: w 20 h 20 rad 10 bor 2 boc $border-hover bg $surface-hover ver cen
+RadioSelected: w 20 h 20 rad 10 bor 2 boc $primary bg $surface-hover ver cen
+RadioDot: w 10 h 10 rad 5 bg $primary
 RadioLabel: size 14`,
   layoutExample: `RadioGroup
   state opt1

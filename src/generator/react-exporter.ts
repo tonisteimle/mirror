@@ -33,7 +33,7 @@ function generateJSX(node: ASTNode, indent: string): string {
   }
 
   // Get styles
-  const style = generateStyles(node.properties)
+  const style = generateStyles(node.properties as Record<string, string | number | boolean>)
   const styleStr = Object.keys(style).length > 0
     ? ` style={${formatStyleObject(style)}}`
     : ''
@@ -97,9 +97,9 @@ function generateStyles(props: Record<string, string | number | boolean>): React
   if (typeof props.maxw === 'number') style.maxWidth = `${props.maxw}px`
   if (props.full) { style.width = '100%'; style.height = '100%' }
 
-  // Colors
-  if (typeof props.bg === 'string') style.backgroundColor = props.bg
+  // Colors: col → text color, bg → background color
   if (typeof props.col === 'string') style.color = props.col
+  if (typeof props.bg === 'string') style.backgroundColor = props.bg
 
   // Border
   if (typeof props.bor === 'number') style.borderWidth = `${props.bor}px`

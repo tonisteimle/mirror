@@ -25,7 +25,6 @@ describe('react-generator', () => {
     it('provides registry to children', () => {
       const registry = new Map<string, ComponentTemplate>()
       registry.set('Button', {
-        modifiers: ['-primary'],
         properties: { pad: 12 },
         children: [],
       })

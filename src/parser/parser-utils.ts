@@ -5,7 +5,7 @@
  * Includes CSS utilities, node traversal, and AST manipulation.
  */
 
-import type { ASTNode, SelectionCommand } from './types'
+import type { ASTNode, SelectionCommand, ComponentTemplate } from './types'
 import { INTERNAL_NODES } from '../constants'
 
 // ============================================
@@ -26,16 +26,26 @@ export const CSS_COLOR_KEYWORDS = new Set([
 // ============================================
 
 /**
- * Split combined directions like 'u-d' into ['u', 'd']
+ * Normalize direction: t→u (top→up), b→d (bottom→down)
+ */
+function normalizeDir(dir: string): string {
+  if (dir === 't') return 'u'
+  if (dir === 'b') return 'd'
+  return dir
+}
+
+/**
+ * Split combined directions like 'u-d' or 't-b' into ['u', 'd']
  * Used for pad/mar/bor with multiple directions.
+ * Normalizes t→u and b→d.
  */
 export function splitDirections(dirValue: string): string[] {
-  // Handle hyphenated: 'u-d' -> ['u', 'd']
+  // Handle hyphenated: 'u-d' -> ['u', 'd'], 't-b' -> ['u', 'd']
   if (dirValue.includes('-')) {
-    return dirValue.split('-')
+    return dirValue.split('-').map(normalizeDir)
   }
-  // Single direction: 'u' -> ['u']
-  return [dirValue]
+  // Single direction: 'u' -> ['u'], 't' -> ['u']
+  return [normalizeDir(dirValue)]
 }
 
 /**
@@ -116,7 +126,6 @@ export function createTextNode(
     type: 'component',
     name: INTERNAL_NODES.TEXT,
     id: generateId ? generateId('text') : '',
-    modifiers: [],
     properties: {},
     content,
     children: [],
@@ -185,6 +194,8 @@ export function cloneChildrenWithNewIds(
   return children.map(child => ({
     ...child,
     id: generateId(child.name),
+    // Deep clone properties to avoid shared references
+    properties: { ...child.properties },
     children: cloneChildrenWithNewIds(child.children, generateId)
   }))
 }
@@ -253,6 +264,62 @@ export function applyCommands(
           }
         }
         break
+    }
+  }
+}
+
+// ============================================
+// Template Application
+// ============================================
+
+/**
+ * Create a template object from a node's current state.
+ * Used for registering components as templates.
+ */
+export function createTemplateFromNode(node: ASTNode): ComponentTemplate {
+  return {
+    properties: { ...node.properties },
+    content: node.content,
+    children: [],
+    // Preserve library type for 'as Text' etc.
+    _isLibrary: node._isLibrary,
+    _libraryType: node._libraryType
+  }
+}
+
+/**
+ * Apply a template to a node if it exists in the registry.
+ * Checks scoped name first, then falls back to unscoped name.
+ *
+ * @param registry Component template registry
+ * @param node Target node to apply template to
+ * @param scopedName Scoped name to check first (e.g., "Parent.Child")
+ * @param name Fallback name to check (e.g., "Child")
+ * @param cloneChildren Optional function to clone children with new IDs
+ */
+export function applyTemplate(
+  registry: Map<string, ComponentTemplate>,
+  node: ASTNode,
+  scopedName: string,
+  name: string,
+  cloneChildren?: (children: ASTNode[]) => ASTNode[]
+): void {
+  const template = registry.get(scopedName) || registry.get(name)
+
+  if (template) {
+    node.properties = { ...template.properties }
+    if (template.content) {
+      node.content = template.content
+    }
+    if (cloneChildren && template.children.length > 0) {
+      node.children = cloneChildren(template.children)
+    }
+    // Apply library type from template (for 'as Text' etc.)
+    if (template._isLibrary) {
+      node._isLibrary = template._isLibrary
+    }
+    if (template._libraryType) {
+      node._libraryType = template._libraryType
     }
   }
 }

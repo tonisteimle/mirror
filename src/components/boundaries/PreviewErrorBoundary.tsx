@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { colors } from '../../theme'
+import { logger } from '../../services/logger'
 
 interface PreviewErrorBoundaryProps {
   children: ReactNode
@@ -22,7 +23,7 @@ export class PreviewErrorBoundary extends Component<PreviewErrorBoundaryProps, P
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('PreviewErrorBoundary caught an error:', error, errorInfo)
+    logger.ui.error('PreviewErrorBoundary caught an error', { error, errorInfo })
     this.props.onError?.(error, errorInfo)
   }
 

@@ -137,7 +137,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Button',
-            modifiers: [],
             properties: {},
             children: [],
           },
@@ -160,34 +159,9 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Text',
-            modifiers: [],
             properties: {},
             children: [],
             content: 'Hello World',
-          },
-        })
-      })
-
-      it('parses add child command with modifiers', () => {
-        const tokens = [
-          token.component('Button'),
-          token.modifier('-primary'),
-          token.modifier('-large'),
-          token.eof(),
-        ]
-        const ctx = createContextFromTokens(tokens)
-
-        const result = parseSelectionCommand(ctx, 'form1')
-
-        expect(result).toEqual({
-          type: 'addChild',
-          targetId: 'form1',
-          component: {
-            type: 'component',
-            name: 'Button',
-            modifiers: ['-primary', '-large'],
-            properties: {},
-            children: [],
           },
         })
       })
@@ -211,7 +185,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Box',
-            modifiers: [],
             properties: { w: 100, h: 50 },
             children: [],
           },
@@ -234,7 +207,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Button',
-            modifiers: [],
             properties: { disabled: true },
             children: [],
           },
@@ -244,7 +216,6 @@ describe('command-parser', () => {
       it('parses add child command with full definition', () => {
         const tokens = [
           token.component('Button'),
-          token.modifier('-primary'),
           token.property('w'),
           token.number('200'),
           token.property('bg'),
@@ -262,7 +233,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Button',
-            modifiers: ['-primary'],
             properties: { w: 200, bg: '#00F' },
             children: [],
             content: 'Click Me',
@@ -277,8 +247,7 @@ describe('command-parser', () => {
         ]
         const registry = new Map([
           ['PrimaryButton', createComponentTemplate({
-            modifiers: ['-primary'],
-            properties: { bg: '#3B82F6' },
+            properties: { bg: '#3B82F6', col: '#FFF' },
           })],
         ])
         const ctx = createContextWithRegistry(tokens, { registry })
@@ -291,8 +260,7 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'PrimaryButton',
-            modifiers: ['-primary'],
-            properties: { bg: '#3B82F6' },
+            properties: { bg: '#3B82F6', col: '#FFF' },
             children: [],
           },
         })
@@ -301,12 +269,12 @@ describe('command-parser', () => {
       it('does not apply template when component has inline definition', () => {
         const tokens = [
           token.component('PrimaryButton'),
-          token.modifier('-large'),
+          token.property('pad'),
+          token.number('16'),
           token.eof(),
         ]
         const registry = new Map([
           ['PrimaryButton', createComponentTemplate({
-            modifiers: ['-primary'],
             properties: { bg: '#3B82F6' },
           })],
         ])
@@ -320,8 +288,7 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'PrimaryButton',
-            modifiers: ['-large'],
-            properties: {},
+            properties: { pad: 16 },
             children: [],
           },
         })
@@ -345,7 +312,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Divider',
-            modifiers: [],
             properties: {},
             children: [],
           },
@@ -370,18 +336,18 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Spacer',
-            modifiers: [],
             properties: { h: 20 },
             children: [],
           },
         })
       })
 
-      it('parses add after command with modifiers and content', () => {
+      it('parses add after command with properties and content', () => {
         const tokens = [
           token.keyword('after'),
           token.component('Text'),
-          token.modifier('-muted'),
+          token.property('col'),
+          token.color('#666'),
           token.string('Footer note'),
           token.eof(),
         ]
@@ -395,8 +361,7 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Text',
-            modifiers: ['-muted'],
-            properties: {},
+            properties: { col: '#666' },
             children: [],
             content: 'Footer note',
           },
@@ -421,7 +386,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Header',
-            modifiers: [],
             properties: {},
             children: [],
           },
@@ -448,7 +412,6 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Icon',
-            modifiers: [],
             properties: { w: 24, h: 24 },
             children: [],
           },
@@ -493,7 +456,8 @@ describe('command-parser', () => {
       it('stops parsing at newline', () => {
         const tokens = [
           token.component('Button'),
-          token.modifier('-primary'),
+          token.property('bg'),
+          token.color('#3B82F6'),
           token.newline(),
           token.property('w'),
           token.number('100'),
@@ -509,8 +473,7 @@ describe('command-parser', () => {
           component: {
             type: 'component',
             name: 'Button',
-            modifiers: ['-primary'],
-            properties: {},
+            properties: { bg: '#3B82F6' },
             children: [],
           },
         })

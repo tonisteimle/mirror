@@ -1,8 +1,9 @@
 /**
  * Undo/Redo Integration Tests
+ *
+ * Testing history management with the useHistory hook.
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from './kit'
 import { renderHook, act } from '@testing-library/react'
 import { useHistory, type HistoryState } from '../hooks/useHistory'
 
@@ -15,7 +16,7 @@ describe('Undo/Redo Keyboard Integration', () => {
     vi.useRealTimers()
   })
 
-  it('should integrate with code editor state', () => {
+  it('integrates with code editor state', () => {
     const initialState: HistoryState = {
       layoutCode: 'Page\n  Header',
       componentsCode: 'Page: ver full',
@@ -23,7 +24,6 @@ describe('Undo/Redo Keyboard Integration', () => {
 
     const { result } = renderHook(() => useHistory(initialState))
 
-    // Simulate user typing
     act(() => {
       result.current.pushState({
         layoutCode: 'Page\n  Header\n  Content',
@@ -34,7 +34,6 @@ describe('Undo/Redo Keyboard Integration', () => {
 
     expect(result.current.canUndo).toBe(true)
 
-    // Undo should restore previous state
     let undoneState: HistoryState | null = null
     act(() => {
       undoneState = result.current.undo()
@@ -44,7 +43,7 @@ describe('Undo/Redo Keyboard Integration', () => {
     expect(result.current.canRedo).toBe(true)
   })
 
-  it('should handle multiple sequential changes', () => {
+  it('handles multiple sequential changes', () => {
     const initialState: HistoryState = {
       layoutCode: 'A',
       componentsCode: '',
@@ -52,7 +51,6 @@ describe('Undo/Redo Keyboard Integration', () => {
 
     const { result } = renderHook(() => useHistory(initialState))
 
-    // Push two states (like the working test in use-history.test.ts)
     act(() => {
       result.current.pushState({ layoutCode: 'AB', componentsCode: '' })
       vi.advanceTimersByTime(500)
@@ -63,20 +61,23 @@ describe('Undo/Redo Keyboard Integration', () => {
       vi.advanceTimersByTime(500)
     })
 
-    // Now undo twice to get back to initial
     let state1: HistoryState | null
-    act(() => { state1 = result.current.undo() })
+    act(() => {
+      state1 = result.current.undo()
+    })
     expect(state1!.layoutCode).toBe('AB')
 
     let state2: HistoryState | null
-    act(() => { state2 = result.current.undo() })
+    act(() => {
+      state2 = result.current.undo()
+    })
     expect(state2!.layoutCode).toBe('A')
 
     expect(result.current.canUndo).toBe(false)
     expect(result.current.canRedo).toBe(true)
   })
 
-  it('should handle undo followed by new change (clearing redo)', () => {
+  it('handles undo followed by new change (clearing redo)', () => {
     const initialState: HistoryState = {
       layoutCode: 'A',
       componentsCode: '',
@@ -95,18 +96,16 @@ describe('Undo/Redo Keyboard Integration', () => {
 
     expect(result.current.canRedo).toBe(true)
 
-    // Make a new change
     act(() => {
       result.current.pushState({ layoutCode: 'C', componentsCode: '' })
       vi.advanceTimersByTime(500)
     })
 
-    // Redo should now be unavailable (future was cleared)
     expect(result.current.canRedo).toBe(false)
     expect(result.current.canUndo).toBe(true)
   })
 
-  it('should track both layoutCode and componentsCode changes', () => {
+  it('tracks both layoutCode and componentsCode changes', () => {
     const initialState: HistoryState = {
       layoutCode: 'Page',
       componentsCode: '',
@@ -114,7 +113,6 @@ describe('Undo/Redo Keyboard Integration', () => {
 
     const { result } = renderHook(() => useHistory(initialState))
 
-    // Change components only
     act(() => {
       result.current.pushState({
         layoutCode: 'Page',

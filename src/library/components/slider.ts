@@ -12,7 +12,7 @@ export const SliderComponent: LibraryComponent = {
       defaultProps: {
         h: 4,
         rad: 2,
-        bg: '#333'
+        bg: '$border'
       }
     },
     {
@@ -20,7 +20,7 @@ export const SliderComponent: LibraryComponent = {
       required: false,
       multiple: false,
       defaultProps: {
-        bg: '#3B82F6'
+        bg: '$primary'
       }
     },
     {
@@ -31,7 +31,7 @@ export const SliderComponent: LibraryComponent = {
         w: 20,
         h: 20,
         rad: 10,
-        bg: '#FFFFFF'
+        col: '$text'
       }
     }
   ],
@@ -39,9 +39,9 @@ export const SliderComponent: LibraryComponent = {
   actions: ['change'],
   definitions: `// Slider
 Slider: w 200 hor ver-cen
-SliderTrack: h 4 rad 2 bg #333 full hor
-SliderRange: h 4 rad 2 bg #3B82F6 w 100
-SliderThumb: w 20 h 20 rad 10 bg #FFF`,
+SliderTrack: h 4 rad 2 bg $border full hor
+SliderRange: h 4 rad 2 bg $primary w 100
+SliderThumb: w 20 h 20 rad 10`,
   layoutExample: `Slider
   SliderTrack
     SliderRange

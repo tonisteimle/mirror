@@ -3,14 +3,13 @@ import {
   KEYWORDS,
   DIRECTIONS,
   isDirectionOrCombo,
-  ACTION_KEYWORDS,
   CONTROL_KEYWORDS,
   EVENT_KEYWORDS,
   STATE_KEYWORD,
   EVENTS_KEYWORD,
   BORDER_STYLES,
   ANIMATION_KEYWORDS,
-  POSITION_KEYWORDS
+  ANIMATION_ACTION_KEYWORDS
 } from '../dsl/properties'
 
 export type TokenType =
@@ -18,8 +17,7 @@ export type TokenType =
   | 'COMPONENT_DEF'   // Button: at start of line (component/style definition)
   | 'MULTIPLE_DEF'    // Item*: in definition (repeatable element)
   | 'LIST_ITEM'       // - at start of line (new instance)
-  | 'MODIFIER'        // -primary, -outlined
-  | 'PROPERTY'        // h, w, pad, gap, hor, ver, col, bg
+  | 'PROPERTY'        // h, w, pad, gap, hor, ver, col
   | 'DIRECTION'       // l, r, u, d or combos like l-r, u-d
   | 'NUMBER'          // 48, 200
   | 'STRING'          // "Label"
@@ -32,6 +30,11 @@ export type TokenType =
   | 'BORDER_STYLE'    // solid, dashed, dotted (for compound border)
   | 'PAREN_OPEN'      // (
   | 'PAREN_CLOSE'     // )
+  | 'BRACKET_OPEN'    // [
+  | 'BRACKET_CLOSE'   // ]
+  | 'BRACE_OPEN'      // {
+  | 'BRACE_CLOSE'     // }
+  | 'COLON'           // : (in object literals)
   | 'COMMA'           // , (optional separator between properties)
   | 'NEWLINE'
   | 'INDENT'
@@ -41,13 +44,13 @@ export type TokenType =
   | 'EVENT'           // onclick, onhover, etc.
   | 'STATE'           // state keyword
   | 'EVENTS'          // events keyword (for centralized event block)
-  | 'ACTION'          // open, close, toggle, change, to
   | 'CONTROL'         // if, not, and, or, else, each, in
-  | 'ANIMATION'       // slide-up, slide-down, fade, scale, none
-  | 'POSITION'        // below, above, left, right, center (overlay positioning)
+  | 'ANIMATION'       // slide-up, slide-down, fade, scale, spin, pulse, bounce
+  | 'ANIMATION_ACTION' // show, hide, animate
   | 'ASSIGNMENT'      // =
   | 'OPERATOR'        // ==, !=, >, <, >=, <=
   | 'ARITHMETIC'      // +, -, *, /
+  | 'JSON_VALUE'      // Complete JSON array/object value for data tokens
 
 export interface Token {
   type: TokenType
@@ -83,6 +86,11 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
+    // Skip comment lines: // comment
+    if (content.trimStart().startsWith('//')) {
+      continue
+    }
+
     // Check for list item at start of line: - Item "value"
     const listItemMatch = content.match(/^-\s+/)
     if (listItemMatch) {
@@ -102,11 +110,55 @@ export function tokenize(input: string): Token[] {
     if (tokenVarDefMatch) {
       tokens.push({ type: 'TOKEN_VAR_DEF', value: tokenVarDefMatch[1], line: lineNum, column })
       column += tokenVarDefMatch[0].length
+
+      // Check if the value starts with [ (JSON array) - collect until matching ]
+      const restOfLine = content.slice(tokenVarDefMatch[0].length).trim()
+      if (restOfLine.startsWith('[')) {
+        // Collect JSON array value, potentially spanning multiple lines
+        let jsonValue = restOfLine
+        let bracketCount = 0
+        let inString = false
+        let foundEnd = false
+
+        // Count brackets in current line
+        for (const c of restOfLine) {
+          if (c === '"' && jsonValue[jsonValue.length - 1] !== '\\') inString = !inString
+          if (!inString) {
+            if (c === '[') bracketCount++
+            if (c === ']') bracketCount--
+          }
+        }
+        foundEnd = bracketCount === 0
+
+        // If not complete, continue to next lines
+        let nextLine = lineNum + 1
+        while (!foundEnd && nextLine < lines.length) {
+          const nextLineContent = lines[nextLine].trim()
+          jsonValue += '\n' + nextLineContent
+          for (const c of nextLineContent) {
+            if (c === '"' && jsonValue[jsonValue.length - 1] !== '\\') inString = !inString
+            if (!inString) {
+              if (c === '[') bracketCount++
+              if (c === ']') bracketCount--
+            }
+          }
+          foundEnd = bracketCount === 0
+          nextLine++
+        }
+
+        tokens.push({ type: 'JSON_VALUE', value: jsonValue, line: lineNum, column })
+        tokens.push({ type: 'NEWLINE', value: '\n', line: nextLine - 1, column: 0 })
+
+        // Skip to the line after the JSON value
+        lineNum = nextLine - 1
+        continue
+      }
     }
 
     // Check for component definition with inheritance: DangerButton from Button: col #EF4444
+    // Also supports hyphenated names like Primary-Button from Button:
     const inheritDefMatch = !selectorMatch && !tokenVarDefMatch && !listItemMatch &&
-      content.match(/^([A-Z][a-zA-Z0-9_]*)\s+from\s+([A-Z][a-zA-Z0-9_]*):\s*/)
+      content.match(/^([A-Z][a-zA-Z0-9_-]*)\s+from\s+([A-Z][a-zA-Z0-9_-]*):\s*/)
     if (inheritDefMatch) {
       // Emit: COMPONENT_DEF, KEYWORD 'from', COMPONENT_NAME
       tokens.push({
@@ -159,6 +211,11 @@ export function tokenize(input: string): Token[] {
         pos++
         column++
         continue
+      }
+
+      // Inline comment: // rest of line is ignored
+      if (char === '/' && content[pos + 1] === '/') {
+        break // Skip rest of line
       }
 
       // Parentheses for style groups
@@ -271,20 +328,8 @@ export function tokenize(input: string): Token[] {
         }
       }
 
-      // Modifier: -primary, -outlined (minus followed by letter)
-      if (char === '-' && /[a-zA-Z]/.test(content[pos + 1] || '')) {
-        let value = '-'
-        pos++
-        while (pos < content.length && /[a-zA-Z0-9_-]/.test(content[pos])) {
-          value += content[pos]
-          pos++
-        }
-        tokens.push({ type: 'MODIFIER', value, line: lineNum, column })
-        column += value.length
-        continue
-      }
-
       // Arithmetic minus: - followed by space or number (for expressions like $count - 1)
+      // Also handle - followed by letter as regular minus (modifiers removed)
       if (char === '-' && (/[0-9\s$]/.test(content[pos + 1] || '') || pos + 1 >= content.length)) {
         tokens.push({ type: 'ARITHMETIC', value: '-', line: lineNum, column })
         pos++
@@ -338,10 +383,24 @@ export function tokenize(input: string): Token[] {
         continue
       }
 
-      // Number, optionally followed by :tokenName
+      // Number (including decimals like 0.5 and percentages like 20%), optionally followed by :tokenName
       if (/[0-9]/.test(char)) {
         let value = ''
         while (pos < content.length && /[0-9]/.test(content[pos])) {
+          value += content[pos]
+          pos++
+        }
+        // Handle decimal point
+        if (content[pos] === '.' && /[0-9]/.test(content[pos + 1] || '')) {
+          value += content[pos] // add the '.'
+          pos++
+          while (pos < content.length && /[0-9]/.test(content[pos])) {
+            value += content[pos]
+            pos++
+          }
+        }
+        // Handle percentage suffix
+        if (content[pos] === '%') {
           value += content[pos]
           pos++
         }
@@ -373,12 +432,15 @@ export function tokenize(input: string): Token[] {
         // Check for hyphenated properties like hor-cen, ver-cen
         // or hyphenated directions like l-r, u-d, u-d-l-r
         // or animation keywords like slide-up, slide-down
+        // or hyphenated component names like Save-Area, Navigation-Area
         while (content[pos] === '-' && /[a-zA-Z]/.test(content[pos + 1] || '')) {
           const restMatch = content.slice(pos + 1).match(/^[a-zA-Z0-9_]+/)
           if (restMatch) {
             const hyphenatedValue = value + '-' + restMatch[0]
-            // Check if it's a valid property, direction combo, or animation keyword
-            if (PROPERTIES.has(hyphenatedValue) || isDirectionOrCombo(hyphenatedValue) || ANIMATION_KEYWORDS.has(hyphenatedValue)) {
+            // Check if it's a valid property, direction combo, animation keyword,
+            // or a PascalCase component name (starts with uppercase)
+            const isPascalCase = /^[A-Z]/.test(value)
+            if (PROPERTIES.has(hyphenatedValue) || isDirectionOrCombo(hyphenatedValue) || ANIMATION_KEYWORDS.has(hyphenatedValue) || isPascalCase) {
               value = hyphenatedValue
               pos += 1 + restMatch[0].length // skip hyphen + rest
             } else {
@@ -417,15 +479,16 @@ export function tokenize(input: string): Token[] {
           type = 'EVENTS'
         } else if (EVENT_KEYWORDS.has(value)) {
           type = 'EVENT'
-        } else if (ACTION_KEYWORDS.has(value)) {
-          type = 'ACTION'
         } else if (CONTROL_KEYWORDS.has(value)) {
           type = 'CONTROL'
         } else if (ANIMATION_KEYWORDS.has(value)) {
           type = 'ANIMATION'
-        } else if (POSITION_KEYWORDS.has(value)) {
-          type = 'POSITION'
+        } else if (ANIMATION_ACTION_KEYWORDS.has(value)) {
+          type = 'ANIMATION_ACTION'
         } else {
+          // NOTE: ACTION_KEYWORDS and POSITION_KEYWORDS are now tokenized as COMPONENT_NAME
+          // to allow using words like 'toggle', 'page', 'center' as component names.
+          // The parser checks for these keywords by value when needed.
           // Check for * suffix (repeatable element marker)
           if (content[pos] === '*') {
             type = 'MULTIPLE_DEF'

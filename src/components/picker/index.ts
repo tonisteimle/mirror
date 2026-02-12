@@ -24,3 +24,12 @@ export { ColorSwatch, type ColorSwatchProps } from './ColorSwatch'
 
 // Item label component
 export { ItemLabel, type ItemLabelProps } from './ItemLabel'
+
+// Category header for grouped lists
+export { CategoryHeader } from './CategoryHeader'
+
+// Empty state message
+export { EmptyState } from './EmptyState'
+
+// Error boundary for pickers
+export { PickerErrorBoundary } from './PickerErrorBoundary'

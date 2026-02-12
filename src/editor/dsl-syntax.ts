@@ -52,19 +52,19 @@ export const dslTheme = EditorView.theme({
   '.cm-activeLineGutter': {
     backgroundColor: activeBg,
   },
-  // Custom classes for our DSL
-  '.dsl-component': { color: '#4EC9B0' },      // Teal - component names
-  '.dsl-component-def': { color: '#DCDCAA' },  // Yellow - component definitions
-  '.dsl-property': { color: '#9CDCFE' },       // Light blue - properties
-  '.dsl-number': { color: '#B5CEA8' },         // Green - numbers
-  '.dsl-string': { color: '#CE9178' },         // Orange - strings
-  '.dsl-color': { color: '#C586C0' },          // Purple - colors
-  '.dsl-comment': { color: '#6A9955', fontStyle: 'italic' },  // Green - comments
-  '.dsl-modifier': { color: '#C586C0' },       // Purple - modifiers
-  '.dsl-direction': { color: '#569CD6' },      // Blue - directions
-  '.dsl-token-ref': { color: '#4FC1FF' },      // Cyan - token references
-  '.dsl-token-def': { color: '#4FC1FF' },      // Cyan - token definitions
-  '.dsl-keyword': { color: '#C586C0' },        // Purple - keywords (from, after, before)
+  // Custom classes for our DSL - matching documentation colors
+  '.dsl-component': { color: '#5ba8f5' },      // Blue - component names (matches docs)
+  '.dsl-component-def': { color: '#5ba8f5' },  // Blue - definitions (matches docs)
+  '.dsl-property': { color: '#888' },          // Gray - properties
+  '.dsl-number': { color: '#b96' },            // Muted orange - numbers
+  '.dsl-string': { color: '#a88' },            // Muted pink - strings
+  '.dsl-color': { color: '#b96' },             // Muted orange - colors (same as values)
+  '.dsl-comment': { color: '#555', fontStyle: 'italic' },  // Dark gray - comments
+  '.dsl-modifier': { color: '#88a' },          // Muted blue - modifiers
+  '.dsl-direction': { color: '#888' },         // Gray - directions (same as properties)
+  '.dsl-token-ref': { color: '#5ba8f5' },      // Blue - token references (matches docs)
+  '.dsl-token-def': { color: '#5ba8f5' },      // Blue - token definitions (matches docs)
+  '.dsl-keyword': { color: '#2271c1' },        // Dark blue - keywords (matches docs)
   // Lint gutter and diagnostics
   '.cm-lintRange-error': {
     backgroundImage: 'none',
@@ -109,7 +109,7 @@ export const dslTheme = EditorView.theme({
 }, { dark: true })
 
 // Token patterns
-const PROPERTIES = /^(w|h|minw|maxw|minh|maxh|full|grow|pad|mar|hor-l|hor-cen|hor-r|ver-t|ver-cen|ver-b|hor|ver|gap|cen|between|wrap|col|bg|boc|rad|border|size|weight|font|line|align|italic|underline|lowercase|uppercase|truncate|icon|src|alt|fit|shadow|opacity|cursor|pointer|z)\b/
+const PROPERTIES = /^(w|h|minw|maxw|minh|maxh|full|grow|padding|pad|margin|mar|hor-l|hor-cen|hor-r|ver-t|ver-cen|ver-b|hor|ver|gap|cen|between|wrap|color|col|boc|radius|rad|border|size|weight|font|line|align|italic|underline|lowercase|uppercase|truncate|icon|src|alt|fit|shadow|opacity|opa|cursor|pointer|z|hidden|visible)\b/
 const DIRECTIONS = /^[lrud](-[lrud])*\b/
 const COMPONENT_DEF = /^[A-Z][a-zA-Z0-9_]*:/
 const COMPONENT_NAME = /^[a-zA-Z_][a-zA-Z0-9_]*/
@@ -118,8 +118,8 @@ const STRING = /^"[^"]*"/
 const COLOR = /^#[0-9a-fA-F]{3,8}/
 const COMMENT = /^\/\/.*/
 const MODIFIER = /^-[a-zA-Z][a-zA-Z0-9_-]*/
-const TOKEN_REF = /^\$[a-zA-Z][a-zA-Z0-9_]*/
-const TOKEN_DEF = /^:[a-zA-Z][a-zA-Z0-9_]*/
+const TOKEN_REF = /^\$[a-zA-Z][a-zA-Z0-9_-]*/
+const TOKEN_DEF = /^:[a-zA-Z][a-zA-Z0-9_-]*/
 const KEYWORD = /^(from|after|before)\b/
 
 interface Token {

@@ -14,8 +14,8 @@ export const TabsBehavior: BehaviorHandler = {
     _registry: BehaviorRegistry
   ) {
     const slots = groupChildrenBySlot(node)
-    const listNodes = slots.get('List') || []
-    const panelNodes = slots.get('Panel') || []
+    const listNodes = slots.get('Tabs') || []
+    const panelNodes = slots.get('TabContent') || []
 
     // Get tabs from List children
     const tabNodes = listNodes.flatMap(list =>
@@ -34,7 +34,14 @@ export const TabsBehavior: BehaviorHandler = {
                 key={tab.id}
                 value={tab.id}
                 style={{
+                  // Reset button defaults
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'inherit',
+                  font: 'inherit',
+                  // User-defined styles
                   ...getStylesFromNode(tab),
+                  // Always apply these
                   cursor: 'pointer',
                   borderBottom: activeTab === tab.id ? '2px solid #3B82F6' : '2px solid transparent'
                 }}

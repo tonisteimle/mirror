@@ -6,21 +6,23 @@
  */
 
 import type { DSLProperties } from '../types/dsl-properties'
+export type { DSLProperties }
 
 // ============================================
 // Expression Types (for conditionals and arithmetic)
 // ============================================
 
 export interface Expression {
-  type: 'literal' | 'variable' | 'binary' | 'property_access' | 'component_property'
+  type: 'literal' | 'variable' | 'binary' | 'unary' | 'property_access' | 'component_property'
   value?: string | number | boolean
   name?: string
   path?: string[]                    // $user.avatar -> ['user', 'avatar']
   componentName?: string             // Email.value -> componentName: 'Email'
   propertyName?: string              // Email.value -> propertyName: 'value'
-  operator?: '+' | '-' | '*' | '/'
+  operator?: '+' | '-' | '*' | '/' | 'not'
   left?: Expression
   right?: Expression
+  operand?: Expression               // For unary expressions (e.g., not $flag)
 }
 
 // ============================================
@@ -41,7 +43,7 @@ export interface VariableDeclaration {
 }
 
 export interface ActionStatement {
-  type: 'change' | 'open' | 'close' | 'toggle' | 'page' | 'show' | 'hide' | 'assign' | 'set_property'
+  type: 'change' | 'open' | 'close' | 'toggle' | 'page' | 'show' | 'hide' | 'assign' | 'set_property' | 'alert'
   target?: string       // Target component (e.g., panel1)
   toState?: string      // For 'change X to Y'
   property?: string     // For assignment: target.property = value
@@ -98,12 +100,13 @@ export interface ASTNode {
   type: 'component'
   name: string
   id: string  // Auto-generated unique ID
-  modifiers: string[]
   properties: DSLProperties
   content?: string
   children: ASTNode[]
-  line?: number  // Source line number (0-indexed)
-  column?: number  // Source column number
+  line?: number      // Source line number (0-indexed)
+  column?: number    // Source column number
+  endLine?: number   // End line number (0-indexed)
+  endColumn?: number // End column number
   // V5: Named instances (Input Email: -> instanceName: 'Email', name: 'Input')
   instanceName?: string  // For named instances like Input Email:
   // V2: New fields for interactivity
@@ -127,10 +130,23 @@ export interface ASTNode {
   // Library component fields
   _isLibrary?: boolean  // True if this is a library component (Dropdown, Dialog, etc.)
   _libraryParent?: string  // Name of parent library component (for slots)
+  _libraryType?: string  // Original library name when using 'as' syntax (e.g., "Dialog" for "SettingsDialog as Dialog")
   // V4: List items (new instances)
   _isListItem?: boolean  // True if created with - prefix (new instance)
   // V5: Explicit definitions (template definitions with colon)
   _isExplicitDefinition?: boolean  // True if defined with colon (e.g., Input Email:)
+  // V6: Element animations
+  showAnimation?: AnimationDefinition    // show fade slide-up 300
+  hideAnimation?: AnimationDefinition    // hide fade 200
+  continuousAnimation?: AnimationDefinition  // animate spin 1000
+}
+
+// Animation definition for show/hide/animate
+export interface AnimationDefinition {
+  type: 'show' | 'hide' | 'animate'
+  animations: string[]   // ['fade', 'slide-up'] - can combine multiple
+  duration?: number      // Duration in ms (default 300)
+  line?: number
 }
 
 // ============================================
@@ -138,7 +154,6 @@ export interface ASTNode {
 // ============================================
 
 export interface ComponentTemplate {
-  modifiers: string[]
   properties: DSLProperties
   content?: string
   children: ASTNode[]
@@ -146,11 +161,13 @@ export interface ComponentTemplate {
   states?: StateDefinition[]
   variables?: VariableDeclaration[]
   eventHandlers?: EventHandler[]
+  // V5: Library type for 'as Text' etc.
+  _isLibrary?: boolean
+  _libraryType?: string
 }
 
 export interface StyleMixin {
   properties: DSLProperties
-  modifiers: string[]
 }
 
 // ============================================
@@ -195,9 +212,14 @@ export function isTokenSequence(value: TokenValue): value is TokenSequence {
 // Parse Result
 // ============================================
 
+import type { ParseError } from './errors'
+
 export interface ParseResult {
   nodes: ASTNode[]
+  /** Simple error strings (backwards compatibility) */
   errors: string[]
+  /** Structured errors with location and hints */
+  diagnostics: ParseError[]
   registry: Map<string, ComponentTemplate>
   tokens: Map<string, TokenValue>
   styles: Map<string, StyleMixin>

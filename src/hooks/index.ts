@@ -26,3 +26,6 @@ export type { UseDialogsReturn, ErrorState } from './useDialogs'
 
 export { useCodeParsing } from './useCodeParsing'
 export type { UseCodeParsingReturn, ParseResult } from './useCodeParsing'
+
+export { useAppState } from './useAppState'
+export type { AppState } from './useAppState'

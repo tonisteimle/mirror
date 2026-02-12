@@ -45,11 +45,6 @@ function TreeNode({ node, depth, selectedId, onSelect }: TreeNodeProps) {
         <span style={{ color: '#6B7280', fontSize: '11px' }}>
           :{node.id}
         </span>
-        {node.modifiers.length > 0 && (
-          <span style={{ color: '#A78BFA', fontSize: '12px' }}>
-            {node.modifiers.join(' ')}
-          </span>
-        )}
       </div>
       {hasChildren && node.children.map((child) => (
         <TreeNode

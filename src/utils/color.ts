@@ -203,3 +203,84 @@ export function generateHueVariations(hue: number | null, cols = 18, rows = 10):
 
 // Pre-generated color grid for InlineColorPanel (12 columns, with grayscale)
 export const COLOR_GRID = generateColorGrid()
+
+// ============================================
+// Luminance and Contrast Utilities
+// ============================================
+
+/**
+ * Calculate relative luminance of a color.
+ * Uses the WCAG formula for perceived brightness.
+ * Returns value between 0 (darkest) and 1 (brightest).
+ */
+export function getLuminance(r: number, g: number, b: number): number {
+  // Convert to sRGB
+  const rsRGB = r / 255
+  const gsRGB = g / 255
+  const bsRGB = b / 255
+
+  // Apply gamma correction
+  const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4)
+  const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4)
+  const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4)
+
+  // Calculate luminance using WCAG coefficients
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear
+}
+
+/**
+ * Check if a color is light (should use dark text) or dark (should use light text).
+ * Uses a practical threshold optimized for UI readability.
+ *
+ * @param hex - Hex color string (with or without #)
+ * @returns true if color is light (use dark text), false if dark (use light text), null if invalid
+ */
+export function isLightColor(hex: string): boolean | null {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return null
+
+  const luminance = getLuminance(rgb.r, rgb.g, rgb.b)
+
+  // Threshold of 0.5 is optimized for UI readability
+  // This ensures colored buttons (blue, red, green) get white text
+  // while light grays and yellows get dark text
+  return luminance > 0.5
+}
+
+/**
+ * Get the appropriate contrast text color for a background.
+ *
+ * @param backgroundColor - Hex color string of the background
+ * @param lightText - Color to use on dark backgrounds (default: #fff)
+ * @param darkText - Color to use on light backgrounds (default: #000)
+ * @returns The appropriate text color, or null if background is invalid
+ */
+export function getContrastTextColor(
+  backgroundColor: string,
+  lightText: string = '#fff',
+  darkText: string = '#000'
+): string | null {
+  const isLight = isLightColor(backgroundColor)
+  if (isLight === null) return null
+
+  return isLight ? darkText : lightText
+}
+
+/**
+ * Check if a string is a valid color value.
+ * Supports hex colors, rgb(), rgba(), hsl(), hsla(), transparent.
+ */
+export function isColorValue(value: string): boolean {
+  if (!value || typeof value !== 'string') return false
+
+  // Hex colors: #RGB, #RRGGBB, #RRGGBBAA
+  if (/^#[0-9a-fA-F]{3,8}$/.test(value)) return true
+
+  // rgb/rgba/hsl/hsla functions
+  if (/^(rgb|hsl)a?\(/.test(value)) return true
+
+  // transparent keyword
+  if (value === 'transparent') return true
+
+  return false
+}

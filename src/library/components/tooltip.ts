@@ -16,8 +16,7 @@ export const TooltipComponent: LibraryComponent = {
       required: true,
       multiple: false,
       defaultProps: {
-        bg: '#1E1E1E',
-        col: '#FFFFFF',
+        bg: '$surface',
         pad: 8,
         rad: 4,
         size: 12
@@ -28,12 +27,12 @@ export const TooltipComponent: LibraryComponent = {
   actions: ['show', 'hide'],
   definitions: `// Tooltip Components
 TooltipTrigger: pad 4
-TooltipContent: bg #1E1E1E col #FFF pad 8 rad 4 size 12 bor 1 boc #333`,
+TooltipContent: bg $surface col $text pad 8 rad 4 size 12 bor 1 boc $border`,
   layoutExample: `Tooltip
   state hidden
   TooltipTrigger
     onhover show
-    icon "info" col #888
+    icon "info" col $text-muted
   TooltipContent
     if visible
     "Helpful information here"`

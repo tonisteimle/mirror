@@ -17,7 +17,7 @@ export const ContextMenuComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 8,
         pad: 4,
         minw: 180
@@ -35,7 +35,7 @@ export const ContextMenuComponent: LibraryComponent = {
         pad_l: 12,
         pad_r: 12,
         rad: 4,
-        'hover-bg': '#3B82F6'
+        'hover-bg': '$primary'
       }
     },
     {
@@ -44,7 +44,7 @@ export const ContextMenuComponent: LibraryComponent = {
       multiple: true,
       defaultProps: {
         h: 1,
-        bg: '#333',
+        bg: '$border',
         mar_u: 4,
         mar_d: 4
       }
@@ -59,10 +59,10 @@ export const ContextMenuComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close'],
   definitions: `// ContextMenu
-ContextMenuTrigger: pad 40 bg #252525 rad 8 bor 1 boc #444 ver cen
-ContextMenuContent: ver bg #1E1E1E rad 8 pad 4 minw 180 bor 1 boc #333
-ContextMenuItem: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg #3B82F6
-ContextMenuSeparator: h 1 bg #333 mar 4`,
+ContextMenuTrigger: pad 40 bg $surface-hover rad 8 bor 1 boc $border-hover ver cen
+ContextMenuContent: ver bg $surface rad 8 pad 4 minw 180 bor 1 boc $border
+ContextMenuItem: hor ver-cen gap 8 pad 8 12 rad 4 hover-bg $primary
+ContextMenuSeparator: h 1 bg $border mar 4`,
   layoutExample: `ContextMenu
   state closed
   ContextMenuTrigger
@@ -80,7 +80,7 @@ ContextMenuSeparator: h 1 bg #333 mar 4`,
       icon "clipboard"
       "Paste"
     ContextMenuSeparator
-    ContextMenuItem col #EF4444
+    ContextMenuItem bg $error
       icon "trash-2"
       "Delete"`
 }

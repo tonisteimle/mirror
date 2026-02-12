@@ -14,7 +14,7 @@ export const DialogBehavior: BehaviorHandler = {
   ) {
     const slots = groupChildrenBySlot(node)
     const triggerNodes = slots.get('Trigger') || []
-    const overlayNodes = slots.get('Overlay') || []
+    const backdropNodes = slots.get('Backdrop') || []
     const contentNodes = slots.get('Content') || []
 
     // Get current state from registry - use node.name for action targeting
@@ -33,11 +33,11 @@ export const DialogBehavior: BehaviorHandler = {
         ))}
 
         <Dialog.Portal>
-          {overlayNodes.map((overlay) => (
+          {backdropNodes.map((backdrop) => (
             <Dialog.Overlay
-              key={overlay.id}
+              key={backdrop.id}
               style={{
-                ...getStylesFromNode(overlay),
+                ...getStylesFromNode(backdrop),
                 position: 'fixed',
                 inset: 0,
                 zIndex: 999

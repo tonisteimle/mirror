@@ -25,109 +25,112 @@
  * Future: gap l-r → columnGap, gap u-d → rowGap
  */
 
-// All known properties
+// All known properties (short forms)
 export const PROPERTIES = new Set([
   // Layout
-  'hor', 'ver', 'gap', 'between', 'wrap', 'grow', 'cen',
+  'hor', 'ver', 'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'cen', 'grid', 'rows',
   // Alignment
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   // Sizing
   'w', 'h', 'full', 'minw', 'maxw', 'minh', 'maxh',
-  // Spacing
-  'pad', 'mar',
-  // Colors (bg for background, col for text/unified color, boc for border-color)
-  'bg', 'col', 'boc',
-  // Border
-  'rad', 'border', 'bor',
+  // Spacing (short and long forms)
+  'pad', 'padding', 'mar', 'margin',
+  // Colors: col = text color, bg = background color
+  'col', 'color', 'bg', 'boc',
+  // Border (short and long forms)
+  'rad', 'radius', 'border', 'bor',
   // Typography
   'size', 'weight', 'font', 'line', 'align', 'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   // Form inputs
-  'placeholder', 'type', 'disabled', 'visible',
+  'placeholder', 'type', 'disabled', 'visible', 'rows',
+  // Link attributes
+  'href', 'target',
+  // Slider/Range
+  'min', 'max', 'step', 'value',
   // Visuals
-  'icon', 'src', 'alt', 'fit', 'shadow', 'opacity', 'cursor', 'pointer', 'z', 'hidden',
+  'icon', 'src', 'alt', 'fit', 'shadow', 'opacity', 'opa', 'op', 'cursor', 'pointer', 'z', 'hidden',
+  // Overflow / Scroll
+  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'snap', 'clip',
   // Hover states
-  'hover-bg', 'hover-col', 'hover-boc', 'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
+  'hover-col', 'hover-bg', 'hover-boc', 'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
 ])
 
 // Border styles for compound border property
-export const BORDER_STYLES = new Set(['solid', 'dashed', 'dotted', 'none'])
-
-// Container components: col → backgroundColor
-export const CONTAINER_COMPONENTS = new Set([
-  'Box', 'Stack', 'VStack', 'HStack', 'ZStack',
-  'Button', 'Card', 'Container', 'Header', 'Footer', 'Sidebar',
-  'Nav', 'Main', 'Section', 'Article', 'Aside',
-  'Modal', 'Dialog', 'Drawer', 'Popover', 'Tooltip',
-  'Dropdown', 'Menu', 'List', 'ListItem', 'Grid', 'Row', 'Column',
-])
-
-// Text components: col → color
-export const TEXT_COMPONENTS = new Set([
-  'Text', 'Label', 'Title', 'Heading', 'Paragraph', 'Span',
-  'Link', 'Badge', 'Tag', 'Chip',
-  '_text', // implicit text from strings
-])
+// Note: 'none' is not included - to remove a border, simply don't use bor
+export const BORDER_STYLES = new Set(['solid', 'dashed', 'dotted'])
 
 // Properties that can take direction modifiers (l, r, u, d)
 export const DIRECTIONAL_PROPERTIES = new Set(['pad', 'mar', 'bor'])
 
-// Direction values
-export const DIRECTIONS = new Set(['l', 'r', 'u', 'd'])
+// Direction values (u/d = up/down, t/b = top/bottom are aliases)
+export const DIRECTIONS = new Set(['l', 'r', 'u', 'd', 't', 'b'])
 
-// Check if a string is a valid direction combo (e.g., 'ud', 'lr', 'u-d', 'l-r')
+// Check if a string is a valid direction combo (e.g., 'ud', 'lr', 'u-d', 'l-r', 't-b')
 export function isDirectionOrCombo(value: string): boolean {
   // Single direction
   if (DIRECTIONS.has(value)) return true
-  // Combo with hyphen: u-d, l-r, u-d-l, etc.
+  // Combo with hyphen: u-d, l-r, t-b, u-d-l, etc.
   if (value.includes('-')) {
     const parts = value.split('-')
     return parts.every(p => DIRECTIONS.has(p))
   }
-  // Combo without hyphen: ud, lr, udlr
-  return value.length > 0 && /^[lrud]+$/.test(value)
+  // Combo without hyphen: ud, lr, udlr, tb
+  return value.length > 0 && /^[lrudtb]+$/.test(value)
 }
 
-// Split direction combo into individual directions
+// Normalize direction: t→u (top→up), b→d (bottom→down)
+export function normalizeDirection(dir: string): string {
+  if (dir === 't') return 'u'
+  if (dir === 'b') return 'd'
+  return dir
+}
+
+// Split direction combo into individual directions (normalized)
 export function splitDirectionCombo(value: string): string[] {
   if (value.includes('-')) {
-    return value.split('-').filter(p => DIRECTIONS.has(p))
+    return value.split('-').filter(p => DIRECTIONS.has(p)).map(normalizeDirection)
   }
-  return value.split('').filter(p => DIRECTIONS.has(p))
+  return value.split('').filter(p => DIRECTIONS.has(p)).map(normalizeDirection)
 }
 
 // Properties by type
 export const BOOLEAN_PROPERTIES = new Set([
-  'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'cen',
+  'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'fill', 'cen',
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
-  'hidden'
+  'hidden', 'visible'
 ])
 
 export const COLOR_PROPERTIES = new Set([
-  'col', 'boc',
-  'hover-col', 'hover-boc'
+  'col', 'bg', 'boc',
+  'hover-col', 'hover-bg', 'hover-boc'
 ])
 
 export const NUMBER_PROPERTIES = new Set([
-  'gap', 'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
+  'gap', 'gap-col', 'gap-row', 'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
   'pad', 'mar', 'rad', 'border', 'bor',
-  'size', 'weight', 'line', 'opacity', 'z',
-  'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale'
+  'size', 'weight', 'line', 'opacity', 'opa', 'op', 'z',
+  'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
+  'min', 'max', 'step', 'value', 'rows'
 ])
 
-export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow'])
+export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type'])
 
 // Keywords
-export const KEYWORDS = new Set(['after', 'before', 'from'])
+export const KEYWORDS = new Set(['after', 'before', 'from', 'as', 'named'])
+
+// Type Keywords - REMOVED
+// Previously contained 'box' and 'text' but these were never used
+// and conflicted with common component names
 
 // Action Keywords (for state changes and interactions)
 export const ACTION_KEYWORDS = new Set([
-  'open', 'close', 'toggle', 'change', 'to', 'page', 'show', 'hide', 'assign'
+  'open', 'close', 'toggle', 'change', 'to', 'page', 'show', 'hide', 'assign', 'alert'
 ])
 
 // Control Flow Keywords
 export const CONTROL_KEYWORDS = new Set([
-  'if', 'not', 'and', 'or', 'else', 'each', 'in'
+  'if', 'then', 'not', 'and', 'or', 'else', 'each', 'in'
 ])
 
 // Event Keywords
@@ -138,15 +141,32 @@ export const EVENT_KEYWORDS = new Set([
 // State Keyword
 export const STATE_KEYWORD = 'state'
 
+// System States - automatically bound to browser pseudo-classes
+// These states don't need explicit event handlers
+export const SYSTEM_STATES = new Set([
+  'hover',    // Bound to onMouseEnter/Leave
+  'focus',    // Bound to onFocus/onBlur
+  'active',   // Bound to onMouseDown/Up
+  'disabled', // Bound to disabled attribute
+])
+
 // Events Keyword (for centralized event block)
 export const EVENTS_KEYWORD = 'events'
 
 // Animation Keywords (for overlay open/close animations)
-// Note: 'none' is not included because it conflicts with BORDER_STYLES
-// To have no animation, simply omit the animation parameter
+// Note: 'none' also exists in BORDER_STYLES, but the parser handles context
 export const ANIMATION_KEYWORDS = new Set([
   'slide-up', 'slide-down', 'slide-left', 'slide-right',
-  'fade', 'scale'
+  'fade', 'scale', 'none',
+  // Continuous animations
+  'spin', 'pulse', 'bounce'
+])
+
+// Animation Action Keywords (for element show/hide/animate blocks)
+export const ANIMATION_ACTION_KEYWORDS = new Set([
+  'show',     // Entrance animation: show fade slide-up 300
+  'hide',     // Exit animation: hide fade 200
+  'animate'   // Continuous animation: animate spin 1000
 ])
 
 // Position Keywords (for overlay positioning relative to trigger or viewport)

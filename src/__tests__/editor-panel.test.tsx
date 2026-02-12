@@ -1,135 +1,98 @@
 /**
- * Tests for EditorPanel component.
+ * EditorPanel Component Tests
+ *
+ * Using the test kit for concise, readable tests.
  */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import {
+  componentTest,
+  editorPanelProps,
+  editorActionsContext,
+  setupMocks,
+  screen,
+  fireEvent,
+  describe,
+  it,
+  expect,
+  beforeEach,
+} from './kit'
 import { EditorPanel } from '../components/EditorPanel'
 
-// Mock PromptPanel since it has complex CodeMirror dependencies
-vi.mock('../components/PromptPanel', () => ({
-  PromptPanel: vi.fn(({ value, onChange }) => (
-    <textarea
-      data-testid="mock-prompt-panel"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  )),
-}))
+// Setup component mocks
+setupMocks()
+
+// Create test context
+const contextActions = editorActionsContext()
+
+// Create test builder
+const test = componentTest(EditorPanel, editorPanelProps, {
+  providers: { EditorActions: contextActions },
+})
 
 describe('EditorPanel', () => {
-  const defaultProps = {
-    width: 420,
-    activeTab: 'layout' as const,
-    onTabChange: vi.fn(),
-    layoutCode: 'Box',
-    componentsCode: 'Button: col #3B82F6',
-    tokensCode: '$primary: #3B82F6',
-    onLayoutChange: vi.fn(),
-    onComponentsChange: vi.fn(),
-    onTokensChange: vi.fn(),
-    highlightLine: undefined,
-    autoCompleteMode: 'always' as const,
-    onOpenAiAssistant: vi.fn(),
-    onClear: vi.fn(),
-    onClean: vi.fn(),
-  }
+  // ===========================================
+  // Rendering Tests
+  // ===========================================
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  test.shouldRender(['Page', 'Components', 'Tokens'])
+  test.shouldRenderTitles(['Clear', 'Extract'])
 
-  describe('Tab Rendering', () => {
-    it('should render Page tab', () => {
-      render(<EditorPanel {...defaultProps} />)
-      expect(screen.getByText('Page')).toBeDefined()
-    })
-
-    it('should render Components tab', () => {
-      render(<EditorPanel {...defaultProps} />)
-      expect(screen.getByText('Components')).toBeDefined()
-    })
-
-    it('should render Tokens tab', () => {
-      render(<EditorPanel {...defaultProps} />)
-      expect(screen.getByText('Tokens')).toBeDefined()
-    })
-
-    it('should render Clear button', () => {
-      render(<EditorPanel {...defaultProps} />)
-      expect(screen.getByTitle('Clear')).toBeDefined()
-    })
-
-    it('should render Extract button', () => {
-      render(<EditorPanel {...defaultProps} />)
-      expect(screen.getByTitle('Extract')).toBeDefined()
-    })
-  })
+  // ===========================================
+  // Tab Selection Tests
+  // ===========================================
 
   describe('Tab Selection', () => {
-    it('should call onTabChange when Page tab clicked', () => {
-      render(<EditorPanel {...defaultProps} activeTab="components" />)
-      fireEvent.click(screen.getByText('Page'))
-      expect(defaultProps.onTabChange).toHaveBeenCalledWith('layout')
-    })
-
-    it('should call onTabChange when Components tab clicked', () => {
-      render(<EditorPanel {...defaultProps} activeTab="layout" />)
-      fireEvent.click(screen.getByText('Components'))
-      expect(defaultProps.onTabChange).toHaveBeenCalledWith('components')
-    })
-
-    it('should call onTabChange when Tokens tab clicked', () => {
-      render(<EditorPanel {...defaultProps} activeTab="layout" />)
-      fireEvent.click(screen.getByText('Tokens'))
-      expect(defaultProps.onTabChange).toHaveBeenCalledWith('tokens')
-    })
+    test.clicking('Page').calls('onTabChange', 'layout')
+    test.clicking('Components').calls('onTabChange', 'components')
+    test.clicking('Tokens').calls('onTabChange', 'tokens')
   })
+
+  // ===========================================
+  // Action Button Tests
+  // ===========================================
 
   describe('Action Buttons', () => {
-    it('should call onClear when Clear button clicked', () => {
-      render(<EditorPanel {...defaultProps} />)
-      fireEvent.click(screen.getByTitle('Clear'))
-      expect(defaultProps.onClear).toHaveBeenCalledTimes(1)
+    beforeEach(() => {
+      contextActions.onClear.mockClear()
+      contextActions.onClean.mockClear()
     })
 
-    it('should call onClean when Extract button clicked', () => {
-      render(<EditorPanel {...defaultProps} />)
+    it('clicking Clear calls onClear from context', () => {
+      test.render()
+      fireEvent.click(screen.getByTitle('Clear'))
+      expect(contextActions.onClear).toHaveBeenCalledTimes(1)
+    })
+
+    it('clicking Extract calls onClean from context', () => {
+      test.render()
       fireEvent.click(screen.getByTitle('Extract'))
-      expect(defaultProps.onClean).toHaveBeenCalledTimes(1)
+      expect(contextActions.onClean).toHaveBeenCalledTimes(1)
     })
   })
+
+  // ===========================================
+  // Editor Content Tests
+  // ===========================================
 
   describe('Editor Content', () => {
-    it('should pass layoutCode to editor when layout tab active', () => {
-      render(<EditorPanel {...defaultProps} activeTab="layout" />)
-      const editor = screen.getByTestId('mock-prompt-panel') as HTMLTextAreaElement
-      expect(editor.value).toBe('Box')
-    })
+    test.when({ activeTab: 'layout' }).editorHasValue('Box')
+    test.when({ activeTab: 'components' }).editorHasValue('Button: col #3B82F6')
+    test.when({ activeTab: 'tokens' }).editorHasValue('$primary: #3B82F6')
 
-    it('should pass componentsCode to editor when components tab active', () => {
-      render(<EditorPanel {...defaultProps} activeTab="components" />)
-      const editor = screen.getByTestId('mock-prompt-panel') as HTMLTextAreaElement
-      expect(editor.value).toBe('Button: col #3B82F6')
-    })
-
-    it('should pass tokensCode to editor when tokens tab active', () => {
-      render(<EditorPanel {...defaultProps} activeTab="tokens" />)
-      const editor = screen.getByTestId('mock-prompt-panel') as HTMLTextAreaElement
-      expect(editor.value).toBe('$primary: #3B82F6')
-    })
-
-    it('should call correct onChange when editor content changes', () => {
-      render(<EditorPanel {...defaultProps} activeTab="layout" />)
-      const editor = screen.getByTestId('mock-prompt-panel')
+    it('calls onLayoutChange when editor content changes', () => {
+      const { props } = test.render({ activeTab: 'layout' })
+      const editor = screen.getByTestId('editor')
       fireEvent.change(editor, { target: { value: 'NewBox' } })
-      expect(defaultProps.onLayoutChange).toHaveBeenCalledWith('NewBox')
+      expect(props.onLayoutChange).toHaveBeenCalledWith('NewBox')
     })
   })
 
+  // ===========================================
+  // Width Tests
+  // ===========================================
+
   describe('Width', () => {
-    it('should apply width from props', () => {
-      const { container } = render(<EditorPanel {...defaultProps} width={500} />)
+    it('applies width from props', () => {
+      const { container } = test.render({ width: 500 })
       const panel = container.firstChild as HTMLElement
       expect(panel.style.width).toBe('500px')
     })

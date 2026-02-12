@@ -19,13 +19,16 @@ export interface ComponentRegistryEntry {
   toggle: () => void  // Toggle between states
 }
 
-interface ComponentRegistryContextType {
+export interface ComponentRegistry {
   register: (entry: ComponentRegistryEntry) => void
   unregister: (id: string) => void
   getByName: (name: string) => ComponentRegistryEntry | undefined
   getById: (id: string) => ComponentRegistryEntry | undefined
   onPageNavigate?: (pageName: string) => void
 }
+
+// Alias for internal use
+type ComponentRegistryContextType = ComponentRegistry
 
 // ============================================
 // Context

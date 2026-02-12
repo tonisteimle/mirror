@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import type { PageData } from '../components/PageSidebar'
 import type { ASTNode } from '../parser/parser'
 import { generateReactCode } from '../generator/react-exporter'
+import { logger } from '../services/logger'
 
 const STORAGE_KEY = 'mirror-project'
 
@@ -94,7 +95,7 @@ export function useProject({
           if (data.tokensCode) setTokensCode(data.tokensCode)
         }
       } catch (e) {
-        console.error('Failed to load project:', e)
+        logger.storage.error('Failed to load project', e)
       }
     }
     isInitializedRef.current = true
@@ -137,7 +138,7 @@ export function useProject({
             if (data.tokensCode) setTokensCode(data.tokensCode)
           }
         } catch (err) {
-          console.error('Failed to import project:', err)
+          logger.storage.error('Failed to import project', err)
         }
       }
       reader.readAsText(file)

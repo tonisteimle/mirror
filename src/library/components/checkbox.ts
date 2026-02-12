@@ -15,8 +15,8 @@ export const CheckboxComponent: LibraryComponent = {
   defaultStates: ['unchecked', 'checked'],
   actions: ['toggle', 'check', 'uncheck'],
   definitions: `// Checkbox
-CheckboxBox: w 20 h 20 rad 4 bor 2 boc #444 bg #252525 ver cen
-CheckboxChecked: w 20 h 20 rad 4 bg #3B82F6 ver cen
+CheckboxBox: w 20 h 20 rad 4 bor 2 boc $border-hover bg $surface-hover ver cen
+CheckboxChecked: w 20 h 20 rad 4 bg $primary ver cen
 CheckboxLabel: size 14`,
   layoutExample: `Checkbox
   state unchecked
@@ -25,6 +25,7 @@ CheckboxLabel: size 14`,
     if unchecked
   CheckboxChecked
     if checked
-    icon "check" col #FFF
+    icon "check"
+
   CheckboxLabel "Accept terms"`
 }

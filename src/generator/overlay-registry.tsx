@@ -27,18 +27,21 @@ interface OverlayOpenOptions {
   triggerRect?: DOMRect
 }
 
-interface OverlayRegistryState {
+export interface OverlayRegistry {
   overlays: Map<string, OverlayState>
   open: (name: string, node: ASTNode, options?: OverlayOpenOptions) => void
   close: (name?: string, animation?: string, duration?: number) => void
   isOpen: (name: string) => boolean
 }
 
+// Internal alias for the context
+type OverlayRegistryState = OverlayRegistry
+
 const OverlayRegistryContext = createContext<OverlayRegistryState | null>(null)
 
 export function OverlayRegistryProvider({ children }: { children: ReactNode }) {
   const [overlays, setOverlays] = useState<Map<string, OverlayState>>(new Map())
-  const closeTimers = useRef<Map<string, NodeJS.Timeout>>(new Map())
+  const closeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   // Cleanup all timers on unmount to prevent memory leaks
   useEffect(() => {

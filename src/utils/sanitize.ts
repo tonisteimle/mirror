@@ -1,6 +1,7 @@
 /**
  * Sanitization utilities for XSS prevention
  */
+import { logger } from '../services/logger'
 
 /**
  * Dangerous URL protocols that could execute JavaScript
@@ -34,7 +35,7 @@ export function sanitizeHref(url: string | undefined): string {
   // Block dangerous protocols
   for (const protocol of DANGEROUS_PROTOCOLS) {
     if (trimmed.startsWith(protocol)) {
-      console.warn(`[Security] Blocked dangerous URL: ${url.substring(0, 50)}...`)
+      logger.security.warn(`Blocked dangerous URL: ${url.substring(0, 50)}...`)
       return '#'
     }
   }
@@ -49,7 +50,7 @@ export function sanitizeHref(url: string | undefined): string {
     const parsed = new URL(url, 'https://placeholder.local')
     const isAllowed = ALLOWED_PROTOCOLS.some(p => parsed.protocol === p || parsed.href.startsWith(p))
     if (!isAllowed) {
-      console.warn(`[Security] Blocked URL with unknown protocol: ${parsed.protocol}`)
+      logger.security.warn(`Blocked URL with unknown protocol: ${parsed.protocol}`)
       return '#'
     }
   } catch {
@@ -57,7 +58,7 @@ export function sanitizeHref(url: string | undefined): string {
     if (/^[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=]+$/.test(url)) {
       return url
     }
-    console.warn(`[Security] Blocked malformed URL: ${url.substring(0, 50)}`)
+    logger.security.warn(`Blocked malformed URL: ${url.substring(0, 50)}`)
     return '#'
   }
 

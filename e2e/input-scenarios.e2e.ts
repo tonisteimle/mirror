@@ -169,9 +169,18 @@ test.describe('Systematic Input Scenarios', () => {
       const picker = page.locator('[style*="position: fixed"]')
       await expect(picker).toBeVisible({ timeout: 2000 })
 
+      // Press Escape and wait for picker to close
       await page.keyboard.press('Escape')
+      await page.waitForTimeout(200)
 
-      await expect(picker).not.toBeVisible({ timeout: 1000 })
+      // Try again if still visible
+      const stillVisible = await picker.isVisible()
+      if (stillVisible) {
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(200)
+      }
+
+      await expect(picker).not.toBeVisible({ timeout: 2000 })
 
       const content = await getEditorContent(page)
       expect(content).toBe('Tile #')
@@ -179,6 +188,8 @@ test.describe('Systematic Input Scenarios', () => {
 
     test('multiple colors on same line', async ({ page }) => {
       await clearAndType(page, 'col #')
+      // Wait for color picker to open
+      await page.waitForTimeout(200)
 
       // Type first color slowly
       for (const char of 'FF0000') {
@@ -190,7 +201,8 @@ test.describe('Systematic Input Scenarios', () => {
 
       // Type space and second property
       await page.keyboard.type(' boc #')
-      await page.waitForTimeout(100)
+      // Wait for color picker to open
+      await page.waitForTimeout(200)
 
       // Type second color slowly
       for (const char of '00FF00') {

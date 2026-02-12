@@ -53,7 +53,7 @@ export function validateUniqueNames(children: ASTNode[], componentName: string):
   const names = collectNames(children)
   const errors: string[] = []
 
-  for (const [name, lines] of names) {
+  for (const [name, lines] of Array.from(names)) {
     if (lines.length > 1) {
       errors.push(`Error in ${componentName}: Duplicate element name "${name}" on lines ${lines.map(l => l + 1).join(', ')}. Names must be unique for flat access.`)
     }

@@ -3,7 +3,7 @@
  * Used as a foundation for all picker components.
  */
 
-import { type ReactNode, type CSSProperties, forwardRef } from 'react'
+import { type ReactNode, type CSSProperties, forwardRef, memo } from 'react'
 import { useViewportPosition } from '../../hooks/useViewportPosition'
 import { colors } from '../../theme'
 import type { Position } from '../../types/common'
@@ -165,7 +165,7 @@ export interface PickerListProps {
   padding?: string
 }
 
-export const PickerList = forwardRef<HTMLDivElement, PickerListProps>(
+export const PickerList = memo(forwardRef<HTMLDivElement, PickerListProps>(
   function PickerList({ children, onKeyDown, padding = '4px 0' }, ref) {
     return (
       <div
@@ -183,7 +183,7 @@ export const PickerList = forwardRef<HTMLDivElement, PickerListProps>(
       </div>
     )
   }
-)
+))
 
 /**
  * Pre-styled search input for pickers.
@@ -234,7 +234,7 @@ export interface PickerItemProps {
   style?: CSSProperties
 }
 
-export function PickerItem({
+export const PickerItem = memo(function PickerItem({
   index,
   isSelected,
   onClick,
@@ -261,4 +261,4 @@ export function PickerItem({
       {children}
     </div>
   )
-}
+})

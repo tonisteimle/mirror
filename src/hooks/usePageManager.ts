@@ -1,9 +1,11 @@
 /**
  * Hook for managing pages in the Mirror application.
  * Handles page CRUD operations, navigation, and reference checking.
+ *
+ * Uses Single Source of Truth: layoutCode is always derived from pages array.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import type { PageData } from '../components/PageSidebar'
 
 export interface UsePageManagerOptions {
@@ -33,7 +35,6 @@ export interface UsePageManagerReturn {
 
   // Utilities
   getPageReferences: (pageName: string) => string[]
-  updateCurrentPageLayoutCode: () => void
 }
 
 const DEFAULT_PAGE: PageData = {
@@ -49,48 +50,31 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
   const [currentPageId, setCurrentPageId] = useState(
     options.initialPageId || options.initialPages?.[0]?.id || 'home'
   )
-  const [layoutCode, setLayoutCodeState] = useState(() => {
-    const initialPage = options.initialPages?.find(p => p.id === (options.initialPageId || options.initialPages?.[0]?.id))
-    return initialPage?.layoutCode || ''
-  })
 
-  // Get current page
-  const currentPage = pages.find(p => p.id === currentPageId)
+  // Single Source of Truth: derive layoutCode from pages array
+  const currentPage = useMemo(
+    () => pages.find(p => p.id === currentPageId),
+    [pages, currentPageId]
+  )
+  const layoutCode = currentPage?.layoutCode ?? ''
 
-  // Update layout code and sync to pages
+  // Update layout code by updating the current page in pages array
   const setLayoutCode = useCallback((code: string) => {
-    setLayoutCodeState(code)
-  }, [])
-
-  // Update current page's layout code in pages array
-  const updateCurrentPageLayoutCode = useCallback(() => {
     setPages(prev => prev.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode } : p
+      p.id === currentPageId ? { ...p, layoutCode: code } : p
     ))
-  }, [currentPageId, layoutCode])
+  }, [currentPageId])
 
-  // Switch to a different page
+  // Switch to a different page (no need to save current - already saved)
   const switchToPage = useCallback((pageId: string) => {
-    // Save current page's layout code first
-    setPages(prev => prev.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode } : p
-    ))
-
-    // Load new page's layout code
     const page = pages.find(p => p.id === pageId)
     if (page) {
-      setLayoutCodeState(page.layoutCode)
       setCurrentPageId(pageId)
     }
-  }, [currentPageId, layoutCode, pages])
+  }, [pages])
 
   // Add a new page
   const addPage = useCallback(() => {
-    // Save current page first
-    setPages(prev => prev.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode } : p
-    ))
-
     const pageNumber = pages.length + 1
     const newPage: PageData = {
       id: `page-${Date.now()}`,
@@ -98,9 +82,8 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
       layoutCode: ''
     }
     setPages(prev => [...prev, newPage])
-    setLayoutCodeState('')
     setCurrentPageId(newPage.id)
-  }, [currentPageId, layoutCode, pages.length])
+  }, [pages.length])
 
   // Rename a page
   const renamePage = useCallback((pageId: string, newName: string) => {
@@ -110,13 +93,10 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
   }, [])
 
   // Check which pages reference a given page name
+  // (pages array is always up-to-date due to Single Source of Truth)
   const getPageReferences = useCallback((pageName: string): string[] => {
     const references: string[] = []
-    // Check all pages (including current with latest layoutCode)
-    const allPages = pages.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode } : p
-    )
-    for (const page of allPages) {
+    for (const page of pages) {
       if (page.name === pageName) continue // Skip self
       // Check if layoutCode contains "page pageName" pattern
       const pattern = new RegExp(`\\bpage\\s+${pageName}\\b`, 'i')
@@ -125,7 +105,7 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
       }
     }
     return references
-  }, [pages, currentPageId, layoutCode])
+  }, [pages])
 
   // Delete a page (returns referencing pages if deletion blocked)
   const deletePage = useCallback((pageId: string): string[] | null => {
@@ -147,9 +127,7 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     // If we're deleting the current page, switch to another
     if (pageId === currentPageId) {
       const newIndex = Math.min(pageIndex, newPages.length - 1)
-      const newCurrentPage = newPages[newIndex]
-      setLayoutCodeState(newCurrentPage.layoutCode)
-      setCurrentPageId(newCurrentPage.id)
+      setCurrentPageId(newPages[newIndex].id)
     }
     return null
   }, [pages, currentPageId, getPageReferences])
@@ -166,15 +144,9 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
 
   // Navigate to a page by name (creates if doesn't exist)
   const navigateToPage = useCallback((pageName: string) => {
-    // Save current page first
-    setPages(prev => prev.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode } : p
-    ))
-
     // Find page by name
     const existingPage = pages.find(p => p.name === pageName)
     if (existingPage) {
-      setLayoutCodeState(existingPage.layoutCode)
       setCurrentPageId(existingPage.id)
     } else {
       // Auto-create new page
@@ -184,21 +156,27 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
         layoutCode: ''
       }
       setPages(prev => [...prev, newPage])
-      setLayoutCodeState('')
       setCurrentPageId(newPage.id)
     }
-  }, [currentPageId, layoutCode, pages])
+  }, [pages])
 
   // Load project data (e.g., from localStorage or import)
+  // If layoutCode is provided, it updates the current page's code
   const loadProject = useCallback((data: {
     pages: PageData[]
     currentPageId: string
     layoutCode?: string
   }) => {
-    setPages(data.pages)
+    // If layoutCode is explicitly provided, update the current page
+    if (data.layoutCode !== undefined) {
+      const updatedPages = data.pages.map(p =>
+        p.id === data.currentPageId ? { ...p, layoutCode: data.layoutCode! } : p
+      )
+      setPages(updatedPages)
+    } else {
+      setPages(data.pages)
+    }
     setCurrentPageId(data.currentPageId)
-    const page = data.pages.find(p => p.id === data.currentPageId)
-    setLayoutCodeState(data.layoutCode ?? page?.layoutCode ?? '')
   }, [])
 
   return {
@@ -215,7 +193,6 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     reorderPages,
     navigateToPage,
     getPageReferences,
-    updateCurrentPageLayoutCode,
     loadProject,
   }
 }

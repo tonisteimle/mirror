@@ -14,7 +14,7 @@ export const AlertDialogBehavior: BehaviorHandler = {
   ) {
     const slots = groupChildrenBySlot(node)
     const triggerNodes = slots.get('Trigger') || []
-    const overlayNodes = slots.get('Overlay') || []
+    const backdropNodes = slots.get('Backdrop') || []
     const contentNodes = slots.get('Content') || []
 
     const isOpen = registry.getState(node.name) === 'open'
@@ -32,11 +32,11 @@ export const AlertDialogBehavior: BehaviorHandler = {
         ))}
 
         <AlertDialog.Portal>
-          {overlayNodes.map((overlay) => (
+          {backdropNodes.map((backdrop) => (
             <AlertDialog.Overlay
-              key={overlay.id}
+              key={backdrop.id}
               style={{
-                ...getStylesFromNode(overlay),
+                ...getStylesFromNode(backdrop),
                 position: 'fixed',
                 inset: 0,
                 zIndex: 999

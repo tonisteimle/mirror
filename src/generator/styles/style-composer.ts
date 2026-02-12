@@ -6,8 +6,16 @@
  */
 
 import type React from 'react'
-import type { ConditionalProperty } from '../../parser/parser'
+import type { AnimationDefinition, ConditionExpr } from '../../parser/types'
+import type { DSLProperties } from '../../types/dsl-properties'
 import { evaluateCondition } from '../utils'
+
+// Conditional property structure (matches ASTNode.conditionalProperties element)
+export interface ConditionalProperty {
+  condition: ConditionExpr
+  thenProperties: DSLProperties
+  elseProperties?: DSLProperties
+}
 
 /**
  * Compose conditional styles based on variable values.
@@ -27,8 +35,9 @@ export function composeConditionalStyles(
     const propsToApply = shouldApplyThen ? condProp.thenProperties : (condProp.elseProperties || {})
 
     for (const [key, value] of Object.entries(propsToApply)) {
-      if (key === 'bg') style.backgroundColor = String(value)
-      else if (key === 'col') style.color = String(value)
+      // col → always text color, bg → always background color
+      if (key === 'col') style.color = String(value)
+      else if (key === 'bg') style.backgroundColor = String(value)
       else if (key === 'w') style.width = typeof value === 'number' ? `${value}px` : String(value)
       else if (key === 'h') style.height = typeof value === 'number' ? `${value}px` : String(value)
       else if (key === 'pad') style.padding = typeof value === 'number' ? `${value}px` : String(value)
@@ -76,4 +85,94 @@ export function createHighlightStyle(
     outlineOffset: isHovered || isSelected ? '2px' : undefined,
     cursor: inspectMode ? 'pointer' : undefined,
   }
+}
+
+/**
+ * Animation name to CSS keyframe mapping
+ */
+const ANIMATION_KEYFRAMES: Record<string, { in: string; out: string }> = {
+  'fade': { in: 'fadeIn', out: 'fadeOut' },
+  'slide-up': { in: 'content-slide-up', out: 'content-slide-up-out' },
+  'slide-down': { in: 'content-slide-down', out: 'content-slide-down-out' },
+  'slide-left': { in: 'content-slide-left', out: 'content-slide-left-out' },
+  'slide-right': { in: 'content-slide-right', out: 'content-slide-right-out' },
+  'scale': { in: 'scaleIn', out: 'content-scale-out' },
+}
+
+const CONTINUOUS_KEYFRAMES: Record<string, string> = {
+  'spin': 'spin',
+  'pulse': 'pulse',
+  'bounce': 'bounce',
+}
+
+/**
+ * Convert AnimationDefinition to CSS animation style.
+ *
+ * For show animations: applies entrance animation
+ * For hide animations: applies exit animation
+ * For continuous animations: applies infinite loop animation
+ */
+export function getAnimationStyle(
+  animDef: AnimationDefinition | undefined,
+  isShowing: boolean = true
+): React.CSSProperties {
+  if (!animDef) return {}
+
+  const duration = animDef.duration || (animDef.type === 'animate' ? 1000 : 300)
+
+  // Continuous animation (spin, pulse, bounce)
+  if (animDef.type === 'animate') {
+    const keyframes = animDef.animations
+      .map(anim => CONTINUOUS_KEYFRAMES[anim])
+      .filter(Boolean)
+      .join(', ')
+
+    if (!keyframes) return {}
+
+    return {
+      animation: `${keyframes} ${duration}ms ease-in-out infinite`,
+    }
+  }
+
+  // Show/hide animations
+  const direction = animDef.type === 'show' ? 'in' : 'out'
+
+  // Combine multiple animations (e.g., fade + slide-up)
+  const keyframes = animDef.animations
+    .map(anim => ANIMATION_KEYFRAMES[anim]?.[direction])
+    .filter(Boolean)
+
+  if (keyframes.length === 0) return {}
+
+  // For multiple animations, we need to combine them
+  // CSS animation property can have multiple animations separated by comma
+  const animations = keyframes.map(kf => `${kf} ${duration}ms ease-out forwards`)
+
+  return {
+    animation: animations.join(', '),
+  }
+}
+
+/**
+ * Get CSS class names for animations (alternative to inline styles).
+ * Returns array of class names to apply.
+ */
+export function getAnimationClasses(
+  animDef: AnimationDefinition | undefined,
+  isShowing: boolean = true
+): string[] {
+  if (!animDef) return []
+
+  // Continuous animation (spin, pulse, bounce)
+  if (animDef.type === 'animate') {
+    return animDef.animations
+      .filter(anim => CONTINUOUS_KEYFRAMES[anim])
+      .map(anim => `mirror-anim-${anim}`)
+  }
+
+  // Show/hide animations
+  const suffix = animDef.type === 'show' ? 'in' : 'out'
+  return animDef.animations
+    .filter(anim => ANIMATION_KEYFRAMES[anim])
+    .map(anim => `mirror-anim-${anim}-${suffix}`)
 }

@@ -14,7 +14,7 @@ export const LLMNodeSchema: z.ZodType<unknown> = z.lazy(() =>
   z.object({
     type: z.literal('component').optional().default('component'),
     name: z.string().min(1, 'Node name is required'),
-    properties: z.record(z.union([z.string(), z.number(), z.boolean()])).optional().default({}),
+    properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional().default({}),
     content: z.string().optional(),
     children: z.array(LLMNodeSchema).optional().default([]),
     instanceName: z.string().optional(),

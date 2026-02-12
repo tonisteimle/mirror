@@ -15,7 +15,7 @@ import { splitDirections } from './parser-utils'
  * Parse properties inside parentheses for style mixins.
  */
 export function parseStyleGroup(ctx: ParserContext): StyleMixin {
-  const mixin: StyleMixin = { properties: {}, modifiers: [] }
+  const mixin: StyleMixin = { properties: {} }
 
   while (ctx.current() && ctx.current()!.type !== 'PAREN_CLOSE' && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
     const token = ctx.current()!
@@ -26,9 +26,7 @@ export function parseStyleGroup(ctx: ParserContext): StyleMixin {
       continue
     }
 
-    if (token.type === 'MODIFIER') {
-      mixin.modifiers.push(ctx.advance().value)
-    } else if (token.type === 'PROPERTY') {
+    if (token.type === 'PROPERTY') {
       const propName = ctx.advance().value
 
       // Handle property values similar to main parser
@@ -115,11 +113,6 @@ export function applyMixin(node: ASTNode, mixin: StyleMixin): void {
   for (const [key, value] of Object.entries(mixin.properties)) {
     if (!(key in node.properties)) {
       node.properties[key] = value
-    }
-  }
-  for (const mod of mixin.modifiers) {
-    if (!node.modifiers.includes(mod)) {
-      node.modifiers.push(mod)
     }
   }
 }

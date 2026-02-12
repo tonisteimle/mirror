@@ -26,9 +26,9 @@ export interface PropertyPickerMapping {
  * Used by both Space keymap (after property) and Slash keymap (explicit trigger).
  */
 export const PROPERTY_PICKER_MAP: PropertyPickerMapping[] = [
-  // Color properties
+  // Color properties: col = text color, bg = background color
   {
-    properties: ['col', 'boc', 'hover-col', 'hover-boc'],
+    properties: ['col', 'bg', 'boc', 'hover-col', 'hover-bg', 'hover-boc'],
     picker: 'color',
   },
   // Font property
@@ -92,7 +92,7 @@ export const PROPERTY_PICKER_MAP: PropertyPickerMapping[] = [
 
 /**
  * Find the picker mapping for a given property name.
- * @param property - The DSL property name (e.g., 'bg', 'pad', 'font')
+ * @param property - The DSL property name (e.g., 'col', 'pad', 'font')
  * @returns The picker mapping or undefined if no picker is associated
  */
 export function findPickerForProperty(property: string): PropertyPickerMapping | undefined {
@@ -178,8 +178,8 @@ export const EDITOR_PATTERNS = {
  * Set of all known DSL properties that should trigger pickers.
  */
 export const KNOWN_PROPERTIES = new Set([
-  // Color properties
-  'col', 'boc', 'hover-col', 'hover-boc',
+  // Color properties: col = text color, bg = background color
+  'col', 'bg', 'boc', 'hover-col', 'hover-bg', 'hover-boc',
   // Special pickers
   'font', 'icon',
   // Spacing

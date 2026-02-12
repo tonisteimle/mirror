@@ -72,7 +72,7 @@ describe('navigation behaviors', () => {
       })
       const listNode = createASTNode({
         id: 'list1',
-        name: 'List',
+        name: 'Tabs',
         children: [tab1, tab2],
       })
       const node = createASTNode({
@@ -98,12 +98,12 @@ describe('navigation behaviors', () => {
       })
       const listNode = createASTNode({
         id: 'list1',
-        name: 'List',
+        name: 'Tabs',
         children: [tab1],
       })
       const panelNode = createASTNode({
         id: 'panel1',
-        name: 'Panel',
+        name: 'TabContent',
         content: 'Panel Content',
       })
       const node = createASTNode({
@@ -149,17 +149,17 @@ describe('navigation behaviors', () => {
       })
       const listNode = createASTNode({
         id: 'list1',
-        name: 'List',
+        name: 'Tabs',
         children: [tab1, tab2],
       })
       const panel1 = createASTNode({
         id: 'panel1',
-        name: 'Panel',
+        name: 'TabContent',
         content: 'Content 1',
       })
       const panel2 = createASTNode({
         id: 'panel2',
-        name: 'Panel',
+        name: 'TabContent',
         content: 'Content 2',
       })
       const node = createASTNode({
@@ -193,7 +193,7 @@ describe('navigation behaviors', () => {
       })
       const listNode = createASTNode({
         id: 'list1',
-        name: 'List',
+        name: 'Tabs',
         properties: { gap: 8, hor: true },
         children: [tab1],
       })

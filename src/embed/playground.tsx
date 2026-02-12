@@ -10,7 +10,7 @@
  *   <div id="playground-1"></div>
  *   <script>
  *     MirrorPlayground.render('#playground-1', {
- *       code: 'Button bg #3B82F6 "Click me"',
+ *       code: 'Button col #3B82F6 "Click me"',
  *       height: 250
  *     });
  *   </script>
@@ -36,6 +36,8 @@ interface PlaygroundOptions {
   title?: string
   theme?: 'dark' | 'light'
   readOnly?: boolean
+  layout?: 'horizontal' | 'vertical'
+  minimal?: boolean
 }
 
 // ============================================

@@ -1,12 +1,13 @@
 /**
- * Input Component Tests
+ * FormField Component Tests
+ *
+ * Testing library component registration and behavior handlers.
  */
-
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from './kit'
 import { render } from '@testing-library/react'
-import { inputComponent } from '../library/components/input'
+import { formFieldComponent } from '../library/components/input'
 import { getLibraryComponent, isLibraryComponent } from '../library/registry'
-import { InputBehavior } from '../generator/behaviors/input'
+import { FormFieldBehavior } from '../generator/behaviors/input'
 import type { ASTNode } from '../parser/parser'
 import type { BehaviorRegistry } from '../generator/behaviors/index'
 
@@ -15,7 +16,6 @@ function createNode(overrides: Partial<ASTNode> & { name: string }): ASTNode {
   return {
     type: 'component',
     id: `${overrides.name}-${Math.random().toString(36).slice(2)}`,
-    modifiers: [],
     properties: {},
     content: '',
     children: [],
@@ -24,44 +24,46 @@ function createNode(overrides: Partial<ASTNode> & { name: string }): ASTNode {
   }
 }
 
-describe('Input Library Component', () => {
-  it('should be registered in the library', () => {
-    expect(isLibraryComponent('Input')).toBe(true)
+describe('FormField Library Component', () => {
+  it('is registered in the library', () => {
+    expect(isLibraryComponent('FormField')).toBe(true)
   })
 
-  it('should have correct metadata', () => {
-    const component = getLibraryComponent('Input')
+  it('has correct metadata', () => {
+    const component = getLibraryComponent('FormField')
     expect(component).toBeDefined()
-    expect(component?.name).toBe('Input')
+    expect(component?.name).toBe('FormField')
     expect(component?.category).toBe('form')
   })
 
-  it('should have Label, Field, and Hint slots', () => {
-    expect(inputComponent.slots).toHaveLength(3)
-    expect(inputComponent.slots.map(s => s.name)).toEqual(['Label', 'Field', 'Hint'])
+  it('has Label, Field, Hint, and Error slots', () => {
+    expect(formFieldComponent.slots).toHaveLength(4)
+    expect(formFieldComponent.slots.map(s => s.name)).toEqual(['Label', 'Field', 'Hint', 'Error'])
   })
 
-  it('should have Field as required slot', () => {
-    const fieldSlot = inputComponent.slots.find(s => s.name === 'Field')
+  it('has Field as required slot', () => {
+    const fieldSlot = formFieldComponent.slots.find(s => s.name === 'Field')
     expect(fieldSlot?.required).toBe(true)
   })
 
-  it('should have Label and Hint as optional slots', () => {
-    const labelSlot = inputComponent.slots.find(s => s.name === 'Label')
-    const hintSlot = inputComponent.slots.find(s => s.name === 'Hint')
+  it('has Label, Hint, and Error as optional slots', () => {
+    const labelSlot = formFieldComponent.slots.find(s => s.name === 'Label')
+    const hintSlot = formFieldComponent.slots.find(s => s.name === 'Hint')
+    const errorSlot = formFieldComponent.slots.find(s => s.name === 'Error')
     expect(labelSlot?.required).toBe(false)
     expect(hintSlot?.required).toBe(false)
+    expect(errorSlot?.required).toBe(false)
   })
 
-  it('should have definitions and layoutExample', () => {
-    expect(inputComponent.definitions).toContain('// Input')
-    expect(inputComponent.definitions).toContain('InputLabel')
-    expect(inputComponent.definitions).toContain('InputField')
-    expect(inputComponent.layoutExample).toContain('Input')
+  it('has definitions and layoutExample', () => {
+    expect(formFieldComponent.definitions).toContain('// FormField')
+    expect(formFieldComponent.definitions).toContain('FormFieldLabel')
+    expect(formFieldComponent.definitions).toContain('FormFieldInput')
+    expect(formFieldComponent.layoutExample).toContain('FormField')
   })
 })
 
-describe('Input Behavior Handler', () => {
+describe('FormField Behavior Handler', () => {
   const mockRegistry: BehaviorRegistry = {
     getHandler: () => undefined,
     getState: () => '',
@@ -71,26 +73,25 @@ describe('Input Behavior Handler', () => {
 
   const mockRenderFn = (node: ASTNode) => node.content || null
 
-  it('should have correct name', () => {
-    expect(InputBehavior.name).toBe('Input')
+  it('has correct name', () => {
+    expect(FormFieldBehavior.name).toBe('FormField')
   })
 
-  it('should render input field', () => {
+  it('renders input field', () => {
     const fieldNode = createNode({
       name: 'Field',
       properties: { placeholder: 'Enter text...' },
       line: 2,
     })
     const node = createNode({
-      name: 'Input',
+      name: 'FormField',
       children: [fieldNode],
     })
 
     const children = new Map<string, ASTNode[]>()
     children.set('Field', [fieldNode])
 
-    const result = InputBehavior.render(node, children, mockRenderFn, mockRegistry)
-
+    const result = FormFieldBehavior.render(node, children, mockRenderFn, mockRegistry)
     const { container } = render(<>{result}</>)
     const input = container.querySelector('input')
 
@@ -98,27 +99,16 @@ describe('Input Behavior Handler', () => {
     expect(input?.getAttribute('placeholder')).toBe('Enter text...')
   })
 
-  it('should render label when provided', () => {
-    const labelNode = createNode({
-      name: 'Label',
-      content: 'Email',
-      line: 2,
-    })
-    const fieldNode = createNode({
-      name: 'Field',
-      line: 3,
-    })
-    const node = createNode({
-      name: 'Input',
-      children: [labelNode, fieldNode],
-    })
+  it('renders label when provided', () => {
+    const labelNode = createNode({ name: 'Label', content: 'Email', line: 2 })
+    const fieldNode = createNode({ name: 'Field', line: 3 })
+    const node = createNode({ name: 'FormField', children: [labelNode, fieldNode] })
 
     const children = new Map<string, ASTNode[]>()
     children.set('Label', [labelNode])
     children.set('Field', [fieldNode])
 
-    const result = InputBehavior.render(node, children, mockRenderFn, mockRegistry)
-
+    const result = FormFieldBehavior.render(node, children, mockRenderFn, mockRegistry)
     const { container } = render(<>{result}</>)
     const label = container.querySelector('label')
 
@@ -126,27 +116,16 @@ describe('Input Behavior Handler', () => {
     expect(label?.textContent).toBe('Email')
   })
 
-  it('should render hint when provided', () => {
-    const fieldNode = createNode({
-      name: 'Field',
-      line: 2,
-    })
-    const hintNode = createNode({
-      name: 'Hint',
-      content: 'This is a hint',
-      line: 3,
-    })
-    const node = createNode({
-      name: 'Input',
-      children: [fieldNode, hintNode],
-    })
+  it('renders hint when provided', () => {
+    const fieldNode = createNode({ name: 'Field', line: 2 })
+    const hintNode = createNode({ name: 'Hint', content: 'This is a hint', line: 3 })
+    const node = createNode({ name: 'FormField', children: [fieldNode, hintNode] })
 
     const children = new Map<string, ASTNode[]>()
     children.set('Field', [fieldNode])
     children.set('Hint', [hintNode])
 
-    const result = InputBehavior.render(node, children, mockRenderFn, mockRegistry)
-
+    const result = FormFieldBehavior.render(node, children, mockRenderFn, mockRegistry)
     const { container } = render(<>{result}</>)
     const hint = container.querySelector('span')
 
@@ -154,26 +133,18 @@ describe('Input Behavior Handler', () => {
     expect(hint?.textContent).toBe('This is a hint')
   })
 
-  it('should apply custom styles to field', () => {
+  it('applies custom styles to field', () => {
     const fieldNode = createNode({
       name: 'Field',
-      properties: {
-        bg: '#222222',
-        rad: 8,
-        size: 16,
-      },
+      properties: { bg: '#222222', rad: 8, size: 16 },
       line: 2,
     })
-    const node = createNode({
-      name: 'Input',
-      children: [fieldNode],
-    })
+    const node = createNode({ name: 'FormField', children: [fieldNode] })
 
     const children = new Map<string, ASTNode[]>()
     children.set('Field', [fieldNode])
 
-    const result = InputBehavior.render(node, children, mockRenderFn, mockRegistry)
-
+    const result = FormFieldBehavior.render(node, children, mockRenderFn, mockRegistry)
     const { container } = render(<>{result}</>)
     const input = container.querySelector('input')
 
@@ -182,22 +153,18 @@ describe('Input Behavior Handler', () => {
     expect(input?.style.fontSize).toBe('16px')
   })
 
-  it('should support different input types', () => {
+  it('supports different input types', () => {
     const fieldNode = createNode({
       name: 'Field',
       properties: { type: 'password' },
       line: 2,
     })
-    const node = createNode({
-      name: 'Input',
-      children: [fieldNode],
-    })
+    const node = createNode({ name: 'FormField', children: [fieldNode] })
 
     const children = new Map<string, ASTNode[]>()
     children.set('Field', [fieldNode])
 
-    const result = InputBehavior.render(node, children, mockRenderFn, mockRegistry)
-
+    const result = FormFieldBehavior.render(node, children, mockRenderFn, mockRegistry)
     const { container } = render(<>{result}</>)
     const input = container.querySelector('input')
 

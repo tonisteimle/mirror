@@ -6,35 +6,8 @@
  */
 
 import type { ParserContext } from './parser-context'
-import type { ASTNode, ComponentTemplate } from './types'
-import { splitDirections, applySpacingToProperties } from './parser-utils'
-
-/**
- * Apply a template to a node if it exists in the registry.
- * Checks scoped name first, then falls back to unscoped name.
- */
-function applyTemplate(
-  ctx: ParserContext,
-  node: ASTNode,
-  scopedName: string,
-  name: string
-): void {
-  let template: ComponentTemplate | undefined
-
-  if (ctx.registry.has(scopedName)) {
-    template = ctx.registry.get(scopedName)
-  } else if (ctx.registry.has(name)) {
-    template = ctx.registry.get(name)
-  }
-
-  if (template) {
-    node.modifiers = [...template.modifiers]
-    node.properties = { ...template.properties }
-    if (template.content) {
-      node.content = template.content
-    }
-  }
-}
+import type { ASTNode } from './types'
+import { splitDirections, applySpacingToProperties, applyTemplate, createTemplateFromNode } from './parser-utils'
 
 /**
  * Parse an inline child slot (e.g., "ProductTile Name "text" Price "price"")
@@ -50,7 +23,6 @@ export function parseInlineChildSlot(ctx: ParserContext, componentName: string):
     type: 'component',
     name: childName,
     id: ctx.generateId(childName),
-    modifiers: [],
     properties: {},
     children: [],
     line: token.line,
@@ -58,15 +30,13 @@ export function parseInlineChildSlot(ctx: ParserContext, componentName: string):
   }
 
   // Apply template if exists
-  applyTemplate(ctx, childNode, scopedChildName, childName)
+  applyTemplate(ctx.registry, childNode, scopedChildName, childName)
 
   // Parse inline properties and content for this child
   while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
     const childToken = ctx.current()!
 
-    if (childToken.type === 'MODIFIER') {
-      childNode.modifiers.push(ctx.advance().value)
-    } else if (childToken.type === 'PROPERTY') {
+    if (childToken.type === 'PROPERTY') {
       parseInlineChildProperty(ctx, childNode)
     } else if (childToken.type === 'STRING') {
       childNode.content = ctx.advance().value
@@ -84,14 +54,9 @@ export function parseInlineChildSlot(ctx: ParserContext, componentName: string):
   }
 
   // Register child as template if it has properties
-  const childHasDef = childNode.modifiers.length > 0 || Object.keys(childNode.properties).length > 0
+  const childHasDef = Object.keys(childNode.properties).length > 0
   if (childHasDef) {
-    ctx.registry.set(childName, {
-      modifiers: [...childNode.modifiers],
-      properties: { ...childNode.properties },
-      content: childNode.content,
-      children: []
-    })
+    ctx.registry.set(childName, createTemplateFromNode(childNode))
   }
 
   return childNode
@@ -139,7 +104,6 @@ export function parseNestedInlineChild(ctx: ParserContext, childName: string): A
     type: 'component',
     name: nestedName,
     id: ctx.generateId(nestedName),
-    modifiers: [],
     properties: {},
     children: [],
     line: token.line,
@@ -147,14 +111,12 @@ export function parseNestedInlineChild(ctx: ParserContext, childName: string): A
   }
 
   // Apply template if exists
-  applyTemplate(ctx, nestedNode, nestedScopedName, nestedName)
+  applyTemplate(ctx.registry, nestedNode, nestedScopedName, nestedName)
 
   // Parse properties for nested child
   while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
     const nt = ctx.current()!
-    if (nt.type === 'MODIFIER') {
-      nestedNode.modifiers.push(ctx.advance().value)
-    } else if (nt.type === 'PROPERTY') {
+    if (nt.type === 'PROPERTY') {
       parseInlineChildProperty(ctx, nestedNode)
     } else if (nt.type === 'STRING') {
       nestedNode.content = ctx.advance().value
@@ -167,14 +129,9 @@ export function parseNestedInlineChild(ctx: ParserContext, childName: string): A
   }
 
   // Register nested child as template if it has properties
-  const nestedHasDef = nestedNode.modifiers.length > 0 || Object.keys(nestedNode.properties).length > 0
+  const nestedHasDef = Object.keys(nestedNode.properties).length > 0
   if (nestedHasDef) {
-    ctx.registry.set(nestedName, {
-      modifiers: [...nestedNode.modifiers],
-      properties: { ...nestedNode.properties },
-      content: nestedNode.content,
-      children: []
-    })
+    ctx.registry.set(nestedName, createTemplateFromNode(nestedNode))
   }
 
   return nestedNode

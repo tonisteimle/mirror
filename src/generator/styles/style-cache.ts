@@ -24,14 +24,12 @@ const styleCache = new Map<string, CacheEntry>()
  */
 function generateCacheKey(
   componentName: string,
-  properties: Record<string, unknown>,
-  modifiers: string[]
+  properties: Record<string, unknown>
 ): string {
   // Create a stable key from properties
   const propKeys = Object.keys(properties).sort()
   const propStr = propKeys.map(k => `${k}:${JSON.stringify(properties[k])}`).join('|')
-  const modStr = modifiers.sort().join(',')
-  return `${componentName}::${propStr}::${modStr}`
+  return `${componentName}::${propStr}`
 }
 
 /**
@@ -40,10 +38,10 @@ function generateCacheKey(
 export function getCachedStyle(
   componentName: string,
   properties: Record<string, unknown>,
-  modifiers: string[],
+  _modifiers: string[], // deprecated, kept for backward compatibility
   computeFn: () => React.CSSProperties
 ): React.CSSProperties {
-  const key = generateCacheKey(componentName, properties, modifiers)
+  const key = generateCacheKey(componentName, properties)
   const now = Date.now()
 
   // Check for cached entry

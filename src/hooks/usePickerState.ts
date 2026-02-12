@@ -6,43 +6,15 @@
 import { useReducer, useCallback } from 'react'
 import type { EditorView } from '@codemirror/view'
 import type { PickerType, PickerContext, PickerState, Position } from '../types/picker'
+import { FOCUS_RETURN_DELAY_MS } from '../editor/constants'
+import { usePanelPosition } from './usePanelPosition'
+import { pickerReducer, pickerInitialState } from './panel-reducers'
 
 // Re-export types for backwards compatibility
 export type { PickerType, PickerContext, PickerState, Position }
 
-// Action types
-type PickerAction =
-  | { type: 'OPEN'; picker: PickerType; position: Position; context?: PickerContext }
-  | { type: 'CLOSE' }
-  | { type: 'UPDATE_CONTEXT'; context: Partial<PickerContext> }
-
-// Initial state
-const initialState: PickerState = {
-  active: null,
-  position: { x: 0, y: 0 },
-  context: {}
-}
-
-// Reducer
-function pickerReducer(state: PickerState, action: PickerAction): PickerState {
-  switch (action.type) {
-    case 'OPEN':
-      return {
-        active: action.picker,
-        position: action.position,
-        context: action.context || {}
-      }
-    case 'CLOSE':
-      return initialState
-    case 'UPDATE_CONTEXT':
-      return {
-        ...state,
-        context: { ...state.context, ...action.context }
-      }
-    default:
-      return state
-  }
-}
+// Re-export reducer for testing
+export { pickerReducer, pickerInitialState }
 
 // Hook return type
 export interface UsePickerStateReturn {
@@ -92,20 +64,59 @@ export interface UsePickerStateReturn {
   insertAtCursor: (value: string, options?: { removePrecedingChar?: string; replaceRange?: { from: number; to: number } }) => void
 }
 
+/**
+ * Detect if cursor is on a color value.
+ */
+export function detectColorAtCursor(view: EditorView): string | undefined {
+  const cursorPos = view.state.selection.main.head
+  const line = view.state.doc.lineAt(cursorPos)
+  const lineText = line.text
+  const posInLine = cursorPos - line.from
+
+  const colorRegex = /#[0-9A-Fa-f]{3,6}/g
+  let match
+
+  while ((match = colorRegex.exec(lineText)) !== null) {
+    if (posInLine >= match.index && posInLine <= match.index + match[0].length) {
+      return match[0].toUpperCase()
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Find the range of a color value at cursor for replacement.
+ */
+export function findColorRangeAtCursor(view: EditorView): { from: number; to: number } | null {
+  const cursorPos = view.state.selection.main.head
+  const line = view.state.doc.lineAt(cursorPos)
+  const lineText = line.text
+  const posInLine = cursorPos - line.from
+
+  const colorRegex = /#[0-9A-Fa-f]{3,6}/g
+  let match
+
+  while ((match = colorRegex.exec(lineText)) !== null) {
+    if (posInLine >= match.index && posInLine <= match.index + match[0].length) {
+      return {
+        from: line.from + match.index,
+        to: line.from + match.index + match[0].length
+      }
+    }
+  }
+
+  return null
+}
+
 export function usePickerState(editorRef: React.RefObject<EditorView | null>): UsePickerStateReturn {
-  const [state, dispatch] = useReducer(pickerReducer, initialState)
+  const [state, dispatch] = useReducer(pickerReducer, pickerInitialState)
+  const { getCursorPosition } = usePanelPosition(editorRef)
 
-  // Get cursor coordinates from editor
+  // Wrapper for backwards compatibility
   const getCursorCoords = useCallback((): Position | null => {
-    const view = editorRef.current
-    if (!view) return null
-
-    const cursorPos = view.state.selection.main.head
-    const coords = view.coordsAtPos(cursorPos)
-
-    if (!coords) return null
-    return { x: coords.left, y: coords.bottom + 4 }
-  }, [editorRef])
+    return getCursorPosition()
+  }, [getCursorPosition])
 
   // Open a picker
   const openPicker = useCallback((picker: PickerType, context?: PickerContext) => {
@@ -121,7 +132,7 @@ export function usePickerState(editorRef: React.RefObject<EditorView | null>): U
     // Return focus to editor so user can continue typing
     setTimeout(() => {
       editorRef.current?.focus()
-    }, 0)
+    }, FOCUS_RETURN_DELAY_MS)
   }, [editorRef])
 
   // Update context

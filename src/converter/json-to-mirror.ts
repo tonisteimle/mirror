@@ -37,7 +37,7 @@ function nodeToMirror(node: ASTNode, depth: number): string {
   }
 
   // Properties
-  const propsStr = propertiesToMirror(node.properties)
+  const propsStr = propertiesToMirror(node.properties as Record<string, string | number | boolean>)
   if (propsStr) {
     mainLine += ` ${propsStr}`
   }
@@ -178,12 +178,39 @@ function eventHandlerToMirror(handler: EventHandler, depth: number): string {
 }
 
 /**
+ * Convert a condition expression to Mirror DSL string
+ */
+function conditionToMirror(cond: ConditionExpr): string {
+  switch (cond.type) {
+    case 'var':
+      return `$${cond.name}`
+    case 'not':
+      return `not ${conditionToMirror(cond.operand!)}`
+    case 'and':
+      return `${conditionToMirror(cond.left!)} and ${conditionToMirror(cond.right!)}`
+    case 'or':
+      return `${conditionToMirror(cond.left!)} or ${conditionToMirror(cond.right!)}`
+    case 'comparison':
+      return `${conditionToMirror(cond.left!)} ${cond.operator} ${cond.value}`
+    default:
+      return ''
+  }
+}
+
+/**
  * Convert action to Mirror DSL
  */
-function actionToMirror(action: ActionStatement | { condition?: ConditionExpr }): string {
-  // Handle conditionals (simplified)
+function actionToMirror(action: ActionStatement | { condition?: ConditionExpr; thenActions?: ActionStatement[]; elseActions?: ActionStatement[] }): string {
+  // Handle conditionals
   if ('condition' in action && action.condition) {
-    return '' // TODO: Conditional actions
+    const condStr = conditionToMirror(action.condition)
+    const thenStr = (action.thenActions || []).map(a => actionToMirror(a)).filter(Boolean).join(', ')
+    const elseStr = (action.elseActions || []).map(a => actionToMirror(a)).filter(Boolean).join(', ')
+
+    if (elseStr) {
+      return `if ${condStr} then ${thenStr} else ${elseStr}`
+    }
+    return `if ${condStr} then ${thenStr}`
   }
 
   const stmt = action as ActionStatement
@@ -228,65 +255,65 @@ function escapeString(str: string): string {
  * Uses Mirror DSL property names directly
  */
 export const LLM_SCHEMA = `
+// WICHTIG: Verwende immer $token-namen statt hardcoded Werte!
+// Beispiel: "$color-primary" statt "#3B82F6", "$space-md" statt "12"
+
 interface ASTNode {
   type: "component"
-  name: string                    // Box, Text, Button, Input, Image, etc.
+  name: string                    // Box, Text, Button, Card, Input, Image, etc.
   instanceName?: string           // Named instance: Input Email: → instanceName: "Email"
   properties: {
     // Layout
     ver?: boolean                 // Vertical layout (column)
     hor?: boolean                 // Horizontal layout (row) - default
-    gap?: number                  // Gap between children
-    pad?: number                  // Padding (all sides)
-    "pad-x"?: number             // Horizontal padding (l-r)
-    "pad-y"?: number             // Vertical padding (u-d)
+    gap?: string | number         // "$space-md" oder Zahl
+    pad?: string | number         // "$space-lg" oder Zahl
+    "pad-x"?: string | number
+    "pad-y"?: string | number
 
     // Size
-    w?: number | "full"          // Width
-    h?: number | "full"          // Height
+    w?: number | "full"
+    h?: number | "full"
 
-    // Styling
-    bg?: string                   // Background color (#HEX)
-    col?: string                  // Text/foreground color (#HEX)
-    rad?: number                  // Border radius
-    bor?: number                  // Border width
-    boc?: string                  // Border color (#HEX)
-    shadow?: string               // Shadow (sm, md, lg)
+    // Styling - IMMER TOKENS VERWENDEN!
+    bg?: string                   // "$color-surface", "$color-primary"
+    col?: string                  // "$color-text", "$color-text-muted"
+    rad?: string | number         // "$radius-md", "$radius-lg"
+    bor?: number                  // Border width (1, 2)
+    boc?: string                  // "$color-border"
+    shadow?: string               // "$shadow-md", "$shadow-lg"
 
-    // Typography (for Text)
-    size?: number                 // Font size
-    weight?: number               // Font weight (400, 500, 600, 700)
+    // Typography - TOKENS!
+    size?: string | number        // "$size-base", "$size-lg", "$size-xl"
+    weight?: string | number      // "$weight-medium", "$weight-bold"
 
     // Alignment
-    "hor-l"?: boolean            // Align left
-    "hor-cen"?: boolean          // Align center horizontally
-    "hor-r"?: boolean            // Align right
-    "ver-t"?: boolean            // Align top
-    "ver-cen"?: boolean          // Align center vertically
-    "ver-b"?: boolean            // Align bottom
+    "hor-l"?: boolean
+    "hor-cen"?: boolean
+    "hor-r"?: boolean
+    "ver-t"?: boolean
+    "ver-cen"?: boolean
+    "ver-b"?: boolean
 
-    // Input specific
+    // Input
     placeholder?: string
-    type?: string                 // "password", "email", etc.
+    type?: string                 // "password", "email"
 
-    // Image specific
+    // Image
     src?: string
 
     // Icon
-    icon?: string                 // Lucide icon name: "plus", "search", "user"
+    icon?: string                 // Lucide: "plus", "search", "user", "mail"
 
-    // Visibility
     hidden?: boolean
   }
-  content?: string                // Text content: "Hello World"
-  children?: ASTNode[]            // Nested components
+  content?: string
+  children?: ASTNode[]
   eventHandlers?: {
-    event: string                 // "onclick", "onhover", "onchange"
+    event: string                 // "onclick"
     actions: {
-      type: string                // "page", "open", "close", "toggle", "set"
-      target?: string             // Target component or page
-      position?: string           // "center", "below", "above" (for open)
-      animation?: string          // "fade", "scale", "slide-up"
+      type: string                // "page", "open", "close", "toggle"
+      target?: string
     }[]
   }[]
 }

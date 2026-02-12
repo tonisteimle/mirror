@@ -15,9 +15,7 @@ interface EditorContainerProps {
   highlightLine?: number
   parsing: UseCodeParsingReturn
   autoCompleteMode: 'always' | 'delay' | 'off'
-  onOpenAiAssistant: (position: { x: number; y: number }) => void
-  onClear: () => void
-  onClean: () => void
+  // Note: onOpenAiAssistant, onClear, onClean are now provided via EditorActionsContext
 }
 
 export function EditorContainer({
@@ -33,9 +31,6 @@ export function EditorContainer({
   highlightLine,
   parsing,
   autoCompleteMode,
-  onOpenAiAssistant,
-  onClear,
-  onClean,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -52,9 +47,6 @@ export function EditorContainer({
         highlightLine={highlightLine}
         designTokens={parsing.parseResult.tokens}
         autoCompleteMode={autoCompleteMode}
-        onOpenAiAssistant={onOpenAiAssistant}
-        onClear={onClear}
-        onClean={onClean}
       />
     </EditorErrorBoundary>
   )

@@ -11,7 +11,6 @@ import type { TokenValueType } from '../types/token-types'
  */
 export const PROPERTY_TOKEN_TYPES: Record<string, TokenValueType[]> = {
   // Color properties
-  bg: ['color'],
   col: ['color'],
   boc: ['color'],  // border color
 

@@ -2,8 +2,7 @@
  * Re-export generator utilities.
  */
 
-export { toPascalCase, getIcon, clearIconCache } from './icon-cache'
-export { modifiersToStyle } from './style-modifiers'
+export { toPascalCase } from './string-utils'
 export {
   evaluateCondition,
   evaluateExpression,

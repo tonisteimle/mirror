@@ -16,7 +16,7 @@ export const SelectBehavior: BehaviorHandler = {
   ) {
     const slots = groupChildrenBySlot(node)
     const triggerNodes = slots.get('Trigger') || []
-    const contentNodes = slots.get('Content') || []
+    const contentNodes = slots.get('Options') || []
 
     // Get open state from registry - use node.name for action targeting
     const isOpen = registry.getState(node.name) === 'open'
@@ -31,7 +31,7 @@ export const SelectBehavior: BehaviorHandler = {
       const items: { value: string; label: string }[] = []
 
       for (const child of contentNode.children) {
-        if (child.name === 'Item') {
+        if (child.name === 'Option') {
           items.push({
             value: child.id,
             label: child.content || ''
@@ -58,6 +58,12 @@ export const SelectBehavior: BehaviorHandler = {
           <Select.Trigger
             key={trigger.id}
             style={{
+              // Reset button defaults
+              background: 'transparent',
+              border: 'none',
+              color: 'inherit',
+              font: 'inherit',
+              // User-defined styles
               ...getStylesFromNode(trigger),
               cursor: 'pointer'
             }}
@@ -112,7 +118,7 @@ function renderSelectContent(
                   )
                 }
 
-                if (groupChild.name === 'Item') {
+                if (groupChild.name === 'Option') {
                   return (
                     <Select.Item
                       key={groupChild.id}
@@ -133,7 +139,7 @@ function renderSelectContent(
           )
         }
 
-        if (child.name === 'Item') {
+        if (child.name === 'Option') {
           return (
             <Select.Item
               key={child.id}

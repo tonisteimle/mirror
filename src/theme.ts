@@ -3,7 +3,7 @@
 export const colors = {
   bg: '#0c0c0c',           // Main background (was #0c0c0e)
   header: '#232323',       // Header background (was #232429)
-  panel: '#272727',        // Panel background
+  panel: '#1a1a1a',        // Panel background (darker)
   panelHover: '#333333',   // Panel hover/active state (was #33343A)
   tabActive: '#272727',    // Selected tab background (was #27292f)
   lineActive: '#272727',   // Active line in editor (was #27292f)
@@ -14,7 +14,7 @@ export const colors = {
   accent: '#A0A0A0',       // Accent color (neutral gray)
   accentBlue: '#808080',   // Neutral gray (was blue)
   accentPrimary: '#3B82F6', // Primary accent (blue) for interactive elements
-  preview: '#111111',      // Preview background (was #111215)
+  preview: '#141414',      // Preview background (darker)
   hover: '#252525',        // Hover state background
   inputBg: '#1A1A1A',      // Input field background
   selected: '#3A3A3A',     // Selected item background

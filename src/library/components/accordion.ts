@@ -12,7 +12,7 @@ export const AccordionComponent: LibraryComponent = {
       defaultProps: {
         ver: true,
         bor_d: 1,
-        boc: '#333'
+        boc: '$border'
       }
     },
     {
@@ -24,7 +24,7 @@ export const AccordionComponent: LibraryComponent = {
         'align_main': 'between',
         'align_cross': 'cen',
         pad: 16,
-        'hover-bg': '#252525'
+        'hover-bg': '$surface-hover'
       }
     },
     {
@@ -40,8 +40,8 @@ export const AccordionComponent: LibraryComponent = {
   defaultStates: ['collapsed', 'expanded'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Accordion
-AccordionItem: ver bor d 1 boc #333
-AccordionTrigger: hor between ver-cen pad 16 hover-bg #252525
+AccordionItem: ver bor d 1 boc $border
+AccordionTrigger: hor between ver-cen pad 16 hover-bg $surface-hover
 AccordionContent: pad 16`,
   layoutExample: `Accordion
   AccordionItem

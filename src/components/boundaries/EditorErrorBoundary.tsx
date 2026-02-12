@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { colors } from '../../theme'
+import { logger } from '../../services/logger'
 
 interface EditorErrorBoundaryProps {
   children: ReactNode
@@ -22,7 +23,7 @@ export class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, Edi
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('EditorErrorBoundary caught an error:', error, errorInfo)
+    logger.ui.error('EditorErrorBoundary caught an error', { error, errorInfo })
     this.props.onError?.(error, errorInfo)
   }
 

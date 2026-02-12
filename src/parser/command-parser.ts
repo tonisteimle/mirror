@@ -9,6 +9,7 @@
 
 import type { ParserContext } from './parser-context'
 import type { ASTNode, SelectionCommand } from './types'
+import { isTokenSequence } from './types'
 
 /**
  * Parse selection command: :id property value OR :id component "content" OR :id after/before component "content"
@@ -26,17 +27,14 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
       const component: Omit<ASTNode, 'id'> & { id?: string } = {
         type: 'component',
         name: componentName,
-        modifiers: [],
         properties: {},
         children: []
       }
 
-      // Parse rest of line (modifiers, properties, content)
+      // Parse rest of line (properties, content)
       while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
         const t = ctx.current()!
-        if (t.type === 'MODIFIER') {
-          component.modifiers.push(ctx.advance().value)
-        } else if (t.type === 'PROPERTY') {
+        if (t.type === 'PROPERTY') {
           const propName = ctx.advance().value
           const next = ctx.current()
           if (next && (next.type === 'NUMBER' || next.type === 'COLOR')) {
@@ -62,7 +60,7 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
     return null
   }
 
-  // Check for property (modify command): :id bg #F00
+  // Check for property (modify command): :id col #F00
   if (token?.type === 'PROPERTY') {
     const propName = ctx.advance().value
     const next = ctx.current()
@@ -76,9 +74,9 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
     } else if (next?.type === 'TOKEN_REF') {
       const tokenName = ctx.advance().value
       const tokenValue = ctx.designTokens.get(tokenName)
-      if (tokenValue !== undefined) {
+      if (tokenValue !== undefined && !isTokenSequence(tokenValue)) {
         value = tokenValue
-      } else {
+      } else if (tokenValue === undefined) {
         // Check for component property reference: $Card.rad
         const parts = tokenName.split('.')
         if (parts.length >= 2) {
@@ -112,7 +110,6 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
     const component: Omit<ASTNode, 'id'> & { id?: string } = {
       type: 'component',
       name: componentName,
-      modifiers: [],
       properties: {},
       children: []
     }
@@ -120,9 +117,7 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
     // Parse rest of line
     while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
       const t = ctx.current()!
-      if (t.type === 'MODIFIER') {
-        component.modifiers.push(ctx.advance().value)
-      } else if (t.type === 'PROPERTY') {
+      if (t.type === 'PROPERTY') {
         const propName = ctx.advance().value
         const next = ctx.current()
         if (next && (next.type === 'NUMBER' || next.type === 'COLOR')) {
@@ -140,10 +135,9 @@ export function parseSelectionCommand(ctx: ParserContext, targetId: string): Sel
     }
 
     // Apply template if component is known and has no definition
-    const hasDefinition = component.modifiers.length > 0 || Object.keys(component.properties).length > 0
+    const hasDefinition = Object.keys(component.properties).length > 0
     if (!hasDefinition && ctx.registry.has(componentName)) {
       const template = ctx.registry.get(componentName)!
-      component.modifiers = [...template.modifiers]
       component.properties = { ...template.properties }
     }
 

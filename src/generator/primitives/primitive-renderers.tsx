@@ -1,13 +1,15 @@
 /**
  * Primitive Renderers Module
  *
- * Renders HTML primitives: Input, Textarea, Link, Icon, Image
+ * Renders HTML primitives: Input, Textarea, Link, Icon, Image, H1-H6
  */
 
 import React from 'react'
 import type { ASTNode } from '../../parser/parser'
-import { getIcon, resolveImageSrc } from '../utils'
+import { resolveImageSrc } from '../utils'
+import { renderDynamicIcon } from '../components'
 import { sanitizeHref, sanitizePlaceholder, sanitizeTextContent } from '../../utils/sanitize'
+import { isHeadingComponent, getHeadingLevel } from '../../parser/sugar/component-type-matcher'
 
 interface PrimitiveProps {
   node: ASTNode
@@ -63,7 +65,7 @@ export function isImageComponent(node: ASTNode): boolean {
 /**
  * Render Input primitive.
  */
-export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): JSX.Element {
+export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element {
   return (
     <input
       key={node.id}
@@ -82,7 +84,7 @@ export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick }
 /**
  * Render Textarea primitive.
  */
-export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): JSX.Element {
+export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element {
   return (
     <textarea
       key={node.id}
@@ -105,8 +107,7 @@ export function renderLink(
   { node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps,
   children: React.ReactNode,
   iconName?: string
-): JSX.Element {
-  const IconComponent = iconName ? getIcon(iconName) : null
+): React.JSX.Element {
   const iconSize = typeof node.properties.size === 'number' ? node.properties.size : 20
   const iconColor = typeof node.properties.col === 'string' ? node.properties.col : 'currentColor'
 
@@ -123,7 +124,7 @@ export function renderLink(
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      {IconComponent && <IconComponent size={iconSize} color={iconColor} />}
+      {renderDynamicIcon(iconName, iconSize, iconColor)}
       {children}
     </a>
   )
@@ -132,11 +133,10 @@ export function renderLink(
 /**
  * Render Icon component.
  */
-export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): JSX.Element | null {
+export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element | null {
   const iconName = node.properties.icon as string | undefined
-  const IconComponent = iconName ? getIcon(iconName) : null
 
-  if (!IconComponent) return null
+  if (!iconName) return null
 
   const iconSize = typeof node.properties.size === 'number' ? node.properties.size : 20
   const iconColor = typeof node.properties.col === 'string' ? node.properties.col : 'currentColor'
@@ -156,7 +156,7 @@ export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }:
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <IconComponent size={iconSize} color={iconColor} />
+      {renderDynamicIcon(iconName, iconSize, iconColor)}
     </span>
   )
 }
@@ -164,7 +164,7 @@ export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }:
 /**
  * Render Image element.
  */
-export function renderImageElement(node: ASTNode): JSX.Element | null {
+export function renderImageElement(node: ASTNode): React.JSX.Element | null {
   const imageSrcRaw = (node.properties.src as string | undefined) ||
                       (isImageComponent(node) ? node.content : undefined)
 
@@ -195,4 +195,39 @@ export function getImageSrc(node: ASTNode): string | undefined {
   const imageSrcRaw = (node.properties.src as string | undefined) ||
                       (isImageComponent(node) ? node.content : undefined)
   return imageSrcRaw ? resolveImageSrc(imageSrcRaw) : undefined
+}
+
+// Re-export heading utilities
+export { isHeadingComponent, getHeadingLevel }
+
+/**
+ * Check if node is a Heading primitive (H1-H6).
+ */
+export function isHeadingPrimitive(node: ASTNode): boolean {
+  return isHeadingComponent(node)
+}
+
+/**
+ * Render Heading element (H1-H6).
+ */
+export function renderHeading(
+  { node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps,
+  children: React.ReactNode
+): React.JSX.Element {
+  const level = getHeadingLevel(node) || 1
+  const Tag = `h${level}` as keyof React.JSX.IntrinsicElements
+
+  return React.createElement(
+    Tag,
+    {
+      key: node.id,
+      'data-id': node.id,
+      className: node.name,
+      style,
+      onMouseEnter,
+      onMouseLeave,
+      onClick,
+    },
+    children
+  )
 }

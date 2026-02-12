@@ -52,44 +52,108 @@ import { parseComponentDefinition, parseTokenDefinition } from './definition-par
 import { parseSelectionCommand } from './command-parser'
 import { parseEventsBlock } from './events-parser'
 import { applyCommands } from './parser-utils'
+import { validateSemantics, checkCircularReferences } from './semantic-validation'
+
+// Re-export semantic validation
+export { validateSemantics, checkCircularReferences } from './semantic-validation'
+
+// Re-export debug tools
+export { debugParse, printAST, printTokens, printParseResult } from './debug'
+
+// Re-export error utilities
+export { formatError, formatErrors, ErrorCollector, type ParseError } from './errors'
 
 /**
- * Resolve forward token references.
- * When tokens reference other tokens that were defined later (forward references),
- * this pass resolves them to their actual values.
- *
- * Example: $size: $base where $base: 16 is defined after $size
+ * Extract the token reference name from a value, if it's a single token reference.
+ * Returns null if the value is not a token reference.
  */
-function resolveTokenReferences(tokens: Map<string, unknown>): void {
-  // Keep iterating until no more changes (handles transitive references)
-  let changed = true
-  let iterations = 0
-  const maxIterations = 10 // Prevent infinite loops on circular references
+function getTokenRefName(value: unknown): string | null {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'type' in value &&
+    (value as { type: string }).type === 'sequence' &&
+    'tokens' in value
+  ) {
+    const seq = value as { type: 'sequence'; tokens: Array<{ type: string; value: string }> }
+    if (seq.tokens.length === 1 && seq.tokens[0].type === 'TOKEN_REF') {
+      return seq.tokens[0].value
+    }
+  }
+  return null
+}
 
-  while (changed && iterations < maxIterations) {
-    changed = false
-    iterations++
+/**
+ * Resolve forward token references using topological sorting.
+ * When tokens reference other tokens (forward or transitive references),
+ * this pass resolves them to their actual values using dependency order.
+ *
+ * Example: $a: $b, $b: $c, $c: 16 resolves to $c=16, $b=16, $a=16
+ *
+ * Circular references are detected and skipped with a warning.
+ */
+function resolveTokenReferences(tokens: Map<string, unknown>, errors?: Array<{ message: string; severity: string }>): void {
+  // Build dependency graph: token -> token it depends on
+  const dependencies = new Map<string, string>()
+  const dependents = new Map<string, Set<string>>() // reverse graph
 
-    for (const [name, value] of tokens) {
-      // Check if value is a sequence with a single token reference
-      if (
-        value &&
-        typeof value === 'object' &&
-        'type' in value &&
-        (value as { type: string }).type === 'sequence' &&
-        'tokens' in value
-      ) {
-        const seq = value as { type: 'sequence'; tokens: Array<{ type: string; value: string }> }
-        // Only resolve single token references
-        if (seq.tokens.length === 1 && seq.tokens[0].type === 'TOKEN_REF') {
-          const refName = seq.tokens[0].value
-          const refValue = tokens.get(refName)
-          // Only resolve if referenced token is now a simple value
-          if (refValue !== undefined && typeof refValue !== 'object') {
-            tokens.set(name, refValue)
-            changed = true
-          }
+  for (const [name, value] of tokens) {
+    const refName = getTokenRefName(value)
+    if (refName && tokens.has(refName)) {
+      dependencies.set(name, refName)
+      if (!dependents.has(refName)) {
+        dependents.set(refName, new Set())
+      }
+      dependents.get(refName)!.add(name)
+    }
+  }
+
+  // Topological sort using Kahn's algorithm
+  // Find tokens with no dependencies (can be resolved immediately)
+  const resolved = new Set<string>()
+  const queue: string[] = []
+
+  for (const [name] of tokens) {
+    if (!dependencies.has(name)) {
+      queue.push(name)
+      resolved.add(name)
+    }
+  }
+
+  // Process in dependency order
+  while (queue.length > 0) {
+    const current = queue.shift()!
+
+    // Check all tokens that depend on this one
+    const deps = dependents.get(current)
+    if (deps) {
+      for (const dependent of deps) {
+        if (resolved.has(dependent)) continue
+
+        // This dependent was waiting for 'current' - now we can resolve it
+        const refName = dependencies.get(dependent)!
+        const refValue = tokens.get(refName)
+
+        // Only resolve if the referenced value is now a simple value (not an object)
+        if (refValue !== undefined && typeof refValue !== 'object') {
+          tokens.set(dependent, refValue)
         }
+
+        resolved.add(dependent)
+        queue.push(dependent)
+      }
+    }
+  }
+
+  // Check for circular references (tokens that couldn't be resolved)
+  for (const [name] of dependencies) {
+    if (!resolved.has(name)) {
+      // Circular reference detected
+      if (errors) {
+        errors.push({
+          message: `Circular token reference detected: $${name}`,
+          severity: 'warning'
+        })
       }
     }
   }
@@ -103,7 +167,7 @@ function resolveTokenReferences(tokens: Map<string, unknown>): void {
  */
 export function parse(input: string): ParseResult {
   const tokens: Token[] = tokenize(input)
-  const ctx = createParserContext(tokens)
+  const ctx = createParserContext(tokens, input)
 
   const nodes: ASTNode[] = []
   const commands: SelectionCommand[] = []
@@ -162,7 +226,15 @@ export function parse(input: string): ParseResult {
     } else if (ctx.current()?.type === 'EOF') {
       break
     } else {
-      ctx.advance() // skip unknown token
+      // Unknown token - use error recovery instead of silent skip
+      const unknownToken = ctx.current()!
+      ctx.addWarning(
+        'P001',
+        `Unexpected token "${unknownToken.value}"`,
+        unknownToken,
+        'This token was skipped'
+      )
+      ctx.recover()
     }
   }
 
@@ -175,6 +247,7 @@ export function parse(input: string): ParseResult {
   return {
     nodes,
     errors: ctx.errors,
+    diagnostics: ctx.errorCollector.getErrors(),
     registry: ctx.registry,
     tokens: ctx.designTokens,
     styles: ctx.styleMixins,

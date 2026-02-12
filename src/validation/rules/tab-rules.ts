@@ -83,7 +83,7 @@ export function validateLayoutTab(code: string): TabValidationResult {
     }
 
     // Properties ARE allowed in layout for inline component definitions
-    // e.g., Button pad 12 bg #1A1A1A Label col #FFF "Label"
+    // e.g., Button pad 12 col #1A1A1A Label col #FFF "Label"
   }
 
   return { errors, warnings }

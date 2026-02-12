@@ -17,7 +17,7 @@ export const PopoverComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 8,
         pad: 16,
         gap: 12
@@ -33,9 +33,9 @@ export const PopoverComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Popover
-PopoverTrigger: pad 8 12 bg #3B82F6 col #FFF rad 6 hover-bg #2563EB
-PopoverContent: ver bg #1E1E1E rad 8 pad 16 gap 12 w 280 bor 1 boc #333
-PopoverClose: pad 8 12 bg #333 rad 4 col #FFF hover-bg #444`,
+PopoverTrigger: pad 8 12 bg $primary rad 6 hover-bg $primary-hover
+PopoverContent: ver bg $surface rad 8 pad 16 gap 12 w 280 bor 1 boc $border
+PopoverClose: pad 8 12 bg $border rad 4 hover-bg $border-hover`,
   layoutExample: `Popover
   state closed
   PopoverTrigger

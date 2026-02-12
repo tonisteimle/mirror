@@ -15,11 +15,30 @@ import { SwitchComponent } from './components/switch'
 import { CheckboxComponent } from './components/checkbox'
 import { RadioGroupComponent } from './components/radio-group'
 import { SliderComponent } from './components/slider'
-import { inputComponent } from './components/input'
+import { formFieldComponent } from './components/input'
 import { ToastComponent } from './components/toast'
 import { ProgressComponent } from './components/progress'
 import { AvatarComponent } from './components/avatar'
 import { CollapsibleComponent } from './components/collapsible'
+// New components
+import { ButtonComponent } from './components/button'
+import { CardComponent } from './components/card'
+import { BadgeComponent } from './components/badge'
+import { AlertComponent } from './components/alert'
+import { TextareaComponent } from './components/textarea'
+import { LabelComponent } from './components/label'
+import { SkeletonComponent } from './components/skeleton'
+import { SpinnerComponent } from './components/spinner'
+// Additional Radix components
+import { SeparatorComponent } from './components/separator'
+import { AspectRatioComponent } from './components/aspect-ratio'
+import { ToggleComponent } from './components/toggle'
+import { ToggleGroupComponent } from './components/toggle-group'
+import { ScrollAreaComponent } from './components/scroll-area'
+import { ToolbarComponent } from './components/toolbar'
+import { MenubarComponent } from './components/menubar'
+import { NavigationMenuComponent } from './components/navigation-menu'
+import { TextComponent } from './components/text'
 
 // All library components
 const LIBRARY_COMPONENTS: LibraryComponent[] = [
@@ -35,17 +54,36 @@ const LIBRARY_COMPONENTS: LibraryComponent[] = [
   TabsComponent,
   AccordionComponent,
   CollapsibleComponent,
+  CardComponent,
   // Form
-  inputComponent,
+  formFieldComponent,
   SelectComponent,
   SwitchComponent,
   CheckboxComponent,
   RadioGroupComponent,
   SliderComponent,
+  ButtonComponent,
+  TextareaComponent,
+  LabelComponent,
   // Feedback
   ToastComponent,
   ProgressComponent,
-  AvatarComponent
+  AvatarComponent,
+  BadgeComponent,
+  AlertComponent,
+  SkeletonComponent,
+  SpinnerComponent,
+  // Layout & Utility
+  SeparatorComponent,
+  AspectRatioComponent,
+  ToggleComponent,
+  ToggleGroupComponent,
+  ScrollAreaComponent,
+  ToolbarComponent,
+  MenubarComponent,
+  NavigationMenuComponent,
+  // Typography
+  TextComponent
 ]
 
 // Map for quick lookup by name

@@ -14,7 +14,7 @@ import {
   createHighlightStyle,
 } from '../../../generator/styles/style-composer'
 import { varCondition, compareCondition } from '../../kit/ast-builders'
-import type { ConditionalProperty } from '../../../parser/parser'
+import type { ConditionalProperty } from '../../../generator/styles/style-composer'
 
 describe('style-composer', () => {
   describe('composeConditionalStyles', () => {
@@ -31,7 +31,7 @@ describe('style-composer', () => {
     it('applies thenProperties when condition is true', () => {
       const conditionalProps: ConditionalProperty[] = [{
         condition: varCondition('isActive'),
-        thenProperties: { bg: '#00F' },
+        thenProperties: { bg: '#00F' },  // bg → backgroundColor
         elseProperties: { bg: '#888' },
       }]
 
@@ -43,7 +43,7 @@ describe('style-composer', () => {
     it('applies elseProperties when condition is false', () => {
       const conditionalProps: ConditionalProperty[] = [{
         condition: varCondition('isActive'),
-        thenProperties: { bg: '#00F' },
+        thenProperties: { bg: '#00F' },  // bg → backgroundColor
         elseProperties: { bg: '#888' },
       }]
 
@@ -55,7 +55,7 @@ describe('style-composer', () => {
     it('returns empty when condition false and no elseProperties', () => {
       const conditionalProps: ConditionalProperty[] = [{
         condition: varCondition('isActive'),
-        thenProperties: { bg: '#00F' },
+        thenProperties: { col: '#00F' },
       }]
 
       const result = composeConditionalStyles(conditionalProps, { isActive: false })
@@ -63,26 +63,26 @@ describe('style-composer', () => {
       expect(result).toEqual({})
     })
 
+    it('converts col to text color', () => {
+      const conditionalProps: ConditionalProperty[] = [{
+        condition: varCondition('show'),
+        thenProperties: { col: 'red' },
+      }]
+
+      const result = composeConditionalStyles(conditionalProps, { show: true })
+
+      expect(result.color).toBe('red')
+    })
+
     it('converts bg to backgroundColor', () => {
       const conditionalProps: ConditionalProperty[] = [{
         condition: varCondition('show'),
-        thenProperties: { bg: 'red' },
+        thenProperties: { bg: 'blue' },
       }]
 
       const result = composeConditionalStyles(conditionalProps, { show: true })
 
-      expect(result.backgroundColor).toBe('red')
-    })
-
-    it('converts col to color', () => {
-      const conditionalProps: ConditionalProperty[] = [{
-        condition: varCondition('show'),
-        thenProperties: { col: 'blue' },
-      }]
-
-      const result = composeConditionalStyles(conditionalProps, { show: true })
-
-      expect(result.color).toBe('blue')
+      expect(result.backgroundColor).toBe('blue')
     })
 
     it('converts w to width with px', () => {
@@ -166,7 +166,7 @@ describe('style-composer', () => {
       const conditionalProps: ConditionalProperty[] = [
         {
           condition: varCondition('isActive'),
-          thenProperties: { bg: 'blue' },
+          thenProperties: { bg: 'blue' },  // bg → backgroundColor
         },
         {
           condition: varCondition('isLarge'),
@@ -188,7 +188,7 @@ describe('style-composer', () => {
     it('handles comparison conditions', () => {
       const conditionalProps: ConditionalProperty[] = [{
         condition: compareCondition(varCondition('count'), '>', 10),
-        thenProperties: { bg: 'green' },
+        thenProperties: { bg: 'green' },  // bg → backgroundColor
         elseProperties: { bg: 'red' },
       }]
 

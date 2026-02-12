@@ -1,28 +1,18 @@
 /**
  * Shared utility for converting DSL properties to CSS styles.
  * Used by both react-generator.tsx and behaviors/index.ts to avoid duplication.
+ *
+ * Color System:
+ * - col → always text color (style.color)
+ * - bg → always background color (style.backgroundColor)
+ * No magic logic based on component type.
  */
 
 import type React from 'react'
-import { CONTAINER_COMPONENTS, TEXT_COMPONENTS } from '../dsl/properties'
 import type { DSLProperties } from '../types/dsl-properties'
 
 // Re-export for backwards compatibility
 export type { DSLProperties }
-
-/**
- * Determine if a component is a container (col → backgroundColor)
- * or text component (col → color)
- */
-export function isContainerComponent(componentName: string): boolean {
-  // Check if it's in the container set
-  if (CONTAINER_COMPONENTS.has(componentName)) return true
-  // Check if it's in the text set
-  if (TEXT_COMPONENTS.has(componentName)) return false
-  // Default: if name starts with uppercase and not in text set, assume container
-  // User-defined components are assumed to be containers
-  return /^[A-Z]/.test(componentName)
-}
 
 /**
  * Check if properties contain any hover styles
@@ -41,12 +31,12 @@ export function extractHoverStyles(properties: DSLProperties): React.CSSProperti
     if (key.startsWith('hover-')) {
       const prop = key.slice(6) // Remove 'hover-' prefix
       switch (prop) {
-        case 'bg':
-          // hover-bg maps to backgroundColor
-          hoverStyle.backgroundColor = String(value)
-          break
         case 'col':
-          // hover-col maps to backgroundColor (most common use case for hover)
+          // hover-col → text color
+          hoverStyle.color = String(value)
+          break
+        case 'bg':
+          // hover-bg → background color
           hoverStyle.backgroundColor = String(value)
           break
         case 'boc':
@@ -80,7 +70,7 @@ export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean
   if (properties.gap) return true
   if (properties.between) return true
   if (properties.wrap) return true
-  if (properties.grow) return true
+  if (properties.grow || properties.fill) return true
   // Alignment properties require flex
   if (properties['hor-l'] || properties['hor-cen'] || properties['hor-r']) return true
   if (properties['ver-t'] || properties['ver-cen'] || properties['ver-b']) return true
@@ -94,22 +84,32 @@ export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean
  * Convert DSL properties to React CSS properties.
  * This is the single source of truth for property-to-style conversion.
  *
+ * Color system:
+ * - col → always text color (style.color)
+ * - bg → always background color (style.backgroundColor)
+ *
  * @param properties - DSL properties to convert
  * @param hasChildren - Whether the component has children (affects flex display)
- * @param componentName - Component name to determine color mapping (col → backgroundColor or color)
+ * @param componentName - Component name (kept for backwards compatibility, no longer affects color mapping)
+ * @param _libraryType - Deprecated, kept for backwards compatibility
  */
 export function propertiesToStyle(
   properties: DSLProperties,
   hasChildren: boolean = false,
-  componentName: string = ''
+  componentName: string = '',
+  _libraryType?: string
 ): React.CSSProperties {
   const style: React.CSSProperties = {}
-  const isContainer = isContainerComponent(componentName)
 
   // Only set flex display when needed
   if (needsFlexDisplay(properties, hasChildren)) {
-    style.display = 'flex'
+    // Use inline-flex so containers fit their content instead of stretching
+    style.display = 'inline-flex'
     style.flexDirection = 'row'
+  } else if (componentName && /^[A-Z]/.test(componentName)) {
+    // Components without flex layout should use inline-block to fit content
+    // This prevents them from stretching to full width
+    style.display = 'inline-block'
   }
 
   // Process direction first so centering can check it
@@ -195,16 +195,57 @@ export function propertiesToStyle(
 
       // Flex properties
       case 'grow':
+      case 'fill':
         style.flexGrow = 1
         break
       case 'shrink':
         style.flexShrink = Number(value)
         break
+
+      // Grid layout
+      case 'grid': {
+        style.display = 'grid'
+        const gridValue = String(value)
+
+        if (gridValue.startsWith('auto ')) {
+          // Auto-fill: grid auto 250 → repeat(auto-fill, minmax(250px, 1fr))
+          const minWidth = gridValue.split(' ')[1]
+          const unit = minWidth.includes('%') ? '' : 'px'
+          style.gridTemplateColumns = `repeat(auto-fill, minmax(${minWidth}${unit}, 1fr))`
+        } else if (!gridValue.includes(' ') && !gridValue.includes('%')) {
+          // Single number: column count → repeat(N, 1fr)
+          style.gridTemplateColumns = `repeat(${gridValue}, 1fr)`
+        } else {
+          // Multiple values: convert to grid-template-columns
+          const cols = gridValue.split(' ').map(v => {
+            if (v.includes('%')) return v
+            if (v === 'auto') return 'auto'
+            return `${v}px`
+          })
+          style.gridTemplateColumns = cols.join(' ')
+        }
+        break
+      }
+      case 'grid_rows': {
+        const rowValue = String(value)
+        const rows = rowValue.split(' ').map(v => {
+          if (v.includes('%')) return v
+          if (v === 'auto') return 'auto'
+          return `${v}px`
+        })
+        style.gridTemplateRows = rows.join(' ')
+        break
+      }
       case 'gap':
-        // TODO: Support direction modifiers like pad/mar:
-        // gap l-r → columnGap, gap u-d → rowGap
-        // For now, gap applies to both row and column
         style.gap = `${value}px`
+        break
+      case 'gap-x':
+      case 'gap-col':
+        style.columnGap = `${value}px`
+        break
+      case 'gap-y':
+      case 'gap-row':
+        style.rowGap = `${value}px`
         break
 
       // Sizing
@@ -265,18 +306,14 @@ export function propertiesToStyle(
         style.marginBottom = `${value}px`
         break
 
-      // Colors - Unified color system
-      case 'bg':
-        // bg → always backgroundColor
-        style.backgroundColor = String(value)
-        break
+      // Colors - Simple color system: col = text, bg = background
       case 'col':
-        // col → backgroundColor for containers, color for text components
-        if (isContainer) {
-          style.backgroundColor = String(value)
-        } else {
-          style.color = String(value)
-        }
+        // col → always text color
+        style.color = String(value)
+        break
+      case 'bg':
+        // bg → always background color
+        style.backgroundColor = String(value)
         break
       case 'boc':
         // Border color (standalone property)
@@ -286,6 +323,18 @@ export function propertiesToStyle(
       // Border - compound properties
       case 'rad':
         style.borderRadius = `${value}px`
+        break
+      case 'rad_tl':
+        style.borderTopLeftRadius = `${value}px`
+        break
+      case 'rad_tr':
+        style.borderTopRightRadius = `${value}px`
+        break
+      case 'rad_br':
+        style.borderBottomRightRadius = `${value}px`
+        break
+      case 'rad_bl':
+        style.borderBottomLeftRadius = `${value}px`
         break
       case 'border':
       case 'bor':
@@ -307,7 +356,12 @@ export function propertiesToStyle(
         style.fontSize = `${value}px`
         break
       case 'weight':
-        style.fontWeight = Number(value)
+        // Handle 'bold' as a special value for weight
+        if (value === 'bold') {
+          style.fontWeight = 700
+        } else {
+          style.fontWeight = Number(value)
+        }
         break
       case 'font':
         style.fontFamily = String(value)
@@ -338,23 +392,47 @@ export function propertiesToStyle(
         }
         break
 
-      // Overflow
+      // Overflow / Scroll
       case 'scroll':
-        if (value) style.overflow = 'auto'
+      case 'scroll-ver':
+        if (value) style.overflowY = 'auto'
         break
-      case 'scroll-x':
+      case 'scroll-hor':
         if (value) style.overflowX = 'auto'
         break
-      case 'scroll-y':
-        if (value) style.overflowY = 'auto'
+      case 'scroll-both':
+        if (value) style.overflow = 'auto'
+        break
+      case 'snap':
+        if (value) {
+          // Determine scroll direction from other properties
+          const isHorizontal = properties['scroll-hor']
+          const isBoth = properties['scroll-both']
+          if (isHorizontal) {
+            style.scrollSnapType = 'x mandatory'
+          } else if (isBoth) {
+            style.scrollSnapType = 'both mandatory'
+          } else {
+            style.scrollSnapType = 'y mandatory'
+          }
+        }
         break
       case 'clip':
         if (value) style.overflow = 'hidden'
         break
+      case 'snap-align':
+        // For children inside a snap container
+        style.scrollSnapAlign = String(value) as 'start' | 'center' | 'end'
+        break
 
       // Effects
       case 'opacity':
+      case 'opa':
         style.opacity = Number(value)
+        break
+      case 'op':
+        // op uses 0-100 scale, convert to 0-1 for CSS
+        style.opacity = Number(value) / 100
         break
       case 'shadow':
         style.boxShadow = String(value)
@@ -372,6 +450,13 @@ export function propertiesToStyle(
       // Visibility (for overlays)
       case 'hidden':
         if (value) style.display = 'none'
+        break
+      case 'visible':
+        if (value) {
+          style.display = 'flex'
+        } else {
+          style.display = 'none'
+        }
         break
     }
   }
@@ -427,8 +512,8 @@ export function propertiesToStyle(
 
 /**
  * Simplified version for behavior handlers that don't need hasChildren logic.
- * Delegates to the main function.
+ * col → always text color, bg → always background color.
  */
 export function getStylesFromNode(properties: DSLProperties): React.CSSProperties {
-  return propertiesToStyle(properties, false)
+  return propertiesToStyle(properties, false, 'Box')
 }

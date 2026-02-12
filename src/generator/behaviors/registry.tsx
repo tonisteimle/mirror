@@ -16,11 +16,20 @@ import { SwitchBehavior } from './switch'
 import { CheckboxBehavior } from './checkbox'
 import { RadioGroupBehavior } from './radio-group'
 import { SliderBehavior } from './slider'
-import { InputBehavior } from './input'
+import { FormFieldBehavior } from './input'
 import { ToastBehavior } from './toast'
 import { ProgressBehavior } from './progress'
 import { AvatarBehavior } from './avatar'
 import { CollapsibleBehavior } from './collapsible'
+// Additional Radix behaviors
+import { SeparatorBehavior } from './separator'
+import { AspectRatioBehavior } from './aspect-ratio'
+import { ToggleBehavior } from './toggle'
+import { ToggleGroupBehavior } from './toggle-group'
+import { ScrollAreaBehavior } from './scroll-area'
+import { ToolbarBehavior } from './toolbar'
+import { MenubarBehavior } from './menubar'
+import { NavigationMenuBehavior } from './navigation-menu'
 
 // All behavior handlers
 const BEHAVIOR_HANDLERS: BehaviorHandler[] = [
@@ -37,7 +46,7 @@ const BEHAVIOR_HANDLERS: BehaviorHandler[] = [
   AccordionBehavior,
   CollapsibleBehavior,
   // Form
-  InputBehavior,
+  FormFieldBehavior,
   SelectBehavior,
   SwitchBehavior,
   CheckboxBehavior,
@@ -46,7 +55,16 @@ const BEHAVIOR_HANDLERS: BehaviorHandler[] = [
   // Feedback
   ToastBehavior,
   ProgressBehavior,
-  AvatarBehavior
+  AvatarBehavior,
+  // Layout & Utility
+  SeparatorBehavior,
+  AspectRatioBehavior,
+  ToggleBehavior,
+  ToggleGroupBehavior,
+  ScrollAreaBehavior,
+  ToolbarBehavior,
+  MenubarBehavior,
+  NavigationMenuBehavior
 ]
 
 // Map for quick lookup
@@ -67,7 +85,7 @@ interface BehaviorRegistryState {
   toggle: (id: string, availableStates: string[]) => void
 }
 
-const BehaviorRegistryContext = createContext<BehaviorRegistryState | null>(null)
+export const BehaviorRegistryContext = createContext<BehaviorRegistryState | null>(null)
 
 // Provider component
 export function BehaviorRegistryProvider({ children }: { children: React.ReactNode }) {
@@ -85,11 +103,21 @@ export function BehaviorRegistryProvider({ children }: { children: React.ReactNo
     if (availableStates.length < 2) return
 
     setStates(prev => {
-      const currentState = prev.get(id) || availableStates[0]
-      const currentIndex = availableStates.indexOf(currentState)
-      const nextIndex = (currentIndex + 1) % availableStates.length
+      const currentState = prev.get(id)
       const next = new Map(prev)
-      next.set(id, availableStates[nextIndex])
+
+      // If no state set yet, set to 'open' (second state)
+      // This handles hidden elements: first toggle shows them
+      // For visible elements: first toggle marks them as "toggled on" (no visual change)
+      if (currentState === undefined) {
+        next.set(id, availableStates[1]) // 'open'
+      } else {
+        // Toggle between states
+        const currentIndex = availableStates.indexOf(currentState)
+        const nextIndex = (currentIndex + 1) % availableStates.length
+        next.set(id, availableStates[nextIndex])
+      }
+
       return next
     })
   }, [])

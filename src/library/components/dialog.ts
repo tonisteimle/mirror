@@ -14,17 +14,16 @@ export const DialogComponent: LibraryComponent = {
         'align_cross': 'cen',
         gap: 8,
         pad: 12,
-        bg: '#3B82F6',
-        col: '#FFFFFF',
+        bg: '$primary',
         rad: 6
       }
     },
     {
-      name: 'Overlay',
+      name: 'Backdrop',
       required: false,
       multiple: false,
       defaultProps: {
-        bg: '#00000080'
+        bg: '$overlay'
       }
     },
     {
@@ -33,7 +32,7 @@ export const DialogComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         ver: true,
-        bg: '#1E1E1E',
+        bg: '$surface',
         rad: 12,
         pad: 24,
         w: 400,
@@ -47,7 +46,7 @@ export const DialogComponent: LibraryComponent = {
       defaultProps: {
         size: 18,
         weight: 600,
-        col: '#FFFFFF'
+        col: '$text'
       }
     },
     {
@@ -56,7 +55,7 @@ export const DialogComponent: LibraryComponent = {
       multiple: false,
       defaultProps: {
         size: 14,
-        col: '#A0A0A0'
+        col: '$text-dim'
       }
     },
     {
@@ -68,8 +67,7 @@ export const DialogComponent: LibraryComponent = {
         'align_cross': 'cen',
         gap: 8,
         pad: 8,
-        bg: '#333',
-        col: '#FFFFFF',
+        bg: '$border',
         rad: 6
       }
     }
@@ -77,18 +75,18 @@ export const DialogComponent: LibraryComponent = {
   defaultStates: ['closed', 'open'],
   actions: ['open', 'close', 'toggle'],
   definitions: `// Dialog Components
-DialogTrigger: pad 12 bg #3B82F6 col #FFF rad 6 hover-bg #2563EB
-DialogOverlay: bg #00000080
-DialogContent: ver bg #1E1E1E rad 12 pad 24 w 400 gap 16 bor 1 boc #333
+DialogTrigger: pad 12 bg $primary rad 6 hover-bg $primary-hover
+DialogBackdrop: bg $overlay
+DialogContent: ver bg $surface rad 12 pad 24 w 400 gap 16 bor 1 boc $border
 DialogTitle: size 18 weight 600
-DialogDescription: size 14 col #A0A0A0
-DialogClose: pad 8 12 bg #333 rad 6 hover-bg #444`,
+DialogDescription: size 14 col $text-dim
+DialogClose: pad 8 12 bg $border rad 6 hover-bg $border-hover`,
   layoutExample: `Dialog
   state closed
   DialogTrigger
     onclick open
     "Open Dialog"
-  DialogOverlay
+  DialogBackdrop
     if open
     onclick close
   DialogContent

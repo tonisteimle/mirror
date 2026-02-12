@@ -20,35 +20,6 @@ import {
 
 describe('style-parser', () => {
   describe('parseStyleGroup', () => {
-    describe('modifiers', () => {
-      it('parses single modifier', () => {
-        const tokens = [
-          token.modifier('-primary'),
-          token.parenClose(),
-        ]
-        const ctx = createContextFromTokens(tokens)
-
-        const result = parseStyleGroup(ctx)
-
-        expect(result.modifiers).toEqual(['-primary'])
-        expect(result.properties).toEqual({})
-      })
-
-      it('parses multiple modifiers', () => {
-        const tokens = [
-          token.modifier('-primary'),
-          token.modifier('-large'),
-          token.modifier('-rounded'),
-          token.parenClose(),
-        ]
-        const ctx = createContextFromTokens(tokens)
-
-        const result = parseStyleGroup(ctx)
-
-        expect(result.modifiers).toEqual(['-primary', '-large', '-rounded'])
-      })
-    })
-
     describe('simple properties', () => {
       it('parses property with number value', () => {
         const tokens = [
@@ -417,29 +388,6 @@ describe('style-parser', () => {
       })
     })
 
-    describe('combined properties and modifiers', () => {
-      it('parses style group with both properties and modifiers', () => {
-        const tokens = [
-          token.property('hor'),
-          token.property('cen'),
-          token.property('gap'),
-          token.number('8'),
-          token.modifier('-primary'),
-          token.parenClose(),
-        ]
-        const ctx = createContextFromTokens(tokens)
-
-        const result = parseStyleGroup(ctx)
-
-        expect(result.properties).toEqual({
-          hor: true,
-          align_main: 'cen',
-          gap: 8,
-        })
-        expect(result.modifiers).toEqual(['-primary'])
-      })
-    })
-
     describe('edge cases', () => {
       it('handles empty style group', () => {
         const tokens = [token.parenClose()]
@@ -447,7 +395,7 @@ describe('style-parser', () => {
 
         const result = parseStyleGroup(ctx)
 
-        expect(result).toEqual({ properties: {}, modifiers: [] })
+        expect(result).toEqual({ properties: {} })
       })
 
       it('stops at newline', () => {
@@ -492,17 +440,6 @@ describe('style-parser', () => {
       expect(node.properties).toEqual({ gap: 8, bg: '#FFF' })
     })
 
-    it('applies modifiers to node', () => {
-      const node = createASTNode()
-      const mixin = createStyleMixin({
-        modifiers: ['-primary', '-large'],
-      })
-
-      applyMixin(node, mixin)
-
-      expect(node.modifiers).toEqual(['-primary', '-large'])
-    })
-
     it('does not override existing properties', () => {
       const node = createASTNode({
         properties: { gap: 16 },
@@ -516,43 +453,15 @@ describe('style-parser', () => {
       expect(node.properties).toEqual({ gap: 16, bg: '#FFF' })
     })
 
-    it('does not duplicate existing modifiers', () => {
-      const node = createASTNode({
-        modifiers: ['-primary'],
-      })
-      const mixin = createStyleMixin({
-        modifiers: ['-primary', '-large'],
-      })
-
-      applyMixin(node, mixin)
-
-      expect(node.modifiers).toEqual(['-primary', '-large'])
-    })
-
-    it('applies both properties and modifiers', () => {
-      const node = createASTNode()
-      const mixin = createStyleMixin({
-        properties: { gap: 8, rad: 4 },
-        modifiers: ['-outlined'],
-      })
-
-      applyMixin(node, mixin)
-
-      expect(node.properties).toEqual({ gap: 8, rad: 4 })
-      expect(node.modifiers).toEqual(['-outlined'])
-    })
-
     it('handles empty mixin', () => {
       const node = createASTNode({
         properties: { w: 100 },
-        modifiers: ['-primary'],
       })
       const mixin = createStyleMixin()
 
       applyMixin(node, mixin)
 
       expect(node.properties).toEqual({ w: 100 })
-      expect(node.modifiers).toEqual(['-primary'])
     })
   })
 })

@@ -72,6 +72,8 @@ export {
   pageSidebarProps,
   headerBarProps,
   promptPanelProps,
+  tokenPickerProps,
+  basePickerProps,
 } from './factories'
 
 // Render utilities

@@ -1,68 +1,40 @@
 /**
- * Tests for HeaderBar component.
+ * HeaderBar Component Tests
+ *
+ * Using the test kit for concise, readable tests.
  */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import {
+  componentTest,
+  headerBarProps,
+  screen,
+  fireEvent,
+  describe,
+  it,
+  expect,
+} from './kit'
 import { HeaderBar } from '../components/HeaderBar'
 
+const test = componentTest(HeaderBar, headerBarProps)
+
 describe('HeaderBar', () => {
-  const defaultProps = {
-    onImport: vi.fn(),
-    onExport: vi.fn(),
-    onOpenSettings: vi.fn(),
-  }
+  // ===========================================
+  // Rendering Tests
+  // ===========================================
 
-  beforeEach(() => {
-    vi.clearAllMocks()
+  test.shouldRenderTitles(['Tutorial', 'Import', 'Export', 'Einstellungen'])
+
+  it('renders logo', () => {
+    test.render()
+    expect(screen.getByAltText('mirror')).toBeDefined()
   })
 
-  describe('Rendering', () => {
-    it('should render logo', () => {
-      render(<HeaderBar {...defaultProps} />)
-      const logo = screen.getByAltText('mirror')
-      expect(logo).toBeDefined()
-    })
-
-    it('should render Tutorial button', () => {
-      render(<HeaderBar {...defaultProps} />)
-      const tutorialButton = screen.getByTitle('Tutorial')
-      expect(tutorialButton).toBeDefined()
-    })
-
-    it('should render Import button', () => {
-      render(<HeaderBar {...defaultProps} />)
-      expect(screen.getByTitle('Import')).toBeDefined()
-    })
-
-    it('should render Export button', () => {
-      render(<HeaderBar {...defaultProps} />)
-      expect(screen.getByTitle('Export')).toBeDefined()
-    })
-
-    it('should render Settings button', () => {
-      render(<HeaderBar {...defaultProps} />)
-      expect(screen.getByTitle('Einstellungen')).toBeDefined()
-    })
-  })
+  // ===========================================
+  // Button Interaction Tests
+  // ===========================================
 
   describe('Button Interactions', () => {
-    it('should call onImport when Import button clicked', () => {
-      render(<HeaderBar {...defaultProps} />)
-      fireEvent.click(screen.getByTitle('Import'))
-      expect(defaultProps.onImport).toHaveBeenCalledTimes(1)
-    })
-
-    it('should call onExport when Export button clicked', () => {
-      render(<HeaderBar {...defaultProps} />)
-      fireEvent.click(screen.getByTitle('Export'))
-      expect(defaultProps.onExport).toHaveBeenCalledTimes(1)
-    })
-
-    it('should call onOpenSettings when Settings button clicked', () => {
-      render(<HeaderBar {...defaultProps} />)
-      fireEvent.click(screen.getByTitle('Einstellungen'))
-      expect(defaultProps.onOpenSettings).toHaveBeenCalledTimes(1)
-    })
+    test.clicking('Import').calls('onImport')
+    test.clicking('Export').calls('onExport')
+    test.clicking('Einstellungen').calls('onOpenSettings')
   })
 })

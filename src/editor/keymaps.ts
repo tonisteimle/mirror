@@ -7,11 +7,13 @@ import { insertNewline } from '@codemirror/commands'
 import type { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import {
-  KNOWN_PROPERTIES,
   EDITOR_PATTERNS,
   matchPropertyAtEnd,
   findPickerForTokenSection,
 } from './property-picker-map'
+import { isInsideString, getTextBeforeCursor } from './utils'
+import { findPropertyContext } from './trigger-handlers'
+import { PICKER_OPEN_DELAY_MS } from './constants'
 
 // Types for keymap configuration
 export interface KeymapCallbacks {
@@ -20,7 +22,6 @@ export interface KeymapCallbacks {
   openFontPicker: () => void
   openIconPicker: () => void
   openTokenPicker: (propertyContext?: string) => void  // Context-aware token picker
-  openAiAssistant: () => void
 }
 
 export interface KeymapConfig {
@@ -66,11 +67,12 @@ export function createColorPickerKeymap(openColorPicker: () => void): Extension 
 
 
 /**
- * Creates the slash keymap for context-sensitive picker
+ * Creates the question mark keymap for opening pickers
+ * '?' after a property opens the appropriate picker
  */
-export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
+export function createQuestionKeymap(callbacks: KeymapCallbacks): Extension {
   return keymap.of([{
-    key: '/',
+    key: '?',
     run: (view: EditorView) => {
       const pos = view.state.selection.main.head
       const line = view.state.doc.lineAt(pos)
@@ -115,7 +117,25 @@ export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
         }
       }
 
-      // Trigger command palette if at start of line or after whitespace
+      return false
+    }
+  }])
+}
+
+/**
+ * Creates the slash keymap for command palette
+ * '/' at line start opens command palette
+ */
+export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
+  return keymap.of([{
+    key: '/',
+    run: (view: EditorView) => {
+      const pos = view.state.selection.main.head
+      const line = view.state.doc.lineAt(pos)
+      const textBefore = line.text.slice(0, pos - line.from)
+
+      // Only trigger at start of line or after whitespace
+      // This prevents triggering when typing '//' for comments
       if (textBefore.length === 0 || /\s$/.test(textBefore)) {
         callbacks.openCommandPalette()
         return true
@@ -144,38 +164,23 @@ export function createHashKeymap(openColorPicker: () => void): Extension {
   return keymap.of([{
     key: '#',
     run: (view: EditorView) => {
-      const pos = view.state.selection.main.head
-      const line = view.state.doc.lineAt(pos)
-      const textBefore = line.text.slice(0, pos - line.from)
+      const textBefore = getTextBeforeCursor(view)
 
       // Don't trigger inside strings
-      const quoteCount = (textBefore.match(/"/g) || []).length
-      if (quoteCount % 2 !== 0) return false
+      if (isInsideString(textBefore)) return false
 
       // Insert # character
+      const pos = view.state.selection.main.head
       view.dispatch({
         changes: { from: pos, to: pos, insert: '#' },
         selection: { anchor: pos + 1 }
       })
 
-      // Open color picker after short delay
-      setTimeout(openColorPicker, 50)
+      // Open color picker after short delay to let editor state settle
+      setTimeout(openColorPicker, PICKER_OPEN_DELAY_MS)
       return true
     }
   }])
-}
-
-/**
- * Helper to find the property context for $ trigger.
- * Looks for property name before cursor position.
- */
-function findPropertyContext(textBefore: string): string | undefined {
-  // Match pattern like "bg " or "pad l-r " before cursor
-  const match = textBefore.match(/\b(\w+)\s+(?:[a-z-]+\s+)*$/)
-  if (match && KNOWN_PROPERTIES.has(match[1])) {
-    return match[1]
-  }
-  return undefined
 }
 
 /**
@@ -186,25 +191,23 @@ export function createDollarKeymap(openTokenPicker: (propertyContext?: string) =
   return keymap.of([{
     key: '$',
     run: (view: EditorView) => {
-      const pos = view.state.selection.main.head
-      const line = view.state.doc.lineAt(pos)
-      const textBefore = line.text.slice(0, pos - line.from)
+      const textBefore = getTextBeforeCursor(view)
 
       // Don't trigger inside strings
-      const quoteCount = (textBefore.match(/"/g) || []).length
-      if (quoteCount % 2 !== 0) return false
+      if (isInsideString(textBefore)) return false
 
       // Find property context for filtering
       const propertyContext = findPropertyContext(textBefore)
 
       // Insert $ character
+      const pos = view.state.selection.main.head
       view.dispatch({
         changes: { from: pos, to: pos, insert: '$' },
         selection: { anchor: pos + 1 }
       })
 
-      // Open token picker with context after short delay
-      setTimeout(() => openTokenPicker(propertyContext), 50)
+      // Open token picker with context after short delay to let editor state settle
+      setTimeout(() => openTokenPicker(propertyContext), PICKER_OPEN_DELAY_MS)
       return true
     }
   }])
@@ -219,18 +222,6 @@ export function createNoAutoIndentKeymap(): Extension {
   ])
 }
 
-/**
- * Creates the question mark keymap for AI assistant
- */
-export function createQuestionMarkKeymap(openAiAssistant: () => void): Extension {
-  return keymap.of([{
-    key: '?',
-    run: () => {
-      openAiAssistant()
-      return true
-    }
-  }])
-}
 
 /**
  * Creates all editor keymaps bundled together
@@ -242,8 +233,8 @@ export function createEditorKeymaps(config: KeymapConfig): Extension[] {
     createSpaceKeymap(config),
     createHashKeymap(callbacks.openColorPicker),
     createDollarKeymap(callbacks.openTokenPicker),
+    createQuestionKeymap(callbacks),
     createSlashKeymap(callbacks),
-    createQuestionMarkKeymap(callbacks.openAiAssistant),
     createNoAutoIndentKeymap(),
     createColorPickerKeymap(callbacks.openColorPicker),
   ]

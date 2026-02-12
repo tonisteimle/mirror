@@ -67,7 +67,6 @@ export interface ComponentProperties {
 
   // Colors
   col?: string
-  bg?: string
   boc?: string
 
   // Border
@@ -112,7 +111,6 @@ export interface ComponentProperties {
   z?: number
 
   // Hover styles (dynamic keys for hover-*)
-  'hover-bg'?: string
   'hover-col'?: string
   'hover-boc'?: string
   'hover-bor'?: number

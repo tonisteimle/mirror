@@ -5,9 +5,12 @@
 import { autocompletion, type CompletionContext, type CompletionResult, type Completion } from '@codemirror/autocomplete'
 import { EditorView } from '@codemirror/view'
 import { properties, type Property, type ValuePickerType } from '../data/dsl-properties'
+import { getAllLibraryComponents } from '../library/registry'
 import { fuzzyScore } from '../utils/fuzzy-search'
 import { colors } from '../theme'
 import { LRUCache } from '../utils/lru-cache'
+import { isInsideString } from './utils'
+import { FUZZY_SCORE_CACHE_SIZE, PICKER_OPEN_DELAY_MS, MAX_AUTOCOMPLETE_OPTIONS } from './constants'
 
 export interface DSLAutocompleteOptions {
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
@@ -44,7 +47,7 @@ interface ScoredProperty {
  * Uses LRU eviction instead of TTL for O(1) operations and bounded memory.
  * Key format: "query:target"
  */
-const scoreCache = new LRUCache<string, number>(2000)
+const scoreCache = new LRUCache<string, number>(FUZZY_SCORE_CACHE_SIZE)
 
 /**
  * Get a cached fuzzy score or calculate and cache it.
@@ -120,9 +123,9 @@ function createApplyFunction(
       selection: { anchor: from + prop.syntax.length }
     })
 
-    // Open value picker after a short delay to let the editor update
+    // Open value picker after a short delay to let the editor state settle
     if (prop.valuePicker && prop.valuePicker !== 'none' && onValuePickerNeeded) {
-      setTimeout(() => onValuePickerNeeded(prop.valuePicker!, prop.valuePickerProperty), 50)
+      setTimeout(() => onValuePickerNeeded(prop.valuePicker!, prop.valuePickerProperty), PICKER_OPEN_DELAY_MS)
     }
   }
 }
@@ -184,8 +187,7 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
     const textBefore = line.text.slice(0, context.pos - line.from)
 
     // Don't trigger autocomplete inside strings
-    const quoteCount = (textBefore.match(/"/g) || []).length
-    if (quoteCount % 2 !== 0) return null
+    if (isInsideString(textBefore)) return null
 
     // Don't trigger autocomplete when typing hex color values (after #)
     // This prevents interference with the color picker
@@ -244,15 +246,105 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
     // Match word characters and hyphens (for properties like "hor-cen")
     const word = context.matchBefore(/[\w-]+/)
 
+    // Check if we're after "as " - show library components for casting
+    // This check comes BEFORE the early return so it works when no word is typed yet
+    const isAfterAsSpace = /\bas\s$/.test(textBefore)
+    const textBeforeWord = word ? textBefore.slice(0, textBefore.length - word.text.length) : textBefore
+    const isTypingAfterAs = word && /\bas\s+$/.test(textBeforeWord)
+
+    if (isAfterAsSpace || isTypingAfterAs) {
+      // Show HTML primitives and library components after "as "
+      const query = word?.text.toLowerCase() ?? ''
+
+      // HTML primitives supported by the parser (PascalCase)
+      const htmlPrimitives = [
+        { name: 'Input', detail: 'HTML', description: 'Text input field → <input>' },
+        { name: 'Textarea', detail: 'HTML', description: 'Multi-line text → <textarea>' },
+        { name: 'Button', detail: 'HTML', description: 'Clickable button → <button>' },
+        { name: 'Link', detail: 'HTML', description: 'Hyperlink → <a>' },
+        { name: 'Image', detail: 'HTML', description: 'Image → <img>' },
+      ]
+
+      const htmlOptions: Completion[] = htmlPrimitives
+        .filter(el => !query || el.name.toLowerCase().includes(query))
+        .map(el => ({
+          label: el.name,
+          detail: el.detail,
+          info: el.description,
+          boost: 10, // Boost HTML primitives to top
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            view.dispatch({
+              changes: { from, to, insert: el.name },
+              selection: { anchor: from + el.name.length }
+            })
+          }
+        }))
+
+      // Library components
+      const components = getAllLibraryComponents()
+      const componentOptions: Completion[] = components
+        .filter(c => !query || c.name.toLowerCase().includes(query))
+        .map(component => ({
+          label: component.name,
+          detail: component.category,
+          info: component.description,
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            view.dispatch({
+              changes: { from, to, insert: component.name },
+              selection: { anchor: from + component.name.length }
+            })
+          }
+        }))
+
+      const allOptions = [...htmlOptions, ...componentOptions]
+
+      if (allOptions.length > 0) {
+        return {
+          from: word?.from ?? context.pos,
+          filter: false,
+          options: allOptions,
+        }
+      }
+    }
+
     // Don't show autocomplete unless typing or explicitly triggered
     if (!word && !context.explicit) return null
 
-    // Don't trigger right after a component name (let dot keymap handle that)
-    if (/^[A-Z][a-zA-Z0-9]*$/.test(word?.text || '')) {
-      // This might be a component name being typed, don't interfere
-      if (textBefore.trimStart() === word?.text) return null
+    // Check if we're at the start of a line (only whitespace before the current word)
+    // This means we're typing a component name, not a property
+    const isAtLineStart = /^\s*$/.test(textBeforeWord)
+
+    if (isAtLineStart) {
+      // Show component suggestions
+      const query = word?.text.toLowerCase() ?? ''
+      const components = getAllLibraryComponents()
+
+      const componentOptions: Completion[] = components
+        .filter(c => !query || c.name.toLowerCase().includes(query))
+        .map(component => ({
+          label: component.name,
+          detail: component.category,
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            view.dispatch({
+              changes: { from, to, insert: component.name },
+              selection: { anchor: from + component.name.length }
+            })
+          }
+        }))
+
+      if (componentOptions.length > 0) {
+        return {
+          from: word?.from ?? context.pos,
+          filter: false,
+          options: componentOptions,
+        }
+      }
+
+      // If no components match, don't show anything at line start
+      return null
     }
 
+    // We're after a component name, show properties only
     const query = word?.text.toLowerCase() ?? ''
     const scored = scoreProperties(query)
 
@@ -339,7 +431,7 @@ export function dslAutocomplete(options: DSLAutocompleteOptions = {}) {
       override: [createDSLCompletionSource(options)],
       activateOnTyping: true,
       selectOnOpen: true,
-      maxRenderedOptions: 50,
+      maxRenderedOptions: MAX_AUTOCOMPLETE_OPTIONS,
     }),
     autocompleteTheme,
   ]

@@ -6,7 +6,7 @@
  */
 
 import type { ActionStatement, Expression, ComponentTemplate, ASTNode } from '../../parser/parser'
-import type { BehaviorRegistry } from '../behaviors/registry'
+import type { BehaviorRegistry } from '../behaviors'
 import type { ComponentRegistry } from '../component-registry'
 import type { OverlayRegistry } from '../overlay-registry'
 import { evaluateExpression } from '../utils'
@@ -34,7 +34,6 @@ export function templateToNode(name: string, template: ComponentTemplate): ASTNo
     type: 'component',
     name,
     id: `overlay-${name}-${Date.now()}`,
-    modifiers: template.modifiers,
     properties: template.properties,
     content: template.content,
     children: template.children,

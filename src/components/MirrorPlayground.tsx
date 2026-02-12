@@ -12,15 +12,9 @@
  * - Minimal dependencies
  */
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, useRef } from 'react'
 import { parse } from '../parser/parser'
-import {
-  generateReactElement,
-  ComponentRegistryProvider,
-  BehaviorRegistryProvider,
-  OverlayRegistryProvider,
-  TemplateRegistryProvider,
-} from '../generator/react-generator'
+import { Preview } from './Preview'
 
 // ============================================
 // Types
@@ -39,6 +33,10 @@ export interface MirrorPlaygroundProps {
   theme?: 'dark' | 'light'
   /** Read-only mode */
   readOnly?: boolean
+  /** Layout: 'horizontal' (default) or 'vertical' */
+  layout?: 'horizontal' | 'vertical'
+  /** Minimal mode: hides headers and status bar */
+  minimal?: boolean
 }
 
 // ============================================
@@ -60,7 +58,7 @@ const themes = {
   light: {
     bg: '#ffffff',
     editorBg: '#f8f8f8',
-    previewBg: '#ffffff',
+    previewBg: '#f5f5f5',
     border: '#e0e0e0',
     text: '#1a1a1a',
     textMuted: '#888',
@@ -74,113 +72,122 @@ const themes = {
 // Styles
 // ============================================
 
-const createStyles = (theme: typeof themes.dark, height: number) => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    border: `1px solid ${theme.border}`,
-    borderRadius: '8px',
-    overflow: 'hidden',
-    backgroundColor: theme.bg,
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 12px',
-    backgroundColor: theme.editorBg,
-    borderBottom: `1px solid ${theme.border}`,
-  },
-  title: {
-    fontSize: '12px',
-    fontWeight: 500,
-    color: theme.textMuted,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  },
-  resetButton: {
-    padding: '4px 10px',
-    fontSize: '11px',
-    fontWeight: 500,
-    color: theme.textMuted,
-    backgroundColor: 'transparent',
-    border: `1px solid ${theme.border}`,
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'all 0.15s',
-  },
-  main: {
-    display: 'flex',
-    height: `${height}px`,
-  },
-  editorPane: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    borderRight: `1px solid ${theme.border}`,
-  },
-  previewPane: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-  },
-  paneHeader: {
-    padding: '6px 12px',
-    fontSize: '10px',
-    fontWeight: 600,
-    color: theme.textMuted,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-    backgroundColor: theme.editorBg,
-    borderBottom: `1px solid ${theme.border}`,
-  },
-  editor: {
-    flex: 1,
-    padding: '12px',
-    backgroundColor: theme.editorBg,
-    color: theme.text,
-    fontFamily: '"SF Mono", "Consolas", "Monaco", monospace',
-    fontSize: '13px',
-    lineHeight: '1.6',
-    border: 'none',
-    outline: 'none',
-    resize: 'none' as const,
-    overflow: 'auto',
-  },
-  preview: {
-    flex: 1,
-    padding: '16px',
-    backgroundColor: theme.previewBg,
-    overflow: 'auto',
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  error: {
-    padding: '8px 12px',
-    fontSize: '12px',
-    color: theme.error,
-    backgroundColor: `${theme.error}15`,
-    borderTop: `1px solid ${theme.error}30`,
-  },
-  status: {
-    padding: '4px 12px',
-    fontSize: '10px',
-    color: theme.success,
-    backgroundColor: theme.editorBg,
-    borderTop: `1px solid ${theme.border}`,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  statusDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: theme.success,
-  },
-})
+const createStyles = (theme: typeof themes.dark, height: number, layout: 'horizontal' | 'vertical', minimal: boolean) => {
+  const isVertical = layout === 'vertical'
+
+  return {
+    container: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      border: minimal ? 'none' : `1px solid ${theme.border}`,
+      borderRadius: minimal ? '0' : '8px',
+      overflow: 'hidden',
+      backgroundColor: theme.bg,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    },
+    header: {
+      display: minimal ? 'none' : 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '8px 12px',
+      backgroundColor: theme.editorBg,
+      borderBottom: `1px solid ${theme.border}`,
+    },
+    title: {
+      fontSize: '12px',
+      fontWeight: 500,
+      color: theme.textMuted,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+    },
+    resetButton: {
+      padding: '4px 10px',
+      fontSize: '11px',
+      fontWeight: 500,
+      color: theme.textMuted,
+      backgroundColor: 'transparent',
+      border: `1px solid ${theme.border}`,
+      borderRadius: '4px',
+      cursor: 'pointer',
+      transition: 'all 0.15s',
+    },
+    main: {
+      display: 'flex',
+      flexDirection: isVertical ? 'column' as const : 'row' as const,
+      height: isVertical ? 'auto' : `${height}px`,
+    },
+    editorPane: {
+      flex: isVertical ? 'none' : 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      borderRight: isVertical ? 'none' : `1px solid ${theme.border}`,
+      borderBottom: isVertical ? `1px solid ${theme.border}` : 'none',
+    },
+    previewPane: {
+      flex: isVertical ? 'none' : 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      minHeight: isVertical ? `${height}px` : 'auto',
+    },
+    paneHeader: {
+      display: minimal ? 'none' : 'block',
+      padding: '6px 12px',
+      fontSize: '10px',
+      fontWeight: 600,
+      color: theme.textMuted,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+      backgroundColor: theme.editorBg,
+      borderBottom: `1px solid ${theme.border}`,
+    },
+    editor: {
+      flex: isVertical ? 'none' : 1,
+      padding: '12px',
+      backgroundColor: theme.editorBg,
+      color: theme.text,
+      fontFamily: '"SF Mono", "Consolas", "Monaco", monospace',
+      fontSize: '13px',
+      lineHeight: '1.6',
+      border: 'none',
+      outline: 'none',
+      resize: 'none' as const,
+      overflow: 'auto',
+      minHeight: isVertical ? '120px' : 'auto',
+    },
+    preview: {
+      flex: 1,
+      padding: '16px',
+      backgroundColor: theme.previewBg,
+      overflow: 'auto',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: isVertical ? 'flex-start' : 'center',
+    },
+    error: {
+      padding: '8px 12px',
+      fontSize: '12px',
+      color: theme.error,
+      backgroundColor: `${theme.error}15`,
+      borderTop: `1px solid ${theme.error}30`,
+    },
+    status: {
+      display: minimal ? 'none' : 'flex',
+      padding: '4px 12px',
+      fontSize: '10px',
+      color: theme.success,
+      backgroundColor: theme.editorBg,
+      borderTop: `1px solid ${theme.border}`,
+      alignItems: 'center',
+      gap: '6px',
+    },
+    statusDot: {
+      width: '6px',
+      height: '6px',
+      borderRadius: '50%',
+      backgroundColor: theme.success,
+    },
+  }
+}
 
 // ============================================
 // Component
@@ -193,13 +200,15 @@ export function MirrorPlayground({
   lineNumbers = false,
   theme = 'dark',
   readOnly = false,
+  layout = 'horizontal',
+  minimal = false,
 }: MirrorPlaygroundProps) {
   const [code, setCode] = useState(initialCode.trim())
   const [error, setError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const colors = themes[theme]
-  const styles = useMemo(() => createStyles(colors, height), [colors, height])
+  const styles = useMemo(() => createStyles(colors, height, layout, minimal), [colors, height, layout, minimal])
 
   // Parse and render
   const { nodes, registry } = useMemo(() => {
@@ -246,7 +255,7 @@ export function MirrorPlayground({
     setCode(initialCode.trim())
   }, [initialCode])
 
-  // Render preview content
+  // Render preview content using full Preview component
   const previewContent = useMemo(() => {
     if (nodes.length === 0) {
       return (
@@ -257,19 +266,10 @@ export function MirrorPlayground({
     }
 
     return (
-      <BehaviorRegistryProvider>
-        <ComponentRegistryProvider>
-          <TemplateRegistryProvider registry={registry}>
-            <OverlayRegistryProvider>
-              {generateReactElement(nodes, {
-                inspectMode: false,
-                hoveredId: null,
-                selectedId: null,
-              })}
-            </OverlayRegistryProvider>
-          </TemplateRegistryProvider>
-        </ComponentRegistryProvider>
-      </BehaviorRegistryProvider>
+      <Preview
+        nodes={nodes}
+        registry={registry}
+      />
     )
   }, [nodes, registry, error, colors.textMuted])
 
@@ -318,7 +318,9 @@ export function MirrorPlayground({
         <div style={styles.previewPane}>
           <div style={styles.paneHeader}>Preview</div>
           <div style={styles.preview}>
-            {previewContent}
+            <div style={{ width: 'max-content', maxWidth: '100%' }}>
+              {previewContent}
+            </div>
           </div>
         </div>
       </div>

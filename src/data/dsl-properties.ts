@@ -411,17 +411,24 @@ export const properties: Property[] = [
   {
     name: 'col',
     syntax: 'col ',
-    description: 'Color (background for containers, text for Text)',
+    description: 'Text color',
     category: 'Colors',
     keywords: [
       'farbe', 'color', 'colour',
-      // Background keywords
+      'textfarbe', 'schriftfarbe', 'font color', 'fontcolor',
+      'text-color', 'textColor', 'fc', 'foreground', 'vordergrund',
+    ],
+    valuePicker: 'color',
+  },
+  {
+    name: 'bg',
+    syntax: 'bg ',
+    description: 'Background color',
+    category: 'Colors',
+    keywords: [
       'hintergrund', 'hintergrundfarbe', 'background', 'fläche', 'fill',
       'bgcolor', 'background-color', 'hg', 'bgColor', 'backgroundColor',
       'backgroud', 'backgrund', 'flächenfarbe', 'füllfarbe',
-      // Text keywords
-      'textfarbe', 'schriftfarbe', 'font color', 'fontcolor',
-      'text-color', 'textColor', 'fc', 'foreground', 'vordergrund',
     ],
     valuePicker: 'color',
   },
@@ -623,36 +630,54 @@ export const properties: Property[] = [
   },
 
   // ============================================
-  // Overflow
+  // Overflow / Scroll
   // ============================================
   {
     name: 'scroll',
     syntax: 'scroll',
-    description: 'Scroll both directions',
+    description: 'Scroll vertical (default)',
     category: 'Overflow',
     keywords: [
       'scrollen', 'scrollbar', 'überlauf', 'scroll', 'overflow scroll',
-      'scrollable', 'scrolling', 'rollen', 'scrollbalken',
+      'scrollable', 'scrolling', 'rollen', 'scrollbalken', 'vertikal',
     ],
   },
   {
-    name: 'scroll-x',
-    syntax: 'scroll-x',
-    description: 'Scroll horizontal',
-    category: 'Overflow',
-    keywords: [
-      'horizontal scrollen', 'seitlich scrollen', 'scroll-x', 'overflow-x',
-      'x scroll', 'horizontal scrollbar', 'links rechts scrollen',
-    ],
-  },
-  {
-    name: 'scroll-y',
-    syntax: 'scroll-y',
-    description: 'Scroll vertical',
+    name: 'scroll-ver',
+    syntax: 'scroll-ver',
+    description: 'Scroll vertical (explicit)',
     category: 'Overflow',
     keywords: [
       'vertikal scrollen', 'runterscrollen', 'scroll-y', 'overflow-y',
       'y scroll', 'vertical scrollbar', 'hoch runter scrollen',
+    ],
+  },
+  {
+    name: 'scroll-hor',
+    syntax: 'scroll-hor',
+    description: 'Scroll horizontal',
+    category: 'Overflow',
+    keywords: [
+      'horizontal scrollen', 'seitlich scrollen', 'scroll-x', 'overflow-x',
+      'x scroll', 'horizontal scrollbar', 'links rechts scrollen', 'carousel',
+    ],
+  },
+  {
+    name: 'scroll-both',
+    syntax: 'scroll-both',
+    description: 'Scroll both directions',
+    category: 'Overflow',
+    keywords: [
+      'beide richtungen', 'scroll both', 'overflow auto', 'map', 'canvas',
+    ],
+  },
+  {
+    name: 'snap',
+    syntax: 'snap',
+    description: 'Scroll snap (items snap into view)',
+    category: 'Overflow',
+    keywords: [
+      'einrasten', 'snap', 'carousel', 'slider', 'scroll-snap', 'paging',
     ],
   },
   {
@@ -672,13 +697,24 @@ export const properties: Property[] = [
   {
     name: 'hover-col',
     syntax: 'hover-col ',
-    description: 'Color on hover (background)',
+    description: 'Text color on hover',
     category: 'Hover',
     keywords: [
-      'hover farbe', 'mauszeiger farbe', 'hover color', ':hover color',
-      'hover hintergrund', 'mauszeiger hintergrund', 'mouseover', 'hover background',
+      'hover textfarbe', 'mauszeiger textfarbe', 'hover text color', ':hover color',
+      'text on hover', 'mouseover text', 'hover schriftfarbe',
+      'rollover text', 'hoverCol', 'hovercol',
+    ],
+    valuePicker: 'color',
+  },
+  {
+    name: 'hover-bg',
+    syntax: 'hover-bg ',
+    description: 'Background color on hover',
+    category: 'Hover',
+    keywords: [
+      'hover hintergrund', 'mauszeiger hintergrund', 'hover background',
       ':hover bg', 'background on hover', 'mouse over background',
-      'rollover', 'hover-background', 'hoverCol', 'hovercol',
+      'rollover', 'hover-background', 'hoverBg', 'hoverbg',
     ],
     valuePicker: 'color',
   },

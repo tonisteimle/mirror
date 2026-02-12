@@ -6,14 +6,14 @@ export const TabsComponent: LibraryComponent = {
   description: 'A set of layered sections of content that are displayed one at a time.',
   slots: [
     {
-      name: 'List',
+      name: 'Tabs',
       required: true,
       multiple: false,
       defaultProps: {
         hor: true,
         gap: 0,
         bor_d: 1,
-        boc: '#333'
+        boc: '$border'
       }
     },
     {
@@ -25,12 +25,12 @@ export const TabsComponent: LibraryComponent = {
         pad_d: 12,
         pad_l: 16,
         pad_r: 16,
-        col: '#888',
-        'hover-col': '#FFF'
+        col: '$text-muted',
+        'hover-col': '$text'
       }
     },
     {
-      name: 'Panel',
+      name: 'TabContent',
       required: true,
       multiple: true,
       defaultProps: {
@@ -41,13 +41,13 @@ export const TabsComponent: LibraryComponent = {
   defaultStates: ['tab-1', 'tab-2', 'tab-3'],
   actions: ['change'],
   definitions: `// Tabs Components
-TabList: hor bor d 1 boc #333
-Tab: pad 12 16 col #888 hover-col #FFF
-TabActive: pad 12 16 col #FFF bor d 2 boc #3B82F6
-TabPanel: pad 16`,
+Tabs: hor bor d 1 boc $border
+Tab: pad 12 16 col $text-muted hover-col $text
+TabActive: pad 12 16 bor d 2 boc $primary
+TabContent: pad 16`,
   layoutExample: `Tabs
   state tab1
-  TabList
+  Tabs
     TabActive
       onclick change to tab1
       "Tab 1"
@@ -57,13 +57,13 @@ TabPanel: pad 16`,
     Tab
       onclick change to tab3
       "Tab 3"
-  TabPanel
+  TabContent
     if tab1
     "Content for Tab 1"
-  TabPanel
+  TabContent
     if tab2
     "Content for Tab 2"
-  TabPanel
+  TabContent
     if tab3
     "Content for Tab 3"`
 }

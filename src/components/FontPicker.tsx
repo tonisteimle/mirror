@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { colors } from '../theme'
-import { usePickerBehavior } from '../hooks/usePickerBehavior'
-import { BasePicker, PickerList, PickerFooter, PickerSearch, PickerToggle } from './picker'
+import { usePickerWithSearch } from '../hooks/usePickerWithSearch'
+import { useGroupedItems } from '../hooks/useGroupedItems'
+import { BasePicker, PickerList, PickerFooter, PickerSearch, PickerToggle, PickerItem, CategoryHeader, EmptyState } from './picker'
+import { parseFontTokens as parseFontTokensUtil } from '../utils/token-parser'
 import type { Position } from '../types/common'
 
 interface FontPickerProps {
@@ -60,31 +62,15 @@ const systemFonts: FontItem[] = [
 
 const fontCategories = ['Sans-Serif', 'Serif', 'Monospace', 'Display']
 
-// Parse font tokens from tokens string
-function parseFontTokens(tokens: string): FontItem[] {
-  const fontTokens: FontItem[] = []
-  const lines = tokens.split('\n')
-
-  for (const line of lines) {
-    const match = line.match(/^\s*(\$font-[a-zA-Z0-9-]+)\s*:\s*(.+)$/)
-    if (match) {
-      fontTokens.push({
-        name: match[1],
-        value: match[1], // Insert the token reference
-        preview: match[2].trim(),
-        category: 'Font Tokens',
-      })
-    }
-  }
-
-  return fontTokens
-}
-
 // Toggle options for tokens/fonts mode
 const TOGGLE_OPTIONS = [
   { id: 'tokens', label: 'Tokens' },
   { id: 'fonts', label: 'System Fonts' },
 ]
+
+// Stable callbacks for filtering and grouping
+const getFontSearchableFields = (item: FontItem) => [item.name, item.value, item.preview]
+const getFontCategory = (item: FontItem) => item.category
 
 export const FontPicker = memo(function FontPicker({
   isOpen,
@@ -94,76 +80,71 @@ export const FontPicker = memo(function FontPicker({
   tokens,
   defaultToTokens = true,
 }: FontPickerProps) {
-  const [query, setQuery] = useState('')
   const [mode, setMode] = useState<'fonts' | 'tokens'>(defaultToTokens ? 'tokens' : 'fonts')
 
-  const fontTokens = parseFontTokens(tokens)
+  // Use memoized token parsing with unified parser
+  const fontTokens = useMemo(
+    () => parseFontTokensUtil(tokens).map(t => ({
+      name: '$' + t.name,
+      value: '$' + t.name, // Insert the token reference
+      preview: t.value,
+      category: 'Font Tokens',
+    })),
+    [tokens]
+  )
 
   // Get items based on mode
   const allItems = mode === 'fonts' ? systemFonts : fontTokens
 
-  // Filter by query
-  const filteredItems = query
-    ? allItems.filter(
-        item =>
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.value.toLowerCase().includes(query.toLowerCase()) ||
-          (item.preview && item.preview.toLowerCase().includes(query.toLowerCase()))
-      )
-    : allItems
-
-  // Group by category
-  const categories = mode === 'fonts' ? fontCategories : ['Font Tokens']
-  const groupedItems = new Map<string, FontItem[]>()
-  for (const category of categories) {
-    const items = filteredItems.filter(item => item.category === category)
-    if (items.length > 0) {
-      groupedItems.set(category, items)
-    }
-  }
-
-  // Reset when opened
-  useEffect(() => {
-    if (isOpen) {
-      setQuery('')
-      setMode(defaultToTokens ? 'tokens' : 'fonts')
-    }
-  }, [isOpen, defaultToTokens])
-
-  const handleSelect = useCallback(
-    (index: number) => {
-      if (filteredItems[index]) {
-        onSelect(filteredItems[index].value)
-        onClose()
-      }
-    },
-    [filteredItems, onSelect, onClose]
+  // Handle font selection
+  const handleFontSelect = useCallback(
+    (item: FontItem) => onSelect(item.value),
+    [onSelect]
   )
 
+  // Combined search, filter, and navigation
   const {
+    query,
+    setQuery,
+    filteredItems,
     selectedIndex,
     setSelectedIndex,
     listRef,
     inputRef,
     handleKeyDown,
+    handleSelect,
     resetSelection,
-  } = usePickerBehavior({
+  } = usePickerWithSearch({
     isOpen,
     onClose,
-    itemCount: filteredItems.length,
-    onSelect: handleSelect,
+    items: allItems,
+    getSearchableFields: getFontSearchableFields,
+    onSelectItem: handleFontSelect,
   })
 
-  // Reset selection when query or mode changes
+  // Group by category with stable indices
+  const categories = mode === 'fonts' ? fontCategories : ['Font Tokens']
+  const { groupedItems } = useGroupedItems({
+    items: filteredItems,
+    getCategory: getFontCategory,
+    categories,
+  })
+
+  // Reset mode when opened
+  useEffect(() => {
+    if (isOpen) {
+      setMode(defaultToTokens ? 'tokens' : 'fonts')
+    }
+  }, [isOpen, defaultToTokens])
+
+  // Reset selection when mode changes
   useEffect(() => {
     resetSelection()
-  }, [query, mode, resetSelection])
+  }, [mode, resetSelection])
 
   const handleModeChange = (id: string) => {
     setMode(id as 'tokens' | 'fonts')
   }
-
-  let itemIndex = 0
 
   return (
     <BasePicker
@@ -196,108 +177,65 @@ export const FontPicker = memo(function FontPicker({
       {/* Font List */}
       <PickerList ref={listRef}>
         {filteredItems.length === 0 ? (
-          <div
-            style={{
-              padding: '12px',
-              fontSize: '12px',
-              color: colors.textMuted,
-              textAlign: 'center',
-            }}
-          >
+          <EmptyState>
             {mode === 'tokens'
               ? 'Keine Font-Tokens definiert. Definiere z.B. $font-heading: "Playfair Display", serif'
               : 'Keine Fonts gefunden'}
-          </div>
+          </EmptyState>
         ) : (
-          Array.from(groupedItems.entries()).map(([category, items]) => (
+          groupedItems.map(({ category, items }) => (
             <div key={category}>
-              {/* Category Header */}
-              <div
-                style={{
-                  padding: '6px 12px 4px',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  color: colors.textMuted,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                {category}
-              </div>
-
-              {/* Items */}
-              {items.map(item => {
-                const index = itemIndex++
-                const isSelected = index === selectedIndex
-
-                return (
+              <CategoryHeader>{category}</CategoryHeader>
+              {items.map(item => (
+                <PickerItem
+                  key={item.name}
+                  index={item.flatIndex}
+                  isSelected={item.flatIndex === selectedIndex}
+                  onClick={() => handleSelect(item.flatIndex)}
+                  onMouseEnter={() => setSelectedIndex(item.flatIndex)}
+                  style={{ gap: '8px' }}
+                >
+                  {/* Font name (readable) */}
                   <div
-                    key={item.name}
-                    data-index={index}
-                    onClick={() => handleSelect(index)}
                     style={{
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      backgroundColor: isSelected ? colors.selected : 'transparent',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '8px',
+                      fontSize: '12px',
+                      color: colors.text,
+                      fontFamily: 'system-ui, sans-serif',
+                      minWidth: '100px',
                     }}
-                    onMouseEnter={() => setSelectedIndex(index)}
                   >
+                    {item.name}
+                  </div>
+                  {/* Font preview */}
+                  {mode === 'fonts' && (
                     <div
                       style={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
+                        fontSize: '14px',
+                        color: colors.textMuted,
+                        fontFamily: item.value,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {/* Font name (readable) */}
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: colors.text,
-                          fontFamily: 'system-ui, sans-serif',
-                          minWidth: '100px',
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      {/* Font preview */}
-                      {mode === 'fonts' && (
-                        <div
-                          style={{
-                            fontSize: '14px',
-                            color: colors.textMuted,
-                            fontFamily: item.value,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Beispiel
-                        </div>
-                      )}
-                      {/* Token preview (for tokens mode) */}
-                      {item.preview && mode === 'tokens' && (
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            color: colors.textMuted,
-                            fontFamily: 'JetBrains Mono, monospace',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {item.preview}
-                        </div>
-                      )}
+                      Beispiel
                     </div>
-                  </div>
-                )
-              })}
+                  )}
+                  {/* Token preview (for tokens mode) */}
+                  {item.preview && mode === 'tokens' && (
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: colors.textMuted,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {item.preview}
+                    </div>
+                  )}
+                </PickerItem>
+              ))}
             </div>
           ))
         )}

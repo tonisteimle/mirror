@@ -18,7 +18,13 @@ export type ComponentCategory =
   | 'item'
   | 'button'
   | 'text'
+  | 'heading'  // H1-H6
   | 'container'
+
+/**
+ * Heading level type (1-6)
+ */
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
 /**
  * Check if a node represents an Image component.
@@ -90,6 +96,53 @@ export function isItemComponent(node: ASTNode): boolean {
 }
 
 /**
+ * Check if a node represents a Heading component (H1-H6).
+ */
+export function isHeadingComponent(node: ASTNode): boolean {
+  const primitiveType = node.properties._primitiveType as string | undefined
+  if (primitiveType && /^H[1-6]$/.test(primitiveType)) return true
+  if (/^H[1-6]$/.test(node.name)) return true
+  // Also match names ending with H1-H6, like "PageH1" or "CardH2"
+  if (/H[1-6]$/.test(node.name)) return true
+  return false
+}
+
+/**
+ * Get the heading level (1-6) for a heading component.
+ * Returns null if not a heading.
+ */
+export function getHeadingLevel(node: ASTNode): HeadingLevel | null {
+  const primitiveType = node.properties._primitiveType as string | undefined
+
+  // Check _primitiveType first
+  if (primitiveType) {
+    const match = primitiveType.match(/^H([1-6])$/)
+    if (match) return parseInt(match[1], 10) as HeadingLevel
+  }
+
+  // Check node name
+  const nameMatch = node.name.match(/H([1-6])$/)
+  if (nameMatch) return parseInt(nameMatch[1], 10) as HeadingLevel
+
+  return null
+}
+
+/**
+ * Check if a node represents a Text component (including P, Span).
+ */
+export function isTextComponent(node: ASTNode): boolean {
+  return (
+    node.properties._primitiveType === 'Text' ||
+    node.properties._primitiveType === 'P' ||
+    node.properties._primitiveType === 'Span' ||
+    node.name === 'Text' ||
+    node.name === 'P' ||
+    node.name === 'Span' ||
+    node.name.endsWith('Text')
+  )
+}
+
+/**
  * Get the component category for a node.
  * Used for determining sugar handling behavior.
  */
@@ -100,6 +153,8 @@ export function getComponentCategory(node: ASTNode): ComponentCategory {
   if (isLinkComponent(node)) return 'link'
   if (isButtonComponent(node)) return 'button'
   if (isItemComponent(node)) return 'item'
+  if (isHeadingComponent(node)) return 'heading'
+  if (isTextComponent(node)) return 'text'
 
   // Default to container for Box, Card, etc.
   return 'container'

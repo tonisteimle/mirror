@@ -1,10 +1,11 @@
 /**
- * Vite Config for Playground Embed Bundle
+ * Vite Config for Editor Embed Bundle
  *
  * Builds a standalone JavaScript bundle that can be included in HTML docs.
+ * Uses the full CodeMirror editor with syntax highlighting.
  *
  * Build: npm run build:embed
- * Output: dist/mirror-playground.js
+ * Output: dist/embed/mirror-editor.js
  */
 
 import { defineConfig } from 'vite'
@@ -19,9 +20,9 @@ export default defineConfig({
   build: {
     outDir: 'dist/embed',
     lib: {
-      entry: resolve(__dirname, 'src/embed/playground.tsx'),
-      name: 'MirrorPlayground',
-      fileName: () => 'mirror-playground.js',
+      entry: resolve(__dirname, 'src/embed/editor.tsx'),
+      name: 'MirrorEditor',
+      fileName: () => 'mirror-editor.js',
       formats: ['iife'],
     },
     rollupOptions: {

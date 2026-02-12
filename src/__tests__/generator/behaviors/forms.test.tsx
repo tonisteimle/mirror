@@ -2,14 +2,14 @@
  * Form Behavior Tests
  *
  * Tests for form behavior components:
- * - InputBehavior
+ * - FormFieldBehavior
  * - SwitchBehavior
  * - CheckboxBehavior
  */
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { InputBehavior } from '../../../generator/behaviors/input'
+import { FormFieldBehavior } from '../../../generator/behaviors/input'
 import { SwitchBehavior } from '../../../generator/behaviors/switch'
 import { CheckboxBehavior } from '../../../generator/behaviors/checkbox'
 import type { ASTNode } from '../../../parser/parser'
@@ -54,9 +54,9 @@ function createChildrenMap(node: ASTNode): Map<string, ASTNode[]> {
 }
 
 describe('form behaviors', () => {
-  describe('InputBehavior', () => {
+  describe('FormFieldBehavior', () => {
     it('has correct name', () => {
-      expect(InputBehavior.name).toBe('Input')
+      expect(FormFieldBehavior.name).toBe('FormField')
     })
 
     it('renders container with label', () => {
@@ -72,7 +72,7 @@ describe('form behaviors', () => {
       })
       const node = createASTNode({
         id: 'input1',
-        name: 'Input',
+        name: 'FormField',
         children: [labelNode, fieldNode],
       })
 
@@ -82,7 +82,7 @@ describe('form behaviors', () => {
 
       render(
         <div>
-          {InputBehavior.render(node, childrenMap, renderFn, registry)}
+          {FormFieldBehavior.render(node, childrenMap, renderFn, registry)}
         </div>
       )
 
@@ -98,7 +98,7 @@ describe('form behaviors', () => {
       })
       const node = createASTNode({
         id: 'input1',
-        name: 'Input',
+        name: 'FormField',
         children: [fieldNode],
       })
 
@@ -108,7 +108,7 @@ describe('form behaviors', () => {
 
       render(
         <div>
-          {InputBehavior.render(node, childrenMap, renderFn, registry)}
+          {FormFieldBehavior.render(node, childrenMap, renderFn, registry)}
         </div>
       )
 
@@ -129,7 +129,7 @@ describe('form behaviors', () => {
       })
       const node = createASTNode({
         id: 'input1',
-        name: 'Input',
+        name: 'FormField',
         children: [fieldNode, hintNode],
       })
 
@@ -139,7 +139,7 @@ describe('form behaviors', () => {
 
       render(
         <div>
-          {InputBehavior.render(node, childrenMap, renderFn, registry)}
+          {FormFieldBehavior.render(node, childrenMap, renderFn, registry)}
         </div>
       )
 
@@ -149,7 +149,7 @@ describe('form behaviors', () => {
     it('applies container width styles', () => {
       const node = createASTNode({
         id: 'input1',
-        name: 'Input',
+        name: 'FormField',
         properties: { w: 'full' },
         children: [],
       })
@@ -160,7 +160,7 @@ describe('form behaviors', () => {
 
       const { container } = render(
         <div>
-          {InputBehavior.render(node, childrenMap, renderFn, registry)}
+          {FormFieldBehavior.render(node, childrenMap, renderFn, registry)}
         </div>
       )
 
@@ -171,7 +171,7 @@ describe('form behaviors', () => {
     it('handles empty children gracefully', () => {
       const node = createASTNode({
         id: 'input1',
-        name: 'Input',
+        name: 'FormField',
         children: [],
       })
 
@@ -182,7 +182,7 @@ describe('form behaviors', () => {
       expect(() => {
         render(
           <div>
-            {InputBehavior.render(node, childrenMap, renderFn, registry)}
+            {FormFieldBehavior.render(node, childrenMap, renderFn, registry)}
           </div>
         )
       }).not.toThrow()

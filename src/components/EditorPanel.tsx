@@ -2,8 +2,11 @@
  * EditorPanel component containing the code editor tabs and AI prompt input.
  */
 
+import { memo, useState, useCallback, useRef } from 'react'
 import { colors } from '../theme'
-import { PromptPanel } from './PromptPanel'
+import { PromptPanel, type PromptPanelRef } from './PromptPanel'
+import { useEditorActions } from '../contexts'
+import { generateDSLViaJSON, hasApiKey } from '../lib/ai'
 
 export type EditorTab = 'layout' | 'components' | 'tokens'
 
@@ -20,12 +23,9 @@ interface EditorPanelProps {
   highlightLine?: number
   designTokens?: Map<string, unknown>
   autoCompleteMode: 'always' | 'delay' | 'off'
-  onOpenAiAssistant: (position: { x: number; y: number }) => void
-  onClear: () => void
-  onClean: () => void
 }
 
-export function EditorPanel({
+export const EditorPanel = memo(function EditorPanel({
   width,
   activeTab,
   onTabChange,
@@ -38,12 +38,54 @@ export function EditorPanel({
   highlightLine,
   designTokens,
   autoCompleteMode,
-  onOpenAiAssistant,
-  onClear,
-  onClean,
 }: EditorPanelProps) {
+  // Get editor actions from context instead of props
+  const { onClear, onClean } = useEditorActions()
   const currentValue = activeTab === 'layout' ? layoutCode : activeTab === 'components' ? componentsCode : tokensCode
   const currentOnChange = activeTab === 'layout' ? onLayoutChange : activeTab === 'components' ? onComponentsChange : onTokensChange
+
+  // AI prompt state
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Handle AI generation
+  const handleGenerate = useCallback(async () => {
+    if (!aiPrompt.trim() || isGenerating) return
+
+    setIsGenerating(true)
+    try {
+      // Pass design system (tokens + components) as context
+      const designSystem = {
+        tokens: tokensCode,
+        components: componentsCode,
+      }
+      const result = await generateDSLViaJSON(aiPrompt.trim(), designSystem)
+      if (result.layout) {
+        // Append generated code to layout (always to layout tab)
+        const newCode = layoutCode.trim()
+          ? layoutCode.trimEnd() + '\n\n' + result.layout
+          : result.layout
+        onLayoutChange(newCode)
+        setAiPrompt('')
+      }
+    } catch (err) {
+      console.error('AI generation error:', err)
+      // Show error to user
+      const message = err instanceof Error ? err.message : 'Unbekannter Fehler'
+      alert(message)
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [aiPrompt, isGenerating, tokensCode, componentsCode, layoutCode, onLayoutChange])
+
+  // Handle keyboard in prompt
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && aiPrompt.trim() && !isGenerating) {
+      e.preventDefault()
+      handleGenerate()
+    }
+  }, [aiPrompt, isGenerating, handleGenerate])
 
   return (
     <div style={{ padding: '4px 12px 12px 16px', width: `${width}px`, backgroundColor: colors.panel }}>
@@ -107,13 +149,74 @@ export function EditorPanel({
             tokensCode={tokensCode}
             designTokens={designTokens}
             autoCompleteMode={autoCompleteMode}
-            onOpenAiAssistant={onOpenAiAssistant}
           />
         </div>
+
+        {/* AI Prompt Footer - only visible when API key is configured */}
+        {hasApiKey() && (
+          <div style={{
+              borderTop: `1px solid ${colors.border}`,
+              padding: '8px 4px',
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+            }}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={isGenerating ? '#F59E0B' : colors.textMuted}
+                strokeWidth="2"
+                style={{ flexShrink: 0 }}
+              >
+                <path d="M12 2a10 10 0 1 0 10 10H12V2Z"/>
+                <path d="M12 12 2.1 12"/>
+                <path d="m5 19 5-5"/>
+              </svg>
+              <input
+                ref={inputRef}
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Was soll ich erstellen?"
+                disabled={isGenerating}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  fontFamily: 'system-ui, sans-serif',
+                  backgroundColor: isGenerating ? '#252525' : '#1A1A1A',
+                  color: isGenerating ? colors.textMuted : colors.text,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '6px',
+                  outline: 'none',
+                  opacity: isGenerating ? 0.7 : 1,
+                }}
+              />
+              {isGenerating && (
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #333',
+                  borderTop: '2px solid #F59E0B',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                  flexShrink: 0,
+                }} />
+              )}
+              <style>{`
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+              `}</style>
+          </div>
+        )}
       </div>
     </div>
   )
-}
+})
 
 // Tab button component
 function TabButton({

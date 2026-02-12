@@ -6,6 +6,7 @@
  * 2. localStorage (for dropped images from drag-and-drop)
  * 3. /media/ path (default fallback)
  */
+import { logger } from '../../services/logger'
 
 // Allowed protocols for image sources (security)
 const ALLOWED_PROTOCOLS = ['http:', 'https:', 'data:', 'blob:']
@@ -55,7 +56,7 @@ export function isValidImageUrl(url: string): boolean {
 export function resolveImageSrc(src: string): string {
   // Validate the URL first
   if (!isValidImageUrl(src)) {
-    console.warn(`[Image] Invalid or unsafe URL blocked: ${src.substring(0, 50)}...`)
+    logger.security.warn(`Invalid or unsafe image URL blocked: ${src.substring(0, 50)}...`)
     return INVALID_IMAGE_PLACEHOLDER
   }
 

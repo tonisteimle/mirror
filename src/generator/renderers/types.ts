@@ -21,6 +21,8 @@ export interface GenerateOptions {
   onHover?: (id: string | null) => void
   /** Callback when node is selected */
   onSelect?: (id: string) => void
+  /** Callback when node is clicked */
+  onClick?: (id: string) => void
   /** Callback for page navigation */
   onPageNavigate?: (targetPage: string) => void
 }

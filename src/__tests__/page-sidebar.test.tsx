@@ -1,274 +1,209 @@
 /**
  * PageSidebar Component Tests
+ *
+ * Using the test kit for concise, readable tests.
  */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { PageSidebar, PageData } from '../components/PageSidebar'
+import {
+  componentTest,
+  pageSidebarProps,
+  screen,
+  fireEvent,
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+} from './kit'
+import { PageSidebar } from '../components/PageSidebar'
 
 // Mock scrollIntoView which isn't available in JSDOM
 Element.prototype.scrollIntoView = vi.fn()
 
+const test = componentTest(PageSidebar, pageSidebarProps)
+
 describe('PageSidebar', () => {
-  const mockPages: PageData[] = [
-    { id: 'page1', name: 'Home', layoutCode: 'Box' },
-    { id: 'page2', name: 'About', layoutCode: 'Box' },
-    { id: 'page3', name: 'Contact', layoutCode: 'Box' },
-  ]
-
-  const defaultProps = {
-    pages: mockPages,
-    currentPageId: 'page1',
-    onSelectPage: vi.fn(),
-    onAddPage: vi.fn(),
-    onRenamePage: vi.fn(),
-    onDeletePage: vi.fn(() => null),
-    onReorderPages: vi.fn(),
-  }
-
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe('Rendering', () => {
-    it('should render all pages', () => {
-      render(<PageSidebar {...defaultProps} />)
+  // ===========================================
+  // Rendering Tests
+  // ===========================================
 
-      expect(screen.getByText('Home')).toBeDefined()
-      expect(screen.getByText('About')).toBeDefined()
-      expect(screen.getByText('Contact')).toBeDefined()
-    })
+  test.shouldRender(['Pages', 'Home', 'About', 'Contact', '+'])
 
-    it('should render the header', () => {
-      render(<PageSidebar {...defaultProps} />)
-
-      expect(screen.getByText('Pages')).toBeDefined()
-    })
-
-    it('should render the add button', () => {
-      render(<PageSidebar {...defaultProps} />)
-
-      expect(screen.getByText('+')).toBeDefined()
-    })
-
-    it('should highlight current page', () => {
-      const { container } = render(<PageSidebar {...defaultProps} currentPageId="page2" />)
-
-      // The active page should have a different background
+  describe('when currentPageId is page2', () => {
+    it('highlights the current page', () => {
+      const { container } = test.render({ currentPageId: 'page2' })
       const aboutPage = screen.getByText('About')
-      // Check parent element has active styling
       expect(aboutPage.parentElement?.style.backgroundColor).toBeDefined()
     })
   })
 
+  // ===========================================
+  // Selection Tests
+  // ===========================================
+
   describe('Selection', () => {
-    it('should select page on click', () => {
-      const onSelectPage = vi.fn()
-      render(<PageSidebar {...defaultProps} onSelectPage={onSelectPage} />)
+    test.clicking('About').calls('onSelectPage', 'page2')
 
-      fireEvent.click(screen.getByText('About'))
-
-      expect(onSelectPage).toHaveBeenCalledWith('page2')
-    })
-
-    it('should not select page when editing', async () => {
-      const onSelectPage = vi.fn()
-      render(<PageSidebar {...defaultProps} onSelectPage={onSelectPage} />)
-
-      // Double-click to start editing
+    it('does not select page when editing', () => {
+      const { props } = test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
-      // Try to click - should not trigger selection during edit mode
-      const input = screen.getByRole('textbox')
-      fireEvent.click(input)
-
-      // Selection should only be called once from the initial click
-      expect(onSelectPage).not.toHaveBeenCalled()
+      fireEvent.click(screen.getByRole('textbox'))
+      expect(props.onSelectPage).not.toHaveBeenCalled()
     })
   })
+
+  // ===========================================
+  // Add Page Tests
+  // ===========================================
 
   describe('Add Page', () => {
-    it('should call onAddPage when add button clicked', () => {
-      const onAddPage = vi.fn()
-      render(<PageSidebar {...defaultProps} onAddPage={onAddPage} />)
-
-      fireEvent.click(screen.getByText('+'))
-
-      expect(onAddPage).toHaveBeenCalled()
-    })
+    test.clicking('+').calls('onAddPage')
   })
 
+  // ===========================================
+  // Renaming Tests
+  // ===========================================
+
   describe('Renaming', () => {
-    it('should enter edit mode on double-click', () => {
-      render(<PageSidebar {...defaultProps} />)
-
+    it('enters edit mode on double-click', () => {
+      test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
       expect(screen.getByRole('textbox')).toBeDefined()
     })
 
-    it('should show input field when editing', () => {
-      render(<PageSidebar {...defaultProps} />)
-
+    it('shows input field with current name', () => {
+      test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
-      const input = screen.getByRole('textbox') as HTMLInputElement
-      expect(input.value).toBe('Home')
+      expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('Home')
     })
 
-    it('should call onRenamePage on Enter', () => {
-      const onRenamePage = vi.fn()
-      render(<PageSidebar {...defaultProps} onRenamePage={onRenamePage} />)
-
+    it('calls onRenamePage on Enter', () => {
+      const { props } = test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
       const input = screen.getByRole('textbox')
       fireEvent.change(input, { target: { value: 'New Name' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-
-      expect(onRenamePage).toHaveBeenCalledWith('page1', 'New Name')
+      expect(props.onRenamePage).toHaveBeenCalledWith('page1', 'New Name')
     })
 
-    it('should cancel rename on Escape', () => {
-      const onRenamePage = vi.fn()
-      render(<PageSidebar {...defaultProps} onRenamePage={onRenamePage} />)
-
+    it('cancels rename on Escape', () => {
+      const { props } = test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
       const input = screen.getByRole('textbox')
       fireEvent.change(input, { target: { value: 'New Name' } })
       fireEvent.keyDown(input, { key: 'Escape' })
-
-      expect(onRenamePage).not.toHaveBeenCalled()
+      expect(props.onRenamePage).not.toHaveBeenCalled()
       expect(screen.queryByRole('textbox')).toBeNull()
     })
 
-    it('should trim whitespace from name', () => {
-      const onRenamePage = vi.fn()
-      render(<PageSidebar {...defaultProps} onRenamePage={onRenamePage} />)
-
+    it('trims whitespace from name', () => {
+      const { props } = test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
       const input = screen.getByRole('textbox')
       fireEvent.change(input, { target: { value: '  Trimmed Name  ' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-
-      expect(onRenamePage).toHaveBeenCalledWith('page1', 'Trimmed Name')
+      expect(props.onRenamePage).toHaveBeenCalledWith('page1', 'Trimmed Name')
     })
 
-    it('should not rename if name is empty', () => {
-      const onRenamePage = vi.fn()
-      render(<PageSidebar {...defaultProps} onRenamePage={onRenamePage} />)
-
+    it('does not rename if name is empty', () => {
+      const { props } = test.render()
       fireEvent.doubleClick(screen.getByText('Home'))
-
       const input = screen.getByRole('textbox')
       fireEvent.change(input, { target: { value: '' } })
       fireEvent.keyDown(input, { key: 'Enter' })
-
-      expect(onRenamePage).not.toHaveBeenCalled()
+      expect(props.onRenamePage).not.toHaveBeenCalled()
     })
   })
 
+  // ===========================================
+  // Context Menu Tests
+  // ===========================================
+
   describe('Context Menu', () => {
-    it('should open on right-click', () => {
-      render(<PageSidebar {...defaultProps} />)
-
+    it('opens on right-click', () => {
+      test.render()
       fireEvent.contextMenu(screen.getByText('Home'))
-
       expect(screen.getByText('Rename')).toBeDefined()
     })
 
-    it('should show rename and delete options', () => {
-      render(<PageSidebar {...defaultProps} />)
-
+    it('shows rename and delete options', () => {
+      test.render()
       fireEvent.contextMenu(screen.getByText('Home'))
-
       expect(screen.getByText('Rename')).toBeDefined()
       expect(screen.getByText('Delete')).toBeDefined()
     })
 
-    it('should start rename from context menu', () => {
-      render(<PageSidebar {...defaultProps} />)
-
+    it('starts rename from context menu', () => {
+      test.render()
       fireEvent.contextMenu(screen.getByText('About'))
       fireEvent.click(screen.getByText('Rename'))
-
-      const input = screen.getByRole('textbox') as HTMLInputElement
-      expect(input.value).toBe('About')
+      expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('About')
     })
 
-    it('should not show delete if only one page', () => {
-      const singlePage = [mockPages[0]]
-      render(<PageSidebar {...defaultProps} pages={singlePage} />)
-
+    it('hides delete if only one page', () => {
+      const singlePage = [{ id: 'page1', name: 'Home', layoutCode: 'Box' }]
+      test.render({ pages: singlePage })
       fireEvent.contextMenu(screen.getByText('Home'))
-
       expect(screen.getByText('Rename')).toBeDefined()
       expect(screen.queryByText('Delete')).toBeNull()
     })
   })
 
-  describe('Deletion', () => {
-    it('should call onDeletePage when delete clicked', () => {
-      const onDeletePage = vi.fn(() => null)
-      render(<PageSidebar {...defaultProps} onDeletePage={onDeletePage} />)
+  // ===========================================
+  // Deletion Tests
+  // ===========================================
 
+  describe('Deletion', () => {
+    it('calls onDeletePage when delete clicked', () => {
+      const { props } = test.render()
       fireEvent.contextMenu(screen.getByText('About'))
       fireEvent.click(screen.getByText('Delete'))
-
-      expect(onDeletePage).toHaveBeenCalledWith('page2')
+      expect(props.onDeletePage).toHaveBeenCalledWith('page2')
     })
 
-    it('should show error if page is referenced', () => {
+    it('shows error if page is referenced', () => {
       const onDeletePage = vi.fn(() => ['HomePage', 'ContactPage'])
-      render(<PageSidebar {...defaultProps} onDeletePage={onDeletePage} />)
-
+      test.render({ onDeletePage })
       fireEvent.contextMenu(screen.getByText('About'))
       fireEvent.click(screen.getByText('Delete'))
-
       expect(screen.getByText(/Seite wird noch referenziert/)).toBeDefined()
       expect(screen.getByText(/HomePage, ContactPage/)).toBeDefined()
     })
   })
 
-  describe('Drag & Drop', () => {
-    it('should set draggable attribute', () => {
-      const { container } = render(<PageSidebar {...defaultProps} />)
+  // ===========================================
+  // Drag & Drop Tests
+  // ===========================================
 
+  describe('Drag & Drop', () => {
+    it('sets draggable attribute', () => {
+      const { container } = test.render()
       const pageItems = container.querySelectorAll('[draggable="true"]')
       expect(pageItems.length).toBe(3)
     })
 
-    it('should call onReorderPages on drop', () => {
-      const onReorderPages = vi.fn()
-      const { container } = render(
-        <PageSidebar {...defaultProps} onReorderPages={onReorderPages} />
-      )
-
+    it('calls onReorderPages on drop', () => {
+      const { props, container } = test.render()
       const pageItems = container.querySelectorAll('[draggable="true"]')
       const firstPage = pageItems[0]
       const secondPage = pageItems[1]
 
-      // Simulate drag and drop
       fireEvent.dragStart(firstPage, {
-        dataTransfer: {
-          effectAllowed: 'move',
-          setData: vi.fn(),
-        },
+        dataTransfer: { effectAllowed: 'move', setData: vi.fn() },
       })
-
       fireEvent.dragOver(secondPage, {
         preventDefault: vi.fn(),
         dataTransfer: { dropEffect: 'move' },
       })
-
       fireEvent.drop(secondPage, {
         preventDefault: vi.fn(),
         dataTransfer: {},
       })
 
-      expect(onReorderPages).toHaveBeenCalledWith(0, 1)
+      expect(props.onReorderPages).toHaveBeenCalledWith(0, 1)
     })
   })
 })
