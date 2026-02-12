@@ -7,8 +7,9 @@
  * - Mouse clicks on panel still work
  * - Arrow keys navigate, Enter selects, Escape closes
  * - Unified dark design matching the editor
+ * - Smart positioning: flips above cursor if not enough space below
  */
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState, useLayoutEffect } from 'react'
 import { colors } from '../theme'
 
 export interface InlinePanelProps {
@@ -32,6 +33,8 @@ export function InlinePanel({
   maxHeight = 280,
 }: InlinePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const [flipAbove, setFlipAbove] = useState(false)
+  const [adjustedLeft, setAdjustedLeft] = useState(position.x)
 
   // Close on click outside
   useEffect(() => {
@@ -48,40 +51,74 @@ export function InlinePanel({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
 
+  // Calculate position after render to get actual panel dimensions
+  useLayoutEffect(() => {
+    if (!isOpen || !panelRef.current) return
+
+    const panel = panelRef.current
+    const rect = panel.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const lineHeight = 20 // Approximate line height for cursor positioning
+
+    // Check if panel fits below cursor
+    const spaceBelow = viewportHeight - position.y - 16
+    const spaceAbove = position.y - 16
+
+    // Flip above if not enough space below but enough above
+    if (rect.height > spaceBelow && spaceAbove > spaceBelow) {
+      setFlipAbove(true)
+    } else {
+      setFlipAbove(false)
+    }
+
+    // Adjust horizontal position to stay in viewport
+    let newLeft = position.x
+    if (newLeft + width > viewportWidth - 16) {
+      newLeft = viewportWidth - width - 16
+    }
+    if (newLeft < 16) {
+      newLeft = 16
+    }
+    setAdjustedLeft(newLeft)
+  }, [isOpen, position, width, maxHeight])
+
+  // Reset flip state when closing
+  useEffect(() => {
+    if (!isOpen) {
+      setFlipAbove(false)
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
-  // Calculate position to stay within viewport
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  let left = position.x
-  let top = position.y
-
-  if (left + width > viewportWidth - 16) {
-    left = viewportWidth - width - 16
-  }
-  if (top + maxHeight > viewportHeight - 16) {
-    top = position.y - maxHeight - 24 // Show above cursor
-  }
+  // Calculate final top position
+  const lineHeight = 20
+  const top = flipAbove
+    ? position.y - maxHeight - lineHeight - 4  // Above cursor with gap
+    : position.y + 4  // Below cursor with gap
 
   return (
     <div
       ref={panelRef}
       style={{
         position: 'fixed',
-        left,
+        left: adjustedLeft,
         top,
         width,
         maxHeight,
         backgroundColor: colors.panel,
         border: `1px solid ${colors.border}`,
         borderRadius: '4px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
         zIndex: 1000,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'JetBrains Mono, Menlo, Monaco, monospace',
         fontSize: '11px',
+        // Smooth transition when flipping position
+        transition: 'top 0.1s ease-out',
       }}
       // Prevent focus stealing
       onMouseDown={(e) => {
