@@ -4,6 +4,7 @@
  */
 import { keymap } from '@codemirror/view'
 import { insertNewline } from '@codemirror/commands'
+import { startCompletion } from '@codemirror/autocomplete'
 import type { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import {
@@ -14,6 +15,19 @@ import {
 import { isInsideString, getTextBeforeCursor } from './utils'
 import { findPropertyContext } from './trigger-handlers'
 import { PICKER_OPEN_DELAY_MS } from './constants'
+import {
+  COLOR_PROPERTIES,
+  NUMBER_PROPERTIES,
+  STRING_PROPERTIES,
+} from '../dsl/properties'
+
+// Properties that expect a value after them - don't trigger autocomplete
+// Note: 'font' and 'icon' are excluded as they have special picker handlers
+const VALUE_EXPECTING_PROPERTIES = new Set([
+  ...COLOR_PROPERTIES,
+  ...NUMBER_PROPERTIES,
+  ...Array.from(STRING_PROPERTIES).filter(p => p !== 'font' && p !== 'icon'),
+])
 
 // Types for keymap configuration
 export interface KeymapCallbacks {
@@ -146,10 +160,23 @@ export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
 }
 
 /**
+ * Helper to insert space and trigger a callback after a delay.
+ */
+function insertSpaceAndTrigger(view: EditorView, trigger: () => void): void {
+  const pos = view.state.selection.main.head
+  view.dispatch({
+    changes: { from: pos, to: pos, insert: ' ' },
+    selection: { anchor: pos + 1 }
+  })
+  setTimeout(trigger, PICKER_OPEN_DELAY_MS)
+}
+
+/**
  * Creates the space keymap.
  * Space after 'font' or 'icon' triggers the appropriate picker automatically.
- * This provides a seamless experience where users type "font " and immediately
- * see the font picker.
+ * Space after boolean properties (hor, ver, full, etc.) triggers autocomplete.
+ * Space after a value (e.g., "search", #FF0000, 12) triggers autocomplete.
+ * Space after value-expecting properties (pad, bg, col, etc.) does NOT trigger.
  */
 export function createSpaceKeymap(config: KeymapConfig): Extension {
   const { callbacks } = config
@@ -164,33 +191,32 @@ export function createSpaceKeymap(config: KeymapConfig): Extension {
 
       // Check if we just typed "font" (with word boundary)
       if (/\bfont$/.test(textBefore)) {
-        // Insert space first
-        const pos = view.state.selection.main.head
-        view.dispatch({
-          changes: { from: pos, to: pos, insert: ' ' },
-          selection: { anchor: pos + 1 }
-        })
-
-        // Open font picker after short delay
-        setTimeout(callbacks.openFontPicker, PICKER_OPEN_DELAY_MS)
+        insertSpaceAndTrigger(view, callbacks.openFontPicker)
         return true
       }
 
       // Check if we just typed "icon" (with word boundary)
       if (/\bicon$/.test(textBefore)) {
-        // Insert space first
-        const pos = view.state.selection.main.head
-        view.dispatch({
-          changes: { from: pos, to: pos, insert: ' ' },
-          selection: { anchor: pos + 1 }
-        })
-
-        // Open icon picker after short delay
-        setTimeout(callbacks.openIconPicker, PICKER_OPEN_DELAY_MS)
+        insertSpaceAndTrigger(view, callbacks.openIconPicker)
         return true
       }
 
-      return false // Let default space handling occur
+      // Extract the last word (property or value)
+      const lastWord = textBefore.match(/\b([\w-]+)$/)?.[1]
+
+      // If the last word is a property that expects a value, don't trigger autocomplete
+      // Let the user type the value with normal space handling
+      if (lastWord && VALUE_EXPECTING_PROPERTIES.has(lastWord)) {
+        return false
+      }
+
+      // Otherwise: trigger autocomplete
+      // This covers:
+      // - Boolean properties (hor, ver, full, cen, etc.)
+      // - After values ("...", #FFF, 123, 50%)
+      // - Component names and unknown words
+      insertSpaceAndTrigger(view, () => startCompletion(view))
+      return true
     }
   }])
 }

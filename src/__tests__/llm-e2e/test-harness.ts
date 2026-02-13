@@ -1,14 +1,14 @@
 /**
- * LLM E2E Test Harness with LLM-as-Judge
+ * LLM E2E Test Harness with Validator + LLM-as-Judge
  *
  * Test Flow:
  * 1. Send prompt to LLM → Generate Mirror code
  * 2. Parse the code → Check syntax
- * 3. LLM-as-Judge → Evaluate if code meets requirements
+ * 3. Validate the code → Check properties, events, actions (objective)
+ * 4. LLM-as-Judge → Evaluate if code meets requirements (subjective)
  */
 
-import { generateDSLViaJSON, hasApiKey, setApiKey, getApiKey } from '../../lib/ai'
-import { parse } from '../../parser/parser'
+import { generateWithValidation, hasApiKey, setApiKey, getApiKey } from '../../lib/ai'
 import { API } from '../../constants'
 
 // ============================================================================
@@ -29,6 +29,7 @@ export interface TestResult {
   prompt: string
   generatedCode: string
   parseErrors: string[]
+  validationErrors: string[]  // Objective validation errors (properties, events, etc.)
   evaluation: {
     passed: boolean
     score: number  // 0-100
@@ -146,21 +147,36 @@ export async function runTest(testCase: TestCase): Promise<TestResult> {
 
   let generatedCode = ''
   let parseErrors: string[] = []
+  let validationErrors: string[] = []
   let evaluation: TestResult['evaluation'] = null
 
   try {
-    // 1. Generate code
-    console.log(`    Generating...`)
-    const generated = await generateDSLViaJSON(testCase.prompt)
-    generatedCode = generated.layout
+    // 1. Generate code with self-healing (auto-corrects up to 2x)
+    console.log(`    Generating (with self-healing)...`)
+    const result = await generateWithValidation(testCase.prompt, {
+      maxAttempts: 3,
+      onProgress: (status, attempt) => {
+        if (status === 'correcting') {
+          console.log(`    Correcting (attempt ${attempt})...`)
+        }
+      }
+    })
+    generatedCode = result.code
 
-    // 2. Parse to check syntax
-    console.log(`    Parsing...`)
-    const parsed = parse(generatedCode)
-    parseErrors = parsed.errors.filter(e => !e.startsWith('Warning:'))
+    // 2. Check if validation passed after self-healing
+    if (!result.valid) {
+      // Separate parse errors from validation errors
+      result.issues.forEach(issue => {
+        if (issue.type === 'parse_error' || issue.type === 'parse_issue') {
+          parseErrors.push(issue.message)
+        } else {
+          validationErrors.push(issue.message)
+        }
+      })
+    }
 
-    // 3. Evaluate with LLM (only if parsing succeeded)
-    if (parseErrors.length === 0) {
+    // 3. Evaluate with LLM (only if validation succeeded)
+    if (result.valid) {
       console.log(`    Evaluating...`)
       evaluation = await evaluateWithLLM(testCase.prompt, generatedCode, testCase.requirements)
     }
@@ -168,13 +184,14 @@ export async function runTest(testCase: TestCase): Promise<TestResult> {
     parseErrors.push(`Error: ${error instanceof Error ? error.message : 'Unknown'}`)
   }
 
-  const success = parseErrors.length === 0 && (evaluation?.passed ?? false)
+  const success = parseErrors.length === 0 && validationErrors.length === 0 && (evaluation?.passed ?? false)
 
   return {
     name: testCase.name,
     prompt: testCase.prompt,
     generatedCode,
     parseErrors,
+    validationErrors,
     evaluation,
     duration: Date.now() - startTime,
     success,
@@ -213,6 +230,9 @@ export async function runTestSuite(tests: TestCase[]): Promise<TestSuiteResult> 
       console.log(`  ❌ FAIL (Score: ${result.evaluation?.score ?? 0}/100, ${result.duration}ms)`)
       if (result.parseErrors.length > 0) {
         console.log(`     Parse errors: ${result.parseErrors.join(', ')}`)
+      }
+      if (result.validationErrors.length > 0) {
+        console.log(`     Validation errors: ${result.validationErrors.slice(0, 3).join(', ')}`)
       }
       if (result.evaluation?.feedback) {
         console.log(`     Feedback: ${result.evaluation.feedback}`)
@@ -273,6 +293,13 @@ export function printSummary(result: TestSuiteResult) {
         console.log(`  ${r.name}`)
         console.log(`  Prompt: "${r.prompt}"`)
         console.log(`  Code: ${r.generatedCode.substring(0, 80).replace(/\n/g, ' ')}...`)
+        if (r.parseErrors.length > 0) {
+          console.log(`  Parse Errors: ${r.parseErrors.join(', ')}`)
+        }
+        if (r.validationErrors.length > 0) {
+          console.log(`  Validation Errors:`)
+          r.validationErrors.slice(0, 5).forEach(e => console.log(`    - ${e}`))
+        }
         if (r.evaluation) {
           console.log(`  Score: ${r.evaluation.score}/100`)
           r.evaluation.requirementResults

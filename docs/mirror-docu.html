@@ -358,6 +358,7 @@
       <a href="#animationen">Animations</a>
       <a href="#conditionals">Conditionals</a>
       <a href="#lists">Data</a>
+      <a href="#behaviors">Behaviors</a>
       <a href="#slots">Slots</a>
       <a href="#library">Library</a>
       <a href="#tutorial-dashboard">Tutorial</a>
@@ -1947,11 +1948,184 @@
 
     <div class="divider"></div>
 
+    <!-- BEHAVIORS -->
+    <section class="concept" id="behaviors">
+      <h2>Behaviors</h2>
+      <p class="lead">
+        Centralized events separate structure from behavior. Behaviors take this further – they define reusable interaction patterns for complex UI components.
+      </p>
+
+      <p>
+        A dropdown needs click-outside-to-close, keyboard navigation, item highlighting, and selection. In traditional development, this means ~350 lines of JavaScript with event listeners, state management, and cleanup code. Mirror behaviors reduce this to a few declarative lines that read like prose.
+      </p>
+
+      <h3 id="behavior-states">Behavior States</h3>
+      <p>
+        We've seen system states like <code class="inline-code">hover</code> and <code class="inline-code">focus</code> that are automatic. <strong>Behavior states</strong> are activated by actions – they give you full control over when states change.
+      </p>
+
+      <div class="mirror-editor" data-code="Item: pad 12 16, rad 6, cursor pointer&#10;  state default&#10;    bg transparent&#10;  state highlighted&#10;    bg #333&#10;  state selected&#10;    bg #2271c1&#10;&#10;Menu ver, gap 2, bg #1A1A23, pad 8, rad 8, w 200&#10;  Item onhover highlight self, &quot;Dashboard&quot;&#10;  Item onhover highlight self, &quot;Settings&quot;&#10;  Item onhover highlight self, &quot;Profile&quot;"></div>
+
+      <p>
+        <code class="inline-code">highlight self</code> activates the <code class="inline-code">highlighted</code> state on hover. The state defines the visual change.
+      </p>
+
+      <div class="rule-box">
+        <h4>Common Behavior States</h4>
+        <ul>
+          <li><code class="inline-code">highlighted</code> – visual focus (keyboard/mouse navigation)</li>
+          <li><code class="inline-code">selected</code> – persistent selection</li>
+          <li><code class="inline-code">active</code> / <code class="inline-code">inactive</code> – tab or toggle states</li>
+          <li><code class="inline-code">expanded</code> / <code class="inline-code">collapsed</code> – accordion states</li>
+        </ul>
+      </div>
+
+      <h3 id="event-action-target">The Event-Action-Target Pattern</h3>
+      <p>
+        Behaviors follow a consistent pattern that reads like a sentence:
+      </p>
+
+      <pre><span class="keyword">on-event</span> [<span class="value">key</span>] <span class="keyword">action</span> <span class="component">target</span></pre>
+
+      <p>Examples:</p>
+      <ul>
+        <li><code class="inline-code">onclick close Dropdown</code> – "On click, close the Dropdown"</li>
+        <li><code class="inline-code">onkeydown escape close self</code> – "On Escape key, close myself"</li>
+        <li><code class="inline-code">onhover highlight self</code> – "On hover, highlight myself"</li>
+        <li><code class="inline-code">onkeydown arrow-down highlight next</code> – "On arrow-down, highlight the next item"</li>
+      </ul>
+
+      <h3 id="keyboard-events">Keyboard Events</h3>
+      <p>
+        Add a key modifier after <code class="inline-code">onkeydown</code> or <code class="inline-code">onkeyup</code> to handle specific keys:
+      </p>
+
+      <div class="mirror-editor" data-code="Item: pad 12 16, rad 6, cursor pointer&#10;  state default&#10;    bg transparent&#10;  state highlighted&#10;    bg #333&#10;&#10;Menu: ver, gap 2, bg #1A1A23, pad 8, rad 8, w 200&#10;  onkeydown arrow-down highlight next&#10;  onkeydown arrow-up highlight prev&#10;  onkeydown escape close self&#10;&#10;Menu&#10;  Item &quot;Dashboard&quot;&#10;  Item &quot;Settings&quot;&#10;  Item &quot;Profile&quot;"></div>
+
+      <div class="rule-box">
+        <h4>Key Modifiers</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>escape</code>, <code>enter</code>, <code>tab</code>, <code>space</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>arrow-up</code>, <code>arrow-down</code>, <code>arrow-left</code>, <code>arrow-right</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;"><code>backspace</code>, <code>delete</code>, <code>home</code>, <code>end</code></td>
+          </tr>
+        </table>
+      </div>
+
+      <h3 id="click-outside">Click Outside</h3>
+      <p>
+        The <code class="inline-code">onclick-outside</code> event fires when the user clicks anywhere outside the element – perfect for closing dropdowns and modals:
+      </p>
+
+      <div class="mirror-editor" data-code="Trigger: bg #2271c1, pad 12, rad 8&#10;  onclick toggle Menu&#10;&#10;Menu: ver, bg #1A1A23, pad 8, rad 8, w 200, hidden, shadow lg&#10;  onclick-outside close self&#10;  Item: pad 12 16, rad 6, cursor pointer, hover-bg #333&#10;&#10;Box ver, gap 8&#10;  Trigger &quot;Open Menu&quot;&#10;  Menu&#10;    Item onclick close Menu, &quot;Option 1&quot;&#10;    Item onclick close Menu, &quot;Option 2&quot;&#10;    Item onclick close Menu, &quot;Option 3&quot;"></div>
+
+      <h3 id="selection-actions">Selection Actions</h3>
+      <p>
+        Use <code class="inline-code">highlight</code> for visual navigation and <code class="inline-code">select</code> for persistent selection:
+      </p>
+
+      <div class="rule-box">
+        <h4>Actions</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0; width: 180px;"><code>highlight self</code></td>
+            <td>Highlight this element</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>highlight next</code> / <code>prev</code></td>
+            <td>Highlight next/previous sibling</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>select self</code></td>
+            <td>Select this element</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>select highlighted</code></td>
+            <td>Select the currently highlighted element</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;"><code>filter Container</code></td>
+            <td>Filter items in container by input value</td>
+          </tr>
+        </table>
+      </div>
+
+      <h3 id="multiple-actions">Multiple Actions</h3>
+      <p>
+        Chain multiple actions with a comma:
+      </p>
+
+      <div class="mirror-editor" data-code="Item: pad 12 16, rad 6, cursor pointer&#10;  state default&#10;    bg transparent&#10;  state selected&#10;    bg #2271c1&#10;  onclick select self, close Menu&#10;  onhover highlight self&#10;&#10;Menu: ver, bg #1A1A23, pad 8, rad 8, w 200&#10;  Item &quot;Dashboard&quot;&#10;  Item &quot;Settings&quot;&#10;  Item &quot;Profile&quot;"></div>
+
+      <p>
+        <code class="inline-code">onclick select self, close Menu</code> selects the item and closes the menu in one action.
+      </p>
+
+      <h3 id="dropdown-pattern">Complete Dropdown Pattern</h3>
+      <p>
+        Combining everything: click to open, keyboard navigation, click-outside to close, and selection:
+      </p>
+
+      <div class="mirror-editor" data-code="// Trigger button&#10;Trigger: bg #2271c1, pad 12, rad 8, cursor pointer&#10;  onclick toggle Dropdown&#10;&#10;// Menu items with states&#10;Item: pad 12 16, rad 6, cursor pointer&#10;  state default&#10;    bg transparent&#10;  state highlighted&#10;    bg #333&#10;  state selected&#10;    bg #3B82F6&#10;  onclick select self, close Dropdown&#10;  onhover highlight self&#10;&#10;// Dropdown container with keyboard nav&#10;Dropdown: ver, bg #1A1A23, pad 8, rad 8, w 220, hidden, shadow lg&#10;  onclick-outside close self&#10;  onkeydown escape close self&#10;  onkeydown arrow-down highlight next&#10;  onkeydown arrow-up highlight prev&#10;  onkeydown enter select highlighted&#10;&#10;// Usage&#10;Select ver, gap 8&#10;  Trigger &quot;Select option...&quot;&#10;  Dropdown&#10;    Item icon home, &quot;Dashboard&quot;&#10;    Item icon user, &quot;Profile&quot;&#10;    Item icon settings, &quot;Settings&quot;&#10;    Item icon log-out, col #EF4444, &quot;Logout&quot;"></div>
+
+      <p class="why">
+        <strong>~20 lines of Mirror</strong> replaces ~350 lines of JavaScript for a fully accessible dropdown with keyboard navigation.
+      </p>
+
+      <h3 id="targets">Targets</h3>
+      <p>
+        Actions can target different elements:
+      </p>
+
+      <div class="rule-box">
+        <h4>Target Keywords</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0; width: 140px;"><code>self</code></td>
+            <td>The element that triggered the event</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>next</code> / <code>prev</code></td>
+            <td>Next/previous sibling element</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>first</code> / <code>last</code></td>
+            <td>First/last element in container</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px 0;"><code>highlighted</code></td>
+            <td>Currently highlighted element</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;"><code>ComponentName</code></td>
+            <td>A specific named component</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-label">Try it</div>
+        <p class="exercise-task">Add keyboard navigation to this menu: arrow-down to highlight next, arrow-up to highlight previous, enter to select.</p>
+        <div class="mirror-editor" data-code="Item: pad 12 16, rad 6, cursor pointer&#10;  state default&#10;    bg transparent&#10;  state highlighted&#10;    bg #333&#10;  onhover highlight self&#10;&#10;Menu ver, bg #1A1A23, pad 8, rad 8, w 200&#10;  // Add keyboard events here&#10;  Item &quot;Option 1&quot;&#10;  Item &quot;Option 2&quot;&#10;  Item &quot;Option 3&quot;"></div>
+      </div>
+
+      <div class="highlight-box">
+        <p><strong>Behaviors are declarative.</strong> You describe <em>what</em> should happen, not <em>how</em>. Mirror handles event listeners, state management, and cleanup automatically.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
     <!-- SLOTS -->
     <section class="concept" id="slots">
       <h2>Slots – Named Children</h2>
       <p class="lead">
-        We've organized behavior with centralized events. Now let's make components more flexible by defining where content can be inserted.
+        Behaviors handle interactions. Now let's make components more flexible by defining where content can be inserted.
       </p>
 
       <p>
@@ -2842,9 +3016,14 @@
       <div class="rule-box">
         <ul>
           <li><code class="inline-code">onclick</code> / <code class="inline-code">onchange</code> / <code class="inline-code">oninput</code> / <code class="inline-code">onfocus</code> / <code class="inline-code">onblur</code></li>
+          <li><code class="inline-code">onclick-outside</code> – click outside element</li>
+          <li><code class="inline-code">onkeydown escape</code> / <code class="inline-code">enter</code> / <code class="inline-code">arrow-down</code> / <code class="inline-code">arrow-up</code> – key events</li>
           <li><code class="inline-code">toggle</code> – switch state</li>
           <li><code class="inline-code">open Name</code> / <code class="inline-code">close</code> – overlays</li>
           <li><code class="inline-code">show Name</code> / <code class="inline-code">hide Name</code> – visibility</li>
+          <li><code class="inline-code">highlight self</code> / <code class="inline-code">next</code> / <code class="inline-code">prev</code> – navigation highlight</li>
+          <li><code class="inline-code">select self</code> / <code class="inline-code">highlighted</code> – selection</li>
+          <li><code class="inline-code">filter Container</code> – filter items by input</li>
           <li><code class="inline-code">page Name</code> – navigation</li>
           <li><code class="inline-code">assign $var to value</code> – set variable</li>
         </ul>
@@ -2949,7 +3128,7 @@
 </div> <!-- /page-layout -->
 
   <!-- Mirror Editor Script -->
-  <script src="mirror-editor.js"></script>
+  <script src="mirror-editor.js?v=20260213c"></script>
 
   <!-- Scroll Spy for Navigation -->
   <script>

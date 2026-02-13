@@ -6,7 +6,7 @@ import { memo, useState, useCallback, useRef } from 'react'
 import { colors } from '../theme'
 import { PromptPanel, type PromptPanelRef } from './PromptPanel'
 import { useEditorActions } from '../contexts'
-import { generateDSLViaJSON, hasApiKey } from '../lib/ai'
+import { generateWithCodeIntelligence, hasApiKey } from '../lib/ai'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
 
 export type EditorTab = 'layout' | 'components' | 'tokens'
@@ -25,6 +25,8 @@ interface EditorPanelProps {
   designTokens?: Map<string, unknown>
   autoCompleteMode: 'always' | 'delay' | 'off'
   onPreviewChange?: (override: PreviewOverride | null) => void
+  /** Called when cursor line changes in layout editor (0-indexed) */
+  onCursorLineChange?: (line: number) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -41,6 +43,7 @@ export const EditorPanel = memo(function EditorPanel({
   designTokens,
   autoCompleteMode,
   onPreviewChange,
+  onCursorLineChange,
 }: EditorPanelProps) {
   // Get editor actions from context instead of props
   const { onClear, onClean } = useEditorActions()
@@ -52,35 +55,74 @@ export const EditorPanel = memo(function EditorPanel({
   const [isGenerating, setIsGenerating] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Handle AI generation
+  // Cursor position tracking for context-aware generation
+  const cursorPositionRef = useRef<{ line: number; column: number } | null>(null)
+
+  // Handle AI generation with context awareness
   const handleGenerate = useCallback(async () => {
     if (!aiPrompt.trim() || isGenerating) return
 
     setIsGenerating(true)
     try {
-      // Pass design system (tokens + components) as context
-      const designSystem = {
-        tokens: tokensCode,
-        components: componentsCode,
-      }
-      const result = await generateDSLViaJSON(aiPrompt.trim(), designSystem)
-      if (result.layout) {
-        // Append generated code to layout (always to layout tab)
-        const newCode = layoutCode.trim()
-          ? layoutCode.trimEnd() + '\n\n' + result.layout
-          : result.layout
+      // Build full source code for analysis
+      const fullSourceCode = [
+        tokensCode.trim(),
+        componentsCode.trim(),
+        layoutCode.trim()
+      ].filter(Boolean).join('\n\n')
+
+      // Get cursor position if we're on the layout tab
+      const cursor = activeTab === 'layout' && cursorPositionRef.current
+        ? cursorPositionRef.current
+        : undefined
+
+      // Generate with code intelligence
+      const result = await generateWithCodeIntelligence(aiPrompt.trim(), {
+        sourceCode: fullSourceCode,
+        cursor,
+      })
+
+      if (result.code) {
+        const generatedCode = result.code.trim()
+        let newCode: string
+
+        if (cursor && result.insertAt) {
+          // Insert at cursor position
+          const lines = layoutCode.split('\n')
+          const insertLine = Math.min(cursor.line + 1, lines.length)
+
+          // Ensure proper spacing around inserted code
+          const needsNewlineBefore = insertLine > 0 && lines[insertLine - 1]?.trim() !== ''
+          const needsNewlineAfter = insertLine < lines.length && lines[insertLine]?.trim() !== ''
+
+          const codeToInsert = (needsNewlineBefore ? '\n' : '') + generatedCode + (needsNewlineAfter ? '\n' : '')
+          lines.splice(insertLine, 0, codeToInsert)
+          newCode = lines.join('\n')
+        } else {
+          // Append at end
+          newCode = layoutCode.trim()
+            ? layoutCode.trimEnd() + '\n\n' + generatedCode
+            : generatedCode
+        }
+
         onLayoutChange(newCode)
         setAiPrompt('')
       }
     } catch (err) {
       console.error('AI generation error:', err)
-      // Show error to user
       const message = err instanceof Error ? err.message : 'Unbekannter Fehler'
       alert(message)
     } finally {
       setIsGenerating(false)
     }
-  }, [aiPrompt, isGenerating, tokensCode, componentsCode, layoutCode, onLayoutChange])
+  }, [aiPrompt, isGenerating, tokensCode, componentsCode, layoutCode, activeTab, onLayoutChange])
+
+  // Track cursor position for context-aware generation
+  const handleCursorChange = useCallback((line: number) => {
+    cursorPositionRef.current = { line, column: 0 }
+    // Also call the parent handler if provided
+    onCursorLineChange?.(line)
+  }, [onCursorLineChange])
 
   // Handle keyboard in prompt
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -153,6 +195,7 @@ export const EditorPanel = memo(function EditorPanel({
             designTokens={designTokens}
             autoCompleteMode={autoCompleteMode}
             onPreviewChange={activeTab === 'layout' ? onPreviewChange : undefined}
+            onCursorLineChange={activeTab === 'layout' ? handleCursorChange : undefined}
           />
         </div>
 
