@@ -119,23 +119,23 @@
 
       <h3>Zahlen</h3>
       <p>Zahlen sind standardmäßig Pixel. Verwende <code class="inline-code">%</code> für Prozent:</p>
-      <pre><span class="component">Box</span> <span class="property">w</span> <span class="value">200</span>       <span class="comment">// 200px</span>
-<span class="component">Box</span> <span class="property">w</span> <span class="value">50%</span>       <span class="comment">// 50%</span>
-<span class="component">Box</span> <span class="property">h</span> <span class="value">100</span>       <span class="comment">// 100px</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="value">16</span>      <span class="comment">// 16px</span></pre>
+      <pre><span class="component">Box</span> <span class="property">width</span> <span class="value">200</span>       <span class="comment">// 200px</span>
+<span class="component">Box</span> <span class="property">width</span> <span class="value">50%</span>       <span class="comment">// 50%</span>
+<span class="component">Box</span> <span class="property">height</span> <span class="value">100</span>       <span class="comment">// 100px</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="value">16</span>      <span class="comment">// 16px</span></pre>
 
       <h3>Dimension Shorthand</h3>
       <p>Die ersten zwei Zahlen nach dem Komponenten-Namen werden automatisch als Breite und Höhe interpretiert:</p>
       <pre><span class="comment">// Shorthand</span>
-<span class="component">Box</span> <span class="value">300</span> <span class="value">400</span> <span class="property">pad</span> <span class="value">16</span>           <span class="comment">// w 300, h 400</span>
-<span class="component">Card</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span>               <span class="comment">// nur w 200</span>
+<span class="component">Box</span> <span class="value">300</span> <span class="value">400</span> <span class="property">padding</span> <span class="value">16</span>           <span class="comment">// width 300, height 400</span>
+<span class="component">Card</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">8</span>               <span class="comment">// nur width 200</span>
 
 <span class="comment">// Äquivalent zu</span>
-<span class="component">Box</span> <span class="property">w</span> <span class="value">300</span> <span class="property">h</span> <span class="value">400</span> <span class="property">pad</span> <span class="value">16</span>
-<span class="component">Card</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span>
+<span class="component">Box</span> <span class="property">width</span> <span class="value">300</span> <span class="property">height</span> <span class="value">400</span> <span class="property">padding</span> <span class="value">16</span>
+<span class="component">Card</span> <span class="property">width</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">8</span>
 
 <span class="comment">// Mischen möglich</span>
-<span class="component">Panel</span> <span class="value">300</span> <span class="property">h</span> <span class="value">400</span>              <span class="comment">// w implizit, h explizit</span></pre>
+<span class="component">Panel</span> <span class="value">300</span> <span class="property">height</span> <span class="value">400</span>              <span class="comment">// w implizit, h explizit</span></pre>
 
       <div class="highlight-box">
         <p><strong>Konsistent mit Image:</strong> Bei <code>Image</code> wird der String als <code>src</code> interpretiert, gefolgt von Breite und Höhe: <code>Image "foto.jpg" 800 600</code></p>
@@ -143,13 +143,13 @@
 
       <h3>Farben</h3>
       <p>Hex-Notation, optional mit Alpha:</p>
-      <pre><span class="component">Box</span> <span class="property">bg</span> <span class="value">#3B82F6</span>        <span class="comment">// RGB (Hintergrund)</span>
-<span class="component">Text</span> <span class="property">col</span> <span class="value">#3B82F680</span>      <span class="comment">// RGBA (50% Transparenz)</span>
-<span class="component">Box</span> <span class="property">bg</span> <span class="value">#FFF</span>          <span class="comment">// Kurzform</span></pre>
+      <pre><span class="component">Box</span> <span class="property">background</span> <span class="value">#3B82F6</span>        <span class="comment">// RGB (Hintergrund)</span>
+<span class="component">Text</span> <span class="property">color</span> <span class="value">#3B82F680</span>      <span class="comment">// RGBA (50% Transparenz)</span>
+<span class="component">Box</span> <span class="property">background</span> <span class="value">#FFF</span>          <span class="comment">// Kurzform</span></pre>
 
       <h3>Komponenten-Namen</h3>
       <pre><span class="component">Button</span> <span class="string">"Click"</span>    <span class="comment">// Großbuchstabe → Komponente</span>
-<span class="component">header</span> <span class="property">hor</span>        <span class="comment">// Kleinbuchstabe → Element</span></pre>
+<span class="component">header</span> <span class="property">horizontal</span>        <span class="comment">// Kleinbuchstabe → Element</span></pre>
     </section>
 
     <div class="divider"></div>
@@ -176,25 +176,25 @@
 <span class="token">$font</span>: <span class="string">"Inter"</span></pre>
 
       <div class="label">Verwendung</div>
-      <pre><span class="component">Button</span> <span class="property">bg</span> <span class="token">$primary</span> <span class="property">pad</span> <span class="token">$spacing</span> <span class="property">rad</span> <span class="token">$radius</span>
-<span class="component">Card</span> <span class="property">bg</span> <span class="token">$background</span></pre>
+      <pre><span class="component">Button</span> <span class="property">background</span> <span class="token">$primary</span> <span class="property">padding</span> <span class="token">$spacing</span> <span class="property">radius</span> <span class="token">$radius</span>
+<span class="component">Card</span> <span class="property">background</span> <span class="token">$background</span></pre>
 
       <h3>Komponenten-Property-Referenzen</h3>
       <p>Referenziere Properties von definierten Komponenten:</p>
       <pre><span class="comment">// Komponente definieren</span>
-<span class="component">Card:</span> <span class="property">rad</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">20</span> <span class="property">bg</span> <span class="value">#2A2A3E</span>
+<span class="component">Card:</span> <span class="property">radius</span> <span class="value">16</span> <span class="property">padding</span> <span class="value">20</span> <span class="property">background</span> <span class="value">#2A2A3E</span>
 
 <span class="comment">// Properties referenzieren</span>
-<span class="component">Button</span> <span class="property">rad</span> <span class="component">Card.rad</span> <span class="property">bg</span> <span class="component">Card.bg</span></pre>
+<span class="component">Button</span> <span class="property">radius</span> <span class="component">Card.rad</span> <span class="property">background</span> <span class="component">Card.bg</span></pre>
 
       <div class="label">Design-System-Pattern</div>
       <pre><span class="comment">// Design-Primitives definieren</span>
-<span class="component">Spacing:</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
-<span class="component">Radius:</span> <span class="property">rad</span> <span class="value">8</span>
-<span class="component">Colors:</span> <span class="property">bg</span> <span class="value">#1E1E2E</span>
+<span class="component">Spacing:</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
+<span class="component">Radius:</span> <span class="property">radius</span> <span class="value">8</span>
+<span class="component">Colors:</span> <span class="property">background</span> <span class="value">#1E1E2E</span>
 
 <span class="comment">// Überall verwenden</span>
-<span class="component">Card</span> <span class="property">pad</span> <span class="component">Spacing.pad</span> <span class="property">gap</span> <span class="component">Spacing.gap</span> <span class="property">rad</span> <span class="component">Radius.rad</span> <span class="property">bg</span> <span class="component">Colors.bg</span></pre>
+<span class="component">Card</span> <span class="property">padding</span> <span class="component">Spacing.pad</span> <span class="property">gap</span> <span class="component">Spacing.gap</span> <span class="property">radius</span> <span class="component">Radius.rad</span> <span class="property">background</span> <span class="component">Colors.bg</span></pre>
     </section>
 
     <div class="divider"></div>
@@ -207,20 +207,20 @@
       <h3>Layout-Richtung</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>hor</code></td><td>Horizontales Layout (Zeile)</td><td><code>Header hor</code></td></tr>
-        <tr><td><code>ver</code></td><td>Vertikales Layout (Spalte)</td><td><code>Sidebar ver</code></td></tr>
+        <tr><td><code>horizontal</code></td><td>Horizontales Layout (Zeile)</td><td><code>Header hor</code></td></tr>
+        <tr><td><code>vertical</code></td><td>Vertikales Layout (Spalte)</td><td><code>Sidebar ver</code></td></tr>
       </table>
 
       <h3>Ausrichtung</h3>
-      <p>Absolute Ausrichtung (funktioniert unabhängig von <code class="inline-code">hor</code>/<code class="inline-code">ver</code>):</p>
+      <p>Absolute Ausrichtung (funktioniert unabhängig von <code class="inline-code">horizontal</code>/<code class="inline-code">vertical</code>):</p>
       <table>
         <tr><th>Property</th><th>Beschreibung</th></tr>
-        <tr><td><code>hor-l</code></td><td>Links ausrichten</td></tr>
-        <tr><td><code>hor-cen</code></td><td>Horizontal zentrieren</td></tr>
-        <tr><td><code>hor-r</code></td><td>Rechts ausrichten</td></tr>
-        <tr><td><code>ver-t</code></td><td>Oben ausrichten</td></tr>
-        <tr><td><code>ver-cen</code></td><td>Vertikal zentrieren</td></tr>
-        <tr><td><code>ver-b</code></td><td>Unten ausrichten</td></tr>
+        <tr><td><code>horizontal-left</code></td><td>Links ausrichten</td></tr>
+        <tr><td><code>horizontal-center</code></td><td>Horizontal zentrieren</td></tr>
+        <tr><td><code>horizontal-right</code></td><td>Rechts ausrichten</td></tr>
+        <tr><td><code>vertical-top</code></td><td>Oben ausrichten</td></tr>
+        <tr><td><code>vertical-center</code></td><td>Vertikal zentrieren</td></tr>
+        <tr><td><code>vertical-bottom</code></td><td>Unten ausrichten</td></tr>
         <tr><td><code>between</code></td><td>Gleichmäßig verteilen</td></tr>
         <tr><td><code>cen</code></td><td>Beide Achsen zentrieren</td></tr>
       </table>
@@ -230,29 +230,29 @@
       <pre><span class="component">Box</span> <span class="property">gap</span> <span class="value">16</span>          <span class="comment">// Abstand zwischen Kindern</span></pre>
 
       <h4>Padding</h4>
-      <pre><span class="component">Box</span> <span class="property">pad</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="value">16</span> <span class="value">12</span>       <span class="comment">// Vertikal, Horizontal</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="value">16</span> <span class="value">12</span> <span class="value">8</span> <span class="value">4</span>   <span class="comment">// Oben, Rechts, Unten, Links</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">l</span> <span class="value">16</span>        <span class="comment">// Nur links</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">r</span> <span class="value">16</span>        <span class="comment">// Nur rechts</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">u</span> <span class="value">16</span>        <span class="comment">// Nur oben</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">d</span> <span class="value">16</span>        <span class="comment">// Nur unten</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">l-r</span> <span class="value">16</span>      <span class="comment">// Links und rechts</span>
-<span class="component">Box</span> <span class="property">pad</span> <span class="property">u-d</span> <span class="value">16</span>      <span class="comment">// Oben und unten</span></pre>
+      <pre><span class="component">Box</span> <span class="property">padding</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="value">16</span> <span class="value">12</span>       <span class="comment">// Vertikal, Horizontal</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="value">16</span> <span class="value">12</span> <span class="value">8</span> <span class="value">4</span>   <span class="comment">// Oben, Rechts, Unten, Links</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">l</span> <span class="value">16</span>        <span class="comment">// Nur links</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">r</span> <span class="value">16</span>        <span class="comment">// Nur rechts</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">u</span> <span class="value">16</span>        <span class="comment">// Nur oben</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">d</span> <span class="value">16</span>        <span class="comment">// Nur unten</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">l-r</span> <span class="value">16</span>      <span class="comment">// Links und rechts</span>
+<span class="component">Box</span> <span class="property">padding</span> <span class="property">u-d</span> <span class="value">16</span>      <span class="comment">// Oben und unten</span></pre>
 
       <h4>Margin</h4>
-      <pre><span class="component">Box</span> <span class="property">mar</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
-<span class="component">Box</span> <span class="property">mar</span> <span class="property">l-r</span> <span class="value">24</span>      <span class="comment">// Links und rechts</span></pre>
+      <pre><span class="component">Box</span> <span class="property">margin</span> <span class="value">16</span>          <span class="comment">// Alle Seiten</span>
+<span class="component">Box</span> <span class="property">margin</span> <span class="property">l-r</span> <span class="value">24</span>      <span class="comment">// Links und rechts</span></pre>
 
       <h3>Größen</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>w</code></td><td>Breite</td><td><code>w 200</code>, <code>w 50%</code>, <code>w auto</code>, <code>w full</code></td></tr>
-        <tr><td><code>h</code></td><td>Höhe</td><td><code>h 48</code>, <code>h 100%</code>, <code>h full</code></td></tr>
-        <tr><td><code>minw</code></td><td>Mindestbreite</td><td><code>minw 100</code></td></tr>
-        <tr><td><code>maxw</code></td><td>Maximalbreite</td><td><code>maxw 500</code></td></tr>
-        <tr><td><code>minh</code></td><td>Mindesthöhe</td><td><code>minh 50</code></td></tr>
-        <tr><td><code>maxh</code></td><td>Maximalhöhe</td><td><code>maxh 300</code></td></tr>
+        <tr><td><code>width</code></td><td>Breite</td><td><code>w 200</code>, <code>w 50%</code>, <code>w auto</code>, <code>w full</code></td></tr>
+        <tr><td><code>height</code></td><td>Höhe</td><td><code>h 48</code>, <code>h 100%</code>, <code>h full</code></td></tr>
+        <tr><td><code>minw</code></td><td>Mindestbreite</td><td><code>min-width 100</code></td></tr>
+        <tr><td><code>maxw</code></td><td>Maximalbreite</td><td><code>max-width 500</code></td></tr>
+        <tr><td><code>minh</code></td><td>Mindesthöhe</td><td><code>min-height 50</code></td></tr>
+        <tr><td><code>maxh</code></td><td>Maximalhöhe</td><td><code>max-height 300</code></td></tr>
         <tr><td><code>full</code></td><td>100% Breite und Höhe</td><td><code>Container full</code></td></tr>
         <tr><td><code>grow</code></td><td>Flex grow (Platz füllen)</td><td><code>Content grow</code></td></tr>
         <tr><td><code>fill</code></td><td>Flex fill (wie grow)</td><td><code>Content fill</code></td></tr>
@@ -260,65 +260,65 @@
       </table>
 
       <div class="highlight-box">
-        <p><strong>w full / h full:</strong> <code>w full</code> setzt <code>width: 100%</code>, <code>h full</code> setzt <code>height: 100%</code>. Das Keyword <code>full</code> ist nur für <code>w</code> und <code>h</code> verfügbar.</p>
+        <p><strong>w full / height full:</strong> <code>w full</code> setzt <code>width: 100%</code>, <code>h full</code> setzt <code>height: 100%</code>. Das Keyword <code>full</code> ist nur für <code>width</code> und <code>height</code> verfügbar.</p>
       </div>
 
       <h3>Farben</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>col</code></td><td>Textfarbe (immer)</td><td><code>col #FFFFFF</code></td></tr>
-        <tr><td><code>bg</code></td><td>Hintergrundfarbe (immer)</td><td><code>bg #3B82F6</code></td></tr>
-        <tr><td><code>boc</code></td><td>Rahmenfarbe</td><td><code>boc #333333</code></td></tr>
+        <tr><td><code>color</code></td><td>Textfarbe (immer)</td><td><code>col #FFFFFF</code></td></tr>
+        <tr><td><code>background</code></td><td>Hintergrundfarbe (immer)</td><td><code>bg #3B82F6</code></td></tr>
+        <tr><td><code>border-color</code></td><td>Rahmenfarbe</td><td><code>boc #333333</code></td></tr>
       </table>
 
       <div class="highlight-box">
-        <p><strong>Einfaches Farbsystem:</strong> <code>col</code> ist immer Textfarbe, <code>bg</code> ist immer Hintergrundfarbe. Keine Magic-Logik basierend auf Komponententyp.</p>
+        <p><strong>Einfaches Farbsystem:</strong> <code>color</code> ist immer Textfarbe, <code>background</code> ist immer Hintergrundfarbe. Keine Magic-Logik basierend auf Komponententyp.</p>
       </div>
 
-      <pre><span class="comment">// bg = Hintergrundfarbe</span>
-<span class="component">Button</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="string">"Click"</span>  <span class="comment">// Blauer Hintergrund</span>
-<span class="component">Card</span> <span class="property">bg</span> <span class="value">#1E1E1E</span>            <span class="comment">// Dunkler Hintergrund</span>
+      <pre><span class="comment">// background = Hintergrundfarbe</span>
+<span class="component">Button</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="string">"Click"</span>  <span class="comment">// Blauer Hintergrund</span>
+<span class="component">Card</span> <span class="property">background</span> <span class="value">#1E1E1E</span>            <span class="comment">// Dunkler Hintergrund</span>
 
-<span class="comment">// col = Textfarbe</span>
-<span class="component">Text</span> <span class="property">col</span> <span class="value">#FFFFFF</span> <span class="string">"Hello"</span>   <span class="comment">// Weiße Schrift</span>
-<span class="component">Label</span> <span class="property">col</span> <span class="value">#888888</span>          <span class="comment">// Graue Schrift</span>
+<span class="comment">// color = Textfarbe</span>
+<span class="component">Text</span> <span class="property">color</span> <span class="value">#FFFFFF</span> <span class="string">"Hello"</span>   <span class="comment">// Weiße Schrift</span>
+<span class="component">Label</span> <span class="property">color</span> <span class="value">#888888</span>          <span class="comment">// Graue Schrift</span>
 
-<span class="comment">// Kombiniert: bg und col zusammen</span>
-<span class="component">Button</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">col</span> <span class="value">#FFFFFF</span> <span class="string">"Click"</span>
+<span class="comment">// Kombiniert: background und color zusammen</span>
+<span class="component">Button</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">color</span> <span class="value">#FFFFFF</span> <span class="string">"Click"</span>
 <span class="comment">// ↑ Blauer Hintergrund, weiße Schrift</span></pre>
 
       <h3>Rahmen (Compound Properties)</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>bor</code></td><td>Rahmen (compound)</td><td><code>bor 1</code>, <code>bor 1 solid #333</code></td></tr>
-        <tr><td><code>bor</code></td><td>Mit Richtung</td><td><code>bor l 2</code>, <code>bor l-r 1 dashed #333</code></td></tr>
-        <tr><td><code>boc</code></td><td>Rahmenfarbe (separat)</td><td><code>boc #333</code></td></tr>
-        <tr><td><code>rad</code></td><td>Eckenradius</td><td><code>rad 8</code></td></tr>
-        <tr><td><code>rad</code></td><td>Pro-Ecke Radius</td><td><code>rad 8 8 0 0</code></td></tr>
+        <tr><td><code>border</code></td><td>Rahmen (compound)</td><td><code>bor 1</code>, <code>bor 1 solid #333</code></td></tr>
+        <tr><td><code>border</code></td><td>Mit Richtung</td><td><code>bor l 2</code>, <code>bor l-r 1 dashed #333</code></td></tr>
+        <tr><td><code>border-color</code></td><td>Rahmenfarbe (separat)</td><td><code>boc #333</code></td></tr>
+        <tr><td><code>radius</code></td><td>Eckenradius</td><td><code>rad 8</code></td></tr>
+        <tr><td><code>radius</code></td><td>Pro-Ecke Radius</td><td><code>rad 8 8 0 0</code></td></tr>
       </table>
 
       <div class="highlight-box">
-        <p><strong>Compound Syntax:</strong> <code>bor</code> kann mehrere Werte in beliebiger Reihenfolge annehmen: Richtung (<code>l r u d l-r u-d</code>), Breite (Zahl), Stil (<code>solid dashed dotted</code>), Farbe (<code>#hex</code>). Der Parser erkennt die Typen automatisch.</p>
+        <p><strong>Compound Syntax:</strong> <code>border</code> kann mehrere Werte in beliebiger Reihenfolge annehmen: Richtung (<code>l r u d l-r u-d</code>), Breite (Zahl), Stil (<code>solid dashed dotted</code>), Farbe (<code>#hex</code>). Der Parser erkennt die Typen automatisch.</p>
       </div>
 
       <pre><span class="comment">// Einfacher Rahmen</span>
-<span class="component">Card</span> <span class="property">bor</span> <span class="value">1</span>                        <span class="comment">// 1px solid</span>
-<span class="component">Card</span> <span class="property">bor</span> <span class="value">1</span> <span class="value">#333</span>                   <span class="comment">// 1px solid #333</span>
-<span class="component">Card</span> <span class="property">bor</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>        <span class="comment">// 2px dashed #3B82F6</span>
+<span class="component">Card</span> <span class="property">border</span> <span class="value">1</span>                        <span class="comment">// 1px solid</span>
+<span class="component">Card</span> <span class="property">border</span> <span class="value">1</span> <span class="value">#333</span>                   <span class="comment">// 1px solid #333</span>
+<span class="component">Card</span> <span class="property">border</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>        <span class="comment">// 2px dashed #3B82F6</span>
 
 <span class="comment">// Mit Richtung</span>
-<span class="component">Sidebar</span> <span class="property">bor</span> <span class="property">l</span> <span class="value">1</span> <span class="value">#333</span>             <span class="comment">// Nur links</span>
-<span class="component">Header</span> <span class="property">bor</span> <span class="property">d</span> <span class="value">1</span> <span class="value">#333</span>              <span class="comment">// Nur unten</span>
-<span class="component">Card</span> <span class="property">bor</span> <span class="property">l-r</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>   <span class="comment">// Links und rechts</span>
+<span class="component">Sidebar</span> <span class="property">border</span> <span class="property">l</span> <span class="value">1</span> <span class="value">#333</span>             <span class="comment">// Nur links</span>
+<span class="component">Header</span> <span class="property">border</span> <span class="property">d</span> <span class="value">1</span> <span class="value">#333</span>              <span class="comment">// Nur unten</span>
+<span class="component">Card</span> <span class="property">border</span> <span class="property">l-r</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>   <span class="comment">// Links und rechts</span>
 
 <span class="comment">// Flexible Reihenfolge (alle äquivalent)</span>
-<span class="component">Box</span> <span class="property">bor</span> <span class="value">1</span> <span class="value">solid</span> <span class="value">#333</span>
-<span class="component">Box</span> <span class="property">bor</span> <span class="value">#333</span> <span class="value">1</span> <span class="value">solid</span>
-<span class="component">Box</span> <span class="property">bor</span> <span class="value">solid</span> <span class="value">#333</span> <span class="value">1</span>
+<span class="component">Box</span> <span class="property">border</span> <span class="value">1</span> <span class="value">solid</span> <span class="value">#333</span>
+<span class="component">Box</span> <span class="property">border</span> <span class="value">#333</span> <span class="value">1</span> <span class="value">solid</span>
+<span class="component">Box</span> <span class="property">border</span> <span class="value">solid</span> <span class="value">#333</span> <span class="value">1</span>
 
 <span class="comment">// Eckenradius</span>
-<span class="component">Card</span> <span class="property">rad</span> <span class="value">12</span>                       <span class="comment">// Alle Ecken</span>
-<span class="component">Tag</span> <span class="property">rad</span> <span class="value">99</span>                        <span class="comment">// Pill-Form</span></pre>
+<span class="component">Card</span> <span class="property">radius</span> <span class="value">12</span>                       <span class="comment">// Alle Ecken</span>
+<span class="component">Tag</span> <span class="property">radius</span> <span class="value">99</span>                        <span class="comment">// Pill-Form</span></pre>
 
       <h3>Typografie</h3>
       <table>
@@ -348,7 +348,7 @@
 <span class="component">Box</span> <span class="string">"Das ist *wichtig*:bold und *betont*:italic"</span>
 
 <span class="comment">// Custom Style Token</span>
-<span class="token">$warning</span>: <span class="property">col</span> <span class="value">#EF4444</span> <span class="property">weight</span> <span class="value">700</span>
+<span class="token">$warning</span>: <span class="property">color</span> <span class="value">#EF4444</span> <span class="property">weight</span> <span class="value">700</span>
 
 <span class="component">Box</span> <span class="string">"Eine *Warnung*:$warning im Text"</span>
 
@@ -359,7 +359,7 @@
       <h3>Visuals</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>opacity</code> / <code>opa</code></td><td>Transparenz (0-1)</td><td><code>opacity 0.5</code>, <code>opa 0.8</code></td></tr>
+        <tr><td><code>opacity</code> / <code>opacity</code></td><td>Transparenz (0-1)</td><td><code>opacity 0.5</code>, <code>opa 0.8</code></td></tr>
         <tr><td><code>shadow</code></td><td>Schatten</td><td><code>shadow "0 4px 12px rgba(0,0,0,0.15)"</code></td></tr>
         <tr><td><code>cursor</code></td><td>Mauszeiger (pointer, default, text, move, grab, not-allowed, etc.)</td><td><code>cursor pointer</code></td></tr>
         <tr><td><code>pointer</code></td><td>Pointer Events (auto, none)</td><td><code>pointer none</code></td></tr>
@@ -378,18 +378,18 @@
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
         <tr><td><code>scroll</code></td><td>Vertikal scrollen (default)</td><td><code>scroll</code></td></tr>
-        <tr><td><code>scroll-ver</code></td><td>Vertikal scrollen (explizit)</td><td><code>scroll-ver</code></td></tr>
-        <tr><td><code>scroll-hor</code></td><td>Horizontal scrollen</td><td><code>scroll-hor</code></td></tr>
+        <tr><td><code>scroll-vertical</code></td><td>Vertikal scrollen (explizit)</td><td><code>scroll-vertical</code></td></tr>
+        <tr><td><code>scroll-horizontal</code></td><td>Horizontal scrollen</td><td><code>scroll-horizontal</code></td></tr>
         <tr><td><code>scroll-both</code></td><td>Beide Richtungen</td><td><code>scroll-both</code></td></tr>
-        <tr><td><code>snap</code></td><td>Elemente rasten ein</td><td><code>scroll-hor snap</code></td></tr>
+        <tr><td><code>snap</code></td><td>Elemente rasten ein</td><td><code>scroll-horizontal snap</code></td></tr>
         <tr><td><code>clip</code></td><td>Überlauf abschneiden</td><td><code>clip</code></td></tr>
       </table>
       <pre><span class="comment">// Vertikaler Scroll (Chat, Feed)</span>
-<span class="component">Box</span> <span class="property">h</span> <span class="value">400</span> <span class="property">scroll</span>
+<span class="component">Box</span> <span class="property">height</span> <span class="value">400</span> <span class="property">scroll</span>
   <span class="component">Content</span>
 
 <span class="comment">// Horizontaler Carousel mit Snap</span>
-<span class="component">Row</span> <span class="property">scroll-hor</span> <span class="property">snap</span> <span class="property">gap</span> <span class="value">16</span>
+<span class="component">Row</span> <span class="property">scroll-horizontal</span> <span class="property">snap</span> <span class="property">gap</span> <span class="value">16</span>
   <span class="component">Card</span> <span class="value">300</span> <span class="value">200</span>
   <span class="component">Card</span> <span class="value">300</span> <span class="value">200</span>
   <span class="component">Card</span> <span class="value">300</span> <span class="value">200</span>
@@ -427,15 +427,15 @@
         <tr><td><code>stacked</code></td><td>Kinder übereinander</td><td><code>Card stacked</code></td></tr>
       </table>
       <pre><span class="comment">// Bild mit Text-Overlay</span>
-<span class="component">Card</span> <span class="property">stacked</span> <span class="value">300</span> <span class="value">200</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">overflow</span> <span class="value">hidden</span>
+<span class="component">Card</span> <span class="property">stacked</span> <span class="value">300</span> <span class="value">200</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">overflow</span> <span class="value">hidden</span>
   <span class="component">Image</span> <span class="string">"foto.jpg"</span> <span class="property">fit</span> <span class="value">cover</span>
-  <span class="component">Overlay</span> <span class="property">ver</span> <span class="property">ver-b</span> <span class="property">pad</span> <span class="value">16</span>
+  <span class="component">Overlay</span> <span class="property">vertical</span> <span class="property">vertical-bottom</span> <span class="property">padding</span> <span class="value">16</span>
     <span class="component">Title</span> <span class="string">"Titel"</span>
 
 <span class="comment">// Avatar mit Badge</span>
 <span class="component">Avatar</span> <span class="property">stacked</span> <span class="value">64</span> <span class="value">64</span>
-  <span class="component">Image</span> <span class="string">"avatar.jpg"</span> <span class="property">rad</span> <span class="value">32</span>
-  <span class="component">Badge</span> <span class="property">bg</span> <span class="value">#10B981</span> <span class="value">16</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">ver-b</span> <span class="property">hor-r</span></pre>
+  <span class="component">Image</span> <span class="string">"avatar.jpg"</span> <span class="property">radius</span> <span class="value">32</span>
+  <span class="component">Badge</span> <span class="property">background</span> <span class="value">#10B981</span> <span class="value">16</span> <span class="value">16</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">vertical-bottom</span> <span class="property">horizontal-right</span></pre>
 
       <h3>HTML Primitives</h3>
       <p>Bestimmte Elemente benötigen native HTML-Tags für ihre Funktionalität. Diese werden mit einem <strong>Keyword</strong> markiert:</p>
@@ -455,10 +455,10 @@
         <tr><td><code>alt</code></td><td>Alt-Text</td><td><code>alt "Beschreibung"</code></td></tr>
       </table>
       <pre><span class="comment">// Anonym</span>
-<span class="component">Image</span> <span class="string">"photo.jpg"</span> <span class="value">200</span> <span class="value">150</span> <span class="property">fit</span> <span class="value">cover</span> <span class="property">rad</span> <span class="value">8</span>
+<span class="component">Image</span> <span class="string">"photo.jpg"</span> <span class="value">200</span> <span class="value">150</span> <span class="property">fit</span> <span class="value">cover</span> <span class="property">radius</span> <span class="value">8</span>
 
 <span class="comment">// Mit Name (wiederverwendbar)</span>
-<span class="component">Image</span> <span class="component">Avatar</span> <span class="string">"avatar.jpg"</span> <span class="value">48</span> <span class="value">48</span> <span class="property">rad</span> <span class="value">24</span>
+<span class="component">Image</span> <span class="component">Avatar</span> <span class="string">"avatar.jpg"</span> <span class="value">48</span> <span class="value">48</span> <span class="property">radius</span> <span class="value">24</span>
 
 <span class="comment">// Später einfach:</span>
 <span class="component">Avatar</span></pre>
@@ -469,16 +469,16 @@
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
         <tr><td><code>(String)</code></td><td>Placeholder-Text</td><td><code>"Email eingeben..."</code></td></tr>
         <tr><td><code>type</code></td><td>Input-Typ</td><td><code>type password</code>, <code>type email</code></td></tr>
-        <tr><td><code>w</code></td><td>Breite</td><td><code>w 200</code></td></tr>
+        <tr><td><code>width</code></td><td>Breite</td><td><code>w 200</code></td></tr>
       </table>
       <pre><span class="comment">// Anonym</span>
-<span class="component">Input</span> <span class="string">"Email eingeben..."</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#1E1E1E</span> <span class="property">rad</span> <span class="value">6</span>
+<span class="component">Input</span> <span class="string">"Email eingeben..."</span> <span class="property">width</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#1E1E1E</span> <span class="property">radius</span> <span class="value">6</span>
 
 <span class="comment">// Mit Name</span>
-<span class="component">Input</span> <span class="component">EmailField</span> <span class="string">"Email"</span> <span class="property">w</span> <span class="value">200</span> <span class="property">pad</span> <span class="value">8</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#444</span>
+<span class="component">Input</span> <span class="component">EmailField</span> <span class="string">"Email"</span> <span class="property">width</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">8</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#444</span>
 
 <span class="comment">// Password</span>
-<span class="component">Input</span> <span class="string">"Passwort"</span> <span class="property">type</span> <span class="value">password</span> <span class="property">w</span> <span class="value">200</span></pre>
+<span class="component">Input</span> <span class="string">"Passwort"</span> <span class="property">type</span> <span class="value">password</span> <span class="property">width</span> <span class="value">200</span></pre>
 
       <h4>Textarea</h4>
       <p>Der String wird als <code>placeholder</code> interpretiert:</p>
@@ -487,7 +487,7 @@
         <tr><td><code>(String)</code></td><td>Placeholder-Text</td><td><code>"Nachricht..."</code></td></tr>
         <tr><td><code>rows</code></td><td>Zeilenanzahl</td><td><code>rows 5</code></td></tr>
       </table>
-      <pre><span class="component">Textarea</span> <span class="string">"Nachricht schreiben..."</span> <span class="property">w</span> <span class="value">300</span> <span class="property">h</span> <span class="value">150</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#1E1E1E</span>
+      <pre><span class="component">Textarea</span> <span class="string">"Nachricht schreiben..."</span> <span class="property">width</span> <span class="value">300</span> <span class="property">height</span> <span class="value">150</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#1E1E1E</span>
 
 <span class="component">Textarea</span> <span class="component">MessageField</span> <span class="string">"Deine Nachricht..."</span> <span class="property">rows</span> <span class="value">5</span></pre>
 
@@ -498,18 +498,18 @@
         <tr><td><code>(String)</code></td><td>URL</td><td><code>"https://example.com"</code></td></tr>
         <tr><td><code>target</code></td><td>Link-Target</td><td><code>target _blank</code></td></tr>
       </table>
-      <pre><span class="component">Link</span> <span class="string">"https://example.com"</span> <span class="property">col</span> <span class="value">#3B82F6</span>
+      <pre><span class="component">Link</span> <span class="string">"https://example.com"</span> <span class="property">color</span> <span class="value">#3B82F6</span>
   <span class="string">"Zur Website"</span>
 
-<span class="component">Link</span> <span class="component">HomeLink</span> <span class="string">"https://home.com"</span> <span class="property">col</span> <span class="value">#3B82F6</span> <span class="property">hover-col</span> <span class="value">#2563EB</span>
+<span class="component">Link</span> <span class="component">HomeLink</span> <span class="string">"https://home.com"</span> <span class="property">color</span> <span class="value">#3B82F6</span> <span class="property">hover-color</span> <span class="value">#2563EB</span>
   <span class="component">Icon</span> <span class="string">"home"</span>
   <span class="string">"Startseite"</span></pre>
 
       <h4>Button</h4>
       <p>Natives Button-Element für Formulare und Accessibility:</p>
-      <pre><span class="component">Button</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="string">"Absenden"</span> <span class="property">col</span> <span class="value">#FFF</span> <span class="property">rad</span> <span class="value">6</span>
+      <pre><span class="component">Button</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="string">"Absenden"</span> <span class="property">color</span> <span class="value">#FFF</span> <span class="property">radius</span> <span class="value">6</span>
 
-<span class="component">Button</span> <span class="component">SubmitBtn</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">hover-bg</span> <span class="value">#2563EB</span>
+<span class="component">Button</span> <span class="component">SubmitBtn</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">hovertical-bottomackground</span> <span class="value">#2563EB</span>
   <span class="string">"Speichern"</span></pre>
 
       <h3>Icons</h3>
@@ -522,15 +522,15 @@
       <h3>Hover-States</h3>
       <table>
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>hover-col</code></td><td>Textfarbe bei Hover</td><td><code>hover-col #333</code></td></tr>
-        <tr><td><code>hover-bg</code></td><td>Hintergrundfarbe bei Hover</td><td><code>hover-bg #3B82F6</code></td></tr>
-        <tr><td><code>hover-boc</code></td><td>Rahmenfarbe bei Hover</td><td><code>hover-boc #555</code></td></tr>
-        <tr><td><code>hover-bor</code></td><td>Rahmenbreite bei Hover</td><td><code>hover-bor 2</code></td></tr>
-        <tr><td><code>hover-rad</code></td><td>Eckenradius bei Hover</td><td><code>hover-rad 12</code></td></tr>
+        <tr><td><code>hover-color</code></td><td>Textfarbe bei Hover</td><td><code>hover-color #333</code></td></tr>
+        <tr><td><code>hovertical-bottomackground</code></td><td>Hintergrundfarbe bei Hover</td><td><code>hovertical-bottomackground #3B82F6</code></td></tr>
+        <tr><td><code>hovertical-bottomorderder-color</code></td><td>Rahmenfarbe bei Hover</td><td><code>hovertical-bottomorderder-color #555</code></td></tr>
+        <tr><td><code>hovertical-bottomorder</code></td><td>Rahmenbreite bei Hover</td><td><code>hovertical-bottomorder 2</code></td></tr>
+        <tr><td><code>hover-radius</code></td><td>Eckenradius bei Hover</td><td><code>hover-radius 12</code></td></tr>
         <tr><td><code>hover-opacity</code></td><td>Transparenz bei Hover</td><td><code>hover-opacity 0.8</code></td></tr>
         <tr><td><code>hover-scale</code></td><td>Skalierung bei Hover</td><td><code>hover-scale 1.05</code></td></tr>
       </table>
-      <pre><span class="component">Button</span> <span class="property">bg</span> <span class="value">#333</span> <span class="property">hover-bg</span> <span class="value">#3B82F6</span>
+      <pre><span class="component">Button</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">hovertical-bottomackground</span> <span class="value">#3B82F6</span>
 <span class="component">Card</span> <span class="property">hover-scale</span> <span class="value">1.02</span> <span class="property">hover-opacity</span> <span class="value">0.9</span></pre>
 
     </section>
@@ -545,7 +545,7 @@
       <h3>Komponenten definieren</h3>
       <p>Verwende <code class="inline-code">:</code> um eine wiederverwendbare Vorlage zu erstellen:</p>
       <pre><span class="comment">// Definition</span>
-<span class="component">Button:</span> <span class="property">hor</span> <span class="property">hor-cen</span> <span class="property">ver-cen</span> <span class="property">h</span> <span class="value">40</span> <span class="property">pad</span> <span class="property">l-r</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">bg</span> <span class="value">#3B82F6</span>
+<span class="component">Button:</span> <span class="property">horizontal</span> <span class="property">horizontal-center</span> <span class="property">vertical-center</span> <span class="property">height</span> <span class="value">40</span> <span class="property">padding</span> <span class="property">l-r</span> <span class="value">16</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">background</span> <span class="value">#3B82F6</span>
 
 <span class="comment">// Verwendung</span>
 <span class="component">Button</span> <span class="string">"Click me"</span>
@@ -553,16 +553,16 @@
 
       <h3>Vererbung</h3>
       <p>Verwende <code class="inline-code">from</code> um Komponenten zu erweitern:</p>
-      <pre><span class="component">Button:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">rad</span> <span class="value">8</span>
-<span class="component">DangerButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">bg</span> <span class="value">#EF4444</span>
-<span class="component">GhostButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">bg</span> <span class="value">transparent</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#3B82F6</span>
-<span class="component">SmallButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">pad</span> <span class="value">8</span> <span class="property">size</span> <span class="value">12</span></pre>
+      <pre><span class="component">Button:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">radius</span> <span class="value">8</span>
+<span class="component">DangerButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">background</span> <span class="value">#EF4444</span>
+<span class="component">GhostButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">background</span> <span class="value">transparent</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#3B82F6</span>
+<span class="component">SmallButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">padding</span> <span class="value">8</span> <span class="property">size</span> <span class="value">12</span></pre>
 
       <h3>Komponenten mit Kindern (Slots)</h3>
-      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#1E1E1E</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">gap</span> <span class="value">8</span>
-  <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span> <span class="property">col</span> <span class="value">#FFF</span>
-  <span class="component">Description:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">col</span> <span class="value">#9CA3AF</span>
-  <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span></pre>
+      <pre><span class="component">Card:</span> <span class="property">vertical</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">background</span> <span class="value">#1E1E1E</span> <span class="property">radius</span> <span class="value">12</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span> <span class="property">color</span> <span class="value">#FFF</span>
+  <span class="component">Description:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">color</span> <span class="value">#9CA3AF</span>
+  <span class="component">Actions:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">8</span></pre>
 
       <div class="label">Inline oder Expanded verwenden</div>
       <div class="grid">
@@ -583,18 +583,18 @@
       <h3>Flacher Zugriff</h3>
       <p>Greife auf verschachtelte Elemente direkt per Namen zu, unabhängig von der Hierarchie:</p>
       <pre><span class="comment">// Definition mit Verschachtelung</span>
-<span class="component">Header:</span> <span class="property">hor</span> <span class="property">between</span> <span class="property">ver-cen</span> <span class="property">h</span> <span class="value">60</span> <span class="property">pad</span> <span class="property">l-r</span> <span class="value">24</span>
-  <span class="component">Left:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">ver-cen</span>
-    <span class="component">Logo:</span> <span class="property">w</span> <span class="value">120</span> <span class="property">h</span> <span class="value">32</span>
-    <span class="component">Nav:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span>
-      <span class="component">Link:</span> <span class="property">col</span> <span class="value">#888</span>
-  <span class="component">Right:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">12</span>
-    <span class="component">Avatar:</span> <span class="property">w</span> <span class="value">36</span> <span class="property">h</span> <span class="value">36</span> <span class="property">rad</span> <span class="value">18</span>
+<span class="component">Header:</span> <span class="property">horizontal</span> <span class="property">between</span> <span class="property">vertical-center</span> <span class="property">height</span> <span class="value">60</span> <span class="property">padding</span> <span class="property">l-r</span> <span class="value">24</span>
+  <span class="component">Left:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">vertical-center</span>
+    <span class="component">Logo:</span> <span class="property">width</span> <span class="value">120</span> <span class="property">height</span> <span class="value">32</span>
+    <span class="component">Nav:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">8</span>
+      <span class="component">Link:</span> <span class="property">color</span> <span class="value">#888</span>
+  <span class="component">Right:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">12</span>
+    <span class="component">Avatar:</span> <span class="property">width</span> <span class="value">36</span> <span class="property">height</span> <span class="value">36</span> <span class="property">radius</span> <span class="value">18</span>
 
 <span class="comment">// Verwendung - direkt auf Logo zugreifen (egal wie tief)</span>
 <span class="component">Header</span>
-  <span class="component">Logo</span> <span class="property">bg</span> <span class="value">#FF0000</span>              <span class="comment">// Modifiziert Logo in Left</span>
-  <span class="component">Avatar</span> <span class="property">bg</span> <span class="value">#3B82F6</span>            <span class="comment">// Modifiziert Avatar in Right</span></pre>
+  <span class="component">Logo</span> <span class="property">background</span> <span class="value">#FF0000</span>              <span class="comment">// Modifiziert Logo in Left</span>
+  <span class="component">Avatar</span> <span class="property">background</span> <span class="value">#3B82F6</span>            <span class="comment">// Modifiziert Avatar in Right</span></pre>
 
       <div class="highlight-box">
         <p><strong>Wichtig:</strong> Namen müssen innerhalb einer Komponente eindeutig sein. Bei Duplikaten gibt der Parser einen Fehler aus.</p>
@@ -603,10 +603,10 @@
       <h3>List Items (Neue Instanzen)</h3>
       <p>Verwende <code class="inline-code">-</code> um neue Instanzen eines Elements zu erstellen:</p>
       <pre><span class="comment">// Definition</span>
-<span class="component">Dropdown:</span> <span class="property">ver</span> <span class="property">w</span> <span class="value">200</span>
-  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#2A2A3E</span>
-  <span class="component">Menu:</span> <span class="property">ver</span>
-    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span>
+<span class="component">Dropdown:</span> <span class="property">vertical</span> <span class="property">width</span> <span class="value">200</span>
+  <span class="component">Trigger:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#2A2A3E</span>
+  <span class="component">Menu:</span> <span class="property">vertical</span>
+    <span class="component">Item:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span>
 
 <span class="comment">// Verwendung - füge mehrere Items hinzu</span>
 <span class="component">Dropdown</span>
@@ -618,17 +618,17 @@
       <p>Das <code class="inline-code">-</code> funktioniert wie bei YAML-Listen: Jedes <code class="inline-code">-</code> erstellt eine neue Instanz.</p>
 
       <div class="label">Kombination: Flacher Zugriff + List Items</div>
-      <pre><span class="component">Card:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
+      <pre><span class="component">Card:</span> <span class="property">vertical</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">12</span>
   <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
-  <span class="component">Tags:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">wrap</span>
-    <span class="component">Tag:</span> <span class="property">pad</span> <span class="value">4</span> <span class="value">8</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">size</span> <span class="value">12</span>
+  <span class="component">Tags:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">wrap</span>
+    <span class="component">Tag:</span> <span class="property">padding</span> <span class="value">4</span> <span class="value">8</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">size</span> <span class="value">12</span>
 
 <span class="comment">// Verwendung</span>
 <span class="component">Card</span>
   <span class="component">Title</span> <span class="string">"Projekt Alpha"</span>        <span class="comment">// Flach: modifiziert Title</span>
   <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"React"</span>                <span class="comment">// Neu: fügt Tag hinzu</span>
   <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"TypeScript"</span>           <span class="comment">// Neu: weiterer Tag</span>
-  <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"UI"</span> <span class="property">bg</span> <span class="value">#10B981</span>        <span class="comment">// Neu: Tag mit anderem Hintergrund</span></pre>
+  <span class="keyword">-</span> <span class="component">Tag</span> <span class="string">"UI"</span> <span class="property">background</span> <span class="value">#10B981</span>        <span class="comment">// Neu: Tag mit anderem Hintergrund</span></pre>
     </section>
 
     <div class="divider"></div>
@@ -640,12 +640,12 @@
 
       <h3>States</h3>
       <p>Definiere mehrere visuelle Zustände:</p>
-      <pre><span class="component">Toggle:</span> <span class="property">w</span> <span class="value">52</span> <span class="property">h</span> <span class="value">28</span> <span class="property">rad</span> <span class="value">14</span> <span class="property">pad</span> <span class="value">2</span>
+      <pre><span class="component">Toggle:</span> <span class="property">width</span> <span class="value">52</span> <span class="property">height</span> <span class="value">28</span> <span class="property">radius</span> <span class="value">14</span> <span class="property">padding</span> <span class="value">2</span>
   <span class="keyword">state</span> <span class="value">off</span>
-    <span class="property">bg</span> <span class="value">#333</span>
+    <span class="property">background</span> <span class="value">#333</span>
   <span class="keyword">state</span> <span class="value">on</span>
-    <span class="property">bg</span> <span class="value">#3B82F6</span>
-  <span class="component">Knob:</span> <span class="property">w</span> <span class="value">24</span> <span class="property">h</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">white</span></pre>
+    <span class="property">background</span> <span class="value">#3B82F6</span>
+  <span class="component">Knob:</span> <span class="property">width</span> <span class="value">24</span> <span class="property">height</span> <span class="value">24</span> <span class="property">radius</span> <span class="value">12</span> <span class="property">background</span> <span class="value">white</span></pre>
 
       <h3>Events</h3>
       <table>
@@ -700,7 +700,7 @@
   <span class="keyword">animate</span> <span class="keyword">spin</span> <span class="value">1000</span>
 
 <span class="comment">// Pulsierender Punkt</span>
-<span class="component">Box</span> <span class="value">8</span> <span class="value">8</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bg</span> <span class="value">#3B82F6</span>
+<span class="component">Box</span> <span class="value">8</span> <span class="value">8</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">background</span> <span class="value">#3B82F6</span>
   <span class="keyword">animate</span> <span class="keyword">pulse</span> <span class="value">800</span></pre>
 
       <div class="highlight-box">
@@ -757,10 +757,10 @@
 
       <h3>Bedingte Properties</h3>
       <pre><span class="comment">// Einfach</span>
-<span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="keyword">else</span> <span class="property">bg</span> <span class="value">#333</span>
+<span class="component">Button</span> <span class="keyword">if</span> <span class="token">$isActive</span> <span class="keyword">then</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="keyword">else</span> <span class="property">background</span> <span class="value">#333</span>
 
 <span class="comment">// Mehrere Properties</span>
-<span class="component">Card</span> <span class="keyword">if</span> <span class="token">$isSelected</span> <span class="keyword">then</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="property">bor</span> <span class="value">2</span> <span class="keyword">else</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">bor</span> <span class="value">0</span>
+<span class="component">Card</span> <span class="keyword">if</span> <span class="token">$isSelected</span> <span class="keyword">then</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">border</span> <span class="value">2</span> <span class="keyword">else</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">border</span> <span class="value">0</span>
 
 <span class="comment">// Komplexe Bedingung</span>
 <span class="component">Button</span> <span class="keyword">if</span> <span class="token">$count</span> > <span class="value">0</span> <span class="keyword">and</span> <span class="token">$enabled</span> <span class="keyword">then</span> <span class="property">opacity</span> <span class="value">1</span> <span class="keyword">else</span> <span class="property">opacity</span> <span class="value">0.5</span></pre>
@@ -832,12 +832,12 @@
       <h3>Benannte Instanzen</h3>
       <p>Gib Komponenten einen Namen, um sie später zu referenzieren:</p>
       <pre><span class="comment">// Typ + Name = Benannte Instanz</span>
-<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span> <span class="property">w</span> <span class="value">full</span>
+<span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span> <span class="property">width</span> <span class="value">full</span>
 <span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span> <span class="property">type</span> <span class="value">password</span>
-<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
 
 <span class="comment">// Verwenden</span>
-<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span>
+<span class="component">LoginForm</span>: <span class="property">vertical</span> <span class="property">gap</span> <span class="value">16</span>
   <span class="component">Input</span> <span class="component">Email</span>
   <span class="component">Input</span> <span class="component">Password</span>
   <span class="component">Button</span> <span class="component">Submit</span></pre>
@@ -889,11 +889,11 @@
       <pre><span class="comment">// === KOMPONENTEN ===</span>
 <span class="component">Input</span> <span class="component">Email</span>: <span class="property">placeholder</span> <span class="string">"Email"</span>
 <span class="component">Input</span> <span class="component">Password</span>: <span class="property">placeholder</span> <span class="string">"Password"</span>
-<span class="component">Text</span> <span class="component">Error</span>: <span class="property">col</span> <span class="value">#EF4444</span> <span class="property">visible</span> <span class="value">false</span>
-<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">bg</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
+<span class="component">Text</span> <span class="component">Error</span>: <span class="property">color</span> <span class="value">#EF4444</span> <span class="property">visible</span> <span class="value">false</span>
+<span class="component">Button</span> <span class="component">Submit</span>: <span class="property">background</span> <span class="value">#3B82F6</span> <span class="string">"Login"</span>
 
 <span class="comment">// === LAYOUT ===</span>
-<span class="component">LoginForm</span>: <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span>
+<span class="component">LoginForm</span>: <span class="property">vertical</span> <span class="property">gap</span> <span class="value">16</span>
   <span class="component">Input</span> <span class="component">Email</span>
   <span class="component">Input</span> <span class="component">Password</span>
   <span class="component">Text</span> <span class="component">Error</span>
@@ -931,7 +931,7 @@
       <h4>Syntax</h4>
       <pre><span class="comment">// Benannte Instanz erstellen</span>
 <span class="component">MeinDialog</span> <span class="keyword">as</span> <span class="component">Dialog:</span>
-  <span class="component">Content:</span> <span class="property">pad</span> <span class="value">24</span>
+  <span class="component">Content:</span> <span class="property">padding</span> <span class="value">24</span>
     <span class="string">"Dialog-Inhalt"</span>
 
 <span class="comment">// Die Instanz kann referenziert werden</span>
@@ -942,7 +942,7 @@
 <span class="component">SettingsDialog</span> <span class="keyword">as</span> <span class="component">Dialog:</span>
   <span class="component">Trigger</span>
     <span class="component">Button</span> <span class="string">"Einstellungen"</span>
-  <span class="component">Content:</span> <span class="property">w</span> <span class="value">400</span> <span class="property">pad</span> <span class="value">24</span>
+  <span class="component">Content:</span> <span class="property">width</span> <span class="value">400</span> <span class="property">padding</span> <span class="value">24</span>
     <span class="string">"Einstellungen hier..."</span>
 
 <span class="comment">// Tabs mit benutzerdefiniertem Namen</span>
@@ -1002,15 +1002,15 @@
 
       <h4>Dropdown</h4>
       <pre><span class="component">UserMenu</span> <span class="keyword">as</span> <span class="component">Dropdown:</span>
-  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+  <span class="component">Trigger:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">6</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#333</span>
     <span class="string">"Options"</span>
-  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
-    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-bg</span> <span class="value">#333</span>
+  <span class="component">Content:</span> <span class="property">vertical</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">padding</span> <span class="value">4</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#333</span>
+    <span class="component">Item:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">hovertical-bottomackground</span> <span class="value">#333</span>
       <span class="string">"Profile"</span>
-    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-bg</span> <span class="value">#333</span>
+    <span class="component">Item:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">hovertical-bottomackground</span> <span class="value">#333</span>
       <span class="string">"Settings"</span>
-    <span class="component">Separator:</span> <span class="property">h</span> <span class="value">1</span> <span class="property">bg</span> <span class="value">#333</span> <span class="property">mar</span> <span class="property">u-d</span> <span class="value">4</span>
-    <span class="component">Item:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">hover-bg</span> <span class="value">#EF4444</span> <span class="property">col</span> <span class="value">#FF6B6B</span>
+    <span class="component">Separator:</span> <span class="property">height</span> <span class="value">1</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">margin</span> <span class="property">u-d</span> <span class="value">4</span>
+    <span class="component">Item:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">hovertical-bottomackground</span> <span class="value">#EF4444</span> <span class="property">color</span> <span class="value">#FF6B6B</span>
       <span class="string">"Logout"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content, Item, Separator</span></div>
@@ -1021,13 +1021,13 @@
       <pre><span class="component">ConfirmDialog</span> <span class="keyword">as</span> <span class="component">Dialog:</span>
   <span class="component">Trigger</span>
     <span class="component">Button</span> <span class="string">"Open Dialog"</span>
-  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">pad</span> <span class="value">24</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">w</span> <span class="value">400</span>
+  <span class="component">Content:</span> <span class="property">vertical</span> <span class="property">gap</span> <span class="value">16</span> <span class="property">padding</span> <span class="value">24</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">12</span> <span class="property">width</span> <span class="value">400</span>
     <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
       <span class="string">"Confirm"</span>
     <span class="string">"Are you sure?"</span>
-    <span class="component">Actions:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">hor-r</span>
+    <span class="component">Actions:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">8</span> <span class="property">horizontal-right</span>
       <span class="component">Button</span> <span class="keyword">onclick</span> <span class="keyword">close</span> <span class="component">ConfirmDialog</span> <span class="string">"Cancel"</span>
-      <span class="component">Button</span> <span class="property">bg</span> <span class="value">#2271c1</span> <span class="string">"Confirm"</span></pre>
+      <span class="component">Button</span> <span class="property">background</span> <span class="value">#2271c1</span> <span class="string">"Confirm"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
         <div class="slots-states-item"><strong>States:</strong> <span>closed, open</span></div>
@@ -1037,7 +1037,7 @@
       <pre><span class="component">HelpTooltip</span> <span class="keyword">as</span> <span class="component">Tooltip:</span>
   <span class="component">Trigger</span>
     <span class="component">Button</span> <span class="string">"Hover me"</span>
-  <span class="component">Content:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">size</span> <span class="value">12</span>
+  <span class="component">Content:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">radius</span> <span class="value">6</span> <span class="property">size</span> <span class="value">12</span>
     <span class="string">"Tooltip text"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
@@ -1047,7 +1047,7 @@
       <pre><span class="component">InfoPopover</span> <span class="keyword">as</span> <span class="component">Popover:</span>
   <span class="component">Trigger</span>
     <span class="component">Button</span> <span class="string">"Click me"</span>
-  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">w</span> <span class="value">200</span>
+  <span class="component">Content:</span> <span class="property">vertical</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">width</span> <span class="value">200</span>
     <span class="string">"Popover content"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
@@ -1056,9 +1056,9 @@
 
       <h4>ContextMenu</h4>
       <pre><span class="component">EditMenu</span> <span class="keyword">as</span> <span class="component">ContextMenu:</span>
-  <span class="component">Trigger:</span> <span class="property">w</span> <span class="value">200</span> <span class="property">h</span> <span class="value">150</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">hor-cen</span> <span class="property">ver-cen</span>
+  <span class="component">Trigger:</span> <span class="property">width</span> <span class="value">200</span> <span class="property">height</span> <span class="value">150</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">horizontal-center</span> <span class="property">vertical-center</span>
     <span class="string">"Rechtsklick hier"</span>
-  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">pad</span> <span class="value">4</span>
+  <span class="component">Content:</span> <span class="property">vertical</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">padding</span> <span class="value">4</span>
     <span class="component">Item:</span> <span class="string">"Copy"</span>
     <span class="component">Item:</span> <span class="string">"Paste"</span>
     <span class="component">Separator:</span>
@@ -1071,10 +1071,10 @@
       <pre><span class="component">UserCard</span> <span class="keyword">as</span> <span class="component">HoverCard:</span>
   <span class="component">Trigger</span>
     <span class="component">Link</span> <span class="string">"@username"</span>
-  <span class="component">Content:</span> <span class="property">ver</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">w</span> <span class="value">300</span>
+  <span class="component">Content:</span> <span class="property">vertical</span> <span class="property">gap</span> <span class="value">12</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">width</span> <span class="value">300</span>
     <span class="component">Avatar</span> <span class="property">src</span> <span class="string">"avatar.jpg"</span>
     <span class="component">Name:</span> <span class="property">weight</span> <span class="value">600</span> <span class="string">"John Doe"</span>
-    <span class="component">Bio:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">col</span> <span class="value">#888</span> <span class="string">"Developer"</span></pre>
+    <span class="component">Bio:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">color</span> <span class="value">#888</span> <span class="string">"Developer"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
       </div>
@@ -1083,15 +1083,15 @@
 
       <h4>Tabs</h4>
       <pre><span class="component">MainTabs</span> <span class="keyword">as</span> <span class="component">Tabs:</span>
-  <span class="component">Tabs:</span> <span class="property">hor</span> <span class="property">gap</span> <span class="value">4</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">pad</span> <span class="value">4</span> <span class="property">rad</span> <span class="value">8</span>
+  <span class="component">Tabs:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">4</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">padding</span> <span class="value">4</span> <span class="property">radius</span> <span class="value">8</span>
     <span class="component">Tab:</span> <span class="string">"Overview"</span>
     <span class="component">Tab:</span> <span class="string">"Details"</span>
     <span class="component">Tab:</span> <span class="string">"Settings"</span>
-  <span class="component">TabContent:</span> <span class="property">pad</span> <span class="value">16</span>
+  <span class="component">TabContent:</span> <span class="property">padding</span> <span class="value">16</span>
     <span class="string">"Overview content"</span>
-  <span class="component">TabContent:</span> <span class="property">pad</span> <span class="value">16</span>
+  <span class="component">TabContent:</span> <span class="property">padding</span> <span class="value">16</span>
     <span class="string">"Details content"</span>
-  <span class="component">TabContent:</span> <span class="property">pad</span> <span class="value">16</span>
+  <span class="component">TabContent:</span> <span class="property">padding</span> <span class="value">16</span>
     <span class="string">"Settings content"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Tabs, Tab, TabContent</span></div>
@@ -1100,9 +1100,9 @@
       <h4>Accordion</h4>
       <pre><span class="component">FAQ</span> <span class="keyword">as</span> <span class="component">Accordion:</span>
   <span class="component">AccordionItem:</span>
-    <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">16</span> <span class="property">hor</span> <span class="property">ver-cen</span> <span class="property">between</span>
+    <span class="component">Trigger:</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">horizontal</span> <span class="property">vertical-center</span> <span class="property">between</span>
       <span class="string">"Section 1"</span>
-    <span class="component">Content:</span> <span class="property">pad</span> <span class="value">16</span>
+    <span class="component">Content:</span> <span class="property">padding</span> <span class="value">16</span>
       <span class="string">"Section 1 content"</span>
   <span class="component">AccordionItem:</span>
     <span class="component">Trigger:</span> <span class="string">"Section 2"</span>
@@ -1114,9 +1114,9 @@
 
       <h4>Collapsible</h4>
       <pre><span class="component">DetailsSection</span> <span class="keyword">as</span> <span class="component">Collapsible:</span>
-  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span>
+  <span class="component">Trigger:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">6</span>
     <span class="string">"Click to expand"</span>
-  <span class="component">Content:</span> <span class="property">pad</span> <span class="value">12</span>
+  <span class="component">Content:</span> <span class="property">padding</span> <span class="value">12</span>
     <span class="string">"Details content"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Trigger, Content</span></div>
@@ -1136,7 +1136,7 @@
 
       <h4>Select</h4>
       <pre><span class="component">CategoryPicker</span> <span class="keyword">as</span> <span class="component">Select:</span>
-  <span class="component">Trigger:</span> <span class="property">pad</span> <span class="value">8</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#1A1A1A</span> <span class="property">rad</span> <span class="value">6</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+  <span class="component">Trigger:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#1A1A1A</span> <span class="property">radius</span> <span class="value">6</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#333</span>
     <span class="string">"Option wählen"</span>
   <span class="component">Options:</span>
     <span class="component">Option</span> <span class="property">value</span> <span class="string">"1"</span> <span class="string">"Option 1"</span>
@@ -1148,7 +1148,7 @@
 
       <h4>Checkbox</h4>
       <pre><span class="component">TermsCheckbox</span> <span class="keyword">as</span> <span class="component">Checkbox:</span>
-  <span class="component">Indicator:</span> <span class="property">w</span> <span class="value">18</span> <span class="property">h</span> <span class="value">18</span> <span class="property">rad</span> <span class="value">4</span> <span class="property">bor</span> <span class="value">1</span> <span class="property">boc</span> <span class="value">#333</span>
+  <span class="component">Indicator:</span> <span class="property">width</span> <span class="value">18</span> <span class="property">height</span> <span class="value">18</span> <span class="property">radius</span> <span class="value">4</span> <span class="property">border</span> <span class="value">1</span> <span class="property">border-color</span> <span class="value">#333</span>
   <span class="component">Label:</span> <span class="string">"AGB akzeptieren"</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Indicator, Label</span></div>
@@ -1157,8 +1157,8 @@
 
       <h4>Switch</h4>
       <pre><span class="component">DarkModeToggle</span> <span class="keyword">as</span> <span class="component">Switch:</span>
-  <span class="component">Track:</span> <span class="property">w</span> <span class="value">44</span> <span class="property">h</span> <span class="value">24</span> <span class="property">rad</span> <span class="value">12</span> <span class="property">bg</span> <span class="value">#333</span>
-  <span class="component">Thumb:</span> <span class="property">w</span> <span class="value">20</span> <span class="property">h</span> <span class="value">20</span> <span class="property">rad</span> <span class="value">10</span> <span class="property">bg</span> <span class="value">white</span></pre>
+  <span class="component">Track:</span> <span class="property">width</span> <span class="value">44</span> <span class="property">height</span> <span class="value">24</span> <span class="property">radius</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#333</span>
+  <span class="component">Thumb:</span> <span class="property">width</span> <span class="value">20</span> <span class="property">height</span> <span class="value">20</span> <span class="property">radius</span> <span class="value">10</span> <span class="property">background</span> <span class="value">white</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Thumb</span></div>
         <div class="slots-states-item"><strong>States:</strong> <span>off, on</span></div>
@@ -1166,9 +1166,9 @@
 
       <h4>Slider</h4>
       <pre><span class="component">VolumeSlider</span> <span class="keyword">as</span> <span class="component">Slider:</span> <span class="property">min</span> <span class="value">0</span> <span class="property">max</span> <span class="value">100</span> <span class="property">step</span> <span class="value">1</span>
-  <span class="component">Track:</span> <span class="property">h</span> <span class="value">4</span> <span class="property">bg</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">2</span>
-  <span class="component">Range:</span> <span class="property">bg</span> <span class="value">#3B82F6</span>
-  <span class="component">Thumb:</span> <span class="property">w</span> <span class="value">16</span> <span class="property">h</span> <span class="value">16</span> <span class="property">rad</span> <span class="value">8</span> <span class="property">bg</span> <span class="value">white</span></pre>
+  <span class="component">Track:</span> <span class="property">height</span> <span class="value">4</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">radius</span> <span class="value">2</span>
+  <span class="component">Range:</span> <span class="property">background</span> <span class="value">#3B82F6</span>
+  <span class="component">Thumb:</span> <span class="property">width</span> <span class="value">16</span> <span class="property">height</span> <span class="value">16</span> <span class="property">radius</span> <span class="value">8</span> <span class="property">background</span> <span class="value">white</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Range, Thumb</span></div>
       </div>
@@ -1186,8 +1186,8 @@
 
       <h4>Progress</h4>
       <pre><span class="component">UploadProgress</span> <span class="keyword">as</span> <span class="component">Progress:</span> <span class="property">value</span> <span class="value">65</span> <span class="property">max</span> <span class="value">100</span>
-  <span class="component">Track:</span> <span class="property">h</span> <span class="value">8</span> <span class="property">bg</span> <span class="value">#333</span> <span class="property">rad</span> <span class="value">4</span>
-  <span class="component">Indicator:</span> <span class="property">bg</span> <span class="value">#3B82F6</span></pre>
+  <span class="component">Track:</span> <span class="property">height</span> <span class="value">8</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">radius</span> <span class="value">4</span>
+  <span class="component">Indicator:</span> <span class="property">background</span> <span class="value">#3B82F6</span></pre>
       <div class="slots-states">
         <div class="slots-states-item"><strong>Slots:</strong> <span>Track, Indicator</span></div>
       </div>
@@ -1209,31 +1209,31 @@
       <h2>Schnellreferenz</h2>
 
       <div class="quick-ref">
-<span class="quick-ref-category">LAYOUT</span>      <span class="quick-ref-items">hor ver gap between wrap grid</span>
-<span class="quick-ref-category">ALIGN</span>       <span class="quick-ref-items">hor-l hor-cen hor-r ver-t ver-cen ver-b cen</span>
-<span class="quick-ref-category">SPACING</span>     <span class="quick-ref-items">pad mar (+ l r u d l-r u-d)</span>
-<span class="quick-ref-category">SIZE</span>        <span class="quick-ref-items">w h minw maxw minh maxh full grow fill shrink</span>
-<span class="quick-ref-category">SHORTHAND</span>   <span class="quick-ref-items">Box 300 400 pad 16            → Box w 300 h 400 pad 16</span>
+<span class="quick-ref-category">LAYOUT</span>      <span class="quick-ref-items">hor vertical gap between wrap grid</span>
+<span class="quick-ref-category">ALIGN</span>       <span class="quick-ref-items">horizontal-left horizontal-center horizontal-right vertical-top vertical-center vertical-bottom cen</span>
+<span class="quick-ref-category">SPACING</span>     <span class="quick-ref-items">pad margin (+ l r u d l-r u-d)</span>
+<span class="quick-ref-category">SIZE</span>        <span class="quick-ref-items">w h min-width max-width min-height max-height full grow fill shrink</span>
+<span class="quick-ref-category">SHORTHAND</span>   <span class="quick-ref-items">Box 300 400 padding 16            → Box width 300 height 400 padding 16</span>
 <span class="quick-ref-category">GRID</span>        <span class="quick-ref-items">grid N | grid auto MIN        → grid 3, grid auto 250</span>
-<span class="quick-ref-category">COLOR</span>       <span class="quick-ref-items">col (unified) bg textCol boc  → col: Container=backgroundColor, Text=color</span>
-<span class="quick-ref-category">BORDER</span>      <span class="quick-ref-items">bor [dir] [w] [style] [col]  → bor l 2 dashed #333</span>
-            <span class="quick-ref-items">rad                          → rad 8</span>
+<span class="quick-ref-category">COLOR</span>       <span class="quick-ref-items">col (unified) background textCol border-color  → col: Container=backgroundColor, Text=color</span>
+<span class="quick-ref-category">BORDER</span>      <span class="quick-ref-items">bor [dir] [w] [style] [col]  → border l 2 dashed #333</span>
+            <span class="quick-ref-items">rad                          → radius 8</span>
 <span class="quick-ref-category">TYPE</span>        <span class="quick-ref-items">size weight line font align italic underline uppercase lowercase truncate</span>
 <span class="quick-ref-category">INLINE</span>      <span class="quick-ref-items">*text*:bold *text*:italic *text*:underline *text*:$token</span>
 <span class="quick-ref-category">VISUAL</span>      <span class="quick-ref-items">opacity/opa shadow cursor pointer z</span>
 <span class="quick-ref-category">VISIBLE</span>     <span class="quick-ref-items">visible hidden</span>
 <span class="quick-ref-category">PRIMITIVES</span>  <span class="quick-ref-items">Image Input Textarea Link Button   → Keyword Name? "value" props</span>
 <span class="quick-ref-category">IMAGE</span>       <span class="quick-ref-items">Image "url" w h fit alt            → Image Avatar "pic.jpg" 48 48</span>
-<span class="quick-ref-category">INPUT</span>       <span class="quick-ref-items">Input "placeholder" type w         → Input EmailField "Email" w 200</span>
+<span class="quick-ref-category">INPUT</span>       <span class="quick-ref-items">Input "placeholder" type w         → Input EmailField "Email" width 200</span>
 <span class="quick-ref-category">TEXTAREA</span>    <span class="quick-ref-items">Textarea "placeholder" rows        → Textarea "Message" rows 5</span>
 <span class="quick-ref-category">LINK</span>        <span class="quick-ref-items">Link "href" target                 → Link "https://..." target _blank</span>
 <span class="quick-ref-category">ICON</span>        <span class="quick-ref-items">icon</span>
-<span class="quick-ref-category">HOVER</span>       <span class="quick-ref-items">hover-col hover-bg hover-boc hover-bor hover-rad hover-opacity hover-scale</span>
+<span class="quick-ref-category">HOVER</span>       <span class="quick-ref-items">hover-color hovertical-bottomackground hovertical-bottomorderder-color hovertical-bottomorder hover-radius hover-opacity hover-scale</span>
 
 <span class="quick-ref-category">TOKENS</span>      <span class="quick-ref-items">$name: value          → $primary: #3B82F6</span>
 <span class="quick-ref-category">REFERENCE</span>   <span class="quick-ref-items">Component.prop        → Card.rad</span>
-<span class="quick-ref-category">DEFINE</span>      <span class="quick-ref-items">Name: props           → Button: pad 12 bg #3B82F6</span>
-<span class="quick-ref-category">INHERIT</span>     <span class="quick-ref-items">Name from Parent: props → DangerBtn from Button: bg #EF4444</span>
+<span class="quick-ref-category">DEFINE</span>      <span class="quick-ref-items">Name: props           → Button: padding 12 background #3B82F6</span>
+<span class="quick-ref-category">INHERIT</span>     <span class="quick-ref-items">Name from Parent: props → DangerBtn from Button: background #EF4444</span>
 <span class="quick-ref-category">INSTANCE</span>    <span class="quick-ref-items">Type named Name:      → Input named Email: placeholder "Email"</span>
 <span class="quick-ref-category">COMP.PROP</span>   <span class="quick-ref-items">Name.property         → Email.value, Submit.disabled</span>
 
@@ -1250,7 +1250,7 @@
 
 <span class="quick-ref-category">CONDITION</span>   <span class="quick-ref-items">if $cond              → if $isLoggedIn</span>
 <span class="quick-ref-category">ELSE</span>        <span class="quick-ref-items">else                  → else</span>
-<span class="quick-ref-category">CONDPROP</span>    <span class="quick-ref-items">if $x then p v else   → if $active then bg #3B82F6 else bg #333</span>
+<span class="quick-ref-category">CONDPROP</span>    <span class="quick-ref-items">if $x then p v else   → if $active then background #3B82F6 else background #333</span>
 <span class="quick-ref-category">ITERATOR</span>    <span class="quick-ref-items">each $x in $list      → each $task in $tasks</span>
 
 <span class="quick-ref-category">OPERATORS</span>   <span class="quick-ref-items">== != > < >= <=       (comparison)</span>

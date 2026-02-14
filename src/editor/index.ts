@@ -59,8 +59,9 @@ export {
 // DSL-specific extensions
 export { dslTheme, dslHighlighter } from './dsl-syntax'
 export { dslAutocomplete, triggerAutocompleteWithBoost } from './dsl-autocomplete'
-export { createEditorKeymaps } from './keymaps'
-export type { KeymapCallbacks, KeymapConfig } from './keymaps'
+export { createEditorKeymaps, createSmartEnterKeymap, createSmartTabKeymap, createMultilineIndentKeymaps, createNLModeEnterKeymap } from './keymaps'
+export type { KeymapCallbacks, KeymapConfig, NLModeConfig } from './keymaps'
+export { isInsideMultilineString } from './multiline-indent'
 export { createPanelKeymap } from './panel-keymap'
 export type { PanelKeymapConfig } from './panel-keymap'
 export { createNumberScrubbingKeymap } from './number-scrubbing'

@@ -1,12 +1,22 @@
 /**
  * Doc Text Parser
  *
- * Parses multiline strings with token formatting for doc-mode.
+ * Parses multiline strings with markdown-style formatting for doc-mode.
  *
- * Block-level syntax: $token Text (applies to rest of line)
- * Inline syntax: $token[phrase] (applies to bracketed content)
- * Link syntax: $link[text](url)
+ * Block-level syntax:
+ * - # Heading 1
+ * - ## Heading 2
+ * - ### Heading 3
+ * - $token Text (legacy block tokens)
+ *
+ * Inline syntax:
+ * - **bold** text
+ * - _italic_ text
+ * - `code` text
+ * - [link text](url)
  */
+
+import { getBlockShortcuts, getInlineShortcuts } from './doc-shortcuts'
 
 /**
  * Represents a parsed text segment
@@ -23,7 +33,7 @@ export interface TextSegment {
  * Parse a multiline string with doc-mode token formatting.
  *
  * Line breaks within text are treated as spaces (soft wrap).
- * Block tokens ($p, $h1, etc.) start new blocks.
+ * Block tokens (# heading, $token) start new blocks.
  * Continuation lines (non-block, non-empty) are appended to current block.
  * Empty lines end the current block.
  *
@@ -102,7 +112,22 @@ export function parseDocText(input: string): TextSegment[] {
       continue
     }
 
-    // Check for block-level token at start of line: $token Text
+    // Check for markdown heading at start of line: # ## ### ####
+    const headingResult = parseMarkdownHeading(trimmedLine)
+    if (headingResult) {
+      // Flush any previous block or paragraph
+      flushBlock()
+      flushParagraph()
+
+      // Start a new block
+      currentBlock = {
+        token: headingResult.token,
+        contentLines: headingResult.content ? [headingResult.content] : []
+      }
+      continue
+    }
+
+    // Check for legacy block-level token at start of line: $token Text
     if (trimmedLine.startsWith('$')) {
       const blockResult = parseBlockToken(trimmedLine)
       if (blockResult) {
@@ -137,7 +162,23 @@ export function parseDocText(input: string): TextSegment[] {
 }
 
 /**
- * Parse a block-level token: $token Text
+ * Parse markdown heading: # Heading, ## Heading, etc.
+ */
+function parseMarkdownHeading(line: string): { token: string; content: string } | null {
+  // Match # followed by space (important: must have space after #)
+  const match = line.match(/^(#{1,4})\s+(.*)$/)
+  if (match) {
+    const level = match[1].length
+    return {
+      token: `h${level}`,
+      content: match[2]
+    }
+  }
+  return null
+}
+
+/**
+ * Parse a legacy block-level token: $token Text
  */
 function parseBlockToken(line: string): { token: string; content: string } | null {
   // Match $token followed by space and text
@@ -162,77 +203,103 @@ function parseBlockToken(line: string): { token: string; content: string } | nul
 }
 
 /**
- * Parse inline tokens within text: $token[phrase] and $link[text](url)
+ * Parse inline tokens within text:
+ * - **bold** text
+ * - _italic_ text
+ * - `code` text
+ * - [link text](url)
  */
 export function parseInlineTokens(text: string): TextSegment[] {
   const segments: TextSegment[] = []
   let pos = 0
   let currentText = ''
 
+  const flushText = () => {
+    if (currentText) {
+      segments.push({ type: 'text', content: currentText })
+      currentText = ''
+    }
+  }
+
   while (pos < text.length) {
-    // Check for escaped bracket
-    if (text[pos] === '\\' && (text[pos + 1] === '[' || text[pos + 1] === ']')) {
-      currentText += text[pos + 1]
-      pos += 2
-      continue
+    // Check for escaped characters
+    if (text[pos] === '\\' && pos + 1 < text.length) {
+      const nextChar = text[pos + 1]
+      // Escape special markdown characters
+      if ('*_`[]()\\'.includes(nextChar)) {
+        currentText += nextChar
+        pos += 2
+        continue
+      }
     }
 
-    // Check for inline token: $token[content]
-    if (text[pos] === '$') {
-      // Try to match token name
-      const tokenMatch = text.slice(pos).match(/^\$([a-zA-Z_][a-zA-Z0-9_-]*)\[/)
-      if (tokenMatch) {
-        // Save preceding text
-        if (currentText) {
-          segments.push({ type: 'text', content: currentText })
-          currentText = ''
-        }
+    // Check for **bold** (must check before single *)
+    if (text.slice(pos, pos + 2) === '**') {
+      const endPos = text.indexOf('**', pos + 2)
+      if (endPos !== -1) {
+        flushText()
+        segments.push({
+          type: 'inline',
+          content: text.slice(pos + 2, endPos),
+          token: 'b'
+        })
+        pos = endPos + 2
+        continue
+      }
+    }
 
-        const tokenName = tokenMatch[1]
-        pos += tokenMatch[0].length // Move past $token[
-
-        // Find matching closing bracket (handle nested brackets)
-        let bracketContent = ''
-        let bracketDepth = 1
-        while (pos < text.length && bracketDepth > 0) {
-          if (text[pos] === '\\' && (text[pos + 1] === '[' || text[pos + 1] === ']')) {
-            bracketContent += text[pos + 1]
-            pos += 2
-            continue
-          }
-          if (text[pos] === '[') bracketDepth++
-          else if (text[pos] === ']') bracketDepth--
-
-          if (bracketDepth > 0) {
-            bracketContent += text[pos]
-          }
-          pos++
-        }
-
-        // Check for link syntax: $link[text](url)
-        if (tokenName === 'link' && text[pos] === '(') {
-          pos++ // Skip (
-          let url = ''
-          while (pos < text.length && text[pos] !== ')') {
-            url += text[pos]
-            pos++
-          }
-          pos++ // Skip )
-
-          segments.push({
-            type: 'link',
-            content: bracketContent,
-            token: tokenName,
-            url
-          })
-        } else {
+    // Check for _italic_
+    // Only match if not preceded by alphanumeric (word boundary)
+    if (text[pos] === '_') {
+      const prevChar = pos > 0 ? text[pos - 1] : ' '
+      if (!/[a-zA-Z0-9]/.test(prevChar)) {
+        const endPos = findClosingUnderscore(text, pos + 1)
+        if (endPos !== -1) {
+          flushText()
           segments.push({
             type: 'inline',
-            content: bracketContent,
-            token: tokenName
+            content: text.slice(pos + 1, endPos),
+            token: 'i'
           })
+          pos = endPos + 1
+          continue
         }
+      }
+    }
+
+    // Check for `code`
+    if (text[pos] === '`') {
+      const endPos = text.indexOf('`', pos + 1)
+      if (endPos !== -1) {
+        flushText()
+        segments.push({
+          type: 'inline',
+          content: text.slice(pos + 1, endPos),
+          token: 'code'
+        })
+        pos = endPos + 1
         continue
+      }
+    }
+
+    // Check for [link text](url)
+    if (text[pos] === '[') {
+      const closeSquare = text.indexOf(']', pos + 1)
+      if (closeSquare !== -1 && text[closeSquare + 1] === '(') {
+        const closeParen = text.indexOf(')', closeSquare + 2)
+        if (closeParen !== -1) {
+          flushText()
+          const linkText = text.slice(pos + 1, closeSquare)
+          const url = text.slice(closeSquare + 2, closeParen)
+          segments.push({
+            type: 'link',
+            content: linkText,
+            token: 'link',
+            url
+          })
+          pos = closeParen + 1
+          continue
+        }
       }
     }
 
@@ -242,11 +309,28 @@ export function parseInlineTokens(text: string): TextSegment[] {
   }
 
   // Add remaining text
-  if (currentText) {
-    segments.push({ type: 'text', content: currentText })
-  }
+  flushText()
 
   return segments
+}
+
+/**
+ * Find the closing underscore for italic text.
+ * Must not be followed by alphanumeric (word boundary).
+ */
+function findClosingUnderscore(text: string, startPos: number): number {
+  let pos = startPos
+  while (pos < text.length) {
+    if (text[pos] === '_') {
+      const nextChar = pos + 1 < text.length ? text[pos + 1] : ' '
+      // Only close if not followed by alphanumeric
+      if (!/[a-zA-Z0-9]/.test(nextChar)) {
+        return pos
+      }
+    }
+    pos++
+  }
+  return -1
 }
 
 /**

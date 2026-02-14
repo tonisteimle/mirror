@@ -46,6 +46,8 @@ export const STORAGE_KEYS = {
   AUTOCOMPLETE: 'mirror-autocomplete',
   API_KEY: 'mirror-api-key',
   AI_MODE: 'mirror-ai-mode',
+  NL_MODE: 'mirror-nl-mode',
+  PICKER_MODE: 'mirror-picker-mode',
 } as const
 
 // Editor Tabs

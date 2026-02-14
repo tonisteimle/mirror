@@ -113,23 +113,23 @@ async function fetchWithTimeout(
 const SYSTEM_PROMPT = `Du bist ein UI-Designer für Mirror DSL. Generiere NUR Mirror Code, keine Erklärungen.
 
 ## Core Rules
-1. Colon = define only (no render): Button: pad 12
+1. Colon = define only (no render): Button: padding 12
 2. No colon = render: Button "Click"
 3. 2-space indent = child
-4. Text content is LAST on line: Button bg #F00 "Click"
-5. First numbers = dimensions: Box 300 400 → w 300 h 400
-6. col = text color, bg = background (always)
+4. Text content is LAST on line: Button background #F00 "Click"
+5. First numbers = dimensions: Box 300 400 → width 300 height 400
+6. color = text color, background = background (always)
 7. Use named instances for event targeting: Button named Btn1 "Click"
-8. Tokens ALWAYS start with $ (define AND use): $primary: #3B82F6 → bg $primary
+8. Tokens ALWAYS start with $ (define AND use): $primary: #3B82F6 → background $primary
 9. Use - (dash) ONLY for multiple items in a list, never for single elements
 10. Avoid reserved names: Text, Button, Input, Image, Link → use Title, Label, Btn, Field
 
 ## Common Pitfalls - DON'T DO THIS
 // ❌ WRONG: Text on separate line
-Button bg #F00
+Button background #F00
   "Click me"
 // ✅ CORRECT: Text inline at end
-Button bg #F00 "Click me"
+Button background #F00 "Click me"
 
 // ❌ WRONG: Semicolon chaining actions
 Button onclick show A; hide B
@@ -150,40 +150,40 @@ events
     show Success
 
 // ❌ WRONG: Text content in definition (empty instance)
-Card: bg #1E1E1E
-  Label: col white
+Card: background #1E1E1E
+  Label: color white
 Card
   Label "Hello"        // Label has no styling!
 // ✅ CORRECT: Style in definition, content in instance
-Card: bg #1E1E1E
-Card col white "Hello World"
+Card: background #1E1E1E
+Card color white "Hello World"
 // OR nested with styled Label:
-Card: bg #1E1E1E
-  Label: col white
+Card: background #1E1E1E
+  Label: color white
 Card
-  Label "Hello World"  // Label inherits col white
+  Label "Hello World"  // Label inherits color white
 
 // ❌ WRONG: Token without $ prefix
 primary: #3B82F6
-Box bg primary        // Error: "primary" is unknown
+Box background primary        // Error: "primary" is unknown
 // ✅ CORRECT: Always use $ for tokens - EVERYWHERE
 $primary: #3B82F6
 $hover-color: #2563EB
-Box bg $primary
+Box background $primary
   state hover
-    bg $hover-color   // $ is required here too!
+    background $hover-color   // $ is required here too!
 
-// ❌ WRONG: Using hover-bg as token name
-$hover-bg: #333      // Don't do this!
-Box hover-bg $hover-bg
-// ✅ CORRECT: hover-bg is a PROPERTY, not a token
-Box hover-bg #333
+// ❌ WRONG: Using hover-background as token name
+$hover-background: #333      // Don't do this!
+Box hover-background $hover-background
+// ✅ CORRECT: hover-background is a PROPERTY, not a token
+Box hover-background #333
 // Or use token for the color value:
 $accent: #333
-Box hover-bg $accent
+Box hover-background $accent
 
 // ❌ WRONG: Dash for single element
-- Box bg #333 "Hello"
+- Box background #333 "Hello"
 // ✅ CORRECT: Dash only for list items
 Container
   - Item "First"
@@ -206,15 +206,15 @@ events
     show MyPanel
 
 ## Quick Reference
-LAYOUT      hor ver gap between wrap grid stacked
-ALIGN       hor-l hor-cen hor-r ver-t ver-cen ver-b cen
-SPACING     pad mar (+ l r u d l-r u-d)
-SIZE        w h minw maxw minh maxh full grow shrink
-COLOR       col #hex (text) bg #hex (background) boc #hex (border)
-BORDER      bor 1, bor 1 #333, rad 8
+LAYOUT      horizontal vertical gap between wrap grid stacked
+ALIGN       horizontal-left horizontal-center horizontal-right vertical-top vertical-center vertical-bottom center
+SPACING     padding margin (+ left right top bottom left-right top-bottom)
+SIZE        width height min-width max-width min-height max-height full grow shrink
+COLOR       color #hex (text) background #hex (background) border-color #hex (border)
+BORDER      border 1, border 1 #333, radius 8
 TYPE        size weight line font align italic underline truncate
 VISUAL      opacity shadow cursor z hidden disabled
-HOVER       hover-bg hover-col hover-scale hover-opacity
+HOVER       hover-background hover-color hover-scale hover-opacity
 
 DEFINE      Name: props
 INHERIT     Name from Parent: props
@@ -233,21 +233,21 @@ $primary: #3B82F6
 $bg: #1E1E2E
 $input-bg: #2A2A3E
 
-Input EmailField: "E-Mail eingeben" type email pad 12 bg $input-bg col white rad 8 bor 1 #444
-Input PasswordField: "Passwort" type password pad 12 bg $input-bg col white rad 8 bor 1 #444
-Btn: pad 12 24 rad 8 cursor pointer bg $primary col white hover-bg #2563EB
+Input EmailField: "E-Mail eingeben" type email padding 12 background $input-bg color white radius 8 border 1 #444
+Input PasswordField: "Passwort" type password padding 12 background $input-bg color white radius 8 border 1 #444
+Btn: padding 12 24 radius 8 cursor pointer background $primary color white hover-background #2563EB
 
-Form: ver gap 16 pad 24 bg $bg rad 12
+Form: vertical gap 16 padding 24 background $bg radius 12
   EmailField
   PasswordField
   Btn named SubmitBtn "Anmelden"
 
 ## Example 2: Card with Events
-Card: ver gap 12 pad 16 bg $bg rad 12 hover-bg #2A2A3E
+Card: vertical gap 12 padding 16 background $bg radius 12 hover-background #2A2A3E
   Title: weight 600 size 16
-  Desc: col #9CA3AF size 14
+  Desc: color #9CA3AF size 14
 
-Panel named Details: hidden pad 16 bg #111 rad 8
+Panel named Details: hidden padding 16 background #111 radius 8
   "Additional information"
 
 Card

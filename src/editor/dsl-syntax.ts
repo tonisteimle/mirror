@@ -48,7 +48,7 @@ export const dslTheme = EditorView.theme({
   '&': {
     backgroundColor: editorBg,
     color: '#D4D4D4',
-    fontSize: '11px',
+    fontSize: '10px',
     fontFamily: 'JetBrains Mono, Menlo, Monaco, monospace',
     lineHeight: '1.4',
     height: '100%',
@@ -65,7 +65,7 @@ export const dslTheme = EditorView.theme({
     overflow: 'auto',
   },
   '.cm-content': {
-    padding: '12px',
+    padding: '12px 12px 12px 0',
     caretColor: '#FFFFFF',
     backgroundColor: editorBg,
   },

@@ -17,6 +17,12 @@ export interface UseEditorStateReturn {
   setHighlightLine: (line: number | undefined) => void
   autoCompleteMode: AutoCompleteMode
   setAutoCompleteMode: (mode: AutoCompleteMode) => void
+  // NL Mode: Natural Language translation on Enter
+  nlModeEnabled: boolean
+  setNlModeEnabled: (enabled: boolean) => void
+  // Picker Mode: Autocomplete pickers enabled/disabled
+  pickerModeEnabled: boolean
+  setPickerModeEnabled: (enabled: boolean) => void
   // Data tab state (unified code for schema + instances)
   dataCode: string
   setDataCode: (code: string) => void
@@ -61,6 +67,29 @@ export function useEditorState(): UseEditorStateReturn {
     localStorage.setItem(STORAGE_KEYS.AUTOCOMPLETE, autoCompleteMode)
   }, [autoCompleteMode])
 
+  // NL Mode state (persisted in localStorage)
+  const [nlModeEnabled, setNlModeEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.NL_MODE)
+    return saved === 'true'
+  })
+
+  // Persist NL mode setting
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.NL_MODE, String(nlModeEnabled))
+  }, [nlModeEnabled])
+
+  // Picker Mode state (persisted in localStorage) - defaults to true
+  const [pickerModeEnabled, setPickerModeEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.PICKER_MODE)
+    // Default to true if not set
+    return saved !== 'false'
+  })
+
+  // Persist picker mode setting
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PICKER_MODE, String(pickerModeEnabled))
+  }, [pickerModeEnabled])
+
   return {
     activeTab,
     setActiveTab,
@@ -72,6 +101,10 @@ export function useEditorState(): UseEditorStateReturn {
     setHighlightLine,
     autoCompleteMode,
     setAutoCompleteMode,
+    nlModeEnabled,
+    setNlModeEnabled,
+    pickerModeEnabled,
+    setPickerModeEnabled,
     dataCode,
     setDataCode,
     dataSchemas: parsedData.schemas,

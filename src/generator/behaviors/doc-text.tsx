@@ -50,9 +50,9 @@ function buildDocTokenFromMap(
       const seqTokens = directValue.tokens || []
       for (let i = 0; i < seqTokens.length; i++) {
         const token = seqTokens[i]
-        if (token.type === 'property' && i + 1 < seqTokens.length) {
+        if (token.type === 'PROPERTY' && i + 1 < seqTokens.length) {
           const nextToken = seqTokens[i + 1]
-          if (nextToken.type === 'number' || nextToken.type === 'string' || nextToken.type === 'color') {
+          if (nextToken.type === 'NUMBER' || nextToken.type === 'STRING' || nextToken.type === 'COLOR') {
             (result as Record<string, unknown>)[token.value as string] = nextToken.value
             i++
           }
@@ -126,7 +126,7 @@ function renderSegment(
 
     // Check for custom token override (from Tokens tab)
     // Supports: $h1 with object value, or $h1-size, $h1-col, etc.
-    const customToken = buildDocTokenFromMap(segment.token, customTokens)
+    const customToken = buildDocTokenFromMap(segment.token, customTokens ?? null)
     if (customToken) {
       // Merge: custom values override defaults
       mergedToken = { ...mergedToken, ...customToken }

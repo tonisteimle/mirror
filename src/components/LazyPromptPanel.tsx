@@ -11,6 +11,7 @@ import { EditorSkeleton } from './EditorSkeleton'
 import type { PromptPanelRef } from './PromptPanel'
 import type { TabType } from '../validation'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
+import type { LineStatus } from '../services/nl-translation'
 
 // Dynamic import creates a separate chunk for CodeMirror and editor code
 const PromptPanel = lazy(() =>
@@ -38,6 +39,16 @@ interface LazyPromptPanelProps {
   onCursorLineChange?: (line: number) => void
   /** Called when cursor position changes (line and column, both 0-indexed) */
   onCursorChange?: (pos: CursorPosition) => void
+  // NL Mode props
+  /** Whether NL mode is enabled */
+  nlModeEnabled?: boolean
+  /** Callback when Enter is pressed in NL mode */
+  onNlTranslate?: (lineIndex: number, content: string, allLines: string[]) => void
+  /** Status of line translations */
+  nlTranslations?: Map<number, LineStatus>
+  // Picker Mode props
+  /** Whether picker mode is enabled (autocomplete suggestions) */
+  pickerModeEnabled?: boolean
 }
 
 /**

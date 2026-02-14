@@ -145,39 +145,27 @@ export function applyTokenSequenceSpacing(
 }
 
 /**
- * Property name aliases: long form → short form
- */
-const PROPERTY_ALIASES: Record<string, string> = {
-  'padding': 'pad',
-  'margin': 'mar',
-  'radius': 'rad',
-  'color': 'col',
-}
-
-/**
  * Parse a property and its value.
  */
 export function parsePropertyValue(ctx: ParserContext, node: ASTNode): void {
-  const rawPropName = ctx.advance().value
-  // Normalize long property names to short form
-  const propName = PROPERTY_ALIASES[rawPropName] || rawPropName
+  const propName = ctx.advance().value
 
-  // Special handling for pad/mar with directions or CSS shorthand
-  if (propName === 'pad' || propName === 'mar') {
+  // Special handling for spacing with directions or CSS shorthand (both forms)
+  if (propName === 'pad' || propName === 'padding' || propName === 'mar' || propName === 'margin') {
     parsePadMarProperty(ctx, node, propName)
-  } else if (propName === 'bor') {
+  } else if (propName === 'bor' || propName === 'border') {
     parseBorderProperty(ctx, node)
-  } else if (propName === 'hor' || propName === 'ver') {
+  } else if (propName === 'hor' || propName === 'horizontal' || propName === 'ver' || propName === 'vertical') {
     parseLayoutProperty(ctx, node, propName)
-  } else if (propName === 'cen') {
+  } else if (propName === 'cen' || propName === 'center') {
     parseCenterProperty(ctx, node)
-  } else if (propName === 'rad') {
+  } else if (propName === 'rad' || propName === 'radius') {
     parseRadiusProperty(ctx, node)
   } else if (propName === 'icon' || propName === 'font') {
     parseStringProperty(ctx, node, propName)
   } else if (propName === 'fit') {
     parseFitProperty(ctx, node)
-  } else if (propName === 'w' || propName === 'h') {
+  } else if (propName === 'w' || propName === 'width' || propName === 'h' || propName === 'height') {
     parseDimensionProperty(ctx, node, propName)
   } else if (propName === 'weight') {
     parseWeightProperty(ctx, node)

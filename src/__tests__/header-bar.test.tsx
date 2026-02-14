@@ -27,9 +27,9 @@ describe('HeaderBar', () => {
     expect(screen.getByAltText('mirror')).toBeDefined()
   })
 
-  it('renders tutorial button', () => {
-    test.render()
-    expect(screen.getByTitle('Tutorial')).toBeDefined()
+  it('renders docs mode button when onToggleDocsMode is provided', () => {
+    test.render({ onToggleDocsMode: vi.fn() })
+    expect(screen.getByTitle('Dokumentation')).toBeDefined()
   })
 
   it('renders menu button', () => {
@@ -128,19 +128,17 @@ describe('HeaderBar', () => {
   })
 
   // ===========================================
-  // Tutorial Link Test
+  // Documentation Mode Toggle Test
   // ===========================================
 
-  describe('Tutorial Link', () => {
-    it('opens tutorial in new window on click', () => {
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  describe('Docs Mode Toggle', () => {
+    it('calls onToggleDocsMode when clicked', () => {
+      const mockToggleDocsMode = vi.fn()
+      test.render({ onToggleDocsMode: mockToggleDocsMode })
 
-      test.render()
-      fireEvent.click(screen.getByTitle('Tutorial'))
+      fireEvent.click(screen.getByTitle('Dokumentation'))
 
-      expect(windowOpenSpy).toHaveBeenCalledWith('/mirror/mirror-docu.html', '_blank')
-
-      windowOpenSpy.mockRestore()
+      expect(mockToggleDocsMode).toHaveBeenCalledTimes(1)
     })
   })
 })

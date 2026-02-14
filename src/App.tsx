@@ -148,6 +148,10 @@ function App() {
                 isSavingDocs={app.docsMode.isSaving}
                 hasUnsavedDocsChanges={app.docsMode.hasUnsavedChanges}
                 hasAdminAccess={app.docsMode.hasAdminAccess}
+                nlModeEnabled={app.editor.nlModeEnabled}
+                onNlModeChange={app.editor.setNlModeEnabled}
+                pickerModeEnabled={app.editor.pickerModeEnabled}
+                onPickerModeChange={app.editor.setPickerModeEnabled}
               />
             </EditorActionsProvider>
 

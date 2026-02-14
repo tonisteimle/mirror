@@ -2,6 +2,27 @@
 
 > Mirror is a DSL for rapid UI prototyping. This reference is optimized for AI comprehension.
 
+## Property Names
+
+Mirror supports both **long-form** (readable) and **shorthand** property names. **Prefer long forms** for clarity:
+
+| Long Form | Shorthand | Description |
+|-----------|-----------|-------------|
+| `padding` | `pad` | Inner spacing |
+| `margin` | `mar` | Outer spacing |
+| `background` | `bg` | Background color |
+| `color` | `col` | Text color |
+| `border` | `bor` | Border width/style |
+| `radius` | `rad` | Border radius |
+| `horizontal` | `hor` | Horizontal layout |
+| `vertical` | `ver` | Vertical layout |
+| `width` | `w` | Element width |
+| `height` | `h` | Element height |
+| `border-color` | `boc` | Border color |
+| `opacity` | `opa` | Transparency |
+
+Both forms are fully supported. The editor auto-expands shortcuts to long forms.
+
 ## Syntax Grammar
 
 ```
@@ -22,15 +43,15 @@ token       ::= $name[-suffix]                    -- $primary-col → infers col
 
 ```
 1. First usage defines, subsequent inherit       Button #F00 "A"  Button "B" ← inherits #F00
-2. Colon = define only, no render               Button: pad 12   ← not visible
+2. Colon = define only, no render               Button: padding 12   ← not visible
 3. No colon = render                            Button "Click"   ← visible
 4. 2-space indent = child                       Parent\n  Child
 5. - prefix = new instance                      - Item "New"     ← creates, not modifies
-6. Flat access to nested slots                  Header\n  Logo bg #F00  ← finds Logo anywhere
-7. col = text color, bg = background (always)   Button bg #00F col #FFF
-8. Dimension shorthand: first numbers = w h     Card 200 150 pad 16 → w 200 h 150
-9. Component property references                Button rad Card.rad bg Card.bg
-10. Text content is LAST on line                Button bg #F00 "Click"  ← text at end
+6. Flat access to nested slots                  Header\n  Logo background #F00  ← finds Logo anywhere
+7. color = text color, background = bg (always) Button background #00F color #FFF
+8. Dimension shorthand: first numbers = w h     Card 200 150 padding 16 → width 200 height 150
+9. Component property references                Button radius Card.radius background Card.background
+10. Text content is LAST on line                Button background #F00 "Click"  ← text at end
 11. Use named instances for event targeting     Button named Btn1 "Click"  ← can reference Btn1
 ```
 
@@ -38,11 +59,11 @@ token       ::= $name[-suffix]                    -- $primary-col → infers col
 
 ```
 // ❌ WRONG: Text on separate line
-Button bg #F00
+Button background #F00
   "Click me"
 
 // ✅ CORRECT: Text inline at end
-Button bg #F00 "Click me"
+Button background #F00 "Click me"
 
 // ❌ WRONG: Semicolon chaining actions
 Button onclick show A; hide B
@@ -72,11 +93,11 @@ events
 Item onhover highlight self      // highlight won't show visually
 
 // ✅ CORRECT: Define states that actions will activate
-Item: pad 12 cursor pointer
+Item: padding 12 cursor pointer
   state default
-    bg transparent
+    background transparent
   state highlighted
-    bg #333
+    background #333
   onhover highlight self
 ```
 
@@ -95,16 +116,16 @@ ComponentName property value property value "text content"
 
 First 1-2 numbers after component = width [height]:
 ```
-Box 300 400 pad 16    → w 300 h 400 pad 16
-Card 200 pad 8        → w 200 pad 8
+Box 300 400 padding 16    → width 300 height 400 padding 16
+Card 200 padding 8        → width 200 padding 8
 ```
 
 ## Colors
 
 ```
-bg #3B82F6            // Background (always)
-col #FFFFFF           // Text color (always)
-boc #333              // Border color
+background #3B82F6    // Background (always)
+color #FFFFFF         // Text color (always)
+border-color #333     // Border color
 #RRGGBBAA             // With alpha: #3B82F680
 ```
 
@@ -113,81 +134,83 @@ boc #333              // Border color
 ```
 $primary: #3B82F6
 $spacing: 16
-Button bg $primary pad $spacing
+Button background $primary padding $spacing
 ```
 
 **Type suffixes** auto-infer property:
-- `-col/-color` → background: `$blue-col`
+- `-color` → background: `$blue-color`
 - `-size` → font-size: `$heading-size`
-- `-pad/-spacing` → padding: `$card-pad`
-- `-rad/-radius` → border-radius: `$btn-rad`
+- `-padding/-spacing` → padding: `$card-padding`
+- `-radius` → border-radius: `$btn-radius`
 - `-gap` → gap: `$grid-gap`
-- `-bor/-border` → border-width
-- `-boc` → border-color
+- `-border` → border-width
+- `-border-color` → border-color
 
 ## Component References
 
 ```
-Card: rad 16 pad 20 bg #2A2A3E
-Button rad Card.rad bg Card.bg    // Reference Card's properties
+Card: radius 16 padding 20 background #2A2A3E
+Button radius Card.radius background Card.background    // Reference Card's properties
 ```
 
 ## Layout Properties
 
-| Property | Description |
-|----------|-------------|
-| `hor` | Horizontal (row) |
-| `ver` | Vertical (column) - default |
-| `gap 16` | Space between children |
-| `between` | Space-between distribution |
-| `wrap` | Allow wrapping |
-| `grow`/`fill` | Flex grow |
-| `shrink 0` | Prevent shrinking |
-| `stacked` | Stack children (z-layers) |
+| Property | Shorthand | Description |
+|----------|-----------|-------------|
+| `horizontal` | `hor` | Horizontal (row) |
+| `vertical` | `ver` | Vertical (column) - default |
+| `gap 16` | | Space between children |
+| `between` | | Space-between distribution |
+| `wrap` | | Allow wrapping |
+| `grow`/`fill` | | Flex grow |
+| `shrink 0` | | Prevent shrinking |
+| `stacked` | | Stack children (z-layers) |
 
 ## Alignment
 
-| Property | Description |
-|----------|-------------|
-| `hor-l` | Align left |
-| `hor-cen` | Center horizontal |
-| `hor-r` | Align right |
-| `ver-t` | Align top |
-| `ver-cen` | Center vertical |
-| `ver-b` | Align bottom |
-| `cen` | Center both axes |
+| Property | Shorthand | Description |
+|----------|-----------|-------------|
+| `horizontal-left` | `hor-l` | Align left |
+| `horizontal-center` | `hor-cen` | Center horizontal |
+| `horizontal-right` | `hor-r` | Align right |
+| `vertical-top` | `ver-t` | Align top |
+| `vertical-center` | `ver-cen` | Center vertical |
+| `vertical-bottom` | `ver-b` | Align bottom |
+| `center` | `cen` | Center both axes |
 
 ## Sizing
 
-| Property | Description | Example |
-|----------|-------------|---------|
-| `w`/`h` | Width/Height | `w 200`, `h 100`, `w full`, `h 50%` |
-| `minw`/`maxw` | Min/Max width | `minw 100`, `maxw 500` |
-| `minh`/`maxh` | Min/Max height | `minh 50`, `maxh 300` |
-| `full` | 100% both | `Container full` |
+| Property | Shorthand | Description | Example |
+|----------|-----------|-------------|---------|
+| `width`/`height` | `w`/`h` | Width/Height | `width 200`, `height 100`, `width full` |
+| `min-width`/`max-width` | `minw`/`maxw` | Min/Max width | `min-width 100`, `max-width 500` |
+| `min-height`/`max-height` | `minh`/`maxh` | Min/Max height | `min-height 50`, `max-height 300` |
+| `full` | | 100% both | `Container full` |
 
 ## Spacing
 
 ```
-pad 16              // All sides
-pad 16 12           // Vertical Horizontal
-pad 16 12 8 4       // Top Right Bottom Left
-pad l 16            // Left only (l/r/u/d)
-pad l-r 16          // Left and right
-pad u-d 16          // Up and down
-mar 16              // Margin (same syntax)
+padding 16              // All sides
+padding 16 12           // Vertical Horizontal
+padding 16 12 8 4       // Top Right Bottom Left
+padding left 16         // Left only (left/right/top/bottom)
+padding left-right 16   // Left and right
+padding top-bottom 16   // Top and bottom
+margin 16               // Margin (same syntax)
 ```
+
+Direction shortcuts: `l`=left, `r`=right, `t`/`u`=top, `b`/`d`=bottom
 
 ## Border
 
 ```
-bor 1               // 1px solid
-bor 1 #333          // 1px solid #333
-bor 2 dashed #3B82F6
-bor l 1 #333        // Left only
-bor l-r 2 dashed    // Left and right
-rad 8               // Border radius
-rad 8 8 0 0         // Per-corner
+border 1               // 1px solid
+border 1 #333          // 1px solid #333
+border 2 dashed #3B82F6
+border left 1 #333     // Left only
+border left-right 2 dashed    // Left and right
+radius 8               // Border radius
+radius 8 8 0 0         // Per-corner
 ```
 
 ## Typography
@@ -225,15 +248,15 @@ All icons: lucide.dev/icons
 
 ## Visuals
 
-| Property | Description | Example |
-|----------|-------------|---------|
-| `opacity`/`opa` | Transparency 0-1 | `opa 0.5` |
-| `shadow` | Box shadow | `shadow sm`/`md`/`lg` |
-| `cursor` | Cursor style | `cursor pointer` |
-| `z` | Z-index | `z 100` |
-| `hidden` | Start hidden | `hidden` |
-| `visible` | Visibility | `visible true/false` |
-| `disabled` | Disabled state | `disabled` |
+| Property | Shorthand | Description | Example |
+|----------|-----------|-------------|---------|
+| `opacity` | `opa` | Transparency 0-1 | `opacity 0.5` |
+| `shadow` | | Box shadow | `shadow sm`/`md`/`lg` |
+| `cursor` | | Cursor style | `cursor pointer` |
+| `z` | | Z-index | `z 100` |
+| `hidden` | | Start hidden | `hidden` |
+| `visible` | | Visibility | `visible true/false` |
+| `disabled` | | Disabled state | `disabled` |
 
 ## Scroll
 
@@ -266,7 +289,7 @@ grid 30% 70%        // Percentage columns
 
 **Named primitives:**
 ```
-Image Avatar: 48 48 rad 24 fit cover
+Image Avatar: 48 48 radius 24 fit cover
 Input Email: "Enter email" type email
 ```
 
@@ -274,7 +297,7 @@ Input Email: "Enter email" type email
 
 ```
 // Define (not rendered)
-Button: pad 12 bg #3B82F6 rad 8
+Button: padding 12 background #3B82F6 radius 8
 
 // Use
 Button "Click me"
@@ -283,18 +306,18 @@ Button "Click me"
 ## Inheritance
 
 ```
-Button: pad 12 bg #3B82F6 rad 8
-DangerButton from Button: bg #EF4444
-GhostButton from Button: bg transparent bor 1 boc #3B82F6
+Button: padding 12 background #3B82F6 radius 8
+DangerButton from Button: background #EF4444
+GhostButton from Button: background transparent border 1 border-color #3B82F6
 ```
 
 ## Slots (Named Children)
 
 ```
-Card: ver pad 16 bg #1E1E1E rad 12 gap 8
+Card: vertical padding 16 background #1E1E1E radius 12 gap 8
   Title: size 18 weight 600
-  Description: size 14 col #9CA3AF
-  Actions: hor gap 8
+  Description: size 14 color #9CA3AF
+  Actions: horizontal gap 8
 
 // Usage - inline
 Card Title "Welcome" Description "Get started"
@@ -311,53 +334,53 @@ Card
 
 Access nested elements directly by name:
 ```
-Header: hor between
-  Left: hor gap 16
-    Logo: w 120 h 32
-    Nav: hor gap 8
+Header: horizontal between
+  Left: horizontal gap 16
+    Logo: width 120 height 32
+    Nav: horizontal gap 8
   Right:
-    Avatar: 36 36 rad 18
+    Avatar: 36 36 radius 18
 
 Header
-  Logo bg #FF0000      // Modifies Logo inside Left
-  Avatar bg #3B82F6    // Modifies Avatar inside Right
+  Logo background #FF0000      // Modifies Logo inside Left
+  Avatar background #3B82F6    // Modifies Avatar inside Right
 ```
 
 ## List Items (New Instances)
 
 Use `-` to create new instances:
 ```
-Menu: ver w 200
-  Item: pad 8 12
+Menu: vertical width 200
+  Item: padding 8 12
 
 Menu
   - Item "Profile"
   - Item "Settings"
-  - Item col #EF4444 "Logout"
+  - Item color #EF4444 "Logout"
 ```
 
 ## States
 
 ```
-Toggle: w 52 h 28 rad 14
+Toggle: width 52 height 28 radius 14
   state off
-    bg #333
+    background #333
   state on
-    bg #3B82F6
-  Knob: 24 24 rad 12 bg white
+    background #3B82F6
+  Knob: 24 24 radius 12 background white
 ```
 
 **System states** (automatic): `hover`, `focus`, `active`, `disabled`
 
 **Behavior states** (activated by actions):
 ```
-Item: pad 12
+Item: padding 12
   state default
-    bg transparent
+    background transparent
   state highlighted
-    bg #333
+    background #333
   state selected
-    bg #3B82F6
+    background #3B82F6
 
 // Activated via: onhover highlight self
 ```
@@ -367,11 +390,11 @@ Common behavior states: `highlighted`, `selected`, `active`, `inactive`, `expand
 ## Hover Shorthand
 
 ```
-Button hover-bg #3B82F6 hover-col #FFF hover-scale 1.05
+Button hover-background #3B82F6 hover-color #FFF hover-scale 1.05
 Card hover-opacity 0.8
 ```
 
-Properties: `hover-col`, `hover-bg`, `hover-boc`, `hover-bor`, `hover-rad`, `hover-opacity`, `hover-scale`
+Properties: `hover-color`, `hover-background`, `hover-border-color`, `hover-border`, `hover-radius`, `hover-opacity`, `hover-scale`
 
 ## Events
 
@@ -454,12 +477,12 @@ onclick highlight self, show Preview
 // Button onclick show A; hide B; assign $x to 1   ← WRONG
 
 // DO: Use events block for complex behavior
-Panel: pad 16 bg #1E1E2E rad 8
+Panel: padding 16 background #1E1E2E radius 8
 
 Content named Content1: "First content"
 Content named Content2: hidden "Second content"
 
-Nav hor gap 8
+Nav horizontal gap 8
   - Button named Btn1 "Show First"
   - Button named Btn2 "Show Second"
 
@@ -481,7 +504,7 @@ events
 Box icon "loader"
   animate spin 1000     // Spinning loader
 
-Box 8 8 rad 4 bg #3B82F6
+Box 8 8 radius 4 background #3B82F6
   animate pulse 800     // Pulsing dot
 ```
 
@@ -539,13 +562,13 @@ There are **three ways** to create named/referenceable components:
 ```
 Input Email: "Enter email" type email
 Input Password: "Password" type password
-Image Avatar: 48 48 rad 24 fit cover
+Image Avatar: 48 48 radius 24 fit cover
 ```
 The primitive keyword comes first, then the name, then colon.
 
 ### 2. Named Custom Components (using `named`)
 ```
-Panel: pad 16 bg #1E1E2E rad 8
+Panel: padding 16 background #1E1E2E radius 8
 
 Panel named Dashboard:
   "Dashboard content"
@@ -557,13 +580,13 @@ Use `named` between component and name to create a referenceable instance.
 
 ### 3. Inheritance (using `from`)
 ```
-Panel: pad 16 bg #1E1E2E rad 8
+Panel: padding 16 background #1E1E2E radius 8
 
 DashboardPanel from Panel:
   "Dashboard content"
 
 SettingsPanel from Panel:
-  bg #2A2A3E  // override bg
+  background #2A2A3E  // override background
   "Settings content"
 ```
 Creates a new component type that inherits from parent.
@@ -573,7 +596,7 @@ Creates a new component type that inherits from parent.
 Input Email: "Email" type email
 Input Password: "Password" type password
 
-LoginForm ver gap 16
+LoginForm vertical gap 16
   Email
   Password
   Button onclick if Email.value page Dashboard "Submit"
@@ -589,7 +612,7 @@ Panel.visible = false  // Toggle visibility
 
 | Component | Properties |
 |-----------|------------|
-| All | `.visible`, `.disabled`, `.opacity`, `.col` |
+| All | `.visible`, `.disabled`, `.opacity`, `.color` |
 | Input/Textarea | `.value`, `.placeholder`, `.focus` |
 | Button | `.label`, `.loading` |
 | Checkbox/Switch | `.checked` |
@@ -609,10 +632,10 @@ Checkbox onchange assign $active to $event.checked
 ```
 // Components
 Input Email: placeholder "Email"
-Button Submit: bg #3B82F6 "Login"
+Button Submit: background #3B82F6 "Login"
 
 // Layout
-LoginForm ver gap 16
+LoginForm vertical gap 16
   Email
   Submit
 
@@ -655,23 +678,26 @@ text
 
 Block tokens start a line and style all following text:
 ```
-$h1, $h2, $h3, $h4    // Headings
-$p                     // Paragraph
+# Heading 1           // Markdown-style headings
+## Heading 2
+### Heading 3
+#### Heading 4
+
+$p                     // Paragraph (legacy token syntax)
 $lead                  // Lead paragraph
 $subtitle              // Subtitle
 $label                 // Small uppercase label
 $li                    // List item
 ```
 
-### Inline Tokens
+### Inline Formatting
 
-Inline tokens use brackets for specific phrases:
+Inline formatting uses markdown-style syntax:
 ```
-$b[bold]              // Bold text
-$i[italic]            // Italic text
-$u[underline]         // Underlined text
-$code[code]           // Inline code
-$link[text](url)      // Hyperlink
+**bold**              // Bold text
+_italic_              // Italic text
+`code`                // Inline code
+[text](url)           // Hyperlink
 ```
 
 ### Example
@@ -679,12 +705,12 @@ $link[text](url)      // Hyperlink
 ```
 doc
   text
-    '$h1 Documentation
+    '# Documentation
 
-     $p Welcome to $b[Mirror]. Visit $link[our site](https://example.com).'
+     $p Welcome to **Mirror**. Visit [our site](https://example.com).'
 
   playground
-    'Button bg #2271c1 pad 12 24 rad 8 "Click me"'
+    'Button background #2271c1 padding 12 24 radius 8 "Click me"'
 ```
 
 ---
@@ -692,18 +718,18 @@ doc
 ## Quick Reference Card
 
 ```
-LAYOUT      hor ver gap between wrap grid stacked
-ALIGN       hor-l hor-cen hor-r ver-t ver-cen ver-b cen
-SPACING     pad mar (+ l r u d l-r u-d)
-SIZE        w h minw maxw minh maxh full grow fill shrink
-SHORTHAND   Box 300 400 → w 300 h 400
-COLOR       col (text) bg (background) boc (border)
-BORDER      bor [dir] [w] [style] [col] | rad
+LAYOUT      horizontal vertical gap between wrap grid stacked
+ALIGN       horizontal-left horizontal-center horizontal-right vertical-top vertical-center vertical-bottom center
+SPACING     padding margin (+ left right top bottom left-right top-bottom)
+SIZE        width height min-width max-width min-height max-height full grow fill shrink
+SHORTHAND   Box 300 400 → width 300 height 400
+COLOR       color (text) background (bg) border-color (border)
+BORDER      border [dir] [width] [style] [color] | radius
 TYPE        size weight line font align italic underline uppercase lowercase truncate
 INLINE      *text*:bold *text*:italic *text*:underline *text*:$token
 VISUAL      opacity shadow cursor z hidden visible disabled
-SCROLL      scroll scroll-hor scroll-both snap clip
-HOVER       hover-col hover-bg hover-boc hover-bor hover-rad hover-opacity hover-scale
+SCROLL      scroll scroll-horizontal scroll-both snap clip
+HOVER       hover-color hover-background hover-border-color hover-border hover-radius hover-opacity hover-scale
 
 TOKENS      $name: value | $name-suffix: value (auto-infer)
 REFERENCE   Component.prop
@@ -739,6 +765,9 @@ OPERATORS   == != > < >= <= | and or not | + - * /
 
 DOC-MODE    text | playground | doc
 DOC-STRING  '...' (multiline with single quotes)
-DOC-BLOCK   $h1 $h2 $h3 $h4 $p $lead $subtitle $label $li
-DOC-INLINE  $b[...] $i[...] $u[...] $code[...] $link[...](url)
+DOC-BLOCK   # ## ### #### (markdown headings) | $p $lead $subtitle $label $li (legacy)
+DOC-INLINE  **bold** | _italic_ | `code` | [text](url)
+
+SHORTCUTS   pad→padding mar→margin bg→background col→color rad→radius bor→border
+            hor→horizontal ver→vertical w→width h→height opa→opacity
 ```

@@ -100,21 +100,28 @@ export function extractHoverStyles(properties: DSLProperties): React.CSSProperti
     if (key.startsWith('hover-')) {
       const prop = key.slice(6) // Remove 'hover-' prefix
       switch (prop) {
+        // Short forms
         case 'col':
-          // hover-col → text color
+        // Long forms
+        case 'color':
+          // hover-col/hover-color → text color
           hoverStyle.color = String(value)
           break
         case 'bg':
-          // hover-bg → background color
+        case 'background':
+          // hover-bg/hover-background → background color
           hoverStyle.backgroundColor = String(value)
           break
         case 'boc':
+        case 'border-color':
           hoverStyle.borderColor = String(value)
           break
         case 'bor':
+        case 'border':
           hoverStyle.border = `${value}px solid`
           break
         case 'rad':
+        case 'radius':
           hoverStyle.borderRadius = `${value}px`
           break
         case 'opacity':
@@ -540,7 +547,9 @@ export function propertiesToStyle(
   }
 
   // Handle compound border (bor_width, bor_style, bor_color)
-  if (properties.bor_width !== undefined || properties.bor_style || properties.bor_color) {
+  // Only use compound format when style or color is explicitly specified
+  // Otherwise the simple `bor 1` → `1px solid` format is used via the switch case
+  if (properties.bor_style || properties.bor_color) {
     const width = properties.bor_width !== undefined ? `${properties.bor_width}px` : '1px'
     const borderStyle = (properties.bor_style as string) || 'solid'
     const color = (properties.bor_color as string) || 'currentColor'

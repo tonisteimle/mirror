@@ -70,7 +70,7 @@ describe('doc-mode rendering', () => {
 
     it('renders text with inline formatting', () => {
       const code = `text
-  '$p Here is $b[bold] and $i[italic] text.'`
+  '$p Here is **bold** and _italic_ text.'`
 
       const result = parse(code)
       expect(result.errors).toHaveLength(0)

@@ -164,4 +164,128 @@ text
       expect(result.nodes[2].properties._docContent).toBe('$p Another paragraph.')
     })
   })
+
+  describe('breakout multiline strings', () => {
+    it('parses deeply nested text with unindented multiline string', () => {
+      const code = `doc
+  section
+    article
+      text
+'$h1 Heading
+
+$p This paragraph uses the full editor width
+because the multiline string is not indented.'`
+
+      const result = parse(code)
+      // Filter out slot warnings - we're testing doc-mode parsing, not component validation
+      const parseErrors = result.errors.filter(e => !e.includes('Warning'))
+      expect(parseErrors).toHaveLength(0)
+      expect(result.nodes).toHaveLength(1)
+
+      // Navigate to the text node
+      // Note: component names get capitalized by the parser
+      const docNode = result.nodes[0]
+      expect(docNode.name).toBe('doc')
+
+      const sectionNode = docNode.children[0]
+      expect(sectionNode.name).toBe('Section')
+
+      const articleNode = sectionNode.children[0]
+      expect(articleNode.name).toBe('Article')
+
+      const textNode = articleNode.children[0]
+      expect(textNode.name).toBe('text')
+      expect(textNode._isLibrary).toBe(true)
+      expect(textNode.properties._docContent).toContain('$h1 Heading')
+      expect(textNode.properties._docContent).toContain('full editor width')
+    })
+
+    it('parses text with breakout string after blank line', () => {
+      const code = `Container
+  text
+
+'$p Content that breaks out of indentation.'`
+
+      const result = parse(code)
+      expect(result.errors).toHaveLength(0)
+
+      const containerNode = result.nodes[0]
+      expect(containerNode.name).toBe('Container')
+
+      const textNode = containerNode.children[0]
+      expect(textNode.name).toBe('text')
+      expect(textNode.properties._docContent).toContain('breaks out')
+    })
+
+    it('parses playground with breakout string', () => {
+      const code = `doc
+  playground
+'Button background #3B82F6 padding 12 24 radius 8 "Click me"
+
+Card vertical gap 16
+  Title "Hello"
+  Body "World"'`
+
+      const result = parse(code)
+      const parseErrors = result.errors.filter(e => !e.includes('Warning'))
+      expect(parseErrors).toHaveLength(0)
+
+      const docNode = result.nodes[0]
+      const playgroundNode = docNode.children[0]
+      expect(playgroundNode.name).toBe('playground')
+      expect(playgroundNode.properties._docContent).toContain('Button background')
+      expect(playgroundNode.properties._docContent).toContain('Card vertical')
+    })
+
+    it('handles multiple text blocks with breakout strings', () => {
+      const code = `doc
+  text
+'$h1 First Section'
+
+  text
+'$h1 Second Section'`
+
+      const result = parse(code)
+      const parseErrors = result.errors.filter(e => !e.includes('Warning'))
+      expect(parseErrors).toHaveLength(0)
+
+      const docNode = result.nodes[0]
+      expect(docNode.children).toHaveLength(2)
+
+      expect(docNode.children[0].name).toBe('text')
+      expect(docNode.children[0].properties._docContent).toContain('First Section')
+
+      expect(docNode.children[1].name).toBe('text')
+      expect(docNode.children[1].properties._docContent).toContain('Second Section')
+    })
+
+    it('does not break other component parsing', () => {
+      const code = `doc
+  Header horizontal between
+    Logo "Mirror"
+    Nav
+      Button "Home"
+  text
+'$p Introduction paragraph.'
+  Footer
+    Link "About"`
+
+      const result = parse(code)
+      const parseErrors = result.errors.filter(e => !e.includes('Warning'))
+      expect(parseErrors).toHaveLength(0)
+
+      const docNode = result.nodes[0]
+      expect(docNode.children.length).toBeGreaterThanOrEqual(3)
+
+      const headerNode = docNode.children.find(c => c.name === 'Header')
+      expect(headerNode).toBeDefined()
+
+      const textNode = docNode.children.find(c => c.name === 'text')
+      expect(textNode).toBeDefined()
+      expect(textNode!.properties._docContent).toContain('Introduction')
+
+      const footerNode = docNode.children.find(c => c.name === 'Footer')
+      expect(footerNode).toBeDefined()
+    })
+  })
 })

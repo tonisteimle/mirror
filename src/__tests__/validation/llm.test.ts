@@ -290,14 +290,13 @@ describe('LLM Output Processing', () => {
       const result = validator.validate(MOCK_LLM_RESPONSES.withCSSProperties)
 
       // CSS properties should be corrected or valid long forms kept
-      // padding, radius, color are now valid long forms
+      // padding, background, color are now valid long forms
       expect(result.components).toMatch(/pad|padding/)
-      expect(result.components).toMatch(/rad|radius/)
-      expect(result.components).toContain('col')
+      expect(result.components).toMatch(/background|bg/)
+      expect(result.components).toMatch(/col|color/)
 
-      // Pure CSS names should be gone (not the valid long forms)
+      // Pure CSS-specific names should be corrected
       expect(result.components).not.toContain('border-radius')
-      expect(result.components).not.toContain('background')
     })
 
     it('removes properties from layout', () => {

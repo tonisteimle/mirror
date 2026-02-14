@@ -1,21 +1,21 @@
 /**
  * Doc Text Parser Tests
  *
- * Tests for parsing multiline strings with token formatting.
+ * Tests for parsing multiline strings with markdown-style formatting.
  */
 
 import { describe, it, expect } from 'vitest'
 import { parseDocText, parseInlineTokens, normalizeIndent } from '../../parser/doc-text-parser'
 
 describe('doc-text-parser', () => {
-  describe('parseInlineTokens', () => {
+  describe('parseInlineTokens - Markdown syntax', () => {
     it('returns plain text as single segment', () => {
       const result = parseInlineTokens('Hello World')
       expect(result).toEqual([{ type: 'text', content: 'Hello World' }])
     })
 
-    it('parses inline token: $b[bold]', () => {
-      const result = parseInlineTokens('This is $b[bold] text')
+    it('parses **bold** text', () => {
+      const result = parseInlineTokens('This is **bold** text')
       expect(result).toEqual([
         { type: 'text', content: 'This is ' },
         { type: 'inline', content: 'bold', token: 'b' },
@@ -23,8 +23,8 @@ describe('doc-text-parser', () => {
       ])
     })
 
-    it('parses inline token: $i[italic]', () => {
-      const result = parseInlineTokens('This is $i[italic] text')
+    it('parses _italic_ text', () => {
+      const result = parseInlineTokens('This is _italic_ text')
       expect(result).toEqual([
         { type: 'text', content: 'This is ' },
         { type: 'inline', content: 'italic', token: 'i' },
@@ -32,8 +32,8 @@ describe('doc-text-parser', () => {
       ])
     })
 
-    it('parses inline token: $code[inline code]', () => {
-      const result = parseInlineTokens('Use $code[console.log()] for debugging')
+    it('parses `code` text', () => {
+      const result = parseInlineTokens('Use `console.log()` for debugging')
       expect(result).toEqual([
         { type: 'text', content: 'Use ' },
         { type: 'inline', content: 'console.log()', token: 'code' },
@@ -42,7 +42,7 @@ describe('doc-text-parser', () => {
     })
 
     it('parses multiple inline tokens', () => {
-      const result = parseInlineTokens('$b[bold] and $i[italic]')
+      const result = parseInlineTokens('**bold** and _italic_')
       expect(result).toEqual([
         { type: 'inline', content: 'bold', token: 'b' },
         { type: 'text', content: ' and ' },
@@ -50,8 +50,8 @@ describe('doc-text-parser', () => {
       ])
     })
 
-    it('parses link syntax: $link[text](url)', () => {
-      const result = parseInlineTokens('Visit $link[our docs](https://example.com) for more')
+    it('parses [link text](url) syntax', () => {
+      const result = parseInlineTokens('Visit [our docs](https://example.com) for more')
       expect(result).toEqual([
         { type: 'text', content: 'Visit ' },
         { type: 'link', content: 'our docs', token: 'link', url: 'https://example.com' },
@@ -59,59 +59,102 @@ describe('doc-text-parser', () => {
       ])
     })
 
+    it('handles escaped characters', () => {
+      const result = parseInlineTokens('Use \\*asterisks\\* literally')
+      expect(result).toEqual([{ type: 'text', content: 'Use *asterisks* literally' }])
+    })
+
     it('handles escaped brackets', () => {
       const result = parseInlineTokens('Array\\[0\\] syntax')
       expect(result).toEqual([{ type: 'text', content: 'Array[0] syntax' }])
     })
 
-    it('handles token with hyphen: $my-token[text]', () => {
-      const result = parseInlineTokens('$my-token[styled]')
-      expect(result).toEqual([
-        { type: 'inline', content: 'styled', token: 'my-token' }
-      ])
-    })
-
-    it('handles token at end of text', () => {
-      const result = parseInlineTokens('Click $b[here]')
+    it('handles bold at end of text', () => {
+      const result = parseInlineTokens('Click **here**')
       expect(result).toEqual([
         { type: 'text', content: 'Click ' },
         { type: 'inline', content: 'here', token: 'b' }
       ])
     })
 
-    it('handles token at start of text', () => {
-      const result = parseInlineTokens('$b[Important] notice')
+    it('handles bold at start of text', () => {
+      const result = parseInlineTokens('**Important** notice')
       expect(result).toEqual([
         { type: 'inline', content: 'Important', token: 'b' },
         { type: 'text', content: ' notice' }
       ])
     })
 
-    it('handles empty bracket content', () => {
-      const result = parseInlineTokens('$b[]')
+    it('handles empty bold', () => {
+      const result = parseInlineTokens('****')
       expect(result).toEqual([
         { type: 'inline', content: '', token: 'b' }
       ])
     })
 
-    it('does not parse $token without brackets', () => {
-      const result = parseInlineTokens('$primary color')
-      expect(result).toEqual([{ type: 'text', content: '$primary color' }])
+    it('does not match underscore in snake_case', () => {
+      // snake_case should not be parsed as italic
+      const result = parseInlineTokens('Use my_variable_name here')
+      expect(result).toEqual([{ type: 'text', content: 'Use my_variable_name here' }])
+    })
+
+    it('matches underscore at word boundary', () => {
+      const result = parseInlineTokens('This _word_ is italic')
+      expect(result).toEqual([
+        { type: 'text', content: 'This ' },
+        { type: 'inline', content: 'word', token: 'i' },
+        { type: 'text', content: ' is italic' }
+      ])
+    })
+
+    it('does not parse unclosed markers', () => {
+      const result = parseInlineTokens('This has **unclosed bold')
+      expect(result).toEqual([{ type: 'text', content: 'This has **unclosed bold' }])
     })
   })
 
-  describe('parseDocText', () => {
-    it('parses block-level token: $h2 Title', () => {
-      const result = parseDocText('$h2 What is Mirror')
+  describe('parseDocText - Block syntax', () => {
+    it('parses # Heading 1', () => {
+      const result = parseDocText('# What is Mirror')
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject({
         type: 'block',
         content: 'What is Mirror',
+        token: 'h1'
+      })
+    })
+
+    it('parses ## Heading 2', () => {
+      const result = parseDocText('## Getting Started')
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        type: 'block',
+        content: 'Getting Started',
         token: 'h2'
       })
     })
 
-    it('parses block-level token: $p Paragraph', () => {
+    it('parses ### Heading 3', () => {
+      const result = parseDocText('### Installation')
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        type: 'block',
+        content: 'Installation',
+        token: 'h3'
+      })
+    })
+
+    it('parses #### Heading 4', () => {
+      const result = parseDocText('#### Details')
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        type: 'block',
+        content: 'Details',
+        token: 'h4'
+      })
+    })
+
+    it('parses legacy $token syntax', () => {
       const result = parseDocText('$p This is a paragraph.')
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject({
@@ -122,7 +165,7 @@ describe('doc-text-parser', () => {
     })
 
     it('parses multiple blocks', () => {
-      const result = parseDocText(`$h2 Title
+      const result = parseDocText(`## Title
 
 $p First paragraph.
 
@@ -135,7 +178,7 @@ $p Second paragraph.`)
     })
 
     it('parses inline tokens within block', () => {
-      const result = parseDocText('$p This has $b[bold] text.')
+      const result = parseDocText('$p This has **bold** text.')
 
       expect(result).toHaveLength(1)
       expect(result[0].type).toBe('block')
@@ -148,7 +191,7 @@ $p Second paragraph.`)
     })
 
     it('parses links within block', () => {
-      const result = parseDocText('$p See $link[docs](https://example.com) for info.')
+      const result = parseDocText('$p See [docs](https://example.com) for info.')
 
       expect(result).toHaveLength(1)
       expect(result[0].children).toBeDefined()
@@ -179,7 +222,7 @@ $p Second paragraph.`)
     })
 
     it('handles mixed block and plain text', () => {
-      const result = parseDocText(`$h2 Title
+      const result = parseDocText(`## Title
 
 Plain text here.
 
@@ -224,7 +267,7 @@ also with continuation.`)
     })
 
     it('handles consecutive block tokens without empty lines', () => {
-      const result = parseDocText(`$h2 Title
+      const result = parseDocText(`## Title
 $p Paragraph starts immediately.`)
 
       expect(result).toHaveLength(2)
@@ -241,23 +284,22 @@ $p Paragraph starts immediately.`)
     })
 
     it('inline tokens cannot span lines', () => {
-      // If $i[ starts on one line and ] is on another, it should NOT be parsed as inline
-      const result = parseDocText(`$p Text with $i[broken
-token] here.`)
+      // If ** starts on one line and ** is on another, it should NOT be parsed as bold
+      const result = parseDocText(`$p Text with **broken
+token** here.`)
 
       expect(result).toHaveLength(1)
       expect(result[0].type).toBe('block')
-      // The $i[broken should remain as plain text since it's not closed on same line
-      // and token] should also be plain text
+      // The **broken should remain as plain text since it's not closed on same line
       const children = result[0].children
       expect(children).toBeDefined()
-      // Should NOT contain an inline token with content "broken token"
+      // Should NOT contain a bold token with content "broken token"
       const brokenInline = children?.find(c => c.type === 'inline' && c.content === 'broken token')
       expect(brokenInline).toBeUndefined()
     })
 
     it('inline tokens work when on same line', () => {
-      const result = parseDocText(`$p Text with $i[italic] and
+      const result = parseDocText(`$p Text with _italic_ and
 more text here.`)
 
       expect(result).toHaveLength(1)
@@ -268,6 +310,14 @@ more text here.`)
       const italicInline = children?.find(c => c.type === 'inline' && c.token === 'i')
       expect(italicInline).toBeDefined()
       expect(italicInline?.content).toBe('italic')
+    })
+
+    it('does not match # without space', () => {
+      // #hashtag should not be parsed as heading
+      const result = parseDocText('#hashtag')
+      expect(result).toHaveLength(1)
+      expect(result[0].type).toBe('text')
+      expect(result[0].content).toBe('#hashtag')
     })
   })
 
@@ -311,10 +361,10 @@ Line 2`)
   })
 
   describe('full document parsing', () => {
-    it('parses complete doc-mode content', () => {
-      const content = `$h2 What is Mirror
+    it('parses complete doc-mode content with markdown syntax', () => {
+      const content = `## What is Mirror
 
-$p Mirror is a description language for $b[user interfaces]. One syntax for structure, styling, and interactions.
+$p Mirror is a description language for **user interfaces**. One syntax for structure, styling, and interactions.
 
 $p Building UI today means juggling three languages.`
 
@@ -337,6 +387,36 @@ $p Building UI today means juggling three languages.`
       const boldSegment = result[1].children!.find(s => s.type === 'inline' && s.token === 'b')
       expect(boldSegment).toBeDefined()
       expect(boldSegment!.content).toBe('user interfaces')
+    })
+
+    it('parses markdown headings with inline formatting', () => {
+      const content = `# Welcome to **Mirror**`
+      const result = parseDocText(content)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].token).toBe('h1')
+      expect(result[0].children).toBeDefined()
+
+      const boldSegment = result[0].children!.find(s => s.type === 'inline' && s.token === 'b')
+      expect(boldSegment).toBeDefined()
+      expect(boldSegment!.content).toBe('Mirror')
+    })
+
+    it('parses mixed formatting', () => {
+      const content = `$p This has **bold**, _italic_, and \`code\` formatting.`
+      const result = parseDocText(content)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].children).toBeDefined()
+
+      const children = result[0].children!
+      const bold = children.find(s => s.token === 'b')
+      const italic = children.find(s => s.token === 'i')
+      const code = children.find(s => s.token === 'code')
+
+      expect(bold).toBeDefined()
+      expect(italic).toBeDefined()
+      expect(code).toBeDefined()
     })
   })
 })

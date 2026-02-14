@@ -20,6 +20,7 @@ import {
   NUMBER_PROPERTIES,
   STRING_PROPERTIES,
 } from '../dsl/properties'
+import { createMultilineIndentKeymaps } from './multiline-indent'
 
 // Properties that expect a value after them - don't trigger autocomplete
 // Note: 'font' and 'icon' are excluded as they have special picker handlers
@@ -280,6 +281,7 @@ export function createDollarKeymap(openTokenPicker: (propertyContext?: string) =
 
 /**
  * Creates keymap to disable auto-indent on Enter
+ * @deprecated Use createSmartEnterKeymap from multiline-indent.ts instead
  */
 export function createNoAutoIndentKeymap(): Extension {
   return keymap.of([
@@ -287,6 +289,54 @@ export function createNoAutoIndentKeymap(): Extension {
   ])
 }
 
+// Re-export smart indent keymaps for convenience
+export { createSmartEnterKeymap, createSmartTabKeymap, createMultilineIndentKeymaps } from './multiline-indent'
+
+/**
+ * Configuration for NL Mode Enter keymap
+ */
+export interface NLModeConfig {
+  /** Whether NL mode is currently enabled */
+  isEnabled: () => boolean
+  /** Callback when a line should be translated */
+  onTranslate: (lineIndex: number, content: string, allLines: string[]) => void
+}
+
+/**
+ * Creates the NL Mode Enter keymap.
+ * When NL mode is enabled, Enter triggers translation of the current line
+ * before inserting a newline.
+ */
+export function createNLModeEnterKeymap(config: NLModeConfig): Extension {
+  return keymap.of([{
+    key: 'Enter',
+    run: (view: EditorView) => {
+      // If NL mode is not enabled, let other handlers process
+      if (!config.isEnabled()) {
+        return false
+      }
+
+      // Get current line info
+      const pos = view.state.selection.main.head
+      const line = view.state.doc.lineAt(pos)
+      const lineContent = line.text
+      const lineIndex = line.number - 1 // 0-indexed
+
+      // Get all lines for context
+      const allLines: string[] = []
+      for (let i = 1; i <= view.state.doc.lines; i++) {
+        allLines.push(view.state.doc.line(i).text)
+      }
+
+      // Trigger translation callback (async, handled externally)
+      config.onTranslate(lineIndex, lineContent, allLines)
+
+      // Insert newline immediately so user can continue typing
+      insertNewline(view)
+      return true
+    }
+  }])
+}
 
 /**
  * Creates all editor keymaps bundled together
@@ -300,7 +350,7 @@ export function createEditorKeymaps(config: KeymapConfig): Extension[] {
     createDollarKeymap(callbacks.openTokenPicker),
     createQuestionKeymap(callbacks),
     createSlashKeymap(callbacks),
-    createNoAutoIndentKeymap(),
+    ...createMultilineIndentKeymaps(), // Smart Enter + Tab for multiline strings
     createColorPickerKeymap(callbacks.openColorPicker),
   ]
 }

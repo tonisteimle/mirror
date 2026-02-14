@@ -47,6 +47,16 @@ interface EditorContainerProps {
   hasUnsavedDocsChanges?: boolean
   /** Whether user has admin access */
   hasAdminAccess?: boolean
+  // NL Mode props
+  /** Whether NL mode is enabled */
+  nlModeEnabled?: boolean
+  /** Callback when NL mode changes */
+  onNlModeChange?: (enabled: boolean) => void
+  // Picker Mode props
+  /** Whether picker mode is enabled (autocomplete suggestions) */
+  pickerModeEnabled?: boolean
+  /** Callback when picker mode changes */
+  onPickerModeChange?: (enabled: boolean) => void
   // Note: onOpenAiAssistant, onClear, onClean are now provided via EditorActionsContext
 }
 
@@ -81,6 +91,10 @@ export function EditorContainer({
   isSavingDocs,
   hasUnsavedDocsChanges,
   hasAdminAccess,
+  nlModeEnabled,
+  onNlModeChange,
+  pickerModeEnabled,
+  onPickerModeChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -115,6 +129,10 @@ export function EditorContainer({
         isSavingDocs={isSavingDocs}
         hasUnsavedDocsChanges={hasUnsavedDocsChanges}
         hasAdminAccess={hasAdminAccess}
+        nlModeEnabled={nlModeEnabled}
+        onNlModeChange={onNlModeChange}
+        pickerModeEnabled={pickerModeEnabled}
+        onPickerModeChange={onPickerModeChange}
       />
     </EditorErrorBoundary>
   )

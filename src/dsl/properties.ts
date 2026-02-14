@@ -4,43 +4,107 @@
  *
  * PROPERTY NAMING CONVENTIONS:
  * ----------------------------
- * - 3-letter abbreviations for common CSS properties:
- *   pad (padding), mar (margin), col (color), rad (border-radius),
- *   bor (border), boc (border-color)
+ * PRIMARY: Full, readable names (natural language):
+ *   padding, margin, color, background, radius, border, border-color
+ *   width, height, horizontal, vertical, center, opacity
  *
- * - Full names when abbreviations would be unclear or for non-CSS concepts:
- *   placeholder, icon, src, alt, fit, shadow, font, weight, size
+ * SHORTCUTS: Short forms accepted for fast typing, auto-expanded to long forms:
+ *   pad → padding, mar → margin, col → color, bg → background
+ *   rad → radius, bor → border, boc → border-color
+ *   w → width, h → height, hor → horizontal, ver → vertical
+ *   opa → opacity, cen → center
  *
- * - Compound names with hyphen for modifications:
- *   hover-col, hover-boc, hor-cen, ver-t
+ * DIRECTIONS: Full names for readability:
+ *   top, bottom, left, right (shortcuts: u/t, d/b, l, r)
+ *   Combinations: left-right, top-bottom (shortcuts: l-r, u-d, t-b)
  *
- * - Single letters for sizing/positioning:
- *   w (width), h (height), z (z-index)
- *
- * - Direction modifiers for spacing properties (pad, mar, bor):
- *   l (left), r (right), u (up/top), d (down/bottom)
- *   Combinations: l-r, u-d, or combined: lr, ud
- *
- * NOTE: gap does not support direction modifiers yet.
- * Future: gap l-r → columnGap, gap u-d → rowGap
+ * The editor auto-completes shortcuts to full forms for readable code.
  */
 
-// All known properties (short forms)
-export const PROPERTIES = new Set([
+// ============================================
+// Property Name Mappings (Short → Long)
+// ============================================
+
+// Maps short property names to their full, readable forms
+export const PROPERTY_LONG_FORMS: Record<string, string> = {
   // Layout
-  'hor', 'ver', 'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'cen', 'grid', 'rows', 'stacked',
+  'hor': 'horizontal',
+  'ver': 'vertical',
+  'cen': 'center',
+  // Sizing
+  'w': 'width',
+  'h': 'height',
+  'minw': 'min-width',
+  'maxw': 'max-width',
+  'minh': 'min-height',
+  'maxh': 'max-height',
+  // Spacing
+  'pad': 'padding',
+  'mar': 'margin',
+  // Colors
+  'col': 'color',
+  'bg': 'background',
+  'boc': 'border-color',
+  // Border
+  'rad': 'radius',
+  'bor': 'border',
+  // Visuals
+  'opa': 'opacity',
+  'op': 'opacity',
+  // Hover states
+  'hover-col': 'hover-color',
+  'hover-bg': 'hover-background',
+  'hover-boc': 'hover-border-color',
+  'hover-bor': 'hover-border',
+  'hover-rad': 'hover-radius',
+}
+
+// Reverse mapping: Long → Short (for internal storage compatibility)
+export const PROPERTY_SHORT_FORMS: Record<string, string> = Object.fromEntries(
+  Object.entries(PROPERTY_LONG_FORMS).map(([short, long]) => [long, short])
+)
+
+// Direction mappings (Short → Long)
+export const DIRECTION_LONG_FORMS: Record<string, string> = {
+  'u': 'top',
+  't': 'top',
+  'd': 'bottom',
+  'b': 'bottom',
+  'l': 'left',
+  'r': 'right',
+}
+
+// Reverse mapping: Long direction → Short (for internal storage)
+export const DIRECTION_SHORT_FORMS: Record<string, string> = {
+  'top': 'u',
+  'bottom': 'd',
+  'left': 'l',
+  'right': 'r',
+}
+
+// All known properties (both short and long forms accepted)
+// Editor expands shortcuts to long forms for readability
+export const PROPERTIES = new Set([
+  // Layout - both forms
+  // Note: 'center' is NOT included here to allow it to be tokenized as COMPONENT_NAME
+  // for overlay position keywords. Use 'cen' shorthand for layout centering.
+  'hor', 'horizontal', 'ver', 'vertical', 'cen',
+  'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'grid', 'rows', 'stacked',
   // Data binding
   'data',
-  // Alignment
-  'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
-  // Sizing
-  'w', 'h', 'full', 'minw', 'maxw', 'minh', 'maxh',
-  // Spacing (short and long forms)
+  // Alignment - both forms
+  'hor-l', 'horizontal-left', 'hor-cen', 'horizontal-center', 'hor-r', 'horizontal-right',
+  'ver-t', 'vertical-top', 'ver-cen', 'vertical-center', 'ver-b', 'vertical-bottom',
+  // Sizing - both forms
+  'w', 'width', 'h', 'height',
+  'minw', 'min-width', 'maxw', 'max-width', 'minh', 'min-height', 'maxh', 'max-height',
+  'full',
+  // Spacing - both forms
   'pad', 'padding', 'mar', 'margin',
-  // Colors: col = text color, bg = background color
-  'col', 'color', 'bg', 'boc',
-  // Border (short and long forms)
-  'rad', 'radius', 'border', 'bor',
+  // Colors - both forms
+  'col', 'color', 'bg', 'background', 'boc', 'border-color',
+  // Border - both forms
+  'rad', 'radius', 'bor', 'border',
   // Typography
   'size', 'weight', 'font', 'line', 'align', 'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   // Form inputs
@@ -51,76 +115,201 @@ export const PROPERTIES = new Set([
   'href', 'target',
   // Slider/Range
   'min', 'max', 'step', 'value',
-  // Visuals
-  'icon', 'src', 'alt', 'fit', 'shadow', 'opacity', 'opa', 'op', 'cursor', 'pointer', 'z', 'hidden',
-  // Overflow / Scroll
-  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'snap', 'clip',
-  // Hover states
-  'hover-col', 'hover-bg', 'hover-boc', 'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
+  // Visuals - both forms
+  'opa', 'op', 'opacity',
+  'icon', 'src', 'alt', 'fit', 'shadow', 'cursor', 'pointer', 'z', 'hidden', 'shortcut',
+  // Overflow / Scroll - both forms
+  'scroll', 'scroll-ver', 'scroll-vertical', 'scroll-hor', 'scroll-horizontal', 'scroll-both', 'snap', 'clip',
+  // Hover states - both forms
+  'hover-col', 'hover-color', 'hover-bg', 'hover-background',
+  'hover-boc', 'hover-border-color', 'hover-bor', 'hover-border',
+  'hover-rad', 'hover-radius', 'hover-opacity', 'hover-scale',
 ])
 
 // Border styles for compound border property
 // Note: 'none' is not included - to remove a border, simply don't use bor
 export const BORDER_STYLES = new Set(['solid', 'dashed', 'dotted'])
 
-// Properties that can take direction modifiers (l, r, u, d)
-export const DIRECTIONAL_PROPERTIES = new Set(['pad', 'mar', 'bor'])
+// Properties that can take direction modifiers (both forms)
+export const DIRECTIONAL_PROPERTIES = new Set([
+  'pad', 'padding',
+  'mar', 'margin',
+  'bor', 'border'
+])
 
-// Direction values (u/d = up/down, t/b = top/bottom are aliases)
-export const DIRECTIONS = new Set(['l', 'r', 'u', 'd', 't', 'b'])
+// Direction values for spacing/border (short forms only as tokens)
+// Long forms (left, right, top, bottom) are handled as COMPONENT_NAME
+// to avoid conflicts with position keywords for overlays
+export const DIRECTIONS = new Set([
+  'l', 'r', 'u', 'd', 't', 'b'
+])
 
-// Check if a string is a valid direction combo (e.g., 'ud', 'lr', 'u-d', 'l-r', 't-b')
+// Short directions only (for regex matching)
+export const SHORT_DIRECTIONS = new Set(['l', 'r', 'u', 'd', 't', 'b'])
+
+// Long directions (for normalization, not tokenization)
+export const LONG_DIRECTIONS = new Set(['left', 'right', 'top', 'bottom'])
+
+// Check if a string is a valid direction or combo
+// Supports: l, left, l-r, left-right, top-bottom, etc.
 export function isDirectionOrCombo(value: string): boolean {
-  // Single direction
+  // Single direction (short or long)
   if (DIRECTIONS.has(value)) return true
-  // Combo with hyphen: u-d, l-r, t-b, u-d-l, etc.
+
+  // Combo with hyphen: u-d, l-r, t-b, left-right, top-bottom, etc.
   if (value.includes('-')) {
     const parts = value.split('-')
     return parts.every(p => DIRECTIONS.has(p))
   }
-  // Combo without hyphen: ud, lr, udlr, tb
+
+  // Combo without hyphen (short forms only): ud, lr, udlr, tb
   return value.length > 0 && /^[lrudtb]+$/.test(value)
 }
 
-// Normalize direction: t→u (top→up), b→d (bottom→down)
+// Normalize direction to internal short form for storage
+// top/t → u, bottom/b → d, left → l, right → r
 export function normalizeDirection(dir: string): string {
+  // Long forms
+  if (dir === 'top') return 'u'
+  if (dir === 'bottom') return 'd'
+  if (dir === 'left') return 'l'
+  if (dir === 'right') return 'r'
+  // Short form aliases
   if (dir === 't') return 'u'
   if (dir === 'b') return 'd'
   return dir
 }
 
-// Split direction combo into individual directions (normalized)
+// Convert direction to long form for display
+export function directionToLongForm(dir: string): string {
+  const normalized = normalizeDirection(dir)
+  return DIRECTION_LONG_FORMS[normalized] || dir
+}
+
+// Split direction combo into individual directions (normalized to short form)
 export function splitDirectionCombo(value: string): string[] {
   if (value.includes('-')) {
     return value.split('-').filter(p => DIRECTIONS.has(p)).map(normalizeDirection)
   }
-  return value.split('').filter(p => DIRECTIONS.has(p)).map(normalizeDirection)
+  // For short combos like 'ud', 'lr'
+  if (/^[lrudtb]+$/.test(value)) {
+    return value.split('').filter(p => SHORT_DIRECTIONS.has(p)).map(normalizeDirection)
+  }
+  // Single long direction
+  if (LONG_DIRECTIONS.has(value)) {
+    return [normalizeDirection(value)]
+  }
+  return []
 }
 
-// Properties by type
+// Convert direction combo to long form for display
+// e.g., 'l-r' → 'left-right', 'u-d' → 'top-bottom'
+export function directionComboToLongForm(value: string): string {
+  const parts = splitDirectionCombo(value)
+  return parts.map(p => DIRECTION_LONG_FORMS[p] || p).join('-')
+}
+
+// Properties by type (both short and long forms)
 export const BOOLEAN_PROPERTIES = new Set([
-  'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'fill', 'cen', 'stacked',
+  // Short forms
+  'hor', 'ver', 'cen',
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
+  // Long forms
+  'horizontal', 'vertical', 'center',
+  'horizontal-left', 'horizontal-center', 'horizontal-right',
+  'vertical-top', 'vertical-center', 'vertical-bottom',
+  // Common
+  'full', 'between', 'wrap', 'grow', 'fill', 'stacked',
   'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   'hidden', 'visible',
   'mask'  // Segment (masked input) - hide characters
 ])
 
 export const COLOR_PROPERTIES = new Set([
+  // Short forms
   'col', 'bg', 'boc',
-  'hover-col', 'hover-bg', 'hover-boc'
+  'hover-col', 'hover-bg', 'hover-boc',
+  // Long forms
+  'color', 'background', 'border-color',
+  'hover-color', 'hover-background', 'hover-border-color'
 ])
 
 export const NUMBER_PROPERTIES = new Set([
-  'gap', 'gap-col', 'gap-row', 'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
-  'pad', 'mar', 'rad', 'border', 'bor',
-  'size', 'weight', 'line', 'opacity', 'opa', 'op', 'z',
-  'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
+  // Short forms
+  'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
+  'pad', 'mar', 'rad', 'bor',
+  'opa', 'op',
+  'hover-bor', 'hover-rad',
+  // Long forms
+  'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height',
+  'padding', 'margin', 'radius', 'border',
+  'opacity',
+  'hover-border', 'hover-radius',
+  // Common
+  'gap', 'gap-col', 'gap-row',
+  'size', 'weight', 'line', 'z',
+  'hover-opacity', 'hover-scale',
   'min', 'max', 'step', 'value', 'rows',
   'length', 'segments'  // Segment (masked input)
 ])
 
-export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type', 'pattern'])
+export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type', 'pattern', 'shortcut'])
+
+// ============================================
+// Property Normalization Functions
+// ============================================
+
+/**
+ * Normalize a property name to its short form for internal storage.
+ * This ensures backward compatibility with existing code.
+ * e.g., 'padding' → 'pad', 'horizontal' → 'hor'
+ */
+export function normalizePropertyToShort(prop: string): string {
+  return PROPERTY_SHORT_FORMS[prop] || prop
+}
+
+/**
+ * Convert a property name to its long, readable form for display.
+ * e.g., 'pad' → 'padding', 'hor' → 'horizontal'
+ */
+export function propertyToLongForm(prop: string): string {
+  return PROPERTY_LONG_FORMS[prop] || prop
+}
+
+/**
+ * Normalize a full property with direction to short form.
+ * e.g., 'padding top' → 'pad_u', 'margin left-right' → 'mar_l-r'
+ */
+export function normalizePropertyWithDirection(prop: string, direction?: string): string {
+  const shortProp = normalizePropertyToShort(prop)
+  if (!direction) return shortProp
+
+  // Normalize direction(s)
+  const dirs = splitDirectionCombo(direction)
+  if (dirs.length === 0) return shortProp
+
+  return `${shortProp}_${dirs.join('-')}`
+}
+
+/**
+ * Convert a property_direction to long form for display.
+ * e.g., 'pad_u' → 'padding top', 'mar_l-r' → 'margin left-right'
+ */
+export function propertyWithDirectionToLongForm(prop: string): string {
+  // Check for underscore-separated direction
+  const underscoreIndex = prop.indexOf('_')
+  if (underscoreIndex === -1) {
+    return propertyToLongForm(prop)
+  }
+
+  const baseProp = prop.substring(0, underscoreIndex)
+  const direction = prop.substring(underscoreIndex + 1)
+
+  const longProp = propertyToLongForm(baseProp)
+  const longDir = directionComboToLongForm(direction)
+
+  return `${longProp} ${longDir}`
+}
 
 // Property keyword values - valid keyword values for certain properties
 // These are accepted as COMPONENT_NAME tokens but should be consumed as property values

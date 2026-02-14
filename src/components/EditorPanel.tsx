@@ -6,12 +6,13 @@ import { memo, useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { colors } from '../theme'
 import { LazyPromptPanel } from './LazyPromptPanel'
 import { TabButton, IconButton, SubMenu } from './editor-panel'
-import { generateWithCodeIntelligence, hasApiKey } from '../lib/ai'
+import { hasApiKey } from '../lib/ai'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
 import { hasSchemas } from '../parser/data-parser'
 import { generateDataWithAI } from '../lib/ai-data'
 import { logger } from '../services/logger'
 import type { PageData } from './PageSidebar'
+import { translateLine, shouldTranslate, type LineStatus } from '../services/nl-translation'
 
 export type EditorTab = 'layout' | 'components' | 'tokens' | 'data'
 
@@ -60,6 +61,16 @@ interface EditorPanelProps {
   hasUnsavedDocsChanges?: boolean
   /** Whether user has admin access */
   hasAdminAccess?: boolean
+  // NL Mode props
+  /** Whether NL mode is enabled */
+  nlModeEnabled?: boolean
+  /** Callback when NL mode changes */
+  onNlModeChange?: (enabled: boolean) => void
+  // Picker Mode props
+  /** Whether picker mode is enabled (autocomplete suggestions) */
+  pickerModeEnabled?: boolean
+  /** Callback when picker mode changes */
+  onPickerModeChange?: (enabled: boolean) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -90,6 +101,10 @@ export const EditorPanel = memo(function EditorPanel({
   isSavingDocs = false,
   hasUnsavedDocsChanges = false,
   hasAdminAccess = false,
+  nlModeEnabled = false,
+  onNlModeChange,
+  pickerModeEnabled = true,
+  onPickerModeChange,
 }: EditorPanelProps) {
   // Delete error state for page management
   const [deleteError, setDeleteError] = useState<{ pageId: string; references: string[] } | null>(null)
@@ -279,130 +294,65 @@ export const EditorPanel = memo(function EditorPanel({
   // State for data generation
   const [isGeneratingData, setIsGeneratingData] = useState(false)
 
-  // AI prompt state
-  const [aiPrompt, setAiPrompt] = useState('')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  // NL Mode translation state - tracks which lines are being translated
+  const [nlTranslations, setNlTranslations] = useState<Map<number, LineStatus>>(new Map())
 
-  // Cursor position tracking for context-aware generation
-  const cursorPositionRef = useRef<{ line: number; column: number } | null>(null)
-
-  // Surrounding code context for LLM
-  const getSurroundingContext = useCallback((line: number) => {
-    const lines = layoutCode.split('\n')
-    const startLine = Math.max(0, line - 3)
-    const endLine = Math.min(lines.length - 1, line + 3)
-
-    return {
-      before: lines.slice(startLine, line).join('\n'),
-      currentLine: lines[line] || '',
-      after: lines.slice(line + 1, endLine + 1).join('\n'),
-      lineNumber: line + 1, // 1-indexed for display
+  // Handle NL mode translation
+  const handleNlTranslate = useCallback(async (lineIndex: number, content: string, allLines: string[]) => {
+    // Skip if line shouldn't be translated
+    if (!shouldTranslate(content)) {
+      return
     }
-  }, [layoutCode])
 
-  // Handle AI generation with context awareness
-  const handleGenerate = useCallback(async () => {
-    if (!aiPrompt.trim() || isGenerating) return
+    // Mark line as translating
+    setNlTranslations(prev => new Map(prev).set(lineIndex, 'translating'))
 
-    setIsGenerating(true)
     try {
-      // Build full source code for analysis
-      const fullSourceCode = [
-        tokensCode.trim(),
-        componentsCode.trim(),
-        layoutCode.trim()
-      ].filter(Boolean).join('\n\n')
+      const result = await translateLine(content, allLines, lineIndex, {
+        onComplete: () => {
+          setNlTranslations(prev => new Map(prev).set(lineIndex, 'done'))
+          // Clear status after 2 seconds
+          setTimeout(() => {
+            setNlTranslations(prev => {
+              const next = new Map(prev)
+              next.delete(lineIndex)
+              return next
+            })
+          }, 2000)
+        },
+        onError: () => {
+          setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
+          // Clear error status after 3 seconds
+          setTimeout(() => {
+            setNlTranslations(prev => {
+              const next = new Map(prev)
+              next.delete(lineIndex)
+              return next
+            })
+          }, 3000)
+        },
+      }, tokensCode)
 
-      // Get cursor position if we're on the layout tab
-      const cursor = activeTab === 'layout' && cursorPositionRef.current
-        ? cursorPositionRef.current
-        : undefined
-
-      // Build enhanced prompt with cursor context
-      let enhancedPrompt = aiPrompt.trim()
-      if (cursor) {
-        const context = getSurroundingContext(cursor.line)
-        // Add explicit cursor context to prompt
-        enhancedPrompt = `${aiPrompt.trim()}
-
-[Cursor-Position: Zeile ${context.lineNumber}]
-[Code vor Cursor:]
-${context.before || '(Anfang des Dokuments)'}
-[Aktuelle Zeile:]
-${context.currentLine || '(leere Zeile)'}
-[Code nach Cursor:]
-${context.after || '(Ende des Dokuments)'}`
-      }
-
-      // Generate with code intelligence
-      const result = await generateWithCodeIntelligence(enhancedPrompt, {
-        sourceCode: fullSourceCode,
-        cursor,
-      })
-
-      if (result.code) {
-        const generatedCode = result.code.trim()
-        let newCode: string
-        let newCursorLine: number | undefined
-
-        if (cursor && result.insertAt) {
-          // Insert at cursor position (after current line)
-          const lines = layoutCode.split('\n')
-          const insertLine = Math.min(cursor.line + 1, lines.length)
-
-          // Ensure proper spacing around inserted code
-          const needsNewlineBefore = insertLine > 0 && lines[insertLine - 1]?.trim() !== ''
-          const needsNewlineAfter = insertLine < lines.length && lines[insertLine]?.trim() !== ''
-
-          const codeToInsert = (needsNewlineBefore ? '\n' : '') + generatedCode + (needsNewlineAfter ? '\n' : '')
-          const codeLines = codeToInsert.split('\n')
-          lines.splice(insertLine, 0, ...codeLines)
-          newCode = lines.join('\n')
-
-          // Calculate new cursor position (end of inserted code)
-          newCursorLine = insertLine + codeLines.length - 1
-        } else {
-          // Append at end
-          newCode = layoutCode.trim()
-            ? layoutCode.trimEnd() + '\n\n' + generatedCode
-            : generatedCode
-
-          // Cursor at end
-          newCursorLine = newCode.split('\n').length - 1
-        }
-
-        onLayoutChange(newCode)
-        setAiPrompt('')
-
-        // Update cursor position ref for next generation
-        if (newCursorLine !== undefined) {
-          cursorPositionRef.current = { line: newCursorLine, column: 0 }
-        }
+      if (result.code && result.code !== content) {
+        // Replace the line in layout code
+        const lines = layoutCode.split('\n')
+        // Handle multi-line results
+        const translatedLines = result.code.split('\n')
+        lines.splice(lineIndex, 1, ...translatedLines)
+        onLayoutChange(lines.join('\n'))
       }
     } catch (err) {
-      logger.ai.error('AI generation error', err)
-      const message = err instanceof Error ? err.message : 'Unbekannter Fehler'
-      alert(message)
-    } finally {
-      setIsGenerating(false)
+      logger.ai.error('NL translation failed', err)
+      setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
     }
-  }, [aiPrompt, isGenerating, tokensCode, componentsCode, layoutCode, activeTab, onLayoutChange, getSurroundingContext])
+  }, [layoutCode, onLayoutChange, tokensCode])
+
 
   // Track cursor position for context-aware generation (with full position info)
   const handleCursorChange = useCallback((pos: { line: number; column: number }) => {
-    cursorPositionRef.current = pos
     // Also call the parent handler if provided (backward compatibility)
     onCursorLineChange?.(pos.line)
   }, [onCursorLineChange])
-
-  // Handle keyboard in prompt
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && aiPrompt.trim() && !isGenerating) {
-      e.preventDefault()
-      handleGenerate()
-    }
-  }, [aiPrompt, isGenerating, handleGenerate])
 
   // Handle data generation for Data tab
   const handleGenerateData = useCallback(async () => {
@@ -583,7 +533,7 @@ ${context.after || '(Ende des Dokuments)'}`
 
           {/* Code Editor - hidden in preview mode */}
           {!previewMode && (
-            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', paddingLeft: '4px' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', marginLeft: '-4px' }}>
               <LazyPromptPanel
               value={currentValue}
               onChange={currentOnChange}
@@ -595,74 +545,105 @@ ${context.after || '(Ende des Dokuments)'}`
               autoCompleteMode={autoCompleteMode}
               onPreviewChange={activeTab === 'layout' ? onPreviewChange : undefined}
               onCursorChange={activeTab === 'layout' ? handleCursorChange : undefined}
+              nlModeEnabled={nlModeEnabled}
+              onNlTranslate={handleNlTranslate}
+              nlTranslations={nlTranslations}
+              pickerModeEnabled={pickerModeEnabled}
               />
             </div>
           )}
         </div>
 
-        {/* AI Prompt Footer - hidden in preview mode and docs mode */}
-        {!previewMode && !isDocsMode && hasApiKey() && activeTab !== 'data' && (
-          <div style={{
-              padding: '8px 4px',
+        {/* Editor Mode Toggles - shown in all tabs */}
+        {!previewMode && !isDocsMode && (
+          <div
+            style={{
+              padding: '6px 8px',
               display: 'flex',
-              gap: '8px',
+              gap: '12px',
               alignItems: 'center',
+              justifyContent: 'space-between',
               flexShrink: 0,
               backgroundColor: colors.panel,
-            }}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={isGenerating ? '#F59E0B' : colors.textMuted}
-                strokeWidth="2"
-                style={{ flexShrink: 0 }}
-              >
-                <path d="M12 2a10 10 0 1 0 10 10H12V2Z"/>
-                <path d="M12 12 2.1 12"/>
-                <path d="m5 19 5-5"/>
-              </svg>
-              <input
-                ref={inputRef}
-                type="text"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Was soll ich erstellen?"
-                aria-label="AI generation prompt"
-                disabled={isGenerating}
+            }}
+          >
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* NL Mode Toggle */}
+              <div
+                onClick={() => onNlModeChange?.(!nlModeEnabled)}
+                title={nlModeEnabled ? 'Natural Language – Enter übersetzt Freitext zu DSL (aktiv)' : 'Natural Language – Enter übersetzt Freitext zu DSL'}
                 style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  fontSize: '13px',
-                  fontFamily: 'system-ui, sans-serif',
-                  backgroundColor: isGenerating ? '#252525' : '#1A1A1A',
-                  color: isGenerating ? colors.textMuted : colors.text,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: '6px',
-                  outline: 'none',
-                  opacity: isGenerating ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  backgroundColor: nlModeEnabled ? '#3B82F620' : 'transparent',
+                  borderRadius: '4px',
+                  border: nlModeEnabled ? 'none' : `1px solid ${colors.border}`,
+                  cursor: 'pointer',
                 }}
-              />
-              {isGenerating && (
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid #333',
-                  borderTop: '2px solid #F59E0B',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
-                  flexShrink: 0,
-                }} />
-              )}
-              <style>{`
-                @keyframes spin {
-                  to { transform: rotate(360deg); }
-                }
-              `}</style>
+              >
+                {/* Zap icon */}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={nlModeEnabled ? '#3B82F6' : colors.textMuted} strokeWidth="2.5">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                <span style={{ fontSize: '11px', color: nlModeEnabled ? '#3B82F6' : colors.textMuted, fontWeight: 500 }}>
+                  NL
+                </span>
+              </div>
+
+              {/* Autocomplete Toggle */}
+              <div
+                onClick={() => onPickerModeChange?.(!pickerModeEnabled)}
+                title={pickerModeEnabled ? 'Autocomplete – Vorschläge beim Tippen (aktiv)' : 'Autocomplete – Vorschläge beim Tippen'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  backgroundColor: pickerModeEnabled ? '#10B98120' : 'transparent',
+                  borderRadius: '4px',
+                  border: pickerModeEnabled ? 'none' : `1px solid ${colors.border}`,
+                  cursor: 'pointer',
+                }}
+              >
+                {/* List icon for autocomplete */}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={pickerModeEnabled ? '#10B981' : colors.textMuted} strokeWidth="2.5">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span style={{ fontSize: '11px', color: pickerModeEnabled ? '#10B981' : colors.textMuted, fontWeight: 500 }}>
+                  AC
+                </span>
+              </div>
+            </div>
+
+            {/* NL Translation Status */}
+            {nlModeEnabled && nlTranslations.size > 0 && (
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                {Array.from(nlTranslations.entries()).map(([line, status]) => (
+                  <span
+                    key={line}
+                    style={{
+                      fontSize: '10px',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      backgroundColor: status === 'translating' ? '#F59E0B20' : status === 'done' ? '#10B98120' : '#EF444420',
+                      color: status === 'translating' ? '#F59E0B' : status === 'done' ? '#10B981' : '#EF4444',
+                    }}
+                  >
+                    {status === 'translating' ? '...' : status === 'done' ? 'OK' : '!'}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
 
       </div>
     </div>

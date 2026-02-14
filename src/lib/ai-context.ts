@@ -405,22 +405,28 @@ export class MirrorCodeIntelligence {
    */
   private parsePropertiesFromString(str: string): Record<string, string> {
     const props: Record<string, string> = {}
-    // Simple pattern matching for common properties
+    // Simple pattern matching for common properties (both short and long forms)
     const patterns = [
-      /\bpad\s+(\S+)/,
-      /\bbg\s+(\S+)/,
-      /\bcol\s+(\S+)/,
-      /\brad\s+(\S+)/,
+      /\b(?:pad|padding)\s+(\S+)/,
+      /\b(?:bg|background)\s+(\S+)/,
+      /\b(?:col|color)\s+(\S+)/,
+      /\b(?:rad|radius)\s+(\S+)/,
       /\bgap\s+(\S+)/,
       /\bsize\s+(\S+)/,
       /\bweight\s+(\S+)/,
+      /\b(?:mar|margin)\s+(\S+)/,
+      /\b(?:bor|border)\s+(\S+)/,
+      /\b(?:hor|horizontal)\b/,
+      /\b(?:ver|vertical)\b/,
     ]
 
     for (const pattern of patterns) {
       const match = str.match(pattern)
       if (match) {
-        const propName = pattern.source.match(/\\b(\w+)/)?.[1] || ''
-        props[propName] = match[1]
+        // Extract property name from pattern
+        const propMatch = pattern.source.match(/\\b\(?:?(\w+)/)
+        const propName = propMatch?.[1] || ''
+        props[propName] = match[1] || 'true'
       }
     }
 

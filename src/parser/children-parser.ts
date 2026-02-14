@@ -326,6 +326,38 @@ export function parseChildren(
     }
   }
 
+  // Doc-mode "breakout": Allow multiline strings to start at any indentation
+  // This handles the case where content-heavy text blocks can use the full editor width
+  // Example:
+  //   doc
+  //     section
+  //       text
+  //   '...'   ← This unindented string belongs to the text component above
+  if ((node.name === 'text' || node.name === 'playground') && !node.properties._docContent) {
+    // Save position to restore if no multiline string found
+    const savedPos = ctx.pos
+
+    // Skip any newlines and indentation
+    while (ctx.current() && (ctx.current()!.type === 'NEWLINE' || ctx.current()!.type === 'INDENT')) {
+      ctx.advance()
+    }
+
+    // Check for multiline string at any indentation level
+    if (ctx.current()?.type === 'MULTILINE_STRING') {
+      node.properties._docContent = ctx.advance().value
+      node._isLibrary = true
+      node._libraryType = node.name
+
+      // Consume trailing newline if present
+      if (ctx.current()?.type === 'NEWLINE') {
+        ctx.advance()
+      }
+    } else {
+      // No multiline string found - restore position
+      ctx.pos = savedPos
+    }
+  }
+
   return instanceChildren
 }
 

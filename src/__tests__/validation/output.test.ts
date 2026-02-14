@@ -277,8 +277,8 @@ Button "Click me"`
     })
 
     it('corrects and validates LLM output with issues', () => {
-      // Note: padding, radius, color are now valid long forms
-      // Use CSS properties that still need correction: background, border-radius
+      // Note: padding, margin, background, color, radius are now valid long forms
+      // Use CSS properties that still need correction: border-radius
       const input = `Here's the UI:
 
 \`\`\`
@@ -293,12 +293,12 @@ This creates a styled button.`
 
       const result = validator.validate(input)
 
-      // Should have corrections (background → col, border-radius → rad)
+      // Should have corrections (border-radius → rad)
       expect(result.corrections.length).toBeGreaterThan(0)
 
       // Components should have corrected properties
       expect(result.components).toContain('pad')
-      expect(result.components).toContain('col')
+      expect(result.components).toContain('background')  // Now valid long form
       expect(result.components).toContain('rad')
 
       // Layout should contain Button and text

@@ -7,6 +7,7 @@
 
 import type { ASTNode, SelectionCommand, ComponentTemplate } from './types'
 import { INTERNAL_NODES } from '../constants'
+import { normalizeDirection } from '../dsl/properties'
 
 // ============================================
 // CSS Constants
@@ -26,12 +27,12 @@ export const CSS_COLOR_KEYWORDS = new Set([
 // ============================================
 
 /**
- * Normalize direction: t→u (top→up), b→d (bottom→down)
+ * Normalize direction to internal short form.
+ * Supports both short (l, r, u, d, t, b) and long (left, right, top, bottom) forms.
+ * Examples: t→u, b→d, top→u, bottom→d, left→l, right→r
  */
 function normalizeDir(dir: string): string {
-  if (dir === 't') return 'u'
-  if (dir === 'b') return 'd'
-  return dir
+  return normalizeDirection(dir)
 }
 
 /**

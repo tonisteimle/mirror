@@ -57,8 +57,8 @@ export const properties: Property[] = [
   // Layout
   // ============================================
   {
-    name: 'hor',
-    syntax: 'hor',
+    name: 'horizontal',
+    syntax: 'horizontal',
     description: 'Horizontal layout',
     category: 'Layout',
     keywords: [
@@ -73,14 +73,16 @@ export const properties: Property[] = [
       'display: flex', 'flexbox row',
       // Tailwind
       'flex-row',
+      // Shortcuts
+      'hor', 'horz', 'horiz',
       // Typos
-      'horizontl', 'horizntal', 'horiontal', 'hroizontal', 'horz', 'horiz',
+      'horizontl', 'horizntal', 'horiontal', 'hroizontal',
       'nebeneinader', 'nebeneienander',
     ],
   },
   {
-    name: 'ver',
-    syntax: 'ver',
+    name: 'vertical',
+    syntax: 'vertical',
     description: 'Vertical layout',
     category: 'Layout',
     keywords: [
@@ -95,8 +97,10 @@ export const properties: Property[] = [
       'display: flex', 'flexbox column',
       // Tailwind
       'flex-col',
+      // Shortcuts
+      'ver', 'vert',
       // Typos
-      'vertiakl', 'vertkal', 'verticl', 'vrtical', 'vert', 'untereinader',
+      'vertiakl', 'vertkal', 'verticl', 'vrtical', 'untereinader',
       'untereienander', 'colum', 'collumn',
     ],
   },
@@ -346,8 +350,8 @@ export const properties: Property[] = [
   // Spacing
   // ============================================
   {
-    name: 'pad',
-    syntax: 'pad ',
+    name: 'padding',
+    syntax: 'padding ',
     description: 'Padding all sides',
     category: 'Spacing',
     keywords: [
@@ -361,6 +365,8 @@ export const properties: Property[] = [
       'padding', 'padding:', 'p-',
       // Tailwind
       'p-', 'padding',
+      // Shortcuts
+      'pad',
       // Typos
       'pading', 'paddng', 'paddin', 'padd', 'innenastand',
     ],
@@ -368,8 +374,8 @@ export const properties: Property[] = [
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad l',
-    syntax: 'pad l ',
+    name: 'padding left',
+    syntax: 'padding left ',
     description: 'Padding left',
     category: 'Spacing',
     keywords: [
@@ -382,6 +388,8 @@ export const properties: Property[] = [
       'padding-left', 'pl',
       // Tailwind
       'pl-',
+      // Shortcuts
+      'pad l', 'pad left',
       // Typos
       'padd links',
     ],
@@ -389,8 +397,8 @@ export const properties: Property[] = [
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad r',
-    syntax: 'pad r ',
+    name: 'padding right',
+    syntax: 'padding right ',
     description: 'Padding right',
     category: 'Spacing',
     keywords: [
@@ -403,13 +411,15 @@ export const properties: Property[] = [
       'padding-right', 'pr',
       // Tailwind
       'pr-',
+      // Shortcuts
+      'pad r', 'pad right',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad u',
-    syntax: 'pad u ',
+    name: 'padding top',
+    syntax: 'padding top ',
     description: 'Padding top',
     category: 'Spacing',
     keywords: [
@@ -422,13 +432,15 @@ export const properties: Property[] = [
       'padding-top', 'pt',
       // Tailwind
       'pt-',
+      // Shortcuts
+      'pad u', 'pad t', 'pad top',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad d',
-    syntax: 'pad d ',
+    name: 'padding bottom',
+    syntax: 'padding bottom ',
     description: 'Padding bottom',
     category: 'Spacing',
     keywords: [
@@ -441,13 +453,15 @@ export const properties: Property[] = [
       'padding-bottom', 'pb',
       // Tailwind
       'pb-',
+      // Shortcuts
+      'pad d', 'pad b', 'pad bottom',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad l-r',
-    syntax: 'pad l-r ',
+    name: 'padding left-right',
+    syntax: 'padding left-right ',
     description: 'Padding left & right',
     category: 'Spacing',
     keywords: [
@@ -460,13 +474,15 @@ export const properties: Property[] = [
       'padding-x', 'px',
       // Tailwind
       'px-',
+      // Shortcuts
+      'pad l-r', 'pad lr',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'pad',
   },
   {
-    name: 'pad u-d',
-    syntax: 'pad u-d ',
+    name: 'padding top-bottom',
+    syntax: 'padding top-bottom ',
     description: 'Padding top & bottom',
     category: 'Spacing',
     keywords: [
@@ -478,13 +494,15 @@ export const properties: Property[] = [
       'padding-y', 'py',
       // Tailwind
       'py-',
+      // Shortcuts
+      'pad u-d', 'pad ud', 'pad t-b', 'pad tb',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'pad',
   },
   {
-    name: 'mar',
-    syntax: 'mar ',
+    name: 'margin',
+    syntax: 'margin ',
     description: 'Margin all sides',
     category: 'Spacing',
     keywords: [
@@ -498,6 +516,8 @@ export const properties: Property[] = [
       'margin', 'margin:', 'm-',
       // Tailwind
       'm-', 'margin',
+      // Shortcuts
+      'mar',
       // Typos
       'margn', 'marign', 'mrgn', 'magin', 'aussenastand',
     ],
@@ -505,8 +525,8 @@ export const properties: Property[] = [
     valuePickerProperty: 'mar',
   },
   {
-    name: 'mar l',
-    syntax: 'mar l ',
+    name: 'margin left',
+    syntax: 'margin left ',
     description: 'Margin left',
     category: 'Spacing',
     keywords: [
@@ -518,13 +538,15 @@ export const properties: Property[] = [
       'margin-left', 'ml',
       // Tailwind
       'ml-',
+      // Shortcuts
+      'mar l', 'mar left',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'mar',
   },
   {
-    name: 'mar r',
-    syntax: 'mar r ',
+    name: 'margin right',
+    syntax: 'margin right ',
     description: 'Margin right',
     category: 'Spacing',
     keywords: [
@@ -536,13 +558,15 @@ export const properties: Property[] = [
       'margin-right', 'mr',
       // Tailwind
       'mr-',
+      // Shortcuts
+      'mar r', 'mar right',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'mar',
   },
   {
-    name: 'mar u',
-    syntax: 'mar u ',
+    name: 'margin top',
+    syntax: 'margin top ',
     description: 'Margin top',
     category: 'Spacing',
     keywords: [
@@ -554,13 +578,15 @@ export const properties: Property[] = [
       'margin-top', 'mt',
       // Tailwind
       'mt-',
+      // Shortcuts
+      'mar u', 'mar t', 'mar top',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'mar',
   },
   {
-    name: 'mar d',
-    syntax: 'mar d ',
+    name: 'margin bottom',
+    syntax: 'margin bottom ',
     description: 'Margin bottom',
     category: 'Spacing',
     keywords: [
@@ -572,6 +598,8 @@ export const properties: Property[] = [
       'margin-bottom', 'mb',
       // Tailwind
       'mb-',
+      // Shortcuts
+      'mar d', 'mar b', 'mar bottom',
     ],
     valuePicker: 'spacing',
     valuePickerProperty: 'mar',
@@ -581,8 +609,8 @@ export const properties: Property[] = [
   // Size
   // ============================================
   {
-    name: 'w',
-    syntax: 'w ',
+    name: 'width',
+    syntax: 'width ',
     description: 'Width in pixels',
     category: 'Size',
     keywords: [
@@ -595,13 +623,15 @@ export const properties: Property[] = [
       'width', 'width:', 'w-',
       // Tailwind
       'w-',
+      // Shortcuts
+      'w',
       // Typos
       'wdth', 'widt', 'widht', 'briete', 'breiet',
     ],
   },
   {
-    name: 'h',
-    syntax: 'h ',
+    name: 'height',
+    syntax: 'height ',
     description: 'Height in pixels',
     category: 'Size',
     keywords: [
@@ -613,13 +643,15 @@ export const properties: Property[] = [
       'height', 'height:', 'h-',
       // Tailwind
       'h-',
+      // Shortcuts
+      'h',
       // Typos
       'hght', 'heigt', 'heigh', 'hoehe', 'höeh',
     ],
   },
   {
-    name: 'min-w',
-    syntax: 'min-w ',
+    name: 'min-width',
+    syntax: 'min-width ',
     description: 'Minimum width',
     category: 'Size',
     keywords: [
@@ -629,14 +661,16 @@ export const properties: Property[] = [
       // English
       'minimum width', 'min width', 'minimal width', 'at least wide',
       // CSS/Technical
-      'min-width', 'minw', 'min-width:',
+      'min-width', 'min-width:',
       // Tailwind
       'min-w-',
+      // Shortcuts
+      'minw', 'min-w',
     ],
   },
   {
-    name: 'max-w',
-    syntax: 'max-w ',
+    name: 'max-width',
+    syntax: 'max-width ',
     description: 'Maximum width',
     category: 'Size',
     keywords: [
@@ -646,14 +680,16 @@ export const properties: Property[] = [
       // English
       'maximum width', 'max width', 'maximal width', 'at most wide',
       // CSS/Technical
-      'max-width', 'maxw', 'max-width:',
+      'max-width', 'max-width:',
       // Tailwind
       'max-w-',
+      // Shortcuts
+      'maxw', 'max-w',
     ],
   },
   {
-    name: 'min-h',
-    syntax: 'min-h ',
+    name: 'min-height',
+    syntax: 'min-height ',
     description: 'Minimum height',
     category: 'Size',
     keywords: [
@@ -663,14 +699,16 @@ export const properties: Property[] = [
       // English
       'minimum height', 'min height', 'minimal height', 'at least tall',
       // CSS/Technical
-      'min-height', 'minh', 'min-height:',
+      'min-height', 'min-height:',
       // Tailwind
       'min-h-',
+      // Shortcuts
+      'minh', 'min-h',
     ],
   },
   {
-    name: 'max-h',
-    syntax: 'max-h ',
+    name: 'max-height',
+    syntax: 'max-height ',
     description: 'Maximum height',
     category: 'Size',
     keywords: [
@@ -711,8 +749,8 @@ export const properties: Property[] = [
   // Colors
   // ============================================
   {
-    name: 'col',
-    syntax: 'col ',
+    name: 'color',
+    syntax: 'color ',
     description: 'Text color',
     category: 'Colors',
     keywords: [
@@ -726,6 +764,8 @@ export const properties: Property[] = [
       'color', 'color:', 'fontcolor', 'text-color', 'textColor', 'fc',
       // Tailwind
       'text-',
+      // Shortcuts
+      'col',
       // Color names (intent-based)
       ...COLOR_NAMES_DE,
       ...COLOR_NAMES_EN,
@@ -735,8 +775,8 @@ export const properties: Property[] = [
     valuePicker: 'color',
   },
   {
-    name: 'bg',
-    syntax: 'bg ',
+    name: 'background',
+    syntax: 'background ',
     description: 'Background color',
     category: 'Colors',
     keywords: [
@@ -747,10 +787,12 @@ export const properties: Property[] = [
       'background', 'background color', 'fill', 'fill color', 'backdrop',
       'surface', 'surface color',
       // CSS/Technical
-      'bgcolor', 'background-color', 'bgColor', 'backgroundColor', 'bg',
+      'bgcolor', 'background-color', 'bgColor', 'backgroundColor',
       'background:', 'hg',
       // Tailwind
       'bg-',
+      // Shortcuts
+      'bg',
       // Color names (intent-based)
       ...COLOR_NAMES_DE.map(c => `${c} hintergrund`),
       ...COLOR_NAMES_EN.map(c => `${c} background`),
@@ -763,8 +805,8 @@ export const properties: Property[] = [
     valuePicker: 'color',
   },
   {
-    name: 'boc',
-    syntax: 'boc ',
+    name: 'border-color',
+    syntax: 'border-color ',
     description: 'Border color',
     category: 'Colors',
     keywords: [
@@ -778,6 +820,8 @@ export const properties: Property[] = [
       'border-color', 'borderColor', 'bc', 'strokecolor',
       // Tailwind
       'border-',
+      // Shortcuts
+      'boc',
       // Typos
       'bordrecolor', 'bodercolor', 'rahmenfabe',
     ],
@@ -788,8 +832,8 @@ export const properties: Property[] = [
   // Border
   // ============================================
   {
-    name: 'bor',
-    syntax: 'bor ',
+    name: 'border',
+    syntax: 'border ',
     description: 'Border width',
     category: 'Border',
     keywords: [
@@ -804,13 +848,15 @@ export const properties: Property[] = [
       'border-width', 'borderWidth', 'border:', 'stroke-width',
       // Tailwind
       'border-', 'border',
+      // Shortcuts
+      'bor',
       // Typos
       'borer', 'bordr', 'boader', 'rahme', 'ramen', 'boarder',
     ],
   },
   {
-    name: 'bor l',
-    syntax: 'bor l ',
+    name: 'border left',
+    syntax: 'border left ',
     description: 'Border left',
     category: 'Border',
     keywords: [
@@ -822,11 +868,13 @@ export const properties: Property[] = [
       'border-left', 'bl',
       // Tailwind
       'border-l-',
+      // Shortcuts
+      'bor l', 'bor left',
     ],
   },
   {
-    name: 'bor r',
-    syntax: 'bor r ',
+    name: 'border right',
+    syntax: 'border right ',
     description: 'Border right',
     category: 'Border',
     keywords: [
@@ -838,11 +886,13 @@ export const properties: Property[] = [
       'border-right', 'br',
       // Tailwind
       'border-r-',
+      // Shortcuts
+      'bor r', 'bor right',
     ],
   },
   {
-    name: 'bor u',
-    syntax: 'bor u ',
+    name: 'border top',
+    syntax: 'border top ',
     description: 'Border top',
     category: 'Border',
     keywords: [
@@ -854,11 +904,13 @@ export const properties: Property[] = [
       'border-top', 'bt',
       // Tailwind
       'border-t-',
+      // Shortcuts
+      'bor u', 'bor t', 'bor top',
     ],
   },
   {
-    name: 'bor d',
-    syntax: 'bor d ',
+    name: 'border bottom',
+    syntax: 'border bottom ',
     description: 'Border bottom',
     category: 'Border',
     keywords: [
@@ -872,11 +924,13 @@ export const properties: Property[] = [
       'border-bottom', 'bb',
       // Tailwind
       'border-b-',
+      // Shortcuts
+      'bor d', 'bor b', 'bor bottom',
     ],
   },
   {
-    name: 'rad',
-    syntax: 'rad ',
+    name: 'radius',
+    syntax: 'radius ',
     description: 'Border radius',
     category: 'Border',
     keywords: [
@@ -891,6 +945,8 @@ export const properties: Property[] = [
       'border-radius', 'borderRadius', 'border-radius:',
       // Tailwind
       'rounded', 'rounded-',
+      // Shortcuts
+      'rad',
       // Typos
       'raduis', 'raius', 'radis', 'eckne', 'runnd', 'abgerundtet',
     ],
@@ -1212,8 +1268,8 @@ export const properties: Property[] = [
   // Hover
   // ============================================
   {
-    name: 'hover-col',
-    syntax: 'hover-col ',
+    name: 'hover-color',
+    syntax: 'hover-color ',
     description: 'Text color on hover',
     category: 'Hover',
     keywords: [
@@ -1227,12 +1283,14 @@ export const properties: Property[] = [
       ':hover color', 'hover:color', 'hoverCol', 'hovercol',
       // Tailwind
       'hover:text-',
+      // Shortcuts
+      'hover-col',
     ],
     valuePicker: 'color',
   },
   {
-    name: 'hover-bg',
-    syntax: 'hover-bg ',
+    name: 'hover-background',
+    syntax: 'hover-background ',
     description: 'Background color on hover',
     category: 'Hover',
     keywords: [
@@ -1240,18 +1298,20 @@ export const properties: Property[] = [
       'hover hintergrund', 'mauszeiger hintergrund', 'hover hintergrundfarbe',
       'hintergrund bei hover', 'hintergrund beim überfahren', 'mouseover hintergrund',
       // English
-      'hover background', 'hover bg', 'background on hover', 'mouse over background',
+      'hover background', 'background on hover', 'mouse over background',
       'rollover background', 'hover fill',
       // CSS/Technical
       ':hover background', 'hover:bg', 'hoverBg', 'hoverbg', 'hover-background',
       // Tailwind
       'hover:bg-',
+      // Shortcuts
+      'hover-bg',
     ],
     valuePicker: 'color',
   },
   {
-    name: 'hover-boc',
-    syntax: 'hover-boc ',
+    name: 'hover-border-color',
+    syntax: 'hover-border-color ',
     description: 'Border color on hover',
     category: 'Hover',
     keywords: [
@@ -1264,12 +1324,14 @@ export const properties: Property[] = [
       ':hover border', 'hover:border-color', 'hoverBoc', 'hoverboc',
       // Tailwind
       'hover:border-',
+      // Shortcuts
+      'hover-boc',
     ],
     valuePicker: 'color',
   },
   {
-    name: 'hover-bor',
-    syntax: 'hover-bor ',
+    name: 'hover-border',
+    syntax: 'hover-border ',
     description: 'Border width on hover',
     category: 'Hover',
     keywords: [
@@ -1282,6 +1344,8 @@ export const properties: Property[] = [
       ':hover border-width', 'hoverBor', 'hoverbor',
       // Tailwind
       'hover:border-',
+      // Shortcuts
+      'hover-bor',
     ],
   },
 

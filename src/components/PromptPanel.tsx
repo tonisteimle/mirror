@@ -7,7 +7,7 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle, memo, useMemo } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { createEditorExtensions, type KeymapCallbacks } from '../editor'
+import { createEditorExtensions, type KeymapCallbacks, createNLModeEnterKeymap } from '../editor'
 import type { ValuePickerType } from '../data/dsl-properties'
 import { InlineColorPanel } from './InlineColorPanel'
 import { InlineIconPanel } from './InlineIconPanel'
@@ -24,6 +24,7 @@ import { useImageDragDrop } from '../hooks/useImageDragDrop'
 import { useEditorTriggers } from '../hooks/useEditorTriggers'
 import { searchIcons } from '../data/icon-synonyms'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
+import type { LineStatus } from '../services/nl-translation'
 import { logger } from '../services/logger'
 import * as LucideIcons from 'lucide-react'
 
@@ -58,6 +59,16 @@ interface PromptPanelProps {
   onCursorLineChange?: (line: number) => void
   /** Called when cursor position changes (line and column, both 0-indexed) */
   onCursorChange?: (pos: CursorPosition) => void
+  // NL Mode props
+  /** Whether NL mode is enabled */
+  nlModeEnabled?: boolean
+  /** Callback when Enter is pressed in NL mode */
+  onNlTranslate?: (lineIndex: number, content: string, allLines: string[]) => void
+  /** Status of line translations */
+  nlTranslations?: Map<number, LineStatus>
+  // Picker Mode props
+  /** Whether picker mode is enabled (autocomplete suggestions) */
+  pickerModeEnabled?: boolean
 }
 
 export interface PromptPanelRef {
@@ -77,6 +88,10 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     onPreviewChange,
     onCursorLineChange,
     onCursorChange,
+    nlModeEnabled = false,
+    onNlTranslate,
+    nlTranslations,
+    pickerModeEnabled = true,
   }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<EditorView | null>(null)
@@ -95,6 +110,16 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     const onCursorChangeRef = useRef(onCursorChange)
     onCursorChangeRef.current = onCursorChange
     const lastCursorPosRef = useRef<{ line: number; column: number }>({ line: -1, column: -1 })
+
+    // NL mode refs
+    const nlModeEnabledRef = useRef(nlModeEnabled)
+    nlModeEnabledRef.current = nlModeEnabled
+    const onNlTranslateRef = useRef(onNlTranslate)
+    onNlTranslateRef.current = onNlTranslate
+
+    // Picker mode ref
+    const pickerModeEnabledRef = useRef(pickerModeEnabled)
+    pickerModeEnabledRef.current = pickerModeEnabled
 
     // Refs for callback functions (to avoid recreating editor on callback changes)
     // These are placeholder no-op functions that get replaced at runtime
@@ -388,9 +413,11 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
         autocompleteOptions: {
           onValuePickerNeeded: (type: ValuePickerType) => callbackRefs.current.handleValuePickerNeeded(type),
           getDesignTokens: () => designTokensRef.current ?? new Map(),
-          // Suppress autocomplete when inline panel (font, icon) is open
+          // Suppress autocomplete when picker mode is off or inline panel (font, icon) is open
           isAutocompleteSuppressed: () =>
-            iconPanel.stateRef.current.isOpen || fontPanel.stateRef.current.isOpen,
+            !pickerModeEnabledRef.current ||
+            iconPanel.stateRef.current.isOpen ||
+            fontPanel.stateRef.current.isOpen,
         },
         colorSwatchConfig: {
           onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
@@ -400,6 +427,14 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
 
       // Add trigger extension
       extensions.push(triggerExtension)
+
+      // Add NL mode keymap (must be added BEFORE other Enter keymaps to take precedence)
+      extensions.unshift(createNLModeEnterKeymap({
+        isEnabled: () => nlModeEnabledRef.current,
+        onTranslate: (lineIndex, content, allLines) => {
+          onNlTranslateRef.current?.(lineIndex, content, allLines)
+        },
+      }))
 
       // Add cursor position tracking extension
       extensions.push(
