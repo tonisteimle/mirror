@@ -38,6 +38,20 @@ export interface ComponentInfo {
   usageCount: number
   /** Lines where this component is used */
   usageLines: number[]
+  /** Full definition code (for showing examples) */
+  fullDefinition?: string
+}
+
+/** Detected style pattern in the codebase */
+export interface StylePattern {
+  /** Pattern name (e.g., "Button Styling", "Card Layout") */
+  name: string
+  /** Components that follow this pattern */
+  components: string[]
+  /** Common properties used */
+  properties: Record<string, string>
+  /** Tokens used in this pattern */
+  tokensUsed: string[]
 }
 
 export interface TokenInfo {
@@ -57,6 +71,10 @@ export interface GenerationContext {
   relevantComponents: ComponentInfo[]
   /** Relevant tokens to use */
   relevantTokens: TokenInfo[]
+  /** Detected style patterns */
+  stylePatterns: StylePattern[]
+  /** Example code snippets showing existing style */
+  exampleCode: string[]
   /** Suggested approach */
   suggestion: GenerationSuggestion
 }
@@ -274,6 +292,154 @@ export class MirrorCodeIntelligence {
   }
 
   // ---------------------------------------------------------------------------
+  // Style Pattern Detection
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Detect common style patterns in the codebase
+   */
+  detectStylePatterns(): StylePattern[] {
+    const patterns: StylePattern[] = []
+
+    // Group components by type (Button, Card, Input, etc.)
+    const componentsByType = new Map<string, { name: string; props: Record<string, string>; tokens: string[] }[]>()
+
+    for (const line of this.lines) {
+      // Find component definitions (Name: props)
+      const defMatch = line.match(/^(\w+):\s*(.+)$/)
+      if (defMatch) {
+        const [, name, propsStr] = defMatch
+        const baseType = this.getBaseType(name)
+        const props = this.parsePropertiesFromString(propsStr)
+        const tokens = this.extractTokensFromString(propsStr)
+
+        if (!componentsByType.has(baseType)) {
+          componentsByType.set(baseType, [])
+        }
+        componentsByType.get(baseType)!.push({ name, props, tokens })
+      }
+    }
+
+    // Create patterns from grouped components
+    for (const [type, components] of componentsByType) {
+      if (components.length >= 1) {
+        // Find common properties
+        const commonProps: Record<string, string> = {}
+        const allTokens = new Set<string>()
+
+        for (const comp of components) {
+          for (const [key, value] of Object.entries(comp.props)) {
+            if (!commonProps[key]) {
+              commonProps[key] = value
+            }
+          }
+          for (const token of comp.tokens) {
+            allTokens.add(token)
+          }
+        }
+
+        patterns.push({
+          name: `${type} Style`,
+          components: components.map(c => c.name),
+          properties: commonProps,
+          tokensUsed: [...allTokens],
+        })
+      }
+    }
+
+    return patterns
+  }
+
+  /**
+   * Extract example code snippets for relevant components
+   */
+  extractExampleCode(componentNames: string[]): string[] {
+    const examples: string[] = []
+
+    for (const name of componentNames.slice(0, 2)) {
+      // Find definition
+      const defLine = this.lines.findIndex(l => l.match(new RegExp(`^${name}:\\s`)))
+      if (defLine >= 0) {
+        // Extract definition and children (up to 5 lines)
+        const snippet: string[] = []
+        let i = defLine
+        const baseIndent = this.getIndent(this.lines[defLine])
+
+        while (i < this.lines.length && snippet.length < 6) {
+          const line = this.lines[i]
+          const lineIndent = this.getIndent(line)
+
+          // Stop if we hit a less-indented line (except for first line)
+          if (i > defLine && lineIndent <= baseIndent && line.trim()) {
+            break
+          }
+
+          if (line.trim()) {
+            snippet.push(line)
+          }
+          i++
+        }
+
+        if (snippet.length > 0) {
+          examples.push(snippet.join('\n'))
+        }
+      }
+    }
+
+    return examples
+  }
+
+  /**
+   * Get base component type from name (e.g., "PrimaryButton" → "Button")
+   */
+  private getBaseType(name: string): string {
+    const types = ['Button', 'Card', 'Input', 'Text', 'Box', 'Container', 'Header', 'Footer', 'Nav', 'Menu', 'List', 'Item', 'Panel', 'Modal', 'Dialog']
+    for (const type of types) {
+      if (name.includes(type)) return type
+    }
+    return name
+  }
+
+  /**
+   * Parse properties from a definition string
+   */
+  private parsePropertiesFromString(str: string): Record<string, string> {
+    const props: Record<string, string> = {}
+    // Simple pattern matching for common properties
+    const patterns = [
+      /\bpad\s+(\S+)/,
+      /\bbg\s+(\S+)/,
+      /\bcol\s+(\S+)/,
+      /\brad\s+(\S+)/,
+      /\bgap\s+(\S+)/,
+      /\bsize\s+(\S+)/,
+      /\bweight\s+(\S+)/,
+    ]
+
+    for (const pattern of patterns) {
+      const match = str.match(pattern)
+      if (match) {
+        const propName = pattern.source.match(/\\b(\w+)/)?.[1] || ''
+        props[propName] = match[1]
+      }
+    }
+
+    return props
+  }
+
+  /**
+   * Extract token references from a string
+   */
+  private extractTokensFromString(str: string): string[] {
+    const tokens: string[] = []
+    const matches = str.matchAll(/\$[\w-]+/g)
+    for (const match of matches) {
+      tokens.push(match[0])
+    }
+    return tokens
+  }
+
+  // ---------------------------------------------------------------------------
   // Generation Context Builder
   // ---------------------------------------------------------------------------
 
@@ -294,7 +460,13 @@ export class MirrorCodeIntelligence {
     const relevantComponents = this.findSimilarComponents(prompt).slice(0, 3)
 
     // Find relevant tokens
-    const relevantTokens = this.findRelevantTokens(prompt).slice(0, 5)
+    const relevantTokens = this.findRelevantTokens(prompt).slice(0, 8)
+
+    // Detect style patterns
+    const stylePatterns = this.detectStylePatterns().slice(0, 3)
+
+    // Extract example code
+    const exampleCode = this.extractExampleCode(relevantComponents.map(c => c.name))
 
     // Suggest approach
     const suggestion = this.suggestApproach(prompt, relevantComponents, insertion)
@@ -304,6 +476,8 @@ export class MirrorCodeIntelligence {
       insertion,
       relevantComponents,
       relevantTokens,
+      stylePatterns,
+      exampleCode,
       suggestion,
     }
   }
@@ -362,20 +536,61 @@ export class MirrorCodeIntelligence {
   formatContextForLLM(context: GenerationContext): string {
     const parts: string[] = []
 
-    // Insertion context
-    if (context.insertion) {
-      const { parent, indent } = context.insertion
-      parts.push('## Einfüge-Position')
-      if (parent) {
-        parts.push(`- In: ${parent.name}`)
-        parts.push(`- Parent-Properties: ${parent.properties.join(', ') || 'keine'}`)
+    // IMPORTANT: Design System Instructions
+    parts.push('## WICHTIG: Design System Regeln')
+    parts.push('Du MUSST die bestehenden Tokens und Komponenten-Stile verwenden!')
+    parts.push('Erfinde KEINE neuen Farben oder Werte - nutze nur die unten gelisteten Tokens.')
+    parts.push('Folge dem Stil der bestehenden Komponenten.')
+
+    // Available tokens (show first - most important)
+    if (context.relevantTokens.length > 0) {
+      parts.push('\n## Verfügbare Design Tokens (NUTZEN!)')
+      const colorTokens = context.relevantTokens.filter(t => t.type === 'color')
+      const otherTokens = context.relevantTokens.filter(t => t.type !== 'color')
+
+      if (colorTokens.length > 0) {
+        parts.push('Farben:')
+        for (const token of colorTokens) {
+          parts.push(`  ${token.name}: ${token.value}`)
+        }
       }
-      parts.push(`- Einrückung: ${indent} Spaces`)
+      if (otherTokens.length > 0) {
+        parts.push('Spacing/Sizes:')
+        for (const token of otherTokens) {
+          parts.push(`  ${token.name}: ${token.value}`)
+        }
+      }
+    }
+
+    // Style patterns
+    if (context.stylePatterns.length > 0) {
+      parts.push('\n## Erkannte Style-Patterns (BEFOLGEN!)')
+      for (const pattern of context.stylePatterns) {
+        const propsStr = Object.entries(pattern.properties)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', ')
+        parts.push(`${pattern.name}:`)
+        parts.push(`  Komponenten: ${pattern.components.join(', ')}`)
+        if (propsStr) parts.push(`  Typische Props: ${propsStr}`)
+        if (pattern.tokensUsed.length > 0) {
+          parts.push(`  Verwendete Tokens: ${pattern.tokensUsed.join(', ')}`)
+        }
+      }
+    }
+
+    // Example code
+    if (context.exampleCode.length > 0) {
+      parts.push('\n## Beispiel-Code (so sieht der bestehende Stil aus)')
+      for (const example of context.exampleCode) {
+        parts.push('```')
+        parts.push(example)
+        parts.push('```')
+      }
     }
 
     // Available components
     if (context.relevantComponents.length > 0) {
-      parts.push('\n## Verfügbare Komponenten')
+      parts.push('\n## Existierende Komponenten (wiederverwenden!)')
       for (const comp of context.relevantComponents) {
         parts.push(`- ${comp.name}: ${comp.definition}`)
         if (comp.slots.length > 0) {
@@ -384,23 +599,27 @@ export class MirrorCodeIntelligence {
       }
     }
 
-    // Available tokens
-    if (context.relevantTokens.length > 0) {
-      parts.push('\n## Verfügbare Tokens')
-      for (const token of context.relevantTokens) {
-        parts.push(`- ${token.name}: ${token.value}`)
+    // Insertion context
+    if (context.insertion) {
+      const { parent, indent } = context.insertion
+      parts.push('\n## Einfüge-Position')
+      if (parent) {
+        parts.push(`- Innerhalb von: ${parent.name}`)
+        parts.push(`- Parent-Properties: ${parent.properties.join(', ') || 'keine'}`)
       }
+      parts.push(`- Einrückung: ${indent} Spaces`)
     }
 
     // Suggestion
-    parts.push('\n## Empfehlung')
+    parts.push('\n## Empfohlenes Vorgehen')
     const { suggestion } = context
     if (suggestion.action === 'reuse' && suggestion.component) {
-      parts.push(`Nutze die existierende "${suggestion.component}" Komponente.`)
+      parts.push(`→ Nutze die existierende "${suggestion.component}" Komponente.`)
+      parts.push(`  Sie wird bereits ${context.relevantComponents.find(c => c.name === suggestion.component)?.usageCount || 0}x verwendet.`)
     } else if (suggestion.action === 'extend' && suggestion.baseComponent) {
-      parts.push(`Erweitere "${suggestion.baseComponent}" mit zusätzlichen Properties.`)
+      parts.push(`→ Erweitere "${suggestion.baseComponent}" mit zusätzlichen Properties.`)
     } else {
-      parts.push('Erstelle eine neue Komponente/Instanz.')
+      parts.push('→ Erstelle eine neue Komponente/Instanz im Stil der bestehenden.')
     }
 
     return parts.join('\n')

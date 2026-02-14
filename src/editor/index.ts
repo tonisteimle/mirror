@@ -58,11 +58,13 @@ export {
 
 // DSL-specific extensions
 export { dslTheme, dslHighlighter } from './dsl-syntax'
-export { dslAutocomplete } from './dsl-autocomplete'
+export { dslAutocomplete, triggerAutocompleteWithBoost } from './dsl-autocomplete'
 export { createEditorKeymaps } from './keymaps'
 export type { KeymapCallbacks, KeymapConfig } from './keymaps'
 export { createPanelKeymap } from './panel-keymap'
 export type { PanelKeymapConfig } from './panel-keymap'
+export { createNumberScrubbingKeymap } from './number-scrubbing'
+export { createSemanticSelectionExtension } from './semantic-selection'
 
 // Editor extensions factory
 export { createEditorExtensions, createMinimalExtensions } from './editor-extensions'
@@ -71,6 +73,9 @@ export type { EditorExtensionsConfig } from './editor-extensions'
 // Color swatches
 export { createColorSwatchPlugin } from './color-swatches'
 export type { ColorSwatchConfig } from './color-swatches'
+
+// Ghost suggestions removed - using contextual autocomplete boost instead
+// See triggerAutocompleteWithBoost in dsl-autocomplete.ts
 
 // Constants
 export {

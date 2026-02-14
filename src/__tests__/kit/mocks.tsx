@@ -14,11 +14,20 @@ export const mockImplementations = {
       onChange={(e) => onChange(e.target.value)}
     />
   ),
+  // LazyPromptPanel renders the same mock (no lazy loading in tests)
+  LazyPromptPanel: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <textarea
+      data-testid="editor"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
 }
 
 // Mock factories (return vi.fn wrapped implementations)
 export const mocks = {
   PromptPanel: vi.fn(mockImplementations.PromptPanel),
+  LazyPromptPanel: vi.fn(mockImplementations.LazyPromptPanel),
 }
 
 /**
@@ -28,6 +37,9 @@ export const mocks = {
 export function setupMocks() {
   vi.mock('../../components/PromptPanel', () => ({
     PromptPanel: mocks.PromptPanel,
+  }))
+  vi.mock('../../components/LazyPromptPanel', () => ({
+    LazyPromptPanel: mocks.LazyPromptPanel,
   }))
 }
 

@@ -723,7 +723,7 @@ Level0
     expect(parseResult.nodes.length).toBe(1)
 
     // Navigate down the tree
-    let current = parseResult.nodes[0]
+    const current = parseResult.nodes[0]
     expect(current.name).toBe('Level0')
     expect(current.children.length).toBe(1)
   })

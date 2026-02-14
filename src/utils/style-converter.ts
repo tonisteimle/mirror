@@ -18,30 +18,52 @@ import { getContrastTextColor } from './color'
 // Re-export for backwards compatibility
 export type { DSLProperties }
 
-// Track loaded Google Fonts to avoid duplicate requests
-const loadedGoogleFonts = new Set<string>()
+// Track Google Font loading with Promises to prevent race conditions
+const fontLoadingPromises = new Map<string, Promise<void>>()
+
+// System fonts that don't need Google Font loading
+const SYSTEM_FONTS = new Set([
+  'system-ui', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy',
+  'arial', 'helvetica', 'times new roman', 'georgia', 'verdana',
+  'courier new', 'monaco', 'consolas', 'ui-sans-serif', 'ui-serif'
+])
 
 /**
- * Load a Google Font dynamically
+ * Load a Google Font dynamically with deduplication.
+ * Returns a Promise that resolves when the font stylesheet is loaded.
  */
-function loadGoogleFont(fontFamily: string) {
+function loadGoogleFont(fontFamily: string): Promise<void> {
   // Extract font name from CSS font-family value (e.g., '"Inter"' -> 'Inter')
   const fontName = fontFamily.replace(/["']/g, '').split(',')[0].trim()
+  const fontNameLower = fontName.toLowerCase()
 
-  // Skip system fonts and already loaded fonts
-  const systemFonts = ['system-ui', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy',
-                       'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana',
-                       'Courier New', 'Monaco', 'Consolas', 'ui-sans-serif', 'ui-serif']
-  if (systemFonts.some(sf => fontName.toLowerCase() === sf.toLowerCase())) return
-  if (loadedGoogleFonts.has(fontName)) return
-  if (typeof document === 'undefined') return
+  // Skip system fonts
+  if (SYSTEM_FONTS.has(fontNameLower)) {
+    return Promise.resolve()
+  }
 
-  loadedGoogleFonts.add(fontName)
+  // Return existing promise if already loading/loaded
+  if (fontLoadingPromises.has(fontName)) {
+    return fontLoadingPromises.get(fontName)!
+  }
 
-  const link = document.createElement('link')
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@100;200;300;400;500;600;700;800;900&display=swap`
-  link.rel = 'stylesheet'
-  document.head.appendChild(link)
+  // Skip SSR
+  if (typeof document === 'undefined') {
+    return Promise.resolve()
+  }
+
+  // Create loading promise
+  const promise = new Promise<void>((resolve) => {
+    const link = document.createElement('link')
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@100;200;300;400;500;600;700;800;900&display=swap`
+    link.rel = 'stylesheet'
+    link.onload = () => resolve()
+    link.onerror = () => resolve() // Resolve anyway to not block rendering
+    document.head.appendChild(link)
+  })
+
+  fontLoadingPromises.set(fontName, promise)
+  return promise
 }
 
 /**
@@ -137,14 +159,12 @@ export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean
  *
  * @param properties - DSL properties to convert
  * @param hasChildren - Whether the component has children (affects flex display)
- * @param componentName - Component name (kept for backwards compatibility, no longer affects color mapping)
- * @param _libraryType - Deprecated, kept for backwards compatibility
+ * @param componentName - Component name (used for auto-contrast on interactive components)
  */
 export function propertiesToStyle(
   properties: DSLProperties,
   hasChildren: boolean = false,
-  componentName: string = '',
-  _libraryType?: string
+  componentName: string = ''
 ): React.CSSProperties {
   const style: React.CSSProperties = {}
 
@@ -152,7 +172,8 @@ export function propertiesToStyle(
   if (needsFlexDisplay(properties, hasChildren)) {
     // Use inline-flex so containers fit their content instead of stretching
     style.display = 'inline-flex'
-    style.flexDirection = 'row'
+    // Default to vertical (column) - more natural for UI panels, cards, forms
+    style.flexDirection = 'column'
   } else if (componentName && /^[A-Z]/.test(componentName)) {
     // Components without flex layout should use inline-block to fit content
     // This prevents them from stretching to full width

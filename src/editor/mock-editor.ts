@@ -131,7 +131,8 @@ export class MockEditor implements IEditor {
 
   // === Coordinates ===
 
-  getCoordsAtPos(_pos: number): ScreenCoords | null {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getCoordsAtPos(pos: number): ScreenCoords | null {
     this.checkDestroyed()
     // Mock implementation returns fixed coordinates
     return {

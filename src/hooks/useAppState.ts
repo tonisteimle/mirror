@@ -1,11 +1,8 @@
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { logger } from '../services/logger'
-import { parse } from '../parser/parser'
-import type { ASTNode } from '../parser/parser'
 import type { PageData } from '../components/PageSidebar'
 import { isLibraryComponent, getLibraryDefinitions } from '../library/registry'
-import { propsToString } from '../utils/dsl-serializer'
-import { STORAGE_KEYS, INTERNAL_NODES } from '../constants'
+import { STORAGE_KEYS } from '../constants'
 import { useHistory } from './useHistory'
 import { usePageManager } from './usePageManager'
 import { useProjectStorage } from './useProjectStorage'
@@ -14,20 +11,27 @@ import { usePanelResize } from './usePanelResize'
 import { useAiAssistant } from './useAiAssistant'
 import { useDialogs } from './useDialogs'
 import { useCodeParsing, type PreviewOverride } from './useCodeParsing'
+import { useDocsMode } from './useDocsMode'
 import type { EditorActions } from '../contexts'
+
+/** View mode for the app: edit (full), preview (pages only), fullscreen (preview only) */
+export type ViewMode = 'edit' | 'preview' | 'fullscreen'
 
 /**
  * Central app state hook that composes all domain-specific hooks.
  * This reduces complexity in App.tsx by aggregating state management.
  */
 export function useAppState() {
+  // View mode (edit, preview, fullscreen)
+  const [viewMode, setViewMode] = useState<ViewMode>('edit')
+
   // Page management
   const pageManager = usePageManager()
   const { pages, currentPageId, layoutCode, setLayoutCode } = pageManager
 
-  // Editor state (tabs, code, autocomplete)
+  // Editor state (tabs, code, autocomplete, data)
   const editor = useEditorState()
-  const { componentsCode, setComponentsCode, tokensCode, setTokensCode } = editor
+  const { componentsCode, setComponentsCode, tokensCode, setTokensCode, dataCode, setDataCode, dataSchemas, dataRecords } = editor
 
   // Panel resize
   const panel = usePanelResize()
@@ -38,8 +42,61 @@ export function useAppState() {
   // Live preview for pickers (color, font, icon)
   const [previewOverride, setPreviewOverride] = useState<PreviewOverride | null>(null)
 
-  // Code parsing (with preview support)
-  const parsing = useCodeParsing(tokensCode, componentsCode, layoutCode, 150, previewOverride)
+  // Track cursor line for diagnostic suppression while typing
+  const [activeCursorLine, setActiveCursorLine] = useState<number | null>(null)
+
+  // Active layout section for navigation (e.g., "--- Einführung ---")
+  const [activeLayoutSection, setActiveLayoutSection] = useState<string | null>(null)
+
+  // Extract sections from layout code
+  const layoutSections = useMemo(() => {
+    const sections: string[] = []
+    for (const line of layoutCode.split('\n')) {
+      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
+      if (match) sections.push(match[1])
+    }
+    return sections
+  }, [layoutCode])
+
+  // Auto-select first section when sections change and current is invalid
+  useEffect(() => {
+    if (layoutSections.length > 0 && !layoutSections.includes(activeLayoutSection || '')) {
+      setActiveLayoutSection(layoutSections[0])
+    }
+  }, [layoutSections, activeLayoutSection])
+
+  // Extract code for the active section (for preview filtering)
+  const sectionLayoutCode = useMemo(() => {
+    if (!activeLayoutSection || layoutSections.length === 0) {
+      return layoutCode
+    }
+
+    const lines = layoutCode.split('\n')
+    let inSection = false
+    const sectionLines: string[] = []
+
+    for (const line of lines) {
+      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
+      if (match) {
+        if (inSection) break // Found next section, stop
+        if (match[1] === activeLayoutSection) {
+          inSection = true
+          sectionLines.push(line)
+        }
+      } else if (inSection) {
+        sectionLines.push(line)
+      }
+    }
+
+    return sectionLines.join('\n')
+  }, [layoutCode, activeLayoutSection, layoutSections.length])
+
+  // Code parsing - use section code when sections exist, full code otherwise
+  const parsing = useCodeParsing(tokensCode, componentsCode, sectionLayoutCode, {
+    debounceMs: 150,
+    previewOverride,
+    activeCursorLine,
+  })
 
   // AI Assistant
   const ai = useAiAssistant({
@@ -47,9 +104,25 @@ export function useAppState() {
     onError: dialogs.setError,
   })
 
+  // Documentation Mode
+  const docsMode = useDocsMode({
+    pages,
+    currentPageId,
+    layoutCode,
+    componentsCode,
+    tokensCode,
+    dataCode,
+    loadProject: pageManager.loadProject,
+    setComponentsCode,
+    setTokensCode,
+    setDataCode,
+  })
+
   // History for undo/redo
   const history = useHistory({ layoutCode, componentsCode })
   const isRestoringRef = useRef(false)
+  const historyRef = useRef(history)
+  historyRef.current = history
 
   // Push state to history when code changes (but not when restoring from undo/redo)
   useEffect(() => {
@@ -60,12 +133,34 @@ export function useAppState() {
     history.pushState({ layoutCode, componentsCode })
   }, [layoutCode, componentsCode, history.pushState])
 
-  // Keyboard shortcuts for undo/redo
+  // Keyboard shortcuts for undo/redo and view modes
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger shortcuts when typing in inputs or CodeMirror
+      // Escape always works - exit preview/fullscreen modes
+      if (e.key === 'Escape') {
+        if (viewMode !== 'edit') {
+          e.preventDefault()
+          setViewMode('edit')
+          return
+        }
+      }
+
+      // Don't trigger other shortcuts when typing in inputs or CodeMirror
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('.cm-editor')) {
+        return
+      }
+
+      // Cmd+. (Mac) or Ctrl+. - Toggle preview mode
+      if ((e.metaKey || e.ctrlKey) && e.key === '.') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          // Cmd+Shift+. - Toggle fullscreen mode
+          setViewMode(prev => prev === 'fullscreen' ? 'edit' : 'fullscreen')
+        } else {
+          // Cmd+. - Toggle preview mode
+          setViewMode(prev => prev === 'preview' ? 'edit' : 'preview')
+        }
         return
       }
 
@@ -74,7 +169,7 @@ export function useAppState() {
         if (e.shiftKey) {
           // Redo: Cmd+Shift+Z
           e.preventDefault()
-          const state = history.redo()
+          const state = historyRef.current.redo()
           if (state) {
             isRestoringRef.current = true
             setLayoutCode(state.layoutCode)
@@ -83,7 +178,7 @@ export function useAppState() {
         } else {
           // Undo: Cmd+Z
           e.preventDefault()
-          const state = history.undo()
+          const state = historyRef.current.undo()
           if (state) {
             isRestoringRef.current = true
             setLayoutCode(state.layoutCode)
@@ -95,86 +190,7 @@ export function useAppState() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [history, setLayoutCode, setComponentsCode])
-
-  // Extract styles to Components, keep structure in Layout
-  const handleClean = useCallback(() => {
-    // Parse the current layout to get AST
-    const parseResult = parse(layoutCode)
-
-    // Already defined in Components tab
-    const existingDefs = new Set<string>()
-    for (const line of componentsCode.split('\n')) {
-      const match = line.match(/^([A-Z][a-zA-Z0-9_]*):/)
-      if (match) existingDefs.add(match[1])
-    }
-
-    // Component definitions to add (name -> definition string)
-    const componentDefs: Map<string, string> = new Map()
-
-    // Extract style definitions from all nodes (recursively)
-    function extractStyles(node: ASTNode) {
-      if (node.name === INTERNAL_NODES.TEXT) return
-
-      const props = propsToString(node.properties as Record<string, string | number | boolean>)
-
-      // Only create definition if component has properties and isn't already defined
-      if (props && !existingDefs.has(node.name) && !componentDefs.has(node.name)) {
-        componentDefs.set(node.name, `${node.name}: ${props}`)
-      }
-
-      // Process children
-      for (const child of node.children) {
-        extractStyles(child)
-      }
-    }
-
-    // Generate clean layout line (structure + content, no properties)
-    function generateLayoutLines(node: ASTNode, indent: string = ''): string[] {
-      if (node.name === INTERNAL_NODES.TEXT) {
-        return node.content ? [`${indent}"${node.content}"`] : []
-      }
-
-      const lines: string[] = []
-
-      // Component name with optional content
-      if (node.content) {
-        lines.push(`${indent}${node.name} "${node.content}"`)
-      } else {
-        lines.push(`${indent}${node.name}`)
-      }
-
-      // Add children with increased indent
-      for (const child of node.children) {
-        lines.push(...generateLayoutLines(child, indent + '  '))
-      }
-
-      return lines
-    }
-
-    // Process all root nodes
-    for (const node of parseResult.nodes) {
-      extractStyles(node)
-    }
-
-    // Generate cleaned layout with structure
-    const cleanedLines: string[] = []
-    for (const node of parseResult.nodes) {
-      cleanedLines.push(...generateLayoutLines(node))
-    }
-
-    // Update components tab with new definitions
-    if (componentDefs.size > 0) {
-      const newDefs = Array.from(componentDefs.values())
-      const newComponents = componentsCode.trim()
-        ? newDefs.join('\n') + '\n\n' + componentsCode
-        : newDefs.join('\n')
-      setComponentsCode(newComponents)
-    }
-
-    // Update layout
-    setLayoutCode(cleanedLines.join('\n'))
-  }, [layoutCode, componentsCode, setComponentsCode, setLayoutCode])
+  }, [setLayoutCode, setComponentsCode, viewMode])
 
   // Auto-import library component definitions when used in layout
   useEffect(() => {
@@ -215,16 +231,28 @@ export function useAppState() {
     setComponentsCode('')
   }, [setLayoutCode, setComponentsCode])
 
+  // Create a completely new prototype (reset everything)
+  const handleNewPrototype = useCallback(() => {
+    // Reset pages to a single empty Home page
+    pageManager.loadProject({
+      pages: [{ id: 'home', name: 'Home', layoutCode: '' }],
+      currentPageId: 'home',
+      layoutCode: '',
+    })
+    // Reset all code tabs
+    setComponentsCode('')
+    setTokensCode('')
+    setDataCode('')
+  }, [pageManager, setComponentsCode, setTokensCode, setDataCode])
+
   // Memoize editor actions for context
   const editorActions: EditorActions = useMemo(() => ({
-    onOpenAiAssistant: ai.openAssistant,
     onClear: handleClear,
-    onClean: handleClean,
-  }), [ai.openAssistant, handleClear, handleClean])
+  }), [handleClear])
 
   // Project storage (auto-save, import, export)
   const projectStorage = useProjectStorage(
-    { pages, currentPageId, layoutCode, componentsCode, tokensCode },
+    { pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode },
     {
       onError: dialogs.setError,
       onImportSuccess: (data) => {
@@ -233,11 +261,17 @@ export function useAppState() {
           currentPageId: data.currentPageId,
           layoutCode: data.layoutCode,
         })
+        setDataCode(data.dataCode)
         setComponentsCode(data.componentsCode)
         setTokensCode(data.tokensCode)
       },
     }
   )
+
+  // Sync pages with code references (auto-create pages from `page PageName` patterns)
+  useEffect(() => {
+    pageManager.syncPagesWithCode(componentsCode)
+  }, [componentsCode, layoutCode, pageManager.syncPagesWithCode])
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -253,6 +287,7 @@ export function useAppState() {
             currentPageId: targetPageId,
             layoutCode: targetPage?.layoutCode || '',
           })
+          if (data.dataCode) setDataCode(data.dataCode)
           if (data.componentsCode) setComponentsCode(data.componentsCode)
           if (data.tokensCode) setTokensCode(data.tokensCode)
         }
@@ -260,7 +295,20 @@ export function useAppState() {
         logger.storage.error('Failed to load project', e)
       }
     }
-  }, [pageManager.loadProject, setComponentsCode, setTokensCode])
+  }, [pageManager.loadProject, setDataCode, setComponentsCode, setTokensCode])
+
+  // Handle docs mode toggle - auto-switch view mode
+  const handleToggleDocsMode = useCallback(() => {
+    if (docsMode.isDocsMode) {
+      // Exiting docs mode - switch to edit
+      docsMode.exitDocsMode()
+      setViewMode('edit')
+    } else {
+      // Entering docs mode - switch to preview after loading
+      docsMode.enterDocsMode()
+      setViewMode('preview')
+    }
+  }, [docsMode, setViewMode])
 
   return {
     // Domain state
@@ -272,6 +320,14 @@ export function useAppState() {
     ai,
     history,
     projectStorage,
+    docsMode,
+
+    // View mode (edit, preview, fullscreen)
+    viewMode,
+    setViewMode,
+
+    // Docs mode helpers
+    handleToggleDocsMode,
 
     // Derived values
     layoutCode,
@@ -283,14 +339,27 @@ export function useAppState() {
     setComponentsCode,
     setTokensCode,
 
+    // Data tab state
+    dataCode,
+    setDataCode,
+    dataSchemas,
+    dataRecords,
+
     // Live preview
     previewOverride,
     setPreviewOverride,
 
+    // Section navigation
+    activeLayoutSection,
+    setActiveLayoutSection,
+
+    // Cursor tracking (for diagnostic suppression while typing)
+    onCursorLineChange: setActiveCursorLine,
+
     // Actions
     editorActions,
     handleClear,
-    handleClean,
+    handleNewPrototype,
   }
 }
 

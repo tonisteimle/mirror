@@ -55,7 +55,7 @@ function estimatePreviewHeight(code: string): number {
 const preRegex = /<pre>([^]*?)<\/pre>/g
 
 let match
-let replacements: Array<{start: number, end: number, replacement: string}> = []
+const replacements: Array<{start: number, end: number, replacement: string}> = []
 
 while ((match = preRegex.exec(html)) !== null) {
   const fullMatch = match[0]

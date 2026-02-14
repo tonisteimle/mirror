@@ -146,8 +146,8 @@ export async function runTest(testCase: TestCase): Promise<TestResult> {
   const startTime = Date.now()
 
   let generatedCode = ''
-  let parseErrors: string[] = []
-  let validationErrors: string[] = []
+  const parseErrors: string[] = []
+  const validationErrors: string[] = []
   let evaluation: TestResult['evaluation'] = null
 
   try {

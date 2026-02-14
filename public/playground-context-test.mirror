@@ -1,0 +1,69 @@
+// Test: Playground mit Global Context
+// Globale Tokens und Komponenten sollten im Playground verfügbar sein
+
+// === Globale Tokens ===
+$primary: #2271c1
+$secondary: #10B981
+$danger: #EF4444
+$spacing: 12
+$radius: 8
+
+// === Globale Komponenten ===
+Button: pad $spacing 24 rad $radius cursor pointer col white
+  state hover
+    opacity 0.9
+
+PrimaryButton from Button: bg $primary
+DangerButton from Button: bg $danger
+SecondaryButton from Button: bg $secondary
+
+Card: ver gap 16 pad 20 bg #1E1E2E rad 12
+
+// === Dokumentation mit Playground ===
+doc
+  text
+    '$h1 Playground Context Test
+
+     $p Dieser Test prüft ob der Playground globale Tokens und Komponenten erbt.'
+
+  text
+    '$h2 Test 1: Token-Vererbung
+
+     $p Der Playground sollte $code[$primary], $code[$spacing] und $code[$radius] kennen:'
+
+  playground
+    'Box pad $spacing rad $radius bg $primary col white "Token-Test OK"'
+
+  text
+    '$h2 Test 2: Komponenten-Vererbung
+
+     $p Der Playground sollte $code[Button], $code[PrimaryButton] etc. kennen:'
+
+  playground
+    'Row gap $spacing
+       PrimaryButton "Primary"
+       SecondaryButton "Secondary"
+       DangerButton "Danger"'
+
+  text
+    '$h2 Test 3: Card mit Buttons
+
+     $p Komplexeres Beispiel mit verschachtelten Komponenten:'
+
+  playground
+    'Card
+       Text size 18 weight 600 "Aktion bestätigen"
+       Text col #999 "Möchten Sie fortfahren?"
+       Row gap $spacing mar u 8
+         PrimaryButton "Bestätigen"
+         DangerButton "Abbrechen"'
+
+  text
+    '$h2 Test 4: Lokale Overrides
+
+     $p Playground kann eigene Tokens definieren die globale überschreiben:'
+
+  playground
+    '$primary: #FF6B6B
+
+     PrimaryButton "Override: Rot statt Blau"'

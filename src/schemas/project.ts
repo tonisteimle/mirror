@@ -17,6 +17,7 @@ export const ProjectSchema = z.object({
   version: z.number().min(1).max(1).optional().default(1),
   pages: z.array(PageSchema).min(1, 'At least one page is required'),
   currentPageId: z.string().min(1, 'Current page ID is required'),
+  dataCode: z.string().optional().default(''),
   componentsCode: z.string().optional().default(''),
   tokensCode: z.string().optional().default(''),
 })

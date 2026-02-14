@@ -29,6 +29,8 @@
 export const PROPERTIES = new Set([
   // Layout
   'hor', 'ver', 'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'cen', 'grid', 'rows', 'stacked',
+  // Data binding
+  'data',
   // Alignment
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   // Sizing
@@ -43,6 +45,8 @@ export const PROPERTIES = new Set([
   'size', 'weight', 'font', 'line', 'align', 'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   // Form inputs
   'placeholder', 'type', 'disabled', 'visible', 'rows',
+  // Segment (masked input)
+  'length', 'pattern', 'mask', 'segments',
   // Link attributes
   'href', 'target',
   // Slider/Range
@@ -98,7 +102,8 @@ export const BOOLEAN_PROPERTIES = new Set([
   'hor', 'ver', 'full', 'between', 'wrap', 'grow', 'fill', 'cen', 'stacked',
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
-  'hidden', 'visible'
+  'hidden', 'visible',
+  'mask'  // Segment (masked input) - hide characters
 ])
 
 export const COLOR_PROPERTIES = new Set([
@@ -111,10 +116,30 @@ export const NUMBER_PROPERTIES = new Set([
   'pad', 'mar', 'rad', 'border', 'bor',
   'size', 'weight', 'line', 'opacity', 'opa', 'op', 'z',
   'hover-bor', 'hover-rad', 'hover-opacity', 'hover-scale',
-  'min', 'max', 'step', 'value', 'rows'
+  'min', 'max', 'step', 'value', 'rows',
+  'length', 'segments'  // Segment (masked input)
 ])
 
-export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type'])
+export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type', 'pattern'])
+
+// Property keyword values - valid keyword values for certain properties
+// These are accepted as COMPONENT_NAME tokens but should be consumed as property values
+export const PROPERTY_KEYWORD_VALUES = new Set([
+  // Shadow sizes
+  'sm', 'md', 'lg', 'xl', 'xs', '2xl', '3xl', 'none',
+  // Fit values (for Image)
+  'cover', 'contain', 'fill', 'none', 'scale-down',
+  // Cursor values
+  'pointer', 'default', 'text', 'move', 'grab', 'grabbing', 'not-allowed', 'wait', 'crosshair',
+  // Align values
+  'left', 'center', 'right', 'justify',
+  // Input types
+  'email', 'password', 'text', 'number', 'tel', 'url', 'search', 'date', 'time', 'datetime-local',
+  // Segment types (for masked input)
+  'digits', 'alpha', 'alphanumeric',
+  // Link targets
+  '_blank', '_self', '_parent', '_top'
+])
 
 // Keywords
 export const KEYWORDS = new Set(['after', 'before', 'from', 'as', 'named'])
@@ -125,21 +150,74 @@ export const KEYWORDS = new Set(['after', 'before', 'from', 'as', 'named'])
 
 // Action Keywords (for state changes and interactions)
 export const ACTION_KEYWORDS = new Set([
-  'open', 'close', 'toggle', 'change', 'to', 'page', 'show', 'hide', 'assign', 'alert'
+  'open', 'close', 'toggle', 'change', 'to', 'page', 'show', 'hide', 'assign', 'alert',
+  // Behavior actions (for dropdowns, lists, etc.)
+  'highlight', 'select', 'filter',
+  // Selection management
+  'deselect', 'clear-selection',
+  // Activation (for tabs, toggle groups)
+  'activate', 'deactivate', 'deactivate-siblings',
+  // State toggle (for accordions)
+  'toggle-state',
+  // Validation
+  'validate', 'reset',
+  // Focus management (for segments/forms)
+  'focus'
+])
+
+// Special targets for behavior actions
+export const BEHAVIOR_TARGETS = new Set([
+  'self',           // Target the current element
+  'next',           // highlight next in list
+  'prev',           // highlight prev in list
+  'first',          // highlight first in list
+  'last',           // highlight last in list
+  'first-empty',    // focus first empty segment
+  'highlighted',    // select highlighted item
+  'selected',       // the currently selected item
+  'self-and-before', // highlight/select self and all before (Rating pattern)
+  'all',            // all items in container
+  'none'            // clear all highlights/selections
 ])
 
 // Control Flow Keywords
 export const CONTROL_KEYWORDS = new Set([
-  'if', 'then', 'not', 'and', 'or', 'else', 'each', 'in'
+  'if', 'then', 'not', 'and', 'or', 'else', 'each', 'in',
+  'where'  // For data binding filter: data Tasks where done == false
 ])
 
 // Event Keywords
 export const EVENT_KEYWORDS = new Set([
-  'onclick', 'onhover', 'onchange', 'oninput', 'onload', 'onfocus', 'onblur', 'onkeydown', 'onkeyup'
+  'onclick', 'onhover', 'onchange', 'oninput', 'onload', 'onfocus', 'onblur', 'onkeydown', 'onkeyup',
+  // Behavior events (click outside, key-specific)
+  'onclick-outside', 'onclick-inside',
+  // Segment events (for masked input)
+  'onfill', 'oncomplete', 'onempty'
+])
+
+// Timing Modifiers for events and actions
+export const TIMING_MODIFIERS = new Set([
+  'debounce',  // Debounce event: oninput debounce 300 filter Results
+  'delay'      // Delay action: onblur delay 200 hide Results
+])
+
+// Key Modifiers for onkeydown/onkeyup events
+export const KEY_MODIFIERS = new Set([
+  'escape', 'enter', 'tab', 'space',
+  'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
+  'backspace', 'delete', 'home', 'end'
 ])
 
 // State Keyword
 export const STATE_KEYWORD = 'state'
+
+// Behavior State Keywords - these can be used as state block names
+// The keyword IS the state name: `highlight` block defines the `highlight` state
+// Used by behavior actions: `highlight next` applies the `highlight` state
+export const BEHAVIOR_STATE_KEYWORDS = new Set([
+  'highlight',  // highlight next/prev/self
+  'select'      // select highlighted/self
+])
 
 // System States - automatically bound to browser pseudo-classes
 // These states don't need explicit event handlers

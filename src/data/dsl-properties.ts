@@ -1290,7 +1290,7 @@ export const properties: Property[] = [
   // ============================================
   {
     name: 'icon',
-    syntax: 'icon "',
+    syntax: 'icon ',
     description: 'Lucide icon',
     category: 'Icon',
     keywords: [

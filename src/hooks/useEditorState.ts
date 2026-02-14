@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { STORAGE_KEYS } from '../constants'
 import type { EditorTab } from '../components/EditorPanel'
+import type { DataSchema, DataInstance, DataRecord } from '../parser/types'
+import { parseDataCode, instancesToRecords } from '../parser/data-parser'
 
 export type AutoCompleteMode = 'always' | 'delay' | 'off'
 
@@ -15,6 +17,14 @@ export interface UseEditorStateReturn {
   setHighlightLine: (line: number | undefined) => void
   autoCompleteMode: AutoCompleteMode
   setAutoCompleteMode: (mode: AutoCompleteMode) => void
+  // Data tab state (unified code for schema + instances)
+  dataCode: string
+  setDataCode: (code: string) => void
+  // Parsed data (derived from dataCode)
+  dataSchemas: DataSchema[]
+  dataInstances: DataInstance[]
+  // Data records for backwards compatibility with generator
+  dataRecords: Map<string, DataRecord[]>
 }
 
 export function useEditorState(): UseEditorStateReturn {
@@ -22,6 +32,22 @@ export function useEditorState(): UseEditorStateReturn {
   const [tokensCode, setTokensCode] = useState('')
   const [componentsCode, setComponentsCode] = useState('')
   const [highlightLine, setHighlightLine] = useState<number | undefined>(undefined)
+
+  // Data tab state - unified code containing both schema and instances
+  const [dataCode, setDataCode] = useState('')
+
+  // Parse data code to get schemas and instances
+  const parsedData = useMemo(() => {
+    if (!dataCode.trim()) {
+      return { schemas: [], instances: [], errors: [] }
+    }
+    return parseDataCode(dataCode)
+  }, [dataCode])
+
+  // Convert instances to records for backwards compatibility
+  const dataRecords = useMemo(() => {
+    return instancesToRecords(parsedData.schemas, parsedData.instances)
+  }, [parsedData.schemas, parsedData.instances])
 
   // AutoComplete setting: 'always' | 'delay' | 'off' (persisted in localStorage)
   const [autoCompleteMode, setAutoCompleteMode] = useState<AutoCompleteMode>(() => {
@@ -46,5 +72,10 @@ export function useEditorState(): UseEditorStateReturn {
     setHighlightLine,
     autoCompleteMode,
     setAutoCompleteMode,
+    dataCode,
+    setDataCode,
+    dataSchemas: parsedData.schemas,
+    dataInstances: parsedData.instances,
+    dataRecords,
   }
 }

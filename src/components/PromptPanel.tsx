@@ -24,6 +24,7 @@ import { useImageDragDrop } from '../hooks/useImageDragDrop'
 import { useEditorTriggers } from '../hooks/useEditorTriggers'
 import { searchIcons } from '../data/icon-synonyms'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
+import { logger } from '../services/logger'
 import * as LucideIcons from 'lucide-react'
 
 // Get all icon names for counting filtered results
@@ -36,8 +37,11 @@ const allIconNames = Object.keys(LucideIcons).filter(
     !!(LucideIcons as Record<string, unknown>)[key]
 )
 
-// Re-export for backwards compatibility
-export { getStoredImageUrl } from '../utils/image-upload'
+/** Cursor position information */
+export interface CursorPosition {
+  line: number    // 0-indexed
+  column: number  // 0-indexed
+}
 
 interface PromptPanelProps {
   value: string
@@ -50,6 +54,10 @@ interface PromptPanelProps {
   designTokens?: Map<string, unknown>
   autoCompleteMode?: 'always' | 'delay' | 'off'
   onPreviewChange?: (override: PreviewOverride | null) => void
+  /** @deprecated Use onCursorChange instead */
+  onCursorLineChange?: (line: number) => void
+  /** Called when cursor position changes (line and column, both 0-indexed) */
+  onCursorChange?: (pos: CursorPosition) => void
 }
 
 export interface PromptPanelRef {
@@ -67,6 +75,8 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     designTokens,
     autoCompleteMode = 'always',
     onPreviewChange,
+    onCursorLineChange,
+    onCursorChange,
   }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<EditorView | null>(null)
@@ -80,21 +90,37 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     designTokensRef.current = designTokens
     const tabRef = useRef(tab)
     tabRef.current = tab
+    const onCursorLineChangeRef = useRef(onCursorLineChange)
+    onCursorLineChangeRef.current = onCursorLineChange
+    const onCursorChangeRef = useRef(onCursorChange)
+    onCursorChangeRef.current = onCursorChange
+    const lastCursorPosRef = useRef<{ line: number; column: number }>({ line: -1, column: -1 })
 
     // Refs for callback functions (to avoid recreating editor on callback changes)
+    // These are placeholder no-op functions that get replaced at runtime
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const callbackRefs = useRef({
       openColorPicker: () => {},
-      openCommandPalette: (_query?: string) => {},
+      openCommandPalette: ((query?: string) => {}) as (query?: string) => void,
       openFontPicker: () => {},
       openIconPicker: () => {},
-      openTokenPicker: (_ctx?: string) => {},
-      handleValuePickerNeeded: (_type: ValuePickerType) => {},
+      openTokenPicker: ((ctx?: string) => {}) as (ctx?: string) => void,
+      handleValuePickerNeeded: ((type: ValuePickerType) => {}) as (type: ValuePickerType) => void,
     })
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+
+    // Callback after panel selection - intentionally empty
+    // We DON'T want to auto-trigger autocomplete after selecting a value
+    // User should press space first to get the next suggestion
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleAfterPanelSelect = useCallback((_type: 'icon' | 'font' | 'token' | 'value', _view: EditorView) => {
+      // No-op: Let user press space to continue
+    }, [])
 
     // Panel hooks
     const colorPanel = useColorPanel(editorRef)
-    const iconPanel = useInlinePanel({ editorRef })
-    const fontPanel = useInlinePanel({ editorRef })
+    const iconPanel = useInlinePanel({ editorRef, onAfterSelect: handleAfterPanelSelect })
+    const fontPanel = useInlinePanel({ editorRef, onAfterSelect: handleAfterPanelSelect })
     const picker = usePickerState(editorRef)
 
     // Ref for color panel setState (needed for keymap closures)
@@ -112,7 +138,6 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     const {
       colorPickerOpen, colorPickerPosition,
       commandPaletteOpen, commandPalettePosition, commandPaletteQuery,
-      fontPickerOpen, fontPickerPosition,
       tokenPickerOpen, tokenPickerPosition, tokenPickerPropertyContext,
       openPicker, closePicker,
     } = picker
@@ -281,8 +306,6 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     )
 
     const insertCommand = createInsertHandler(['/'])
-    const insertFont = createInsertHandler(['/'])
-    const insertIcon = createInsertHandler(['/'])
     const insertValue = createInsertHandler(['/', '$'])
 
     // Value picker callback for autocomplete
@@ -378,6 +401,30 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       // Add trigger extension
       extensions.push(triggerExtension)
 
+      // Add cursor position tracking extension
+      extensions.push(
+        EditorView.updateListener.of((update) => {
+          if (update.selectionSet || update.docChanged) {
+            const head = update.state.selection.main.head
+            const lineInfo = update.state.doc.lineAt(head)
+            const line = lineInfo.number - 1 // 0-indexed
+            const column = head - lineInfo.from // 0-indexed column within line
+
+            // Check if position changed
+            const lastPos = lastCursorPosRef.current
+            if (line !== lastPos.line || column !== lastPos.column) {
+              lastCursorPosRef.current = { line, column }
+
+              // Call both callbacks for backward compatibility
+              if (line !== lastPos.line) {
+                onCursorLineChangeRef.current?.(line)
+              }
+              onCursorChangeRef.current?.({ line, column })
+            }
+          }
+        })
+      )
+
       let view: EditorView | null = null
       try {
         const state = EditorState.create({ doc: value, extensions })
@@ -385,7 +432,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
         editorRef.current = view
         setEditorError(null)
       } catch (error) {
-        console.error('[PromptPanel] Editor initialization failed:', error)
+        logger.ui.error('Editor initialization failed', error)
         setEditorError(error instanceof Error ? error : new Error('Editor initialization failed'))
         return
       }
@@ -480,6 +527,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
             ref={containerRef}
             style={{
               flex: 1,
+              minHeight: 0,
               borderRadius: '8px',
               overflow: 'hidden',
               backgroundColor: colors.panel,

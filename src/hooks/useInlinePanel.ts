@@ -34,9 +34,11 @@ const initialState: InlinePanelState = {
 
 export interface UseInlinePanelOptions {
   editorRef: React.RefObject<EditorView | null>
+  /** Callback after a value is selected and inserted. Gets the panel type. */
+  onAfterSelect?: (type: InlinePanelType, view: EditorView) => void
 }
 
-export function useInlinePanel({ editorRef }: UseInlinePanelOptions) {
+export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptions) {
   const [state, setState] = useState<InlinePanelState>(initialState)
   const { returnFocus } = usePanelPosition(editorRef)
 
@@ -97,7 +99,7 @@ export function useInlinePanel({ editorRef }: UseInlinePanelOptions) {
     const view = editorRef.current
     if (!view) return
 
-    const { triggerPos } = stateRef.current
+    const { triggerPos, type } = stateRef.current
     const cursorPos = view.state.selection.main.head
 
     // Insert the value, replacing everything from triggerPos to cursor
@@ -107,7 +109,12 @@ export function useInlinePanel({ editorRef }: UseInlinePanelOptions) {
     })
 
     close()
-  }, [editorRef, close])
+
+    // Call onAfterSelect callback (e.g., to trigger autocomplete with context)
+    if (onAfterSelect && type) {
+      onAfterSelect(type, view)
+    }
+  }, [editorRef, close, onAfterSelect])
 
   /**
    * Update filter text (called when user types).

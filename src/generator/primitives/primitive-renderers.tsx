@@ -8,8 +8,9 @@ import React from 'react'
 import type { ASTNode } from '../../parser/parser'
 import { resolveImageSrc } from '../utils'
 import { renderDynamicIcon } from '../components'
-import { sanitizeHref, sanitizePlaceholder, sanitizeTextContent } from '../../utils/sanitize'
-import { isHeadingComponent, getHeadingLevel } from '../../parser/sugar/component-type-matcher'
+import { sanitizeHref, sanitizePlaceholder } from '../../utils/sanitize'
+import { getHeadingLevel } from '../../parser/sugar/component-type-matcher'
+import { isImageComponent } from './primitive-checkers'
 
 interface PrimitiveProps {
   node: ASTNode
@@ -17,49 +18,6 @@ interface PrimitiveProps {
   onMouseEnter?: () => void
   onMouseLeave?: () => void
   onClick?: (e: React.MouseEvent) => void
-}
-
-/**
- * Check if node is an Input primitive.
- */
-export function isInputPrimitive(node: ASTNode): boolean {
-  return node.properties._primitiveType === 'Input' ||
-         node.name === 'Input' ||
-         node.name.endsWith('Input')
-}
-
-/**
- * Check if node is a Textarea primitive.
- */
-export function isTextareaPrimitive(node: ASTNode): boolean {
-  return node.properties._primitiveType === 'Textarea' ||
-         node.name === 'Textarea' ||
-         node.name.endsWith('Textarea')
-}
-
-/**
- * Check if node is a Link primitive.
- */
-export function isLinkPrimitive(node: ASTNode): boolean {
-  return node.properties._primitiveType === 'Link' ||
-         node.name === 'Link' ||
-         node.name.endsWith('Link')
-}
-
-/**
- * Check if node is an Icon component.
- */
-export function isIconComponent(node: ASTNode): boolean {
-  return node.name === 'Icon' || node.name.endsWith('Icon')
-}
-
-/**
- * Check if node is an Image component.
- */
-export function isImageComponent(node: ASTNode): boolean {
-  return node.properties._primitiveType === 'Image' ||
-         node.name === 'Image' ||
-         node.name.endsWith('Image')
 }
 
 /**
@@ -195,16 +153,6 @@ export function getImageSrc(node: ASTNode): string | undefined {
   const imageSrcRaw = (node.properties.src as string | undefined) ||
                       (isImageComponent(node) ? node.content : undefined)
   return imageSrcRaw ? resolveImageSrc(imageSrcRaw) : undefined
-}
-
-// Re-export heading utilities
-export { isHeadingComponent, getHeadingLevel }
-
-/**
- * Check if node is a Heading primitive (H1-H6).
- */
-export function isHeadingPrimitive(node: ASTNode): boolean {
-  return isHeadingComponent(node)
 }
 
 /**

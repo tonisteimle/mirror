@@ -277,7 +277,7 @@ export function applyCommands(
  * Used for registering components as templates.
  */
 export function createTemplateFromNode(node: ASTNode): ComponentTemplate {
-  return {
+  const template: ComponentTemplate = {
     properties: { ...node.properties },
     content: node.content,
     children: [],
@@ -285,6 +285,29 @@ export function createTemplateFromNode(node: ASTNode): ComponentTemplate {
     _isLibrary: node._isLibrary,
     _libraryType: node._libraryType
   }
+
+  // V7: Copy states for component-local state definitions
+  if (node.states && node.states.length > 0) {
+    template.states = node.states.map(s => ({
+      ...s,
+      properties: { ...s.properties }
+    }))
+  }
+
+  // V7: Copy event handlers for component-local events
+  if (node.eventHandlers && node.eventHandlers.length > 0) {
+    template.eventHandlers = node.eventHandlers.map(h => ({
+      ...h,
+      actions: [...h.actions]
+    }))
+  }
+
+  // V7: Copy variables
+  if (node.variables && node.variables.length > 0) {
+    template.variables = node.variables.map(v => ({ ...v }))
+  }
+
+  return template
 }
 
 /**

@@ -17,11 +17,12 @@
 
 import type { ParserContext } from './parser-context'
 import type { ASTNode, ConditionExpr } from './types'
-import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction } from './state-parser'
+import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction, parseBehaviorStateDefinition } from './state-parser'
 import { parseCondition } from './condition-parser'
 import { createTextNode } from './parser-utils'
 import { isTokenSequence } from './types'
 import { INTERNAL_NODES } from '../constants'
+import { BEHAVIOR_STATE_KEYWORDS, SYSTEM_STATES } from '../dsl/properties'
 
 /**
  * Type for the component parser function (dependency injection).
@@ -63,6 +64,23 @@ export function parseChildren(
 
       if (childIndent > baseIndent) {
         ctx.advance() // consume indent
+
+        // Check for multiline string (doc-mode content)
+        // Used for text and playground blocks: '...'
+        if (ctx.current()?.type === 'MULTILINE_STRING') {
+          const content = ctx.advance().value
+          // Store as _docContent property on the parent node
+          node.properties._docContent = content
+          // Mark as library component for doc-mode rendering
+          if (node.name === 'text' || node.name === 'playground') {
+            node._isLibrary = true
+            node._libraryType = node.name
+          }
+          if (ctx.current()?.type === 'NEWLINE') {
+            ctx.advance()
+          }
+          continue
+        }
 
         // Check if it's strings with properties (inline text styling)
         // Handles: "Normal" "bold" weight 600 "normal again"
@@ -141,6 +159,19 @@ export function parseChildren(
             node.states.push(stateDef)
           }
         }
+        // V8: Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
+        // These are state blocks where the keyword IS the state name
+        else if (
+          ctx.current()?.type === 'COMPONENT_NAME' &&
+          (BEHAVIOR_STATE_KEYWORDS.has(ctx.current()!.value) || SYSTEM_STATES.has(ctx.current()!.value)) &&
+          ctx.peek(1)?.type === 'NEWLINE'
+        ) {
+          const stateDef = parseBehaviorStateDefinition(ctx, childIndent)
+          if (stateDef) {
+            if (!node.states) node.states = []
+            node.states.push(stateDef)
+          }
+        }
         // V2: Check for event handler
         else if (ctx.current()?.type === 'EVENT') {
           const handler = parseEventHandler(ctx, childIndent)
@@ -200,8 +231,66 @@ export function parseChildren(
               instanceChildren.push(child)
             }
           }
+          // V7: Bare strings in list items - wrap in default slot
+          // e.g., Menu with Item: slot → `- "Dashboard"` becomes `- Item "Dashboard"`
+          else if (ctx.current()?.type === 'STRING') {
+            const stringToken = ctx.current()!
+            const stringValue = ctx.advance().value
+
+            // Find the default item slot from parent's template
+            const template = ctx.registry.get(componentName)
+            const defaultSlot = template?.children?.[0]
+
+            if (defaultSlot && defaultSlot.name !== '_text') {
+              // Create a node using the slot template
+              const slotNode: ASTNode = {
+                type: 'component',
+                name: defaultSlot.name,
+                id: ctx.generateId(defaultSlot.name),
+                properties: { ...defaultSlot.properties },
+                children: [],
+                content: stringValue,
+                line: stringToken.line,
+                column: stringToken.column,
+                _isListItem: true
+              }
+
+              // Copy states from slot template
+              if (defaultSlot.states && defaultSlot.states.length > 0) {
+                slotNode.states = defaultSlot.states.map(s => ({
+                  ...s,
+                  properties: { ...s.properties }
+                }))
+              }
+
+              // Copy event handlers from slot template
+              if (defaultSlot.eventHandlers && defaultSlot.eventHandlers.length > 0) {
+                slotNode.eventHandlers = defaultSlot.eventHandlers.map(h => ({
+                  ...h,
+                  actions: [...h.actions]
+                }))
+              }
+
+              instanceChildren.push(slotNode)
+            } else {
+              // No slot defined - create a simple text node
+              const textNode = createTextNode(
+                stringValue,
+                ctx.generateId.bind(ctx),
+                stringToken.line,
+                stringToken.column
+              )
+              textNode._isListItem = true
+              instanceChildren.push(textNode)
+            }
+
+            if (ctx.current()?.type === 'NEWLINE') {
+              ctx.advance()
+            }
+          }
         }
-        else if (ctx.current()?.type === 'COMPONENT_NAME') {
+        else if (ctx.current()?.type === 'COMPONENT_NAME' || ctx.current()?.type === 'COMPONENT_DEF') {
+          // Handle both instances (COMPONENT_NAME) and definitions (COMPONENT_DEF) as children
           const child = parseComponentFn(ctx, childIndent, componentName)
           if (child) {
             instanceChildren.push(child)

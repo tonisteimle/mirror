@@ -17,9 +17,10 @@ import type {
   Conditional,
   AnimationDefinition
 } from './types'
+import { isActionType } from './types'
 import { parseValue, parseExpression } from './expression-parser'
 import { parseCondition } from './condition-parser'
-import { ACTION_KEYWORDS, ANIMATION_KEYWORDS, POSITION_KEYWORDS } from '../dsl/properties'
+import { ACTION_KEYWORDS, ANIMATION_KEYWORDS, POSITION_KEYWORDS, BEHAVIOR_TARGETS, KEY_MODIFIERS } from '../dsl/properties'
 
 // Helper to check if a token is an action keyword
 function isActionKeyword(ctx: ParserContext): boolean {
@@ -90,6 +91,69 @@ export function parseStateDefinition(ctx: ParserContext, baseIndent: number): St
           if (ctx.current()?.type === 'STRING') {
             // It's content for this state
             stateDef.properties['content'] = ctx.advance().value
+          }
+        }
+
+        if (ctx.current()?.type === 'NEWLINE') {
+          ctx.advance()
+        }
+      } else {
+        // Less indent - done with this state
+        break
+      }
+    } else if (token.type === 'NEWLINE') {
+      ctx.advance()
+    } else {
+      // No indent - done with this state
+      break
+    }
+  }
+
+  return stateDef
+}
+
+/**
+ * Parse a behavior state definition: highlight \n properties...
+ * The keyword IS the state name (no separate name token).
+ * This creates a direct 1:1 mapping between action and state name.
+ */
+export function parseBehaviorStateDefinition(ctx: ParserContext, baseIndent: number): StateDefinition | null {
+  // Current token should be COMPONENT_NAME with a behavior state keyword value
+  const currentToken = ctx.current()
+  if (currentToken?.type !== 'COMPONENT_NAME') return null
+
+  const stateName = ctx.advance().value // The keyword IS the state name
+  const stateLine = currentToken.line
+
+  const stateDef: StateDefinition = {
+    name: stateName,
+    properties: {},
+    children: [],
+    line: stateLine
+  }
+
+  // Skip newline
+  if (ctx.current()?.type === 'NEWLINE') {
+    ctx.advance()
+  }
+
+  // Parse state properties (indented lines) - same logic as parseStateDefinition
+  while (ctx.current() && ctx.current()!.type !== 'EOF') {
+    const token = ctx.current()!
+
+    if (token.type === 'INDENT') {
+      const indent = parseInt(token.value, 10)
+      if (indent > baseIndent) {
+        ctx.advance() // consume indent
+
+        // Parse property on this line
+        if (ctx.current()?.type === 'PROPERTY') {
+          const propName = ctx.advance().value
+          const val = parseValue(ctx)
+          if (val !== null) {
+            stateDef.properties[propName] = val
+          } else {
+            stateDef.properties[propName] = true
           }
         }
 
@@ -230,31 +294,65 @@ export function parseAction(ctx: ParserContext): ActionStatement | null {
   if (!isActionKeyword(ctx)) return null
 
   const actionLine = token.line
-  const actionType = ctx.advance().value as ActionStatement['type']
+  const actionToken = ctx.advance()
+  const actionValue = actionToken.value
+
+  // Validate action type using type guard
+  if (!isActionType(actionValue)) {
+    ctx.addWarning(
+      'P001',
+      `Unknown action type "${actionValue}"`,
+      actionToken,
+      `Valid actions: open, close, toggle, change, show, hide, assign, highlight, select, etc.`
+    )
+    return null
+  }
 
   const action: ActionStatement = {
-    type: actionType,
+    type: actionValue,
     line: actionLine
   }
 
   // Parse target
-  if (actionType === 'assign') {
+  if (actionValue === 'assign') {
     if (ctx.current()?.type === 'TOKEN_REF' || ctx.current()?.type === 'COMPONENT_NAME') {
       action.target = ctx.advance().value
     }
-  } else if (actionType === 'alert') {
+  } else if (actionValue === 'alert') {
     // Alert accepts a string message as target
     if (ctx.current()?.type === 'STRING') {
       action.target = ctx.advance().value
     } else if (ctx.current()?.type === 'COMPONENT_NAME') {
       action.target = ctx.advance().value
     }
+  } else if (actionValue === 'highlight' || actionValue === 'select' || actionValue === 'filter' || actionValue === 'deselect') {
+    // Behavior actions accept COMPONENT_NAME, ANIMATION ('none'), or PROPERTY tokens as targets
+    // 'none' is tokenized as ANIMATION, 'all' as COMPONENT_NAME
+    const token = ctx.current()
+    if (token?.type === 'COMPONENT_NAME' || token?.type === 'ANIMATION' || token?.type === 'PROPERTY') {
+      // Only consume if it's a valid behavior target
+      if (BEHAVIOR_TARGETS.has(token.value) || /^[A-Z]/.test(token.value)) {
+        action.target = ctx.advance().value
+      }
+    }
+  } else if (actionValue === 'activate' || actionValue === 'deactivate' || actionValue === 'validate' || actionValue === 'reset') {
+    // These actions accept self or component names as targets
+    const token = ctx.current()
+    if (token?.type === 'COMPONENT_NAME' || token?.type === 'PROPERTY') {
+      // Accept 'self' or component names
+      if (token.value === 'self' || /^[A-Z]/.test(token.value)) {
+        action.target = ctx.advance().value
+      }
+    }
+  } else if (actionValue === 'deactivate-siblings' || actionValue === 'clear-selection' || actionValue === 'toggle-state') {
+    // These actions don't need a target (implicit self/siblings)
+    // No target parsing needed
   } else if (ctx.current()?.type === 'COMPONENT_NAME') {
     action.target = ctx.advance().value
   }
 
   // Parse action-specific details
-  switch (actionType) {
+  switch (actionValue) {
     case 'change':
       parseChangeDetails(ctx, action)
       break
@@ -265,19 +363,49 @@ export function parseAction(ctx: ParserContext): ActionStatement | null {
     case 'close':
       parseOpenCloseDetails(ctx, action)
       break
+    case 'highlight':
+    case 'select':
+    case 'filter':
+    case 'deselect':
+    case 'activate':
+    case 'deactivate':
+      parseBehaviorActionDetails(ctx, action)
+      break
+    // Actions without additional details
+    case 'deactivate-siblings':
+    case 'clear-selection':
+    case 'toggle-state':
+    case 'validate':
+    case 'reset':
+      // No additional parsing needed
+      break
   }
 
   return action
 }
 
 /**
+ * Parse behavior action details: highlight next in dropdown, select self, filter dropdown
+ */
+function parseBehaviorActionDetails(ctx: ParserContext, action: ActionStatement): void {
+  // Check for 'in' keyword: highlight next in dropdown
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'in') {
+    ctx.advance() // consume 'in'
+    if (ctx.current()?.type === 'COMPONENT_NAME') {
+      action.inContainer = ctx.advance().value
+    }
+  }
+}
+
+/**
  * Parse an event handler: onclick \n actions...
+ * Also supports key modifiers: onkeydown escape close self
  */
 export function parseEventHandler(ctx: ParserContext, baseIndent: number): EventHandler | null {
   if (ctx.current()?.type !== 'EVENT') return null
 
   const eventLine = ctx.current()!.line
-  const eventName = ctx.advance().value // onclick, onhover, etc.
+  const eventName = ctx.advance().value // onclick, onhover, onkeydown, onclick-outside, etc.
 
   const handler: EventHandler = {
     event: eventName,
@@ -285,10 +413,43 @@ export function parseEventHandler(ctx: ParserContext, baseIndent: number): Event
     line: eventLine
   }
 
-  // Check for inline action on same line
-  if (isActionKeyword(ctx)) {
+  // Check for key modifier after onkeydown/onkeyup: onkeydown escape close self
+  if ((eventName === 'onkeydown' || eventName === 'onkeyup') && ctx.current()?.type === 'COMPONENT_NAME') {
+    const possibleModifier = ctx.current()!.value.toLowerCase()
+    if (KEY_MODIFIERS.has(possibleModifier)) {
+      handler.modifier = ctx.advance().value.toLowerCase()
+    }
+  }
+
+  // Check for debounce modifier: oninput debounce 300 filter Results
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()?.value === 'debounce') {
+    ctx.advance() // consume 'debounce'
+    if (ctx.current()?.type === 'NUMBER') {
+      handler.debounce = parseInt(ctx.advance().value, 10)
+    }
+  }
+
+  // Check for delay modifier: onblur delay 200 hide Results
+  if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.current()?.value === 'delay') {
+    ctx.advance() // consume 'delay'
+    if (ctx.current()?.type === 'NUMBER') {
+      handler.delay = parseInt(ctx.advance().value, 10)
+    }
+  }
+
+  // Check for inline actions on same line (supports comma-chaining)
+  // Example: onclick activate self, deactivate-siblings
+  while (isActionKeyword(ctx)) {
     const action = parseAction(ctx)
     if (action) handler.actions.push(action)
+
+    // Check for comma to continue parsing more actions
+    if (ctx.current()?.type === 'COMMA') {
+      ctx.advance() // consume comma
+      // Continue loop to parse next action
+    } else {
+      break // No more actions on this line
+    }
   }
 
   // Skip newline

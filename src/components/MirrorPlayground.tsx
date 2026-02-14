@@ -12,7 +12,7 @@
  * - Minimal dependencies
  */
 
-import React, { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { parse } from '../parser/parser'
 import { Preview } from './Preview'
 
@@ -198,7 +198,7 @@ export function MirrorPlayground({
   initialCode,
   height = 300,
   title = 'Try it',
-  lineNumbers = false,
+  // lineNumbers prop reserved for future implementation
   theme = 'dark',
   readOnly = false,
   layout = 'horizontal',

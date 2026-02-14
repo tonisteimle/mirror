@@ -116,11 +116,9 @@ function convertSpecialProperty(key: string, value: string | number | boolean): 
 function propertiesToMirror(properties: Record<string, string | number | boolean>): string {
   const parts: string[] = []
 
-  for (let [key, value] of Object.entries(properties)) {
+  for (const [originalKey, value] of Object.entries(properties)) {
     // Map CSS/common names to Mirror names
-    if (PROP_ALIASES[key]) {
-      key = PROP_ALIASES[key]
-    }
+    const key = PROP_ALIASES[originalKey] || originalKey
 
     // Handle special conversions
     const special = convertSpecialProperty(key, value)

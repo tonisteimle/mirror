@@ -15,71 +15,32 @@ import {
   BehaviorRegistryProvider,
   useBehaviorRegistry,
   getBehaviorHandler,
-} from '../../../generator/behaviors/registry'
+} from '../../../generator/behaviors'
 
 describe('behavior registry', () => {
   describe('getBehaviorHandler', () => {
-    it('returns handler for known component', () => {
-      const handler = getBehaviorHandler('Dropdown')
+    it('returns handler for FormField', () => {
+      const handler = getBehaviorHandler('FormField')
       expect(handler).toBeDefined()
-      expect(handler?.name).toBe('Dropdown')
+      expect(handler?.name).toBe('FormField')
     })
 
-    it('returns handler for Dialog', () => {
-      const handler = getBehaviorHandler('Dialog')
+    it('returns handler for text (DocText)', () => {
+      const handler = getBehaviorHandler('text')
       expect(handler).toBeDefined()
-      expect(handler?.name).toBe('Dialog')
+      expect(handler?.name).toBe('text')
     })
 
-    it('returns handler for Tabs', () => {
-      const handler = getBehaviorHandler('Tabs')
+    it('returns handler for playground', () => {
+      const handler = getBehaviorHandler('playground')
       expect(handler).toBeDefined()
-      expect(handler?.name).toBe('Tabs')
+      expect(handler?.name).toBe('playground')
     })
 
-    it('returns handler for Accordion', () => {
-      const handler = getBehaviorHandler('Accordion')
+    it('returns handler for doc (DocWrapper)', () => {
+      const handler = getBehaviorHandler('doc')
       expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Select', () => {
-      const handler = getBehaviorHandler('Select')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Popover', () => {
-      const handler = getBehaviorHandler('Popover')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Tooltip', () => {
-      const handler = getBehaviorHandler('Tooltip')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Switch', () => {
-      const handler = getBehaviorHandler('Switch')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Checkbox', () => {
-      const handler = getBehaviorHandler('Checkbox')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Slider', () => {
-      const handler = getBehaviorHandler('Slider')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Progress', () => {
-      const handler = getBehaviorHandler('Progress')
-      expect(handler).toBeDefined()
-    })
-
-    it('returns handler for Avatar', () => {
-      const handler = getBehaviorHandler('Avatar')
-      expect(handler).toBeDefined()
+      expect(handler?.name).toBe('doc')
     })
 
     it('returns undefined for unknown component', () => {
@@ -105,7 +66,7 @@ describe('behavior registry', () => {
     it('getHandler still works without provider', () => {
       const { result } = renderHook(() => useBehaviorRegistry())
 
-      const handler = result.current.getHandler('Dropdown')
+      const handler = result.current.getHandler('FormField')
       expect(handler).toBeDefined()
     })
   })
@@ -116,7 +77,7 @@ describe('behavior registry', () => {
         wrapper: BehaviorRegistryProvider,
       })
 
-      expect(result.current.getState('dropdown1')).toBe('closed')
+      expect(result.current.getState('component1')).toBe('closed')
     })
 
     it('sets state correctly', () => {
@@ -125,10 +86,10 @@ describe('behavior registry', () => {
       })
 
       act(() => {
-        result.current.setState('dropdown1', 'open')
+        result.current.setState('component1', 'open')
       })
 
-      expect(result.current.getState('dropdown1')).toBe('open')
+      expect(result.current.getState('component1')).toBe('open')
     })
 
     it('manages multiple component states', () => {
@@ -137,14 +98,14 @@ describe('behavior registry', () => {
       })
 
       act(() => {
-        result.current.setState('dropdown1', 'open')
-        result.current.setState('dialog1', 'closed')
-        result.current.setState('accordion1', 'open')
+        result.current.setState('component1', 'open')
+        result.current.setState('component2', 'closed')
+        result.current.setState('component3', 'open')
       })
 
-      expect(result.current.getState('dropdown1')).toBe('open')
-      expect(result.current.getState('dialog1')).toBe('closed')
-      expect(result.current.getState('accordion1')).toBe('open')
+      expect(result.current.getState('component1')).toBe('open')
+      expect(result.current.getState('component2')).toBe('closed')
+      expect(result.current.getState('component3')).toBe('open')
     })
 
     it('updates existing state', () => {
@@ -153,14 +114,14 @@ describe('behavior registry', () => {
       })
 
       act(() => {
-        result.current.setState('dropdown1', 'open')
+        result.current.setState('component1', 'open')
       })
-      expect(result.current.getState('dropdown1')).toBe('open')
+      expect(result.current.getState('component1')).toBe('open')
 
       act(() => {
-        result.current.setState('dropdown1', 'closed')
+        result.current.setState('component1', 'closed')
       })
-      expect(result.current.getState('dropdown1')).toBe('closed')
+      expect(result.current.getState('component1')).toBe('closed')
     })
 
     it('toggle toggles between closed and open', () => {
@@ -169,25 +130,25 @@ describe('behavior registry', () => {
       })
 
       // Default state returned by getState is 'closed' (but internally undefined)
-      expect(result.current.getState('dropdown1')).toBe('closed')
+      expect(result.current.getState('component1')).toBe('closed')
 
       // First toggle: undefined → 'open' (for hidden elements: becomes visible)
       act(() => {
-        result.current.toggle('dropdown1')
+        result.current.toggle('component1')
       })
-      expect(result.current.getState('dropdown1')).toBe('open')
+      expect(result.current.getState('component1')).toBe('open')
 
       // Second toggle: 'open' → 'closed'
       act(() => {
-        result.current.toggle('dropdown1')
+        result.current.toggle('component1')
       })
-      expect(result.current.getState('dropdown1')).toBe('closed')
+      expect(result.current.getState('component1')).toBe('closed')
 
       // Third toggle: 'closed' → 'open'
       act(() => {
-        result.current.toggle('dropdown1')
+        result.current.toggle('component1')
       })
-      expect(result.current.getState('dropdown1')).toBe('open')
+      expect(result.current.getState('component1')).toBe('open')
     })
 
     it('toggle works independently for multiple components', () => {
@@ -195,25 +156,25 @@ describe('behavior registry', () => {
         wrapper: BehaviorRegistryProvider,
       })
 
-      // First toggle on dropdown1: undefined → 'open'
+      // First toggle on component1: undefined → 'open'
       act(() => {
-        result.current.toggle('dropdown1')
+        result.current.toggle('component1')
       })
-      expect(result.current.getState('dropdown1')).toBe('open')
-      expect(result.current.getState('dropdown2')).toBe('closed') // still default
+      expect(result.current.getState('component1')).toBe('open')
+      expect(result.current.getState('component2')).toBe('closed') // still default
 
-      // Second toggle on dropdown1: 'open' → 'closed'
+      // Second toggle on component1: 'open' → 'closed'
       act(() => {
-        result.current.toggle('dropdown1')
+        result.current.toggle('component1')
       })
-      expect(result.current.getState('dropdown1')).toBe('closed')
+      expect(result.current.getState('component1')).toBe('closed')
 
-      // First toggle on dropdown2: undefined → 'open'
+      // First toggle on component2: undefined → 'open'
       act(() => {
-        result.current.toggle('dropdown2')
+        result.current.toggle('component2')
       })
-      expect(result.current.getState('dropdown1')).toBe('closed')
-      expect(result.current.getState('dropdown2')).toBe('open')
+      expect(result.current.getState('component1')).toBe('closed')
+      expect(result.current.getState('component2')).toBe('open')
     })
   })
 

@@ -16,7 +16,7 @@ import type {
 import { parseExpression } from './expression-parser'
 import { parseCondition } from './condition-parser'
 import { parseAction } from './state-parser'
-import { ACTION_KEYWORDS } from '../dsl/properties'
+import { ACTION_KEYWORDS, KEY_MODIFIERS } from '../dsl/properties'
 
 /**
  * Parse the `events` block.
@@ -79,13 +79,17 @@ export function parseEventsBlock(ctx: ParserContext): CentralizedEventHandler[] 
 
 /**
  * Parse a centralized event handler.
- * Syntax: `ComponentName event` followed by indented actions
+ * Syntax: `ComponentName event [modifier]` followed by indented actions
+ * Examples:
+ *   Button onclick
+ *   Input onkeydown escape
+ *   Menu onclick-outside
  */
 function parseCentralizedEventHandler(ctx: ParserContext, baseIndent: number): CentralizedEventHandler | null {
   const targetLine = ctx.current()!.line
   const targetInstance = ctx.advance().value // ComponentName
 
-  // Next should be an event keyword (onclick, onchange, etc.)
+  // Next should be an event keyword (onclick, onchange, onkeydown, onclick-outside, etc.)
   if (ctx.current()?.type !== 'EVENT') {
     return null
   }
@@ -96,6 +100,14 @@ function parseCentralizedEventHandler(ctx: ParserContext, baseIndent: number): C
     event: eventName,
     actions: [],
     line: targetLine
+  }
+
+  // Check for key modifier after onkeydown/onkeyup: onkeydown escape
+  if ((eventName === 'onkeydown' || eventName === 'onkeyup') && ctx.current()?.type === 'COMPONENT_NAME') {
+    const possibleModifier = ctx.current()!.value.toLowerCase()
+    if (KEY_MODIFIERS.has(possibleModifier)) {
+      handler.modifier = ctx.advance().value.toLowerCase()
+    }
   }
 
   // Skip newline

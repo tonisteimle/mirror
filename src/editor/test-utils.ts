@@ -78,7 +78,8 @@ export class TestEditor extends MockEditor {
   }
 
   // Override getCoordsAtPos to use configurable mock coords
-  override getCoordsAtPos(_pos: number): ScreenCoords | null {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  override getCoordsAtPos(pos: number): ScreenCoords | null {
     return this.mockCoords
   }
 
@@ -160,7 +161,6 @@ export class TestEditor extends MockEditor {
    * Returns the position after insertion.
    */
   simulateTrigger(char: string): { pos: number; charBefore: string } {
-    const posBefore = this.getCursorPosition()
     this.insert(char)
     return {
       pos: this.getCursorPosition(),

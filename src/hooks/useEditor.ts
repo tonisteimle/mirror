@@ -38,7 +38,7 @@ export function useEditor(): UseEditorReturn {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [inspectMode, setInspectMode] = useState(false)
   const [highlightLine, setHighlightLine] = useState<number | undefined>(undefined)
-  const [panelWidth, setPanelWidth] = useState(420)
+  const [panelWidth, setPanelWidth] = useState(340)
   const [isDragging, setIsDragging] = useState(false)
 
   // Helper to find a node by ID in the AST

@@ -69,6 +69,7 @@ class ColorSwatchWidget extends WidgetType {
 /** Regex patterns for color detection */
 const HEX_COLOR_REGEX = /#[0-9a-fA-F]{3,8}\b/g
 const TOKEN_REGEX = /\$([a-zA-Z_][a-zA-Z0-9_.-]*)/g
+const TOKEN_DEF_REGEX = /^\s*\$[a-zA-Z_][a-zA-Z0-9_.-]*\s*:/
 
 /**
  * Check if a token value is a color.
@@ -114,13 +115,21 @@ function buildDecorations(
   for (const { from, to } of view.visibleRanges) {
     const text = view.state.doc.sliceString(from, to)
 
-    // Find hex colors
+    // Find hex colors (but skip those in token definitions)
     HEX_COLOR_REGEX.lastIndex = 0
     let match: RegExpExecArray | null
     while ((match = HEX_COLOR_REGEX.exec(text)) !== null) {
       const start = from + match.index
       const end = start + match[0].length
       const color = match[0]
+
+      // Check if this hex color is part of a token definition line
+      // If so, skip it (the token itself will show the swatch)
+      const line = view.state.doc.lineAt(start)
+      const lineText = line.text
+      if (TOKEN_DEF_REGEX.test(lineText)) {
+        continue
+      }
 
       const widget = Decoration.widget({
         widget: new ColorSwatchWidget(color, start, end, config.onSwatchClick),

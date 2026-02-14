@@ -7,16 +7,16 @@
  * - ReactGenerator component
  */
 
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, renderHook } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { renderHook } from '@testing-library/react'
 import {
   TemplateRegistryProvider,
-  useTemplateRegistry,
-  generateReactCode,
   BehaviorRegistryProvider,
   ComponentRegistryProvider,
   RuntimeVariableProvider,
 } from '../../generator/react-generator'
+import { useTemplateRegistry } from '../../generator/contexts'
+import { generateReactCode } from '../../generator/code-generator'
 import type { ASTNode, ComponentTemplate } from '../../parser/parser'
 import { createASTNode } from '../kit/ast-builders'
 

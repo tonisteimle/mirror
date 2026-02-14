@@ -1,19 +1,29 @@
 /**
  * Hook for project storage operations.
  * Handles auto-save, import, and export functionality.
+ *
+ * Supports:
+ * - .mirror text format (new, preferred)
+ * - .json format (legacy, for backwards compatibility)
+ * - React export (App.tsx + styles.css)
  */
 
 import { useEffect, useRef, useCallback } from 'react'
 import type { PageData } from '../components/PageSidebar'
-import { validateProject, formatValidationErrors } from '../schemas/project'
 import { STORAGE_KEYS, UI } from '../constants'
-import { z } from 'zod'
 import { logger } from '../services/logger'
+import {
+  serializeMirrorFile,
+  parseProjectFile,
+  type MirrorProject
+} from '../lib/mirror-file'
+import { exportReact } from '../generator/export'
 
 export interface ProjectState {
   pages: PageData[]
   currentPageId: string
   layoutCode: string
+  dataCode: string
   componentsCode: string
   tokensCode: string
 }
@@ -24,14 +34,19 @@ export interface UseProjectStorageOptions {
     pages: PageData[]
     currentPageId: string
     layoutCode: string
+    dataCode: string
     componentsCode: string
     tokensCode: string
   }) => void
 }
 
 export interface UseProjectStorageReturn {
-  exportProject: () => void
-  importProject: () => void
+  /** Open a .mirror project file */
+  openProject: () => void
+  /** Save project as .mirror file */
+  saveProject: () => void
+  /** Export to React (App.tsx + styles.css) */
+  exportReactCode: () => void
 }
 
 export function useProjectStorage(
@@ -42,18 +57,16 @@ export function useProjectStorage(
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Auto-save to localStorage with debounce
-  // Note: pages array is now always up-to-date (Single Source of Truth in usePageManager)
   useEffect(() => {
-    // Clear previous timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
 
-    // Debounce save
     saveTimeoutRef.current = setTimeout(() => {
       const projectData = {
         pages: state.pages,
         currentPageId: state.currentPageId,
+        dataCode: state.dataCode,
         componentsCode: state.componentsCode,
         tokensCode: state.tokensCode,
       }
@@ -65,82 +78,118 @@ export function useProjectStorage(
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [state.pages, state.currentPageId, state.componentsCode, state.tokensCode])
+  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode])
 
-  // Export project to file
-  // Note: pages array is now always up-to-date (Single Source of Truth in usePageManager)
-  const exportProject = useCallback(() => {
-    const projectData = {
+  // Save project to .mirror file
+  const saveProject = useCallback(() => {
+    const mirrorProject: MirrorProject = {
       version: 1,
-      pages: state.pages,
-      currentPageId: state.currentPageId,
-      componentsCode: state.componentsCode,
+      dataCode: state.dataCode,
       tokensCode: state.tokensCode,
+      componentsCode: state.componentsCode,
+      pages: state.pages.map(p => ({
+        id: p.id,
+        name: p.name,
+        layoutCode: p.layoutCode
+      })),
+      currentPageId: state.currentPageId,
     }
-    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' })
+
+    const content = serializeMirrorFile(mirrorProject)
+    const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'mirror-project.json'
+    a.download = 'project.mirror'
     a.click()
     URL.revokeObjectURL(url)
-  }, [state.pages, state.currentPageId, state.componentsCode, state.tokensCode])
+  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode])
 
-  // Import project from file
-  const importProject = useCallback(() => {
+  // Export to React (App.tsx + styles.css as ZIP)
+  const exportReactCode = useCallback(() => {
+    // Combine all code for export
+    const fullCode = [state.tokensCode, state.componentsCode, state.layoutCode]
+      .filter(Boolean)
+      .join('\n\n')
+
+    const result = exportReact(fullCode)
+
+    // Create and download files
+    // App.tsx
+    const tsxBlob = new Blob([result.tsx], { type: 'text/typescript' })
+    const tsxUrl = URL.createObjectURL(tsxBlob)
+    const tsxLink = document.createElement('a')
+    tsxLink.href = tsxUrl
+    tsxLink.download = 'App.tsx'
+    tsxLink.click()
+    URL.revokeObjectURL(tsxUrl)
+
+    // styles.css (after small delay to avoid browser blocking)
+    setTimeout(() => {
+      const cssBlob = new Blob([result.css], { type: 'text/css' })
+      const cssUrl = URL.createObjectURL(cssBlob)
+      const cssLink = document.createElement('a')
+      cssLink.href = cssUrl
+      cssLink.download = 'styles.css'
+      cssLink.click()
+      URL.revokeObjectURL(cssUrl)
+    }, 100)
+  }, [state.tokensCode, state.componentsCode, state.layoutCode])
+
+  // Open project from file (supports .mirror and .json)
+  const openProject = useCallback(() => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.json'
+    input.accept = '.mirror,.json'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (!file) return
+
       const reader = new FileReader()
       reader.onload = (event) => {
-        try {
-          const rawData = JSON.parse(event.target?.result as string)
+        const content = event.target?.result as string
 
-          // Validate project structure with Zod
-          const data = validateProject(rawData)
+        // Parse file (handles both .mirror and .json formats)
+        const result = parseProjectFile(content)
 
-          // Apply validated data
-          const currentPage = data.pages.find(p => p.id === data.currentPageId)
-          onImportSuccess({
-            pages: data.pages,
-            currentPageId: data.currentPageId,
-            layoutCode: currentPage?.layoutCode || '',
-            componentsCode: data.componentsCode,
-            tokensCode: data.tokensCode,
+        if (!result.success || !result.project) {
+          onError({
+            title: 'Import fehlgeschlagen',
+            message: 'Die Datei konnte nicht gelesen werden.',
+            details: result.error || 'Unbekanntes Format',
           })
-        } catch (err) {
-          if (err instanceof z.ZodError) {
-            onError({
-              title: 'Ungültiges Projektformat',
-              message: 'Die Datei entspricht nicht dem erwarteten Format.',
-              details: formatValidationErrors(err),
-            })
-          } else if (err instanceof SyntaxError) {
-            onError({
-              title: 'Ungültige JSON-Datei',
-              message: 'Die Datei enthält kein gültiges JSON.',
-              details: err.message,
-            })
-          } else {
-            logger.storage.error('Failed to import project', err)
-            onError({
-              title: 'Import fehlgeschlagen',
-              message: 'Die Datei konnte nicht importiert werden.',
-              details: err instanceof Error ? err.message : 'Unbekannter Fehler',
-            })
-          }
+          return
         }
+
+        const project = result.project
+        const currentPage = project.pages.find(p => p.id === project.currentPageId)
+
+        onImportSuccess({
+          pages: project.pages,
+          currentPageId: project.currentPageId,
+          layoutCode: currentPage?.layoutCode || '',
+          dataCode: project.dataCode,
+          componentsCode: project.componentsCode,
+          tokensCode: project.tokensCode,
+        })
       }
+
+      reader.onerror = () => {
+        logger.storage.error('Failed to read file')
+        onError({
+          title: 'Lesefehler',
+          message: 'Die Datei konnte nicht gelesen werden.',
+        })
+      }
+
       reader.readAsText(file)
     }
     input.click()
   }, [onError, onImportSuccess])
 
   return {
-    exportProject,
-    importProject,
+    openProject,
+    saveProject,
+    exportReactCode,
   }
 }

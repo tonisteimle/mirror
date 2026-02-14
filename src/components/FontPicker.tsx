@@ -169,20 +169,6 @@ const googleFonts: FontItem[] = [
 
 const fontCategories = ['Sans-Serif', 'Serif', 'Display', 'Handwriting', 'Monospace']
 
-// Track loaded fonts to avoid duplicate requests
-const loadedFonts = new Set<string>()
-
-// Load a Google Font dynamically
-function loadGoogleFont(fontName: string) {
-  if (loadedFonts.has(fontName)) return
-  loadedFonts.add(fontName)
-
-  const link = document.createElement('link')
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}&display=swap`
-  link.rel = 'stylesheet'
-  document.head.appendChild(link)
-}
-
 // Preload all fonts at once using a single request (more efficient)
 let allFontsLoaded = false
 function loadAllGoogleFonts() {
@@ -195,9 +181,6 @@ function loadAllGoogleFonts() {
   link.href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`
   link.rel = 'stylesheet'
   document.head.appendChild(link)
-
-  // Mark all as loaded
-  googleFonts.forEach(f => loadedFonts.add(f.name))
 }
 
 // Stable callbacks for filtering and grouping
@@ -212,9 +195,9 @@ export const FontPicker = memo(function FontPicker({
 }: FontPickerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  // Handle font selection
+  // Handle font selection - adds trailing space for next property
   const handleFontSelect = useCallback(
-    (item: FontItem) => onSelect(item.value),
+    (item: FontItem) => onSelect(item.value + ' '),
     [onSelect]
   )
 
@@ -251,18 +234,21 @@ export const FontPicker = memo(function FontPicker({
     }
   }, [isOpen])
 
+  // Get the currently selected font for the preview
+  const selectedFont = filteredItems[selectedIndex]
+
   return (
     <BasePicker
       isOpen={isOpen}
       onClose={onClose}
       position={position}
-      width={340}
-      maxHeight={420}
+      width={260}
+      maxHeight={360}
       footer={
         <PickerFooter
           hints={[
-            { key: '↑↓', label: 'Navigation' },
-            { key: '↵', label: 'Einfügen' },
+            { key: '↑↓', label: 'nav' },
+            { key: '↵', label: 'select' },
           ]}
         />
       }
@@ -276,14 +262,14 @@ export const FontPicker = memo(function FontPicker({
         placeholder="Font suchen..."
       />
 
-      {/* Font List */}
+      {/* Font List - compact, font name in its own typeface */}
       <PickerList ref={(el) => {
         // Combine refs
         if (listRef) (listRef as React.MutableRefObject<HTMLDivElement | null>).current = el
         if (scrollContainerRef) scrollContainerRef.current = el
       }}>
         {filteredItems.length === 0 ? (
-          <EmptyState>Keine Fonts gefunden</EmptyState>
+          <EmptyState>Kein Font gefunden</EmptyState>
         ) : (
           groupedItems.map(({ category, items }) => (
             <div key={category}>
@@ -296,38 +282,22 @@ export const FontPicker = memo(function FontPicker({
                   onClick={() => handleSelect(item.flatIndex)}
                   onMouseEnter={() => setSelectedIndex(item.flatIndex)}
                   style={{
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    gap: '2px',
-                    padding: '8px 10px',
+                    padding: '6px 10px',
                   }}
                 >
-                  {/* Font name label */}
+                  {/* Font name in its own typeface - this IS the preview */}
                   <div
                     style={{
-                      fontSize: '10px',
-                      color: colors.textMuted,
-                      fontFamily: 'system-ui, sans-serif',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    {item.name}
-                  </div>
-                  {/* Font preview - large, in the actual font */}
-                  <div
-                    style={{
-                      fontSize: '20px',
+                      fontSize: '15px',
                       color: colors.text,
                       fontFamily: item.value,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       width: '100%',
-                      lineHeight: 1.3,
                     }}
                   >
-                    The quick brown fox
+                    {item.name}
                   </div>
                 </PickerItem>
               ))}
@@ -335,6 +305,25 @@ export const FontPicker = memo(function FontPicker({
           ))
         )}
       </PickerList>
+
+      {/* Larger preview for selected font only */}
+      {selectedFont && (
+        <div style={{
+          padding: '10px 12px',
+          borderTop: `1px solid ${colors.border}`,
+          backgroundColor: colors.lineActive,
+          flexShrink: 0,
+        }}>
+          <div style={{
+            fontFamily: selectedFont.value,
+            fontSize: '20px',
+            color: colors.text,
+            lineHeight: 1.3,
+          }}>
+            The quick brown fox
+          </div>
+        </div>
+      )}
     </BasePicker>
   )
 })

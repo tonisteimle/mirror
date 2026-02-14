@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { generateDSLViaJSON, hasApiKey } from '../lib/ai'
 
 export interface UseAiAssistantReturn {
@@ -20,10 +20,19 @@ export function useAiAssistant(options: UseAiAssistantOptions = {}): UseAiAssist
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
+  // Use refs for callbacks to avoid recreating functions on every render
+  const onGeneratedRef = useRef(options.onGenerated)
+  const onErrorRef = useRef(options.onError)
+
+  useEffect(() => {
+    onGeneratedRef.current = options.onGenerated
+    onErrorRef.current = options.onError
+  })
+
   const openAssistant = useCallback((pos: { x: number; y: number }) => {
     // Check if API key is configured
     if (!hasApiKey()) {
-      options.onError?.({
+      onErrorRef.current?.({
         title: 'API Key fehlt',
         message: 'Bitte trage zuerst einen OpenRouter API Key in den Einstellungen ein.',
         details: 'Klicke auf das Zahnrad-Icon oben rechts und gib deinen Key ein. Du bekommst einen Key auf openrouter.ai/keys',
@@ -32,7 +41,7 @@ export function useAiAssistant(options: UseAiAssistantOptions = {}): UseAiAssist
     }
     setPosition(pos)
     setIsOpen(true)
-  }, [options])
+  }, [])
 
   const closeAssistant = useCallback(() => {
     setIsOpen(false)
@@ -48,11 +57,11 @@ export function useAiAssistant(options: UseAiAssistantOptions = {}): UseAiAssist
       const generated = await generateDSLViaJSON(prompt)
 
       if (generated.layout) {
-        options.onGenerated?.(generated.layout)
+        onGeneratedRef.current?.(generated.layout)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ein unbekannter Fehler ist aufgetreten'
-      options.onError?.({
+      onErrorRef.current?.({
         title: 'AI Generation fehlgeschlagen',
         message: 'Die Generierung konnte nicht abgeschlossen werden.',
         details: errorMessage,
@@ -60,7 +69,7 @@ export function useAiAssistant(options: UseAiAssistantOptions = {}): UseAiAssist
     } finally {
       setIsGenerating(false)
     }
-  }, [isGenerating, options])
+  }, [isGenerating])
 
   return {
     isGenerating,

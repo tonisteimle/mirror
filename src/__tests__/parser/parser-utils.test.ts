@@ -23,7 +23,7 @@ import {
   applyTemplate,
 } from '../../parser/parser-utils'
 import { createASTNode, createComponentTemplate } from '../kit/ast-builders'
-import type { ASTNode, SelectionCommand } from '../../parser/types'
+import type { SelectionCommand } from '../../parser/types'
 
 describe('parser-utils', () => {
   describe('splitDirections', () => {

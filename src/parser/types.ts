@@ -42,9 +42,25 @@ export interface VariableDeclaration {
   line?: number
 }
 
+// Valid action types for ActionStatement
+export const ACTION_TYPES = [
+  'change', 'open', 'close', 'toggle', 'page', 'show', 'hide', 'assign', 'set_property', 'alert',
+  'highlight', 'select', 'filter', 'focus',
+  'deselect', 'clear-selection',
+  'activate', 'deactivate', 'deactivate-siblings',
+  'toggle-state', 'validate', 'reset'
+] as const
+
+export type ActionType = typeof ACTION_TYPES[number]
+
+/** Type guard for valid action types */
+export function isActionType(value: string): value is ActionType {
+  return ACTION_TYPES.includes(value as ActionType)
+}
+
 export interface ActionStatement {
-  type: 'change' | 'open' | 'close' | 'toggle' | 'page' | 'show' | 'hide' | 'assign' | 'set_property' | 'alert'
-  target?: string       // Target component (e.g., panel1)
+  type: ActionType
+  target?: string       // Target component (e.g., panel1) or special: 'self', 'next', 'prev', 'highlighted'
   toState?: string      // For 'change X to Y'
   property?: string     // For assignment: target.property = value
   value?: string | number | boolean | Expression  // For assignment (supports expressions)
@@ -55,6 +71,10 @@ export interface ActionStatement {
   // For set_property: Component.property = value
   componentName?: string  // Email.value = "x" -> componentName: 'Email'
   propertyName?: string   // Email.value = "x" -> propertyName: 'value'
+  // For behavior actions
+  inContainer?: string    // For 'highlight next in dropdown' -> inContainer: 'dropdown'
+  // Timing
+  delay?: number          // Delay action in ms: onblur delay 200 hide Results
   line?: number
 }
 
@@ -65,18 +85,30 @@ export interface Conditional {
   line?: number
 }
 
+// Valid comparison operators
+export const COMPARISON_OPERATORS = ['==', '!=', '>', '<', '>=', '<='] as const
+export type ComparisonOperator = typeof COMPARISON_OPERATORS[number]
+
+/** Type guard for valid comparison operators */
+export function isComparisonOperator(value: string): value is ComparisonOperator {
+  return COMPARISON_OPERATORS.includes(value as ComparisonOperator)
+}
+
 export interface ConditionExpr {
   type: 'var' | 'not' | 'and' | 'or' | 'comparison'
   name?: string                    // For type='var': variable name
   operand?: ConditionExpr          // For type='not'
   left?: ConditionExpr             // For 'and', 'or', 'comparison'
   right?: ConditionExpr            // For 'and', 'or', 'comparison'
-  operator?: '==' | '!=' | '>' | '<' | '>=' | '<='  // For comparison
+  operator?: ComparisonOperator    // For comparison
   value?: string | number | boolean // For comparison right-hand side
 }
 
 export interface EventHandler {
-  event: string  // onclick, onhover, etc.
+  event: string  // onclick, onhover, onclick-outside, etc.
+  modifier?: string  // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
+  debounce?: number  // Debounce in ms: oninput debounce 300 filter Results
+  delay?: number     // Delay in ms: onblur delay 200 hide Results
   actions: (ActionStatement | Conditional)[]
   line?: number
 }
@@ -87,9 +119,34 @@ export interface EventHandler {
  */
 export interface CentralizedEventHandler {
   targetInstance: string  // The named instance (e.g., 'Email', 'Submit')
-  event: string           // onclick, onhover, onchange, etc.
+  event: string           // onclick, onhover, onchange, onclick-outside, etc.
+  modifier?: string       // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
+  debounce?: number       // Debounce in ms: oninput debounce 300 filter Results
+  delay?: number          // Delay in ms: onblur delay 200 hide Results
   actions: (ActionStatement | Conditional)[]
   line?: number
+}
+
+// ============================================
+// Parse Issues (for error-tolerant parsing)
+// ============================================
+
+export type ParseIssueType =
+  | 'unknown_event'       // onclck (looks like event but invalid)
+  | 'unknown_property'    // paddin (looks like property but invalid)
+  | 'unknown_animation'   // slideup (looks like animation but invalid)
+  | 'unknown_action'      // opn (looks like action but invalid)
+  | 'invalid_value'       // col "hello" (wrong type)
+  | 'unknown_token'       // General unknown identifier
+
+export interface ParseIssue {
+  type: ParseIssueType
+  value: string           // The problematic token value
+  line: number            // 0-indexed line number
+  column: number          // 0-indexed column number
+  message: string         // Human-readable description
+  suggestion?: string     // "Did you mean X?"
+  context?: string        // Additional context (e.g., property name)
 }
 
 // ============================================
@@ -121,6 +178,11 @@ export interface ASTNode {
     collectionVar: string            // $items
     collectionPath?: string[]        // $data.items -> ['data', 'items']
   }
+  // Data binding: data Tasks [where condition]
+  dataBinding?: {
+    typeName: string                 // Tasks, Users, etc.
+    filter?: ConditionExpr           // Optional where clause
+  }
   // V3: Conditional properties (if $cond then props else props)
   conditionalProperties?: {
     condition: ConditionExpr
@@ -139,6 +201,8 @@ export interface ASTNode {
   showAnimation?: AnimationDefinition    // show fade slide-up 300
   hideAnimation?: AnimationDefinition    // hide fade 200
   continuousAnimation?: AnimationDefinition  // animate spin 1000
+  // V7: Parse issues (error-tolerant parsing)
+  parseIssues?: ParseIssue[]  // Collected issues during parsing
 }
 
 // Animation definition for show/hide/animate
@@ -164,6 +228,10 @@ export interface ComponentTemplate {
   // V5: Library type for 'as Text' etc.
   _isLibrary?: boolean
   _libraryType?: string
+  // V6: Animation definitions
+  showAnimation?: AnimationDefinition
+  hideAnimation?: AnimationDefinition
+  continuousAnimation?: AnimationDefinition
 }
 
 export interface StyleMixin {
@@ -220,9 +288,87 @@ export interface ParseResult {
   errors: string[]
   /** Structured errors with location and hints */
   diagnostics: ParseError[]
+  /** Parse issues collected during error-tolerant parsing */
+  parseIssues: ParseIssue[]
   registry: Map<string, ComponentTemplate>
   tokens: Map<string, TokenValue>
   styles: Map<string, StyleMixin>
   commands: SelectionCommand[]
   centralizedEvents: CentralizedEventHandler[]  // Events from the `events` block
+}
+
+// ============================================
+// Data Schema Types (for Data Tab)
+// ============================================
+
+export type DataFieldType = 'text' | 'number' | 'boolean' | string  // string = Relation to another type
+
+export interface DataField {
+  name: string           // Field name, e.g. "title"
+  type: DataFieldType    // Field type, e.g. "text", "number", "boolean", or "Category" (relation)
+}
+
+export interface DataSchema {
+  typeName: string       // Type name, e.g. "Task"
+  fields: DataField[]    // Fields in this type
+}
+
+export type DataRecord = Record<string, unknown> & { _id: string }
+
+export type DataRecords = Map<string, DataRecord[]>
+
+// ============================================
+// Data Instance Types (for new Data Tab syntax)
+// ============================================
+
+/**
+ * Parsed data instance from the Data tab.
+ * Created from lines like: - Task "Einkaufen" false Category[0]
+ */
+export interface DataInstance {
+  /** Type name this instance belongs to (e.g., "Task") */
+  typeName: string
+  /** Unique ID, auto-generated as "typename-index" */
+  _id: string
+  /** Field values in order as defined in the schema */
+  values: DataInstanceValue[]
+  /** Line number in source (0-indexed) */
+  line?: number
+}
+
+/**
+ * A single field value in a data instance.
+ */
+export interface DataInstanceValue {
+  /** Field name from schema */
+  fieldName: string
+  /** The value - can be primitive or a reference */
+  value: string | number | boolean | DataInstanceReference
+}
+
+/**
+ * Reference to another data instance (e.g., Category[0])
+ */
+export interface DataInstanceReference {
+  type: 'reference'
+  /** Referenced type name (e.g., "Category") */
+  typeName: string
+  /** Index in the list of that type (0-based) */
+  index: number
+}
+
+/**
+ * Check if a value is a reference
+ */
+export function isDataInstanceReference(value: unknown): value is DataInstanceReference {
+  return typeof value === 'object' && value !== null && 'type' in value && (value as DataInstanceReference).type === 'reference'
+}
+
+/**
+ * Result of parsing the Data tab code
+ */
+export interface DataParseResult {
+  schemas: DataSchema[]
+  instances: DataInstance[]
+  errors: string[]
 }

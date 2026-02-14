@@ -2,7 +2,7 @@
 // Pure neutral grays (blue component removed)
 export const colors = {
   bg: '#0c0c0c',           // Main background (was #0c0c0e)
-  header: '#232323',       // Header background (was #232429)
+  header: '#111111',       // Header background
   panel: '#1a1a1a',        // Panel background (darker)
   panelHover: '#333333',   // Panel hover/active state (was #33343A)
   tabActive: '#272727',    // Selected tab background (was #27292f)

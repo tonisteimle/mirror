@@ -19,6 +19,7 @@
 
 import { tokenize } from './lexer'
 import type { Token } from './lexer'
+import { normalizeInput } from './normalizer'
 
 // Re-export types for backwards compatibility
 export type {
@@ -34,7 +35,14 @@ export type {
   ComponentTemplate,
   StyleMixin,
   SelectionCommand,
-  ParseResult
+  ParseResult,
+  // Data types
+  DataSchema,
+  DataField,
+  DataRecord,
+  DataRecords,
+  // Token types
+  TokenValue
 } from './types'
 
 // Import types for internal use
@@ -53,6 +61,73 @@ import { parseSelectionCommand } from './command-parser'
 import { parseEventsBlock } from './events-parser'
 import { applyCommands } from './parser-utils'
 import { validateSemantics, checkCircularReferences } from './semantic-validation'
+import type { EventHandler } from './types'
+
+// ============================================
+// Apply Centralized Events to Nodes
+// ============================================
+
+/**
+ * Applies centralized event handlers from the `events` block to matching nodes.
+ * Finds nodes by instanceName or name and attaches the event handlers.
+ */
+function applyCentralizedEvents(
+  nodes: ASTNode[],
+  centralizedEvents: CentralizedEventHandler[]
+): void {
+  if (centralizedEvents.length === 0) return
+
+  // Build an index of nodes by instanceName and name for quick lookup
+  const nodesByName = new Map<string, ASTNode[]>()
+
+  function indexNode(node: ASTNode): void {
+    // Index by instanceName if present
+    if (node.instanceName) {
+      const existing = nodesByName.get(node.instanceName) || []
+      existing.push(node)
+      nodesByName.set(node.instanceName, existing)
+    }
+    // Also index by name (component type)
+    const existingByName = nodesByName.get(node.name) || []
+    existingByName.push(node)
+    nodesByName.set(node.name, existingByName)
+
+    // Recursively index children
+    for (const child of node.children) {
+      indexNode(child)
+    }
+  }
+
+  // Index all nodes
+  for (const node of nodes) {
+    indexNode(node)
+  }
+
+  // Apply each centralized event to matching nodes
+  for (const event of centralizedEvents) {
+    const targetNodes = nodesByName.get(event.targetInstance)
+    if (!targetNodes || targetNodes.length === 0) {
+      // Node not found - validation will catch this
+      continue
+    }
+
+    // Convert CentralizedEventHandler to EventHandler
+    const handler: EventHandler = {
+      event: event.event,
+      modifier: event.modifier,
+      actions: event.actions,
+      line: event.line
+    }
+
+    // Attach to all matching nodes (usually just one)
+    for (const node of targetNodes) {
+      if (!node.eventHandlers) {
+        node.eventHandlers = []
+      }
+      node.eventHandlers.push(handler)
+    }
+  }
+}
 
 // Re-export semantic validation
 export { validateSemantics, checkCircularReferences } from './semantic-validation'
@@ -62,6 +137,43 @@ export { debugParse, printAST, printTokens, printParseResult } from './debug'
 
 // Re-export error utilities
 export { formatError, formatErrors, ErrorCollector, type ParseError } from './errors'
+
+// ============================================
+// Parse Options
+// ============================================
+
+export interface ParseOptions {
+  /**
+   * Run comprehensive validation after parsing.
+   * Adds property, reference, event, action, library, state,
+   * animation, and type validation diagnostics.
+   */
+  validate?: boolean
+
+  /**
+   * Treat validation warnings as errors (strict mode).
+   * Only applies when validate is true.
+   */
+  strictValidation?: boolean
+
+  /**
+   * Skip certain validation categories.
+   * Only applies when validate is true.
+   */
+  skipValidation?: Array<'property' | 'library' | 'reference' | 'event' | 'action' | 'animation' | 'type' | 'state'>
+
+  /**
+   * Parent tokens to inherit from outer document.
+   * Used by Playground to access global tokens.
+   */
+  parentTokens?: Map<string, import('./types').TokenValue>
+
+  /**
+   * Parent registry to inherit from outer document.
+   * Used by Playground to access global component definitions.
+   */
+  parentRegistry?: Map<string, import('./types').ComponentTemplate>
+}
 
 /**
  * Extract the token reference name from a value, if it's a single token reference.
@@ -159,15 +271,73 @@ function resolveTokenReferences(tokens: Map<string, unknown>, errors?: Array<{ m
   }
 }
 
+// Validator integration - set by validator module to avoid circular deps
+let _validateCode: ((result: ParseResult, source: string, options?: unknown) => { errors: Array<{ message: string }>; warnings: Array<{ message: string }> }) | null = null
+let _diagnosticToParseError: ((d: unknown) => import('./errors').ParseError) | null = null
+
+/**
+ * Register the validator functions (called by validator module).
+ * This avoids circular dependency issues.
+ */
+export function registerValidator(
+  validateFn: typeof _validateCode,
+  convertFn: typeof _diagnosticToParseError
+): void {
+  _validateCode = validateFn
+  _diagnosticToParseError = convertFn
+}
+
+/**
+ * Run validation on a parse result.
+ */
+function runValidation(result: ParseResult, input: string, options: ParseOptions): void {
+  if (!_validateCode || !_diagnosticToParseError) {
+    // Validator not registered - skip validation
+    return
+  }
+
+  const validation = _validateCode!(result, input, {
+    strictMode: options.strictValidation,
+    skip: options.skipValidation
+  })
+
+  // Add validation diagnostics to the result
+  for (const error of validation.errors) {
+    result.diagnostics.push(_diagnosticToParseError!(error))
+    result.errors.push(error.message)
+  }
+  for (const warning of validation.warnings) {
+    result.diagnostics.push(_diagnosticToParseError!(warning))
+  }
+}
+
 /**
  * Parse DSL source code into an AST.
  *
  * @param input The DSL source code string
+ * @param options Optional parsing options (validation, etc.)
  * @returns ParseResult containing nodes, errors, registries, and commands
+ *
+ * @example
+ * ```typescript
+ * // Basic parsing
+ * const result = parse(code)
+ *
+ * // With validation
+ * const result = parse(code, { validate: true })
+ *
+ * // Strict validation (warnings become errors)
+ * const result = parse(code, { validate: true, strictValidation: true })
+ * ```
  */
-export function parse(input: string): ParseResult {
-  const tokens: Token[] = tokenize(input)
-  const ctx = createParserContext(tokens, input)
+export function parse(input: string, options?: ParseOptions): ParseResult {
+  // Normalize input before lexing (auto-correct common mistakes)
+  const normalizedInput = normalizeInput(input)
+  const tokens: Token[] = tokenize(normalizedInput)
+  const ctx = createParserContext(tokens, normalizedInput, {
+    parentTokens: options?.parentTokens,
+    parentRegistry: options?.parentRegistry
+  })
 
   const nodes: ASTNode[] = []
   const commands: SelectionCommand[] = []
@@ -215,6 +385,18 @@ export function parse(input: string): ParseResult {
     if (ctx.current()?.type === 'COMPONENT_NAME') {
       const node = parseComponent(ctx, 0)
       if (node) {
+        // Doc-mode: Check for MULTILINE_STRING after text/playground components
+        // This handles the case where the string is on the next line without indentation
+        if ((node.name === 'text' || node.name === 'playground') && !node.properties._docContent) {
+          // Skip newlines to find MULTILINE_STRING
+          ctx.skipNewlines()
+          if (ctx.current()?.type === 'MULTILINE_STRING') {
+            node.properties._docContent = ctx.advance().value
+            node._isLibrary = true
+            node._libraryType = node.name
+          }
+        }
+
         // Named instance definitions of primitives (e.g., Input Email:) are template-only
         // They're detected by having both instanceName and _primitiveType, with explicit definition
         // These define reusable input patterns but shouldn't render at top level
@@ -241,17 +423,28 @@ export function parse(input: string): ParseResult {
   // Apply selection commands to the AST
   applyCommands(nodes, commands, ctx.generateId.bind(ctx))
 
+  // Apply centralized events from the `events` block to matching nodes
+  applyCentralizedEvents(nodes, centralizedEvents)
+
   // Resolve forward token references (e.g., $size: $base where $base is defined later)
   resolveTokenReferences(ctx.designTokens)
 
-  return {
+  const result: ParseResult = {
     nodes,
     errors: ctx.errors,
     diagnostics: ctx.errorCollector.getErrors(),
+    parseIssues: ctx.parseIssues,
     registry: ctx.registry,
     tokens: ctx.designTokens,
     styles: ctx.styleMixins,
     commands,
     centralizedEvents
   }
+
+  // Run comprehensive validation if requested
+  if (options?.validate) {
+    runValidation(result, input, options)
+  }
+
+  return result
 }

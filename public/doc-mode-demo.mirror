@@ -1,0 +1,67 @@
+// Doc-Mode Demo
+// This file demonstrates the new documentation syntax
+
+doc
+  text
+    '$h1 Mirror Documentation
+
+     $subtitle A DSL for rapid UI prototyping
+
+     $h2 Getting Started
+
+     $p Mirror uses a simple, indentation-based syntax to define user interfaces.
+     Each component is defined on a single line with its properties.
+
+     $p Here is an example of a $b[basic button]:'
+
+  playground
+    'Button bg #2271c1 col white pad 12 24 rad 8 "Click me"'
+
+  text
+    '$h2 Components
+
+     $p Mirror supports a wide range of components:
+
+     $li $b[Box] - A basic container element
+     $li $b[Button] - Clickable button with various styles
+     $li $b[Input] - Text input field
+     $li $b[Card] - A card container with shadow
+
+     $h3 Layout Example
+
+     $p Components can be nested to create complex layouts:'
+
+  playground
+    'Card 300 pad 20 bg #1a1a1a rad 12 shadow md
+       Title size 18 weight 600 col #fff "Welcome"
+       Description size 14 col #888 mar u 8 "Get started with Mirror"
+       Actions hor gap 8 mar u 16
+         Button bg #2271c1 pad 8 16 rad 6 "Get Started"
+         Button bg transparent bor 1 boc #444 pad 8 16 rad 6 "Learn More"'
+
+  text
+    '$h2 Interactive Elements
+
+     $p Mirror supports interactive behaviors like $code[onclick], $code[onhover], and $code[toggle]:'
+
+  playground
+    'Toggle: w 52 h 28 rad 14 cursor pointer
+       state off
+         bg #333
+       state on
+         bg #3B82F6
+       Knob: 24 24 rad 12 bg white
+         state off
+           x 2
+         state on
+           x 26
+       onclick toggle
+
+     Toggle'
+
+  text
+    '$h2 Learn More
+
+     $p Visit the $link[documentation](https://mirror.dev/docs) for more examples and guides.
+
+     $p Happy prototyping!'

@@ -1,3 +1,13 @@
+/**
+ * PageSidebar - Minimal navigation for pages
+ *
+ * Design: Subtle, like editor tabs. No backgrounds, no borders.
+ * - Page names only
+ * - Delete icon appears on hover (if page can be deleted)
+ * - Pages are created via code references (page PageName)
+ * - Pages can only be deleted if not referenced in code
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { colors } from '../theme'
 
@@ -11,26 +21,23 @@ interface PageSidebarProps {
   pages: PageData[]
   currentPageId: string
   onSelectPage: (pageId: string) => void
-  onAddPage: () => void
+  onDeletePage: (pageId: string) => string[] | null
   onRenamePage: (pageId: string, newName: string) => void
-  onDeletePage: (pageId: string) => string[] | null  // Returns referencing pages if can't delete
-  onReorderPages: (fromIndex: number, toIndex: number) => void
+  /** Set of page names that are referenced in code */
+  referencedPages?: Set<string>
 }
 
 export function PageSidebar({
   pages,
   currentPageId,
   onSelectPage,
-  onAddPage,
-  onRenamePage,
   onDeletePage,
-  onReorderPages,
+  onRenamePage,
+  referencedPages = new Set(),
 }: PageSidebarProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; pageId: string } | null>(null)
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [deleteError, setDeleteError] = useState<{ pageId: string; references: string[] } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -41,16 +48,14 @@ export function PageSidebar({
     }
   }, [editingId])
 
+  // Close error popup on outside click
   useEffect(() => {
-    const handleClick = () => {
-      setContextMenu(null)
-      setDeleteError(null)
-    }
-    if (contextMenu || deleteError) {
+    if (deleteError) {
+      const handleClick = () => setDeleteError(null)
       document.addEventListener('click', handleClick)
       return () => document.removeEventListener('click', handleClick)
     }
-  }, [contextMenu, deleteError])
+  }, [deleteError])
 
   const handleDoubleClick = (page: PageData) => {
     setEditingId(page.id)
@@ -74,253 +79,162 @@ export function PageSidebar({
     }
   }
 
-  const handleContextMenu = (e: React.MouseEvent, pageId: string) => {
-    e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY, pageId })
-  }
-
-  const startRename = (pageId: string) => {
-    const page = pages.find(p => p.id === pageId)
-    if (page) {
-      setEditingId(pageId)
-      setEditName(page.name)
+  const handleDelete = (e: React.MouseEvent, pageId: string) => {
+    e.stopPropagation()
+    const references = onDeletePage(pageId)
+    if (references && references.length > 0) {
+      setDeleteError({ pageId, references })
     }
-    setContextMenu(null)
   }
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index)
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', index.toString())
-  }
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverIndex(index)
-  }
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null)
-  }
-
-  const handleDrop = (e: React.DragEvent, toIndex: number) => {
-    e.preventDefault()
-    if (draggedIndex !== null && draggedIndex !== toIndex) {
-      onReorderPages(draggedIndex, toIndex)
-    }
-    setDraggedIndex(null)
-    setDragOverIndex(null)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null)
-    setDragOverIndex(null)
+  const canDelete = (page: PageData): boolean => {
+    // Can't delete if it's the only page
+    if (pages.length <= 1) return false
+    // Can't delete if referenced in code
+    if (referencedPages.has(page.name)) return false
+    return true
   }
 
   return (
-    <div style={{
-      width: '140px',
-      minWidth: '140px',
-      backgroundColor: colors.panel,
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: '8px 10px 6px',
+    <nav
+      role="navigation"
+      aria-label="Page navigation"
+      style={{
+        width: '120px',
+        minWidth: '120px',
+        paddingTop: '8px',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column',
+        backgroundColor: colors.panel,
       }}>
-        <span style={{
-          fontSize: '12px',
-          fontWeight: 500,
-          color: colors.text,
-        }}>
-          Pages
-        </span>
-        <button
-          onClick={onAddPage}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: colors.text,
-            fontSize: '14px',
-            lineHeight: 1,
-            cursor: 'pointer',
-            padding: '2px 4px',
-            opacity: 0.6,
-            transition: 'opacity 0.15s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6' }}
-        >
-          +
-        </button>
-      </div>
-
       {/* Page List */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '0 6px' }}>
-        {pages.map((page, index) => {
-          const isActive = page.id === currentPageId
-          const isEditing = page.id === editingId
-          const isDragging = draggedIndex === index
-          const isDragOver = dragOverIndex === index && draggedIndex !== index
+      {pages.map((page) => {
+        const isActive = page.id === currentPageId
+        const isHovered = hoveredId === page.id
+        const isEditing = page.id === editingId
+        const showDelete = isHovered && canDelete(page) && !isEditing
 
-          return (
-            <div
-              key={page.id}
-              draggable={!isEditing}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-              onClick={() => !isEditing && onSelectPage(page.id)}
-              onDoubleClick={() => handleDoubleClick(page)}
-              onContextMenu={(e) => handleContextMenu(e, page.id)}
-              style={{
-                padding: '6px 8px',
-                fontSize: '12px',
-                color: colors.text,
-                backgroundColor: isActive ? '#2A2A2A' : 'transparent',
-                borderRadius: '4px',
-                cursor: isEditing ? 'text' : 'pointer',
-                transition: 'background-color 0.1s ease',
-                marginBottom: '1px',
-                opacity: isDragging ? 0.5 : 1,
-                borderTop: isDragOver ? '2px solid #555' : '2px solid transparent',
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive && !isDragging) {
-                  e.currentTarget.style.backgroundColor = '#252525'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }
-              }}
-            >
-              {isEditing ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onBlur={handleRenameSubmit}
-                  onKeyDown={handleKeyDown}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    width: '100%',
-                    padding: '0',
-                    fontSize: '12px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'transparent',
-                    color: colors.text,
-                    border: 'none',
-                    outline: 'none',
-                  }}
-                />
-              ) : (
-                page.name
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Context Menu */}
-      {contextMenu && (
-        <div
-          style={{
-            position: 'fixed',
-            left: contextMenu.x,
-            top: contextMenu.y,
-            backgroundColor: '#2A2A2A',
-            border: `1px solid ${colors.border}`,
-            borderRadius: '4px',
-            padding: '2px 0',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-            zIndex: 1000,
-            minWidth: '90px',
-          }}
-        >
+        return (
           <div
-            onClick={(e) => {
-              e.stopPropagation()
-              startRename(contextMenu.pageId)
+            key={page.id}
+            role="button"
+            tabIndex={0}
+            aria-current={isActive ? 'page' : undefined}
+            aria-label={`Page: ${page.name}`}
+            onClick={() => !isEditing && onSelectPage(page.id)}
+            onDoubleClick={() => handleDoubleClick(page)}
+            onMouseEnter={() => setHoveredId(page.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isEditing) {
+                onSelectPage(page.id)
+              }
             }}
             style={{
-              padding: '5px 10px',
+              padding: '4px 12px',
               fontSize: '12px',
-              color: colors.text,
-              cursor: 'pointer',
+              color: isActive ? '#fff' : '#666',
+              cursor: isEditing ? 'text' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'color 0.1s ease',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3A3A3A' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
           >
-            Rename
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  padding: '0',
+                  fontSize: '12px',
+                  fontFamily: 'inherit',
+                  backgroundColor: 'transparent',
+                  color: '#fff',
+                  border: 'none',
+                  outline: 'none',
+                }}
+              />
+            ) : (
+              <>
+                <span style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {page.name}
+                </span>
+                {showDelete && (
+                  <button
+                    onClick={(e) => handleDelete(e, page.id)}
+                    aria-label={`Delete page ${page.name}`}
+                    title={`Delete page ${page.name}`}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '0 0 0 8px',
+                      color: '#666',
+                      fontSize: '10px',
+                      cursor: 'pointer',
+                      lineHeight: 1,
+                      opacity: 0.6,
+                      transition: 'opacity 0.1s, color 0.1s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1'
+                      e.currentTarget.style.color = '#EF4444'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.6'
+                      e.currentTarget.style.color = '#666'
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </>
+            )}
           </div>
-          {pages.length > 1 && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation()
-                const references = onDeletePage(contextMenu.pageId)
-                if (references && references.length > 0) {
-                  setDeleteError({ pageId: contextMenu.pageId, references })
-                }
-                setContextMenu(null)
-              }}
-              style={{
-                padding: '5px 10px',
-                fontSize: '12px',
-                color: '#EF4444',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3A3A3A' }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-            >
-              Delete
-            </div>
-          )}
-        </div>
-      )}
+        )
+      })}
 
       {/* Delete Error Popup */}
       {deleteError && (
         <div
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
-            left: '50%',
+            left: '140px',
             top: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: '#2A2A2A',
-            border: `1px solid ${colors.border}`,
+            transform: 'translateY(-50%)',
+            backgroundColor: '#1E1E2E',
+            border: '1px solid #333',
             borderRadius: '6px',
             padding: '12px 16px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
             zIndex: 1001,
-            maxWidth: '280px',
+            maxWidth: '240px',
           }}
         >
-          <div style={{ fontSize: '12px', color: colors.text, marginBottom: '8px' }}>
-            Seite wird noch referenziert von:
+          <div style={{ fontSize: '12px', color: '#999', marginBottom: '6px' }}>
+            Seite wird referenziert von:
           </div>
-          <div style={{ fontSize: '12px', color: '#EF4444', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#EF4444', marginBottom: '10px' }}>
             {deleteError.references.join(', ')}
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setDeleteError(null)
-            }}
+            onClick={() => setDeleteError(null)}
             style={{
               padding: '4px 12px',
               fontSize: '11px',
-              backgroundColor: '#3A3A3A',
-              color: colors.text,
+              backgroundColor: '#333',
+              color: '#999',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -330,6 +244,6 @@ export function PageSidebar({
           </button>
         </div>
       )}
-    </div>
+    </nav>
   )
 }

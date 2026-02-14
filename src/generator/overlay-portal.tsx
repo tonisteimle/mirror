@@ -7,7 +7,8 @@
  */
 
 import { createPortal } from 'react-dom'
-import { useOverlayRegistry, type OverlayPosition } from './overlay-registry'
+import { useOverlayRegistry } from './overlay-registry-hooks'
+import type { OverlayPosition } from './overlay-registry-context'
 import type { ASTNode } from '../parser/types'
 
 /**

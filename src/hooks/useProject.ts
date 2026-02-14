@@ -3,6 +3,11 @@ import type { PageData } from '../components/PageSidebar'
 import type { ASTNode } from '../parser/parser'
 import { generateReactCode } from '../generator/react-exporter'
 import { logger } from '../services/logger'
+import {
+  serializeMirrorFile,
+  parseProjectFile,
+  type MirrorProject
+} from '../lib/mirror-file'
 
 const STORAGE_KEY = 'mirror-project'
 
@@ -10,6 +15,7 @@ interface ProjectData {
   version?: number
   pages: PageData[]
   currentPageId: string
+  dataCode?: string
   componentsCode: string
   tokensCode: string
 }
@@ -18,11 +24,13 @@ interface UseProjectProps {
   pages: PageData[]
   currentPageId: string
   layoutCode: string
+  dataCode: string
   componentsCode: string
   tokensCode: string
   setPages: (pages: PageData[]) => void
   setCurrentPageId: (id: string) => void
   setLayoutCode: (code: string) => void
+  setDataCode: (code: string) => void
   setComponentsCode: (code: string) => void
   setTokensCode: (code: string) => void
   getCurrentPagesWithLayout: () => PageData[]
@@ -39,11 +47,13 @@ export function useProject({
   pages,
   currentPageId,
   layoutCode,
+  dataCode,
   componentsCode,
   tokensCode,
   setPages,
   setCurrentPageId,
   setLayoutCode,
+  setDataCode,
   setComponentsCode,
   setTokensCode,
   getCurrentPagesWithLayout,
@@ -67,6 +77,7 @@ export function useProject({
       const projectData: ProjectData = {
         pages: getCurrentPagesWithLayout(),
         currentPageId,
+        dataCode,
         componentsCode,
         tokensCode,
       }
@@ -78,7 +89,7 @@ export function useProject({
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [pages, currentPageId, layoutCode, componentsCode, tokensCode, getCurrentPagesWithLayout])
+  }, [pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode, getCurrentPagesWithLayout])
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -91,6 +102,7 @@ export function useProject({
           setCurrentPageId(data.currentPageId || data.pages[0].id)
           const currentPage = data.pages.find(p => p.id === (data.currentPageId || data.pages[0].id))
           setLayoutCode(currentPage?.layoutCode || '')
+          if (data.dataCode) setDataCode(data.dataCode)
           if (data.componentsCode) setComponentsCode(data.componentsCode)
           if (data.tokensCode) setTokensCode(data.tokensCode)
         }
@@ -101,50 +113,62 @@ export function useProject({
     isInitializedRef.current = true
   }, [])
 
+  // Export project to .mirror file
   const exportProject = useCallback(() => {
-    const projectData: ProjectData = {
+    const mirrorProject: MirrorProject = {
       version: 1,
-      pages: getCurrentPagesWithLayout(),
-      currentPageId,
-      componentsCode,
+      dataCode,
       tokensCode,
+      componentsCode,
+      pages: getCurrentPagesWithLayout().map(p => ({
+        id: p.id,
+        name: p.name,
+        layoutCode: p.layoutCode
+      })),
+      currentPageId,
     }
-    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' })
+
+    const content = serializeMirrorFile(mirrorProject)
+    const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'mirror-project.json'
+    a.download = 'project.mirror'
     a.click()
     URL.revokeObjectURL(url)
-  }, [getCurrentPagesWithLayout, currentPageId, componentsCode, tokensCode])
+  }, [getCurrentPagesWithLayout, currentPageId, dataCode, componentsCode, tokensCode])
 
+  // Import project from file (supports .mirror and .json)
   const importProject = useCallback(() => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.json'
+    input.accept = '.mirror,.json'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (!file) return
+
       const reader = new FileReader()
       reader.onload = (event) => {
-        try {
-          const data: ProjectData = JSON.parse(event.target?.result as string)
-          if (data.pages?.length > 0) {
-            setPages(data.pages)
-            setCurrentPageId(data.currentPageId || data.pages[0].id)
-            const currentPage = data.pages.find(p => p.id === (data.currentPageId || data.pages[0].id))
-            setLayoutCode(currentPage?.layoutCode || '')
-            if (data.componentsCode) setComponentsCode(data.componentsCode)
-            if (data.tokensCode) setTokensCode(data.tokensCode)
-          }
-        } catch (err) {
-          logger.storage.error('Failed to import project', err)
+        const content = event.target?.result as string
+        const result = parseProjectFile(content)
+
+        if (result.success && result.project) {
+          const project = result.project
+          setPages(project.pages)
+          setCurrentPageId(project.currentPageId || project.pages[0]?.id || 'page-1')
+          const currentPage = project.pages.find(p => p.id === project.currentPageId)
+          setLayoutCode(currentPage?.layoutCode || '')
+          setDataCode(project.dataCode)
+          setComponentsCode(project.componentsCode)
+          setTokensCode(project.tokensCode)
+        } else {
+          logger.storage.error('Failed to import project', result.error)
         }
       }
       reader.readAsText(file)
     }
     input.click()
-  }, [setPages, setCurrentPageId, setLayoutCode, setComponentsCode, setTokensCode])
+  }, [setPages, setCurrentPageId, setLayoutCode, setDataCode, setComponentsCode, setTokensCode])
 
   const exportReact = useCallback(() => {
     const reactCode = generateReactCode(parseResult.nodes)

@@ -10,6 +10,7 @@
 
 import type { ParserContext } from './parser-context'
 import type { ConditionExpr } from './types'
+import { isComparisonOperator } from './types'
 import { parseValue } from './expression-parser'
 
 /**
@@ -33,12 +34,22 @@ function parseAtomicCondition(ctx: ParserContext): ConditionExpr | null {
 
     // Check for comparison operator
     if (ctx.current()?.type === 'OPERATOR') {
-      const op = ctx.advance().value as ConditionExpr['operator']
+      const opToken = ctx.advance()
+      const opValue = opToken.value
+      if (!isComparisonOperator(opValue)) {
+        ctx.addWarning(
+          'P001',
+          `Unknown comparison operator "${opValue}"`,
+          opToken,
+          `Valid operators: ==, !=, >, <, >=, <=`
+        )
+        return null
+      }
       const rightValue = parseValue(ctx)
       return {
         type: 'comparison',
         left: { type: 'var', name: varName },
-        operator: op,
+        operator: opValue,
         value: rightValue ?? undefined
       }
     }
@@ -52,12 +63,22 @@ function parseAtomicCondition(ctx: ParserContext): ConditionExpr | null {
 
     // Check for comparison operator
     if (ctx.current()?.type === 'OPERATOR') {
-      const op = ctx.advance().value as ConditionExpr['operator']
+      const opToken = ctx.advance()
+      const opValue = opToken.value
+      if (!isComparisonOperator(opValue)) {
+        ctx.addWarning(
+          'P001',
+          `Unknown comparison operator "${opValue}"`,
+          opToken,
+          `Valid operators: ==, !=, >, <, >=, <=`
+        )
+        return null
+      }
       const rightValue = parseValue(ctx)
       return {
         type: 'comparison',
         left: { type: 'var', name: varName },
-        operator: op,
+        operator: opValue,
         value: rightValue ?? undefined
       }
     }

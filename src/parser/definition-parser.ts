@@ -9,7 +9,9 @@
 import type { ParserContext } from './parser-context'
 import type { ASTNode, ComponentTemplate } from './types'
 import { CSS_COLOR_KEYWORDS, splitDirections, applySpacingToProperties } from './parser-utils'
-import { parseStateDefinition, parseVariableDeclaration, parseEventHandler } from './state-parser'
+import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseBehaviorStateDefinition, parseAnimationAction, parseAction } from './state-parser'
+import { ACTION_KEYWORDS, KEY_MODIFIERS } from '../dsl/properties'
+import { BEHAVIOR_STATE_KEYWORDS, PROPERTY_KEYWORD_VALUES, SYSTEM_STATES } from '../dsl/properties'
 import { parseComponent } from './component-parser'
 import { parseLayoutProperty, parseCenterProperty } from './property-parser'
 import { createTextNode } from './parser-utils'
@@ -149,6 +151,9 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
         } else if (next?.type === 'COMPONENT_NAME' && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
           // CSS color keyword like 'transparent', 'white', etc.
           template.properties[propName] = ctx.advance().value
+        } else if (next?.type === 'COMPONENT_NAME' && PROPERTY_KEYWORD_VALUES.has(next.value.toLowerCase())) {
+          // Property keyword value like 'sm', 'md', 'lg' for shadow, 'cover' for fit, etc.
+          template.properties[propName] = ctx.advance().value
         } else {
           template.properties[propName] = true
         }
@@ -221,6 +226,35 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
         }
       }
       template.children.push(textNode)
+    } else if (token.type === 'EVENT') {
+      // Inline event handler: onclick toggle, onhover show Tooltip, etc.
+      const eventLine = token.line
+      const eventName = ctx.advance().value
+
+      const handler: import('./types').EventHandler = {
+        event: eventName,
+        actions: [],
+        line: eventLine
+      }
+
+      // Check for key modifier after onkeydown/onkeyup
+      if ((eventName === 'onkeydown' || eventName === 'onkeyup') && ctx.current()?.type === 'COMPONENT_NAME') {
+        const possibleModifier = ctx.current()!.value.toLowerCase()
+        if (KEY_MODIFIERS.has(possibleModifier)) {
+          handler.modifier = ctx.advance().value.toLowerCase()
+        }
+      }
+
+      // Parse inline action
+      const current = ctx.current()
+      if (current?.type === 'COMPONENT_NAME' && ACTION_KEYWORDS.has(current.value)) {
+        const action = parseAction(ctx)
+        if (action) handler.actions.push(action)
+      }
+
+      // Add handler to template
+      if (!template.eventHandlers) template.eventHandlers = []
+      template.eventHandlers.push(handler)
     } else {
       break
     }
@@ -255,6 +289,20 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           template.states.push(stateDef)
         }
       }
+      // V8: Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
+      // These are state blocks where the keyword IS the state name
+      // e.g., `highlight` followed by newline and indented properties
+      else if (
+        ctx.current()?.type === 'COMPONENT_NAME' &&
+        (BEHAVIOR_STATE_KEYWORDS.has(ctx.current()!.value) || SYSTEM_STATES.has(ctx.current()!.value)) &&
+        ctx.peek(1)?.type === 'NEWLINE'
+      ) {
+        const stateDef = parseBehaviorStateDefinition(ctx, childIndent)
+        if (stateDef) {
+          if (!template.states) template.states = []
+          template.states.push(stateDef)
+        }
+      }
       // V2: Check for event handler
       else if (ctx.current()?.type === 'EVENT') {
         const handler = parseEventHandler(ctx, childIndent)
@@ -274,11 +322,40 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           ctx.advance()
         }
       }
-      else if (ctx.current()?.type === 'COMPONENT_NAME') {
+      // V6: Check for animation action (show/hide/animate)
+      else if (ctx.current()?.type === 'ANIMATION_ACTION') {
+        const animDef = parseAnimationAction(ctx)
+        if (animDef) {
+          if (animDef.type === 'show') {
+            template.showAnimation = animDef
+          } else if (animDef.type === 'hide') {
+            template.hideAnimation = animDef
+          } else if (animDef.type === 'animate') {
+            template.continuousAnimation = animDef
+          }
+        }
+        if (ctx.current()?.type === 'NEWLINE') {
+          ctx.advance()
+        }
+      }
+      // V4: Check for list item (- prefix for new instance)
+      else if (ctx.current()?.type === 'LIST_ITEM') {
+        ctx.advance() // consume '-'
+        if (ctx.current()?.type === 'COMPONENT_NAME') {
+          const child = parseComponent(ctx, childIndent, componentName, false, true)
+          if (child) {
+            child._isListItem = true
+            template.children.push(child)
+          }
+        }
+      }
+      else if (ctx.current()?.type === 'COMPONENT_NAME' || ctx.current()?.type === 'COMPONENT_DEF') {
         // Component child - parse it with parent scope
         // Children are instances (not definitions), but they ARE part of a definition
         // so they should register in scoped registry if they have props
-        const child = parseComponent(ctx, childIndent, componentName, false, true)
+        // Note: COMPONENT_DEF handles cases like "Item:" which defines a slot template
+        const isChildDef = ctx.current()?.type === 'COMPONENT_DEF'
+        const child = parseComponent(ctx, childIndent, componentName, isChildDef, true)
         if (child) {
           template.children.push(child)
         }

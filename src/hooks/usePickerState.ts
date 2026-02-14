@@ -3,7 +3,7 @@
  * Replaces 10 separate picker states with a single unified state.
  */
 
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useRef, useEffect } from 'react'
 import type { EditorView } from '@codemirror/view'
 import type { PickerType, PickerContext, PickerState, Position } from '../types/picker'
 import { FOCUS_RETURN_DELAY_MS } from '../editor/constants'
@@ -113,6 +113,18 @@ export function usePickerState(editorRef: React.RefObject<EditorView | null>): U
   const [state, dispatch] = useReducer(pickerReducer, pickerInitialState)
   const { getCursorPosition } = usePanelPosition(editorRef)
 
+  // Ref for focus return timeout - prevents multiple queued timeouts
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Wrapper for backwards compatibility
   const getCursorCoords = useCallback((): Position | null => {
     return getCursorPosition()
@@ -129,9 +141,16 @@ export function usePickerState(editorRef: React.RefObject<EditorView | null>): U
   // Close current picker and return focus to editor
   const closePicker = useCallback(() => {
     dispatch({ type: 'CLOSE' })
+
+    // Clear any pending focus timeout before setting a new one
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current)
+    }
+
     // Return focus to editor so user can continue typing
-    setTimeout(() => {
+    focusTimeoutRef.current = setTimeout(() => {
       editorRef.current?.focus()
+      focusTimeoutRef.current = null
     }, FOCUS_RETURN_DELAY_MS)
   }, [editorRef])
 

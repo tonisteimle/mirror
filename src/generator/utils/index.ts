@@ -10,3 +10,4 @@ export {
   getEventValue
 } from './evaluators'
 export { resolveImageSrc, isValidImageUrl } from './image-resolver'
+export { matchesKeyModifier } from './key-modifiers'

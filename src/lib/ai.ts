@@ -1,31 +1,40 @@
 import { API, STORAGE_KEYS } from '../constants'
 
-// API key management - persisted to localStorage for convenience
+// API key management
+// Uses sessionStorage for security - key clears when browser tab closes
+// This prevents API key from persisting if device is shared
 let OPENROUTER_API_KEY = ''
 
-// Load API key from localStorage on module initialization
+// Load API key: 1. sessionStorage, 2. env variable (for testing)
 try {
-  const stored = localStorage.getItem(STORAGE_KEYS.API_KEY)
+  const stored = sessionStorage.getItem(STORAGE_KEYS.API_KEY)
   if (stored) {
     OPENROUTER_API_KEY = stored
+  } else if (import.meta.env.VITE_OPENROUTER_API_KEY) {
+    // Fallback to env variable for testing phase
+    OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
   }
 } catch {
-  // localStorage not available (SSR, etc.)
+  // sessionStorage not available (SSR, etc.)
+  if (import.meta.env.VITE_OPENROUTER_API_KEY) {
+    OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
+  }
 }
 
 /**
- * Set the API key and persist it to localStorage.
+ * Set the API key and persist it to sessionStorage.
+ * Key will be cleared when the browser tab is closed.
  */
 export function setApiKey(key: string): void {
   OPENROUTER_API_KEY = key
   try {
     if (key) {
-      localStorage.setItem(STORAGE_KEYS.API_KEY, key)
+      sessionStorage.setItem(STORAGE_KEYS.API_KEY, key)
     } else {
-      localStorage.removeItem(STORAGE_KEYS.API_KEY)
+      sessionStorage.removeItem(STORAGE_KEYS.API_KEY)
     }
   } catch {
-    // localStorage not available
+    // sessionStorage not available
   }
 }
 
@@ -44,14 +53,14 @@ export function hasApiKey(): boolean {
 }
 
 /**
- * Clear the API key from memory and localStorage
+ * Clear the API key from memory and sessionStorage
  */
 export function clearApiKey(): void {
   OPENROUTER_API_KEY = ''
   try {
-    localStorage.removeItem(STORAGE_KEYS.API_KEY)
+    sessionStorage.removeItem(STORAGE_KEYS.API_KEY)
   } catch {
-    // localStorage not available
+    // sessionStorage not available
   }
 }
 
@@ -292,7 +301,7 @@ export async function generateMirrorCode(userPrompt: string): Promise<GeneratedC
     throw new Error(`API Error: ${response.status}${errorText ? ` - ${errorText}` : ''}`)
   }
 
-  const data = await response.json()
+  const data = await response.json() as { choices: Array<{ message?: { content?: string } }> }
   let content = data.choices[0]?.message?.content || ''
 
   // Remove markdown code blocks if present
@@ -530,3 +539,177 @@ function adjustIndentation(code: string, targetIndent: number): string {
 
 // Re-export context types
 export { type GenerationContext, type CursorContext } from './ai-context'
+
+// =============================================================================
+// Intent-based Generation (NEW: LLM arbeitet mit JSON, nicht Mirror-Syntax)
+// =============================================================================
+
+import { mirrorToIntent } from '../intent/mirror-to-intent'
+import { intentToMirror } from '../intent/intent-to-mirror'
+import { INTENT_SYSTEM_PROMPT, buildUserPrompt, parseIntentResponse } from '../intent/llm-prompt'
+import type { Intent } from '../intent/schema'
+
+export interface IntentGenerationOptions {
+  layoutCode: string
+  componentsCode?: string
+  tokensCode?: string
+}
+
+export interface IntentGenerationResult {
+  success: boolean
+  layoutCode?: string
+  componentsCode?: string
+  tokensCode?: string
+  error?: string
+  // Debug info
+  inputIntent?: Intent
+  outputIntent?: Intent
+}
+
+/**
+ * Generate Mirror code using Intent-based approach.
+ *
+ * Unlike direct generation, this:
+ * 1. Converts current code to structured JSON (Intent)
+ * 2. LLM modifies JSON (no Mirror syntax knowledge needed)
+ * 3. Converts back to clean, token-based Mirror code
+ *
+ * Benefits:
+ * - LLM doesn't need to learn Mirror syntax
+ * - Output is always syntactically correct
+ * - Tokens and components are automatically used
+ * - Design consistency is guaranteed
+ */
+export async function generateWithIntent(
+  userPrompt: string,
+  options: IntentGenerationOptions
+): Promise<IntentGenerationResult> {
+  if (!hasApiKey()) {
+    return {
+      success: false,
+      error: 'Kein API Key gesetzt. Bitte OpenRouter API Key in den Einstellungen eingeben.',
+    }
+  }
+
+  try {
+    // 1. Convert current code to Intent
+    const currentIntent = mirrorToIntent(
+      options.layoutCode,
+      options.componentsCode || '',
+      options.tokensCode || ''
+    )
+
+    // 2. Build prompts
+    const systemPrompt = INTENT_SYSTEM_PROMPT
+    const userPromptWithContext = buildUserPrompt(currentIntent, userPrompt)
+
+    // 3. Call OpenRouter
+    const response = await fetchWithTimeout(API.ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'http://localhost:5173',
+        'X-Title': 'Mirror Intent',
+      },
+      body: JSON.stringify({
+        model: API.MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPromptWithContext }
+        ],
+        max_tokens: API.MAX_TOKENS,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      return {
+        success: false,
+        error: `API Error: ${response.status}${errorText ? ` - ${errorText}` : ''}`,
+        inputIntent: currentIntent,
+      }
+    }
+
+    const data = await response.json() as { choices: Array<{ message?: { content?: string } }> }
+    const content = data.choices[0]?.message?.content || ''
+
+    // 4. Parse response
+    const newIntent = parseIntentResponse(content)
+    if (!newIntent) {
+      return {
+        success: false,
+        error: 'LLM-Antwort konnte nicht als Intent-JSON geparst werden',
+        inputIntent: currentIntent,
+      }
+    }
+
+    // 5. Convert back to Mirror code (split into sections)
+    const tokensCode = generateTokensCode(newIntent)
+    const componentsCode = generateComponentsCode(newIntent)
+    const layoutCode = generateLayoutCode(newIntent)
+
+    return {
+      success: true,
+      layoutCode,
+      componentsCode,
+      tokensCode,
+      inputIntent: currentIntent,
+      outputIntent: newIntent,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unbekannter Fehler',
+    }
+  }
+}
+
+// Helper: Generate tokens section
+function generateTokensCode(intent: Intent): string {
+  const lines: string[] = []
+  const { colors, spacing, radii, sizes } = intent.tokens
+
+  if (colors) {
+    for (const [name, value] of Object.entries(colors)) {
+      lines.push(`$${name}: ${value}`)
+    }
+  }
+  if (spacing) {
+    for (const [name, value] of Object.entries(spacing)) {
+      lines.push(`$${name}: ${value}`)
+    }
+  }
+  if (radii) {
+    for (const [name, value] of Object.entries(radii)) {
+      lines.push(`$${name}: ${value}`)
+    }
+  }
+  if (sizes) {
+    for (const [name, value] of Object.entries(sizes)) {
+      lines.push(`$${name}: ${value}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+// Helper: Generate components section
+function generateComponentsCode(intent: Intent): string {
+  const componentsOnlyIntent: Intent = {
+    tokens: { colors: {}, spacing: {}, radii: {}, sizes: {} },
+    components: intent.components,
+    layout: [],
+  }
+  return intentToMirror(componentsOnlyIntent).trim()
+}
+
+// Helper: Generate layout section
+function generateLayoutCode(intent: Intent): string {
+  const layoutOnlyIntent: Intent = {
+    tokens: { colors: {}, spacing: {}, radii: {}, sizes: {} },
+    components: [],
+    layout: intent.layout,
+  }
+  return intentToMirror(layoutOnlyIntent).trim()
+}

@@ -1,0 +1,67 @@
+// Test: Doc-Mode Styling vs HTML
+// Dieser Test vergleicht das Styling mit mirror-docu.html
+
+// Globale Komponenten für Playground
+Btn: pad 12 24 bg #2271c1 col white rad 8 cursor pointer
+Card: ver bg #1A1A23 rad 12 pad 24
+Tile: ver bg #3281d1 pad 20 rad 12 gap 8
+
+doc
+  text
+    '$h1 Mirror
+
+     $subtitle A description language for user interfaces.'
+
+  text
+    '$h2 What is Mirror
+
+     $lead Mirror is a description language for user interfaces. One syntax for structure, styling, and interactions – that compiles to React.
+
+     $p Building UI today means juggling three languages: HTML for structure, CSS for styling, JavaScript for behavior. Each lives in different files, follows different rules, and requires constant mental context-switching.
+
+     $p Mirror takes a different approach. It is a single, declarative language where components, their appearance, and their behavior live together.'
+
+  text
+    '$h3 Learn Mirror in 2 Minutes
+
+     $p Every example below is interactive. Edit the code and see the result instantly.
+
+     $h4 1. A Component
+
+     $p Everything in Mirror is a component. Every component has a name – this is how you reuse it later.'
+
+  playground
+    'Btn "Hello World"'
+
+  text
+    '$p $code[Btn] is the component name, $code["Hello World"] is its content.
+
+     $h4 2. Add Styling
+
+     $p Properties style a component. Colors can be written directly without a property name.'
+
+  playground
+    'Row gap 12
+       Btn "Short form"
+       Btn bg #c12271 "Override"'
+
+  text
+    '$h4 3. Layouts and Children
+
+     $p Components can contain other components. Indentation (2 spaces) defines hierarchy.'
+
+  playground
+    'Tile
+       Label size 12 "Revenue"
+       Value size 28 weight bold "2.7 Mio"'
+
+  text
+    '$h4 4. Reusable Templates
+
+     $p Add $code[:] after a name to define a template.'
+
+  playground
+    'Dashboard grid 3 gap 16
+       Tile Label "Revenue" Value "2.7 Mio"
+       Tile Label "Customers" Value "40"
+       Tile Label "Growth" Value "+12%"'

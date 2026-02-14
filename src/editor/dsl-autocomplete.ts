@@ -2,8 +2,9 @@
  * DSL Autocomplete for CodeMirror
  * VS Code-like inline autocomplete that replaces the modal PropertyPicker.
  */
-import { autocompletion, type CompletionContext, type CompletionResult, type Completion } from '@codemirror/autocomplete'
+import { autocompletion, startCompletion, type CompletionContext, type CompletionResult, type Completion } from '@codemirror/autocomplete'
 import { EditorView } from '@codemirror/view'
+import { StateField, StateEffect } from '@codemirror/state'
 import { properties, type Property, type ValuePickerType } from '../data/dsl-properties'
 import { getAllLibraryComponents } from '../library/registry'
 import { fuzzyScore } from '../utils/fuzzy-search'
@@ -11,6 +12,75 @@ import { colors } from '../theme'
 import { LRUCache } from '../utils/lru-cache'
 import { isInsideString } from './utils'
 import { FUZZY_SCORE_CACHE_SIZE, PICKER_OPEN_DELAY_MS, MAX_AUTOCOMPLETE_OPTIONS } from './constants'
+
+/**
+ * Property groups for contextual boosting.
+ * After selecting a value for one property, related properties are boosted.
+ */
+const PROPERTY_BOOST_GROUPS: Record<string, string[]> = {
+  // Typography: after font, suggest size/weight/line/col
+  font: ['size', 'weight', 'line', 'col'],
+  size: ['weight', 'line', 'font', 'col'],
+  weight: ['size', 'line', 'font'],
+  line: ['size', 'weight', 'font'],
+  // Icon: after icon, suggest size/col
+  icon: ['size', 'col'],
+  // Spacing: after pad, suggest mar/gap
+  pad: ['mar', 'gap'],
+  mar: ['pad', 'gap'],
+  gap: ['pad', 'mar'],
+  // Box styling: after bg, suggest bor/rad
+  bg: ['bor', 'rad', 'col'],
+  bor: ['rad', 'bg', 'boc'],
+  rad: ['bor', 'bg'],
+  // Layout: after hor/ver, suggest gap and alignment
+  hor: ['gap', 'ver-cen', 'hor-cen', 'wrap'],
+  ver: ['gap', 'ver-cen', 'hor-cen'],
+}
+
+/**
+ * StateEffect to set the boost context (which property was just completed).
+ */
+export const setBoostContext = StateEffect.define<string | null>()
+
+/**
+ * StateField to track the current boost context.
+ * This is set when a picker closes to boost related properties.
+ */
+export const boostContextField = StateField.define<string | null>({
+  create: () => null,
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(setBoostContext)) {
+        return effect.value
+      }
+    }
+    // Clear boost context when user types (after the initial autocomplete)
+    if (tr.docChanged && value !== null) {
+      return null
+    }
+    return value
+  },
+})
+
+/**
+ * Trigger autocomplete with property boost context.
+ * Call this after a picker closes to show related properties first.
+ *
+ * @param view - The editor view
+ * @param property - The property that was just completed (e.g., 'font')
+ */
+export function triggerAutocompleteWithBoost(view: EditorView, property: string): void {
+  // Set the boost context
+  view.dispatch({
+    effects: setBoostContext.of(property),
+  })
+
+  // Trigger autocomplete after a short delay to let the state settle
+  setTimeout(() => {
+    startCompletion(view)
+  }, 50)
+}
 
 export interface DSLAutocompleteOptions {
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
@@ -70,11 +140,36 @@ function getCachedScore(query: string, target: string): number {
 }
 
 /**
- * Score properties against a search query using weighted multi-field fuzzy search.
+ * Cache for empty query results by boost context.
+ * Avoids recalculating the same property list repeatedly.
  */
-function scoreProperties(query: string): ScoredProperty[] {
+const emptyQueryCache = new Map<string | null, ScoredProperty[]>()
+
+/**
+ * Score properties against a search query using weighted multi-field fuzzy search.
+ * @param query - The search query
+ * @param boostContext - Optional property name to boost related properties (e.g., 'font' boosts size/weight/line)
+ */
+function scoreProperties(query: string, boostContext: string | null = null): ScoredProperty[] {
+  // Get boosted properties for the context
+  const boostedProps = boostContext ? PROPERTY_BOOST_GROUPS[boostContext] ?? [] : []
+  const boostSet = new Set(boostedProps)
+
   if (!query) {
-    return properties.map(p => ({ prop: p, score: 0, matchedKeyword: null }))
+    // Check cache for empty query results
+    const cached = emptyQueryCache.get(boostContext)
+    if (cached) return cached
+
+    // No query - show boosted properties first, then all others
+    const boosted = properties
+      .filter(p => boostSet.has(p.name))
+      .map(p => ({ prop: p, score: 1000, matchedKeyword: null })) // High score for boosted
+    const others = properties
+      .filter(p => !boostSet.has(p.name))
+      .map(p => ({ prop: p, score: 0, matchedKeyword: null }))
+    const result = [...boosted, ...others]
+    emptyQueryCache.set(boostContext, result)
+    return result
   }
 
   return properties
@@ -100,7 +195,12 @@ function scoreProperties(query: string): ScoredProperty[] {
       const catScore = getCachedScore(query, prop.category) * 0.3
 
       // Take the best score from all fields
-      const score = Math.max(nameScore, keywordScore, descScore, catScore)
+      let score = Math.max(nameScore, keywordScore, descScore, catScore)
+
+      // Boost score for context-related properties
+      if (boostSet.has(prop.name)) {
+        score += 500 // Significant boost to appear at top
+      }
 
       return {
         prop,
@@ -113,6 +213,11 @@ function scoreProperties(query: string): ScoredProperty[] {
 }
 
 /**
+ * Track pending picker timers per editor view for cleanup.
+ */
+const pendingPickers = new WeakMap<EditorView, number>()
+
+/**
  * Create an apply function that inserts the property and optionally opens a value picker.
  */
 function createApplyFunction(
@@ -120,6 +225,12 @@ function createApplyFunction(
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
 ): Completion['apply'] {
   return (view: EditorView, _completion: Completion, from: number, to: number) => {
+    // Cancel any previous pending picker to avoid stacking timeouts
+    const existingTimer = pendingPickers.get(view)
+    if (existingTimer !== undefined) {
+      clearTimeout(existingTimer)
+    }
+
     view.dispatch({
       changes: { from, to, insert: prop.syntax },
       selection: { anchor: from + prop.syntax.length }
@@ -127,7 +238,11 @@ function createApplyFunction(
 
     // Open value picker after a short delay to let the editor state settle
     if (prop.valuePicker && prop.valuePicker !== 'none' && onValuePickerNeeded) {
-      setTimeout(() => onValuePickerNeeded(prop.valuePicker!, prop.valuePickerProperty), PICKER_OPEN_DELAY_MS)
+      const timerId = window.setTimeout(() => {
+        pendingPickers.delete(view)
+        onValuePickerNeeded(prop.valuePicker!, prop.valuePickerProperty)
+      }, PICKER_OPEN_DELAY_MS)
+      pendingPickers.set(view, timerId)
     }
   }
 }
@@ -351,7 +466,10 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
 
     // We're after a component name, show properties only
     const query = word?.text.toLowerCase() ?? ''
-    const scored = scoreProperties(query)
+
+    // Get boost context from state (set by triggerAutocompleteWithBoost)
+    const boostContext = context.state.field(boostContextField, false)
+    const scored = scoreProperties(query, boostContext)
 
     // Build completion options
     const completionOptions: Completion[] = scored.map(({ prop, matchedKeyword }) => {
@@ -432,11 +550,13 @@ const autocompleteTheme = EditorView.baseTheme({
  */
 export function dslAutocomplete(options: DSLAutocompleteOptions = {}) {
   return [
+    boostContextField,
     autocompletion({
       override: [createDSLCompletionSource(options)],
       activateOnTyping: true,
       selectOnOpen: true,
       maxRenderedOptions: MAX_AUTOCOMPLETE_OPTIONS,
+      interactionDelay: 100, // 100ms debounce to reduce CPU usage
     }),
     autocompleteTheme,
   ]

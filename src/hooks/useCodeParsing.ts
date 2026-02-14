@@ -1,31 +1,42 @@
 import { useMemo, useCallback } from 'react'
 import { parse } from '../parser/parser'
+import { validateCode } from '../validator'
 import { useDebouncedValue } from './useDebouncedValue'
-import type { ASTNode, ComponentTemplate, TokenValue, StyleMixin, SelectionCommand } from '../parser/types'
+import type { ASTNode, ParseIssue, ParseResult as ParserParseResult } from '../parser/types'
+import type { ValidationDiagnostic } from '../validator/types'
 
-export interface ParseResult {
-  nodes: ASTNode[]
-  errors: unknown[]
-  registry: Map<string, ComponentTemplate>
-  tokens: Map<string, TokenValue>
-  styles: Map<string, StyleMixin>
-  commands: SelectionCommand[]
+// Re-export parser's ParseResult for backward compatibility
+export type ParseResult = ParserParseResult
+
+export interface CodeDiagnostic {
+  type: 'error' | 'warning' | 'info'
+  line: number
+  column: number
+  message: string
+  suggestion?: string
 }
 
 export interface UseCodeParsingReturn {
   mergedCode: string
   debouncedCode: string
   parseResult: ParseResult
+  /** All diagnostics (parse issues + validation errors/warnings) */
+  diagnostics: CodeDiagnostic[]
+  /** Whether the code is valid (no errors) */
+  isValid: boolean
   findNodeById: (nodes: ASTNode[], id: string) => ASTNode | null
 }
 
 const emptyParseResult: ParseResult = {
   nodes: [],
   errors: [],
+  diagnostics: [],
+  parseIssues: [],
   registry: new Map(),
   tokens: new Map(),
   styles: new Map(),
   commands: [],
+  centralizedEvents: [],
 }
 
 /**
@@ -41,19 +52,44 @@ export interface PreviewOverride {
   value: string
 }
 
+export interface UseCodeParsingOptions {
+  /** Debounce delay in ms (default: 150) */
+  debounceMs?: number
+  /** Preview override for live picker preview */
+  previewOverride?: PreviewOverride | null
+  /**
+   * Active cursor line (0-indexed).
+   * Diagnostics on this line are suppressed while typing.
+   */
+  activeCursorLine?: number | null
+}
+
 export function useCodeParsing(
   tokensCode: string,
   componentsCode: string,
   layoutCode: string,
-  debounceMs = 150,
+  optionsOrDebounceMs: number | UseCodeParsingOptions = 250, // PERF: Default increased for large docs
   previewOverride?: PreviewOverride | null
 ): UseCodeParsingReturn {
+  // Support both old signature (debounceMs, previewOverride) and new options object
+  const options: UseCodeParsingOptions = typeof optionsOrDebounceMs === 'number'
+    ? { debounceMs: optionsOrDebounceMs, previewOverride }
+    : optionsOrDebounceMs
+
+  const {
+    debounceMs = 250, // PERF: Increased from 150ms for better perceived performance
+    previewOverride: previewOverrideFromOptions = null,
+    activeCursorLine = null
+  } = options
+
+  // Use previewOverride from options if provided, otherwise fall back to parameter
+  const effectivePreviewOverride = previewOverrideFromOptions ?? previewOverride ?? null
   // Apply preview override to layout code if present
   const effectiveLayoutCode = useMemo(() => {
-    if (!previewOverride) return layoutCode
-    const { from, to, value } = previewOverride
+    if (!effectivePreviewOverride) return layoutCode
+    const { from, to, value } = effectivePreviewOverride
     return layoutCode.slice(0, from) + value + layoutCode.slice(to)
-  }, [layoutCode, previewOverride])
+  }, [layoutCode, effectivePreviewOverride])
 
   // Merge tokens (first) + components (second) + layout (third) for parsing
   const mergedCode = useMemo(() => {
@@ -66,7 +102,7 @@ export function useCodeParsing(
 
   // Debounce merged code to avoid parsing on every keystroke
   // Skip debouncing when preview is active for instant feedback
-  const shouldSkipDebounce = !!previewOverride
+  const shouldSkipDebounce = !!effectivePreviewOverride
   const debouncedCode = useDebouncedValue(
     mergedCode,
     shouldSkipDebounce ? 0 : debounceMs
@@ -78,6 +114,69 @@ export function useCodeParsing(
     }
     return parse(debouncedCode)
   }, [debouncedCode])
+
+  // Run validation (debounced via parseResult dependency)
+  const { diagnostics, isValid } = useMemo(() => {
+    if (!debouncedCode.trim() || parseResult === emptyParseResult) {
+      return { diagnostics: [], isValid: true }
+    }
+
+    const allDiagnostics: CodeDiagnostic[] = []
+
+    // Collect parse issues (lexer-level typos like "onclck", "paddin")
+    if (parseResult.parseIssues) {
+      parseResult.parseIssues.forEach((issue: ParseIssue) => {
+        allDiagnostics.push({
+          type: 'error',
+          line: issue.line,
+          column: issue.column,
+          message: issue.message,
+          suggestion: issue.suggestion
+        })
+      })
+    }
+
+    // Run full validation (reuse parseResult, don't parse again)
+    const validation = validateCode(parseResult, debouncedCode)
+
+    // Collect validation errors
+    validation.errors.forEach((error: ValidationDiagnostic) => {
+      allDiagnostics.push({
+        type: 'error',
+        line: error.location.line,
+        column: error.location.column,
+        message: error.message,
+        suggestion: error.suggestions?.[0]?.label
+      })
+    })
+
+    // Collect validation warnings
+    validation.warnings.forEach((warning: ValidationDiagnostic) => {
+      allDiagnostics.push({
+        type: 'warning',
+        line: warning.location.line,
+        column: warning.location.column,
+        message: warning.message,
+        suggestion: warning.suggestions?.[0]?.label
+      })
+    })
+
+    // Sort by line number
+    allDiagnostics.sort((a, b) => a.line - b.line)
+
+    // Filter out diagnostics on the active cursor line (user is still typing)
+    // This prevents distracting errors while the user is mid-edit
+    const filteredDiagnostics = activeCursorLine !== null
+      ? allDiagnostics.filter(d => d.line !== activeCursorLine)
+      : allDiagnostics
+
+    const hasErrors = filteredDiagnostics.some(d => d.type === 'error')
+
+    return {
+      diagnostics: filteredDiagnostics,
+      isValid: !hasErrors
+    }
+  }, [debouncedCode, parseResult, activeCursorLine])
 
   // Helper to find a node by ID in the AST
   const findNodeById = useCallback((nodes: ASTNode[], id: string): ASTNode | null => {
@@ -93,6 +192,8 @@ export function useCodeParsing(
     mergedCode,
     debouncedCode,
     parseResult,
+    diagnostics,
+    isValid,
     findNodeById,
   }
 }

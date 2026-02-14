@@ -66,7 +66,8 @@ export function useAiPanel(editorRef: React.RefObject<EditorView | null>) {
     const view = editorRef.current
     if (!view) return
 
-    const { triggerPos } = state
+    // Use ref to get current triggerPos - avoids stale closure during async operation
+    const { triggerPos } = stateRef.current
 
     // Show generating state
     setState(prev => ({ ...prev, isGenerating: true }))
@@ -102,7 +103,7 @@ export function useAiPanel(editorRef: React.RefObject<EditorView | null>) {
     } finally {
       close()
     }
-  }, [editorRef, close, state])
+  }, [editorRef, close])
 
   /**
    * Get state ref for use in closures.

@@ -44,8 +44,6 @@ export function editorPanelProps() {
 export function editorActionsContext() {
   return createProps({
     onClear: () => {},
-    onClean: () => {},
-    onOpenAiAssistant: () => {},
   })
 }
 
@@ -79,16 +77,17 @@ export function pageSidebarProps() {
     ],
     currentPageId: 'page1',
     onSelectPage: () => {},
-    onAddPage: () => {},
     onDeletePage: () => null as string[] | null,
     onRenamePage: () => {},
-    onReorderPages: () => {},
+    referencedPages: new Set<string>(),
   })
 }
 
 export function headerBarProps() {
   return createProps({
-    onImport: () => {},
+    onNewPrototype: () => {},
+    onOpen: () => {},
+    onSave: () => {},
     onExport: () => {},
     onOpenSettings: () => {},
   })

@@ -11,9 +11,7 @@
 import { useMemo, useCallback, useEffect, useRef } from 'react'
 import {
   InlinePanel,
-  PanelHeader,
   PanelList,
-  PanelItem,
   PanelFooter,
 } from './InlinePanel'
 import { colors } from '../theme'
@@ -144,10 +142,10 @@ export function InlineFontPanel({
     return googleFonts.slice(0, MAX_RESULTS)
   }, [filter])
 
-  // Compute selected value and report it
+  // Compute selected value and report it (with trailing space for next property)
   const selectedValue = useMemo(() => {
     const font = filteredFonts[selectedIndex]
-    return font ? font.value : null
+    return font ? font.value + ' ' : null
   }, [filteredFonts, selectedIndex])
 
   // Report selected value changes
@@ -165,125 +163,100 @@ export function InlineFontPanel({
     }
   }, [selectedIndex])
 
-  // Handle font click
+  // Handle font click - adds trailing space for next property
   const handleFontClick = useCallback((font: FontItem) => {
-    onSelect(font.value)
+    onSelect(font.value + ' ')
     onClose()
   }, [onSelect, onClose])
+
+  const selectedFont = filteredFonts[selectedIndex]
 
   return (
     <InlinePanel
       isOpen={isOpen}
       onClose={onClose}
       position={position}
-      width={300}
-      maxHeight={360}
+      width={240}
+      maxHeight={320}
     >
-      <PanelHeader
-        filter={filter ? `"${filter}` : undefined}
-        placeholder="Font eingeben..."
-      />
-
       <PanelList listRef={listRef}>
         {filteredFonts.length === 0 ? (
           <div style={{
-            padding: '16px',
+            padding: '12px',
             textAlign: 'center',
             color: colors.textMuted,
+            fontSize: '11px',
           }}>
-            Keine Fonts gefunden
+            Kein Font gefunden
           </div>
         ) : (
           <div style={{ padding: '4px' }}>
             {filteredFonts.map((font, index) => {
               const isSelected = index === selectedIndex
               return (
-                <PanelItem
+                <div
                   key={font.name}
-                  isSelected={isSelected}
-                  onClick={() => handleFontClick(font)}
+                  data-font-item
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleFontClick(font)
+                  }}
                   onMouseEnter={() => onSelectedIndexChange(index)}
+                  style={{
+                    padding: '6px 8px',
+                    cursor: 'pointer',
+                    backgroundColor: isSelected ? colors.lineActive : 'transparent',
+                    borderRadius: '3px',
+                    fontFamily: font.value,
+                    fontSize: '15px',
+                    color: colors.text,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
                 >
-                  <div
-                    data-font-item
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '2px',
-                      width: '100%',
-                    }}
-                  >
-                    {/* Category indicator */}
-                    <div style={{
-                      fontSize: '9px',
-                      color: colors.textMuted,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}>
-                      {font.category}
-                    </div>
-                    {/* Font preview */}
-                    <div style={{
-                      fontFamily: font.value,
-                      fontSize: '18px',
-                      color: colors.text,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      {font.name}
-                    </div>
-                  </div>
-                </PanelItem>
+                  {font.name}
+                </div>
               )
             })}
           </div>
         )}
       </PanelList>
 
-      {/* Selected Font Preview */}
-      {filteredFonts[selectedIndex] && (
+      {/* Preview for selected font */}
+      {selectedFont && (
         <div style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           borderTop: `1px solid ${colors.border}`,
           backgroundColor: colors.lineActive,
         }}>
           <div style={{
-            fontFamily: filteredFonts[selectedIndex].value,
-            fontSize: '16px',
-            color: colors.text,
+            fontSize: '9px',
+            color: colors.textMuted,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: '4px',
           }}>
-            The quick brown fox jumps
+            {selectedFont.category}
+          </div>
+          <div style={{
+            fontFamily: selectedFont.value,
+            fontSize: '20px',
+            color: colors.text,
+            lineHeight: 1.3,
+          }}>
+            The quick brown fox
           </div>
         </div>
       )}
 
       <PanelFooter
         hints={[
-          { key: '↑↓', label: 'Navigation' },
-          { key: '↵', label: 'Einfügen' },
+          { key: '↑↓', label: 'nav' },
+          { key: '↵', label: 'select' },
         ]}
       />
     </InlinePanel>
   )
 }
 
-/**
- * Calculate next index for list navigation.
- */
-export function navigateFontList(
-  currentIndex: number,
-  direction: 'up' | 'down',
-  totalItems: number
-): number {
-  if (totalItems === 0) return 0
-
-  switch (direction) {
-    case 'up':
-      return Math.max(0, currentIndex - 1)
-    case 'down':
-      return Math.min(totalItems - 1, currentIndex + 1)
-    default:
-      return currentIndex
-  }
-}

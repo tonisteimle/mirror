@@ -59,7 +59,6 @@ export function InlinePanel({
     const rect = panel.getBoundingClientRect()
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
-    const lineHeight = 20 // Approximate line height for cursor positioning
 
     // Check if panel fits below cursor
     const spaceBelow = viewportHeight - position.y - 16

@@ -9,6 +9,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
+import { logger } from '../services/logger'
 
 export interface UseCodeMirrorConfig {
   /** Initial document content */
@@ -134,7 +135,7 @@ export function useCodeMirror({
       editorRef.current = view
       setError(null)
     } catch (err) {
-      console.error('[useCodeMirror] Editor initialization failed:', err)
+      logger.ui.error('Editor initialization failed', err)
       setError(err instanceof Error ? err : new Error('Editor initialization failed'))
       return
     }
@@ -147,18 +148,6 @@ export function useCodeMirror({
     // Extensions changes require full re-mount which is handled by parent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValue])
-
-  // Sync external value changes
-  useEffect(() => {
-    const view = editorRef.current
-    if (!view) return
-
-    const currentValue = view.state.doc.toString()
-    if (currentValue !== valueRef.current) {
-      // External value was set via setValue, already handled
-      return
-    }
-  }, [])
 
   return {
     containerRef,

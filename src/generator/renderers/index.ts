@@ -7,4 +7,5 @@
 
 export { ConditionalRenderer } from './conditional-renderer'
 export { IteratorRenderer } from './iterator-renderer'
+export { DataBindingRenderer } from './data-binding-renderer'
 export type { GenerateOptions, RenderChildrenFn } from './types'

@@ -7,32 +7,67 @@
  * Calculate Levenshtein distance between two strings.
  * Measures the minimum number of single-character edits needed
  * to transform one string into the other.
+ *
+ * Optimized implementation:
+ * - Uses two rows instead of full matrix (O(min(m,n)) space)
+ * - Optional early termination when max distance exceeded
+ * - Quick return for length-based bounds
  */
-export function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = []
+export function levenshteinDistance(a: string, b: string, maxDistance?: number): number {
+  // Quick checks
+  if (a === b) return 0
+  if (a.length === 0) return maxDistance !== undefined && b.length > maxDistance ? maxDistance + 1 : b.length
+  if (b.length === 0) return maxDistance !== undefined && a.length > maxDistance ? maxDistance + 1 : a.length
 
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i]
-  }
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j
+  // Ensure a is the shorter string for space optimization
+  if (a.length > b.length) {
+    [a, b] = [b, a]
   }
 
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1]
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1 // deletion
-        )
+  const aLen = a.length
+  const bLen = b.length
+
+  // Early termination if length difference exceeds max distance
+  if (maxDistance !== undefined && bLen - aLen > maxDistance) {
+    return maxDistance + 1
+  }
+
+  // Use two rows instead of full matrix (O(n) space)
+  let prevRow = new Array(aLen + 1)
+  let currRow = new Array(aLen + 1)
+
+  // Initialize first row
+  for (let j = 0; j <= aLen; j++) {
+    prevRow[j] = j
+  }
+
+  // Fill in the matrix row by row
+  for (let i = 1; i <= bLen; i++) {
+    currRow[0] = i
+    let minInRow = i // Track minimum value in current row for early termination
+
+    for (let j = 1; j <= aLen; j++) {
+      const cost = b.charCodeAt(i - 1) === a.charCodeAt(j - 1) ? 0 : 1
+      currRow[j] = Math.min(
+        prevRow[j] + 1,      // deletion
+        currRow[j - 1] + 1,  // insertion
+        prevRow[j - 1] + cost // substitution
+      )
+      if (currRow[j] < minInRow) {
+        minInRow = currRow[j]
       }
     }
+
+    // Early termination: if minimum possible distance exceeds max, return early
+    if (maxDistance !== undefined && minInRow > maxDistance) {
+      return maxDistance + 1
+    }
+
+    // Swap rows
+    ;[prevRow, currRow] = [currRow, prevRow]
   }
 
-  return matrix[b.length][a.length]
+  return prevRow[aLen]
 }
 
 /**
@@ -57,11 +92,10 @@ export function fuzzyScore(search: string, target: string): number {
   if (t.includes(s)) return 0.85
 
   // Fuzzy match with Levenshtein
-  const distance = levenshteinDistance(s, t)
-  const maxLen = Math.max(s.length, t.length)
-
   // Allow up to 2 character difference for short words, 3 for longer
   const threshold = s.length <= 4 ? 2 : 3
+  const distance = levenshteinDistance(s, t, threshold)
+  const maxLen = Math.max(s.length, t.length)
 
   if (distance <= threshold) {
     return 0.7 - (distance / maxLen) * 0.3
@@ -70,7 +104,7 @@ export function fuzzyScore(search: string, target: string): number {
   // Check if search matches start of target with typos
   if (t.length >= s.length) {
     const targetStart = t.substring(0, s.length + 1)
-    const startDistance = levenshteinDistance(s, targetStart)
+    const startDistance = levenshteinDistance(s, targetStart, 2)
     if (startDistance <= 2) {
       return 0.5 - (startDistance / maxLen) * 0.2
     }
@@ -132,19 +166,23 @@ export function findClosestMatch(
   maxDistance: number = 3
 ): { match: string | null; distance: number } {
   let bestMatch: string | null = null
-  let bestDistance = Infinity
+  let bestDistance = maxDistance + 1
 
   const candidateArray = Array.isArray(candidates) ? candidates : Array.from(candidates)
+  const inputLower = input.toLowerCase()
 
   for (const candidate of candidateArray) {
-    const distance = levenshteinDistance(input.toLowerCase(), candidate.toLowerCase())
-    if (distance < bestDistance && distance <= maxDistance) {
+    // Use bestDistance as maxDistance for early termination
+    const distance = levenshteinDistance(inputLower, candidate.toLowerCase(), bestDistance - 1)
+    if (distance < bestDistance) {
       bestDistance = distance
       bestMatch = candidate
+      // Perfect match found, no need to continue
+      if (distance === 0) break
     }
   }
 
-  return { match: bestMatch, distance: bestDistance }
+  return { match: bestMatch, distance: bestDistance <= maxDistance ? bestDistance : Infinity }
 }
 
 /**
@@ -156,5 +194,5 @@ export function findClosestMatch(
  * @returns True if strings are within threshold distance
  */
 export function areSimilar(a: string, b: string, threshold: number = 2): boolean {
-  return levenshteinDistance(a.toLowerCase(), b.toLowerCase()) <= threshold
+  return levenshteinDistance(a.toLowerCase(), b.toLowerCase(), threshold) <= threshold
 }

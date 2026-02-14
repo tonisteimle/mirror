@@ -12,6 +12,7 @@ export interface HoverableDivProps {
   hoverStyle: React.CSSProperties
   className: string
   dataId: string
+  dataSourceLine?: number
   children: React.ReactNode
   onMouseEnter?: () => void
   onMouseLeave?: () => void
@@ -23,6 +24,7 @@ export const HoverableDiv = React.memo(function HoverableDiv({
   hoverStyle,
   className,
   dataId,
+  dataSourceLine,
   children,
   onMouseEnter,
   onMouseLeave,
@@ -48,6 +50,7 @@ export const HoverableDiv = React.memo(function HoverableDiv({
   return (
     <div
       data-id={dataId}
+      data-source-line={dataSourceLine}
       className={className}
       style={style}
       onMouseEnter={handleMouseEnter}

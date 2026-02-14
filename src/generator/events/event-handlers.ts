@@ -149,27 +149,82 @@ export function createBlurHandler(
 }
 
 /**
- * Create key down handler.
+ * Map keyboard event key to modifier string.
+ */
+function keyToModifier(e: React.KeyboardEvent): string | null {
+  switch (e.key) {
+    case 'Escape': return 'escape'
+    case 'Enter': return 'enter'
+    case 'Tab': return 'tab'
+    case ' ': return 'space'
+    case 'ArrowUp': return 'arrow-up'
+    case 'ArrowDown': return 'arrow-down'
+    case 'ArrowLeft': return 'arrow-left'
+    case 'ArrowRight': return 'arrow-right'
+    case 'Backspace': return 'backspace'
+    case 'Delete': return 'delete'
+    case 'Home': return 'home'
+    case 'End': return 'end'
+    default: return null
+  }
+}
+
+/**
+ * Create key down handler with modifier support.
  */
 export function createKeyDownHandler(
   eventHandlers: EventHandler[] | undefined,
   executeHandler: (handler: EventHandler, event?: React.SyntheticEvent) => void
 ): (e: React.KeyboardEvent) => void {
   return (e) => {
-    const handler = eventHandlers?.find(h => h.event === 'onkeydown')
-    if (handler) executeHandler(handler, e)
+    const keydownHandlers = eventHandlers?.filter(h => h.event === 'onkeydown')
+    if (!keydownHandlers || keydownHandlers.length === 0) return
+
+    const pressedKey = keyToModifier(e)
+
+    for (const handler of keydownHandlers) {
+      // If handler has a modifier, only execute if key matches
+      if (handler.modifier) {
+        if (pressedKey === handler.modifier) {
+          e.preventDefault()
+          executeHandler(handler, e)
+          return
+        }
+      } else {
+        // No modifier specified - execute for any keydown
+        executeHandler(handler, e)
+        return
+      }
+    }
   }
 }
 
 /**
- * Create key up handler.
+ * Create key up handler with modifier support.
  */
 export function createKeyUpHandler(
   eventHandlers: EventHandler[] | undefined,
   executeHandler: (handler: EventHandler, event?: React.SyntheticEvent) => void
 ): (e: React.KeyboardEvent) => void {
   return (e) => {
-    const handler = eventHandlers?.find(h => h.event === 'onkeyup')
-    if (handler) executeHandler(handler, e)
+    const keyupHandlers = eventHandlers?.filter(h => h.event === 'onkeyup')
+    if (!keyupHandlers || keyupHandlers.length === 0) return
+
+    const pressedKey = keyToModifier(e)
+
+    for (const handler of keyupHandlers) {
+      // If handler has a modifier, only execute if key matches
+      if (handler.modifier) {
+        if (pressedKey === handler.modifier) {
+          e.preventDefault()
+          executeHandler(handler, e)
+          return
+        }
+      } else {
+        // No modifier specified - execute for any keyup
+        executeHandler(handler, e)
+        return
+      }
+    }
   }
 }

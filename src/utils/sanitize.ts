@@ -55,7 +55,7 @@ export function sanitizeHref(url: string | undefined): string {
     }
   } catch {
     // If URL parsing fails, allow relative URLs that look safe
-    if (/^[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=]+$/.test(url)) {
+    if (/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]+$/.test(url)) {
       return url
     }
     logger.security.warn(`Blocked malformed URL: ${url.substring(0, 50)}`)
@@ -99,7 +99,8 @@ export function sanitizePlaceholder(placeholder: string | undefined): string {
   // Remove newlines and control characters from placeholders
   return placeholder
     .replace(/[\r\n\t]/g, ' ')
-    .replace(/[\x00-\x1f\x7f]/g, '')
+    // eslint-disable-next-line no-control-regex -- intentionally removing control characters for sanitization
+    .replace(/[\u0000-\u001f\u007f]/g, '')
     .trim()
 }
 

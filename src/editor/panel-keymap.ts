@@ -11,7 +11,8 @@ import type { EditorView } from '@codemirror/view'
 import type { ColorPanelState } from '../hooks/useColorPanel'
 import type { InlinePanelState } from '../hooks/useInlinePanel'
 import { prepareInsertText } from './utils'
-import { navigateIconGrid } from '../components/InlineIconPanel'
+import { navigateIconGrid } from '../components/inline-panel-utils'
+// Note: triggerAutocompleteWithBoost removed - we don't auto-trigger after picker selection
 
 // Grid columns for icon panel
 const ICON_GRID_COLUMNS = 6
@@ -222,6 +223,7 @@ export function createPanelKeymap({
               changes: { from: triggerPos, to: cursorPos, insert: selectedValue },
               selection: { anchor: triggerPos + selectedValue.length },
             })
+            // Don't auto-trigger autocomplete - let user press space first
           }
           setIconPanelState(prev => ({ ...prev, isOpen: false, type: null }))
           return true
@@ -239,6 +241,7 @@ export function createPanelKeymap({
               changes: { from: triggerPos, to: cursorPos, insert: selectedValue },
               selection: { anchor: triggerPos + selectedValue.length },
             })
+            // Don't auto-trigger autocomplete - let user press space first
           }
           setFontPanelState(prev => ({ ...prev, isOpen: false, type: null }))
           return true

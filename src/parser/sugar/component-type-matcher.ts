@@ -19,6 +19,7 @@ export type ComponentCategory =
   | 'button'
   | 'text'
   | 'heading'  // H1-H6
+  | 'segment'  // Masked input segment
   | 'container'
 
 /**
@@ -143,6 +144,17 @@ export function isTextComponent(node: ASTNode): boolean {
 }
 
 /**
+ * Check if a node represents a Segment component (for masked input).
+ */
+export function isSegmentComponent(node: ASTNode): boolean {
+  return (
+    node.properties._primitiveType === 'Segment' ||
+    node.name === 'Segment' ||
+    node.name.endsWith('Segment')
+  )
+}
+
+/**
  * Get the component category for a node.
  * Used for determining sugar handling behavior.
  */
@@ -154,6 +166,7 @@ export function getComponentCategory(node: ASTNode): ComponentCategory {
   if (isButtonComponent(node)) return 'button'
   if (isItemComponent(node)) return 'item'
   if (isHeadingComponent(node)) return 'heading'
+  if (isSegmentComponent(node)) return 'segment'
   if (isTextComponent(node)) return 'text'
 
   // Default to container for Box, Card, etc.

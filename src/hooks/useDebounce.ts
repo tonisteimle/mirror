@@ -5,7 +5,7 @@
  * Useful for search inputs to avoid filtering on every keystroke.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 /**
  * Debounce a value with a delay.
@@ -45,6 +45,8 @@ export function useDebounce<T>(value: T, delay: number = 150): T {
 /**
  * Debounce a callback function.
  *
+ * Uses useRef for timer to avoid re-renders on every debounce call.
+ *
  * @param callback - The function to debounce
  * @param delay - Delay in milliseconds
  * @returns A debounced version of the callback
@@ -53,26 +55,30 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 150
 ): T {
-  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
-
-  const debouncedCallback = ((...args: Parameters<T>) => {
-    if (timer) {
-      clearTimeout(timer)
-    }
-    const newTimer = setTimeout(() => {
-      callback(...args)
-    }, delay)
-    setTimer(newTimer)
-  }) as T
+  // Use ref to avoid re-renders when timer changes
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Keep callback in ref to always have latest version
+  const callbackRef = useRef(callback)
+  callbackRef.current = callback
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (timer) {
-        clearTimeout(timer)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
       }
     }
-  }, [timer])
+  }, [])
+
+  const debouncedCallback = useCallback((...args: Parameters<T>) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+    timerRef.current = setTimeout(() => {
+      callbackRef.current(...args)
+      timerRef.current = null
+    }, delay)
+  }, [delay]) as T
 
   return debouncedCallback
 }

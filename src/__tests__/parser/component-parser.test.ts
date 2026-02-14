@@ -16,7 +16,7 @@ function parseFirst(code: string) {
 // Helper to check for no errors (excluding warnings)
 function expectNoErrors(result: ReturnType<typeof parse>) {
   const errors = (result.errors || []).filter(
-    (e: any) => typeof e === 'string' ? !e.includes('Warning') : e.severity !== 'warning'
+    (e: { severity?: string } | string) => typeof e === 'string' ? !e.includes('Warning') : e.severity !== 'warning'
   )
   expect(errors).toHaveLength(0)
 }
@@ -63,10 +63,10 @@ describe('Component Parsing Basics', () => {
     expect(node?.children?.[0]?.content).toBe('Submit')
   })
 
-  it('parses lowercase element name', () => {
+  it('normalizes lowercase element name to PascalCase', () => {
     const { node, result } = parseFirst('header hor')
     expectNoErrors(result)
-    expect(node?.name).toBe('header')
+    expect(node?.name).toBe('Header') // Normalizer converts to PascalCase
     expect(node?.properties?.hor).toBe(true)
   })
 
@@ -367,7 +367,7 @@ describe('Inline Properties', () => {
   })
 
   it('parses token reference', () => {
-    const { node, result } = parseFirst(`$primary: #3B82F6
+    const { result } = parseFirst(`$primary: #3B82F6
 Box col $primary`)
     expectNoErrors(result)
     expect(result.nodes[0]?.properties?.col).toBe('#3B82F6')
@@ -513,9 +513,9 @@ Box if $a or $b then col #00FF00 else col #FF0000`)
 
 describe('Event Handlers', () => {
   it('parses onclick toggle', () => {
-    const { node, result } = parseFirst('Button onclick toggle "Toggle"')
+    const { node: _node, result } = parseFirst('Button onclick toggle "Toggle"')
     expectNoErrors(result)
-    expect(node?.eventHandlers?.length).toBeGreaterThan(0)
+    expect(_node?.eventHandlers?.length).toBeGreaterThan(0)
   })
 
   it('parses onclick open with target', () => {
@@ -525,12 +525,12 @@ describe('Event Handlers', () => {
   })
 
   it('parses onclick close', () => {
-    const { node, result } = parseFirst('Button onclick close "Cancel"')
+    const { result } = parseFirst('Button onclick close "Cancel"')
     expectNoErrors(result)
   })
 
   it('parses onclick with animation', () => {
-    const { node, result } = parseFirst('Button onclick open Dialog slide-up 300 "Open"')
+    const { result } = parseFirst('Button onclick open Dialog slide-up 300 "Open"')
     expectNoErrors(result)
   })
 
@@ -547,12 +547,12 @@ Button onclick assign $count to $count + 1 "+"`)
   })
 
   it('parses onclick show', () => {
-    const { node, result } = parseFirst('Button onclick show Tooltip "Info"')
+    const { result } = parseFirst('Button onclick show Tooltip "Info"')
     expectNoErrors(result)
   })
 
   it('parses onclick hide', () => {
-    const { node, result } = parseFirst('Button onclick hide Tooltip "Hide"')
+    const { result } = parseFirst('Button onclick hide Tooltip "Hide"')
     expectNoErrors(result)
   })
 
@@ -641,7 +641,7 @@ Card
 
 describe('Edge Cases & Error Handling', () => {
   it('handles empty component', () => {
-    const { node, result } = parseFirst('Box')
+    const { node } = parseFirst('Box')
     expect(node?.name).toBe('Box')
   })
 

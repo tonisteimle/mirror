@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from './kit'
 import { renderHook, act } from '@testing-library/react'
-import { BehaviorRegistryProvider, useBehaviorRegistry } from '../generator/behaviors/registry'
+import { BehaviorRegistryProvider, useBehaviorRegistry } from '../generator/behaviors'
 
 describe('BehaviorRegistry', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -20,9 +20,9 @@ describe('BehaviorRegistry', () => {
   it('sets state correctly', () => {
     const { result } = renderHook(() => useBehaviorRegistry(), { wrapper })
     act(() => {
-      result.current.setState('dropdown1', 'open')
+      result.current.setState('component1', 'open')
     })
-    expect(result.current.getState('dropdown1')).toBe('open')
+    expect(result.current.getState('component1')).toBe('open')
   })
 
   it('toggles between states', () => {
@@ -54,14 +54,14 @@ describe('BehaviorRegistry', () => {
     const { result } = renderHook(() => useBehaviorRegistry(), { wrapper })
 
     act(() => {
-      result.current.setState('dropdown1', 'open')
-      result.current.setState('dropdown2', 'closed')
-      result.current.setState('dialog1', 'open')
+      result.current.setState('component1', 'open')
+      result.current.setState('component2', 'closed')
+      result.current.setState('component3', 'open')
     })
 
-    expect(result.current.getState('dropdown1')).toBe('open')
-    expect(result.current.getState('dropdown2')).toBe('closed')
-    expect(result.current.getState('dialog1')).toBe('open')
+    expect(result.current.getState('component1')).toBe('open')
+    expect(result.current.getState('component2')).toBe('closed')
+    expect(result.current.getState('component3')).toBe('open')
   })
 
   it('returns no-op registry without provider', () => {
@@ -80,9 +80,9 @@ describe('BehaviorRegistry', () => {
   it('provides handler lookup', () => {
     const { result } = renderHook(() => useBehaviorRegistry(), { wrapper })
 
-    const dropdownHandler = result.current.getHandler('Dropdown')
-    expect(dropdownHandler).toBeDefined()
-    expect(dropdownHandler?.name).toBe('Dropdown')
+    const formFieldHandler = result.current.getHandler('FormField')
+    expect(formFieldHandler).toBeDefined()
+    expect(formFieldHandler?.name).toBe('FormField')
 
     const unknownHandler = result.current.getHandler('UnknownComponent')
     expect(unknownHandler).toBeUndefined()

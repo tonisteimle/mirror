@@ -1,89 +1,20 @@
 import type { LibraryComponent, LibraryCategory } from './types'
 
-// Import all library components
-import { DropdownComponent } from './components/dropdown'
-import { DialogComponent } from './components/dialog'
-import { TooltipComponent } from './components/tooltip'
-import { TabsComponent } from './components/tabs'
-import { AccordionComponent } from './components/accordion'
-import { SelectComponent } from './components/select'
-import { PopoverComponent } from './components/popover'
-import { AlertDialogComponent } from './components/alert-dialog'
-import { ContextMenuComponent } from './components/context-menu'
-import { HoverCardComponent } from './components/hover-card'
-import { SwitchComponent } from './components/switch'
-import { CheckboxComponent } from './components/checkbox'
-import { RadioGroupComponent } from './components/radio-group'
-import { SliderComponent } from './components/slider'
+// Import library components
 import { formFieldComponent } from './components/input'
-import { ToastComponent } from './components/toast'
-import { ProgressComponent } from './components/progress'
-import { AvatarComponent } from './components/avatar'
-import { CollapsibleComponent } from './components/collapsible'
-// New components
-import { ButtonComponent } from './components/button'
-import { CardComponent } from './components/card'
-import { BadgeComponent } from './components/badge'
-import { AlertComponent } from './components/alert'
-import { TextareaComponent } from './components/textarea'
-import { LabelComponent } from './components/label'
-import { SkeletonComponent } from './components/skeleton'
-import { SpinnerComponent } from './components/spinner'
-// Additional Radix components
-import { SeparatorComponent } from './components/separator'
-import { AspectRatioComponent } from './components/aspect-ratio'
-import { ToggleComponent } from './components/toggle'
-import { ToggleGroupComponent } from './components/toggle-group'
-import { ScrollAreaComponent } from './components/scroll-area'
-import { ToolbarComponent } from './components/toolbar'
-import { MenubarComponent } from './components/menubar'
-import { NavigationMenuComponent } from './components/navigation-menu'
-import { TextComponent } from './components/text'
+// Doc-mode components
+import { DocTextComponent } from './components/doc-text'
+import { PlaygroundComponent } from './components/playground'
+import { DocWrapperComponent } from './components/doc-wrapper'
 
 // All library components
 const LIBRARY_COMPONENTS: LibraryComponent[] = [
-  // Overlays
-  DropdownComponent,
-  DialogComponent,
-  TooltipComponent,
-  PopoverComponent,
-  AlertDialogComponent,
-  ContextMenuComponent,
-  HoverCardComponent,
-  // Navigation
-  TabsComponent,
-  AccordionComponent,
-  CollapsibleComponent,
-  CardComponent,
   // Form
   formFieldComponent,
-  SelectComponent,
-  SwitchComponent,
-  CheckboxComponent,
-  RadioGroupComponent,
-  SliderComponent,
-  ButtonComponent,
-  TextareaComponent,
-  LabelComponent,
-  // Feedback
-  ToastComponent,
-  ProgressComponent,
-  AvatarComponent,
-  BadgeComponent,
-  AlertComponent,
-  SkeletonComponent,
-  SpinnerComponent,
-  // Layout & Utility
-  SeparatorComponent,
-  AspectRatioComponent,
-  ToggleComponent,
-  ToggleGroupComponent,
-  ScrollAreaComponent,
-  ToolbarComponent,
-  MenubarComponent,
-  NavigationMenuComponent,
-  // Typography
-  TextComponent
+  // Doc-mode
+  DocTextComponent,
+  PlaygroundComponent,
+  DocWrapperComponent,
 ]
 
 // Map for quick lookup by name

@@ -2,6 +2,10 @@
  * Hook for managing pages in the Mirror application.
  * Handles page CRUD operations, navigation, and reference checking.
  *
+ * Pages are code-driven:
+ * - Created automatically when referenced via `page PageName` in code
+ * - Can only be deleted when not referenced
+ *
  * Uses Single Source of Truth: layoutCode is always derived from pages array.
  */
 
@@ -11,6 +15,8 @@ import type { PageData } from '../components/PageSidebar'
 export interface UsePageManagerOptions {
   initialPages?: PageData[]
   initialPageId?: string
+  /** Components code (also scanned for page references) */
+  componentsCode?: string
 }
 
 export interface UsePageManagerReturn {
@@ -19,10 +25,13 @@ export interface UsePageManagerReturn {
   currentPageId: string
   currentPage: PageData | undefined
   layoutCode: string
+  /** Set of page names referenced in code */
+  referencedPages: Set<string>
 
   // Setters
   setPages: React.Dispatch<React.SetStateAction<PageData[]>>
   setLayoutCode: (code: string) => void
+  setCurrentPageId: React.Dispatch<React.SetStateAction<string>>
 
   // Actions
   switchToPage: (pageId: string) => void
@@ -32,9 +41,27 @@ export interface UsePageManagerReturn {
   reorderPages: (fromIndex: number, toIndex: number) => void
   navigateToPage: (pageName: string) => void
   loadProject: (data: { pages: PageData[]; currentPageId: string; layoutCode?: string }) => void
+  /** Sync pages with code references (creates missing, allows delete of unreferenced) */
+  syncPagesWithCode: (componentsCode: string) => void
 
   // Utilities
   getPageReferences: (pageName: string) => string[]
+}
+
+/**
+ * Extract all page names referenced in code via `page PageName` pattern.
+ * This finds references like: onclick page Settings, page Dashboard, etc.
+ */
+export function extractPageReferences(code: string): Set<string> {
+  const refs = new Set<string>()
+  // Match: page followed by a page name (capitalized word)
+  // Pattern: \bpage\s+([A-Z][a-zA-Z0-9]*)
+  const pattern = /\bpage\s+([A-Z][a-zA-Z0-9]*)\b/g
+  let match
+  while ((match = pattern.exec(code)) !== null) {
+    refs.add(match[1])
+  }
+  return refs
 }
 
 const DEFAULT_PAGE: PageData = {
@@ -50,6 +77,7 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
   const [currentPageId, setCurrentPageId] = useState(
     options.initialPageId || options.initialPages?.[0]?.id || 'home'
   )
+  const [componentsCodeRef, setComponentsCodeRef] = useState(options.componentsCode || '')
 
   // Single Source of Truth: derive layoutCode from pages array
   const currentPage = useMemo(
@@ -57,6 +85,20 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     [pages, currentPageId]
   )
   const layoutCode = currentPage?.layoutCode ?? ''
+
+  // Calculate referenced pages from all code
+  const referencedPages = useMemo(() => {
+    const allRefs = new Set<string>()
+    // Scan all page layouts
+    for (const page of pages) {
+      const refs = extractPageReferences(page.layoutCode)
+      refs.forEach(r => allRefs.add(r))
+    }
+    // Scan components code
+    const compRefs = extractPageReferences(componentsCodeRef)
+    compRefs.forEach(r => allRefs.add(r))
+    return allRefs
+  }, [pages, componentsCodeRef])
 
   // Update layout code by updating the current page in pages array
   const setLayoutCode = useCallback((code: string) => {
@@ -114,10 +156,11 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     const page = pages.find(p => p.id === pageId)
     if (!page) return null
 
-    // Check for references
-    const references = getPageReferences(page.name)
-    if (references.length > 0) {
-      return references // Return referencing pages instead of deleting
+    // Check if page is referenced in code
+    if (referencedPages.has(page.name)) {
+      // Find which pages reference it
+      const references = getPageReferences(page.name)
+      return references.length > 0 ? references : ['Code']
     }
 
     const pageIndex = pages.findIndex(p => p.id === pageId)
@@ -130,7 +173,7 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
       setCurrentPageId(newPages[newIndex].id)
     }
     return null
-  }, [pages, currentPageId, getPageReferences])
+  }, [pages, currentPageId, referencedPages, getPageReferences])
 
   // Reorder pages (drag & drop)
   const reorderPages = useCallback((fromIndex: number, toIndex: number) => {
@@ -179,13 +222,51 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     setCurrentPageId(data.currentPageId)
   }, [])
 
+  // Sync pages with code references
+  // Creates pages for references that don't exist yet
+  const syncPagesWithCode = useCallback((componentsCode: string) => {
+    setComponentsCodeRef(componentsCode)
+
+    // Get all references from all code
+    const allRefs = new Set<string>()
+    for (const page of pages) {
+      const refs = extractPageReferences(page.layoutCode)
+      refs.forEach(r => allRefs.add(r))
+    }
+    const compRefs = extractPageReferences(componentsCode)
+    compRefs.forEach(r => allRefs.add(r))
+
+    // Find references that don't have pages yet
+    const existingNames = new Set(pages.map(p => p.name))
+    const missingPages: string[] = []
+    allRefs.forEach(ref => {
+      if (!existingNames.has(ref)) {
+        missingPages.push(ref)
+      }
+    })
+
+    // Create missing pages
+    if (missingPages.length > 0) {
+      setPages(prev => [
+        ...prev,
+        ...missingPages.map(name => ({
+          id: `page-${name.toLowerCase()}-${Date.now()}`,
+          name,
+          layoutCode: ''
+        }))
+      ])
+    }
+  }, [pages])
+
   return {
     pages,
     currentPageId,
     currentPage,
     layoutCode,
+    referencedPages,
     setPages,
     setLayoutCode,
+    setCurrentPageId,
     switchToPage,
     addPage,
     renamePage,
@@ -194,5 +275,6 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     navigateToPage,
     getPageReferences,
     loadProject,
+    syncPagesWithCode,
   }
 }

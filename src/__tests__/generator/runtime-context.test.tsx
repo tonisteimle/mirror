@@ -13,7 +13,6 @@ import { renderHook, act } from '@testing-library/react'
 import {
   RuntimeVariableProvider,
   useRuntimeVariables,
-  RuntimeVariableContext,
 } from '../../generator/runtime-context'
 
 describe('RuntimeVariableContext', () => {

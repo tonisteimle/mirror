@@ -24,7 +24,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { MirrorPlayground, type MirrorPlaygroundProps } from '../components/MirrorPlayground'
+import { MirrorPlayground } from '../components/MirrorPlayground'
 
 // ============================================
 // Types

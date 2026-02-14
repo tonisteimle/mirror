@@ -5,39 +5,15 @@
  * Provides a React context for tracking active overlays with their animation settings.
  */
 
-import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { ASTNode } from '../parser/types'
+import {
+  OverlayRegistryContext,
+  type OverlayState,
+  type OverlayOpenOptions
+} from './overlay-registry-context'
 
-export type OverlayPosition = 'below' | 'above' | 'left' | 'right' | 'center'
-
-export interface OverlayState {
-  node: ASTNode
-  animation?: string
-  duration?: number
-  position?: OverlayPosition
-  triggerRect?: DOMRect  // Position of the trigger element
-  isClosing?: boolean
-}
-
-interface OverlayOpenOptions {
-  animation?: string
-  duration?: number
-  position?: OverlayPosition
-  triggerRect?: DOMRect
-}
-
-export interface OverlayRegistry {
-  overlays: Map<string, OverlayState>
-  open: (name: string, node: ASTNode, options?: OverlayOpenOptions) => void
-  close: (name?: string, animation?: string, duration?: number) => void
-  isOpen: (name: string) => boolean
-}
-
-// Internal alias for the context
-type OverlayRegistryState = OverlayRegistry
-
-const OverlayRegistryContext = createContext<OverlayRegistryState | null>(null)
 
 export function OverlayRegistryProvider({ children }: { children: ReactNode }) {
   const [overlays, setOverlays] = useState<Map<string, OverlayState>>(new Map())
@@ -131,6 +107,3 @@ export function OverlayRegistryProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useOverlayRegistry() {
-  return useContext(OverlayRegistryContext)
-}

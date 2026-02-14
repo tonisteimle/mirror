@@ -13,7 +13,6 @@ import {
   describe,
   it,
   expect,
-  beforeEach,
 } from './kit'
 import { EditorPanel } from '../components/EditorPanel'
 
@@ -33,40 +32,16 @@ describe('EditorPanel', () => {
   // Rendering Tests
   // ===========================================
 
-  test.shouldRender(['Page', 'Components', 'Tokens'])
-  test.shouldRenderTitles(['Clear', 'Extract'])
+  test.shouldRender(['Content', 'Components', 'Tokens'])
 
   // ===========================================
   // Tab Selection Tests
   // ===========================================
 
   describe('Tab Selection', () => {
-    test.clicking('Page').calls('onTabChange', 'layout')
+    test.clicking('Content').calls('onTabChange', 'layout')
     test.clicking('Components').calls('onTabChange', 'components')
     test.clicking('Tokens').calls('onTabChange', 'tokens')
-  })
-
-  // ===========================================
-  // Action Button Tests
-  // ===========================================
-
-  describe('Action Buttons', () => {
-    beforeEach(() => {
-      contextActions.onClear.mockClear()
-      contextActions.onClean.mockClear()
-    })
-
-    it('clicking Clear calls onClear from context', () => {
-      test.render()
-      fireEvent.click(screen.getByTitle('Clear'))
-      expect(contextActions.onClear).toHaveBeenCalledTimes(1)
-    })
-
-    it('clicking Extract calls onClean from context', () => {
-      test.render()
-      fireEvent.click(screen.getByTitle('Extract'))
-      expect(contextActions.onClean).toHaveBeenCalledTimes(1)
-    })
   })
 
   // ===========================================

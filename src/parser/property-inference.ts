@@ -31,7 +31,7 @@ export function inferPropertyFromTokenName(tokenName: string): string | null {
   if (name.endsWith('-mar')) return 'mar'
   if (name.endsWith('-rad')) return 'rad'
   if (name.endsWith('-gap')) return 'gap'
-  if (name.endsWith('-col')) return 'col'
+  if (name.endsWith('-col') || name.endsWith('-color')) return 'col'
   if (name.endsWith('-bg')) return 'bg'
   if (name.endsWith('-boc')) return 'boc'
   if (name.endsWith('-bor')) return 'bor'

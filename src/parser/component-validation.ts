@@ -10,16 +10,28 @@
 import type { ASTNode } from './types'
 
 /**
+ * Maximum recursion depth to prevent stack overflow.
+ */
+const MAX_RECURSION_DEPTH = 100
+
+/**
  * Find a child node by name recursively (flat access).
  * Returns the node for in-place modification.
+ * @param depth - Current recursion depth (internal use)
  */
-export function findChildDeep(children: ASTNode[], name: string): ASTNode | null {
+export function findChildDeep(children: ASTNode[], name: string, depth: number = 0): ASTNode | null {
+  // Prevent stack overflow on deeply nested or circular structures
+  if (depth >= MAX_RECURSION_DEPTH) {
+    console.warn(`findChildDeep: Max recursion depth (${MAX_RECURSION_DEPTH}) reached`)
+    return null
+  }
+
   for (const child of children) {
     if (child.name === name) {
       return child
     }
     // Recurse into nested children
-    const found = findChildDeep(child.children, name)
+    const found = findChildDeep(child.children, name, depth + 1)
     if (found) {
       return found
     }
@@ -30,8 +42,15 @@ export function findChildDeep(children: ASTNode[], name: string): ASTNode | null
 /**
  * Collect all element names in a hierarchy for uniqueness validation.
  * Returns a map of name -> array of line numbers where it appears.
+ * @param depth - Current recursion depth (internal use)
  */
-export function collectNames(children: ASTNode[], names: Map<string, number[]> = new Map()): Map<string, number[]> {
+export function collectNames(children: ASTNode[], names: Map<string, number[]> = new Map(), depth: number = 0): Map<string, number[]> {
+  // Prevent stack overflow on deeply nested or circular structures
+  if (depth >= MAX_RECURSION_DEPTH) {
+    console.warn(`collectNames: Max recursion depth (${MAX_RECURSION_DEPTH}) reached`)
+    return names
+  }
+
   for (const child of children) {
     // Skip internal names like _text, _conditional, _iterator
     if (!child.name.startsWith('_')) {
@@ -40,7 +59,7 @@ export function collectNames(children: ASTNode[], names: Map<string, number[]> =
       names.set(child.name, lines)
     }
     // Recurse into nested children
-    collectNames(child.children, names)
+    collectNames(child.children, names, depth + 1)
   }
   return names
 }

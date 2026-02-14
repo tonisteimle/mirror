@@ -7,10 +7,24 @@
 export const UI = {
   PANEL_MIN_WIDTH: 300,
   PANEL_MAX_WIDTH: 800,
-  PANEL_DEFAULT_WIDTH: 420,
+  PANEL_DEFAULT_WIDTH: 548,
   HEADER_HEIGHT: 40,
   DEBOUNCE_DELAY_MS: 500,
   AUTOCOMPLETE_DELAY_MS: 300,
+} as const
+
+// Common Timing Values
+export const TIMING = {
+  /** Default debounce delay for search/input (ms) */
+  DEBOUNCE_DEFAULT_MS: 150,
+  /** Tooltip show delay (ms) */
+  TOOLTIP_DELAY_MS: 200,
+  /** Avatar tooltip delay (ms) */
+  AVATAR_TOOLTIP_DELAY_MS: 600,
+  /** Focus return delay - next tick (ms) */
+  FOCUS_NEXT_TICK_MS: 0,
+  /** Short focus delay for UI transitions (ms) */
+  FOCUS_SHORT_DELAY_MS: 10,
 } as const
 
 // History settings

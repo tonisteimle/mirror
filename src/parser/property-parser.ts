@@ -15,10 +15,12 @@ import { isTokenSequence } from './types'
 import type { Token } from './lexer'
 import { CSS_COLOR_KEYWORDS, splitDirections, applySpacingToProperties } from './parser-utils'
 import { STRING_PROPERTIES, BOOLEAN_PROPERTIES } from '../dsl/properties'
+import { parseCondition } from './condition-parser'
 
 /**
  * Resolve a component property reference like "Card.pad" or "$Card.pad".
  * Returns the resolved value or undefined if not found.
+ * Logs warnings when references cannot be resolved.
  */
 function resolveComponentPropertyRef(
   ctx: ParserContext,
@@ -28,15 +30,45 @@ function resolveComponentPropertyRef(
   if (parts.length < 2) return undefined
 
   const componentName = parts[0].startsWith('$') ? parts[0].slice(1) : parts[0]
-  const propPath = parts.slice(1).join('_')
   const compTemplate = ctx.registry.get(componentName)
 
-  if (compTemplate) {
-    const value = compTemplate.properties[propPath]
+  if (!compTemplate) {
+    // Only warn if it looks like an intentional component reference
+    // (starts with uppercase letter)
+    if (/^[A-Z]/.test(componentName)) {
+      console.warn(`Component property reference failed: "${componentName}" is not defined. Reference: "${refValue}"`)
+    }
+    return undefined
+  }
+
+  // Try single property first (most common case: Card.pad)
+  if (parts.length === 2) {
+    const value = compTemplate.properties[parts[1]]
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
       return value
     }
   }
+
+  // For nested paths like Card.Header.style, try both formats:
+  // 1. Dot notation (Header.style) for nested component access
+  // 2. Underscore notation (Header_style) for flat property storage
+  const propPathDot = parts.slice(1).join('.')
+  const propPathUnderscore = parts.slice(1).join('_')
+
+  // Try dot notation first
+  let value = compTemplate.properties[propPathDot]
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+
+  // Fallback to underscore notation for backwards compatibility
+  value = compTemplate.properties[propPathUnderscore]
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+
+  // Property not found on component
+  console.warn(`Component property reference failed: "${componentName}" has no property "${parts.slice(1).join('.')}". Available properties: ${Object.keys(compTemplate.properties).join(', ') || 'none'}`)
   return undefined
 }
 
@@ -56,6 +88,28 @@ function tryAssignResolvedRef(
     return true
   }
   return false
+}
+
+/**
+ * Look up a token value with optional warning on failure.
+ * @param ctx Parser context
+ * @param tokenName Name of the token to look up
+ * @param warnOnMissing Whether to warn if the token is not found
+ * @returns The token value or undefined
+ */
+function lookupToken(
+  ctx: ParserContext,
+  tokenName: string,
+  warnOnMissing: boolean = false
+): unknown {
+  const value = ctx.designTokens.get(tokenName)
+  if (value === undefined && warnOnMissing) {
+    // Only warn if it doesn't look like a component property reference
+    if (!tokenName.includes('.')) {
+      console.warn(`Token reference failed: "$${tokenName}" is not defined`)
+    }
+  }
+  return value
 }
 
 /**
@@ -131,6 +185,8 @@ export function parsePropertyValue(ctx: ParserContext, node: ASTNode): void {
     parseGridProperty(ctx, node)
   } else if (propName === 'pointer' || propName === 'cursor') {
     parsePointerProperty(ctx, node, propName)
+  } else if (propName === 'data') {
+    parseDataProperty(ctx, node)
   } else {
     parseGenericProperty(ctx, node, propName)
   }
@@ -626,11 +682,51 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
         node.properties[propName] = tokenValue
       }
     } else {
-      tryAssignResolvedRef(ctx, node, propName, tokenName)
+      // Token not found - try as component property reference
+      const resolved = tryAssignResolvedRef(ctx, node, propName, tokenName)
+      // If both token and component property lookup failed, warn
+      if (!resolved && !tokenName.includes('.')) {
+        console.warn(`Token reference failed: "$${tokenName}" is not defined`)
+      }
     }
   } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {
     tryAssignResolvedRef(ctx, node, propName, ctx.advance().value)
   } else {
     node.properties[propName] = true
+  }
+}
+
+/**
+ * Parse data property for data binding.
+ * Syntax: data TypeName [where condition]
+ * Examples:
+ *   data Tasks
+ *   data Tasks where done == false
+ *   data Users where active == true and role == "admin"
+ */
+function parseDataProperty(ctx: ParserContext, node: ASTNode): void {
+  const next = ctx.current()
+
+  // Expect a type name (uppercase component name like Tasks, Users)
+  if (!next || next.type !== 'COMPONENT_NAME') {
+    return
+  }
+
+  const typeName = ctx.advance().value
+
+  // Initialize dataBinding
+  node.dataBinding = {
+    typeName
+  }
+
+  // Check for optional 'where' clause
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'where') {
+    ctx.advance() // consume 'where'
+
+    // Parse the filter condition
+    const filter = parseCondition(ctx)
+    if (filter) {
+      node.dataBinding.filter = filter
+    }
   }
 }

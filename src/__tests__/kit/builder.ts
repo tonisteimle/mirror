@@ -5,7 +5,7 @@
  */
 import { screen, fireEvent, waitFor } from '@testing-library/react'
 import { it, expect, describe, beforeEach } from 'vitest'
-import { createRenderer, type RenderWithProps } from './render'
+import { createRenderer } from './render'
 import { resetMocks } from './mocks'
 import type { ComponentType } from 'react'
 import type { Mock } from 'vitest'

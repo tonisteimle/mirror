@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "id": "home",
+      "name": "Home",
+      "layoutCode": "// Component-local events + implicit item slots\nMenu: ver bg #1E1E2E pad 8 rad 8 w 200\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  Item: pad 12 16 hover-bg #333 cursor pointer\n    state highlighted\n      bg #3B82F6\n\nMenu\n  - \"Dashboard\"\n  - \"Profile\"\n  - \"Settings\""
+    }
+  ],
+  "currentPageId": "home",
+  "componentsCode": "",
+  "tokensCode": ""
+}

@@ -12,7 +12,10 @@ import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { dslAutocomplete, type DSLAutocompleteOptions } from './dsl-autocomplete'
 import { createEditorKeymaps, type KeymapConfig } from './keymaps'
 import { createPanelKeymap, type PanelKeymapConfig } from './panel-keymap'
+import { createNumberScrubbingKeymap } from './number-scrubbing'
+import { createSemanticSelectionExtension } from './semantic-selection'
 import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
+// Ghost suggestions removed - using contextual autocomplete boost instead
 
 /**
  * Configuration for creating editor extensions.
@@ -30,7 +33,7 @@ export interface EditorExtensionsConfig {
   /** Callback for document changes */
   onDocChange?: (view: EditorView) => void
 
-  /** Whether to include line numbers (default: true) */
+  /** Whether to include line numbers (default: false) */
   lineNumbers?: boolean
 
   /** Whether to highlight active line (default: true) */
@@ -73,7 +76,7 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
     panelKeymapConfig,
     autocompleteOptions,
     onDocChange,
-    lineNumbers: showLineNumbers = true,
+    lineNumbers: showLineNumbers = false,
     highlightActiveLine: showHighlightActiveLine = true,
     colorSwatchConfig,
   } = config
@@ -93,6 +96,12 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
 
   // Panel navigation keymap (for color panel arrow key navigation)
   extensions.push(createPanelKeymap(panelKeymapConfig))
+
+  // Number scrubbing keymap (Shift+Arrow to increment/decrement numbers)
+  extensions.push(createNumberScrubbingKeymap())
+
+  // Semantic selection (Alt+Click for intelligent selection)
+  extensions.push(createSemanticSelectionExtension())
 
   // DSL autocomplete
   extensions.push(dslAutocomplete(autocompleteOptions))
@@ -123,7 +132,6 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
  */
 export function createMinimalExtensions(): Extension[] {
   return [
-    lineNumbers(),
     dslTheme,
     dslHighlighter,
     keymap.of([...defaultKeymap, indentWithTab]),

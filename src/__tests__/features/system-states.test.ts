@@ -150,7 +150,7 @@ ToggleSwitch
   describe('Parser - complete button example', () => {
     it('parses realistic button with all system states', () => {
       const input = `
-PrimaryBtn: pad 12 24, col #2271c1, rad 8
+PrimaryBtn: pad 12 24 col #2271c1 rad 8
   state hover
     col #3388e8
   state active
@@ -171,7 +171,7 @@ PrimaryBtn: pad 12 24, col #2271c1, rad 8
 
       // Base properties (pad is expanded to pad_u, pad_r, pad_d, pad_l)
       expect(button!.properties.pad_u).toBe(12)
-      expect(button!.properties.col).toBe('#2271c1')
+      expect(button!.properties.col).toBe('#2271c1') // Hex colors preserve original case
 
       // System states
       const hover = button!.states!.find(s => s.name === 'hover')

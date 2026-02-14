@@ -14,10 +14,8 @@ import {
   InlinePanel,
   PanelHeader,
   PanelList,
-  PanelItem,
   PanelFooter,
 } from './InlinePanel'
-import { ItemLabel } from './picker'
 import { colors } from '../theme'
 import { searchIcons } from '../data/icon-synonyms'
 
@@ -239,27 +237,3 @@ export function InlineIconPanel({
   )
 }
 
-/**
- * Calculate next index for grid navigation.
- */
-export function navigateIconGrid(
-  currentIndex: number,
-  direction: 'up' | 'down' | 'left' | 'right',
-  totalItems: number,
-  columns: number = GRID_COLUMNS
-): number {
-  if (totalItems === 0) return 0
-
-  switch (direction) {
-    case 'up':
-      return Math.max(0, currentIndex - columns)
-    case 'down':
-      return Math.min(totalItems - 1, currentIndex + columns)
-    case 'left':
-      return Math.max(0, currentIndex - 1)
-    case 'right':
-      return Math.min(totalItems - 1, currentIndex + 1)
-    default:
-      return currentIndex
-  }
-}

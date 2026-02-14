@@ -22,7 +22,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { EmbeddableEditor, type EmbeddableEditorProps } from '../components/EmbeddableEditor'
+import { EmbeddableEditor } from '../components/EmbeddableEditor'
 
 // ============================================
 // Types

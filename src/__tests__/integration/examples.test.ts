@@ -242,7 +242,8 @@ ToggleGroup ver gap 12
     const result = parse(dsl)
     expect(result.errors.filter(e => !e.startsWith('Warning:'))).toHaveLength(0)
     expect(result.registry.has('Toggle')).toBe(true)
-    expect(result.registry.has('Knob')).toBe(true)
+    // Nested definitions are registered with scoped names
+    expect(result.registry.has('Toggle.Knob')).toBe(true)
   })
 
   it('accordion with expanded/collapsed states', () => {
@@ -395,7 +396,8 @@ describe('Navigation Patterns', () => {
     const result = parse(dsl)
     expect(result.errors.filter(e => !e.startsWith('Warning:'))).toHaveLength(0)
     expect(result.registry.has('Sidebar')).toBe(true)
-    expect(result.registry.has('NavItem')).toBe(true)
+    // Nested definitions are registered with scoped names
+    expect(result.registry.has('Sidebar.Nav.Section.NavItem')).toBe(true)
   })
 
   it('breadcrumb navigation', () => {

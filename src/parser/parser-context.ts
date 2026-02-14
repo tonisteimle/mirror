@@ -12,9 +12,11 @@
  */
 
 import type { Token } from './lexer'
-import type { ComponentTemplate, StyleMixin, ASTNode, TokenValue } from './types'
+import type { ComponentTemplate, StyleMixin, ASTNode, TokenValue, ParseIssue } from './types'
 import { isTokenSequence } from './types'
 import { ErrorCollector, type ParseError, createError, ErrorCodes } from './errors'
+import { getBestMatch } from '../validator/utils/suggestion-engine'
+import { PROPERTIES, EVENT_KEYWORDS, ANIMATION_KEYWORDS } from '../dsl/properties'
 
 /**
  * Parser Context - shared state and operations for parsing.
@@ -40,6 +42,9 @@ export interface ParserContext {
   // Structured error collection
   readonly errorCollector: ErrorCollector
 
+  // V7: Parse issues (error-tolerant parsing)
+  readonly parseIssues: ParseIssue[]
+
   // Cursor methods
   current(): Token | undefined
   peek(offset?: number): Token | undefined
@@ -54,8 +59,8 @@ export interface ParserContext {
   generateId(prefix: string): string
 
   // Token expansion - resolves token sequences with nested token references
-  resolveTokenValue(name: string): Token[]
-  expandTokenSequence(tokens: Token[]): Token[]
+  resolveTokenValue(name: string, visited?: Set<string>): Token[]
+  expandTokenSequence(tokens: Token[], visited?: Set<string>): Token[]
 
   // Error helpers
   addError(code: string, message: string, token: Token, hint?: string): void
@@ -63,9 +68,23 @@ export interface ParserContext {
 }
 
 /**
+ * Options for creating a parser context with pre-populated values.
+ */
+export interface ParserContextOptions {
+  /** Parent tokens to inherit (e.g., from outer document) */
+  parentTokens?: Map<string, TokenValue>
+  /** Parent registry to inherit (e.g., from outer document) */
+  parentRegistry?: Map<string, ComponentTemplate>
+}
+
+/**
  * Create a new parser context from a token stream.
  */
-export function createParserContext(tokens: Token[], source: string = ''): ParserContext {
+export function createParserContext(
+  tokens: Token[],
+  source: string = '',
+  options?: ParserContextOptions
+): ParserContext {
   const registry = new Map<string, ComponentTemplate>()
   const designTokens = new Map<string, TokenValue>()
   const styleMixins = new Map<string, StyleMixin>()
@@ -73,8 +92,21 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
   const errors: string[] = []
   const sourceLines = source.split('\n')
   const errorCollector = new ErrorCollector(source)
+  const parseIssues: ParseIssue[] = []
 
-  // Collect lexer errors
+  // Pre-populate with parent context (local definitions can override)
+  if (options?.parentTokens) {
+    for (const [key, value] of options.parentTokens) {
+      designTokens.set(key, value)
+    }
+  }
+  if (options?.parentRegistry) {
+    for (const [key, value] of options.parentRegistry) {
+      registry.set(key, value)
+    }
+  }
+
+  // Collect lexer errors and parse issues from heuristic token types
   for (const token of tokens) {
     if (token.type === 'ERROR') {
       errors.push(`Line ${token.line + 1}: ${token.value}`)
@@ -84,6 +116,43 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
         token.line,
         token.column
       )
+    }
+
+    // V7: Collect UNKNOWN_* tokens as parse issues
+    if (token.type === 'UNKNOWN_EVENT') {
+      const suggestion = getBestMatch(token.value, Array.from(EVENT_KEYWORDS))
+      parseIssues.push({
+        type: 'unknown_event',
+        value: token.value,
+        line: token.line,
+        column: token.column,
+        message: `Unknown event "${token.value}"`,
+        suggestion: suggestion ? `Did you mean "${suggestion}"?` : undefined
+      })
+    }
+
+    if (token.type === 'UNKNOWN_PROPERTY') {
+      const suggestion = getBestMatch(token.value, Array.from(PROPERTIES))
+      parseIssues.push({
+        type: 'unknown_property',
+        value: token.value,
+        line: token.line,
+        column: token.column,
+        message: `Unknown property "${token.value}"`,
+        suggestion: suggestion ? `Did you mean "${suggestion}"?` : undefined
+      })
+    }
+
+    if (token.type === 'UNKNOWN_ANIMATION') {
+      const suggestion = getBestMatch(token.value, Array.from(ANIMATION_KEYWORDS))
+      parseIssues.push({
+        type: 'unknown_animation',
+        value: token.value,
+        line: token.line,
+        column: token.column,
+        message: `Unknown animation "${token.value}"`,
+        suggestion: suggestion ? `Did you mean "${suggestion}"?` : undefined
+      })
     }
   }
 
@@ -103,6 +172,7 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
     idCounters,
     errors,
     errorCollector,
+    parseIssues,
 
     current(): Token | undefined {
       return tokens[pos]
@@ -189,8 +259,16 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
      * Resolve a token name to its expanded token sequence.
      * If the token is a simple value, wraps it in a single-element array.
      * If the token is a sequence, expands any nested token references.
+     * @param visited - Set of already visited token names for cycle detection
      */
-    resolveTokenValue(name: string): Token[] {
+    resolveTokenValue(name: string, visited: Set<string> = new Set()): Token[] {
+      // Cycle detection: prevent infinite loops from circular references
+      if (visited.has(name)) {
+        console.warn(`Circular token reference detected: $${name}`)
+        return []
+      }
+      visited.add(name)
+
       const value = designTokens.get(name)
       if (value === undefined) {
         return []
@@ -210,7 +288,7 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
 
       // Token sequence - expand nested references
       if (isTokenSequence(value)) {
-        return ctx.expandTokenSequence(value.tokens)
+        return ctx.expandTokenSequence(value.tokens, visited)
       }
 
       return []
@@ -218,14 +296,15 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
 
     /**
      * Expand a token sequence by recursively resolving any TOKEN_REF tokens.
+     * @param visited - Set of already visited token names for cycle detection
      */
-    expandTokenSequence(tokenSeq: Token[]): Token[] {
+    expandTokenSequence(tokenSeq: Token[], visited: Set<string> = new Set()): Token[] {
       const result: Token[] = []
 
       for (const token of tokenSeq) {
         if (token.type === 'TOKEN_REF') {
-          // Recursively resolve the referenced token
-          const expanded = ctx.resolveTokenValue(token.value)
+          // Recursively resolve the referenced token with cycle detection
+          const expanded = ctx.resolveTokenValue(token.value, visited)
           result.push(...expanded)
         } else {
           result.push(token)
@@ -240,18 +319,32 @@ export function createParserContext(tokens: Token[], source: string = ''): Parse
 }
 
 /**
+ * Maximum recursion depth for cloning children to prevent stack overflow.
+ */
+const MAX_CLONE_DEPTH = 50
+
+/**
  * Clone children with new IDs for template instantiation.
  * Re-exported from parser-utils for convenience.
  */
 export function cloneChildrenWithNewIds(
   children: ASTNode[],
-  generateId: (name: string) => string
+  generateId: (name: string) => string,
+  depth: number = 0
 ): ASTNode[] {
+  if (depth >= MAX_CLONE_DEPTH) {
+    console.warn(`Max clone depth (${MAX_CLONE_DEPTH}) reached`)
+    return children.map(child => ({
+      ...child,
+      id: generateId(child.name),
+      properties: { ...child.properties }
+    }))
+  }
   return children.map(child => ({
     ...child,
     id: generateId(child.name),
     // Deep clone properties to avoid shared references
     properties: { ...child.properties },
-    children: cloneChildrenWithNewIds(child.children, generateId)
+    children: cloneChildrenWithNewIds(child.children, generateId, depth + 1)
   }))
 }
