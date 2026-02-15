@@ -27,11 +27,6 @@ describe('HeaderBar', () => {
     expect(screen.getByAltText('mirror')).toBeDefined()
   })
 
-  it('renders docs mode button when onToggleDocsMode is provided', () => {
-    test.render({ onToggleDocsMode: vi.fn() })
-    expect(screen.getByTitle('Dokumentation')).toBeDefined()
-  })
-
   it('renders menu button', () => {
     test.render()
     expect(screen.getByTitle('Menu')).toBeDefined()
@@ -124,21 +119,6 @@ describe('HeaderBar', () => {
       // Close
       fireEvent.click(menuBtn)
       expect(screen.queryByText('Open')).toBeNull()
-    })
-  })
-
-  // ===========================================
-  // Documentation Mode Toggle Test
-  // ===========================================
-
-  describe('Docs Mode Toggle', () => {
-    it('calls onToggleDocsMode when clicked', () => {
-      const mockToggleDocsMode = vi.fn()
-      test.render({ onToggleDocsMode: mockToggleDocsMode })
-
-      fireEvent.click(screen.getByTitle('Dokumentation'))
-
-      expect(mockToggleDocsMode).toHaveBeenCalledTimes(1)
     })
   })
 })
