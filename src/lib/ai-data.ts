@@ -7,7 +7,8 @@
 
 import type { DataSchema, DataRecord } from '../parser/types'
 import { parseDataCode, getCollectionName, generateInstancesSyntax } from '../parser/data-parser'
-import { API, STORAGE_KEYS } from '../constants'
+import { API } from '../constants'
+import { hasApiKey, getApiKey } from './ai'
 
 /**
  * System prompt for Mirror syntax data generation
@@ -63,15 +64,8 @@ export async function generateDataWithAI(dataCode: string): Promise<DataGenerati
     return { success: false, error: 'Keine Schemas gefunden. Definiere erst Schemas mit TypeName: und Feldern.' }
   }
 
-  // Get API key from localStorage
-  let apiKey: string
-  try {
-    apiKey = localStorage.getItem(STORAGE_KEYS.API_KEY) || ''
-  } catch {
-    return { success: false, error: 'Kein Zugriff auf API Key' }
-  }
-
-  if (!apiKey) {
+  // Check for API key (uses shared sessionStorage-based management from ai.ts)
+  if (!hasApiKey()) {
     // Fall back to placeholder generation without LLM
     const placeholderCode = generateInstancesSyntax(schemas, 3)
     return { success: true, code: placeholderCode }
@@ -94,7 +88,7 @@ Beachte: Typen mit Relationen nach den referenzierten Typen!`
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${getApiKey()}`,
         'HTTP-Referer': window.location.origin,
         'X-Title': 'Mirror Data Generator',
       },
