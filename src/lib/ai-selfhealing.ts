@@ -1289,6 +1289,42 @@ export function fixActionTypos(code: string): string {
 }
 
 /**
+ * Fix CSS state names that are not supported in Mirror.
+ *
+ * LLM error:
+ *   state focus-within
+ *     border-color $primary
+ *
+ * Should be:
+ *   state focus
+ *     border-color $primary
+ *
+ * Mirror supports: hover, focus, active, disabled (system states)
+ * and behavior states like highlighted, selected, etc.
+ */
+export function fixUnsupportedStates(code: string): string {
+  const stateReplacements: Record<string, string> = {
+    'focus-within': 'focus',
+    'focus-visible': 'focus',
+    'checked': 'active',
+    'enabled': 'active',
+    'visited': 'active',
+    'first-child': 'default',
+    'last-child': 'default',
+  }
+
+  let result = code
+  for (const [cssState, mirrorState] of Object.entries(stateReplacements)) {
+    // Replace in state definitions: state focus-within → state focus
+    result = result.replace(
+      new RegExp(`(state\\s+)${cssState}\\b`, 'gi'),
+      `$1${mirrorState}`
+    )
+  }
+  return result
+}
+
+/**
  * Remove empty lines between token definitions.
  *
  * LLM error:
@@ -1558,6 +1594,7 @@ export function applyAllFixes(code: string): string {
   // Phase 3: Typo fixes
   result = fixEventTypos(result)
   result = fixActionTypos(result)
+  result = fixUnsupportedStates(result)
 
   // Phase 4: Structural fixes
   result = fixOrphanedLayoutKeywords(result)
