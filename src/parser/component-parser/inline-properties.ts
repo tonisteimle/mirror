@@ -74,11 +74,28 @@ export function parseInlineProperties(
       continue
     }
 
-    // Inline child slot handling
-    if (token.type === 'COMPONENT_NAME') {
-      const childNode = parseInlineChildSlot(ctx, componentName)
-      if (childNode) {
-        inlineSlots.push(childNode)
+    // V8: Check if token matches a defined state for this component
+    // e.g., Status pending "Waiting" -> activeState: 'pending'
+    // Handle COMPONENT_NAME and UNKNOWN_PROPERTY (for state names like 'pending' close to 'padding')
+    if (token.type === 'COMPONENT_NAME' || token.type === 'UNKNOWN_PROPERTY') {
+      const template = ctx.registry.get(componentName)
+      if (template?.states) {
+        const matchingState = template.states.find(s => s.name === token.value)
+        if (matchingState) {
+          node.activeState = token.value
+          ctx.advance()
+          continue
+        }
+      }
+      // Inline child slot handling (if not a state) - only for COMPONENT_NAME
+      if (token.type === 'COMPONENT_NAME') {
+        const childNode = parseInlineChildSlot(ctx, componentName)
+        if (childNode) {
+          inlineSlots.push(childNode)
+        }
+      } else {
+        // FIX: UNKNOWN_PROPERTY muss auch advanced werden um Endlosschleife zu vermeiden!
+        ctx.advance()
       }
       continue
     }
