@@ -163,10 +163,14 @@ function parseEventAction(ctx: ParserContext): ActionStatement | null {
   if (ctx.current()?.type === 'COMPONENT_NAME' && ctx.peek(1)?.type === 'ASSIGNMENT') {
     return parsePropertyAssignment(ctx)
   }
-  // Check for action keyword: open, close, toggle, etc. (now tokenized as COMPONENT_NAME)
+  // Check for action keyword: open, close, toggle, etc.
+  // Note: Most action keywords are tokenized as COMPONENT_NAME, but show/hide/animate
+  // are tokenized as ANIMATION_ACTION (they're in ANIMATION_ACTION_KEYWORDS)
   const token = ctx.current()
-  if (token?.type === 'COMPONENT_NAME' && ACTION_KEYWORDS.has(token.value)) {
-    return parseAction(ctx)
+  if (token && ACTION_KEYWORDS.has(token.value)) {
+    if (token.type === 'COMPONENT_NAME' || token.type === 'ANIMATION_ACTION') {
+      return parseAction(ctx)
+    }
   }
   return null
 }
