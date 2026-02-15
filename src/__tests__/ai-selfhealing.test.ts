@@ -11,6 +11,12 @@ import {
   isValidMirrorCode,
   getIssueSummary,
   withSelfHealing,
+  removePxSuffix,
+  removePropertyColons,
+  fixOpacityRange,
+  fixMissingTokenPrefix,
+  fixTextOnSeparateLine,
+  applyAllFixes,
   type CodeIssue
 } from '../lib/ai-selfhealing'
 
@@ -338,5 +344,245 @@ Button onclck toggle`
     const result = validateMirrorCode(code)
     expect(result.valid).toBe(false)
     expect(result.issues.some(i => i.message.includes('onclck'))).toBe(true)
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: removePxSuffix
+// ============================================================================
+
+describe('removePxSuffix', () => {
+  it('removes px from width values', () => {
+    expect(removePxSuffix('Box width 200px')).toBe('Box width 200')
+  })
+
+  it('removes px from height values', () => {
+    expect(removePxSuffix('Box height 100px')).toBe('Box height 100')
+  })
+
+  it('removes px from multiple values', () => {
+    expect(removePxSuffix('Box width 200px height 100px padding 16px')).toBe('Box width 200 height 100 padding 16')
+  })
+
+  it('does NOT remove px inside strings', () => {
+    expect(removePxSuffix('Button "16px wide"')).toBe('Button "16px wide"')
+  })
+
+  it('handles mixed string and non-string content', () => {
+    expect(removePxSuffix('Box width 200px "Size: 16px" height 100px')).toBe('Box width 200 "Size: 16px" height 100')
+  })
+
+  it('handles code without px', () => {
+    expect(removePxSuffix('Box width 200 height 100')).toBe('Box width 200 height 100')
+  })
+
+  it('handles empty string', () => {
+    expect(removePxSuffix('')).toBe('')
+  })
+
+  it('preserves px at end of line', () => {
+    const input = 'Box width 200px'
+    const result = removePxSuffix(input)
+    expect(result).toBe('Box width 200')
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: removePropertyColons
+// ============================================================================
+
+describe('removePropertyColons', () => {
+  it('removes colon after padding', () => {
+    expect(removePropertyColons('Box padding: 16')).toBe('Box padding 16')
+  })
+
+  it('removes colon after background', () => {
+    expect(removePropertyColons('Box background: #1E1E1E')).toBe('Box background #1E1E1E')
+  })
+
+  it('removes colons from multiple properties', () => {
+    expect(removePropertyColons('Box padding: 16 background: #1E1E1E color: #FFF'))
+      .toBe('Box padding 16 background #1E1E1E color #FFF')
+  })
+
+  it('handles short form properties', () => {
+    expect(removePropertyColons('Box pad: 16 bg: #1E1E1E col: #FFF'))
+      .toBe('Box pad 16 bg #1E1E1E col #FFF')
+  })
+
+  it('does NOT remove colon from component definitions', () => {
+    // Component definitions have format "ComponentName:" at start of line
+    // Our regex requires whitespace before the property, so this is preserved
+    const input = 'Card: padding 16'
+    const result = removePropertyColons(input)
+    // The colon in "Card:" should be preserved because there's no space before it
+    expect(result).toBe('Card: padding 16')
+  })
+
+  it('handles code without colons', () => {
+    expect(removePropertyColons('Box padding 16 background #1E1E1E'))
+      .toBe('Box padding 16 background #1E1E1E')
+  })
+
+  it('handles empty string', () => {
+    expect(removePropertyColons('')).toBe('')
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: fixOpacityRange
+// ============================================================================
+
+describe('fixOpacityRange', () => {
+  it('converts 50 to 0.5', () => {
+    expect(fixOpacityRange('Box opacity 50')).toBe('Box opacity 0.5')
+  })
+
+  it('converts 100 to 1', () => {
+    expect(fixOpacityRange('Box opacity 100')).toBe('Box opacity 1')
+  })
+
+  it('converts 25 to 0.25', () => {
+    expect(fixOpacityRange('Box opacity 25')).toBe('Box opacity 0.25')
+  })
+
+  it('converts 75 to 0.75', () => {
+    expect(fixOpacityRange('Box opacity 75')).toBe('Box opacity 0.75')
+  })
+
+  it('leaves 0 unchanged', () => {
+    expect(fixOpacityRange('Box opacity 0')).toBe('Box opacity 0')
+  })
+
+  it('leaves 1 unchanged', () => {
+    expect(fixOpacityRange('Box opacity 1')).toBe('Box opacity 1')
+  })
+
+  it('leaves decimal values unchanged', () => {
+    expect(fixOpacityRange('Box opacity 0.5')).toBe('Box opacity 0.5')
+  })
+
+  it('handles short form opa', () => {
+    expect(fixOpacityRange('Box opa 50')).toBe('Box opa 0.5')
+  })
+
+  it('handles shortest form o', () => {
+    expect(fixOpacityRange('Box o 50')).toBe('Box o 0.5')
+  })
+
+  it('handles empty string', () => {
+    expect(fixOpacityRange('')).toBe('')
+  })
+
+  it('does not convert values > 100', () => {
+    // Values > 100 are left as-is (could be intentional error or different unit)
+    expect(fixOpacityRange('Box opacity 150')).toBe('Box opacity 150')
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: fixMissingTokenPrefix
+// ============================================================================
+
+describe('fixMissingTokenPrefix', () => {
+  it('adds $ prefix to token references', () => {
+    const code = `$primary: #3B82F6
+Box bg primary`
+
+    expect(fixMissingTokenPrefix(code)).toBe(`$primary: #3B82F6
+Box bg $primary`)
+  })
+
+  it('does not double-prefix already prefixed tokens', () => {
+    const code = `$primary: #3B82F6
+Box bg $primary`
+
+    expect(fixMissingTokenPrefix(code)).toBe(code)
+  })
+
+  it('does not prefix token definitions', () => {
+    const code = `$primary: #3B82F6
+$secondary: #333`
+
+    expect(fixMissingTokenPrefix(code)).toBe(code)
+  })
+
+  it('handles multiple token references', () => {
+    const code = `$primary: #3B82F6
+$spacing: 16
+Box bg primary pad spacing`
+
+    expect(fixMissingTokenPrefix(code)).toBe(`$primary: #3B82F6
+$spacing: 16
+Box bg $primary pad $spacing`)
+  })
+
+  it('does not modify code without token definitions', () => {
+    const code = 'Box bg #3B82F6 pad 16'
+    expect(fixMissingTokenPrefix(code)).toBe(code)
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: fixTextOnSeparateLine
+// ============================================================================
+
+describe('fixTextOnSeparateLine', () => {
+  it('merges text content from separate line', () => {
+    const code = `Button bg #F00
+  "Click me"`
+
+    expect(fixTextOnSeparateLine(code)).toBe('Button bg #F00 "Click me"')
+  })
+
+  it('preserves text that is already inline', () => {
+    const code = 'Button bg #F00 "Click me"'
+    expect(fixTextOnSeparateLine(code)).toBe(code)
+  })
+
+  it('does not merge if indentation is wrong', () => {
+    const code = `Button bg #F00
+"Click me"`
+
+    // Same indentation means it's not a child, don't merge
+    expect(fixTextOnSeparateLine(code)).toBe(code)
+  })
+
+  it('handles multiple components', () => {
+    const code = `Button bg #F00
+  "Click"
+Box pad 16
+  "Content"`
+
+    expect(fixTextOnSeparateLine(code)).toBe(`Button bg #F00 "Click"
+Box pad 16 "Content"`)
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: applyAllFixes
+// ============================================================================
+
+describe('applyAllFixes', () => {
+  it('applies multiple fixes in sequence', () => {
+    const code = `$primary: #3B82F6
+Box padding: 16px background: primary opacity 50`
+
+    const result = applyAllFixes(code)
+
+    // Should fix: colon after properties, px suffix, token prefix, opacity range
+    expect(result).toContain('padding 16')
+    expect(result).toContain('$primary')
+    expect(result).toContain('opacity 0.5')
+    expect(result).not.toContain('padding:')
+    expect(result).not.toContain('16px')
+  })
+
+  it('preserves valid code', () => {
+    const code = `$primary: #3B82F6
+Box padding 16 background $primary opacity 0.5`
+
+    const result = applyAllFixes(code)
+    expect(result).toBe(code)
   })
 })

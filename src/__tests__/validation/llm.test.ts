@@ -330,17 +330,21 @@ describe('LLM Output Processing', () => {
     it('corrects common typos', () => {
       const result = validator.validate(MOCK_LLM_RESPONSES.withTypos)
 
-      // Typos should be corrected
-      expect(result.components).toContain('hor')
+      // Typos should be corrected to valid forms (short OR long)
+      // horizonal → hor or horizontal
+      expect(result.components).toMatch(/\bhor\b|\bhorizontal\b/)
       expect(result.components).not.toContain('horizonal')
 
-      expect(result.components).toContain('rad')
-      expect(result.components).not.toContain('radi')
+      // radi → rad or radius
+      expect(result.components).toMatch(/\brad\b|\bradius\b/)
+      expect(result.components).not.toMatch(/\bradi\b(?!us)/)
 
-      expect(result.components).toContain('col')
+      // backgrnd → bg or background (NOT col!)
+      expect(result.components).toMatch(/\bbg\b|\bbackground\b/)
       expect(result.components).not.toContain('backgrnd')
 
-      expect(result.components).toContain('col')
+      // colour → col or color
+      expect(result.components).toMatch(/\bcol\b|\bcolor\b/)
       expect(result.components).not.toContain('colour')
     })
   })
@@ -490,7 +494,8 @@ describe('LLM Output Processing', () => {
 
       const correction = result.corrections.find(c => c.original.includes('horizonal'))
       expect(correction).toBeDefined()
-      expect(correction!.corrected).toContain('hor')
+      // Should correct to hor or horizontal (both valid)
+      expect(correction!.corrected).toMatch(/hor|horizontal/)
     })
   })
 })

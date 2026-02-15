@@ -8,6 +8,8 @@ import { findClosestMatch } from '../../utils/fuzzy-search'
 import { propertyConfidence } from '../utils/confidence'
 
 // Common CSS to DSL mappings (only unambiguous mappings)
+// NOTE: Both short and long forms are valid in Mirror DSL!
+// We only map CSS-specific syntax to DSL equivalents
 const CSS_TO_DSL: Record<string, string> = {
   // Layout (removed ambiguous: flex-direction, justify-content, align-items can have many values)
   'flex-wrap': 'wrap',
@@ -15,35 +17,24 @@ const CSS_TO_DSL: Record<string, string> = {
   'flex-grow': 'grow',
   'flexgrow': 'grow',
 
-  // Sizing
-  'width': 'w',
-  'height': 'h',
-  'min-width': 'minw',
-  'minwidth': 'minw',
-  'max-width': 'maxw',
-  'maxwidth': 'maxw',
-  'min-height': 'minh',
-  'minheight': 'minh',
-  'max-height': 'maxh',
-  'maxheight': 'maxh',
+  // Sizing - CSS camelCase variants
+  'minwidth': 'min-width',
+  'maxwidth': 'max-width',
+  'minheight': 'min-height',
+  'maxheight': 'max-height',
 
-  // Spacing
-  'padding': 'pad',
-  'margin': 'mar',
+  // Colors - CSS syntax to DSL
+  // IMPORTANT: background and color are DIFFERENT properties!
+  // background/bg = background color, color/col = text color
+  'background-color': 'background',  // CSS → DSL long form
+  'backgroundcolor': 'background',
+  'bordercolor': 'border-color',
 
-  // Colors (unified: background → col)
-  'background': 'col',
-  'background-color': 'col',
-  'backgroundcolor': 'col',
-  'border-color': 'boc',
-  'bordercolor': 'boc',
+  // Border - CSS syntax to DSL
+  'border-radius': 'radius',
+  'borderradius': 'radius',
 
-  // Border
-  'border-radius': 'rad',
-  'borderradius': 'rad',
-  'radius': 'rad',
-
-  // Typography
+  // Typography - CSS syntax to DSL
   'font-size': 'size',
   'fontsize': 'size',
   'font-weight': 'weight',
@@ -52,54 +43,58 @@ const CSS_TO_DSL: Record<string, string> = {
   'fontfamily': 'font',
 
   // Direction keywords (unambiguous)
-  'row': 'hor',
-  'column': 'ver',
-  'horizontal': 'hor',
-  'vertical': 'ver',
+  'row': 'horizontal',
+  'column': 'vertical',
   'space-between': 'between',
   'spacebetween': 'between',
 }
 
 // Common typos and alternatives (only typos, not CSS names which are in CSS_TO_DSL)
+// NOTE: We do NOT convert between valid forms (bg ↔ background, col ↔ color)
+// Both short and long forms are valid in Mirror DSL!
 const COMMON_TYPOS: Record<string, string> = {
   // Layout typos
-  'horizonal': 'hor',
-  'horiz': 'hor',
-  'hori': 'hor',
-  'verticle': 'ver',
-  'vert': 'ver',
-  'centre': 'cen',
-  'centered': 'cen',
-  'centr': 'cen',
+  'horizonal': 'horizontal',
+  'horiz': 'horizontal',
+  'hori': 'horizontal',
+  'verticle': 'vertical',
+  'vert': 'vertical',
+  'centre': 'center',
+  'centered': 'center',
+  'centr': 'center',
   // Spacing typos
-  'padd': 'pad',
-  'marg': 'mar',
-  'margn': 'mar',
-  // Color typos (unified: bg → col)
-  'bg': 'col',
-  'bg-color': 'col',
-  'bgcolor': 'col',
-  'backgrnd': 'col',
-  'backgr': 'col',
-  'colour': 'col',
-  'color': 'col',
-  'clr': 'col',
-  'txt': 'col',
+  'padd': 'padding',
+  'paddng': 'padding',
+  'marg': 'margin',
+  'margn': 'margin',
+  // Background typos (NOT color!)
+  'backgrnd': 'background',
+  'backgr': 'background',
+  'bckgrnd': 'background',
+  'bgcolor': 'background',  // Common CSS-ism
+  // Text color typos (NOT background!)
+  'colour': 'color',
+  'clr': 'color',
+  'colr': 'color',
+  'txt': 'color',  // text-color → color
+  'textcolor': 'color',
+  'text-color': 'color',
   // Border typos
-  'radi': 'rad',
-  'round': 'rad',
-  'rounded': 'rad',
-  'bord': 'bor',
-  'brdr': 'bor',
-  'borderw': 'bor',
+  'radi': 'radius',
+  'round': 'radius',
+  'rounded': 'radius',
+  'bord': 'border',
+  'brdr': 'border',
+  'borderw': 'border',
+  'bordercol': 'border-color',
   // Typography typos
   'sz': 'size',
   'wgt': 'weight',
   'bold': 'weight',
   // Sizing typos
-  'widt': 'w',
-  'heigh': 'h',
-  'hgt': 'h',
+  'widt': 'width',
+  'heigh': 'height',
+  'hgt': 'height',
   // Other typos
   'ic': 'icon',
   'ico': 'icon',
@@ -110,6 +105,8 @@ const COMMON_TYPOS: Record<string, string> = {
   'wrp': 'wrap',
   'btween': 'between',
   'btwn': 'between',
+  'opac': 'opacity',
+  'opacty': 'opacity',
 }
 
 export interface PropertyCorrectionResult {

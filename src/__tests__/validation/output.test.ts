@@ -37,20 +37,23 @@ This creates a button.`
 
   describe('Property Correction', () => {
     it('corrects CSS property names', () => {
-      // padding is now valid, use background-color instead
+      // background-color (CSS) → background (DSL)
       const result = correctProperty('background-color')
-      expect(result.corrected).toBe('col')
+      expect(result.corrected).toBe('background')
       expect(result.method).toBe('css')
     })
 
     it('corrects common typos', () => {
+      // backgrnd → background (NOT col!)
+      // bg/background = background color, col/color = text color
       const result = correctProperty('backgrnd')
-      expect(result.corrected).toBe('col')
+      expect(result.corrected).toBe('background')
     })
 
     it('uses fuzzy matching for unknown properties', () => {
+      // horiz → horizontal (we now prefer long forms)
       const result = correctProperty('horiz')
-      expect(result.corrected).toBe('hor')
+      expect(result.corrected).toBe('horizontal')
     })
 
     it('returns null for unrecognizable properties', () => {

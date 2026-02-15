@@ -394,6 +394,9 @@ export function fixMissingTokenPrefix(code: string): string {
       const quoteCount = (before.match(/"/g) || []).length
       if (quoteCount % 2 === 1) return match
 
+      // Don't replace if after 'state' keyword (it's a state name, not a token)
+      if (/\bstate\s+$/.test(before)) return match
+
       return `$${tokenName}`
     })
   }
@@ -490,15 +493,295 @@ export function hasSemicolonChaining(code: string): boolean {
 }
 
 /**
+ * Fix token names used as property names.
+ *
+ * LLM error patterns:
+ *   state focus
+ *     $border-color $primary    // Token used as property name
+ *   Box radius 8 $border 1 #333   // $border instead of border
+ *
+ * Should be:
+ *   state focus
+ *     border-color $primary     // Property name, then token value
+ *   Box radius 8 border 1 #333
+ */
+export function fixTokenAsProperty(code: string): string {
+  // Known property names that might be prefixed with $ by mistake
+  const knownProperties = [
+    'border-color', 'boc', 'background', 'bg', 'color', 'col',
+    'border', 'bor', 'padding', 'pad', 'margin', 'mar',
+    'radius', 'rad', 'width', 'w', 'height', 'h',
+    'opacity', 'opa', 'gap', 'size', 'weight'
+  ]
+
+  let result = code
+
+  // Fix $property when followed by a value that clearly indicates property usage:
+  // - number (e.g., $border 1)
+  // - #color (e.g., $background #333)
+  // - $token (e.g., $border-color $primary)
+  // But NOT when followed by a word (which could be a different property)
+  for (const prop of knownProperties) {
+    // Match $prop followed by space and a number, # or $
+    // This avoids false positives like "$border type" where $border is a token value
+    const pattern = new RegExp(`\\$${prop}(\\s+)(\\d|#[0-9a-fA-F]|\\$)`, 'g')
+    result = result.replace(pattern, `${prop}$1$2`)
+  }
+
+  return result
+}
+
+/**
+ * Fix multiple token definitions on same line.
+ *
+ * LLM error:
+ *   $bg: #1E1E2E $text: #FFFFFF $accent: #3B82F6
+ *
+ * Should be:
+ *   $bg: #1E1E2E
+ *   $text: #FFFFFF
+ *   $accent: #3B82F6
+ */
+export function fixTokensOnSameLine(code: string): string {
+  // Process line by line
+  return code.split('\n').map(line => {
+    // Only process lines that have multiple token definitions
+    // Pattern: $name: value (followed by space and another $name:)
+    if (!/ \$[a-zA-Z_][a-zA-Z0-9_-]*:/.test(line)) return line
+
+    // Split on ` $` but keep the $ with the following token
+    const parts = line.split(/(?= \$[a-zA-Z_][a-zA-Z0-9_-]*:)/)
+    return parts.map(p => p.trim()).filter(Boolean).join('\n')
+  }).join('\n')
+}
+
+/**
+ * Fix component definition and usage on same line.
+ *
+ * LLM error:
+ *   Card: background #1E1E1E Card color white "Hello World"
+ *
+ * Should be:
+ *   Card: background #1E1E1E
+ *   Card color white "Hello World"
+ */
+export function fixDefinitionAndUsageOnSameLine(code: string): string {
+  // Pattern: ComponentName: props ComponentName props
+  // Match definition followed by same component name without colon
+  return code.replace(
+    /^(\s*)([A-Z][a-zA-Z]*:\s*(?:[a-z][a-zA-Z-]*\s+[^\n$"]+?\s+)+)([A-Z][a-zA-Z]*(?:\s+[^:\n]+))/gm,
+    (match, indent, definition, usage) => {
+      // Only split if the component names match
+      const defName = definition.match(/^([A-Z][a-zA-Z]*):/)?.[1]
+      const useName = usage.match(/^([A-Z][a-zA-Z]*)/)?.[1]
+      if (defName === useName) {
+        return `${indent}${definition.trim()}\n${indent}${usage.trim()}`
+      }
+      return match
+    }
+  )
+}
+
+/**
+ * Fix duplicate element names by converting to list items.
+ *
+ * LLM error:
+ *   Nav: horizontal gap 8
+ *     NavLink "Home"
+ *     NavLink "About"
+ *     NavLink "Contact"
+ *
+ * Should be:
+ *   Nav: horizontal gap 8
+ *     - NavLink "Home"
+ *     - NavLink "About"
+ *     - NavLink "Contact"
+ */
+export function fixDuplicateElementNames(code: string): string {
+  const lines = code.split('\n')
+  const result: string[] = []
+
+  // Track element names at each indentation level
+  const seenAtIndent = new Map<number, Map<string, number[]>>()
+
+  // First pass: find duplicates
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const indentMatch = line.match(/^(\s*)/)
+    const indent = indentMatch?.[1].length ?? 0
+
+    // Extract component name (starts with capital, not already a list item)
+    const componentMatch = line.match(/^(\s*)([A-Z][a-zA-Z]*)(?:\s|$)/)
+    if (componentMatch && !line.trim().startsWith('-')) {
+      const componentName = componentMatch[2]
+
+      if (!seenAtIndent.has(indent)) {
+        seenAtIndent.set(indent, new Map())
+      }
+      const names = seenAtIndent.get(indent)!
+
+      if (!names.has(componentName)) {
+        names.set(componentName, [])
+      }
+      names.get(componentName)!.push(i)
+    }
+  }
+
+  // Find which names have duplicates
+  const duplicateLines = new Set<number>()
+  for (const [, names] of seenAtIndent) {
+    for (const [, lineNums] of names) {
+      if (lineNums.length > 1) {
+        // All instances of duplicates should be list items
+        lineNums.forEach(n => duplicateLines.add(n))
+      }
+    }
+  }
+
+  // Second pass: add - prefix to duplicates
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (duplicateLines.has(i) && !line.trim().startsWith('-')) {
+      // Add - prefix after indentation
+      const indentMatch = line.match(/^(\s*)(.*)$/)
+      if (indentMatch) {
+        result.push(`${indentMatch[1]}- ${indentMatch[2]}`)
+        continue
+      }
+    }
+    result.push(line)
+  }
+
+  return result.join('\n')
+}
+
+/**
+ * Remove px suffix from numeric values.
+ *
+ * LLM error:
+ *   Box width 200px height 100px
+ *
+ * Should be:
+ *   Box width 200 height 100
+ *
+ * Note: Preserves px inside strings (e.g., "16px wide")
+ */
+export function removePxSuffix(code: string): string {
+  // Split into string and non-string parts to avoid modifying content inside quotes
+  const parts: string[] = []
+  let current = ''
+  let inString = false
+
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i]
+    if (char === '"' && (i === 0 || code[i - 1] !== '\\')) {
+      if (inString) {
+        // End of string - push string part as-is
+        parts.push(current + char)
+        current = ''
+        inString = false
+      } else {
+        // Start of string - push non-string part (will be processed)
+        parts.push(current)
+        current = char
+        inString = true
+      }
+    } else {
+      current += char
+    }
+  }
+  parts.push(current)
+
+  // Process non-string parts to remove px suffix
+  return parts.map((part, i) => {
+    // Odd indices are string content (between quotes)
+    if (i % 2 === 1) return part
+    // Remove px from numbers outside strings
+    return part.replace(/(\d+)px(?=\s|$|")/g, '$1')
+  }).join('')
+}
+
+/**
+ * Remove colons after property names.
+ *
+ * LLM error (CSS-style):
+ *   Box padding: 16 background: #1E1E1E
+ *
+ * Should be:
+ *   Box padding 16 background #1E1E1E
+ */
+export function removePropertyColons(code: string): string {
+  // Common properties that LLMs might add colons after
+  const props = [
+    'padding', 'pad', 'p',
+    'margin', 'mar', 'm',
+    'background', 'bg',
+    'color', 'col', 'c',
+    'border', 'bor',
+    'border-color', 'boc',
+    'radius', 'rad',
+    'width', 'w',
+    'height', 'h',
+    'gap', 'g',
+    'opacity', 'opa', 'o',
+    'size', 'weight', 'font', 'line',
+    'icon', 'src', 'fit', 'shadow',
+    'min-width', 'max-width', 'min-height', 'max-height',
+    'minw', 'maxw', 'minh', 'maxh'
+  ]
+
+  let result = code
+  for (const prop of props) {
+    // Match property followed by colon and optional whitespace, then a value
+    // Don't match if it's a component definition (ComponentName:)
+    const pattern = new RegExp(`(\\s)(${prop}):\\s*(?=\\S)`, 'gi')
+    result = result.replace(pattern, '$1$2 ')
+  }
+
+  return result
+}
+
+/**
+ * Fix opacity values in wrong range (0-100 → 0-1).
+ *
+ * LLM error:
+ *   Box opacity 50
+ *
+ * Should be:
+ *   Box opacity 0.5
+ *
+ * Only converts values > 1 (assumes they're percentages)
+ */
+export function fixOpacityRange(code: string): string {
+  return code.replace(/\b(opacity|opa|o)\s+(\d+)(?=\s|$)/g, (match, prop, val) => {
+    const n = parseInt(val, 10)
+    if (n > 1 && n <= 100) {
+      // Convert percentage to decimal
+      return `${prop} ${(n / 100).toFixed(2).replace(/\.?0+$/, '')}`
+    }
+    return match
+  })
+}
+
+/**
  * Apply all algorithmic fixes to generated code.
  */
 export function applyAllFixes(code: string): string {
   let result = code
 
-  // Apply fixes in order
+  // Apply fixes in order (order matters!)
+  // First, fix syntax issues
+  result = removePropertyColons(result)
+  result = removePxSuffix(result)
+  result = fixOpacityRange(result)
+  // Then, fix structural issues
+  result = fixTokensOnSameLine(result)
+  result = fixDefinitionAndUsageOnSameLine(result)
+  result = fixDuplicateElementNames(result)
   result = fixMissingTokenPrefix(result)
   result = fixTextOnSeparateLine(result)
   result = fixSingleDashElement(result)
+  result = fixTokenAsProperty(result)
 
   return result
 }
