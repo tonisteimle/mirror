@@ -17,6 +17,9 @@ import {
   fixMissingTokenPrefix,
   fixTextOnSeparateLine,
   applyAllFixes,
+  convertRgbaToHex,
+  convertNamedColorsToHex,
+  fixHyphenatedTokenNames,
   type CodeIssue
 } from '../lib/ai-selfhealing'
 
@@ -584,5 +587,122 @@ Box padding 16 background $primary opacity 0.5`
 
     const result = applyAllFixes(code)
     expect(result).toBe(code)
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: convertRgbaToHex
+// ============================================================================
+
+describe('convertRgbaToHex', () => {
+  it('converts rgb() to hex', () => {
+    expect(convertRgbaToHex('Box background rgb(255, 255, 255)')).toBe('Box background #FFFFFF')
+  })
+
+  it('converts rgba() to hex with alpha', () => {
+    expect(convertRgbaToHex('Box shadow rgba(0, 0, 0, 0.3)')).toBe('Box shadow #0000004D')
+  })
+
+  it('converts rgba() with alpha 1 to 6-digit hex', () => {
+    expect(convertRgbaToHex('Card background rgba(30, 30, 46, 1)')).toBe('Card background #1E1E2E')
+  })
+
+  it('handles rgba with 0.5 alpha', () => {
+    expect(convertRgbaToHex('Box background rgba(0, 0, 0, 0.5)')).toBe('Box background #00000080')
+  })
+
+  it('preserves code without rgba', () => {
+    const code = 'Box background #1E1E1E'
+    expect(convertRgbaToHex(code)).toBe(code)
+  })
+
+  it('handles multiple rgba values', () => {
+    const code = 'Box background rgba(255, 0, 0, 0.5) shadow rgba(0, 0, 0, 0.3)'
+    const result = convertRgbaToHex(code)
+    expect(result).toContain('#FF000080')
+    expect(result).toContain('#0000004D')
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: convertNamedColorsToHex
+// ============================================================================
+
+describe('convertNamedColorsToHex', () => {
+  it('converts white to hex', () => {
+    expect(convertNamedColorsToHex('Box color white')).toBe('Box color #FFFFFF')
+  })
+
+  it('converts black to hex', () => {
+    expect(convertNamedColorsToHex('Card background black')).toBe('Card background #000000')
+  })
+
+  it('converts multiple named colors', () => {
+    const code = 'Box background white color black'
+    const result = convertNamedColorsToHex(code)
+    expect(result).toBe('Box background #FFFFFF color #000000')
+  })
+
+  it('preserves hex colors', () => {
+    const code = 'Box background #FFFFFF color #000000'
+    expect(convertNamedColorsToHex(code)).toBe(code)
+  })
+
+  it('handles bg shorthand', () => {
+    expect(convertNamedColorsToHex('Box bg white')).toBe('Box bg #FFFFFF')
+  })
+
+  it('handles col shorthand', () => {
+    expect(convertNamedColorsToHex('Text col white')).toBe('Text col #FFFFFF')
+  })
+
+  it('preserves transparent', () => {
+    expect(convertNamedColorsToHex('Box background transparent')).toBe('Box background transparent')
+  })
+
+  it('does not convert colors in strings', () => {
+    expect(convertNamedColorsToHex('Button "white button"')).toBe('Button "white button"')
+  })
+})
+
+// ============================================================================
+// Algorithmic Fixer Tests: fixHyphenatedTokenNames
+// ============================================================================
+
+describe('fixHyphenatedTokenNames', () => {
+  it('converts hyphenated token definition to camelCase', () => {
+    const code = '$border-color: #333'
+    expect(fixHyphenatedTokenNames(code)).toBe('$borderColor: #333')
+  })
+
+  it('converts hyphenated token usage to camelCase', () => {
+    const code = `$border-color: #333
+Box border-color $border-color`
+    expect(fixHyphenatedTokenNames(code)).toBe(`$borderColor: #333
+Box border-color $borderColor`)
+  })
+
+  it('preserves property names with hyphens', () => {
+    const code = 'Box border-color #333'
+    expect(fixHyphenatedTokenNames(code)).toBe(code)
+  })
+
+  it('handles multiple hyphenated tokens', () => {
+    const code = `$border-color: #333
+$hover-background: #444
+Box border-color $border-color hover-bg $hover-background`
+    const result = fixHyphenatedTokenNames(code)
+    expect(result).toContain('$borderColor:')
+    expect(result).toContain('$hoverBackground:')
+    expect(result).toContain('$borderColor')
+    expect(result).toContain('$hoverBackground')
+    // Property name should be preserved
+    expect(result).toContain('border-color $borderColor')
+  })
+
+  it('preserves code without hyphenated tokens', () => {
+    const code = `$primary: #3B82F6
+Box background $primary`
+    expect(fixHyphenatedTokenNames(code)).toBe(code)
   })
 })

@@ -764,24 +764,155 @@ export function fixOpacityRange(code: string): string {
 }
 
 /**
+ * Convert rgba() to hex color.
+ *
+ * LLM error:
+ *   Box shadow rgba(0, 0, 0, 0.3)
+ *   Card background rgba(30, 30, 46, 1)
+ *
+ * Should be:
+ *   Box shadow #0000004D
+ *   Card background #1E1E2E
+ */
+export function convertRgbaToHex(code: string): string {
+  return code.replace(
+    /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/gi,
+    (match, r, g, b, a) => {
+      const red = parseInt(r, 10).toString(16).padStart(2, '0')
+      const green = parseInt(g, 10).toString(16).padStart(2, '0')
+      const blue = parseInt(b, 10).toString(16).padStart(2, '0')
+
+      if (a !== undefined && parseFloat(a) < 1) {
+        const alpha = Math.round(parseFloat(a) * 255).toString(16).padStart(2, '0')
+        return `#${red}${green}${blue}${alpha}`.toUpperCase()
+      }
+
+      return `#${red}${green}${blue}`.toUpperCase()
+    }
+  )
+}
+
+/**
+ * Convert named CSS colors to hex.
+ *
+ * LLM error:
+ *   Box color white
+ *   Card background black
+ *
+ * Should be:
+ *   Box color #FFFFFF
+ *   Card background #000000
+ */
+const NAMED_COLORS: Record<string, string> = {
+  white: '#FFFFFF',
+  black: '#000000',
+  red: '#FF0000',
+  green: '#00FF00',
+  blue: '#0000FF',
+  yellow: '#FFFF00',
+  cyan: '#00FFFF',
+  magenta: '#FF00FF',
+  gray: '#808080',
+  grey: '#808080',
+  orange: '#FFA500',
+  pink: '#FFC0CB',
+  purple: '#800080',
+  transparent: 'transparent',
+}
+
+export function convertNamedColorsToHex(code: string): string {
+  const colorProps = ['background', 'bg', 'color', 'col', 'c', 'border-color', 'boc']
+  let result = code
+
+  for (const prop of colorProps) {
+    const pattern = new RegExp(
+      `(${prop})\\s+(${Object.keys(NAMED_COLORS).join('|')})(?=\\s|$|")`,
+      'gi'
+    )
+    result = result.replace(pattern, (match, p, colorName) => {
+      const hex = NAMED_COLORS[colorName.toLowerCase()]
+      return hex ? `${p} ${hex}` : match
+    })
+  }
+
+  return result
+}
+
+/**
+ * Fix token names with hyphens that cause lexer issues.
+ *
+ * LLM error:
+ *   $border-color: #333
+ *   Box border-color $border-color
+ *
+ * Should be:
+ *   $borderColor: #333
+ *   Box border-color $borderColor
+ *
+ * Note: Property names like border-color are fine, only TOKEN names
+ * with hyphens cause issues.
+ */
+export function fixHyphenatedTokenNames(code: string): string {
+  // Find all token definitions with hyphens
+  const hyphenatedTokens = new Map<string, string>()
+  const defPattern = /\$([a-zA-Z]+(?:-[a-zA-Z]+)+)\s*:/g
+  let match
+
+  while ((match = defPattern.exec(code)) !== null) {
+    const original = match[1]
+    // Convert to camelCase
+    const camelCase = original.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+    hyphenatedTokens.set(original, camelCase)
+  }
+
+  if (hyphenatedTokens.size === 0) return code
+
+  let result = code
+
+  // Replace definitions and usages
+  for (const [hyphenated, camelCase] of hyphenatedTokens) {
+    // Replace definition: $border-color: → $borderColor:
+    result = result.replace(
+      new RegExp(`\\$${hyphenated}\\s*:`, 'g'),
+      `$${camelCase}:`
+    )
+    // Replace usages: $border-color → $borderColor
+    // But NOT property names like border-color (without $)
+    result = result.replace(
+      new RegExp(`\\$${hyphenated}(?=\\s|$|")`, 'g'),
+      `$${camelCase}`
+    )
+  }
+
+  return result
+}
+
+/**
  * Apply all algorithmic fixes to generated code.
  */
 export function applyAllFixes(code: string): string {
   let result = code
 
   // Apply fixes in order (order matters!)
-  // First, fix syntax issues
+
+  // Phase 1: Color/value syntax fixes
+  result = convertRgbaToHex(result)
+  result = convertNamedColorsToHex(result)
   result = removePropertyColons(result)
   result = removePxSuffix(result)
   result = fixOpacityRange(result)
-  // Then, fix structural issues
+
+  // Phase 2: Token fixes
+  result = fixHyphenatedTokenNames(result)
   result = fixTokensOnSameLine(result)
+  result = fixMissingTokenPrefix(result)
+  result = fixTokenAsProperty(result)
+
+  // Phase 3: Structural fixes
   result = fixDefinitionAndUsageOnSameLine(result)
   result = fixDuplicateElementNames(result)
-  result = fixMissingTokenPrefix(result)
   result = fixTextOnSeparateLine(result)
   result = fixSingleDashElement(result)
-  result = fixTokenAsProperty(result)
 
   return result
 }
