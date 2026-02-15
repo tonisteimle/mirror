@@ -282,3 +282,23 @@ export { cleanLLMOutput } from './correctors/markdown-cleaner'
 export { correctProperty } from './correctors/property-corrector'
 export { correctColor, looksLikeColor } from './correctors/color-corrector'
 export { correctLayoutLine } from './correctors/layout-corrector'
+
+// Re-export schema (source of truth)
+export {
+  DSL_SCHEMA,
+  getAllProperties,
+  getAllEvents,
+  getAllActions,
+  isValidProperty,
+  isValidEvent,
+  isValidAction,
+  isValidTarget,
+  isValidAnimation,
+  isValidPosition,
+  isValidOpacity,
+  getPropertyCategory,
+} from './dsl-schema'
+
+// Re-export schema validator
+export { SchemaValidator, getSchemaValidator } from './schema-validator'
+export type { SchemaError, ErrorCategory, ValidationResult as SchemaValidationResult } from './schema-validator'
