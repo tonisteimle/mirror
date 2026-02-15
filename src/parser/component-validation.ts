@@ -53,7 +53,8 @@ export function collectNames(children: ASTNode[], names: Map<string, number[]> =
 
   for (const child of children) {
     // Skip internal names like _text, _conditional, _iterator
-    if (!child.name.startsWith('_')) {
+    // Skip list items (created with - prefix) - they're not meant to be unique
+    if (!child.name.startsWith('_') && !child._isListItem) {
       const lines = names.get(child.name) || []
       lines.push(child.line ?? 0)
       names.set(child.name, lines)

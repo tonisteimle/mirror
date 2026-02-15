@@ -109,6 +109,9 @@ export function parseStateDefinition(ctx: ParserContext, baseIndent: number): St
                 stateDef.properties[propName] = true
               }
             }
+          } else if (ctx.current()?.type === 'STRING') {
+            // Direct string content for this state (e.g., "Light Mode")
+            stateDef.properties['content'] = ctx.advance().value
           } else if (ctx.current()?.type === 'COMPONENT_NAME') {
             // Could be a child component or content
             ctx.advance() // consume component name
