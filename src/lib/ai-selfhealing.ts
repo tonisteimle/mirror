@@ -281,8 +281,8 @@ export async function withSelfHealing(
       currentCode = correctionResult.code
       attempts++
 
-      // Algorithmic fix: add missing $ to token references
-      currentCode = fixMissingTokenPrefix(currentCode)
+      // Apply all algorithmic fixes to correction as well
+      currentCode = applyAllFixes(currentCode)
 
       lastFeedback = validateMirrorCode(currentCode, includeWarnings, language)
 
@@ -324,36 +324,50 @@ export async function withSelfHealing(
 
 // Known DSL property names that should never be prefixed with $
 const DSL_PROPERTIES = new Set([
-  // Layout
-  'hor', 'ver', 'gap', 'between', 'wrap', 'grid', 'stacked', 'grow', 'shrink', 'fill',
+  // Layout - long and short forms
+  'horizontal', 'hor', 'vertical', 'ver', 'gap', 'between', 'wrap', 'grid', 'stacked', 'grow', 'shrink', 'fill',
   // Alignment
-  'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b', 'cen',
-  // Spacing
-  'pad', 'mar', 'l', 'r', 'u', 'd', 'l-r', 'u-d',
-  // Size
-  'w', 'h', 'minw', 'maxw', 'minh', 'maxh', 'full',
-  // Color
-  'col', 'bg', 'boc',
-  // Border
-  'bor', 'rad',
+  'horizontal-left', 'horizontal-center', 'horizontal-right',
+  'vertical-top', 'vertical-center', 'vertical-bottom',
+  'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b', 'cen', 'center',
+  // Spacing - long and short forms
+  'padding', 'pad', 'p', 'margin', 'mar', 'm',
+  'left', 'right', 'top', 'bottom', 'l', 'r', 'u', 'd', 'l-r', 'u-d',
+  'left-right', 'top-bottom',
+  // Size - long and short forms
+  'width', 'height', 'w', 'h',
+  'min-width', 'max-width', 'min-height', 'max-height',
+  'minw', 'maxw', 'minh', 'maxh', 'full',
+  // Color - long and short forms
+  'color', 'col', 'c', 'background', 'bg', 'border-color', 'boc',
+  // Border - long and short forms
+  'border', 'bor', 'radius', 'rad',
   // Typography
   'size', 'weight', 'line', 'font', 'align', 'italic', 'underline', 'truncate', 'uppercase', 'lowercase',
   // Visual
-  'opacity', 'opa', 'shadow', 'cursor', 'z', 'hidden', 'visible', 'disabled',
-  // Hover
-  'hover-bg', 'hover-col', 'hover-boc', 'hover-opacity', 'hover-scale', 'hover-rad',
+  'opacity', 'opa', 'o', 'shadow', 'cursor', 'z', 'hidden', 'visible', 'disabled', 'rotate', 'translate',
+  // Hover - long and short forms
+  'hover-background', 'hover-color', 'hover-border-color', 'hover-border', 'hover-radius', 'hover-opacity', 'hover-scale',
+  'hover-bg', 'hover-col', 'hover-boc', 'hover-rad',
   // Scroll
-  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'snap', 'clip',
+  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'snap', 'clip', 'scroll-vertical', 'scroll-horizontal',
   // Other
-  'icon', 'type', 'placeholder', 'src', 'fit', 'rows', 'named', 'from', 'as',
+  'icon', 'type', 'placeholder', 'src', 'fit', 'rows', 'named', 'from', 'as', 'shortcut',
   // Events
   'onclick', 'onchange', 'oninput', 'onfocus', 'onblur', 'onhover', 'onkeydown', 'onkeyup', 'onload',
+  'onclick-outside', 'debounce', 'delay',
   // Actions
-  'toggle', 'show', 'hide', 'open', 'close', 'page', 'assign',
+  'toggle', 'show', 'hide', 'open', 'close', 'page', 'assign', 'alert', 'highlight', 'select', 'deselect',
+  'clear-selection', 'filter', 'focus', 'activate', 'deactivate', 'deactivate-siblings', 'toggle-state',
+  'validate', 'reset', 'change',
+  // Targets
+  'self', 'next', 'prev', 'first', 'last', 'highlighted', 'selected', 'all', 'none',
   // State
-  'state', 'if', 'then', 'else', 'each', 'in', 'to', 'and', 'or', 'not',
+  'state', 'if', 'then', 'else', 'each', 'in', 'to', 'and', 'or', 'not', 'data', 'where',
   // Animations
-  'animate', 'fade', 'scale', 'spin', 'pulse', 'bounce',
+  'animate', 'fade', 'scale', 'spin', 'pulse', 'bounce', 'slide-up', 'slide-down', 'slide-left', 'slide-right',
+  // Positions
+  'below', 'above',
 ])
 
 /**
@@ -383,9 +397,10 @@ export function fixMissingTokenPrefix(code: string): string {
     // Only replace if:
     // - Not already prefixed with $
     // - Not followed by : (that's a definition)
+    // - Not followed by - (that's part of a compound name like hover-background)
     // - The word is the token name exactly
     const usePattern = new RegExp(
-      `(?<!\\$|[a-zA-Z0-9_-])\\b(${token})\\b(?!\\s*:)`,
+      `(?<!\\$|[a-zA-Z0-9_-])\\b(${token})\\b(?![-a-zA-Z0-9_]|\\s*:)`,
       'g'
     )
     result = result.replace(usePattern, (match, tokenName, offset) => {
@@ -888,6 +903,581 @@ export function fixHyphenatedTokenNames(code: string): string {
 }
 
 /**
+ * Convert CSS box-shadow syntax to Mirror shadow sizes.
+ *
+ * LLM error:
+ *   Card shadow 0 4px 6px rgba(0, 0, 0, 0.1)
+ *   Box shadow 0 2px 4px #00000033
+ *
+ * Should be:
+ *   Card shadow md
+ *   Box shadow sm
+ *
+ * Mapping based on shadow blur radius:
+ *   0-3px → sm, 4-8px → md, 9-15px → lg, 16+px → xl
+ */
+export function convertCssShadowToSize(code: string): string {
+  // Pattern: shadow followed by CSS values (numbers, px, colors)
+  // Match: shadow 0 4 6 #color or shadow 0 4px 6px rgba(...)
+  // Note: px immediately follows digits without spaces, so no \s* before (?:px)?
+  return code.replace(
+    /\bshadow\s+(\d+)(?:px)?\s+(\d+)(?:px)?\s+(\d+)(?:px)?(?:\s+\d+(?:px)?)?(?:\s+(?:#[0-9A-Fa-f]+|rgba?\([^)]+\)))?/gi,
+    (match, x, y, blur) => {
+      const blurPx = parseInt(blur, 10)
+      if (blurPx <= 3) return 'shadow sm'
+      if (blurPx <= 8) return 'shadow md'
+      if (blurPx <= 15) return 'shadow lg'
+      return 'shadow xl'
+    }
+  )
+}
+
+/**
+ * Remove CSS units (em, rem, vh, vw, %) where not supported.
+ *
+ * LLM error:
+ *   Box padding 1rem gap 0.5em
+ *   Card width 100%
+ *
+ * Should be:
+ *   Box padding 16 gap 8
+ *   Card width full (or width 100%)
+ *
+ * Note: % is actually supported in Mirror, but em/rem are not.
+ */
+export function removeUnsupportedUnits(code: string): string {
+  let result = code
+
+  // Convert rem to px (assuming 1rem = 16px)
+  result = result.replace(/(\d+(?:\.\d+)?)\s*rem(?=\s|$|")/gi, (match, val) => {
+    return String(Math.round(parseFloat(val) * 16))
+  })
+
+  // Convert em to px (assuming 1em = 16px for simplicity)
+  result = result.replace(/(\d+(?:\.\d+)?)\s*em(?=\s|$|")/gi, (match, val) => {
+    return String(Math.round(parseFloat(val) * 16))
+  })
+
+  // Convert vh/vw to percentage (rough approximation)
+  result = result.replace(/(\d+)\s*vh(?=\s|$|")/gi, '$1%')
+  result = result.replace(/(\d+)\s*vw(?=\s|$|")/gi, '$1%')
+
+  return result
+}
+
+/**
+ * Remove CSS calc() expressions - simplify to first number.
+ *
+ * LLM error:
+ *   Box width calc(100% - 32px)
+ *
+ * Should be:
+ *   Box width full (or just remove calc)
+ */
+export function removeCalcExpressions(code: string): string {
+  // Handle nested parentheses by matching balanced parens
+  return code.replace(/calc\s*\((?:[^()]+|\([^()]*\))*\)/gi, (match) => {
+    // Try to extract the first meaningful value
+    const numMatch = match.match(/(\d+)(?:px|%)?/)
+    if (numMatch) {
+      return numMatch[1]
+    }
+    return 'full' // fallback
+  })
+}
+
+/**
+ * Fix undefined token references by finding similar defined tokens.
+ *
+ * LLM error:
+ *   $hover: #2563EB
+ *   Button hover-bg $hover-background  // $hover-background not defined!
+ *
+ * Should be:
+ *   $hover: #2563EB
+ *   Button hover-bg $hover
+ */
+// Equivalent suffixes in token names (LLM often mixes these)
+const TOKEN_SUFFIX_ALIASES: Record<string, string[]> = {
+  'background': ['bg', 'color'],
+  'bg': ['background', 'color'],
+  'color': ['col', 'c'],
+  'col': ['color', 'c'],
+  'primary': ['accent', 'main'],
+  'accent': ['primary', 'secondary'],
+}
+
+export function fixUndefinedTokenReferences(code: string): string {
+  // 1. Find all defined tokens
+  const definedTokens = new Set<string>()
+  const defPattern = /\$([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g
+  let match
+
+  while ((match = defPattern.exec(code)) !== null) {
+    definedTokens.add(match[1])
+  }
+
+  if (definedTokens.size === 0) return code
+
+  // 2. Find all token usages
+  const usagePattern = /\$([a-zA-Z_][a-zA-Z0-9_-]*)(?=\s|$|")/g
+  let result = code
+
+  // Create array for iteration
+  const tokens = Array.from(definedTokens)
+
+  // 3. For each usage, check if defined. If not, find closest match.
+  result = result.replace(usagePattern, (fullMatch, tokenName, offset) => {
+    // Check if this is a definition (followed by :)
+    const afterMatch = code.substring(offset + fullMatch.length, offset + fullMatch.length + 5)
+    if (afterMatch.trim().startsWith(':')) return fullMatch
+
+    // Check if token is defined
+    if (definedTokens.has(tokenName)) return fullMatch
+
+    // Don't try to match property names that were incorrectly prefixed with $
+    // e.g., $border-color should not be matched to $border
+    if (DSL_PROPERTIES.has(tokenName) || DSL_PROPERTIES.has(tokenName.replace(/-/g, ''))) {
+      return fullMatch
+    }
+
+    // Find closest defined token
+    let bestMatch = ''
+    let bestScore = 0
+
+    for (const defined of tokens) {
+      let score = 0
+
+      // Check exact containment (e.g., "hover" in "hover-background")
+      if (tokenName.includes(defined)) {
+        // Base part matches - high confidence
+        score = defined.length / tokenName.length
+        // Boost if defined is a complete prefix
+        if (tokenName.startsWith(defined)) {
+          score += 0.3
+        }
+      } else if (defined.includes(tokenName)) {
+        score = tokenName.length / defined.length
+      }
+
+      // Check for equivalent suffixes (hover-background ↔ hover-bg, hoverBackground ↔ hoverBg)
+      for (const [suffix, aliases] of Object.entries(TOKEN_SUFFIX_ALIASES)) {
+        // Check lowercase suffix (e.g., tokenName ends with 'background')
+        if (tokenName.toLowerCase().endsWith(suffix.toLowerCase())) {
+          // Extract base: hoverBackground → hover, hover-background → hover-
+          const suffixStart = tokenName.length - suffix.length
+          const base = tokenName.slice(0, suffixStart)
+          const cleanBase = base.replace(/-$/, '')
+
+          for (const alias of aliases) {
+            // Check various naming conventions:
+            // hover + bg → hoverbg
+            // hover + Bg → hoverBg (camelCase)
+            // hover- + bg → hover-bg
+            const variations = [
+              cleanBase + alias,
+              cleanBase + alias.charAt(0).toUpperCase() + alias.slice(1),
+              cleanBase + '-' + alias,
+            ]
+            for (const variant of variations) {
+              if (defined.toLowerCase() === variant.toLowerCase()) {
+                score = Math.max(score, 0.9) // High confidence for suffix match
+              }
+            }
+          }
+          // Also check if just the base is defined: hoverBackground → hover
+          if (defined.toLowerCase() === cleanBase.toLowerCase()) {
+            score = Math.max(score, 0.85)
+          }
+        }
+      }
+
+      // Check for common prefix
+      let commonPrefix = 0
+      for (let i = 0; i < Math.min(defined.length, tokenName.length); i++) {
+        if (defined[i].toLowerCase() === tokenName[i].toLowerCase()) {
+          commonPrefix++
+        } else break
+      }
+      const prefixScore = commonPrefix / Math.max(defined.length, tokenName.length)
+      if (prefixScore > 0.5) {
+        score = Math.max(score, prefixScore)
+      }
+
+      if (score > bestScore) {
+        bestScore = score
+        bestMatch = defined
+      }
+    }
+
+    // Only replace if we found a good match
+    if (bestMatch && bestScore > 0.4) {
+      return `$${bestMatch}`
+    }
+
+    return fullMatch
+  })
+
+  return result
+}
+
+/**
+ * Fix CSS transition/animation syntax.
+ *
+ * LLM error:
+ *   Button transition all 0.2s ease
+ *
+ * Should be removed (Mirror handles transitions automatically):
+ *   Button
+ */
+export function removeCssTransitions(code: string): string {
+  // Remove transition property entirely
+  return code.replace(/\btransition\s+[^"\n]+(?=\s|$|")/gi, '')
+}
+
+/**
+ * Fix border shorthand with too many values.
+ *
+ * LLM error:
+ *   Box border 1px solid #333
+ *
+ * Should be:
+ *   Box border 1 #333
+ *
+ * Or:
+ *   Box border 1 solid #333 (if style is needed)
+ */
+export function fixBorderShorthand(code: string): string {
+  // Pattern: border N px/solid/dashed/dotted #color
+  return code.replace(
+    /\bborder\s+(\d+)\s*px\s+(solid|dashed|dotted)\s+(#[0-9A-Fa-f]{3,8})/gi,
+    'border $1 $2 $3'
+  )
+}
+
+/**
+ * Remove CSS !important declarations.
+ */
+export function removeImportant(code: string): string {
+  return code.replace(/\s*!important/gi, '')
+}
+
+/**
+ * Fix CSS "none" values that Mirror doesn't understand.
+ *
+ * CSS patterns:
+ *   border none → border 0
+ *   outline none → (removed, Mirror has no outline)
+ *   box-shadow none → (removed)
+ */
+export function fixCssNoneValues(code: string): string {
+  // Process line by line to preserve indentation
+  return code.split('\n').map(line => {
+    // Preserve leading whitespace
+    const leadingWhitespace = line.match(/^(\s*)/)?.[1] ?? ''
+    let content = line.slice(leadingWhitespace.length)
+
+    // border none → border 0
+    content = content.replace(/\bborder\s+none\b/gi, 'border 0')
+
+    // outline none → remove entirely
+    content = content.replace(/\boutline\s+none\b/gi, '')
+
+    // box-shadow none → remove entirely
+    content = content.replace(/\bbox-shadow\s+none\b/gi, '')
+
+    // Clean up any double spaces in content (not indentation)
+    content = content.replace(/  +/g, ' ').trim()
+
+    return leadingWhitespace + content
+  }).join('\n')
+}
+
+/**
+ * Fix common event typos.
+ */
+export function fixEventTypos(code: string): string {
+  const eventTypos: Record<string, string> = {
+    'onlick': 'onclick',
+    'onclck': 'onclick',
+    'onclik': 'onclick',
+    'onhver': 'onhover',
+    'onhovr': 'onhover',
+    'onchage': 'onchange',
+    'onchnge': 'onchange',
+    'oninpt': 'oninput',
+    'onfoucs': 'onfocus',
+    'onblr': 'onblur',
+    'onkeydonw': 'onkeydown',
+    'onkeydwn': 'onkeydown',
+  }
+
+  let result = code
+  for (const [typo, correct] of Object.entries(eventTypos)) {
+    result = result.replace(new RegExp(`\\b${typo}\\b`, 'gi'), correct)
+  }
+  return result
+}
+
+/**
+ * Fix common action typos.
+ */
+export function fixActionTypos(code: string): string {
+  const actionTypos: Record<string, string> = {
+    'toogle': 'toggle',
+    'togle': 'toggle',
+    'shwo': 'show',
+    'hdie': 'hide',
+    'hidde': 'hide',
+    'opne': 'open',
+    'clsoe': 'close',
+    'chnage': 'change',
+    'asign': 'assign',
+    'assgin': 'assign',
+  }
+
+  let result = code
+  for (const [typo, correct] of Object.entries(actionTypos)) {
+    result = result.replace(new RegExp(`\\b${typo}\\b`, 'gi'), correct)
+  }
+  return result
+}
+
+/**
+ * Remove empty lines between token definitions.
+ *
+ * LLM error:
+ *   $primary: #3B82F6
+ *
+ *   $bg: #1E1E2E
+ *
+ * Should be:
+ *   $primary: #3B82F6
+ *   $bg: #1E1E2E
+ */
+export function removeEmptyLinesBetweenTokens(code: string): string {
+  // Remove empty lines that are between two token definitions
+  return code.replace(/(\$[a-zA-Z_][a-zA-Z0-9_]*:[^\n]+)\n\n+(\$[a-zA-Z_])/g, '$1\n$2')
+}
+
+/**
+ * Fix property name and value split across lines.
+ *
+ * LLM error (in state blocks):
+ *   state focus
+ *     border-color
+ *     $primary
+ *
+ * Should be:
+ *   state focus
+ *     border-color $primary
+ */
+export function fixSplitPropertyLines(code: string): string {
+  const propertyNames = [
+    'border-color', 'boc', 'background', 'bg', 'color', 'col',
+    'border', 'bor', 'padding', 'pad', 'margin', 'mar',
+    'radius', 'rad', 'width', 'w', 'height', 'h',
+    'opacity', 'opa', 'gap', 'size', 'weight', 'font',
+    'min-width', 'max-width', 'min-height', 'max-height',
+    // Layout keywords
+    'vertical', 'ver', 'horizontal', 'hor', 'center', 'cen',
+    'between', 'wrap', 'grow', 'fill', 'shrink', 'stacked',
+  ]
+
+  const lines = code.split('\n')
+  const result: string[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const nextLine = lines[i + 1]
+
+    // Check if current line is just a property name
+    const trimmed = line.trim()
+    if (nextLine && propertyNames.includes(trimmed)) {
+      const nextTrimmed = nextLine.trim()
+      // Check if next line is a value (starts with $ or # or is a number)
+      if (/^(\$|#|\d)/.test(nextTrimmed)) {
+        // Merge the lines
+        const indent = line.match(/^(\s*)/)?.[1] ?? ''
+        result.push(`${indent}${trimmed} ${nextTrimmed}`)
+        i++ // Skip next line
+        continue
+      }
+    }
+    result.push(line)
+  }
+
+  return result.join('\n')
+}
+
+/**
+ * Fix border with only color value (missing width).
+ *
+ * LLM error (in state blocks):
+ *   state focus
+ *     border $primary     // border needs width, not just color
+ *
+ * Should be:
+ *   state focus
+ *     border-color $primary   // Use border-color for color-only
+ *
+ * Or:
+ *   state focus
+ *     border 1 $primary      // Add default width
+ */
+export function fixBorderColorOnly(code: string): string {
+  // Pattern: border followed by a color value only ($ or #)
+  // This is wrong because border needs a width first
+  return code.replace(
+    /\bborder\s+(\$[a-zA-Z_][a-zA-Z0-9_]*|#[0-9A-Fa-f]+)(?=\s|$)/g,
+    'border-color $1'
+  )
+}
+
+/**
+ * Fix orphaned layout keywords and properties on their own lines.
+ *
+ * LLM error:
+ *   Box
+ *     ver
+ *     gap 16
+ *
+ * Should be:
+ *   Box ver gap 16
+ */
+export function fixOrphanedLayoutKeywords(code: string): string {
+  const orphanedKeywords = new Set([
+    // Layout keywords
+    'vertical', 'ver', 'horizontal', 'hor',
+    'center', 'cen', 'between', 'wrap',
+    'grow', 'fill', 'shrink', 'stacked',
+    // Properties that shouldn't be on own line when indented child of component
+    'gap', 'padding', 'pad', 'p', 'margin', 'mar', 'm',
+    'background', 'bg', 'color', 'col',
+    'radius', 'rad', 'border', 'bor',
+    'width', 'w', 'height', 'h',
+  ])
+
+  const lines = code.split('\n')
+  const result: string[] = []
+
+  // Helper to find parent line index (less indented, starts with component)
+  const findParentIndex = (currentIndent: number): number => {
+    for (let j = result.length - 1; j >= 0; j--) {
+      const lineIndent = result[j].match(/^(\s*)/)?.[1].length ?? 0
+      if (lineIndent < currentIndent) {
+        const firstWord = result[j].trim().split(/\s+/)[0]
+        // Parent should be a component (uppercase) or definition
+        if (/^[A-Z]/.test(firstWord) || firstWord.endsWith(':')) {
+          return j
+        }
+      }
+    }
+    return -1
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const prevLine = result[result.length - 1]
+
+    // Check if current line starts with an orphaned keyword (with indentation)
+    const trimmed = line.trim()
+    const firstWord = trimmed.split(/\s+/)[0]
+
+    // Skip if line starts with component name (uppercase) or is a special construct
+    if (/^[A-Z]/.test(firstWord) || firstWord.startsWith('$') || firstWord === 'state' ||
+        firstWord === 'if' || firstWord === 'else' || firstWord === 'each' ||
+        firstWord === 'events' || firstWord.startsWith('-') || firstWord.startsWith('"')) {
+      result.push(line)
+      continue
+    }
+
+    if (prevLine && orphanedKeywords.has(firstWord)) {
+      const currentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+      const prevIndent = prevLine.match(/^(\s*)/)?.[1].length ?? 0
+
+      // Don't merge if previous line is a state block
+      const prevTrimmed = prevLine.trim()
+      const prevFirstWord = prevTrimmed.split(/\s+/)[0]
+      if (prevFirstWord === 'state') {
+        result.push(line)
+        continue
+      }
+
+      // If this is more indented than prev line, merge with prev
+      if (currentIndent > prevIndent) {
+        result[result.length - 1] = prevLine + ' ' + trimmed
+        continue
+      }
+
+      // If same indent as prev line but prev is inside a state block,
+      // find the actual parent component and merge there
+      if (currentIndent === prevIndent || currentIndent < prevIndent) {
+        const parentIdx = findParentIndex(currentIndent)
+        if (parentIdx >= 0) {
+          result[parentIdx] = result[parentIdx] + ' ' + trimmed
+          continue
+        }
+      }
+    }
+
+    result.push(line)
+  }
+
+  return result.join('\n')
+}
+
+/**
+ * Fix radius values split across lines (e.g., in state blocks).
+ *
+ * LLM error:
+ *   state focus
+ *     border
+ *     1
+ *     $borderColor
+ *
+ * Should be:
+ *   state focus
+ *     border 1 $borderColor
+ */
+export function fixOrphanedNumbers(code: string): string {
+  const lines = code.split('\n')
+  const result: string[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Skip if not just a number
+    if (!/^\d+$/.test(trimmed)) {
+      result.push(line)
+      continue
+    }
+
+    // This is an orphaned number - try to merge with previous property line
+    if (result.length > 0) {
+      const prevLine = result[result.length - 1]
+      const prevTrimmed = prevLine.trim()
+
+      // Check if previous line looks like it needs a value
+      // (ends with a property name or already has partial values)
+      const propertyPattern = /\b(border|radius|padding|margin|gap|width|height|size|opacity|weight|border-color)$/i
+      const partialValuePattern = /(border|radius)\s+\d+$/
+
+      if (propertyPattern.test(prevTrimmed) || partialValuePattern.test(prevTrimmed)) {
+        // Merge with previous line
+        result[result.length - 1] = prevLine + ' ' + trimmed
+        continue
+      }
+    }
+
+    result.push(line)
+  }
+
+  return result.join('\n')
+}
+
+/**
  * Apply all algorithmic fixes to generated code.
  */
 export function applyAllFixes(code: string): string {
@@ -895,20 +1485,39 @@ export function applyAllFixes(code: string): string {
 
   // Apply fixes in order (order matters!)
 
+  // Phase 0: Clean up CSS artifacts
+  result = removeImportant(result)
+  result = removeCssTransitions(result)
+  result = removeCalcExpressions(result)
+  result = fixCssNoneValues(result)
+
   // Phase 1: Color/value syntax fixes
   result = convertRgbaToHex(result)
   result = convertNamedColorsToHex(result)
+  result = convertCssShadowToSize(result)
   result = removePropertyColons(result)
   result = removePxSuffix(result)
+  result = removeUnsupportedUnits(result)
   result = fixOpacityRange(result)
+  result = fixBorderShorthand(result)
+  result = fixBorderColorOnly(result)
 
   // Phase 2: Token fixes
   result = fixHyphenatedTokenNames(result)
   result = fixTokensOnSameLine(result)
+  result = removeEmptyLinesBetweenTokens(result)
   result = fixMissingTokenPrefix(result)
+  result = fixUndefinedTokenReferences(result)
   result = fixTokenAsProperty(result)
 
-  // Phase 3: Structural fixes
+  // Phase 3: Typo fixes
+  result = fixEventTypos(result)
+  result = fixActionTypos(result)
+
+  // Phase 4: Structural fixes
+  result = fixOrphanedLayoutKeywords(result)
+  result = fixSplitPropertyLines(result)
+  result = fixOrphanedNumbers(result)
   result = fixDefinitionAndUsageOnSameLine(result)
   result = fixDuplicateElementNames(result)
   result = fixTextOnSeparateLine(result)
