@@ -576,21 +576,23 @@ export function fixTokensOnSameLine(code: string): string {
  * LLM error:
  *   Card: background #1E1E1E Card color white "Hello World"
  *
- * Should be:
- *   Card: background #1E1E1E
- *   Card color white "Hello World"
+ * The LLM is confused about syntax - it wants ONE Card with both properties.
+ * So we merge into a single usage (remove the definition colon):
+ *   Card background #1E1E1E color white "Hello World"
+ *
+ * This is more semantically correct when the prompt is "create a Card with X and Y".
  */
 export function fixDefinitionAndUsageOnSameLine(code: string): string {
-  // Pattern: ComponentName: props ComponentName props
-  // Match definition followed by same component name without colon
+  // Pattern: ComponentName: props ComponentName props "text"
+  // When both component names match, merge into single usage
   return code.replace(
-    /^(\s*)([A-Z][a-zA-Z]*:\s*(?:[a-z][a-zA-Z-]*\s+[^\n$"]+?\s+)+)([A-Z][a-zA-Z]*(?:\s+[^:\n]+))/gm,
-    (match, indent, definition, usage) => {
-      // Only split if the component names match
-      const defName = definition.match(/^([A-Z][a-zA-Z]*):/)?.[1]
-      const useName = usage.match(/^([A-Z][a-zA-Z]*)/)?.[1]
+    /^(\s*)([A-Z][a-zA-Z]*):\s*((?:[a-z][a-zA-Z-]*\s+[^\s]+\s*)+)([A-Z][a-zA-Z]*)\s+(.+)$/gm,
+    (match, indent, defName, defProps, useName, useRest) => {
+      // Only merge if the component names match
       if (defName === useName) {
-        return `${indent}${definition.trim()}\n${indent}${usage.trim()}`
+        // Merge: remove the colon from definition, remove duplicate component name
+        // Result: ComponentName defProps useRest
+        return `${indent}${defName} ${defProps.trim()} ${useRest.trim()}`
       }
       return match
     }

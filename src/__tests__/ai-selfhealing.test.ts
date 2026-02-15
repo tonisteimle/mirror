@@ -32,6 +32,7 @@ import {
   fixBorderColorOnly,
   fixOrphanedLayoutKeywords,
   fixCssNoneValues,
+  fixDefinitionAndUsageOnSameLine,
   type CodeIssue
 } from '../lib/ai-selfhealing'
 
@@ -1166,5 +1167,51 @@ describe('fixCssNoneValues', () => {
   it('cleans up double spaces', () => {
     const result = fixCssNoneValues('Input  outline none  padding 16')
     expect(result).not.toContain('  ')
+  })
+})
+
+// ============================================================================
+// fixDefinitionAndUsageOnSameLine Tests
+// ============================================================================
+
+describe('fixDefinitionAndUsageOnSameLine', () => {
+  it('merges definition and usage on same line into single usage', () => {
+    const code = 'Card: background #1E1E1E Card color #FFFFFF "Hello World"'
+    const result = fixDefinitionAndUsageOnSameLine(code)
+    expect(result).toBe('Card background #1E1E1E color #FFFFFF "Hello World"')
+  })
+
+  it('handles Button definition and usage pattern', () => {
+    const code = 'Button: padding 12 Button "Click"'
+    const result = fixDefinitionAndUsageOnSameLine(code)
+    expect(result).toBe('Button padding 12 "Click"')
+  })
+
+  it('preserves intentional definition only (no usage)', () => {
+    const code = 'Card: background #1E1E1E radius 8'
+    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
+  })
+
+  it('does not merge different component names', () => {
+    const code = 'Card: background #1E1E1E Button "Click"'
+    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
+  })
+
+  it('handles multiple properties in definition', () => {
+    const code = 'Card: vertical gap 16 padding 24 Card color #FFF "Content"'
+    const result = fixDefinitionAndUsageOnSameLine(code)
+    expect(result).toBe('Card vertical gap 16 padding 24 color #FFF "Content"')
+  })
+
+  it('preserves indentation', () => {
+    const code = '  Card: background #333 Card "Text"'
+    const result = fixDefinitionAndUsageOnSameLine(code)
+    expect(result).toBe('  Card background #333 "Text"')
+  })
+
+  it('works with applyAllFixes', () => {
+    const code = 'Card: background #1E1E1E Card color #FFFFFF "Hello World"'
+    const result = applyAllFixes(code)
+    expect(result).toBe('Card background #1E1E1E color #FFFFFF "Hello World"')
   })
 })
