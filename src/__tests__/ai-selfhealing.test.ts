@@ -33,6 +33,7 @@ import {
   fixOrphanedLayoutKeywords,
   fixCssNoneValues,
   fixDefinitionAndUsageOnSameLine,
+  fixDimensionShorthandInDefinition,
   type CodeIssue
 } from '../lib/ai-selfhealing'
 
@@ -1222,5 +1223,61 @@ describe('fixDefinitionAndUsageOnSameLine', () => {
     const code = 'Card: background #1E1E1E Card color #FFFFFF "Hello World"'
     const result = applyAllFixes(code)
     expect(result).toBe('Card background #1E1E1E color #FFFFFF "Hello World"')
+  })
+})
+
+describe('fixDimensionShorthandInDefinition', () => {
+  it('expands two-number shorthand to width and height', () => {
+    const code = 'Box: 300 100 radius 12'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('Box: width 300 height 100 radius 12')
+  })
+
+  it('expands Avatar dimensions', () => {
+    const code = 'Avatar: 80 80 radius 40 background $primary'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('Avatar: width 80 height 80 radius 40 background $primary')
+  })
+
+  it('expands IconBtn dimensions', () => {
+    const code = 'IconBtn: 48 48 radius 24 background $primary'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('IconBtn: width 48 height 48 radius 24 background $primary')
+  })
+
+  it('handles percentage values', () => {
+    const code = 'Box: 50% 100% padding 16'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('Box: width 50% height 100% padding 16')
+  })
+
+  it('handles single dimension with property', () => {
+    const code = 'Box: 200 padding 16'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('Box: width 200 padding 16')
+  })
+
+  it('does not change definitions without dimension shorthand', () => {
+    const code = 'Box: vertical gap 16'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe(code)
+  })
+
+  it('does not change component usage (no colon)', () => {
+    const code = 'Box 300 100 radius 12'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe(code)
+  })
+
+  it('preserves indentation', () => {
+    const code = '  Avatar: 80 80 radius 40'
+    const result = fixDimensionShorthandInDefinition(code)
+    expect(result).toBe('  Avatar: width 80 height 80 radius 40')
+  })
+
+  it('works with applyAllFixes', () => {
+    const code = 'Box: 300 100 radius 12'
+    const result = applyAllFixes(code)
+    expect(result).toBe('Box: width 300 height 100 radius 12')
   })
 })

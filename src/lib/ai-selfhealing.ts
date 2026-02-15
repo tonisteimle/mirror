@@ -600,6 +600,49 @@ export function fixDefinitionAndUsageOnSameLine(code: string): string {
 }
 
 /**
+ * Fix dimension shorthand in component definitions.
+ *
+ * LLM error:
+ *   Box: 300 100 radius 12
+ *   Avatar: 80 80 radius 40
+ *   IconBtn: 48 48 radius 24
+ *
+ * Should be:
+ *   Box: width 300 height 100 radius 12
+ *   Avatar: width 80 height 80 radius 40
+ *   IconBtn: width 48 height 48 radius 24
+ *
+ * Dimension shorthand (numbers as first arguments) works for component
+ * USAGE but not for DEFINITIONS (with colon). This fix expands the
+ * shorthand to explicit width/height properties.
+ */
+export function fixDimensionShorthandInDefinition(code: string): string {
+  // Pattern: ComponentName: NUMBER [NUMBER] rest...
+  // Captures: indent, name, first number, optional second number, rest of line
+  return code.replace(
+    /^(\s*)([A-Z][a-zA-Z0-9]*:\s+)(\d+(?:\.\d+)?(?:%)?)\s+(\d+(?:\.\d+)?(?:%)?)\s+(.*)$/gm,
+    (match, indent, namePart, num1, num2, rest) => {
+      // Check if rest starts with a property keyword (not another number)
+      // If rest is empty or starts with a property, expand to width/height
+      if (!rest || /^[a-z]/.test(rest)) {
+        return `${indent}${namePart}width ${num1} height ${num2} ${rest}`.trimEnd()
+      }
+      return match
+    }
+  ).replace(
+    // Also handle single dimension: ComponentName: NUMBER propertyName...
+    /^(\s*)([A-Z][a-zA-Z0-9]*:\s+)(\d+(?:\.\d+)?(?:%)?)\s+([a-z][a-zA-Z-]*)(.*)$/gm,
+    (match, indent, namePart, num, propName, rest) => {
+      // Only expand if followed by a property name (not 'px' or similar unit)
+      if (propName && !['px', 'em', 'rem', 'vh', 'vw'].includes(propName)) {
+        return `${indent}${namePart}width ${num} ${propName}${rest}`
+      }
+      return match
+    }
+  )
+}
+
+/**
  * Fix duplicate element names by converting to list items.
  *
  * LLM error:
@@ -1520,6 +1563,7 @@ export function applyAllFixes(code: string): string {
   result = fixOrphanedLayoutKeywords(result)
   result = fixSplitPropertyLines(result)
   result = fixOrphanedNumbers(result)
+  result = fixDimensionShorthandInDefinition(result)
   result = fixDefinitionAndUsageOnSameLine(result)
   result = fixDuplicateElementNames(result)
   result = fixTextOnSeparateLine(result)
