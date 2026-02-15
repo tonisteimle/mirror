@@ -93,8 +93,8 @@ describe('Component Parsing Basics', () => {
   it('parses component with percentage value', () => {
     const { node, result } = parseFirst('Box w 50%')
     expectNoErrors(result)
-    // Percentage is stored as number; style-converter adds the % unit
-    expect(node?.properties?.w).toBe(50)
+    // Percentage is stored as string with % suffix
+    expect(node?.properties?.w).toBe('50%')
   })
 
   it('parses component with full keyword', () => {

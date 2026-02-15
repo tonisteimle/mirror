@@ -89,7 +89,7 @@ export const PROPERTIES = new Set([
   // Note: 'center' is NOT included here to allow it to be tokenized as COMPONENT_NAME
   // for overlay position keywords. Use 'cen' shorthand for layout centering.
   'hor', 'horizontal', 'ver', 'vertical', 'cen',
-  'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'fill', 'grid', 'rows', 'stacked',
+  'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'shrink', 'fill', 'grid', 'rows', 'stacked',
   // Data binding
   'data',
   // Alignment - both forms
@@ -118,12 +118,14 @@ export const PROPERTIES = new Set([
   // Visuals - both forms
   'opa', 'op', 'opacity',
   'icon', 'src', 'alt', 'fit', 'shadow', 'cursor', 'pointer', 'z', 'hidden', 'shortcut',
+  // Transform (note: 'scale' is in ANIMATION_KEYWORDS, so not listed here)
+  'rotate', 'translate',
   // Overflow / Scroll - both forms
   'scroll', 'scroll-ver', 'scroll-vertical', 'scroll-hor', 'scroll-horizontal', 'scroll-both', 'snap', 'clip',
   // Hover states - both forms
   'hover-col', 'hover-color', 'hover-bg', 'hover-background',
   'hover-boc', 'hover-border-color', 'hover-bor', 'hover-border',
-  'hover-rad', 'hover-radius', 'hover-opacity', 'hover-scale',
+  'hover-rad', 'hover-radius', 'hover-opa', 'hover-opacity', 'hover-scale',
 ])
 
 // Border styles for compound border property
@@ -246,9 +248,9 @@ export const NUMBER_PROPERTIES = new Set([
   'opacity',
   'hover-border', 'hover-radius',
   // Common
-  'gap', 'gap-col', 'gap-row',
+  'gap', 'gap-col', 'gap-row', 'shrink',
   'size', 'weight', 'line', 'z',
-  'hover-opacity', 'hover-scale',
+  'hover-opa', 'hover-opacity', 'hover-scale',
   'min', 'max', 'step', 'value', 'rows',
   'length', 'segments'  // Segment (masked input)
 ])
@@ -417,6 +419,22 @@ export const SYSTEM_STATES = new Set([
   'disabled', // Bound to disabled attribute
 ])
 
+// Behavior States - activated by actions like highlight, select, etc.
+// These require explicit event handlers
+export const BEHAVIOR_STATES = new Set([
+  'highlighted',
+  'selected',
+  'active',     // Can also be a behavior state
+  'inactive',
+  'expanded',
+  'collapsed',
+  'valid',
+  'invalid',
+  'default',    // Initial state
+  'on',         // Toggle states
+  'off',
+])
+
 // Events Keyword (for centralized event block)
 export const EVENTS_KEYWORD = 'events'
 
@@ -437,7 +455,8 @@ export const ANIMATION_ACTION_KEYWORDS = new Set([
 ])
 
 // Position Keywords (for overlay positioning relative to trigger or viewport)
+// Note: includes both long and short forms since normalizer may convert center->cen
 export const POSITION_KEYWORDS = new Set([
   'below', 'above', 'left', 'right',  // Relative to trigger element
-  'center'                             // Relative to viewport (for modals)
+  'center', 'cen'                      // Relative to viewport (for modals)
 ])

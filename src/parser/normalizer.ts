@@ -79,7 +79,15 @@ const CSS_COLORS: Record<string, string> = {
 }
 
 // Property aliases (CSS-like → Mirror shorthand)
+// NOTE: hover-* aliases must come before single-word aliases to match first
 const PROPERTY_ALIASES: Record<string, string> = {
+  // Hover state property aliases (must be first!)
+  'hover-background': 'hover-bg',
+  'hover-color': 'hover-col',
+  'hover-border-color': 'hover-boc',
+  'hover-opacity': 'hover-opa',
+  'hover-radius': 'hover-rad',
+  // Standard property aliases
   'background': 'bg',
   'background-color': 'bg',
   'color': 'col',
@@ -89,12 +97,17 @@ const PROPERTY_ALIASES: Record<string, string> = {
   'radius': 'rad',
   // NOTE: 'border' is NOT aliased to 'bor' because they are handled differently
   'border-color': 'boc',
+  'border-col': 'boc',  // Handle partial conversion
   'width': 'w',
   'height': 'h',
   'min-width': 'minw',
+  'min-w': 'minw',  // Also handle partial conversion
   'max-width': 'maxw',
+  'max-w': 'maxw',
   'min-height': 'minh',
+  'min-h': 'minh',
   'max-height': 'maxh',
+  'max-h': 'maxh',
   'font-size': 'size',
   'font-weight': 'weight',
   'line-height': 'line',
@@ -110,9 +123,30 @@ const PROPERTY_ALIASES: Record<string, string> = {
   'overflow': 'clip',
   'overflow-x': 'scroll-hor',
   'overflow-y': 'scroll',
+  // Gap direction aliases
+  'gap-x': 'gap-col',
+  'gap-y': 'gap-row',
+  'column-gap': 'gap-col',
+  'row-gap': 'gap-row',
   'horizontal': 'hor',
   'vertical': 'ver',
-  'center': 'cen'
+  'center': 'cen',
+  // Alignment long forms (must include both forms since center→cen happens first)
+  'horizontal-left': 'hor-l',
+  'horizontal-center': 'hor-cen',
+  'horizontal-cen': 'hor-cen',
+  'horizontal-right': 'hor-r',
+  'vertical-top': 'ver-t',
+  'vertical-center': 'ver-cen',
+  'vertical-cen': 'ver-cen',
+  'vertical-bottom': 'ver-b',
+  // Also handle hor/ver prefixes with full suffixes
+  'hor-center': 'hor-cen',
+  'hor-left': 'hor-l',
+  'hor-right': 'hor-r',
+  'ver-center': 'ver-cen',
+  'ver-top': 'ver-t',
+  'ver-bottom': 'ver-b'
 }
 
 // Known component names for case normalization
@@ -275,6 +309,11 @@ function normalizeLine(line: string): string {
 
   // === Property Alias Normalization ===
   content = normalizePropertyAliases(content)
+
+  // === Direction Keyword Normalization ===
+  // Convert long-form directions to short-form after spacing/border properties
+  // e.g., "pad left 16" → "pad l 16"
+  content = normalizeDirectionKeywords(content)
 
   // === Component Name Normalization ===
   content = normalizeComponentNames(content)
@@ -484,6 +523,35 @@ function normalizePropertyAliases(content: string): string {
 }
 
 /**
+ * Normalize direction keywords after spacing/border properties.
+ * Converts: left→l, right→r, top→t, bottom→b
+ * Also handles combos: left-right→l-r, top-bottom→t-b
+ */
+function normalizeDirectionKeywords(content: string): string {
+  // Note: top→u (up), bottom→d (down) to match parser internals
+  const directionMap: Record<string, string> = {
+    'left': 'l',
+    'right': 'r',
+    'top': 'u',
+    'bottom': 'd'
+  }
+
+  // Match spacing/border property followed by direction keyword(s)
+  return content.replace(
+    /\b(pad|mar|border|bor)\s+(left|right|top|bottom)(-(?:left|right|top|bottom))?\b/gi,
+    (match, prop, dir1, dir2) => {
+      const shortDir1 = directionMap[dir1.toLowerCase()]
+      if (dir2) {
+        const dir2Clean = dir2.slice(1) // Remove leading hyphen
+        const shortDir2 = directionMap[dir2Clean.toLowerCase()]
+        return `${prop} ${shortDir1}-${shortDir2}`
+      }
+      return `${prop} ${shortDir1}`
+    }
+  )
+}
+
+/**
  * Normalize component names to PascalCase
  */
 function normalizeComponentNames(content: string): string {
@@ -523,6 +591,8 @@ function normalizeComponentNames(content: string): string {
       'scroll', 'wrap', 'fill', 'full', 'grid', 'stacked', 'between',
       'icon', 'type', 'rows', 'fit', 'snap', 'truncate', 'italic',
       'underline', 'uppercase', 'lowercase',
+      // Transform properties
+      'rotate', 'translate',
       // System states (should not be PascalCased)
       'hover', 'active', 'default', 'pressed', 'selected',
       'expanded', 'collapsed', 'valid', 'invalid', 'loading',

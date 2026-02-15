@@ -39,7 +39,8 @@ describe('Grid Layout', () => {
     it('parses grid with column count', () => {
       const result = parse('Container grid 4 gap 16')
       expect(getErrors(result)).toHaveLength(0)
-      expect(result.nodes[0].properties.grid).toBe('4')
+      // Single number is stored as number, not string
+      expect(result.nodes[0].properties.grid).toBe(4)
       expect(result.nodes[0].properties.gap).toBe(16)
     })
 
@@ -70,7 +71,8 @@ describe('Grid Layout', () => {
     it('parses grid with rows', () => {
       const result = parse('Container grid 2 rows 100 200')
       expect(getErrors(result)).toHaveLength(0)
-      expect(result.nodes[0].properties.grid).toBe('2')
+      // Single number is stored as number, not string
+      expect(result.nodes[0].properties.grid).toBe(2)
       expect(result.nodes[0].properties.grid_rows).toBe('100 200')
     })
 
@@ -162,7 +164,8 @@ Container grid 3 gap 16
 `
       const result = parse(input)
       expect(getErrors(result)).toHaveLength(0)
-      expect(result.nodes[0].properties.grid).toBe('3')
+      // Single number is stored as number, not string
+      expect(result.nodes[0].properties.grid).toBe(3)
       expect(result.nodes[0].children).toHaveLength(3)
     })
   })

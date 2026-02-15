@@ -76,21 +76,49 @@ export function parseStateDefinition(ctx: ParserContext, baseIndent: number): St
       if (indent > baseIndent) {
         ctx.advance() // consume indent
 
-        // Parse property on this line
-        if (ctx.current()?.type === 'PROPERTY') {
-          const propName = ctx.advance().value
-          const val = parseValue(ctx)
-          if (val !== null) {
-            stateDef.properties[propName] = val
+        // Parse ALL properties on this line (multiple properties like: bg #3B82F6 col #FFF)
+        while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
+          if (ctx.current()?.type === 'PROPERTY') {
+            const propName = ctx.advance().value
+
+            // Handle directional properties: mar l 0, pad t-b 8, etc.
+            if (ctx.current()?.type === 'DIRECTION') {
+              const directions: string[] = []
+              while (ctx.current()?.type === 'DIRECTION') {
+                // Split combined directions like 'l-r' into ['l', 'r']
+                const dir = ctx.advance().value
+                if (dir.includes('-')) {
+                  directions.push(...dir.split('-'))
+                } else {
+                  directions.push(dir)
+                }
+              }
+              // Get the value for these directions
+              const val = parseValue(ctx)
+              if (val !== null) {
+                for (const dir of directions) {
+                  stateDef.properties[`${propName}-${dir}`] = val
+                }
+              }
+            } else {
+              // Regular property with value
+              const val = parseValue(ctx)
+              if (val !== null) {
+                stateDef.properties[propName] = val
+              } else {
+                stateDef.properties[propName] = true
+              }
+            }
+          } else if (ctx.current()?.type === 'COMPONENT_NAME') {
+            // Could be a child component or content
+            ctx.advance() // consume component name
+            if (ctx.current()?.type === 'STRING') {
+              // It's content for this state
+              stateDef.properties['content'] = ctx.advance().value
+            }
           } else {
-            stateDef.properties[propName] = true
-          }
-        } else if (ctx.current()?.type === 'COMPONENT_NAME') {
-          // Could be a child component or content
-          ctx.advance() // consume component name
-          if (ctx.current()?.type === 'STRING') {
-            // It's content for this state
-            stateDef.properties['content'] = ctx.advance().value
+            // Unknown token, stop parsing this line
+            break
           }
         }
 
@@ -149,11 +177,34 @@ export function parseBehaviorStateDefinition(ctx: ParserContext, baseIndent: num
         // Parse property on this line
         if (ctx.current()?.type === 'PROPERTY') {
           const propName = ctx.advance().value
-          const val = parseValue(ctx)
-          if (val !== null) {
-            stateDef.properties[propName] = val
+
+          // Handle directional properties: mar l 0, pad t-b 8, etc.
+          if (ctx.current()?.type === 'DIRECTION') {
+            const directions: string[] = []
+            while (ctx.current()?.type === 'DIRECTION') {
+              // Split combined directions like 'l-r' into ['l', 'r']
+              const dir = ctx.advance().value
+              if (dir.includes('-')) {
+                directions.push(...dir.split('-'))
+              } else {
+                directions.push(dir)
+              }
+            }
+            // Get the value for these directions
+            const val = parseValue(ctx)
+            if (val !== null) {
+              for (const dir of directions) {
+                stateDef.properties[`${propName}-${dir}`] = val
+              }
+            }
           } else {
-            stateDef.properties[propName] = true
+            // Regular property with value
+            const val = parseValue(ctx)
+            if (val !== null) {
+              stateDef.properties[propName] = val
+            } else {
+              stateDef.properties[propName] = true
+            }
           }
         }
 
