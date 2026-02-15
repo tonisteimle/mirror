@@ -1175,7 +1175,8 @@ describe('fixCssNoneValues', () => {
 // ============================================================================
 
 describe('fixDefinitionAndUsageOnSameLine', () => {
-  it('merges definition and usage on same line into single usage', () => {
+  // Same component names - merge
+  it('merges definition and usage when same component name', () => {
     const code = 'Card: background #1E1E1E Card color #FFFFFF "Hello World"'
     const result = fixDefinitionAndUsageOnSameLine(code)
     expect(result).toBe('Card background #1E1E1E color #FFFFFF "Hello World"')
@@ -1187,26 +1188,34 @@ describe('fixDefinitionAndUsageOnSameLine', () => {
     expect(result).toBe('Button padding 12 "Click"')
   })
 
-  it('preserves intentional definition only (no usage)', () => {
-    const code = 'Card: background #1E1E1E radius 8'
-    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
-  })
-
-  it('does not merge different component names', () => {
-    const code = 'Card: background #1E1E1E Button "Click"'
-    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
-  })
-
   it('handles multiple properties in definition', () => {
     const code = 'Card: vertical gap 16 padding 24 Card color #FFF "Content"'
     const result = fixDefinitionAndUsageOnSameLine(code)
     expect(result).toBe('Card vertical gap 16 padding 24 color #FFF "Content"')
   })
 
-  it('preserves indentation', () => {
+  it('preserves indentation when merging', () => {
     const code = '  Card: background #333 Card "Text"'
     const result = fixDefinitionAndUsageOnSameLine(code)
     expect(result).toBe('  Card background #333 "Text"')
+  })
+
+  // Different component names - leave unchanged (too ambiguous)
+  it('leaves different components unchanged for LLM self-healing', () => {
+    const code = 'Label: size 14 color #999 Number "2.7 Mio"'
+    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
+  })
+
+  // Edge cases
+  it('preserves intentional definition only (no usage)', () => {
+    const code = 'Card: background #1E1E1E radius 8'
+    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
+  })
+
+  it('does not match single-letter components (hex colors)', () => {
+    // This should not match because 'E' is only 1 char
+    const code = 'Card: background #1E1E1E radius 8'
+    expect(fixDefinitionAndUsageOnSameLine(code)).toBe(code)
   })
 
   it('works with applyAllFixes', () => {

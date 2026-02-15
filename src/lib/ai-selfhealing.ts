@@ -576,24 +576,24 @@ export function fixTokensOnSameLine(code: string): string {
  * LLM error:
  *   Card: background #1E1E1E Card color white "Hello World"
  *
- * The LLM is confused about syntax - it wants ONE Card with both properties.
- * So we merge into a single usage (remove the definition colon):
+ * The LLM wants ONE Card with both properties. Merge into single usage:
  *   Card background #1E1E1E color white "Hello World"
  *
- * This is more semantically correct when the prompt is "create a Card with X and Y".
+ * Note: Only handles SAME component names. Different components are left
+ * for the LLM self-healing loop to fix (too ambiguous to auto-correct).
  */
 export function fixDefinitionAndUsageOnSameLine(code: string): string {
   // Pattern: ComponentName: props ComponentName props "text"
-  // When both component names match, merge into single usage
+  // The second component must be preceded by whitespace (not part of a hex color)
+  // and must be at least 2 chars (to avoid matching single letters in hex colors)
   return code.replace(
-    /^(\s*)([A-Z][a-zA-Z]*):\s*((?:[a-z][a-zA-Z-]*\s+[^\s]+\s*)+)([A-Z][a-zA-Z]*)\s+(.+)$/gm,
+    /^(\s*)([A-Z][a-zA-Z]+):\s*((?:[a-z][a-zA-Z-]*\s+[^\s]+\s*)+)\s([A-Z][a-zA-Z]+)\s+(.+)$/gm,
     (match, indent, defName, defProps, useName, useRest) => {
-      // Only merge if the component names match
       if (defName === useName) {
-        // Merge: remove the colon from definition, remove duplicate component name
-        // Result: ComponentName defProps useRest
+        // Same component: merge into single usage
         return `${indent}${defName} ${defProps.trim()} ${useRest.trim()}`
       }
+      // Different components: leave unchanged for LLM self-healing
       return match
     }
   )
