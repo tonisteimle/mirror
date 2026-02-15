@@ -8,10 +8,8 @@ import { usePageManager } from './usePageManager'
 import { useProjectStorage } from './useProjectStorage'
 import { useEditorState } from './useEditorState'
 import { usePanelResize } from './usePanelResize'
-import { useAiAssistant } from './useAiAssistant'
 import { useDialogs } from './useDialogs'
 import { useCodeParsing, type PreviewOverride } from './useCodeParsing'
-import { useDocsMode } from './useDocsMode'
 import type { EditorActions } from '../contexts'
 
 /** View mode for the app: edit (full), preview (pages only), fullscreen (preview only) */
@@ -96,26 +94,6 @@ export function useAppState() {
     debounceMs: 150,
     previewOverride,
     activeCursorLine,
-  })
-
-  // AI Assistant
-  const ai = useAiAssistant({
-    onGenerated: setLayoutCode,
-    onError: dialogs.setError,
-  })
-
-  // Documentation Mode
-  const docsMode = useDocsMode({
-    pages,
-    currentPageId,
-    layoutCode,
-    componentsCode,
-    tokensCode,
-    dataCode,
-    loadProject: pageManager.loadProject,
-    setComponentsCode,
-    setTokensCode,
-    setDataCode,
   })
 
   // History for undo/redo
@@ -297,19 +275,6 @@ export function useAppState() {
     }
   }, [pageManager.loadProject, setDataCode, setComponentsCode, setTokensCode])
 
-  // Handle docs mode toggle - auto-switch view mode
-  const handleToggleDocsMode = useCallback(() => {
-    if (docsMode.isDocsMode) {
-      // Exiting docs mode - switch to edit
-      docsMode.exitDocsMode()
-      setViewMode('edit')
-    } else {
-      // Entering docs mode - switch to preview after loading
-      docsMode.enterDocsMode()
-      setViewMode('preview')
-    }
-  }, [docsMode, setViewMode])
-
   return {
     // Domain state
     pageManager,
@@ -317,17 +282,12 @@ export function useAppState() {
     panel,
     dialogs,
     parsing,
-    ai,
     history,
     projectStorage,
-    docsMode,
 
     // View mode (edit, preview, fullscreen)
     viewMode,
     setViewMode,
-
-    // Docs mode helpers
-    handleToggleDocsMode,
 
     // Derived values
     layoutCode,

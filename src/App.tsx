@@ -3,7 +3,6 @@ import { colors } from './theme'
 import { ErrorDialog } from './components/ErrorDialog'
 import { SettingsDialog } from './components/SettingsDialog'
 import { HeaderBar } from './components/HeaderBar'
-import { AiAssistantPanel } from './components/AiAssistantPanel'
 import { EditorContainer } from './containers/EditorContainer'
 import { PreviewContainer } from './containers/PreviewContainer'
 import { PropertyPanel } from './components/PropertyPanel'
@@ -96,9 +95,6 @@ function App() {
           onOpenSettings={app.dialogs.openSettings}
           viewMode={app.viewMode}
           onViewModeChange={app.setViewMode}
-          isDocsMode={app.docsMode.isDocsMode}
-          onToggleDocsMode={app.handleToggleDocsMode}
-          isDocsLoading={app.docsMode.isLoading}
           showPropertyPanel={showPropertyPanel}
           onTogglePropertyPanel={() => setShowPropertyPanel(!showPropertyPanel)}
           contentEditMode={contentEditMode}
@@ -143,15 +139,12 @@ function App() {
                 previewMode={isPreviewMode}
                 activeLayoutSection={app.activeLayoutSection}
                 onActiveLayoutSectionChange={app.setActiveLayoutSection}
-                isDocsMode={app.docsMode.isDocsMode}
-                onSaveDocs={app.docsMode.saveDocs}
-                isSavingDocs={app.docsMode.isSaving}
-                hasUnsavedDocsChanges={app.docsMode.hasUnsavedChanges}
-                hasAdminAccess={app.docsMode.hasAdminAccess}
                 nlModeEnabled={app.editor.nlModeEnabled}
                 onNlModeChange={app.editor.setNlModeEnabled}
                 pickerModeEnabled={app.editor.pickerModeEnabled}
                 onPickerModeChange={app.editor.setPickerModeEnabled}
+                deepThinkingEnabled={app.editor.deepThinkingEnabled}
+                onDeepThinkingChange={app.editor.setDeepThinkingEnabled}
               />
             </EditorActionsProvider>
 
@@ -206,21 +199,10 @@ function App() {
         )}
       </div>
 
-      {/* AI Assistant Panel */}
-      <AiAssistantPanel
-        isOpen={app.ai.isOpen}
-        onClose={app.ai.closeAssistant}
-        onSubmit={app.ai.generate}
-        position={app.ai.position}
-        isGenerating={app.ai.isGenerating}
-      />
-
       {/* Settings Dialog */}
       <SettingsDialog
         isOpen={app.dialogs.isSettingsOpen}
         onClose={app.dialogs.closeSettings}
-        autoCompleteMode={app.editor.autoCompleteMode}
-        onAutoCompleteModeChange={app.editor.setAutoCompleteMode}
       />
 
       {/* Error Dialog */}

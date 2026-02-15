@@ -103,6 +103,44 @@ export {
   type IEditorFactory,
 } from './editor'
 
+// Style assertions for AST-to-CSS tests
+export {
+  expectStyle,
+  expectStyles,
+  getGeneratedStyle,
+  expectDSLStyle,
+  expectDSLStyles,
+  expectNoStyle,
+  getStyleMap,
+} from './style-assertions'
+
+// HTML structure assertions for AST-to-HTML tests
+export {
+  expectTag,
+  expectChildCount,
+  expectDataAttribute,
+  expectClassName,
+  expectProp,
+  expectPropDefined,
+  expectContainsChild,
+  expectNotContainsChild,
+  getElementTag,
+  expectStructure,
+  type ElementStructure,
+} from './html-assertions'
+
+// Behavior helpers for interactive tests
+export {
+  renderInteractive,
+  renderInteractiveWithContext,
+  findByDSLClass,
+  findAllByDSLClass,
+  hasDataAttr,
+  isVisible,
+  getComputedStyleValue,
+  waitForStateChange,
+} from './behavior-helpers'
+
 // Re-export testing-library for convenience
 export { screen, fireEvent, within, waitFor } from '@testing-library/react'
 export { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'

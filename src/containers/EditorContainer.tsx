@@ -36,17 +36,6 @@ interface EditorContainerProps {
   activeLayoutSection?: string | null
   /** Callback when layout section changes */
   onActiveLayoutSectionChange?: (section: string | null) => void
-  // Docs mode props
-  /** Whether docs mode is active */
-  isDocsMode?: boolean
-  /** Callback to save docs to server */
-  onSaveDocs?: () => Promise<boolean>
-  /** Whether docs are saving */
-  isSavingDocs?: boolean
-  /** Whether docs have unsaved changes */
-  hasUnsavedDocsChanges?: boolean
-  /** Whether user has admin access */
-  hasAdminAccess?: boolean
   // NL Mode props
   /** Whether NL mode is enabled */
   nlModeEnabled?: boolean
@@ -57,6 +46,11 @@ interface EditorContainerProps {
   pickerModeEnabled?: boolean
   /** Callback when picker mode changes */
   onPickerModeChange?: (enabled: boolean) => void
+  // Deep Thinking Mode props
+  /** Whether deep thinking mode is enabled (Opus 4.5 with full context) */
+  deepThinkingEnabled?: boolean
+  /** Callback when deep thinking mode changes */
+  onDeepThinkingChange?: (enabled: boolean) => void
   // Note: onOpenAiAssistant, onClear, onClean are now provided via EditorActionsContext
 }
 
@@ -86,15 +80,12 @@ export function EditorContainer({
   previewMode,
   activeLayoutSection,
   onActiveLayoutSectionChange,
-  isDocsMode,
-  onSaveDocs,
-  isSavingDocs,
-  hasUnsavedDocsChanges,
-  hasAdminAccess,
   nlModeEnabled,
   onNlModeChange,
   pickerModeEnabled,
   onPickerModeChange,
+  deepThinkingEnabled,
+  onDeepThinkingChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -124,15 +115,12 @@ export function EditorContainer({
         previewMode={previewMode}
         activeLayoutSection={activeLayoutSection}
         onActiveLayoutSectionChange={onActiveLayoutSectionChange}
-        isDocsMode={isDocsMode}
-        onSaveDocs={onSaveDocs}
-        isSavingDocs={isSavingDocs}
-        hasUnsavedDocsChanges={hasUnsavedDocsChanges}
-        hasAdminAccess={hasAdminAccess}
         nlModeEnabled={nlModeEnabled}
         onNlModeChange={onNlModeChange}
         pickerModeEnabled={pickerModeEnabled}
         onPickerModeChange={onPickerModeChange}
+        deepThinkingEnabled={deepThinkingEnabled}
+        onDeepThinkingChange={onDeepThinkingChange}
       />
     </EditorErrorBoundary>
   )

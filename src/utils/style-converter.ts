@@ -330,24 +330,24 @@ export function propertiesToStyle(
         style.rowGap = `${value}px`
         break
 
-      // Sizing
+      // Sizing - handle percentage values that are stored as strings like "50%"
       case 'w':
-        style.width = value === 'full' ? '100%' : `${value}px`
+        style.width = value === 'full' ? '100%' : (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'h':
-        style.height = value === 'full' ? '100%' : `${value}px`
+        style.height = value === 'full' ? '100%' : (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'minw':
-        style.minWidth = `${value}px`
+        style.minWidth = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'maxw':
-        style.maxWidth = `${value}px`
+        style.maxWidth = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'minh':
-        style.minHeight = `${value}px`
+        style.minHeight = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'maxh':
-        style.maxHeight = `${value}px`
+        style.maxHeight = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'full':
         style.width = '100%'
@@ -455,7 +455,8 @@ export function propertiesToStyle(
         style.lineHeight = Number(value)
         break
       case 'align':
-        style.textAlign = String(value) as 'left' | 'center' | 'right' | 'justify'
+        // Handle normalized value 'cen' → 'center'
+        style.textAlign = (value === 'cen' ? 'center' : String(value)) as 'left' | 'center' | 'right' | 'justify'
         break
       case 'italic':
         if (value) style.fontStyle = 'italic'

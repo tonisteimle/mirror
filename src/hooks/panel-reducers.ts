@@ -6,7 +6,6 @@
  */
 
 import type { ColorPanelState } from './useColorPanel'
-import type { AiPanelState } from './useAiPanel'
 
 // ============================================================================
 // Color Panel Reducer
@@ -67,67 +66,6 @@ export function colorPanelReducer(
 
     case 'RESET':
       return colorPanelInitialState
-
-    default:
-      return state
-  }
-}
-
-// ============================================================================
-// AI Panel Reducer
-// ============================================================================
-
-export type AiPanelAction =
-  | { type: 'OPEN'; position: { x: number; y: number }; triggerPos: number }
-  | { type: 'CLOSE' }
-  | { type: 'START_GENERATING' }
-  | { type: 'STOP_GENERATING' }
-  | { type: 'RESET' }
-
-export const aiPanelInitialState: AiPanelState = {
-  isOpen: false,
-  position: { x: 0, y: 0 },
-  triggerPos: 0,
-  isGenerating: false,
-}
-
-/**
- * Pure reducer for AI panel state.
- */
-export function aiPanelReducer(
-  state: AiPanelState,
-  action: AiPanelAction
-): AiPanelState {
-  switch (action.type) {
-    case 'OPEN':
-      return {
-        isOpen: true,
-        position: action.position,
-        triggerPos: action.triggerPos,
-        isGenerating: false,
-      }
-
-    case 'CLOSE':
-      return {
-        ...state,
-        isOpen: false,
-        isGenerating: false,
-      }
-
-    case 'START_GENERATING':
-      return {
-        ...state,
-        isGenerating: true,
-      }
-
-    case 'STOP_GENERATING':
-      return {
-        ...state,
-        isGenerating: false,
-      }
-
-    case 'RESET':
-      return aiPanelInitialState
 
     default:
       return state
@@ -203,10 +141,9 @@ export function getPickerPosition(state: PickerState): Position {
  */
 export function isAnyPanelOpen(
   colorPanel: ColorPanelState,
-  aiPanel: AiPanelState,
   picker: PickerState
 ): boolean {
-  return colorPanel.isOpen || aiPanel.isOpen || picker.active !== null
+  return colorPanel.isOpen || picker.active !== null
 }
 
 /**

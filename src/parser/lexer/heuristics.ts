@@ -13,6 +13,7 @@ import {
   ANIMATION_KEYWORDS,
   ANIMATION_ACTION_KEYWORDS,
   SYSTEM_STATES,
+  BEHAVIOR_STATES,
   TIMING_MODIFIERS
 } from '../../dsl/properties'
 import { RESERVED_WORDS } from './token-types'
@@ -183,6 +184,11 @@ export function looksLikeProperty(value: string): boolean {
 
   // Don't flag system states (hover, focus, active, disabled)
   if (SYSTEM_STATES.has(value)) {
+    return false
+  }
+
+  // Don't flag behavior states (valid, invalid, highlighted, selected, etc.)
+  if (BEHAVIOR_STATES.has(value)) {
     return false
   }
 

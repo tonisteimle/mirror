@@ -21,23 +21,39 @@ export function isColorValue(value: string): boolean {
 /**
  * Infer property name from token name suffix.
  * e.g., $default-pad → 'pad', $card-rad → 'rad'
- * Uses 3-character suffixes consistent with keywords.
+ * Supports both short (3-char) and long-form suffixes.
  */
 export function inferPropertyFromTokenName(tokenName: string): string | null {
   const name = tokenName.toLowerCase()
 
-  // 3-character suffixes (consistent with keywords)
-  if (name.endsWith('-pad')) return 'pad'
-  if (name.endsWith('-mar')) return 'mar'
-  if (name.endsWith('-rad')) return 'rad'
-  if (name.endsWith('-gap')) return 'gap'
-  if (name.endsWith('-col') || name.endsWith('-color')) return 'col'
-  if (name.endsWith('-bg')) return 'bg'
-  if (name.endsWith('-boc')) return 'boc'
-  if (name.endsWith('-bor')) return 'bor'
+  // Padding: -pad, -padding, -spacing
+  if (name.endsWith('-pad') || name.endsWith('-padding') || name.endsWith('-spacing')) return 'pad'
 
-  // size/weight: Both short and long variants allowed
+  // Margin: -mar, -margin
+  if (name.endsWith('-mar') || name.endsWith('-margin')) return 'mar'
+
+  // Border radius: -rad, -radius
+  if (name.endsWith('-rad') || name.endsWith('-radius')) return 'rad'
+
+  // Gap: -gap
+  if (name.endsWith('-gap')) return 'gap'
+
+  // Text color: -col, -color
+  if (name.endsWith('-col') || name.endsWith('-color')) return 'col'
+
+  // Background: -bg, -background
+  if (name.endsWith('-bg') || name.endsWith('-background')) return 'bg'
+
+  // Border color: -boc, -border-color
+  if (name.endsWith('-boc') || name.endsWith('-border-color')) return 'boc'
+
+  // Border: -bor, -border (but not -border-color which is handled above)
+  if ((name.endsWith('-bor') || name.endsWith('-border')) && !name.endsWith('-border-color')) return 'bor'
+
+  // Font size: -siz, -size
   if (name.endsWith('-siz') || name.endsWith('-size')) return 'size'
+
+  // Font weight: -wei, -weight
   if (name.endsWith('-wei') || name.endsWith('-weight')) return 'weight'
 
   return null

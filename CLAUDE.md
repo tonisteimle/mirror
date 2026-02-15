@@ -99,6 +99,31 @@ Item: padding 12 cursor pointer
   state highlighted
     background #333
   onhover highlight self
+
+// ❌ WRONG: Event handlers AFTER deeply nested children
+Accordion: vertical
+  Item:
+    Header: horizontal
+      Title:
+        Icon:
+    onclick toggle-state         // Won't attach to Header!
+
+// ✅ CORRECT: Event handlers BEFORE nested children
+Accordion: vertical
+  Item:
+    Header: horizontal
+      onclick toggle-state       // Attaches correctly
+      Title:
+        Icon:
+
+// ❌ WRONG: Hyphenated cursor values
+Button cursor not-allowed        // Lexer splits this incorrectly
+
+// ✅ CORRECT: Use single-word cursor values
+Button cursor pointer
+Button cursor move
+Button cursor grab
+Button disabled                  // Use disabled property instead
 ```
 
 ## Core Syntax

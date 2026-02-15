@@ -18,9 +18,6 @@ export type { UsePreviewSelectionReturn } from './usePreviewSelection'
 export { usePanelResize } from './usePanelResize'
 export type { UsePanelResizeReturn } from './usePanelResize'
 
-export { useAiAssistant } from './useAiAssistant'
-export type { UseAiAssistantReturn } from './useAiAssistant'
-
 export { useDialogs } from './useDialogs'
 export type { UseDialogsReturn, ErrorState } from './useDialogs'
 

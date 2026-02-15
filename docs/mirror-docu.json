@@ -1360,7 +1360,12 @@
             },
             {
               "type": "code",
-              "code": "text\n  '$h2 Welcome\n\n   $p This paragraph spans\n   multiple lines.\n\n   $p Another paragraph.'"
+              "code": "text\n  '$h2 Welcome\n\n   $p This paragraph spans\n   multiple lines.\n\n   $p Another paragraph.'",
+              "expects": {
+                "nodes": [{
+                  "name": "text"
+                }]
+              }
             }
           ]
         },
@@ -1383,7 +1388,12 @@
             },
             {
               "type": "code",
-              "code": "text\n  '$h2 Getting Started\n\n   $lead Mirror is a DSL for UI.\n\n   $p Key features:\n   $li Simple syntax\n   $li Live preview'"
+              "code": "text\n  '$h2 Getting Started\n\n   $lead Mirror is a DSL for UI.\n\n   $p Key features:\n   $li Simple syntax\n   $li Live preview'",
+              "expects": {
+                "nodes": [{
+                  "name": "text"
+                }]
+              }
             }
           ]
         },
@@ -1406,7 +1416,12 @@
             },
             {
               "type": "code",
-              "code": "text\n  '$p This has $b[bold] and $i[italic] text.\n\n   $p Visit $link[our site](https://example.com).'"
+              "code": "text\n  '$p This has $b[bold] and $i[italic] text.\n\n   $p Visit $link[our site](https://example.com).'",
+              "expects": {
+                "nodes": [{
+                  "name": "text"
+                }]
+              }
             }
           ]
         },
@@ -2762,7 +2777,12 @@
             },
             {
               "type": "code",
-              "code": "Section: vertical border b 1 #333\n  Header: horizontal between padding 12 cursor pointer hover-background #1a1a1a\n    Title: weight 500\n    Icon: icon \"chevron-down\" color #666\n  Content: padding 12 background #1a1a1a\n\n  state collapsed\n    Content hidden\n  state expanded\n    Content visible\n\nBox ver\n  Section\n    Header onclick toggle-state\n      Title \"Section 1\"\n    Content \"Content for section 1. Click header to collapse.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 2\"\n    Content \"Content for section 2.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 3\"\n    Content \"Content for section 3.\""
+              "code": "Section: vertical border b 1 #333\n  Header: horizontal between padding 12 cursor pointer hover-background #1a1a1a\n    Title: weight 500\n    Icon: icon \"chevron-down\" color #666\n  Content: padding 12 background #1a1a1a\n\n  state collapsed\n    Content hidden\n  state expanded\n    Content visible\n\nBox ver\n  Section\n    Header onclick toggle-state\n      Title \"Section 1\"\n    Content \"Content for section 1. Click header to collapse.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 2\"\n    Content \"Content for section 2.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 3\"\n    Content \"Content for section 3.\"",
+              "expects": {
+                "registry": {
+                  "Section": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -2780,7 +2800,13 @@
             },
             {
               "type": "code",
-              "code": "Star: cursor pointer\n  state empty\n    icon \"star\" color #333 size 24\n  state highlighted\n    icon \"star\" color #F59E0B size 24\n  state selected\n    icon \"star\" color #F59E0B size 24\n\nRating: horizontal gap 4\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before"
+              "code": "Star: cursor pointer\n  state empty\n    icon \"star\" color #333 size 24\n  state highlighted\n    icon \"star\" color #F59E0B size 24\n  state selected\n    icon \"star\" color #F59E0B size 24\n\nRating: horizontal gap 4\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before",
+              "expects": {
+                "registry": {
+                  "Star": {},
+                  "Rating": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -2837,7 +2863,12 @@
             },
             {
               "type": "code",
-              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: background #2271c1 padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter"
+              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: background #2271c1 padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter",
+              "expects": {
+                "registry": {
+                  "Footer": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -2845,7 +2876,12 @@
             },
             {
               "type": "code",
-              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter\n  Save background #10B981  // Target Save specifically"
+              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter\n  Save background #10B981  // Target Save specifically",
+              "expects": {
+                "registry": {
+                  "Footer": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -2853,7 +2889,12 @@
             },
             {
               "type": "code",
-              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: background #2271c1 padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter\n  Cancel hidden  // Only Save is visible"
+              "code": "Footer: padding 16 hor between background #1a1a1a radius 8\n  Button named Save: background #2271c1 padding 8 16 radius 6 \"Save\"\n  Button named Cancel: background #333 padding 8 16 radius 6 \"Cancel\"\n\nFooter\n  Cancel hidden  // Only Save is visible",
+              "expects": {
+                "registry": {
+                  "Footer": {}
+                }
+              }
             }
           ]
         },
@@ -2867,7 +2908,13 @@
             },
             {
               "type": "code",
-              "code": "Input named Email: background #1a1a1a padding 12 radius 8 border 1 #333\n\nCard background #1a1a1a padding 16 radius 8 gap 12\n  Email placeholder \"Type something...\"\n  Text color #888 size 13\n    if Email.value then \"You typed: \" + Email.value else \"Input is empty\"\n  Button padding 8 16 radius 6\n    if Email.value then background #2271c1 else background #333\n    if Email.value then \"Submit\" else \"Enter text first\""
+              "code": "Input named Email: background #1a1a1a padding 12 radius 8 border 1 #333\n\nCard background #1a1a1a padding 16 radius 8 gap 12\n  Email placeholder \"Type something...\"\n  Text color #888 size 13\n    if Email.value then \"You typed: \" + Email.value else \"Input is empty\"\n  Button padding 8 16 radius 6\n    if Email.value then background #2271c1 else background #333\n    if Email.value then \"Submit\" else \"Enter text first\"",
+              "expects": {
+                "nodes": [{
+                  "name": "Card",
+                  "properties": { "background": "#1a1a1a", "padding": 16, "radius": 8, "gap": 12 }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -2901,7 +2948,13 @@
             },
             {
               "type": "code",
-              "code": "Button onclick open SettingsDialog, \"Open Settings\"\n\nSettingsDialog as Dialog: background #1A1A23, padding 24, radius 12, width 400\n  Title size 18, weight 600, \"Settings\"\n  Text \"Configure your preferences here.\"\n  Actions horizontal, gap 8, horizontal-right\n    Button background #333, onclick close, \"Cancel\"\n    Button background #2271c1, onclick close, \"Save\""
+              "code": "Button onclick open SettingsDialog, \"Open Settings\"\n\nSettingsDialog as Dialog: background #1A1A23, padding 24, radius 12, width 400\n  Title size 18, weight 600, \"Settings\"\n  Text \"Configure your preferences here.\"\n  Actions horizontal, gap 8, horizontal-right\n    Button background #333, onclick close, \"Cancel\"\n    Button background #2271c1, onclick close, \"Save\"",
+              "expects": {
+                "nodes": [{
+                  "name": "Button",
+                  "textContent": "Open Settings"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -2924,7 +2977,12 @@
             },
             {
               "type": "code",
-              "code": "Menu as Dropdown:\n  Trigger background #333, padding 8 12, radius 6\n    \"Options ▼\"\n  Content background #1a1a1a, padding 4, radius 8, border 1 #333\n    Item padding 8 12, radius 4, hover-color #333, \"Profile\"\n    Item \"Settings\"\n    Item background #EF4444, \"Logout\"\n\nRow horizontal, gap 8\n  Menu"
+              "code": "Menu as Dropdown:\n  Trigger background #333, padding 8 12, radius 6\n    \"Options ▼\"\n  Content background #1a1a1a, padding 4, radius 8, border 1 #333\n    Item padding 8 12, radius 4, hover-color #333, \"Profile\"\n    Item \"Settings\"\n    Item background #EF4444, \"Logout\"\n\nRow horizontal, gap 8\n  Menu",
+              "expects": {
+                "nodes": [{
+                  "name": "Menu"
+                }]
+              }
             },
             {
               "type": "list",
@@ -2948,7 +3006,12 @@
             },
             {
               "type": "code",
-              "code": "OptionsMenu as Dropdown:\n  Trigger: padding 8 12 background #1A1A23 radius 6 border 1 #333 \"Select option\"\n  Content: vertical background #1A1A23 radius 8 padding 4\n    - Item padding 8 12 radius 4 hover-background #333 \"Profile\"\n    - Item \"Settings\"\n    - Item \"Logout\""
+              "code": "OptionsMenu as Dropdown:\n  Trigger: padding 8 12 background #1A1A23 radius 6 border 1 #333 \"Select option\"\n  Content: vertical background #1A1A23 radius 8 padding 4\n    - Item padding 8 12 radius 4 hover-background #333 \"Profile\"\n    - Item \"Settings\"\n    - Item \"Logout\"",
+              "expects": {
+                "nodes": [{
+                  "name": "OptionsMenu"
+                }]
+              }
             }
           ]
         },
@@ -2962,7 +3025,12 @@
             },
             {
               "type": "code",
-              "code": "HelpTip as Tooltip:\n  Trigger\n    Button icon \"help-circle\" \"?\"\n  Content: padding 8 12 background #333 radius 6 size 12\n    \"Click to get help\""
+              "code": "HelpTip as Tooltip:\n  Trigger\n    Button icon \"help-circle\" \"?\"\n  Content: padding 8 12 background #333 radius 6 size 12\n    \"Click to get help\"",
+              "expects": {
+                "nodes": [{
+                  "name": "HelpTip"
+                }]
+              }
             }
           ]
         },
@@ -2976,7 +3044,12 @@
             },
             {
               "type": "code",
-              "code": "FadeDialog as Dialog: background #1a1a1a padding 24 radius 12 width 250\n  show fade 200\n  Title weight 600 \"Fade Animation\"\n  Button background #333 onclick close \"Close\"\n\nScaleDialog as Dialog: background #1a1a1a padding 24 radius 12 width 250\n  show fade scale 200\n  Title weight 600 \"Scale Animation\"\n  Button background #333 onclick close \"Close\"\n\nRow horizontal gap 8\n  Button background #2271c1 padding 8 16 radius 8 onclick open FadeDialog \"Fade\"\n  Button background #333 padding 8 16 radius 8 onclick open ScaleDialog \"Scale\""
+              "code": "FadeDialog as Dialog: background #1a1a1a padding 24 radius 12 width 250\n  show fade 200\n  Title weight 600 \"Fade Animation\"\n  Button background #333 onclick close \"Close\"\n\nScaleDialog as Dialog: background #1a1a1a padding 24 radius 12 width 250\n  show fade scale 200\n  Title weight 600 \"Scale Animation\"\n  Button background #333 onclick close \"Close\"\n\nRow horizontal gap 8\n  Button background #2271c1 padding 8 16 radius 8 onclick open FadeDialog \"Fade\"\n  Button background #333 padding 8 16 radius 8 onclick open ScaleDialog \"Scale\"",
+              "expects": {
+                "nodes": [{
+                  "name": "FadeDialog"
+                }]
+              }
             },
             {
               "type": "list",
@@ -3012,7 +3085,14 @@
             },
             {
               "type": "code",
-              "code": "Card background #1a1a1a, padding 16, radius 8, gap 12\n  Button background #2271c1, padding 8 16, radius 6, onclick toggle Panel, \"Toggle Panel\"\n  Panel hidden, background #333, padding 16, radius 8\n    show fade slide-up 300\n    hide fade 150\n    Text \"This panel fades and slides!\""
+              "code": "Card background #1a1a1a, padding 16, radius 8, gap 12\n  Button background #2271c1, padding 8 16, radius 6, onclick toggle Panel, \"Toggle Panel\"\n  Panel hidden, background #333, padding 16, radius 8\n    show fade slide-up 300\n    hide fade 150\n    Text \"This panel fades and slides!\"",
+              "expects": {
+                "nodes": [{
+                  "name": "Card",
+                  "properties": { "background": "#1a1a1a", "padding": 16, "radius": 8, "gap": 12 },
+                  "childCount": 2
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3026,7 +3106,14 @@
           "content": [
             {
               "type": "code",
-              "code": "Card background #1a1a1a, padding 16, radius 8, gap 12\n  Button background #333, padding 8 16, radius 6, onclick toggle Box, \"Toggle Animation\"\n  Box hidden, hor, gap 8\n    show fade slide-up 300\n    Tile background #2271c1, 60 60, radius 8, cen, \"fade\"\n    Tile background #10B981, 60 60, radius 8, cen, \"slide\"\n    Tile background #EF4444, 60 60, radius 8, cen, \"scale\""
+              "code": "Card background #1a1a1a, padding 16, radius 8, gap 12\n  Button background #333, padding 8 16, radius 6, onclick toggle Box, \"Toggle Animation\"\n  Box hidden, hor, gap 8\n    show fade slide-up 300\n    Tile background #2271c1, 60 60, radius 8, cen, \"fade\"\n    Tile background #10B981, 60 60, radius 8, cen, \"slide\"\n    Tile background #EF4444, 60 60, radius 8, cen, \"scale\"",
+              "expects": {
+                "nodes": [{
+                  "name": "Card",
+                  "properties": { "background": "#1a1a1a", "padding": 16, "radius": 8, "gap": 12 },
+                  "childCount": 2
+                }]
+              }
             }
           ]
         },
@@ -3040,7 +3127,13 @@
             },
             {
               "type": "code",
-              "code": "Loader 24 24\n  animate spin 1000\n  Icon icon loader"
+              "code": "Loader 24 24\n  animate spin 1000\n  Icon icon loader",
+              "expects": {
+                "nodes": [{
+                  "name": "Loader",
+                  "childCount": 1
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3058,7 +3151,14 @@
             },
             {
               "type": "code",
-              "code": "Card background #1A1A23 padding 16 radius 8\n  Header horizontal between vertical-center onclick toggle Details\n    Title weight 600 \"Click to expand\"\n    Icon icon \"chevron-down\"\n  Details hidden\n    show fade slide-down 200\n    hide fade 150\n    Text padding top 12 \"Here are the details...\""
+              "code": "Card background #1A1A23 padding 16 radius 8\n  Header horizontal between vertical-center onclick toggle Details\n    Title weight 600 \"Click to expand\"\n    Icon icon \"chevron-down\"\n  Details hidden\n    show fade slide-down 200\n    hide fade 150\n    Text padding top 12 \"Here are the details...\"",
+              "expects": {
+                "nodes": [{
+                  "name": "Card",
+                  "properties": { "background": "#1A1A23", "padding": 16, "radius": 8 },
+                  "childCount": 2
+                }]
+              }
             },
             {
               "type": "exercise",
@@ -3084,7 +3184,17 @@
             },
             {
               "type": "code",
-              "code": "$count: 0\n$name: \"World\"\n$isActive: true\n\nCard background #1A1A23, padding 16, radius 8, ver, gap 8\n  Text \"Count: \" + $count\n  Text \"Hello, \" + $name\n  Text if $isActive then \"Active\" else \"Inactive\""
+              "code": "$count: 0\n$name: \"World\"\n$isActive: true\n\nCard background #1A1A23, padding 16, radius 8, ver, gap 8\n  Text \"Count: \" + $count\n  Text \"Hello, \" + $name\n  Text if $isActive then \"Active\" else \"Inactive\"",
+              "expects": {
+                "tokens": {
+                  "$count": { "value": 0 },
+                  "$name": { "value": "World" },
+                  "$isActive": { "value": true }
+                },
+                "nodes": [{
+                  "name": "Card"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3102,7 +3212,17 @@
             },
             {
               "type": "code",
-              "code": "$count: 0\n\nCounter hor, gap 16, vertical-center, background #1A1A23, padding 16, radius 8\n  Button background #333, padding 8 16, radius 6, onclick assign $count to $count - 1, \"-\"\n  Text size 24, weight 600, width 60, align center, $count\n  Button background #2271c1, padding 8 16, radius 6, onclick assign $count to $count + 1, \"+\""
+              "code": "$count: 0\n\nCounter hor, gap 16, vertical-center, background #1A1A23, padding 16, radius 8\n  Button background #333, padding 8 16, radius 6, onclick assign $count to $count - 1, \"-\"\n  Text size 24, weight 600, width 60, align center, $count\n  Button background #2271c1, padding 8 16, radius 6, onclick assign $count to $count + 1, \"+\"",
+              "expects": {
+                "tokens": {
+                  "$count": { "value": 0 }
+                },
+                "nodes": [{
+                  "name": "Counter",
+                  "properties": { "horizontal": true, "gap": 16 },
+                  "childCount": 3
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3120,7 +3240,16 @@
             },
             {
               "type": "code",
-              "code": "$liked: false\n\nLikeButton horizontal gap 8 vertical-center padding 12 16 radius 8 cursor pointer\n  if $liked then background #DC2626 else background #333\n  onclick assign $liked to not $liked\n  Icon icon \"heart\" size 18\n  Text if $liked then \"Liked\" else \"Like\""
+              "code": "$liked: false\n\nLikeButton horizontal gap 8 vertical-center padding 12 16 radius 8 cursor pointer\n  if $liked then background #DC2626 else background #333\n  onclick assign $liked to not $liked\n  Icon icon \"heart\" size 18\n  Text if $liked then \"Liked\" else \"Like\"",
+              "expects": {
+                "tokens": {
+                  "$liked": { "value": false }
+                },
+                "nodes": [{
+                  "name": "LikeButton",
+                  "properties": { "horizontal": true, "gap": 8, "cursor": "pointer" }
+                }]
+              }
             }
           ]
         },
@@ -3134,7 +3263,17 @@
             },
             {
               "type": "code",
-              "code": "$price: 29\n$quantity: 2\n\nCart background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, between\n    Text \"Price:\"\n    Text \"$\" + $price\n  Row horizontal, between\n    Text \"Quantity:\"\n    Row horizontal, gap 8\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity - 1, \"-\"\n      Text width 30, align center, $quantity\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity + 1, \"+\"\n  Divider height 1, background #333\n  Row horizontal, between\n    Text weight 600, \"Total:\"\n    Text weight 600, color #10B981, \"$\" + ($price * $quantity)"
+              "code": "$price: 29\n$quantity: 2\n\nCart background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, between\n    Text \"Price:\"\n    Text \"$\" + $price\n  Row horizontal, between\n    Text \"Quantity:\"\n    Row horizontal, gap 8\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity - 1, \"-\"\n      Text width 30, align center, $quantity\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity + 1, \"+\"\n  Divider height 1, background #333\n  Row horizontal, between\n    Text weight 600, \"Total:\"\n    Text weight 600, color #10B981, \"$\" + ($price * $quantity)",
+              "expects": {
+                "tokens": {
+                  "$price": { "value": 29 },
+                  "$quantity": { "value": 2 }
+                },
+                "nodes": [{
+                  "name": "Cart",
+                  "properties": { "background": "#1A1A23", "padding": 16, "radius": 8 }
+                }]
+              }
             },
             {
               "type": "exercise",
@@ -3164,7 +3303,16 @@
             },
             {
               "type": "code",
-              "code": "$isOnline: true\n\nStatus hor, gap 8, vertical-center, background #1A1A23, padding 12, radius 8\n  Dot width 8, height 8, radius 4\n    if $isOnline then background #10B981 else background #666\n  Text if $isOnline then \"Online\" else \"Offline\"\n  Button background #333, padding 6 12, radius 4, size 12\n    onclick assign $isOnline to not $isOnline\n    \"Toggle\""
+              "code": "$isOnline: true\n\nStatus hor, gap 8, vertical-center, background #1A1A23, padding 12, radius 8\n  Dot width 8, height 8, radius 4\n    if $isOnline then background #10B981 else background #666\n  Text if $isOnline then \"Online\" else \"Offline\"\n  Button background #333, padding 6 12, radius 4, size 12\n    onclick assign $isOnline to not $isOnline\n    \"Toggle\"",
+              "expects": {
+                "tokens": {
+                  "$isOnline": { "value": true }
+                },
+                "nodes": [{
+                  "name": "Status",
+                  "properties": { "horizontal": true, "gap": 8 }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3182,7 +3330,16 @@
             },
             {
               "type": "code",
-              "code": "$loggedIn: false\n\nHeader hor, between, vertical-center, background #1A1A23, padding 16, radius 8\n  Logo weight 600, \"MyApp\"\n  if $loggedIn\n    Row horizontal, gap 12, vertical-center\n      Avatar width 32, height 32, radius 16, background #2271c1\n      Button background #333, padding 8 16, radius 6\n        onclick assign $loggedIn to false\n        \"Logout\"\n  else\n    Button background #2271c1, padding 8 16, radius 6\n      onclick assign $loggedIn to true\n      \"Login\""
+              "code": "$loggedIn: false\n\nHeader hor, between, vertical-center, background #1A1A23, padding 16, radius 8\n  Logo weight 600, \"MyApp\"\n  if $loggedIn\n    Row horizontal, gap 12, vertical-center\n      Avatar width 32, height 32, radius 16, background #2271c1\n      Button background #333, padding 8 16, radius 6\n        onclick assign $loggedIn to false\n        \"Logout\"\n  else\n    Button background #2271c1, padding 8 16, radius 6\n      onclick assign $loggedIn to true\n      \"Login\"",
+              "expects": {
+                "tokens": {
+                  "$loggedIn": { "value": false }
+                },
+                "nodes": [{
+                  "name": "Header",
+                  "properties": { "horizontal": true, "between": true }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3200,7 +3357,17 @@
             },
             {
               "type": "code",
-              "code": "$score: 75\n\nResult background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8, vertical-center\n    Text \"Score:\"\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score - 10, \"-10\"\n    Text weight 600, size 20, $score\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score + 10, \"+10\"\n  Badge padding 8 16, radius 6\n    if $score >= 90 then background #10B981 else if $score >= 70 then background #F59E0B else background #EF4444\n    if $score >= 90 then \"Excellent\" else if $score >= 70 then \"Good\" else \"Needs Work\""
+              "code": "$score: 75\n\nResult background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8, vertical-center\n    Text \"Score:\"\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score - 10, \"-10\"\n    Text weight 600, size 20, $score\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score + 10, \"+10\"\n  Badge padding 8 16, radius 6\n    if $score >= 90 then background #10B981 else if $score >= 70 then background #F59E0B else background #EF4444\n    if $score >= 90 then \"Excellent\" else if $score >= 70 then \"Good\" else \"Needs Work\"",
+              "expects": {
+                "tokens": {
+                  "$score": { "value": 75 }
+                },
+                "nodes": [{
+                  "name": "Result",
+                  "properties": { "background": "#1A1A23", "padding": 16, "radius": 8 },
+                  "childCount": 2
+                }]
+              }
             }
           ]
         },
@@ -3214,7 +3381,17 @@
             },
             {
               "type": "code",
-              "code": "$hasEmail: true\n$hasPassword: false\n\nForm background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasEmail then background #2271c1 else background #333\n      onclick assign $hasEmail to not $hasEmail\n    Text \"Email entered\"\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasPassword then background #2271c1 else background #333\n      onclick assign $hasPassword to not $hasPassword\n    Text \"Password entered\"\n  Button padding 12, radius 6, width full\n    if $hasEmail and $hasPassword then background #2271c1 else background #333\n    if $hasEmail and $hasPassword then \"Submit\" else \"Fill all fields\""
+              "code": "$hasEmail: true\n$hasPassword: false\n\nForm background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasEmail then background #2271c1 else background #333\n      onclick assign $hasEmail to not $hasEmail\n    Text \"Email entered\"\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasPassword then background #2271c1 else background #333\n      onclick assign $hasPassword to not $hasPassword\n    Text \"Password entered\"\n  Button padding 12, radius 6, width full\n    if $hasEmail and $hasPassword then background #2271c1 else background #333\n    if $hasEmail and $hasPassword then \"Submit\" else \"Fill all fields\"",
+              "expects": {
+                "tokens": {
+                  "$hasEmail": { "value": true },
+                  "$hasPassword": { "value": false }
+                },
+                "nodes": [{
+                  "name": "Form",
+                  "properties": { "background": "#1A1A23", "padding": 16, "radius": 8 }
+                }]
+              }
             },
             {
               "type": "exercise",
@@ -3244,7 +3421,12 @@
             },
             {
               "type": "code",
-              "code": "// === DATA TAB ===\nFruit:\n  name: text\n\n- Fruit \"Apple\"\n- Fruit \"Banana\"\n- Fruit \"Cherry\"\n- Fruit \"Date\"\n\n// === LAYOUT TAB ===\nList data Fruits vertical gap 8\n  Item background #1A1A23 padding 12 radius 6\n    Text $item.name"
+              "code": "// === DATA TAB ===\nFruit:\n  name: text\n\n- Fruit \"Apple\"\n- Fruit \"Banana\"\n- Fruit \"Cherry\"\n- Fruit \"Date\"\n\n// === LAYOUT TAB ===\nList data Fruits vertical gap 8\n  Item background #1A1A23 padding 12 radius 6\n    Text $item.name",
+              "expects": {
+                "registry": {
+                  "Fruit": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -3262,7 +3444,12 @@
             },
             {
               "type": "code",
-              "code": "// === DATA TAB ===\nUser:\n  name: text\n  role: text\n  online: boolean\n\n- User \"Alice\", \"Admin\", true\n- User \"Bob\", \"Editor\", true\n- User \"Carol\", \"Viewer\", false\n\n// === LAYOUT TAB ===\nUserList data Users vertical gap 8\n  Card horizontal between vertical-center background #1A1A23 padding 12 radius 8\n    Left horizontal gap 12 vertical-center\n      Status width 8 height 8 radius 4\n        if $item.online then background #10B981 else background #666\n      Name weight 500 $item.name\n    Role color #888 size 13 $item.role"
+              "code": "// === DATA TAB ===\nUser:\n  name: text\n  role: text\n  online: boolean\n\n- User \"Alice\", \"Admin\", true\n- User \"Bob\", \"Editor\", true\n- User \"Carol\", \"Viewer\", false\n\n// === LAYOUT TAB ===\nUserList data Users vertical gap 8\n  Card horizontal between vertical-center background #1A1A23 padding 12 radius 8\n    Left horizontal gap 12 vertical-center\n      Status width 8 height 8 radius 4\n        if $item.online then background #10B981 else background #666\n      Name weight 500 $item.name\n    Role color #888 size 13 $item.role",
+              "expects": {
+                "registry": {
+                  "User": {}
+                }
+              }
             }
           ]
         },
@@ -3276,7 +3463,12 @@
             },
             {
               "type": "code",
-              "code": "// === DATA TAB ===\nMenuItem:\n  name: text\n  category: text\n\n- MenuItem \"Soup\", \"Starters\"\n- MenuItem \"Salad\", \"Starters\"\n- MenuItem \"Bread\", \"Starters\"\n- MenuItem \"Pasta\", \"Mains\"\n- MenuItem \"Steak\", \"Mains\"\n- MenuItem \"Fish\", \"Mains\"\n- MenuItem \"Cake\", \"Desserts\"\n- MenuItem \"Ice Cream\", \"Desserts\"\n\n// === LAYOUT TAB ===\nMenu vertical gap 16\n  Section vertical gap 8\n    Title weight 600 color #2271c1 \"Category Name\"\n    Items data MenuItems vertical gap 4\n      Item background #1A1A23 padding 8 12 radius 6 $item.name"
+              "code": "// === DATA TAB ===\nMenuItem:\n  name: text\n  category: text\n\n- MenuItem \"Soup\", \"Starters\"\n- MenuItem \"Salad\", \"Starters\"\n- MenuItem \"Bread\", \"Starters\"\n- MenuItem \"Pasta\", \"Mains\"\n- MenuItem \"Steak\", \"Mains\"\n- MenuItem \"Fish\", \"Mains\"\n- MenuItem \"Cake\", \"Desserts\"\n- MenuItem \"Ice Cream\", \"Desserts\"\n\n// === LAYOUT TAB ===\nMenu vertical gap 16\n  Section vertical gap 8\n    Title weight 600 color #2271c1 \"Category Name\"\n    Items data MenuItems vertical gap 4\n      Item background #1A1A23 padding 8 12 radius 6 $item.name",
+              "expects": {
+                "registry": {
+                  "MenuItem": {}
+                }
+              }
             }
           ]
         },
@@ -3290,7 +3482,15 @@
             },
             {
               "type": "code",
-              "code": "// === DATA TAB ===\nMenuItem:\n  label: text\n\n- MenuItem \"Dashboard\"\n- MenuItem \"Settings\"\n- MenuItem \"Profile\"\n- MenuItem \"Messages\"\n- MenuItem \"Help\"\n\n// === LAYOUT TAB ===\n$search: \"\"\n\nSearch vertical gap 12 width 250\n  Input background #1A1A23 padding 12 radius 8 border 1 #333\n    placeholder \"Search...\"\n    oninput assign $search to $event.value\n  Results data MenuItems vertical gap 4\n    Item background #1A1A23 padding 8 12 radius 6 $item.label"
+              "code": "// === DATA TAB ===\nMenuItem:\n  label: text\n\n- MenuItem \"Dashboard\"\n- MenuItem \"Settings\"\n- MenuItem \"Profile\"\n- MenuItem \"Messages\"\n- MenuItem \"Help\"\n\n// === LAYOUT TAB ===\n$search: \"\"\n\nSearch vertical gap 12 width 250\n  Input background #1A1A23 padding 12 radius 8 border 1 #333\n    placeholder \"Search...\"\n    oninput assign $search to $event.value\n  Results data MenuItems vertical gap 4\n    Item background #1A1A23 padding 8 12 radius 6 $item.label",
+              "expects": {
+                "registry": {
+                  "MenuItem": {}
+                },
+                "tokens": {
+                  "$search": { "value": "" }
+                }
+              }
             }
           ]
         },
@@ -3304,7 +3504,15 @@
             },
             {
               "type": "code",
-              "code": "// === DATA TAB ===\nTask:\n  title: text\n  done: boolean\n\n- Task \"Design mockup\" true\n- Task \"Build prototype\" false\n- Task \"User testing\" false\n- Task \"Write docs\" true\n\n// === LAYOUT TAB ===\n$showDone: true\n\nTaskList vertical gap 12\n  Row horizontal gap 8 vertical-center\n    Checkbox width 18 height 18 radius 4 cursor pointer\n      if $showDone then background #2271c1 else background #333\n      onclick assign $showDone to not $showDone\n    Text size 13 color #888 \"Show completed\"\n  Tasks data Tasks vertical gap 8\n    if $showDone or not $item.done\n      TaskRow horizontal gap 12 vertical-center background #1A1A23 padding 12 radius 8\n        Icon if $item.done then color #10B981 else color #333\n          icon if $item.done then \"check-circle\" else \"circle\"\n        Text if $item.done then color #666 else color white $item.title"
+              "code": "// === DATA TAB ===\nTask:\n  title: text\n  done: boolean\n\n- Task \"Design mockup\" true\n- Task \"Build prototype\" false\n- Task \"User testing\" false\n- Task \"Write docs\" true\n\n// === LAYOUT TAB ===\n$showDone: true\n\nTaskList vertical gap 12\n  Row horizontal gap 8 vertical-center\n    Checkbox width 18 height 18 radius 4 cursor pointer\n      if $showDone then background #2271c1 else background #333\n      onclick assign $showDone to not $showDone\n    Text size 13 color #888 \"Show completed\"\n  Tasks data Tasks vertical gap 8\n    if $showDone or not $item.done\n      TaskRow horizontal gap 12 vertical-center background #1A1A23 padding 12 radius 8\n        Icon if $item.done then color #10B981 else color #333\n          icon if $item.done then \"check-circle\" else \"circle\"\n        Text if $item.done then color #666 else color white $item.title",
+              "expects": {
+                "registry": {
+                  "Task": {}
+                },
+                "tokens": {
+                  "$showDone": { "value": true }
+                }
+              }
             },
             {
               "type": "exercise",
@@ -3334,7 +3542,13 @@
             },
             {
               "type": "code",
-              "code": "// In the Data tab:\nTask:\n  title: text\n  done: boolean\n  priority: number\n\nCategory:\n  name: text\n  color: text"
+              "code": "// In the Data tab:\nTask:\n  title: text\n  done: boolean\n  priority: number\n\nCategory:\n  name: text\n  color: text",
+              "expects": {
+                "registry": {
+                  "Task": {},
+                  "Category": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -3352,7 +3566,12 @@
             },
             {
               "type": "code",
-              "code": "// Schema\nCategory:\n  name: text\n  color: text\n\n// Instances (values in field order, comma-separated)\n- Category \"Arbeit\", \"#3B82F6\"\n- Category \"Privat\", \"#10B981\"\n- Category \"Dringend\", \"#EF4444\""
+              "code": "// Schema\nCategory:\n  name: text\n  color: text\n\n// Instances (values in field order, comma-separated)\n- Category \"Arbeit\", \"#3B82F6\"\n- Category \"Privat\", \"#10B981\"\n- Category \"Dringend\", \"#EF4444\"",
+              "expects": {
+                "registry": {
+                  "Category": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -3360,7 +3579,12 @@
             },
             {
               "type": "code",
-              "code": "Task:\n  title: text\n  done: boolean\n  priority: number\n\n// Instances: title, done, priority (comma-separated)\n- Task \"Einkaufen\", false, 1\n- Task \"Sport machen\", true, 2\n- Task \"Meeting vorbereiten\", false, 3"
+              "code": "Task:\n  title: text\n  done: boolean\n  priority: number\n\n// Instances: title, done, priority (comma-separated)\n- Task \"Einkaufen\", false, 1\n- Task \"Sport machen\", true, 2\n- Task \"Meeting vorbereiten\", false, 3",
+              "expects": {
+                "registry": {
+                  "Task": {}
+                }
+              }
             }
           ]
         },
@@ -3374,7 +3598,13 @@
             },
             {
               "type": "code",
-              "code": "Category:\n  name: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category    // Reference to Category type\n\n// Categories\n- Category \"Arbeit\"\n- Category \"Privat\"\n\n// Tasks referencing categories by index (comma-separated)\n- Task \"Email schreiben\", false, Category[0]    // References \"Arbeit\"\n- Task \"Joggen gehen\", true, Category[1]        // References \"Privat\"\n- Task \"Report erstellen\", false, Category[0]   // References \"Arbeit\""
+              "code": "Category:\n  name: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category    // Reference to Category type\n\n// Categories\n- Category \"Arbeit\"\n- Category \"Privat\"\n\n// Tasks referencing categories by index (comma-separated)\n- Task \"Email schreiben\", false, Category[0]    // References \"Arbeit\"\n- Task \"Joggen gehen\", true, Category[1]        // References \"Privat\"\n- Task \"Report erstellen\", false, Category[0]   // References \"Arbeit\"",
+              "expects": {
+                "registry": {
+                  "Category": {},
+                  "Task": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -3392,7 +3622,12 @@
             },
             {
               "type": "code",
-              "code": "// In Data tab:\nTask:\n  title: text\n  done: boolean\n\n- Task \"Buy groceries\", false\n- Task \"Call mom\", true\n\n// In Layout tab:\nTaskList data Tasks ver gap 8\n  Card padding 12 radius 8\n    // Each Card repeats for each Task record"
+              "code": "// In Data tab:\nTask:\n  title: text\n  done: boolean\n\n- Task \"Buy groceries\", false\n- Task \"Call mom\", true\n\n// In Layout tab:\nTaskList data Tasks ver gap 8\n  Card padding 12 radius 8\n    // Each Card repeats for each Task record",
+              "expects": {
+                "registry": {
+                  "Task": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -3410,11 +3645,23 @@
             },
             {
               "type": "code",
-              "code": "// ===== DATA TAB =====\n\n// Schema definitions\nCategory:\n  name: text\n  icon: text\n  color: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category\n\n// Category instances\n- Category \"Work\", \"briefcase\", \"#3B82F6\"\n- Category \"Personal\", \"user\", \"#10B981\"\n- Category \"Urgent\", \"alert-circle\", \"#EF4444\"\n\n// Task instances\n- Task \"Prepare presentation\", false, Category[0]\n- Task \"Buy birthday gift\", false, Category[1]\n- Task \"Fix critical bug\", false, Category[2]\n- Task \"Morning workout\", true, Category[1]\n- Task \"Team meeting\", true, Category[0]"
+              "code": "// ===== DATA TAB =====\n\n// Schema definitions\nCategory:\n  name: text\n  icon: text\n  color: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category\n\n// Category instances\n- Category \"Work\", \"briefcase\", \"#3B82F6\"\n- Category \"Personal\", \"user\", \"#10B981\"\n- Category \"Urgent\", \"alert-circle\", \"#EF4444\"\n\n// Task instances\n- Task \"Prepare presentation\", false, Category[0]\n- Task \"Buy birthday gift\", false, Category[1]\n- Task \"Fix critical bug\", false, Category[2]\n- Task \"Morning workout\", true, Category[1]\n- Task \"Team meeting\", true, Category[0]",
+              "expects": {
+                "registry": {
+                  "Category": {},
+                  "Task": {}
+                }
+              }
             },
             {
               "type": "code",
-              "code": "// ===== LAYOUT TAB =====\n\n// The container repeats for each Task record\nTaskList data Tasks vertical gap 8 padding 16\n  Card horizontal between vertical-center background #1A1A23 padding 12 radius 8\n    Left horizontal gap 12 vertical-center\n      Icon icon \"file-text\"\n      Title \"Task item\"\n    Status\n      Icon icon \"circle\" color #333"
+              "code": "// ===== LAYOUT TAB =====\n\n// The container repeats for each Task record\nTaskList data Tasks vertical gap 8 padding 16\n  Card horizontal between vertical-center background #1A1A23 padding 12 radius 8\n    Left horizontal gap 12 vertical-center\n      Icon icon \"file-text\"\n      Title \"Task item\"\n    Status\n      Icon icon \"circle\" color #333",
+              "expects": {
+                "nodes": [{
+                  "name": "TaskList",
+                  "properties": { "vertical": true, "gap": 8, "padding": 16 }
+                }]
+              }
             }
           ]
         },
@@ -3462,7 +3709,16 @@
             },
             {
               "type": "code",
-              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item onhover highlight self, \"Dashboard\"\n  Item onhover highlight self, \"Settings\"\n  Item onhover highlight self, \"Profile\""
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item onhover highlight self, \"Dashboard\"\n  Item onhover highlight self, \"Settings\"\n  Item onhover highlight self, \"Profile\"",
+              "expects": {
+                "registry": {
+                  "Item": {}
+                },
+                "nodes": [{
+                  "name": "Menu",
+                  "properties": { "vertical": true, "gap": 2 }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3480,7 +3736,16 @@
             },
             {
               "type": "code",
-              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  Item \"Dashboard\"\n  Item \"Settings\"\n  Item \"Profile\"\n  Item \"Logout\""
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  Item \"Dashboard\"\n  Item \"Settings\"\n  Item \"Profile\"\n  Item \"Logout\"",
+              "expects": {
+                "registry": {
+                  "Item": {}
+                },
+                "nodes": [{
+                  "name": "Menu",
+                  "properties": { "vertical": true, "gap": 2 }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3498,7 +3763,17 @@
             },
             {
               "type": "code",
-              "code": "Trigger: background #2271c1, padding 12 16, radius 8, cursor pointer\n  onclick toggle Dropdown\n\nDropdown: ver, background #1A1A23, padding 8, radius 8, width 180, hidden, shadow lg\n  onclick-outside close self\n  Item: padding 10 14, radius 6, cursor pointer, hover-background #333\n\nBox ver, gap 8\n  Trigger \"Open Menu\"\n  Dropdown\n    Item \"Edit\"\n    Item \"Duplicate\"\n    Item color #EF4444, \"Delete\""
+              "code": "Trigger: background #2271c1, padding 12 16, radius 8, cursor pointer\n  onclick toggle Dropdown\n\nDropdown: ver, background #1A1A23, padding 8, radius 8, width 180, hidden, shadow lg\n  onclick-outside close self\n  Item: padding 10 14, radius 6, cursor pointer, hover-background #333\n\nBox ver, gap 8\n  Trigger \"Open Menu\"\n  Dropdown\n    Item \"Edit\"\n    Item \"Duplicate\"\n    Item color #EF4444, \"Delete\"",
+              "expects": {
+                "registry": {
+                  "Trigger": {},
+                  "Dropdown": {}
+                },
+                "nodes": [{
+                  "name": "Box",
+                  "properties": { "vertical": true, "gap": 8 }
+                }]
+              }
             }
           ]
         },
@@ -3512,7 +3787,16 @@
             },
             {
               "type": "code",
-              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self\n  onhover highlight self\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item \"Option A\"\n  Item \"Option B\"\n  Item \"Option C\""
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self\n  onhover highlight self\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item \"Option A\"\n  Item \"Option B\"\n  Item \"Option C\"",
+              "expects": {
+                "registry": {
+                  "Item": {}
+                },
+                "nodes": [{
+                  "name": "Menu",
+                  "properties": { "vertical": true, "gap": 2 }
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3530,7 +3814,19 @@
             },
             {
               "type": "code",
-              "code": "// The trigger button\nTrigger: background #1A1A23 padding 12 16 radius 8 border 1 #333 horizontal between vertical-center width 200 cursor pointer\n  onclick toggle Dropdown\n  Text \"Select option...\"\n  Icon icon \"chevron-down\" size 14 color #888\n\n// Menu items with three states\nItem: padding 10 14 radius 6 cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self, close Dropdown\n  onhover highlight self\n\n// The dropdown with keyboard support\nDropdown: vertical background #1A1A23 padding 6 radius 8 width 200 hidden shadow lg border 1 #333\n  onclick-outside close self\n  onkeydown escape close self\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  onkeydown enter select highlighted, close self\n\n// Usage\nSelect vertical gap 4\n  Trigger\n  Dropdown\n    Item icon \"home\" \"Dashboard\"\n    Item icon \"user\" \"Profile\"\n    Item icon \"settings\" \"Settings\"\n    Item icon \"log-out\" color #EF4444 \"Logout\""
+              "code": "// The trigger button\nTrigger: background #1A1A23 padding 12 16 radius 8 border 1 #333 horizontal between vertical-center width 200 cursor pointer\n  onclick toggle Dropdown\n  Text \"Select option...\"\n  Icon icon \"chevron-down\" size 14 color #888\n\n// Menu items with three states\nItem: padding 10 14 radius 6 cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self, close Dropdown\n  onhover highlight self\n\n// The dropdown with keyboard support\nDropdown: vertical background #1A1A23 padding 6 radius 8 width 200 hidden shadow lg border 1 #333\n  onclick-outside close self\n  onkeydown escape close self\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  onkeydown enter select highlighted, close self\n\n// Usage\nSelect vertical gap 4\n  Trigger\n  Dropdown\n    Item icon \"home\" \"Dashboard\"\n    Item icon \"user\" \"Profile\"\n    Item icon \"settings\" \"Settings\"\n    Item icon \"log-out\" color #EF4444 \"Logout\"",
+              "expects": {
+                "registry": {
+                  "Trigger": {},
+                  "Item": {},
+                  "Dropdown": {}
+                },
+                "nodes": [{
+                  "name": "Select",
+                  "properties": { "vertical": true, "gap": 4 },
+                  "childCount": 2
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -3548,7 +3844,21 @@
             },
             {
               "type": "code",
-              "code": "// === COMPONENTS ===\nInput Email: placeholder \"Email\", padding 12, radius 8, background #1A1A23, border 1 #333\nInput Password: placeholder \"Password\", type password, padding 12, radius 8, background #1A1A23, border 1 #333\nError: color #EF4444, size 13\nButton Submit: background #2271c1, padding 12, radius 8, \"Login\"\n\n$error: \"\"\n\n// === LAYOUT ===\nLoginForm ver, gap 12, padding 24, background #0F0F14, radius 12, width 280\n  Input Email\n  Input Password\n  if $error\n    Error $error\n  Button Submit\n\n// === BEHAVIOR ===\nevents\n  Email onchange\n    assign $error to \"\"\n  Password onchange\n    assign $error to \"\"\n  Submit onclick\n    if Email.value and Password.value\n      assign $error to \"\"\n      Submit.label = \"Success!\"\n    else\n      assign $error to \"Please fill all fields\""
+              "code": "// === COMPONENTS ===\nInput Email: placeholder \"Email\", padding 12, radius 8, background #1A1A23, border 1 #333\nInput Password: placeholder \"Password\", type password, padding 12, radius 8, background #1A1A23, border 1 #333\nError: color #EF4444, size 13\nButton Submit: background #2271c1, padding 12, radius 8, \"Login\"\n\n$error: \"\"\n\n// === LAYOUT ===\nLoginForm ver, gap 12, padding 24, background #0F0F14, radius 12, width 280\n  Input Email\n  Input Password\n  if $error\n    Error $error\n  Button Submit\n\n// === BEHAVIOR ===\nevents\n  Email onchange\n    assign $error to \"\"\n  Password onchange\n    assign $error to \"\"\n  Submit onclick\n    if Email.value and Password.value\n      assign $error to \"\"\n      Submit.label = \"Success!\"\n    else\n      assign $error to \"Please fill all fields\"",
+              "expects": {
+                "registry": {
+                  "Email": {},
+                  "Password": {},
+                  "Error": {},
+                  "Submit": {}
+                },
+                "tokens": {
+                  "$error": { "value": "" }
+                },
+                "nodes": [{
+                  "name": "LoginForm"
+                }]
+              }
             },
             {
               "type": "paragraph",

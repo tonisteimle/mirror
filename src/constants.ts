@@ -48,6 +48,7 @@ export const STORAGE_KEYS = {
   AI_MODE: 'mirror-ai-mode',
   NL_MODE: 'mirror-nl-mode',
   PICKER_MODE: 'mirror-picker-mode',
+  DEEP_THINKING_MODE: 'mirror-deep-thinking-mode',
 } as const
 
 // Editor Tabs

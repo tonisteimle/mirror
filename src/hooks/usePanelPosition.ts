@@ -2,7 +2,7 @@
  * usePanelPosition Hook
  *
  * Shared utility for calculating panel positions relative to editor cursor.
- * Used by useColorPanel, useAiPanel, and usePickerState.
+ * Used by useColorPanel and usePickerState.
  */
 
 import { useCallback } from 'react'

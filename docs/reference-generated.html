@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Referenz</title>
+  <style>
+    /* ==========================================================================
+       CSS Variables
+       ========================================================================== */
+    :root {
+      /* Colors */
+      --color-bg: #111;
+      --color-bg-darker: #0a0a0a;
+      --color-surface: #1a1a1a;
+      --color-border: #222;
+
+      --color-text: #999;
+      --color-text-muted: #555;
+      --color-text-light: #888;
+      --color-text-bright: #bbb;
+      --color-text-heading: #ccc;
+      --color-text-title: #eee;
+
+      --color-accent: #3B82F6;
+      --color-accent-light: #60A5FA;
+      --color-info-bg: #1a2744;
+
+      /* Syntax */
+      --syntax-comment: #555;
+      --syntax-component: #7a7;
+      --syntax-property: #888;
+      --syntax-value: #b96;
+      --syntax-string: #a88;
+      --syntax-keyword: #88a;
+      --syntax-token: #8aa;
+
+      /* Spacing */
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 24px;
+      --space-2xl: 32px;
+      --space-3xl: 48px;
+      --space-4xl: 64px;
+
+      /* Typography */
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Consolas', monospace;
+
+      /* Layout */
+      --content-width: 720px;
+      --text-width: 480px;
+    }
+
+    /* ==========================================================================
+       Base & Reset
+       ========================================================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.7;
+      padding: var(--space-3xl) var(--space-xl);
+      font-size: 14px;
+    }
+
+    a { color: inherit; }
+
+    .container {
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+
+    /* ==========================================================================
+       Typography
+       ========================================================================== */
+    h1 {
+      font-size: 48px;
+      font-weight: 400;
+      color: var(--color-text-title);
+      margin-bottom: var(--space-sm);
+      letter-spacing: -1px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--color-text-heading);
+      margin: var(--space-2xl) 0 var(--space-md);
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text-bright);
+      margin: var(--space-2xl) 0 var(--space-md);
+    }
+
+    h4 {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-light);
+      margin: var(--space-xl) 0 var(--space-sm);
+    }
+
+    p {
+      margin-bottom: var(--space-md);
+      max-width: var(--text-width);
+    }
+
+    .subtitle {
+      margin-bottom: var(--space-3xl);
+    }
+
+    .section {
+      margin-bottom: var(--space-2xl);
+    }
+
+    .section-number { display: none; }
+
+    /* ==========================================================================
+       Code & Syntax Highlighting
+       ========================================================================== */
+    pre, code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    pre {
+      background: var(--color-bg-darker);
+      border: 1px solid var(--color-border);
+      padding: var(--space-lg);
+      overflow-x: auto;
+      margin: var(--space-lg) 0;
+      line-height: 1.6;
+    }
+
+    .inline-code {
+      background: var(--color-surface);
+      padding: 2px 6px;
+    }
+
+    /* Syntax colors */
+    .comment { color: var(--syntax-comment); }
+    .component { color: var(--syntax-component); }
+    .property { color: var(--syntax-property); }
+    .value { color: var(--syntax-value); }
+    .string { color: var(--syntax-string); }
+    .keyword { color: var(--syntax-keyword); }
+    .token { color: var(--syntax-token); }
+
+    /* ==========================================================================
+       Tables
+       ========================================================================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--space-lg) 0;
+    }
+
+    th, td {
+      padding: var(--space-sm) var(--space-md);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    th {
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td code {
+      background: var(--color-surface);
+      padding: 1px 4px;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* ==========================================================================
+       Components
+       ========================================================================== */
+    .label {
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 6px;
+    }
+
+    .highlight-box {
+      border-left: 2px solid #333;
+      padding-left: var(--space-lg);
+      margin: 20px 0;
+    }
+
+    .highlight-box p { margin: 0; }
+
+    .info-box {
+      background: var(--color-info-bg);
+      border-left: 4px solid var(--color-accent);
+      padding: var(--space-lg) 20px;
+      margin: var(--space-lg) 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .info-box strong { color: var(--color-accent-light); }
+
+    .slots-states {
+      display: flex;
+      gap: var(--space-lg);
+      margin: var(--space-md) 0;
+      flex-wrap: wrap;
+    }
+
+    .slots-states-item strong { margin-right: 4px; }
+    .slots-states-item span { color: var(--syntax-component); }
+
+    .divider { display: none; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+      margin: var(--space-lg) 0;
+      align-items: stretch;
+    }
+
+    .grid pre { margin: 0; height: 100%; }
+
+    /* ==========================================================================
+       Quick Reference
+       ========================================================================== */
+    .quick-ref {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .quick-ref-category {
+      color: var(--color-text-light);
+      display: inline-block;
+      min-width: 100px;
+    }
+
+    .quick-ref-items {
+      color: var(--color-text);
+    }
+
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    .footer {
+      margin-top: var(--space-4xl);
+      padding-top: var(--space-xl);
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* ==========================================================================
+       Responsive
+       ========================================================================== */
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+
+      body { padding: var(--space-xl) var(--space-lg); }
+
+      h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mirror DSL Referenz</h1>
+    <p class="subtitle">Basierend auf Parser-Implementierung - Stand Februar 2026</p>
+
+    <div class="info-box" style="margin: 24px 0;">
+      undefined
+    </div>
+
+    <!-- SECTION 1 -->
+    <section class="section">
+      <h2>Grundlagen</h2>
+      <h3>Syntax-Übersicht</h3>
+      <p>Mirror DSL ist eine deklarative Sprache für UI-Prototyping. Jede Zeile beschreibt eine Komponente mit Properties.</p>
+
+      <pre><span class="component">ComponentName</span> <span class="property">property</span> <span class="value">value</span> <span class="property">property</span> <span class="value">value</span> <span class="string">"Text"</span></pre>
+
+      <div class="highlight-box"><p><strong>Wichtig:</strong> Text-Inhalte müssen IMMER am Ende der Zeile stehen, in Anführungszeichen.</p></div>
+
+      <h3>Einrückung = Hierarchie</h3>
+      <p>2 Leerzeichen = Kind-Element</p>
+
+      <pre><span class="component">Parent</span>
+  <span class="component">Child</span>
+    <span class="component">GrandChild</span></pre>
+
+      <h3>Kommentare</h3>
+      <pre><span class="comment">// Kommentar auf eigener Zeile</span>
+<span class="component">Button</span> <span class="string">"Click"</span> <span class="comment">// Inline-Kommentar</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 2 -->
+    <section class="section">
+      <h2>Properties</h2>
+      <h3>Layout</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>horizontal</code></td><td><code>hor</code></td><td>Horizontales Layout (row)</td><td><code>hor</code></td></tr>
+        <tr><td><code>vertical</code></td><td><code>ver</code></td><td>Vertikales Layout (column, default)</td><td><code>ver</code></td></tr>
+        <tr><td><code>gap</code></td><td></td><td>Abstand zwischen Kindern</td><td><code>gap 16</code></td></tr>
+        <tr><td><code>between</code></td><td></td><td>Space-between Distribution</td><td><code>between</code></td></tr>
+        <tr><td><code>wrap</code></td><td></td><td>Flex-Wrap erlauben</td><td><code>wrap</code></td></tr>
+        <tr><td><code>grow</code></td><td><code>fill</code></td><td>Flex-Grow</td><td><code>grow</code></td></tr>
+        <tr><td><code>shrink</code></td><td></td><td>Flex-Shrink</td><td><code>shrink 0</code></td></tr>
+        <tr><td><code>stacked</code></td><td></td><td>Kinder übereinander (z-layers)</td><td><code>stacked</code></td></tr>
+        <tr><td><code>grid</code></td><td></td><td>Grid-Layout</td><td><code>grid 3</code>, <code>grid auto 250</code></td></tr>
+      </table>
+
+      <h3>Ausrichtung</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th></tr>
+        <tr><td><code>horizontal-left</code></td><td><code>hor-l</code></td><td>Links ausrichten</td></tr>
+        <tr><td><code>horizontal-center</code></td><td><code>hor-cen</code></td><td>Horizontal zentrieren</td></tr>
+        <tr><td><code>horizontal-right</code></td><td><code>hor-r</code></td><td>Rechts ausrichten</td></tr>
+        <tr><td><code>vertical-top</code></td><td><code>ver-t</code></td><td>Oben ausrichten</td></tr>
+        <tr><td><code>vertical-center</code></td><td><code>ver-cen</code></td><td>Vertikal zentrieren</td></tr>
+        <tr><td><code>vertical-bottom</code></td><td><code>ver-b</code></td><td>Unten ausrichten</td></tr>
+        <tr><td><code>center</code></td><td><code>cen</code></td><td>Beide Achsen zentrieren</td></tr>
+      </table>
+
+      <div class="highlight-box"><p><strong>Kontext-abhängig:</strong> In <code>ver</code>-Layout ist <code>hor-cen</code> = alignItems:center. In <code>hor</code>-Layout ist <code>hor-cen</code> = justifyContent:center.</p></div>
+
+      <h3>Größe</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>width</code></td><td><code>w</code></td><td>Breite</td><td><code>w 200</code>, <code>w 50%</code>, <code>w full</code></td></tr>
+        <tr><td><code>height</code></td><td><code>h</code></td><td>Höhe</td><td><code>h 100</code></td></tr>
+        <tr><td><code>min-width</code></td><td><code>minw</code></td><td>Minimale Breite</td><td><code>minw 100</code></td></tr>
+        <tr><td><code>max-width</code></td><td><code>maxw</code></td><td>Maximale Breite</td><td><code>maxw 500</code></td></tr>
+        <tr><td><code>min-height</code></td><td><code>minh</code></td><td>Minimale Höhe</td><td><code>minh 50</code></td></tr>
+        <tr><td><code>max-height</code></td><td><code>maxh</code></td><td>Maximale Höhe</td><td><code>maxh 300</code></td></tr>
+        <tr><td><code>full</code></td><td></td><td>100% beide Dimensionen</td><td><code>full</code></td></tr>
+      </table>
+
+      <p><strong>Dimension-Shorthand:</strong> Erste 1-2 Zahlen nach Komponenten-Name = width [height]</p>
+
+      <pre><span class="component">Box</span> <span class="value">300</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">16</span>   <span class="comment">// width:300, height:200, padding:16</span>
+<span class="component">Card</span> <span class="value">200</span> <span class="property">padding</span> <span class="value">8</span>          <span class="comment">// width:200, padding:8</span></pre>
+
+      <h3>Abstände</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th></tr>
+        <tr><td><code>padding</code></td><td><code>pad</code></td><td>Innenabstand</td></tr>
+        <tr><td><code>margin</code></td><td><code>mar</code></td><td>Außenabstand</td></tr>
+      </table>
+
+      <p><strong>Wert-Varianten:</strong></p>
+
+      <pre><span class="property">padding</span> <span class="value">16</span>              <span class="comment">// Alle Seiten</span>
+<span class="property">padding</span> <span class="value">16</span> <span class="value">8</span>           <span class="comment">// Vertikal Horizontal</span>
+<span class="property">padding</span> <span class="value">16</span> <span class="value">12</span> <span class="value">8</span> <span class="value">4</span>      <span class="comment">// Top Right Bottom Left</span>
+<span class="property">padding</span> <span class="value">left</span> <span class="value">16</span>         <span class="comment">// Nur links (auch: l)</span>
+<span class="property">padding</span> <span class="value">left-right</span> <span class="value">16</span>   <span class="comment">// Links und rechts (auch: l-r)</span>
+<span class="property">padding</span> <span class="value">top-bottom</span> <span class="value">8</span>   <span class="comment">// Oben und unten (auch: u-d, t-b)</span></pre>
+
+      <h3>Farben</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th></tr>
+        <tr><td><code>background</code></td><td><code>bg</code></td><td>Hintergrundfarbe</td></tr>
+        <tr><td><code>color</code></td><td><code>col</code></td><td>Textfarbe</td></tr>
+        <tr><td><code>border-color</code></td><td><code>boc</code></td><td>Rahmenfarbe</td></tr>
+      </table>
+
+      <div class="highlight-box"><p><strong>Wichtig:</strong> Farben brauchen IMMER einen Property-Namen. <code>#FF0000</code> allein funktioniert NICHT.</p></div>
+
+      <pre><span class="comment">// RICHTIG:</span>
+<span class="component">Button</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">color</span> <span class="value">#FFFFFF</span> <span class="string">"Click"</span>
+
+<span class="comment">// FALSCH (funktioniert nicht):</span>
+<span class="component">Button</span> <span class="value">#3B82F6</span> <span class="string">"Click"</span></pre>
+
+      <p><strong>Formate:</strong> <code>#RGB</code>, <code>#RRGGBB</code>, <code>#RRGGBBAA</code> (mit Alpha)</p>
+
+      <h3>Rahmen & Radius</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>border</code></td><td><code>bor</code></td><td>Rahmenbreite (optional style, color)</td><td><code>border 1</code>, <code>border 2 dashed #333</code></td></tr>
+        <tr><td><code>radius</code></td><td><code>rad</code></td><td>Eckenradius</td><td><code>radius 8</code>, <code>radius 8 8 0 0</code></td></tr>
+      </table>
+
+      <pre><span class="property">border</span> <span class="value">1</span>                   <span class="comment">// 1px solid</span>
+<span class="property">border</span> <span class="value">2</span> <span class="value">dashed</span> <span class="value">#3B82F6</span>   <span class="comment">// 2px dashed #3B82F6</span>
+<span class="property">border</span> <span class="value">left</span> <span class="value">1</span> <span class="value">#333</span>        <span class="comment">// Nur links</span></pre>
+
+      <h3>Typografie</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>size</code></td><td>Schriftgröße (px)</td><td><code>size 14</code></td></tr>
+        <tr><td><code>weight</code></td><td>Schriftstärke</td><td><code>weight 600</code>, <code>weight bold</code></td></tr>
+        <tr><td><code>font</code></td><td>Schriftfamilie</td><td><code>font "Inter"</code></td></tr>
+        <tr><td><code>line</code></td><td>Zeilenhöhe</td><td><code>line 1.5</code></td></tr>
+        <tr><td><code>align</code></td><td>Textausrichtung</td><td><code>align center</code></td></tr>
+        <tr><td><code>italic</code></td><td>Kursiv</td><td><code>italic</code></td></tr>
+        <tr><td><code>underline</code></td><td>Unterstrichen</td><td><code>underline</code></td></tr>
+        <tr><td><code>uppercase</code></td><td>Großbuchstaben</td><td><code>uppercase</code></td></tr>
+        <tr><td><code>lowercase</code></td><td>Kleinbuchstaben</td><td><code>lowercase</code></td></tr>
+        <tr><td><code>truncate</code></td><td>Text abschneiden mit Ellipse</td><td><code>truncate</code></td></tr>
+      </table>
+
+      <h3>Visuelle Eigenschaften</h3>
+      <table>
+        <tr><th>Property</th><th>Kurzform</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>opacity</code></td><td><code>opa</code></td><td>Transparenz (0-1)</td><td><code>opacity 0.5</code></td></tr>
+        <tr><td><code>shadow</code></td><td></td><td>Box-Schatten</td><td><code>shadow sm</code>, <code>shadow md</code>, <code>shadow lg</code></td></tr>
+        <tr><td><code>cursor</code></td><td></td><td>Mauszeiger</td><td><code>cursor pointer</code></td></tr>
+        <tr><td><code>z</code></td><td></td><td>Z-Index</td><td><code>z 100</code></td></tr>
+        <tr><td><code>hidden</code></td><td></td><td>Element verstecken</td><td><code>hidden</code></td></tr>
+        <tr><td><code>visible</code></td><td></td><td>Sichtbarkeit</td><td><code>visible true</code></td></tr>
+        <tr><td><code>disabled</code></td><td></td><td>Element deaktivieren</td><td><code>disabled</code></td></tr>
+      </table>
+
+      <div class="highlight-box"><p><strong>Opacity:</strong> Werte von 0 (vollständig transparent) bis 1 (vollständig sichtbar). NICHT 0-100!</p></div>
+
+      <h3>Scroll & Overflow</h3>
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>scroll</code> / <code>scroll-ver</code></td><td>Vertikaler Scroll</td></tr>
+        <tr><td><code>scroll-hor</code></td><td>Horizontaler Scroll</td></tr>
+        <tr><td><code>scroll-both</code></td><td>Beide Richtungen</td></tr>
+        <tr><td><code>snap</code></td><td>Scroll-Snap</td></tr>
+        <tr><td><code>clip</code></td><td>Overflow hidden</td></tr>
+      </table>
+
+      <h3>Icons</h3>
+      <p>Lucide Icons (<a href="https://lucide.dev/icons">lucide.dev/icons</a>)</p>
+
+      <pre><span class="component">Box</span> <span class="property">icon</span> <span class="string">"search"</span>
+<span class="component">Box</span> <span class="property">icon</span> <span class="string">"user"</span> <span class="property">size</span> <span class="value">20</span>
+<span class="component">Box</span> <span class="property">icon</span> <span class="string">"arrow-right"</span></pre>
+
+      <h3>Hover-Properties</h3>
+      <p>Shorthand für Hover-Effekte ohne expliziten State-Block:</p>
+
+      <table>
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>hover-background</code> / <code>hover-bg</code></td><td>Hintergrundfarbe bei Hover</td></tr>
+        <tr><td><code>hover-color</code> / <code>hover-col</code></td><td>Textfarbe bei Hover</td></tr>
+        <tr><td><code>hover-border-color</code> / <code>hover-boc</code></td><td>Rahmenfarbe bei Hover</td></tr>
+        <tr><td><code>hover-border</code> / <code>hover-bor</code></td><td>Rahmenbreite bei Hover</td></tr>
+        <tr><td><code>hover-radius</code> / <code>hover-rad</code></td><td>Eckenradius bei Hover</td></tr>
+        <tr><td><code>hover-opacity</code> / <code>hover-opa</code></td><td>Transparenz bei Hover</td></tr>
+        <tr><td><code>hover-scale</code></td><td>Skalierung bei Hover</td></tr>
+      </table>
+
+      <pre><span class="component">Button</span> <span class="property">background</span> <span class="value">#333</span> <span class="property">hover-background</span> <span class="value">#3B82F6</span> <span class="property">hover-scale</span> <span class="value">1.02</span> <span class="string">"Hover me"</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 3 -->
+    <section class="section">
+      <h2>Komponenten</h2>
+      <h3>Definition (mit Doppelpunkt)</h3>
+      <p>Doppelpunkt <code>:</code> am Ende = Definition. Wird NICHT gerendert.</p>
+
+      <pre><span class="comment">// Definition (nicht sichtbar)</span>
+<span class="component">Button:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">radius</span> <span class="value">8</span>
+
+<span class="comment">// Verwendung (sichtbar)</span>
+<span class="component">Button</span> <span class="string">"Click me"</span></pre>
+
+      <h3>Vererbung (from)</h3>
+      <pre><span class="component">Button:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">radius</span> <span class="value">8</span>
+
+<span class="component">DangerButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">background</span> <span class="value">#EF4444</span>
+<span class="component">GhostButton</span> <span class="keyword">from</span> <span class="component">Button:</span> <span class="property">background</span> <span class="value">transparent</span> <span class="property">border</span> <span class="value">1</span></pre>
+
+      <h3>Slots (Kind-Definitionen)</h3>
+      <pre><span class="component">Card:</span> <span class="property">vertical</span> <span class="property">padding</span> <span class="value">16</span> <span class="property">gap</span> <span class="value">8</span>
+  <span class="component">Title:</span> <span class="property">size</span> <span class="value">18</span> <span class="property">weight</span> <span class="value">600</span>
+  <span class="component">Description:</span> <span class="property">size</span> <span class="value">14</span> <span class="property">color</span> <span class="value">#888</span>
+  <span class="component">Actions:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">8</span>
+
+<span class="comment">// Verwendung</span>
+<span class="component">Card</span>
+  <span class="component">Title</span> <span class="string">"Welcome"</span>
+  <span class="component">Description</span> <span class="string">"Get started"</span>
+  <span class="component">Actions</span>
+    <span class="component">Button</span> <span class="string">"Learn more"</span></pre>
+
+      <h3>Flacher Zugriff</h3>
+      <p>Greife auf verschachtelte Slots direkt per Namen zu:</p>
+
+      <pre><span class="component">Header:</span> <span class="property">horizontal</span> <span class="property">between</span>
+  <span class="component">Left:</span> <span class="property">horizontal</span> <span class="property">gap</span> <span class="value">16</span>
+    <span class="component">Logo:</span> <span class="property">width</span> <span class="value">120</span>
+  <span class="component">Right:</span>
+    <span class="component">Avatar:</span> <span class="value">36</span> <span class="value">36</span> <span class="property">radius</span> <span class="value">18</span>
+
+<span class="comment">// Direkt auf Logo zugreifen (egal wie tief)</span>
+<span class="component">Header</span>
+  <span class="component">Logo</span> <span class="property">background</span> <span class="value">#FF0000</span>
+  <span class="component">Avatar</span> <span class="property">background</span> <span class="value">#3B82F6</span></pre>
+
+      <h3>List Items (neue Instanzen)</h3>
+      <p><code>-</code> erstellt eine neue Instanz:</p>
+
+      <pre><span class="component">Menu:</span> <span class="property">vertical</span> <span class="property">width</span> <span class="value">200</span>
+  <span class="component">Item:</span> <span class="property">padding</span> <span class="value">8</span> <span class="value">12</span>
+
+<span class="component">Menu</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Profile"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="string">"Settings"</span>
+  <span class="keyword">-</span> <span class="component">Item</span> <span class="property">color</span> <span class="value">#EF4444</span> <span class="string">"Logout"</span></pre>
+
+      <h3>Benannte Instanzen</h3>
+      <p>Drei Syntaxen für benannte Instanzen:</p>
+
+      <pre><span class="comment">// 1. named Keyword</span>
+<span class="component">Button</span> <span class="keyword">named</span> <span class="component">SaveBtn</span> <span class="string">"Save"</span>
+<span class="component">Panel</span> <span class="keyword">named</span> <span class="component">Dashboard</span> <span class="string">"Dashboard"</span>
+
+<span class="comment">// 2. Primitives (Input, Image, etc.)</span>
+<span class="component">Input</span> <span class="component">Email:</span> <span class="string">"Email eingeben"</span> <span class="property">type</span> <span class="value">email</span>
+<span class="component">Image</span> <span class="component">Avatar:</span> <span class="value">48</span> <span class="value">48</span> <span class="property">radius</span> <span class="value">24</span> <span class="property">fit</span> <span class="value">cover</span>
+
+<span class="comment">// 3. as Syntax</span>
+<span class="component">SettingsDialog</span> <span class="keyword">as</span> <span class="component">Dialog:</span>
+  <span class="string">"Dialog Inhalt"</span></pre>
+
+      <div class="highlight-box"><p><strong>Wichtig:</strong> Nur benannte Instanzen können in Events referenziert werden!</p></div>
+
+      <h3>Komponenten-Referenzen</h3>
+      <p>Properties anderer Komponenten referenzieren:</p>
+
+      <pre><span class="component">Card:</span> <span class="property">radius</span> <span class="value">16</span> <span class="property">padding</span> <span class="value">20</span> <span class="property">background</span> <span class="value">#2A2A3E</span>
+
+<span class="component">Button</span> <span class="property">radius</span> <span class="component">Card</span>.<span class="property">radius</span> <span class="property">background</span> <span class="component">Card</span>.<span class="property">background</span> <span class="string">"Match Card"</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 4 -->
+    <section class="section">
+      <h2>Tokens (Design-Variablen)</h2>
+      <h3>Token-Definition</h3>
+      <p>Tokens sind einfache Werte (Farben, Zahlen, Strings). KEINE Arrays oder Objekte!</p>
+
+      <pre><span class="token">$primary</span>: <span class="value">#3B82F6</span>
+<span class="token">$spacing</span>: <span class="value">16</span>
+<span class="token">$font-main</span>: <span class="string">"Inter"</span>
+
+<span class="component">Button</span> <span class="property">background</span> <span class="token">$primary</span> <span class="property">padding</span> <span class="token">$spacing</span> <span class="property">font</span> <span class="token">$font-main</span></pre>
+
+      <h3>Token-Suffix Inferenz</h3>
+      <p>Token-Namen mit Suffix werden automatisch der richtigen Property zugeordnet:</p>
+
+      <table>
+        <tr><th>Suffix</th><th>Property</th></tr>
+        <tr><td><code>-color</code></td><td><code>background</code></td></tr>
+        <tr><td><code>-size</code></td><td><code>font-size</code></td></tr>
+        <tr><td><code>-padding</code>, <code>-spacing</code></td><td><code>padding</code></td></tr>
+        <tr><td><code>-radius</code></td><td><code>border-radius</code></td></tr>
+        <tr><td><code>-gap</code></td><td><code>gap</code></td></tr>
+        <tr><td><code>-border</code></td><td><code>border-width</code></td></tr>
+        <tr><td><code>-border-color</code></td><td><code>border-color</code></td></tr>
+      </table>
+
+      <pre><span class="token">$card-padding</span>: <span class="value">16</span>
+<span class="component">Card</span> <span class="token">$card-padding</span>   <span class="comment">// Wird zu padding: 16</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 5 -->
+    <section class="section">
+      <h2>HTML Primitives</h2>
+      <h3>Input</h3>
+      <p>String wird als <code>placeholder</code> interpretiert:</p>
+
+      <pre><span class="component">Input</span> <span class="string">"Email eingeben..."</span> <span class="property">type</span> <span class="value">email</span>
+<span class="component">Input</span> <span class="string">"Passwort"</span> <span class="property">type</span> <span class="value">password</span>
+
+<span class="comment">// Benannt</span>
+<span class="component">Input</span> <span class="component">Email:</span> <span class="string">"Email"</span> <span class="property">type</span> <span class="value">email</span></pre>
+
+      <h3>Textarea</h3>
+      <pre><span class="component">Textarea</span> <span class="string">"Nachricht..."</span> <span class="property">rows</span> <span class="value">5</span></pre>
+
+      <h3>Image</h3>
+      <p>String wird als <code>src</code> interpretiert:</p>
+
+      <pre><span class="component">Image</span> <span class="string">"photo.jpg"</span> <span class="value">200</span> <span class="value">150</span> <span class="property">fit</span> <span class="value">cover</span> <span class="property">radius</span> <span class="value">8</span>
+
+<span class="comment">// Benannt</span>
+<span class="component">Image</span> <span class="component">Avatar:</span> <span class="value">48</span> <span class="value">48</span> <span class="property">radius</span> <span class="value">24</span> <span class="property">fit</span> <span class="value">cover</span></pre>
+
+      <p><code>fit</code>: cover, contain, fill, scale-down</p>
+
+      <h3>Link</h3>
+      <p>String wird als <code>href</code> interpretiert:</p>
+
+      <pre><span class="component">Link</span> <span class="string">"https://example.com"</span> <span class="property">color</span> <span class="value">#3B82F6</span>
+  <span class="string">"Zur Website"</span></pre>
+
+      <h3>Button</h3>
+      <pre><span class="component">Button</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="property">radius</span> <span class="value">6</span> <span class="string">"Submit"</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 6 -->
+    <section class="section">
+      <h2>States</h2>
+      <h3>Benannte States</h3>
+      <pre><span class="component">Toggle:</span> <span class="property">width</span> <span class="value">52</span> <span class="property">height</span> <span class="value">28</span> <span class="property">radius</span> <span class="value">14</span>
+  <span class="keyword">state</span> <span class="value">off</span>
+    <span class="property">background</span> <span class="value">#333</span>
+  <span class="keyword">state</span> <span class="value">on</span>
+    <span class="property">background</span> <span class="value">#3B82F6</span></pre>
+
+      <h3>System States (automatisch)</h3>
+      <table>
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>hover</code></td><td>Maus über Element</td></tr>
+        <tr><td><code>focus</code></td><td>Element hat Fokus</td></tr>
+        <tr><td><code>active</code></td><td>Element wird gedrückt</td></tr>
+        <tr><td><code>disabled</code></td><td>Element deaktiviert</td></tr>
+      </table>
+
+      <pre><span class="component">Button:</span> <span class="property">padding</span> <span class="value">12</span> <span class="property">background</span> <span class="value">#333</span>
+  <span class="keyword">state</span> <span class="value">hover</span>
+    <span class="property">background</span> <span class="value">#444</span>
+  <span class="keyword">state</span> <span class="value">active</span>
+    <span class="property">background</span> <span class="value">#222</span></pre>
+
+      <h3>Behavior States</h3>
+      <p>Durch Actions aktiviert:</p>
+
+      <table>
+        <tr><th>State</th><th>Aktiviert durch</th></tr>
+        <tr><td><code>highlighted</code></td><td><code>highlight</code> action</td></tr>
+        <tr><td><code>selected</code></td><td><code>select</code> action</td></tr>
+        <tr><td><code>active</code>, <code>inactive</code></td><td><code>activate</code>, <code>deactivate</code></td></tr>
+        <tr><td><code>expanded</code>, <code>collapsed</code></td><td><code>toggle-state</code></td></tr>
+        <tr><td><code>default</code></td><td>Initialer State</td></tr>
+      </table>
+
+      <pre><span class="component">Item:</span> <span class="property">padding</span> <span class="value">12</span>
+  <span class="keyword">state</span> <span class="value">default</span>
+    <span class="property">background</span> <span class="value">transparent</span>
+  <span class="keyword">state</span> <span class="value">highlighted</span>
+    <span class="property">background</span> <span class="value">#333</span>
+  <span class="keyword">state</span> <span class="value">selected</span>
+    <span class="property">background</span> <span class="value">#3B82F6</span>
+
+<span class="component">Item</span> <span class="keyword">onhover</span> <span class="keyword">highlight</span> <span class="value">self</span> <span class="keyword">onclick</span> <span class="keyword">select</span> <span class="value">self</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 7 -->
+    <section class="section">
+      <h2>Events</h2>
+      <h3>Event-Typen</h3>
+      <table>
+        <tr><th>Event</th><th>Beschreibung</th></tr>
+        <tr><td><code>onclick</code></td><td>Klick</td></tr>
+        <tr><td><code>onclick-outside</code></td><td>Klick außerhalb</td></tr>
+        <tr><td><code>onhover</code></td><td>Hover</td></tr>
+        <tr><td><code>onchange</code></td><td>Wert geändert</td></tr>
+        <tr><td><code>oninput</code></td><td>Während der Eingabe</td></tr>
+        <tr><td><code>onfocus</code></td><td>Fokus erhalten</td></tr>
+        <tr><td><code>onblur</code></td><td>Fokus verloren</td></tr>
+        <tr><td><code>onkeydown</code></td><td>Taste gedrückt</td></tr>
+        <tr><td><code>onkeyup</code></td><td>Taste losgelassen</td></tr>
+        <tr><td><code>onload</code></td><td>Komponente geladen</td></tr>
+      </table>
+
+      <h3>Tasten-Modifikatoren</h3>
+      <p>Für <code>onkeydown</code> und <code>onkeyup</code>:</p>
+
+      <pre><span class="keyword">onkeydown</span> <span class="value">escape</span> <span class="keyword">close</span> <span class="value">self</span>
+<span class="keyword">onkeydown</span> <span class="value">enter</span> <span class="keyword">select</span> <span class="value">highlighted</span>
+<span class="keyword">onkeydown</span> <span class="value">arrow-down</span> <span class="keyword">highlight</span> <span class="value">next</span>
+<span class="keyword">onkeydown</span> <span class="value">arrow-up</span> <span class="keyword">highlight</span> <span class="value">prev</span></pre>
+
+      <p>Verfügbar: <code>escape</code>, <code>enter</code>, <code>tab</code>, <code>space</code>, <code>arrow-up</code>, <code>arrow-down</code>, <code>arrow-left</code>, <code>arrow-right</code>, <code>backspace</code>, <code>delete</code>, <code>home</code>, <code>end</code></p>
+
+      <h3>Timing-Modifikatoren</h3>
+      <pre><span class="keyword">oninput</span> <span class="value">debounce</span> <span class="value">300</span> <span class="keyword">filter</span> <span class="component">Results</span>   <span class="comment">// Warte 300ms nach letzter Eingabe</span>
+<span class="keyword">onblur</span> <span class="value">delay</span> <span class="value">200</span> <span class="keyword">hide</span> <span class="component">Results</span>      <span class="comment">// Warte 200ms vor Aktion</span></pre>
+
+      <h3>Zentraler Events-Block</h3>
+      <p>Für komplexe Event-Logik:</p>
+
+      <pre><span class="component">Input</span> <span class="component">Email:</span> <span class="string">"Email"</span>
+<span class="component">Button</span> <span class="component">Submit:</span> <span class="string">"Login"</span>
+
+<span class="keyword">events</span>
+  <span class="component">Email</span> <span class="keyword">onchange</span>
+    <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">false</span>
+
+  <span class="component">Submit</span> <span class="keyword">onclick</span>
+    <span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
+      <span class="keyword">page</span> <span class="component">Dashboard</span>
+    <span class="keyword">else</span>
+      <span class="component">Error</span>.<span class="property">visible</span> = <span class="value">true</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 8 -->
+    <section class="section">
+      <h2>Actions</h2>
+      <h3>Sichtbarkeit</h3>
+      <table>
+        <tr><th>Action</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>show</td><td><code>show Target</code></td><td><code>onclick show Panel</code></td></tr>
+        <tr><td>hide</td><td><code>hide Target</code></td><td><code>onclick hide Panel</code></td></tr>
+        <tr><td>toggle</td><td><code>toggle [Target]</code></td><td><code>onclick toggle</code>, <code>onclick toggle Menu</code></td></tr>
+        <tr><td>open</td><td><code>open Target [pos] [anim] [ms]</code></td><td><code>onclick open Dialog center fade 200</code></td></tr>
+        <tr><td>close</td><td><code>close [Target] [anim] [ms]</code></td><td><code>onclick close</code></td></tr>
+      </table>
+
+      <h3>State-Kontrolle</h3>
+      <table>
+        <tr><th>Action</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>change</td><td><code>change Target to state</code></td><td><code>onclick change self to active</code></td></tr>
+        <tr><td>toggle-state</td><td><code>toggle-state</code></td><td><code>onclick toggle-state</code></td></tr>
+        <tr><td>activate</td><td><code>activate Target</code></td><td><code>onclick activate self</code></td></tr>
+        <tr><td>deactivate</td><td><code>deactivate Target</code></td><td><code>onclick deactivate self</code></td></tr>
+        <tr><td>deactivate-siblings</td><td><code>deactivate-siblings</code></td><td><code>onclick activate self, deactivate-siblings</code></td></tr>
+      </table>
+
+      <h3>Selektion</h3>
+      <table>
+        <tr><th>Action</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>highlight</td><td><code>highlight Target</code></td><td><code>onhover highlight self</code></td></tr>
+        <tr><td>select</td><td><code>select Target</code></td><td><code>onclick select self</code></td></tr>
+        <tr><td>deselect</td><td><code>deselect Target</code></td><td><code>onclick deselect self</code></td></tr>
+        <tr><td>clear-selection</td><td><code>clear-selection</code></td><td><code>onclick clear-selection</code></td></tr>
+        <tr><td>filter</td><td><code>filter Target</code></td><td><code>oninput filter Dropdown</code></td></tr>
+      </table>
+
+      <h3>Weitere Actions</h3>
+      <table>
+        <tr><th>Action</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>page</td><td><code>page Name</code></td><td><code>onclick page Dashboard</code></td></tr>
+        <tr><td>assign</td><td><code>assign $var to expr</code></td><td><code>onclick assign $count to $count + 1</code></td></tr>
+        <tr><td>focus</td><td><code>focus Target</code></td><td><code>onclick focus next</code></td></tr>
+        <tr><td>validate</td><td><code>validate Target</code></td><td><code>onclick validate Form</code></td></tr>
+        <tr><td>reset</td><td><code>reset Target</code></td><td><code>onclick reset Form</code></td></tr>
+      </table>
+
+      <h3>Action-Targets</h3>
+      <table>
+        <tr><th>Target</th><th>Beschreibung</th></tr>
+        <tr><td><code>self</code></td><td>Aktuelles Element</td></tr>
+        <tr><td><code>next</code></td><td>Nächstes Geschwister-Element</td></tr>
+        <tr><td><code>prev</code></td><td>Vorheriges Geschwister-Element</td></tr>
+        <tr><td><code>first</code></td><td>Erstes Element im Container</td></tr>
+        <tr><td><code>last</code></td><td>Letztes Element im Container</td></tr>
+        <tr><td><code>highlighted</code></td><td>Aktuell hervorgehobenes Element</td></tr>
+        <tr><td><code>selected</code></td><td>Aktuell ausgewähltes Element</td></tr>
+        <tr><td><code>self-and-before</code></td><td>Selbst und alle vorherigen (für Rating)</td></tr>
+        <tr><td><code>all</code></td><td>Alle Elemente</td></tr>
+        <tr><td><code>none</code></td><td>Keine Elemente</td></tr>
+      </table>
+
+      <h3>Mehrere Actions</h3>
+      <p>Mit Komma verketten:</p>
+
+      <pre><span class="keyword">onclick</span> <span class="keyword">select</span> <span class="value">self</span>, <span class="keyword">close</span> <span class="component">Dropdown</span>
+<span class="keyword">onclick</span> <span class="keyword">activate</span> <span class="value">self</span>, <span class="keyword">deactivate-siblings</span></pre>
+
+      <div class="highlight-box"><p><strong>Wichtig:</strong> KEIN Semikolon! <code>onclick show A; hide B</code> funktioniert NICHT.</p></div>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 9 -->
+    <section class="section">
+      <h2>Animationen</h2>
+      <h3>Show/Hide Animationen</h3>
+      <p>Animationen für Ein-/Ausblenden:</p>
+
+      <pre><span class="component">Panel</span> <span class="property">hidden</span>
+  <span class="keyword">show</span> <span class="value">fade</span> <span class="value">slide-up</span> <span class="value">300</span>
+  <span class="keyword">hide</span> <span class="value">fade</span> <span class="value">150</span>
+  <span class="string">"Animierter Inhalt"</span></pre>
+
+      <table>
+        <tr><th>Animation</th><th>Beschreibung</th></tr>
+        <tr><td><code>fade</code></td><td>Ein-/Ausblenden</td></tr>
+        <tr><td><code>scale</code></td><td>Skalieren</td></tr>
+        <tr><td><code>slide-up</code></td><td>Von unten einfahren</td></tr>
+        <tr><td><code>slide-down</code></td><td>Von oben einfahren</td></tr>
+        <tr><td><code>slide-left</code></td><td>Von rechts einfahren</td></tr>
+        <tr><td><code>slide-right</code></td><td>Von links einfahren</td></tr>
+        <tr><td><code>none</code></td><td>Keine Animation</td></tr>
+      </table>
+
+      <h3>Overlay-Positionen</h3>
+      <p>Für <code>open</code> Action:</p>
+
+      <table>
+        <tr><th>Position</th><th>Beschreibung</th></tr>
+        <tr><td><code>below</code></td><td>Unterhalb des Triggers</td></tr>
+        <tr><td><code>above</code></td><td>Oberhalb des Triggers</td></tr>
+        <tr><td><code>left</code></td><td>Links vom Trigger</td></tr>
+        <tr><td><code>right</code></td><td>Rechts vom Trigger</td></tr>
+        <tr><td><code>center</code></td><td>Zentriert im Viewport</td></tr>
+      </table>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 10 -->
+    <section class="section">
+      <h2>Conditionals</h2>
+      <h3>Block-Conditionals</h3>
+      <pre><span class="token">$isLoggedIn</span>: <span class="value">true</span>
+
+<span class="component">Box</span>
+  <span class="keyword">if</span> <span class="token">$isLoggedIn</span>
+    <span class="component">Avatar</span>
+  <span class="keyword">else</span>
+    <span class="component">Button</span> <span class="string">"Login"</span></pre>
+
+      <h3>Property-Conditionals</h3>
+      <pre><span class="component">Button</span> <span class="keyword">if</span> <span class="token">$active</span> <span class="keyword">then</span> <span class="property">background</span> <span class="value">#3B82F6</span> <span class="keyword">else</span> <span class="property">background</span> <span class="value">#333</span>
+
+<span class="component">Badge</span> <span class="keyword">if</span> <span class="token">$count</span> > <span class="value">0</span> <span class="keyword">then</span> <span class="property">background</span> <span class="value">#10B981</span> <span class="keyword">else</span> <span class="property">background</span> <span class="value">#666</span></pre>
+
+      <div class="highlight-box"><p><strong>Experimentell:</strong> Property-Conditionals sind noch nicht vollständig implementiert.</p></div>
+
+      <h3>Operatoren</h3>
+      <table>
+        <tr><th>Typ</th><th>Operatoren</th></tr>
+        <tr><td>Vergleich</td><td><code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></td></tr>
+        <tr><td>Logik</td><td><code>and</code>, <code>or</code>, <code>not</code></td></tr>
+        <tr><td>Arithmetik</td><td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td></tr>
+      </table>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 11 -->
+    <section class="section">
+      <h2>Daten & Iteration</h2>
+      <h3>Data Tab Syntax</h3>
+      <p>Daten werden im <strong>Data Tab</strong> definiert, NICHT in der DSL-Datei:</p>
+
+      <pre><span class="comment">// Schema-Definition</span>
+<span class="component">Task:</span>
+  <span class="property">title</span>: <span class="value">text</span>
+  <span class="property">done</span>: <span class="value">boolean</span>
+  <span class="property">category</span>: <span class="component">Category</span>
+
+<span class="component">Category:</span>
+  <span class="property">name</span>: <span class="value">text</span>
+
+<span class="comment">// Instanzen</span>
+<span class="keyword">-</span> <span class="component">Category</span> <span class="string">"Arbeit"</span>
+<span class="keyword">-</span> <span class="component">Category</span> <span class="string">"Privat"</span>
+
+<span class="keyword">-</span> <span class="component">Task</span> <span class="string">"Einkaufen"</span>, <span class="value">false</span>, <span class="component">Category</span>[<span class="value">0</span>]
+<span class="keyword">-</span> <span class="component">Task</span> <span class="string">"Sport"</span>, <span class="value">true</span>, <span class="component">Category</span>[<span class="value">1</span>]</pre>
+
+      <div class="highlight-box"><p><strong>Wichtig:</strong> Die Syntax <code>$tasks: [{...}]</code> (JSON-Arrays) ist NICHT unterstützt! Daten müssen über den Data Tab mit Schema-Syntax definiert werden.</p></div>
+
+      <h3>Iteration (each)</h3>
+      <p>Iteriert über Collections aus dem Data Tab:</p>
+
+      <pre><span class="comment">// In der DSL (tasks kommt aus Data Tab)</span>
+<span class="component">Box</span>
+  <span class="keyword">each</span> <span class="token">$task</span> <span class="keyword">in</span> <span class="token">$tasks</span>
+    <span class="component">Card</span>
+      <span class="component">Title</span> <span class="token">$task.title</span>
+      <span class="component">Checkbox</span> <span class="token">$task.done</span></pre>
+
+      <p>Verschachtelte Iteration:</p>
+
+      <pre><span class="keyword">each</span> <span class="token">$category</span> <span class="keyword">in</span> <span class="token">$categories</span>
+  <span class="component">Section</span>
+    <span class="component">Title</span> <span class="token">$category.name</span>
+    <span class="keyword">each</span> <span class="token">$item</span> <span class="keyword">in</span> <span class="token">$category.items</span>
+      <span class="component">Item</span> <span class="token">$item.name</span></pre>
+
+      <h3>Feld-Typen</h3>
+      <table>
+        <tr><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>text</code> / <code>string</code></td><td>Text</td></tr>
+        <tr><td><code>number</code> / <code>int</code> / <code>float</code></td><td>Zahl</td></tr>
+        <tr><td><code>boolean</code> / <code>bool</code></td><td>Wahrheitswert</td></tr>
+        <tr><td><code>TypeName</code></td><td>Relation zu anderem Schema</td></tr>
+      </table>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 12 -->
+    <section class="section">
+      <h2>Komponenten-Properties</h2>
+      <h3>Property-Zugriff</h3>
+      <p>Lesen und Schreiben von Komponenten-Eigenschaften:</p>
+
+      <pre><span class="comment">// Lesen (in Bedingungen)</span>
+<span class="keyword">if</span> <span class="component">Email</span>.<span class="property">value</span>
+  <span class="keyword">page</span> <span class="component">Dashboard</span>
+
+<span class="comment">// Schreiben (in Events)</span>
+<span class="component">Submit</span>.<span class="property">label</span> = <span class="string">"Sending..."</span>
+<span class="component">Submit</span>.<span class="property">disabled</span> = <span class="value">true</span>
+<span class="component">Panel</span>.<span class="property">visible</span> = <span class="value">false</span></pre>
+
+      <h3>Intrinsische Properties</h3>
+      <table>
+        <tr><th>Komponente</th><th>Properties</th></tr>
+        <tr><td>Alle</td><td><code>.visible</code>, <code>.disabled</code>, <code>.opacity</code></td></tr>
+        <tr><td>Input / Textarea</td><td><code>.value</code>, <code>.placeholder</code>, <code>.focus</code></td></tr>
+        <tr><td>Button</td><td><code>.label</code>, <code>.loading</code></td></tr>
+        <tr><td>Checkbox / Switch</td><td><code>.checked</code></td></tr>
+        <tr><td>Dialog / Overlay</td><td><code>.open</code></td></tr>
+        <tr><td>Text / Label</td><td><code>.text</code></td></tr>
+        <tr><td>Image</td><td><code>.src</code>, <code>.alt</code></td></tr>
+      </table>
+
+      <h3>$event Objekt</h3>
+      <pre><span class="component">Input</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$text</span> <span class="keyword">to</span> <span class="token">$event.value</span>
+<span class="component">Checkbox</span> <span class="keyword">onchange</span> <span class="keyword">assign</span> <span class="token">$active</span> <span class="keyword">to</span> <span class="token">$event.checked</span></pre>
+
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 13 -->
+    <section class="section">
+      <h2>Bekannte Einschränkungen</h2>
+      <h3>Parser-Limitierungen</h3>
+      <table>
+        <tr><th>Feature</th><th>Status</th><th>Hinweis</th></tr>
+        <tr><td><code>cursor: not-allowed</code></td><td>Funktioniert nicht</td><td>Lexer splittet bei Bindestrich. Nur einwortige Werte: pointer, move, grab</td></tr>
+        <tr><td>Events nach Children</td><td>Funktioniert nicht</td><td>Events VOR Children platzieren, nicht danach</td></tr>
+        <tr><td><code>animate spin/pulse/bounce</code></td><td>NICHT implementiert</td><td>Nur show/hide Animationen funktionieren</td></tr>
+        <tr><td>JSON-Arrays in Tokens</td><td>NICHT unterstützt</td><td><code>$items: [{...}]</code> wird als String gespeichert</td></tr>
+        <tr><td>Property-Conditionals</td><td>Experimentell</td><td><code>if $x then bg #F00 else bg #00F</code> noch instabil</td></tr>
+        <tr><td>Semicolon-Chaining</td><td>NICHT unterstützt</td><td>Verwende Kommas oder events Block</td></tr>
+      </table>
+
+    </section>
+
+    <div class="divider"></div>
+
+
+    <!-- QUICK REFERENCE -->
+    <section class="section">
+      <h2>Schnellreferenz</h2>
+      <div class="quick-ref">
+<span class="quick-ref-category">LAYOUT      </span><span class="quick-ref-items">horizontal / hor | vertical / ver | gap N | between | wrap | grow / fill | shrink N | stacked | grid N</span>
+<span class="quick-ref-category">ALIGNMENT   </span><span class="quick-ref-items">hor-l | hor-cen | hor-r | ver-t | ver-cen | ver-b | cen</span>
+<span class="quick-ref-category">SPACING     </span><span class="quick-ref-items">padding / pad [dir] N | margin / mar [dir] N | Direktionen: l r t b u d l-r u-d</span>
+<span class="quick-ref-category">SIZE        </span><span class="quick-ref-items">w / width N | h / height N | minw | maxw | minh | maxh | full | Shorthand: Box 300 200</span>
+<span class="quick-ref-category">COLOR       </span><span class="quick-ref-items">background / bg #HEX | color / col #HEX | border-color / boc #HEX</span>
+<span class="quick-ref-category">BORDER      </span><span class="quick-ref-items">border / bor [dir] N [style] [color] | radius / rad N [N N N]</span>
+<span class="quick-ref-category">TYPOGRAPHY  </span><span class="quick-ref-items">size N | weight N/bold | font "name" | line N | align left/center/right | italic | underline | truncate</span>
+<span class="quick-ref-category">VISUAL      </span><span class="quick-ref-items">opacity / opa 0-1 | shadow sm/md/lg | cursor pointer | z N | hidden | visible | disabled</span>
+<span class="quick-ref-category">HOVER       </span><span class="quick-ref-items">hover-background | hover-color | hover-border-color | hover-border | hover-radius | hover-opacity | hover-scale</span>
+<span class="quick-ref-category">SCROLL      </span><span class="quick-ref-items">scroll / scroll-ver | scroll-hor | scroll-both | snap | clip</span>
+<span class="quick-ref-category">TOKENS      </span><span class="quick-ref-items">$name: value | Suffixe: -color -size -padding -radius -gap -border</span>
+<span class="quick-ref-category">COMPONENTS  </span><span class="quick-ref-items">Name: props (Definition) | Name from Parent: (Vererbung) | named Name (benannt) | - Item (neue Instanz)</span>
+<span class="quick-ref-category">PRIMITIVES  </span><span class="quick-ref-items">Input "placeholder" type email | Image "src" W H fit cover | Textarea rows N | Link "url" | Button</span>
+<span class="quick-ref-category">STATES      </span><span class="quick-ref-items">state name \n props | System: hover focus active disabled | Behavior: highlighted selected default</span>
+<span class="quick-ref-category">EVENTS      </span><span class="quick-ref-items">onclick | onhover | onchange | oninput | onfocus | onblur | onkeydown KEY | onkeyup KEY | onload</span>
+<span class="quick-ref-category">EVENT-MODIFIERS</span><span class="quick-ref-items">debounce N | delay N | Tasten: escape enter tab space arrow-up arrow-down home end</span>
+<span class="quick-ref-category">ACTIONS     </span><span class="quick-ref-items">show X | hide X | toggle [X] | open X [pos] [anim] [ms] | close [X] | page X | assign $var to expr</span>
+<span class="quick-ref-category">STATE-ACTIONS</span><span class="quick-ref-items">change X to state | toggle-state | activate X | deactivate X | deactivate-siblings</span>
+<span class="quick-ref-category">SELECTION-ACTIONS</span><span class="quick-ref-items">highlight X | select X | deselect X | clear-selection | filter X | focus X</span>
+<span class="quick-ref-category">TARGETS     </span><span class="quick-ref-items">self | next | prev | first | last | highlighted | selected | self-and-before | all | none</span>
+<span class="quick-ref-category">ANIMATIONS  </span><span class="quick-ref-items">show/hide: fade | scale | slide-up | slide-down | slide-left | slide-right | none</span>
+<span class="quick-ref-category">POSITIONS   </span><span class="quick-ref-items">below | above | left | right | center</span>
+<span class="quick-ref-category">CONDITIONALS</span><span class="quick-ref-items">if $var | if $x > 0 | if $a and $b | if $x then prop val else prop val | not $var</span>
+<span class="quick-ref-category">DATA-TAB    </span><span class="quick-ref-items">Schema: TypeName: \n field: type | Instanz: - TypeName values | Types: text number boolean TypeRef</span>
+<span class="quick-ref-category">ITERATION   </span><span class="quick-ref-items">each $item in $collection | $item.field | Nested: each $x in $parent.children</span>
+<span class="quick-ref-category">PROPERTY-ACCESS</span><span class="quick-ref-items">Read: if Component.value | Write: Component.visible = false | $event.value | $event.checked</span>
+<span class="quick-ref-category">LIMITS      </span><span class="quick-ref-items">cursor: nur einwortige Werte | Events VOR Children | animate: NICHT implementiert | Keine JSON-Arrays in $tokens</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Mirror Referenz v2.0</p>
+      <p style="font-size: 11px; color: #555; margin-top: 8px;">Generiert: 2026-02-15</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -444,7 +444,7 @@ function parseGridProperty(ctx: ParserContext, node: ASTNode): void {
     node.properties['grid'] = `auto ${columns[0]}`
   } else if (columns.length === 1 && !columns[0].includes('%')) {
     // Single number without % means column count: grid 4
-    node.properties['grid'] = columns[0]
+    node.properties['grid'] = parseInt(columns[0], 10)
   } else if (columns.length > 0) {
     // Multiple values or percentages: grid 20% 80% or grid 200 300 200
     node.properties['grid'] = columns.join(' ')
@@ -462,8 +462,10 @@ function parseGridProperty(ctx: ParserContext, node: ASTNode): void {
  */
 function parsePointerProperty(ctx: ParserContext, node: ASTNode, propName: string): void {
   const next = ctx.current()
-  // Accept COMPONENT_NAME (pointer, auto, grab), ANIMATION (none), or STRING
-  if (next?.type === 'COMPONENT_NAME' || next?.type === 'ANIMATION' || next?.type === 'STRING') {
+  // Accept cursor values: COMPONENT_NAME, PROPERTY (for 'pointer' which is also a property),
+  // ANIMATION (for 'none'), or STRING
+  // Known cursor values: pointer, default, text, move, grab, grabbing, not-allowed, wait, crosshair, help
+  if (next?.type === 'COMPONENT_NAME' || next?.type === 'PROPERTY' || next?.type === 'ANIMATION' || next?.type === 'STRING') {
     node.properties[propName] = ctx.advance().value
   } else {
     // Boolean - just the property name without value
@@ -600,7 +602,9 @@ function parseFitProperty(ctx: ParserContext, node: ASTNode): void {
 function parseDimensionProperty(ctx: ParserContext, node: ASTNode, propName: string): void {
   const next = ctx.current()
   if (next?.type === 'NUMBER') {
-    node.properties[propName] = parseInt(ctx.advance().value, 10)
+    const value = ctx.advance().value
+    // Preserve percentage values as strings, parse plain numbers as integers
+    node.properties[propName] = value.includes('%') ? value : parseInt(value, 10)
   } else if (next?.type === 'PROPERTY' && next.value === 'full') {
     node.properties[propName] = ctx.advance().value
   } else if (next?.type === 'TOKEN_REF') {
@@ -644,8 +648,8 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
     node.properties[propName] = ctx.advance().value
   } else if (next?.type === 'COMPONENT_NAME' && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
     node.properties[propName] = ctx.advance().value
-  } else if (next?.type === 'COMPONENT_NAME' && STRING_PROPERTIES.has(propName)) {
-    // Handle COMPONENT_NAME values for string properties (e.g., align center, fit cover)
+  } else if ((next?.type === 'COMPONENT_NAME' || next?.type === 'PROPERTY') && STRING_PROPERTIES.has(propName)) {
+    // Handle COMPONENT_NAME or PROPERTY values for string properties (e.g., align center/cen, fit cover)
     node.properties[propName] = ctx.advance().value
   } else if (next?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value

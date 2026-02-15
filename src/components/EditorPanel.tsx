@@ -50,17 +50,6 @@ interface EditorPanelProps {
   activeLayoutSection?: string | null
   /** Callback when layout section changes */
   onActiveLayoutSectionChange?: (section: string | null) => void
-  // Docs mode props
-  /** Whether docs mode is active */
-  isDocsMode?: boolean
-  /** Callback to save docs to server */
-  onSaveDocs?: () => Promise<boolean>
-  /** Whether docs are saving */
-  isSavingDocs?: boolean
-  /** Whether docs have unsaved changes */
-  hasUnsavedDocsChanges?: boolean
-  /** Whether user has admin access */
-  hasAdminAccess?: boolean
   // NL Mode props
   /** Whether NL mode is enabled */
   nlModeEnabled?: boolean
@@ -71,6 +60,11 @@ interface EditorPanelProps {
   pickerModeEnabled?: boolean
   /** Callback when picker mode changes */
   onPickerModeChange?: (enabled: boolean) => void
+  // Deep Thinking Mode props
+  /** Whether deep thinking mode is enabled (Opus 4.5 with full context) */
+  deepThinkingEnabled?: boolean
+  /** Callback when deep thinking mode changes */
+  onDeepThinkingChange?: (enabled: boolean) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -96,15 +90,12 @@ export const EditorPanel = memo(function EditorPanel({
   onSelectPage,
   activeLayoutSection: controlledActiveLayoutSection,
   onActiveLayoutSectionChange,
-  isDocsMode = false,
-  onSaveDocs,
-  isSavingDocs = false,
-  hasUnsavedDocsChanges = false,
-  hasAdminAccess = false,
   nlModeEnabled = false,
   onNlModeChange,
   pickerModeEnabled = true,
   onPickerModeChange,
+  deepThinkingEnabled = false,
+  onDeepThinkingChange,
 }: EditorPanelProps) {
   // Delete error state for page management
   const [deleteError, setDeleteError] = useState<{ pageId: string; references: string[] } | null>(null)
@@ -297,6 +288,9 @@ export const EditorPanel = memo(function EditorPanel({
   // NL Mode translation state - tracks which lines are being translated
   const [nlTranslations, setNlTranslations] = useState<Map<number, LineStatus>>(new Map())
 
+  // NL Mode undo history - stores original content before translation
+  const [nlUndoHistory, setNlUndoHistory] = useState<Map<number, { original: string; translatedLineCount: number }>>(new Map())
+
   // Handle NL mode translation
   const handleNlTranslate = useCallback(async (lineIndex: number, content: string, allLines: string[]) => {
     // Skip if line shouldn't be translated
@@ -308,17 +302,33 @@ export const EditorPanel = memo(function EditorPanel({
     setNlTranslations(prev => new Map(prev).set(lineIndex, 'translating'))
 
     try {
+      // Build deep thinking options if enabled
+      const deepThinkingOptions = deepThinkingEnabled ? {
+        enabled: true,
+        layoutCode,
+        componentsCode,
+      } : undefined
+
       const result = await translateLine(content, allLines, lineIndex, {
-        onComplete: () => {
-          setNlTranslations(prev => new Map(prev).set(lineIndex, 'done'))
-          // Clear status after 2 seconds
+        onComplete: (res) => {
+          // Set status based on validation result
+          const status = res.isValid === false ? 'warning' : 'done'
+          setNlTranslations(prev => new Map(prev).set(lineIndex, status))
+
+          // Log validation issues for debugging
+          if (res.validationIssues && res.validationIssues.length > 0) {
+            logger.ai.warn('NL translation has validation issues', res.validationIssues)
+          }
+
+          // Clear status after delay (longer for warnings, even longer for deep thinking success)
+          const clearDelay = status === 'warning' ? 4000 : (deepThinkingEnabled ? 3000 : 2000)
           setTimeout(() => {
             setNlTranslations(prev => {
               const next = new Map(prev)
               next.delete(lineIndex)
               return next
             })
-          }, 2000)
+          }, clearDelay)
         },
         onError: () => {
           setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
@@ -331,13 +341,19 @@ export const EditorPanel = memo(function EditorPanel({
             })
           }, 3000)
         },
-      }, tokensCode)
+      }, tokensCode, deepThinkingOptions)
 
       if (result.code && result.code !== content) {
+        // Save original for undo before replacing
+        const translatedLines = result.code.split('\n')
+        setNlUndoHistory(prev => new Map(prev).set(lineIndex, {
+          original: content,
+          translatedLineCount: translatedLines.length
+        }))
+
         // Replace the line in layout code
         const lines = layoutCode.split('\n')
         // Handle multi-line results
-        const translatedLines = result.code.split('\n')
         lines.splice(lineIndex, 1, ...translatedLines)
         onLayoutChange(lines.join('\n'))
       }
@@ -345,8 +361,30 @@ export const EditorPanel = memo(function EditorPanel({
       logger.ai.error('NL translation failed', err)
       setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
     }
-  }, [layoutCode, onLayoutChange, tokensCode])
+  }, [layoutCode, componentsCode, onLayoutChange, tokensCode, deepThinkingEnabled])
 
+  // Handle NL mode undo - restore original content
+  const handleNlUndo = useCallback((lineIndex: number) => {
+    const undoEntry = nlUndoHistory.get(lineIndex)
+    if (!undoEntry) return
+
+    const lines = layoutCode.split('\n')
+    // Remove the translated lines and restore original
+    lines.splice(lineIndex, undoEntry.translatedLineCount, undoEntry.original)
+    onLayoutChange(lines.join('\n'))
+
+    // Clear undo history and status for this line
+    setNlUndoHistory(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+    setNlTranslations(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+  }, [layoutCode, onLayoutChange, nlUndoHistory])
 
   // Track cursor position for context-aware generation (with full position info)
   const handleCursorChange = useCallback((pos: { line: number; column: number }) => {
@@ -426,21 +464,6 @@ export const EditorPanel = memo(function EditorPanel({
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                  </svg>
-                </IconButton>
-              )}
-              {/* Save Docs Button - only in docs mode with admin access */}
-              {isDocsMode && hasAdminAccess && onSaveDocs && (
-                <IconButton
-                  onClick={() => onSaveDocs()}
-                  title={hasUnsavedDocsChanges ? 'Änderungen speichern' : 'Keine Änderungen'}
-                  isLoading={isSavingDocs}
-                  color={hasUnsavedDocsChanges ? '#3B82F6' : undefined}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                    <polyline points="17 21 17 13 7 13 7 21"/>
-                    <polyline points="7 3 7 8 15 8"/>
                   </svg>
                 </IconButton>
               )}
@@ -555,7 +578,7 @@ export const EditorPanel = memo(function EditorPanel({
         </div>
 
         {/* Editor Mode Toggles - shown in all tabs */}
-        {!previewMode && !isDocsMode && (
+        {!previewMode && (
           <div
             style={{
               padding: '6px 8px',
@@ -567,7 +590,7 @@ export const EditorPanel = memo(function EditorPanel({
               backgroundColor: colors.panel,
             }}
           >
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {/* NL Mode Toggle */}
               <div
                 onClick={() => onNlModeChange?.(!nlModeEnabled)}
@@ -576,11 +599,13 @@ export const EditorPanel = memo(function EditorPanel({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '4px 10px',
+                  height: '24px',
+                  padding: '0 10px',
                   backgroundColor: nlModeEnabled ? '#3B82F620' : 'transparent',
                   borderRadius: '4px',
                   border: nlModeEnabled ? 'none' : `1px solid ${colors.border}`,
                   cursor: 'pointer',
+                  boxSizing: 'border-box',
                 }}
               >
                 {/* Zap icon */}
@@ -588,11 +613,49 @@ export const EditorPanel = memo(function EditorPanel({
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                 </svg>
                 <span style={{ fontSize: '11px', color: nlModeEnabled ? '#3B82F6' : colors.textMuted, fontWeight: 500 }}>
-                  NL
+                  LLM
                 </span>
               </div>
 
-              {/* Autocomplete Toggle */}
+              {/* Deep Thinking Toggle - only shown when NL is enabled */}
+              {nlModeEnabled && (
+                <div
+                  onClick={() => onDeepThinkingChange?.(!deepThinkingEnabled)}
+                  title={deepThinkingEnabled
+                    ? 'Deep Thinking – Opus 4.5 mit vollem Kontext (aktiv, ~3-5s)'
+                    : 'Deep Thinking – Opus 4.5 für komplexe Komponenten (~3-5s)'}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    height: '24px',
+                    padding: '0 10px',
+                    backgroundColor: deepThinkingEnabled ? '#8B5CF620' : 'transparent',
+                    borderRadius: '4px',
+                    border: deepThinkingEnabled ? 'none' : `1px solid ${colors.border}`,
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {/* Brain icon for deep thinking */}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={deepThinkingEnabled ? '#8B5CF6' : colors.textMuted} strokeWidth="2">
+                    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+                    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
+                    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
+                    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/>
+                    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/>
+                    <path d="M3.477 10.896a4 4 0 0 1 .585-.396"/>
+                    <path d="M19.938 10.5a4 4 0 0 1 .585.396"/>
+                    <path d="M6 18a4 4 0 0 1-1.967-.516"/>
+                    <path d="M19.967 17.484A4 4 0 0 1 18 18"/>
+                  </svg>
+                  <span style={{ fontSize: '11px', color: deepThinkingEnabled ? '#8B5CF6' : colors.textMuted, fontWeight: 500 }}>
+                    Deep
+                  </span>
+                </div>
+              )}
+
+              {/* Autocomplete Toggle - with spacing from NL/DT group */}
               <div
                 onClick={() => onPickerModeChange?.(!pickerModeEnabled)}
                 title={pickerModeEnabled ? 'Autocomplete – Vorschläge beim Tippen (aktiv)' : 'Autocomplete – Vorschläge beim Tippen'}
@@ -600,11 +663,14 @@ export const EditorPanel = memo(function EditorPanel({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '4px 10px',
+                  height: '24px',
+                  padding: '0 10px',
+                  marginLeft: '12px',
                   backgroundColor: pickerModeEnabled ? '#10B98120' : 'transparent',
                   borderRadius: '4px',
                   border: pickerModeEnabled ? 'none' : `1px solid ${colors.border}`,
                   cursor: 'pointer',
+                  boxSizing: 'border-box',
                 }}
               >
                 {/* List icon for autocomplete */}
@@ -617,28 +683,70 @@ export const EditorPanel = memo(function EditorPanel({
                   <line x1="3" y1="18" x2="3.01" y2="18"/>
                 </svg>
                 <span style={{ fontSize: '11px', color: pickerModeEnabled ? '#10B981' : colors.textMuted, fontWeight: 500 }}>
-                  AC
+                  Assist
                 </span>
               </div>
             </div>
 
-            {/* NL Translation Status */}
-            {nlModeEnabled && nlTranslations.size > 0 && (
+            {/* NL Translation Status & Undo */}
+            {nlModeEnabled && (nlTranslations.size > 0 || nlUndoHistory.size > 0) && (
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                {Array.from(nlTranslations.entries()).map(([line, status]) => (
-                  <span
-                    key={line}
+                {/* Show undo button if there's undo history */}
+                {nlUndoHistory.size > 0 && (
+                  <button
+                    onClick={() => {
+                      // Undo the most recent translation
+                      const lastKey = Array.from(nlUndoHistory.keys()).pop()
+                      if (lastKey !== undefined) handleNlUndo(lastKey)
+                    }}
+                    title="Letzte Übersetzung rückgängig (Undo)"
                     style={{
-                      fontSize: '10px',
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      backgroundColor: status === 'translating' ? '#F59E0B20' : status === 'done' ? '#10B98120' : '#EF444420',
-                      color: status === 'translating' ? '#F59E0B' : status === 'done' ? '#10B981' : '#EF4444',
+                      height: '24px',
+                      padding: '0 8px',
+                      borderRadius: '4px',
+                      backgroundColor: 'transparent',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.textMuted,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      boxSizing: 'border-box',
                     }}
                   >
-                    {status === 'translating' ? '...' : status === 'done' ? 'OK' : '!'}
-                  </span>
-                ))}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M3 7v6h6"/>
+                      <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13"/>
+                    </svg>
+                  </button>
+                )}
+                {/* Translation status indicators */}
+                {Array.from(nlTranslations.entries()).map(([line, status]) => {
+                  const statusConfig = {
+                    translating: { bg: '#F59E0B20', color: '#F59E0B', label: '...', title: 'Übersetze...' },
+                    done: { bg: '#10B98120', color: '#10B981', label: '✓', title: 'Übersetzt & validiert' },
+                    warning: { bg: '#F59E0B20', color: '#F59E0B', label: '⚠', title: 'Übersetzt, aber Validierungsprobleme' },
+                    error: { bg: '#EF444420', color: '#EF4444', label: '✗', title: 'Fehler bei Übersetzung' },
+                    pending: { bg: '#6B728020', color: '#6B7280', label: '○', title: 'Warte...' },
+                  }
+                  const config = statusConfig[status]
+                  return (
+                    <span
+                      key={line}
+                      title={config.title}
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        backgroundColor: config.bg,
+                        color: config.color,
+                        cursor: 'help',
+                      }}
+                    >
+                      {config.label}
+                    </span>
+                  )
+                })}
               </div>
             )}
           </div>

@@ -23,6 +23,9 @@ export interface UseEditorStateReturn {
   // Picker Mode: Autocomplete pickers enabled/disabled
   pickerModeEnabled: boolean
   setPickerModeEnabled: (enabled: boolean) => void
+  // Deep Thinking Mode: Use Opus 4.5 with full context
+  deepThinkingEnabled: boolean
+  setDeepThinkingEnabled: (enabled: boolean) => void
   // Data tab state (unified code for schema + instances)
   dataCode: string
   setDataCode: (code: string) => void
@@ -90,6 +93,17 @@ export function useEditorState(): UseEditorStateReturn {
     localStorage.setItem(STORAGE_KEYS.PICKER_MODE, String(pickerModeEnabled))
   }, [pickerModeEnabled])
 
+  // Deep Thinking Mode state (persisted in localStorage) - defaults to false
+  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.DEEP_THINKING_MODE)
+    return saved === 'true'
+  })
+
+  // Persist deep thinking mode setting
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DEEP_THINKING_MODE, String(deepThinkingEnabled))
+  }, [deepThinkingEnabled])
+
   return {
     activeTab,
     setActiveTab,
@@ -105,6 +119,8 @@ export function useEditorState(): UseEditorStateReturn {
     setNlModeEnabled,
     pickerModeEnabled,
     setPickerModeEnabled,
+    deepThinkingEnabled,
+    setDeepThinkingEnabled,
     dataCode,
     setDataCode,
     dataSchemas: parsedData.schemas,

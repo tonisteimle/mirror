@@ -83,7 +83,8 @@ export function createHighlightStyle(
     ...baseStyle,
     outline: isHovered ? '2px solid #3B82F6' : isSelected ? '2px solid #10B981' : undefined,
     outlineOffset: isHovered || isSelected ? '2px' : undefined,
-    cursor: inspectMode ? 'pointer' : undefined,
+    // Only override cursor for inspect mode - preserve baseStyle cursor otherwise
+    ...(inspectMode ? { cursor: 'pointer' } : {}),
   }
 }
 

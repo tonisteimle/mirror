@@ -63,9 +63,9 @@ export function parseIdentifier(
       }
     }
 
-    // Check if the full greedy value is a valid behavior target or action keyword
-    // (e.g., self-and-before, deactivate-siblings, toggle-state, clear-selection)
-    if (BEHAVIOR_TARGETS.has(greedyValue) || ACTION_KEYWORDS.has(greedyValue)) {
+    // Check if the full greedy value is a valid behavior target, action keyword, or event keyword
+    // (e.g., self-and-before, deactivate-siblings, toggle-state, clear-selection, onclick-outside)
+    if (BEHAVIOR_TARGETS.has(greedyValue) || ACTION_KEYWORDS.has(greedyValue) || EVENT_KEYWORDS.has(greedyValue)) {
       value = greedyValue
       pos = greedyPos
     } else {

@@ -64,9 +64,11 @@ export function parseNamedInstance(
         }
         instanceName = ctx.advance().value
 
+        // For 'named' keyword syntax, preserve the original component name
+        // and just set the componentType for HTML primitives
         if (HTML_PRIMITIVES.includes(componentName)) {
           componentType = componentName
-          componentName = instanceName
+          // Don't change componentName - keep it as the original primitive
         }
       }
     }

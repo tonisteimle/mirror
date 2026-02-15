@@ -1,26 +1,20 @@
 /**
  * Settings Dialog component.
- * Contains AutoComplete mode toggle and API Key management.
+ * Contains API Key management.
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { colors } from '../theme'
 import { setApiKey, getApiKey, hasApiKey } from '../lib/ai'
 
-export type AutoCompleteMode = 'always' | 'delay' | 'off'
-
 interface SettingsDialogProps {
   isOpen: boolean
   onClose: () => void
-  autoCompleteMode: AutoCompleteMode
-  onAutoCompleteModeChange: (mode: AutoCompleteMode) => void
 }
 
 export function SettingsDialog({
   isOpen,
   onClose,
-  autoCompleteMode,
-  onAutoCompleteModeChange,
 }: SettingsDialogProps) {
   const [apiKeyValue, setApiKeyValue] = useState('')
   const [hasKey, setHasKey] = useState(false)
@@ -121,42 +115,6 @@ export function SettingsDialog({
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        </div>
-
-        {/* AutoComplete Mode Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{
-            display: 'block',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: colors.text,
-            marginBottom: '10px',
-          }}>
-            KI-Unterstützung
-          </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <ModeButton
-              label="Immer"
-              description="Sofortige Vorschläge"
-              isActive={autoCompleteMode === 'always'}
-              onClick={() => onAutoCompleteModeChange('always')}
-              color="#3B82F6"
-            />
-            <ModeButton
-              label="Verzögert"
-              description="Nach 300ms"
-              isActive={autoCompleteMode === 'delay'}
-              onClick={() => onAutoCompleteModeChange('delay')}
-              color="#10B981"
-            />
-            <ModeButton
-              label="Aus"
-              description="Keine Vorschläge"
-              isActive={autoCompleteMode === 'off'}
-              onClick={() => onAutoCompleteModeChange('off')}
-              color={colors.textMuted}
-            />
-          </div>
         </div>
 
         {/* API Key Section */}
@@ -274,41 +232,5 @@ export function SettingsDialog({
         </div>
       </div>
     </>
-  )
-}
-
-function ModeButton({
-  label,
-  description,
-  isActive,
-  onClick,
-  color,
-}: {
-  label: string
-  description: string
-  isActive: boolean
-  onClick: () => void
-  color: string
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        padding: '12px',
-        fontSize: '12px',
-        fontWeight: 500,
-        backgroundColor: isActive ? `${color}15` : colors.bg,
-        color: isActive ? color : colors.textMuted,
-        border: isActive ? `1px solid ${color}40` : `1px solid ${colors.border}`,
-        borderRadius: '8px',
-        cursor: 'pointer',
-        textAlign: 'center',
-        transition: 'all 0.15s ease',
-      }}
-    >
-      <div style={{ marginBottom: '4px' }}>{label}</div>
-      <div style={{ fontSize: '10px', opacity: 0.7 }}>{description}</div>
-    </button>
   )
 }

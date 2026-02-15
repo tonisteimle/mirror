@@ -6,9 +6,11 @@
  */
 
 import { getApiKey, hasApiKey } from '../lib/ai'
+import { applyAllFixes, validateMirrorCode, type CodeIssue } from '../lib/ai-selfhealing'
 
-// Use Haiku 4.5 for fastest responses
-const HAIKU_MODEL = 'anthropic/claude-haiku-4.5'
+// Models
+const HAIKU_MODEL = 'anthropic/claude-haiku-4.5'  // Fast (~300ms)
+const OPUS_MODEL = 'anthropic/claude-opus-4.5'    // Deep Thinking (~3-5s)
 const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 
 // System prompt - understands both UI translations AND meta-requests
@@ -83,8 +85,148 @@ $input-border: #4B5563
   Input placeholder "Passwort" type password
   Button background $primary width full "Anmelden"`
 
+// Deep Thinking system prompt - minimal but precise
+const DEEP_THINKING_PROMPT = `Du bist ein Mirror DSL Experte.
+
+Antworte NUR mit ausführbarem Mirror DSL Code.
+- UI-Requests → generiere Komponenten
+- "extrahiere/definiere tokens" → generiere $token: value Definitionen
+- Nutze existierende Tokens. Kommentare mit //.
+
+## MIRROR DSL REFERENZ
+
+### Layout
+horizontal/hor, vertical/ver, gap N, between, wrap, center
+grid N, stacked (z-layers)
+
+### Alignment
+horizontal-left/hor-l, horizontal-center/hor-cen, horizontal-right/hor-r
+vertical-top/ver-t, vertical-center/ver-cen, vertical-bottom/ver-b
+
+### Sizing
+width/w N, height/h N, min-width/minw, max-width/maxw
+full (100% both), grow, fill, shrink 0
+
+### Spacing
+padding/pad N, margin/mar N
+padding left N, padding left-right N, padding top-bottom N
+
+### Colors
+background/bg $token, color/col $token, border-color/boc $token
+
+### Border & Radius
+border/bor N [style] [color], radius/rad N
+radius 8 8 0 0 (per corner)
+
+### Typography
+size N, weight N/bold, line N, font "Name"
+align center/left/right, italic, underline, truncate
+
+### Visuals
+opacity/opa 0-1, shadow sm/md/lg, cursor pointer/move/grab
+z N, hidden, visible, disabled
+WICHTIG: cursor nur einwortige Werte (pointer, move, grab) - NICHT not-allowed!
+
+### Hover States (Inline)
+hover-background $token, hover-color $token
+hover-opacity N, hover-scale N, hover-radius N
+
+### Events
+onclick, onclick-outside, onhover, onchange, oninput
+onfocus, onblur, onkeydown KEY, onkeyup KEY, onload
+Keys: escape, enter, tab, space, arrow-up/down/left/right
+
+WICHTIG: Event-Handler VOR Children platzieren, nicht danach!
+
+### Actions
+toggle, show Name, hide Name, open Name [pos] [anim] [ms], close
+page Name, assign $var to expr
+highlight self/next/prev, select self, deselect self
+activate self, deactivate self, deactivate-siblings
+
+### Animations
+show fade slide-up 300, hide fade 150
+animate spin/pulse/bounce N
+
+### Named Instances
+Component named Name: props   // für Referenzierung
+- Item named Item1 "Text"     // in Listen
+
+### Events Block (für multiple Actions)
+events
+  ButtonName onclick
+    show Panel
+    hide OtherPanel
+    assign $active to true
+
+### States
+Component:
+  state default
+    background #333
+  state active
+    background $primary
+
+### Conditionals
+if $condition
+  Component
+else
+  OtherComponent
+
+Button if $active then background $primary else background #333
+
+### Primitives
+Input "placeholder" type email/password/text
+Image "src.jpg" width height fit cover
+Button "Label", Link "url" "Label"
+
+## BEISPIELE
+
+### Dropdown mit Animation
+Dropdown: vertical
+  Button named Trigger onclick toggle "Auswählen ▼"
+
+  Panel named Options hidden
+    show fade slide-down 200
+    hide fade 100
+    - Item hover-background #333 onclick select self "Option 1"
+    - Item hover-background #333 onclick select self "Option 2"
+    - Item hover-background #333 onclick select self "Option 3"
+
+events
+  Options onclick-outside
+    hide Options
+  Trigger onclick
+    toggle Options
+
+### Toggle/Switch
+Toggle: width 52 height 28 radius 14 cursor pointer
+  state off
+    background #333
+  state on
+    background $primary
+  Knob: width 24 height 24 radius 12 background white
+    state off
+      margin left 2
+    state on
+      margin left 26
+
+### Tabs
+Tabs: horizontal gap 0
+  - Tab named Tab1 onclick activate self, deactivate-siblings, show Content1, hide Content2 "Tab 1"
+  - Tab named Tab2 onclick activate self, deactivate-siblings, show Content2, hide Content1 "Tab 2"
+
+Tab:
+  state default
+    background transparent
+    border-bottom 2 transparent
+  state active
+    border-bottom 2 $primary
+
+Content1: padding 16 "Content for Tab 1"
+Content2: hidden padding 16 "Content for Tab 2"`
+
 /** Status of a line translation */
-export type LineStatus = 'pending' | 'translating' | 'done' | 'error'
+export type LineStatus = 'pending' | 'translating' | 'done' | 'warning' | 'error'
 
 /** Information about a line being translated */
 export interface LineTranslation {
@@ -99,6 +241,10 @@ export interface LineTranslation {
 export interface TranslationResult {
   code: string
   error?: string
+  /** Validation issues found in the generated code */
+  validationIssues?: CodeIssue[]
+  /** Whether the code passed validation */
+  isValid?: boolean
   timeToFirstToken: number
   totalTime: number
 }
@@ -109,6 +255,15 @@ export interface TranslationCallbacks {
   onFirstToken?: (latency: number) => void
   onComplete?: (result: TranslationResult) => void
   onError?: (error: Error) => void
+}
+
+/** Options for Deep Thinking mode */
+export interface DeepThinkingOptions {
+  enabled: boolean
+  /** Full layout code of current page */
+  layoutCode?: string
+  /** Components code */
+  componentsCode?: string
 }
 
 /**
@@ -206,6 +361,57 @@ export function buildContext(
 }
 
 /**
+ * Build context for Deep Thinking mode.
+ * Includes full page, components, and tokens.
+ */
+function buildDeepThinkingContext(
+  lineContent: string,
+  lineIndex: number,
+  options: DeepThinkingOptions,
+  tokensCode?: string
+): string {
+  const parts: string[] = []
+
+  // Add tokens
+  if (tokensCode?.trim()) {
+    parts.push('## TOKENS (verwende diese!)')
+    parts.push('```')
+    parts.push(tokensCode.trim())
+    parts.push('```')
+    parts.push('')
+  }
+
+  // Add components
+  if (options.componentsCode?.trim()) {
+    parts.push('## KOMPONENTEN-DEFINITIONEN')
+    parts.push('```')
+    parts.push(options.componentsCode.trim())
+    parts.push('```')
+    parts.push('')
+  }
+
+  // Add current page layout
+  if (options.layoutCode?.trim()) {
+    parts.push('## AKTUELLE SEITE')
+    parts.push('```')
+    // Mark the line to translate
+    const lines = options.layoutCode.split('\n')
+    lines[lineIndex] = `>>> ${lines[lineIndex]} <<<  // DIESE ZEILE ÜBERSETZEN`
+    parts.push(lines.join('\n'))
+    parts.push('```')
+    parts.push('')
+  }
+
+  parts.push('## AUFGABE')
+  parts.push(`Übersetze folgende Zeile zu Mirror DSL:`)
+  parts.push(`"${lineContent.trim()}"`)
+  parts.push('')
+  parts.push('Generiere vollständigen, funktionierenden Code. Nutze die definierten Tokens.')
+
+  return parts.join('\n')
+}
+
+/**
  * Translate a single line from natural language to Mirror DSL.
  * Uses streaming for fast feedback.
  */
@@ -214,7 +420,8 @@ export async function translateLine(
   context: string[],
   lineIndex: number,
   callbacks: TranslationCallbacks = {},
-  tokensCode?: string
+  tokensCode?: string,
+  deepThinking?: DeepThinkingOptions
 ): Promise<TranslationResult> {
   const startTime = performance.now()
   let firstTokenTime: number | null = null
@@ -231,8 +438,16 @@ export async function translateLine(
     }
   }
 
-  // Build the prompt with context and tokens
-  const prompt = buildContext(context, lineIndex, tokensCode)
+  // Choose model and prompt based on mode
+  const isDeepThinking = deepThinking?.enabled ?? false
+  const model = isDeepThinking ? OPUS_MODEL : HAIKU_MODEL
+  const systemPrompt = isDeepThinking ? DEEP_THINKING_PROMPT : SYSTEM_PROMPT
+  const maxTokens = isDeepThinking ? 2048 : 512
+
+  // Build the prompt with context
+  const prompt = isDeepThinking
+    ? buildDeepThinkingContext(lineContent, lineIndex, deepThinking!, tokensCode)
+    : buildContext(context, lineIndex, tokensCode)
 
   try {
     const response = await fetch(API_ENDPOINT, {
@@ -241,15 +456,15 @@ export async function translateLine(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getApiKey()}`,
         'HTTP-Referer': window.location.origin,
-        'X-Title': 'Mirror NL Mode',
+        'X-Title': isDeepThinking ? 'Mirror Deep Thinking' : 'Mirror NL Mode',
       },
       body: JSON.stringify({
-        model: HAIKU_MODEL,
+        model,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 512,
+        max_tokens: maxTokens,
         stream: true,
       }),
     })
@@ -309,6 +524,10 @@ export async function translateLine(
       .replace(/```\s*/g, '')
       .trim()
 
+    // Apply algorithmic fixes (fast, synchronous)
+    // This catches common LLM errors like missing $ on tokens
+    code = applyAllFixes(code)
+
     // Preserve original indentation
     const originalIndent = lineContent.match(/^(\s*)/)?.[1] || ''
     if (code && !code.startsWith(originalIndent)) {
@@ -321,8 +540,13 @@ export async function translateLine(
       }).join('\n')
     }
 
+    // Validate the generated code
+    const validation = validateMirrorCode(code, false, 'de')
+
     const result: TranslationResult = {
       code,
+      isValid: validation.valid,
+      validationIssues: validation.issues.length > 0 ? validation.issues : undefined,
       timeToFirstToken: firstTokenTime ?? totalTime,
       totalTime,
     }

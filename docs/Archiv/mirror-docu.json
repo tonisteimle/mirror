@@ -1,0 +1,2850 @@
+{
+  "title": "Mirror Documentation",
+  "version": "1.0",
+  "generatedAt": "2026-02-14T23:35:23.848Z",
+  "sections": [
+    {
+      "id": "idea",
+      "title": "What is Mirror",
+      "lead": "Mirror is a description language for user interfaces. One syntax for structure, styling, and interactions – that compiles to React.",
+      "subsections": [
+        {
+          "id": "",
+          "title": "Learn Mirror in 2 Minutes",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Every example below is interactive. Edit the code and see the result instantly."
+            },
+            {
+              "type": "paragraph",
+              "text": "**1. A Component**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Everything in Mirror is a component. Every component has a name – this is how you reuse it later."
+            },
+            {
+              "type": "code",
+              "code": "Button \"Hello World\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Button is the component name, \"Hello World\" is its content."
+            },
+            {
+              "type": "paragraph",
+              "text": "**2. Add Styling**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Properties style a component. They are written as name-value pairs directly after the component name. Use background for background color, color for text color."
+            },
+            {
+              "type": "code",
+              "code": "Row gap 12\n  Button bg #2271c1 pad 12 24 rad 8 \"Short form\"\n  Button background #2271c1 padding 12 24 radius 8 \"Long form\""
+            },
+            {
+              "type": "paragraph",
+              "text": "background #2271c1 sets the background color. padding adds spacing (vertical horizontal), radius rounds corners. Values are in pixels. Properties can be shortened to three letters: background → bg, padding → pad, radius → rad."
+            },
+            {
+              "type": "paragraph",
+              "text": "**3. Reuse and Override**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Components remember their styling. Use them again and they inherit everything. Override only what's different."
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal gap 12\n  Button background #2271c1 padding 12 24 radius 8 \"Hello World\"\n  Button \"Save\"\n  Button background #c12271 \"Delete\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The first Button defines the style. The second inherits it. The third overrides background to red."
+            },
+            {
+              "type": "paragraph",
+              "text": "**4. Layouts and Children**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Components can contain other components. Indentation (2 spaces) defines hierarchy. Layout properties arrange children."
+            },
+            {
+              "type": "code",
+              "code": "Tile vertical #3281d1 padding 20 radius 12 gap 8\n  Label size 12 \"Revenue\"\n  Value size 28 weight bold \"2.7 Mio\""
+            },
+            {
+              "type": "paragraph",
+              "text": "vertical arranges children vertically, gap adds spacing. Label and Value are children of Tile."
+            },
+            {
+              "type": "paragraph",
+              "text": "**5. Reusable Components**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Add : after a name to define a template. Templates can have child placeholders that get filled when used."
+            },
+            {
+              "type": "code",
+              "code": "Tile: vertical background #3281d1 padding 20 radius 12 gap 8\n  Label size 12\n  Value size 28 weight bold\n\nDashboard grid 3 gap 16\n  Tile Label \"Revenue\" Value \"2.7 Mio\"\n  Tile Label \"Customers\" Value \"40\"\n  Tile Label \"Growth\" Value \"+12%\"\n  Tile Label \"Users\" Value \"1.2k\"\n  Tile Label \"Orders\" Value \"89\"\n  Tile Label \"Rating\" Value \"4.8\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Tile: defines the template. Each Tile usage fills in the Label and Value content."
+            },
+            {
+              "type": "paragraph",
+              "text": "**6. States**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Components can have different visual states. Properties inside a state override the defaults when that state is active."
+            },
+            {
+              "type": "code",
+              "code": "Button background #2271c1 padding 12 24 radius 8 \"Hover me\"\n  state hover\n    background #1d5ba0\n  state active\n    background #174a83"
+            },
+            {
+              "type": "paragraph",
+              "text": "state hover changes color on hover. state active changes it when pressed."
+            },
+            {
+              "type": "paragraph",
+              "text": "**7. Click Events**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Events trigger actions. onclick runs when the user clicks, onchange when a value changes."
+            },
+            {
+              "type": "code",
+              "code": "Button background #2271c1 padding 12 24 radius 8 \"Click me\"\n  state hover\n    background #1d5ba0\n  onclick alert \"It works!\""
+            },
+            {
+              "type": "paragraph",
+              "text": "onclick alert \"It works!\" shows a message when clicked."
+            },
+            {
+              "type": "paragraph",
+              "text": "**8. Toggle Visibility**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Actions can show, hide, or toggle elements. Use the element's name as the target."
+            },
+            {
+              "type": "code",
+              "code": "Box vertical #3281d1 padding 20 radius 12 gap 12\n  Button #2271c1 padding 10 16 radius 6 \"Show/Hide Details\"\n    state hover\n      color #1d5ba0\n    onclick toggle Details\n  Details vertical #222 padding 16 radius 8 gap 4\n    Text \"Here are the details.\"\n    Text \"They appear and disappear.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "toggle Details shows or hides Details on each click."
+            },
+            {
+              "type": "paragraph",
+              "text": "**9. Starting Hidden**"
+            },
+            {
+              "type": "paragraph",
+              "text": "The hidden property makes an element invisible at the start. It appears when toggled or shown."
+            },
+            {
+              "type": "code",
+              "code": "Box vertical #3281d1 padding 20 radius 12 gap 12\n  Button #2271c1 padding 10 16 radius 6 \"Show Message\"\n    state hover\n      color #1d5ba0\n    onclick toggle Message\n  Message hidden \"Hello! Click again to hide.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Message hidden starts invisible. Click the button to reveal it."
+            },
+            {
+              "type": "paragraph",
+              "text": "The following sections describe each concept in detail."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "components",
+      "title": "Components",
+      "lead": "You've seen that Mirror code is compact. Now let's understand why: everything is a component, and components are defined by usage.",
+      "subsections": [
+        {
+          "id": "all-elements-are-components",
+          "title": "All Elements are Components",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Every element is a component. The first usage defines it, subsequent ones inherit."
+            },
+            {
+              "type": "code",
+              "code": "Row gap 8\n  Button background #2271c1, padding 8 16, radius 8, \"Next\"\n  Button \"Save\"\n  Button \"Cancel\"\n  Button \"Delete\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The first button sets background (background), padding, and radius. The following ones inherit this definition. Use color to set text color explicitly."
+            },
+            {
+              "type": "exercise",
+              "task": "Change the color to red (#c14022) and the padding to 12 24.",
+              "code": "Button #2271c1, padding 8 16, radius 8, \"Click me\""
+            }
+          ]
+        },
+        {
+          "id": "implicit-explicit-definition",
+          "title": "Implicit versus Explicit Definition",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "The example above shows how you can define and display components directly while designing. Later, you might want to separate definition from usage. The only change needed is a colon:"
+            },
+            {
+              "type": "code",
+              "code": "Button: background #2271c1, padding 8 16, radius 8\n\nRow horizontal, gap 8\n  Button \"Next\"\n  Button \"Save\"\n  Button \"Cancel\"\n  Button \"Delete\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The colon makes the difference: with a colon, the component is defined but not rendered. Without a colon, it is rendered. The definition can then be moved to a separate file if desired."
+            },
+            {
+              "type": "exercise",
+              "task": "Define a Card: with dark background and padding, then use it twice.",
+              "code": "// Define your Card here\n\nCard\nCard"
+            }
+          ]
+        },
+        {
+          "id": "hierarchical-structure",
+          "title": "Hierarchical Structure",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Interfaces are hierarchical: a card contains a title and text, a header contains a logo and navigation. In HTML, this means nested tags – opening tags, closing tags, and the actual content somewhere in between. In Mirror, indentation expresses this hierarchy directly. The visual structure of the code matches the visual structure of the UI. No closing tags, no tag soup – just clear nesting through whitespace."
+            },
+            {
+              "type": "code",
+              "code": "Footer padding 16, hor, between, #1a1a1a, radius 8\n  Save-Area hor, gap 8\n    Button #2271c1, padding 8 16, radius 6, \"Save\"\n    Button \"Cancel\"\n  Navigation-Area hor, gap 8\n    Button #333, padding 8 16, radius 6, \"Back\"\n    Button \"Next\""
+            },
+            {
+              "type": "paragraph",
+              "text": "horizontal arranges children horizontally, between distributes available space between them. Indented elements are children of their parent."
+            },
+            {
+              "type": "exercise",
+              "task": "Add a third button \"Delete\" to the Save-Area. Notice how subsequent buttons inherit from the first one!",
+              "code": "Footer padding 16, hor, between, #1a1a1a, radius 8\n  Save-Area hor, gap 8\n    Button background #2271c1, padding 8 16, radius 6, \"Save\"\n    Button \"Cancel\"\n  Navigation-Area hor, gap 8\n    Button background #333, \"Back\"\n    Button \"Next\""
+            }
+          ]
+        },
+        {
+          "id": "components-in-components",
+          "title": "Components in Components",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "The same result is achieved when components are defined separately:"
+            },
+            {
+              "type": "code",
+              "code": "Footer: padding 16, hor, between, #1a1a1a, radius 8\nSave-Area: hor, gap 8\nNavigation-Area: hor, gap 8\n\nFooter\n  Save-Area\n    Button #2271c1, padding 8 16, radius 6, \"Save\"\n  Navigation-Area\n    Button #333, padding 8 16, radius 6, \"Next\""
+            },
+            {
+              "type": "paragraph",
+              "text": "These components can then be combined freely:"
+            },
+            {
+              "type": "code",
+              "code": "Footer\n  Save-Area\n    Button \"Save\"\n    Button \"Cancel\"\n  Navigation-Area\n    Button \"Back\"\n    Button \"Next\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Since components are not tightly coupled, they accept different children:"
+            },
+            {
+              "type": "code",
+              "code": "Footer\n  Button \"Save\"\n  Button \"Cancel\""
+            }
+          ]
+        },
+        {
+          "id": "individual-instances",
+          "title": "Customizing Instances",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Each usage of a component can be customized inline:"
+            },
+            {
+              "type": "code",
+              "code": "Button #5ba8f5, padding 8 16, radius 6, \"Next\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The label becomes \"Next\" and the background changes to #5ba8f5. Properties added at usage override the component definition."
+            }
+          ]
+        },
+        {
+          "id": "inheritance",
+          "title": "Inheritance",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "For reusable variants, components can be derived from each other:"
+            },
+            {
+              "type": "code",
+              "code": "// Base button\nButton: padding 8 16, radius 8\n\n// Variants\nPrimary-Button from Button: background #2271c1\nSecondary-Button from Button: background transparent, border 1 #2271c1\nDanger-Button from Button: background #c14022\n\nRow horizontal, gap 8\n  Primary-Button \"Save\"\n  Secondary-Button \"Cancel\"\n  Danger-Button \"Delete\""
+            },
+            {
+              "type": "paragraph",
+              "text": "With from, a component inherits all properties from the base. New properties are added or override existing ones."
+            },
+            {
+              "type": "code",
+              "code": "Actions horizontal, gap 12\n  Primary-Button \"Save\"\n  Secondary-Button \"Cancel\"\n  Danger-Button \"Delete\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a GhostBtn variant with transparent background and a blue border.",
+              "code": "Btn: padding 8 16, radius 8\n\nPrimaryBtn from Btn: background #2271c1\nDangerBtn from Btn: background #c14022\n\n// Add GhostBtn here (hint: color transparent, border 1 #2271c1)\n\nRow gap 8\n  PrimaryBtn \"Save\"\n  DangerBtn \"Delete\""
+            }
+          ]
+        },
+        {
+          "id": "component-states",
+          "title": "States",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Components can define state blocks for different visual appearances. Use onclick toggle to switch between them. System states (hover, focus, active, disabled) activate automatically."
+            },
+            {
+              "type": "code",
+              "code": "Button: padding 12 24, background #2271c1, radius 8\n  state hover\n    background #3388e8\n\nButton \"Hover me\""
+            },
+            {
+              "type": "paragraph",
+              "text": "See States section for details on defining states, system states, and hover shorthand."
+            },
+            {
+              "type": "exercise",
+              "task": "Add a state hover with a lighter blue (#5ba8f5).",
+              "code": "Button: #2271c1, padding 8 16, radius 8\n\n// Add hover state here\n\nButton \"Hover me\""
+            }
+          ]
+        },
+        {
+          "id": "combining-states-inheritance",
+          "title": "Combining States and Inheritance",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A base component can contain all possible elements and states. Variants inherit everything and override only what they need."
+            },
+            {
+              "type": "paragraph",
+              "text": "**The Base Component**"
+            },
+            {
+              "type": "paragraph",
+              "text": "The base button defines three child elements: IconLeft, Label, and IconRight. Both icons are hidden by default. It also defines two states: hover and disabled."
+            },
+            {
+              "type": "code",
+              "code": "Button:\n  hor, gap 8, padding 12 24, radius 8, color #2271c1\n  IconLeft icon check, hidden\n  Label \"Button\"\n  IconRight icon chevron-right, hidden\n\n  state hover\n    background #1a5a9e\n\n  state disabled\n    color #94A3B8, opacity 0.6\n\nRow horizontal, gap 12\n  Button\n  Button IconLeft visible, Label \"Confirm\"\n  Button disabled, Label \"Disabled\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Variants**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Each variant inherits all elements and states from the base. It only specifies what's different."
+            },
+            {
+              "type": "code",
+              "code": "Button: hor, gap 8, padding 12 24, radius 8, color #2271c1\n  IconLeft icon check, hidden\n  Label \"Button\"\n\nPrimary-Button from Button:\n  IconLeft visible\n\nSecondary-Button from Button:\n  color #E2E8F0, textCol #1E293B\n\nGhost-Button from Button:\n  color transparent, textCol #2271c1, border 1 #2271c1\n\nRow horizontal, gap 12\n  Primary-Button Label \"Next\"\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Info\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Usage**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Variants can be used directly, or further customized at instantiation. The disabled state is inherited from the base and available on all variants."
+            },
+            {
+              "type": "code",
+              "code": "Page:\n  ver, gap 16, padding 32\n\n  Primary-Button\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Learn more\", IconRight visible\n  Icon-Button\n  Primary-Button disabled"
+            }
+          ]
+        },
+        {
+          "id": "slots",
+          "title": "Slots – Flexible Components",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Your Card component always has the same children. But what if you want different actions sometimes? Two buttons, three buttons, or an icon instead? Slots let you define where content goes without prescribing what that content is."
+            },
+            {
+              "type": "paragraph",
+              "text": "Child components with a colon become named slots:"
+            },
+            {
+              "type": "code",
+              "code": "Card: ver, padding 24, gap 16, background #1A1A23, radius 12\n  Header: hor, between, vertical-center\n  Title: size 20, weight 600\n  Body: color #9CA3AF\n  Actions: hor, gap 8, horizontal-right\n\nCard\n  Header\n    Badge background #10B981, padding 4 8, radius 4, size 12, \"New\"\n    Icon icon more-vertical\n  Title \"Project Alpha\"\n  Body \"A new project with great potential.\"\n  Actions\n    Button background #333, padding 8 16, radius 6, \"Cancel\"\n    Button background #2271c1, \"Save\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Access nested elements directly by name – no matter how deep they are in the structure:"
+            },
+            {
+              "type": "code",
+              "code": "Header: hor, between, padding 12, background #1a1a1a, radius 8\n  Left: hor, gap 16, vertical-center\n    Logo: width 100, height 32\n    Nav: hor, gap 8\n  Right:\n    Avatar: width 36, height 36, radius 18\n\n// Direct access to nested elements\nHeader\n  Logo background #EF4444\n  Avatar background #2271c1"
+            },
+            {
+              "type": "paragraph",
+              "text": "Names are flat, structure is preserved. This makes components easy to use without knowing their internal hierarchy."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Creating Multiple Items**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Use - to create new instances instead of modifying existing ones:"
+            },
+            {
+              "type": "code",
+              "code": "Menu: ver, width 200, background #1A1A23, radius 8\n  Item: padding 8 12\n\nMenu\n  - Item \"Profile\"\n  - Item \"Settings\"\n  - Item color #EF4444, \"Logout\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a Panel with slots for Header, Body, and Footer.",
+              "code": "Panel: background #1A1A23, padding 16, radius 8, gap 12\n  Header: weight 600\n  Body:\n  Footer: hor, horizontal-right\n\nPanel\n  Header \"My Panel\"\n  Body \"Content here...\"\n  Footer\n    Button background #2271c1, padding 8 16, radius 6, \"OK\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "syntax-shortcuts",
+      "title": "Syntax Shortcuts",
+      "lead": "You understand components and inheritance. Now let's learn shortcuts that make your code even more concise.",
+      "subsections": [
+        {
+          "id": "dimension-shorthand",
+          "title": "Dimension Shorthand",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "The first one or two numbers after a component name are interpreted as w and height:"
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 8\n  Box 80 50, #2271c1, radius 8, cen\n    Text size 11, \"80×50\"\n  Card 60, #333, radius 8, cen\n    Text size 11, \"60\""
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 8\n  Box width 80, height 50, #2271c1, radius 8, cen\n    Text size 11, \"80×50\"\n  Card width 60, #333, radius 8, cen\n    Text size 11, \"60\""
+            },
+            {
+              "type": "paragraph",
+              "text": "One number sets w only. Two numbers set w and height. You can mix shorthand with explicit properties."
+            },
+            {
+              "type": "paragraph",
+              "text": "Why this shorthand? Width and h are the most common sizing properties. Making them implicit reduces visual noise while keeping code readable. The pattern mirrors how designers think: \"a 300 by 400 box\"."
+            },
+            {
+              "type": "exercise",
+              "task": "Simplify this code using dimension shorthand – remove width and height keywords.",
+              "code": "Card width 280, height 180, ver, #3281d1, radius 12, padding 16, gap 8\n  Title weight 600, \"Project Alpha\"\n  Text \"A description here\""
+            }
+          ]
+        },
+        {
+          "id": "image-shorthand",
+          "title": "Image Shorthand",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "For Image, the string is the source URL, followed by optional dimensions:"
+            },
+            {
+              "type": "code",
+              "code": "Gallery horizontal gap 16\n  Image \"https://picsum.photos/id/10/200/150\" 200 150, radius 8\n  Image \"https://picsum.photos/id/20/120/80\" 120 80, radius 8\n  Image \"https://picsum.photos/id/64/48/48\" 48 48, radius 24"
+            }
+          ]
+        },
+        {
+          "id": "opacity",
+          "title": "Transparency",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use opacity for transparency (0–1, where 0 is fully transparent and 1 is fully opaque):"
+            },
+            {
+              "type": "code",
+              "code": "Container horizontal gap 16\n  Overlay 80 80 background #000 opacity 0.5 radius 8\n  Overlay 80 80 background #2271c1 opacity 0.75 radius 8\n  Overlay 80 80 background #fff opacity 0.25 radius 8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tokens",
+      "title": "Tokens",
+      "lead": "Components centralize structure. But what about values – colors, sizes, spacing? Tokens let you define them once and reuse everywhere.",
+      "subsections": [
+        {
+          "id": "type-suffixes",
+          "title": "Type Suffixes",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "The suffix tells Mirror the type. With a typed suffix, the property name can be omitted:"
+            },
+            {
+              "type": "code",
+              "code": "// Without suffix – property required\n$blue: #2271c1\n\n// With suffix – Mirror infers the property\n$blue-color: #2271c1\n\nRow horizontal, gap 12\n  Button background $blue, padding 8 16, radius 8, \"bg $blue\"\n  Button $blue-color, padding 8 16, radius 8, \"$blue-color\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Available suffixes:"
+            },
+            {
+              "type": "paragraph",
+              "text": "When you use typed suffixes consistently, your components become cleaner and more readable. Here's a practical example – a styled card using multiple typed tokens:"
+            },
+            {
+              "type": "code",
+              "code": "// Design tokens with type suffixes\n$primary-color: #2271c1\n$text-color: #fff\n$muted-color: #94a3b8\n$card-padding: 20\n$card-radius: 12\n$card-gap: 12\n$title-size: 18\n\n// Use tokens directly – no property names needed\nCard vertical $primary-background $card-padding $card-radius $card-gap\n  Title $text-color $title-size weight 600, \"Project Status\"\n  Text $muted-color, \"Last updated: Today\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Without type suffixes, you'd need to specify every property name explicitly: col $primary, pad $padding, rad $radius. The suffixes let Mirror infer the property from the token name."
+            }
+          ]
+        },
+        {
+          "id": "tokens-vs-definitions",
+          "title": "Tokens vs. Definitions",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Tokens hold single values – one color, one number, one string. But what if you want to reuse a combination of properties, like a text style with font, size, and weight together?"
+            },
+            {
+              "type": "paragraph",
+              "text": "That's what Component Definitions are for. While tokens store individual values, definitions bundle multiple properties into reusable components:"
+            },
+            {
+              "type": "code",
+              "code": "// Tokens: single values\n$primary-color: #2271c1\n$card-padding: 16\n$card-radius: 8\n\n// Definitions: property combinations\nHeading: size 24 weight 600\nSubheading: size 16 weight 500 color #94a3b8\nBody: size 14 color #e2e8f0\n\n// Use both together\nCard vertical $primary-background $card-padding $card-radius gap 8\n  Heading \"Dashboard\"\n  Subheading \"Welcome back\"\n  Body \"Here's your daily summary.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Think of it this way: Tokens are your design system's raw materials (colors, spacing, sizes). Definitions are the recipes that combine those materials into consistent patterns (text styles, button variants, card layouts)."
+            }
+          ]
+        },
+        {
+          "id": "semantic-hierarchy",
+          "title": "Semantic Token Hierarchy",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Design systems often organize tokens in layers. Base tokens define raw values. Semantic tokens assign meaning. Component tokens connect to specific UI elements."
+            },
+            {
+              "type": "code",
+              "code": "// 1. Base colors\n$blue-500: #2271c1\n$blue-600: #1a5a9e\n$slate-800: #1e293b\n\n// 2. Semantic tokens\n$primary-color: $blue-500\n$primary-hover-color: $blue-600\n$card-color: $slate-800\n\n// 3. Usage\nCard $card-color, padding 16, radius 8, gap 8\n  Text \"Change $blue-500 → all updates\"\n  Button $primary-color, padding 8 16, radius 6, hover-color $primary-hover-color, \"Primary\""
+            },
+            {
+              "type": "paragraph",
+              "text": "This structure allows changes at any level. Swap $blue-500 for a different shade, and all primary elements update. Reassign $primary-color to a different base color, and the meaning stays intact. Change $button-color independently if buttons need a unique treatment."
+            },
+            {
+              "type": "code",
+              "code": "$btn-color: #2271c1\n$btn-hover-color: #1a5a9e\n\nButton: $btn-color, padding 8 16, radius 8\n  state hover\n    $btn-hover-color\n\nButton \"Hover me\""
+            },
+            {
+              "type": "exercise",
+              "task": "Add a $danger color token and use it on a second button.",
+              "code": "$primary: #2271c1\n$radius: 8\n\nRow gap 8\n  Button background $primary, radius $radius, padding 8 16, \"Save\"\n  // Add danger button here"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "typography",
+      "title": "Typography",
+      "lead": "Any component with a string becomes text. Properties control how it looks.",
+      "subsections": [
+        {
+          "id": "text-properties",
+          "title": "Text Properties",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "size 14 – Font size in pixels",
+                "weight 600 – Font weight (100-900)",
+                "font \"Inter\" – Font family",
+                "col #fff – Text color",
+                "line 1.5 – Line h (multiplier or px)",
+                "align center – Text alignment (left, center, right)",
+                "italic – Italic style",
+                "underline – Underlined text",
+                "uppercase – Transform to capitals",
+                "truncate – Cut off with \"...\" (needs width)"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "text-color",
+          "title": "Unified Color",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "color is always text color. background is always background color. Simple and explicit."
+            },
+            {
+              "type": "code",
+              "code": "Box gap 8\n  Button background #2271c1 color #FFF \"Blue background, white text\"\n  Title color #2271c1 \"Blue text\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a card with a large bold title and a smaller muted description.",
+              "code": "Card #3281d1, padding 16, radius 8, gap 4\n  Title size 18, weight 600, \"Card Title\"\n  Description size 13, \"This is a description\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Product Card with Image**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Combine images with cards for rich content:"
+            },
+            {
+              "type": "code",
+              "code": "ProductCard width 200, background #1a1a1a, radius 12, overflow hidden\n  Image \"https://picsum.photos/id/96/200/150\" w fill, height 150, fit cover\n  Info ver, padding 12, gap 4\n    Name weight 600, \"Wireless Headphones\"\n    Price color #10B981, \"$129\""
+            }
+          ]
+        },
+        {
+          "id": "inline-spans",
+          "title": "Inline Spans",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Format parts of text inline with *text*:style. The style can be bold, italic, underline, or a custom token."
+            },
+            {
+              "type": "list",
+              "items": [
+                "*text*:bold – Bold text (weight 700)",
+                "*text*:italic – Italic text",
+                "*text*:underline – Underlined text",
+                "*text*:$token – Apply token styles"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Box gap 8\n  Box \"This is *important*:bold and this is *emphasized*:italic\"\n  Box \"Click *here*:underline to continue\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Custom Style Tokens**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Define a token with multiple style properties and apply it to inline spans."
+            },
+            {
+              "type": "code",
+              "code": "$warning: color #EF4444 weight 700\n$highlight: color #22C55E italic\n\nBox gap 8\n  Box \"There is a *critical error*:$warning in your code\"\n  Box \"This feature is *new*:$highlight in version 2.0\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Note: *text* without :style is treated as normal text. Use \\* to escape a literal asterisk."
+            }
+          ]
+        },
+        {
+          "id": "icons",
+          "title": "Icons",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "icon displays a Lucide icon. Use the icon name from lucide.dev/icons."
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 16\n  Icon icon \"home\"\n  Icon icon \"settings\"\n  Icon icon \"user\"\n  Icon icon \"search\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Icon Size and Color**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Icons inherit text color from color. Use size to change the icon size."
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 12, vertical-center\n  Small icon \"star\", size 16, color #71717A\n  Medium icon \"star\", size 24, color #F4F4F5\n  Large icon \"star\", size 32, color #FBBF24"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Icons in Buttons**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Combine icons with text in buttons. Use horizontal and gap to arrange them."
+            },
+            {
+              "type": "code",
+              "code": "Button hor, gap 8, vertical-center, background #2271c1, padding 8 16, radius 6\n  Icon icon \"download\", size 16\n  Label \"Download\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Icon-only Buttons**"
+            },
+            {
+              "type": "paragraph",
+              "text": "For icon-only buttons, use cen to center the icon and set equal w and height."
+            },
+            {
+              "type": "code",
+              "code": "IconButton: width 36, height 36, radius 6, background #3F3F46, cen\n\nRow horizontal, gap 8\n  IconButton\n    Icon icon \"bold\", size 16\n  IconButton\n    Icon icon \"italic\", size 16\n  IconButton\n    Icon icon \"underline\", size 16"
+            },
+            {
+              "type": "exercise",
+              "task": "Create a button with a \"plus\" icon and the text \"Add item\".",
+              "code": "Button #2271c1, padding 8 16, radius 6, \"Add\""
+            },
+            {
+              "type": "list",
+              "items": [
+                "size N – Font size in pixels",
+                "weight N – Font weight (100-900)",
+                "font \"name\" – Font family",
+                "line N – Line h (multiplier or px)",
+                "col #HEX – Text color",
+                "align left/center/right – Text alignment",
+                "italic – Italic text",
+                "underline – Underlined text",
+                "uppercase / lowercase – Transform case",
+                "truncate – Cut off with \"...\"",
+                "icon \"name\" – Lucide icon"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text",
+      "title": "Text",
+      "lead": "For longer text content, Mirror provides a special syntax with formatting tokens for headings, paragraphs, and inline styles.",
+      "subsections": [
+        {
+          "id": "",
+          "title": "Multiline Strings",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use single quotes for text that spans multiple lines:"
+            },
+            {
+              "type": "code",
+              "code": "text\n  '$h2 Welcome\n\n   $p This paragraph spans\n   multiple lines.\n\n   $p Another paragraph.'"
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Block Tokens",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Block tokens start a line and style all following text:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "$h1, $h2, $h3, $h4 – Headings",
+                "$p – Paragraph",
+                "$lead – Lead paragraph",
+                "$li – List item"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "text\n  '$h2 Getting Started\n\n   $lead Mirror is a DSL for UI.\n\n   $p Key features:\n   $li Simple syntax\n   $li Live preview'"
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Inline Tokens",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Inline tokens use brackets to format specific phrases:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "$b[text] – Bold",
+                "$i[text] – Italic",
+                "$code[text] – Inline code",
+                "$link[text](url) – Hyperlink"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "text\n  '$p This has $b[bold] and $i[italic] text.\n\n   $p Visit $link[our site](https://example.com).'"
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "All Tokens",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Headings: $h1, $h2, $h3, $h4",
+                "Text: $p, $lead, $subtitle, $label",
+                "Lists: $li",
+                "Inline: $b[...], $i[...], $u[...], $code[...]",
+                "Links: $link[text](url)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "layout-basics",
+      "title": "Layout",
+      "lead": "You know how to style text. Now let's arrange elements in space – rows, columns, grids, and alignment.",
+      "subsections": [
+        {
+          "id": "direction",
+          "title": "Direction",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "By default, children stack vertically. Use horizontal for horizontal layout."
+            },
+            {
+              "type": "code",
+              "code": "Menu\n  Item \"Dashboard\"\n  Item \"Projects\"\n  Item \"Settings\""
+            },
+            {
+              "type": "code",
+              "code": "Tabs hor\n  Tab \"Overview\"\n  Tab \"Details\"\n  Tab \"History\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Use vertical to explicitly set vertical layout, useful when overriding an inherited horizontal layout."
+            }
+          ]
+        },
+        {
+          "id": "gap",
+          "title": "Gap",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "gap sets the space between children. Without gap, elements touch each other."
+            },
+            {
+              "type": "code",
+              "code": "Actions horizontal, gap 12\n  Button background #2271c1, padding 8 16, radius 6, \"Save\"\n  Button \"Cancel\"\n  Button \"Delete\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a vertical menu with 16px gap between items.",
+              "code": "Menu ver\n  Item #27272A, padding 12 16, radius 6, \"Dashboard\"\n  Item \"Projects\"\n  Item \"Settings\""
+            }
+          ]
+        },
+        {
+          "id": "alignment",
+          "title": "Alignment",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Control how children align within their container."
+            },
+            {
+              "type": "list",
+              "items": [
+                "horizontal-left / horizontal-center / horizontal-right – Horizontal: left, center, right",
+                "vertical-top / vertical-center / vertical-bottom – Vertical: top, center, bottom",
+                "cen – Center both axes"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Header hor, vertical-center, gap 12, padding 16, background #2271c1\n  Logo weight 600, \"App\"\n  Status color #22c55e, width 8, height 8, radius 4"
+            }
+          ]
+        },
+        {
+          "id": "distribution",
+          "title": "Distribution",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "between distributes space between children, pushing them apart. Useful for headers with logo and navigation, or footers with actions on both sides."
+            },
+            {
+              "type": "code",
+              "code": "Header hor, between, vertical-center, padding 16, background #2271c1\n  Logo weight 600, \"Mirror\"\n  Nav hor, gap 16\n    Link \"Docs\"\n    Link \"GitHub\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Use between for space-between distribution along the main axis."
+            },
+            {
+              "type": "exercise",
+              "task": "Create a footer with \"Back\" on the left and \"Next\" on the right.",
+              "code": "Footer hor, padding 16, #3281d1, radius 8\n  Button #27272A, padding 8 16, radius 6, \"Back\"\n  Button #2271c1, \"Next\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Hero Section with Image**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Combine layout, image, and text for a hero banner:"
+            },
+            {
+              "type": "code",
+              "code": "Hero hor, between, vertical-center, background #1a1a1a, padding 32, radius 16, gap 24\n  Content ver, gap 12\n    Title size 24, weight bold, \"Build faster\"\n    Text color #888, \"Design and prototype in one tool.\"\n    Button background #2271c1, padding 12 24, radius 8, \"Get Started\"\n  Image \"https://picsum.photos/id/180/200/150\" radius 12"
+            }
+          ]
+        },
+        {
+          "id": "wrap",
+          "title": "Wrap",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "wrap allows children to wrap to the next line when they don't fit. Essential for tag lists, galleries, or responsive layouts."
+            },
+            {
+              "type": "code",
+              "code": "Tags hor, wrap, gap 8\n  Tag background #27272A, padding 4 8, radius 4, \"React\"\n  Tag \"TypeScript\"\n  Tag \"Node.js\"\n  Tag \"GraphQL\"\n  Tag \"PostgreSQL\"\n  Tag \"Docker\""
+            }
+          ]
+        },
+        {
+          "id": "grow-shrink",
+          "title": "Grow and Shrink",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "grow makes an element expand to fill available space. shrink 0 prevents an element from shrinking."
+            },
+            {
+              "type": "code",
+              "code": "SearchBar hor, gap 8, padding 8, color #2271c1, radius 8\n  Input grow, background #27272A, padding 8 12, radius 4, placeholder \"Search...\"\n  Button shrink 0, background #2271c1, padding 8 16, radius 4, \"Go\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Common pattern: sidebar with fixed width, main content that grows."
+            },
+            {
+              "type": "code",
+              "code": "Layout hor, gap 16\n  Sidebar width 200, shrink 0\n  Main grow"
+            }
+          ]
+        },
+        {
+          "id": "grid",
+          "title": "Grid",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "grid creates a CSS Grid layout. Specify the number of columns or explicit column widths."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Equal Columns**"
+            },
+            {
+              "type": "code",
+              "code": "Cards grid 3, gap 16\n  Card background #2271c1, padding 16, radius 8, \"One\"\n  Card \"Two\"\n  Card \"Three\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Custom Column Widths**"
+            },
+            {
+              "type": "code",
+              "code": "Layout grid 250 auto, gap 16\n  Sidebar background #2271c1, padding 16, radius 8, \"Sidebar (250px)\"\n  Main background #27272A, padding 16, radius 8, \"Main (auto)\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Percentage Widths**"
+            },
+            {
+              "type": "code",
+              "code": "Layout grid 30% 70%, gap 16\n  Left #2271c1, padding 16, radius 8, cen, \"30%\"\n  Right #333, padding 16, radius 8, cen, \"70%\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Auto-fill Grid**"
+            },
+            {
+              "type": "paragraph",
+              "text": "grid auto 200 creates as many 200px columns as fit, automatically wrapping."
+            },
+            {
+              "type": "code",
+              "code": "Gallery grid auto 150, gap 12\n  Image \"https://picsum.photos/id/10/150/100\" radius 8\n  Image \"https://picsum.photos/id/20/150/100\" radius 8\n  Image \"https://picsum.photos/id/30/150/100\" radius 8\n  Image \"https://picsum.photos/id/40/150/100\" radius 8\n  Image \"https://picsum.photos/id/50/150/100\" radius 8"
+            },
+            {
+              "type": "exercise",
+              "task": "Create a 2x2 grid of cards with 12px gap.",
+              "code": "Cards\n  Card #3281d1, padding 16, radius 8, \"Card 1\"\n  Card \"Card 2\"\n  Card \"Card 3\"\n  Card \"Card 4\""
+            }
+          ]
+        },
+        {
+          "id": "scroll",
+          "title": "Scroll",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Make containers scrollable when content overflows. Essential for feeds, lists, and carousels."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Vertical Scroll**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Use scroll for vertically scrollable content like chat messages or long lists:"
+            },
+            {
+              "type": "code",
+              "code": "ChatFeed height 150, scroll, ver, gap 8, #1a1a1a, padding 8, radius 8\n  Message #333, padding 12, radius 8, \"Hey, how are you?\"\n  Message #2271c1, padding 12, radius 8, \"I'm good, thanks!\"\n  Message #333, padding 12, radius 8, \"Want to grab lunch?\"\n  Message #2271c1, padding 12, radius 8, \"Sure, sounds great!\"\n  Message #333, padding 12, radius 8, \"Meet at 12:30?\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Horizontal Carousel**"
+            },
+            {
+              "type": "paragraph",
+              "text": "scroll-horizontal enables horizontal scrolling. Add snap to make items snap into place:"
+            },
+            {
+              "type": "code",
+              "code": "Carousel scroll-horizontal, snap, hor, gap 16\n  Slide 280 180, color #1A1A23, radius 12, shrink 0, cen, \"Slide 1\"\n  Slide \"Slide 2\"\n  Slide \"Slide 3\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Both Directions**"
+            },
+            {
+              "type": "paragraph",
+              "text": "scroll-both allows scrolling in both directions – useful for maps or large canvases:"
+            },
+            {
+              "type": "code",
+              "code": "MapView width full, height 150, scroll-both, #1a1a1a, radius 8\n  Canvas 600 400, #222\n    Pin 50 80, #EF4444, width 20, height 20, radius 10\n    Pin 200 150, #10B981, width 20, height 20, radius 10\n    Pin 400 100, #2271c1, width 20, height 20, radius 10\n    Text 100 200, color #666, \"Scroll to explore →\""
+            },
+            {
+              "type": "list",
+              "items": [
+                "scroll / scroll-vertical – Vertical scrolling",
+                "scroll-horizontal – Horizontal scrolling",
+                "scroll-both – Both directions",
+                "snap – Items snap into position",
+                "clip – Hide overflow without scrollbars"
+              ]
+            },
+            {
+              "type": "exercise",
+              "task": "Create a horizontal carousel of 4 cards with snap scrolling. Each card should be 220px wide.",
+              "code": "Carousel hor, gap 12\n  Card 220 140, #3281d1, radius 8, shrink 0, cen, \"1\"\n  Card \"2\"\n  Card \"3\"\n  Card \"4\""
+            }
+          ]
+        },
+        {
+          "id": "stacked",
+          "title": "Stacked Layout",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use stacked to layer children on top of each other. Perfect for text overlays on images, badges, or loading states."
+            },
+            {
+              "type": "code",
+              "code": "ImageCard stacked, width 300, height 200, radius 12, overflow hidden\n  Image \"https://picsum.photos/id/15/300/200\" fit cover\n  Overlay ver, horizontal-left, vertical-bottom, padding 16, gap 4\n    Title weight 600, \"Mountain View\"\n    Location color #ccc, size 13, \"Swiss Alps\""
+            },
+            {
+              "type": "paragraph",
+              "text": "All children occupy the same space. Use alignment (horizontal-left, vertical-bottom) and padding to position the overlay content."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Badge Overlay**"
+            },
+            {
+              "type": "code",
+              "code": "Avatar stacked, 80 80\n  Image \"https://i.pravatar.cc/80\" radius 40\n  Badge background #10B981, 20 20, radius 10, vertical-bottom, horizontal-right"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Loading State**"
+            },
+            {
+              "type": "code",
+              "code": "Card stacked, 200 120, background #1a1a1a, radius 8\n  Content ver, cen, gap 8\n    Title weight 600, \"Dashboard\"\n    Text color #888, size 13, \"Loading data...\"\n  Loader background #00000080, cen\n    Text \"⏳\""
+            },
+            {
+              "type": "list",
+              "items": [
+                "First child is the bottom layer, last child is on top",
+                "Use overflow hidden on parent to clip children",
+                "Combine with vertical-top/cen/b and horizontal-left/cen/r to position layers",
+                "Add semi-transparent backgrounds (#00000080) for overlay effects"
+              ]
+            },
+            {
+              "type": "list",
+              "items": [
+                "horizontal / vertical – Direction",
+                "gap N – Space between children",
+                "horizontal-left / horizontal-center / horizontal-right – Horizontal align",
+                "vertical-top / vertical-center / vertical-bottom – Vertical align",
+                "cen – Center both axes",
+                "between – Space between children",
+                "wrap – Allow wrapping",
+                "grow / shrink 0 – Flex behavior",
+                "grid N – N equal columns",
+                "grid auto N – Auto-fill with min Npx",
+                "stacked – Layer children on top of each other"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forms",
+      "title": "Forms",
+      "lead": "With components, tokens, typography, and layout you can build any static UI. But users need to input data. That's where form elements come in.",
+      "subsections": [
+        {
+          "id": "primitive-types",
+          "title": "HTML Primitives",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Mirror supports these HTML primitives: Input, Textarea, Button, Image, and Link."
+            }
+          ]
+        },
+        {
+          "id": "named-primitives",
+          "title": "Named Primitives",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Add a name after the primitive keyword to create a referenceable component. The syntax is: Primitive Name: properties"
+            },
+            {
+              "type": "code",
+              "code": "Input Email: \"Enter email\", type email\nInput Password: \"Password\", type password\n\nLoginForm color #2271c1, padding 24, radius 12, gap 16, width 300\n  Email\n  Password\n  Button background #2271c1, padding 12 24, radius 6, \"Login\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Now you can reference these by name: Email.value, Password.value."
+            }
+          ]
+        },
+        {
+          "id": "input-types",
+          "title": "Input Types",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use the type property to specify the input type."
+            },
+            {
+              "type": "code",
+              "code": "Input Username: \"Username\", type text\nInput Email: \"Email\", type email\nInput Password: \"Password\", type password\nInput Age: \"Age\", type number\n\nForm gap 12, width 280\n  Username\n  Email\n  Password\n  Age"
+            }
+          ]
+        },
+        {
+          "id": "textarea",
+          "title": "Textarea",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "For multi-line text input, use Textarea."
+            },
+            {
+              "type": "code",
+              "code": "Textarea Bio: \"Tell us about yourself\", rows 4\n\nProfileForm gap 12, width 300\n  Bio"
+            }
+          ]
+        },
+        {
+          "id": "styled-inputs",
+          "title": "Styling Inputs",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Apply the same styling properties as any other component."
+            },
+            {
+              "type": "code",
+              "code": "Input StyledInput: padding 12 16, background #0a0a0f, border 2 #3B82F6, radius 8\n\nForm gap 12\n  StyledInput \"Highlighted input\""
+            }
+          ]
+        },
+        {
+          "id": "image",
+          "title": "Image",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Display images with Image. The first string is the source URL:"
+            },
+            {
+              "type": "code",
+              "code": "Image \"https://picsum.photos/id/42/300/200\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Dimensions**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Numbers after the URL set width and height. Add radius for rounded corners:"
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 16\n  Image \"https://picsum.photos/id/64/80/80\" 80 80, radius 8\n  Image \"https://picsum.photos/id/64/80/80\" 80 80, radius 40"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Object Fit**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Use fit to control how images fill their container:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "fit cover – Fill container, crop if needed (default for most cases)",
+                "fit contain – Fit entire image, may leave space",
+                "fit fill – Stretch to fill (may distort)"
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Row horizontal, gap 16\n  Box ver, gap 4\n    Image \"https://picsum.photos/id/29/200/300\" 100 100, radius 8, fit cover\n    Text size 11, color #888, \"cover\"\n  Box ver, gap 4\n    Image \"https://picsum.photos/id/29/200/300\" 100 100, radius 8, fit contain, background #333\n    Text size 11, color #888, \"contain\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Named Images**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Create reusable image definitions with Image Name::"
+            },
+            {
+              "type": "code",
+              "code": "Image Avatar: 48 48, radius 24, fit cover\n\nUserRow horizontal, gap 12, vertical-center, background #1a1a1a, padding 12, radius 8\n  Avatar \"https://i.pravatar.cc/48?u=1\"\n  Text \"Alice\""
+            }
+          ]
+        },
+        {
+          "id": "link",
+          "title": "Link",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Create clickable links with Link. The first string is the URL, followed by the label:"
+            },
+            {
+              "type": "code",
+              "code": "Nav hor, gap 16\n  Link \"#home\", \"Home\"\n  Link \"#about\", color #888, \"About\"\n  Link \"#contact\", color #888, \"Contact\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a user profile card with avatar, name, and a \"View Profile\" link.",
+              "code": "Image Avatar: 64 64, radius 32, fit cover\n\nProfileCard hor, gap 16, vertical-center, background #1a1a1a, padding 16, radius 12\n  Avatar \"https://i.pravatar.cc/64\"\n  Info ver, gap 4\n    Name weight 600, \"Alice Chen\"\n    Link \"#profile\", color #3B82F6, size 13, \"View Profile\""
+            },
+            {
+              "type": "list",
+              "items": [
+                "Input named Name: – Create named input",
+                "Textarea named Name: – Create named textarea",
+                "Image named Name: – Create named image",
+                "Link named Name: – Create named link",
+                "Button named Name: – Create named button",
+                "\"placeholder\" – First string = placeholder (for Input/Textarea)",
+                "type email/password/number – Input type",
+                "rows N – Textarea rows"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interactivity",
+      "title": "Interactivity",
+      "lead": "Everything so far has been static – components that look good but don't respond to users. Now we'll bring them to life.",
+      "subsections": [
+        {
+          "id": "first-click",
+          "title": "Your First Click",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Let's start with the simplest possible interaction: a button that does something when you click it."
+            },
+            {
+              "type": "code",
+              "code": "Button background #2271c1 padding 12 radius 8 onclick toggle \"Click me\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Click the button. It toggles between two states. Let's break down what's happening:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "onclick – the event: \"when clicked\"",
+                "toggle – the action: \"switch to the next state\""
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "But wait – what states? We haven't defined any! When you don't define states explicitly, Mirror creates two default states for toggle: a \"default\" state and an \"active\" state. The button just gets a subtle visual change."
+            },
+            {
+              "type": "paragraph",
+              "text": "Let's make it more interesting by defining our own states:"
+            },
+            {
+              "type": "code",
+              "code": "Button: padding 12 radius 8 cursor pointer\n  state off\n    background #333\n    \"Light Mode\"\n  state on\n    background #3B82F6\n    \"Dark Mode\"\n\nButton onclick toggle"
+            },
+            {
+              "type": "paragraph",
+              "text": "Now when you click, the button changes color and text. The toggle action cycles through all defined states in order: off → on → off → on..."
+            },
+            {
+              "type": "exercise",
+              "task": "Modify the button to have three states: \"Low\", \"Medium\", \"High\" with colors #333, #F59E0B, #EF4444",
+              "code": "Button: padding 12 radius 8 cursor pointer\n  state low\n    background #333\n    \"Low\"\n  state medium\n    background #F59E0B\n    \"Medium\"\n  state high\n    background #EF4444\n    \"High\"\n\nButton onclick toggle"
+            },
+            {
+              "type": "paragraph",
+              "text": "Why states instead of variables? You could manage button appearance with variables and conditionals, but states keep all visual variations in one place. You see at a glance every possible appearance of your button – no jumping between files or hunting for where colors are defined."
+            }
+          ]
+        },
+        {
+          "id": "controlling-elements",
+          "title": "Controlling Other Elements",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "So far, our button only affects itself. But often you want one element to control another – a button that shows a tooltip, opens a menu, or reveals hidden content."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Show and Hide**"
+            },
+            {
+              "type": "paragraph",
+              "text": "The simplest way to control another element is show and hide:"
+            },
+            {
+              "type": "code",
+              "code": "Box vertical gap 12\n  Button background #2271c1 padding 12 radius 8 onclick show Message \"Show Message\"\n  Button background #333 padding 12 radius 8 onclick hide Message \"Hide Message\"\n\n  Message: hidden background #10B981 padding 12 radius 8 color #fff\n    \"Hello! I was hidden.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Notice the hidden property on Message – it starts invisible. The first button shows it, the second hides it."
+            },
+            {
+              "type": "paragraph",
+              "text": "For toggling visibility with a single button, use toggle with a target:"
+            },
+            {
+              "type": "code",
+              "code": "Box vertical gap 12\n  Button background #2271c1 padding 12 radius 8 onclick toggle Panel \"Toggle Panel\"\n\n  Panel: hidden background #1E1E2E padding 16 radius 8 border 1 #333\n    \"This panel toggles on and off.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "**Multiple Actions**"
+            },
+            {
+              "type": "paragraph",
+              "text": "What if you want one click to do multiple things? Separate actions with a comma:"
+            },
+            {
+              "type": "code",
+              "code": "$count: 0\n\nBox vertical gap 12\n  Button background #2271c1 padding 12 radius 8 \"Do Everything\"\n    onclick show Message, assign $count to $count + 1\n\n  Message: hidden background #10B981 padding 12 radius 8\n    \"Shown! Count: \" + $count"
+            },
+            {
+              "type": "paragraph",
+              "text": "Each click shows the message and increments the counter. Actions execute in order, left to right."
+            },
+            {
+              "type": "list",
+              "items": [
+                "show Target – make Target visible",
+                "hide Target – make Target invisible",
+                "toggle Target – flip Target's visibility",
+                "toggle (no target) – toggle self between states"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "understanding-states",
+          "title": "Understanding States",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "We've been using states, but let's understand them properly. A state is a named collection of property overrides. When a state becomes active, its properties replace the defaults."
+            },
+            {
+              "type": "code",
+              "code": "Card: padding 16 background #1E1E2E radius 8 border 1 #333 cursor pointer\n  state default\n    \"Click to select\"\n  state selected\n    border 2 #3B82F6\n    background #1E2A4A\n    shadow lg\n    \"Selected!\"\n\nCard onclick toggle"
+            },
+            {
+              "type": "paragraph",
+              "text": "The base Card has bor 1 #333. When the \"selected\" state activates, it overrides the border to bor 2 #3B82F6 and adds a shadow. Properties not mentioned in the state (like padding and radius) stay the same."
+            },
+            {
+              "type": "paragraph",
+              "text": "**System States**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Some states are automatic – the browser activates them based on user interaction:"
+            },
+            {
+              "type": "code",
+              "code": "Button: padding 12 radius 8 background #333 cursor pointer\n  state hover\n    background #444\n  state active\n    background #222\n\n  \"Hover and click me\""
+            },
+            {
+              "type": "paragraph",
+              "text": "You don't need onclick or any action – the browser handles hover and active states automatically."
+            },
+            {
+              "type": "list",
+              "items": [
+                "hover – mouse is over the element",
+                "focus – element has keyboard focus",
+                "active – element is being clicked/pressed",
+                "disabled – element is disabled"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "**Hover Shorthand**"
+            },
+            {
+              "type": "paragraph",
+              "text": "For simple hover effects, there's a shorthand that keeps everything on one line:"
+            },
+            {
+              "type": "code",
+              "code": "Button: padding 12 radius 8 background #333\n  state hover\n    background #444\n    color #fff\n  \"Hover me\""
+            },
+            {
+              "type": "code",
+              "code": "Button: padding 12 radius 8 background #333 hover-background #444 hover-color #fff\n  \"Hover me\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Available hover shorthands: hover-background, hover-color, hover-border-color, hover-opacity, hover-scale"
+            }
+          ]
+        },
+        {
+          "id": "change-action",
+          "title": "The Change Action",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "toggle cycles through states, but sometimes you want to set a specific state. That's what change is for:"
+            },
+            {
+              "type": "code",
+              "code": "Status: padding 12 radius 8\n  state pending\n    background #F59E0B\n    \"Pending\"\n  state approved\n    background #10B981\n    \"Approved\"\n  state rejected\n    background #EF4444\n    \"Rejected\"\n\nBox horizontal gap 8\n  Button background #333 padding 8 radius 4 onclick change Status to pending \"Pending\"\n  Button background #333 padding 8 radius 4 onclick change Status to approved \"Approve\"\n  Button background #333 padding 8 radius 4 onclick change Status to rejected \"Reject\"\n\nStatus"
+            },
+            {
+              "type": "paragraph",
+              "text": "Each button sets the Status to a specific state. Use change when you have more than two states or when you need explicit control over which state to activate."
+            },
+            {
+              "type": "paragraph",
+              "text": "You can also change your own state with self:"
+            },
+            {
+              "type": "code",
+              "code": "Tab: padding 12 16 radius 8 cursor pointer\n  state inactive\n    background transparent color #666\n  state active\n    background #2271c1 color #fff\n\nBox horizontal gap 4 background #1a1a1a padding 4 radius 8\n  Tab onclick change self to active \"Tab 1\"\n  Tab onclick change self to active \"Tab 2\"\n  Tab onclick change self to active \"Tab 3\""
+            },
+            {
+              "type": "paragraph",
+              "text": "But wait – clicking one tab doesn't deactivate the others. We need something more..."
+            }
+          ]
+        },
+        {
+          "id": "tabs-pattern",
+          "title": "Tabs: When Only One Can Be Active",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "The tabs above have a problem: you can activate multiple tabs at once. In a real tab bar, selecting one should deselect the others. This is called mutual exclusion."
+            },
+            {
+              "type": "paragraph",
+              "text": "Mirror provides two actions for this pattern:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "activate self – set your own state to \"active\"",
+                "deactivate-siblings – set all siblings to \"inactive\""
+              ]
+            },
+            {
+              "type": "code",
+              "code": "Tab: padding 12 16 cursor pointer\n  state inactive\n    color #666\n    border b 2 transparent\n  state active\n    color #fff\n    border b 2 #3B82F6\n\nTabBar: horizontal gap 0 border b 1 #333\n  - Tab onclick activate self, deactivate-siblings \"Overview\"\n  - Tab onclick activate self, deactivate-siblings \"Settings\"\n  - Tab onclick activate self, deactivate-siblings \"History\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Now only one tab can be active at a time. Click any tab – it activates, and its siblings deactivate."
+            },
+            {
+              "type": "paragraph",
+              "text": "This pattern works for any mutually exclusive selection: tab bars, toggle groups, radio-like buttons:"
+            },
+            {
+              "type": "code",
+              "code": "Option: padding 8 16 radius 4 cursor pointer\n  state inactive\n    background transparent color #888\n  state active\n    background #3B82F6 color #fff\n\nToggleGroup: horizontal gap 2 background #1a1a1a padding 4 radius 8\n  - Option onclick activate self, deactivate-siblings \"Day\"\n  - Option onclick activate self, deactivate-siblings \"Week\"\n  - Option onclick activate self, deactivate-siblings \"Month\"\n  - Option onclick activate self, deactivate-siblings \"Year\""
+            }
+          ]
+        },
+        {
+          "id": "highlight-select",
+          "title": "Highlight vs Select: Menus and Lists",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "For menus and dropdowns, you need two different concepts:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Highlight – temporary visual feedback (hover, keyboard navigation)",
+                "Select – permanent choice (click to choose)"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Think about a dropdown menu: as you move your mouse, items highlight. But they're not selected until you click."
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 8 12 cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #3B82F6\n\nMenu: vertical background #1E1E2E radius 8 padding 4 width 200\n  - Item onhover highlight self, onclick select self \"Dashboard\"\n  - Item onhover highlight self, onclick select self \"Settings\"\n  - Item onhover highlight self, onclick select self \"Profile\"\n  - Item onhover highlight self, onclick select self \"Logout\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Hover over items – they highlight (gray). Click one – it gets selected (blue). The highlight is temporary; the selection persists."
+            },
+            {
+              "type": "list",
+              "items": [
+                "highlight self – mark as highlighted (temporary)",
+                "highlight next / prev – highlight next/previous sibling",
+                "select self – mark as selected (permanent)",
+                "select highlighted – select whatever is currently highlighted",
+                "deselect self – remove selection",
+                "clear-selection – remove all selections"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "keyboard-navigation",
+          "title": "Keyboard Navigation",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Good UIs are keyboard accessible. Mirror makes this easy with onkeydown:"
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 8 12 cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n\nMenu: vertical background #1E1E2E radius 8 padding 4 width 200\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  onkeydown home highlight first\n  onkeydown end highlight last\n\n  - Item onhover highlight self \"First Item\"\n  - Item onhover highlight self \"Second Item\"\n  - Item onhover highlight self \"Third Item\"\n  - Item onhover highlight self \"Fourth Item\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Click the menu to focus it, then use arrow keys to navigate. Home jumps to first, End to last."
+            },
+            {
+              "type": "list",
+              "items": [
+                "escape – Escape key",
+                "enter – Enter key",
+                "space – Space bar",
+                "tab – Tab key",
+                "arrow-up, arrow-down, arrow-left, arrow-right – Arrow keys",
+                "home, end – Home/End keys",
+                "backspace, delete – Delete keys"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "**Navigation Targets**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Actions like highlight and focus can target relative positions:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "self – the element that received the event",
+                "next – next sibling",
+                "prev – previous sibling",
+                "first – first in container",
+                "last – last in container",
+                "highlighted – currently highlighted element",
+                "selected – currently selected element"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dropdown-pattern",
+          "title": "Pattern: Complete Dropdown",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Let's combine everything into a fully functional dropdown with mouse and keyboard support:"
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 8 12 cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #3B82F6\n\nTrigger: padding 8 12 background #1E1E2E radius 8 border 1 #333 cursor pointer\n  onclick toggle Dropdown\n  \"Select an option...\"\n\nDropdown: vertical background #1E1E2E radius 8 shadow lg hidden width 200\n  onclick-outside close self\n  onkeydown escape close self\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  onkeydown enter select highlighted, close self\n\n  - Item onhover highlight self, onclick select self, close Dropdown \"Dashboard\"\n  - Item onhover highlight self, onclick select self, close Dropdown \"Settings\"\n  - Item onhover highlight self, onclick select self, close Dropdown \"Profile\""
+            },
+            {
+              "type": "paragraph",
+              "text": "This dropdown:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Opens/closes on trigger click",
+                "Closes when clicking outside (onclick-outside)",
+                "Closes on Escape key",
+                "Navigates with arrow keys",
+                "Selects with Enter or click",
+                "Highlights on hover"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "timing",
+          "title": "Timing: Debounce and Delay",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Some interactions need timing control. Two common cases:"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Debounce: Wait for User to Stop Typing**"
+            },
+            {
+              "type": "paragraph",
+              "text": "For search/autocomplete, you don't want to filter on every keystroke – wait until the user pauses:"
+            },
+            {
+              "type": "code",
+              "code": "$query: \"\"\n\nBox vertical gap 12 width 300\n  Input: padding 8 12 background #1E1E2E radius 8 border 1 #333\n    oninput debounce 300 assign $query to $event.value\n    \"Type something...\"\n\n  Text color #666 \"Query: \" + $query"
+            },
+            {
+              "type": "paragraph",
+              "text": "debounce 300 waits 300ms after the last keystroke before executing the action. If the user keeps typing, the timer resets."
+            },
+            {
+              "type": "paragraph",
+              "text": "**Delay: Wait Before Acting**"
+            },
+            {
+              "type": "paragraph",
+              "text": "Sometimes you need a brief pause before an action. Common use: keeping a dropdown open long enough to click it:"
+            },
+            {
+              "type": "code",
+              "code": "Box vertical gap 8 width 200\n  Input: padding 8 background #1E1E2E radius 8 border 1 #333\n    onfocus show Results\n    onblur delay 150 hide Results\n    \"Focus me...\"\n\n  Results: vertical background #1E1E2E radius 8 shadow lg hidden\n    - Item padding 8 hover-background #333 cursor pointer \"Result 1\"\n    - Item padding 8 hover-background #333 cursor pointer \"Result 2\"\n    - Item padding 8 hover-background #333 cursor pointer \"Result 3\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Without the delay, clicking a result would blur the input and hide the results before the click registers. The 150ms delay gives you time to click."
+            },
+            {
+              "type": "list",
+              "items": [
+                "debounce N – wait N ms after last event (resets on each event)",
+                "delay N – wait N ms before executing"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accordion-pattern",
+          "title": "Pattern: Accordion",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Accordions expand and collapse sections. Use toggle-state to flip between two states:"
+            },
+            {
+              "type": "code",
+              "code": "Section: vertical border b 1 #333\n  Header: horizontal between padding 12 cursor pointer hover-background #1a1a1a\n    Title: weight 500\n    Icon: icon \"chevron-down\" color #666\n  Content: padding 12 background #1a1a1a\n\n  state collapsed\n    Content hidden\n  state expanded\n    Content visible\n\nBox ver\n  Section\n    Header onclick toggle-state\n      Title \"Section 1\"\n    Content \"Content for section 1. Click header to collapse.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 2\"\n    Content \"Content for section 2.\"\n  Section collapsed\n    Header onclick toggle-state\n      Title \"Section 3\"\n    Content \"Content for section 3.\""
+            },
+            {
+              "type": "paragraph",
+              "text": "toggle-state cycles through the component's defined states – here, between \"collapsed\" and \"expanded\"."
+            }
+          ]
+        },
+        {
+          "id": "rating-pattern",
+          "title": "Pattern: Star Rating",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Rating components need a special behavior: hovering over star 3 should highlight stars 1, 2, and 3. That's the self-and-before target:"
+            },
+            {
+              "type": "code",
+              "code": "Star: cursor pointer\n  state empty\n    icon \"star\" color #333 size 24\n  state highlighted\n    icon \"star\" color #F59E0B size 24\n  state selected\n    icon \"star\" color #F59E0B size 24\n\nRating: horizontal gap 4\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before\n  - Star onhover highlight self-and-before, onclick select self-and-before"
+            },
+            {
+              "type": "paragraph",
+              "text": "Hover over the third star – all three before it (including itself) highlight. Click to make the selection permanent."
+            }
+          ]
+        },
+        {
+          "id": "events-reference",
+          "title": "Reference: All Events",
+          "content": []
+        },
+        {
+          "id": "actions-reference",
+          "title": "Reference: All Actions",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "**Visibility**"
+            },
+            {
+              "type": "paragraph",
+              "text": "**State Control**"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Selection**"
+            },
+            {
+              "type": "paragraph",
+              "text": "**Data & Navigation**"
+            }
+          ]
+        },
+        {
+          "id": "targets-reference",
+          "title": "Reference: All Targets",
+          "content": []
+        }
+      ]
+    },
+    {
+      "id": "instances",
+      "title": "Named Instances",
+      "lead": "We've learned how events trigger actions. But how do we know what the user entered in a form? How do we target a specific button among many?",
+      "subsections": [
+        {
+          "id": "targeting-instances",
+          "title": "Targeting Named Instances",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Named instances can also be targeted for styling. Consider a footer with multiple buttons – which one should turn red when you write Footer Button #F00? Mirror can't know. Name them:"
+            },
+            {
+              "type": "code",
+              "code": "Footer: padding 16, hor, between, #1a1a1a, radius 8\n  Button named Save: #2271c1, padding 8 16, radius 6, \"Save\"\n  Button named Cancel: #333, padding 8 16, radius 6, \"Cancel\"\n\nFooter"
+            },
+            {
+              "type": "paragraph",
+              "text": "Now you can target specific instances:"
+            },
+            {
+              "type": "code",
+              "code": "Footer: padding 16, hor, between, #1a1a1a, radius 8\n  Button named Save: padding 8 16, radius 6, \"Save\"\n  Button named Cancel: #333, padding 8 16, radius 6, \"Cancel\"\n\nFooter\n  Save #10B981  // Target Save specifically"
+            },
+            {
+              "type": "paragraph",
+              "text": "Mirror finds Save within Footer and changes its color. Named instances can also be hidden:"
+            },
+            {
+              "type": "code",
+              "code": "Footer: padding 16, hor, between, #1a1a1a, radius 8\n  Button named Save: #2271c1, padding 8 16, radius 6, \"Save\"\n  Button named Cancel: #333, padding 8 16, radius 6, \"Cancel\"\n\nFooter\n  Cancel hidden  // Only Save is visible"
+            }
+          ]
+        },
+        {
+          "id": "component-properties",
+          "title": "Component Properties",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Every component has intrinsic properties you can read and write:"
+            },
+            {
+              "type": "code",
+              "code": "Input named Email: #1a1a1a, padding 12, radius 8, border 1 #333\n\nCard #1a1a1a, padding 16, radius 8, gap 12\n  Email placeholder \"Type something...\"\n  Text #888, size 13\n    if Email.value then \"You typed: \" + Email.value else \"Input is empty\"\n  Button padding 8 16, radius 6\n    if Email.value then #2271c1 else #333\n    if Email.value then \"Submit\" else \"Enter text first\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Components ARE the state. No separate state management needed. Email.value is the email – simple as that."
+            },
+            {
+              "type": "paragraph",
+              "text": "Why this approach? Traditional frameworks require separate state variables (useState) that mirror UI values. In Mirror, the component is the source of truth. This eliminates the \"state/UI sync problem\" that plagues many applications."
+            },
+            {
+              "type": "exercise",
+              "task": "Create a form where clicking Submit shows an alert with the Email value (use if Email.value to check if it's filled).",
+              "code": "Input named Email: placeholder \"Enter email\"\nButton named Submit: #2271c1, padding 12, radius 8, \"Submit\"\n\nForm #3281d1, padding 24, radius 12, gap 16, width 300\n  Email\n  Submit"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "overlays",
+      "title": "Overlays",
+      "lead": "You can now trigger actions and access component properties. A common pattern is showing content that floats above the UI – dialogs, menus, tooltips.",
+      "subsections": [
+        {
+          "id": "dialog",
+          "title": "Dialog",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A modal dialog that blocks interaction with the rest of the page. Define a trigger button and the dialog content:"
+            },
+            {
+              "type": "code",
+              "code": "Button onclick open SettingsDialog, \"Open Settings\"\n\nSettingsDialog as Dialog: background #1A1A23, padding 24, radius 12, width 400\n  Title size 18, weight 600, \"Settings\"\n  Text \"Configure your preferences here.\"\n  Actions horizontal, gap 8, horizontal-right\n    Button background #333, onclick close, \"Cancel\"\n    Button background #2271c1, onclick close, \"Save\""
+            },
+            {
+              "type": "paragraph",
+              "text": "open SettingsDialog shows the dialog. close hides it.\n        Dialogs automatically close when clicking outside or pressing Escape."
+            },
+            {
+              "type": "exercise",
+              "task": "Click the button to open the dialog. Close it with the buttons or click outside.",
+              "code": "SettingsDialog as Dialog: background #1A1A23, padding 24, radius 12, width 320\n  Title size 18, weight 600, \"Settings\"\n  Text color #888, \"Configure your preferences here.\"\n  Actions horizontal, gap 8, horizontal-right\n    Button background #333, onclick close, \"Cancel\"\n    Button background #2271c1, onclick close, \"Save\"\n\nButton onclick open SettingsDialog center, \"Open Settings\""
+            }
+          ]
+        },
+        {
+          "id": "overlay-positioning",
+          "title": "Positioning",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Overlays can be positioned relative to their trigger element:"
+            },
+            {
+              "type": "code",
+              "code": "Menu as Dropdown:\n  Trigger #333, padding 8 12, radius 6\n    \"Options ▼\"\n  Content #1a1a1a, padding 4, radius 8, border 1 #333\n    Item padding 8 12, radius 4, hover-color #333, \"Profile\"\n    Item \"Settings\"\n    Item #EF4444, \"Logout\"\n\nRow horizontal, gap 8\n  Menu"
+            },
+            {
+              "type": "list",
+              "items": [
+                "below – below the trigger (dropdowns)",
+                "above – above the trigger (tooltips)",
+                "left – to the left of trigger",
+                "right – to the right of trigger",
+                "cen – centered in viewport (modals)"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dropdown",
+          "title": "Dropdown",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A menu that opens below its trigger:"
+            },
+            {
+              "type": "code",
+              "code": "OptionsMenu as Dropdown:\n  Trigger: padding 8 12, background #1A1A23, radius 6, border 1 #333\n    \"Select option\"\n  Content: ver, background #1A1A23, radius 8, padding 4\n    Item: padding 8 12, radius 4, hover-background #333\n      \"Profile\"\n    Item \"Settings\"\n    Item \"Logout\""
+            }
+          ]
+        },
+        {
+          "id": "tooltip",
+          "title": "Tooltip",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A small hint that appears on hover:"
+            },
+            {
+              "type": "code",
+              "code": "HelpTip as Tooltip:\n  Trigger\n    Button icon help, \"?\"\n  Content: padding 8 12, background #333, radius 6, size 12\n    \"Click to get help\""
+            }
+          ]
+        },
+        {
+          "id": "overlay-animations",
+          "title": "Animations",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Overlays can have entrance and exit animations:"
+            },
+            {
+              "type": "code",
+              "code": "FadeDialog as Dialog: #1a1a1a, padding 24, radius 12, width 250\n  show fade 200\n  Title weight 600, \"Fade Animation\"\n  Button #333, onclick close, \"Close\"\n\nScaleDialog as Dialog: #1a1a1a, padding 24, radius 12, width 250\n  show fade scale 200\n  Title weight 600, \"Scale Animation\"\n  Button #333, onclick close, \"Close\"\n\nRow horizontal, gap 8\n  Button #2271c1, padding 8 16, radius 8, onclick open FadeDialog, \"Fade\"\n  Button #333, padding 8 16, radius 8, onclick open ScaleDialog, \"Scale\""
+            },
+            {
+              "type": "list",
+              "items": [
+                "fade – fade in/out",
+                "scale – scale from center",
+                "slide-up / slide-down – vertical slide",
+                "slide-left / slide-right – horizontal slide",
+                "none – no animation"
+              ]
+            },
+            {
+              "type": "exercise",
+              "task": "Create a button that opens a dialog. Add a close button inside the dialog.",
+              "code": "Button #2271c1, padding 12, radius 8, onclick open MyDialog, \"Open Dialog\"\n\nMyDialog as Dialog: #1A1A23, padding 24, radius 12, width 300, ver, gap 16\n  Title size 18, weight 600, \"Hello!\"\n  Text \"This is a dialog.\"\n  Button #333, onclick close, \"Close\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "animationen",
+      "title": "Animations",
+      "lead": "Overlays appear and disappear. Animations smooth the transitions between visibility states.",
+      "subsections": [
+        {
+          "id": "show-hide-animations",
+          "title": "Show & Hide Animations",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use show and hide blocks to define how an element animates in and out:"
+            },
+            {
+              "type": "code",
+              "code": "Card #1a1a1a, padding 16, radius 8, gap 12\n  Button #2271c1, padding 8 16, radius 6, onclick toggle Panel, \"Toggle Panel\"\n  Panel hidden, #333, padding 16, radius 8\n    show fade slide-up 300\n    hide fade 150\n    Text \"This panel fades and slides!\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The panel starts hidden (hidden). When it becomes visible, it fades in and slides up (300ms).\n        When hiding, it fades out (200ms). Animations can be combined: fade slide-up."
+            }
+          ]
+        },
+        {
+          "id": "animation-types",
+          "title": "Animation Types",
+          "content": [
+            {
+              "type": "code",
+              "code": "Card #1a1a1a, padding 16, radius 8, gap 12\n  Button #333, padding 8 16, radius 6, onclick toggle Box, \"Toggle Animation\"\n  Box hidden, hor, gap 8\n    show fade slide-up 300\n    Tile #2271c1, 60 60, radius 8, cen, \"fade\"\n    Tile #10B981, 60 60, radius 8, cen, \"slide\"\n    Tile #EF4444, 60 60, radius 8, cen, \"scale\""
+            }
+          ]
+        },
+        {
+          "id": "continuous-animations",
+          "title": "Continuous Animations",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "⚠️ **Note:** Continuous animations (animate spin, pulse, bounce) are NOT YET IMPLEMENTED in the current parser. The syntax below is documented for future use."
+            },
+            {
+              "type": "code",
+              "code": "Loader 24 24\n  animate spin 1000\n  Icon icon loader"
+            },
+            {
+              "type": "paragraph",
+              "text": "When implemented, the icon will rotate continuously, completing one full rotation every 1000ms. Currently only show/hide animations (fade, slide-up, etc.) work."
+            }
+          ]
+        },
+        {
+          "id": "animation-example",
+          "title": "Complete Example",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "An expandable card with animations:"
+            },
+            {
+              "type": "code",
+              "code": "Card background #1A1A23, padding 16, radius 8\n  Header hor, between, vertical-center, onclick toggle Details\n    Title weight 600, \"Click to expand\"\n    Icon icon chevron-down\n  Details hidden\n    show fade slide-down 200\n    hide fade 150\n    Text padding u 12, \"Here are the details...\""
+            },
+            {
+              "type": "exercise",
+              "task": "Add a show animation to make the content fade in when revealed.",
+              "code": "Card #1A1A23, padding 16, radius 8, ver, gap 12\n  Button #333, onclick toggle Content, \"Toggle Content\"\n  Content hidden\n    Text \"This content can be toggled\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "variables",
+      "title": "Variables & State",
+      "lead": "You've built static interfaces – components that always look the same. Now let's make them come alive. A button that counts clicks. A toggle that remembers its state. A display that updates in real-time.",
+      "subsections": [
+        {
+          "id": "defining-variables",
+          "title": "Defining Variables",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Variables start with $ and are defined with a colon:"
+            },
+            {
+              "type": "code",
+              "code": "$count: 0\n$name: \"World\"\n$isActive: true\n\nCard background #1A1A23, padding 16, radius 8, ver, gap 8\n  Text \"Count: \" + $count\n  Text \"Hello, \" + $name\n  Text if $isActive then \"Active\" else \"Inactive\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Variables can hold numbers, text, or boolean values (true/false). Use + to combine text with variables."
+            }
+          ]
+        },
+        {
+          "id": "changing-variables",
+          "title": "Changing Variables",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use assign in event handlers to change a variable's value:"
+            },
+            {
+              "type": "code",
+              "code": "$count: 0\n\nCounter hor, gap 16, vertical-center, background #1A1A23, padding 16, radius 8\n  Button background #333, padding 8 16, radius 6, onclick assign $count to $count - 1, \"-\"\n  Text size 24, weight 600, width 60, align center, $count\n  Button background #2271c1, padding 8 16, radius 6, onclick assign $count to $count + 1, \"+\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Click the buttons – the count updates instantly. The Text component automatically reflects the new value because it displays $count."
+            }
+          ]
+        },
+        {
+          "id": "toggle-pattern",
+          "title": "The Toggle Pattern",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A common pattern is toggling between two states. Use not to flip a boolean:"
+            },
+            {
+              "type": "code",
+              "code": "$liked: false\n\nLikeButton hor, gap 8, vertical-center, padding 12 16, radius 8, cursor pointer\n  if $liked then background #DC2626 else background #333\n  onclick assign $liked to not $liked\n  Icon icon heart, size 18\n  Text if $liked then \"Liked\" else \"Like\""
+            }
+          ]
+        },
+        {
+          "id": "arithmetic",
+          "title": "Arithmetic",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Mirror supports basic math: +, -, *, /"
+            },
+            {
+              "type": "code",
+              "code": "$price: 29\n$quantity: 2\n\nCart background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, between\n    Text \"Price:\"\n    Text \"$\" + $price\n  Row horizontal, between\n    Text \"Quantity:\"\n    Row horizontal, gap 8\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity - 1, \"-\"\n      Text width 30, align center, $quantity\n      Button background #333, padding 4 12, radius 4, onclick assign $quantity to $quantity + 1, \"+\"\n  Divider height 1, background #333\n  Row horizontal, between\n    Text weight 600, \"Total:\"\n    Text weight 600, color #10B981, \"$\" + ($price * $quantity)"
+            },
+            {
+              "type": "exercise",
+              "task": "Create a temperature converter. Define $celsius: 20 and display Fahrenheit ($celsius * 9 / 5 + 32).",
+              "code": "$celsius: 20\n\nConverter background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8, vertical-center\n    Button background #333, padding 8, radius 4, onclick assign $celsius to $celsius - 5, \"-5\"\n    Text size 24, weight 600, $celsius + \"°C\"\n    Button background #333, padding 8, radius 4, onclick assign $celsius to $celsius + 5, \"+5\"\n  // Add Fahrenheit display here"
+            },
+            {
+              "type": "paragraph",
+              "text": "Variables make your UI reactive. Change a value once, and everything that depends on it updates automatically. This is the foundation for dynamic interfaces."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conditions",
+      "title": "Conditional Display",
+      "lead": "Your UI responds to clicks and updates values. But what if you want to show completely different content based on state? A login button that becomes a logout button. An error message that only appears when needed. A theme that switches between light and dark.",
+      "subsections": [
+        {
+          "id": "conditional-properties",
+          "title": "Conditional Properties",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Change a single property based on a condition with if ... then ... else:"
+            },
+            {
+              "type": "code",
+              "code": "$isOnline: true\n\nStatus hor, gap 8, vertical-center, background #1A1A23, padding 12, radius 8\n  Dot width 8, height 8, radius 4\n    if $isOnline then background #10B981 else background #666\n  Text if $isOnline then \"Online\" else \"Offline\"\n  Button background #333, padding 6 12, radius 4, size 12\n    onclick assign $isOnline to not $isOnline\n    \"Toggle\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The dot and text both respond to $isOnline. One condition, multiple effects."
+            }
+          ]
+        },
+        {
+          "id": "conditional-components",
+          "title": "Conditional Components",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "When you want to show different components entirely, use if / else blocks:"
+            },
+            {
+              "type": "code",
+              "code": "$loggedIn: false\n\nHeader hor, between, vertical-center, background #1A1A23, padding 16, radius 8\n  Logo weight 600, \"MyApp\"\n  if $loggedIn\n    Row horizontal, gap 12, vertical-center\n      Avatar width 32, height 32, radius 16, background #2271c1\n      Button background #333, padding 8 16, radius 6\n        onclick assign $loggedIn to false\n        \"Logout\"\n  else\n    Button background #2271c1, padding 8 16, radius 6\n      onclick assign $loggedIn to true\n      \"Login\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The if block shows the avatar and logout button when logged in. The else block shows the login button otherwise. Completely different UI structures, controlled by one variable."
+            }
+          ]
+        },
+        {
+          "id": "comparisons",
+          "title": "Comparisons",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Conditions can compare values: == (equal), != (not equal), >, <, >=, <="
+            },
+            {
+              "type": "code",
+              "code": "$score: 75\n\nResult background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8, vertical-center\n    Text \"Score:\"\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score - 10, \"-10\"\n    Text weight 600, size 20, $score\n    Button background #333, padding 4 8, radius 4, onclick assign $score to $score + 10, \"+10\"\n  Badge padding 8 16, radius 6\n    if $score >= 90 then background #10B981 else if $score >= 70 then background #F59E0B else background #EF4444\n    if $score >= 90 then \"Excellent\" else if $score >= 70 then \"Good\" else \"Needs Work\""
+            }
+          ]
+        },
+        {
+          "id": "logical-operators",
+          "title": "Logical Operators",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Combine conditions with and, or, and not:"
+            },
+            {
+              "type": "code",
+              "code": "$hasEmail: true\n$hasPassword: false\n\nForm background #1A1A23, padding 16, radius 8, ver, gap 12\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasEmail then background #2271c1 else background #333\n      onclick assign $hasEmail to not $hasEmail\n    Text \"Email entered\"\n  Row horizontal, gap 8\n    Checkbox width 18, height 18, radius 4\n      if $hasPassword then background #2271c1 else background #333\n      onclick assign $hasPassword to not $hasPassword\n    Text \"Password entered\"\n  Button padding 12, radius 6, width full\n    if $hasEmail and $hasPassword then background #2271c1 else background #333\n    if $hasEmail and $hasPassword then \"Submit\" else \"Fill all fields\""
+            },
+            {
+              "type": "exercise",
+              "task": "Create a theme switcher with a $darkMode variable. Change the card background between #1A1A23 (dark) and #F5F5F5 (light).",
+              "code": "$darkMode: true\n\nCard padding 24, radius 12, ver, gap 16\n  if $darkMode then background #1A1A23 else background #F5F5F5\n  Title size 20, weight 600\n    if $darkMode then color white else color #1A1A23\n    \"Theme Demo\"\n  Text if $darkMode then color #9CA3AF else color #666\n    \"Click to switch themes\"\n  Button padding 12, radius 6\n    if $darkMode then background #2271c1 else background #1A1A23\n    onclick assign $darkMode to not $darkMode\n    if $darkMode then \"Switch to Light\" else \"Switch to Dark\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Conditions turn static layouts into adaptive interfaces. The same code handles multiple states – you just describe what each state looks like."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lists",
+      "title": "Lists & Data",
+      "lead": "You can show and hide elements, change their properties. But what about a list of 50 products? 100 messages? You're not going to type each one. Real apps get data – from APIs, databases, user input – and generate UI from it.",
+      "subsections": [
+        {
+          "id": "simple-lists",
+          "title": "Simple Lists",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use each $item in $list to create a component for every item:"
+            },
+            {
+              "type": "code",
+              "code": "$fruits: [\"Apple\", \"Banana\", \"Cherry\", \"Date\"]\n\nList ver, gap 8\n  each $fruit in $fruits\n    Item background #1A1A23, padding 12, radius 6, $fruit"
+            },
+            {
+              "type": "paragraph",
+              "text": "Four items in the array, four components rendered. The variable $fruit holds each value in turn."
+            }
+          ]
+        },
+        {
+          "id": "object-arrays",
+          "title": "Object Arrays",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Real data usually has structure. Access properties with dot notation:"
+            },
+            {
+              "type": "code",
+              "code": "$users: [\n  { name: \"Alice\", role: \"Admin\", online: true },\n  { name: \"Bob\", role: \"Editor\", online: true },\n  { name: \"Carol\", role: \"Viewer\", online: false }\n]\n\nUserList ver, gap 8\n  each $user in $users\n    Card hor, between, vertical-center, background #1A1A23, padding 12, radius 8\n      Left hor, gap 12, vertical-center\n        Status width 8, height 8, radius 4\n          if $user.online then background #10B981 else background #666\n        Name weight 500, $user.name\n      Role color #888, size 13, $user.role"
+            }
+          ]
+        },
+        {
+          "id": "nested-data",
+          "title": "Nested Iteration",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Iterate within iterations for hierarchical data:"
+            },
+            {
+              "type": "code",
+              "code": "$menu: [\n  { category: \"Starters\", items: [\"Soup\", \"Salad\", \"Bread\"] },\n  { category: \"Mains\", items: [\"Pasta\", \"Steak\", \"Fish\"] },\n  { category: \"Desserts\", items: [\"Cake\", \"Ice Cream\"] }\n]\n\nMenu ver, gap 16\n  each $section in $menu\n    Section ver, gap 8\n      Title weight 600, color #2271c1, $section.category\n      Items ver, gap 4\n        each $item in $section.items\n          Item background #1A1A23, padding 8 12, radius 6, $item"
+            }
+          ]
+        },
+        {
+          "id": "input-binding",
+          "title": "Input Binding",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Capture user input with $event.value:"
+            },
+            {
+              "type": "code",
+              "code": "$search: \"\"\n\n$items: [\"Dashboard\", \"Settings\", \"Profile\", \"Messages\", \"Help\"]\n\nSearch ver, gap 12, width 250\n  Input background #1A1A23, padding 12, radius 8, border 1 #333\n    placeholder \"Search...\"\n    oninput assign $search to $event.value\n  Results ver, gap 4\n    each $item in $items\n      Item background #1A1A23, padding 8 12, radius 6, $item"
+            }
+          ]
+        },
+        {
+          "id": "combining-with-conditions",
+          "title": "Combining with Conditions",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Filter displayed items by combining each with if:"
+            },
+            {
+              "type": "code",
+              "code": "$tasks: [\n  { title: \"Design mockup\", done: true },\n  { title: \"Build prototype\", done: false },\n  { title: \"User testing\", done: false },\n  { title: \"Write docs\", done: true }\n]\n$showDone: true\n\nTaskList ver, gap 12\n  Row horizontal, gap 8, vertical-center\n    Checkbox width 18, height 18, radius 4\n      if $showDone then background #2271c1 else background #333\n      onclick assign $showDone to not $showDone\n    Text size 13, color #888, \"Show completed\"\n  Tasks ver, gap 8\n    each $task in $tasks\n      if $showDone or not $task.done\n        Task hor, gap 12, vertical-center, background #1A1A23, padding 12, radius 8\n          Icon if $task.done then color #10B981 else color #333\n            icon if $task.done then check-circle else circle\n          Text if $task.done then color #666 else color white, $task.title"
+            },
+            {
+              "type": "exercise",
+              "task": "Create a contact list with name, email, and a status indicator. Use $contact.active to show green/gray dots.",
+              "code": "$contacts: [\n  { name: \"Alice\", email: \"alice@mail.com\", active: true },\n  { name: \"Bob\", email: \"bob@mail.com\", active: false },\n  { name: \"Carol\", email: \"carol@mail.com\", active: true }\n]\n\nContactList ver, gap 8\n  each $contact in $contacts\n    // Build your contact card here"
+            },
+            {
+              "type": "paragraph",
+              "text": "Data-driven UIs scale effortlessly. Whether you have 3 items or 3000, the same template handles them all. The UI becomes a view of your data."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data-tab",
+      "title": "Data Tab",
+      "lead": "For complex prototypes with structured data, the Data tab provides a cleaner way to define schemas and instances separately from your layout code.",
+      "subsections": [
+        {
+          "id": "data-schemas",
+          "title": "Defining Schemas",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "A schema defines the structure of your data. Use a colon after the type name, then indent fields with their types:"
+            },
+            {
+              "type": "code",
+              "code": "// In the Data tab:\nTask:\n  title: text\n  done: boolean\n  priority: number\n\nCategory:\n  name: text\n  color: text"
+            },
+            {
+              "type": "paragraph",
+              "text": "Each field has a name and a type. Available types are:"
+            }
+          ]
+        },
+        {
+          "id": "data-instances",
+          "title": "Creating Instances",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "After defining schemas, create instances using - prefix. Values are listed in field order:"
+            },
+            {
+              "type": "code",
+              "code": "// Schema\nCategory:\n  name: text\n  color: text\n\n// Instances (values in field order, comma-separated)\n- Category \"Arbeit\", \"#3B82F6\"\n- Category \"Privat\", \"#10B981\"\n- Category \"Dringend\", \"#EF4444\""
+            },
+            {
+              "type": "paragraph",
+              "text": "For schemas with many fields:"
+            },
+            {
+              "type": "code",
+              "code": "Task:\n  title: text\n  done: boolean\n  priority: number\n\n// Instances: title, done, priority (comma-separated)\n- Task \"Einkaufen\", false, 1\n- Task \"Sport machen\", true, 2\n- Task \"Meeting vorbereiten\", false, 3"
+            }
+          ]
+        },
+        {
+          "id": "data-references",
+          "title": "References Between Types",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use index notation to reference other instances. Category[0] refers to the first Category instance:"
+            },
+            {
+              "type": "code",
+              "code": "Category:\n  name: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category    // Reference to Category type\n\n// Categories\n- Category \"Arbeit\"\n- Category \"Privat\"\n\n// Tasks referencing categories by index (comma-separated)\n- Task \"Email schreiben\", false, Category[0]    // References \"Arbeit\"\n- Task \"Joggen gehen\", true, Category[1]        // References \"Privat\"\n- Task \"Report erstellen\", false, Category[0]   // References \"Arbeit\""
+            },
+            {
+              "type": "paragraph",
+              "text": "The index [0] refers to the first instance of that type, [1] to the second, and so on."
+            }
+          ]
+        },
+        {
+          "id": "data-usage",
+          "title": "Using Data in Layout",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use the data property to bind a container to your data. The container repeats its children for each record:"
+            },
+            {
+              "type": "code",
+              "code": "// In Data tab:\nTask:\n  title: text\n  done: boolean\n\n- Task \"Buy groceries\", false\n- Task \"Call mom\", true\n\n// In Layout tab:\nTaskList data Tasks ver gap 8\n  Card padding 12 radius 8\n    // Each Card repeats for each Task record"
+            },
+            {
+              "type": "paragraph",
+              "text": "Note: Field binding syntax (Tasks.title) to display data values directly is planned for a future release."
+            }
+          ]
+        },
+        {
+          "id": "data-complete-example",
+          "title": "Complete Example",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Here's a full example with multiple related types:"
+            },
+            {
+              "type": "code",
+              "code": "// ===== DATA TAB =====\n\n// Schema definitions\nCategory:\n  name: text\n  icon: text\n  color: text\n\nTask:\n  title: text\n  done: boolean\n  category: Category\n\n// Category instances\n- Category \"Work\", \"briefcase\", \"#3B82F6\"\n- Category \"Personal\", \"user\", \"#10B981\"\n- Category \"Urgent\", \"alert-circle\", \"#EF4444\"\n\n// Task instances\n- Task \"Prepare presentation\", false, Category[0]\n- Task \"Buy birthday gift\", false, Category[1]\n- Task \"Fix critical bug\", false, Category[2]\n- Task \"Morning workout\", true, Category[1]\n- Task \"Team meeting\", true, Category[0]"
+            },
+            {
+              "type": "code",
+              "code": "// ===== LAYOUT TAB =====\n\n// The container repeats for each Task record\nTaskList data Tasks ver gap 8 padding 16\n  Card hor between vertical-center bg #1A1A23 padding 12 radius 8\n    Left hor gap 12 vertical-center\n      Icon icon \"file-text\"\n      Title \"Task item\"\n    Status\n      Icon icon \"circle\" color #333\n\n// With filter: only show incomplete tasks\nTodoList data Tasks where done == false ver gap 8\n  Card background #1A1A23 padding 12 radius 8\n    Text \"Todo item\""
+            }
+          ]
+        },
+        {
+          "id": "data-ai-generation",
+          "title": "AI-Powered Data Generation",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "When you've defined schemas in the Data tab, a Generate button appears. Click it to have AI create realistic sample data based on your schema definitions."
+            },
+            {
+              "type": "paragraph",
+              "text": "The AI understands your field names and types, generating contextually appropriate values:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "title: text → Generates meaningful titles",
+                "email: text → Generates realistic email addresses",
+                "price: number → Generates appropriate price values",
+                "done: boolean → Generates true/false mix"
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "This is especially useful for prototyping: define your data structure once, then generate 10, 20, or 50 realistic entries instantly."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interaction",
+      "title": "Interactive Components",
+      "lead": "You've built data-driven interfaces. Now let's add sophisticated interaction patterns – keyboard navigation, click-outside-to-close, selection states. The kind of behavior that makes a dropdown feel polished.",
+      "subsections": [
+        {
+          "id": "behavior-states",
+          "title": "Behavior States",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Beyond system states like hover, you can define custom states that change through actions:"
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item onhover highlight self, \"Dashboard\"\n  Item onhover highlight self, \"Settings\"\n  Item onhover highlight self, \"Profile\""
+            },
+            {
+              "type": "paragraph",
+              "text": "highlight self activates the highlighted state. The state defines what changes visually. Hover over the items to see it in action."
+            }
+          ]
+        },
+        {
+          "id": "keyboard-navigation",
+          "title": "Keyboard Navigation",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Handle keyboard events with onkeydown plus a key name:"
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  Item \"Dashboard\"\n  Item \"Settings\"\n  Item \"Profile\"\n  Item \"Logout\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Click the menu to focus it, then use arrow keys. highlight next and highlight prev move through siblings automatically."
+            }
+          ]
+        },
+        {
+          "id": "click-outside",
+          "title": "Click Outside",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Close dropdowns when clicking elsewhere with onclick-outside:"
+            },
+            {
+              "type": "code",
+              "code": "Trigger: background #2271c1, padding 12 16, radius 8, cursor pointer\n  onclick toggle Dropdown\n\nDropdown: ver, background #1A1A23, padding 8, radius 8, width 180, hidden, shadow lg\n  onclick-outside close self\n  Item: padding 10 14, radius 6, cursor pointer, hover-background #333\n\nBox ver, gap 8\n  Trigger \"Open Menu\"\n  Dropdown\n    Item \"Edit\"\n    Item \"Duplicate\"\n    Item color #EF4444, \"Delete\""
+            }
+          ]
+        },
+        {
+          "id": "selection",
+          "title": "Selection",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Use select for persistent selection that survives closing:"
+            },
+            {
+              "type": "code",
+              "code": "Item: padding 12 16, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self\n  onhover highlight self\n\nMenu ver, gap 2, background #1A1A23, padding 8, radius 8, width 200\n  Item \"Option A\"\n  Item \"Option B\"\n  Item \"Option C\""
+            },
+            {
+              "type": "paragraph",
+              "text": "highlight is temporary (for navigation). select is persistent (for choosing)."
+            }
+          ]
+        },
+        {
+          "id": "complete-dropdown",
+          "title": "Complete Dropdown",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Combining everything into a production-ready pattern:"
+            },
+            {
+              "type": "code",
+              "code": "// The trigger button\nTrigger: background #1A1A23, padding 12 16, radius 8, border 1 #333, hor, between, vertical-center, width 200, cursor pointer\n  onclick toggle Dropdown\n  Text \"Select option...\"\n  Icon icon chevron-down, size 14, color #888\n\n// Menu items with three states\nItem: padding 10 14, radius 6, cursor pointer\n  state default\n    background transparent\n  state highlighted\n    background #333\n  state selected\n    background #2271c1\n  onclick select self, close Dropdown\n  onhover highlight self\n\n// The dropdown with keyboard support\nDropdown: ver, background #1A1A23, padding 6, radius 8, width 200, hidden, shadow lg, border 1 #333\n  onclick-outside close self\n  onkeydown escape close self\n  onkeydown arrow-down highlight next\n  onkeydown arrow-up highlight prev\n  onkeydown enter select highlighted, close self\n\n// Usage\nSelect ver, gap 4\n  Trigger\n  Dropdown\n    Item icon home, \"Dashboard\"\n    Item icon user, \"Profile\"\n    Item icon settings, \"Settings\"\n    Item icon log-out, color #EF4444, \"Logout\""
+            },
+            {
+              "type": "paragraph",
+              "text": "~25 lines for a fully accessible dropdown with keyboard navigation, click-outside, and selection states. The behavior reads like documentation: \"on keydown arrow-down, highlight next.\""
+            }
+          ]
+        },
+        {
+          "id": "events-block",
+          "title": "Organizing with Events Block",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "When interactions grow complex, separate structure from behavior with the events block:"
+            },
+            {
+              "type": "code",
+              "code": "// === COMPONENTS ===\nInput Email: placeholder \"Email\", padding 12, radius 8, background #1A1A23, border 1 #333\nInput Password: placeholder \"Password\", type password, padding 12, radius 8, background #1A1A23, border 1 #333\nError: color #EF4444, size 13\nButton Submit: background #2271c1, padding 12, radius 8, \"Login\"\n\n$error: \"\"\n\n// === LAYOUT ===\nLoginForm ver, gap 12, padding 24, background #0F0F14, radius 12, width 280\n  Input Email\n  Input Password\n  if $error\n    Error $error\n  Button Submit\n\n// === BEHAVIOR ===\nevents\n  Email onchange\n    assign $error to \"\"\n  Password onchange\n    assign $error to \"\"\n  Submit onclick\n    if Email.value and Password.value\n      assign $error to \"\"\n      Submit.label = \"Success!\"\n    else\n      assign $error to \"Please fill all fields\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Structure at the top, behavior at the bottom. Each section has one job. As forms grow, this separation keeps code maintainable."
+            },
+            {
+              "type": "exercise",
+              "task": "Build a tab component: three tab buttons that highlight on hover and select on click. Use state highlighted and state selected.",
+              "code": "Tab: padding 12 24, cursor pointer\n  state default\n    background transparent, bor-b 2, border-color transparent\n  state highlighted\n    border-color #333\n  state selected\n    border-color #2271c1\n  onclick select self\n  onhover highlight self\n\nTabs hor, background #1A1A23, radius 8\n  Tab \"Overview\"\n  Tab \"Details\"\n  Tab \"Settings\""
+            },
+            {
+              "type": "paragraph",
+              "text": "Behaviors are declarative. You describe what should happen, not how. Mirror handles event listeners, state management, focus handling, and cleanup automatically."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reference",
+      "title": "Quick Reference",
+      "lead": "All properties, keywords, and patterns at a glance.",
+      "subsections": [
+        {
+          "id": "",
+          "title": "Layout",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "horizontal – horizontal (flex row)",
+                "vertical – vertical (flex column)",
+                "gap 16 – space between children",
+                "between – space-between",
+                "wrap – flex wrap",
+                "grow / fill – flex grow",
+                "cen – center both axes",
+                "horizontal-left / horizontal-center / horizontal-right – horizontal alignment",
+                "vertical-top / vertical-center / vertical-bottom – vertical alignment",
+                "grid 3 – 3 equal columns",
+                "grid 20% 80% – percentage columns",
+                "grid auto 250 – auto-fill with min width"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Sizing",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "w 200 / h 100 – width/height in pixels",
+                "w full / h full – 100%",
+                "full – both 100%",
+                "minw / maxw / minh / maxh – constraints"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Spacing",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "pad 12 – padding all sides",
+                "pad 8 16 – vertical horizontal",
+                "pad l 12 – left only (also: r, u, d, l-r, u-d)",
+                "mar 12 – margin (same syntax)"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Colors",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "col #2271c1 – unified color (background for containers, text for text)",
+                "boc #333 – border color",
+                "textCol #fff – override auto text color"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Border",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "rad 8 – border radius",
+                "bor 1 – border width (solid)",
+                "bor 1 #333 – border with color (shorthand)",
+                "bor l 2 dashed #333 – directional compound border"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Typography",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "size 18 – font size",
+                "weight 600 / weight bold – font weight",
+                "font \"Inter\" – font family",
+                "line 1.5 – line height",
+                "align center – text alignment",
+                "italic / underline / uppercase / lowercase",
+                "truncate – ellipsis overflow"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Visual",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "opacity 0.5 / opa 0.5 – transparency",
+                "shadow sm / md / lg – box shadow",
+                "z 10 – z-index",
+                "cursor pointer – cursor style",
+                "hidden / visible – visibility",
+                "icon chevron-down – Lucide icon"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Scroll",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "scroll / scroll-vertical – vertical scroll",
+                "scroll-horizontal – horizontal scroll",
+                "scroll-both – both directions",
+                "snap – scroll snap",
+                "clip – overflow hidden"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Hover States",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "hover-color – background on hover",
+                "hover-border-color / hover-border / hover-radius",
+                "hover-opacity / hover-scale"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Events & Actions",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "onclick / onchange / oninput / onfocus / onblur",
+                "onclick-outside – click outside element",
+                "onkeydown escape / enter / arrow-down / arrow-up – key events",
+                "toggle – switch state",
+                "open Name / close – overlays",
+                "show Name / hide Name – visibility",
+                "highlight self / next / prev – navigation highlight",
+                "select self / highlighted – selection",
+                "filter Container – filter items by input",
+                "page Name – navigation",
+                "assign $var to value – set variable"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Logic",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "if $condition ... else – conditional rendering",
+                "if $x then prop value else prop value – conditional property",
+                "each $item in $list – iteration",
+                "and / or / not – logical operators",
+                "== / != / > / < / >= / <= – comparison"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Animations",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "show fade slide-up 300 – entrance animation",
+                "hide fade 200 – exit animation",
+                "animate spin 1000 – continuous animation",
+                "Types: fade, scale, slide-up/down/left/right, spin, pulse, bounce"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Primitives",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Email as Input: – named input with type inference",
+                "Input placeholder \"text\" type email",
+                "Textarea placeholder \"text\" rows 5",
+                "Image \"url\" w h fit cover",
+                "Link \"url\" target _blank"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Definitions",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Button: – define without rendering",
+                "Button – use/render",
+                "DangerBtn from Button: – inherit",
+                "$token: value – design token",
+                "Component.property – reference property",
+                "state name – define visual state",
+                "events – centralized event block"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Shortcuts",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Box 300 400 – Dimension shorthand (w h)",
+                "Image \"url\" 100 100 – Image with size",
+                "#RRGGBBAA – Color with alpha (8-digit hex)",
+                "$name-color – Token with property suffix",
+                "Component.prop – Property reference"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Library Components",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Tabs – Tabs, Tab, TabContent",
+                "Accordion – AccordionItem, Trigger, Content (states: collapsed, expanded)",
+                "Collapsible – Trigger, Content (states: collapsed, expanded)",
+                "Dropdown – Trigger, Content, Item, Separator (states: closed, open)",
+                "Dialog – Trigger, Content (states: closed, open)",
+                "AlertDialog – Trigger, Content, Title, Description, Cancel, Action",
+                "Select – Trigger, Options, Option, Group, Label",
+                "ContextMenu – Trigger, Content, Item, Separator",
+                "Tooltip – Trigger, Content",
+                "Popover – Trigger, Content (states: closed, open)",
+                "HoverCard – Trigger, Content",
+                "FormField – Label, Field, Hint, Error",
+                "RadioGroup – Item, Indicator, Label (states: unselected, selected)",
+                "Checkbox – Indicator, Label (states: unchecked, checked)",
+                "Switch – Track, Thumb (states: off, on)",
+                "Slider – Track, Range, Thumb (props: min, max, value, step)",
+                "Progress – Track, Indicator (props: value, max)",
+                "Toast – Title, Description, Action, Close",
+                "Avatar – Image, Fallback"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "",
+          "title": "Additional Actions",
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "change self to state – Set own state explicitly",
+                "change Component to state – Set another component's state",
+                "onclick if cond action else action – Conditional action"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
