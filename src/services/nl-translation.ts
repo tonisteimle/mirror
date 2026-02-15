@@ -7,11 +7,7 @@
 
 import { getApiKey, hasApiKey } from '../lib/ai'
 import { applyAllFixes, validateMirrorCode, type CodeIssue } from '../lib/ai-selfhealing'
-
-// Models
-const HAIKU_MODEL = 'anthropic/claude-haiku-4.5'  // Fast (~300ms)
-const OPUS_MODEL = 'anthropic/claude-opus-4.5'    // Deep Thinking (~3-5s)
-const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
+import { API } from '../constants'
 
 // System prompt - understands both UI translations AND meta-requests
 const SYSTEM_PROMPT = `Du bist ein Mirror DSL Assistent. Du verstehst Absichten und handelst entsprechend.
@@ -440,7 +436,7 @@ export async function translateLine(
 
   // Choose model and prompt based on mode
   const isDeepThinking = deepThinking?.enabled ?? false
-  const model = isDeepThinking ? OPUS_MODEL : HAIKU_MODEL
+  const model = isDeepThinking ? API.MODEL_THINKING : API.MODEL_FAST
   const systemPrompt = isDeepThinking ? DEEP_THINKING_PROMPT : SYSTEM_PROMPT
   const maxTokens = isDeepThinking ? 2048 : 512
 
@@ -450,7 +446,7 @@ export async function translateLine(
     : buildContext(context, lineIndex, tokensCode)
 
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const response = await fetch(API.ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -590,7 +586,7 @@ export async function translateLineSimple(
   const prompt = buildContext(context, lineIndex)
 
   try {
-    const response = await fetch(API_ENDPOINT, {
+    const response = await fetch(API.ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -599,7 +595,7 @@ export async function translateLineSimple(
         'X-Title': 'Mirror NL Mode',
       },
       body: JSON.stringify({
-        model: HAIKU_MODEL,
+        model: API.MODEL_FAST,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt }

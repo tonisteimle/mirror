@@ -17,7 +17,10 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">ComponentName</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"string\">\"Text\"</span>"
+              "html": "<span class=\"component\">ComponentName</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"string\">\"Text\"</span>",
+              "expects": {
+                "nodes": [{ "name": "ComponentName", "textContent": "Text" }]
+              }
             },
             {
               "type": "highlight",
@@ -35,7 +38,10 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Parent</span>\n  <span class=\"component\">Child</span>\n    <span class=\"component\">GrandChild</span>"
+              "html": "<span class=\"component\">Parent</span>\n  <span class=\"component\">Child</span>\n    <span class=\"component\">GrandChild</span>",
+              "expects": {
+                "nodes": [{ "name": "Parent", "childCount": 1 }]
+              }
             }
           ]
         },
@@ -45,7 +51,10 @@
           "content": [
             {
               "type": "code",
-              "html": "<span class=\"comment\">// Kommentar auf eigener Zeile</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click\"</span> <span class=\"comment\">// Inline-Kommentar</span>"
+              "html": "<span class=\"comment\">// Kommentar auf eigener Zeile</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click\"</span> <span class=\"comment\">// Inline-Kommentar</span>",
+              "expects": {
+                "nodes": [{ "name": "Button", "textContent": "Click" }]
+              }
             }
           ]
         }
@@ -128,7 +137,13 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Box</span> <span class=\"value\">300</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">16</span>   <span class=\"comment\">// width:300, height:200, padding:16</span>\n<span class=\"component\">Card</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">8</span>          <span class=\"comment\">// width:200, padding:8</span>"
+              "html": "<span class=\"component\">Box</span> <span class=\"value\">300</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">16</span>   <span class=\"comment\">// width:300, height:200, padding:16</span>\n<span class=\"component\">Card</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">8</span>          <span class=\"comment\">// width:200, padding:8</span>",
+              "expects": {
+                "nodes": [
+                  { "name": "Box", "properties": { "width": 300, "height": 200, "padding": 16 } },
+                  { "name": "Card", "properties": { "width": 200, "padding": 8 } }
+                ]
+              }
             }
           ]
         },
@@ -152,7 +167,8 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"property\">padding</span> <span class=\"value\">16</span>              <span class=\"comment\">// Alle Seiten</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">8</span>           <span class=\"comment\">// Vertikal Horizontal</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">12</span> <span class=\"value\">8</span> <span class=\"value\">4</span>      <span class=\"comment\">// Top Right Bottom Left</span>\n<span class=\"property\">padding</span> <span class=\"value\">left</span> <span class=\"value\">16</span>         <span class=\"comment\">// Nur links (auch: l)</span>\n<span class=\"property\">padding</span> <span class=\"value\">left-right</span> <span class=\"value\">16</span>   <span class=\"comment\">// Links und rechts (auch: l-r)</span>\n<span class=\"property\">padding</span> <span class=\"value\">top-bottom</span> <span class=\"value\">8</span>   <span class=\"comment\">// Oben und unten (auch: u-d, t-b)</span>"
+              "html": "<span class=\"property\">padding</span> <span class=\"value\">16</span>              <span class=\"comment\">// Alle Seiten</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">8</span>           <span class=\"comment\">// Vertikal Horizontal</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">12</span> <span class=\"value\">8</span> <span class=\"value\">4</span>      <span class=\"comment\">// Top Right Bottom Left</span>\n<span class=\"property\">padding</span> <span class=\"value\">left</span> <span class=\"value\">16</span>         <span class=\"comment\">// Nur links (auch: l)</span>\n<span class=\"property\">padding</span> <span class=\"value\">left-right</span> <span class=\"value\">16</span>   <span class=\"comment\">// Links und rechts (auch: l-r)</span>\n<span class=\"property\">padding</span> <span class=\"value\">top-bottom</span> <span class=\"value\">8</span>   <span class=\"comment\">// Oben und unten (auch: u-d, t-b)</span>",
+              "expects": {}
             }
           ]
         },
@@ -177,7 +193,10 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"comment\">// RICHTIG:</span>\n<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">color</span> <span class=\"value\">#FFFFFF</span> <span class=\"string\">\"Click\"</span>\n\n<span class=\"comment\">// FALSCH (funktioniert nicht):</span>\n<span class=\"component\">Button</span> <span class=\"value\">#3B82F6</span> <span class=\"string\">\"Click\"</span>"
+              "html": "<span class=\"comment\">// RICHTIG:</span>\n<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">color</span> <span class=\"value\">#FFFFFF</span> <span class=\"string\">\"Click\"</span>\n\n<span class=\"comment\">// FALSCH (funktioniert nicht):</span>\n<span class=\"component\">Button</span> <span class=\"value\">#3B82F6</span> <span class=\"string\">\"Click\"</span>",
+              "expects": {
+                "nodes": [{ "name": "Button", "properties": { "background": "#3B82F6", "color": "#FFFFFF" } }]
+              }
             },
             {
               "type": "paragraph",
@@ -201,7 +220,8 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"property\">border</span> <span class=\"value\">1</span>                   <span class=\"comment\">// 1px solid</span>\n<span class=\"property\">border</span> <span class=\"value\">2</span> <span class=\"value\">dashed</span> <span class=\"value\">#3B82F6</span>   <span class=\"comment\">// 2px dashed #3B82F6</span>\n<span class=\"property\">border</span> <span class=\"value\">left</span> <span class=\"value\">1</span> <span class=\"value\">#333</span>        <span class=\"comment\">// Nur links</span>"
+              "html": "<span class=\"property\">border</span> <span class=\"value\">1</span>                   <span class=\"comment\">// 1px solid</span>\n<span class=\"property\">border</span> <span class=\"value\">2</span> <span class=\"value\">dashed</span> <span class=\"value\">#3B82F6</span>   <span class=\"comment\">// 2px dashed #3B82F6</span>\n<span class=\"property\">border</span> <span class=\"value\">left</span> <span class=\"value\">1</span> <span class=\"value\">#333</span>        <span class=\"comment\">// Nur links</span>",
+              "expects": {}
             }
           ]
         },
@@ -283,7 +303,14 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"search\"</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"user\"</span> <span class=\"property\">size</span> <span class=\"value\">20</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"arrow-right\"</span>"
+              "html": "<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"search\"</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"user\"</span> <span class=\"property\">size</span> <span class=\"value\">20</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"arrow-right\"</span>",
+              "expects": {
+                "nodes": [
+                  { "name": "Box", "properties": { "icon": "search" } },
+                  { "name": "Box", "properties": { "icon": "user", "size": 20 } },
+                  { "name": "Box", "properties": { "icon": "arrow-right" } }
+                ]
+              }
             }
           ]
         },
@@ -312,7 +339,10 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#333</span> <span class=\"property\">hover-background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">hover-scale</span> <span class=\"value\">1.02</span> <span class=\"string\">\"Hover me\"</span>"
+              "html": "<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#333</span> <span class=\"property\">hover-background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">hover-scale</span> <span class=\"value\">1.02</span> <span class=\"string\">\"Hover me\"</span>",
+              "expects": {
+                "nodes": [{ "name": "Button", "properties": { "background": "#333" } }]
+              }
             }
           ]
         }
@@ -332,7 +362,11 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"comment\">// Definition (nicht sichtbar)</span>\n<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung (sichtbar)</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click me\"</span>"
+              "html": "<span class=\"comment\">// Definition (nicht sichtbar)</span>\n<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung (sichtbar)</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click me\"</span>",
+              "expects": {
+                "registry": { "Button": {} },
+                "nodes": [{ "name": "Button", "textContent": "Click me" }]
+              }
             }
           ]
         },
@@ -342,7 +376,10 @@
           "content": [
             {
               "type": "code",
-              "html": "<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"component\">DangerButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">#EF4444</span>\n<span class=\"component\">GhostButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">transparent</span> <span class=\"property\">border</span> <span class=\"value\">1</span>"
+              "html": "<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"component\">DangerButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">#EF4444</span>\n<span class=\"component\">GhostButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">transparent</span> <span class=\"property\">border</span> <span class=\"value\">1</span>",
+              "expects": {
+                "registry": { "Button": {}, "DangerButton": {}, "GhostButton": {} }
+              }
             }
           ]
         },
@@ -352,7 +389,11 @@
           "content": [
             {
               "type": "code",
-              "html": "<span class=\"component\">Card:</span> <span class=\"property\">vertical</span> <span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n  <span class=\"component\">Title:</span> <span class=\"property\">size</span> <span class=\"value\">18</span> <span class=\"property\">weight</span> <span class=\"value\">600</span>\n  <span class=\"component\">Description:</span> <span class=\"property\">size</span> <span class=\"value\">14</span> <span class=\"property\">color</span> <span class=\"value\">#888</span>\n  <span class=\"component\">Actions:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung</span>\n<span class=\"component\">Card</span>\n  <span class=\"component\">Title</span> <span class=\"string\">\"Welcome\"</span>\n  <span class=\"component\">Description</span> <span class=\"string\">\"Get started\"</span>\n  <span class=\"component\">Actions</span>\n    <span class=\"component\">Button</span> <span class=\"string\">\"Learn more\"</span>"
+              "html": "<span class=\"component\">Card:</span> <span class=\"property\">vertical</span> <span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n  <span class=\"component\">Title:</span> <span class=\"property\">size</span> <span class=\"value\">18</span> <span class=\"property\">weight</span> <span class=\"value\">600</span>\n  <span class=\"component\">Description:</span> <span class=\"property\">size</span> <span class=\"value\">14</span> <span class=\"property\">color</span> <span class=\"value\">#888</span>\n  <span class=\"component\">Actions:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung</span>\n<span class=\"component\">Card</span>\n  <span class=\"component\">Title</span> <span class=\"string\">\"Welcome\"</span>\n  <span class=\"component\">Description</span> <span class=\"string\">\"Get started\"</span>\n  <span class=\"component\">Actions</span>\n    <span class=\"component\">Button</span> <span class=\"string\">\"Learn more\"</span>",
+              "expects": {
+                "registry": { "Card": {} },
+                "nodes": [{ "name": "Card" }]
+              }
             }
           ]
         },
@@ -366,7 +407,11 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Header:</span> <span class=\"property\">horizontal</span> <span class=\"property\">between</span>\n  <span class=\"component\">Left:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">16</span>\n    <span class=\"component\">Logo:</span> <span class=\"property\">width</span> <span class=\"value\">120</span>\n  <span class=\"component\">Right:</span>\n    <span class=\"component\">Avatar:</span> <span class=\"value\">36</span> <span class=\"value\">36</span> <span class=\"property\">radius</span> <span class=\"value\">18</span>\n\n<span class=\"comment\">// Direkt auf Logo zugreifen (egal wie tief)</span>\n<span class=\"component\">Header</span>\n  <span class=\"component\">Logo</span> <span class=\"property\">background</span> <span class=\"value\">#FF0000</span>\n  <span class=\"component\">Avatar</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span>"
+              "html": "<span class=\"component\">Header:</span> <span class=\"property\">horizontal</span> <span class=\"property\">between</span>\n  <span class=\"component\">Left:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">16</span>\n    <span class=\"component\">Logo:</span> <span class=\"property\">width</span> <span class=\"value\">120</span>\n  <span class=\"component\">Right:</span>\n    <span class=\"component\">Avatar:</span> <span class=\"value\">36</span> <span class=\"value\">36</span> <span class=\"property\">radius</span> <span class=\"value\">18</span>\n\n<span class=\"comment\">// Direkt auf Logo zugreifen (egal wie tief)</span>\n<span class=\"component\">Header</span>\n  <span class=\"component\">Logo</span> <span class=\"property\">background</span> <span class=\"value\">#FF0000</span>\n  <span class=\"component\">Avatar</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span>",
+              "expects": {
+                "registry": { "Header": {} },
+                "nodes": [{ "name": "Header" }]
+              }
             }
           ]
         },
@@ -380,7 +425,11 @@
             },
             {
               "type": "code",
-              "html": "<span class=\"component\">Menu:</span> <span class=\"property\">vertical</span> <span class=\"property\">width</span> <span class=\"value\">200</span>\n  <span class=\"component\">Item:</span> <span class=\"property\">padding</span> <span class=\"value\">8</span> <span class=\"value\">12</span>\n\n<span class=\"component\">Menu</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Profile\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Settings\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"property\">color</span> <span class=\"value\">#EF4444</span> <span class=\"string\">\"Logout\"</span>"
+              "html": "<span class=\"component\">Menu:</span> <span class=\"property\">vertical</span> <span class=\"property\">width</span> <span class=\"value\">200</span>\n  <span class=\"component\">Item:</span> <span class=\"property\">padding</span> <span class=\"value\">8</span> <span class=\"value\">12</span>\n\n<span class=\"component\">Menu</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Profile\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Settings\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"property\">color</span> <span class=\"value\">#EF4444</span> <span class=\"string\">\"Logout\"</span>",
+              "expects": {
+                "registry": { "Menu": {} },
+                "nodes": [{ "name": "Menu" }]
+              }
             }
           ]
         },

@@ -201,12 +201,19 @@ describe('Feature', () => {
 
 ## Tracking
 
-| Phase | Status | Coverage Vorher | Coverage Nachher |
-|-------|--------|-----------------|------------------|
-| Phase 1 | TODO | 69% | - |
-| Phase 2 | TODO | - | - |
-| Phase 3 | TODO | - | - |
-| Phase 4 | TODO | - | - |
+| Phase | Status | Tests Hinzugefügt | Beschreibung |
+|-------|--------|-------------------|--------------|
+| Phase 1 | DONE | 195+ | Lexer-Tests (string, json, operator) + Action-Executor + Registry |
+| Phase 2 | TODO | - | Generator Tests |
+| Phase 3 | TODO | - | Utils & Edge Cases |
+| Phase 4 | TODO | - | Component Tests |
+
+### Phase 1 Details (abgeschlossen)
+- `src/__tests__/parser/lexer/string-lexer.test.ts` - 43 Tests
+- `src/__tests__/parser/lexer/json-lexer.test.ts` - 29 Tests
+- `src/__tests__/parser/lexer/operator-lexer.test.ts` - 52 Tests
+- `src/__tests__/generator/actions/action-executor.test.ts` - 56 Tests
+- `src/__tests__/generator/behaviors/registry.test.tsx` - 15 neue Tests (36 gesamt)
 
 ---
 

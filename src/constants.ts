@@ -99,6 +99,8 @@ function getApiEndpoint(): string {
 
 export const API = {
   MODEL: 'anthropic/claude-sonnet-4.5',
+  MODEL_FAST: 'anthropic/claude-haiku-4.5',      // Fast responses (~300ms)
+  MODEL_THINKING: 'anthropic/claude-opus-4.5',   // Deep thinking (~3-5s)
   MAX_TOKENS: 4096,
   get ENDPOINT() { return getApiEndpoint() },
   REQUEST_TIMEOUT_MS: 60000,  // 60 seconds timeout for AI requests

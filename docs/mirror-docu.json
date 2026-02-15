@@ -766,7 +766,12 @@
             },
             {
               "type": "code",
-              "code": "Button:\n  horizontal gap 8 padding 12 24 radius 8 background #2271c1 color white\n  IconLeft icon \"check\" hidden\n  Label \"Button\"\n  IconRight icon \"chevron-right\" hidden\n\n  state hover\n    background #1a5a9e\n\n  state disabled\n    background #94A3B8 opacity 0.6\n\nRow horizontal gap 12\n  Button\n  Button IconLeft visible Label \"Confirm\"\n  Button disabled Label \"Disabled\""
+              "code": "Button:\n  horizontal gap 8 padding 12 24 radius 8 background #2271c1 color white\n  IconLeft icon \"check\" hidden\n  Label \"Button\"\n  IconRight icon \"chevron-right\" hidden\n\n  state hover\n    background #1a5a9e\n\n  state disabled\n    background #94A3B8 opacity 0.6\n\nRow horizontal gap 12\n  Button\n  Button IconLeft visible Label \"Confirm\"\n  Button disabled Label \"Disabled\"",
+              "expects": {
+                "registry": {
+                  "Button": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -778,7 +783,15 @@
             },
             {
               "type": "code",
-              "code": "Button: horizontal gap 8 padding 12 24 radius 8 background #2271c1 color white\n  IconLeft icon \"check\" hidden\n  Label \"Button\"\n\nPrimary-Button from Button:\n  IconLeft visible\n\nSecondary-Button from Button:\n  background #E2E8F0 color #1E293B\n\nGhost-Button from Button:\n  background transparent color #2271c1 border 1 #2271c1\n\nRow horizontal gap 12\n  Primary-Button Label \"Next\"\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Info\""
+              "code": "Button: horizontal gap 8 padding 12 24 radius 8 background #2271c1 color white\n  IconLeft icon \"check\" hidden\n  Label \"Button\"\n\nPrimary-Button from Button:\n  IconLeft visible\n\nSecondary-Button from Button:\n  background #E2E8F0 color #1E293B\n\nGhost-Button from Button:\n  background transparent color #2271c1 border 1 #2271c1\n\nRow horizontal gap 12\n  Primary-Button Label \"Next\"\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Info\"",
+              "expects": {
+                "registry": {
+                  "Button": {},
+                  "Primary-Button": {},
+                  "Secondary-Button": {},
+                  "Ghost-Button": {}
+                }
+              }
             },
             {
               "type": "paragraph",
@@ -790,7 +803,12 @@
             },
             {
               "type": "code",
-              "code": "Page:\n  ver, gap 16, padding 32\n\n  Primary-Button\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Learn more\", IconRight visible\n  Icon-Button\n  Primary-Button disabled"
+              "code": "Page:\n  ver, gap 16, padding 32\n\n  Primary-Button\n  Secondary-Button Label \"Cancel\"\n  Ghost-Button Label \"Learn more\", IconRight visible\n  Icon-Button\n  Primary-Button disabled",
+              "expects": {
+                "registry": {
+                  "Page": {}
+                }
+              }
             }
           ]
         },
@@ -808,7 +826,15 @@
             },
             {
               "type": "code",
-              "code": "Card: vertical padding 24 gap 16 background #1A1A23 radius 12\n  Header: horizontal between vertical-center\n  Title: size 20 weight 600\n  Body: color #9CA3AF\n  Actions: horizontal gap 8 horizontal-right\n\nCard\n  Header\n    Badge background #10B981 padding 4 8 radius 4 size 12 \"New\"\n    Icon icon \"more-vertical\"\n  Title \"Project Alpha\"\n  Body \"A new project with great potential.\"\n  Actions\n    Button background #333 padding 8 16 radius 6 \"Cancel\"\n    Button background #2271c1 \"Save\""
+              "code": "Card: vertical padding 24 gap 16 background #1A1A23 radius 12\n  Header: horizontal between vertical-center\n  Title: size 20 weight 600\n  Body: color #9CA3AF\n  Actions: horizontal gap 8 horizontal-right\n\nCard\n  Header\n    Badge background #10B981 padding 4 8 radius 4 size 12 \"New\"\n    Icon icon \"more-vertical\"\n  Title \"Project Alpha\"\n  Body \"A new project with great potential.\"\n  Actions\n    Button background #333 padding 8 16 radius 6 \"Cancel\"\n    Button background #2271c1 \"Save\"",
+              "expects": {
+                "registry": {
+                  "Card": {}
+                },
+                "nodes": [{
+                  "name": "Card"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -816,7 +842,15 @@
             },
             {
               "type": "code",
-              "code": "Header: hor, between, padding 12, background #1a1a1a, radius 8\n  Left: hor, gap 16, vertical-center\n    Logo: width 100, height 32\n    Nav: hor, gap 8\n  Right:\n    Avatar: width 36, height 36, radius 18\n\n// Direct access to nested elements\nHeader\n  Logo background #EF4444\n  Avatar background #2271c1"
+              "code": "Header: hor, between, padding 12, background #1a1a1a, radius 8\n  Left: hor, gap 16, vertical-center\n    Logo: width 100, height 32\n    Nav: hor, gap 8\n  Right:\n    Avatar: width 36, height 36, radius 18\n\n// Direct access to nested elements\nHeader\n  Logo background #EF4444\n  Avatar background #2271c1",
+              "expects": {
+                "registry": {
+                  "Header": {}
+                },
+                "nodes": [{
+                  "name": "Header"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -1008,7 +1042,16 @@
             },
             {
               "type": "code",
-              "code": "// Design tokens with type suffixes\n$primary-color: #2271c1\n$text-color: #fff\n$muted-color: #94a3b8\n$card-padding: 20\n$card-radius: 12\n$card-gap: 12\n$title-size: 18\n\n// Use tokens directly – no property names needed\nCard vertical $primary-background $card-padding $card-radius $card-gap\n  Title $text-color $title-size weight 600, \"Project Status\"\n  Text $muted-color, \"Last updated: Today\""
+              "code": "// Design tokens with type suffixes\n$primary-color: #2271c1\n$text-color: #fff\n$muted-color: #94a3b8\n$card-padding: 20\n$card-radius: 12\n$card-gap: 12\n$title-size: 18\n\n// Use tokens directly – no property names needed\nCard vertical $primary-background $card-padding $card-radius $card-gap\n  Title $text-color $title-size weight 600, \"Project Status\"\n  Text $muted-color, \"Last updated: Today\"",
+              "expects": {
+                "tokens": {
+                  "$primary-color": { "value": "#2271c1" },
+                  "$card-padding": { "value": 20 }
+                },
+                "nodes": [{
+                  "name": "Card"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -1069,7 +1112,15 @@
             },
             {
               "type": "code",
-              "code": "// 1. Base colors\n$blue-500: #2271c1\n$blue-600: #1a5a9e\n$slate-800: #1e293b\n\n// 2. Semantic tokens\n$primary-color: $blue-500\n$primary-hover-color: $blue-600\n$card-color: $slate-800\n\n// 3. Usage\nCard $card-color, padding 16, radius 8, gap 8\n  Text \"Change $blue-500 → all updates\"\n  Button $primary-color, padding 8 16, radius 6, hover-color $primary-hover-color, \"Primary\""
+              "code": "// 1. Base colors\n$blue-500: #2271c1\n$blue-600: #1a5a9e\n$slate-800: #1e293b\n\n// 2. Semantic tokens\n$primary-color: $blue-500\n$primary-hover-color: $blue-600\n$card-color: $slate-800\n\n// 3. Usage\nCard $card-color, padding 16, radius 8, gap 8\n  Text \"Change $blue-500 → all updates\"\n  Button $primary-color, padding 8 16, radius 6, hover-color $primary-hover-color, \"Primary\"",
+              "expects": {
+                "tokens": {
+                  "$blue-500": { "value": "#2271c1" }
+                },
+                "nodes": [{
+                  "name": "Card"
+                }]
+              }
             },
             {
               "type": "paragraph",
@@ -1077,7 +1128,20 @@
             },
             {
               "type": "code",
-              "code": "$btn-color: #2271c1\n$btn-hover-color: #1a5a9e\n\nButton: $btn-color, padding 8 16, radius 8\n  state hover\n    $btn-hover-color\n\nButton \"Hover me\""
+              "code": "$btn-color: #2271c1\n$btn-hover-color: #1a5a9e\n\nButton: $btn-color, padding 8 16, radius 8\n  state hover\n    $btn-hover-color\n\nButton \"Hover me\"",
+              "expects": {
+                "tokens": {
+                  "$btn-color": { "value": "#2271c1" },
+                  "$btn-hover-color": { "value": "#1a5a9e" }
+                },
+                "registry": {
+                  "Button": {}
+                },
+                "nodes": [{
+                  "name": "Button",
+                  "textContent": "Hover me"
+                }]
+              }
             },
             {
               "type": "exercise",
