@@ -45,7 +45,7 @@ describe('doc-mode', () => {
       const code = `text
   '$h2 What is Mirror
 
-   $p Mirror is a description language for $b[user interfaces].
+   $p Mirror is a description language for **user interfaces**.
 
    $p Building UI today means juggling three languages.'`
 
@@ -54,7 +54,7 @@ describe('doc-mode', () => {
 
       const textNode = result.nodes[0]
       expect(textNode.properties._docContent).toContain('$h2 What is Mirror')
-      expect(textNode.properties._docContent).toContain('$b[user interfaces]')
+      expect(textNode.properties._docContent).toContain('**user interfaces**')
       expect(textNode.properties._docContent).toContain('$p Building UI')
     })
   })
@@ -168,8 +168,8 @@ text
   describe('breakout multiline strings', () => {
     it('parses deeply nested text with unindented multiline string', () => {
       const code = `doc
-  section
-    article
+  Section
+    Article
       text
 '$h1 Heading
 
@@ -183,7 +183,7 @@ because the multiline string is not indented.'`
       expect(result.nodes).toHaveLength(1)
 
       // Navigate to the text node
-      // Note: component names get capitalized by the parser
+      // V2: component names are preserved as written
       const docNode = result.nodes[0]
       expect(docNode.name).toBe('doc')
 

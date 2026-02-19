@@ -96,9 +96,11 @@ describe('Lexer', () => {
   })
 
   describe('Icons', () => {
-    it('tokenizes icon property', () => {
+    it('tokenizes icon as component name (icon is a child element, not a property)', () => {
+      // icon is now a child element, not a property
+      // Button icon "star" → Button with child icon "star"
       const tokens = tokenize('Button icon "star"')
-      expect(tokens[1]).toMatchObject({ type: 'PROPERTY', value: 'icon' })
+      expect(tokens[1]).toMatchObject({ type: 'COMPONENT_NAME', value: 'icon' })
       expect(tokens[2]).toMatchObject({ type: 'STRING', value: 'star' })
     })
   })

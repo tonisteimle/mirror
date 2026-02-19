@@ -64,12 +64,12 @@ Third line'`
     it('parses string with $token syntax', () => {
       const code = `'$h2 Title
 
-$p This is a paragraph with $b[bold] text.'`
+$p This is a paragraph with **bold** text.'`
       const tokens = tokenize(code)
       const stringToken = tokens.find(t => t.type === 'MULTILINE_STRING')
       expect(stringToken).toBeDefined()
       expect(stringToken!.value).toContain('$h2 Title')
-      expect(stringToken!.value).toContain('$b[bold]')
+      expect(stringToken!.value).toContain('**bold**')
     })
 
     it('parses string after text keyword', () => {

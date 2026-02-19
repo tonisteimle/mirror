@@ -110,9 +110,16 @@ describe('Sugar Handlers', () => {
   })
 
   describe('String Handler - Link', () => {
-    it('assigns string to href for Link', () => {
-      const result = parse('Link "https://example.com"')
+    it('assigns string to text content for Link (not href)', () => {
+      const result = parse('Link "Click here"')
+      // String becomes visible text content, not href (consistent with Button)
+      expect(result.nodes[0].children[0]?.content).toBe('Click here')
+    })
+
+    it('explicit href property sets the URL', () => {
+      const result = parse('Link href "https://example.com" "Click here"')
       expect(result.nodes[0].properties.href).toBe('https://example.com')
+      expect(result.nodes[0].children[0]?.content).toBe('Click here')
     })
   })
 

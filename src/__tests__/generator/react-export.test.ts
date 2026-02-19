@@ -337,8 +337,8 @@ describe('Inkrement 14: Image', () => {
 // =============================================================================
 
 describe('Inkrement 15: Link & Textarea', () => {
-  it('generiert a-Tag für Link', () => {
-    const result = exportReact('Link "https://example.com"')
+  it('generiert a-Tag für Link mit explizitem href', () => {
+    const result = exportReact('Link href "https://example.com" "Click here"')
     expect(result.tsx).toContain('<a')
     expect(result.tsx).toContain('href="https://example.com"')
   })

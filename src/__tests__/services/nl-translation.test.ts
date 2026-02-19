@@ -10,21 +10,24 @@ import { applyAllFixes, validateMirrorCode } from '../../lib/ai-selfhealing'
 
 describe('NL Translation Service', () => {
   describe('shouldTranslate', () => {
+    // Note: shouldTranslate now returns true for ALL non-empty, non-comment lines
+    // when in LLM mode. The LLM processes everything including valid DSL.
+
     it('should translate natural language descriptions', () => {
       expect(shouldTranslate('toolbar mit icon buttons')).toBe(true)
       expect(shouldTranslate('ein blauer button')).toBe(true)
       expect(shouldTranslate('navigation mit 3 items')).toBe(true)
     })
 
-    it('should skip valid DSL code', () => {
-      expect(shouldTranslate('Button background #3B82F6 "Click"')).toBe(false)
-      expect(shouldTranslate('Box horizontal gap 16')).toBe(false)
-      expect(shouldTranslate('Card: padding 16 radius 8')).toBe(false)
+    it('should translate DSL code (user is in LLM mode)', () => {
+      expect(shouldTranslate('Button background #3B82F6 "Click"')).toBe(true)
+      expect(shouldTranslate('Box horizontal gap 16')).toBe(true)
+      expect(shouldTranslate('Card: padding 16 radius 8')).toBe(true)
     })
 
-    it('should skip token definitions', () => {
-      expect(shouldTranslate('$primary: #3B82F6')).toBe(false)
-      expect(shouldTranslate('$spacing: 16')).toBe(false)
+    it('should translate token definitions (user is in LLM mode)', () => {
+      expect(shouldTranslate('$primary: #3B82F6')).toBe(true)
+      expect(shouldTranslate('$spacing: 16')).toBe(true)
     })
 
     it('should skip comments and section headers', () => {
@@ -42,7 +45,7 @@ describe('NL Translation Service', () => {
     const tokensCode = `$primary: #3B82F6
 $bg-dark: #1E1E2E
 $spacing: 16
-$radius: 8`
+$rad 8`
 
     const layoutLines = [
       'Header horizontal between',
@@ -97,7 +100,7 @@ $radius: 8`
       const tokensCode = `$primary: #3B82F6
 $bg-card: #2A2A3E
 $spacing: 16
-$radius: 8`
+$rad 8`
 
       const lines = [
         'Header horizontal padding $spacing',

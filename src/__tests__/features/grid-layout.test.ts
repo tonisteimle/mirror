@@ -41,7 +41,7 @@ describe('Grid Layout', () => {
       expect(getErrors(result)).toHaveLength(0)
       // Single number is stored as number, not string
       expect(result.nodes[0].properties.grid).toBe(4)
-      expect(result.nodes[0].properties.gap).toBe(16)
+      expect(result.nodes[0].properties.g).toBe(16)
     })
 
     it('parses grid with percentages', () => {
