@@ -18,6 +18,28 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { PanelTabsHeader, type PanelTabId } from './InlineLayoutPanel'
 
 // ============================================
+// Token Mode Persistence
+// ============================================
+
+const STORAGE_KEY = 'mirror-panel-token-mode'
+
+function getStoredTokenMode(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function setStoredTokenMode(mode: boolean) {
+  try {
+    localStorage.setItem(STORAGE_KEY, mode ? 'true' : 'false')
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -52,6 +74,7 @@ interface BorderState {
   cornersExpanded: boolean
   // UI state
   showColorPicker: boolean
+  useTokenMode: boolean
 }
 
 interface InlineBorderPanelProps {
@@ -105,6 +128,7 @@ const defaultState: BorderState = {
   radiusBL: 0,
   cornersExpanded: false,
   showColorPicker: false,
+  useTokenMode: getStoredTokenMode(),
 }
 
 // Helper to check if all sides are selected
@@ -830,7 +854,16 @@ export function InlineBorderPanel({
     >
       {/* Tab Header - only shown when showTabs is true */}
       {showTabs && onSwitchPanel && (
-        <PanelTabsHeader activeTab="border" onSwitchPanel={onSwitchPanel} availableTabs={availableTabs} />
+        <PanelTabsHeader
+          activeTab="border"
+          onSwitchPanel={onSwitchPanel}
+          availableTabs={availableTabs}
+          useTokenMode={state.useTokenMode}
+          onTokenModeChange={(mode) => {
+            setStoredTokenMode(mode)
+            updateState({ useTokenMode: mode })
+          }}
+        />
       )}
       <div
         style={{ padding: showTabs ? '8px 16px 16px 16px' : '16px', flex: 1 }}
@@ -945,24 +978,34 @@ export function InlineBorderPanel({
         {/* COLOR SECTION - full width with inline swatches */}
         <div style={{ marginTop: '16px' }}>
           <SectionLabel>Color</SectionLabel>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
-              <ColorButton
-                color={state.color}
-                onClick={() => updateState({ showColorPicker: !state.showColorPicker })}
-              />
+          {state.useTokenMode && editorCode ? (
+            /* Token mode: only show token swatches */
+            <TokenSwatches
+              code={editorCode}
+              onSelect={(tokenName) => updateState({ color: tokenName })}
+              selectedValue={state.color}
+            />
+          ) : (
+            /* Normal mode: color button + optional token swatches */
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
+                <ColorButton
+                  color={state.color}
+                  onClick={() => updateState({ showColorPicker: !state.showColorPicker })}
+                />
+              </div>
+              {/* Token swatches inline */}
+              {editorCode && (
+                <TokenSwatches
+                  code={editorCode}
+                  onSelect={(tokenName) => updateState({ color: tokenName })}
+                  selectedValue={state.color}
+                />
+              )}
             </div>
-            {/* Token swatches inline */}
-            {editorCode && (
-              <TokenSwatches
-                code={editorCode}
-                onSelect={(tokenName) => updateState({ color: tokenName })}
-                selectedValue={state.color}
-              />
-            )}
-          </div>
+          )}
           {/* Color Picker Overlay - Rendered via Portal */}
-          {state.showColorPicker && (
+          {state.showColorPicker && !state.useTokenMode && (
             <BorderColorPicker
               color={state.color}
               onChange={(color) => updateState({ color })}
