@@ -566,55 +566,65 @@ export function InlineIconPanel({
         </div>
 
         {/* Row 2: Color - horizontal with inline swatches */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-          {/* Color button */}
-          <button
-            ref={colorButtonRef}
-            tabIndex={-1}
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setShowColorPicker(!showColorPicker)
-            }}
-            style={{
-              width: '80px',
-              height: '24px',
-              padding: '0 6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: PANEL_COLORS.buttonBg,
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            <div
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '3px',
-                backgroundColor: iconColor || 'transparent',
-                border: iconColor ? 'none' : '1px dashed #666',
+        {useTokenMode && editorCode ? (
+          /* Token mode: only show token swatches */
+          <TokenSwatches
+            code={editorCode}
+            onSelect={(tokenName) => handleColorChange(tokenName)}
+            selectedValue={iconColor ?? undefined}
+          />
+        ) : (
+          /* Normal mode: color button + optional token swatches */
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            {/* Color button */}
+            <button
+              ref={colorButtonRef}
+              tabIndex={-1}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowColorPicker(!showColorPicker)
               }}
-            />
-            <span style={{
-              color: iconColor ? PANEL_COLORS.textLight : PANEL_COLORS.text,
-              fontSize: '11px',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>
-              {iconColor ? iconColor.replace('#', '') : 'Auto'}
-            </span>
-          </button>
-          {/* Token Swatches inline */}
-          {editorCode && (
-            <TokenSwatches
-              code={editorCode}
-              onSelect={(tokenName) => handleColorChange(tokenName)}
-              selectedValue={iconColor ?? undefined}
-            />
-          )}
-        </div>
+              style={{
+                width: '80px',
+                height: '24px',
+                padding: '0 6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: PANEL_COLORS.buttonBg,
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              <div
+                style={{
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '3px',
+                  backgroundColor: iconColor || 'transparent',
+                  border: iconColor ? 'none' : '1px dashed #666',
+                }}
+              />
+              <span style={{
+                color: iconColor ? PANEL_COLORS.textLight : PANEL_COLORS.text,
+                fontSize: '11px',
+                fontFamily: 'JetBrains Mono, monospace',
+              }}>
+                {iconColor ? iconColor.replace('#', '') : 'Auto'}
+              </span>
+            </button>
+            {/* Token Swatches inline */}
+            {editorCode && (
+              <TokenSwatches
+                code={editorCode}
+                onSelect={(tokenName) => handleColorChange(tokenName)}
+                selectedValue={iconColor ?? undefined}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <PanelFooter
@@ -625,7 +635,7 @@ export function InlineIconPanel({
       />
 
       {/* Color Picker Popup */}
-      {showColorPicker && colorButtonRef.current && createPortal(
+      {showColorPicker && !useTokenMode && colorButtonRef.current && createPortal(
         <IconColorPicker
           color={iconColor || ''}
           onChange={handleColorChange}

@@ -1061,22 +1061,32 @@ export function InlineTypographyPanel({
         {/* Color - full width with inline swatches */}
         <div style={{ marginTop: '16px' }}>
           <SectionLabel>Color</SectionLabel>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
-              <ColorButton
-                color={state.color}
-                onClick={() => setState(s => ({ ...s, showColorPicker: !s.showColorPicker, showFontPicker: false }))}
-              />
+          {state.useTokenMode && editorCode ? (
+            /* Token mode: only show token swatches */
+            <TokenSwatches
+              code={editorCode}
+              onSelect={(tokenName) => updateState(s => ({ ...s, color: tokenName }))}
+              selectedValue={state.color}
+            />
+          ) : (
+            /* Normal mode: color button + optional token swatches */
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
+                <ColorButton
+                  color={state.color}
+                  onClick={() => setState(s => ({ ...s, showColorPicker: !s.showColorPicker, showFontPicker: false }))}
+                />
+              </div>
+              {editorCode && (
+                <TokenSwatches
+                  code={editorCode}
+                  onSelect={(tokenName) => updateState(s => ({ ...s, color: tokenName }))}
+                  selectedValue={state.color}
+                />
+              )}
             </div>
-            {editorCode && (
-              <TokenSwatches
-                code={editorCode}
-                onSelect={(tokenName) => updateState(s => ({ ...s, color: tokenName }))}
-                selectedValue={state.color}
-              />
-            )}
-          </div>
-          {state.showColorPicker && (
+          )}
+          {state.showColorPicker && !state.useTokenMode && (
             <MiniColorPicker
               color={state.color}
               onChange={(c) => updateState(s => ({ ...s, color: c }))}
