@@ -78,7 +78,7 @@ const NAME_HINTS: Array<{ pattern: RegExp; type: TokenValueType }> = [
   { pattern: /rad|radius/i, type: 'radius' },
   { pattern: /opa|opacity/i, type: 'opacity' },
   { pattern: /bor|border/i, type: 'border' },
-  { pattern: /size|fos/i, type: 'size' },
+  { pattern: /size|fos|\.is$/i, type: 'size' },  // includes icon-size (.is suffix)
 ]
 
 /**
@@ -474,8 +474,8 @@ export function isTokenTypeValidForProperty(
     return tokenType === 'font' || tokenType === 'unknown'
   }
 
-  // Size properties
-  if (/size|fos/.test(propertyLower)) {
+  // Size properties (font-size and icon-size)
+  if (/size|fos|^is$/.test(propertyLower)) {
     return tokenType === 'size' || tokenType === 'spacing' || tokenType === 'unknown'
   }
 
@@ -559,6 +559,7 @@ const PROPERTY_BINDINGS: Record<TokenPropertyBinding, TokenValueType> = {
   'bor': 'border',
   'border': 'border',  // compound property
   'size': 'size',
+  'is': 'size',        // icon-size
   'weight': 'weight',
   'opa': 'opacity',
   'shadow': 'shadow',
@@ -824,9 +825,9 @@ function isTypeCompatibleWithProperty(
   // Exact type match
   if (tokenType === expectedType) return true
 
-  // Spacing tokens are compatible with radius, size, and border properties
+  // Spacing tokens are compatible with radius, size, icon-size, and border properties
   if (tokenType === 'spacing') {
-    if (['rad', 'radius', 'size', 'bor', 'border'].includes(property)) {
+    if (['rad', 'radius', 'size', 'is', 'bor', 'border'].includes(property)) {
       return true
     }
   }

@@ -831,37 +831,49 @@ export function InlineTypographyPanel({
             {/* Font */}
             <div style={{ position: 'relative' }}>
               <SectionLabel>Font</SectionLabel>
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setState(s => ({ ...s, showFontPicker: !s.showFontPicker, showColorPicker: false }))
-                }}
-                style={{
-                  width: '100%',
-                  height: '28px',
-                  padding: '0 8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: COLORS.buttonBg,
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontFamily: state.font || 'system-ui, sans-serif',
-                  fontSize: '11px',
-                  color: state.font ? COLORS.textLight : COLORS.text,
-                }}
-              >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fontDisplayName}</span>
-                <ChevronDown size={12} style={{ opacity: 0.5, flexShrink: 0 }} />
-              </button>
-              {state.showFontPicker && (
-                <MiniFontPicker
-                  font={state.font}
-                  onChange={(f) => updateState(s => ({ ...s, font: f }))}
-                  onClose={() => setState(s => ({ ...s, showFontPicker: false }))}
+              {state.useTokenMode && editorCode ? (
+                <TokenButtonRow
+                  code={editorCode}
+                  property="font"
+                  value={state.font}
+                  onSelect={(token) => updateState(s => ({ ...s, font: token }))}
+                  maxTokens={4}
                 />
+              ) : (
+                <>
+                  <button
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setState(s => ({ ...s, showFontPicker: !s.showFontPicker, showColorPicker: false }))
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '28px',
+                      padding: '0 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: COLORS.buttonBg,
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontFamily: state.font || 'system-ui, sans-serif',
+                      fontSize: '11px',
+                      color: state.font ? COLORS.textLight : COLORS.text,
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fontDisplayName}</span>
+                    <ChevronDown size={12} style={{ opacity: 0.5, flexShrink: 0 }} />
+                  </button>
+                  {state.showFontPicker && (
+                    <MiniFontPicker
+                      font={state.font}
+                      onChange={(f) => updateState(s => ({ ...s, font: f }))}
+                      onClose={() => setState(s => ({ ...s, showFontPicker: false }))}
+                    />
+                  )}
+                </>
               )}
             </div>
 

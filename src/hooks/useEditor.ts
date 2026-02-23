@@ -81,6 +81,18 @@ $l.gap: 12
 $l.rad: 12
 $l.size: 16
 $l.bor.width: 3
+
+// Icon Sizes
+
+$s.is: 16
+$m.is: 24
+$l.is: 32
+
+// Fonts
+
+$sans.font: "Inter"
+$serif.font: "Merriweather"
+$mono.font: "JetBrains Mono"
 `
 
 // Default component definitions with bound token format

@@ -410,14 +410,20 @@ const PROPERTY_TOKEN_SUFFIXES: Record<string, string[]> = {
   // Radius
   'rad': ['rad', 'radius'],
   'radius': ['rad', 'radius'],
-  // Size
+  // Size (font-size)
   'size': ['size'],
   'fs': ['size'],
   'font-size': ['size'],
+  // Icon Size
+  'is': ['is', 'icon-size'],
+  'icon-size': ['is', 'icon-size'],
   // Border
   'bor': ['bor.width', 'bor', 'border.width', 'border'],
   'border': ['bor.width', 'bor', 'border.width', 'border'],
   'border-width': ['bor.width', 'border.width'],
+  // Font
+  'font': ['font'],
+  'font-family': ['font'],
 }
 
 /**
