@@ -6,6 +6,17 @@
  * - col → always text color (style.color)
  * - bg → always background color (style.backgroundColor)
  *
+ * Typography System:
+ * - text-size / ts / fs → fontSize (normalized to 'ts')
+ * - icon-size / is → fontSize for icons (normalized to 'is')
+ * - size → fontSize (legacy, ambiguous - prefer ts/is)
+ *
+ * Sizing System:
+ * - w / width → width (px, %, 'min', 'max')
+ * - h / height → height (px, %, 'min', 'max')
+ * - 'min' / 'hug' → fit-content
+ * - 'max' / 'full' → 100% + flex-grow
+ *
  * Auto-Contrast:
  * - For interactive components (Button, Btn, etc.) with bg but no col,
  *   automatically set a contrasting text color (white on dark, black on light)
@@ -14,9 +25,109 @@
 import type React from 'react'
 import type { DSLProperties } from '../types/dsl-properties'
 import { getContrastTextColor } from './color'
+import { normalizePropertyToShort } from '../dsl/properties'
 
 // Re-export for backwards compatibility
 export type { DSLProperties }
+
+/**
+ * Check if a value is a token reference object
+ */
+function isTokenReference(value: unknown): value is { type: 'token'; name: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as Record<string, unknown>).type === 'token' &&
+    typeof (value as Record<string, unknown>).name === 'string'
+  )
+}
+
+/**
+ * Property to token suffix mapping for context-aware resolution.
+ * When resolving $s for 'pad', first try $s.pad, then $s
+ */
+const PROPERTY_TOKEN_SUFFIXES: Record<string, string[]> = {
+  // Spacing
+  'pad': ['pad', 'padding'],
+  'padding': ['pad', 'padding'],
+  'p': ['pad', 'padding'],
+  'mar': ['mar', 'margin'],
+  'margin': ['mar', 'margin'],
+  'm': ['mar', 'margin'],
+  'gap': ['gap'],
+  'g': ['gap'],
+  // Radius
+  'rad': ['rad', 'radius'],
+  'radius': ['rad', 'radius'],
+  // Size
+  'size': ['size'],
+  'fs': ['size'],
+  'font-size': ['size'],
+  // Border
+  'bor': ['bor.width', 'bor', 'border.width', 'border'],
+  'border': ['bor.width', 'bor', 'border.width', 'border'],
+  'border-width': ['bor.width', 'border.width'],
+}
+
+/**
+ * Resolve a token name with context-aware fallback.
+ * For property 'pad' and token '$s', tries: $s.pad, $s.padding, $s
+ */
+function resolveTokenWithContext(
+  tokenName: string,
+  propertyKey: string,
+  tokens: Map<string, unknown>
+): unknown {
+  const suffixes = PROPERTY_TOKEN_SUFFIXES[propertyKey.toLowerCase()]
+
+  if (suffixes) {
+    // Try property-specific tokens first
+    for (const suffix of suffixes) {
+      const contextualName = `${tokenName}.${suffix}`
+      const value = tokens.get(contextualName)
+      if (value !== undefined) {
+        return value
+      }
+    }
+  }
+
+  // Fall back to direct token name
+  return tokens.get(tokenName)
+}
+
+/**
+ * Resolve token references in properties using the provided tokens map.
+ * Token references have the format: { type: 'token', name: 'tokenName' }
+ *
+ * Context-aware resolution: For property 'pad' with token '$s',
+ * first tries $s.pad, then falls back to $s.
+ */
+export function resolveTokensInProperties(
+  properties: DSLProperties,
+  tokens?: Map<string, unknown>
+): DSLProperties {
+  if (!tokens || tokens.size === 0) {
+    return properties
+  }
+
+  const resolved: DSLProperties = {}
+
+  for (const [key, value] of Object.entries(properties)) {
+    if (isTokenReference(value)) {
+      const tokenValue = resolveTokenWithContext(value.name, key, tokens)
+      if (tokenValue !== undefined) {
+        resolved[key] = tokenValue as DSLProperties[string]
+      } else {
+        // Token not found - keep original (will be handled as error elsewhere)
+        resolved[key] = value as DSLProperties[string]
+      }
+    } else {
+      resolved[key] = value as DSLProperties[string]
+    }
+  }
+
+  return resolved
+}
 
 // Track Google Font loading with Promises to prevent race conditions
 const fontLoadingPromises = new Map<string, Promise<void>>()
@@ -124,6 +235,7 @@ export function extractHoverStyles(properties: DSLProperties): React.CSSProperti
         case 'radius':
           hoverStyle.borderRadius = `${value}px`
           break
+        case 'opa':
         case 'opacity':
           hoverStyle.opacity = Number(value)
           break
@@ -148,12 +260,25 @@ export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean
   if (properties.wrap) return true
   if (properties.grow || properties.fill) return true
   // Alignment properties require flex
+  if (properties.cen) return true  // cen as boolean property
   if (properties['hor-l'] || properties['hor-cen'] || properties['hor-r']) return true
   if (properties['ver-t'] || properties['ver-cen'] || properties['ver-b']) return true
   if (properties.align_main || properties.align_cross) return true
   // Elements with children typically need flex for layout
   if (hasChildren) return true
   return false
+}
+
+/**
+ * Options for property-to-style conversion.
+ */
+export interface PropertyConversionOptions {
+  /** Whether the component has children (affects flex display) */
+  hasChildren?: boolean
+  /** Component name (used for auto-contrast on interactive components) */
+  componentName?: string
+  /** Optional tokens map to resolve token references */
+  tokens?: Map<string, unknown>
 }
 
 /**
@@ -167,16 +292,21 @@ export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean
  * @param properties - DSL properties to convert
  * @param hasChildren - Whether the component has children (affects flex display)
  * @param componentName - Component name (used for auto-contrast on interactive components)
+ * @param tokens - Optional tokens map to resolve token references
  */
 export function propertiesToStyle(
   properties: DSLProperties,
   hasChildren: boolean = false,
-  componentName: string = ''
+  componentName: string = '',
+  tokens?: Map<string, unknown>
 ): React.CSSProperties {
+  // Resolve token references first
+  const resolvedProps = resolveTokensInProperties(properties, tokens)
+
   const style: React.CSSProperties = {}
 
   // Only set flex display when needed
-  if (needsFlexDisplay(properties, hasChildren)) {
+  if (needsFlexDisplay(resolvedProps, hasChildren)) {
     // Use inline-flex so containers fit their content instead of stretching
     style.display = 'inline-flex'
     // Default to vertical (column) - more natural for UI panels, cards, forms
@@ -188,11 +318,13 @@ export function propertiesToStyle(
   }
 
   // Process direction first so centering can check it
-  if (properties.ver) {
+  if (resolvedProps.ver) {
     style.flexDirection = 'column'
   }
 
-  for (const [key, value] of Object.entries(properties)) {
+  for (const [rawKey, value] of Object.entries(resolvedProps)) {
+    // Normalize property key to short form (e.g., 'margin' -> 'mar', 'padding' -> 'pad')
+    const key = normalizePropertyToShort(rawKey)
     switch (key) {
       // Layout direction
       case 'hor':
@@ -207,6 +339,17 @@ export function propertiesToStyle(
         style.display = 'grid'
         style.gridTemplateColumns = '1fr'
         style.gridTemplateRows = '1fr'
+        break
+
+      // Grid row: auto-creates equal columns for table rows
+      // Column count is set via CSS variable --cols by the renderer
+      case '_gridRow':
+        if (value) {
+          style.display = 'grid'
+          // Use CSS variable for column count (set by renderer based on children count)
+          style.gridTemplateColumns = 'repeat(var(--cols, 1), 1fr)'
+          style.alignItems = 'center'
+        }
         break
 
       // Alignment - main axis
@@ -225,10 +368,20 @@ export function propertiesToStyle(
         break
 
       case 'between':
+      case 'spread':
         style.justifyContent = 'space-between'
         break
       case 'wrap':
         style.flexWrap = 'wrap'
+        break
+
+      // Center shorthand (cen or cen true)
+      case 'cen':
+        if (value === true) {
+          style.display = 'flex'
+          style.justifyContent = 'center'
+          style.alignItems = 'center'
+        }
         break
 
       // Absolute alignment (independent of flex direction)
@@ -276,6 +429,8 @@ export function propertiesToStyle(
         break
 
       // Flex properties
+      // Legacy: 'grow' and 'fill' are now replaced by 'width max' or 'height max'
+      // Kept for backwards compatibility
       case 'grow':
       case 'fill':
         style.flexGrow = 1
@@ -318,6 +473,7 @@ export function propertiesToStyle(
         style.gridTemplateRows = rows.join(' ')
         break
       }
+      case 'g':
       case 'gap':
         style.gap = `${value}px`
         break
@@ -330,12 +486,55 @@ export function propertiesToStyle(
         style.rowGap = `${value}px`
         break
 
-      // Sizing - handle percentage values that are stored as strings like "50%"
+      // Sizing - handle percentage values, min, max
+      // Strategy: max dimensions always get flexGrow, fixed dimensions are protected by max-width/max-height
       case 'w':
-        style.width = value === 'full' ? '100%' : (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
+        if (value === 'min') {
+          style.width = 'fit-content'
+          // Prevent flex stretch from overriding fit-content
+          style.alignSelf = 'flex-start'
+        } else if (value === 'max') {
+          // Fill available width: flexGrow for main axis, alignSelf for cross axis
+          style.width = '100%'
+          style.flexGrow = 1
+          style.flexBasis = 0
+          style.alignSelf = 'stretch'
+        } else if (value === 'full') {
+          // Legacy support
+          style.width = '100%'
+        } else if (typeof value === 'string' && value.includes('%')) {
+          style.width = value
+          style.flexShrink = 0  // Prevent flex from overriding percentage width
+        } else {
+          // Fixed pixel width: use max-width to protect from flexGrow
+          style.width = `${value}px`
+          style.maxWidth = `${value}px`
+          style.flexShrink = 0
+        }
         break
       case 'h':
-        style.height = value === 'full' ? '100%' : (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
+        if (value === 'min') {
+          style.height = 'fit-content'
+          // Prevent flex stretch from overriding fit-content
+          style.alignSelf = 'flex-start'
+        } else if (value === 'max') {
+          // Fill available height: flexGrow for main axis, alignSelf for cross axis
+          style.height = '100%'
+          style.flexGrow = 1
+          style.flexBasis = 0
+          style.alignSelf = 'stretch'
+        } else if (value === 'full') {
+          // Legacy support
+          style.height = '100%'
+        } else if (typeof value === 'string' && value.includes('%')) {
+          style.height = value
+          style.flexShrink = 0  // Prevent flex from overriding percentage height
+        } else {
+          // Fixed pixel height: use max-height to protect from flexGrow
+          style.height = `${value}px`
+          style.maxHeight = `${value}px`
+          style.flexShrink = 0
+        }
         break
       case 'minw':
         style.minWidth = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
@@ -350,8 +549,10 @@ export function propertiesToStyle(
         style.maxHeight = (typeof value === 'string' && value.includes('%')) ? value : `${value}px`
         break
       case 'full':
+        // Legacy: 'full' now behaves like 'max' for both dimensions
         style.width = '100%'
         style.height = '100%'
+        style.flexGrow = 1
         break
 
       // Spacing - Padding
@@ -434,7 +635,19 @@ export function propertiesToStyle(
         break
 
       // Typography
+      // Note: 'size' is ambiguous (legacy) - kept for backwards compatibility
+      // New code should use 'text-size' / 'ts' or 'icon-size' / 'is'
       case 'size':
+      case 'text-size':
+      case 'ts':
+      case 'font-size':  // backwards compatibility
+      case 'fs':         // backwards compatibility
+        style.fontSize = `${value}px`
+        break
+      case 'icon-size':
+      case 'is':
+        // icon-size is handled by primitive-renderers.tsx for Icon components
+        // For non-icon components, apply as fontSize (icons are rendered via CSS font-size)
         style.fontSize = `${value}px`
         break
       case 'weight':
@@ -454,6 +667,7 @@ export function propertiesToStyle(
       case 'line':
         style.lineHeight = Number(value)
         break
+      case 'text-align':
       case 'align':
         // Handle normalized value 'cen' → 'center'
         style.textAlign = (value === 'cen' ? 'center' : String(value)) as 'left' | 'center' | 'right' | 'justify'
@@ -514,14 +728,36 @@ export function propertiesToStyle(
       // Effects
       case 'opacity':
       case 'opa':
-        style.opacity = Number(value)
-        break
       case 'op':
-        // op uses 0-100 scale, convert to 0-1 for CSS
-        style.opacity = Number(value) / 100
+      case 'o':
+        // Accept both 0-1 (CSS standard) and 0-100 (percentage) scales
+        // Values > 1 are treated as percentages
+        const opacityVal = Number(value)
+        style.opacity = opacityVal > 1 ? opacityVal / 100 : opacityVal
         break
       case 'shadow':
-        style.boxShadow = String(value)
+        // Convert shadow keywords (sm, md, lg, xl) to CSS box-shadow values
+        const shadowVal = String(value).toLowerCase()
+        if (shadowVal === 'sm') {
+          style.boxShadow = '0 1px 2px 0 rgba(0,0,0,0.05)'
+        } else if (shadowVal === 'md') {
+          style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)'
+        } else if (shadowVal === 'lg') {
+          style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)'
+        } else if (shadowVal === 'xl') {
+          style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)'
+        } else if (shadowVal === 'none') {
+          style.boxShadow = 'none'
+        } else {
+          // Numeric value: generate simple shadow
+          const numVal = Number(value)
+          if (!isNaN(numVal)) {
+            style.boxShadow = `0 ${numVal}px ${numVal * 2}px rgba(0,0,0,0.15)`
+          } else {
+            // Pass through custom CSS value
+            style.boxShadow = String(value)
+          }
+        }
         break
       case 'cursor':
         style.cursor = String(value)
@@ -533,9 +769,17 @@ export function propertiesToStyle(
         style.zIndex = Number(value)
         break
 
+      // Transform
+      case 'rot':
+      case 'rotate':
+        style.transform = `rotate(${value}deg)`
+        break
+
       // Visibility (for overlays)
+      // NOTE: visible takes precedence over hidden - if visible is explicitly true, hidden is ignored
       case 'hidden':
-        if (value) style.display = 'none'
+        // Only apply hidden if visible is not explicitly true
+        if (value && resolvedProps.visible !== true) style.display = 'none'
         break
       case 'visible':
         if (value) {
@@ -550,10 +794,10 @@ export function propertiesToStyle(
   // Handle compound border (bor_width, bor_style, bor_color)
   // Only use compound format when style or color is explicitly specified
   // Otherwise the simple `bor 1` → `1px solid` format is used via the switch case
-  if (properties.bor_style || properties.bor_color) {
-    const width = properties.bor_width !== undefined ? `${properties.bor_width}px` : '1px'
-    const borderStyle = (properties.bor_style as string) || 'solid'
-    const color = (properties.bor_color as string) || 'currentColor'
+  if (resolvedProps.bor_style || resolvedProps.bor_color) {
+    const width = resolvedProps.bor_width !== undefined ? `${resolvedProps.bor_width}px` : '1px'
+    const borderStyle = (resolvedProps.bor_style as string) || 'solid'
+    const color = (resolvedProps.bor_color as string) || 'currentColor'
     style.border = `${width} ${borderStyle} ${color}`
   }
 
@@ -566,32 +810,32 @@ export function propertiesToStyle(
     const styleKey = `bor_${dir}_style`
     const colorKey = `bor_${dir}_color`
 
-    if (properties[widthKey] !== undefined || properties[styleKey] || properties[colorKey]) {
-      const width = properties[widthKey] !== undefined ? `${properties[widthKey]}px` : '1px'
-      const borderStyle = (properties[styleKey] as string) || 'solid'
-      const color = (properties[colorKey] as string) || 'currentColor'
+    if (resolvedProps[widthKey] !== undefined || resolvedProps[styleKey] || resolvedProps[colorKey]) {
+      const width = resolvedProps[widthKey] !== undefined ? `${resolvedProps[widthKey]}px` : '1px'
+      const borderStyle = (resolvedProps[styleKey] as string) || 'solid'
+      const color = (resolvedProps[colorKey] as string) || 'currentColor'
       const cssProp = `border${cssSides[dir]}` as keyof React.CSSProperties
       ;(style as Record<string, string>)[cssProp] = `${width} ${borderStyle} ${color}`
     }
   }
 
   // Legacy: Handle directional borders with old syntax (bor_l, bor_r, etc.)
-  const legacyBorderColor = properties.boc ? String(properties.boc) : 'currentColor'
-  if (properties.bor_l && !properties.bor_l_width) {
-    style.borderLeft = `${properties.bor_l}px solid ${legacyBorderColor}`
+  const legacyBorderColor = resolvedProps.boc ? String(resolvedProps.boc) : 'currentColor'
+  if (resolvedProps.bor_l && !resolvedProps.bor_l_width) {
+    style.borderLeft = `${resolvedProps.bor_l}px solid ${legacyBorderColor}`
   }
-  if (properties.bor_r && !properties.bor_r_width) {
-    style.borderRight = `${properties.bor_r}px solid ${legacyBorderColor}`
+  if (resolvedProps.bor_r && !resolvedProps.bor_r_width) {
+    style.borderRight = `${resolvedProps.bor_r}px solid ${legacyBorderColor}`
   }
-  if (properties.bor_u && !properties.bor_u_width) {
-    style.borderTop = `${properties.bor_u}px solid ${legacyBorderColor}`
+  if (resolvedProps.bor_u && !resolvedProps.bor_u_width) {
+    style.borderTop = `${resolvedProps.bor_u}px solid ${legacyBorderColor}`
   }
-  if (properties.bor_d && !properties.bor_d_width) {
-    style.borderBottom = `${properties.bor_d}px solid ${legacyBorderColor}`
+  if (resolvedProps.bor_d && !resolvedProps.bor_d_width) {
+    style.borderBottom = `${resolvedProps.bor_d}px solid ${legacyBorderColor}`
   }
 
   // Add CSS transition for smooth hover effects
-  if (hasHoverStyles(properties)) {
+  if (hasHoverStyles(resolvedProps)) {
     style.transition = 'all 0.15s ease'
   }
 

@@ -1,25 +1,83 @@
 /**
- * Parser Module - Main Entry Point
+ * @module parser
+ * @description Mirror DSL Parser - Haupt-Einstiegspunkt
  *
- * Coordinates parsing of the DSL by delegating to specialized modules.
- * This is the main entry point for parsing DSL source code into an AST.
+ * Koordiniert das Parsing der DSL durch Delegation an spezialisierte Module.
+ * Konvertiert DSL-Quellcode in einen Abstract Syntax Tree (AST).
  *
- * Architecture:
- * - parser-context.ts: Shared parser state and cursor operations
- * - expression-parser.ts: Values and expressions
- * - condition-parser.ts: Conditional expressions
- * - state-parser.ts: States, variables, events, actions
- * - style-parser.ts: Style groups and mixins
- * - command-parser.ts: Selection commands
- * - component-parser.ts: Component parsing
- * - definition-parser.ts: Component and token definitions
- * - parser-utils.ts: Low-level utilities
- * - types.ts: Type definitions
+ * @architecture
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │                        parse(input)                                 │
+ * │                            │                                        │
+ * │    ┌───────────────────────┴───────────────────────┐                │
+ * │    ▼                                               ▼                │
+ * │ tokenize()                                  createParserContext()   │
+ * │ (lexer/index.ts)                            (parser-context.ts)     │
+ * │    │                                               │                │
+ * │    ▼                                               ▼                │
+ * │ Token[]  ────────────────────────────────►  ParserContext           │
+ * │                                                    │                │
+ * │    ┌──────────────────────┬───────────────────────┼─────────────┐   │
+ * │    ▼                      ▼                       ▼             ▼   │
+ * │ parseComponent   parseTokenDefinition   parseEventsBlock   ...      │
+ * │ (component-      (definition-           (events-parser.ts)          │
+ * │  parser/)        parser.ts)                                         │
+ * │    │                  │                       │                     │
+ * │    ▼                  ▼                       ▼                     │
+ * │ ASTNode[]        tokens Map              CentralizedEventHandler[]  │
+ * │                                                                     │
+ * │    └──────────────────────┴───────────────────────┴─────────────┘   │
+ * │                           │                                         │
+ * │                           ▼                                         │
+ * │                    ParseResult { nodes, tokens, registry, ... }     │
+ * └─────────────────────────────────────────────────────────────────────┘
+ *
+ * @syntax-overview
+ * // Token-Definition
+ * $primary: #3B82F6              → tokens.set('primary', '#3B82F6')
+ *
+ * // Komponenten-Definition (mit Colon)
+ * Button: pad 12                 → registry.set('Button', template)
+ *
+ * // Komponenten-Instanz (ohne Colon)
+ * Button "Click me"              → nodes.push(ASTNode)
+ *
+ * // Events-Block (zentralisiert)
+ * events                         → centralizedEvents[]
+ *   Btn onclick toggle
+ *
+ * // Conditionals
+ * if $isLoggedIn                 → nodes.push(ConditionalNode)
+ *   Dashboard
+ *
+ * @input DSL-Quellcode als String
+ * @output ParseResult { nodes, errors, diagnostics, registry, tokens, ... }
+ *
+ * @dependencies
+ * - lexer/index.ts: Tokenisierung
+ * - parser-context.ts: Zustand und Cursor
+ * - component-parser/: Komponenten-Parsing
+ * - definition-parser.ts: Definitionen
+ * - events-parser.ts: Events-Block
+ * - children-parser.ts: Conditionals, Iteratoren
+ *
+ * @example
+ * const result = parse('Button pad 12, "Click"')
+ * // result.nodes[0] = { name: 'Button', properties: { pad: 12 }, ... }
+ *
+ * @example
+ * const result = parse(`
+ *   $primary: #3B82F6
+ *   Button: bg $primary
+ *   Button "Click"
+ * `, { validate: true })
+ * // result.tokens.get('primary') = '#3B82F6'
+ * // result.registry.has('Button') = true
+ * // result.nodes.length = 1
  */
 
 import { tokenize } from './lexer'
 import type { Token } from './lexer'
-import { normalizeInput } from './normalizer'
 
 // Re-export types for backwards compatibility
 export type {
@@ -42,7 +100,9 @@ export type {
   DataRecord,
   DataRecords,
   // Token types
-  TokenValue
+  TokenValue,
+  // Runtime types (for Master-Detail pattern)
+  RuntimeValue
 } from './types'
 
 // Import types for internal use
@@ -56,10 +116,12 @@ import type {
 // Import modules
 import { createParserContext } from './parser-context'
 import { parseComponent } from './component-parser'
-import { parseComponentDefinition, parseTokenDefinition } from './definition-parser'
+import { parseComponentDefinition, parseInlineDefinition, parseInheritanceDefinition, parseLibraryDefinition, parseLibraryDefinitionV1, parseTokenDefinition } from './definition-parser'
 import { parseSelectionCommand } from './command-parser'
 import { parseEventsBlock } from './events-parser'
+import { parseThemeDefinition, parseUseTheme } from './theme-parser'
 import { applyCommands } from './parser-utils'
+import { parseTopLevelConditional, parseTopLevelIterator } from './children-parser'
 import { validateSemantics, checkCircularReferences } from './semantic-validation'
 import type { EventHandler } from './types'
 
@@ -68,8 +130,31 @@ import type { EventHandler } from './types'
 // ============================================
 
 /**
- * Applies centralized event handlers from the `events` block to matching nodes.
- * Finds nodes by instanceName or name and attaches the event handlers.
+ * @doc applyCentralizedEvents
+ * @brief Wendet zentralisierte Event-Handler auf passende Nodes an
+ *
+ * @syntax
+ * events
+ *   Btn onclick toggle          → findet Node mit instanceName='Btn'
+ *   Button onclick show Modal   → findet alle Nodes mit name='Button'
+ *
+ * @input
+ * - nodes: ASTNode[] - Alle geparsten Top-Level-Nodes
+ * - centralizedEvents: CentralizedEventHandler[] - Handler aus events-Block
+ *
+ * @output Modifiziert nodes in-place, fügt eventHandlers hinzu
+ *
+ * @algorithm
+ * 1. Indexiert alle Nodes rekursiv nach instanceName und name
+ * 2. Für jeden CentralizedEventHandler:
+ *    - Sucht passende Nodes im Index
+ *    - Konvertiert zu EventHandler
+ *    - Fügt zu node.eventHandlers hinzu
+ *
+ * @example
+ * // Input: events { Btn onclick toggle }
+ * // Node: { name: 'Button', instanceName: 'Btn' }
+ * // Output: node.eventHandlers = [{ event: 'onclick', actions: [...] }]
  */
 function applyCentralizedEvents(
   nodes: ASTNode[],
@@ -114,7 +199,9 @@ function applyCentralizedEvents(
     // Convert CentralizedEventHandler to EventHandler
     const handler: EventHandler = {
       event: event.event,
-      modifier: event.modifier,
+      key: event.key,
+      debounce: event.debounce,
+      delay: event.delay,
       actions: event.actions,
       line: event.line
     }
@@ -131,6 +218,8 @@ function applyCentralizedEvents(
 
 // Re-export semantic validation
 export { validateSemantics, checkCircularReferences } from './semantic-validation'
+
+// ============================================
 
 // Re-export debug tools
 export { debugParse, printAST, printTokens, printParseResult } from './debug'
@@ -196,13 +285,34 @@ function getTokenRefName(value: unknown): string | null {
 }
 
 /**
- * Resolve forward token references using topological sorting.
- * When tokens reference other tokens (forward or transitive references),
- * this pass resolves them to their actual values using dependency order.
+ * @doc resolveTokenReferences
+ * @brief Löst Forward-Token-Referenzen mittels topologischer Sortierung auf
  *
- * Example: $a: $b, $b: $c, $c: 16 resolves to $c=16, $b=16, $a=16
+ * @syntax
+ * $a: $b         → $a referenziert $b (Forward-Referenz)
+ * $b: $c         → $b referenziert $c (Transitive Referenz)
+ * $c: 16         → $c ist ein Wert (Basis)
+ * // Auflösung: $c=16, $b=16, $a=16
  *
- * Circular references are detected and skipped with a warning.
+ * @input
+ * - tokens: Map<string, unknown> - Token-Map aus ParserContext
+ * - errors: Array - Optional, für Circular-Reference-Warnungen
+ *
+ * @output Modifiziert tokens Map in-place
+ *
+ * @algorithm
+ * 1. Baut Abhängigkeitsgraph: token → referenziertes token
+ * 2. Kahn's Algorithmus für topologische Sortierung:
+ *    - Startet mit Tokens ohne Abhängigkeiten
+ *    - Löst abhängige Tokens der Reihe nach auf
+ * 3. Erkennt zirkuläre Referenzen (nicht auflösbare Tokens)
+ *
+ * @example
+ * tokens = { a: {type:'sequence', tokens:[{type:'TOKEN_REF', value:'b'}]}, b: 16 }
+ * resolveTokenReferences(tokens)
+ * // tokens = { a: 16, b: 16 }
+ *
+ * @warning Zirkuläre Referenzen erzeugen Warnung, Token bleibt unaufgelöst
  */
 function resolveTokenReferences(tokens: Map<string, unknown>, errors?: Array<{ message: string; severity: string }>): void {
   // Build dependency graph: token -> token it depends on
@@ -271,6 +381,125 @@ function resolveTokenReferences(tokens: Map<string, unknown>, errors?: Array<{ m
   }
 }
 
+/**
+ * Check if a value is a token reference object
+ */
+function isTokenReference(value: unknown): value is { type: 'token'; name: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as Record<string, unknown>).type === 'token' &&
+    typeof (value as Record<string, unknown>).name === 'string'
+  )
+}
+
+/**
+ * Property to token suffix mapping for context-aware resolution.
+ * When resolving $s for 'pad', first try $s.pad, then $s
+ */
+const PROPERTY_TOKEN_SUFFIXES: Record<string, string[]> = {
+  // Spacing
+  'pad': ['pad', 'padding'],
+  'padding': ['pad', 'padding'],
+  'p': ['pad', 'padding'],
+  'mar': ['mar', 'margin'],
+  'margin': ['mar', 'margin'],
+  'm': ['mar', 'margin'],
+  'gap': ['gap'],
+  'g': ['gap'],
+  // Radius
+  'rad': ['rad', 'radius'],
+  'radius': ['rad', 'radius'],
+  // Size
+  'size': ['size'],
+  'fs': ['size'],
+  'font-size': ['size'],
+  // Border
+  'bor': ['bor.width', 'bor', 'border.width', 'border'],
+  'border': ['bor.width', 'bor', 'border.width', 'border'],
+  'border-width': ['bor.width', 'border.width'],
+}
+
+/**
+ * Resolve a token name with context-aware fallback.
+ * For property 'pad' and token '$s', tries: $s.pad, $s.padding, $s
+ */
+function resolveTokenWithContext(
+  tokenName: string,
+  propertyKey: string,
+  tokens: Map<string, unknown>
+): unknown {
+  const suffixes = PROPERTY_TOKEN_SUFFIXES[propertyKey.toLowerCase()]
+
+  if (suffixes) {
+    // Try property-specific tokens first
+    for (const suffix of suffixes) {
+      const contextualName = `${tokenName}.${suffix}`
+      const value = tokens.get(contextualName)
+      if (value !== undefined) {
+        return value
+      }
+    }
+  }
+
+  // Fall back to direct token name
+  return tokens.get(tokenName)
+}
+
+/**
+ * @doc resolvePropertyTokens
+ * @brief Löst Token-Referenzen in Node-Properties auf
+ *
+ * @input nodes - AST Nodes mit Properties die Token-Referenzen enthalten können
+ * @input tokens - Aufgelöste Design-Tokens Map
+ *
+ * @syntax { type: 'token', name: 'primary' } → '#3B82F6'
+ *
+ * @description
+ * Nach dem Parsing können Properties Token-Referenz-Objekte enthalten:
+ * - Button bg $primary → properties.bg = { type: 'token', name: 'primary' }
+ *
+ * Diese Funktion ersetzt alle Token-Referenzen durch ihre aufgelösten Werte.
+ * Wird rekursiv auf alle Kinder und States angewendet.
+ *
+ * Context-aware resolution: For property 'pad' with token '$s',
+ * first tries $s.pad, then falls back to $s.
+ *
+ * @warning Nicht-aufgelöste Tokens (undefined) werden übersprungen
+ */
+function resolvePropertyTokens(nodes: ASTNode[], tokens: Map<string, unknown>): void {
+  for (const node of nodes) {
+    // Resolve tokens in properties
+    for (const [key, value] of Object.entries(node.properties)) {
+      if (isTokenReference(value)) {
+        const tokenValue = resolveTokenWithContext(value.name, key, tokens)
+        if (tokenValue !== undefined) {
+          node.properties[key] = tokenValue
+        }
+      }
+    }
+
+    // Resolve tokens in states
+    if (node.states) {
+      for (const state of node.states) {
+        for (const [key, value] of Object.entries(state.properties)) {
+          if (isTokenReference(value)) {
+            const tokenValue = resolveTokenWithContext(value.name, key, tokens)
+            if (tokenValue !== undefined) {
+              state.properties[key] = tokenValue
+            }
+          }
+        }
+      }
+    }
+
+    // Recursively process children
+    if (node.children.length > 0) {
+      resolvePropertyTokens(node.children, tokens)
+    }
+  }
+}
+
 // Validator integration - set by validator module to avoid circular deps
 let _validateCode: ((result: ParseResult, source: string, options?: unknown) => { errors: Array<{ message: string }>; warnings: Array<{ message: string }> }) | null = null
 let _diagnosticToParseError: ((d: unknown) => import('./errors').ParseError) | null = null
@@ -312,29 +541,81 @@ function runValidation(result: ParseResult, input: string, options: ParseOptions
 }
 
 /**
- * Parse DSL source code into an AST.
+ * @doc parse
+ * @brief Haupt-Einstiegspunkt - Parst DSL-Quellcode in einen AST
  *
- * @param input The DSL source code string
- * @param options Optional parsing options (validation, etc.)
- * @returns ParseResult containing nodes, errors, registries, and commands
+ * @syntax
+ * // Token-Definition
+ * $primary: #3B82F6
+ *
+ * // Komponenten-Definition
+ * Button: pad 12, bg $primary
+ *
+ * // Komponenten-Instanz
+ * Button "Click me"
+ *
+ * // Events-Block
+ * events
+ *   Btn onclick toggle
+ *
+ * // Conditionals
+ * if $isLoggedIn
+ *   Dashboard
+ * else
+ *   LoginForm
+ *
+ * @input
+ * - input: string - DSL-Quellcode
+ * - options?: ParseOptions
+ *   - validate?: boolean - Umfassende Validierung aktivieren
+ *   - strictValidation?: boolean - Warnings als Errors behandeln
+ *   - skipValidation?: string[] - Kategorien überspringen
+ *   - parentTokens?: Map - Tokens von außen erben (Playground)
+ *   - parentRegistry?: Map - Registry von außen erben
+ *
+ * @output ParseResult
+ * - nodes: ASTNode[] - Gerenderte Komponenten-Instanzen
+ * - errors: string[] - Fehlermeldungen
+ * - diagnostics: ParseError[] - Strukturierte Fehler
+ * - registry: Map<string, ComponentTemplate> - Definitionen
+ * - tokens: Map<string, TokenValue> - Design-Tokens
+ * - centralizedEvents: CentralizedEventHandler[] - Events-Block
+ *
+ * @algorithm
+ * 1. tokenize(input) → Token[]
+ * 2. createParserContext(tokens) → ParserContext
+ * 3. Loop über Tokens:
+ *    - SELECTOR → parseSelectionCommand (:id ...)
+ *    - TOKEN_VAR_DEF → parseTokenDefinition ($name: value)
+ *    - COMPONENT_DEF → parseComponentDefinition (Name: props)
+ *    - COMPONENT_NAME + 'from' + COMPONENT_NAME + COLON → parseInheritanceDefinition
+ *    - COMPONENT_NAME + 'as' + COMPONENT_DEF → parseLibraryDefinitionV1 (Name as Library:)
+ *    - COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON + BRACE → parseLibraryDefinition
+ *    - COMPONENT_NAME + COLON + BRACE → parseInlineDefinition (v2 brace-syntax)
+ *    - EVENTS → parseEventsBlock
+ *    - CONTROL 'if' → parseTopLevelConditional
+ *    - CONTROL 'each' → parseTopLevelIterator
+ *    - COMPONENT_NAME + MULTILINE_STRING → parseComponent (doc-mode: text, playground)
+ *    - COMPONENT_NAME → parseComponent
+ * 4. applyCentralizedEvents() - Events an Nodes anhängen
+ * 5. resolveTokenReferences() - Forward-Referenzen auflösen
+ * 6. Optional: runValidation()
  *
  * @example
- * ```typescript
- * // Basic parsing
- * const result = parse(code)
+ * // Einfaches Parsing
+ * const result = parse('Button "Click"')
  *
- * // With validation
+ * // Mit Validierung
  * const result = parse(code, { validate: true })
  *
- * // Strict validation (warnings become errors)
+ * // Strict Mode (Warnings = Errors)
  * const result = parse(code, { validate: true, strictValidation: true })
- * ```
  */
 export function parse(input: string, options?: ParseOptions): ParseResult {
-  // Normalize input before lexing (auto-correct common mistakes)
-  const normalizedInput = normalizeInput(input)
-  const tokens: Token[] = tokenize(normalizedInput)
-  const ctx = createParserContext(tokens, normalizedInput, {
+  // v1 inline syntax is standard - no normalization needed
+  const tokens: Token[] = tokenize(input)
+
+  const ctx = createParserContext(tokens, input, {
     parentTokens: options?.parentTokens,
     parentRegistry: options?.parentRegistry
   })
@@ -374,6 +655,62 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
       continue
     }
 
+    // Component definition with inheritance: Icon-Button from Button: pad l 12
+    // Pattern: COMPONENT_NAME + KEYWORD("from") + COMPONENT_NAME + COLON
+    if (ctx.current()?.type === 'COMPONENT_NAME' &&
+        ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'from' &&
+        ctx.peek(2)?.type === 'COMPONENT_NAME' &&
+        ctx.peek(3)?.type === 'COLON') {
+      parseInheritanceDefinition(ctx)
+      continue
+    }
+
+    // Inline Definition: Button: pad 12 or DangerButton: Button bg #EF4444
+    // Pattern: COMPONENT_NAME + COLON + properties (v1) or + BRACE_OPEN (v2 legacy)
+    if (ctx.current()?.type === 'COMPONENT_NAME' &&
+        ctx.peek(1)?.type === 'COLON') {
+      const peekAfterColon = ctx.peek(2)
+      // Check for brace-based definition patterns (v2 legacy)
+      if (peekAfterColon?.type === 'BRACE_OPEN' ||
+          (peekAfterColon?.type === 'COMPONENT_NAME' && ctx.peek(3)?.type === 'BRACE_OPEN')) {
+        parseInlineDefinition(ctx)
+        continue
+      }
+    }
+
+    // Library Definition v2: OptionsMenu as Dropdown: { w 200 }
+    // Pattern: COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON + BRACE_OPEN
+    if (ctx.current()?.type === 'COMPONENT_NAME' &&
+        ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&
+        ctx.peek(2)?.type === 'COMPONENT_NAME' &&
+        ctx.peek(3)?.type === 'COLON' &&
+        ctx.peek(4)?.type === 'BRACE_OPEN') {
+      parseLibraryDefinition(ctx)
+      continue
+    }
+
+    // Library Definition v1: OptionsMenu as Dropdown: w 200
+    // Pattern: COMPONENT_NAME + 'as' + COMPONENT_DEF (e.g., "Tooltip:")
+    if (ctx.current()?.type === 'COMPONENT_NAME' &&
+        ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&
+        ctx.peek(2)?.type === 'COMPONENT_DEF') {
+      parseLibraryDefinitionV1(ctx)
+      continue
+    }
+
+    // Theme definition: theme dark: ...
+    if (ctx.current()?.type === 'THEME') {
+      parseThemeDefinition(ctx)
+      continue
+    }
+
+    // Use theme: use theme dark
+    if (ctx.current()?.type === 'KEYWORD' && ctx.current()?.value === 'use' &&
+        ctx.peek(1)?.type === 'THEME') {
+      parseUseTheme(ctx)
+      continue
+    }
+
     // Centralized events block: events ...
     if (ctx.current()?.type === 'EVENTS') {
       const handlers = parseEventsBlock(ctx)
@@ -381,15 +718,41 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
       continue
     }
 
+    // Top-level conditional: if $condition ...
+    if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'if') {
+      const condNode = parseTopLevelConditional(ctx, (innerCtx, indent, scope) => parseComponent(innerCtx, indent, scope))
+      if (condNode) {
+        nodes.push(condNode)
+      }
+      continue
+    }
+
+    // Top-level iterator: each $item in $collection ...
+    if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'each') {
+      const iterNode = parseTopLevelIterator(ctx, (innerCtx, indent, scope) => parseComponent(innerCtx, indent, scope))
+      if (iterNode) {
+        nodes.push(iterNode)
+      }
+      continue
+    }
+
     // Component instance
     if (ctx.current()?.type === 'COMPONENT_NAME') {
       const node = parseComponent(ctx, 0)
       if (node) {
+        // Skip explicit definitions (with colon) - they're only templates, not rendered nodes
+        if (node._isExplicitDefinition) {
+          continue
+        }
+
         // Doc-mode: Check for MULTILINE_STRING after text/playground components
-        // This handles the case where the string is on the next line without indentation
+        // This handles the case where the string is on the next line with or without indentation
         if ((node.name === 'text' || node.name === 'playground') && !node.properties._docContent) {
-          // Skip newlines to find MULTILINE_STRING
+          // Skip newlines and indent to find MULTILINE_STRING
           ctx.skipNewlines()
+          if (ctx.current()?.type === 'INDENT') {
+            ctx.advance() // skip indent
+          }
           if (ctx.current()?.type === 'MULTILINE_STRING') {
             node.properties._docContent = ctx.advance().value
             node._isLibrary = true
@@ -397,13 +760,7 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
           }
         }
 
-        // Named instance definitions of primitives (e.g., Input Email:) are template-only
-        // They're detected by having both instanceName and _primitiveType, with explicit definition
-        // These define reusable input patterns but shouldn't render at top level
-        const isPrimitiveNamedInstanceDef = node.instanceName && node.properties._primitiveType && node._isExplicitDefinition
-        if (!isPrimitiveNamedInstanceDef) {
-          nodes.push(node)
-        }
+        nodes.push(node)
       }
     } else if (ctx.current()?.type === 'EOF') {
       break
@@ -429,6 +786,9 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
   // Resolve forward token references (e.g., $size: $base where $base is defined later)
   resolveTokenReferences(ctx.designTokens)
 
+  // Resolve token references in node properties (e.g., background: $primary → background: '#3B82F6')
+  resolvePropertyTokens(nodes, ctx.designTokens)
+
   const result: ParseResult = {
     nodes,
     errors: ctx.errors,
@@ -438,7 +798,9 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
     tokens: ctx.designTokens,
     styles: ctx.styleMixins,
     commands,
-    centralizedEvents
+    centralizedEvents,
+    themes: ctx.themeDefinitions,
+    activeTheme: ctx.activeTheme
   }
 
   // Run comprehensive validation if requested

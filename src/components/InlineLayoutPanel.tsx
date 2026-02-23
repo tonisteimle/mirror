@@ -7,9 +7,13 @@
  *
  * Triggered by: ver, hor, grid keywords or double-click on layout properties
  */
-import { useState, useEffect, useCallback } from 'react'
-import { InlinePanel } from './InlinePanel'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { InlinePanel, PanelFooter } from './InlinePanel'
 import { colors } from '../theme'
+import { TailwindColorPalette } from './TailwindColorPalette'
+import { TokenSwatches } from './TokenSwatches'
+import { TokenButtonRow } from './TokenButtonRow'
 import {
   ArrowRight,
   ArrowDown,
@@ -22,6 +26,8 @@ import {
   ChevronDown,
   Layers,
   ChevronsLeftRight,
+  DollarSign,
+  Hash,
 } from 'lucide-react'
 
 // ============================================
@@ -38,14 +44,14 @@ interface LayoutState {
   between: boolean
   alignH: AlignH
   alignV: AlignV
-  gap: number
+  gap: string | number  // Can be number or token like "$sm.gap"
   widthMode: SizeMode
   widthValue: number
   heightMode: SizeMode
   heightValue: number
-  // Padding - can be combined or separate
-  padH: number // horizontal combined
-  padV: number // vertical combined
+  // Padding - can be combined or separate, or tokens
+  padH: string | number  // horizontal combined
+  padV: string | number  // vertical combined
   padLeft: number
   padRight: number
   padTop: number
@@ -56,14 +62,117 @@ interface LayoutState {
   // Grid settings
   gridCols: number
   gridRows: number
+  // Background color
+  bgColor: string
+  // UI state
+  showColorPicker: boolean
+  useTokenMode: boolean  // Toggle between token/value mode
 }
 
 interface InlineLayoutPanelProps {
   isOpen: boolean
   onClose: () => void
   onSelect: (code: string) => void
+  /** Called when panel values change for live sync to editor */
+  onCodeChange?: (code: string) => void
   position: { x: number; y: number }
   initialCode?: string
+  /** Full editor code for extracting defined tokens */
+  editorCode?: string
+  /** Show tabs to switch between panels */
+  showTabs?: boolean
+  /** Called when user wants to switch to a different panel */
+  onSwitchPanel?: (panel: PanelTabId) => void
+  /** Which tabs to show (defaults to layout, font, border) */
+  availableTabs?: PanelTabId[]
+}
+
+// ============================================
+// Tab Header Component
+// ============================================
+
+export type PanelTabId = 'layout' | 'font' | 'border' | 'input' | 'image' | 'icon'
+
+const ALL_TABS: { id: PanelTabId; label: string }[] = [
+  { id: 'input', label: 'Input' },
+  { id: 'image', label: 'Image' },
+  { id: 'icon', label: 'Icon' },
+  { id: 'layout', label: 'Layout' },
+  { id: 'font', label: 'Font' },
+  { id: 'border', label: 'Border' },
+]
+
+export function PanelTabsHeader({
+  activeTab,
+  onSwitchPanel,
+  availableTabs,
+  useTokenMode,
+  onTokenModeChange,
+}: {
+  activeTab: PanelTabId
+  onSwitchPanel: (panel: PanelTabId) => void
+  availableTabs?: PanelTabId[]
+  useTokenMode?: boolean
+  onTokenModeChange?: (mode: boolean) => void
+}) {
+  // Filter tabs based on availableTabs prop, or show default 3 tabs
+  const defaultTabs: PanelTabId[] = ['layout', 'font', 'border']
+  const tabsToShow = availableTabs || defaultTabs
+  const tabs = ALL_TABS.filter(tab => tabsToShow.includes(tab.id))
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      borderBottom: '1px solid #222',
+      marginBottom: '4px',
+      paddingLeft: '4px',
+    }}>
+      {tabs.map(tab => (
+        <button
+          key={tab.id}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onSwitchPanel(tab.id) }}
+          style={{
+            padding: '8px 12px',
+            fontSize: '11px',
+            fontWeight: 500,
+            backgroundColor: 'transparent',
+            border: 'none',
+            color: activeTab === tab.id ? '#E5E5E5' : '#666',
+            cursor: 'pointer',
+          }}
+        >
+          {tab.label}
+        </button>
+      ))}
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+      {/* Token Mode Toggle */}
+      {onTokenModeChange && (
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onTokenModeChange(!useTokenMode)
+          }}
+          style={{
+            padding: '4px 8px',
+            marginRight: '8px',
+            fontSize: '10px',
+            fontWeight: 500,
+            backgroundColor: useTokenMode ? '#252525' : '#181818',
+            color: useTokenMode ? '#ccc' : '#555',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer',
+          }}
+          title="Token Mode"
+        >
+          Tokens
+        </button>
+      )}
+    </div>
+  )
 }
 
 // ============================================
@@ -72,8 +181,8 @@ interface InlineLayoutPanelProps {
 
 const COLORS = {
   bg: '#1a1a1a',
-  buttonBg: '#222',
-  buttonBgSelected: '#333',
+  buttonBg: '#181818',
+  buttonBgSelected: '#252525',
   text: '#555',
   textLight: '#ccc',
   label: '#666',
@@ -86,60 +195,64 @@ const COLORS = {
 function generateLayoutCode(state: LayoutState): string {
   const parts: string[] = []
 
-  // Direction (with grid columns if grid)
+  // ============================================
+  // Property Order: Size → Layout → Spacing → Visual
+  // ============================================
+
+  // 1. SIZE (width, height) - most important, comes first
+  if (state.widthMode === 'min') parts.push('width hug')
+  else if (state.widthMode === 'max') parts.push('width full')
+  else if (state.widthMode === 'fixed' && state.widthValue > 0) parts.push(`width ${state.widthValue}`)
+
+  if (state.heightMode === 'min') parts.push('height hug')
+  else if (state.heightMode === 'max') parts.push('height full')
+  else if (state.heightMode === 'fixed' && state.heightValue > 0) parts.push(`height ${state.heightValue}`)
+
+  // 2. DIRECTION (hor, ver, grid, stacked)
   if (state.direction === 'grid' && state.gridCols > 0) {
     parts.push(`grid ${state.gridCols}`)
   } else if (state.direction === 'stacked') {
-    // Stacked needs a base direction, default to ver
     parts.push('ver')
     parts.push('stacked')
   } else {
     parts.push(state.direction)
   }
 
-  // Between
+  // 3. ALIGNMENT (cen, spread, hor-center, right, ver-center, bottom)
   if (state.between) {
-    parts.push('between')
+    parts.push('spread')
   }
 
-  // Alignment
   if (state.alignH === 'center' && state.alignV === 'center') {
     parts.push('cen')
   } else {
-    if (state.direction === 'hor') {
-      if (state.alignH === 'center') parts.push('hor-cen')
-      else if (state.alignH === 'right') parts.push('hor-r')
-      if (state.alignV === 'center') parts.push('ver-cen')
-      else if (state.alignV === 'bottom') parts.push('ver-b')
-    } else if (state.direction === 'ver') {
-      if (state.alignV === 'center') parts.push('ver-cen')
-      else if (state.alignV === 'bottom') parts.push('ver-b')
-      if (state.alignH === 'center') parts.push('hor-cen')
-      else if (state.alignH === 'right') parts.push('hor-r')
-    }
+    if (state.alignH === 'center') parts.push('hor-center')
+    else if (state.alignH === 'right') parts.push('right')
+
+    if (state.alignV === 'center') parts.push('ver-center')
+    else if (state.alignV === 'bottom') parts.push('bottom')
   }
 
-  // Gap
-  if (state.gap > 0) {
-    parts.push(`g ${state.gap}`)
+  // 4. GAP (can be number or token)
+  if (typeof state.gap === 'string' && state.gap.startsWith('$')) {
+    parts.push(`gap ${state.gap}`)
+  } else if (typeof state.gap === 'number' && state.gap > 0) {
+    parts.push(`gap ${state.gap}`)
   }
 
-  // Size
-  if (state.widthMode === 'min') parts.push('w-min')
-  else if (state.widthMode === 'max') parts.push('w-max')
-  else if (state.widthMode === 'fixed' && state.widthValue > 0) parts.push(`w ${state.widthValue}`)
+  // 5. PADDING (can be numbers or tokens)
+  // Helper to check if value is set (number > 0 or token string)
+  const hasValue = (v: string | number) => {
+    if (typeof v === 'string') return v.startsWith('$')
+    return v > 0
+  }
 
-  if (state.heightMode === 'min') parts.push('h-min')
-  else if (state.heightMode === 'max') parts.push('h-max')
-  else if (state.heightMode === 'fixed' && state.heightValue > 0) parts.push(`h ${state.heightValue}`)
-
-  // Padding
   if (state.padHExpanded || state.padVExpanded) {
-    // Use separate values - pad top right bottom left
-    const top = state.padVExpanded ? state.padTop : state.padV
-    const bottom = state.padVExpanded ? state.padBottom : state.padV
-    const left = state.padHExpanded ? state.padLeft : state.padH
-    const right = state.padHExpanded ? state.padRight : state.padH
+    // Expanded mode uses individual sides (numbers only for now)
+    const top = state.padVExpanded ? state.padTop : (typeof state.padV === 'number' ? state.padV : 0)
+    const bottom = state.padVExpanded ? state.padBottom : (typeof state.padV === 'number' ? state.padV : 0)
+    const left = state.padHExpanded ? state.padLeft : (typeof state.padH === 'number' ? state.padH : 0)
+    const right = state.padHExpanded ? state.padRight : (typeof state.padH === 'number' ? state.padH : 0)
 
     if (top > 0 || right > 0 || bottom > 0 || left > 0) {
       if (top === right && right === bottom && bottom === left) {
@@ -150,12 +263,25 @@ function generateLayoutCode(state: LayoutState): string {
         parts.push(`pad ${top} ${right} ${bottom} ${left}`)
       }
     }
-  } else if (state.padH > 0 || state.padV > 0) {
-    if (state.padH === state.padV) {
-      parts.push(`pad ${state.padH}`)
-    } else {
-      parts.push(`pad ${state.padV} ${state.padH}`)
+  } else if (hasValue(state.padH) || hasValue(state.padV)) {
+    // Token or simple padding
+    const padHStr = typeof state.padH === 'string' ? state.padH : (state.padH > 0 ? state.padH : '')
+    const padVStr = typeof state.padV === 'string' ? state.padV : (state.padV > 0 ? state.padV : '')
+
+    if (padHStr && padVStr && padHStr === padVStr) {
+      parts.push(`pad ${padHStr}`)
+    } else if (padHStr && padVStr) {
+      parts.push(`pad ${padVStr} ${padHStr}`)
+    } else if (padVStr) {
+      parts.push(`pad ${padVStr} 0`)
+    } else if (padHStr) {
+      parts.push(`pad 0 ${padHStr}`)
     }
+  }
+
+  // 6. BACKGROUND (visual, comes last in layout)
+  if (state.bgColor) {
+    parts.push(`bg ${state.bgColor}`)
   }
 
   return parts.join(', ')
@@ -169,42 +295,132 @@ function parseLayoutCode(code: string): Partial<LayoutState> {
   const state: Partial<LayoutState> = {}
   if (!code) return state
 
+  // Direction - support both short and long forms
   if (code.includes('stacked')) state.direction = 'stacked'
-  else if (code.includes('hor')) state.direction = 'hor'
-  else if (code.includes('grid')) state.direction = 'grid'
-  else if (code.includes('ver')) state.direction = 'ver'
+  else if (/\b(hor|horizontal)\b/.test(code)) state.direction = 'hor'
+  else if (/\bgrid\b/.test(code)) state.direction = 'grid'
+  else if (/\b(ver|vertical)\b/.test(code)) state.direction = 'ver'
 
-  if (code.includes('cen') && !code.includes('hor-cen') && !code.includes('ver-cen')) {
+  // Spread (space-between) - also "between"
+  if (/\b(spread|between)\b/.test(code)) state.between = true
+
+  // Alignment - support all forms
+  if (/\b(cen|center)\b/.test(code) && !code.includes('hor-center') && !code.includes('ver-center')) {
     state.alignH = 'center'
     state.alignV = 'center'
   } else {
-    if (code.includes('hor-l')) state.alignH = 'left'
-    else if (code.includes('hor-cen')) state.alignH = 'center'
-    else if (code.includes('hor-r')) state.alignH = 'right'
-    if (code.includes('ver-t')) state.alignV = 'top'
-    else if (code.includes('ver-cen')) state.alignV = 'center'
-    else if (code.includes('ver-b')) state.alignV = 'bottom'
+    // Horizontal alignment
+    if (code.includes('hor-center')) state.alignH = 'center'
+    else if (/\bright\b/.test(code)) state.alignH = 'right'
+    else if (/\bleft\b/.test(code)) state.alignH = 'left'
+
+    // Vertical alignment
+    if (code.includes('ver-center')) state.alignV = 'center'
+    else if (/\bbottom\b/.test(code)) state.alignV = 'bottom'
+    else if (/\btop\b/.test(code)) state.alignV = 'top'
   }
 
-  const gapMatch = code.match(/g(?:ap)?\s+(\d+)/)
-  if (gapMatch) state.gap = parseInt(gapMatch[1], 10)
+  // Gap - support both "gap" and "g", and token values
+  const gapMatch = code.match(/\b(?:gap|g)\s+(\$[\w.-]+|\d+)/)
+  if (gapMatch) {
+    const val = gapMatch[1]
+    state.gap = val.startsWith('$') ? val : parseInt(val, 10)
+  }
 
-  if (code.includes('w-min')) state.widthMode = 'min'
-  else if (code.includes('w-max')) state.widthMode = 'max'
-  const wMatch = code.match(/\bw\s+(\d+)/)
-  if (wMatch) { state.widthMode = 'fixed'; state.widthValue = parseInt(wMatch[1], 10) }
+  // Width - support "width", "w" and "size" with hug/full/N
+  // "size hug" = width hug, "size full" = width full
+  // "size 300" or "size 300 200" = width 300 (first value)
+  if (/\b(?:width|w)\s+hug\b/.test(code) || /\bsize\s+hug\b/.test(code)) {
+    state.widthMode = 'min'
+  } else if (/\b(?:width|w)\s+full\b/.test(code) || /\bsize\s+full\b/.test(code)) {
+    state.widthMode = 'max'
+  } else {
+    // Check for "w N" or "width N"
+    const wMatch = code.match(/\b(?:width|w)\s+(\d+(?:\.\d+)?%?)/)
+    if (wMatch) {
+      state.widthMode = 'fixed'
+      state.widthValue = wMatch[1].includes('%')
+        ? parseFloat(wMatch[1])
+        : parseInt(wMatch[1], 10)
+    } else {
+      // Check for "size N" or "size N M" (first value is width)
+      const sizeMatch = code.match(/\bsize\s+(?:hug\s+)?(\d+(?:\.\d+)?%?)/)
+      if (sizeMatch) {
+        state.widthMode = 'fixed'
+        state.widthValue = sizeMatch[1].includes('%')
+          ? parseFloat(sizeMatch[1])
+          : parseInt(sizeMatch[1], 10)
+      }
+    }
+  }
 
-  if (code.includes('h-min')) state.heightMode = 'min'
-  else if (code.includes('h-max')) state.heightMode = 'max'
-  const hMatch = code.match(/\bh\s+(\d+)/)
-  if (hMatch) { state.heightMode = 'fixed'; state.heightValue = parseInt(hMatch[1], 10) }
+  // Height - support "height", "h"
+  // Also check "size N M" where M is height
+  if (/\b(?:height|h)\s+hug\b/.test(code)) {
+    state.heightMode = 'min'
+  } else if (/\b(?:height|h)\s+full\b/.test(code)) {
+    state.heightMode = 'max'
+  } else {
+    const hMatch = code.match(/\b(?:height|h)\s+(\d+(?:\.\d+)?%?)/)
+    if (hMatch) {
+      state.heightMode = 'fixed'
+      state.heightValue = hMatch[1].includes('%')
+        ? parseFloat(hMatch[1])
+        : parseInt(hMatch[1], 10)
+    } else {
+      // Check for "size N M" (second value is height)
+      const sizeMatch = code.match(/\bsize\s+(?:hug\s+)?(\d+(?:\.\d+)?%?)\s+(\d+(?:\.\d+)?%?)/)
+      if (sizeMatch) {
+        state.heightMode = 'fixed'
+        state.heightValue = sizeMatch[2].includes('%')
+          ? parseFloat(sizeMatch[2])
+          : parseInt(sizeMatch[2], 10)
+      }
+    }
+  }
 
-  const padMatch = code.match(/pad\s+(\d+)(?:\s+(\d+))?/)
-  if (padMatch) {
-    const v1 = parseInt(padMatch[1], 10)
-    const v2 = padMatch[2] ? parseInt(padMatch[2], 10) : v1
-    state.padV = v1
-    state.padH = v2
+  // Padding - supports "pad", "padding", "p" with 1-4 values or tokens
+  // Token pattern: $name.pad or $name-pad
+  const padTokenMatch = code.match(/\b(?:pad(?:ding)?|p)\s+(\$[\w.-]+)(?:\s+(\$[\w.-]+|\d+))?/)
+  const padNumMatch = code.match(/\b(?:pad(?:ding)?|p)\s+(\d+)(?:\s+(\d+))?(?:\s+(\d+))?(?:\s+(\d+))?/)
+
+  if (padTokenMatch) {
+    // Token-based padding (1 or 2 tokens)
+    const v1 = padTokenMatch[1]
+    const v2 = padTokenMatch[2] || v1
+    state.padV = v1.startsWith('$') ? v1 : parseInt(v1, 10)
+    state.padH = v2.startsWith('$') ? v2 : parseInt(v2, 10)
+  } else if (padNumMatch) {
+    const v1 = parseInt(padNumMatch[1], 10)
+    const v2 = padNumMatch[2] ? parseInt(padNumMatch[2], 10) : v1
+    const v3 = padNumMatch[3] ? parseInt(padNumMatch[3], 10) : v1
+    const v4 = padNumMatch[4] ? parseInt(padNumMatch[4], 10) : v2
+
+    if (padNumMatch[3] || padNumMatch[4]) {
+      // 4-value padding: top right bottom left
+      state.padTop = v1
+      state.padRight = v2
+      state.padBottom = v3
+      state.padLeft = v4
+      state.padVExpanded = true
+      state.padHExpanded = true
+    } else {
+      // 1 or 2 value padding: vertical horizontal
+      state.padV = v1
+      state.padH = v2
+    }
+  }
+
+  // Grid columns
+  const gridMatch = code.match(/\bgrid\s+(\d+)/)
+  if (gridMatch) {
+    state.gridCols = parseInt(gridMatch[1], 10)
+  }
+
+  // Background color - support "bg", "background"
+  const bgMatch = code.match(/\b(?:bg|background)\s+(#[0-9a-fA-F]{3,8}|\$[\w-]+|\w+)/)
+  if (bgMatch) {
+    state.bgColor = bgMatch[1]
   }
 
   return state
@@ -214,14 +430,13 @@ function parseLayoutCode(code: string): Partial<LayoutState> {
 // UI Components
 // ============================================
 
-function SectionLabel({ children, indent }: { children: React.ReactNode; indent?: boolean }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontSize: '11px',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       color: COLORS.label,
-      marginBottom: '8px',
-      marginLeft: indent ? '24px' : 0, // 20px icon + 4px gap
+      marginBottom: '4px',
     }}>
       {children}
     </div>
@@ -299,16 +514,21 @@ function NumberInput({
   onChange,
   placeholder,
   width = 40,
+  presets = [],
 }: {
   value: number
   onChange: (v: number) => void
   placeholder?: string
   width?: number
+  presets?: number[]  // When value matches a preset, show empty and not highlighted
 }) {
+  // Only show value and highlight if it's a custom value (not matching any preset)
+  const isPresetValue = presets.includes(value)
+  const showValue = !isPresetValue && value > 0
   return (
     <input
       type="text"
-      value={value || ''}
+      value={showValue ? value : ''}
       placeholder={placeholder}
       onChange={(e) => {
         const num = parseInt(e.target.value, 10)
@@ -319,7 +539,7 @@ function NumberInput({
         width: `${width}px`,
         height: '24px',
         padding: '0 5px',
-        backgroundColor: COLORS.buttonBg,
+        backgroundColor: showValue ? COLORS.buttonBgSelected : COLORS.buttonBg,
         color: COLORS.textLight,
         border: 'none',
         borderRadius: '4px',
@@ -360,26 +580,23 @@ function SizeRow({
   onValueChange: (v: number) => void
 }) {
   const isWidth = label === 'W'
-  const Icon = isWidth ? MoveHorizontal : MoveVertical
+  const iconRotation = isWidth ? 'rotate(45deg)' : 'rotate(135deg)'
 
   return (
     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-      <DecorativeIcon>
-        <Icon size={14} />
-      </DecorativeIcon>
       <IconButton
         selected={mode === 'min'}
         onClick={() => onModeChange(mode === 'min' ? 'auto' : 'min')}
         title="Shrink to content"
       >
-        <Minimize2 size={14} style={{ transform: 'rotate(45deg)' }} />
+        <Minimize2 size={14} style={{ transform: iconRotation }} />
       </IconButton>
       <IconButton
         selected={mode === 'max'}
         onClick={() => onModeChange(mode === 'max' ? 'auto' : 'max')}
         title="Fill available"
       >
-        <Maximize2 size={14} style={{ transform: 'rotate(45deg)' }} />
+        <Maximize2 size={14} style={{ transform: iconRotation }} />
       </IconButton>
       <NumberInput
         value={mode === 'fixed' ? value : 0}
@@ -452,26 +669,56 @@ function PaddingValueRow({
   showExpand,
   isExpanded,
   onToggleExpand,
+  useTokenMode,
+  editorCode,
 }: {
   mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom'
-  value: number
-  onChange: (v: number) => void
+  value: string | number
+  onChange: (v: string | number) => void
   showExpand?: boolean
   isExpanded?: boolean
   onToggleExpand?: () => void
+  useTokenMode?: boolean
+  editorCode?: string
 }) {
+  // Get numeric value for preset comparison
+  const numValue = typeof value === 'number' ? value : 0
+  const isToken = typeof value === 'string' && value.startsWith('$')
+
+  // Token mode with tokens from editor
+  if (useTokenMode && editorCode) {
+    return (
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        <DecorativeIcon>
+          <PaddingIcon mode={mode} />
+        </DecorativeIcon>
+        <TokenButtonRow
+          code={editorCode}
+          property="pad"
+          value={value}
+          onSelect={(token) => onChange(token)}
+          maxTokens={5}
+        />
+      </div>
+    )
+  }
+
   return (
     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
       <DecorativeIcon>
         <PaddingIcon mode={mode} />
       </DecorativeIcon>
-      <PresetButton value={0} selected={value === 0} onClick={() => onChange(0)} />
-      <PresetButton value={8} selected={value === 8} onClick={() => onChange(8)} />
-      <PresetButton value={16} selected={value === 16} onClick={() => onChange(16)} />
-      <NumberInput value={value} onChange={onChange} />
+      <PresetButton value={0} selected={!isToken && numValue === 0} onClick={() => onChange(0)} />
+      <PresetButton value={8} selected={!isToken && numValue === 8} onClick={() => onChange(8)} />
+      <PresetButton value={16} selected={!isToken && numValue === 16} onClick={() => onChange(16)} />
+      <NumberInput value={numValue} onChange={(v) => onChange(v)} presets={[0, 8, 16]} />
       {showExpand && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); onToggleExpand?.() }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation() // Prevent click-outside from closing panel during DOM update
+            onToggleExpand?.()
+          }}
           style={{
             width: '20px',
             height: '24px',
@@ -503,16 +750,20 @@ function PaddingSection({
   onFirstChange,
   onSecondChange,
   onToggleExpand,
+  useTokenMode,
+  editorCode,
 }: {
   isHorizontal: boolean
-  combined: number
+  combined: string | number
   first: number // left or top
   second: number // right or bottom
   isExpanded: boolean
-  onCombinedChange: (v: number) => void
+  onCombinedChange: (v: string | number) => void
   onFirstChange: (v: number) => void
   onSecondChange: (v: number) => void
   onToggleExpand: () => void
+  useTokenMode?: boolean
+  editorCode?: string
 }) {
   if (!isExpanded) {
     return (
@@ -523,17 +774,19 @@ function PaddingSection({
         showExpand
         isExpanded={false}
         onToggleExpand={onToggleExpand}
+        useTokenMode={useTokenMode}
+        editorCode={editorCode}
       />
     )
   }
 
-  // Expanded: show two rows
+  // Expanded: show two rows (always numeric, no token mode)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <PaddingValueRow
         mode={isHorizontal ? 'left' : 'top'}
         value={first}
-        onChange={onFirstChange}
+        onChange={(v) => onFirstChange(typeof v === 'number' ? v : 0)}
         showExpand
         isExpanded={true}
         onToggleExpand={onToggleExpand}
@@ -541,7 +794,7 @@ function PaddingSection({
       <PaddingValueRow
         mode={isHorizontal ? 'right' : 'bottom'}
         value={second}
-        onChange={onSecondChange}
+        onChange={(v) => onSecondChange(typeof v === 'number' ? v : 0)}
       />
     </div>
   )
@@ -555,7 +808,7 @@ function DirectionPicker({
   onChange: (v: Direction) => void
 }) {
   return (
-    <div style={{ display: 'flex', gap: '4px', marginLeft: '24px' }}>
+    <div style={{ display: 'flex', gap: '4px' }}>
       <IconButton
         selected={value === 'hor'}
         onClick={() => onChange('hor')}
@@ -600,7 +853,7 @@ function GridSettings({
   onRowsChange: (v: number) => void
 }) {
   return (
-    <div style={{ display: 'flex', gap: '8px', marginLeft: '24px', marginTop: '8px' }}>
+    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <span style={{ fontSize: '11px', color: COLORS.label }}>X</span>
         <NumberInput value={cols} onChange={onColsChange} />
@@ -628,14 +881,12 @@ function AlignmentGrid({
     [{ h: 'left', v: 'bottom' }, { h: 'center', v: 'bottom' }, { h: 'right', v: 'bottom' }],
   ]
 
-  // Width to match padding row: 28 + 28 + 44 + 2*4px gaps = 108px
+  // 3 columns × 24px + 2 gaps × 4px = 80px
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateColumns: 'repeat(3, 24px)',
       gap: '4px',
-      marginLeft: '24px',
-      width: '108px',
     }}>
       {positions.flat().map((pos, i) => {
         const isSelected = pos.h === alignH && pos.v === alignV
@@ -644,7 +895,7 @@ function AlignmentGrid({
             key={i}
             onMouseDown={(e) => { e.preventDefault(); onChange(pos.h, pos.v) }}
             style={{
-              height: '25px',
+              height: '24px',
               backgroundColor: isSelected ? COLORS.buttonBgSelected : COLORS.buttonBg,
               border: 'none',
               borderRadius: '4px',
@@ -657,33 +908,282 @@ function AlignmentGrid({
   )
 }
 
+function ModeToggle({
+  useTokenMode,
+  onChange,
+}: {
+  useTokenMode: boolean
+  onChange: (mode: boolean) => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: '2px' }}>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); onChange(true) }}
+        title="Token Mode"
+        style={{
+          width: '20px',
+          height: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: useTokenMode ? COLORS.buttonBgSelected : 'transparent',
+          color: useTokenMode ? COLORS.textLight : COLORS.text,
+          border: 'none',
+          borderRadius: '3px',
+          cursor: 'pointer',
+        }}
+      >
+        <DollarSign size={12} />
+      </button>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); onChange(false) }}
+        title="Value Mode"
+        style={{
+          width: '20px',
+          height: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: !useTokenMode ? COLORS.buttonBgSelected : 'transparent',
+          color: !useTokenMode ? COLORS.textLight : COLORS.text,
+          border: 'none',
+          borderRadius: '3px',
+          cursor: 'pointer',
+        }}
+      >
+        <Hash size={12} />
+      </button>
+    </div>
+  )
+}
+
 function GapRow({
   value,
   onChange,
+  useTokenMode,
+  editorCode,
 }: {
-  value: number
-  onChange: (v: number) => void
+  value: string | number
+  onChange: (v: string | number) => void
+  useTokenMode?: boolean
+  editorCode?: string
 }) {
+  // Get numeric value for preset comparison
+  const numValue = typeof value === 'number' ? value : 0
+  const isToken = typeof value === 'string' && value.startsWith('$')
+
+  if (useTokenMode && editorCode) {
+    return (
+      <TokenButtonRow
+        code={editorCode}
+        property="gap"
+        value={value}
+        onSelect={(token) => onChange(token)}
+        maxTokens={5}
+      />
+    )
+  }
+
   return (
     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-      <DecorativeIcon>
-        <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
-          <div style={{ width: '4px', height: '8px', backgroundColor: COLORS.label, borderRadius: '1px' }} />
-          <div style={{ width: '2px' }} />
-          <div style={{ width: '4px', height: '8px', backgroundColor: COLORS.label, borderRadius: '1px' }} />
-        </div>
-      </DecorativeIcon>
-      <PresetButton value={0} selected={value === 0} onClick={() => onChange(0)} />
-      <PresetButton value={8} selected={value === 8} onClick={() => onChange(8)} />
-      <PresetButton value={16} selected={value === 16} onClick={() => onChange(16)} />
-      <NumberInput value={value} onChange={onChange} />
+      <PresetButton value={0} selected={!isToken && numValue === 0} onClick={() => onChange(0)} />
+      <PresetButton value={4} selected={!isToken && numValue === 4} onClick={() => onChange(4)} />
+      <PresetButton value={8} selected={!isToken && numValue === 8} onClick={() => onChange(8)} />
+      <NumberInput value={numValue} onChange={(v) => onChange(v)} presets={[0, 4, 8]} width={24} />
     </div>
   )
+}
+
+function ColorButton({
+  color,
+  onClick,
+}: {
+  color: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onMouseDown={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
+      style={{
+        width: '80px',
+        height: '24px',
+        padding: '0 6px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        backgroundColor: COLORS.buttonBg,
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+      }}
+    >
+      <div
+        style={{
+          width: '14px',
+          height: '14px',
+          borderRadius: '3px',
+          backgroundColor: color || 'transparent',
+          border: color ? 'none' : `1px dashed ${COLORS.label}`,
+        }}
+      />
+      <span style={{
+        color: color ? COLORS.textLight : COLORS.text,
+        fontSize: '11px',
+        fontFamily: 'JetBrains Mono, monospace',
+      }}>
+        {color || 'Keine'}
+      </span>
+    </button>
+  )
+}
+
+function MiniColorPicker({
+  color,
+  onChange,
+  onClose,
+  triggerRef,
+}: {
+  color: string
+  onChange: (color: string) => void
+  onClose: () => void
+  triggerRef: React.RefObject<HTMLElement | null>
+}) {
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Calculate position based on trigger element
+  useEffect(() => {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    // Position below the trigger
+    setPosition({
+      top: rect.bottom + 8, // 8px gap below
+      left: rect.left,
+    })
+  }, [triggerRef])
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [onClose])
+
+  // Global keyboard handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        onClose()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  const content = (
+    <div
+      ref={panelRef}
+      style={{
+        position: 'fixed',
+        top: position.top,
+        left: position.left,
+        backgroundColor: COLORS.bg,
+        border: `1px solid ${COLORS.label}`,
+        borderRadius: '8px',
+        zIndex: 10000,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div style={{ padding: '12px' }}>
+        <TailwindColorPalette
+          color={color || '#FFFFFF'}
+          onChange={(c) => onChange(c.toUpperCase())}
+        />
+      </div>
+      {/* Footer */}
+      <div style={{
+        padding: '8px 12px',
+        borderTop: `1px solid ${COLORS.label}`,
+        display: 'flex',
+        gap: '8px',
+        fontSize: '10px',
+        color: COLORS.text,
+      }}>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClose() }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '3px 8px',
+            backgroundColor: 'transparent',
+            border: `1px solid ${COLORS.label}`,
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '10px',
+            color: COLORS.text,
+          }}
+        >
+          <span style={{ fontWeight: 500, color: '#ccc' }}>↵</span> Einfügen
+        </button>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClose() }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '3px 8px',
+            backgroundColor: 'transparent',
+            border: `1px solid ${COLORS.label}`,
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '10px',
+            color: COLORS.text,
+          }}
+        >
+          <span style={{ fontWeight: 500, color: '#ccc' }}>Esc</span> Schließen
+        </button>
+      </div>
+    </div>
+  )
+
+  return createPortal(content, document.body)
 }
 
 // ============================================
 // Main Component
 // ============================================
+
+const STORAGE_KEY = 'mirror-panel-token-mode'
+
+function getStoredTokenMode(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function setStoredTokenMode(mode: boolean) {
+  try {
+    localStorage.setItem(STORAGE_KEY, mode ? 'true' : 'false')
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 const defaultState: LayoutState = {
   direction: 'hor',
@@ -705,27 +1205,66 @@ const defaultState: LayoutState = {
   padVExpanded: false,
   gridCols: 3,
   gridRows: 0,
+  bgColor: '',
+  showColorPicker: false,
+  useTokenMode: false,
 }
 
 export function InlineLayoutPanel({
   isOpen,
   onClose,
   onSelect,
+  onCodeChange,
   position,
   initialCode,
+  editorCode,
+  showTabs,
+  onSwitchPanel,
+  availableTabs,
 }: InlineLayoutPanelProps) {
-  // DEBUG: Force always open for design iteration
-  const debugAlwaysOpen = true
+  // Set to true for design iteration
+  const debugAlwaysOpen = false
   const effectiveIsOpen = debugAlwaysOpen || isOpen
 
   const [state, setState] = useState<LayoutState>(defaultState)
+  // Track if user has interacted with the panel (to enable live sync)
+  const hasUserInteractedRef = useRef(false)
+  // Track pending sync to avoid calling onCodeChange during render
+  const pendingSyncRef = useRef(false)
+  // Ref for color picker positioning
+  const colorButtonRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (isOpen) {
+      hasUserInteractedRef.current = false
+      pendingSyncRef.current = false
       const parsed = parseLayoutCode(initialCode || '')
-      setState({ ...defaultState, ...parsed })
+      // Load stored token mode preference
+      const storedTokenMode = getStoredTokenMode()
+      setState({ ...defaultState, ...parsed, useTokenMode: storedTokenMode })
     }
   }, [isOpen, initialCode])
+
+  // Persist token mode preference
+  useEffect(() => {
+    setStoredTokenMode(state.useTokenMode)
+  }, [state.useTokenMode])
+
+  // Sync to editor after user interaction (runs after render)
+  useEffect(() => {
+    if (pendingSyncRef.current && onCodeChange) {
+      pendingSyncRef.current = false
+      const code = generateLayoutCode(state)
+      onCodeChange(code)
+    }
+  }, [state, onCodeChange])
+
+  // Wrapper for setState that marks user interaction and schedules sync
+  const updateState = useCallback((updater: (prev: LayoutState) => LayoutState) => {
+    hasUserInteractedRef.current = true
+    pendingSyncRef.current = true
+    setState(updater)
+  }, [])
 
   const handleSubmit = useCallback(() => {
     const code = generateLayoutCode(state)
@@ -733,15 +1272,48 @@ export function InlineLayoutPanel({
     onClose()
   }, [state, onSelect, onClose])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleSubmit()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
+  // Use refs to track state for the global handler
+  const isOpenRef = useRef(isOpen)
+  isOpenRef.current = isOpen
+  const showColorPickerRef = useRef(state.showColorPicker)
+  showColorPickerRef.current = state.showColorPicker
+  const handleSubmitRef = useRef(handleSubmit)
+  handleSubmitRef.current = handleSubmit
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  // Global keyboard handler (Enter to submit, Escape to close)
+  // Uses refs to always check current state, avoiding stale closures
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Always check current isOpen state via ref
+      if (!isOpenRef.current) {
+        return
+      }
+
+      // CRITICAL: Don't intercept Enter from CodeMirror editor
+      // This prevents the panel from capturing Enter presses in the text editor
+      const target = e.target as HTMLElement
+      if (target.closest('.cm-editor') || target.closest('.cm-content')) {
+        return
+      }
+
+      if (e.key === 'Enter' && !showColorPickerRef.current) {
+        e.preventDefault()
+        handleSubmitRef.current()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        if (showColorPickerRef.current) {
+          setState(prev => ({ ...prev, showColorPicker: false }))
+        } else {
+          onCloseRef.current()
+        }
+      }
     }
-  }, [handleSubmit, onClose])
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, []) // Empty deps - handler checks refs for current state
 
   const debugPosition = debugAlwaysOpen ? { x: 100, y: 100 } : position
 
@@ -752,67 +1324,80 @@ export function InlineLayoutPanel({
       position={debugPosition}
       width={360}
       maxHeight={400}
+      testId="panel-layout-picker"
     >
+      {/* Tabs header when showTabs is true */}
+      {showTabs && onSwitchPanel && (
+        <PanelTabsHeader
+          activeTab="layout"
+          onSwitchPanel={onSwitchPanel}
+          availableTabs={availableTabs}
+          useTokenMode={state.useTokenMode}
+          onTokenModeChange={(mode) => updateState(s => ({ ...s, useTokenMode: mode }))}
+        />
+      )}
       <div
-        style={{ padding: '16px' }}
-        onKeyDown={handleKeyDown}
-        tabIndex={-1}
+        style={{ padding: showTabs ? '8px 16px 16px 16px' : '16px', flex: 1 }}
       >
         {/* Two column layout */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {/* Left Column */}
           <div>
             {/* Size */}
-            <SectionLabel indent>Size</SectionLabel>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <SizeRow
-                label="W"
-                mode={state.widthMode}
-                value={state.widthValue}
-                onModeChange={(m) => setState(s => ({ ...s, widthMode: m }))}
-                onValueChange={(v) => setState(s => ({ ...s, widthValue: v }))}
-              />
-              <SizeRow
-                label="H"
-                mode={state.heightMode}
-                value={state.heightValue}
-                onModeChange={(m) => setState(s => ({ ...s, heightMode: m }))}
-                onValueChange={(v) => setState(s => ({ ...s, heightValue: v }))}
-              />
+            <div>
+              <SectionLabel>Size</SectionLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <SizeRow
+                  label="W"
+                  mode={state.widthMode}
+                  value={state.widthValue}
+                  onModeChange={(m) => updateState(s => ({ ...s, widthMode: m }))}
+                  onValueChange={(v) => updateState(s => ({ ...s, widthValue: v }))}
+                />
+                <SizeRow
+                  label="H"
+                  mode={state.heightMode}
+                  value={state.heightValue}
+                  onModeChange={(m) => updateState(s => ({ ...s, heightMode: m }))}
+                  onValueChange={(v) => updateState(s => ({ ...s, heightValue: v }))}
+                />
+              </div>
             </div>
 
             {/* Direction */}
-            <div style={{ marginTop: '20px' }}>
-              <SectionLabel indent>Direction</SectionLabel>
+            <div style={{ marginTop: '16px' }}>
+              <SectionLabel>Direction</SectionLabel>
               <DirectionPicker
                 value={state.direction}
-                onChange={(d) => setState(s => ({ ...s, direction: d }))}
+                onChange={(d) => updateState(s => ({ ...s, direction: d }))}
               />
               {state.direction === 'grid' && (
                 <GridSettings
                   cols={state.gridCols}
                   rows={state.gridRows}
-                  onColsChange={(v) => setState(s => ({ ...s, gridCols: v }))}
-                  onRowsChange={(v) => setState(s => ({ ...s, gridRows: v }))}
+                  onColsChange={(v) => updateState(s => ({ ...s, gridCols: v }))}
+                  onRowsChange={(v) => updateState(s => ({ ...s, gridRows: v }))}
                 />
               )}
             </div>
 
-            {/* Align */}
-            <div style={{ marginTop: '20px' }}>
-              <SectionLabel indent>Align</SectionLabel>
-              <AlignmentGrid
-                alignH={state.alignH}
-                alignV={state.alignV}
-                onChange={(h, v) => setState(s => ({ ...s, alignH: h, alignV: v }))}
+            {/* Gap */}
+            <div style={{ marginTop: '16px' }}>
+              <SectionLabel>Gap</SectionLabel>
+              <GapRow
+                value={state.gap}
+                onChange={(v) => updateState(s => ({ ...s, gap: v }))}
+                useTokenMode={state.useTokenMode}
+                editorCode={editorCode}
               />
             </div>
+
           </div>
 
           {/* Right Column */}
           <div>
             {/* Padding */}
-            <SectionLabel indent>Padding</SectionLabel>
+            <SectionLabel>Padding</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <PaddingSection
                 isHorizontal={true}
@@ -820,15 +1405,21 @@ export function InlineLayoutPanel({
                 first={state.padLeft}
                 second={state.padRight}
                 isExpanded={state.padHExpanded}
-                onCombinedChange={(v) => setState(s => ({ ...s, padH: v }))}
-                onFirstChange={(v) => setState(s => ({ ...s, padLeft: v }))}
-                onSecondChange={(v) => setState(s => ({ ...s, padRight: v }))}
-                onToggleExpand={() => setState(s => ({
-                  ...s,
-                  padHExpanded: !s.padHExpanded,
-                  // When expanding, copy combined value to both sides
-                  ...((!s.padHExpanded) ? { padLeft: s.padH, padRight: s.padH } : {}),
-                }))}
+                onCombinedChange={(v) => updateState(s => ({ ...s, padH: v }))}
+                onFirstChange={(v) => updateState(s => ({ ...s, padLeft: v }))}
+                onSecondChange={(v) => updateState(s => ({ ...s, padRight: v }))}
+                onToggleExpand={() => updateState(s => {
+                  // Get numeric value for copying to sides
+                  const numVal = typeof s.padH === 'number' ? s.padH : 0
+                  return {
+                    ...s,
+                    padHExpanded: !s.padHExpanded,
+                    // When expanding, copy combined value to both sides
+                    ...((!s.padHExpanded) ? { padLeft: numVal, padRight: numVal } : {}),
+                  }
+                })}
+                useTokenMode={state.useTokenMode}
+                editorCode={editorCode}
               />
               <PaddingSection
                 isHorizontal={false}
@@ -836,43 +1427,89 @@ export function InlineLayoutPanel({
                 first={state.padTop}
                 second={state.padBottom}
                 isExpanded={state.padVExpanded}
-                onCombinedChange={(v) => setState(s => ({ ...s, padV: v }))}
-                onFirstChange={(v) => setState(s => ({ ...s, padTop: v }))}
-                onSecondChange={(v) => setState(s => ({ ...s, padBottom: v }))}
-                onToggleExpand={() => setState(s => ({
-                  ...s,
-                  padVExpanded: !s.padVExpanded,
-                  // When expanding, copy combined value to both sides
-                  ...((!s.padVExpanded) ? { padTop: s.padV, padBottom: s.padV } : {}),
-                }))}
+                onCombinedChange={(v) => updateState(s => ({ ...s, padV: v }))}
+                onFirstChange={(v) => updateState(s => ({ ...s, padTop: v }))}
+                onSecondChange={(v) => updateState(s => ({ ...s, padBottom: v }))}
+                onToggleExpand={() => updateState(s => {
+                  // Get numeric value for copying to sides
+                  const numVal = typeof s.padV === 'number' ? s.padV : 0
+                  return {
+                    ...s,
+                    padVExpanded: !s.padVExpanded,
+                    // When expanding, copy combined value to both sides
+                    ...((!s.padVExpanded) ? { padTop: numVal, padBottom: numVal } : {}),
+                  }
+                })}
+                useTokenMode={state.useTokenMode}
+                editorCode={editorCode}
               />
             </div>
 
-            {/* Gap */}
-            <div style={{ marginTop: '20px' }}>
-              <SectionLabel indent>Gap</SectionLabel>
-              <GapRow
-                value={state.gap}
-                onChange={(v) => setState(s => ({ ...s, gap: v }))}
-              />
-            </div>
-
-            {/* Between - same level as Align */}
-            <div style={{ marginTop: '20px' }}>
-              <SectionLabel indent>Between</SectionLabel>
-              <div style={{ marginLeft: '24px' }}>
+            {/* Align & Spread - same row */}
+            <div style={{ marginTop: '16px', display: 'flex', gap: '16px' }}>
+              <div>
+                <SectionLabel>Align</SectionLabel>
+                <AlignmentGrid
+                  alignH={state.alignH}
+                  alignV={state.alignV}
+                  onChange={(h, v) => updateState(s => ({ ...s, alignH: h, alignV: v }))}
+                />
+              </div>
+              <div>
+                <SectionLabel>Spread</SectionLabel>
                 <IconButton
                   selected={state.between}
-                  onClick={() => setState(s => ({ ...s, between: !s.between }))}
-                  title="Between (space-between)"
+                  onClick={() => updateState(s => ({ ...s, between: !s.between }))}
+                  title="Spread (space-between)"
                 >
                   <ChevronsLeftRight size={14} />
                 </IconButton>
               </div>
             </div>
+
           </div>
         </div>
+
+        {/* Background - full width row */}
+        <div style={{ marginTop: '16px' }}>
+          <SectionLabel>Background</SectionLabel>
+          {state.useTokenMode ? (
+            /* Token Mode: Only token swatches */
+            <TokenSwatches
+              code={editorCode || ''}
+              onSelect={(token) => updateState(s => ({ ...s, bgColor: token }))}
+            />
+          ) : (
+            /* Value Mode: Color button + picker */
+            <>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
+                  <ColorButton
+                    color={state.bgColor}
+                    onClick={() => updateState(s => ({ ...s, showColorPicker: !s.showColorPicker }))}
+                  />
+                </div>
+              </div>
+              {/* Mini Color Picker */}
+              {state.showColorPicker && (
+                <MiniColorPicker
+                  color={state.bgColor}
+                  onChange={(c) => updateState(s => ({ ...s, bgColor: c }))}
+                  onClose={() => updateState(s => ({ ...s, showColorPicker: false }))}
+                  triggerRef={colorButtonRef}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      <PanelFooter
+        hints={[
+          { label: 'Abbrechen', onClick: onClose },
+          { label: 'Einfügen', onClick: handleSubmit, primary: true },
+        ]}
+      />
     </InlinePanel>
   )
 }
