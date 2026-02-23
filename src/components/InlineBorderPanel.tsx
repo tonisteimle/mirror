@@ -986,22 +986,12 @@ export function InlineBorderPanel({
               selectedValue={state.color}
             />
           ) : (
-            /* Normal mode: color button + optional token swatches */
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
-                <ColorButton
-                  color={state.color}
-                  onClick={() => updateState({ showColorPicker: !state.showColorPicker })}
-                />
-              </div>
-              {/* Token swatches inline */}
-              {editorCode && (
-                <TokenSwatches
-                  code={editorCode}
-                  onSelect={(tokenName) => updateState({ color: tokenName })}
-                  selectedValue={state.color}
-                />
-              )}
+            /* Normal mode: only color button */
+            <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
+              <ColorButton
+                color={state.color}
+                onClick={() => updateState({ showColorPicker: !state.showColorPicker })}
+              />
             </div>
           )}
           {/* Color Picker Overlay - Rendered via Portal */}

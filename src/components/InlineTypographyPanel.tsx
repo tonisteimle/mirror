@@ -1069,21 +1069,12 @@ export function InlineTypographyPanel({
               selectedValue={state.color}
             />
           ) : (
-            /* Normal mode: color button + optional token swatches */
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
-                <ColorButton
-                  color={state.color}
-                  onClick={() => setState(s => ({ ...s, showColorPicker: !s.showColorPicker, showFontPicker: false }))}
-                />
-              </div>
-              {editorCode && (
-                <TokenSwatches
-                  code={editorCode}
-                  onSelect={(tokenName) => updateState(s => ({ ...s, color: tokenName }))}
-                  selectedValue={state.color}
-                />
-              )}
+            /* Normal mode: only color button */
+            <div ref={colorButtonRef as React.RefObject<HTMLDivElement>}>
+              <ColorButton
+                color={state.color}
+                onClick={() => setState(s => ({ ...s, showColorPicker: !s.showColorPicker, showFontPicker: false }))}
+              />
             </div>
           )}
           {state.showColorPicker && !state.useTokenMode && (
