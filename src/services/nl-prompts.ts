@@ -36,17 +36,16 @@ MyComp "text"        // Instanz (ohne :)
 
 WICHTIG: Einrückung = Verschachtelung (2 Spaces), KEINE { }
 
-## TOKEN SYSTEM (Context-Aware)
+## TOKEN SYSTEM - KURZFORM PFLICHT!
 
-Tokens im Format $name.property - Property-Kontext erlaubt Kurzform:
-- gap $md → resolves to $md.gap (Suffix aus Kontext)
-- pad $lg → resolves to $lg.pad
-- bg $primary → resolves to $primary.bg
-- rad $sm → resolves to $sm.rad
+❌ FALSCH (redundante Suffixe):
+gap $md.gap, pad $lg.pad, bg $primary.bg, rad $sm.rad
 
-WICHTIG: Nutze die KURZFORM wenn Property redundant ist!
-FALSCH: gap $md.gap, pad $lg.pad  (Suffix redundant)
-RICHTIG: gap $md, pad $lg  (sauber, Property gibt Kontext)
+✅ RICHTIG (Property gibt Kontext):
+gap $md, pad $lg, bg $primary, rad $sm
+
+Die Property (gap, pad, bg, rad) sagt bereits den Typ - Suffix ist überflüssig!
+Ausnahme: Compound-Properties wie font.size → $sm.font.size
 
 IMMER die verfügbaren Tokens aus dem Kontext nutzen!
 
@@ -87,6 +86,24 @@ Box hor, gap $md
 \`\`\`
 
 ## BEISPIELE
+
+>>> vertikale navigation mit icons
+NavItem: hor, gap $sm, pad $sm $md, col $muted, rad $sm, cursor pointer
+  hover
+    bg $hover
+  state selected
+    bg $primary, col $on-primary
+
+Nav ver, gap $xs, pad $md, bg $elevated, rad $md
+  - NavItem
+    Icon "home"
+    Text "Dashboard"
+  - NavItem
+    Icon "users"
+    Text "Benutzer"
+  - NavItem
+    Icon "settings"
+    Text "Einstellungen"
 
 >>> adressformular
 Form: ver, gap $md, pad $lg, bg $surface, rad $lg
@@ -140,29 +157,20 @@ MyComp "text"        // Instanz (ohne :)
 
 WICHTIG: Einrückung = Verschachtelung (2 Spaces), KEINE { }
 
-## TOKEN SYSTEM (Context-Aware)
+## TOKEN SYSTEM - KURZFORM PFLICHT!
 
 Zwei-Stufen-System:
 1. Basis-Palette: Rohe Werte ($grey-800, $blue-500)
 2. Semantische Tokens: Mit Bedeutung ($primary.bg, $muted.col)
 
-Format: $name.property - Property-Kontext erlaubt Kurzform:
-- gap $md → resolves to $md.gap
-- pad $lg → resolves to $lg.pad
-- bg $primary → resolves to $primary.bg
-- rad $sm → resolves to $sm.rad
+❌ FALSCH (redundante Suffixe - NIEMALS so schreiben!):
+gap $md.gap, pad $lg.pad, bg $primary.bg, rad $sm.rad
 
-WICHTIG: Nutze die KURZFORM wenn Property redundant ist!
-FALSCH: gap $md.gap, pad $lg.pad  (Suffix redundant)
-RICHTIG: gap $md, pad $lg  (sauber, Property gibt Kontext)
+✅ RICHTIG (Property gibt Kontext):
+gap $md, pad $lg, bg $primary, rad $sm
 
-Beispiel:
-\`\`\`
-$grey-800: #27272A
-$elevated.bg: $grey-800
-$sm.pad: 4
-$md.gap: 6
-\`\`\`
+Die Property (gap, pad, bg, rad) sagt bereits den Typ!
+Ausnahme: Compound-Properties wie font.size → $sm.font.size
 
 IMMER die verfügbaren Tokens aus dem Kontext nutzen!
 

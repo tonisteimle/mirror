@@ -38,32 +38,46 @@ export { SYSTEM_PROMPT, DEEP_THINKING_PROMPT }
 export function normalizeTokenSuffixes(code: string): string {
   // Property-suffix pairs where the suffix is redundant with the property name
   // In JavaScript regex replacement: $$ = literal $, $1 = first capture group
+  // Token name pattern: word chars plus hyphens (e.g., $on-primary, $grey-800)
+  const tokenName = '[\\w-]+'
+
   const redundantPatterns: Array<[RegExp, string]> = [
     // Spacing: gap $md.gap → gap $md
-    [/\bgap\s+\$(\w+)\.gap\b/g, 'gap $$$1'],
-    [/\bpad\s+\$(\w+)\.pad\b/g, 'pad $$$1'],
-    [/\bpadding\s+\$(\w+)\.pad\b/g, 'padding $$$1'],
-    [/\bmar\s+\$(\w+)\.mar\b/g, 'mar $$$1'],
-    [/\bmargin\s+\$(\w+)\.mar\b/g, 'margin $$$1'],
+    [new RegExp(`\\bgap\\s+\\$(${tokenName})\\.gap\\b`, 'g'), 'gap $$$1'],
+    [new RegExp(`\\bpad\\s+\\$(${tokenName})\\.pad\\b`, 'g'), 'pad $$$1'],
+    [new RegExp(`\\bpadding\\s+\\$(${tokenName})\\.pad\\b`, 'g'), 'padding $$$1'],
+    [new RegExp(`\\bmar\\s+\\$(${tokenName})\\.mar\\b`, 'g'), 'mar $$$1'],
+    [new RegExp(`\\bmargin\\s+\\$(${tokenName})\\.mar\\b`, 'g'), 'margin $$$1'],
     // Colors: bg $primary.bg → bg $primary
-    [/\bbg\s+\$(\w+)\.bg\b/g, 'bg $$$1'],
-    [/\bbackground\s+\$(\w+)\.bg\b/g, 'background $$$1'],
-    [/\bcol\s+\$(\w+)\.col\b/g, 'col $$$1'],
-    [/\bcolor\s+\$(\w+)\.col\b/g, 'color $$$1'],
-    [/\bboc\s+\$(\w+)\.boc\b/g, 'boc $$$1'],
-    // Border & Radius: rad $md.rad → rad $md
-    [/\brad\s+\$(\w+)\.rad\b/g, 'rad $$$1'],
-    [/\bradius\s+\$(\w+)\.rad\b/g, 'radius $$$1'],
-    [/\bbor\s+\$(\w+)\.bor\b/g, 'bor $$$1'],
-    [/\bborder\s+\$(\w+)\.bor\b/g, 'border $$$1'],
+    [new RegExp(`\\bbg\\s+\\$(${tokenName})\\.bg\\b`, 'g'), 'bg $$$1'],
+    [new RegExp(`\\bbackground\\s+\\$(${tokenName})\\.bg\\b`, 'g'), 'background $$$1'],
+    [new RegExp(`\\bcol\\s+\\$(${tokenName})\\.col\\b`, 'g'), 'col $$$1'],
+    [new RegExp(`\\bcolor\\s+\\$(${tokenName})\\.col\\b`, 'g'), 'color $$$1'],
+    [new RegExp(`\\bboc\\s+\\$(${tokenName})\\.boc\\b`, 'g'), 'boc $$$1'],
+    // Border & Radius: rad $md.rad → rad $md (handle both .rad and .radius)
+    [new RegExp(`\\brad\\s+\\$(${tokenName})\\.rad\\b`, 'g'), 'rad $$$1'],
+    [new RegExp(`\\brad\\s+\\$(${tokenName})\\.radius\\b`, 'g'), 'rad $$$1'],
+    [new RegExp(`\\bradius\\s+\\$(${tokenName})\\.rad\\b`, 'g'), 'radius $$$1'],
+    [new RegExp(`\\bradius\\s+\\$(${tokenName})\\.radius\\b`, 'g'), 'radius $$$1'],
+    [new RegExp(`\\bbor\\s+\\$(${tokenName})\\.bor\\b`, 'g'), 'bor $$$1'],
+    [new RegExp(`\\bbor\\s+\\$(${tokenName})\\.border\\b`, 'g'), 'bor $$$1'],
+    [new RegExp(`\\bborder\\s+\\$(${tokenName})\\.bor\\b`, 'g'), 'border $$$1'],
+    [new RegExp(`\\bborder\\s+\\$(${tokenName})\\.border\\b`, 'g'), 'border $$$1'],
+    // Icon size: is $m.is → is $m, w $m.is → w $m (for icons)
+    [new RegExp(`\\bis\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'is $$$1'],
+    [new RegExp(`\\bicon-size\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'icon-size $$$1'],
+    [new RegExp(`\\bw\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'w $$$1'],
+    [new RegExp(`\\bh\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'h $$$1'],
+    [new RegExp(`\\bwidth\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'width $$$1'],
+    [new RegExp(`\\bheight\\s+\\$(${tokenName})\\.is\\b`, 'g'), 'height $$$1'],
     // Typography: size $lg.font.size → size $lg
-    [/\bsize\s+\$(\w+)\.font\.size\b/g, 'size $$$1'],
-    [/\bfont-size\s+\$(\w+)\.font\.size\b/g, 'font-size $$$1'],
-    [/\bfs\s+\$(\w+)\.font\.size\b/g, 'fs $$$1'],
-    [/\btext-size\s+\$(\w+)\.font\.size\b/g, 'text-size $$$1'],
+    [new RegExp(`\\bsize\\s+\\$(${tokenName})\\.font\\.size\\b`, 'g'), 'size $$$1'],
+    [new RegExp(`\\bfont-size\\s+\\$(${tokenName})\\.font\\.size\\b`, 'g'), 'font-size $$$1'],
+    [new RegExp(`\\bfs\\s+\\$(${tokenName})\\.font\\.size\\b`, 'g'), 'fs $$$1'],
+    [new RegExp(`\\btext-size\\s+\\$(${tokenName})\\.font\\.size\\b`, 'g'), 'text-size $$$1'],
     // Hover variants: hover-bg $primary.hover.bg → hover-bg $primary.hover
-    [/\bhover-bg\s+\$(\w+)\.hover\.bg\b/g, 'hover-bg $$$1.hover'],
-    [/\bhover-col\s+\$(\w+)\.hover\.col\b/g, 'hover-col $$$1.hover'],
+    [new RegExp(`\\bhover-bg\\s+\\$(${tokenName})\\.hover\\.bg\\b`, 'g'), 'hover-bg $$$1.hover'],
+    [new RegExp(`\\bhover-col\\s+\\$(${tokenName})\\.hover\\.col\\b`, 'g'), 'hover-col $$$1.hover'],
   ]
 
   let result = code
