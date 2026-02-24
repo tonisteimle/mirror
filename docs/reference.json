@@ -1,349 +1,132 @@
 {
-  "title": "Mirror DSL Referenz",
-  "subtitle": "Basierend auf Parser-Implementierung - Stand Februar 2026",
   "version": "2.0",
+  "generatedAt": "2026-02-22T17:30:56.266Z",
+  "generatedFrom": [
+    "src/dsl/properties.ts"
+  ],
   "sections": [
     {
       "id": "grundlagen",
       "title": "Grundlagen",
+      "description": "Basis-Syntax und Kommentare",
       "subsections": [
         {
-          "id": "syntax-uebersicht",
-          "title": "Syntax-Übersicht",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Mirror DSL ist eine deklarative Sprache für UI-Prototyping. Jede Zeile beschreibt eine Komponente mit Properties."
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">ComponentName</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"property\">property</span> <span class=\"value\">value</span> <span class=\"string\">\"Text\"</span>",
-              "expects": {
-                "nodes": [{ "name": "ComponentName", "textContent": "Text" }]
-              }
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Wichtig:</strong> Text-Inhalte müssen IMMER am Ende der Zeile stehen, in Anführungszeichen.</p>"
-            }
-          ]
-        },
-        {
-          "id": "indentation",
-          "title": "Einrückung = Hierarchie",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "2 Leerzeichen = Kind-Element"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Parent</span>\n  <span class=\"component\">Child</span>\n    <span class=\"component\">GrandChild</span>",
-              "expects": {
-                "nodes": [{ "name": "Parent", "childCount": 1 }]
-              }
-            }
+          "id": "inline-syntax",
+          "title": "Inline-Syntax",
+          "description": "Mirror v1 verwendet eine kompakte Inline-Syntax ohne geschweifte Klammern.",
+          "syntax": [
+            "Component property value",
+            "Component property value, property2 value2",
+            "Component vertical, horizontal",
+            "Component \"Text-Inhalt\"",
+            "Component\\n  Child"
+          ],
+          "examples": [
+            "Button pad 12, bg #3B82F6, \"Click me\""
           ]
         },
         {
           "id": "kommentare",
           "title": "Kommentare",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// Kommentar auf eigener Zeile</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click\"</span> <span class=\"comment\">// Inline-Kommentar</span>",
-              "expects": {
-                "nodes": [{ "name": "Button", "textContent": "Click" }]
-              }
-            }
+          "syntax": [
+            "// Einzeiliger Kommentar",
+            "property value,  // Inline-Kommentar"
+          ]
+        },
+        {
+          "id": "dimension-shorthand",
+          "title": "Dimension Shorthand",
+          "description": "Erste Zahlen nach Komponente werden als width/height interpretiert.",
+          "syntax": [
+            "Box 300, 400, pad 16  // width: 300, height: 400",
+            "Card 200, pad 8       // width: 200"
           ]
         }
       ]
     },
     {
-      "id": "properties",
-      "title": "Properties",
+      "id": "tokens",
+      "title": "Tokens (Design Variables)",
+      "description": "Zweistufiges Token-System: Basis-Palette + Semantische Tokens",
       "subsections": [
         {
-          "id": "layout",
-          "title": "Layout",
-          "content": [
+          "id": "base-palette",
+          "title": "Basis-Palette",
+          "description": "Reine Farbwerte ohne semantische Bedeutung. Namensschema: $farbe-stufe",
+          "examples": [
+            "// Grey Scale\n$grey-50: #FAFAFA\n$grey-300: #D4D4D8\n$grey-500: #71717A\n$grey-800: #27272A\n$grey-950: #09090B\n\n// Accent Colors\n$blue-500: #3B82F6\n$green-500: #22C55E\n$red-500: #EF4444"
+          ]
+        },
+        {
+          "id": "semantic-tokens",
+          "title": "Semantische Tokens (Bound Property Format)",
+          "description": "Tokens mit Property-Binding: $name.property",
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung", "Beispiel"],
-                "rows": [
-                  {"cells": ["<code>horizontal</code>", "<code>hor</code>", "Horizontales Layout (row)", "<code>hor</code>"]},
-                  {"cells": ["<code>vertical</code>", "<code>ver</code>", "Vertikales Layout (column, default)", "<code>ver</code>"]},
-                  {"cells": ["<code>gap</code>", "", "Abstand zwischen Kindern", "<code>gap 16</code>"]},
-                  {"cells": ["<code>between</code>", "", "Space-between Distribution", "<code>between</code>"]},
-                  {"cells": ["<code>wrap</code>", "", "Flex-Wrap erlauben", "<code>wrap</code>"]},
-                  {"cells": ["<code>grow</code>", "<code>fill</code>", "Flex-Grow", "<code>grow</code>"]},
-                  {"cells": ["<code>shrink</code>", "", "Flex-Shrink", "<code>shrink 0</code>"]},
-                  {"cells": ["<code>stacked</code>", "", "Kinder übereinander (z-layers)", "<code>stacked</code>"]},
-                  {"cells": ["<code>grid</code>", "", "Grid-Layout", "<code>grid 3</code>, <code>grid auto 250</code>"]}
-                ]
-              }
+              "name": ".bg",
+              "description": "Background"
+            },
+            {
+              "name": ".col",
+              "description": "Color (Text/Foreground)"
+            },
+            {
+              "name": ".pad",
+              "description": "Padding"
+            },
+            {
+              "name": ".gap",
+              "description": "Gap"
+            },
+            {
+              "name": ".rad",
+              "description": "Border-Radius"
+            },
+            {
+              "name": ".font.size",
+              "description": "Font-Size (Compound Property)"
+            }
+          ],
+          "examples": [
+            "// Background (referenziert Palette)\n$app.bg: $grey-950\n$default.bg: $grey-900\n$elevated.bg: $grey-800\n\n// Foreground\n$default.col: $grey-300\n$muted.col: $grey-500\n\n// Primary\n$primary.bg: $blue-500\n$primary.hover.bg: $blue-600\n\n// Spacing\n$sm.pad: 4\n$md.pad: 6\n$lg.gap: 8\n\n// Typography\n$default.font.size: 13"
+          ]
+        },
+        {
+          "id": "token-usage",
+          "title": "Verwendung in Komponenten",
+          "examples": [
+            "Button:\n  bg $primary.bg\n  col $on-primary.col\n  pad $md.pad\n  rad $md.rad\n  hover\n    bg $primary.hover.bg"
+          ]
+        },
+        {
+          "id": "token-best-practices",
+          "title": "Best Practices",
+          "items": [
+            {
+              "name": "Palette zuerst",
+              "description": "Basis-Farben ohne Semantik definieren"
+            },
+            {
+              "name": "Semantik referenziert",
+              "description": "Semantische Tokens referenzieren Palette"
+            },
+            {
+              "name": "Property im Namen",
+              "description": ".bg, .col, .pad zeigt Verwendung"
+            },
+            {
+              "name": "Konsistente Stufen",
+              "description": "xs, sm, md, lg, xl für Größen"
             }
           ]
         },
         {
-          "id": "alignment",
-          "title": "Ausrichtung",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>horizontal-left</code>", "<code>hor-l</code>", "Links ausrichten"]},
-                  {"cells": ["<code>horizontal-center</code>", "<code>hor-cen</code>", "Horizontal zentrieren"]},
-                  {"cells": ["<code>horizontal-right</code>", "<code>hor-r</code>", "Rechts ausrichten"]},
-                  {"cells": ["<code>vertical-top</code>", "<code>ver-t</code>", "Oben ausrichten"]},
-                  {"cells": ["<code>vertical-center</code>", "<code>ver-cen</code>", "Vertikal zentrieren"]},
-                  {"cells": ["<code>vertical-bottom</code>", "<code>ver-b</code>", "Unten ausrichten"]},
-                  {"cells": ["<code>center</code>", "<code>cen</code>", "Beide Achsen zentrieren"]}
-                ]
-              }
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Kontext-abhängig:</strong> In <code>ver</code>-Layout ist <code>hor-cen</code> = alignItems:center. In <code>hor</code>-Layout ist <code>hor-cen</code> = justifyContent:center.</p>"
-            }
-          ]
-        },
-        {
-          "id": "sizing",
-          "title": "Größe",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung", "Beispiel"],
-                "rows": [
-                  {"cells": ["<code>width</code>", "<code>w</code>", "Breite", "<code>w 200</code>, <code>w 50%</code>, <code>w full</code>"]},
-                  {"cells": ["<code>height</code>", "<code>h</code>", "Höhe", "<code>h 100</code>"]},
-                  {"cells": ["<code>min-width</code>", "<code>minw</code>", "Minimale Breite", "<code>minw 100</code>"]},
-                  {"cells": ["<code>max-width</code>", "<code>maxw</code>", "Maximale Breite", "<code>maxw 500</code>"]},
-                  {"cells": ["<code>min-height</code>", "<code>minh</code>", "Minimale Höhe", "<code>minh 50</code>"]},
-                  {"cells": ["<code>max-height</code>", "<code>maxh</code>", "Maximale Höhe", "<code>maxh 300</code>"]},
-                  {"cells": ["<code>full</code>", "", "100% beide Dimensionen", "<code>full</code>"]}
-                ]
-              }
-            },
-            {
-              "type": "paragraph",
-              "html": "<strong>Dimension-Shorthand:</strong> Erste 1-2 Zahlen nach Komponenten-Name = width [height]"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Box</span> <span class=\"value\">300</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">16</span>   <span class=\"comment\">// width:300, height:200, padding:16</span>\n<span class=\"component\">Card</span> <span class=\"value\">200</span> <span class=\"property\">padding</span> <span class=\"value\">8</span>          <span class=\"comment\">// width:200, padding:8</span>",
-              "expects": {
-                "nodes": [
-                  { "name": "Box", "properties": { "width": 300, "height": 200, "padding": 16 } },
-                  { "name": "Card", "properties": { "width": 200, "padding": 8 } }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "spacing",
-          "title": "Abstände",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>padding</code>", "<code>pad</code>", "Innenabstand"]},
-                  {"cells": ["<code>margin</code>", "<code>mar</code>", "Außenabstand"]}
-                ]
-              }
-            },
-            {
-              "type": "paragraph",
-              "html": "<strong>Wert-Varianten:</strong>"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"property\">padding</span> <span class=\"value\">16</span>              <span class=\"comment\">// Alle Seiten</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">8</span>           <span class=\"comment\">// Vertikal Horizontal</span>\n<span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"value\">12</span> <span class=\"value\">8</span> <span class=\"value\">4</span>      <span class=\"comment\">// Top Right Bottom Left</span>\n<span class=\"property\">padding</span> <span class=\"value\">left</span> <span class=\"value\">16</span>         <span class=\"comment\">// Nur links (auch: l)</span>\n<span class=\"property\">padding</span> <span class=\"value\">left-right</span> <span class=\"value\">16</span>   <span class=\"comment\">// Links und rechts (auch: l-r)</span>\n<span class=\"property\">padding</span> <span class=\"value\">top-bottom</span> <span class=\"value\">8</span>   <span class=\"comment\">// Oben und unten (auch: u-d, t-b)</span>",
-              "expects": {}
-            }
-          ]
-        },
-        {
-          "id": "colors",
-          "title": "Farben",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>background</code>", "<code>bg</code>", "Hintergrundfarbe"]},
-                  {"cells": ["<code>color</code>", "<code>col</code>", "Textfarbe"]},
-                  {"cells": ["<code>border-color</code>", "<code>boc</code>", "Rahmenfarbe"]}
-                ]
-              }
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Wichtig:</strong> Farben brauchen IMMER einen Property-Namen. <code>#FF0000</code> allein funktioniert NICHT.</p>"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// RICHTIG:</span>\n<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">color</span> <span class=\"value\">#FFFFFF</span> <span class=\"string\">\"Click\"</span>\n\n<span class=\"comment\">// FALSCH (funktioniert nicht):</span>\n<span class=\"component\">Button</span> <span class=\"value\">#3B82F6</span> <span class=\"string\">\"Click\"</span>",
-              "expects": {
-                "nodes": [{ "name": "Button", "properties": { "background": "#3B82F6", "color": "#FFFFFF" } }]
-              }
-            },
-            {
-              "type": "paragraph",
-              "html": "<strong>Formate:</strong> <code>#RGB</code>, <code>#RRGGBB</code>, <code>#RRGGBBAA</code> (mit Alpha)"
-            }
-          ]
-        },
-        {
-          "id": "border",
-          "title": "Rahmen & Radius",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung", "Beispiel"],
-                "rows": [
-                  {"cells": ["<code>border</code>", "<code>bor</code>", "Rahmenbreite (optional style, color)", "<code>border 1</code>, <code>border 2 dashed #333</code>"]},
-                  {"cells": ["<code>radius</code>", "<code>rad</code>", "Eckenradius", "<code>radius 8</code>, <code>radius 8 8 0 0</code>"]}
-                ]
-              }
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"property\">border</span> <span class=\"value\">1</span>                   <span class=\"comment\">// 1px solid</span>\n<span class=\"property\">border</span> <span class=\"value\">2</span> <span class=\"value\">dashed</span> <span class=\"value\">#3B82F6</span>   <span class=\"comment\">// 2px dashed #3B82F6</span>\n<span class=\"property\">border</span> <span class=\"value\">left</span> <span class=\"value\">1</span> <span class=\"value\">#333</span>        <span class=\"comment\">// Nur links</span>",
-              "expects": {}
-            }
-          ]
-        },
-        {
-          "id": "typography",
-          "title": "Typografie",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Beschreibung", "Beispiel"],
-                "rows": [
-                  {"cells": ["<code>size</code>", "Schriftgröße (px)", "<code>size 14</code>"]},
-                  {"cells": ["<code>weight</code>", "Schriftstärke", "<code>weight 600</code>, <code>weight bold</code>"]},
-                  {"cells": ["<code>font</code>", "Schriftfamilie", "<code>font \"Inter\"</code>"]},
-                  {"cells": ["<code>line</code>", "Zeilenhöhe", "<code>line 1.5</code>"]},
-                  {"cells": ["<code>align</code>", "Textausrichtung", "<code>align center</code>"]},
-                  {"cells": ["<code>italic</code>", "Kursiv", "<code>italic</code>"]},
-                  {"cells": ["<code>underline</code>", "Unterstrichen", "<code>underline</code>"]},
-                  {"cells": ["<code>uppercase</code>", "Großbuchstaben", "<code>uppercase</code>"]},
-                  {"cells": ["<code>lowercase</code>", "Kleinbuchstaben", "<code>lowercase</code>"]},
-                  {"cells": ["<code>truncate</code>", "Text abschneiden mit Ellipse", "<code>truncate</code>"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "visual",
-          "title": "Visuelle Eigenschaften",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Kurzform", "Beschreibung", "Beispiel"],
-                "rows": [
-                  {"cells": ["<code>opacity</code>", "<code>opa</code>", "Transparenz (0-1)", "<code>opacity 0.5</code>"]},
-                  {"cells": ["<code>shadow</code>", "", "Box-Schatten", "<code>shadow sm</code>, <code>shadow md</code>, <code>shadow lg</code>"]},
-                  {"cells": ["<code>cursor</code>", "", "Mauszeiger", "<code>cursor pointer</code>"]},
-                  {"cells": ["<code>z</code>", "", "Z-Index", "<code>z 100</code>"]},
-                  {"cells": ["<code>hidden</code>", "", "Element verstecken", "<code>hidden</code>"]},
-                  {"cells": ["<code>visible</code>", "", "Sichtbarkeit", "<code>visible true</code>"]},
-                  {"cells": ["<code>disabled</code>", "", "Element deaktivieren", "<code>disabled</code>"]}
-                ]
-              }
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Opacity:</strong> Werte von 0 (vollständig transparent) bis 1 (vollständig sichtbar). NICHT 0-100!</p>"
-            }
-          ]
-        },
-        {
-          "id": "scroll",
-          "title": "Scroll & Overflow",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>scroll</code> / <code>scroll-ver</code>", "Vertikaler Scroll"]},
-                  {"cells": ["<code>scroll-hor</code>", "Horizontaler Scroll"]},
-                  {"cells": ["<code>scroll-both</code>", "Beide Richtungen"]},
-                  {"cells": ["<code>snap</code>", "Scroll-Snap"]},
-                  {"cells": ["<code>clip</code>", "Overflow hidden"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "icons",
-          "title": "Icons",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Lucide Icons (<a href=\"https://lucide.dev/icons\">lucide.dev/icons</a>)"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"search\"</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"user\"</span> <span class=\"property\">size</span> <span class=\"value\">20</span>\n<span class=\"component\">Box</span> <span class=\"property\">icon</span> <span class=\"string\">\"arrow-right\"</span>",
-              "expects": {
-                "nodes": [
-                  { "name": "Box", "properties": { "icon": "search" } },
-                  { "name": "Box", "properties": { "icon": "user", "size": 20 } },
-                  { "name": "Box", "properties": { "icon": "arrow-right" } }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "hover",
-          "title": "Hover-Properties",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Shorthand für Hover-Effekte ohne expliziten State-Block:"
-            },
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Property", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>hover-background</code> / <code>hover-bg</code>", "Hintergrundfarbe bei Hover"]},
-                  {"cells": ["<code>hover-color</code> / <code>hover-col</code>", "Textfarbe bei Hover"]},
-                  {"cells": ["<code>hover-border-color</code> / <code>hover-boc</code>", "Rahmenfarbe bei Hover"]},
-                  {"cells": ["<code>hover-border</code> / <code>hover-bor</code>", "Rahmenbreite bei Hover"]},
-                  {"cells": ["<code>hover-radius</code> / <code>hover-rad</code>", "Eckenradius bei Hover"]},
-                  {"cells": ["<code>hover-opacity</code> / <code>hover-opa</code>", "Transparenz bei Hover"]},
-                  {"cells": ["<code>hover-scale</code>", "Skalierung bei Hover"]}
-                ]
-              }
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"value\">#333</span> <span class=\"property\">hover-background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">hover-scale</span> <span class=\"value\">1.02</span> <span class=\"string\">\"Hover me\"</span>",
-              "expects": {
-                "nodes": [{ "name": "Button", "properties": { "background": "#333" } }]
-              }
-            }
+          "id": "component-references",
+          "title": "Component References",
+          "description": "Referenzieren von Properties anderer Komponenten.",
+          "syntax": [
+            "Component.property",
+            "Button rad Card.radius"
           ]
         }
       ]
@@ -351,166 +134,499 @@
     {
       "id": "komponenten",
       "title": "Komponenten",
+      "description": "Definition, Vererbung und Instanzen",
       "subsections": [
         {
           "id": "definition",
-          "title": "Definition (mit Doppelpunkt)",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Doppelpunkt <code>:</code> am Ende = Definition. Wird NICHT gerendert."
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// Definition (nicht sichtbar)</span>\n<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung (sichtbar)</span>\n<span class=\"component\">Button</span> <span class=\"string\">\"Click me\"</span>",
-              "expects": {
-                "registry": { "Button": {} },
-                "nodes": [{ "name": "Button", "textContent": "Click me" }]
-              }
-            }
+          "title": "Definition",
+          "description": "Komponenten mit Doppelpunkt definieren (nicht rendern).",
+          "syntax": [
+            "Name: properties"
+          ],
+          "examples": [
+            "Button: pad 12, bg #3B82F6, rad 8"
           ]
         },
         {
           "id": "vererbung",
-          "title": "Vererbung (from)",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"component\">DangerButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">#EF4444</span>\n<span class=\"component\">GhostButton</span> <span class=\"keyword\">from</span> <span class=\"component\">Button:</span> <span class=\"property\">background</span> <span class=\"value\">transparent</span> <span class=\"property\">border</span> <span class=\"value\">1</span>",
-              "expects": {
-                "registry": { "Button": {}, "DangerButton": {}, "GhostButton": {} }
-              }
-            }
+          "title": "Vererbung",
+          "description": "Von anderen Komponenten erben mit Child: Parent.",
+          "syntax": [
+            "Child: Parent overrides"
+          ],
+          "examples": [
+            "DangerButton: Button bg #EF4444",
+            "GhostButton: Button bg transparent, bor 1 $primary"
           ]
         },
         {
-          "id": "slots",
-          "title": "Slots (Kind-Definitionen)",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Card:</span> <span class=\"property\">vertical</span> <span class=\"property\">padding</span> <span class=\"value\">16</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n  <span class=\"component\">Title:</span> <span class=\"property\">size</span> <span class=\"value\">18</span> <span class=\"property\">weight</span> <span class=\"value\">600</span>\n  <span class=\"component\">Description:</span> <span class=\"property\">size</span> <span class=\"value\">14</span> <span class=\"property\">color</span> <span class=\"value\">#888</span>\n  <span class=\"component\">Actions:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Verwendung</span>\n<span class=\"component\">Card</span>\n  <span class=\"component\">Title</span> <span class=\"string\">\"Welcome\"</span>\n  <span class=\"component\">Description</span> <span class=\"string\">\"Get started\"</span>\n  <span class=\"component\">Actions</span>\n    <span class=\"component\">Button</span> <span class=\"string\">\"Learn more\"</span>",
-              "expects": {
-                "registry": { "Card": {} },
-                "nodes": [{ "name": "Card" }]
-              }
-            }
+          "id": "child-overrides",
+          "title": "Vererbung mit Child-Overrides",
+          "description": "Kinder-Properties inline überschreiben mit Semicolon-Syntax.",
+          "syntax": [
+            "Child: Parent childName property; childName2 property"
+          ],
+          "examples": [
+            "Button:\n  icon \"check\", hidden\n  label \"Click\"\n\nIcon-Button: Button icon visible; label hidden"
           ]
         },
         {
-          "id": "flat-access",
-          "title": "Flacher Zugriff",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Greife auf verschachtelte Slots direkt per Namen zu:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Header:</span> <span class=\"property\">horizontal</span> <span class=\"property\">between</span>\n  <span class=\"component\">Left:</span> <span class=\"property\">horizontal</span> <span class=\"property\">gap</span> <span class=\"value\">16</span>\n    <span class=\"component\">Logo:</span> <span class=\"property\">width</span> <span class=\"value\">120</span>\n  <span class=\"component\">Right:</span>\n    <span class=\"component\">Avatar:</span> <span class=\"value\">36</span> <span class=\"value\">36</span> <span class=\"property\">radius</span> <span class=\"value\">18</span>\n\n<span class=\"comment\">// Direkt auf Logo zugreifen (egal wie tief)</span>\n<span class=\"component\">Header</span>\n  <span class=\"component\">Logo</span> <span class=\"property\">background</span> <span class=\"value\">#FF0000</span>\n  <span class=\"component\">Avatar</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span>",
-              "expects": {
-                "registry": { "Header": {} },
-                "nodes": [{ "name": "Header" }]
-              }
-            }
-          ]
-        },
-        {
-          "id": "list-items",
-          "title": "List Items (neue Instanzen)",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "<code>-</code> erstellt eine neue Instanz:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Menu:</span> <span class=\"property\">vertical</span> <span class=\"property\">width</span> <span class=\"value\">200</span>\n  <span class=\"component\">Item:</span> <span class=\"property\">padding</span> <span class=\"value\">8</span> <span class=\"value\">12</span>\n\n<span class=\"component\">Menu</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Profile\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"string\">\"Settings\"</span>\n  <span class=\"keyword\">-</span> <span class=\"component\">Item</span> <span class=\"property\">color</span> <span class=\"value\">#EF4444</span> <span class=\"string\">\"Logout\"</span>",
-              "expects": {
-                "registry": { "Menu": {} },
-                "nodes": [{ "name": "Menu" }]
-              }
-            }
+          "id": "instanzen",
+          "title": "Instanzen",
+          "description": "Komponenten verwenden (ohne Doppelpunkt).",
+          "syntax": [
+            "Name content",
+            "Name \"text\""
+          ],
+          "examples": [
+            "Button \"Click me\"",
+            "Card\n  Title \"Welcome\""
           ]
         },
         {
           "id": "named-instances",
           "title": "Benannte Instanzen",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Drei Syntaxen für benannte Instanzen:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// 1. named Keyword</span>\n<span class=\"component\">Button</span> <span class=\"keyword\">named</span> <span class=\"component\">SaveBtn</span> <span class=\"string\">\"Save\"</span>\n<span class=\"component\">Panel</span> <span class=\"keyword\">named</span> <span class=\"component\">Dashboard</span> <span class=\"string\">\"Dashboard\"</span>\n\n<span class=\"comment\">// 2. Primitives (Input, Image, etc.)</span>\n<span class=\"component\">Input</span> <span class=\"component\">Email:</span> <span class=\"string\">\"Email eingeben\"</span> <span class=\"property\">type</span> <span class=\"value\">email</span>\n<span class=\"component\">Image</span> <span class=\"component\">Avatar:</span> <span class=\"value\">48</span> <span class=\"value\">48</span> <span class=\"property\">radius</span> <span class=\"value\">24</span> <span class=\"property\">fit</span> <span class=\"value\">cover</span>\n\n<span class=\"comment\">// 3. as Syntax</span>\n<span class=\"component\">SettingsDialog</span> <span class=\"keyword\">as</span> <span class=\"component\">Dialog:</span>\n  <span class=\"string\">\"Dialog Inhalt\"</span>"
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Wichtig:</strong> Nur benannte Instanzen können in Events referenziert werden!</p>"
-            }
+          "description": "Für Referenzierung in Events.",
+          "syntax": [
+            "Component named Name"
+          ],
+          "examples": [
+            "Button named SaveBtn \"Save\"",
+            "- Item named FirstItem \"Dashboard\""
           ]
         },
         {
-          "id": "component-references",
-          "title": "Komponenten-Referenzen",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Properties anderer Komponenten referenzieren:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Card:</span> <span class=\"property\">radius</span> <span class=\"value\">16</span> <span class=\"property\">padding</span> <span class=\"value\">20</span> <span class=\"property\">background</span> <span class=\"value\">#2A2A3E</span>\n\n<span class=\"component\">Button</span> <span class=\"property\">radius</span> <span class=\"component\">Card</span>.<span class=\"property\">radius</span> <span class=\"property\">background</span> <span class=\"component\">Card</span>.<span class=\"property\">background</span> <span class=\"string\">\"Match Card\"</span>"
-            }
+          "id": "inline-define",
+          "title": "Inline Define + Render (as)",
+          "description": "Komponenten definieren UND rendern in einem Schritt mit `as`.",
+          "syntax": [
+            "Name as Type properties"
+          ],
+          "examples": [
+            "Email as Input, pad 12, \"placeholder@mail.com\"",
+            "SearchIcon as Icon, size 20, \"search\"",
+            "Container bg #333, pad 16      // = Container as Box"
+          ]
+        },
+        {
+          "id": "slots",
+          "title": "Slots",
+          "description": "Vordefinierte Kinder-Platzhalter.",
+          "syntax": [
+            "Parent\n  Slot:"
+          ],
+          "examples": [
+            "Card:\n  Title:\n  Description:",
+            "Card\n  Title \"Welcome\"\n  Description \"Get started\""
+          ]
+        },
+        {
+          "id": "flat-access",
+          "title": "Flat Access",
+          "description": "Direkter Zugriff auf verschachtelte Slots.",
+          "syntax": [
+            "Parent\n  NestedSlot props"
+          ],
+          "examples": [
+            "Header:\n  Left:\n    Logo:",
+            "Header\n  Logo bg #F00  // Findet Logo in Left"
+          ]
+        },
+        {
+          "id": "listen",
+          "title": "Listen (- Prefix)",
+          "description": "Neue Instanzen mit - erstellen.",
+          "syntax": [
+            "- Component"
+          ],
+          "examples": [
+            "Menu\n  - Item \"Profile\"\n  - Item \"Settings\"\n  - Item col #EF4444, \"Logout\""
           ]
         }
       ]
     },
     {
-      "id": "tokens",
-      "title": "Tokens (Design-Variablen)",
+      "id": "properties",
+      "title": "Properties",
+      "description": "Styling und Layout",
       "subsections": [
         {
-          "id": "token-definition",
-          "title": "Token-Definition",
-          "content": [
+          "id": "layout",
+          "title": "Layout",
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Tokens sind einfache Werte (Farben, Zahlen, Strings). KEINE Arrays oder Objekte!"
+              "name": "horizontal / hor",
+              "description": "Horizontale Anordnung (row)"
             },
             {
-              "type": "code",
-              "html": "<span class=\"token\">$primary</span>: <span class=\"value\">#3B82F6</span>\n<span class=\"token\">$spacing</span>: <span class=\"value\">16</span>\n<span class=\"token\">$font-main</span>: <span class=\"string\">\"Inter\"</span>\n\n<span class=\"component\">Button</span> <span class=\"property\">background</span> <span class=\"token\">$primary</span> <span class=\"property\">padding</span> <span class=\"token\">$spacing</span> <span class=\"property\">font</span> <span class=\"token\">$font-main</span>"
+              "name": "vertical / ver",
+              "description": "Vertikale Anordnung (column) - Default"
+            },
+            {
+              "name": "center / cen",
+              "description": "Beide Achsen zentrieren"
+            },
+            {
+              "name": "gap / g",
+              "description": "Abstand zwischen Kindern"
+            },
+            {
+              "name": "spread",
+              "description": "Space-between Distribution"
+            },
+            {
+              "name": "wrap",
+              "description": "Erlaubt Umbruch"
+            },
+            {
+              "name": "stacked",
+              "description": "Kinder übereinander (z-layers)"
             }
           ]
         },
         {
-          "id": "token-suffixes",
-          "title": "Token-Suffix Inferenz",
-          "content": [
+          "id": "alignment",
+          "title": "Alignment",
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Token-Namen mit Suffix werden automatisch der richtigen Property zugeordnet:"
+              "name": "left",
+              "description": "Links ausrichten (horizontal)"
             },
             {
-              "type": "table",
-              "table": {
-                "headers": ["Suffix", "Property"],
-                "rows": [
-                  {"cells": ["<code>-color</code>", "<code>background</code>"]},
-                  {"cells": ["<code>-size</code>", "<code>font-size</code>"]},
-                  {"cells": ["<code>-padding</code>, <code>-spacing</code>", "<code>padding</code>"]},
-                  {"cells": ["<code>-radius</code>", "<code>border-radius</code>"]},
-                  {"cells": ["<code>-gap</code>", "<code>gap</code>"]},
-                  {"cells": ["<code>-border</code>", "<code>border-width</code>"]},
-                  {"cells": ["<code>-border-color</code>", "<code>border-color</code>"]}
-                ]
-              }
+              "name": "right",
+              "description": "Rechts ausrichten (horizontal)"
             },
             {
-              "type": "code",
-              "html": "<span class=\"token\">$card-padding</span>: <span class=\"value\">16</span>\n<span class=\"component\">Card</span> <span class=\"token\">$card-padding</span>   <span class=\"comment\">// Wird zu padding: 16</span>"
+              "name": "hor-center",
+              "description": "Horizontal zentrieren"
+            },
+            {
+              "name": "top",
+              "description": "Oben ausrichten (vertikal)"
+            },
+            {
+              "name": "bottom",
+              "description": "Unten ausrichten (vertikal)"
+            },
+            {
+              "name": "ver-center",
+              "description": "Vertikal zentrieren"
+            }
+          ]
+        },
+        {
+          "id": "sizing",
+          "title": "Sizing",
+          "items": [
+            {
+              "name": "size",
+              "description": "Kombinierte Dimension (size hug 32, size 100 200)"
+            },
+            {
+              "name": "width hug",
+              "description": "Breite = Inhalt (fit-content)"
+            },
+            {
+              "name": "width full",
+              "description": "Breite = 100% + flex-grow"
+            },
+            {
+              "name": "width N",
+              "description": "Feste Breite in px"
+            },
+            {
+              "name": "height hug",
+              "description": "Höhe = Inhalt (fit-content)"
+            },
+            {
+              "name": "height full",
+              "description": "Höhe = 100% + flex-grow"
+            },
+            {
+              "name": "height N",
+              "description": "Feste Höhe in px"
+            },
+            {
+              "name": "min-width / minw",
+              "description": "Minimale Breite"
+            },
+            {
+              "name": "max-width / maxw",
+              "description": "Maximale Breite"
+            },
+            {
+              "name": "min-height / minh",
+              "description": "Minimale Höhe"
+            },
+            {
+              "name": "max-height / maxh",
+              "description": "Maximale Höhe"
+            }
+          ]
+        },
+        {
+          "id": "spacing",
+          "title": "Spacing",
+          "description": "Padding mit optionalen Richtungen.",
+          "syntax": [
+            "pad 16",
+            "pad 16 12",
+            "pad 16 12 8 4",
+            "pad left 16",
+            "pad top 8 bottom 24"
+          ],
+          "items": [
+            {
+              "name": "padding / p",
+              "description": "Innenabstand"
+            },
+            {
+              "name": "margin / m",
+              "description": "Außenabstand"
+            }
+          ]
+        },
+        {
+          "id": "colors",
+          "title": "Farben",
+          "items": [
+            {
+              "name": "color / c",
+              "description": "Textfarbe"
+            },
+            {
+              "name": "background / bg",
+              "description": "Hintergrundfarbe"
+            },
+            {
+              "name": "border-color / boc",
+              "description": "Rahmenfarbe"
+            }
+          ]
+        },
+        {
+          "id": "border",
+          "title": "Border & Radius",
+          "syntax": [
+            "bor 1",
+            "bor 1 #333",
+            "bor 2 dashed #3B82F6",
+            "bor t 1",
+            "rad 8",
+            "rad tl 8 br 8"
+          ],
+          "items": [
+            {
+              "name": "border / bor",
+              "description": "Rahmen (width style color)"
+            },
+            {
+              "name": "radius / rad",
+              "description": "Eckenradius"
+            }
+          ]
+        },
+        {
+          "id": "typography",
+          "title": "Typography",
+          "items": [
+            {
+              "name": "font-size",
+              "description": "Schriftgröße (px)"
+            },
+            {
+              "name": "icon-size / is",
+              "description": "Icon-Größe (px)"
+            },
+            {
+              "name": "icon-weight / iw",
+              "description": "Icon-Strichstärke (100-700, Standard: 400)"
+            },
+            {
+              "name": "icon-color / ic",
+              "description": "Icon-Farbe (überschreibt color)"
+            },
+            {
+              "name": "fill",
+              "description": "Icon gefüllt (Material only)"
+            },
+            {
+              "name": "weight",
+              "description": "Schriftstärke (400, 600, bold)"
+            },
+            {
+              "name": "line",
+              "description": "Zeilenhöhe"
+            },
+            {
+              "name": "font",
+              "description": "Schriftart"
+            },
+            {
+              "name": "align",
+              "description": "Textausrichtung"
+            },
+            {
+              "name": "italic",
+              "description": "Kursiv"
+            },
+            {
+              "name": "underline",
+              "description": "Unterstrichen"
+            },
+            {
+              "name": "truncate",
+              "description": "Abschneiden mit Ellipsis"
+            },
+            {
+              "name": "uppercase",
+              "description": "Großbuchstaben"
+            },
+            {
+              "name": "lowercase",
+              "description": "Kleinbuchstaben"
+            }
+          ]
+        },
+        {
+          "id": "visuals",
+          "title": "Visuals",
+          "items": [
+            {
+              "name": "opacity / o",
+              "description": "Transparenz (0-1)"
+            },
+            {
+              "name": "shadow",
+              "description": "Schatten (sm, md, lg)"
+            },
+            {
+              "name": "cursor",
+              "description": "Cursor-Stil"
+            },
+            {
+              "name": "z",
+              "description": "Z-Index"
+            },
+            {
+              "name": "hidden",
+              "description": "Versteckt starten"
+            },
+            {
+              "name": "visible",
+              "description": "Sichtbarkeit"
+            },
+            {
+              "name": "disabled",
+              "description": "Deaktiviert"
+            },
+            {
+              "name": "rotate / rot",
+              "description": "Rotation in Grad"
+            },
+            {
+              "name": "translate",
+              "description": "X Y Verschiebung"
+            }
+          ]
+        },
+        {
+          "id": "scroll",
+          "title": "Scroll",
+          "items": [
+            {
+              "name": "scroll",
+              "description": "Vertikales Scrollen"
+            },
+            {
+              "name": "scroll-ver",
+              "description": "Vertikales Scrollen"
+            },
+            {
+              "name": "scroll-hor",
+              "description": "Horizontales Scrollen"
+            },
+            {
+              "name": "scroll-both",
+              "description": "Beide Richtungen"
+            },
+            {
+              "name": "clip",
+              "description": "Overflow hidden"
+            }
+          ]
+        },
+        {
+          "id": "hover-properties",
+          "title": "Hover Properties",
+          "description": "Inline Hover-Styles.",
+          "items": [
+            {
+              "name": "hover-background / hover-bg",
+              "description": "Hover Hintergrund"
+            },
+            {
+              "name": "hover-color / hover-col",
+              "description": "Hover Textfarbe"
+            },
+            {
+              "name": "hover-opacity / hover-opa",
+              "description": "Hover Transparenz"
+            },
+            {
+              "name": "hover-scale",
+              "description": "Hover Skalierung"
+            },
+            {
+              "name": "hover-border / hover-bor",
+              "description": "Hover Rahmen"
+            },
+            {
+              "name": "hover-border-color / hover-boc",
+              "description": "Hover Rahmenfarbe"
+            },
+            {
+              "name": "hover-radius / hover-rad",
+              "description": "Hover Eckenradius"
+            }
+          ]
+        },
+        {
+          "id": "grid",
+          "title": "Grid",
+          "description": "Grid-Layout für Spalten.",
+          "syntax": [
+            "grid 3                    // 3 gleiche Spalten",
+            "grid 2, g 16              // Mit Abstand",
+            "grid auto 250             // Auto-fill, min 250px",
+            "grid 30% 70%              // Prozentuale Spalten"
+          ]
+        },
+        {
+          "id": "inline-spans",
+          "title": "Inline Spans",
+          "description": "Formatierung innerhalb von Strings.",
+          "syntax": [
+            "\"This is *important*:bold\"",
+            "\"Click *here*:underline\"",
+            "\"A *warning*:$customToken\""
+          ],
+          "items": [
+            {
+              "name": ":bold",
+              "description": "Fett"
+            },
+            {
+              "name": ":italic",
+              "description": "Kursiv"
+            },
+            {
+              "name": ":underline",
+              "description": "Unterstrichen"
+            },
+            {
+              "name": ":$token",
+              "description": "Custom Token-Style"
             }
           ]
         }
@@ -519,71 +635,50 @@
     {
       "id": "primitives",
       "title": "HTML Primitives",
+      "description": "Native HTML-Elemente",
       "subsections": [
         {
-          "id": "input",
-          "title": "Input",
-          "content": [
+          "id": "primitives-list",
+          "title": "Primitives",
+          "items": [
             {
-              "type": "paragraph",
-              "html": "String wird als <code>placeholder</code> interpretiert:"
+              "name": "Image \"url\"",
+              "description": "Bild (String = src)"
             },
             {
-              "type": "code",
-              "html": "<span class=\"component\">Input</span> <span class=\"string\">\"Email eingeben...\"</span> <span class=\"property\">type</span> <span class=\"value\">email</span>\n<span class=\"component\">Input</span> <span class=\"string\">\"Passwort\"</span> <span class=\"property\">type</span> <span class=\"value\">password</span>\n\n<span class=\"comment\">// Benannt</span>\n<span class=\"component\">Input</span> <span class=\"component\">Email:</span> <span class=\"string\">\"Email\"</span> <span class=\"property\">type</span> <span class=\"value\">email</span>"
+              "name": "Input \"placeholder\"",
+              "description": "Eingabefeld (String = placeholder)"
+            },
+            {
+              "name": "Textarea \"placeholder\"",
+              "description": "Mehrzeiliges Eingabefeld"
+            },
+            {
+              "name": "Link href \"/url\", \"Label\"",
+              "description": "Hyperlink (String = Label)"
+            },
+            {
+              "name": "Button \"Label\"",
+              "description": "Button"
+            },
+            {
+              "name": "Icon \"name\"",
+              "description": "Icon (Lucide oder Material)"
+            },
+            {
+              "name": "Segment segments 4",
+              "description": "Segmentiertes Eingabefeld"
             }
           ]
         },
         {
-          "id": "textarea",
-          "title": "Textarea",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Textarea</span> <span class=\"string\">\"Nachricht...\"</span> <span class=\"property\">rows</span> <span class=\"value\">5</span>"
-            }
-          ]
-        },
-        {
-          "id": "image",
-          "title": "Image",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "String wird als <code>src</code> interpretiert:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Image</span> <span class=\"string\">\"photo.jpg\"</span> <span class=\"value\">200</span> <span class=\"value\">150</span> <span class=\"property\">fit</span> <span class=\"value\">cover</span> <span class=\"property\">radius</span> <span class=\"value\">8</span>\n\n<span class=\"comment\">// Benannt</span>\n<span class=\"component\">Image</span> <span class=\"component\">Avatar:</span> <span class=\"value\">48</span> <span class=\"value\">48</span> <span class=\"property\">radius</span> <span class=\"value\">24</span> <span class=\"property\">fit</span> <span class=\"value\">cover</span>"
-            },
-            {
-              "type": "paragraph",
-              "html": "<code>fit</code>: cover, contain, fill, scale-down"
-            }
-          ]
-        },
-        {
-          "id": "link",
-          "title": "Link",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "String wird als <code>href</code> interpretiert:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Link</span> <span class=\"string\">\"https://example.com\"</span> <span class=\"property\">color</span> <span class=\"value\">#3B82F6</span>\n  <span class=\"string\">\"Zur Website\"</span>"
-            }
-          ]
-        },
-        {
-          "id": "button",
-          "title": "Button",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Button</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"property\">radius</span> <span class=\"value\">6</span> <span class=\"string\">\"Submit\"</span>"
-            }
+          "id": "icons",
+          "title": "Icons",
+          "description": "Lucide (default) oder Material Icons.",
+          "syntax": [
+            "Icon \"search\"",
+            "Icon \"home\", material",
+            "Icon \"user\", size 20, col #3B82F6"
           ]
         }
       ]
@@ -591,64 +686,90 @@
     {
       "id": "states",
       "title": "States",
+      "description": "System- und Behavior-States",
       "subsections": [
         {
-          "id": "named-states",
-          "title": "Benannte States",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Toggle:</span> <span class=\"property\">width</span> <span class=\"value\">52</span> <span class=\"property\">height</span> <span class=\"value\">28</span> <span class=\"property\">radius</span> <span class=\"value\">14</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">off</span>\n    <span class=\"property\">background</span> <span class=\"value\">#333</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">on</span>\n    <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span>"
-            }
-          ]
-        },
-        {
           "id": "system-states",
-          "title": "System States (automatisch)",
-          "content": [
+          "title": "System States",
+          "description": "Automatisch vom Browser bei Interaktion.",
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["State", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>hover</code>", "Maus über Element"]},
-                  {"cells": ["<code>focus</code>", "Element hat Fokus"]},
-                  {"cells": ["<code>active</code>", "Element wird gedrückt"]},
-                  {"cells": ["<code>disabled</code>", "Element deaktiviert"]}
-                ]
-              }
+              "name": "hover",
+              "description": "Maus über Element"
             },
             {
-              "type": "code",
-              "html": "<span class=\"component\">Button:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span> <span class=\"property\">background</span> <span class=\"value\">#333</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">hover</span>\n    <span class=\"property\">background</span> <span class=\"value\">#444</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">active</span>\n    <span class=\"property\">background</span> <span class=\"value\">#222</span>"
+              "name": "focus",
+              "description": "Element hat Fokus"
+            },
+            {
+              "name": "active",
+              "description": "Element ist aktiv (gedrückt)"
+            },
+            {
+              "name": "disabled",
+              "description": "Element ist deaktiviert"
             }
           ]
         },
         {
           "id": "behavior-states",
           "title": "Behavior States",
-          "content": [
+          "description": "Aktiviert durch Actions.",
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Durch Actions aktiviert:"
+              "name": "highlighted",
+              "description": "Hervorgehoben (via highlight)"
             },
             {
-              "type": "table",
-              "table": {
-                "headers": ["State", "Aktiviert durch"],
-                "rows": [
-                  {"cells": ["<code>highlighted</code>", "<code>highlight</code> action"]},
-                  {"cells": ["<code>selected</code>", "<code>select</code> action"]},
-                  {"cells": ["<code>active</code>, <code>inactive</code>", "<code>activate</code>, <code>deactivate</code>"]},
-                  {"cells": ["<code>expanded</code>, <code>collapsed</code>", "<code>toggle-state</code>"]},
-                  {"cells": ["<code>default</code>", "Initialer State"]}
-                ]
-              }
+              "name": "selected",
+              "description": "Ausgewählt (via select)"
             },
             {
-              "type": "code",
-              "html": "<span class=\"component\">Item:</span> <span class=\"property\">padding</span> <span class=\"value\">12</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">default</span>\n    <span class=\"property\">background</span> <span class=\"value\">transparent</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">highlighted</span>\n    <span class=\"property\">background</span> <span class=\"value\">#333</span>\n  <span class=\"keyword\">state</span> <span class=\"value\">selected</span>\n    <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span>\n\n<span class=\"component\">Item</span> <span class=\"keyword\">onhover</span> <span class=\"keyword\">highlight</span> <span class=\"value\">self</span> <span class=\"keyword\">onclick</span> <span class=\"keyword\">select</span> <span class=\"value\">self</span>"
+              "name": "active",
+              "description": "Element ist aktiv (gedrückt)"
+            },
+            {
+              "name": "inactive",
+              "description": ""
+            },
+            {
+              "name": "expanded",
+              "description": "Ausgeklappt"
+            },
+            {
+              "name": "collapsed",
+              "description": "Eingeklappt"
+            },
+            {
+              "name": "valid",
+              "description": "Eingabe valide"
+            },
+            {
+              "name": "invalid",
+              "description": "Eingabe invalide"
+            },
+            {
+              "name": "default",
+              "description": "Initialzustand"
+            },
+            {
+              "name": "on",
+              "description": "Toggle an"
+            },
+            {
+              "name": "off",
+              "description": "Toggle aus"
             }
+          ]
+        },
+        {
+          "id": "state-syntax",
+          "title": "State Syntax",
+          "syntax": [
+            "hover\n  bg #555",
+            "state hover\n  bg #555",
+            "state highlighted\n  bg #333",
+            "state selection\n  selected\n    bg #3B82F6\n  not-selected\n    bg transparent"
           ]
         }
       ]
@@ -656,71 +777,129 @@
     {
       "id": "events",
       "title": "Events",
+      "description": "Event-Handler und Keyboard-Events",
       "subsections": [
         {
-          "id": "event-types",
-          "title": "Event-Typen",
-          "content": [
+          "id": "basis-events",
+          "title": "Basis Events",
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Event", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>onclick</code>", "Klick"]},
-                  {"cells": ["<code>onclick-outside</code>", "Klick außerhalb"]},
-                  {"cells": ["<code>onhover</code>", "Hover"]},
-                  {"cells": ["<code>onchange</code>", "Wert geändert"]},
-                  {"cells": ["<code>oninput</code>", "Während der Eingabe"]},
-                  {"cells": ["<code>onfocus</code>", "Fokus erhalten"]},
-                  {"cells": ["<code>onblur</code>", "Fokus verloren"]},
-                  {"cells": ["<code>onkeydown</code>", "Taste gedrückt"]},
-                  {"cells": ["<code>onkeyup</code>", "Taste losgelassen"]},
-                  {"cells": ["<code>onload</code>", "Komponente geladen"]}
-                ]
-              }
+              "name": "onclick",
+              "description": "Klick-Event"
+            },
+            {
+              "name": "onhover",
+              "description": "Hover-Event"
+            },
+            {
+              "name": "onchange",
+              "description": "Wert geändert (nach Blur)"
+            },
+            {
+              "name": "oninput",
+              "description": "Während Eingabe"
+            },
+            {
+              "name": "onload",
+              "description": "Komponente geladen"
+            },
+            {
+              "name": "onfocus",
+              "description": "Fokus erhalten"
+            },
+            {
+              "name": "onblur",
+              "description": "Fokus verloren"
             }
           ]
         },
         {
-          "id": "key-modifiers",
-          "title": "Tasten-Modifikatoren",
-          "content": [
+          "id": "keyboard-events",
+          "title": "Keyboard Events",
+          "description": "Mit Key-Modifier zwischen Event und Doppelpunkt.",
+          "syntax": [
+            "onkeydown escape: close",
+            "onkeydown enter: select highlighted",
+            "onkeydown arrow-down: highlight next"
+          ],
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Für <code>onkeydown</code> und <code>onkeyup</code>:"
+              "name": "escape",
+              "description": "Escape-Taste"
             },
             {
-              "type": "code",
-              "html": "<span class=\"keyword\">onkeydown</span> <span class=\"value\">escape</span> <span class=\"keyword\">close</span> <span class=\"value\">self</span>\n<span class=\"keyword\">onkeydown</span> <span class=\"value\">enter</span> <span class=\"keyword\">select</span> <span class=\"value\">highlighted</span>\n<span class=\"keyword\">onkeydown</span> <span class=\"value\">arrow-down</span> <span class=\"keyword\">highlight</span> <span class=\"value\">next</span>\n<span class=\"keyword\">onkeydown</span> <span class=\"value\">arrow-up</span> <span class=\"keyword\">highlight</span> <span class=\"value\">prev</span>"
+              "name": "enter",
+              "description": "Enter-Taste"
             },
             {
-              "type": "paragraph",
-              "html": "Verfügbar: <code>escape</code>, <code>enter</code>, <code>tab</code>, <code>space</code>, <code>arrow-up</code>, <code>arrow-down</code>, <code>arrow-left</code>, <code>arrow-right</code>, <code>backspace</code>, <code>delete</code>, <code>home</code>, <code>end</code>"
+              "name": "tab",
+              "description": "Tab-Taste"
+            },
+            {
+              "name": "space",
+              "description": "Leertaste"
+            },
+            {
+              "name": "arrow-up",
+              "description": "Pfeil hoch"
+            },
+            {
+              "name": "arrow-down",
+              "description": "Pfeil runter"
+            },
+            {
+              "name": "arrow-left",
+              "description": "Pfeil links"
+            },
+            {
+              "name": "arrow-right",
+              "description": "Pfeil rechts"
+            },
+            {
+              "name": "backspace",
+              "description": "Backspace"
+            },
+            {
+              "name": "delete",
+              "description": "Delete"
+            },
+            {
+              "name": "home",
+              "description": "Home"
+            },
+            {
+              "name": "end",
+              "description": "End"
             }
           ]
         },
         {
           "id": "timing-modifiers",
-          "title": "Timing-Modifikatoren",
-          "content": [
+          "title": "Timing Modifiers",
+          "items": [
             {
-              "type": "code",
-              "html": "<span class=\"keyword\">oninput</span> <span class=\"value\">debounce</span> <span class=\"value\">300</span> <span class=\"keyword\">filter</span> <span class=\"component\">Results</span>   <span class=\"comment\">// Warte 300ms nach letzter Eingabe</span>\n<span class=\"keyword\">onblur</span> <span class=\"value\">delay</span> <span class=\"value\">200</span> <span class=\"keyword\">hide</span> <span class=\"component\">Results</span>      <span class=\"comment\">// Warte 200ms vor Aktion</span>"
+              "name": "debounce N",
+              "description": "Verzögert bis N ms nach letztem Event"
+            },
+            {
+              "name": "delay N",
+              "description": "Verzögert um N ms"
             }
+          ],
+          "examples": [
+            "oninput debounce 300: filter Results",
+            "onblur delay 200: hide Dropdown"
           ]
         },
         {
           "id": "events-block",
-          "title": "Zentraler Events-Block",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Für komplexe Event-Logik:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Input</span> <span class=\"component\">Email:</span> <span class=\"string\">\"Email\"</span>\n<span class=\"component\">Button</span> <span class=\"component\">Submit:</span> <span class=\"string\">\"Login\"</span>\n\n<span class=\"keyword\">events</span>\n  <span class=\"component\">Email</span> <span class=\"keyword\">onchange</span>\n    <span class=\"component\">Error</span>.<span class=\"property\">visible</span> = <span class=\"value\">false</span>\n\n  <span class=\"component\">Submit</span> <span class=\"keyword\">onclick</span>\n    <span class=\"keyword\">if</span> <span class=\"component\">Email</span>.<span class=\"property\">value</span>\n      <span class=\"keyword\">page</span> <span class=\"component\">Dashboard</span>\n    <span class=\"keyword\">else</span>\n      <span class=\"component\">Error</span>.<span class=\"property\">visible</span> = <span class=\"value\">true</span>"
-            }
+          "title": "Zentralisierter Events Block",
+          "description": "Trennt Layout und Behavior.",
+          "syntax": [
+            "events\n  ComponentName onclick\n    action1\n    action2"
+          ],
+          "examples": [
+            "events\n  SaveBtn onclick\n    show Spinner\n    Submit.disabled = true"
           ]
         }
       ]
@@ -728,180 +907,176 @@
     {
       "id": "actions",
       "title": "Actions",
+      "description": "Interaktive Aktionen",
       "subsections": [
         {
-          "id": "visibility-actions",
-          "title": "Sichtbarkeit",
-          "content": [
+          "id": "navigation",
+          "title": "Navigation & Visibility",
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Action", "Syntax", "Beispiel"],
-                "rows": [
-                  {"cells": ["show", "<code>show Target</code>", "<code>onclick show Panel</code>"]},
-                  {"cells": ["hide", "<code>hide Target</code>", "<code>onclick hide Panel</code>"]},
-                  {"cells": ["toggle", "<code>toggle [Target]</code>", "<code>onclick toggle</code>, <code>onclick toggle Menu</code>"]},
-                  {"cells": ["open", "<code>open Target [pos] [anim] [ms]</code>", "<code>onclick open Dialog center fade 200</code>"]},
-                  {"cells": ["close", "<code>close [Target] [anim] [ms]</code>", "<code>onclick close</code>"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "state-actions",
-          "title": "State-Kontrolle",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Action", "Syntax", "Beispiel"],
-                "rows": [
-                  {"cells": ["change", "<code>change Target to state</code>", "<code>onclick change self to active</code>"]},
-                  {"cells": ["toggle-state", "<code>toggle-state</code>", "<code>onclick toggle-state</code>"]},
-                  {"cells": ["activate", "<code>activate Target</code>", "<code>onclick activate self</code>"]},
-                  {"cells": ["deactivate", "<code>deactivate Target</code>", "<code>onclick deactivate self</code>"]},
-                  {"cells": ["deactivate-siblings", "<code>deactivate-siblings</code>", "<code>onclick activate self, deactivate-siblings</code>"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "selection-actions",
-          "title": "Selektion",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Action", "Syntax", "Beispiel"],
-                "rows": [
-                  {"cells": ["highlight", "<code>highlight Target</code>", "<code>onhover highlight self</code>"]},
-                  {"cells": ["select", "<code>select Target</code>", "<code>onclick select self</code>"]},
-                  {"cells": ["deselect", "<code>deselect Target</code>", "<code>onclick deselect self</code>"]},
-                  {"cells": ["clear-selection", "<code>clear-selection</code>", "<code>onclick clear-selection</code>"]},
-                  {"cells": ["filter", "<code>filter Target</code>", "<code>oninput filter Dropdown</code>"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "other-actions",
-          "title": "Weitere Actions",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Action", "Syntax", "Beispiel"],
-                "rows": [
-                  {"cells": ["page", "<code>page Name</code>", "<code>onclick page Dashboard</code>"]},
-                  {"cells": ["assign", "<code>assign $var to expr</code>", "<code>onclick assign $count to $count + 1</code>"]},
-                  {"cells": ["focus", "<code>focus Target</code>", "<code>onclick focus next</code>"]},
-                  {"cells": ["validate", "<code>validate Target</code>", "<code>onclick validate Form</code>"]},
-                  {"cells": ["reset", "<code>reset Target</code>", "<code>onclick reset Form</code>"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "action-targets",
-          "title": "Action-Targets",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Target", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>self</code>", "Aktuelles Element"]},
-                  {"cells": ["<code>next</code>", "Nächstes Geschwister-Element"]},
-                  {"cells": ["<code>prev</code>", "Vorheriges Geschwister-Element"]},
-                  {"cells": ["<code>first</code>", "Erstes Element im Container"]},
-                  {"cells": ["<code>last</code>", "Letztes Element im Container"]},
-                  {"cells": ["<code>highlighted</code>", "Aktuell hervorgehobenes Element"]},
-                  {"cells": ["<code>selected</code>", "Aktuell ausgewähltes Element"]},
-                  {"cells": ["<code>self-and-before</code>", "Selbst und alle vorherigen (für Rating)"]},
-                  {"cells": ["<code>all</code>", "Alle Elemente"]},
-                  {"cells": ["<code>none</code>", "Keine Elemente"]}
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "chaining",
-          "title": "Mehrere Actions",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Mit Komma verketten:"
+              "name": "toggle",
+              "description": "Toggle-State wechseln"
             },
             {
-              "type": "code",
-              "html": "<span class=\"keyword\">onclick</span> <span class=\"keyword\">select</span> <span class=\"value\">self</span>, <span class=\"keyword\">close</span> <span class=\"component\">Dropdown</span>\n<span class=\"keyword\">onclick</span> <span class=\"keyword\">activate</span> <span class=\"value\">self</span>, <span class=\"keyword\">deactivate-siblings</span>"
+              "name": "show",
+              "description": "Element anzeigen"
             },
             {
-              "type": "highlight",
-              "html": "<p><strong>Wichtig:</strong> KEIN Semikolon! <code>onclick show A; hide B</code> funktioniert NICHT.</p>"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "animations",
-      "title": "Animationen",
-      "subsections": [
-        {
-          "id": "show-hide-animations",
-          "title": "Show/Hide Animationen",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Animationen für Ein-/Ausblenden:"
+              "name": "hide",
+              "description": "Element verstecken"
             },
             {
-              "type": "code",
-              "html": "<span class=\"component\">Panel</span> <span class=\"property\">hidden</span>\n  <span class=\"keyword\">show</span> <span class=\"value\">fade</span> <span class=\"value\">slide-up</span> <span class=\"value\">300</span>\n  <span class=\"keyword\">hide</span> <span class=\"value\">fade</span> <span class=\"value\">150</span>\n  <span class=\"string\">\"Animierter Inhalt\"</span>"
+              "name": "open",
+              "description": "Overlay/Dialog öffnen"
             },
             {
-              "type": "table",
-              "table": {
-                "headers": ["Animation", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>fade</code>", "Ein-/Ausblenden"]},
-                  {"cells": ["<code>scale</code>", "Skalieren"]},
-                  {"cells": ["<code>slide-up</code>", "Von unten einfahren"]},
-                  {"cells": ["<code>slide-down</code>", "Von oben einfahren"]},
-                  {"cells": ["<code>slide-left</code>", "Von rechts einfahren"]},
-                  {"cells": ["<code>slide-right</code>", "Von links einfahren"]},
-                  {"cells": ["<code>none</code>", "Keine Animation"]}
-                ]
-              }
+              "name": "close",
+              "description": "Overlay schließen"
+            },
+            {
+              "name": "page",
+              "description": "Zu Seite wechseln"
             }
           ]
         },
         {
-          "id": "positions",
-          "title": "Overlay-Positionen",
-          "content": [
+          "id": "selection",
+          "title": "Selection & Highlight",
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Für <code>open</code> Action:"
+              "name": "highlight",
+              "description": "Element hervorheben"
             },
             {
-              "type": "table",
-              "table": {
-                "headers": ["Position", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>below</code>", "Unterhalb des Triggers"]},
-                  {"cells": ["<code>above</code>", "Oberhalb des Triggers"]},
-                  {"cells": ["<code>left</code>", "Links vom Trigger"]},
-                  {"cells": ["<code>right</code>", "Rechts vom Trigger"]},
-                  {"cells": ["<code>center</code>", "Zentriert im Viewport"]}
-                ]
-              }
+              "name": "select",
+              "description": "Element auswählen"
+            },
+            {
+              "name": "deselect",
+              "description": "Auswahl aufheben"
+            },
+            {
+              "name": "clear-selection",
+              "description": "Alle Auswahlen löschen"
+            },
+            {
+              "name": "filter",
+              "description": "Liste filtern"
+            }
+          ]
+        },
+        {
+          "id": "state-changes",
+          "title": "State Changes",
+          "items": [
+            {
+              "name": "change",
+              "description": "State ändern (change self to X)"
+            },
+            {
+              "name": "activate",
+              "description": "Element aktivieren"
+            },
+            {
+              "name": "deactivate",
+              "description": "Element deaktivieren"
+            },
+            {
+              "name": "deactivate-siblings",
+              "description": "Geschwister deaktivieren"
+            },
+            {
+              "name": "toggle-state",
+              "description": "State umschalten"
+            }
+          ]
+        },
+        {
+          "id": "assignments",
+          "title": "Assignments & Forms",
+          "items": [
+            {
+              "name": "assign",
+              "description": "Variable zuweisen"
+            },
+            {
+              "name": "validate",
+              "description": "Formular validieren"
+            },
+            {
+              "name": "reset",
+              "description": "Formular zurücksetzen"
+            },
+            {
+              "name": "focus",
+              "description": "Fokus setzen"
+            },
+            {
+              "name": "alert",
+              "description": "Alert anzeigen"
+            }
+          ]
+        },
+        {
+          "id": "javascript-integration",
+          "title": "JavaScript Integration",
+          "items": [
+            {
+              "name": "call",
+              "description": "Externe JavaScript-Funktion aufrufen"
+            }
+          ],
+          "examples": [
+            "// JavaScript-Funktion definieren (außerhalb von Mirror)\nfunction handleLogin(data) {\n  console.log('Login:', data)\n}\n\n// In Mirror aufrufen\nButton onclick call handleLogin, \"Login\""
+          ]
+        },
+        {
+          "id": "targets",
+          "title": "Action Targets",
+          "items": [
+            {
+              "name": "self",
+              "description": "Das aktuelle Element"
+            },
+            {
+              "name": "next",
+              "description": "Nächstes Element"
+            },
+            {
+              "name": "prev",
+              "description": "Vorheriges Element"
+            },
+            {
+              "name": "first",
+              "description": "Erstes Element"
+            },
+            {
+              "name": "last",
+              "description": "Letztes Element"
+            },
+            {
+              "name": "first-empty",
+              "description": "Erstes leeres Element"
+            },
+            {
+              "name": "highlighted",
+              "description": "Hervorgehobenes Element"
+            },
+            {
+              "name": "selected",
+              "description": "Ausgewähltes Element"
+            },
+            {
+              "name": "self-and-before",
+              "description": "Selbst und alle davor"
+            },
+            {
+              "name": "all",
+              "description": "Alle Elemente"
+            },
+            {
+              "name": "none",
+              "description": "Kein Element"
             }
           ]
         }
@@ -909,354 +1084,292 @@
     },
     {
       "id": "conditionals",
-      "title": "Conditionals",
+      "title": "Conditionals & Logic",
+      "description": "Bedingungen und Operatoren",
       "subsections": [
         {
           "id": "block-conditionals",
-          "title": "Block-Conditionals",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"token\">$isLoggedIn</span>: <span class=\"value\">true</span>\n\n<span class=\"component\">Box</span>\n  <span class=\"keyword\">if</span> <span class=\"token\">$isLoggedIn</span>\n    <span class=\"component\">Avatar</span>\n  <span class=\"keyword\">else</span>\n    <span class=\"component\">Button</span> <span class=\"string\">\"Login\"</span>"
-            }
+          "title": "Block Conditionals",
+          "syntax": [
+            "if $condition\n  Component",
+            "if $condition\n  Component\nelse\n  Other"
+          ],
+          "examples": [
+            "if $isLoggedIn\n  Avatar\nelse\n  Button \"Login\""
           ]
         },
         {
           "id": "property-conditionals",
-          "title": "Property-Conditionals",
-          "content": [
-            {
-              "type": "code",
-              "html": "<span class=\"component\">Button</span> <span class=\"keyword\">if</span> <span class=\"token\">$active</span> <span class=\"keyword\">then</span> <span class=\"property\">background</span> <span class=\"value\">#3B82F6</span> <span class=\"keyword\">else</span> <span class=\"property\">background</span> <span class=\"value\">#333</span>\n\n<span class=\"component\">Badge</span> <span class=\"keyword\">if</span> <span class=\"token\">$count</span> > <span class=\"value\">0</span> <span class=\"keyword\">then</span> <span class=\"property\">background</span> <span class=\"value\">#10B981</span> <span class=\"keyword\">else</span> <span class=\"property\">background</span> <span class=\"value\">#666</span>"
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Experimentell:</strong> Property-Conditionals sind noch nicht vollständig implementiert.</p>"
-            }
+          "title": "Property Conditionals",
+          "description": "Inline Bedingungen für Properties.",
+          "syntax": [
+            "if $cond then property value",
+            "if $cond then property value else property value2"
+          ],
+          "examples": [
+            "Button if $active then bg #3B82F6 else bg #333",
+            "Icon if $task.done then \"check\" else \"circle\""
           ]
         },
         {
           "id": "operators",
           "title": "Operatoren",
-          "content": [
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Typ", "Operatoren"],
-                "rows": [
-                  {"cells": ["Vergleich", "<code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>"]},
-                  {"cells": ["Logik", "<code>and</code>, <code>or</code>, <code>not</code>"]},
-                  {"cells": ["Arithmetik", "<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>"]}
-                ]
-              }
+              "name": "==, !=",
+              "description": "Gleichheit / Ungleichheit"
+            },
+            {
+              "name": ">, <, >=, <=",
+              "description": "Vergleiche"
+            },
+            {
+              "name": "and",
+              "description": "Logisches UND"
+            },
+            {
+              "name": "or",
+              "description": "Logisches ODER"
+            },
+            {
+              "name": "not",
+              "description": "Negation"
+            },
+            {
+              "name": "+, -, *, /",
+              "description": "Arithmetik"
+            }
+          ]
+        },
+        {
+          "id": "expressions",
+          "title": "Expressions",
+          "items": [
+            {
+              "name": "$varName",
+              "description": "Variable"
+            },
+            {
+              "name": "$obj.prop",
+              "description": "Property-Access"
+            },
+            {
+              "name": "Component.prop",
+              "description": "Component-Property"
+            },
+            {
+              "name": "$event.value",
+              "description": "Event-Wert"
             }
           ]
         }
       ]
     },
     {
-      "id": "data",
-      "title": "Daten & Iteration",
+      "id": "iterators",
+      "title": "Iterators & Data",
+      "description": "Schleifen und Data Binding",
       "subsections": [
         {
-          "id": "data-tab",
-          "title": "Data Tab Syntax",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Daten werden im <strong>Data Tab</strong> definiert, NICHT in der DSL-Datei:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// Schema-Definition</span>\n<span class=\"component\">Task:</span>\n  <span class=\"property\">title</span>: <span class=\"value\">text</span>\n  <span class=\"property\">done</span>: <span class=\"value\">boolean</span>\n  <span class=\"property\">category</span>: <span class=\"component\">Category</span>\n\n<span class=\"component\">Category:</span>\n  <span class=\"property\">name</span>: <span class=\"value\">text</span>\n\n<span class=\"comment\">// Instanzen</span>\n<span class=\"keyword\">-</span> <span class=\"component\">Category</span> <span class=\"string\">\"Arbeit\"</span>\n<span class=\"keyword\">-</span> <span class=\"component\">Category</span> <span class=\"string\">\"Privat\"</span>\n\n<span class=\"keyword\">-</span> <span class=\"component\">Task</span> <span class=\"string\">\"Einkaufen\"</span>, <span class=\"value\">false</span>, <span class=\"component\">Category</span>[<span class=\"value\">0</span>]\n<span class=\"keyword\">-</span> <span class=\"component\">Task</span> <span class=\"string\">\"Sport\"</span>, <span class=\"value\">true</span>, <span class=\"component\">Category</span>[<span class=\"value\">1</span>]"
-            },
-            {
-              "type": "highlight",
-              "html": "<p><strong>Wichtig:</strong> Die Syntax <code>$tasks: [{...}]</code> (JSON-Arrays) ist NICHT unterstützt! Daten müssen über den Data Tab mit Schema-Syntax definiert werden.</p>"
-            }
+          "id": "each-loop",
+          "title": "Each Loop",
+          "syntax": [
+            "each $item in $collection\n  Component $item.prop"
+          ],
+          "examples": [
+            "each $task in $tasks\n  Card\n    Text $task.title\n    Icon if $task.done then \"check\" else \"circle\""
           ]
         },
         {
-          "id": "iteration",
-          "title": "Iteration (each)",
-          "content": [
-            {
-              "type": "paragraph",
-              "html": "Iteriert über Collections aus dem Data Tab:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"comment\">// In der DSL (tasks kommt aus Data Tab)</span>\n<span class=\"component\">Box</span>\n  <span class=\"keyword\">each</span> <span class=\"token\">$task</span> <span class=\"keyword\">in</span> <span class=\"token\">$tasks</span>\n    <span class=\"component\">Card</span>\n      <span class=\"component\">Title</span> <span class=\"token\">$task.title</span>\n      <span class=\"component\">Checkbox</span> <span class=\"token\">$task.done</span>"
-            },
-            {
-              "type": "paragraph",
-              "html": "Verschachtelte Iteration:"
-            },
-            {
-              "type": "code",
-              "html": "<span class=\"keyword\">each</span> <span class=\"token\">$category</span> <span class=\"keyword\">in</span> <span class=\"token\">$categories</span>\n  <span class=\"component\">Section</span>\n    <span class=\"component\">Title</span> <span class=\"token\">$category.name</span>\n    <span class=\"keyword\">each</span> <span class=\"token\">$item</span> <span class=\"keyword\">in</span> <span class=\"token\">$category.items</span>\n      <span class=\"component\">Item</span> <span class=\"token\">$item.name</span>"
-            }
+          "id": "data-binding",
+          "title": "Data Binding",
+          "description": "Mit optionalem Filter.",
+          "syntax": [
+            "Component data Collection",
+            "Component data Collection where field == value"
+          ],
+          "examples": [
+            "TaskList data Tasks where done == false"
           ]
         },
         {
-          "id": "field-types",
-          "title": "Feld-Typen",
-          "content": [
-            {
-              "type": "table",
-              "table": {
-                "headers": ["Typ", "Beschreibung"],
-                "rows": [
-                  {"cells": ["<code>text</code> / <code>string</code>", "Text"]},
-                  {"cells": ["<code>number</code> / <code>int</code> / <code>float</code>", "Zahl"]},
-                  {"cells": ["<code>boolean</code> / <code>bool</code>", "Wahrheitswert"]},
-                  {"cells": ["<code>TypeName</code>", "Relation zu anderem Schema"]}
-                ]
-              }
-            }
+          "id": "master-detail",
+          "title": "Master-Detail Pattern",
+          "description": "Für Klick-auf-Liste-zeigt-Details Pattern.",
+          "syntax": [
+            "$selected: null\n\nMaster data Collection\n  - Item onclick assign $selected to $item\n    Text $item.title\n\nDetail if $selected\n  Text $selected.title"
+          ],
+          "examples": [
+            "onclick assign $selected to $item\n$selected.field (access stored record fields)"
           ]
         }
       ]
     },
     {
-      "id": "component-properties",
-      "title": "Komponenten-Properties",
+      "id": "animations",
+      "title": "Animations",
+      "description": "Show/Hide und kontinuierliche Animationen",
       "subsections": [
         {
-          "id": "property-access",
-          "title": "Property-Zugriff",
-          "content": [
+          "id": "show-hide",
+          "title": "Show/Hide Animations",
+          "syntax": [
+            "show fade slide-up 300",
+            "hide fade 150"
+          ],
+          "items": [
             {
-              "type": "paragraph",
-              "html": "Lesen und Schreiben von Komponenten-Eigenschaften:"
+              "name": "slide-up",
+              "description": "Von unten einblenden"
             },
             {
-              "type": "code",
-              "html": "<span class=\"comment\">// Lesen (in Bedingungen)</span>\n<span class=\"keyword\">if</span> <span class=\"component\">Email</span>.<span class=\"property\">value</span>\n  <span class=\"keyword\">page</span> <span class=\"component\">Dashboard</span>\n\n<span class=\"comment\">// Schreiben (in Events)</span>\n<span class=\"component\">Submit</span>.<span class=\"property\">label</span> = <span class=\"string\">\"Sending...\"</span>\n<span class=\"component\">Submit</span>.<span class=\"property\">disabled</span> = <span class=\"value\">true</span>\n<span class=\"component\">Panel</span>.<span class=\"property\">visible</span> = <span class=\"value\">false</span>"
+              "name": "slide-down",
+              "description": "Von oben einblenden"
+            },
+            {
+              "name": "slide-left",
+              "description": "Von rechts einblenden"
+            },
+            {
+              "name": "slide-right",
+              "description": "Von links einblenden"
+            },
+            {
+              "name": "fade",
+              "description": "Ein-/Ausblenden (opacity)"
+            },
+            {
+              "name": "scale",
+              "description": "Skalieren"
+            },
+            {
+              "name": "none",
+              "description": "Keine Animation"
             }
           ]
         },
         {
-          "id": "intrinsic-properties",
-          "title": "Intrinsische Properties",
-          "content": [
+          "id": "continuous",
+          "title": "Kontinuierliche Animationen",
+          "syntax": [
+            "animate spin 1000",
+            "animate pulse 800"
+          ],
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Komponente", "Properties"],
-                "rows": [
-                  {"cells": ["Alle", "<code>.visible</code>, <code>.disabled</code>, <code>.opacity</code>"]},
-                  {"cells": ["Input / Textarea", "<code>.value</code>, <code>.placeholder</code>, <code>.focus</code>"]},
-                  {"cells": ["Button", "<code>.label</code>, <code>.loading</code>"]},
-                  {"cells": ["Checkbox / Switch", "<code>.checked</code>"]},
-                  {"cells": ["Dialog / Overlay", "<code>.open</code>"]},
-                  {"cells": ["Text / Label", "<code>.text</code>"]},
-                  {"cells": ["Image", "<code>.src</code>, <code>.alt</code>"]}
-                ]
-              }
+              "name": "spin",
+              "description": "Rotation (kontinuierlich)"
+            },
+            {
+              "name": "pulse",
+              "description": "Pulsieren"
+            },
+            {
+              "name": "bounce",
+              "description": "Hüpfen"
             }
           ]
         },
         {
-          "id": "event-object",
-          "title": "$event Objekt",
-          "content": [
+          "id": "positions",
+          "title": "Overlay Positions",
+          "description": "Für open-Action.",
+          "items": [
             {
-              "type": "code",
-              "html": "<span class=\"component\">Input</span> <span class=\"keyword\">onchange</span> <span class=\"keyword\">assign</span> <span class=\"token\">$text</span> <span class=\"keyword\">to</span> <span class=\"token\">$event.value</span>\n<span class=\"component\">Checkbox</span> <span class=\"keyword\">onchange</span> <span class=\"keyword\">assign</span> <span class=\"token\">$active</span> <span class=\"keyword\">to</span> <span class=\"token\">$event.checked</span>"
+              "name": "below",
+              "description": "Unterhalb des Elements"
+            },
+            {
+              "name": "above",
+              "description": "Oberhalb des Elements"
+            },
+            {
+              "name": "left",
+              "description": "Links vom Element"
+            },
+            {
+              "name": "right",
+              "description": "Rechts vom Element"
+            },
+            {
+              "name": "center",
+              "description": "Zentriert im Viewport"
             }
           ]
         }
       ]
     },
     {
-      "id": "limits",
-      "title": "Bekannte Einschränkungen",
+      "id": "doc-mode",
+      "title": "Doc Mode",
+      "description": "Dokumentation mit formatiertem Text",
       "subsections": [
         {
-          "id": "limitations",
-          "title": "Parser-Limitierungen",
-          "content": [
+          "id": "doc-components",
+          "title": "Komponenten",
+          "items": [
             {
-              "type": "table",
-              "table": {
-                "headers": ["Feature", "Status", "Hinweis"],
-                "rows": [
-                  {"cells": ["<code>cursor: not-allowed</code>", "Funktioniert nicht", "Lexer splittet bei Bindestrich. Nur einwortige Werte: pointer, move, grab"]},
-                  {"cells": ["Events nach Children", "Funktioniert nicht", "Events VOR Children platzieren, nicht danach"]},
-                  {"cells": ["<code>animate spin/pulse/bounce</code>", "NICHT implementiert", "Nur show/hide Animationen funktionieren"]},
-                  {"cells": ["JSON-Arrays in Tokens", "NICHT unterstützt", "<code>$items: [{...}]</code> wird als String gespeichert"]},
-                  {"cells": ["Property-Conditionals", "Experimentell", "<code>if $x then bg #F00 else bg #00F</code> noch instabil"]},
-                  {"cells": ["Semicolon-Chaining", "NICHT unterstützt", "Verwende Kommas oder events Block"]}
-                ]
-              }
+              "name": "text",
+              "description": "Formatierte Text-Blöcke"
+            },
+            {
+              "name": "playground",
+              "description": "Live Code-Beispiele"
+            },
+            {
+              "name": "doc",
+              "description": "Container für Dokumentation"
+            }
+          ]
+        },
+        {
+          "id": "block-syntax",
+          "title": "Block-Level Syntax",
+          "items": [
+            {
+              "name": "# / ## / ### / ####",
+              "description": "Headings 1-4"
+            },
+            {
+              "name": "$p",
+              "description": "Paragraph"
+            },
+            {
+              "name": "$lead",
+              "description": "Lead Paragraph"
+            },
+            {
+              "name": "$label",
+              "description": "Label (uppercase)"
+            },
+            {
+              "name": "$li",
+              "description": "List Item"
+            }
+          ]
+        },
+        {
+          "id": "inline-syntax",
+          "title": "Inline Formatting",
+          "items": [
+            {
+              "name": "**text**",
+              "description": "Bold"
+            },
+            {
+              "name": "_text_",
+              "description": "Italic"
+            },
+            {
+              "name": "`code`",
+              "description": "Inline Code"
+            },
+            {
+              "name": "[text](url)",
+              "description": "Hyperlink"
             }
           ]
         }
-      ]
-    }
-  ],
-  "quickRef": [
-    {
-      "category": "LAYOUT",
-      "items": [
-        "horizontal / hor | vertical / ver | gap N | between | wrap | grow / fill | shrink N | stacked | grid N"
-      ]
-    },
-    {
-      "category": "ALIGNMENT",
-      "items": [
-        "hor-l | hor-cen | hor-r | ver-t | ver-cen | ver-b | cen"
-      ]
-    },
-    {
-      "category": "SPACING",
-      "items": [
-        "padding / pad [dir] N | margin / mar [dir] N | Direktionen: l r t b u d l-r u-d"
-      ]
-    },
-    {
-      "category": "SIZE",
-      "items": [
-        "w / width N | h / height N | minw | maxw | minh | maxh | full | Shorthand: Box 300 200"
-      ]
-    },
-    {
-      "category": "COLOR",
-      "items": [
-        "background / bg #HEX | color / col #HEX | border-color / boc #HEX"
-      ]
-    },
-    {
-      "category": "BORDER",
-      "items": [
-        "border / bor [dir] N [style] [color] | radius / rad N [N N N]"
-      ]
-    },
-    {
-      "category": "TYPOGRAPHY",
-      "items": [
-        "size N | weight N/bold | font \"name\" | line N | align left/center/right | italic | underline | truncate"
-      ]
-    },
-    {
-      "category": "VISUAL",
-      "items": [
-        "opacity / opa 0-1 | shadow sm/md/lg | cursor pointer | z N | hidden | visible | disabled"
-      ]
-    },
-    {
-      "category": "HOVER",
-      "items": [
-        "hover-background | hover-color | hover-border-color | hover-border | hover-radius | hover-opacity | hover-scale"
-      ]
-    },
-    {
-      "category": "SCROLL",
-      "items": [
-        "scroll / scroll-ver | scroll-hor | scroll-both | snap | clip"
-      ]
-    },
-    {
-      "category": "TOKENS",
-      "items": [
-        "$name: value | Suffixe: -color -size -padding -radius -gap -border"
-      ]
-    },
-    {
-      "category": "COMPONENTS",
-      "items": [
-        "Name: props (Definition) | Name from Parent: (Vererbung) | named Name (benannt) | - Item (neue Instanz)"
-      ]
-    },
-    {
-      "category": "PRIMITIVES",
-      "items": [
-        "Input \"placeholder\" type email | Image \"src\" W H fit cover | Textarea rows N | Link \"url\" | Button"
-      ]
-    },
-    {
-      "category": "STATES",
-      "items": [
-        "state name \\n props | System: hover focus active disabled | Behavior: highlighted selected default"
-      ]
-    },
-    {
-      "category": "EVENTS",
-      "items": [
-        "onclick | onhover | onchange | oninput | onfocus | onblur | onkeydown KEY | onkeyup KEY | onload"
-      ]
-    },
-    {
-      "category": "EVENT-MODIFIERS",
-      "items": [
-        "debounce N | delay N | Tasten: escape enter tab space arrow-up arrow-down home end"
-      ]
-    },
-    {
-      "category": "ACTIONS",
-      "items": [
-        "show X | hide X | toggle [X] | open X [pos] [anim] [ms] | close [X] | page X | assign $var to expr"
-      ]
-    },
-    {
-      "category": "STATE-ACTIONS",
-      "items": [
-        "change X to state | toggle-state | activate X | deactivate X | deactivate-siblings"
-      ]
-    },
-    {
-      "category": "SELECTION-ACTIONS",
-      "items": [
-        "highlight X | select X | deselect X | clear-selection | filter X | focus X"
-      ]
-    },
-    {
-      "category": "TARGETS",
-      "items": [
-        "self | next | prev | first | last | highlighted | selected | self-and-before | all | none"
-      ]
-    },
-    {
-      "category": "ANIMATIONS",
-      "items": [
-        "show/hide: fade | scale | slide-up | slide-down | slide-left | slide-right | none"
-      ]
-    },
-    {
-      "category": "POSITIONS",
-      "items": [
-        "below | above | left | right | center"
-      ]
-    },
-    {
-      "category": "CONDITIONALS",
-      "items": [
-        "if $var | if $x > 0 | if $a and $b | if $x then prop val else prop val | not $var"
-      ]
-    },
-    {
-      "category": "DATA-TAB",
-      "items": [
-        "Schema: TypeName: \\n field: type | Instanz: - TypeName values | Types: text number boolean TypeRef"
-      ]
-    },
-    {
-      "category": "ITERATION",
-      "items": [
-        "each $item in $collection | $item.field | Nested: each $x in $parent.children"
-      ]
-    },
-    {
-      "category": "PROPERTY-ACCESS",
-      "items": [
-        "Read: if Component.value | Write: Component.visible = false | $event.value | $event.checked"
-      ]
-    },
-    {
-      "category": "LIMITS",
-      "items": [
-        "cursor: nur einwortige Werte | Events VOR Children | animate: NICHT implementiert | Keine JSON-Arrays in $tokens"
       ]
     }
   ]
