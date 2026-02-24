@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { buildContext, shouldTranslate } from '../../services/nl-translation'
-import { applyAllFixes, validateMirrorCode } from '../../lib/ai-selfhealing'
+import { shouldTranslate } from '../../services/nl-translation'
+import { applyAllFixes, validateMirrorCode } from '../../lib/self-healing'
 
 describe('NL Translation Service', () => {
   describe('shouldTranslate', () => {
@@ -38,91 +38,6 @@ describe('NL Translation Service', () => {
     it('should skip empty lines', () => {
       expect(shouldTranslate('')).toBe(false)
       expect(shouldTranslate('   ')).toBe(false)
-    })
-  })
-
-  describe('buildContext', () => {
-    const tokensCode = `$primary: #3B82F6
-$bg-dark: #1E1E2E
-$spacing: 16
-$rad 8`
-
-    const layoutLines = [
-      'Header horizontal between',
-      '  Logo width 120',
-      '  Nav horizontal gap 16',
-      'toolbar mit buttons', // Line to translate (index 3)
-      'Content vertical',
-      '  Card padding 16',
-      '  Footer',
-    ]
-
-    it('should include tokens in context', () => {
-      const context = buildContext(layoutLines, 3, tokensCode)
-
-      expect(context).toContain('Tokens:')
-      expect(context).toContain('$primary: #3B82F6')
-      expect(context).toContain('$spacing: 16')
-    })
-
-    it('should mark the target line with >>>', () => {
-      const context = buildContext(layoutLines, 3, tokensCode)
-
-      expect(context).toContain('>>> toolbar mit buttons')
-    })
-
-    it('should include surrounding context (±5 lines)', () => {
-      const context = buildContext(layoutLines, 3, tokensCode)
-
-      // Lines before
-      expect(context).toContain('Header horizontal between')
-      expect(context).toContain('Logo width 120')
-      expect(context).toContain('Nav horizontal gap 16')
-
-      // Lines after
-      expect(context).toContain('Content vertical')
-      expect(context).toContain('Card padding 16')
-      expect(context).toContain('Footer')
-    })
-
-    it('should work without tokens', () => {
-      const context = buildContext(layoutLines, 3)
-
-      expect(context).not.toContain('Tokens:')
-      expect(context).toContain('>>> toolbar mit buttons')
-    })
-  })
-
-  describe('Token usage expectations', () => {
-    // These are documentation tests showing expected LLM behavior
-
-    it('documents expected prompt format', () => {
-      const tokensCode = `$primary: #3B82F6
-$bg-card: #2A2A3E
-$spacing: 16
-$rad 8`
-
-      const lines = [
-        'Header horizontal padding $spacing',
-        'toolbar mit primary button',
-        'Footer',
-      ]
-
-      const context = buildContext(lines, 1, tokensCode)
-
-      // The context should clearly show:
-      // 1. Available tokens
-      // 2. Surrounding code using tokens
-      // 3. The line to translate
-
-      console.log('=== Expected prompt to LLM ===')
-      console.log(context)
-      console.log('=== Expected response ===')
-      console.log('Toolbar horizontal gap $spacing padding $spacing background $bg-card radius $radius')
-      console.log('  - Button background $primary icon "save"')
-
-      expect(context).toContain('$primary')
-      expect(context).toContain('$spacing')
     })
   })
 

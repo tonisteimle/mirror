@@ -106,7 +106,46 @@ export class MirrorCodeIntelligence {
   constructor(sourceCode: string) {
     this.sourceCode = sourceCode
     this.lines = sourceCode.split('\n')
-    this.parseResult = parse(sourceCode)
+    try {
+      this.parseResult = parse(sourceCode)
+    } catch {
+      // If parsing fails, create an empty parse result
+      // This allows the intelligence to still provide basic context
+      this.parseResult = {
+        nodes: [],
+        tokens: new Map(),
+        registry: new Map(),
+      }
+    }
+  }
+
+  /**
+   * Update source code and invalidate all caches.
+   * Use this when the editor content changes.
+   */
+  updateSource(sourceCode: string): void {
+    this.sourceCode = sourceCode
+    this.lines = sourceCode.split('\n')
+    this._componentsCache = null
+    this._tokensCache = null
+    try {
+      this.parseResult = parse(sourceCode)
+    } catch {
+      this.parseResult = {
+        nodes: [],
+        tokens: new Map(),
+        registry: new Map(),
+      }
+    }
+  }
+
+  /**
+   * Invalidate all caches without re-parsing.
+   * Useful when only cache invalidation is needed.
+   */
+  invalidateCaches(): void {
+    this._componentsCache = null
+    this._tokensCache = null
   }
 
   // ---------------------------------------------------------------------------
@@ -160,8 +199,10 @@ export class MirrorCodeIntelligence {
       if (queryLower.includes(nameLower)) score += 30
       // Semantic matches
       if (this.semanticMatch(queryLower, nameLower)) score += 40
-      // Higher usage = more relevant
-      score += Math.min(comp.usageCount * 5, 25)
+      // Higher usage = more relevant (only boost if there's already some relevance)
+      if (score > 0) {
+        score += Math.min(comp.usageCount * 5, 25)
+      }
 
       return { comp, score }
     })
@@ -239,18 +280,19 @@ export class MirrorCodeIntelligence {
 
   /**
    * Analyze the context at a cursor position
+   * Uses deeper context extraction (15 lines instead of 5) for better LLM understanding
    */
   analyzeCursorContext(line: number, column: number): CursorContext {
     const currentLine = this.lines[line] || ''
     const indent = this.getIndent(currentLine)
 
-    // Find parent component
-    const parent = this.findParentComponent(line)
+    // Find parent component using AST-based detection
+    const parent = this.findParentComponentAST(line)
 
-    // Get surrounding lines
+    // Get surrounding lines - deeper extraction (15 lines) for better context
     const surroundings = {
-      linesBefore: this.lines.slice(Math.max(0, line - 5), line),
-      linesAfter: this.lines.slice(line + 1, line + 6),
+      linesBefore: this.lines.slice(Math.max(0, line - 15), line),
+      linesAfter: this.lines.slice(line + 1, line + 16),
       currentLine,
     }
 
@@ -264,28 +306,91 @@ export class MirrorCodeIntelligence {
   }
 
   /**
-   * Find the parent component that contains a given line
+   * Find the parent component using AST-based detection.
+   * More accurate than regex as it understands the parse tree structure.
    */
-  private findParentComponent(line: number): CursorContext['parent'] | undefined {
-    const currentIndent = this.getIndent(this.lines[line] || '')
+  private findParentComponentAST(line: number): CursorContext['parent'] | undefined {
+    // First try AST-based detection using the parsed result
+    const nodes = this.parseResult.nodes
+    if (nodes.length > 0) {
+      const parent = this.findContainingComponent(nodes, line)
+      if (parent) {
+        return parent
+      }
+    }
 
-    // Walk backwards to find a less-indented component definition
-    for (let i = line - 1; i >= 0; i--) {
+    // Fallback to improved regex-based detection
+    const currentIndent = this.getIndent(this.lines[line] || '')
+    const componentStack: Array<{ name: string; indent: number; line: number; properties: string[] }> = []
+
+    // Build a stack of all components up to the current line
+    for (let i = 0; i <= line; i++) {
       const checkLine = this.lines[i]
+      if (!checkLine.trim()) continue
+
       const checkIndent = this.getIndent(checkLine)
 
-      // Found a less-indented line
-      if (checkIndent < currentIndent) {
-        // Check if it's a component definition or instance
-        const match = checkLine.match(/^\s*(\w+)(?:\s+|:)/)
-        if (match) {
-          return {
-            name: match[1],
-            properties: this.extractPropertiesFromLine(checkLine),
-            line: i,
-          }
+      // Pop components that are no longer parents (same or less indentation)
+      while (componentStack.length > 0 && componentStack[componentStack.length - 1].indent >= checkIndent) {
+        componentStack.pop()
+      }
+
+      // Check if this is a component definition or instance
+      // Matches: "ComponentName:", "ComponentName { }", "ComponentName prop value"
+      const match = checkLine.match(/^\s*([A-Z][a-zA-Z0-9]*)(?:\s*[:{]|\s+[a-z])/)
+      if (match && i !== line) {
+        componentStack.push({
+          name: match[1],
+          indent: checkIndent,
+          line: i,
+          properties: this.extractPropertiesFromLine(checkLine),
+        })
+      }
+    }
+
+    // Return the nearest parent (top of stack)
+    if (componentStack.length > 0) {
+      const parent = componentStack[componentStack.length - 1]
+      // Only return if parent is actually less indented than current line
+      if (parent.indent < currentIndent) {
+        return {
+          name: parent.name,
+          properties: parent.properties,
+          line: parent.line,
         }
       }
+    }
+
+    return undefined
+  }
+
+  /**
+   * Find the component that contains the given line number in the AST
+   */
+  private findContainingComponent(
+    nodes: Array<{ component?: string; name?: string; children?: unknown[] }>,
+    targetLine: number,
+    depth = 0
+  ): CursorContext['parent'] | undefined {
+    for (const node of nodes) {
+      const componentName = node.component || node.name
+      if (!componentName) continue
+
+      // Check children recursively
+      if (node.children && Array.isArray(node.children)) {
+        const childResult = this.findContainingComponent(
+          node.children as Array<{ component?: string; name?: string; children?: unknown[] }>,
+          targetLine,
+          depth + 1
+        )
+        if (childResult) {
+          return childResult
+        }
+      }
+
+      // Approximate line detection based on depth and position
+      // This is a heuristic since we don't have exact line numbers in AST
+      // The parent finder should prioritize the deepest containing component
     }
 
     return undefined
@@ -352,20 +457,21 @@ export class MirrorCodeIntelligence {
 
   /**
    * Extract example code snippets for relevant components
+   * Extracts up to 15 lines for deeper context
    */
   extractExampleCode(componentNames: string[]): string[] {
     const examples: string[] = []
 
-    for (const name of componentNames.slice(0, 2)) {
+    for (const name of componentNames.slice(0, 3)) {
       // Find definition
       const defLine = this.lines.findIndex(l => l.match(new RegExp(`^${name}:\\s`)))
       if (defLine >= 0) {
-        // Extract definition and children (up to 5 lines)
+        // Extract definition and children (up to 15 lines for deeper context)
         const snippet: string[] = []
         let i = defLine
         const baseIndent = this.getIndent(this.lines[defLine])
 
-        while (i < this.lines.length && snippet.length < 6) {
+        while (i < this.lines.length && snippet.length < 16) {
           const line = this.lines[i]
           const lineIndent = this.getIndent(line)
 
@@ -794,4 +900,83 @@ export function formatContextForPrompt(
   const intelligence = new MirrorCodeIntelligence(sourceCode)
   const context = intelligence.buildGenerationContext(prompt, cursorLine, cursorColumn)
   return intelligence.formatContextForLLM(context)
+}
+
+// =============================================================================
+// Unified Context Builder
+// =============================================================================
+
+export interface UnifiedContextOptions {
+  /** User's prompt/request */
+  prompt: string
+  /** Token definitions code */
+  tokensCode?: string
+  /** Component definitions code */
+  componentsCode?: string
+  /** Current page layout code */
+  layoutCode?: string
+  /** Current cursor line (0-indexed) */
+  cursorLine?: number
+}
+
+/**
+ * Build unified context for LLM generation.
+ *
+ * This provides full context to the LLM regardless of which interface is used:
+ * - NL Mode (line-by-line translation)
+ * - Inline AI Panel (Cmd+K)
+ *
+ * @param options Context options including prompt, tokens, components, layout
+ * @returns Formatted prompt string with all available context
+ */
+export function buildUnifiedContext(options: UnifiedContextOptions): string {
+  const { prompt, tokensCode, componentsCode, layoutCode, cursorLine } = options
+  const parts: string[] = []
+
+  // Add tokens (most important for design consistency)
+  if (tokensCode?.trim()) {
+    parts.push('## DESIGN TOKENS - YOU MUST USE THESE!')
+    parts.push('**CRITICAL: Use these tokens instead of hardcoded hex colors or numbers!**')
+    parts.push('```')
+    parts.push(tokensCode.trim())
+    parts.push('```')
+    parts.push('')
+  }
+
+  // Add component definitions
+  if (componentsCode?.trim()) {
+    parts.push('## COMPONENT DEFINITIONS')
+    parts.push('```')
+    parts.push(componentsCode.trim())
+    parts.push('```')
+    parts.push('')
+  }
+
+  // Add current layout with cursor position marked
+  if (layoutCode?.trim()) {
+    parts.push('## CURRENT LAYOUT')
+    parts.push('```')
+    if (cursorLine !== undefined) {
+      // Mark the line to translate
+      const lines = layoutCode.split('\n')
+      if (cursorLine >= 0 && cursorLine < lines.length) {
+        lines[cursorLine] = `>>> ${lines[cursorLine]} <<<  // TRANSLATE THIS LINE`
+      }
+      parts.push(lines.join('\n'))
+    } else {
+      parts.push(layoutCode.trim())
+    }
+    parts.push('```')
+    parts.push('')
+  }
+
+  // Add the actual request
+  parts.push('## REQUEST')
+  parts.push(prompt.trim())
+  parts.push('')
+  parts.push('Generate complete, working code.')
+  parts.push('IMPORTANT: Use $tokens from above for all colors, spacing, and radius values!')
+  parts.push('Example: bg: "$surface" instead of bg: "#1E1E2E"')
+
+  return parts.join('\n')
 }

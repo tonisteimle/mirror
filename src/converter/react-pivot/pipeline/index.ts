@@ -24,9 +24,14 @@ import type {
   LLMContext,
 } from '../types'
 import { validateReactCode } from '../validation/react-linter'
-import { healReactCode, generateCorrectionPrompt } from '../validation/healing'
+import { healReactCode } from '../validation/healing'
 import { generateReactCode } from './react-generator'
 import { transformReactToMirror } from './transformer'
+import {
+  decideRetryStrategy,
+  generateEnhancedCorrectionPrompt,
+  type RetryDecision,
+} from './retry-strategy'
 
 // =============================================================================
 // Pipeline Orchestrator
@@ -36,6 +41,17 @@ export async function executePipeline(
   prompt: string,
   options: ReactPivotOptions = {}
 ): Promise<ReactPivotResult> {
+  // Validate prompt
+  const trimmedPrompt = prompt?.trim()
+  if (!trimmedPrompt) {
+    return {
+      success: false,
+      mirrorCode: '',
+      issues: [{ type: 'INVALID_COMPONENT', message: 'Empty prompt provided', fixable: false }],
+      metrics: { timeToFirstToken: 0, totalTime: 0, retryCount: 0 },
+    }
+  }
+
   const {
     qualityMode = false,
     maxRetries = 2,
@@ -72,15 +88,18 @@ export async function executePipeline(
       duration: metrics.phases!['context-building'],
     })
 
-    // Phase 2 & 3: React Generation + Validation (with retry loop)
+    // Phase 2 & 3: React Generation + Validation (with intelligent retry loop)
     let retryCount = 0
     let validReactCode: string | null = null
+    let currentQualityMode = qualityMode
+    const previousIssues: ValidationIssue[][] = []
+    let retryDecision: RetryDecision | null = null
 
     while (retryCount <= maxRetries) {
       // Generate React code
       const genStart = performance.now()
       const genResult = await generateReactCode(currentPrompt, context, {
-        qualityMode,
+        qualityMode: currentQualityMode,
         streaming: options.streaming,
         onToken: (token) => {
           if (metrics.timeToFirstToken === 0) {
@@ -95,7 +114,8 @@ export async function executePipeline(
         (performance.now() - genStart)
 
       if (debug) {
-        console.log('Generated React code:', reactCode.substring(0, 500))
+        console.log(`[Attempt ${retryCount + 1}] Generated React code (quality=${currentQualityMode}):`,
+          reactCode.substring(0, 500))
       }
 
       emitPhaseComplete(callbacks, 'react-generation', {
@@ -146,17 +166,45 @@ export async function executePipeline(
         issues: healingResult.remainingIssues,
       })
 
-      // Prepare retry
-      if (retryCount < maxRetries) {
-        currentPrompt = generateCorrectionPrompt(
+      // Use intelligent retry strategy with LLM error analysis
+      retryDecision = decideRetryStrategy({
+        prompt,
+        attemptCount: retryCount,
+        maxAttempts: maxRetries,
+        issues: healingResult.remainingIssues,
+        previousIssues,
+        isQualityMode: currentQualityMode,
+        failedCode: reactCode,  // Pass code for LLM pattern analysis
+      })
+
+      if (debug) {
+        console.log(`Retry decision: ${retryDecision.reason}`)
+        console.log(`  Escalate to quality: ${retryDecision.escalateToQuality}`)
+        console.log(`  Focus areas: ${retryDecision.focusAreas.join(', ')}`)
+      }
+
+      // Prepare retry with intelligent strategy
+      if (retryDecision.shouldRetry && retryCount < maxRetries) {
+        // Escalate to quality mode if needed
+        if (retryDecision.escalateToQuality && !currentQualityMode) {
+          currentQualityMode = true
+          if (debug) {
+            console.log('Escalating to quality mode (Opus)')
+          }
+        }
+
+        // Generate enhanced correction prompt
+        currentPrompt = generateEnhancedCorrectionPrompt(
           prompt,
           reactCode,
-          healingResult.remainingIssues
+          retryDecision
         )
+
+        previousIssues.push(healingResult.remainingIssues)
         metrics.retryCount = ++retryCount
 
         if (debug) {
-          console.log(`Retry ${retryCount}/${maxRetries} with correction prompt`)
+          console.log(`Retry ${retryCount}/${maxRetries} with ${retryDecision.hints.length} hints`)
         }
       } else {
         retryCount++
@@ -243,17 +291,71 @@ export async function executePipeline(
 // Context Building
 // =============================================================================
 
-function buildContext(tokensCode: string): LLMContext {
-  // Extract tokens and components from the editor context
-  // This is a simplified version - the full implementation would
-  // use buildUnifiedContext from ai-context.ts
+/**
+ * Build comprehensive context for LLM generation.
+ * Extracts tokens, components, and style patterns from the codebase.
+ */
+function buildContext(tokensCode: string, componentsCode?: string, layoutCode?: string): LLMContext {
+  // Format tokens for the LLM
+  let formattedTokens = ''
+  if (tokensCode?.trim()) {
+    formattedTokens = `Available design tokens (USE THESE for all colors and spacing!):\n\`\`\`\n${tokensCode.trim()}\n\`\`\``
+  }
+
+  // Format components for the LLM
+  let formattedComponents = ''
+  if (componentsCode?.trim()) {
+    formattedComponents = `Existing component definitions (reuse when applicable):\n\`\`\`\n${componentsCode.trim()}\n\`\`\``
+  }
+
+  // Format layout for context
+  let formattedLayout = ''
+  if (layoutCode?.trim()) {
+    formattedLayout = `Current layout structure:\n\`\`\`\n${layoutCode.trim()}\n\`\`\``
+  }
 
   return {
-    tokens: tokensCode,
-    components: '', // Would be extracted from editor
-    layoutCode: '', // Would be extracted from editor
+    tokens: formattedTokens,
+    components: formattedComponents,
+    layoutCode: formattedLayout,
     systemPrompt: '', // Set by react-generator
   }
+}
+
+/**
+ * Extract token names and their semantic purpose from token code
+ * to provide better context to the LLM
+ */
+export function analyzeTokens(tokensCode: string): {
+  colorTokens: string[]
+  spacingTokens: string[]
+  radiusTokens: string[]
+} {
+  const colorTokens: string[] = []
+  const spacingTokens: string[] = []
+  const radiusTokens: string[] = []
+
+  if (!tokensCode) return { colorTokens, spacingTokens, radiusTokens }
+
+  const lines = tokensCode.split('\n')
+
+  for (const line of lines) {
+    // Match token definitions: $name.property: value or $name: value
+    const match = line.match(/^\s*\$([^\s:]+)(?:\.(\w+))?:\s*(.+)/)
+    if (!match) continue
+
+    const [, name, property] = match
+
+    if (property === 'bg' || property === 'col' || name.includes('color')) {
+      colorTokens.push(`$${name}${property ? '.' + property : ''}`)
+    } else if (property === 'pad' || property === 'gap' || name.includes('pad') || name.includes('gap')) {
+      spacingTokens.push(`$${name}${property ? '.' + property : ''}`)
+    } else if (property === 'rad' || name.includes('rad')) {
+      radiusTokens.push(`$${name}${property ? '.' + property : ''}`)
+    }
+  }
+
+  return { colorTokens, spacingTokens, radiusTokens }
 }
 
 // =============================================================================
@@ -293,6 +395,6 @@ export async function promptToMirror(
 // Re-exports
 // =============================================================================
 
-export { generateReactCode } from './react-generator'
+export { generateReactCode, cancelActiveRequest } from './react-generator'
 export { transformReactToMirror } from './transformer'
 export type { ReactPivotResult, ReactPivotOptions }
