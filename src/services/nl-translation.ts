@@ -25,6 +25,55 @@ import { SYSTEM_PROMPT, DEEP_THINKING_PROMPT } from './nl-prompts'
 // Re-export for backwards compatibility
 export { SYSTEM_PROMPT, DEEP_THINKING_PROMPT }
 
+/**
+ * Normalize redundant token suffixes in generated code.
+ * Converts patterns like `gap $md.gap` to `gap $md` when the suffix matches the property.
+ *
+ * This makes the code cleaner since the property context already tells us what type of token is expected.
+ *
+ * @example
+ * Input:  "Table gap $s.gap, pad $m.pad, bg $surface.bg, rad $m.rad"
+ * Output: "Table gap $s, pad $m, bg $surface, rad $m"
+ */
+export function normalizeTokenSuffixes(code: string): string {
+  // Property-suffix pairs where the suffix is redundant with the property name
+  // In JavaScript regex replacement: $$ = literal $, $1 = first capture group
+  const redundantPatterns: Array<[RegExp, string]> = [
+    // Spacing: gap $md.gap → gap $md
+    [/\bgap\s+\$(\w+)\.gap\b/g, 'gap $$$1'],
+    [/\bpad\s+\$(\w+)\.pad\b/g, 'pad $$$1'],
+    [/\bpadding\s+\$(\w+)\.pad\b/g, 'padding $$$1'],
+    [/\bmar\s+\$(\w+)\.mar\b/g, 'mar $$$1'],
+    [/\bmargin\s+\$(\w+)\.mar\b/g, 'margin $$$1'],
+    // Colors: bg $primary.bg → bg $primary
+    [/\bbg\s+\$(\w+)\.bg\b/g, 'bg $$$1'],
+    [/\bbackground\s+\$(\w+)\.bg\b/g, 'background $$$1'],
+    [/\bcol\s+\$(\w+)\.col\b/g, 'col $$$1'],
+    [/\bcolor\s+\$(\w+)\.col\b/g, 'color $$$1'],
+    [/\bboc\s+\$(\w+)\.boc\b/g, 'boc $$$1'],
+    // Border & Radius: rad $md.rad → rad $md
+    [/\brad\s+\$(\w+)\.rad\b/g, 'rad $$$1'],
+    [/\bradius\s+\$(\w+)\.rad\b/g, 'radius $$$1'],
+    [/\bbor\s+\$(\w+)\.bor\b/g, 'bor $$$1'],
+    [/\bborder\s+\$(\w+)\.bor\b/g, 'border $$$1'],
+    // Typography: size $lg.font.size → size $lg
+    [/\bsize\s+\$(\w+)\.font\.size\b/g, 'size $$$1'],
+    [/\bfont-size\s+\$(\w+)\.font\.size\b/g, 'font-size $$$1'],
+    [/\bfs\s+\$(\w+)\.font\.size\b/g, 'fs $$$1'],
+    [/\btext-size\s+\$(\w+)\.font\.size\b/g, 'text-size $$$1'],
+    // Hover variants: hover-bg $primary.hover.bg → hover-bg $primary.hover
+    [/\bhover-bg\s+\$(\w+)\.hover\.bg\b/g, 'hover-bg $$$1.hover'],
+    [/\bhover-col\s+\$(\w+)\.hover\.col\b/g, 'hover-col $$$1.hover'],
+  ]
+
+  let result = code
+  for (const [pattern, replacement] of redundantPatterns) {
+    result = result.replace(pattern, replacement)
+  }
+
+  return result
+}
+
 /** Status of a line translation */
 export type LineStatus = 'pending' | 'translating' | 'done' | 'warning' | 'error'
 
@@ -243,6 +292,9 @@ export async function translateLine(
       .replace(/```\s*/g, '')
       .trim()
 
+    // Normalize redundant token suffixes (gap $md.gap → gap $md)
+    code = normalizeTokenSuffixes(code)
+
     // Preserve original indentation
     const originalIndent = lineContent.match(/^(\s*)/)?.[1] || ''
     if (code && !code.startsWith(originalIndent)) {
@@ -339,6 +391,9 @@ export async function translateLineSimple(
       .replace(/```(?:mirror|dsl)?\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim()
+
+    // Normalize redundant token suffixes (gap $md.gap → gap $md)
+    content = normalizeTokenSuffixes(content)
 
     // Preserve original indentation
     const originalIndent = lineContent.match(/^(\s*)/)?.[1] || ''

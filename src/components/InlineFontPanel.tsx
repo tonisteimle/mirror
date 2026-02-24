@@ -179,7 +179,6 @@ export function InlineFontPanel({
       width={240}
       maxHeight={320}
       testId="panel-font-picker"
-      disableClickOutsideClose
     >
       <PanelList listRef={listRef}>
         {filteredFonts.length === 0 ? (

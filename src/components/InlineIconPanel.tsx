@@ -504,7 +504,6 @@ export function InlineIconPanel({
       width={520}
       maxHeight={340}
       testId="panel-icon-picker"
-      disableClickOutsideClose
     >
       {/* Panel Tab Header (Icon tab) when showTabs is true */}
       {showTabs && onSwitchPanel && (

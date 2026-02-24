@@ -283,8 +283,10 @@ export function handleTemplateLogic(
     // Implicit inheritance: first usage with properties becomes the template
     // This allows: Button #blue "Click"  ->  Button "Other" (inherits #blue)
     // EXCLUDE generic containers like Box - they should NOT inherit implicitly
+    // Also update template if existing one is empty (e.g., "Item:" with no properties)
     const isGenericContainer = GENERIC_CONTAINERS.includes(node.name)
-    if (hasOwnProps && !template && !isChildOfDefinition && !isGenericContainer) {
+    const templateIsEmpty = template && Object.keys(template.properties).length === 0 && template.children.length === 0
+    if (hasOwnProps && (!template || templateIsEmpty) && !isChildOfDefinition && !isGenericContainer) {
       const newTemplate = createTemplateFromNode(node)
       ctx.registry.set(scopedName, newTemplate)
       // Also register globally for cross-scope inheritance (e.g., Button in different parents)

@@ -253,7 +253,6 @@ export function InlineInputPanel({
       maxHeight={400}
       height={showTabs ? 320 : undefined}
       testId="panel-input-picker"
-      disableClickOutsideClose
     >
       {/* Tab Header when showTabs is true */}
       {showTabs && onSwitchPanel && (

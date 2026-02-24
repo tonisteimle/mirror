@@ -10,7 +10,10 @@
  * 2. Remove className artifacts
  * 3. Fix common property mistakes
  * 4. Standardize token names
+ * 5. DRY extraction (repeated styles → definitions)
  */
+
+import { extractDryDefinitions, type DryExtractionResult } from './dry-extractor'
 
 // =============================================================================
 // Types
@@ -25,6 +28,9 @@ export interface PostProcessResult {
 
   /** Whether any corrections were made */
   modified: boolean
+
+  /** DRY extraction result (if enabled) */
+  dryExtraction?: DryExtractionResult
 }
 
 export interface PostProcessCorrection {
@@ -113,11 +119,20 @@ const COLOR_NAME_TO_TOKEN: Record<string, string> = {
 // Post-Processing Functions
 // =============================================================================
 
+export interface PostProcessOptions {
+  /** Enable DRY extraction (extract repeated patterns into definitions) */
+  enableDryExtraction?: boolean
+}
+
 /**
  * Main post-processing function.
  * Applies all corrections to the Mirror code.
  */
-export function postProcessMirrorCode(mirrorCode: string): PostProcessResult {
+export function postProcessMirrorCode(
+  mirrorCode: string,
+  options: PostProcessOptions = {}
+): PostProcessResult {
+  const { enableDryExtraction = true } = options
   const corrections: PostProcessCorrection[] = []
   let code = mirrorCode
 
@@ -136,10 +151,20 @@ export function postProcessMirrorCode(mirrorCode: string): PostProcessResult {
   // 5. Standardize token names
   code = standardizeTokenNames(code, corrections)
 
+  // 6. DRY extraction (extract repeated patterns into definitions)
+  let dryExtraction: DryExtractionResult | undefined
+  if (enableDryExtraction) {
+    dryExtraction = extractDryDefinitions(code)
+    if (dryExtraction.modified) {
+      code = dryExtraction.code
+    }
+  }
+
   return {
     code,
     corrections,
-    modified: corrections.length > 0,
+    modified: corrections.length > 0 || (dryExtraction?.modified ?? false),
+    dryExtraction,
   }
 }
 

@@ -16,6 +16,7 @@ import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { PanelTabsHeader, type PanelTabId } from './InlineLayoutPanel'
+import { transformCode } from '../editor/shorthand-expansion'
 
 // ============================================
 // Token Mode Persistence
@@ -96,6 +97,8 @@ interface InlineBorderPanelProps {
   useTokenMode?: boolean
   /** Callback when token mode changes (if provided, updates project settings) */
   onTokenModeChange?: (mode: boolean) => void
+  /** If true, output long form (e.g., "border"); if false, output short form (e.g., "bor") */
+  toLongForm?: boolean
 }
 
 // ============================================
@@ -794,6 +797,7 @@ export function InlineBorderPanel({
   availableTabs,
   useTokenMode: useTokenModeProp,
   onTokenModeChange,
+  toLongForm = true,
 }: InlineBorderPanelProps) {
   const [state, setState] = useState<BorderState>(defaultState)
   const hasUserInteractedRef = useRef(false)
@@ -826,9 +830,11 @@ export function InlineBorderPanel({
     if (!pendingSyncRef.current) return
 
     const code = generateBorderCode(state)
-    onCodeChange?.(code)
+    // Transform to long/short form based on editor mode
+    const transformedCode = transformCode(code, toLongForm)
+    onCodeChange?.(transformedCode)
     pendingSyncRef.current = false
-  }, [state, isOpen, onCodeChange])
+  }, [state, isOpen, onCodeChange, toLongForm])
 
   const updateState = useCallback((updates: Partial<BorderState>) => {
     hasUserInteractedRef.current = true
@@ -838,9 +844,11 @@ export function InlineBorderPanel({
 
   const handleSubmit = useCallback(() => {
     const code = generateBorderCode(state)
-    onSelect(code)
+    // Transform to long/short form based on editor mode
+    const transformedCode = transformCode(code, toLongForm)
+    onSelect(transformedCode)
     onClose()
-  }, [state, onSelect, onClose])
+  }, [state, onSelect, onClose, toLongForm])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !state.showColorPicker) {
@@ -866,7 +874,6 @@ export function InlineBorderPanel({
       width={360}
       maxHeight={400}
       testId="panel-border-picker"
-      disableClickOutsideClose
     >
       {/* Tab Header - only shown when showTabs is true */}
       {showTabs && onSwitchPanel && (

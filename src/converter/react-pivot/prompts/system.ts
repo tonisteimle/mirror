@@ -28,6 +28,7 @@ Your output will be automatically transformed to Mirror code.
 5. **NO SPREAD OPERATORS** - NO {...props}
 6. **NO TEMPLATE LITERALS** - Use string concatenation or variables
 7. **USE CONSISTENT TOKEN FORMAT** - Always $name.property (e.g., $primary.bg, $md.pad)
+8. **DRY: DEFINE REUSABLE COMPONENTS** - If any style combination repeats 2+ times, define it as a component with \`mirror()\`
 
 ## ❌ COMMON MISTAKES TO AVOID
 
@@ -75,6 +76,61 @@ Your output will be automatically transformed to Mirror code.
 <Box><Text>Hello</Text></Box>
 <Button>Click</Button>
 <Input type="text" />
+\`\`\`
+
+### WRONG: Repeating Styles (NO DRY!)
+\`\`\`jsx
+// ❌ NEVER DO THIS - Repeated styles are wasteful!
+<Table>
+  <Row style={{ direction: 'horizontal', gap: '$md.gap', padding: '$md.pad' }}>
+    <Text style={{ color: '$heading.col', fontWeight: 600, flex: 1 }}>Name</Text>
+    <Text style={{ color: '$heading.col', fontWeight: 600, flex: 1 }}>Email</Text>
+  </Row>
+  <Row style={{ direction: 'horizontal', gap: '$md.gap', padding: '$md.pad' }}>
+    <Text style={{ color: '$default.col', flex: 1 }}>Max</Text>
+    <Text style={{ color: '$default.col', flex: 1 }}>max@example.com</Text>
+  </Row>
+  <Row style={{ direction: 'horizontal', gap: '$md.gap', padding: '$md.pad' }}>
+    <Text style={{ color: '$default.col', flex: 1 }}>Anna</Text>
+    <Text style={{ color: '$default.col', flex: 1 }}>anna@example.com</Text>
+  </Row>
+</Table>
+\`\`\`
+
+### CORRECT: DRY with Component Definitions
+\`\`\`jsx
+// ✅ Define reusable components - styles appear only ONCE
+const TableRow = mirror({
+  tag: 'div',
+  base: { direction: 'horizontal', gap: '$md.gap', padding: '$md.pad' }
+})
+
+const HeaderCell = mirror({
+  tag: 'span',
+  base: { color: '$heading.col', fontWeight: 600, flex: 1 }
+})
+
+const DataCell = mirror({
+  tag: 'span',
+  base: { color: '$default.col', flex: 1 }
+})
+
+const App = () => (
+  <Table>
+    <TableRow>
+      <HeaderCell>Name</HeaderCell>
+      <HeaderCell>Email</HeaderCell>
+    </TableRow>
+    <TableRow listItem>
+      <DataCell>Max</DataCell>
+      <DataCell>max@example.com</DataCell>
+    </TableRow>
+    <TableRow listItem>
+      <DataCell>Anna</DataCell>
+      <DataCell>anna@example.com</DataCell>
+    </TableRow>
+  </Table>
+)
 \`\`\`
 
 ## ALLOWED COMPONENTS
@@ -636,6 +692,56 @@ const App = () => (
 )
 \`\`\`
 
+### Example 8: Data Table (DRY Pattern!)
+**Prompt:** "A table with users"
+**Output:**
+\`\`\`jsx
+// IMPORTANT: Define reusable components for repeated row/cell patterns!
+const TableRow = mirror({
+  tag: 'div',
+  base: {
+    direction: 'horizontal',
+    gap: '$md.gap',
+    padding: '$md.pad',
+    borderRadius: '$sm.rad'
+  },
+  states: {
+    hover: { background: '$hover.bg' }
+  }
+})
+
+const HeaderRow = TableRow.extend({
+  base: { background: '$elevated.bg' }
+})
+
+const HeaderCell = mirror({
+  tag: 'span',
+  base: { flex: 1, color: '$heading.col', fontWeight: 600 }
+})
+
+const DataCell = mirror({
+  tag: 'span',
+  base: { flex: 1, color: '$default.col' }
+})
+
+const App = () => (
+  <Table style={{ gap: '$sm.gap', padding: '$md.pad', background: '$surface.bg', borderRadius: '$md.rad' }}>
+    <HeaderRow>
+      <HeaderCell>Name</HeaderCell>
+      <HeaderCell>Email</HeaderCell>
+      <HeaderCell>Role</HeaderCell>
+    </HeaderRow>
+    {each('$user', '$users', (
+      <TableRow listItem onClick={{ action: 'assign', variable: '$selected', expression: '$user' }}>
+        <DataCell>{'{$user.name}'}</DataCell>
+        <DataCell>{'{$user.email}'}</DataCell>
+        <DataCell>{'{$user.role}'}</DataCell>
+      </TableRow>
+    ))}
+  </Table>
+)
+\`\`\`
+
 ## OUTPUT FORMAT
 
 Output ONLY the React/JSX code. No explanations, no markdown outside code.
@@ -652,6 +758,7 @@ Before outputting your code, verify:
 - [ ] All colors use $token.property format
 - [ ] All spacing uses $size.pad or $size.gap tokens
 - [ ] All radius values use $size.rad tokens
+- [ ] **DRY CHECK**: Any style combination that appears 2+ times MUST be extracted into a mirror() definition
 
 If ANY of these fail, REWRITE your code before outputting!
 `

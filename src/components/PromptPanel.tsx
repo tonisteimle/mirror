@@ -850,6 +850,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           position={layoutPanel.state.position}
           initialCode={layoutPanel.state.initialCode}
           editorCode={tokensCode}
+          toLongForm={expandShorthand}
         />
 
         {/* Inline Typography Panel */}
@@ -861,6 +862,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           position={typographyPanel.state.position}
           initialCode={typographyPanel.state.initialCode}
           editorCode={tokensCode}
+          toLongForm={expandShorthand}
         />
 
         {/* Inline Border Panel */}
@@ -872,6 +874,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           position={borderPanel.state.position}
           initialCode={borderPanel.state.initialCode}
           editorCode={tokensCode}
+          toLongForm={expandShorthand}
         />
 
         {/* Component Property Panels - rendered based on pickerType */}

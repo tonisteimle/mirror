@@ -98,7 +98,8 @@ export function parseInlineChildSlot(ctx: ParserContext, componentName: string):
   applyTemplate(ctx.registry, childNode, scopedChildName, childName)
 
   // Parse inline properties and content for this child
-  while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
+  // Stop at SEMICOLON - it separates sibling slots in inline instance syntax
+  while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF' && ctx.current()!.type !== 'SEMICOLON') {
     const childToken = ctx.current()!
 
     if (childToken.type === 'PROPERTY') {

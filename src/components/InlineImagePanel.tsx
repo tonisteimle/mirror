@@ -249,7 +249,6 @@ export function InlineImagePanel({
       maxHeight={400}
       height={showTabs ? 300 : undefined}
       testId="panel-image-picker"
-      disableClickOutsideClose
     >
       {/* Tab Header when showTabs is true */}
       {showTabs && onSwitchPanel && (

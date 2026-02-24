@@ -200,6 +200,13 @@ export function parseInlineProperties(
       continue
     }
 
+    // Skip semicolon separators - used for inline child slot syntax
+    // e.g., Item Icon "bed-double"; Label "Text"
+    if (token.type === 'SEMICOLON') {
+      ctx.advance()
+      continue
+    }
+
     // Style group: (hor cen gap 8):styleName
     if (token.type === 'PAREN_OPEN') {
       ctx.advance() // skip (

@@ -9,6 +9,11 @@
 
 /**
  * Property shorthand → long form mappings
+ *
+ * Convention:
+ * - Single char: w, h (sizing only)
+ * - Two char: fs, ts, is, iw, ic (typography/icons)
+ * - Three char: hor, ver, cen, pad, mar, col, bg, bor, rad, opa, rot
  */
 export const PROPERTY_EXPANSIONS: Record<string, string> = {
   // Layout
@@ -41,12 +46,15 @@ export const PROPERTY_EXPANSIONS: Record<string, string> = {
   'rad': 'radius',
   'bor': 'border',
 
-  // Visuals
-  'o': 'opacity',
-  'opa': 'opacity',
-  'op': 'opacity',
+  // Typography
+  'fs': 'font-size',
+  'ts': 'text-size',  // alias for font-size
+  'is': 'icon-size',
+  'iw': 'icon-weight',
+  'ic': 'icon-color',
 
-  // Transform
+  // Visuals
+  'opa': 'opacity',
   'rot': 'rotate',
 
   // Hover states
@@ -88,7 +96,11 @@ export const DIRECTION_EXPANSIONS: Record<string, string> = {
 
 /**
  * Long form → preferred shorthand mappings (reverse of above)
- * Use 3-character forms except for w/h (standard Mirror convention)
+ *
+ * Convention:
+ * - Single char: w, h (sizing only)
+ * - Two char: fs, is, iw, ic (typography/icons)
+ * - Three char: hor, ver, cen, pad, mar, col, bg, bor, rad, opa, rot
  */
 export const LONG_TO_SHORT: Record<string, string> = {
   // Layout
@@ -117,6 +129,13 @@ export const LONG_TO_SHORT: Record<string, string> = {
   // Border
   'radius': 'rad',
   'border': 'bor',
+
+  // Typography (2-char forms)
+  'font-size': 'fs',
+  'text-size': 'ts',
+  'icon-size': 'is',
+  'icon-weight': 'iw',
+  'icon-color': 'ic',
 
   // Visuals (3-char form)
   'opacity': 'opa',

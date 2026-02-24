@@ -208,6 +208,27 @@ Button:
 Icon-Button: Button icon visible; label hidden
 ```
 
+### Instanz Child-Overrides
+
+Die Semicolon-Syntax funktioniert auch für Instanzen (ohne Doppelpunkt).
+
+```
+Component childName "content"; childName2 "content"
+```
+
+**Example:**
+```
+// Definition mit Slots
+NavItem:
+  Icon:
+  Label:
+
+// Instanzen mit Child-Overrides
+NavItem Icon "home"; Label "Home"
+NavItem Icon "settings"; Label "Settings"
+NavItem Icon "user"; Label "Profile"
+```
+
 ### Instanzen
 
 Komponenten verwenden (ohne Doppelpunkt).

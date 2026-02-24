@@ -261,7 +261,7 @@ export function extractHoverStyles(properties: DSLProperties): React.CSSProperti
 export function needsFlexDisplay(properties: DSLProperties, hasChildren: boolean): boolean {
   // Explicit layout properties require flex
   if (properties.hor || properties.ver) return true
-  if (properties.gap) return true
+  if (properties.gap || properties.g) return true
   if (properties.between) return true
   if (properties.wrap) return true
   if (properties.grow || properties.fill) return true

@@ -17,6 +17,7 @@ import { TokenButtonRow } from './TokenButtonRow'
 import { AlignLeft, AlignCenter, AlignRight, Scissors, ChevronDown } from 'lucide-react'
 import { colors } from '../theme'
 import { PanelTabsHeader, type PanelTabId } from './InlineLayoutPanel'
+import { transformCode } from '../editor/shorthand-expansion'
 
 // ============================================
 // Token Mode Persistence
@@ -77,6 +78,8 @@ interface InlineTypographyPanelProps {
   useTokenMode?: boolean
   /** Callback when token mode changes (if provided, updates project settings) */
   onTokenModeChange?: (mode: boolean) => void
+  /** If true, output long form (e.g., "color"); if false, output short form (e.g., "col") */
+  toLongForm?: boolean
 }
 
 // ============================================
@@ -741,6 +744,7 @@ export function InlineTypographyPanel({
   availableTabs,
   useTokenMode: useTokenModeProp,
   onTokenModeChange,
+  toLongForm = true,
 }: InlineTypographyPanelProps) {
   const [state, setState] = useState<TypographyState>(defaultState)
   const hasUserInteractedRef = useRef(false)
@@ -773,9 +777,11 @@ export function InlineTypographyPanel({
     if (pendingSyncRef.current && onCodeChange) {
       pendingSyncRef.current = false
       const code = generateTypographyCode(state)
-      onCodeChange(code)
+      // Transform to long/short form based on editor mode
+      const transformedCode = transformCode(code, toLongForm)
+      onCodeChange(transformedCode)
     }
-  }, [state, onCodeChange])
+  }, [state, onCodeChange, toLongForm])
 
   const updateState = useCallback((updater: (prev: TypographyState) => TypographyState) => {
     hasUserInteractedRef.current = true
@@ -785,9 +791,11 @@ export function InlineTypographyPanel({
 
   const handleSubmit = useCallback(() => {
     const code = generateTypographyCode(state)
-    onSelect(code)
+    // Transform to long/short form based on editor mode
+    const transformedCode = transformCode(code, toLongForm)
+    onSelect(transformedCode)
     onClose()
-  }, [state, onSelect, onClose])
+  }, [state, onSelect, onClose, toLongForm])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !state.showColorPicker && !state.showFontPicker) {
@@ -821,7 +829,6 @@ export function InlineTypographyPanel({
       width={360}
       maxHeight={400}
       testId="panel-typography-picker"
-      disableClickOutsideClose
     >
       {/* Tabs header when showTabs is true */}
       {showTabs && onSwitchPanel && (

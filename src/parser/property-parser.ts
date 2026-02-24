@@ -135,7 +135,7 @@
  */
 
 import type { ParserContext } from './parser-context'
-import type { ASTNode } from './types'
+import type { ASTNode, TokenValue, TokenSequence } from './types'
 import { isTokenSequence } from './types'
 import type { Token } from './lexer'
 import { CSS_COLOR_KEYWORDS, splitDirections, applySpacingToProperties } from './parser-utils'
@@ -267,6 +267,74 @@ function lookupToken(
     }
   }
   return value
+}
+
+/**
+ * Property-to-token-suffix mapping for context-aware token resolution.
+ * When `gap $md` is written, we try `$md.gap` if `$md` doesn't exist.
+ */
+const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
+  // Spacing
+  'pad': 'pad',
+  'padding': 'pad',
+  'mar': 'mar',
+  'margin': 'mar',
+  'gap': 'gap',
+  'g': 'gap',
+  // Colors
+  'bg': 'bg',
+  'background': 'bg',
+  'col': 'col',
+  'color': 'col',
+  'boc': 'boc',
+  'border-color': 'boc',
+  // Border & Radius
+  'rad': 'rad',
+  'radius': 'rad',
+  'bor': 'bor',
+  'border': 'bor',
+  // Typography
+  'text-size': 'font.size',
+  'font-size': 'font.size',
+  'fs': 'font.size',
+  'ts': 'font.size',
+  'size': 'font.size',
+  'icon-size': 'icon.size',
+  'is': 'icon.size',
+}
+
+/**
+ * Context-aware token resolution.
+ * When a short token like `$md` is used in a property context like `gap`,
+ * we first try `$md`, then `$md.gap` to find the value.
+ *
+ * @param ctx Parser context with design tokens
+ * @param tokenName The token name (without $)
+ * @param propContext The property context (e.g., 'gap', 'pad', 'bg')
+ * @returns The resolved token value or undefined
+ */
+function resolveTokenWithContext(
+  ctx: ParserContext,
+  tokenName: string,
+  propContext: string
+): TokenValue | undefined {
+  // Try exact match first (e.g., $md.gap when user writes gap $md.gap)
+  let value = ctx.designTokens.get(tokenName)
+  if (value !== undefined) return value as TokenValue
+
+  // If token name already has a suffix, don't try to add another
+  if (tokenName.includes('.')) return undefined
+
+  // Get the token suffix for this property
+  const suffix = PROPERTY_TO_TOKEN_SUFFIX[propContext]
+  if (!suffix) return undefined
+
+  // Try with property context suffix (e.g., $md → $md.gap)
+  const suffixedName = `${tokenName}.${suffix}`
+  value = ctx.designTokens.get(suffixedName)
+  if (value !== undefined) return value as TokenValue
+
+  return undefined
 }
 
 /**
@@ -488,10 +556,11 @@ function parsePadMarProperty(ctx: ParserContext, node: ASTNode, propName: string
   // Handle token references first (before any directions or numbers)
   if (ctx.current()?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
-    const tokenValue = ctx.designTokens.get(tokenName)
+    // Use context-aware token resolution: pad $md → tries $md, then $md.pad
+    const tokenValue = resolveTokenWithContext(ctx, tokenName, propName)
 
     if (tokenValue !== undefined && isTokenSequence(tokenValue)) {
-      const expandedTokens = ctx.expandTokenSequence(tokenValue.tokens)
+      const expandedTokens = ctx.expandTokenSequence((tokenValue as TokenSequence).tokens)
       applyTokenSequenceSpacing(expandedTokens, node, propName)
       return
     } else if (typeof tokenValue === 'number') {
@@ -899,10 +968,11 @@ function parseRadiusProperty(ctx: ParserContext, node: ASTNode): void {
     }
   }
 
-  // Handle token reference: $radius
+  // Handle token reference: $radius or $md (with context-aware resolution)
   if (ctx.current()?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
-    const tokenValue = ctx.designTokens.get(tokenName)
+    // Use context-aware token resolution: rad $md → tries $md, then $md.rad
+    const tokenValue = resolveTokenWithContext(ctx, tokenName, 'rad')
     if (typeof tokenValue === 'number') {
       node.properties['rad'] = tokenValue
       return
@@ -1206,7 +1276,8 @@ function parseTextSizeProperty(ctx: ParserContext, node: ASTNode): void {
     node.properties['text-size'] = parseInt(ctx.advance().value, 10)
   } else if (next?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
-    const tokenValue = ctx.designTokens.get(tokenName)
+    // Use context-aware resolution: fs $lg → tries $lg, then $lg.font.size
+    const tokenValue = resolveTokenWithContext(ctx, tokenName, 'text-size')
     if (typeof tokenValue === 'number') {
       node.properties['text-size'] = tokenValue
     } else {
@@ -1224,7 +1295,8 @@ function parseIconSizeProperty(ctx: ParserContext, node: ASTNode): void {
     node.properties['icon-size'] = parseInt(ctx.advance().value, 10)
   } else if (next?.type === 'TOKEN_REF') {
     const tokenName = ctx.advance().value
-    const tokenValue = ctx.designTokens.get(tokenName)
+    // Use context-aware resolution: is $lg → tries $lg, then $lg.icon.size
+    const tokenValue = resolveTokenWithContext(ctx, tokenName, 'icon-size')
     if (typeof tokenValue === 'number') {
       node.properties['icon-size'] = tokenValue
     } else {
@@ -1267,11 +1339,13 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
   } else if (next?.type === 'TOKEN_REF') {
     const tokenRefToken = ctx.advance()
     const tokenName = tokenRefToken.value
-    const tokenValue = ctx.designTokens.get(tokenName)
+
+    // Use context-aware token resolution: gap $md → tries $md, then $md.gap
+    const tokenValue = resolveTokenWithContext(ctx, tokenName, propName)
 
     if (tokenValue !== undefined) {
       if (isTokenSequence(tokenValue)) {
-        const expandedTokens = ctx.expandTokenSequence(tokenValue.tokens)
+        const expandedTokens = ctx.expandTokenSequence((tokenValue as TokenSequence).tokens)
         for (const token of expandedTokens) {
           if (token.type === 'NUMBER') {
             node.properties[propName] = parseFloat(token.value)

@@ -14,6 +14,7 @@ import { colors } from '../theme'
 import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { TokenButtonRow } from './TokenButtonRow'
+import { transformCode } from '../editor/shorthand-expansion'
 import {
   ArrowRight,
   ArrowDown,
@@ -89,6 +90,8 @@ interface InlineLayoutPanelProps {
   useTokenMode?: boolean
   /** Callback when token mode changes (if provided, updates project settings) */
   onTokenModeChange?: (mode: boolean) => void
+  /** If true, output long form (e.g., "padding"); if false, output short form (e.g., "pad") */
+  toLongForm?: boolean
 }
 
 // ============================================
@@ -1257,6 +1260,7 @@ export function InlineLayoutPanel({
   availableTabs,
   useTokenMode: useTokenModeProp,
   onTokenModeChange,
+  toLongForm = true,
 }: InlineLayoutPanelProps) {
   // Set to true for design iteration
   const debugAlwaysOpen = false
@@ -1293,9 +1297,11 @@ export function InlineLayoutPanel({
     if (pendingSyncRef.current && onCodeChange) {
       pendingSyncRef.current = false
       const code = generateLayoutCode(state)
-      onCodeChange(code)
+      // Transform to long/short form based on editor mode
+      const transformedCode = transformCode(code, toLongForm)
+      onCodeChange(transformedCode)
     }
-  }, [state, onCodeChange])
+  }, [state, onCodeChange, toLongForm])
 
   // Wrapper for setState that marks user interaction and schedules sync
   const updateState = useCallback((updater: (prev: LayoutState) => LayoutState) => {
@@ -1306,9 +1312,11 @@ export function InlineLayoutPanel({
 
   const handleSubmit = useCallback(() => {
     const code = generateLayoutCode(state)
-    onSelect(code)
+    // Transform to long/short form based on editor mode
+    const transformedCode = transformCode(code, toLongForm)
+    onSelect(transformedCode)
     onClose()
-  }, [state, onSelect, onClose])
+  }, [state, onSelect, onClose, toLongForm])
 
   // Use refs to track state for the global handler
   const isOpenRef = useRef(isOpen)
@@ -1363,7 +1371,6 @@ export function InlineLayoutPanel({
       width={360}
       maxHeight={400}
       testId="panel-layout-picker"
-      disableClickOutsideClose
     >
       {/* Tabs header when showTabs is true */}
       {showTabs && onSwitchPanel && (

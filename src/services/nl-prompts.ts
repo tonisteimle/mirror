@@ -36,14 +36,17 @@ MyComp "text"        // Instanz (ohne :)
 
 WICHTIG: Einrückung = Verschachtelung (2 Spaces), KEINE { }
 
-## TOKEN SYSTEM (Bound Property Format)
+## TOKEN SYSTEM (Context-Aware)
 
-Tokens nutzen das Format $name.property für automatische Property-Inferenz:
-- $primary.bg → background (Farben mit .bg)
-- $default.col → color (Textfarben mit .col)
-- $md.pad → padding (Abstände mit .pad)
-- $md.gap → gap (Abstände mit .gap)
-- $md.rad → radius (Radien mit .rad)
+Tokens im Format $name.property - Property-Kontext erlaubt Kurzform:
+- gap $md → resolves to $md.gap (Suffix aus Kontext)
+- pad $lg → resolves to $lg.pad
+- bg $primary → resolves to $primary.bg
+- rad $sm → resolves to $sm.rad
+
+WICHTIG: Nutze die KURZFORM wenn Property redundant ist!
+FALSCH: gap $md.gap, pad $lg.pad  (Suffix redundant)
+RICHTIG: gap $md, pad $lg  (sauber, Property gibt Kontext)
 
 IMMER die verfügbaren Tokens aus dem Kontext nutzen!
 
@@ -53,7 +56,7 @@ Bei 2+ gleichen Strukturen: IMMER erst definieren, dann wiederverwenden!
 \`\`\`
 Field:
   Label:
-  Input: w-max, pad $md.pad, bg $input.bg
+  Input: w-max, pad $md, bg $input
 
 Field
   Label "Name"
@@ -76,7 +79,7 @@ Box hor
 
 RICHTIG - Kinder mit Breite:
 \`\`\`
-Box hor, gap $md.gap
+Box hor, gap $md
   Field w 100      // PLZ: feste Breite
     Label "PLZ"
   Field grow       // Ort: füllt Rest
@@ -86,10 +89,10 @@ Box hor, gap $md.gap
 ## BEISPIELE
 
 >>> adressformular
-Form: ver, gap $md.gap, pad $lg.pad, bg $surface.bg, rad $lg.rad
+Form: ver, gap $md, pad $lg, bg $surface, rad $lg
   Field:
-    Label: Text size $sm.font.size, col $muted.col
-    Input: w-max, pad $md.pad, rad $md.rad, bg $input.bg
+    Label: Text size $sm.font.size, col $muted
+    Input: w-max, pad $md, rad $md, bg $input
 
 Form
   Text size $lg.font.size, weight 600, "Adresse"
@@ -97,18 +100,18 @@ Form
     Label "Name"
   Field
     Label "Straße"
-  Box hor, gap $md.gap
+  Box hor, gap $md
     Field w 100
       Label "PLZ"
     Field grow
       Label "Ort"
-  Button w-max, bg $primary.bg, pad $md.pad, rad $md.rad, "Speichern"
+  Button w-max, bg $primary, pad $md, rad $md, "Speichern"
 
 >>> login formular
-LoginForm: ver, gap $md.gap, pad $lg.pad, bg $surface.bg, rad $lg.rad
+LoginForm: ver, gap $md, pad $lg, bg $surface, rad $lg
   Field:
-    Label: Text size $sm.font.size, col $muted.col
-    Input: w-max, pad $md.pad, rad $md.rad, bg $input.bg
+    Label: Text size $sm.font.size, col $muted
+    Input: w-max, pad $md, rad $md, bg $input
 
 LoginForm
   Text size $lg.font.size, weight 600, "Anmelden"
@@ -117,7 +120,7 @@ LoginForm
   Field
     Label "Passwort"
     Input type password
-  Button w-max, bg $primary.bg, pad $md.pad, rad $md.rad, "Anmelden"`
+  Button w-max, bg $primary, pad $md, rad $md, "Anmelden"`
 
 // =============================================================================
 // Quality Mode System Prompt (Opus - complex requests with deep thinking)
@@ -137,19 +140,21 @@ MyComp "text"        // Instanz (ohne :)
 
 WICHTIG: Einrückung = Verschachtelung (2 Spaces), KEINE { }
 
-## TOKEN SYSTEM (Bound Property Format)
+## TOKEN SYSTEM (Context-Aware)
 
 Zwei-Stufen-System:
 1. Basis-Palette: Rohe Werte ($grey-800, $blue-500)
 2. Semantische Tokens: Mit Bedeutung ($primary.bg, $muted.col)
 
-Format: $name.property
-- .bg → background
-- .col → color
-- .pad → padding
-- .gap → gap
-- .rad → radius
-- .font.size → font-size
+Format: $name.property - Property-Kontext erlaubt Kurzform:
+- gap $md → resolves to $md.gap
+- pad $lg → resolves to $lg.pad
+- bg $primary → resolves to $primary.bg
+- rad $sm → resolves to $sm.rad
+
+WICHTIG: Nutze die KURZFORM wenn Property redundant ist!
+FALSCH: gap $md.gap, pad $lg.pad  (Suffix redundant)
+RICHTIG: gap $md, pad $lg  (sauber, Property gibt Kontext)
 
 Beispiel:
 \`\`\`
@@ -166,8 +171,8 @@ IMMER die verfügbaren Tokens aus dem Kontext nutzen!
 Bei 2+ gleichen Strukturen: IMMER erst definieren, dann wiederverwenden!
 \`\`\`
 Field:
-  Label: Text size $sm.font.size, col $muted.col
-  Input: w-max, pad $md.pad, rad $md.rad, bg $input.bg
+  Label: Text size $sm.font.size, col $muted
+  Input: w-max, pad $md, rad $md, bg $input
 
 Field
   Label "E-Mail"
@@ -190,7 +195,7 @@ Box hor
 
 RICHTIG - Kinder mit w/grow:
 \`\`\`
-Box hor, gap $md.gap
+Box hor, gap $md
   Field w 100          // PLZ: feste Breite 100px
     Label "PLZ"
   Field grow           // Ort: füllt restlichen Platz
@@ -239,16 +244,16 @@ Master-Detail: onclick assign $selected to $item → $selected.field
 ## BEISPIELE
 
 >>> login formular
-LoginForm: ver, gap $lg.gap, pad $xl.pad, bg $surface.bg, rad $lg.rad, w 400
+LoginForm: ver, gap $lg, pad $xl, bg $surface, rad $lg, w 400
   Title: Text size $heading.font.size, weight 600
-  Subtitle: Text col $muted.col
+  Subtitle: Text col $muted
   Field:
-    Label: Text size $sm.font.size, col $muted.col
-    Input: w-max, pad $md.pad, rad $md.rad, bg $input.bg
-  SubmitBtn: Button w-max, pad $md.pad, rad $md.rad, bg $primary.bg, hover-bg $primary.hover.bg
-  LinkRow: Box hor, cen, gap $sm.gap
-    LinkText: Text size $sm.font.size, col $muted.col
-    Link: Text size $sm.font.size, col $primary.col
+    Label: Text size $sm.font.size, col $muted
+    Input: w-max, pad $md, rad $md, bg $input
+  SubmitBtn: Button w-max, pad $md, rad $md, bg $primary, hover-bg $primary.hover
+  LinkRow: Box hor, cen, gap $sm
+    LinkText: Text size $sm.font.size, col $muted
+    Link: Text size $sm.font.size, col $primary
 
 LoginForm
   Title "Anmelden"
@@ -265,14 +270,14 @@ LoginForm
     Link "Registrieren"
 
 >>> adressformular
-Form: ver, gap $md.gap, pad $lg.pad, bg $surface.bg, rad $lg.rad, w 400
+Form: ver, gap $md, pad $lg, bg $surface, rad $lg, w 400
   Title: Text size $lg.font.size, weight 600
   Field:
-    Label: Text size $sm.font.size, col $muted.col
-    Input: w-max, pad $md.pad, rad $md.rad, bg $input.bg
-  Actions: Box hor, gap $md.gap
-    SecondaryBtn: Button bg $surface.bg, hover-bg $hover.bg, pad $md.pad, rad $md.rad, grow
-    PrimaryBtn: Button bg $primary.bg, hover-bg $primary.hover.bg, pad $md.pad, rad $md.rad, grow
+    Label: Text size $sm.font.size, col $muted
+    Input: w-max, pad $md, rad $md, bg $input
+  Actions: Box hor, gap $md
+    SecondaryBtn: Button bg $surface, hover-bg $hover, pad $md, rad $md, grow
+    PrimaryBtn: Button bg $primary, hover-bg $primary.hover, pad $md, rad $md, grow
 
 Form
   Title "Adressformular"
@@ -280,7 +285,7 @@ Form
     Label "Name"
   Field
     Label "Straße & Hausnummer"
-  Box hor, gap $md.gap
+  Box hor, gap $md
     Field w 100
       Label "PLZ"
     Field grow
@@ -292,11 +297,11 @@ Form
     PrimaryBtn "Speichern"
 
 >>> liste mit items
-List: vertical, gap $sm.gap
-  Item: Box horizontal, gap $md.gap, padding $md.pad, background $surface.bg, radius $md.rad, ver-cen
-    ItemIcon: Box width 32, height 32, radius 16, background $primary.bg, center
-      Icon: Icon size 16, color $on-primary.col
-    ItemText: Text col $default.col
+List: vertical, gap $sm
+  Item: Box horizontal, gap $md, padding $md, background $surface, radius $md, ver-cen
+    ItemIcon: Box width 32, height 32, radius 16, background $primary, center
+      Icon: Icon size 16, color $on-primary
+    ItemText: Text col $default
 
 List
   Item
@@ -312,9 +317,9 @@ List
 >>> toggle switch
 Toggle: width 52, height 28, radius 14, cursor pointer, onclick toggle
   state off
-    background $surface.bg
+    background $surface
   state on
-    background $primary.bg
+    background $primary
   Knob: width 24, height 24, radius 12, background white
     state off
       margin l 2
@@ -324,26 +329,26 @@ Toggle: width 52, height 28, radius 14, cursor pointer, onclick toggle
 >>> master-detail liste (klick auf item zeigt details)
 $selectedItem: null
 
-App: hor, gap $lg.gap, pad $lg.pad
-  Master: ver, gap $sm.gap, w 250
+App: hor, gap $lg, pad $lg
+  Master: ver, gap $sm, w 250
   Detail: w-max
 
 App
   Master
     List data Items
-      - Item pad $md.pad, bg $surface.bg, rad $md.rad, cursor pointer
+      - Item pad $md, bg $surface, rad $md, cursor pointer
         onclick assign $selectedItem to $item
         hover
-          bg $hover.bg
+          bg $hover
         Text $item.title
   Detail
     if $selectedItem
-      Card pad $lg.pad, bg $surface.bg, rad $lg.rad
+      Card pad $lg, bg $surface, rad $lg
         Text size $heading.font.size, weight 600, $selectedItem.title
-        Text col $muted.col, $selectedItem.description
+        Text col $muted, $selectedItem.description
     else
       Box cen, h 200
-        Text col $muted.col, "Wähle ein Element aus"`
+        Text col $muted, "Wähle ein Element aus"`
 
 // =============================================================================
 // Quick Reference for Context

@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { tokenize } from '../../parser/lexer'
 import { createParserContext } from '../../parser/parser-context'
+import { parse } from '../../parser/parser'
 import {
   parseInlineChildSlot,
   parseNestedInlineChild,
@@ -141,6 +142,147 @@ describe('slot-parser', () => {
       // Check if it has any definition worth registering
       // If only content, it may or may not be registered depending on implementation
       // This tests the basic behavior
+    })
+  })
+
+  describe('semicolon syntax for instances', () => {
+    it('stops parsing child at semicolon', () => {
+      const ctx = createContext('Icon "check"; Label "Click"')
+      const icon = parseInlineChildSlot(ctx, 'Button')
+      expect(icon?.name).toBe('Icon')
+      expect(icon?.content).toBe('check')
+      // Should stop at semicolon - next token should be SEMICOLON
+      expect(ctx.current()?.type).toBe('SEMICOLON')
+    })
+
+    it('allows parsing multiple children separated by semicolon', () => {
+      const ctx = createContext('Icon "check"; Label "Click"')
+      const icon = parseInlineChildSlot(ctx, 'Button')
+      expect(icon?.content).toBe('check')
+
+      // Skip semicolon manually (as inline-properties.ts does)
+      ctx.advance() // consume SEMICOLON
+
+      const label = parseInlineChildSlot(ctx, 'Button')
+      expect(label?.name).toBe('Label')
+      expect(label?.content).toBe('Click')
+    })
+
+    it('handles semicolon with properties on child', () => {
+      const ctx = createContext('Icon size 20 "check"; Label col #F00 "Click"')
+      const icon = parseInlineChildSlot(ctx, 'Button')
+      expect(icon?.name).toBe('Icon')
+      expect(icon?.properties.size).toBe(20)
+      expect(icon?.content).toBe('check')
+      expect(ctx.current()?.type).toBe('SEMICOLON')
+    })
+  })
+
+  describe('semicolon syntax integration', () => {
+    it('parses instance with semicolon child overrides via parse()', () => {
+      const code = `
+Item:
+  Icon:
+  Label:
+
+Item Icon "bed-double"; Label "Doppelbett"
+`
+      const result = parse(code)
+      expect(result.errors).toHaveLength(0)
+
+      // Find the Item instance (not definition)
+      const items = result.nodes.filter(n => n.name === 'Item' && !n._isExplicitDefinition)
+      expect(items).toHaveLength(1)
+
+      const item = items[0]
+      expect(item.children).toHaveLength(2)
+
+      const icon = item.children.find(c => c.name === 'Icon')
+      const label = item.children.find(c => c.name === 'Label')
+
+      expect(icon?.content).toBe('bed-double')
+      expect(label?.content).toBe('Doppelbett')
+    })
+
+    it('parses multiple instances with semicolon syntax', () => {
+      const code = `
+NavItem:
+  Icon:
+  Label:
+
+NavItem Icon "home"; Label "Home"
+NavItem Icon "settings"; Label "Settings"
+NavItem Icon "user"; Label "Profile"
+`
+      const result = parse(code)
+      expect(result.errors).toHaveLength(0)
+
+      const items = result.nodes.filter(n => n.name === 'NavItem' && !n._isExplicitDefinition)
+      expect(items).toHaveLength(3)
+
+      expect(items[0].children.find(c => c.name === 'Icon')?.content).toBe('home')
+      expect(items[0].children.find(c => c.name === 'Label')?.content).toBe('Home')
+
+      expect(items[1].children.find(c => c.name === 'Icon')?.content).toBe('settings')
+      expect(items[1].children.find(c => c.name === 'Label')?.content).toBe('Settings')
+
+      expect(items[2].children.find(c => c.name === 'Icon')?.content).toBe('user')
+      expect(items[2].children.find(c => c.name === 'Label')?.content).toBe('Profile')
+    })
+
+    it('handles semicolon with properties on children', () => {
+      const code = `
+Button:
+  Icon:
+  Text:
+
+Button Icon size 20 "check"; Text col #0F0 "Success"
+`
+      const result = parse(code)
+      expect(result.errors).toHaveLength(0)
+
+      const buttons = result.nodes.filter(n => n.name === 'Button' && !n._isExplicitDefinition)
+      expect(buttons).toHaveLength(1)
+
+      const btn = buttons[0]
+      const icon = btn.children.find(c => c.name === 'Icon')
+      const text = btn.children.find(c => c.name === 'Text')
+
+      expect(icon?.content).toBe('check')
+      expect(icon?.properties.size).toBe(20)
+      expect(text?.content).toBe('Success')
+      expect(text?.properties.col).toBe('#0F0')
+    })
+
+    it('inherits properties from first usage when empty definition exists', () => {
+      // When an empty definition exists (e.g., "Item:" in Components tab),
+      // the first usage with properties should update the template
+      // so subsequent instances inherit those properties
+      const code = `
+Item:
+
+Item hor, gap 4
+  Icon "bed-double"
+  Label "First"
+Item Icon "check"; Label "Second"
+`
+      const result = parse(code)
+      expect(result.errors).toHaveLength(0)
+
+      const items = result.nodes.filter(n => n.name === 'Item' && !n._isExplicitDefinition)
+      expect(items).toHaveLength(2)
+
+      // First Item has its own properties
+      expect(items[0].properties.hor).toBe(true)
+      expect(items[0].properties.g).toBe(4)
+
+      // Second Item should inherit hor and gap from first usage
+      expect(items[1].properties.hor).toBe(true)
+      expect(items[1].properties.g).toBe(4)
+
+      // Both should have their children
+      expect(items[0].children.find(c => c.name === 'Label')?.content).toBe('First')
+      expect(items[1].children.find(c => c.name === 'Label')?.content).toBe('Second')
     })
   })
 })
