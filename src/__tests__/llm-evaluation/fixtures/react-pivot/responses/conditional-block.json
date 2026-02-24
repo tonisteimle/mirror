@@ -1,0 +1,26 @@
+{
+  "caseId": "conditional-block",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:46:09.839Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 2889,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\n{condition('$isLoggedIn',\n  <Avatar src=\"$user.avatar\" />,\n  <Button \n    style={{\n      background: '$primary.bg',\n      color: '$on-primary.col',\n      padding: ['$sm.pad', '$md.pad'],\n      borderRadius: '$md.rad'\n    }}\n    onClick={{ action: 'page', target: 'Login' }}\n  >\n    Login\n  </Button>\n)}\n```",
+    "processed": "if $isLoggedIn\n  Avatar \"$user.avatar\"\nelse\n  Button pad $sm-pad $md-pad, bg $primary-bg, col $on-primary-col, rad $md-rad \"Login\"",
+    "wasProcessed": true,
+    "reactCode": "{condition('$isLoggedIn',\n  <Avatar src=\"$user.avatar\" />,\n  <Button \n    style={{\n      background: '$primary.bg',\n      color: '$on-primary.col',\n      padding: ['$sm.pad', '$md.pad'],\n      borderRadius: '$md.rad'\n    }}\n    onClick={{ action: 'page', target: 'Login' }}\n  >\n    Login\n  </Button>\n)}",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

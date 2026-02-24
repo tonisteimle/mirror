@@ -1,0 +1,29 @@
+{
+  "caseId": "pricing-table",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:51:48.785Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 10965,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Row gap 24, center, pad 24\n  Card bg #222, pad 24, rad 12, width 300\n    Text fs 24, weight bold, \"Basic\"\n    Text fs 36, weight bold, pad-ver 16, \"$9\"\n    Text col #888, \"pro Monat\"\n    Box gap 12, pad-ver 24\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"1 User\"\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"10 GB Storage\"\n      Row gap 8\n        Icon x, col #888, is 20\n        Text col #888, \"API Access\"\n    Button bg #3B82F6, pad 12, rad 6, width full, \"Auswählen\"\n\n  Card bg #222, pad 24, rad 12, width 300\n    Text fs 24, weight bold, col #3B82F6, \"Pro\"\n    Text fs 36, weight bold, pad-ver 16, \"$29\"\n    Text col #888, \"pro Monat\"\n    Box gap 12, pad-ver 24\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"5 User\"\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"50 GB Storage\"\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"API Access\"\n    Button bg #3B82F6, pad 12, rad 6, width full, \"Auswählen\"\n\n  Card bg #222, pad 24, rad 12, width 300\n    Text fs 24, weight bold, \"Enterprise\"\n    Text fs 36, weight bold, pad-ver 16, \"$99\"\n    Text col #888, \"pro Monat\"\n    Box gap 12, pad-ver 24\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"Unlimited Users\"\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"500 GB Storage\"\n      Row gap 8\n        Icon check, col #22C55E, is 20\n        Text \"Premium Support\"\n    Button bg #3B82F6, pad 12, rad 6, width full, \"Kontakt\"",
+    "processed": "Row gap 24 center pad 24\n  - Card bg #222222, pad 24, rad 12, width 300\n    - Text fs 24, weight bold, \"Basic\"\n    - Text fs 36, weight bold, pad-ver 16, \"$9\"\n    - Text col #888888, \"pro Monat\"\n    - Box gap 12, pad-ver 24\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"1 User\"\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"10 GB Storage\"\n      - Row gap 8\n        - Icon x, col #888888, is 20\n        - Text col #888888, \"API Access\"\n    - Button bg #3B82F6, pad 12, rad 6, width full, \"Auswählen\"\n\n  - Card bg #222222, pad 24, rad 12, width 300\n    - Text fs 24, weight bold, col #3B82F6, \"Pro\"\n    - Text fs 36, weight bold, pad-ver 16, \"$29\"\n    - Text col #888888, \"pro Monat\"\n    - Box gap 12, pad-ver 24\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"5 User\"\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"50 GB Storage\"\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"API Access\"\n    - Button bg #3B82F6, pad 12, rad 6, width full, \"Auswählen\"\n\n  - Card bg #222222, pad 24, rad 12, width 300\n    - Text fs 24, weight bold, \"Enterprise\"\n    - Text fs 36, weight bold, pad-ver 16, \"$99\"\n    - Text col #888888, \"pro Monat\"\n    - Box gap 12, pad-ver 24\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"Unlimited Users\"\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"500 GB Storage\"\n      - Row gap 8\n        - Icon check, col #22C55E, is 20\n        - Text \"Premium Support\"\n    - Button bg #3B82F6, pad 12, rad 6, width full, \"Kontakt\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.694Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Long output: 46 lines; Uses 46 components; Clean Mirror syntax; Uses property shortcuts; Uses tokens; Proper nesting"
+  }
+}

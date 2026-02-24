@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TokenHierarchy: Snapshot > Parser-Output sollte stabil sein 1`] = `
+{
+  "bgColor": "#2271c1",
+  "hasHoverState": true,
+  "nodeCount": 1,
+  "nodeName": "Button",
+}
+`;
+
+exports[`TokenHierarchy: Snapshot > sollte dem gespeicherten Snapshot entsprechen 1`] = `"<div data-id="Button1" data-state="default" class="Button" style="display: inline-block; background-color: rgb(34, 113, 193); padding: 8px 16px; border-radius: 8px; color: rgb(165, 165, 165);"><button data-id="Button1" data-source-line="7" class="Button" type="button" style="background-color: rgb(34, 113, 193); color: rgb(165, 165, 165); border: medium; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Hover me</span></button></div>"`;

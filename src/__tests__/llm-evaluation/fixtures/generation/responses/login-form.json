@@ -1,0 +1,29 @@
+{
+  "caseId": "login-form",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:51:02.553Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 6727,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Form pad 20, bg #f8f8f8, rad 8, gap 16\n  Text fs 24, weight bold, \"Login\"\n  \n  Box gap 8\n    Text \"Email\"\n    Input type email, pad 12, rad 6, bg white, width 100%\n  \n  Box gap 8\n    Text \"Passwort\" \n    Input type password, pad 12, rad 6, bg white, width 100%\n  \n  Button bg #3B82F6, col white, pad 12, rad 6, width 100%, \"Login\"\n    hover\n      bg #2563EB\n\n  Text col #666, center, \"Noch kein Account?\"\n    hover\n      col #3B82F6",
+    "processed": "Box pad 20 bg #f8f8f8 rad 8 gap 16\n  - Text fs 24, weight bold, \"Login\"\n\n  - Box gap 8\n    - Text \"Email\"\n    - Input type email, pad 12, rad 6, bg #FFFFFF, width full\n\n  - Box gap 8\n    - Text \"Passwort\"\n    - Input type password, pad 12, rad 6, bg #FFFFFF, width full\n\n  Button bg #3B82F6 col #FFFFFF pad 12 rad 6 width full \"Login\"\n    hover bg #2563EB\n\n  - Text col #666666, center, \"Noch kein Account?\"\n    hover col #3B82F6",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.682Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 12 lines; Uses 9 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

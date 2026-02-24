@@ -1,0 +1,29 @@
+{
+  "caseId": "modal-dialog",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:51:28.455Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 5769,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Box fixed, center, bg #222, rad 12, pad 24, w 400, gap 16\n  Row hor between\n    Text fs 20, weight bold, \"Bestätigen\"\n    Button onclick hide Modal, is 20, \"×\"\n  \n  Text col #999, \"Möchten Sie diese Aktion wirklich durchführen? Dies kann nicht rückgängig gemacht werden.\"\n  \n  Row gap 12, hor end, mt 24\n    Button col #999, onclick hide Modal, \"Abbrechen\" \n    Button bg #3B82F6, pad 12 24, rad 6, \"Bestätigen\"\n      hover\n        bg #2563EB",
+    "processed": "Box fixed center bg #222222 rad 12 pad 24 w 400 gap 16\n  - Row hor between\n    Text fs 20 weight bold \"Bestätigen\"\n    - Button onclick hide Modal, is 20, \"×\"\n\n  Text col #999999 \"Möchten Sie diese Aktion wirklich durchführen? Dies kann nicht rückgängig gemacht werden.\"\n\n  - Row gap 12, hor end, margin top 24\n    - Button col #999999, onclick hide Modal, \"Abbrechen\"\n    - Button bg #3B82F6, pad 12 24, rad 6, \"Bestätigen\"\n      hover bg #2563EB",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.684Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 9 lines; Uses 8 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "caseId": "fixes-missing-quotes",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:08:01.978Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1033,
+    "streaming": false,
+    "pipeline": "syntax-correction"
+  },
+  "response": {
+    "raw": "Button \"Click me\"",
+    "processed": "Button \"Click me\"",
+    "wasProcessed": false
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.731Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax"
+  }
+}

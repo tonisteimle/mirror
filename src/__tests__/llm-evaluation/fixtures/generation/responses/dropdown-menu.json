@@ -1,0 +1,29 @@
+{
+  "caseId": "dropdown-menu",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T12:01:46.247Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 3997,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Box \n  Button bg #333, pad 12, rad 6, onclick toggle Menu, \"Dropdown ▼\"\n    hover\n      bg #444\n  \n  Box named Menu, hidden, bg #333, pad 8, rad 6, gap 8\n    Text col #fff, \"Option 1\"\n    Text col #fff, \"Option 2\"  \n    Text col #fff, \"Option 3\"\n    Button bg #444, pad 8, rad 4, col #fff, onclick hide Menu, \"Schließen\"",
+    "processed": "Box\n  Button bg #333333 pad 12 rad 6 onclick toggle Menu \"Dropdown ▼\"\n    hover bg #444444\n\n  Box named Menu hidden bg #333333 pad 8 rad 6 gap 8\n    - Text col #FFFFFF, \"Option 1\"\n    - Text col #FFFFFF, \"Option 2\"\n    - Text col #FFFFFF, \"Option 3\"\n    Button bg #444444 pad 8 rad 4 col #FFFFFF onclick hide Menu \"Schließen\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.675Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 8 lines; Uses 7 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

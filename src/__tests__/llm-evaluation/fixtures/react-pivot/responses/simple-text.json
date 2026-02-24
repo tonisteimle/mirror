@@ -1,0 +1,26 @@
+{
+  "caseId": "simple-text",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:44:40.714Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 2135,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\n<Text style={{\n  color: '$default.col',\n  fontSize: '$default.font.size'\n}}>\n  Hello World\n</Text>\n```",
+    "processed": "Text col $default-col, size $default-font-size \"Hello World\"",
+    "wasProcessed": true,
+    "reactCode": "<Text style={{\n  color: '$default.col',\n  fontSize: '$default.font.size'\n}}>\n  Hello World\n</Text>",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

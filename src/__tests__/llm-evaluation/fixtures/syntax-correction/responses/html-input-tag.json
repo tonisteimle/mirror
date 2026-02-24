@@ -1,0 +1,29 @@
+{
+  "caseId": "html-input-tag",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T13:42:42.618Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1540,
+    "streaming": false,
+    "pipeline": "syntax-correction",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Input placeholder \"Email\"",
+    "processed": "Input placeholder \"Email\"",
+    "wasProcessed": false
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.741Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax"
+  }
+}

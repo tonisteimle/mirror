@@ -1,0 +1,26 @@
+{
+  "caseId": "inheritance",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:45:23.748Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 3559,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst BaseButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    gap: '$sm.gap',\n    padding: ['$sm.pad', '$lg.pad'],\n    background: '$primary.bg',\n    color: '$on-primary.col',\n    borderRadius: '$md.rad',\n    cursor: 'pointer',\n  },\n  states: {\n    hover: { background: '$primary.hover.bg' }\n  }\n})\n\nconst DangerButton = BaseButton.extend({\n  base: { \n    background: '$danger.bg',\n    color: '$on-primary.col'\n  },\n  states: {\n    hover: { background: '$danger.hover.bg' }\n  }\n})\n```",
+    "processed": "BaseButton: ver-center, gap $sm-gap, pad $sm-pad $lg-pad, bg $primary-bg, col $on-primary-col, rad $md-rad, cursor pointer\n  hover\n    bg $primary-hover-bg\n\nDangerButton: BaseButton bg $danger-bg, col $on-primary-col\n  hover\n    bg $danger-hover-bg",
+    "wasProcessed": true,
+    "reactCode": "const BaseButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    gap: '$sm.gap',\n    padding: ['$sm.pad', '$lg.pad'],\n    background: '$primary.bg',\n    color: '$on-primary.col',\n    borderRadius: '$md.rad',\n    cursor: 'pointer',\n  },\n  states: {\n    hover: { background: '$primary.hover.bg' }\n  }\n})\n\nconst DangerButton = BaseButton.extend({\n  base: { \n    background: '$danger.bg',\n    color: '$on-primary.col'\n  },\n  states: {\n    hover: { background: '$danger.hover.bg' }\n  }\n})",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

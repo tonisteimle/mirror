@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PrimaryButton: Snapshot > Parser-Output sollte stabil sein 1`] = `
+{
+  "hasHoverState": true,
+  "nodeCount": 1,
+  "nodeName": "PrimaryButton",
+  "properties": {
+    "bg": "#3B82F6",
+    "col": "white",
+    "cursor": "pointer",
+    "pad_d": 12,
+    "pad_l": 24,
+    "pad_r": 24,
+    "pad_u": 12,
+    "rad": 6,
+    "weight": 500,
+  },
+}
+`;
+
+exports[`PrimaryButton: Snapshot > sollte dem gespeicherten Snapshot entsprechen 1`] = `"<div data-id="PrimaryButton1" data-state="default" class="PrimaryButton" style="display: inline-block; padding: 12px 24px; background-color: rgb(59, 130, 246); color: white; border-radius: 6px; font-weight: 500; cursor: pointer;"><span>Click me</span></div>"`;

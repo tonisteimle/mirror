@@ -1,0 +1,29 @@
+{
+  "caseId": "icon-button-sizes",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:52:51.769Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 2128,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Row gap 16\n  Button bg #333, pad 12, rad 6, is 16, \"①\"\n  Button bg #333, pad 12, rad 6, is 24, \"②\"\n  Button bg #333, pad 12, rad 6, is 32, \"③\"",
+    "processed": "Row gap 16\n  - Button bg #333333, pad 12, rad 6, is 16, \"①\"\n  - Button bg #333333, pad 12, rad 6, is 24, \"②\"\n  - Button bg #333333, pad 12, rad 6, is 32, \"③\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.678Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 4 lines; Uses 4 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

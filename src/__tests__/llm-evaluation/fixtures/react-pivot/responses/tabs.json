@@ -1,0 +1,26 @@
+{
+  "caseId": "tabs",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:45:54.410Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 7504,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst TabButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    padding: ['$sm.pad', '$md.pad'],\n    background: '$surface.bg',\n    color: '$muted.col',\n    borderRadius: '$sm.rad',\n    cursor: 'pointer'\n  },\n  states: {\n    active: { \n      background: '$primary.bg', \n      color: '$on-primary.col' \n    }\n  }\n})\n\nconst TabContent = mirror({\n  tag: 'div',\n  base: {\n    hidden: true\n  },\n  states: {\n    active: { \n      hidden: false \n    }\n  }\n})\n\nconst App = () => (\n  <Col style={{ gap: '$lg.gap' }}>\n    <Row style={{ gap: '$md.gap' }}>\n      <TabButton \n        name=\"HomeTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'HomeTab',\n          deactivate: ['SettingsTab', 'ProfileTab']\n        }}\n      >\n        Home\n      </TabButton>\n      \n      <TabButton \n        name=\"SettingsTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'SettingsTab',\n          deactivate: ['HomeTab', 'ProfileTab']\n        }}\n      >\n        Settings\n      </TabButton>\n      \n      <TabButton \n        name=\"ProfileTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'ProfileTab',\n          deactivate: ['HomeTab', 'SettingsTab']\n        }}\n      >\n        Profile\n      </TabButton>\n    </Row>\n\n    <TabContent name=\"HomeTab\" state=\"active\">\n      <Text>Home Content</Text>\n    </TabContent>\n\n    <TabContent name=\"SettingsTab\">\n      <Text>Settings Content</Text>\n    </TabContent>\n\n    <TabContent name=\"ProfileTab\">\n      <Text>Profile Content</Text>\n    </TabContent>\n  </Col>\n)\n```",
+    "processed": "TabButton: ver-center, pad $sm-pad $md-pad, bg $surface-bg, col $muted-col, rad $sm-rad, cursor pointer\n  active\n    bg $primary-bg, col $on-primary-col\n\nTabContent: hidden\n  active\n\nCol gap $lg-gap\n  Row gap $md-gap\n    TabButton named HomeTab \"Home\"\n    TabButton named SettingsTab \"Settings\"\n    TabButton named ProfileTab \"Profile\"\n  TabContent named HomeTab\n    Text \"Home Content\"\n  TabContent named SettingsTab\n    Text \"Settings Content\"\n  TabContent named ProfileTab\n    Text \"Profile Content\"",
+    "wasProcessed": true,
+    "reactCode": "const TabButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    padding: ['$sm.pad', '$md.pad'],\n    background: '$surface.bg',\n    color: '$muted.col',\n    borderRadius: '$sm.rad',\n    cursor: 'pointer'\n  },\n  states: {\n    active: { \n      background: '$primary.bg', \n      color: '$on-primary.col' \n    }\n  }\n})\n\nconst TabContent = mirror({\n  tag: 'div',\n  base: {\n    hidden: true\n  },\n  states: {\n    active: { \n      hidden: false \n    }\n  }\n})\n\nconst App = () => (\n  <Col style={{ gap: '$lg.gap' }}>\n    <Row style={{ gap: '$md.gap' }}>\n      <TabButton \n        name=\"HomeTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'HomeTab',\n          deactivate: ['SettingsTab', 'ProfileTab']\n        }}\n      >\n        Home\n      </TabButton>\n      \n      <TabButton \n        name=\"SettingsTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'SettingsTab',\n          deactivate: ['HomeTab', 'ProfileTab']\n        }}\n      >\n        Settings\n      </TabButton>\n      \n      <TabButton \n        name=\"ProfileTab\"\n        onClick={{ \n          action: 'activate', \n          target: 'ProfileTab',\n          deactivate: ['HomeTab', 'SettingsTab']\n        }}\n      >\n        Profile\n      </TabButton>\n    </Row>\n\n    <TabContent name=\"HomeTab\" state=\"active\">\n      <Text>Home Content</Text>\n    </TabContent>\n\n    <TabContent name=\"SettingsTab\">\n      <Text>Settings Content</Text>\n    </TabContent>\n\n    <TabContent name=\"ProfileTab\">\n      <Text>Profile Content</Text>\n    </TabContent>\n  </Col>\n)",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Tutorial Overlays: 1. Dialog > Snapshot > DOM Snapshot 1`] = `"<div data-id="Button1" data-state="default" class="Button" style="display: inline-block;"><button data-id="Button1" data-source-line="0" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(224, 224, 224); border: medium; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block;"><span>Open Settings</span></button></div>"`;
+
+exports[`Tutorial Overlays: 1. Dialog > Snapshot > Parser-Output sollte stabil sein 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 5,
+}
+`;
+
+exports[`Tutorial Overlays: 2. Dropdown > Snapshot > DOM Snapshot 1`] = `"<div style="position: relative; display: inline-block;" data-id="OptionsMenu1" class="OptionsMenu" data-state="closed"><button type="button" style="cursor: pointer; border: 1px solid rgb(51, 51, 51); color: rgb(165, 165, 165); font: inherit; text-align: left; display: flex; padding: 8px 12px; background-color: rgb(26, 26, 35); border-radius: 6px; align-items: center; justify-content: space-between; gap: 8px; width: 100%;" aria-haspopup="listbox" aria-expanded="false"><span style="flex-grow: 1; flex-shrink: 1; min-width: 0;">Select...</span><span style="flex-shrink: 0; margin-left: auto; display: inline-flex; align-items: center; transition: transform 0.2s; transform: rotate(0deg);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span></button></div>"`;
+
+exports[`Tutorial Overlays: 3. Tooltip > Snapshot > DOM Snapshot 1`] = `"<div data-id="HelpTip1" data-source-line="8" class="HelpTip" style="display: inline-flex; flex-direction: column;"><div data-id="Trigger2" data-source-line="1" class="Trigger" style="display: inline-flex; flex-direction: column;"><button data-id="Button2" data-source-line="2" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(224, 224, 224); border: medium; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-flex; flex-direction: column;"><span data-id="Icon2" data-source-line="3" class="Icon" style="display: inline-block; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0C0C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-question-mark" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></span><span>?</span></button></div><div data-id="Content2" data-source-line="5" class="Content" style="display: inline-flex; flex-direction: column; gap: 16px; width: 100%; flex-grow: 1; flex-basis: 0px; align-self: stretch; overflow-y: auto; padding: 8px 12px; background-color: rgb(51, 51, 51); border-radius: 6px; font-size: 12px; color: rgb(165, 165, 165);"><span>Click to get help</span></div></div>"`;
+
+exports[`Tutorial Overlays: 4. Overlay Animations > Snapshot > DOM Snapshot 1`] = `"<div data-id="Title1" data-source-line="2" class="Title" style="display: inline-flex; flex-direction: column; font-weight: 600;"><div data-id="Button1" data-state="default" class="Button" style="display: inline-block; background-color: rgb(51, 51, 51); color: rgb(165, 165, 165);"><button data-id="Button1" data-source-line="3" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(165, 165, 165); border: medium; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block;"><span>Close</span></button></div></div><div data-id="Title2" data-source-line="7" class="Title" style="display: inline-flex; flex-direction: column; font-weight: 600;"><div data-id="Button2" data-state="default" class="Button" style="display: inline-block; background-color: rgb(51, 51, 51); color: rgb(165, 165, 165);"><button data-id="Button2" data-source-line="3" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(165, 165, 165); border: medium; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block;"><span>Close</span></button></div></div><div data-id="Row1" data-source-line="10" class="Row" style="display: inline-flex; flex-direction: row; gap: 8px;"><div data-id="Button4" data-state="default" class="Button" style="display: inline-block; background-color: rgb(34, 113, 193); padding: 8px 16px; border-radius: 8px; color: rgb(165, 165, 165);"><button data-id="Button4" data-source-line="11" class="Button" type="button" style="background-color: rgb(34, 113, 193); color: rgb(165, 165, 165); border: medium; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Fade</span></button></div><div data-id="Button5" data-state="default" class="Button" style="display: inline-block; background-color: rgb(51, 51, 51); padding: 8px 16px; border-radius: 8px; color: rgb(165, 165, 165);"><button data-id="Button5" data-source-line="12" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(165, 165, 165); border: medium; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Scale</span></button></div></div>"`;
+
+exports[`Tutorial Overlays: 5. Show/Hide Animations > Snapshot > DOM Snapshot 1`] = `"<div data-id="Card1" data-source-line="0" class="Card" style="display: inline-flex; flex-direction: column; gap: 12px; padding: 16px; background-color: rgb(26, 26, 26); border-radius: 8px; color: rgb(165, 165, 165);"><div data-id="Button1" data-state="default" class="Button" style="display: inline-block; background-color: rgb(34, 113, 193); padding: 8px 16px; border-radius: 6px; color: rgb(165, 165, 165);"><button data-id="Button1" data-source-line="1" class="Button" type="button" style="background-color: rgb(34, 113, 193); color: rgb(165, 165, 165); border: medium; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Toggle Panel</span></button></div></div>"`;
+
+exports[`Tutorial Overlays: 6. Expandable Card > Snapshot > DOM Snapshot 1`] = `"<div data-id="Card1" data-source-line="0" class="Card" style="display: inline-flex; flex-direction: column; gap: 8px; padding: 16px; background-color: rgb(26, 26, 35); border-radius: 8px; color: rgb(165, 165, 165);"><div data-id="Header1" data-state="default" class="Header" style="display: inline-flex; flex-direction: row; justify-content: space-between; align-items: center;"><div data-id="Title1" data-source-line="2" class="Title" style="display: inline-block; font-weight: 600;">Click to expand</div><span data-id="Icon1" data-source-line="3" class="Icon" style="display: inline-block; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0C0C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span></div></div>"`;
+
+exports[`Tutorial Overlays: Snapshots > Dialog Trigger - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 3,
+}
+`;
+
+exports[`Tutorial Overlays: Snapshots > Expandable Card - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 7,
+}
+`;
+
+exports[`Tutorial Overlays: Snapshots > Simple Dropdown - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 3,
+}
+`;

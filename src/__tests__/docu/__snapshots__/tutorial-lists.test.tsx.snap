@@ -1,0 +1,53 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Tutorial Lists: 1. Simple Lists > Snapshot > DOM Snapshot 1`] = `"<div data-id="List1" data-source-line="2" class="List" style="display: inline-flex; flex-direction: column; gap: 8px;"></div>"`;
+
+exports[`Tutorial Lists: 1. Simple Lists > Snapshot > Parser-Output sollte stabil sein 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "tokenCount": 1,
+}
+`;
+
+exports[`Tutorial Lists: 2. Object Arrays > Snapshot > DOM Snapshot 1`] = `"<div data-id="UserList1" data-source-line="6" class="UserList" style="display: inline-flex; flex-direction: column; gap: 8px;"></div>"`;
+
+exports[`Tutorial Lists: 3. Input Binding > Snapshot > DOM Snapshot 1`] = `"<div data-id="Search1" data-source-line="2" class="Search" style="display: inline-flex; flex-direction: column; gap: 12px; width: 250px; max-width: 250px; flex-shrink: 0;"><div data-id="Input1" data-state="default" class="Input" style="display: inline-block; background-color: rgb(26, 26, 35); padding: 12px; border-radius: 8px; border: 1px solid rgb(51, 51, 51);"><input data-id="Input1" data-source-line="3" class="Input" placeholder="Search..." style="background-color: rgb(26, 26, 35); color: rgb(224, 224, 224); border: 1px solid rgb(51, 51, 51); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.4; font-weight: 400; min-width: 120px; display: inline-block;" type="text"></div><div data-id="Results1" data-source-line="5" class="Results" style="display: inline-flex; flex-direction: column; gap: 4px;"><div data-id="Text1" data-source-line="6" class="Text" style="display: inline-block;"><span>Results for: </span></div></div></div>"`;
+
+exports[`Tutorial Lists: 4. Task List with Conditions > Snapshot > DOM Snapshot 1`] = `"<div data-id="TaskList1" data-source-line="8" class="TaskList" style="display: inline-flex; flex-direction: column; gap: 12px;"><div data-id="Row1" data-source-line="9" class="Row" style="display: inline-flex; flex-direction: row; gap: 8px; align-items: center;"><div data-id="Checkbox1" data-state="default" class="Checkbox" style="display: inline-block; width: 18px; max-width: 18px; flex-shrink: 0; height: 18px; max-height: 18px; border-radius: 4px; cursor: pointer; background-color: rgb(51, 51, 51);"></div><div data-id="Text1" data-source-line="13" class="Text" style="display: inline-block; font-size: 13px; color: rgb(136, 136, 136);"><span>Show completed</span></div></div><div data-id="Tasks1" data-source-line="14" class="Tasks" style="display: inline-flex; flex-direction: column; gap: 8px;"></div></div><div data-id="TaskRow1" data-source-line="17" class="TaskRow" style="display: inline-flex; flex-direction: row; gap: 12px; align-items: center; background-color: rgb(26, 26, 35); padding: 12px; border-radius: 8px;"><div data-id="Icon1" data-state="default" class="Icon" style="display: inline-block; color: rgb(51, 51, 51);">circle</div><div data-id="Text2" data-state="default" class="Text" style="display: inline-block; font-size: 13px; color: white;"><span>Show completed</span></div></div>"`;
+
+exports[`Tutorial Lists: 5. Data Binding > Snapshot > DOM Snapshot 1`] = `""`;
+
+exports[`Tutorial Lists: 6. Master-Detail Pattern > Snapshot > DOM Snapshot 1`] = `"<div data-id="App1" data-source-line="6" class="App" style="display: inline-flex; flex-direction: row; width: 100%; flex-grow: 1; flex-basis: 0px; align-self: stretch; height: 100%; gap: 16px;"><div data-id="UserList1" data-source-line="7" class="UserList" style="display: inline-flex; flex-direction: column; gap: 8px; width: 200px; max-width: 200px; flex-shrink: 0;"></div><div data-id="Detail1" data-source-line="12" class="Detail" style="display: inline-flex; flex-direction: column; width: 100%; flex-grow: 1; flex-basis: 0px; align-self: stretch; background-color: rgb(26, 26, 35); padding: 16px; border-radius: 8px;"><div data-id="Text3" data-source-line="17" class="Text" style="display: inline-block; color: rgb(102, 102, 102);"><span>Select a user</span></div></div></div>"`;
+
+exports[`Tutorial Lists: Snapshots > Data Binding - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "tokenCount": 0,
+}
+`;
+
+exports[`Tutorial Lists: Snapshots > Object Each - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "tokenCount": 1,
+}
+`;
+
+exports[`Tutorial Lists: Snapshots > Simple Each - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "tokenCount": 1,
+}
+`;
+
+exports[`Tutorial Lists: Snapshots > With Condition - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 2,
+  "tokenCount": 1,
+}
+`;

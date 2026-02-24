@@ -1,0 +1,28 @@
+{
+  "caseId": "buttn-to-button",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:07:38.383Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1317,
+    "streaming": false,
+    "pipeline": "syntax-correction"
+  },
+  "response": {
+    "raw": "Button bg #333",
+    "processed": "Button bg #333333",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.714Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax; Uses property shortcuts"
+  }
+}

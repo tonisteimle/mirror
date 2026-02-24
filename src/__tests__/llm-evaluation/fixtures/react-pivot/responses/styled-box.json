@@ -1,0 +1,26 @@
+{
+  "caseId": "styled-box",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:44:45.636Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 3919,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "<Box style={{\n  padding: 16,\n  background: '$surface.bg'\n}}>\n</Box>",
+    "processed": "Box pad 16, bg $surface-bg",
+    "wasProcessed": true,
+    "reactCode": "<Box style={{\n  padding: 16,\n  background: '$surface.bg'\n}}>\n</Box>",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

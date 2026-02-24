@@ -1,0 +1,29 @@
+{
+  "caseId": "settings-form",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:51:57.293Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 7507,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Box bg #1E1E1E, pad 24, rad 12\n  Col gap 20\n    Text fs 24, weight bold, \"Einstellungen\"\n    \n    Col gap 16\n      Label \"Benutzername\"\n      Input bg #333, pad 12, rad 6\n      \n      Label \"E-Mail\"\n      Input type email, bg #333, pad 12, rad 6\n      \n      Label \"Sprache\"\n      Select bg #333, pad 12, rad 6\n        Option \"Deutsch\"\n        Option \"English\"\n        Option \"Español\"\n      \n      Row gap 8, ver center\n        Checkbox bg #333\n        Text \"Newsletter erhalten\"\n      \n      Row gap 8, ver center  \n        Checkbox bg #333\n        Text \"Benachrichtigungen aktivieren\"\n      \n      Row gap 8, ver center\n        Switch bg #333\n        Text \"Dunkelmodus\"\n        \n      Row gap 12, hor right\n        Button bg #4B5563, pad 12, rad 6, \"Abbrechen\"\n        Button bg #3B82F6, pad 12, rad 6, \"Speichern\"",
+    "processed": "Box bg #1E1E1E pad 24 rad 12\n  Col gap 20\n    Text fs 24 weight bold \"Einstellungen\"\n\n    Col gap 16\n      - Label \"Benutzername\"\n      - Input bg #333333, pad 12, rad 6\n\n      - Label \"E-Mail\"\n      - Input type email, bg #333333, pad 12, rad 6\n\n      - Label \"Sprache\"\n      Select bg #333333 pad 12 rad 6\n        - Option \"Deutsch\"\n        - Option \"English\"\n        - Option \"Español\"\n\n      - Row gap 8, ver center\n        - Checkbox bg #333333\n        - Text \"Newsletter erhalten\"\n\n      - Row gap 8, ver center\n        - Checkbox bg #333333\n        - Text \"Benachrichtigungen aktivieren\"\n\n      - Row gap 8, ver center\n        Switch bg #333333\n        - Text \"Dunkelmodus\"\n\n      - Row gap 12, hor right\n        - Button bg #4B5563, pad 12, rad 6, \"Abbrechen\"\n        - Button bg #3B82F6, pad 12, rad 6, \"Speichern\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.698Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 20 lines; Uses 12 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

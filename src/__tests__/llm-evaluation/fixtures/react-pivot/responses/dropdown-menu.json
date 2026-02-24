@@ -1,0 +1,26 @@
+{
+  "caseId": "dropdown-menu",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:46:37.729Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 5370,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst MenuButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    gap: '$sm.gap',\n    padding: ['$sm.pad', '$lg.pad'],\n    background: '$surface.bg',\n    color: '$default.col',\n    borderRadius: '$md.rad',\n    cursor: 'pointer'\n  }\n})\n\nconst Menu = mirror({\n  tag: 'div',\n  base: {\n    direction: 'vertical',\n    gap: '$sm.gap',\n    background: '$elevated.bg',\n    borderRadius: '$md.rad',\n    padding: '$md.pad'\n  },\n  states: {\n    hidden: { display: 'none' }\n  }\n})\n\nconst App = () => {\n  return (\n    <Col style={{ gap: '$md.gap' }}>\n      <MenuButton \n        onClick={{ action: 'toggle', target: 'MainMenu' }}\n        onKeyDown={{ \n          key: 'Escape', \n          action: 'hide', \n          target: 'MainMenu' \n        }}\n      >\n        Open Menu\n      </MenuButton>\n\n      <Menu name=\"MainMenu\" hidden>\n        <Item listItem>Dashboard</Item>\n        <Item listItem>Profile</Item>\n        <Item listItem>Settings</Item>\n      </Menu>\n    </Col>\n  )\n}\n```",
+    "processed": "MenuButton: ver-center, gap $sm-gap, pad $sm-pad $lg-pad, bg $surface-bg, col $default-col, rad $md-rad, cursor pointer\n\nMenu: gap $sm-gap, pad $md-pad, bg $elevated-bg, rad $md-rad\n  state hidden\n\nCol gap $md-gap\n  MenuButton \"Open Menu\"\n  Menu named MainMenu\n    - Item \"Dashboard\"\n    - Item \"Profile\"\n    - Item \"Settings\"",
+    "wasProcessed": true,
+    "reactCode": "const MenuButton = mirror({\n  tag: 'button',\n  base: {\n    direction: 'horizontal',\n    alignItems: 'center',\n    gap: '$sm.gap',\n    padding: ['$sm.pad', '$lg.pad'],\n    background: '$surface.bg',\n    color: '$default.col',\n    borderRadius: '$md.rad',\n    cursor: 'pointer'\n  }\n})\n\nconst Menu = mirror({\n  tag: 'div',\n  base: {\n    direction: 'vertical',\n    gap: '$sm.gap',\n    background: '$elevated.bg',\n    borderRadius: '$md.rad',\n    padding: '$md.pad'\n  },\n  states: {\n    hidden: { display: 'none' }\n  }\n})\n\nconst App = () => {\n  return (\n    <Col style={{ gap: '$md.gap' }}>\n      <MenuButton \n        onClick={{ action: 'toggle', target: 'MainMenu' }}\n        onKeyDown={{ \n          key: 'Escape', \n          action: 'hide', \n          target: 'MainMenu' \n        }}\n      >\n        Open Menu\n      </MenuButton>\n\n      <Menu name=\"MainMenu\" hidden>\n        <Item listItem>Dashboard</Item>\n        <Item listItem>Profile</Item>\n        <Item listItem>Settings</Item>\n      </Menu>\n    </Col>\n  )\n}",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "caseId": "sidebar-menu",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:51:36.818Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 7362,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Column bg #1F2937, pad 16, gap 16, width 240\n  Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    Icon home, is 20, col #9CA3AF\n    Text col #9CA3AF, \"Dashboard\"\n    state active\n      bg #374151\n      Text col white\n      Icon col white\n\n  Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    Icon users, is 20, col #9CA3AF\n    Text col #9CA3AF, \"Team\"\n    state active\n      bg #374151\n      Text col white\n      Icon col white\n\n  Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    Icon folder, is 20, col #9CA3AF\n    Text col #9CA3AF, \"Projekte\"\n    state active\n      bg #374151\n      Text col white\n      Icon col white\n\n  Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    Icon calendar, is 20, col #9CA3AF\n    Text col #9CA3AF, \"Kalender\"\n    state active\n      bg #374151\n      Text col white\n      Icon col white\n\n  Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    Icon settings, is 20, col #9CA3AF\n    Text col #9CA3AF, \"Einstellungen\"\n    state active\n      bg #374151\n      Text col white\n      Icon col white",
+    "processed": "Column bg #1F2937 pad 16 gap 16 width 240\n  - Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    - Icon home, is 20, col #9CA3AF\n    - Text col #9CA3AF, \"Dashboard\"\n    state active\n      bg #374151\n      - Text col #FFFFFF\n      - Icon col #FFFFFF\n\n  - Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    - Icon users, is 20, col #9CA3AF\n    - Text col #9CA3AF, \"Team\"\n    state active\n      bg #374151\n      - Text col #FFFFFF\n      - Icon col #FFFFFF\n\n  - Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    - Icon folder, is 20, col #9CA3AF\n    - Text col #9CA3AF, \"Projekte\"\n    state active\n      bg #374151\n      - Text col #FFFFFF\n      - Icon col #FFFFFF\n\n  - Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    - Icon calendar, is 20, col #9CA3AF\n    - Text col #9CA3AF, \"Kalender\"\n    state active\n      bg #374151\n      - Text col #FFFFFF\n      - Icon col #FFFFFF\n\n  - Button bg transparent, pad 12, rad 6, gap 8, center, onclick activate self, onclick deactivate-siblings\n    - Icon settings, is 20, col #9CA3AF\n    - Text col #9CA3AF, \"Einstellungen\"\n    state active\n      bg #374151\n      - Text col #FFFFFF\n      - Icon col #FFFFFF",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.705Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Long output: 36 lines; Uses 26 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "caseId": "boarder-typo",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T13:42:31.594Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1058,
+    "streaming": false,
+    "pipeline": "syntax-correction",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Card bor 2 #333",
+    "processed": "Card bor 2 #333333",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.714Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax; Uses property shortcuts"
+  }
+}

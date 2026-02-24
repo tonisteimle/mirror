@@ -1,0 +1,29 @@
+{
+  "caseId": "accordion-panel",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:52:34.632Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 5121,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Box\n  Box\n    Button pad 12, bg #333, rad 6, onclick toggle Panel1, \"Panel 1 ▼\"\n    Box named Panel1, hidden, pad 12, bg #222\n      Text \"Inhalt Panel 1\"\n  \n  Box\n    Button pad 12, bg #333, rad 6, onclick toggle Panel2, \"Panel 2 ▼\"\n    Box named Panel2, hidden, pad 12, bg #222\n      Text \"Inhalt Panel 2\"\n  \n  Box\n    Button pad 12, bg #333, rad 6, onclick toggle Panel3, \"Panel 3 ▼\"\n    Box named Panel3, hidden, pad 12, bg #222\n      Text \"Inhalt Panel 3\"",
+    "processed": "Box\n  - Box\n    - Button pad 12, bg #333333, rad 6, onclick toggle Panel1, \"Panel 1 ▼\"\n    - Box named Panel1, hidden, pad 12, bg #222222\n      - Text \"Inhalt Panel 1\"\n\n  - Box\n    - Button pad 12, bg #333333, rad 6, onclick toggle Panel2, \"Panel 2 ▼\"\n    - Box named Panel2, hidden, pad 12, bg #222222\n      - Text \"Inhalt Panel 2\"\n\n  - Box\n    - Button pad 12, bg #333333, rad 6, onclick toggle Panel3, \"Panel 3 ▼\"\n    - Box named Panel3, hidden, pad 12, bg #222222\n      - Text \"Inhalt Panel 3\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.667Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 13 lines; Uses 13 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

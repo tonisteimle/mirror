@@ -1,0 +1,26 @@
+{
+  "caseId": "toggle",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:45:38.249Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 4987,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst Toggle = mirror({\n  tag: 'button',\n  base: {\n    width: 60,\n    height: 30,\n    borderRadius: '$lg.rad',\n    background: '$surface.bg',\n    cursor: 'pointer',\n    direction: 'horizontal',\n    alignItems: 'center',\n    padding: '$sm.pad'\n  },\n  states: {\n    on: { \n      background: '$primary.bg',\n      justifyContent: 'end'\n    },\n    off: { \n      background: '$surface.bg',\n      justifyContent: 'start'\n    }\n  }\n})\n\nconst App = () => (\n  <Toggle \n    onClick={{ \n      action: 'toggle', \n      target: 'self' \n    }}\n  >\n    <Box \n      style={{\n        width: 22, \n        height: 22, \n        borderRadius: '$lg.rad', \n        background: '$default.col'\n      }} \n    />\n  </Toggle>\n)\n```",
+    "processed": "Toggle: ver-center, w 60, h 30, pad $sm-pad, bg $surface-bg, rad $lg-rad, cursor pointer\n  state on\n    right, bg $primary-bg\n  state off\n    left, bg $surface-bg\n\nToggle\n  onclick: toggle self\n  Box w 22, h 22, bg $default-col, rad $lg-rad",
+    "wasProcessed": true,
+    "reactCode": "const Toggle = mirror({\n  tag: 'button',\n  base: {\n    width: 60,\n    height: 30,\n    borderRadius: '$lg.rad',\n    background: '$surface.bg',\n    cursor: 'pointer',\n    direction: 'horizontal',\n    alignItems: 'center',\n    padding: '$sm.pad'\n  },\n  states: {\n    on: { \n      background: '$primary.bg',\n      justifyContent: 'end'\n    },\n    off: { \n      background: '$surface.bg',\n      justifyContent: 'start'\n    }\n  }\n})\n\nconst App = () => (\n  <Toggle \n    onClick={{ \n      action: 'toggle', \n      target: 'self' \n    }}\n  >\n    <Box \n      style={{\n        width: 22, \n        height: 22, \n        borderRadius: '$lg.rad', \n        background: '$default.col'\n      }} \n    />\n  </Toggle>\n)",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

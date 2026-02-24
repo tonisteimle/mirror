@@ -1,0 +1,26 @@
+{
+  "caseId": "iterator",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:46:15.682Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1827,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "{each('$task', '$tasks', (\n  <Card>\n    <Title>{'{$task.title}'}</Title>\n  </Card>\n))}",
+    "processed": "each $task in $tasks\n  Card\n    Title\n      Text $task.title",
+    "wasProcessed": true,
+    "reactCode": "{each('$task', '$tasks', (\n  <Card>\n    <Title>{'{$task.title}'}</Title>\n  </Card>\n))}",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

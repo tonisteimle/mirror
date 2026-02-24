@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Text Formatting: Snapshots > Basic text - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "hasChildren": false,
+  "nodeCount": 1,
+}
+`;
+
+exports[`Text Formatting: Snapshots > Block Tokens - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "hasChildren": false,
+  "nodeCount": 1,
+}
+`;
+
+exports[`Text Formatting: Snapshots > Inline Spans - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+}
+`;
+
+exports[`Text Formatting: Snapshots > sollte Basic text dem HTML-Snapshot entsprechen 1`] = `"<div style="display: flex; flex-direction: column; gap: 0.75em;" data-source-line="0"><div style="font-size: 48px; font-weight: 400; letter-spacing: -1px; color: rgb(238, 238, 238); margin: 0px 0px 8px;">Welcome to Mirror</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 12px; max-width: 480px;"><span>This is a </span><span style="font-weight: 600;">paragraph</span><span> with </span><span style="font-style: italic;">italic</span><span> text. </span><span>Click </span><a href="https://example.com" style="text-decoration: underline; color: rgb(91, 168, 245); cursor: pointer;" target="_blank" rel="noopener noreferrer">here</a><span> for more.</span></div></div>"`;
+
+exports[`Text Formatting: Snapshots > sollte Block Tokens dem HTML-Snapshot entsprechen 1`] = `"<div style="display: flex; flex-direction: column; gap: 0.75em;" data-source-line="0"><div style="font-size: 48px; font-weight: 400; letter-spacing: -1px; color: rgb(238, 238, 238); margin: 0px 0px 8px;">Getting Started</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 20px; max-width: 480px;">Mirror is a DSL for UI.</div><div style="font-size: 28px; font-weight: 500; letter-spacing: -0.5px; color: rgb(255, 255, 255); margin: 48px 0px 16px;">Installation</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 12px; max-width: 480px;">Install from npm:</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 6px;">Run npm install</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 6px;">Import the library</div><div style="font-size: 14px; line-height: 1.7; color: rgb(119, 119, 119); margin: 0px 0px 6px;">Start building</div></div>"`;

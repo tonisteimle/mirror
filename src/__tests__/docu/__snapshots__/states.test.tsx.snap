@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`States: Snapshot > sollte Disabled State dem Snapshot entsprechen 1`] = `"<button data-id="Button1" data-source-line="0" class="Button" type="button" disabled="" style="background-color: rgb(51, 51, 51); color: rgb(136, 136, 136); border: medium; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: not-allowed; line-height: 1.4; display: inline-block; padding: 12px 24px;"><span>Disabled</span></button>"`;
+
+exports[`States: Snapshot > sollte Hover State dem Snapshot entsprechen 1`] = `"<div data-id="Button1" data-state="default" class="Button" style="display: inline-block; padding: 12px 24px; background-color: rgb(59, 130, 246); color: white; border-radius: 8px; cursor: pointer;"><button data-id="Button1" data-source-line="0" class="Button" type="button" style="background-color: rgb(59, 130, 246); color: white; border: medium; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 12px 24px;"><span>Hover me</span></button></div>"`;

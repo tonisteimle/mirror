@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Named Instances: Snapshots > Named Instances - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 2,
+}
+`;
+
+exports[`Named Instances: Snapshots > as Syntax - Parser Output stabil 1`] = `
+{
+  "errorCount": 0,
+  "nodeCount": 1,
+  "registrySize": 4,
+}
+`;
+
+exports[`Named Instances: Snapshots > sollte Named Instances dem HTML-Snapshot entsprechen 1`] = `"<div data-id="Footer1" data-source-line="4" class="Footer" style="display: inline-flex; flex-direction: row; padding: 16px; justify-content: space-between; background-color: rgb(26, 26, 26); border-radius: 8px; color: rgb(165, 165, 165);"><button data-id="Button1" data-source-line="1" class="Button" type="button" style="background-color: rgb(34, 113, 193); color: rgb(165, 165, 165); border: medium; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Save</span></button><button data-id="Button2" data-source-line="2" class="Button" type="button" style="background-color: rgb(51, 51, 51); color: rgb(165, 165, 165); border: medium; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; line-height: 1.4; display: inline-block; padding: 8px 16px;"><span>Cancel</span></button></div>"`;
+
+exports[`Named Instances: Snapshots > sollte as Syntax dem HTML-Snapshot entsprechen 1`] = `"<div data-id="Row1" data-source-line="0" class="Row" style="display: inline-flex; flex-direction: row; gap: 12px;"><input data-id="Email" data-source-line="1" class="Email" placeholder="Enter email" style="background-color: rgb(26, 26, 26); color: rgb(224, 224, 224); border: 1px solid rgb(51, 51, 51); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.4; font-weight: 400; min-width: 120px; display: inline-block;" type="text"><span data-id="SearchIcon" data-source-line="2" class="SearchIcon" style="display: inline-block; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0C0C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg></span></div>"`;

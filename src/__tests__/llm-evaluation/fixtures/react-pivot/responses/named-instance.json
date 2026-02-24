@@ -1,0 +1,26 @@
+{
+  "caseId": "named-instance",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:45:41.442Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 2191,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\n<Panel name=\"Details\" hidden>\n  <Title>Details</Title>\n  <Text style={{ color: '$muted.col' }}>\n    Panel content goes here\n  </Text>\n</Panel>\n```",
+    "processed": "Panel named Details\n  Title \"Details\"\n  Text col $muted-col \"Panel content goes here\"",
+    "wasProcessed": true,
+    "reactCode": "<Panel name=\"Details\" hidden>\n  <Title>Details</Title>\n  <Text style={{ color: '$muted.col' }}>\n    Panel content goes here\n  </Text>\n</Panel>",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

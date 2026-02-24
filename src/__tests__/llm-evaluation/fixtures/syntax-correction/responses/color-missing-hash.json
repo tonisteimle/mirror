@@ -1,0 +1,29 @@
+{
+  "caseId": "color-missing-hash",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T13:16:38.520Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1453,
+    "streaming": false,
+    "pipeline": "syntax-correction",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Button bg #3B82F6",
+    "processed": "Button bg #3B82F6",
+    "wasProcessed": false
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.715Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax; Uses property shortcuts"
+  }
+}

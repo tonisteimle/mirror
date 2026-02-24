@@ -1,0 +1,26 @@
+{
+  "caseId": "slots",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:45:59.894Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 4482,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst Card = mirror({\n  tag: 'div',\n  base: {\n    direction: 'vertical',\n    background: '$surface.bg',\n    borderRadius: '$md.rad',\n    padding: '$lg.pad',\n    gap: '$md.gap'\n  },\n  slots: {\n    Title: {\n      style: {\n        fontSize: '$heading.font.size',\n        color: '$heading.col',\n        fontWeight: 600\n      }\n    },\n    Content: {\n      style: {\n        color: '$default.col'\n      }\n    }\n  }\n})\n\nconst App = () => (\n  <Card>\n    <Title>Project Details</Title>\n    <Content>\n      This is a detailed description of the project with important information.\n    </Content>\n  </Card>\n)\n```",
+    "processed": "Card: gap $md-gap, pad $lg-pad, bg $surface-bg, rad $md-rad\n\nCard\n  Title \"Project Details\"\n  Content \"This is a detailed description of the project with important information.\"",
+    "wasProcessed": true,
+    "reactCode": "const Card = mirror({\n  tag: 'div',\n  base: {\n    direction: 'vertical',\n    background: '$surface.bg',\n    borderRadius: '$md.rad',\n    padding: '$lg.pad',\n    gap: '$md.gap'\n  },\n  slots: {\n    Title: {\n      style: {\n        fontSize: '$heading.font.size',\n        color: '$heading.col',\n        fontWeight: 600\n      }\n    },\n    Content: {\n      style: {\n        color: '$default.col'\n      }\n    }\n  }\n})\n\nconst App = () => (\n  <Card>\n    <Title>Project Details</Title>\n    <Content>\n      This is a detailed description of the project with important information.\n    </Content>\n  </Card>\n)",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

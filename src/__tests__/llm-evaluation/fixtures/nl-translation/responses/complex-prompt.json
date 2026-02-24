@@ -1,0 +1,29 @@
+{
+  "caseId": "complex-prompt",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:44:37.902Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 3027,
+    "streaming": false,
+    "pipeline": "nl-translation",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Card bg #1F2937, pad 24, rad 12\n  Title fs 24, col #FFF, mb 16, \"Überschrift\"\n  Text col #9CA3AF, mb 24, \"Beschreibungstext\"\n  Button bg #3B82F6, pad 12, rad 8, \"Klicken\"",
+    "processed": "Card bg #1F2937 pad 24 rad 12\n  Title fs 24 col #FFFFFF margin bottom 16 \"Überschrift\"\n  Text col #9CA3AF margin bottom 24 \"Beschreibungstext\"\n  Button bg #3B82F6 pad 12 rad 8 \"Klicken\"",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.649Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 4 lines; Uses 4 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

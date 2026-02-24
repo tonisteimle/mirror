@@ -1,0 +1,29 @@
+{
+  "caseId": "shadow-radius",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:44:33.873Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 1715,
+    "streaming": false,
+    "pipeline": "nl-translation",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Card shadow sm, rad 8",
+    "processed": "Card shadow sm rad 8",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.655Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax; Uses property shortcuts"
+  }
+}

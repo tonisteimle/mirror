@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-02-22T12:11:42.175Z",
+  "pipelines": {
+    "generation": {
+      "passRate": 100,
+      "avgQualityScore": 96,
+      "fixtureCount": 20,
+      "goldenCount": 20
+    },
+    "js-builder": {
+      "passRate": 100,
+      "avgQualityScore": 94,
+      "fixtureCount": 8,
+      "goldenCount": 8
+    },
+    "nl-translation": {
+      "passRate": 100,
+      "avgQualityScore": 94,
+      "fixtureCount": 14,
+      "goldenCount": 14
+    },
+    "syntax-correction": {
+      "passRate": 100,
+      "avgQualityScore": 94,
+      "fixtureCount": 13,
+      "goldenCount": 13
+    }
+  },
+  "thresholds": {
+    "maxPassRateRegression": 5,
+    "maxQualityRegression": 10,
+    "minGoldenRatio": 0.15
+  }
+}

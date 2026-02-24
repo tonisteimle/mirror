@@ -1,0 +1,26 @@
+{
+  "caseId": "grid-layout",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:46:05.948Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 5051,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\n<Grid style={{\n  gridTemplateColumns: 'repeat(3, 1fr)',\n  gap: '$md.gap'\n}}>\n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 1</Title>\n    <Paragraph>Description for card 1</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 2</Title>\n    <Paragraph>Description for card 2</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 3</Title>\n    <Paragraph>Description for card 3</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 4</Title>\n    <Paragraph>Description for card 4</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 5</Title>\n    <Paragraph>Description for card 5</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 6</Title>\n    <Paragraph>Description for card 6</Paragraph>\n  </Card>\n</Grid>\n```",
+    "processed": "Grid grid 3, gap $md-gap\n  Card bg $surface-bg\n    Title \"Card 1\"\n    Paragraph \"Description for card 1\"\n  Card bg $surface-bg\n    Title \"Card 2\"\n    Paragraph \"Description for card 2\"\n  Card bg $surface-bg\n    Title \"Card 3\"\n    Paragraph \"Description for card 3\"\n  Card bg $surface-bg\n    Title \"Card 4\"\n    Paragraph \"Description for card 4\"\n  Card bg $surface-bg\n    Title \"Card 5\"\n    Paragraph \"Description for card 5\"\n  Card bg $surface-bg\n    Title \"Card 6\"\n    Paragraph \"Description for card 6\"",
+    "wasProcessed": true,
+    "reactCode": "<Grid style={{\n  gridTemplateColumns: 'repeat(3, 1fr)',\n  gap: '$md.gap'\n}}>\n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 1</Title>\n    <Paragraph>Description for card 1</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 2</Title>\n    <Paragraph>Description for card 2</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 3</Title>\n    <Paragraph>Description for card 3</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 4</Title>\n    <Paragraph>Description for card 4</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 5</Title>\n    <Paragraph>Description for card 5</Paragraph>\n  </Card>\n  \n  <Card style={{ background: '$surface.bg' }}>\n    <Title>Card 6</Title>\n    <Paragraph>Description for card 6</Paragraph>\n  </Card>\n</Grid>",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

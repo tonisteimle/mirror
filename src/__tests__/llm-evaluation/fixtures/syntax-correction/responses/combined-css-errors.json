@@ -1,0 +1,29 @@
+{
+  "caseId": "combined-css-errors",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T14:03:03.600Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1287,
+    "streaming": false,
+    "pipeline": "syntax-correction",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Form bg #333, rad 8, pad 16",
+    "processed": "Box bg #333333 rad 8 pad 16",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T14:05:40.719Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Auto-reviewed: valid Mirror syntax after post-processing"
+  }
+}

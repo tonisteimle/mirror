@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Iterators: Snapshot > Parser-Output sollte stabil sein 1`] = `
+{
+  "itemCount": 3,
+  "itemTexts": [
+    "Dashboard",
+    "Settings",
+    "Profile",
+  ],
+  "menuName": "Menu",
+}
+`;
+
+exports[`Iterators: Snapshot > sollte List Syntax dem Snapshot entsprechen 1`] = `"<div data-id="Menu1" data-source-line="0" class="Menu" style="display: inline-flex; flex-direction: column; gap: 4px; background-color: rgb(26, 26, 26); padding: 8px; border-radius: 8px; color: rgb(165, 165, 165);"><div data-id="Item1" data-source-line="1" class="Item" style="display: inline-flex; flex-direction: row; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">Dashboard</div><div data-id="Item2" data-source-line="2" class="Item" style="display: inline-flex; flex-direction: row; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">Settings</div><div data-id="Item3" data-source-line="3" class="Item" style="display: inline-flex; flex-direction: row; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">Profile</div></div>"`;

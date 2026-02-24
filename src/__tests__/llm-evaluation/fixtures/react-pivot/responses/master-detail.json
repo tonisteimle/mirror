@@ -1,0 +1,26 @@
+{
+  "caseId": "master-detail",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:46:31.356Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 6495,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst ContactList = mirror({\n  tag: 'List',\n  base: {\n    width: '30%',\n    background: '$surface.bg',\n    borderRight: '1px solid $muted.col'\n  }\n})\n\nconst ContactDetails = mirror({\n  tag: 'Col',\n  base: {\n    width: '70%',\n    padding: '$lg.pad',\n    gap: '$md.gap'\n  }\n})\n\nconst App = () => (\n  <Row style={{ height: 'full' }}>\n    <ContactList>\n      {each('$contact', '$contacts', (\n        <Item \n          listItem \n          onClick={{ \n            action: 'assign', \n            variable: '$selected', \n            expression: '$contact' \n          }}\n          style={{\n            background: '$selected.contact.id === $contact.id ? $primary.bg : $surface.bg'\n          }}\n        >\n          <Avatar src=\"$contact.avatar\" />\n          <Text>{'{$contact.name}'}</Text>\n        </Item>\n      ))}\n    </ContactList>\n\n    <ContactDetails>\n      {condition('$selected', \n        <>\n          <Avatar src=\"$selected.avatar\" size=\"lg\" />\n          <Title>{'{$selected.name}'}</Title>\n          <Text>{'{$selected.email}'}</Text>\n          <Text>{'{$selected.phone}'}</Text>\n        </>,\n        <Text style={{ color: '$muted.col' }}>Select a contact</Text>\n      )}\n    </ContactDetails>\n  </Row>\n)\n```",
+    "processed": "ContactList: w 30%, bg $surface-bg\n\nContactDetails: gap $md-gap, w 70%, pad $lg-pad\n\nRow h full\n  ContactList\n    each $contact in $contacts\n      - Item bg $selected-contact-id === $contact-id ? $primary-bg : $surface-bg\n        onclick: assign $selected to $contact\n        Avatar \"$contact.avatar\"\n        Text\n          Text $contact.name\n  ContactDetails",
+    "wasProcessed": true,
+    "reactCode": "const ContactList = mirror({\n  tag: 'List',\n  base: {\n    width: '30%',\n    background: '$surface.bg',\n    borderRight: '1px solid $muted.col'\n  }\n})\n\nconst ContactDetails = mirror({\n  tag: 'Col',\n  base: {\n    width: '70%',\n    padding: '$lg.pad',\n    gap: '$md.gap'\n  }\n})\n\nconst App = () => (\n  <Row style={{ height: 'full' }}>\n    <ContactList>\n      {each('$contact', '$contacts', (\n        <Item \n          listItem \n          onClick={{ \n            action: 'assign', \n            variable: '$selected', \n            expression: '$contact' \n          }}\n          style={{\n            background: '$selected.contact.id === $contact.id ? $primary.bg : $surface.bg'\n          }}\n        >\n          <Avatar src=\"$contact.avatar\" />\n          <Text>{'{$contact.name}'}</Text>\n        </Item>\n      ))}\n    </ContactList>\n\n    <ContactDetails>\n      {condition('$selected', \n        <>\n          <Avatar src=\"$selected.avatar\" size=\"lg\" />\n          <Title>{'{$selected.name}'}</Title>\n          <Text>{'{$selected.email}'}</Text>\n          <Text>{'{$selected.phone}'}</Text>\n        </>,\n        <Text style={{ color: '$muted.col' }}>Select a contact</Text>\n      )}\n    </ContactDetails>\n  </Row>\n)",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}

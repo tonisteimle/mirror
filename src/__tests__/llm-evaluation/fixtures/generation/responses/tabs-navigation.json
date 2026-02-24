@@ -1,0 +1,29 @@
+{
+  "caseId": "tabs-navigation",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:52:28.510Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 6367,
+    "streaming": false,
+    "pipeline": "generation",
+    "promptVersion": "3.0"
+  },
+  "response": {
+    "raw": "Row gap 8\n  Button bg #333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Dashboard\"\n    state active\n      bg #3B82F6\n  Button bg #333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Profile\"\n    state active\n      bg #3B82F6\n  Button bg #333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Settings\"\n    state active\n      bg #3B82F6",
+    "processed": "Row gap 8\n  - Button bg #333333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Dashboard\"\n    state active\n      bg #3B82F6\n  - Button bg #333333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Profile\"\n    state active\n      bg #3B82F6\n  - Button bg #333333, pad 12, rad 6, onclick activate self, onclick deactivate-siblings, \"Settings\"\n    state active\n      bg #3B82F6",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.707Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 10 lines; Uses 4 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

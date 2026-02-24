@@ -1,0 +1,30 @@
+{
+  "caseId": "row-with-items",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:05:34.406Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 2050,
+    "streaming": false,
+    "pipeline": "js-builder"
+  },
+  "response": {
+    "raw": "Row({ gap: 16, align: 'center' }, [\n  Button({ bg: 'green', color: 'white' }, \"Ja\"),\n  Button({ bg: 'red', color: 'white' }, \"Nein\"),\n  Button({ bg: 'gray', color: 'white' }, \"Abbrechen\")\n])",
+    "processed": "Row gap 16 align center\n  - Button bg #22C55E, color white, \"Ja\"\n  - Button bg #EF4444, color white, \"Nein\"\n  - Button bg #6B7280, color white, \"Abbrechen\"",
+    "wasProcessed": true,
+    "jsCode": "Row({ gap: 16, align: 'center' }, [\n  Button({ bg: 'green', color: 'white' }, \"Ja\"),\n  Button({ bg: 'red', color: 'white' }, \"Nein\"),\n  Button({ bg: 'gray', color: 'white' }, \"Abbrechen\")\n])",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.774Z",
+    "isGolden": true,
+    "qualityScore": 95,
+    "notes": "Good length: 3 lines; Uses 3 components; Clean Mirror syntax; Uses property shortcuts; Proper nesting"
+  }
+}

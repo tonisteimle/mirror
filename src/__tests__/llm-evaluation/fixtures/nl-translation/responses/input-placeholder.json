@@ -1,0 +1,29 @@
+{
+  "caseId": "input-placeholder",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T11:44:14.336Z",
+    "model": "anthropic/claude-3.5-sonnet",
+    "latencyMs": 1132,
+    "streaming": false,
+    "pipeline": "nl-translation",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Input placeholder \"Email eingeben\"",
+    "processed": "Input placeholder \"Email eingeben\"",
+    "wasProcessed": false
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T13:47:25.652Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Concise single-line output; Uses 1 components; Clean Mirror syntax"
+  }
+}

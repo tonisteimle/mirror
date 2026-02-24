@@ -1,0 +1,74 @@
+hor         // direction horizontal
+ver         // direction horizontal
+grid 3 4
+stack
+
+left        // align left
+right       // align right
+hor-center  // align horizontal-center
+top         // align top
+bottom      // align bottom
+ver-center  // align vertical-center
+spread       // ersetzt between, kann auch als align spread geschrieben werden
+
+Und kombinationen: align left top oder align top left
+
+width hug
+width full
+width 300
+
+hight hug
+hight full
+hight 300
+
+alternativ ist erlaubt, zB folgendes zu schreiben: ohne width wird erkannt
+
+hug, full // muss immer als zweierpaar kommen, direkt nach dem komponentennamen
+300, full // muss immer als zweierpaar kommen, direkt nach dem komponentennamen
+
+Padding erlaubt ist
+
+pad 8               // bedeutet pad überall 8
+pad 12, 8           // bedeutet padding links rechts 12, top down 8
+pad 4, 6, 8, 10     // bedeutet padding links 4 rechts 6, top 8 down 10
+pad left 4
+pad top 4 bottom 6  // etc.
+
+Langschreibweise padding
+
+gap 2
+
+
+Bitte passe parser an und sorge dafür dass der layout picker die richtige syntax generiert. langversionen sind alle auch erlaubt. passe die ganze doku an
+
+
+
+
+Tabelle
+
+table
+  header
+    "Vorname"
+    "Name"
+    "Geburtsdatum"
+    "Postleitzahl"
+    "Ort"
+  row
+    "Toni"
+    "Steimle"
+    "30.03.1969"
+    "8630"
+    "Rüti"
+  row
+    "Rahel"
+    "Steimle"
+    "28.01.1972"
+    "8630"
+    "Rüti"
+    
+  
+
+
+
+
+

@@ -1,0 +1,29 @@
+{
+  "caseId": "hover-comma-removal",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-22T14:02:59.342Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 1165,
+    "streaming": false,
+    "pipeline": "syntax-correction",
+    "promptVersion": "2.0"
+  },
+  "response": {
+    "raw": "Button bg #333\n  hover bg #444",
+    "processed": "Button bg #333333\n  hover bg #444444",
+    "wasProcessed": true
+  },
+  "validation": {
+    "parses": true,
+    "validates": true
+  },
+  "review": {
+    "reviewed": true,
+    "reviewedBy": "automated",
+    "reviewedAt": "2026-02-22T14:05:40.725Z",
+    "isGolden": true,
+    "qualityScore": 90,
+    "notes": "Auto-reviewed: valid Mirror syntax after post-processing"
+  }
+}

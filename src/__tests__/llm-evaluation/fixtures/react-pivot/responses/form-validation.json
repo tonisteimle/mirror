@@ -1,0 +1,26 @@
+{
+  "caseId": "form-validation",
+  "fixtureVersion": "1.0",
+  "metadata": {
+    "recordedAt": "2026-02-23T17:47:01.982Z",
+    "model": "anthropic/claude-3.5-haiku",
+    "latencyMs": 4637,
+    "streaming": false,
+    "pipeline": "react-pivot",
+    "promptVersion": "inline"
+  },
+  "response": {
+    "raw": "```jsx\nconst ValidatedInput = mirror({\n  tag: 'input',\n  base: {\n    padding: '$sm.pad',\n    background: '$input.bg',\n    borderRadius: '$sm.rad',\n    border: 1,\n    borderColor: '$default.col'\n  },\n  states: {\n    valid: {\n      borderColor: '$success.col',\n      background: '$surface.bg'\n    },\n    invalid: {\n      borderColor: '$danger.col',\n      background: '$danger.bg'\n    }\n  }\n})\n\nconst Form = () => (\n  <Column style={{ gap: '$md.gap' }}>\n    <ValidatedInput \n      placeholder=\"Enter email\" \n      type=\"email\"\n      onChange={{\n        action: 'validate',\n        rules: [\n          { \n            type: 'email', \n            onValid: { state: 'valid' },\n            onInvalid: { state: 'invalid' }\n          }\n        ]\n      }}\n    />\n  </Column>\n)\n```",
+    "processed": "ValidatedInput: pad $sm-pad, bg $input-bg, boc $default-col, bor 1, rad $sm-rad\n  state valid\n    bg $surface-bg, boc $success-col\n  state invalid\n    bg $danger-bg, boc $danger-col",
+    "wasProcessed": true,
+    "reactCode": "const ValidatedInput = mirror({\n  tag: 'input',\n  base: {\n    padding: '$sm.pad',\n    background: '$input.bg',\n    borderRadius: '$sm.rad',\n    border: 1,\n    borderColor: '$default.col'\n  },\n  states: {\n    valid: {\n      borderColor: '$success.col',\n      background: '$surface.bg'\n    },\n    invalid: {\n      borderColor: '$danger.col',\n      background: '$danger.bg'\n    }\n  }\n})\n\nconst Form = () => (\n  <Column style={{ gap: '$md.gap' }}>\n    <ValidatedInput \n      placeholder=\"Enter email\" \n      type=\"email\"\n      onChange={{\n        action: 'validate',\n        rules: [\n          { \n            type: 'email', \n            onValid: { state: 'valid' },\n            onInvalid: { state: 'invalid' }\n          }\n        ]\n      }}\n    />\n  </Column>\n)",
+    "conversionSuccess": true
+  },
+  "validation": {
+    "parses": false,
+    "validates": false
+  },
+  "review": {
+    "reviewed": false
+  }
+}
