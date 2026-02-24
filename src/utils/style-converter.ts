@@ -672,6 +672,12 @@ export function propertiesToStyle(
       }
       case 'line':
         style.lineHeight = Number(value)
+        // When line-height > 1, use inline-flex to vertically center text
+        // This fixes alignment with icons in horizontal layouts
+        if (Number(value) > 1 && style.display === 'inline-block') {
+          style.display = 'inline-flex'
+          style.alignItems = 'center'
+        }
         break
       case 'text-align':
       case 'align':
