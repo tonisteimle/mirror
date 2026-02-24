@@ -73,12 +73,33 @@ function hexToRgba(hex: string): string {
 }
 
 /**
- * Convert layout properties (hor, ver, gap, between, wrap, grow)
+ * Convert layout properties (hor, ver, gap, between, wrap, grow, grid)
  */
 function convertLayout(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  // Always add display: flex and default direction
+  // Check for grid layout first
+  if (props.grid !== undefined) {
+    declarations.push({ property: 'display', value: 'grid' })
+    if (typeof props.grid === 'number') {
+      declarations.push({
+        property: 'grid-template-columns',
+        value: `repeat(${props.grid}, 1fr)`,
+      })
+    } else if (typeof props.grid === 'string') {
+      // e.g., "auto 250" for auto-fill with min 250px
+      const parts = props.grid.split(' ')
+      if (parts[0] === 'auto' && parts[1]) {
+        declarations.push({
+          property: 'grid-template-columns',
+          value: `repeat(auto-fill, minmax(${parts[1]}px, 1fr))`,
+        })
+      }
+    }
+    return declarations
+  }
+
+  // Default: flex layout
   declarations.push({ property: 'display', value: 'flex' })
 
   if (getProp<boolean>(props, 'hor')) {
@@ -445,8 +466,9 @@ function convertBorder(props: DSLProperties): CssDeclaration[] {
 function convertTypography(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  // font-size: check multiple property names (font-size, text-size, fs, size)
-  const fontSize = props['font-size'] ?? props['text-size'] ?? props.fs ?? props.size
+  // font-size: check multiple property names (font-size, text-size, fs, size, icon-size)
+  const fontSize =
+    props['font-size'] ?? props['text-size'] ?? props['icon-size'] ?? props.fs ?? props.size
   if (typeof fontSize === 'number') {
     declarations.push({ property: 'font-size', value: formatCssValue(fontSize) })
   }
@@ -481,7 +503,7 @@ function convertTypography(props: DSLProperties): CssDeclaration[] {
 }
 
 /**
- * Convert visual properties (opacity, shadow, cursor, z)
+ * Convert visual properties (opacity, shadow, cursor, z, hidden, rotate)
  */
 function convertVisuals(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
@@ -509,6 +531,22 @@ function convertVisuals(props: DSLProperties): CssDeclaration[] {
 
   if (typeof props.z === 'number') {
     declarations.push({ property: 'z-index', value: String(props.z) })
+  }
+
+  // Hidden - override display
+  if (props.hidden === true) {
+    declarations.push({ property: 'display', value: 'none' })
+  }
+
+  // Rotation (rot property)
+  if (typeof props.rot === 'number') {
+    declarations.push({ property: 'transform', value: `rotate(${props.rot}deg)` })
+  }
+
+  // Translate
+  if (props.translate) {
+    const [x, y] = Array.isArray(props.translate) ? props.translate : [props.translate, 0]
+    declarations.push({ property: 'transform', value: `translate(${x}px, ${y}px)` })
   }
 
   return declarations
