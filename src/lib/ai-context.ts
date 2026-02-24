@@ -115,6 +115,14 @@ export class MirrorCodeIntelligence {
         nodes: [],
         tokens: new Map(),
         registry: new Map(),
+        errors: [],
+        diagnostics: [],
+        parseIssues: [],
+        styles: new Map(),
+        commands: [],
+        centralizedEvents: [],
+        themes: new Map(),
+        activeTheme: null,
       }
     }
   }
@@ -135,6 +143,14 @@ export class MirrorCodeIntelligence {
         nodes: [],
         tokens: new Map(),
         registry: new Map(),
+        errors: [],
+        diagnostics: [],
+        parseIssues: [],
+        styles: new Map(),
+        commands: [],
+        centralizedEvents: [],
+        themes: new Map(),
+        activeTheme: null,
       }
     }
   }
@@ -418,10 +434,9 @@ export class MirrorCodeIntelligence {
         const props = this.parsePropertiesFromString(propsStr)
         const tokens = this.extractTokensFromString(propsStr)
 
-        if (!componentsByType.has(baseType)) {
-          componentsByType.set(baseType, [])
-        }
-        componentsByType.get(baseType)!.push({ name, props, tokens })
+        const existing = componentsByType.get(baseType) ?? []
+        existing.push({ name, props, tokens })
+        componentsByType.set(baseType, existing)
       }
     }
 
@@ -464,7 +479,7 @@ export class MirrorCodeIntelligence {
 
     for (const name of componentNames.slice(0, 3)) {
       // Find definition
-      const defLine = this.lines.findIndex(l => l.match(new RegExp(`^${name}:\\s`)))
+      const defLine = this.lines.findIndex(l => l.match(new RegExp(`^${this.escapeRegExp(name)}:\\s`)))
       if (defLine >= 0) {
         // Extract definition and children (up to 15 lines for deeper context)
         const snippet: string[] = []
@@ -790,7 +805,7 @@ export class MirrorCodeIntelligence {
 
   private findComponentUsage(name: string): number[] {
     const lines: number[] = []
-    const pattern = new RegExp(`^\\s*${name}\\b`, 'i')
+    const pattern = new RegExp(`^\\s*${this.escapeRegExp(name)}\\b`, 'i')
 
     for (let i = 0; i < this.lines.length; i++) {
       if (pattern.test(this.lines[i]) && !this.lines[i].includes(':')) {
@@ -803,7 +818,7 @@ export class MirrorCodeIntelligence {
 
   private findTokenUsage(tokenName: string): string[] {
     const users: Set<string> = new Set()
-    const pattern = new RegExp(`\\$${tokenName}\\b`)
+    const pattern = new RegExp(`\\$${this.escapeRegExp(tokenName)}\\b`)
 
     for (const line of this.lines) {
       if (pattern.test(line)) {
@@ -868,6 +883,11 @@ export class MirrorCodeIntelligence {
     }
 
     return false
+  }
+
+  /** Escape special regex characters in a string */
+  private escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   }
 }
 

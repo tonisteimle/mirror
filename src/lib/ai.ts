@@ -1,24 +1,56 @@
 import { API, STORAGE_KEYS } from '../constants'
+import { classifyRequest } from './request-classifier'
+import { isIntentPipelineEnabled, isRateLimitingEnabled } from './feature-flags'
+import { generateWithCreate, generateWithModify } from '../intent/generation'
+import type { LLMCallFn } from '../intent/generation'
+import {
+  sanitizeUserInput,
+  sanitizeCodeContext,
+  detectPromptInjection,
+  canGenerateNow,
+  recordGenerationRequest,
+  getGenerationStatus,
+  RateLimitError,
+} from './llm'
 
 // API key management
 // Uses sessionStorage for security - key clears when browser tab closes
 // This prevents API key from persisting if device is shared
 let OPENROUTER_API_KEY = ''
 
+// Helper to safely get env variable (works in both Vite and Node.js)
+function getEnvApiKey(): string {
+  // Try Vite's import.meta.env first (browser)
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
+      return import.meta.env.VITE_OPENROUTER_API_KEY
+    }
+  } catch {
+    // import.meta not available
+  }
+  // Try Node.js process.env (for E2E tests)
+  try {
+    const global = globalThis as { process?: { env?: Record<string, string> } }
+    if (global.process?.env?.VITE_OPENROUTER_API_KEY) {
+      return global.process.env.VITE_OPENROUTER_API_KEY
+    }
+  } catch {
+    // process not available
+  }
+  return ''
+}
+
 // Load API key: 1. sessionStorage, 2. env variable (for testing)
 try {
   const stored = sessionStorage.getItem(STORAGE_KEYS.API_KEY)
   if (stored) {
     OPENROUTER_API_KEY = stored
-  } else if (import.meta.env.VITE_OPENROUTER_API_KEY) {
-    // Fallback to env variable for testing phase
-    OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
+  } else {
+    OPENROUTER_API_KEY = getEnvApiKey()
   }
 } catch {
-  // sessionStorage not available (SSR, etc.)
-  if (import.meta.env.VITE_OPENROUTER_API_KEY) {
-    OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
-  }
+  // sessionStorage not available (SSR, Node.js, etc.)
+  OPENROUTER_API_KEY = getEnvApiKey()
 }
 
 /**
@@ -123,6 +155,7 @@ const SYSTEM_PROMPT = `Du bist ein UI-Designer für Mirror DSL. Generiere NUR Mi
 8. Tokens ALWAYS start with $ (define AND use): $primary: #3B82F6 → background $primary
 9. Use - (dash) ONLY for multiple items in a list, never for single elements
 10. Avoid reserved names: Text, Button, Input, Image, Link → use Title, Label, Btn, Field
+11. DRY: Bei wiederholten Elementen IMMER erst definieren, dann wiederverwenden
 
 ## Common Pitfalls - DON'T DO THIS
 // ❌ WRONG: Text on separate line
@@ -173,6 +206,18 @@ Box background $primary
   state hover
     background $hover-color   // $ is required here too!
 
+// ❌ WRONG: Using token NAME as property in state
+$border: #444
+Input border 1 $border
+  state focus
+    $border 1 $primary        // ERROR: $border is a VALUE, not a property!
+// ✅ CORRECT: Use property names, tokens for VALUES only
+$border-color: #444
+$focus-color: #3B82F6
+Input border 1 $border-color
+  state focus
+    border-color $focus-color  // Property: border-color, Value: $focus-color
+
 // ❌ WRONG: Using hover-background as token name
 $hover-background: #333      // Don't do this!
 Box hover-background $hover-background
@@ -205,19 +250,43 @@ events
   TriggerBtn onclick
     show MyPanel
 
+## DRY-PRINZIP - SEHR WICHTIG!
+
+Bei wiederholten Elementen (Formularfelder, Listen, etc.) IMMER erst definieren, dann wiederverwenden:
+
+// ❌ FALSCH - Wiederholung
+Box vertical gap 8
+  Label color #9CA3AF "Name"
+  Input padding 12 radius 8
+Box vertical gap 8
+  Label color #9CA3AF "Email"
+  Input padding 12 radius 8
+
+// ✅ RICHTIG - Definition + Wiederverwendung
+Field:
+  Label: color #9CA3AF
+  Input: padding 12 radius 8 background #2A2A3E
+
+Field
+  Label "Name"
+Field
+  Label "Email"
+
 ## Quick Reference
 LAYOUT      horizontal vertical gap between wrap grid stacked
 ALIGN       horizontal-left horizontal-center horizontal-right vertical-top vertical-center vertical-bottom center
 SPACING     padding margin (+ left right top bottom left-right top-bottom)
-SIZE        width height min-width max-width min-height max-height full grow shrink
+SIZE        width height w-min w-max h-min h-max min-width max-width full grow shrink
 COLOR       color #hex (text) background #hex (background) border-color #hex (border)
-BORDER      border 1, border 1 #333, radius 8
+BORDER      border 1, border 1 #333, radius 8, radius tl 8 br 8 (corners: tl tr bl br)
 TYPE        size weight line font align italic underline truncate
 VISUAL      opacity shadow cursor z hidden disabled
 HOVER       hover-background hover-color hover-scale hover-opacity
 
-DEFINE      Name: props
+DEFINE      Name: props (define only, no render)
 INHERIT     Name from Parent: props
+AS-SYNTAX   Email as Input props (define AND render)
+            Card bg #333 (implicit as Box, define AND render)
 PRIMITIVE   Input EmailField: "placeholder" type email  (creates named input)
             Input PasswordField: "password" type password
 NAMED       - Component named Name props "text"
@@ -227,6 +296,52 @@ EVENTS      onclick onchange oninput onfocus onblur
 ACTIONS     toggle | show X | hide X | open X | close | page X | assign $var to expr
 CONDITION   if $x then prop val else prop val
 ITERATOR    each $item in $list
+DATA        data TypeName, data TypeName where field == value
+MASTER-DETAIL  onclick assign $selected to $item → $selected.field
+THEME       theme name: (define) | use theme name (activate)
+
+## Theme Blocks (für Dark/Light Mode)
+Themes gruppieren Tokens, die zusammen aktiviert werden können:
+
+// Theme definieren
+theme dark:
+  $bg-color: #1A1A1A
+  $text-color: #E0E0E0
+
+theme light:
+  $bg-color: #FFFFFF
+  $text-color: #1A1A1A
+
+// Theme aktivieren (überschreibt globale Tokens)
+use theme dark
+
+// Tokens verwenden
+Box background $bg-color
+  Text color $text-color "Hello"
+
+WICHTIG:
+- Theme muss VOR "use theme" definiert sein
+- "use theme X" kopiert alle Theme-Tokens in globale Tokens
+- Globale Tokens (nicht im Theme) bleiben erhalten
+- Letztes "use theme" gewinnt
+
+## Data Tab Syntax (für data-driven UIs)
+Wenn der User Daten/Listen/Master-Detail möchte, generiere BEIDE Teile:
+
+// === DATA TAB ===
+TypeName:
+  fieldName: text|number|boolean|OtherType
+- TypeName "value1", value2, OtherType[0]
+
+// === LAYOUT TAB ===
+$selected: null
+List data TypeName
+  - Item onclick assign $selected to $item
+
+WICHTIG Naming-Konvention:
+- Schema-Name ist SINGULAR: Task:, Contact:, User:
+- data-Binding verwendet GLEICHEN Namen: data Task, data Contact, data User
+- NICHT data Tasks oder data Contacts - immer SINGULAR!
 
 ## Example 1: Form with Inputs
 $primary: #3B82F6
@@ -259,23 +374,168 @@ events
   ShowBtn onclick
     show Details
 
+## Example 3: Aufgabenliste mit Toggle (vollständig mit Data Tab)
+
+// === DATA TAB ===
+Task:
+  title: text
+  done: boolean
+
+- Task "Einkaufen gehen", false
+- Task "Meeting vorbereiten", true
+- Task "Email schreiben", false
+- Task "Projekt-Dokumentation", false
+
+// === LAYOUT TAB ===
+App vertical gap 16 padding 24 background #1E1E2E h-max
+  Text size 20 weight 600 margin b 8 "Aufgaben"
+
+  List data Task vertical gap 8
+    - Row horizontal gap 12 vertical-center padding 12 background #252530 radius 8 cursor pointer
+      onclick toggle $item.done
+      hover
+        background #333
+      Box width 20 height 20 radius 4 center border 2 #555
+        background if $item.done then #3B82F6 else transparent
+        border-color if $item.done then #3B82F6 else #555
+        if $item.done
+          Icon "check" size 12 color white
+      Text $item.title
+        color if $item.done then #666 else white
+        opacity if $item.done then 0.6 else 1
+
+## Example 4: Kontaktliste mit Master-Detail
+
+// === DATA TAB ===
+Contact:
+  name: text
+  email: text
+  phone: text
+  company: text
+
+- Contact "Max Müller", "max@example.com", "+49 123 456", "Acme GmbH"
+- Contact "Anna Schmidt", "anna@firma.de", "+49 789 012", "Tech AG"
+- Contact "Peter Weber", "peter@mail.com", "+49 345 678", "StartupXY"
+
+// === LAYOUT TAB ===
+$selected: null
+
+Row horizontal gap 24 padding 24 background #1E1E2E h-max
+  // Master: Kontaktliste
+  Col vertical gap 8 width 280 padding 16 background #252530 radius 12
+    Row horizontal between vertical-center margin b 16
+      Text size 18 weight 600 "Kontakte"
+      Text background #3B82F6 padding 4 8 radius 12 size 12 "3"
+    List data Contact vertical gap 4
+      - Row horizontal gap 12 vertical-center padding 12 radius 8 cursor pointer
+        onclick assign $selected to $item
+        background if $selected == $item then #333 else transparent
+        hover
+          background #333
+        Box width 40 height 40 radius 20 background #3B82F6 center
+          Icon "user" size 20
+        Col vertical gap 2
+          Text weight 500 $item.name
+          Text size 12 color #888 $item.company
+
+  // Detail: Kontaktdetails
+  Col w-max padding 24 background #252530 radius 12
+    if $selected
+      Col vertical gap 24
+        Row horizontal gap 16 vertical-center
+          Box width 80 height 80 radius 40 background #3B82F6 center
+            Icon "user" size 32
+          Col vertical gap 4
+            Text size 28 weight 600 $selected.name
+            Text size 16 color #888 $selected.company
+        Box height 1 background #444
+        Col vertical gap 16
+          Row horizontal gap 12 vertical-center
+            Icon "mail" color #888
+            Text $selected.email
+          Row horizontal gap 12 vertical-center
+            Icon "phone" color #888
+            Text $selected.phone
+    else
+      Col vertical center h-max gap 16
+        Icon "users" size 48 color #444
+        Text color #666 "Wähle einen Kontakt aus der Liste"
+
 ## Output Rules
 1. NUR Mirror Code - keine Erklärungen
 2. Dunkles Farbschema: #1E1E2E, #1A1A1A, Akzent #3B82F6
 3. Hover-States für interaktive Elemente
-4. Named instances für Event-Targeting`
+4. Named instances für Event-Targeting
+5. Bei data-driven UIs (Listen, Master-Detail): IMMER mit "// === DATA TAB ===" und "// === LAYOUT TAB ===" Marker generieren
+6. Data Tab enthält Schema-Definitionen UND Beispiel-Instanzen
+7. NAMING: Schema-Name SINGULAR (Task:), data-Binding SINGULAR (data Task) - NICHT pluralisieren!
+8. Bei konditionellen Properties: NUR EINE if-then-else pro Property. Richtig: "color if $x then #red else #white". Falsch: "color if $x then #red else #white if $y then ..."
+9. Für durchgestrichenen Text bei erledigten Tasks: opacity 0.6 verwenden, NICHT text-decoration
+10. PRIMITIVE KOMPONENTEN verwenden: Row, Col, Box, Text, List, Icon, Input, Button - NICHT erfundene Namen wie TaskItem, Checkbox, Avatar, Title etc.
+11. Variable Text-Inhalte ($item.title etc.) VOR konditionellen Properties platzieren. Richtig: "Text $item.title" mit "color if $x then #red else #white" auf separater Zeile. Falsch: "Text color if $x then #red else #white $item.title"
+`
 
 export interface GeneratedCode {
   code: string
   error?: string
+  method?: 'js-builder' | 'intent-create' | 'intent-modify'
+}
+
+export interface GenerationOptions {
+  /** Current layout code (for MODIFY detection) */
+  layoutCode?: string
+  /** Components code */
+  componentsCode?: string
+  /** Tokens code */
+  tokensCode?: string
+  /** Force a specific pipeline (overrides auto-detection) */
+  forcePipeline?: 'js-builder' | 'intent'
 }
 
 /**
  * Generate Mirror DSL code from a user prompt
+ * Uses JS Builder: LLM generates JavaScript, we transform to Mirror
+ *
+ * @param userPrompt - The user's request
+ * @param tokensCode - Optional tokens code to provide context
  */
-export async function generateMirrorCode(userPrompt: string): Promise<GeneratedCode> {
+export async function generateMirrorCode(userPrompt: string, tokensCode?: string): Promise<GeneratedCode> {
   if (!hasApiKey()) {
     throw new Error('Kein API Key gesetzt. Bitte OpenRouter API Key in den Einstellungen eingeben.')
+  }
+
+  // Rate limiting check
+  if (isRateLimitingEnabled() && !canGenerateNow()) {
+    const status = getGenerationStatus()
+    throw new RateLimitError(
+      `Zu viele Anfragen. Bitte warte ${Math.ceil(status.retryAfter / 1000)} Sekunden.`,
+      status.retryAfter
+    )
+  }
+
+  // Input sanitization
+  const sanitizedPrompt = sanitizeUserInput(userPrompt)
+  if (sanitizedPrompt.modified) {
+    console.debug('[AI] Input sanitized:', sanitizedPrompt.warnings)
+  }
+
+  // Check for potential prompt injection
+  const injectionCheck = detectPromptInjection(userPrompt)
+  if (injectionCheck.detected && injectionCheck.confidence === 'high') {
+    console.warn('[AI] Potential prompt injection detected:', injectionCheck.patterns)
+    // Log but don't block - the LLM system prompt should handle this
+  }
+
+  // Build prompt with token context
+  let fullPrompt = sanitizedPrompt.sanitized
+  if (tokensCode?.trim()) {
+    const sanitizedTokens = sanitizeCodeContext(tokensCode)
+    fullPrompt = `Available design tokens (use these instead of hardcoded values):
+\`\`\`
+${sanitizedTokens.sanitized.trim()}
+\`\`\`
+
+${sanitizedPrompt.sanitized}`
   }
 
   const response = await fetchWithTimeout(API.ENDPOINT, {
@@ -287,10 +547,10 @@ export async function generateMirrorCode(userPrompt: string): Promise<GeneratedC
       'X-Title': 'Mirror',
     },
     body: JSON.stringify({
-      model: API.MODEL,
+      model: API.MODEL_FAST,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: fullPrompt }
       ],
       max_tokens: API.MAX_TOKENS,
     }),
@@ -301,21 +561,155 @@ export async function generateMirrorCode(userPrompt: string): Promise<GeneratedC
     throw new Error(`API Error: ${response.status}${errorText ? ` - ${errorText}` : ''}`)
   }
 
-  const data = await response.json() as { choices: Array<{ message?: { content?: string } }> }
-  let content = data.choices[0]?.message?.content || ''
+  // Record successful request for rate limiting
+  if (isRateLimitingEnabled()) {
+    recordGenerationRequest()
+  }
 
-  // Remove markdown code blocks if present
-  content = content.replace(/```(?:mirror|dsl)?\s*/gi, '').replace(/```\s*/g, '')
-  content = content.trim()
+  const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> }
+  if (!data?.choices?.[0]) {
+    return { code: '', error: 'Invalid API response: no choices', method: 'js-builder' }
+  }
+  const code = data.choices[0].message?.content || ''
 
-  return { code: content }
+  // Clean up markdown code blocks
+  const cleanedCode = code
+    .replace(/```(?:mirror|dsl)?\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim()
+
+  if (cleanedCode) {
+    return { code: cleanedCode, method: 'js-builder' }
+  } else {
+    return {
+      code: '',
+      error: 'No code generated',
+      method: 'js-builder'
+    }
+  }
 }
+
+// =============================================================================
+// Intent Pipeline Generation
+// =============================================================================
+
+/**
+ * Create an LLM call function for the intent pipeline
+ */
+function createIntentLLMCall(): LLMCallFn {
+  return async (systemPrompt: string, userPrompt: string): Promise<string> => {
+    const response = await fetchWithTimeout(API.ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'http://localhost:5173',
+        'X-Title': 'Mirror',
+      },
+      body: JSON.stringify({
+        model: API.MODEL_FAST,  // Use fast model for intent pipeline
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: API.MAX_TOKENS,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      throw new Error(`API Error: ${response.status}${errorText ? ` - ${errorText}` : ''}`)
+    }
+
+    const data = await response.json() as { choices: Array<{ message?: { content?: string } }> }
+    return data.choices[0]?.message?.content || ''
+  }
+}
+
+/**
+ * Generate Mirror code using the Intent Pipeline
+ *
+ * Routes to CREATE or MODIFY based on request classification.
+ */
+async function generateWithIntentPipeline(
+  userPrompt: string,
+  options: GenerationOptions
+): Promise<GeneratedCode> {
+  const layoutCode = options.layoutCode || ''
+  const classification = classifyRequest(userPrompt, layoutCode)
+  const llmCall = createIntentLLMCall()
+
+  if (classification.type === 'create') {
+    const result = await generateWithCreate(
+      userPrompt,
+      {
+        layoutCode,
+        componentsCode: options.componentsCode,
+        tokensCode: options.tokensCode,
+      },
+      llmCall
+    )
+
+    if (result.success) {
+      return { code: result.code, method: 'intent-create' }
+    } else {
+      return { code: '', error: result.error, method: 'intent-create' }
+    }
+  } else {
+    const result = await generateWithModify(
+      userPrompt,
+      {
+        layoutCode,
+        componentsCode: options.componentsCode,
+        tokensCode: options.tokensCode,
+      },
+      llmCall
+    )
+
+    if (result.success) {
+      return { code: result.code, method: 'intent-modify' }
+    } else {
+      return { code: result.code || layoutCode, error: result.error, method: 'intent-modify' }
+    }
+  }
+}
+
+/**
+ * Generate Mirror DSL code with full options
+ *
+ * Uses the Intent Pipeline when enabled, otherwise falls back to JS Builder.
+ *
+ * @param userPrompt - The user's request
+ * @param options - Generation options including context
+ */
+export async function generateMirrorCodeWithOptions(
+  userPrompt: string,
+  options: GenerationOptions = {}
+): Promise<GeneratedCode> {
+  if (!hasApiKey()) {
+    throw new Error('Kein API Key gesetzt. Bitte OpenRouter API Key in den Einstellungen eingeben.')
+  }
+
+  // Determine which pipeline to use
+  const useIntentPipeline = options.forcePipeline === 'intent' ||
+    (options.forcePipeline !== 'js-builder' && isIntentPipelineEnabled())
+
+  if (useIntentPipeline) {
+    return generateWithIntentPipeline(userPrompt, options)
+  } else {
+    // Fallback to JS Builder
+    return generateMirrorCode(userPrompt, options.tokensCode)
+  }
+}
+
+// Re-export feature flag utilities for convenience
+export { isIntentPipelineEnabled, enableIntentPipeline, disableIntentPipeline } from './feature-flags'
 
 // =============================================================================
 // Self-Healing Generation (validates and auto-corrects)
 // =============================================================================
 
-import { withSelfHealing, validateMirrorCode, type SelfHealingResult, type PromptLanguage } from './ai-selfhealing'
+import { withSelfHealing, validateMirrorCode, applyAllFixes, type SelfHealingResult, type PromptLanguage, type CodeIssue } from './self-healing'
 
 export interface GenerateWithValidationOptions {
   /** Maximum correction attempts (default: 2) */
@@ -332,7 +726,11 @@ export interface GenerateWithValidationOptions {
  * Generate Mirror code with automatic validation and self-healing.
  *
  * If the generated code contains errors, the LLM is automatically
- * re-prompted with correction instructions.
+ * re-prompted with the original request plus hints about what to avoid.
+ *
+ * Note: This uses a JS Builder pathway where LLM generates JavaScript
+ * that gets transformed to Mirror. For retries, we resend the original
+ * prompt with error hints (not Mirror code to fix).
  *
  * @example
  * ```typescript
@@ -349,27 +747,84 @@ export async function generateWithValidation(
   userPrompt: string,
   options: GenerateWithValidationOptions = {}
 ): Promise<SelfHealingResult> {
-  const { maxAttempts = 2, includeWarnings = false, language = 'de', onProgress } = options
+  const { maxAttempts = 3, includeWarnings = false, language = 'de', onProgress } = options
 
-  // Wrapper that reports progress
-  const generateWithProgress = async (prompt: string) => {
-    // Detect if this is a correction prompt (works for both DE and EN)
-    const isCorrection = prompt.includes('FEHLER:') || prompt.includes('ERRORS:')
-    if (onProgress) {
-      onProgress(isCorrection ? 'correcting' : 'generating', 1)
-    }
-    const result = await generateMirrorCode(prompt)
-    if (onProgress) {
-      onProgress('validating', 1)
-    }
-    return result
+  let currentCode = ''
+  let attempts = 0
+  let lastIssues: CodeIssue[] = []
+
+  // Helper to build retry prompt
+  const buildRetryPrompt = (originalPrompt: string, issues: typeof lastIssues): string => {
+    const errorHints = issues
+      .filter(i => i.type !== 'validation_warning')
+      .slice(0, 5) // Limit to 5 most important errors
+      .map(i => `- ${i.message}${i.suggestion ? ` (${i.suggestion})` : ''}`)
+      .join('\n')
+
+    const hint = language === 'de'
+      ? `WICHTIG: Beim letzten Versuch gab es diese Probleme - bitte vermeide sie:\n${errorHints}\n\n`
+      : `IMPORTANT: The last attempt had these issues - please avoid them:\n${errorHints}\n\n`
+
+    return hint + originalPrompt
   }
 
-  return withSelfHealing(generateWithProgress, userPrompt, {
-    maxAttempts,
-    includeWarnings,
-    language
-  })
+  while (attempts < maxAttempts) {
+    attempts++
+
+    // Report progress
+    if (onProgress) {
+      onProgress(attempts === 1 ? 'generating' : 'correcting', attempts)
+    }
+
+    // Build prompt (with hints on retry)
+    const prompt = attempts === 1
+      ? userPrompt
+      : buildRetryPrompt(userPrompt, lastIssues)
+
+    // Generate
+    const result = await generateMirrorCode(prompt)
+    currentCode = result.code
+
+    // If generation failed completely, try again
+    if (!currentCode || currentCode.trim() === '') {
+      lastIssues = [{
+        type: 'parse_error',
+        line: 0,
+        message: result.error || 'Generation returned empty code'
+      }]
+      continue
+    }
+
+    // Apply algorithmic fixes
+    currentCode = applyAllFixes(currentCode)
+
+    // Report validation
+    if (onProgress) {
+      onProgress('validating', attempts)
+    }
+
+    // Validate
+    const feedback = validateMirrorCode(currentCode, includeWarnings, language)
+    lastIssues = feedback.issues
+
+    // If valid, return success
+    if (feedback.valid) {
+      return {
+        code: currentCode,
+        valid: true,
+        attempts,
+        issues: feedback.issues
+      }
+    }
+  }
+
+  // Return last attempt even if not valid
+  return {
+    code: currentCode,
+    valid: false,
+    attempts,
+    issues: lastIssues
+  }
 }
 
 /**
@@ -390,8 +845,8 @@ export function validateGeneratedCode(code: string): {
 }
 
 // Re-export for convenience
-export { validateMirrorCode, isValidMirrorCode, getIssueSummary } from './ai-selfhealing'
-export type { SelfHealingResult, ValidationFeedback, CodeIssue, PromptLanguage } from './ai-selfhealing'
+export { validateMirrorCode, isValidMirrorCode, getIssueSummary } from './self-healing'
+export type { SelfHealingResult, ValidationFeedback, CodeIssue, PromptLanguage } from './self-healing'
 
 // =============================================================================
 // Context-Aware Generation (Code Intelligence)

@@ -140,6 +140,8 @@ export type ValidationIssueType =
   | 'SPREAD_OPERATOR'
   | 'CLASSNAME_USED'
   | 'CUSTOM_HOOK'
+  | 'INVALID_TOKEN'      // NEW: Token format errors
+  | 'TEMPLATE_LITERAL'   // NEW: Template literal usage
 
 export interface ValidationIssue {
   /** Type of validation issue */
@@ -195,6 +197,16 @@ export function createReactPivotError(data: ReactPivotErrorData): ReactPivotErro
   error.issues = data.issues
   error.code = data.code
   return error
+}
+
+/** Type guard to check if an error is a ReactPivotError */
+export function isReactPivotError(error: unknown): error is ReactPivotError {
+  return (
+    error instanceof Error &&
+    error.name === 'ReactPivotError' &&
+    'phase' in error &&
+    typeof (error as ReactPivotError).phase === 'string'
+  )
 }
 
 // =============================================================================

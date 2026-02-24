@@ -181,8 +181,10 @@ export async function translateWithReactPivot(
 
   // Build context-aware prompt if we have surrounding code
   const hasContext = context.length > 0 && context.some(line => line.trim().length > 0)
+  // Ensure lineIndex is within valid bounds
+  const validLineIndex = Math.max(0, Math.min(lineIndex, context.length - 1))
   const contextAwarePrompt = hasContext
-    ? buildContextAwarePrompt(lineContent, context, lineIndex)
+    ? buildContextAwarePrompt(lineContent, context, validLineIndex)
     : lineContent
 
   // Build React-Pivot options from the translation parameters
@@ -249,7 +251,7 @@ export async function translateWithReactPivot(
         line: issue.line ?? 0,
         suggestion: issue.suggestion,
       })),
-      isValid: !result.issues || result.issues.every(i => i.fixable),
+      isValid: !result.issues || result.issues.length === 0,
     }
 
     callbacks.onComplete?.(translationResult)

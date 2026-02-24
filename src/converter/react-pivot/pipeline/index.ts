@@ -12,8 +12,8 @@
 
 import {
   createReactPivotError,
+  isReactPivotError,
 } from '../types'
-import type { ReactPivotError } from '../types'
 import type {
   ReactPivotOptions,
   ReactPivotResult,
@@ -266,9 +266,8 @@ export async function executePipeline(
   } catch (error) {
     metrics.totalTime = performance.now() - startTime
 
-    const isReactPivotError = error instanceof Error && error.name === 'ReactPivotError'
-    const pivotError = isReactPivotError
-      ? error as ReactPivotError
+    const pivotError = isReactPivotError(error)
+      ? error
       : createReactPivotError({
           message: error instanceof Error ? error.message : 'Unknown error',
           phase: 'react-generation',
