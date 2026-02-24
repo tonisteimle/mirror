@@ -119,10 +119,15 @@ function convertLayout(props: DSLProperties): CssDeclaration[] {
 function alignmentToCss(value: string): string {
   switch (value) {
     case 'cen':
+    case 'center':
       return 'center'
     case 'start':
+    case 'l':
+    case 'u':
       return 'flex-start'
     case 'end':
+    case 'r':
+    case 'd':
       return 'flex-end'
     default:
       return value
@@ -132,23 +137,48 @@ function alignmentToCss(value: string): string {
 /**
  * Convert alignment properties (cen, hor-l, hor-cen, hor-r, ver-t, ver-cen, ver-b)
  * Note: Parser converts cen to align_main/align_cross = 'cen'
+ *
+ * For default column layout:
+ * - left/right affect cross axis (align-items)
+ * - top/bottom affect main axis (justify-content)
  */
 function convertAlignment(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
   const isHorizontal = props.hor === true
 
-  // Handle align_main and align_cross (set by parser for cen)
+  // Handle align_main and align_cross (set by parser)
+  // The parser sets align_main for left/right and align_cross for top/bottom,
+  // but semantically left/right should be cross-axis for vertical layouts.
+  // We need to swap based on the actual alignment value.
   if (props.align_main) {
-    declarations.push({
-      property: 'justify-content',
-      value: alignmentToCss(props.align_main as string),
-    })
+    const value = props.align_main as string
+    // For left/right values, they should affect cross axis (align-items) in column layout
+    if (value === 'l' || value === 'r') {
+      declarations.push({
+        property: isHorizontal ? 'justify-content' : 'align-items',
+        value: alignmentToCss(value),
+      })
+    } else {
+      declarations.push({
+        property: 'justify-content',
+        value: alignmentToCss(value),
+      })
+    }
   }
   if (props.align_cross) {
-    declarations.push({
-      property: 'align-items',
-      value: alignmentToCss(props.align_cross as string),
-    })
+    const value = props.align_cross as string
+    // For top/bottom values, they should affect main axis (justify-content) in column layout
+    if (value === 'u' || value === 'd') {
+      declarations.push({
+        property: isHorizontal ? 'align-items' : 'justify-content',
+        value: alignmentToCss(value),
+      })
+    } else {
+      declarations.push({
+        property: 'align-items',
+        value: alignmentToCss(value),
+      })
+    }
   }
 
   // Horizontal alignment
@@ -195,6 +225,26 @@ function convertAlignment(props: DSLProperties): CssDeclaration[] {
 }
 
 /**
+ * Convert sizing keyword to CSS value
+ * Parser outputs: "max" for full, "min" for hug
+ */
+function sizingKeywordToCss(value: string | number): string {
+  if (typeof value === 'number') {
+    return formatCssValue(value)
+  }
+  switch (value) {
+    case 'full':
+    case 'max':
+      return '100%'
+    case 'hug':
+    case 'min':
+      return 'fit-content'
+    default:
+      return formatCssValue(value)
+  }
+}
+
+/**
  * Convert dimension properties (w, h, minw, maxw, minh, maxh, full)
  */
 function convertDimensions(props: DSLProperties): CssDeclaration[] {
@@ -209,15 +259,23 @@ function convertDimensions(props: DSLProperties): CssDeclaration[] {
   // Check both short (w) and long (width) forms
   const wValue = getProp<number | string>(props, 'w')
   if (wValue !== undefined) {
-    const value = wValue === 'full' ? '100%' : formatCssValue(wValue)
+    const value = sizingKeywordToCss(wValue)
     declarations.push({ property: 'width', value })
+    // Add flex-grow for "full" sizing
+    if (wValue === 'full' || wValue === 'max') {
+      declarations.push({ property: 'flex-grow', value: '1' })
+    }
   }
 
   // Check both short (h) and long (height) forms
   const hValue = getProp<number | string>(props, 'h')
   if (hValue !== undefined) {
-    const value = hValue === 'full' ? '100%' : formatCssValue(hValue)
+    const value = sizingKeywordToCss(hValue)
     declarations.push({ property: 'height', value })
+    // Add flex-grow for "full" sizing
+    if (hValue === 'full' || hValue === 'max') {
+      declarations.push({ property: 'flex-grow', value: '1' })
+    }
   }
 
   if (props.minw !== undefined) {
@@ -329,34 +387,53 @@ function convertBorder(props: DSLProperties): CssDeclaration[] {
 
   // Border width - check both short (bor) and long (border) forms
   const borValue = getProp<number>(props, 'bor')
-  const bocValue = getProp<string>(props, 'boc')
+  // Check both boc (short) and bor_color (from parser)
+  const bocValue = getProp<string>(props, 'boc') || (props.bor_color as string | undefined)
   if (typeof borValue === 'number') {
     const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
     declarations.push({ property: 'border', value: `${borValue}px solid${color}` })
   }
 
-  // Directional borders
+  // Directional borders - check for direction-specific colors
   if (typeof props.bor_l === 'number') {
-    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
-    declarations.push({ property: 'border-left', value: `${props.bor_l}px solid${color}` })
+    const color = (props.bor_l_color as string) || bocValue
+    const colorStr = typeof color === 'string' ? ` ${color}` : ''
+    declarations.push({ property: 'border-left', value: `${props.bor_l}px solid${colorStr}` })
   }
   if (typeof props.bor_r === 'number') {
-    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
-    declarations.push({ property: 'border-right', value: `${props.bor_r}px solid${color}` })
+    const color = (props.bor_r_color as string) || bocValue
+    const colorStr = typeof color === 'string' ? ` ${color}` : ''
+    declarations.push({ property: 'border-right', value: `${props.bor_r}px solid${colorStr}` })
   }
   if (typeof props.bor_u === 'number') {
-    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
-    declarations.push({ property: 'border-top', value: `${props.bor_u}px solid${color}` })
+    const color = (props.bor_u_color as string) || bocValue
+    const colorStr = typeof color === 'string' ? ` ${color}` : ''
+    declarations.push({ property: 'border-top', value: `${props.bor_u}px solid${colorStr}` })
   }
   if (typeof props.bor_d === 'number') {
-    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
-    declarations.push({ property: 'border-bottom', value: `${props.bor_d}px solid${color}` })
+    const color = (props.bor_d_color as string) || bocValue
+    const colorStr = typeof color === 'string' ? ` ${color}` : ''
+    declarations.push({ property: 'border-bottom', value: `${props.bor_d}px solid${colorStr}` })
   }
 
   // Border radius - check both short (rad) and long (radius) forms
   const radValue = getProp<number>(props, 'rad')
   if (typeof radValue === 'number') {
     declarations.push({ property: 'border-radius', value: formatCssValue(radValue) })
+  }
+
+  // Directional border radius
+  if (typeof props.rad_tl === 'number') {
+    declarations.push({ property: 'border-top-left-radius', value: formatCssValue(props.rad_tl) })
+  }
+  if (typeof props.rad_tr === 'number') {
+    declarations.push({ property: 'border-top-right-radius', value: formatCssValue(props.rad_tr) })
+  }
+  if (typeof props.rad_bl === 'number') {
+    declarations.push({ property: 'border-bottom-left-radius', value: formatCssValue(props.rad_bl) })
+  }
+  if (typeof props.rad_br === 'number') {
+    declarations.push({ property: 'border-bottom-right-radius', value: formatCssValue(props.rad_br) })
   }
 
   return declarations
@@ -368,13 +445,13 @@ function convertBorder(props: DSLProperties): CssDeclaration[] {
 function convertTypography(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  // font-size: new property name, size: legacy
-  const fontSize = props['font-size'] ?? props.size
+  // font-size: check multiple property names (font-size, text-size, fs, size)
+  const fontSize = props['font-size'] ?? props['text-size'] ?? props.fs ?? props.size
   if (typeof fontSize === 'number') {
     declarations.push({ property: 'font-size', value: formatCssValue(fontSize) })
   }
 
-  if (typeof props.weight === 'number') {
+  if (typeof props.weight === 'number' || typeof props.weight === 'string') {
     declarations.push({ property: 'font-weight', value: String(props.weight) })
   }
 
@@ -451,6 +528,31 @@ function convertImage(props: DSLProperties): CssDeclaration[] {
 }
 
 /**
+ * Convert overflow/scroll properties
+ */
+function convertOverflow(props: DSLProperties): CssDeclaration[] {
+  const declarations: CssDeclaration[] = []
+
+  if (props.scroll === true) {
+    declarations.push({ property: 'overflow-y', value: 'auto' })
+  }
+  if (props['scroll-hor'] === true) {
+    declarations.push({ property: 'overflow-x', value: 'auto' })
+  }
+  if (props['scroll-ver'] === true) {
+    declarations.push({ property: 'overflow-y', value: 'auto' })
+  }
+  if (props['scroll-both'] === true) {
+    declarations.push({ property: 'overflow', value: 'auto' })
+  }
+  if (props.clip === true) {
+    declarations.push({ property: 'overflow', value: 'hidden' })
+  }
+
+  return declarations
+}
+
+/**
  * Convert hover properties to separate hover declarations
  */
 export function convertHoverProperties(props: DSLProperties): CssDeclaration[] {
@@ -502,6 +604,7 @@ export function convertProperties(props: DSLProperties): CssDeclaration[] {
     ...convertTypography(props),
     ...convertVisuals(props),
     ...convertImage(props),
+    ...convertOverflow(props),
   ]
 }
 

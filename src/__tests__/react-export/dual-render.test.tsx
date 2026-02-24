@@ -303,7 +303,11 @@ describe('Property Comparison: Preview vs Export', () => {
   it('padding with multiple values is consistent', () => {
     const mirror = 'Box pad 8 16'
     const { css } = exportReact(mirror)
-    expect(css).toContain('padding: 8px 16px')
+    // Parser expands padding to individual properties
+    expect(css).toContain('padding-top: 8px')
+    expect(css).toContain('padding-bottom: 8px')
+    expect(css).toContain('padding-left: 16px')
+    expect(css).toContain('padding-right: 16px')
   })
 
   it('background color is consistent', () => {
