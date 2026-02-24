@@ -67,6 +67,7 @@ export function SettingsDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-dialog-title"
+        data-testid="dialog-settings"
         style={{
           position: 'fixed',
           top: '50%',

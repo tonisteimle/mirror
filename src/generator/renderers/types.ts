@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react'
 import type { ASTNode } from '../../parser/types'
+import type { TypographyContextValue } from '../contexts/typography-context'
 
 /**
  * Options passed to renderers for controlling render behavior
@@ -27,6 +28,10 @@ export interface GenerateOptions {
   onPageNavigate?: (targetPage: string) => void
   /** Parent has stacked layout - children should use grid-area: 1/1 */
   parentStacked?: boolean
+  /** Parent state overrides for children (e.g., state collapsed { Content { hidden } }) */
+  parentStateOverrides?: Map<string, Record<string, unknown>>
+  /** Inherited typography from App (font, size, color, line-height) */
+  typography?: TypographyContextValue
 }
 
 /**

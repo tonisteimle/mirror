@@ -1,7 +1,72 @@
 /**
- * Children Merger Module
+ * @module component-parser/children-merger
+ * @description Children Merging mit Flat-Access Support
  *
- * Handles merging of instance children with template children using flat access.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Merged Instance-Children mit Template-Children
+ *
+ * Wenn eine Komponente ein Template erbt, müssen die Children
+ * intelligent gemerged werden:
+ * - Existierende Slots werden überschrieben
+ * - Neue Children werden hinzugefügt
+ * - List Items (- prefix) werden immer hinzugefügt
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FLAT ACCESS PATTERN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @pattern Tief verschachtelte Slots können direkt referenziert werden
+ *
+ * @example Template
+ *   Card: vertical padding 16
+ *     Header: horizontal between
+ *       Title: size 18 weight 600
+ *       Badge: background #3B82F6
+ *     Content: padding 8
+ *
+ * @example Instance (Flat Access)
+ *   Card
+ *     Title "My Card"           // Findet Title in Header
+ *     Badge "NEW"               // Findet Badge in Header
+ *     Content "Card content"    // Direktes Child
+ *
+ * @algorithm findChildDeep
+ *   Sucht rekursiv in allen Children nach passendem Namen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * MERGING-REGELN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @rule 1: Explicit Definition ohne Template-Children
+ *   Einfach alle Instance-Children hinzufügen
+ *
+ * @rule 2: List Items (_isListItem = true)
+ *   Immer hinzufügen (neue Instanzen, kein Override)
+ *
+ * @rule 3: Matching Template-Child gefunden
+ *   - Properties mergen (Object.assign)
+ *   - Content überschreiben (falls vorhanden)
+ *   - Children rekursiv mergen
+ *   - _isExplicitDefinition = false (Slot ist gefüllt)
+ *
+ * @rule 4: Kein Match gefunden
+ *   Instance-Child direkt hinzufügen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * REKURSIVES MERGING
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function mergeChildrenRecursive
+ *   Merged Grandchildren rekursiv
+ *
+ * @special _text Children
+ *   Text-Children werden ersetzt (nicht gemerged)
+ *   Template-_text wird entfernt, Instance-_text wird hinzugefügt
+ *
+ * @used-by component-parser/index.ts für Template-Anwendung
  */
 
 import type { ASTNode } from './types'
@@ -19,14 +84,20 @@ export function mergeInstanceChildren(
   instanceChildren: ASTNode[],
   isExplicitDefinition: boolean
 ): void {
+
   if (instanceChildren.length === 0) return
 
-  if (isExplicitDefinition) {
+  const hasTemplateChildren = node.children.length > 0
+
+  // For explicit definitions WITHOUT template children, just push
+  // (this is a fresh definition, not inheriting from anything)
+  if (isExplicitDefinition && !hasTemplateChildren) {
     node.children.push(...instanceChildren)
     return
   }
 
-  const hasTemplateChildren = node.children.length > 0
+  // For explicit definitions WITH template children (inheritance via 'from'),
+  // we need to merge, not push - otherwise we get duplicate children
 
   for (const instanceChild of instanceChildren) {
     if (instanceChild._isListItem) {
@@ -35,11 +106,31 @@ export function mergeInstanceChildren(
       const templateChild = findChildDeep(node.children, instanceChild.name)
       if (templateChild) {
         Object.assign(templateChild.properties, instanceChild.properties)
+        // When setting visible: true on a slot, also clear hidden from direct children
+        // This allows patterns like: IconLeft { visible } to show the hidden Icon inside
+        if (instanceChild.properties.visible === true && templateChild.children.length > 0) {
+          for (const child of templateChild.children) {
+            if (child.properties.hidden === true) {
+              delete child.properties.hidden
+            }
+          }
+        }
         if (instanceChild.content) {
           templateChild.content = instanceChild.content
         }
+        // Merge eventHandlers from instance into template
+        if (instanceChild.eventHandlers && instanceChild.eventHandlers.length > 0) {
+          if (!templateChild.eventHandlers) {
+            templateChild.eventHandlers = []
+          }
+          templateChild.eventHandlers.push(...instanceChild.eventHandlers)
+        }
         if (instanceChild.children.length > 0) {
           mergeChildrenRecursive(templateChild, instanceChild)
+        }
+        // Mark slot as filled (no longer just a definition) if it has content or children
+        if (instanceChild.content || instanceChild.children.length > 0) {
+          templateChild._isExplicitDefinition = false
         }
       } else {
         node.children.push(instanceChild)
@@ -75,8 +166,19 @@ export function mergeChildrenRecursive(templateChild: ASTNode, instanceChild: AS
         if (grandchild.content) {
           templateGrandchild.content = grandchild.content
         }
+        // Merge eventHandlers from instance into template
+        if (grandchild.eventHandlers && grandchild.eventHandlers.length > 0) {
+          if (!templateGrandchild.eventHandlers) {
+            templateGrandchild.eventHandlers = []
+          }
+          templateGrandchild.eventHandlers.push(...grandchild.eventHandlers)
+        }
         if (grandchild.children.length > 0) {
           templateGrandchild.children = grandchild.children
+        }
+        // Mark slot as filled if it has content or children
+        if (grandchild.content || grandchild.children.length > 0) {
+          templateGrandchild._isExplicitDefinition = false
         }
       } else {
         templateChild.children.push(grandchild)

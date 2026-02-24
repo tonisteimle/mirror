@@ -28,7 +28,7 @@ const DocWrapperBehavior: BehaviorHandler = {
     renderFn: RenderFn,
     _registry: BehaviorRegistry
   ): React.ReactNode {
-    // Container styles for doc pages (matches mirror-docu.html .container)
+    // Container styles for doc pages (matches tutorial.html .container)
     const containerStyle: React.CSSProperties = {
       maxWidth: '720px',
       margin: '0 auto',

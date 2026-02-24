@@ -9,6 +9,46 @@ import type { DSLProperties } from '../../parser/types'
 import { formatCssValue } from './utils/format-css-value'
 
 /**
+ * Property aliases: maps short forms to long forms.
+ * Used to support both `pad` and `padding`, `bg` and `background`, etc.
+ */
+const PROPERTY_ALIASES: Record<string, string[]> = {
+  // Spacing
+  pad: ['pad', 'padding'],
+  mar: ['mar', 'margin'],
+  // Colors
+  bg: ['bg', 'background'],
+  col: ['col', 'color', 'c'],
+  boc: ['boc', 'border-color'],
+  // Border
+  rad: ['rad', 'radius'],
+  bor: ['bor', 'border'],
+  // Layout
+  hor: ['hor', 'horizontal'],
+  ver: ['ver', 'vertical'],
+  // Sizing
+  w: ['w', 'width'],
+  h: ['h', 'height'],
+  // Visuals
+  o: ['o', 'opa', 'op', 'opacity'],
+  g: ['g', 'gap'],
+}
+
+/**
+ * Get a property value, checking both short and long forms.
+ */
+function getProp<T>(props: DSLProperties, shortForm: string): T | undefined {
+  const aliases = PROPERTY_ALIASES[shortForm] || [shortForm]
+  for (const alias of aliases) {
+    const value = (props as Record<string, unknown>)[alias]
+    if (value !== undefined) {
+      return value as T
+    }
+  }
+  return undefined
+}
+
+/**
  * A single CSS declaration
  */
 export interface CssDeclaration {
@@ -41,15 +81,17 @@ function convertLayout(props: DSLProperties): CssDeclaration[] {
   // Always add display: flex and default direction
   declarations.push({ property: 'display', value: 'flex' })
 
-  if (props.hor) {
+  if (getProp<boolean>(props, 'hor')) {
     declarations.push({ property: 'flex-direction', value: 'row' })
   } else {
     // Default to column
     declarations.push({ property: 'flex-direction', value: 'column' })
   }
 
-  if (typeof props.gap === 'number') {
-    declarations.push({ property: 'gap', value: formatCssValue(props.gap) })
+  // Check both short form (g) and long form (gap) for gap property
+  const gapValue = getProp<number>(props, 'g')
+  if (typeof gapValue === 'number') {
+    declarations.push({ property: 'gap', value: formatCssValue(gapValue) })
   }
 
   if (props.between) {
@@ -164,13 +206,17 @@ function convertDimensions(props: DSLProperties): CssDeclaration[] {
     return declarations
   }
 
-  if (props.w !== undefined) {
-    const value = props.w === 'full' ? '100%' : formatCssValue(props.w)
+  // Check both short (w) and long (width) forms
+  const wValue = getProp<number | string>(props, 'w')
+  if (wValue !== undefined) {
+    const value = wValue === 'full' ? '100%' : formatCssValue(wValue)
     declarations.push({ property: 'width', value })
   }
 
-  if (props.h !== undefined) {
-    const value = props.h === 'full' ? '100%' : formatCssValue(props.h)
+  // Check both short (h) and long (height) forms
+  const hValue = getProp<number | string>(props, 'h')
+  if (hValue !== undefined) {
+    const value = hValue === 'full' ? '100%' : formatCssValue(hValue)
     declarations.push({ property: 'height', value })
   }
 
@@ -196,8 +242,9 @@ function convertDimensions(props: DSLProperties): CssDeclaration[] {
 function convertPadding(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  if (typeof props.pad === 'number') {
-    declarations.push({ property: 'padding', value: formatCssValue(props.pad) })
+  const padValue = getProp<number>(props, 'pad')
+  if (typeof padValue === 'number') {
+    declarations.push({ property: 'padding', value: formatCssValue(padValue) })
   }
 
   if (typeof props.pad_l === 'number') {
@@ -222,8 +269,15 @@ function convertPadding(props: DSLProperties): CssDeclaration[] {
 function convertMargin(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  if (typeof props.mar === 'number') {
-    declarations.push({ property: 'margin', value: formatCssValue(props.mar) })
+  // centered: horizontal centering via auto margins
+  if (props.centered) {
+    declarations.push({ property: 'margin-left', value: 'auto' })
+    declarations.push({ property: 'margin-right', value: 'auto' })
+  }
+
+  const marValue = getProp<number>(props, 'mar')
+  if (typeof marValue === 'number') {
+    declarations.push({ property: 'margin', value: formatCssValue(marValue) })
   }
 
   if (typeof props.mar_l === 'number') {
@@ -248,17 +302,20 @@ function convertMargin(props: DSLProperties): CssDeclaration[] {
 function convertColors(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  if (typeof props.col === 'string') {
-    declarations.push({ property: 'color', value: props.col })
+  const colValue = getProp<string>(props, 'col')
+  if (typeof colValue === 'string') {
+    declarations.push({ property: 'color', value: colValue })
   }
 
-  if (typeof props.bg === 'string') {
-    const value = props.bg.length === 9 ? hexToRgba(props.bg) : props.bg
+  const bgValue = getProp<string>(props, 'bg')
+  if (typeof bgValue === 'string') {
+    const value = bgValue.length === 9 ? hexToRgba(bgValue) : bgValue
     declarations.push({ property: 'background', value })
   }
 
-  if (typeof props.boc === 'string') {
-    declarations.push({ property: 'border-color', value: props.boc })
+  const bocValue = getProp<string>(props, 'boc')
+  if (typeof bocValue === 'string') {
+    declarations.push({ property: 'border-color', value: bocValue })
   }
 
   return declarations
@@ -270,33 +327,36 @@ function convertColors(props: DSLProperties): CssDeclaration[] {
 function convertBorder(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  // Border width
-  if (typeof props.bor === 'number') {
-    const color = typeof props.boc === 'string' ? ` ${props.boc}` : ''
-    declarations.push({ property: 'border', value: `${props.bor}px solid${color}` })
+  // Border width - check both short (bor) and long (border) forms
+  const borValue = getProp<number>(props, 'bor')
+  const bocValue = getProp<string>(props, 'boc')
+  if (typeof borValue === 'number') {
+    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
+    declarations.push({ property: 'border', value: `${borValue}px solid${color}` })
   }
 
   // Directional borders
   if (typeof props.bor_l === 'number') {
-    const color = typeof props.boc === 'string' ? ` ${props.boc}` : ''
+    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
     declarations.push({ property: 'border-left', value: `${props.bor_l}px solid${color}` })
   }
   if (typeof props.bor_r === 'number') {
-    const color = typeof props.boc === 'string' ? ` ${props.boc}` : ''
+    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
     declarations.push({ property: 'border-right', value: `${props.bor_r}px solid${color}` })
   }
   if (typeof props.bor_u === 'number') {
-    const color = typeof props.boc === 'string' ? ` ${props.boc}` : ''
+    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
     declarations.push({ property: 'border-top', value: `${props.bor_u}px solid${color}` })
   }
   if (typeof props.bor_d === 'number') {
-    const color = typeof props.boc === 'string' ? ` ${props.boc}` : ''
+    const color = typeof bocValue === 'string' ? ` ${bocValue}` : ''
     declarations.push({ property: 'border-bottom', value: `${props.bor_d}px solid${color}` })
   }
 
-  // Border radius
-  if (typeof props.rad === 'number') {
-    declarations.push({ property: 'border-radius', value: formatCssValue(props.rad) })
+  // Border radius - check both short (rad) and long (radius) forms
+  const radValue = getProp<number>(props, 'rad')
+  if (typeof radValue === 'number') {
+    declarations.push({ property: 'border-radius', value: formatCssValue(radValue) })
   }
 
   return declarations
@@ -308,8 +368,10 @@ function convertBorder(props: DSLProperties): CssDeclaration[] {
 function convertTypography(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  if (typeof props.size === 'number') {
-    declarations.push({ property: 'font-size', value: formatCssValue(props.size) })
+  // font-size: new property name, size: legacy
+  const fontSize = props['font-size'] ?? props.size
+  if (typeof fontSize === 'number') {
+    declarations.push({ property: 'font-size', value: formatCssValue(fontSize) })
   }
 
   if (typeof props.weight === 'number') {
@@ -347,8 +409,10 @@ function convertTypography(props: DSLProperties): CssDeclaration[] {
 function convertVisuals(props: DSLProperties): CssDeclaration[] {
   const declarations: CssDeclaration[] = []
 
-  if (typeof props.opacity === 'number') {
-    declarations.push({ property: 'opacity', value: String(props.opacity) })
+  // Check both short forms (o, opa, op) and long form (opacity) via getProp
+  const opacityValue = getProp<number>(props, 'o')
+  if (typeof opacityValue === 'number') {
+    declarations.push({ property: 'opacity', value: String(opacityValue) })
   }
 
   if (props.shadow) {

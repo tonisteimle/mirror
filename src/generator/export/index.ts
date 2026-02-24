@@ -121,6 +121,8 @@ export function exportReactFromNodes(
     styles: new Map(),
     commands: [],
     centralizedEvents: [],
+    themes: new Map(),
+    activeTheme: null,
   }
 
   const interactivity = analyzeInteractivity(parseResult)

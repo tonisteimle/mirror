@@ -2,6 +2,7 @@ import type { LibraryComponent, LibraryCategory } from './types'
 
 // Import library components
 import { formFieldComponent } from './components/input'
+import { dropdownComponent } from './components/dropdown'
 // Doc-mode components
 import { DocTextComponent } from './components/doc-text'
 import { PlaygroundComponent } from './components/playground'
@@ -11,6 +12,7 @@ import { DocWrapperComponent } from './components/doc-wrapper'
 const LIBRARY_COMPONENTS: LibraryComponent[] = [
   // Form
   formFieldComponent,
+  dropdownComponent,
   // Doc-mode
   DocTextComponent,
   PlaygroundComponent,
@@ -26,9 +28,9 @@ for (const component of LIBRARY_COMPONENTS) {
 // Set of all library component names (for quick checks)
 export const LIBRARY_COMPONENT_NAMES = new Set(LIBRARY_COMPONENTS.map(c => c.name))
 
-// Set of all slot names across all library components
+// Set of all slot names across all library components (including aliases)
 export const LIBRARY_SLOT_NAMES = new Set(
-  LIBRARY_COMPONENTS.flatMap(c => c.slots.map(s => s.name))
+  LIBRARY_COMPONENTS.flatMap(c => c.slots.flatMap(s => [s.name, ...(s.aliases || [])]))
 )
 
 /**
@@ -51,7 +53,21 @@ export function isLibraryComponent(name: string): boolean {
 export function isLibrarySlot(componentName: string, slotName: string): boolean {
   const component = componentMap.get(componentName)
   if (!component) return false
-  return component.slots.some(s => s.name === slotName)
+  return component.slots.some(s =>
+    s.name === slotName || (s.aliases && s.aliases.includes(slotName))
+  )
+}
+
+/**
+ * Get the canonical slot name (resolving aliases)
+ */
+export function getCanonicalSlotName(componentName: string, slotName: string): string {
+  const component = componentMap.get(componentName)
+  if (!component) return slotName
+  const slot = component.slots.find(s =>
+    s.name === slotName || (s.aliases && s.aliases.includes(slotName))
+  )
+  return slot?.name ?? slotName
 }
 
 /**

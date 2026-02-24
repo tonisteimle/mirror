@@ -49,7 +49,7 @@ export interface BehaviorHandler {
 // Registry for all behavior handlers
 export interface BehaviorRegistry {
   getHandler(name: string): BehaviorHandler | undefined
-  getState(componentId: string): BehaviorState | string
+  getState(componentId: string): BehaviorState | string | undefined
   setState(componentId: string, state: BehaviorState | string): void
   toggle(componentId: string): void
   // Behavior actions for dropdowns, lists, etc.

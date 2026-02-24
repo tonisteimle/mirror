@@ -5,14 +5,34 @@
 import { memo, useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { colors } from '../theme'
 import { LazyPromptPanel } from './LazyPromptPanel'
-import { TabButton, IconButton, SubMenu } from './editor-panel'
+import type { PromptPanelRef } from './PromptPanel'
+import { TabButton, IconButton } from './editor-panel'
 import { hasApiKey } from '../lib/ai'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
 import { hasSchemas } from '../parser/data-parser'
 import { generateDataWithAI } from '../lib/ai-data'
 import { logger } from '../services/logger'
-import type { PageData } from './PageSidebar'
-import { translateLine, shouldTranslate, type LineStatus } from '../services/nl-translation'
+import { PageSidebar, type PageData } from './PageSidebar'
+import { translateLine, type LineStatus } from '../services/nl-translation'
+import { parse } from '../parser/parser'
+import { applyAllFixes, validateMirrorCode } from '../lib/self-healing'
+import { transformCode } from '../editor/shorthand-expansion'
+import { clearDecorationCache } from '../editor/dsl-syntax'
+import {
+  getPropertyAtCursor,
+  getComponentAtLine,
+  getComponentBlock,
+  getCurrentLineNumber,
+  getCurrentLineText,
+  generateTokenName,
+  createTokenDefinition,
+  createComponentDefinition,
+  createComponentUsage,
+  createComponentDefinitionWithChildren,
+  replaceInEditor,
+  replaceCurrentLine,
+  replaceLines,
+} from '../editor'
 
 export type EditorTab = 'layout' | 'components' | 'tokens' | 'data'
 
@@ -45,26 +65,26 @@ interface EditorPanelProps {
   referencedPages?: Set<string>
   /** Preview mode - hides editor, shows only section navigation */
   previewMode?: boolean
-  // Section navigation props
-  /** Active section for layout tab (controlled) */
-  activeLayoutSection?: string | null
-  /** Callback when layout section changes */
-  onActiveLayoutSectionChange?: (section: string | null) => void
-  // NL Mode props
-  /** Whether NL mode is enabled */
-  nlModeEnabled?: boolean
-  /** Callback when NL mode changes */
-  onNlModeChange?: (enabled: boolean) => void
   // Picker Mode props
   /** Whether picker mode is enabled (autocomplete suggestions) */
   pickerModeEnabled?: boolean
   /** Callback when picker mode changes */
   onPickerModeChange?: (enabled: boolean) => void
-  // Deep Thinking Mode props
-  /** Whether deep thinking mode is enabled (Opus 4.5 with full context) */
-  deepThinkingEnabled?: boolean
-  /** Callback when deep thinking mode changes */
-  onDeepThinkingChange?: (enabled: boolean) => void
+  // Shorthand expansion props
+  /** Whether to expand shorthand to long form (e.g., p → padding). Default: true */
+  expandShorthand?: boolean
+  /** Callback when expand shorthand changes */
+  onExpandShorthandChange?: (enabled: boolean) => void
+  // Token mode (project setting)
+  /** Token mode for picker panels (project-specific setting) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes */
+  onTokenModeChange?: (mode: boolean) => void
+  // LLM enabled toggle
+  /** Whether LLM features are enabled (translation, generation) */
+  llmEnabled?: boolean
+  /** Callback when LLM enabled changes */
+  onLlmEnabledChange?: (enabled: boolean) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -88,17 +108,30 @@ export const EditorPanel = memo(function EditorPanel({
   pages = [],
   currentPageId,
   onSelectPage,
-  activeLayoutSection: controlledActiveLayoutSection,
-  onActiveLayoutSectionChange,
-  nlModeEnabled = false,
-  onNlModeChange,
+  onDeletePage,
+  onRenamePage,
+  referencedPages = new Set(),
   pickerModeEnabled = true,
   onPickerModeChange,
-  deepThinkingEnabled = false,
-  onDeepThinkingChange,
+  expandShorthand = true,
+  onExpandShorthandChange,
+  useTokenMode,
+  onTokenModeChange,
+  llmEnabled = true,
+  onLlmEnabledChange,
 }: EditorPanelProps) {
   // Delete error state for page management
   const [deleteError, setDeleteError] = useState<{ pageId: string; references: string[] } | null>(null)
+
+  // AI generation state (for footer indicator)
+  const [isAiGenerating, setIsAiGenerating] = useState(false)
+  const [aiProgress, setAiProgress] = useState<{ currentStep: number; totalSteps: number; currentComponent: string } | undefined>()
+
+  // Ref to the PromptPanel for triggering decoration refresh
+  const promptPanelRef = useRef<PromptPanelRef>(null)
+
+  // State for smooth transition during short/long toggle
+  const [isTransforming, setIsTransforming] = useState(false)
 
   // Close delete error on outside click - stable handler with ref
   const deleteErrorRef = useRef(deleteError)
@@ -114,146 +147,6 @@ export const EditorPanel = memo(function EditorPanel({
     return () => document.removeEventListener('click', handleClick)
   }, []) // Empty deps - handler is stable via ref
 
-  // Extract sections from code using --- Name --- syntax
-  const extractSections = useCallback((code: string): string[] => {
-    const sections: string[] = []
-    for (const line of code.split('\n')) {
-      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
-      if (match) sections.push(match[1])
-    }
-    return sections
-  }, [])
-
-  // Extract code for a specific section
-  const extractSectionCode = useCallback((code: string, sectionName: string): string => {
-    const lines = code.split('\n')
-    let inSection = false
-    const sectionLines: string[] = []
-
-    for (const line of lines) {
-      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
-      if (match) {
-        if (inSection) {
-          // Found next section, stop
-          break
-        }
-        if (match[1] === sectionName) {
-          inSection = true
-          sectionLines.push(line) // Include the section header
-        }
-      } else if (inSection) {
-        sectionLines.push(line)
-      }
-    }
-
-    return sectionLines.join('\n')
-  }, [])
-
-  // Replace code for a specific section in full code
-  const replaceSectionCode = useCallback((fullCode: string, sectionName: string, newSectionCode: string): string => {
-    const lines = fullCode.split('\n')
-    const result: string[] = []
-    let inSection = false
-    let sectionReplaced = false
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
-
-      if (match) {
-        if (inSection) {
-          // Found next section, end current section replacement
-          inSection = false
-        }
-        if (match[1] === sectionName) {
-          inSection = true
-          sectionReplaced = true
-          // Add the new section code (which includes its header)
-          result.push(...newSectionCode.split('\n'))
-          continue
-        }
-      }
-
-      if (!inSection) {
-        result.push(line)
-      }
-    }
-
-    // If section wasn't found, append it
-    if (!sectionReplaced) {
-      result.push(...newSectionCode.split('\n'))
-    }
-
-    return result.join('\n')
-  }, [])
-
-  // Extract sections from each tab's code
-  const layoutSections = useMemo(() => extractSections(layoutCode), [layoutCode, extractSections])
-  const componentSections = useMemo(() => extractSections(componentsCode), [componentsCode, extractSections])
-  const tokenSections = useMemo(() => extractSections(tokensCode), [tokensCode, extractSections])
-  const dataSections = useMemo(() => extractSections(dataCode), [dataCode, extractSections])
-
-  // Active section state per tab (layout can be controlled)
-  const [internalActiveLayoutSection, setInternalActiveLayoutSection] = useState<string | null>(null)
-  const [activeComponentSection, setActiveComponentSection] = useState<string | null>(null)
-  const [activeTokenSection, setActiveTokenSection] = useState<string | null>(null)
-  const [activeDataSection, setActiveDataSection] = useState<string | null>(null)
-
-  // Use controlled state for layout section if provided
-  const activeLayoutSection = controlledActiveLayoutSection !== undefined
-    ? controlledActiveLayoutSection
-    : internalActiveLayoutSection
-
-  const setActiveLayoutSection = useCallback((section: string | null) => {
-    if (onActiveLayoutSectionChange) {
-      onActiveLayoutSectionChange(section)
-    } else {
-      setInternalActiveLayoutSection(section)
-    }
-  }, [onActiveLayoutSectionChange])
-
-  // Auto-select first section when sections change
-  useEffect(() => {
-    if (layoutSections.length > 0 && !layoutSections.includes(activeLayoutSection || '')) {
-      setActiveLayoutSection(layoutSections[0])
-    }
-  }, [layoutSections, activeLayoutSection, setActiveLayoutSection])
-
-  useEffect(() => {
-    if (componentSections.length > 0 && !componentSections.includes(activeComponentSection || '')) {
-      setActiveComponentSection(componentSections[0])
-    }
-  }, [componentSections, activeComponentSection])
-
-  useEffect(() => {
-    if (tokenSections.length > 0 && !tokenSections.includes(activeTokenSection || '')) {
-      setActiveTokenSection(tokenSections[0])
-    }
-  }, [tokenSections, activeTokenSection])
-
-  useEffect(() => {
-    if (dataSections.length > 0 && !dataSections.includes(activeDataSection || '')) {
-      setActiveDataSection(dataSections[0])
-    }
-  }, [dataSections, activeDataSection])
-
-  // Get active section for current tab
-  const activeSection = activeTab === 'layout' ? activeLayoutSection
-    : activeTab === 'components' ? activeComponentSection
-    : activeTab === 'tokens' ? activeTokenSection
-    : activeDataSection
-
-  const setActiveSection = activeTab === 'layout' ? setActiveLayoutSection
-    : activeTab === 'components' ? setActiveComponentSection
-    : activeTab === 'tokens' ? setActiveTokenSection
-    : setActiveDataSection
-
-  // Get current sections list
-  const currentSections = activeTab === 'layout' ? layoutSections
-    : activeTab === 'components' ? componentSections
-    : activeTab === 'tokens' ? tokenSections
-    : dataSections
-
   // Determine current full code and change handler based on active tab
   const fullCode = activeTab === 'layout' ? layoutCode
     : activeTab === 'components' ? componentsCode
@@ -264,20 +157,9 @@ export const EditorPanel = memo(function EditorPanel({
     : activeTab === 'tokens' ? onTokensChange
     : onDataCodeChange || (() => {})
 
-  // If there are sections and one is active, show only that section's code
-  const currentValue = (currentSections.length > 0 && activeSection)
-    ? extractSectionCode(fullCode, activeSection)
-    : fullCode
-
-  // When editing section code, replace it in full code
-  const currentOnChange = useCallback((newCode: string) => {
-    if (currentSections.length > 0 && activeSection) {
-      const updatedFullCode = replaceSectionCode(fullCode, activeSection, newCode)
-      fullCodeOnChange(updatedFullCode)
-    } else {
-      fullCodeOnChange(newCode)
-    }
-  }, [currentSections.length, activeSection, fullCode, fullCodeOnChange, replaceSectionCode])
+  // Current code value and change handler
+  const currentValue = fullCode
+  const currentOnChange = fullCodeOnChange
 
   // Check if data tab has schema definitions (for showing Generate button)
   const dataHasSchemas = useMemo(() => hasSchemas(dataCode), [dataCode])
@@ -291,26 +173,110 @@ export const EditorPanel = memo(function EditorPanel({
   // NL Mode undo history - stores original content before translation
   const [nlUndoHistory, setNlUndoHistory] = useState<Map<number, { original: string; translatedLineCount: number }>>(new Map())
 
-  // Handle NL mode translation
+  // NL Mode retry data - stores failed translation info for retry
+  const [nlRetryData, setNlRetryData] = useState<Map<number, { content: string; allLines: string[] }>>(new Map())
+
+  // Refs for NL translation timeout cleanup (K2 fix: prevent memory leaks)
+  const nlTimeoutRefs = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+  const isMountedRef = useRef(true)
+
+  // Cleanup NL timeouts on unmount
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      for (const timeoutId of nlTimeoutRefs.current) {
+        clearTimeout(timeoutId)
+      }
+      nlTimeoutRefs.current.clear()
+    }
+  }, [])
+
+  // Handle line validation and LLM translation
+  // Flow: Parse → Self-Healing → LLM (only if healing fails)
   const handleNlTranslate = useCallback(async (lineIndex: number, content: string, allLines: string[]) => {
-    // Skip if line shouldn't be translated
-    if (!shouldTranslate(content)) {
+    const trimmed = content.trim()
+
+    console.log('[NL Debug] handleNlTranslate called:', { lineIndex, content: trimmed.substring(0, 50) })
+
+    // Skip empty lines, comments, section headers
+    if (!trimmed || trimmed.startsWith('//') || (trimmed.startsWith('---') && trimmed.endsWith('---'))) {
+      console.log('[NL Debug] Skipped: empty/comment/header')
+      return
+    }
+
+    // Skip indented lines (children depend on context)
+    if (content.startsWith('  ') || content.startsWith('\t')) {
+      console.log('[NL Debug] Skipped: indented line')
+      return
+    }
+
+    // Step 1: Try to parse
+    try {
+      const parseResult = parse(content)
+      console.log('[NL Debug] Parse result:', { errors: parseResult.errors?.length, nodes: parseResult.nodes?.length, registry: parseResult.registry?.size })
+
+      // If no errors and has nodes/registry → valid DSL, skip
+      if ((!parseResult.errors || parseResult.errors.length === 0) &&
+          ((parseResult.nodes && parseResult.nodes.length > 0) ||
+           (parseResult.registry && parseResult.registry.size > 0))) {
+        console.log('[NL Debug] Valid DSL, skipping LLM')
+        return
+      }
+    } catch (e) {
+      console.log('[NL Debug] Parse exception:', e)
+      // Parse threw exception, continue to self-healing
+    }
+
+    // Step 2: Try self-healing
+    console.log('[NL Debug] Trying self-healing')
+    const healed = applyAllFixes(content)
+    const validation = validateMirrorCode(healed, false, 'de')
+
+    if (validation.valid) {
+      // Self-healing worked! Replace the line with healed version
+      logger.ai.debug('Self-healing fixed the line', { original: trimmed, healed: healed.trim() })
+
+      if (healed.trim() !== trimmed) {
+        const lines = layoutCode.split('\n')
+        lines[lineIndex] = healed.trim()
+        onLayoutChange(lines.join('\n'))
+      }
+      return
+    }
+
+    // Step 3: Self-healing failed → call LLM
+    console.log('[NL Debug] Self-healing failed, calling LLM')
+    logger.ai.debug('Self-healing failed, calling LLM', { content: trimmed, issues: validation.issues })
+
+    // Prevent concurrent translations of the same line
+    const currentStatus = nlTranslations.get(lineIndex)
+    if (currentStatus === 'translating') {
+      logger.ai.debug('Skipped - line already translating', { lineIndex })
       return
     }
 
     // Mark line as translating
     setNlTranslations(prev => new Map(prev).set(lineIndex, 'translating'))
 
+    // Clear any previous retry data for this line
+    setNlRetryData(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+
     try {
-      // Build deep thinking options if enabled
-      const deepThinkingOptions = deepThinkingEnabled ? {
-        enabled: true,
+      // Build context options
+      const contextOptions = {
+        enabled: false,
         layoutCode,
         componentsCode,
-      } : undefined
+      }
 
       const result = await translateLine(content, allLines, lineIndex, {
         onComplete: (res) => {
+          if (!isMountedRef.current) return
           // Set status based on validation result
           const status = res.isValid === false ? 'warning' : 'done'
           setNlTranslations(prev => new Map(prev).set(lineIndex, status))
@@ -320,32 +286,35 @@ export const EditorPanel = memo(function EditorPanel({
             logger.ai.warn('NL translation has validation issues', res.validationIssues)
           }
 
-          // Clear status after delay (longer for warnings, even longer for deep thinking success)
-          const clearDelay = status === 'warning' ? 4000 : (deepThinkingEnabled ? 3000 : 2000)
-          setTimeout(() => {
+          // Clear status after delay (longer for warnings)
+          const clearDelay = status === 'warning' ? 4000 : 2000
+          const timeoutId = setTimeout(() => {
+            nlTimeoutRefs.current.delete(timeoutId)
+            if (!isMountedRef.current) return
             setNlTranslations(prev => {
               const next = new Map(prev)
               next.delete(lineIndex)
               return next
             })
           }, clearDelay)
+          nlTimeoutRefs.current.add(timeoutId)
         },
         onError: () => {
+          if (!isMountedRef.current) return
           setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
-          // Clear error status after 3 seconds
-          setTimeout(() => {
-            setNlTranslations(prev => {
-              const next = new Map(prev)
-              next.delete(lineIndex)
-              return next
-            })
-          }, 3000)
+          // Store retry data so user can retry
+          setNlRetryData(prev => new Map(prev).set(lineIndex, { content, allLines }))
+          // Keep error status visible longer (don't auto-clear - let user dismiss or retry)
         },
-      }, tokensCode, deepThinkingOptions)
+      }, tokensCode, contextOptions)
 
       if (result.code && result.code !== content) {
+        // Transform LLM output to match current short/long mode
+        // LLM always outputs long form, so transform to short if needed
+        const transformedCode = expandShorthand ? result.code : transformCode(result.code, false)
+
         // Save original for undo before replacing
-        const translatedLines = result.code.split('\n')
+        const translatedLines = transformedCode.split('\n')
         setNlUndoHistory(prev => new Map(prev).set(lineIndex, {
           original: content,
           translatedLineCount: translatedLines.length
@@ -356,12 +325,65 @@ export const EditorPanel = memo(function EditorPanel({
         // Handle multi-line results
         lines.splice(lineIndex, 1, ...translatedLines)
         onLayoutChange(lines.join('\n'))
+
+        // Move cursor to the line after the translated content
+        // Use longer timeout to ensure editor has synced with new content
+        setTimeout(() => {
+          const view = promptPanelRef.current?.getEditorView()
+          if (!view) return
+
+          const doc = view.state.doc
+          const newCursorLine = lineIndex + translatedLines.length
+
+          // Calculate proper indentation based on translated content
+          // Use the indentation of the last translated line as reference
+          const lastTranslatedLine = translatedLines[translatedLines.length - 1]
+          const indentMatch = lastTranslatedLine.match(/^(\s*)/)
+          const baseIndent = indentMatch ? indentMatch[1] : ''
+
+          // For child components, add one level of indentation (2 spaces)
+          // If the last line has content (not just whitespace), indent for potential child
+          const shouldAddChildIndent = lastTranslatedLine.trim().length > 0 &&
+            !lastTranslatedLine.trim().startsWith('//') &&
+            !lastTranslatedLine.trim().startsWith('---')
+          const newLineIndent = shouldAddChildIndent ? baseIndent + '  ' : baseIndent
+
+          // If target line doesn't exist, add a new line with proper indentation
+          if (newCursorLine >= doc.lines) {
+            view.dispatch({
+              changes: { from: doc.length, to: doc.length, insert: '\n' + newLineIndent },
+              selection: { anchor: doc.length + 1 + newLineIndent.length },
+              scrollIntoView: true,
+            })
+            view.focus()
+          } else {
+            // Position cursor at the existing line, but with proper indentation
+            const targetLine = doc.line(newCursorLine + 1)
+            const existingIndent = targetLine.text.match(/^(\s*)/)?.[1] || ''
+
+            // If next line is empty or has only whitespace, add proper indentation
+            if (targetLine.text.trim() === '') {
+              view.dispatch({
+                changes: { from: targetLine.from, to: targetLine.to, insert: newLineIndent },
+                selection: { anchor: targetLine.from + newLineIndent.length },
+                scrollIntoView: true,
+              })
+            } else {
+              // Next line has content, just position cursor at start of content
+              view.dispatch({
+                selection: { anchor: targetLine.from + existingIndent.length },
+                scrollIntoView: true,
+              })
+            }
+            view.focus()
+          }
+        }, 100)
       }
     } catch (err) {
       logger.ai.error('NL translation failed', err)
       setNlTranslations(prev => new Map(prev).set(lineIndex, 'error'))
     }
-  }, [layoutCode, componentsCode, onLayoutChange, tokensCode, deepThinkingEnabled])
+  }, [layoutCode, componentsCode, onLayoutChange, tokensCode, expandShorthand, nlTranslations])
 
   // Handle NL mode undo - restore original content
   const handleNlUndo = useCallback((lineIndex: number) => {
@@ -385,6 +407,41 @@ export const EditorPanel = memo(function EditorPanel({
       return next
     })
   }, [layoutCode, onLayoutChange, nlUndoHistory])
+
+  // Handle NL mode retry - retry a failed translation
+  const handleNlRetry = useCallback((lineIndex: number) => {
+    const retryEntry = nlRetryData.get(lineIndex)
+    if (!retryEntry) return
+
+    // Clear error status and retry data
+    setNlTranslations(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+    setNlRetryData(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+
+    // Retry the translation
+    handleNlTranslate(lineIndex, retryEntry.content, retryEntry.allLines)
+  }, [nlRetryData, handleNlTranslate])
+
+  // Handle NL mode dismiss error - just clear the error without retry
+  const handleNlDismissError = useCallback((lineIndex: number) => {
+    setNlTranslations(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+    setNlRetryData(prev => {
+      const next = new Map(prev)
+      next.delete(lineIndex)
+      return next
+    })
+  }, [])
 
   // Track cursor position for context-aware generation (with full position info)
   const handleCursorChange = useCallback((pos: { line: number; column: number }) => {
@@ -415,8 +472,91 @@ export const EditorPanel = memo(function EditorPanel({
     }
   }, [isGeneratingData, dataHasSchemas, dataCode, onDataCodeChange])
 
+  // Handle Extract to Token
+  const handleExtractToken = useCallback(() => {
+    const view = promptPanelRef.current?.getEditorView()
+    if (!view) return
+
+    // Get property at cursor
+    const propInfo = getPropertyAtCursor(view)
+    if (!propInfo) {
+      logger.ui.warn('No property found at cursor')
+      return
+    }
+
+    // Get component name from current line
+    const lineText = getCurrentLineText(view)
+    const componentInfo = getComponentAtLine(lineText)
+    const componentName = componentInfo?.name || 'token'
+
+    // Generate token name and definition
+    const tokenName = generateTokenName(componentName, propInfo.property)
+    const tokenDef = createTokenDefinition(tokenName, propInfo.value)
+
+    // Add token to tokens code (at the end)
+    const newTokensCode = tokensCode.trim()
+      ? `${tokensCode.trim()}\n${tokenDef}`
+      : tokenDef
+    onTokensChange(newTokensCode)
+
+    // Replace value in editor with token reference
+    replaceInEditor(view, propInfo.valueStart, propInfo.valueEnd, tokenName)
+  }, [tokensCode, onTokensChange])
+
+  // Handle Extract Component (with optional children via shift key)
+  const handleExtractComponent = useCallback((includeChildren: boolean) => {
+    const view = promptPanelRef.current?.getEditorView()
+    if (!view) return
+
+    const lineNum = getCurrentLineNumber(view)
+    const lineText = getCurrentLineText(view)
+
+    // Get component info
+    const componentInfo = getComponentAtLine(lineText)
+    if (!componentInfo) {
+      logger.ui.warn('No component found at cursor line')
+      return
+    }
+
+    if (includeChildren) {
+      // Extract component with children
+      const blockInfo = getComponentBlock(view, lineNum)
+      if (!blockInfo || !blockInfo.componentInfo) return
+
+      // Create definition with children
+      const definition = createComponentDefinitionWithChildren(blockInfo)
+
+      // Add to components code
+      const newComponentsCode = componentsCode.trim()
+        ? `${componentsCode.trim()}\n\n${definition}`
+        : definition
+      onComponentsChange(newComponentsCode)
+
+      // Replace block with simple usage (just component name)
+      const usage = ' '.repeat(blockInfo.componentInfo.indent) + blockInfo.componentInfo.name
+      replaceLines(view, blockInfo.startLine, blockInfo.endLine, usage)
+    } else {
+      // Extract single component line
+      // Create definition (without text content)
+      const definition = createComponentDefinition(componentInfo)
+
+      // Add to components code
+      const newComponentsCode = componentsCode.trim()
+        ? `${componentsCode.trim()}\n\n${definition}`
+        : definition
+      onComponentsChange(newComponentsCode)
+
+      // Replace with usage (just name and text)
+      const usage = ' '.repeat(componentInfo.indent) + createComponentUsage(componentInfo)
+      replaceCurrentLine(view, usage)
+    }
+  }, [componentsCode, onComponentsChange])
+
   return (
-    <div style={{ padding: '4px 12px 12px 16px', width: `${width}px`, height: '100%', backgroundColor: colors.panel, boxSizing: 'border-box' }}>
+    <div
+      data-testid="editor-panel"
+      style={{ padding: '4px 12px 12px 16px', width: `${width}px`, height: '100%', backgroundColor: colors.panel, borderRight: '1px solid #1a1a1a', boxSizing: 'border-box' }}
+    >
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -433,32 +573,71 @@ export const EditorPanel = memo(function EditorPanel({
             alignItems: 'center',
             padding: '2px 4px',
           }}>
-            <div role="tablist" aria-label="Editor tabs" style={{ display: 'flex', gap: '16px' }}>
+            <div role="tablist" aria-label="Editor tabs" data-testid="editor-tablist" style={{ display: 'flex', gap: '16px' }}>
               <TabButton
-                label="Content"
+                label="Pages"
                 isActive={activeTab === 'layout'}
                 onClick={() => onTabChange('layout')}
+                testId="editor-tab-pages"
               />
               <TabButton
                 label="Components"
                 isActive={activeTab === 'components'}
                 onClick={() => onTabChange('components')}
+                testId="editor-tab-components"
               />
               <TabButton
                 label="Tokens"
                 isActive={activeTab === 'tokens'}
                 onClick={() => onTabChange('tokens')}
+                testId="editor-tab-tokens"
               />
               <TabButton
                 label="Data"
                 isActive={activeTab === 'data'}
                 onClick={() => onTabChange('data')}
+                testId="editor-tab-data"
               />
             </div>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {activeTab === 'data' && dataHasSchemas && hasApiKey() && (
+            <div style={{ display: 'flex', gap: '2px' }}>
+              {/* Undo/Redo - always visible */}
+              <IconButton
+                onClick={() => {
+                  const view = promptPanelRef.current?.getEditorView()
+                  if (view) {
+                    import('@codemirror/commands').then(({ undo }) => undo(view))
+                  }
+                }}
+                title="Undo (⌘Z)"
+                preventFocusLoss
+                color="#666"
+              >
+                {/* Undo icon from Lucide */}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7v6h6"/>
+                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+                </svg>
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  const view = promptPanelRef.current?.getEditorView()
+                  if (view) {
+                    import('@codemirror/commands').then(({ redo }) => redo(view))
+                  }
+                }}
+                title="Redo (⌘⇧Z)"
+                preventFocusLoss
+                color="#666"
+              >
+                {/* Redo icon from Lucide */}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 7v6h-6"/>
+                  <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
+                </svg>
+              </IconButton>
+              {activeTab === 'data' && dataHasSchemas && hasApiKey() && llmEnabled && (
                 <IconButton
-                  onClick={handleGenerateData}
+                  onClick={() => handleGenerateData()}
                   title="Generate Data"
                   isLoading={isGeneratingData}
                 >
@@ -512,66 +691,55 @@ export const EditorPanel = memo(function EditorPanel({
         )}
 
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
-          {/* Preview mode: Show sections navigation (same as edit mode for layout tab) */}
-          {previewMode && layoutSections.length > 0 && (
-            <SubMenu
-              items={layoutSections.map(name => ({ id: name, name }))}
-              activeId={activeLayoutSection || undefined}
-              onSelect={setActiveLayoutSection}
-            />
-          )}
-
-          {/* Edit mode: Show sections for current tab */}
-          {!previewMode && activeTab === 'layout' && layoutSections.length > 0 && (
-            <SubMenu
-              items={layoutSections.map(name => ({ id: name, name }))}
-              activeId={activeLayoutSection || undefined}
-              onSelect={setActiveLayoutSection}
-            />
-          )}
-
-          {!previewMode && activeTab === 'components' && componentSections.length > 0 && (
-            <SubMenu
-              items={componentSections.map(name => ({ id: name, name }))}
-              activeId={activeComponentSection || undefined}
-              onSelect={setActiveComponentSection}
-            />
-          )}
-
-          {!previewMode && activeTab === 'tokens' && tokenSections.length > 0 && (
-            <SubMenu
-              items={tokenSections.map(name => ({ id: name, name }))}
-              activeId={activeTokenSection || undefined}
-              onSelect={setActiveTokenSection}
-            />
-          )}
-
-          {!previewMode && activeTab === 'data' && dataSections.length > 0 && (
-            <SubMenu
-              items={dataSections.map(name => ({ id: name, name }))}
-              activeId={activeDataSection || undefined}
-              onSelect={setActiveDataSection}
+          {/* Page navigation - shown when multiple pages exist, OUTSIDE the sections container */}
+          {!previewMode && activeTab === 'layout' && pages.length > 1 && onSelectPage && onDeletePage && onRenamePage && (
+            <PageSidebar
+              pages={pages}
+              currentPageId={currentPageId || ''}
+              onSelectPage={onSelectPage}
+              onDeletePage={onDeletePage}
+              onRenamePage={onRenamePage}
+              referencedPages={referencedPages}
             />
           )}
 
           {/* Code Editor - hidden in preview mode */}
           {!previewMode && (
-            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', marginLeft: '-4px' }}>
+            <div style={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              marginLeft: 0,
+              visibility: isTransforming ? 'hidden' : 'visible',
+              cursor: isAiGenerating ? 'wait' : undefined,
+            }}>
               <LazyPromptPanel
+              key={activeTab}
+              ref={promptPanelRef}
               value={currentValue}
               onChange={currentOnChange}
               highlightLine={activeTab === 'layout' ? highlightLine : undefined}
               tab={activeTab === 'tokens' || activeTab === 'data' ? undefined : activeTab}
               getOtherTabCode={activeTab === 'tokens' || activeTab === 'data' ? undefined : () => activeTab === 'layout' ? componentsCode : layoutCode}
               tokensCode={tokensCode}
+              componentsCode={componentsCode}
+              layoutCode={layoutCode}
               designTokens={designTokens}
               autoCompleteMode={autoCompleteMode}
               onPreviewChange={activeTab === 'layout' ? onPreviewChange : undefined}
               onCursorChange={activeTab === 'layout' ? handleCursorChange : undefined}
-              nlModeEnabled={nlModeEnabled}
+              nlModeEnabled={hasApiKey() && llmEnabled}
               onNlTranslate={handleNlTranslate}
               nlTranslations={nlTranslations}
               pickerModeEnabled={pickerModeEnabled}
+              expandShorthand={expandShorthand}
+              onAiGenerating={(generating, progress) => {
+                setIsAiGenerating(generating)
+                setAiProgress(progress)
+              }}
+              onDataCodeGenerated={onDataCodeChange}
+              useTokenMode={useTokenMode}
+              onTokenModeChange={onTokenModeChange}
               />
             </div>
           )}
@@ -591,90 +759,92 @@ export const EditorPanel = memo(function EditorPanel({
             }}
           >
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              {/* NL Mode Toggle */}
-              <div
-                onClick={() => onNlModeChange?.(!nlModeEnabled)}
-                title={nlModeEnabled ? 'Natural Language – Enter übersetzt Freitext zu DSL (aktiv)' : 'Natural Language – Enter übersetzt Freitext zu DSL'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  height: '24px',
-                  padding: '0 10px',
-                  backgroundColor: nlModeEnabled ? '#3B82F620' : 'transparent',
-                  borderRadius: '4px',
-                  border: nlModeEnabled ? 'none' : `1px solid ${colors.border}`,
-                  cursor: 'pointer',
-                  boxSizing: 'border-box',
-                }}
-              >
-                {/* Zap icon */}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={nlModeEnabled ? '#3B82F6' : colors.textMuted} strokeWidth="2.5">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-                <span style={{ fontSize: '11px', color: nlModeEnabled ? '#3B82F6' : colors.textMuted, fontWeight: 500 }}>
-                  LLM
-                </span>
-              </div>
-
-              {/* Deep Thinking Toggle - only shown when NL is enabled */}
-              {nlModeEnabled && (
+              {/* LLM Toggle - shows generation progress when active, otherwise clickable toggle */}
+              {isAiGenerating ? (
                 <div
-                  onClick={() => onDeepThinkingChange?.(!deepThinkingEnabled)}
-                  title={deepThinkingEnabled
-                    ? 'Deep Thinking – Opus 4.5 mit vollem Kontext (aktiv, ~3-5s)'
-                    : 'Deep Thinking – Opus 4.5 für komplexe Komponenten (~3-5s)'}
+                  title={aiProgress?.currentComponent
+                    ? `Generiere ${aiProgress.currentStep}/${aiProgress.totalSteps}: ${aiProgress.currentComponent}`
+                    : 'KI generiert...'}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    height: '24px',
-                    padding: '0 10px',
-                    backgroundColor: deepThinkingEnabled ? '#8B5CF620' : 'transparent',
+                    height: '20px',
+                    padding: '0 8px',
+                    backgroundColor: '#3B82F620',
                     borderRadius: '4px',
-                    border: deepThinkingEnabled ? 'none' : `1px solid ${colors.border}`,
-                    cursor: 'pointer',
+                    cursor: 'default',
+                  }}
+                >
+                  {/* Animated spinner */}
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid #3B82F640',
+                    borderTopColor: '#3B82F6',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }} />
+                  <span style={{ fontSize: '10px', color: '#3B82F6', fontWeight: 500 }}>
+                    {aiProgress?.totalSteps && aiProgress.totalSteps > 1
+                      ? `${aiProgress.currentStep}/${aiProgress.totalSteps}: ${aiProgress.currentComponent || 'Generiere...'}`
+                      : aiProgress?.currentComponent || 'Generiere...'}
+                  </span>
+                </div>
+              ) : (
+                <div
+                  onClick={() => hasApiKey() && onLlmEnabledChange?.(!llmEnabled)}
+                  title={!hasApiKey()
+                    ? 'LLM nicht verfügbar – API Key fehlt'
+                    : llmEnabled
+                      ? 'LLM aktiv – Klick zum Deaktivieren'
+                      : 'LLM deaktiviert – Klick zum Aktivieren'}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    height: '20px',
+                    padding: '0 8px',
+                    backgroundColor: hasApiKey() && llmEnabled ? '#3B82F620' : 'transparent',
+                    borderRadius: '4px',
+                    border: 'none',
+                    cursor: hasApiKey() ? 'pointer' : 'not-allowed',
+                    opacity: hasApiKey() ? 1 : 0.4,
                     boxSizing: 'border-box',
                   }}
                 >
-                  {/* Brain icon for deep thinking */}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={deepThinkingEnabled ? '#8B5CF6' : colors.textMuted} strokeWidth="2">
-                    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
-                    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
-                    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
-                    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/>
-                    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/>
-                    <path d="M3.477 10.896a4 4 0 0 1 .585-.396"/>
-                    <path d="M19.938 10.5a4 4 0 0 1 .585.396"/>
-                    <path d="M6 18a4 4 0 0 1-1.967-.516"/>
-                    <path d="M19.967 17.484A4 4 0 0 1 18 18"/>
-                  </svg>
-                  <span style={{ fontSize: '11px', color: deepThinkingEnabled ? '#8B5CF6' : colors.textMuted, fontWeight: 500 }}>
-                    Deep
+                  {/* Status dot */}
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: hasApiKey() && llmEnabled ? '#1E4A7A' : colors.textMuted,
+                  }} />
+                  <span style={{ fontSize: '10px', color: hasApiKey() && llmEnabled ? '#1E4A7A' : colors.textMuted, fontWeight: 500 }}>
+                    LLM
                   </span>
                 </div>
               )}
 
-              {/* Autocomplete Toggle - with spacing from NL/DT group */}
+              {/* Autocomplete Toggle */}
               <div
                 onClick={() => onPickerModeChange?.(!pickerModeEnabled)}
-                title={pickerModeEnabled ? 'Autocomplete – Vorschläge beim Tippen (aktiv)' : 'Autocomplete – Vorschläge beim Tippen'}
+                title={pickerModeEnabled ? 'Autocomplete – Vorschläge beim Tippen (aktiv) ⌥K' : 'Autocomplete – Vorschläge beim Tippen ⌥K'}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  height: '24px',
-                  padding: '0 10px',
-                  marginLeft: '12px',
+                  gap: '5px',
+                  height: '20px',
+                  padding: '0 8px',
                   backgroundColor: pickerModeEnabled ? '#10B98120' : 'transparent',
                   borderRadius: '4px',
-                  border: pickerModeEnabled ? 'none' : `1px solid ${colors.border}`,
+                  border: 'none',
                   cursor: 'pointer',
                   boxSizing: 'border-box',
                 }}
               >
                 {/* List icon for autocomplete */}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={pickerModeEnabled ? '#10B981' : colors.textMuted} strokeWidth="2.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={pickerModeEnabled ? '#0A5540' : colors.textMuted} strokeWidth="2.5">
                   <line x1="8" y1="6" x2="21" y2="6"/>
                   <line x1="8" y1="12" x2="21" y2="12"/>
                   <line x1="8" y1="18" x2="21" y2="18"/>
@@ -682,15 +852,83 @@ export const EditorPanel = memo(function EditorPanel({
                   <line x1="3" y1="12" x2="3.01" y2="12"/>
                   <line x1="3" y1="18" x2="3.01" y2="18"/>
                 </svg>
-                <span style={{ fontSize: '11px', color: pickerModeEnabled ? '#10B981' : colors.textMuted, fontWeight: 500 }}>
+                <span style={{ fontSize: '10px', color: pickerModeEnabled ? '#0A5540' : colors.textMuted, fontWeight: 500 }}>
                   Assist
                 </span>
               </div>
+
+              {/* Shorthand Expansion Toggle */}
+              <div
+                onClick={() => {
+                  const newMode = !expandShorthand
+                  // Hide editor immediately
+                  setIsTransforming(true)
+
+                  // Transform all code tabs
+                  onLayoutChange(transformCode(layoutCode, newMode))
+                  onComponentsChange(transformCode(componentsCode, newMode))
+                  onTokensChange(transformCode(tokensCode, newMode))
+                  clearDecorationCache()
+                  onExpandShorthandChange?.(newMode)
+
+                  // Show editor after decorations are ready
+                  setTimeout(() => {
+                    promptPanelRef.current?.refreshDecorations()
+                    setIsTransforming(false)
+                  }, 100)
+                }}
+                title={expandShorthand
+                  ? 'Langform aktiv – Klick zum Deaktivieren'
+                  : 'Langform deaktiviert – Klick zum Aktivieren'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  height: '20px',
+                  padding: '0 8px',
+                  backgroundColor: expandShorthand ? '#F59E0B20' : 'transparent',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                }}
+              >
+                {/* Text/Expand icon */}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={expandShorthand ? '#7A4A08' : colors.textMuted} strokeWidth="2.5">
+                  <path d="M4 7V4h16v3"/>
+                  <path d="M9 20h6"/>
+                  <path d="M12 4v16"/>
+                </svg>
+                <span style={{ fontSize: '10px', color: expandShorthand ? '#7A4A08' : colors.textMuted, fontWeight: 500 }}>
+                  Long
+                </span>
+              </div>
+
             </div>
 
             {/* NL Translation Status & Undo */}
-            {nlModeEnabled && (nlTranslations.size > 0 || nlUndoHistory.size > 0) && (
+            {hasApiKey() && (nlTranslations.size > 0 || nlUndoHistory.size > 0) && (
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                {/* Show translating indicator */}
+                {Array.from(nlTranslations.values()).some(s => s === 'translating') && (
+                  <span
+                    title="Übersetze..."
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#3B82F620',
+                      color: '#3B82F6',
+                    }}
+                  >
+                    <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>●</span>
+                    Translating
+                  </span>
+                )}
                 {/* Show undo button if there's undo history */}
                 {nlUndoHistory.size > 0 && (
                   <button
@@ -701,8 +939,8 @@ export const EditorPanel = memo(function EditorPanel({
                     }}
                     title="Letzte Übersetzung rückgängig (Undo)"
                     style={{
-                      height: '24px',
-                      padding: '0 8px',
+                      height: '20px',
+                      padding: '0 6px',
                       borderRadius: '4px',
                       backgroundColor: 'transparent',
                       border: `1px solid ${colors.border}`,
@@ -713,30 +951,92 @@ export const EditorPanel = memo(function EditorPanel({
                       boxSizing: 'border-box',
                     }}
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M3 7v6h6"/>
                       <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13"/>
                     </svg>
                   </button>
                 )}
-                {/* Translation status indicators */}
-                {Array.from(nlTranslations.entries()).map(([line, status]) => {
-                  const statusConfig = {
-                    translating: { bg: '#F59E0B20', color: '#F59E0B', label: '...', title: 'Übersetze...' },
-                    done: { bg: '#10B98120', color: '#10B981', label: '✓', title: 'Übersetzt & validiert' },
+                {/* Translation status indicators (translating status shown inline in editor) */}
+                {Array.from(nlTranslations.entries())
+                  .filter(([, status]) => status !== 'translating') // translating spinner shown inline
+                  .map(([line, status]) => {
+                  const statusConfig: Record<string, { bg: string; color: string; label: string; title: string }> = {
+                    done: { bg: '#10B98120', color: '#10B981', label: '✓', title: 'Übersetzt' },
                     warning: { bg: '#F59E0B20', color: '#F59E0B', label: '⚠', title: 'Übersetzt, aber Validierungsprobleme' },
                     error: { bg: '#EF444420', color: '#EF4444', label: '✗', title: 'Fehler bei Übersetzung' },
                     pending: { bg: '#6B728020', color: '#6B7280', label: '○', title: 'Warte...' },
                   }
                   const config = statusConfig[status]
+                  if (!config) return null
+
+                  // For errors, show retry and dismiss buttons
+                  if (status === 'error') {
+                    const hasRetryData = nlRetryData.has(line)
+                    return (
+                      <span
+                        key={line}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '10px',
+                          fontWeight: 500,
+                          padding: '3px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: config.bg,
+                          color: config.color,
+                        }}
+                      >
+                        <span title={config.title}>{config.label}</span>
+                        {hasRetryData && (
+                          <button
+                            onClick={() => handleNlRetry(line)}
+                            title="Erneut versuchen"
+                            style={{
+                              padding: '0 4px',
+                              marginLeft: '2px',
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'inherit',
+                              cursor: 'pointer',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                            }}
+                          >
+                            ↻
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleNlDismissError(line)}
+                          title="Schließen"
+                          style={{
+                            padding: '0 2px',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'inherit',
+                            cursor: 'pointer',
+                            fontSize: '10px',
+                            opacity: 0.7,
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )
+                  }
+
                   return (
                     <span
                       key={line}
                       title={config.title}
                       style={{
-                        fontSize: '11px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '10px',
                         fontWeight: 500,
-                        padding: '4px 10px',
+                        padding: '3px 8px',
                         borderRadius: '4px',
                         backgroundColor: config.bg,
                         color: config.color,
@@ -749,6 +1049,8 @@ export const EditorPanel = memo(function EditorPanel({
                 })}
               </div>
             )}
+
+            {/* AI Generation Status - shown inline in InlineAiPanel */}
           </div>
         )}
 

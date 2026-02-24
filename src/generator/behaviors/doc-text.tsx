@@ -10,12 +10,12 @@
  * - Custom tokens are merged with defaults (custom values take precedence)
  */
 
-import React, { useCallback } from 'react'
+import React from 'react'
 import type { BehaviorHandler, RenderFn, BehaviorRegistry } from './index'
 import type { ASTNode, TokenValue } from '../../parser/types'
 import { parseDocText, normalizeIndent, type TextSegment } from '../../parser/doc-text-parser'
 import { getDocToken, docTokenToStyles, isBlockToken, type DocTokenDef } from '../../parser/doc-tokens'
-import { useTokens, useContentEditContext } from '../contexts'
+import { useTokens } from '../contexts'
 
 /**
  * Build a DocTokenDef from related tokens in the token map.
@@ -67,6 +67,8 @@ function buildDocTokenFromMap(
   // Property mapping for suffixed tokens
   const propertyMap: Record<string, keyof DocTokenDef> = {
     'size': 'size',
+    'font-size': 'size',
+    'fs': 'size',
     'col': 'col',
     'color': 'col',
     'bg': 'bg',
@@ -100,21 +102,18 @@ function buildDocTokenFromMap(
 interface RenderSegmentOptions {
   customTokens?: Map<string, TokenValue> | null
   isChild?: boolean
-  contentEditMode?: boolean
-  onBlur?: (e: React.FocusEvent<HTMLElement>, token?: string) => void
 }
 
 /**
  * Render a text segment with its token styles
  * @param isChild - true when rendering children of a block (should not wrap in <p>)
- * @param contentEditMode - true when content should be editable
  */
 function renderSegment(
   segment: TextSegment,
   index: number,
   options: RenderSegmentOptions = {}
 ): React.ReactNode {
-  const { customTokens, isChild = false, contentEditMode = false, onBlur } = options
+  const { customTokens, isChild = false } = options
 
   // Get styles from token
   let styles: React.CSSProperties = {}
@@ -138,22 +137,6 @@ function renderSegment(
     }
   }
 
-  // Add edit mode styling
-  if (contentEditMode) {
-    styles = {
-      ...styles,
-      cursor: 'text',
-      outline: 'none',
-    }
-  }
-
-  // Common editable props
-  const editableProps = contentEditMode ? {
-    contentEditable: true,
-    suppressContentEditableWarning: true,
-    onBlur: onBlur ? (e: React.FocusEvent<HTMLElement>) => onBlur(e, segment.token) : undefined,
-  } : {}
-
   // Handle link type
   if (segment.type === 'link' && segment.url) {
     return (
@@ -163,7 +146,6 @@ function renderSegment(
         style={styles}
         target="_blank"
         rel="noopener noreferrer"
-        {...editableProps}
       >
         {segment.content}
       </a>
@@ -178,14 +160,14 @@ function renderSegment(
     // If has children (inline tokens within), render them as inline (isChild=true)
     if (segment.children && segment.children.length > 0) {
       return (
-        <Tag key={index} style={styles} {...editableProps}>
+        <Tag key={index} style={styles}>
           {segment.children.map((child, i) => renderSegment(child, i, { ...options, isChild: true }))}
         </Tag>
       )
     }
 
     return (
-      <Tag key={index} style={styles} {...editableProps}>
+      <Tag key={index} style={styles}>
         {segment.content}
       </Tag>
     )
@@ -194,7 +176,7 @@ function renderSegment(
   // Handle inline type
   if (segment.type === 'inline') {
     return (
-      <span key={index} style={styles} {...editableProps}>
+      <span key={index} style={styles}>
         {segment.content}
       </span>
     )
@@ -202,9 +184,9 @@ function renderSegment(
 
   // Plain text - render as span if child of block, otherwise as paragraph
   if (isChild) {
-    return <span key={index} {...editableProps}>{segment.content}</span>
+    return <span key={index}>{segment.content}</span>
   }
-  return <p key={index} style={{ margin: 0 }} {...editableProps}>{segment.content}</p>
+  return <p key={index} style={{ margin: 0 }}>{segment.content}</p>
 }
 
 /**
@@ -218,19 +200,9 @@ interface DocTextRendererProps {
 function DocTextRenderer({ node }: DocTextRendererProps): React.ReactNode {
   // Get custom tokens from context (defined in Tokens tab)
   const customTokens = useTokens()
-  // Get content edit context
-  const { enabled: contentEditMode, onTextChange } = useContentEditContext()
 
   // Get the multiline string content
   const content = node.properties._docContent as string || node.content || ''
-
-  // Handle blur event - sync text changes back to source
-  const handleBlur = useCallback((e: React.FocusEvent<HTMLElement>, token?: string) => {
-    if (!onTextChange || !node.line) return
-
-    const newText = e.target.textContent || ''
-    onTextChange(node.line, newText, token)
-  }, [onTextChange, node.line])
 
   if (!content) {
     return null
@@ -250,8 +222,6 @@ function DocTextRenderer({ node }: DocTextRendererProps): React.ReactNode {
   // Render options
   const renderOptions: RenderSegmentOptions = {
     customTokens,
-    contentEditMode,
-    onBlur: handleBlur,
   }
 
   return (

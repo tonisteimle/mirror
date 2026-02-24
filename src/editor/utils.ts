@@ -7,11 +7,13 @@ import type { Position } from '../types/common'
 
 /**
  * Check if the cursor is inside a string literal.
- * Uses simple quote counting - odd number of quotes means inside string.
+ * Counts unescaped quotes - odd number means inside string.
  */
 export function isInsideString(textBefore: string): boolean {
-  const quoteCount = (textBefore.match(/"/g) || []).length
-  return quoteCount % 2 !== 0
+  // Count only unescaped quotes (not preceded by backslash)
+  // Match quotes that are either at start or not preceded by backslash
+  const unescapedQuotes = textBefore.match(/(?<!\\)"/g) || []
+  return unescapedQuotes.length % 2 !== 0
 }
 
 /**

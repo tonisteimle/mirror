@@ -1,10 +1,85 @@
 /**
- * Iterator Parser Module
+ * @module iterator-parser
+ * @description Iterator Parser - Parst each-Loops für Iteration
  *
- * Parses each loops for iterating over collections.
- * Syntax: each $item in $collection
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Uses dependency injection to avoid circular dependencies with component-parser.
+ * @brief Parst each-Loops zum Iterieren über Collections
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Basic Iterator
+ *   each $item in $collection
+ *     Card $item.title
+ *
+ * @syntax With Nested Path
+ *   each $task in $data.tasks
+ *     TaskItem $task.name
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PARSING-ALGORITHMUS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @algorithm parseIterator
+ *   1. Consume 'each' Keyword
+ *   2. Parse Item-Variable ($item)
+ *   3. Consume 'in' Keyword
+ *   4. Parse Collection-Variable ($collection)
+ *      - Kann Punkt-Pfad enthalten: $data.items.active
+ *   5. Erstelle _iterator Node mit iteration-Metadaten
+ *   6. Parse Template-Children (tiefere Einrückung)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OUTPUT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @output ASTNode
+ *   {
+ *     name: '_iterator',
+ *     iteration: {
+ *       itemVar: 'item',           // Variable für jedes Element
+ *       collectionVar: 'tasks',    // Root-Variable der Collection
+ *       collectionPath: ['data', 'tasks']  // Optional: Voller Pfad
+ *     },
+ *     children: [...]              // Template das wiederholt wird
+ *   }
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DEPENDENCY INJECTION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type ComponentParserFn
+ *   Injizierte Funktion um zirkuläre Dependencies zu vermeiden
+ *   parseIterator → braucht parseComponent
+ *   parseComponent → braucht parseIterator
+ *   → Lösung: parseComponent als Parameter übergeben
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Input
+ *   $tasks: [{ title: "Task 1" }, { title: "Task 2" }]
+ *
+ *   each $task in $tasks
+ *     Card
+ *       Text $task.title
+ *
+ * @example Output AST
+ *   {
+ *     name: '_iterator',
+ *     iteration: { itemVar: 'task', collectionVar: 'tasks' },
+ *     children: [{
+ *       name: 'Card',
+ *       children: [{ name: 'Text', content: '$task.title' }]
+ *     }]
+ *   }
+ *
+ * @used-by component-parser/index.ts für each-Blöcke
  */
 
 import type { ParserContext } from './parser-context'

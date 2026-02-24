@@ -1,18 +1,153 @@
 /**
- * Parser Context Module
+ * @module parser-context
+ * @description Parser Context - Shared Parser State & Cursor Operations
  *
- * Shared parser state and cursor operations.
- * Provides the core infrastructure for all parser modules.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Features:
- * - Token stream navigation with lookahead
- * - Error collection with recovery support
- * - Design token and component template registries
- * - Unique ID generation
+ * @brief Zentraler State-Container für alle Parser-Module
+ *
+ * Der ParserContext ist das Rückgrat des gesamten Parsers:
+ * - Token-Stream Navigation (current, peek, advance)
+ * - Registries für Tokens, Templates, Styles
+ * - Error Collection und Recovery
+ * - ID-Generierung für AST-Nodes
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ARCHITEKTUR
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @diagram
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                          ParserContext                                  │
+ * │  ┌─────────────────────────────────────────────────────────────────┐   │
+ * │  │ Token Stream                                                     │   │
+ * │  │ ┌───────┬───────┬───────┬───────┬───────┬─────┐                 │   │
+ * │  │ │ Token │ Token │ Token │ Token │ Token │ EOF │                 │   │
+ * │  │ └───────┴───────┴───────┴───────┴───────┴─────┘                 │   │
+ * │  │           ↑                                                      │   │
+ * │  │          pos (cursor position)                                   │   │
+ * │  └─────────────────────────────────────────────────────────────────┘   │
+ * │                                                                         │
+ * │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
+ * │  │ designTokens    │  │ registry        │  │ styleMixins     │         │
+ * │  │ Map<name,value> │  │ Map<name,templ> │  │ Map<name,style> │         │
+ * │  │ $primary: #3B82 │  │ Button: {...}   │  │ rounded: {...}  │         │
+ * │  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
+ * │                                                                         │
+ * │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
+ * │  │ errors[]        │  │ errorCollector  │  │ parseIssues[]   │         │
+ * │  │ Legacy strings  │  │ Structured      │  │ Error-tolerant  │         │
+ * │  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CURSOR-OPERATIONEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @method current() → Token | undefined
+ *   Gibt aktuelles Token zurück ohne Cursor zu bewegen
+ *   Beispiel: ctx.current()?.type === 'COMPONENT_NAME'
+ *
+ * @method peek(offset) → Token | undefined
+ *   Schaut offset Tokens voraus (default: 1)
+ *   Beispiel: ctx.peek(1)?.type === 'COLON'
+ *
+ * @method advance() → Token
+ *   Gibt aktuelles Token zurück UND bewegt Cursor um 1
+ *   Beispiel: const name = ctx.advance().value
+ *
+ * @method skipNewlines()
+ *   Überspringt alle NEWLINE Tokens
+ *   Verwendet für Block-Parsing nach Braces
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ERROR-RECOVERY
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @method recover()
+ *   Springt zum nächsten Synchronisationspunkt:
+ *   - NEWLINE
+ *   - COMPONENT_NAME
+ *   - COMPONENT_DEF
+ *   - TOKEN_VAR_DEF
+ *   - EOF
+ *
+ * @method recoverToNewline()
+ *   Einfachere Recovery: Springt nur zum nächsten NEWLINE
+ *
+ * @example Error Recovery
+ *   try {
+ *     parseProperty(ctx)
+ *   } catch {
+ *     ctx.recover() // Skip to next sync point
+ *   }
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TOKEN-EXPANSION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @method resolveTokenValue(name, visited?) → Token[]
+ *   Löst einen Token-Namen zu seiner Token-Sequenz auf
+ *   Erkennt zirkuläre Referenzen via visited Set
+ *
+ * @method expandTokenSequence(tokens, visited?) → Token[]
+ *   Expandiert TOKEN_REF Tokens rekursiv
+ *
+ * @example Token Expansion
+ *   $base: 8
+ *   $spacing: $base * 2
+ *
+ *   resolveTokenValue('spacing')
+ *   → [NUMBER "8", ARITHMETIC "*", NUMBER "2"]
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ID-GENERIERUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @method generateId(prefix) → string
+ *   Erzeugt eindeutige IDs für AST-Nodes
+ *   Format: prefix + incrementing counter
+ *
+ * @example
+ *   ctx.generateId('Button')  → 'Button1'
+ *   ctx.generateId('Button')  → 'Button2'
+ *   ctx.generateId('Card')    → 'Card1'
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * REGISTRIES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @registry designTokens Map<string, TokenValue>
+ *   Design Tokens (Variablen)
+ *   $primary: #3B82F6
+ *   $spacing: 16
+ *   $complex: l-r 4 (TokenSequence)
+ *
+ * @registry registry Map<string, ComponentTemplate>
+ *   Komponenten-Definitionen
+ *   Button: { properties: { pad: 12 }, children: [] }
+ *
+ * @registry styleMixins Map<string, StyleMixin>
+ *   Style Mixins (aktuell wenig genutzt)
+ *   rounded: { properties: { rad: 8 } }
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PARSE ISSUES (Error-Tolerant Parsing)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @collection parseIssues ParseIssue[]
+ *   Sammelt Probleme ohne Parsing abzubrechen:
+ *   - unknown_event: "onclck" (→ "onclick"?)
+ *   - unknown_property: "paddin" (→ "padding"?)
+ *   - unknown_animation: "slideup" (→ "slide-up"?)
+ *
+ * @used-by Linter, Editor-Diagnostics, Validation
  */
 
 import type { Token } from './lexer'
-import type { ComponentTemplate, StyleMixin, ASTNode, TokenValue, ParseIssue } from './types'
+import type { ComponentTemplate, StyleMixin, ASTNode, TokenValue, ParseIssue, TokenSequence } from './types'
 import { isTokenSequence } from './types'
 import { ErrorCollector, type ParseError, createError, ErrorCodes } from './errors'
 import { getBestMatch } from '../validator/utils/suggestion-engine'
@@ -35,6 +170,10 @@ export interface ParserContext {
   readonly designTokens: Map<string, TokenValue>
   readonly styleMixins: Map<string, StyleMixin>
   readonly idCounters: Map<string, number>
+
+  // Theme support
+  readonly themeDefinitions: Map<string, Map<string, TokenValue>>
+  activeTheme: string | null
 
   // Error handling (backwards compatible)
   readonly errors: string[]
@@ -78,7 +217,36 @@ export interface ParserContextOptions {
 }
 
 /**
- * Create a new parser context from a token stream.
+ * @doc createParserContext
+ * @brief Erstellt einen neuen ParserContext aus einem Token-Stream
+ * @input tokens Token[] - Lexer-Output
+ * @input source string - Original-Quellcode (für Error-Context)
+ * @input options ParserContextOptions - Optional: Parent-Tokens/Registry
+ * @output ParserContext - Vollständiger Parser-State
+ *
+ * @algorithm
+ * 1. Initialisiere leere Registries (tokens, templates, styles)
+ * 2. Pre-populate aus Parent-Context (falls vorhanden)
+ * 3. Sammle Lexer-Errors und heuristische Parse-Issues
+ * 4. Erstelle Context-Objekt mit allen Methoden
+ *
+ * @example Basic Usage
+ *   const tokens = tokenize('Button "Click"')
+ *   const ctx = createParserContext(tokens, source)
+ *   while (ctx.current()?.type !== 'EOF') {
+ *     // parse tokens
+ *   }
+ *
+ * @example With Parent Context (für eingebettete Playgrounds)
+ *   const ctx = createParserContext(tokens, source, {
+ *     parentTokens: outerDoc.tokens,
+ *     parentRegistry: outerDoc.registry
+ *   })
+ *
+ * @error-handling
+ *   - Sammelt ERROR Tokens vom Lexer
+ *   - Sammelt UNKNOWN_* Tokens als ParseIssues
+ *   - Generiert Suggestions via getBestMatch
  */
 export function createParserContext(
   tokens: Token[],
@@ -89,6 +257,8 @@ export function createParserContext(
   const designTokens = new Map<string, TokenValue>()
   const styleMixins = new Map<string, StyleMixin>()
   const idCounters = new Map<string, number>()
+  const themeDefinitions = new Map<string, Map<string, TokenValue>>()
+  let activeTheme: string | null = null
   const errors: string[] = []
   const sourceLines = source.split('\n')
   const errorCollector = new ErrorCollector(source)
@@ -170,6 +340,9 @@ export function createParserContext(
     designTokens,
     styleMixins,
     idCounters,
+    themeDefinitions,
+    get activeTheme() { return activeTheme },
+    set activeTheme(value: string | null) { activeTheme = value },
     errors,
     errorCollector,
     parseIssues,
@@ -187,7 +360,7 @@ export function createParserContext(
     },
 
     skipNewlines(): void {
-      while (ctx.current()?.type === 'NEWLINE') {
+      while (ctx.current()?.type === 'NEWLINE' || ctx.current()?.type === 'INDENT') {
         ctx.advance()
       }
     },
@@ -264,7 +437,14 @@ export function createParserContext(
     resolveTokenValue(name: string, visited: Set<string> = new Set()): Token[] {
       // Cycle detection: prevent infinite loops from circular references
       if (visited.has(name)) {
-        console.warn(`Circular token reference detected: $${name}`)
+        // Create synthetic token for position info when we don't have a source token
+        const syntheticToken: Token = { type: 'TOKEN_REF', value: name, line: 0, column: 0 }
+        ctx.addWarning(
+          'CIRCULAR_REFERENCE',
+          `Circular token reference detected: $${name}`,
+          syntheticToken,
+          `Token chain: ${[...visited].join(' → ')} → ${name}`
+        )
         return []
       }
       visited.add(name)
@@ -319,13 +499,48 @@ export function createParserContext(
 }
 
 /**
- * Maximum recursion depth for cloning children to prevent stack overflow.
+ * @constant MAX_CLONE_DEPTH
+ * @brief Maximale Rekursionstiefe für Child-Cloning
+ * @value 50
+ * @purpose Verhindert Stack Overflow bei tief verschachtelten Templates
  */
 const MAX_CLONE_DEPTH = 50
 
 /**
- * Clone children with new IDs for template instantiation.
- * Re-exported from parser-utils for convenience.
+ * @doc cloneChildrenWithNewIds
+ * @brief Klont Children mit neuen IDs für Template-Instanziierung
+ * @input children ASTNode[] - Zu klonende Kinder
+ * @input generateId (name: string) => string - ID-Generator
+ * @input depth number - Aktuelle Rekursionstiefe (intern)
+ * @output ASTNode[] - Geklonte Kinder mit neuen IDs
+ *
+ * @purpose
+ *   Wenn ein Template instanziiert wird, müssen alle Children
+ *   neue IDs bekommen, damit sie eindeutig sind.
+ *
+ * @algorithm
+ * 1. Prüfe MAX_CLONE_DEPTH (Schutz vor Stack Overflow)
+ * 2. Für jedes Kind:
+ *    a. Erstelle Shallow Copy
+ *    b. Generiere neue ID
+ *    c. Deep-Clone Properties (verhindert shared references)
+ *    d. Rekursiv Children klonen
+ *
+ * @example
+ *   // Template: Card mit 2 Children
+ *   Card: vertical
+ *     Title "Default"
+ *     Content "..."
+ *
+ *   // Bei Instanziierung:
+ *   Card "My Card"
+ *   // → Title bekommt neue ID (Title2 statt Title1)
+ *   // → Content bekommt neue ID (Content2 statt Content1)
+ *
+ * @edge-cases
+ *   - Leeres children Array → Leeres Array zurück
+ *   - MAX_CLONE_DEPTH erreicht → Flaches Klonen (Warning)
+ *   - Zirkuläre Referenzen → Nicht möglich (AST ist Tree)
  */
 export function cloneChildrenWithNewIds(
   children: ASTNode[],
@@ -333,18 +548,31 @@ export function cloneChildrenWithNewIds(
   depth: number = 0
 ): ASTNode[] {
   if (depth >= MAX_CLONE_DEPTH) {
-    console.warn(`Max clone depth (${MAX_CLONE_DEPTH}) reached`)
-    return children.map(child => ({
-      ...child,
-      id: generateId(child.name),
-      properties: { ...child.properties }
-    }))
+    // Performance safeguard: prevent excessive recursion in pathological cases.
+    // This is a defensive measure that should rarely trigger in normal usage.
+    // Note: No parser context available here - console.warn is acceptable for debugging.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[Parser] Max clone depth (${MAX_CLONE_DEPTH}) reached - using shallow clone`)
+    }
+    return children.map(child => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { _isExplicitDefinition, ...rest } = child
+      return {
+        ...rest,
+        id: generateId(child.name),
+        properties: { ...child.properties }
+      }
+    })
   }
-  return children.map(child => ({
-    ...child,
-    id: generateId(child.name),
-    // Deep clone properties to avoid shared references
-    properties: { ...child.properties },
-    children: cloneChildrenWithNewIds(child.children, generateId, depth + 1)
-  }))
+  return children.map(child => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _isExplicitDefinition, ...rest } = child
+    return {
+      ...rest,
+      id: generateId(child.name),
+      // Deep clone properties to avoid shared references
+      properties: { ...child.properties },
+      children: cloneChildrenWithNewIds(child.children, generateId, depth + 1)
+    }
+  })
 }

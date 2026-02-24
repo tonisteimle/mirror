@@ -5,7 +5,7 @@
  * This adapter allows the application to use CodeMirror through
  * a generic interface, enabling potential future editor switches.
  */
-import { EditorState, type Extension } from '@codemirror/state'
+import { EditorState, type Extension, type TransactionSpec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import type {
   IEditor,
@@ -16,6 +16,35 @@ import type {
   ScreenCoords,
   DispatchOptions,
 } from './types'
+
+/**
+ * Build a CodeMirror transaction spec from dispatch options.
+ * Shared helper to avoid duplication between CodeMirrorEditor and createCodeMirrorAdapter.
+ */
+function buildTransaction(options: DispatchOptions): TransactionSpec {
+  const transaction: TransactionSpec = {}
+
+  if (options.changes) {
+    transaction.changes = {
+      from: options.changes.from,
+      to: options.changes.to,
+      insert: options.changes.insert,
+    }
+  }
+
+  if (options.selection) {
+    transaction.selection = {
+      anchor: options.selection.anchor,
+      head: options.selection.head,
+    }
+  }
+
+  if (options.scrollIntoView) {
+    transaction.scrollIntoView = true
+  }
+
+  return transaction
+}
 
 /**
  * CodeMirror 6 implementation of IEditor.
@@ -111,28 +140,7 @@ export class CodeMirrorEditor implements IEditor {
   // === Document Modification ===
 
   dispatch(options: DispatchOptions): void {
-    const transaction: Parameters<EditorView['dispatch']>[0] = {}
-
-    if (options.changes) {
-      transaction.changes = {
-        from: options.changes.from,
-        to: options.changes.to,
-        insert: options.changes.insert,
-      }
-    }
-
-    if (options.selection) {
-      transaction.selection = {
-        anchor: options.selection.anchor,
-        head: options.selection.head,
-      }
-    }
-
-    if (options.scrollIntoView) {
-      transaction.scrollIntoView = true
-    }
-
-    this.view.dispatch(transaction)
+    this.view.dispatch(buildTransaction(options))
   }
 
   insert(text: string): void {
@@ -266,26 +274,7 @@ export function createCodeMirrorAdapter(view: EditorView): import('./types').Edi
         text: line.text,
       }
     },
-    dispatch: (options) => {
-      const transaction: Parameters<EditorView['dispatch']>[0] = {}
-      if (options.changes) {
-        transaction.changes = {
-          from: options.changes.from,
-          to: options.changes.to,
-          insert: options.changes.insert,
-        }
-      }
-      if (options.selection) {
-        transaction.selection = {
-          anchor: options.selection.anchor,
-          head: options.selection.head,
-        }
-      }
-      if (options.scrollIntoView) {
-        transaction.scrollIntoView = true
-      }
-      view.dispatch(transaction)
-    },
+    dispatch: (options) => view.dispatch(buildTransaction(options)),
     focus: () => view.focus(),
   }
 }

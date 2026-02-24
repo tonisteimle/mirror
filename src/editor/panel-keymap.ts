@@ -22,6 +22,7 @@ export interface PanelKeymapConfig {
   getColorPanelState: () => ColorPanelState
   setColorPanelState: React.Dispatch<React.SetStateAction<ColorPanelState>>
   getSelectedValue: () => string | null // Legacy name, used for color
+  getColorItemCount?: () => number // Optional, defaults to 50 (palette size)
 
   // Icon panel (optional - for backward compatibility)
   getIconPanelState?: () => InlinePanelState
@@ -36,16 +37,17 @@ export interface PanelKeymapConfig {
   getFontItemCount?: () => number
 }
 
-/** @deprecated Use PanelKeymapConfig instead */
-export type PanelKeymapOptions = PanelKeymapConfig
-
 /**
  * Create keymap extension for panel navigation.
  */
+// Default color palette size (base palette + recently used)
+const DEFAULT_COLOR_ITEM_COUNT = 50
+
 export function createPanelKeymap({
   getColorPanelState,
   setColorPanelState,
   getSelectedValue,
+  getColorItemCount,
   getIconPanelState,
   setIconPanelState,
   getIconSelectedValue,
@@ -85,9 +87,13 @@ export function createPanelKeymap({
     {
       key: 'ArrowDown',
       run: () => {
-        // Color panel: simple increment
+        // Color panel: increment with upper bound
         if (getColorPanelState().isOpen) {
-          setColorPanelState(prev => ({ ...prev, selectedIndex: prev.selectedIndex + 1 }))
+          const itemCount = getColorItemCount?.() ?? DEFAULT_COLOR_ITEM_COUNT
+          setColorPanelState(prev => ({
+            ...prev,
+            selectedIndex: Math.min(prev.selectedIndex + 1, itemCount - 1)
+          }))
           return true
         }
         // Icon panel: grid navigation
@@ -205,6 +211,7 @@ export function createPanelKeymap({
             const insertText = prepareInsertText(view, selectedValue, triggerPos)
             view.dispatch({
               changes: { from: triggerPos, to: cursorPos, insert: insertText },
+              selection: { anchor: triggerPos + insertText.length },
             })
           }
           setColorPanelState(prev => ({ ...prev, isOpen: false }))

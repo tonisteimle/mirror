@@ -10,8 +10,10 @@ import type { ComponentTemplate, DataSchema, DataRecord, TokenValue } from '../p
 import { BehaviorRegistryProvider } from './behaviors'
 import { ComponentRegistryProvider } from './component-registry'
 import { OverlayRegistryProvider } from './overlay-registry'
-import { TemplateRegistryProvider, TokenProvider, ContentEditProvider } from './contexts'
+import { TemplateRegistryProvider, TokenProvider, TypographyProvider } from './contexts'
+import type { TypographyContextValue } from './contexts'
 import { DataProvider } from './data-context'
+import { RuntimeVariableProvider } from './RuntimeVariableProvider'
 
 export interface PreviewProvidersProps {
   children: ReactNode
@@ -20,10 +22,12 @@ export interface PreviewProvidersProps {
   dataRecords?: Map<string, DataRecord[]>
   dataSchemas?: DataSchema[]
   tokens?: Map<string, TokenValue>
-  /** Whether content edit mode is active */
-  contentEditMode?: boolean
-  /** Callback when text content changes in edit mode */
-  onTextChange?: (sourceLine: number, newText: string, token?: string) => void
+  /** Theme definitions: Map<themeName, Map<tokenName, tokenValue>> */
+  themes?: Map<string, Map<string, TokenValue>>
+  /** Currently active theme name */
+  activeTheme?: string | null
+  /** Inherited typography from App (font, size, color, line-height) */
+  typography?: TypographyContextValue
 }
 
 /**
@@ -31,13 +35,13 @@ export interface PreviewProvidersProps {
  * Reduces provider nesting from 6 levels to 1.
  *
  * Includes:
+ * - TypographyProvider (inherited font/size from App)
  * - BehaviorRegistryProvider (state management)
  * - ComponentRegistryProvider (component instances)
  * - TemplateRegistryProvider (component templates)
  * - TokenProvider (design tokens)
  * - OverlayRegistryProvider (overlays/dialogs)
  * - DataProvider (data binding)
- * - ContentEditProvider (direct text editing)
  */
 export function PreviewProviders({
   children,
@@ -46,24 +50,35 @@ export function PreviewProviders({
   dataRecords = new Map(),
   dataSchemas = [],
   tokens = new Map(),
-  contentEditMode = false,
-  onTextChange,
+  themes = new Map(),
+  activeTheme = null,
+  typography = {},
 }: PreviewProvidersProps) {
+  // Note: themes and activeTheme are available for future runtime theme switching
+  // Currently, theme tokens are merged into 'tokens' at parse time
+  // Convert tokens Map to object for RuntimeVariableProvider
+  const initialVariables: Record<string, unknown> = {}
+  tokens.forEach((value, key) => {
+    initialVariables[key] = value
+  })
+
   return (
-    <BehaviorRegistryProvider>
-      <ComponentRegistryProvider onPageNavigate={onPageNavigate}>
-        <TemplateRegistryProvider registry={registry}>
-          <TokenProvider tokens={tokens}>
-            <OverlayRegistryProvider>
-              <DataProvider allRecords={dataRecords} schemas={dataSchemas}>
-                <ContentEditProvider enabled={contentEditMode} onTextChange={onTextChange}>
-                  {children}
-                </ContentEditProvider>
-              </DataProvider>
-            </OverlayRegistryProvider>
-          </TokenProvider>
-        </TemplateRegistryProvider>
-      </ComponentRegistryProvider>
-    </BehaviorRegistryProvider>
+    <TypographyProvider typography={typography}>
+      <BehaviorRegistryProvider>
+        <ComponentRegistryProvider onPageNavigate={onPageNavigate}>
+          <TemplateRegistryProvider registry={registry}>
+            <TokenProvider tokens={tokens}>
+              <RuntimeVariableProvider initialVariables={initialVariables}>
+                <OverlayRegistryProvider>
+                  <DataProvider allRecords={dataRecords} schemas={dataSchemas}>
+                    {children}
+                  </DataProvider>
+                </OverlayRegistryProvider>
+              </RuntimeVariableProvider>
+            </TokenProvider>
+          </TemplateRegistryProvider>
+        </ComponentRegistryProvider>
+      </BehaviorRegistryProvider>
+    </TypographyProvider>
   )
 }

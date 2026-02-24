@@ -35,20 +35,46 @@ export function composeConditionalStyles(
     const propsToApply = shouldApplyThen ? condProp.thenProperties : (condProp.elseProperties || {})
 
     for (const [key, value] of Object.entries(propsToApply)) {
-      // col → always text color, bg → always background color
-      if (key === 'col') style.color = String(value)
-      else if (key === 'bg') style.backgroundColor = String(value)
-      else if (key === 'w') style.width = typeof value === 'number' ? `${value}px` : String(value)
-      else if (key === 'h') style.height = typeof value === 'number' ? `${value}px` : String(value)
-      else if (key === 'pad') style.padding = typeof value === 'number' ? `${value}px` : String(value)
-      else if (key === 'rad') style.borderRadius = typeof value === 'number' ? `${value}px` : String(value)
-      else if (key === 'border') style.border = String(value)
-      else if (key === 'op') style.opacity = Number(value)
+      // Handle both short and long form property names
+      // color/col → text color, background/bg → background color
+      if (key === 'col' || key === 'color') style.color = String(value)
+      else if (key === 'bg' || key === 'background') style.backgroundColor = String(value)
+      else if (key === 'w' || key === 'width') style.width = typeof value === 'number' ? `${value}px` : String(value)
+      else if (key === 'h' || key === 'height') style.height = typeof value === 'number' ? `${value}px` : String(value)
+      else if (key === 'pad' || key === 'padding') style.padding = typeof value === 'number' ? `${value}px` : String(value)
+      else if (key === 'rad' || key === 'radius') style.borderRadius = typeof value === 'number' ? `${value}px` : String(value)
+      else if (key === 'bor' || key === 'border') style.border = String(value)
+      else if (key === 'op' || key === 'opacity') style.opacity = Number(value)
       else if (key === 'shadow') style.boxShadow = `0 ${value}px ${Number(value) * 2}px rgba(0,0,0,0.15)`
     }
   }
 
   return style
+}
+
+/**
+ * Get conditional content based on variable values.
+ * Returns the _content from the matching conditional branch.
+ */
+export function getConditionalContent(
+  conditionalProperties: ConditionalProperty[] | undefined,
+  variables: Record<string, unknown>
+): string | null {
+  if (!conditionalProperties || conditionalProperties.length === 0) {
+    return null
+  }
+
+  for (const condProp of conditionalProperties) {
+    const shouldApplyThen = evaluateCondition(condProp.condition, variables)
+    const propsToApply = shouldApplyThen ? condProp.thenProperties : (condProp.elseProperties || {})
+
+    // Check for _content in the conditional properties
+    if ('_content' in propsToApply && propsToApply._content !== undefined) {
+      return String(propsToApply._content)
+    }
+  }
+
+  return null
 }
 
 /**

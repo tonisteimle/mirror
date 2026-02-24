@@ -3,6 +3,7 @@
  */
 
 import * as LucideIcons from 'lucide-react'
+import * as PhosphorIcons from '@phosphor-icons/react'
 import type { ComponentType } from 'react'
 
 // Convert kebab-case to PascalCase: "arrow-right" -> "ArrowRight"
@@ -13,18 +14,30 @@ export function toPascalCase(str: string): string {
     .join('')
 }
 
+// Icon props (shared between Lucide and Phosphor)
+export interface IconProps {
+  size?: number
+  color?: string
+  strokeWidth?: number  // Lucide only
+  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'  // Phosphor only
+}
+
+// Legacy alias for backwards compatibility
+export type LucideIconProps = IconProps
+
 // Cache for icon lookups to avoid repeated string transformations
-const iconCache = new Map<string, ComponentType<{ size?: number; color?: string }> | null>()
+const lucideCache = new Map<string, ComponentType<IconProps> | null>()
+const phosphorCache = new Map<string, ComponentType<IconProps> | null>()
 
 /**
  * Get Lucide icon component by name (with caching).
  * @param name - kebab-case icon name (e.g., "arrow-right")
  * @returns The icon component or null if not found
  */
-export function getIcon(name: string): ComponentType<{ size?: number; color?: string }> | null {
+export function getIcon(name: string): ComponentType<IconProps> | null {
   // Check cache first
-  if (iconCache.has(name)) {
-    return iconCache.get(name)!
+  if (lucideCache.has(name)) {
+    return lucideCache.get(name)!
   }
 
   const pascalName = toPascalCase(name)
@@ -36,11 +49,39 @@ export function getIcon(name: string): ComponentType<{ size?: number; color?: st
     (typeof icon === 'object' && icon !== null && '$$typeof' in icon)
 
   const result = isValidComponent
-    ? icon as ComponentType<{ size?: number; color?: string }>
+    ? icon as ComponentType<IconProps>
     : null
 
   // Cache the result
-  iconCache.set(name, result)
+  lucideCache.set(name, result)
+  return result
+}
+
+/**
+ * Get Phosphor icon component by name (with caching).
+ * @param name - PascalCase icon name (e.g., "ArrowRight" or "House")
+ * @returns The icon component or null if not found
+ */
+export function getPhosphorIcon(name: string): ComponentType<IconProps> | null {
+  // Check cache first
+  if (phosphorCache.has(name)) {
+    return phosphorCache.get(name)!
+  }
+
+  // Phosphor icons are already PascalCase, but handle kebab-case input too
+  const pascalName = name.includes('-') ? toPascalCase(name) : name
+  const icon = (PhosphorIcons as Record<string, unknown>)[pascalName]
+
+  // Phosphor icons are ForwardRef components
+  const isValidComponent = typeof icon === 'function' ||
+    (typeof icon === 'object' && icon !== null && '$$typeof' in icon)
+
+  const result = isValidComponent
+    ? icon as ComponentType<IconProps>
+    : null
+
+  // Cache the result
+  phosphorCache.set(name, result)
   return result
 }
 
@@ -48,5 +89,6 @@ export function getIcon(name: string): ComponentType<{ size?: number; color?: st
  * Clear the icon cache (useful for testing).
  */
 export function clearIconCache(): void {
-  iconCache.clear()
+  lucideCache.clear()
+  phosphorCache.clear()
 }

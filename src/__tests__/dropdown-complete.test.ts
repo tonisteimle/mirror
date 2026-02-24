@@ -140,19 +140,19 @@ Dropdown
     expect(clickHandler?.actions[0]).toMatchObject({ type: 'toggle' })
 
     // onkeydown escape close self
-    const escapeHandler = handlers.find(h => h.event === 'onkeydown' && h.modifier === 'escape')
+    const escapeHandler = handlers.find(h => h.event === 'onkeydown' && h.key === 'escape')
     expect(escapeHandler?.actions[0]).toMatchObject({ type: 'close', target: 'self' })
 
     // onkeydown arrow-down highlight next
-    const downHandler = handlers.find(h => h.event === 'onkeydown' && h.modifier === 'arrow-down')
+    const downHandler = handlers.find(h => h.event === 'onkeydown' && h.key === 'arrow-down')
     expect(downHandler?.actions[0]).toMatchObject({ type: 'highlight', target: 'next' })
 
     // onkeydown arrow-up highlight prev
-    const upHandler = handlers.find(h => h.event === 'onkeydown' && h.modifier === 'arrow-up')
+    const upHandler = handlers.find(h => h.event === 'onkeydown' && h.key === 'arrow-up')
     expect(upHandler?.actions[0]).toMatchObject({ type: 'highlight', target: 'prev' })
 
     // onkeydown enter select highlighted
-    const enterHandler = handlers.find(h => h.event === 'onkeydown' && h.modifier === 'enter')
+    const enterHandler = handlers.find(h => h.event === 'onkeydown' && h.key === 'enter')
     expect(enterHandler?.actions[0]).toMatchObject({ type: 'select', target: 'highlighted' })
   })
 })

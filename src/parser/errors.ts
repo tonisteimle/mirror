@@ -1,12 +1,81 @@
 /**
- * Parser Errors Module
+ * @module errors
+ * @description Parser Error Handling - Professionelle Fehlerbehandlung
  *
- * Professional-grade error handling with:
- * - Structured error types with severity levels
- * - Source location tracking (line, column, end positions)
- * - Code context snippets with caret highlighting
- * - Helpful suggestions for common mistakes
- * - Error recovery support
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Strukturierte Fehler mit Severity, Locations und Suggestions
+ *
+ * Features:
+ * - Severity Levels: error, warning, info
+ * - Source Location Tracking (line, column, end positions)
+ * - Code Context Snippets mit Caret-Highlighting
+ * - Hilfreiche Suggestions für häufige Fehler
+ * - Error Recovery Support
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ERROR CODES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @category Lexer (L0xx)
+ *   L001 UNTERMINATED_STRING    Ungeschlossener String
+ *   L002 INVALID_CHARACTER      Ungültiges Zeichen
+ *   L003 INVALID_NUMBER         Ungültige Zahl
+ *
+ * @category Parser (P0xx)
+ *   P001 UNEXPECTED_TOKEN       Unerwartetes Token
+ *   P002 MISSING_COMPONENT_NAME Fehlender Component-Name
+ *   P003 INVALID_PROPERTY_VALUE Ungültiger Property-Wert
+ *   P004 UNCLOSED_BLOCK         Ungeschlossener Block
+ *   P005 INVALID_INDENT         Ungültige Einrückung
+ *
+ * @category Semantic (S0xx)
+ *   S001 UNDEFINED_TOKEN        Undefinierter Token
+ *   S002 UNDEFINED_COMPONENT    Undefinierte Komponente
+ *   S003 DUPLICATE_DEFINITION   Doppelte Definition
+ *   S004 CIRCULAR_REFERENCE     Zirkuläre Referenz
+ *   S005 TYPE_MISMATCH          Typ-Mismatch
+ *   S006 CANNOT_INFER_PROPERTY  Property nicht ableitbar
+ *
+ * @category Warnings (W0xx)
+ *   W001 UNUSED_TOKEN           Unbenutzter Token
+ *   W002 DEPRECATED_SYNTAX      Veraltete Syntax
+ *   W003 POSSIBLE_TYPO          Möglicher Tippfehler
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ERROR FORMATTING
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Formatted Error Output
+ *   ERROR [P001] at line 5:12: Unexpected token "pad"
+ *      5 | Button pad 16 #3B82F6
+ *        |        ^^^
+ *   Hint: Did you mean "padding"?
+ *
+ * @function formatError(error, sourceLines)
+ *   Erzeugt formatierte Fehlerausgabe mit Code-Context
+ *
+ * @function formatErrors(errors, sourceLines)
+ *   Formatiert mehrere Fehler
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ERROR COLLECTOR
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @class ErrorCollector
+ *   Sammelt Fehler während des Parsings
+ *
+ * @method add(error) - Fehler hinzufügen
+ * @method addError(code, msg, line, col) - Error shorthand
+ * @method addWarning(code, msg, line, col) - Warning shorthand
+ * @method hasErrors() - Prüft auf Errors (nicht Warnings)
+ * @method getErrors() - Alle Fehler
+ * @method getSorted() - Nach Zeile sortiert
+ * @method format() - Formatierte Ausgabe
+ *
+ * @used-by parser-context.ts für Error-Tracking
  */
 
 import type { Token } from './lexer'

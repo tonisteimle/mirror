@@ -18,6 +18,15 @@ export { TokenProvider } from './token-context'
 export { ContainerContext, useContainerContext, type ContainerContextValue } from './container-context'
 export { templateToNode } from './container-utils'
 
-// Content Edit Context
-export { ContentEditContext, useContentEditMode, useContentEditContext, ContentEditProvider } from './content-edit-context'
-export type { ContentEditContextValue } from './content-edit-context'
+// State Override Context
+export { StateOverrideContext, StateOverrideProvider, useStateOverride, buildStateOverrides } from './state-override-context'
+export type { StateOverrideContextValue, StateChildOverride } from './state-override-context'
+
+// Typography Context (inherited font/size from App)
+export {
+  TypographyContext,
+  TypographyProvider,
+  useTypography,
+  extractTypography
+} from './typography-context'
+export type { TypographyContextValue } from './typography-context'

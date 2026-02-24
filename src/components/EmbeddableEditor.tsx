@@ -58,7 +58,7 @@ const styles = {
   previewWrapper: {
     backgroundColor: colors.preview,
     color: '#fff',
-    minHeight: '120px',
+    padding: '16px',
   },
   error: {
     padding: '12px 16px',
@@ -89,7 +89,6 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   const [error, setError] = useState<string | null>(null)
   const editorContainerRef = useRef<HTMLDivElement>(null)
   const editorViewRef = useRef<EditorView | null>(null)
-  const autoCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Refs for callbacks to avoid recreating editor on every state change
   const keymapCallbacksRef = useRef<KeymapCallbacks | null>(null)
@@ -242,9 +241,6 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
     const extensions = createEditorExtensions({
       keymapConfig: {
         callbacks: wrappedCallbacks,
-        getAutoCompleteMode: () => 'always',
-        getCurrentTab: () => 'layout',
-        autoCompleteTimeoutRef,
       },
       panelKeymapConfig: {
         getColorPanelState: () => colorPanelRef.current.state,
@@ -254,10 +250,11 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
       autocompleteOptions: {
         getDesignTokens: () => designTokensRef.current,
       },
-      colorSwatchConfig: {
-        onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
-        getDesignTokens: () => designTokensRef.current,
-      },
+      // Color swatches disabled - causing UI issues
+      // colorSwatchConfig: {
+      //   onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
+      //   getDesignTokens: () => designTokensRef.current,
+      // },
     })
 
     const state = EditorState.create({

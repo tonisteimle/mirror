@@ -1,23 +1,96 @@
 /**
- * Data Parser for Data Tab
+ * @module data-parser
+ * @description Data Parser - Parst Schema-Definitionen und Daten-Instanzen
  *
- * Parses the new unified Data tab syntax:
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * // Schema definitions (auto-detected by field types)
- * Task:
- *   title: text
- *   done: boolean
- *   category: Category
+ * @brief Parst den Data-Tab mit Schema-Definitionen und Daten-Instanzen
  *
- * Category:
- *   name: text
+ * Der Data-Tab ermöglicht strukturierte Daten für Iteration und Binding.
  *
- * // Data instances (values in field order)
- * - Category "Arbeit"
- * - Category "Privat"
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * - Task "Einkaufen" false Category[0]
- * - Task "Sport" true Category[1]
+ * @syntax Schema Definition
+ *   TypeName:               ← Uppercase, endet mit :
+ *     fieldName: fieldType  ← Eingerückt, field: type
+ *
+ * @syntax Data Instance
+ *   - TypeName value1, value2, ...  ← - Prefix, Werte komma-getrennt
+ *
+ * @syntax Reference
+ *   TypeName[index]         ← Referenz auf andere Instanz
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FIELD TYPES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type text/string → String-Wert
+ * @type number/int/integer/float → Numerischer Wert
+ * @type boolean/bool → true/false
+ * @type TypeName → Relation zu anderem Schema
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Schema + Instanzen
+ *   Category:
+ *     name: text
+ *
+ *   Task:
+ *     title: text
+ *     done: boolean
+ *     category: Category
+ *
+ *   - Category "Arbeit"
+ *   - Category "Privat"
+ *
+ *   - Task "Einkaufen", false, Category[0]
+ *   - Task "Sport", true, Category[1]
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OUTPUT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @interface DataParseResult
+ *   schemas: DataSchema[]    → Typ-Definitionen
+ *   instances: DataInstance[] → Daten-Instanzen
+ *   errors: string[]         → Parse-Fehler
+ *
+ * @interface DataSchema
+ *   typeName: string         → z.B. "Task"
+ *   fields: DataField[]      → Feld-Definitionen
+ *
+ * @interface DataInstance
+ *   typeName: string         → z.B. "Task"
+ *   _id: string              → Auto-generiert: "task-0"
+ *   values: DataInstanceValue[]
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseDataCode(code) → DataParseResult
+ *   Parst Data-Tab Code in Schemas und Instanzen
+ *
+ * @function instancesToRecords(schemas, instances) → Map<string, DataRecord[]>
+ *   Konvertiert zu Record-Format für Generator
+ *   Collection-Namen werden pluralisiert: Task → tasks
+ *
+ * @function getCollectionName(typeName) → string
+ *   Pluralisiert Type-Namen: Task→tasks, Category→categories
+ *
+ * @function hasSchemas(code) → boolean
+ *   Prüft ob Code Schema-Definitionen enthält
+ *
+ * @function generateInstancesSyntax(schemas, count?) → string
+ *   Generiert Sample-Daten-Syntax für AI
+ *
+ * @used-by Generator für Data-Binding und Iteration
  */
 
 import type {

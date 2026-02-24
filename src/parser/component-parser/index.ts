@@ -1,23 +1,81 @@
 /**
- * Component Parser Module
+ * @module component-parser
+ * @description Kern-Logik für Komponenten-Parsing
  *
- * The core component parsing logic.
- * Parses component definitions and instances with:
- * - Modifiers, properties, and content
- * - Child components
- * - Library component integration
- * - Template inheritance (from keyword)
- * - Conditional rendering (if/else)
- * - Iteration (each)
+ * Parst Komponenten-Definitionen und -Instanzen aus tokenisiertem DSL-Code.
+ * Unterscheidet zwischen Definitionen (mit Colon) und Instanzen (ohne Colon).
  *
- * This module has been refactored into smaller, maintainable sub-modules:
- * - types.ts: Type definitions
- * - constants.ts: Constants (HTML_PRIMITIVES, GENERIC_CONTAINERS)
- * - named-instance-parser.ts: Named instance pattern parsing
- * - library-defaults.ts: Library component defaults
- * - children-merger.ts: Children merging logic
- * - template-logic.ts: Template registration and application
- * - inline-properties.ts: Inline properties, events, conditionals
+ * @syntax-patterns
+ * | Pattern                        | Typ         | Beispiel                    |
+ * |--------------------------------|-------------|----------------------------|
+ * | Name: props                    | Definition  | Button: pad 12             |
+ * | Name props                     | Instanz     | Button "Click"             |
+ * | Child: Parent props            | Vererbung   | DangerBtn: Button bg red   |
+ * | Child from Parent props        | Vererbung   | DangerBtn from Button      |
+ * | Email: Input props             | Prim. Def.  | Email: Input type email    |
+ * | Name as Library props          | Library     | Tabs as Dropdown w 200     |
+ * | Name named Instance props      | Named Inst. | Panel named Main "Content" |
+ *
+ * @flow
+ * parseComponent(ctx, baseIndent)
+ *   │
+ *   ├─► parseNamedInstance() → instanceName, componentType
+ *   │
+ *   ├─► applyLibraryDefaults() → States, Slots von Library
+ *   │
+ *   ├─► "from" Keyword? → applyTemplate() für Vererbung
+ *   │
+ *   ├─► isBlockStart()? ─► parseBlockContent()
+ *   │        │
+ *   │        └─► parseInlineProperties()
+ *   │
+ *   ├─► handleTemplateLogic() → Registry-Eintrag
+ *   │
+ *   ├─► parseChildren() → Kinder rekursiv parsen
+ *   │
+ *   └─► mergeInstanceChildren() → Flat Access, Slot-Merge
+ *
+ * @sub-modules
+ * - types.ts: ASTNode, ComponentTemplate Typen
+ * - constants.ts: HTML_PRIMITIVES, GENERIC_CONTAINERS
+ * - named-instance-parser.ts: Named Instance Patterns
+ * - library-defaults.ts: Library-Komponenten Defaults
+ * - children-merger.ts: Kinder-Merge-Logik
+ * - template-logic.ts: Template-Registrierung
+ * - inline-properties.ts: Inline-Properties + Events
+ *
+ * @template-logic
+ * 1. Definition (Name:) → Speichert in ctx.registry
+ * 2. Erste Nutzung (Name) → Definiert implizit + rendert
+ * 3. Weitere Nutzung → Erbt von Registry
+ *
+ * @flat-access
+ * Ermöglicht direkten Zugriff auf verschachtelte Slots:
+ * Card
+ *   Title "Hello"    // → findet Card.Title, egal wie tief
+ *
+ * @primitive-inheritance
+ * Primitive Komponenten (Input, Image, etc.) können erweitert werden:
+ *   Email: Input type email, placeholder "you@example.com"
+ *   → node.properties._primitiveType = 'Input'
+ *   → node erbt Input-Verhalten, bekommt eigene Properties
+ *
+ * @layout-defaults
+ * Strukturelle Komponenten erhalten automatische Layout-Properties:
+ *   Card, Header, Footer, Sidebar → hor/ver, gap, padding
+ *   Aktiviert via applyLayoutDefaultsToNode()
+ *   Nur wenn keine expliziten Layout-Properties gesetzt
+ *
+ * @syntax-version
+ * _syntaxVersion: 2 wird gesetzt wenn:
+ *   - Block-Syntax verwendet wird (mit Block-Content)
+ *   - Inline-Syntax ohne Braces verwendet wird
+ *   Markiert v2-kompatible Syntax für Generator
+ *
+ * @example
+ * // Tokens: COMPONENT_NAME 'Button', BRACE_OPEN, PROPERTY 'pad', ...
+ * parseComponent(ctx, 0)
+ * // → ASTNode { name: 'Button', properties: { pad: 12 }, children: [] }
  */
 
 import type { ParserContext } from '../parser-context'
@@ -30,14 +88,19 @@ import { applyTemplate, createTemplateFromNode } from '../parser-utils'
 
 // Import sub-modules
 import { parseNamedInstance } from './named-instance-parser'
+import { HTML_PRIMITIVES } from './constants'
 import { applyLibraryDefaults } from './library-defaults'
 import { mergeInstanceChildren } from './children-merger'
 import { handleTemplateLogic, saveToTemplate } from './template-logic'
 import { parseInlineProperties } from './inline-properties'
+import { parseBlockContent, isBlockStart } from '../block-parser'
+
+// Import layout defaults for structural components
+import { applyLayoutDefaultsToNode, hasLayoutDefaults, hasLayoutSlot } from '../../library/layout-defaults'
 
 // Re-export types for backwards compatibility
 export * from './types'
-export { HTML_PRIMITIVES, GENERIC_CONTAINERS } from './constants'
+export { HTML_PRIMITIVES, GENERIC_CONTAINERS, BUILT_IN_COMPONENTS } from './constants'
 export { parseNamedInstance } from './named-instance-parser'
 export { applyLibraryDefaults } from './library-defaults'
 export { mergeInstanceChildren, mergeChildrenRecursive } from './children-merger'
@@ -45,14 +108,60 @@ export { handleTemplateLogic, copyTemplateExtras, saveToTemplate } from './templ
 export { parseInlineProperties, parseInlineEventHandler, parseInlineConditional, parseInlineConditionalProperties } from './inline-properties'
 
 /**
- * Parse a component definition or instance.
+ * @doc parseComponent
+ * @brief Parst eine Komponenten-Definition oder -Instanz
  *
- * @param ctx Parser context
- * @param baseIndent Base indentation level
- * @param parentScope Optional parent scope for scoped naming
- * @param isExplicitDefinition Whether this is an explicit definition (with colon)
- * @param isChildOfDefinition Whether this is a child of a definition
- * @returns Parsed AST node or null
+ * @syntax
+ * // Definition (speichert in Registry, rendert nicht)
+ * Button: pad 12, bg #3B82F6
+ *
+ * // Instanz (verwendet Registry, rendert)
+ * Button "Click me"
+ *
+ * // Vererbung (Child: Parent props)
+ * DangerButton: Button bg #EF4444
+ *
+ * // Named Instance
+ * Panel named Dashboard "Content"
+ *
+ * // Named Primitive
+ * Input Email: type email, "Email..."
+ *
+ * @input
+ * - ctx: ParserContext - Aktueller Token muss COMPONENT_NAME/COMPONENT_DEF sein
+ * - baseIndent: number - Basis-Einrückung für Kind-Erkennung
+ * - parentScope?: string - Eltern-Scope für Registry-Keys (z.B. "Card.Header")
+ * - isExplicitDefinition: boolean - Ob Colon vorhanden (Definition)
+ * - isChildOfDefinition: boolean - Ob Kind einer Definition
+ *
+ * @output ASTNode | null
+ * {
+ *   type: 'component',
+ *   name: string,           // Komponenten-Name
+ *   id: string,             // Generierte ID
+ *   instanceName?: string,  // Bei "named" Instanz
+ *   properties: {},         // Geparste Properties
+ *   children: [],           // Kinder-Nodes
+ *   eventHandlers?: [],     // Inline-Events
+ *   states?: [],            // State-Definitionen
+ *   _isExplicitDefinition?: boolean,
+ *   _syntaxVersion?: 2
+ * }
+ *
+ * @algorithm
+ * 1. Consume COMPONENT_NAME/COMPONENT_DEF Token
+ * 2. parseNamedInstance() → Erkennt "named", "as", Primitive-Pattern
+ * 3. applyLibraryDefaults() → Wenn Library-Komponente
+ * 4. Prüfe "from" Keyword → applyTemplate() für Vererbung
+ * 5. isBlockStart()? → parseBlockContent()
+ *    sonst → parseInlineProperties()
+ * 6. handleTemplateLogic() → Registry-Eintrag
+ * 7. parseChildren() → Rekursiv Kinder parsen
+ * 8. mergeInstanceChildren() → Flat Access, Slot-Merge
+ *
+ * @example
+ * // Input: Button pad 12, "Click"
+ * // Output: { name: 'Button', properties: { pad: 12 }, children: [{ type: 'text', ... }] }
  */
 export function parseComponent(
   ctx: ParserContext,
@@ -73,11 +182,32 @@ export function parseComponent(
     isExplicitDefinition = true
   }
 
+  // V2 syntax: Check for COLON after component name (e.g., "Header:" in block syntax)
+  // In V2, the lexer emits COMPONENT_NAME + COLON + BRACE_OPEN as separate tokens
+  if (ctx.current()?.type === 'COLON') {
+    isExplicitDefinition = true
+    ctx.advance() // consume the colon
+  }
+
+  // Check for inline inheritance: DangerButton: Button bg #EF4444
+  // Also handles inheriting from primitives: InputBase: Input pad 8
+  let baseComponentName: string | undefined
+  let basePrimitiveType: string | undefined
+  if (isExplicitDefinition &&
+      ctx.current()?.type === 'COMPONENT_NAME') {
+    const nextValue = ctx.current()!.value
+    if (ctx.registry.has(nextValue)) {
+      baseComponentName = ctx.advance().value // consume the base component name
+    } else if (HTML_PRIMITIVES.includes(nextValue)) {
+      basePrimitiveType = ctx.advance().value // consume the primitive type
+    }
+  }
+
   // Parse named instance patterns
   const namedResult = parseNamedInstance(ctx, componentName, isExplicitDefinition)
   componentName = namedResult.componentName
   isExplicitDefinition = namedResult.isExplicitDefinition
-  const { instanceName, componentType, libraryType } = namedResult
+  const { instanceName, componentType, libraryType, customComponentType } = namedResult
 
   // Determine the scoped name for registry lookup/storage
   const scopedName = parentScope ? `${parentScope}.${componentName}` : componentName
@@ -85,7 +215,8 @@ export function parseComponent(
   const node: ASTNode = {
     type: 'component',
     name: componentName,
-    id: ctx.generateId(componentName),
+    // Use instanceName as id if provided (for event targeting: "onclick toggle myPanel")
+    id: instanceName || ctx.generateId(componentName),
     properties: {},
     children: [],
     line: startToken.line,
@@ -107,11 +238,44 @@ export function parseComponent(
     node.properties._primitiveType = componentType
   }
 
+  // Mark the primitive type for inheritance from primitives (e.g., InputBase: Input)
+  if (basePrimitiveType) {
+    node.properties._primitiveType = basePrimitiveType
+  }
+
   // Apply library component defaults (states, slot properties)
   applyLibraryDefaults(ctx, node, libraryType, parentScope, startToken)
 
+  // Apply custom component type template: label as Standardtext
+  // The node keeps its name ("label") but gets properties/children from "Standardtext"
+  if (customComponentType && ctx.registry.has(customComponentType)) {
+    applyTemplate(
+      ctx.registry,
+      node,
+      customComponentType,
+      customComponentType,
+      (children) => cloneChildrenWithNewIds(children, ctx.generateId.bind(ctx))
+    )
+    // Store the original type for reference
+    node._customComponentType = customComponentType
+  }
+
   // Collect inline child slots (to be merged after template application)
   const inlineSlots: ASTNode[] = []
+
+  // Apply inline inheritance: DangerButton: Button ...
+  // baseComponentName was detected above after the COLON
+  if (baseComponentName) {
+    applyTemplate(
+      ctx.registry,
+      node,
+      baseComponentName,
+      baseComponentName,
+      (children) => cloneChildrenWithNewIds(children, ctx.generateId.bind(ctx))
+    )
+    // Mark the extends property for template storage
+    node.extends = baseComponentName
+  }
 
   // Check for "from" keyword: NewComponent from BaseComponent ...
   if (ctx.current()?.type === 'KEYWORD' && ctx.current()?.value === 'from') {
@@ -119,25 +283,76 @@ export function parseComponent(
 
     // Get base component name and apply its template
     if (ctx.current()?.type === 'COMPONENT_NAME') {
-      const baseComponentName = ctx.advance().value
+      const baseName = ctx.advance().value
       applyTemplate(
         ctx.registry,
         node,
-        baseComponentName,
-        baseComponentName,
+        baseName,
+        baseName,
         (children) => cloneChildrenWithNewIds(children, ctx.generateId.bind(ctx))
       )
     }
   }
 
-  // Parse properties and content on the same line
-  parseInlineProperties(ctx, node, componentName, inlineSlots)
+  // Initialize source span
+  node._sourceSpan = {
+    start: { line: startToken.line, column: startToken.column },
+    end: { line: startToken.line, column: startToken.column }
+  }
+
+  // Track if we used block syntax (children already parsed inside braces)
+  let usedBlockSyntax = false
+
+  // Check for v2 brace-based syntax
+  if (isBlockStart(ctx)) {
+    // v2 brace syntax
+    node._syntaxVersion = 2
+    usedBlockSyntax = true
+    ctx.advance() // consume {
+    parseBlockContent(ctx, node, (innerCtx, _indent) => parseComponent(innerCtx, 0))
+    if (ctx.current()?.type === 'BRACE_CLOSE') {
+      const closeToken = ctx.current()!
+      node._sourceSpan.end = { line: closeToken.line, column: closeToken.column + 1 }
+      node.endLine = closeToken.line
+      node.endColumn = closeToken.column + 1
+      ctx.advance()
+    }
+  } else {
+    // Inline syntax (without braces) - parsed directly, no normalization needed
+    node._syntaxVersion = 2
+    parseInlineProperties(ctx, node, componentName, inlineSlots, baseIndent)
+  }
+
+  // Extract direct parent name from parentScope (e.g., "Card.Header" → "Card")
+  const directParentName = parentScope?.split('.').pop()
+
+  // Apply layout defaults for structural components (Header, Footer, Card, Table, etc.)
+  // Defaults are applied UNDER user properties, so user props always win
+  if (!node._isLibrary) {
+    // Check if this is a SLOT of a layout parent (e.g., Header inside Card)
+    const isLayoutSlot = directParentName && hasLayoutSlot(directParentName, componentName)
+
+    // Check if this is a standalone layout component (e.g., Card at root level)
+    const isStandaloneLayoutComponent = hasLayoutDefaults(componentName)
+
+    // Apply defaults if:
+    // 1. This is a slot of a layout parent (ALWAYS apply slot defaults, regardless of registry)
+    // 2. OR this is a standalone layout component AND not yet in registry (first occurrence)
+    if (isLayoutSlot || (isStandaloneLayoutComponent && !ctx.registry.has(componentName))) {
+      // Store user-specified properties (these take precedence)
+      const userProps = { ...node.properties }
+
+      // Apply defaults - user props override defaults
+      node.properties = applyLayoutDefaultsToNode(componentName, directParentName, userProps)
+    }
+  }
 
   // Check if this instance has its own properties
   const hasOwnProps = Object.keys(node.properties).length > 0
 
   // Handle template registration/application
-  handleTemplateLogic(ctx, node, scopedName, componentName, isExplicitDefinition, isChildOfDefinition, hasOwnProps)
+  // Pass directParentName to skip template inheritance for layout slots
+  handleTemplateLogic(ctx, node, scopedName, componentName, isExplicitDefinition, isChildOfDefinition, hasOwnProps, directParentName)
 
   // Register named instances as templates for reuse
   // e.g., Input Email "placeholder" -> registers Email as reusable template
@@ -145,11 +360,29 @@ export function parseComponent(
     ctx.registry.set(instanceName, createTemplateFromNode(node))
   }
 
-  // Merge inline slots: replace matching children or add new ones
+  // Merge inline slots: merge properties with existing children or add new ones
   for (const slot of inlineSlots) {
     const existingIndex = node.children.findIndex(c => c.name === slot.name)
     if (existingIndex >= 0) {
-      node.children[existingIndex] = slot
+      const existing = node.children[existingIndex]
+      // Merge properties from inline slot into existing template child
+      Object.assign(existing.properties, slot.properties)
+      // When setting visible: true, clear hidden from direct children
+      if (slot.properties.visible === true && existing.children.length > 0) {
+        for (const child of existing.children) {
+          if (child.properties.hidden === true) {
+            delete child.properties.hidden
+          }
+        }
+      }
+      // Override content if provided
+      if (slot.content) {
+        existing.content = slot.content
+      }
+      // Merge children if provided
+      if (slot.children.length > 0) {
+        existing.children = slot.children
+      }
     } else {
       node.children.push(slot)
     }
@@ -161,14 +394,25 @@ export function parseComponent(
   }
 
   // Parse children (using dependency injection to avoid circular imports)
-  // For library components with as syntax, use libraryType as parent scope for slot validation
-  // Use scopedName so template lookups work correctly (e.g., Dropdown.Content instead of just Content)
-  const parentScopeForChildren = libraryType || scopedName
-  const instanceChildren = parseChildrenImpl(
-    ctx, node, baseIndent, parentScopeForChildren,
-    parseComponent,
-    (ctx, childIndent, compName, parseFn) => parseIterator(ctx, childIndent, compName, parseFn)
-  )
+  // For block syntax, children are already parsed in parseBlockContent
+  // Only parse indentation-based children for inline syntax (without braces)
+  // When inside a definition block (isChildOfDefinition=true AND baseIndent=0),
+  // don't parse indentation-based children because parseBlockContent handles siblings.
+  // For indentation syntax (baseIndent>0), children CAN parse their grandchildren.
+  let instanceChildren: ASTNode[] = []
+
+  // Only skip children parsing for block definitions (baseIndent=0)
+  const insideBlockDef = isChildOfDefinition && baseIndent === 0
+  if (!usedBlockSyntax && !insideBlockDef) {
+    // For library components with as syntax, use libraryType as parent scope for slot validation
+    // Use scopedName so template lookups work correctly (e.g., Dropdown.Content instead of just Content)
+    const parentScopeForChildren = libraryType || scopedName
+    instanceChildren = parseChildrenImpl(
+      ctx, node, baseIndent, parentScopeForChildren,
+      parseComponent,
+      (ctx, childIndent, compName, parseFn) => parseIterator(ctx, childIndent, compName, parseFn)
+    )
+  }
 
   // Merge instance children with template children using flat access
   mergeInstanceChildren(node, instanceChildren, isExplicitDefinition)

@@ -1,6 +1,43 @@
 /**
- * JSON array/object parsing logic for the Mirror DSL lexer.
- * Used for parsing data token values like $tasks: [{ title: "Task 1" }]
+ * @module json-lexer
+ * @description JSON-Parsing für den Mirror DSL Lexer
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst JSON Arrays/Objects für Data-Token-Werte
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax JSON Array für Data-Token
+ *   $tasks: [{ title: "Task 1", done: false }]
+ *
+ * @syntax Mehrzeiliges JSON
+ *   $items: [
+ *     { id: 1, name: "Item 1" },
+ *     { id: 2, name: "Item 2" }
+ *   ]
+ *
+ * @token JSON_VALUE
+ *   value enthält kompletten JSON-String (inkl. Zeilenumbrüche)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PARSING-LOGIK
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @algorithm
+ * 1. Zähle öffnende [ und schließende ]
+ * 2. Beachte Strings (kein Bracket-Counting in "...")
+ * 3. Handle Escape-Sequences (\", \\)
+ * 4. Sammle Content über mehrere Zeilen bis Balance = 0
+ *
+ * @returns newLineNum für korrekten Line-Counter nach Multi-Line JSON
+ *
+ * @used-by Parser für Data-Token-Definitionen
+ * @used-by each-Loops mit JSON-Array-Daten
  */
 
 import type { Token } from './token-types'

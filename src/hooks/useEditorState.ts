@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { STORAGE_KEYS } from '../constants'
 import type { EditorTab } from '../components/EditorPanel'
 import type { DataSchema, DataInstance, DataRecord } from '../parser/types'
 import { parseDataCode, instancesToRecords } from '../parser/data-parser'
+import { defaultComponentsCode, defaultTokensCode } from './useEditor'
 
 export type AutoCompleteMode = 'always' | 'delay' | 'off'
 
@@ -17,15 +18,8 @@ export interface UseEditorStateReturn {
   setHighlightLine: (line: number | undefined) => void
   autoCompleteMode: AutoCompleteMode
   setAutoCompleteMode: (mode: AutoCompleteMode) => void
-  // NL Mode: Natural Language translation on Enter
-  nlModeEnabled: boolean
-  setNlModeEnabled: (enabled: boolean) => void
-  // Picker Mode: Autocomplete pickers enabled/disabled
-  pickerModeEnabled: boolean
-  setPickerModeEnabled: (enabled: boolean) => void
-  // Deep Thinking Mode: Use Opus 4.5 with full context
-  deepThinkingEnabled: boolean
-  setDeepThinkingEnabled: (enabled: boolean) => void
+  // Note: pickerModeEnabled, qualityModeEnabled, expandShorthand, llmEnabled
+  // are now managed by useAppState and persisted with the project
   // Data tab state (unified code for schema + instances)
   dataCode: string
   setDataCode: (code: string) => void
@@ -38,8 +32,8 @@ export interface UseEditorStateReturn {
 
 export function useEditorState(): UseEditorStateReturn {
   const [activeTab, setActiveTab] = useState<EditorTab>('layout')
-  const [tokensCode, setTokensCode] = useState('')
-  const [componentsCode, setComponentsCode] = useState('')
+  const [tokensCode, setTokensCode] = useState(defaultTokensCode)
+  const [componentsCode, setComponentsCode] = useState(defaultComponentsCode)
   const [highlightLine, setHighlightLine] = useState<number | undefined>(undefined)
 
   // Data tab state - unified code containing both schema and instances
@@ -70,39 +64,11 @@ export function useEditorState(): UseEditorStateReturn {
     localStorage.setItem(STORAGE_KEYS.AUTOCOMPLETE, autoCompleteMode)
   }, [autoCompleteMode])
 
-  // NL Mode state (persisted in localStorage)
-  const [nlModeEnabled, setNlModeEnabled] = useState<boolean>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.NL_MODE)
-    return saved === 'true'
-  })
+  // NL Mode is now automatic - enabled when API key exists
+  // Hybrid detection handles DSL vs natural language automatically
 
-  // Persist NL mode setting
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NL_MODE, String(nlModeEnabled))
-  }, [nlModeEnabled])
-
-  // Picker Mode state (persisted in localStorage) - defaults to true
-  const [pickerModeEnabled, setPickerModeEnabled] = useState<boolean>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PICKER_MODE)
-    // Default to true if not set
-    return saved !== 'false'
-  })
-
-  // Persist picker mode setting
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PICKER_MODE, String(pickerModeEnabled))
-  }, [pickerModeEnabled])
-
-  // Deep Thinking Mode state (persisted in localStorage) - defaults to false
-  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState<boolean>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.DEEP_THINKING_MODE)
-    return saved === 'true'
-  })
-
-  // Persist deep thinking mode setting
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DEEP_THINKING_MODE, String(deepThinkingEnabled))
-  }, [deepThinkingEnabled])
+  // Note: pickerModeEnabled, qualityModeEnabled, expandShorthand, llmEnabled
+  // are now managed by useAppState and persisted with the project
 
   return {
     activeTab,
@@ -115,12 +81,6 @@ export function useEditorState(): UseEditorStateReturn {
     setHighlightLine,
     autoCompleteMode,
     setAutoCompleteMode,
-    nlModeEnabled,
-    setNlModeEnabled,
-    pickerModeEnabled,
-    setPickerModeEnabled,
-    deepThinkingEnabled,
-    setDeepThinkingEnabled,
     dataCode,
     setDataCode,
     dataSchemas: parsedData.schemas,

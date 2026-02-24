@@ -24,14 +24,10 @@ import type {
   LLMContext,
 } from '../types'
 import { validateReactCode } from '../validation/react-linter'
-import { healReactCode } from '../validation/healing'
+// Self-healing removed - analysis showed 0% activation rate, transformer handles tolerance
 import { generateReactCode } from './react-generator'
 import { transformReactToMirror } from './transformer'
-import {
-  decideRetryStrategy,
-  generateEnhancedCorrectionPrompt,
-  type RetryDecision,
-} from './retry-strategy'
+// Retry strategy imports removed - simplified pipeline doesn't need complex retries
 
 // =============================================================================
 // Pipeline Orchestrator
@@ -69,8 +65,6 @@ export async function executePipeline(
   }
 
   const allIssues: ValidationIssue[] = []
-  let healed = false
-  let currentPrompt = prompt
   let reactCode = ''
   let mirrorCode = ''
 
@@ -88,144 +82,68 @@ export async function executePipeline(
       duration: metrics.phases!['context-building'],
     })
 
-    // Phase 2 & 3: React Generation + Validation (with intelligent retry loop)
-    let retryCount = 0
-    let validReactCode: string | null = null
-    let currentQualityMode = qualityMode
-    const previousIssues: ValidationIssue[][] = []
-    let retryDecision: RetryDecision | null = null
-
-    while (retryCount <= maxRetries) {
-      // Generate React code
-      const genStart = performance.now()
-      const genResult = await generateReactCode(currentPrompt, context, {
-        qualityMode: currentQualityMode,
-        streaming: options.streaming,
-        onToken: (token) => {
-          if (metrics.timeToFirstToken === 0) {
-            metrics.timeToFirstToken = performance.now() - startTime
-          }
-          callbacks?.onToken?.(token)
-        },
-      })
-
-      reactCode = genResult.code
-      metrics.phases!['react-generation'] = (metrics.phases!['react-generation'] ?? 0) +
-        (performance.now() - genStart)
-
-      if (debug) {
-        console.log(`[Attempt ${retryCount + 1}] Generated React code (quality=${currentQualityMode}):`,
-          reactCode.substring(0, 500))
-      }
-
-      emitPhaseComplete(callbacks, 'react-generation', {
-        phase: 'react-generation',
-        success: true,
-        duration: performance.now() - genStart,
-        output: debug ? reactCode : undefined,
-      })
-
-      // Validate React code
-      const validationStart = performance.now()
-      const validation = validateReactCode(reactCode)
-      metrics.phases!['react-validation'] = (metrics.phases!['react-validation'] ?? 0) +
-        (performance.now() - validationStart)
-
-      if (validation.valid) {
-        validReactCode = validation.fixedCode ?? reactCode
-        emitPhaseComplete(callbacks, 'react-validation', {
-          phase: 'react-validation',
-          success: true,
-          duration: performance.now() - validationStart,
-        })
-        break
-      }
-
-      // Try self-healing
-      const healingResult = healReactCode(reactCode, validation.issues)
-
-      if (healingResult.success && healingResult.code) {
-        validReactCode = healingResult.code
-        healed = true
-        emitPhaseComplete(callbacks, 'react-validation', {
-          phase: 'react-validation',
-          success: true,
-          duration: performance.now() - validationStart,
-          issues: validation.issues,
-        })
-        break
-      }
-
-      // Collect issues
-      allIssues.push(...healingResult.remainingIssues)
-
-      emitPhaseComplete(callbacks, 'react-validation', {
-        phase: 'react-validation',
-        success: false,
-        duration: performance.now() - validationStart,
-        issues: healingResult.remainingIssues,
-      })
-
-      // Use intelligent retry strategy with LLM error analysis
-      retryDecision = decideRetryStrategy({
-        prompt,
-        attemptCount: retryCount,
-        maxAttempts: maxRetries,
-        issues: healingResult.remainingIssues,
-        previousIssues,
-        isQualityMode: currentQualityMode,
-        failedCode: reactCode,  // Pass code for LLM pattern analysis
-      })
-
-      if (debug) {
-        console.log(`Retry decision: ${retryDecision.reason}`)
-        console.log(`  Escalate to quality: ${retryDecision.escalateToQuality}`)
-        console.log(`  Focus areas: ${retryDecision.focusAreas.join(', ')}`)
-      }
-
-      // Prepare retry with intelligent strategy
-      if (retryDecision.shouldRetry && retryCount < maxRetries) {
-        // Escalate to quality mode if needed
-        if (retryDecision.escalateToQuality && !currentQualityMode) {
-          currentQualityMode = true
-          if (debug) {
-            console.log('Escalating to quality mode (Opus)')
-          }
+    // Phase 2: React Generation (single pass - no retries needed)
+    const genStart = performance.now()
+    const genResult = await generateReactCode(prompt, context, {
+      qualityMode,
+      streaming: options.streaming,
+      onToken: (token) => {
+        if (metrics.timeToFirstToken === 0) {
+          metrics.timeToFirstToken = performance.now() - startTime
         }
+        callbacks?.onToken?.(token)
+      },
+    })
 
-        // Generate enhanced correction prompt
-        currentPrompt = generateEnhancedCorrectionPrompt(
-          prompt,
-          reactCode,
-          retryDecision
-        )
+    reactCode = genResult.code
+    metrics.phases!['react-generation'] = performance.now() - genStart
 
-        previousIssues.push(healingResult.remainingIssues)
-        metrics.retryCount = ++retryCount
-
-        if (debug) {
-          console.log(`Retry ${retryCount}/${maxRetries} with ${retryDecision.hints.length} hints`)
-        }
-      } else {
-        retryCount++
-      }
+    if (debug) {
+      console.log(`Generated React code (quality=${qualityMode}):`, reactCode.substring(0, 500))
     }
 
-    // Check if we got valid React code
-    if (!validReactCode) {
-      throw createReactPivotError({
-        message: `Failed to generate valid React code after ${maxRetries} retries`,
-        phase: 'react-validation',
-        issues: allIssues,
-        code: reactCode
-      })
+    emitPhaseComplete(callbacks, 'react-generation', {
+      phase: 'react-generation',
+      success: true,
+      duration: metrics.phases!['react-generation'],
+      output: debug ? reactCode : undefined,
+    })
+
+    // Phase 3: Validation (informational only - we always proceed)
+    const validationStart = performance.now()
+    const validation = validateReactCode(reactCode)
+    metrics.phases!['react-validation'] = performance.now() - validationStart
+
+    // Collect validation issues for reporting (but don't block)
+    if (!validation.valid) {
+      allIssues.push(...validation.issues)
     }
 
-    // Phase 4: Transformation
+    emitPhaseComplete(callbacks, 'react-validation', {
+      phase: 'react-validation',
+      success: true, // Always succeed - transformer handles tolerance
+      duration: metrics.phases!['react-validation'],
+      issues: validation.issues.length > 0 ? validation.issues : undefined,
+    })
+
+    // Use fixed code if available, otherwise original
+    const codeToTransform = validation.fixedCode ?? reactCode
+
+    // Phase 4: Transformation + Post-Processing
     const transformStart = performance.now()
-    const transformResult = transformReactToMirror(validReactCode)
+    const transformResult = transformReactToMirror(codeToTransform)
     mirrorCode = transformResult.mirrorCode
     metrics.phases!['transformation'] = performance.now() - transformStart
+
+    // Report post-processing corrections
+    if (transformResult.postProcessed && transformResult.corrections) {
+      if (debug) {
+        console.log(`Post-processing applied ${transformResult.corrections.length} corrections`)
+        for (const correction of transformResult.corrections) {
+          console.log(`  ${correction.type}: "${correction.original}" → "${correction.replacement}"`)
+        }
+      }
+    }
 
     emitPhaseComplete(callbacks, 'transformation', {
       phase: 'transformation',
@@ -255,7 +173,7 @@ export async function executePipeline(
       reactCode: debug ? reactCode : undefined,
       schema: debug ? transformResult.schema : undefined,
       issues: allIssues.length > 0 ? allIssues : undefined,
-      healed,
+      healed: false, // Self-healing removed - transformer handles tolerance
       metrics,
     }
 

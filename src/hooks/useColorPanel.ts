@@ -15,6 +15,10 @@ export interface ColorPanelState {
   filter: string
   selectedIndex: number
   triggerPos: number
+  /** Range to replace when updating (tracks inserted color) */
+  replaceRange: { from: number; to: number } | null
+  /** Current selected value (triggers effect updates for live preview) */
+  selectedValue: string | null
 }
 
 const initialState: ColorPanelState = {
@@ -23,6 +27,8 @@ const initialState: ColorPanelState = {
   filter: '',
   selectedIndex: 0,
   triggerPos: 0,
+  replaceRange: null,
+  selectedValue: null,
 }
 
 export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
@@ -41,7 +47,8 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
    */
   const open = useCallback(() => {
     // Don't reopen if already open - prevents triggerPos from being overwritten
-    if (state.isOpen) return
+    // K3 fix: Use stateRef.current to avoid stale closure
+    if (stateRef.current.isOpen) return
 
     const view = editorRef.current
     if (!view) return
@@ -62,14 +69,16 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
       filter: '',
       selectedIndex: 0,
       triggerPos,
+      replaceRange: null,
+      selectedValue: null,
     })
-  }, [editorRef, state.isOpen])
+  }, [editorRef])
 
   /**
    * Close the color panel and return focus to editor.
    */
   const close = useCallback(() => {
-    setState(prev => ({ ...prev, isOpen: false }))
+    setState(prev => ({ ...prev, isOpen: false, replaceRange: null }))
     returnFocus()
   }, [returnFocus])
 
@@ -80,7 +89,8 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
     const view = editorRef.current
     if (!view) return
 
-    const { triggerPos } = state
+    // H3 fix: Use stateRef.current to avoid stale closure
+    const { triggerPos } = stateRef.current
     const cursorPos = view.state.selection.main.head
     const insertText = prepareInsertText(view, color, triggerPos)
 
@@ -89,7 +99,34 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
     })
 
     close()
-  }, [editorRef, close, state])
+  }, [editorRef, close])
+
+  /**
+   * Update code live without closing (for live sync).
+   */
+  const updateCode = useCallback((color: string) => {
+    const view = editorRef.current
+    if (!view) return
+
+    const { triggerPos, replaceRange } = stateRef.current
+
+    // Determine what to replace
+    const from = replaceRange ? replaceRange.from : triggerPos
+    const to = replaceRange ? replaceRange.to : view.state.selection.main.head
+
+    const insertText = prepareInsertText(view, color, from)
+
+    view.dispatch({
+      changes: { from, to, insert: insertText },
+      selection: { anchor: from + insertText.length },
+    })
+
+    // Update replaceRange to track the new color position
+    setState(prev => ({
+      ...prev,
+      replaceRange: { from, to: from + insertText.length },
+    }))
+  }, [editorRef])
 
   /**
    * Update the filter text (called when user types after #).
@@ -107,9 +144,11 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
 
   /**
    * Set the currently selected value (called by InlineColorPanel).
+   * Updates both ref (for immediate access) and state (for effect triggers).
    */
   const setSelectedValue = useCallback((value: string | null) => {
     selectedValueRef.current = value
+    setState(prev => ({ ...prev, selectedValue: value }))
   }, [])
 
   /**
@@ -132,6 +171,7 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
     open,
     close,
     selectColor,
+    updateCode,
     updateFilter,
     setSelectedIndex,
     setSelectedValue,

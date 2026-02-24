@@ -13,18 +13,20 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import * as LucideIcons from 'lucide-react'
+import * as PhosphorIcons from '@phosphor-icons/react'
 import {
   InlinePanel,
   PanelList,
   PanelFooter,
 } from './InlinePanel'
 import { PanelTabsHeader, type PanelTabId } from './InlineLayoutPanel'
-import { TailwindColorPalette } from './TailwindColorPalette'
+import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { TokenButtonRow } from './TokenButtonRow'
 import { colors } from '../theme'
 import { searchIcons } from '../data/icon-synonyms'
 import { MATERIAL_ICONS, searchMaterialIcons } from '../data/material-icons'
+import { PHOSPHOR_ICONS, searchPhosphorIcons } from '../data/phosphor-icons'
 import type { IconLibrary } from '../hooks/useInlinePanel'
 
 // ============================================
@@ -69,7 +71,54 @@ const WEIGHT_PRESETS = [
 ]
 
 // Size presets
-const SIZE_PRESETS = [16, 20, 24, 32, 48]
+const SIZE_PRESETS = [16, 20, 24, 32]
+
+// ============================================
+// UI Components
+// ============================================
+
+/** Number input for custom values (matching InlineLayoutPanel style) */
+function NumberInput({
+  value,
+  onChange,
+  placeholder,
+  width = 40,
+  presets = [],
+}: {
+  value: number
+  onChange: (v: number) => void
+  placeholder?: string
+  width?: number
+  presets?: number[]  // When value matches a preset, show empty and not highlighted
+}) {
+  // Only show value and highlight if it's a custom value (not matching any preset)
+  const isPresetValue = presets.includes(value)
+  const showValue = !isPresetValue && value > 0
+  return (
+    <input
+      type="text"
+      value={showValue ? value : ''}
+      placeholder={placeholder}
+      onChange={(e) => {
+        const num = parseInt(e.target.value, 10)
+        onChange(isNaN(num) ? 0 : num)
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      style={{
+        width: `${width}px`,
+        height: '22px',
+        padding: '0 5px',
+        backgroundColor: showValue ? PANEL_COLORS.buttonBgSelected : PANEL_COLORS.buttonBg,
+        color: PANEL_COLORS.textLight,
+        border: 'none',
+        borderRadius: '3px',
+        fontSize: '10px',
+        fontFamily: 'system-ui, sans-serif',
+        outline: 'none',
+      }}
+    />
+  )
+}
 
 // Get all icon names from Lucide
 // Filter: PascalCase names, exclude "Icon" suffix duplicates, exclude utilities
@@ -111,9 +160,88 @@ interface InlineIconPanelProps {
   onSwitchPanel?: (panel: PanelTabId) => void
   /** Which tabs to show (defaults to just icon) */
   availableTabs?: PanelTabId[]
+  /** Token mode from project settings (if provided, overrides localStorage) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes (if provided, updates project settings) */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
-const GRID_COLUMNS = 10
+const GRID_COLUMNS = 8
+
+// Default icon color (white) - what icons look like in the preview
+const DEFAULT_ICON_COLOR = '#FFFFFF'
+
+/**
+ * Convert weight to Phosphor weight variant
+ */
+function weightToPhosphorWeight(weight: number): 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone' {
+  if (weight <= 150) return 'thin'
+  if (weight <= 250) return 'light'
+  if (weight <= 450) return 'regular'
+  if (weight <= 550) return 'bold'
+  return 'fill'
+}
+
+/**
+ * Separate component for icon preview to ensure proper re-rendering
+ * when size, weight, or color changes.
+ */
+function IconPreview({
+  iconName,
+  iconLibrary,
+  iconSize,
+  iconWeight,
+  iconColor,
+}: {
+  iconName: string
+  iconLibrary: IconLibrary
+  iconSize: number | string | null
+  iconWeight: number | null
+  iconColor: string | null
+}) {
+  // For preview, use numeric size or default 24 (tokens show as 24)
+  const size = typeof iconSize === 'number' ? iconSize : 24
+  const weight = iconWeight ?? 400
+  const color = iconColor ?? DEFAULT_ICON_COLOR
+
+  if (iconLibrary === 'material') {
+    return (
+      <span
+        className="material-symbols-outlined"
+        style={{
+          fontSize: size,
+          color,
+          fontVariationSettings: `'FILL' 0, 'wght' ${weight}, 'GRAD' 0, 'opsz' 24`,
+        }}
+      >
+        {iconName}
+      </span>
+    )
+  } else if (iconLibrary === 'phosphor') {
+    const phosphorWeight = weightToPhosphorWeight(weight)
+    const IconComponent = (
+      PhosphorIcons as unknown as Record<
+        string,
+        React.ComponentType<{ size?: number; color?: string; weight?: string }>
+      >
+    )[iconName]
+    return IconComponent ? (
+      <IconComponent size={size} color={color} weight={phosphorWeight} />
+    ) : null
+  } else {
+    // Lucide - Map weight 100-700 to strokeWidth 0.75-3.0
+    const strokeWidth = 0.75 + ((weight - 100) / 600) * 2.25
+    const IconComponent = (
+      LucideIcons as unknown as Record<
+        string,
+        React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
+      >
+    )[iconName]
+    return IconComponent ? (
+      <IconComponent size={size} color={color} strokeWidth={strokeWidth} />
+    ) : null
+  }
+}
 
 export function InlineIconPanel({
   isOpen,
@@ -131,14 +259,35 @@ export function InlineIconPanel({
   showTabs,
   onSwitchPanel,
   availableTabs,
+  useTokenMode: useTokenModeProp,
+  onTokenModeChange,
 }: InlineIconPanelProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const colorButtonRef = useRef<HTMLButtonElement>(null)
   const hasUserInteractedRef = useRef(false)
   const pendingSyncRef = useRef(false)
 
-  // Token mode state (shared with other panels via localStorage)
-  const [useTokenMode, setUseTokenMode] = useState(getStoredTokenMode)
+  // Token mode state - use prop if provided, otherwise fall back to localStorage
+  const [useTokenModeState, setUseTokenModeState] = useState(() =>
+    useTokenModeProp !== undefined ? useTokenModeProp : getStoredTokenMode()
+  )
+
+  // Effective token mode - prefer prop over local state
+  const useTokenMode = useTokenModeProp !== undefined ? useTokenModeProp : useTokenModeState
+
+  // Sync with prop when it changes
+  useEffect(() => {
+    if (useTokenModeProp !== undefined) {
+      setUseTokenModeState(useTokenModeProp)
+    }
+  }, [useTokenModeProp])
+
+  // Handler for token mode change
+  const handleTokenModeChange = useCallback((mode: boolean) => {
+    setUseTokenModeState(mode)
+    // Notify parent if callback provided (saves to project)
+    onTokenModeChange?.(mode)
+  }, [onTokenModeChange])
 
   // Icon options state
   const [iconSize, setIconSize] = useState<number | string | null>(null)  // null = default (24), can be token like "$s"
@@ -165,6 +314,9 @@ export function InlineIconPanel({
     if (iconLibrary === 'material') {
       // Material Icons (snake_case)
       return cleanFilter ? searchMaterialIcons(cleanFilter) : MATERIAL_ICONS
+    } else if (iconLibrary === 'phosphor') {
+      // Phosphor Icons (PascalCase)
+      return cleanFilter ? searchPhosphorIcons(cleanFilter) : PHOSPHOR_ICONS
     } else {
       // Lucide Icons (PascalCase)
       return cleanFilter
@@ -182,6 +334,9 @@ export function InlineIconPanel({
     if (iconLibrary === 'material') {
       parts.push(`"${iconName}"`)
       parts.push('material')
+    } else if (iconLibrary === 'phosphor') {
+      parts.push(`"${iconName}"`)
+      parts.push('phosphor')
     } else {
       parts.push(`"${toKebabCase(iconName)}"`)
     }
@@ -221,12 +376,13 @@ export function InlineIconPanel({
   }, [selectedValue, onSelectedValueChange])
 
   // Live sync to editor after user interaction
+  // Include iconColor, iconSize, iconWeight as dependencies to ensure effect runs on their changes
   useEffect(() => {
     if (pendingSyncRef.current && onCodeChange && selectedValue) {
       pendingSyncRef.current = false
       onCodeChange(selectedValue)
     }
-  }, [selectedValue, onCodeChange])
+  }, [selectedValue, onCodeChange, iconColor, iconSize, iconWeight])
 
   // Wrapper functions to track user interaction and trigger sync
   const handleSizeChange = useCallback((size: number | string | null) => {
@@ -301,6 +457,15 @@ export function InlineIconPanel({
           {iconName}
         </span>
       )
+    } else if (iconLibrary === 'phosphor') {
+      // Phosphor Icons: React Component
+      const IconComponent = (
+        PhosphorIcons as unknown as Record<
+          string,
+          React.ComponentType<{ size?: number; color?: string; weight?: string }>
+        >
+      )[iconName]
+      return IconComponent ? <IconComponent size={size} color={GRID_ICON_COLOR} weight="regular" /> : null
     } else {
       // Lucide Icons: React Component
       const IconComponent = (
@@ -313,53 +478,18 @@ export function InlineIconPanel({
     }
   }, [iconLibrary])
 
-  // Default icon color (white) - what icons look like in the preview
-  const DEFAULT_ICON_COLOR = '#FFFFFF'
-
-  // Render icon with current options (for large preview)
-  const renderIconWithOptions = useCallback((iconName: string) => {
-    // For preview, use numeric size or default 24 (tokens show as 24)
-    const size = typeof iconSize === 'number' ? iconSize : 24
-    const weight = iconWeight ?? 400
-    const color = iconColor ?? DEFAULT_ICON_COLOR
-
-    if (iconLibrary === 'material') {
-      return (
-        <span
-          className="material-symbols-outlined"
-          style={{
-            fontSize: size,
-            color,
-            fontVariationSettings: `'FILL' 0, 'wght' ${weight}, 'GRAD' 0, 'opsz' 24`,
-          }}
-        >
-          {iconName}
-        </span>
-      )
-    } else {
-      // Map weight 100-700 to strokeWidth 0.75-3.0
-      const strokeWidth = 0.75 + ((weight - 100) / 600) * 2.25
-      const IconComponent = (
-        LucideIcons as unknown as Record<
-          string,
-          React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
-        >
-      )[iconName]
-      return IconComponent ? (
-        <IconComponent size={size} color={color} strokeWidth={strokeWidth} />
-      ) : null
-    }
-  }, [iconLibrary, iconSize, iconWeight, iconColor])
-
-  // Get display name for icon (kebab-case for Lucide, snake_case for Material)
+  // Get display name for icon (kebab-case for Lucide, snake_case for Material, PascalCase for Phosphor)
   const getDisplayName = useCallback((iconName: string) => {
-    return iconLibrary === 'material' ? iconName : toKebabCase(iconName)
+    if (iconLibrary === 'material') return iconName
+    if (iconLibrary === 'phosphor') return iconName  // Keep PascalCase for Phosphor
+    return toKebabCase(iconName)  // Lucide: convert to kebab-case
   }, [iconLibrary])
 
   // Library tabs for PanelHeader
   const libraryTabs = useMemo(() => [
     { id: 'lucide', label: 'Lucide' },
     { id: 'material', label: 'Material' },
+    { id: 'phosphor', label: 'Phosphor' },
   ], [])
 
   const handleTabChange = useCallback((id: string) => {
@@ -371,9 +501,10 @@ export function InlineIconPanel({
       isOpen={isOpen}
       onClose={onClose}
       position={position}
-      width={440}
-      maxHeight={400}
+      width={520}
+      maxHeight={340}
       testId="panel-icon-picker"
+      disableClickOutsideClose
     >
       {/* Panel Tab Header (Icon tab) when showTabs is true */}
       {showTabs && onSwitchPanel && (
@@ -382,19 +513,18 @@ export function InlineIconPanel({
           onSwitchPanel={onSwitchPanel}
           availableTabs={availableTabs}
           useTokenMode={useTokenMode}
-          onTokenModeChange={(mode) => {
-            setStoredTokenMode(mode)
-            setUseTokenMode(mode)
-          }}
+          onTokenModeChange={handleTokenModeChange}
         />
       )}
-      {/* Library Tabs */}
+      {/* Library Tabs + Token Toggle */}
       <div style={{
         display: 'flex',
-        padding: '4px',
+        alignItems: 'center',
+        padding: '4px 8px',
         gap: '2px',
         borderBottom: `1px solid ${colors.border}`,
       }}>
+        {/* Library tabs - left aligned */}
         {libraryTabs.map(tab => (
           <button
             key={tab.id}
@@ -404,8 +534,7 @@ export function InlineIconPanel({
               handleTabChange(tab.id)
             }}
             style={{
-              flex: 1,
-              padding: '4px 8px',
+              padding: '4px 10px',
               fontSize: '10px',
               fontWeight: 500,
               fontFamily: 'system-ui, sans-serif',
@@ -419,201 +548,261 @@ export function InlineIconPanel({
             {tab.label}
           </button>
         ))}
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+        {/* Token Mode Toggle - always visible */}
+        <button
+          tabIndex={-1}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleTokenModeChange(!useTokenMode)
+          }}
+          style={{
+            padding: '4px 8px',
+            fontSize: '10px',
+            fontWeight: 500,
+            backgroundColor: useTokenMode ? '#252525' : '#181818',
+            color: useTokenMode ? '#ccc' : '#555',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer',
+          }}
+          title="Token Mode - Größen und Farben als Tokens"
+        >
+          Tokens
+        </button>
       </div>
 
-      <PanelList listRef={listRef}>
-        {filteredIcons.length === 0 ? (
-          <div style={{
-            padding: '16px',
-            textAlign: 'center',
-            color: colors.textMuted,
-          }}>
-            Keine Icons gefunden
-          </div>
-        ) : (
-          <div style={{ padding: '4px' }}>
-            {iconRows.map((row, rowIndex) => (
-              <div
-                key={rowIndex}
-                style={{
-                  display: 'flex',
-                  gap: '2px',
-                  marginBottom: '2px',
-                }}
-              >
-                {row.map((iconName, colIndex) => {
-                  const flatIndex = rowIndex * GRID_COLUMNS + colIndex
-                  const isSelected = flatIndex === selectedIndex
-
-                  return (
-                    <div
-                      key={iconName}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        handleIconClick(iconName, flatIndex)
-                      }}
-                      title={getDisplayName(iconName)}
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        backgroundColor: isSelected ? '#2a2a2a' : 'transparent',
-                        border: 'none',
-                        borderRadius: '4px',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      {renderIconPreview(iconName)}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        )}
-      </PanelList>
-
-      {/* Options Panel - Compact layout */}
-      <div style={{
-        borderTop: `1px solid ${colors.border}`,
-        padding: '12px',
-        backgroundColor: PANEL_COLORS.bg,
-      }}>
-        {/* Row 1: Size + Weight + Icon Preview */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-          {/* Size buttons - token mode or numeric presets */}
-          {useTokenMode && editorCode ? (
-            <TokenButtonRow
-              code={editorCode}
-              property="is"
-              value={iconSize ?? 24}
-              onSelect={(token) => handleSizeChange(token)}
-              maxTokens={3}
-            />
+      {/* Main content: Icon grid left, Options right */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        {/* Icon Grid - left side */}
+        <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+        <PanelList listRef={listRef}>
+          {filteredIcons.length === 0 ? (
+            <div style={{
+              padding: '16px',
+              textAlign: 'center',
+              color: colors.textMuted,
+            }}>
+              Keine Icons gefunden
+            </div>
           ) : (
-            <div style={{ display: 'flex', gap: '3px' }}>
-              {SIZE_PRESETS.map(size => (
-                <button
-                  key={size}
-                  tabIndex={-1}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    handleSizeChange(size === 24 ? null : size)
-                  }}
+            <div style={{ padding: '4px' }}>
+              {iconRows.map((row, rowIndex) => (
+                <div
+                  key={rowIndex}
                   style={{
-                    minWidth: '24px',
-                    height: '24px',
-                    padding: '0 5px',
-                    fontSize: '11px',
-                    fontFamily: 'system-ui, sans-serif',
-                    backgroundColor: (typeof iconSize === 'number' ? iconSize : 24) === size ? PANEL_COLORS.buttonBgSelected : PANEL_COLORS.buttonBg,
-                    color: (typeof iconSize === 'number' ? iconSize : 24) === size ? PANEL_COLORS.textLight : PANEL_COLORS.text,
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
+                    display: 'flex',
+                    gap: '2px',
+                    marginBottom: '2px',
                   }}
                 >
-                  {size}
-                </button>
+                  {row.map((iconName, colIndex) => {
+                    const flatIndex = rowIndex * GRID_COLUMNS + colIndex
+                    const isSelected = flatIndex === selectedIndex
+
+                    return (
+                      <div
+                        key={iconName}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          handleIconClick(iconName, flatIndex)
+                        }}
+                        title={getDisplayName(iconName)}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? '#2a2a2a' : 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        {renderIconPreview(iconName, 16)}
+                      </div>
+                    )
+                  })}
+                </div>
               ))}
             </div>
           )}
-          {/* Weight buttons */}
-          <div style={{ display: 'flex', gap: '3px' }}>
-            {WEIGHT_PRESETS.map(({ value, label }) => (
-              <button
-                key={value}
-                tabIndex={-1}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  handleWeightChange(value === 400 ? null : value)
-                }}
-                style={{
-                  height: '24px',
-                  padding: '0 6px',
-                  fontSize: '11px',
-                  fontFamily: 'system-ui, sans-serif',
-                  backgroundColor: (iconWeight ?? 400) === value ? PANEL_COLORS.buttonBgSelected : PANEL_COLORS.buttonBg,
-                  color: (iconWeight ?? 400) === value ? PANEL_COLORS.textLight : PANEL_COLORS.text,
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-                title={`${value}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {/* Icon preview */}
+        </PanelList>
+        </div>
+
+        {/* Options Panel - right side */}
+        <div style={{
+          width: '200px',
+          borderLeft: `1px solid ${colors.border}`,
+          padding: '8px',
+          backgroundColor: '#111',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          flexShrink: 0,
+        }}>
+          {/* Icon preview - top */}
           {filteredIcons[selectedIndex] && (
             <div style={{
-              width: 40,
-              height: 40,
+              width: '100%',
+              height: '64px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: PANEL_COLORS.buttonBg,
               borderRadius: '4px',
-              flexShrink: 0,
             }}>
-              {renderIconWithOptions(filteredIcons[selectedIndex])}
+              <IconPreview
+                iconName={filteredIcons[selectedIndex]}
+                iconLibrary={iconLibrary}
+                iconSize={iconSize}
+                iconWeight={iconWeight}
+                iconColor={iconColor}
+              />
             </div>
           )}
-        </div>
 
-        {/* Row 2: Color - horizontal with inline swatches */}
-        {useTokenMode && editorCode ? (
-          /* Token mode: only show token swatches */
-          <TokenSwatches
-            code={editorCode}
-            onSelect={(tokenName) => handleColorChange(tokenName)}
-            selectedValue={iconColor ?? undefined}
-          />
-        ) : (
-          /* Normal mode: only color button */
-          <button
-            ref={colorButtonRef}
-            tabIndex={-1}
-            onMouseDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setShowColorPicker(!showColorPicker)
-            }}
-            style={{
-              width: '80px',
-              height: '24px',
-              padding: '0 6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: PANEL_COLORS.buttonBg,
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            <div
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '3px',
-                backgroundColor: iconColor || 'transparent',
-                border: iconColor ? 'none' : '1px dashed #666',
-              }}
-            />
-            <span style={{
-              color: iconColor ? PANEL_COLORS.textLight : PANEL_COLORS.text,
-              fontSize: '11px',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>
-              {iconColor ? iconColor.replace('#', '') : 'Auto'}
-            </span>
-          </button>
-        )}
+          {/* Size */}
+          <div>
+            <div style={{ fontSize: '10px', color: PANEL_COLORS.label, marginBottom: '4px' }}>Size</div>
+            {useTokenMode ? (
+              editorCode ? (
+                <TokenButtonRow
+                  code={editorCode}
+                  property="is"
+                  value={iconSize ?? ''}
+                  onSelect={(token) => handleSizeChange(token)}
+                  maxTokens={4}
+                />
+              ) : null
+            ) : (
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+                {SIZE_PRESETS.map(size => {
+                  const isSelected = iconSize !== null && (typeof iconSize === 'number' ? iconSize : 0) === size
+                  return (
+                    <button
+                      key={size}
+                      tabIndex={-1}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleSizeChange(isSelected ? null : size)
+                      }}
+                      style={{
+                        minWidth: '28px',
+                        height: '22px',
+                        padding: '0 4px',
+                        fontSize: '10px',
+                        fontFamily: 'system-ui, sans-serif',
+                        backgroundColor: isSelected ? PANEL_COLORS.buttonBgSelected : PANEL_COLORS.buttonBg,
+                        color: isSelected ? PANEL_COLORS.textLight : PANEL_COLORS.text,
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {size}
+                    </button>
+                  )
+                })}
+                <NumberInput
+                  value={typeof iconSize === 'number' ? iconSize : 0}
+                  onChange={(v) => handleSizeChange(v > 0 ? v : null)}
+                  presets={SIZE_PRESETS}
+                  width={32}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Weight */}
+          <div>
+            <div style={{ fontSize: '10px', color: PANEL_COLORS.label, marginBottom: '4px' }}>Weight</div>
+            <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+              {WEIGHT_PRESETS.map(({ value, label }) => {
+                const isSelected = iconWeight !== null && iconWeight === value
+                return (
+                  <button
+                    key={value}
+                    tabIndex={-1}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleWeightChange(isSelected ? null : value)
+                    }}
+                    style={{
+                      height: '22px',
+                      padding: '0 5px',
+                      fontSize: '10px',
+                      fontFamily: 'system-ui, sans-serif',
+                      backgroundColor: isSelected ? PANEL_COLORS.buttonBgSelected : PANEL_COLORS.buttonBg,
+                      color: isSelected ? PANEL_COLORS.textLight : PANEL_COLORS.text,
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                    }}
+                    title={`${value}`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <div style={{ fontSize: '10px', color: PANEL_COLORS.label, marginBottom: '4px' }}>Color</div>
+            {useTokenMode && editorCode ? (
+              <TokenSwatches
+                code={editorCode}
+                onSelect={(tokenName) => handleColorChange(tokenName)}
+                selectedValue={iconColor ?? undefined}
+              />
+            ) : (
+              <button
+                ref={colorButtonRef}
+                tabIndex={-1}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setShowColorPicker(!showColorPicker)
+                }}
+                style={{
+                  width: '100%',
+                  height: '24px',
+                  padding: '0 6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: PANEL_COLORS.buttonBg,
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '3px',
+                    backgroundColor: iconColor || 'transparent',
+                    border: iconColor ? 'none' : '1px dashed #666',
+                  }}
+                />
+                <span style={{
+                  color: iconColor ? PANEL_COLORS.textLight : PANEL_COLORS.text,
+                  fontSize: '11px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                }}>
+                  {iconColor ? iconColor.replace('#', '') : 'Auto'}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <PanelFooter
@@ -655,15 +844,27 @@ function IconColorPicker({
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const panelRef = useRef<HTMLDivElement>(null)
 
-  // Calculate position based on trigger element
+  // Calculate position based on trigger element - open ABOVE the trigger
   useEffect(() => {
-    if (!triggerRef.current) return
+    if (!triggerRef.current || !panelRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
+    const panelHeight = panelRef.current.offsetHeight || 300 // Estimate if not measured yet
     setPosition({
-      top: rect.bottom + 8,
+      top: rect.top - panelHeight - 8,
       left: rect.left,
     })
   }, [triggerRef])
+
+  // Re-measure after render to get accurate height
+  useEffect(() => {
+    if (!triggerRef.current || !panelRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    const panelHeight = panelRef.current.offsetHeight
+    setPosition({
+      top: rect.top - panelHeight - 8,
+      left: rect.left,
+    })
+  })
 
   // Close on click outside
   useEffect(() => {
@@ -704,7 +905,7 @@ function IconColorPicker({
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div style={{ padding: '12px' }}>
-        <TailwindColorPalette
+        <ColorSystemPalette
           color={color || ''}
           onChange={(c) => onChange(c || null)}
         />

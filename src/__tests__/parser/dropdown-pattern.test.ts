@@ -37,10 +37,10 @@ MyDropdown
     expect(result.errors).toHaveLength(0)
     const dropdown = result.registry.get('MyDropdown')
     expect(dropdown?.eventHandlers).toHaveLength(4)
-    expect(dropdown?.eventHandlers![0].modifier).toBe('arrow-down')
-    expect(dropdown?.eventHandlers![1].modifier).toBe('arrow-up')
-    expect(dropdown?.eventHandlers![2].modifier).toBe('escape')
-    expect(dropdown?.eventHandlers![3].modifier).toBe('enter')
+    expect(dropdown?.eventHandlers![0].key).toBe('arrow-down')
+    expect(dropdown?.eventHandlers![1].key).toBe('arrow-up')
+    expect(dropdown?.eventHandlers![2].key).toBe('escape')
+    expect(dropdown?.eventHandlers![3].key).toBe('enter')
   })
 
   it('should parse item with highlight and select states', () => {
@@ -122,7 +122,7 @@ events
 
     // Check keyboard events
     const arrowDownEvent = result.centralizedEvents.find(
-      e => e.targetInstance === 'OptionsMenu' && e.modifier === 'arrow-down'
+      e => e.targetInstance === 'OptionsMenu' && e.key === 'arrow-down'
     )
     expect(arrowDownEvent?.actions[0]).toHaveProperty('type', 'highlight')
     expect(arrowDownEvent?.actions[0]).toHaveProperty('target', 'next')

@@ -11,18 +11,21 @@ interface TabButtonProps {
   label: string
   isActive: boolean
   onClick: () => void
+  testId?: string
 }
 
 export const TabButton = memo(function TabButton({
   label,
   isActive,
   onClick,
+  testId,
 }: TabButtonProps) {
   return (
     <button
       role="tab"
       aria-selected={isActive}
       aria-label={`${label} tab`}
+      data-testid={testId}
       onClick={onClick}
       style={{
         padding: '6px 0',

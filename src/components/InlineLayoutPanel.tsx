@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { InlinePanel, PanelFooter } from './InlinePanel'
 import { colors } from '../theme'
-import { TailwindColorPalette } from './TailwindColorPalette'
+import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { TokenButtonRow } from './TokenButtonRow'
 import {
@@ -34,9 +34,9 @@ import {
 // Types
 // ============================================
 
-type Direction = 'ver' | 'hor' | 'grid' | 'stacked'
-type AlignH = 'left' | 'center' | 'right'
-type AlignV = 'top' | 'center' | 'bottom'
+type Direction = 'ver' | 'hor' | 'grid' | 'stacked' | null
+type AlignH = 'left' | 'center' | 'right' | null
+type AlignV = 'top' | 'center' | 'bottom' | null
 type SizeMode = 'auto' | 'min' | 'max' | 'fixed'
 
 interface LayoutState {
@@ -85,6 +85,10 @@ interface InlineLayoutPanelProps {
   onSwitchPanel?: (panel: PanelTabId) => void
   /** Which tabs to show (defaults to layout, font, border) */
   availableTabs?: PanelTabId[]
+  /** Token mode from project settings (if provided, overrides localStorage) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes (if provided, updates project settings) */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
 // ============================================
@@ -208,29 +212,36 @@ function generateLayoutCode(state: LayoutState): string {
   else if (state.heightMode === 'max') parts.push('height full')
   else if (state.heightMode === 'fixed' && state.heightValue > 0) parts.push(`height ${state.heightValue}`)
 
-  // 2. DIRECTION (hor, ver, grid, stacked)
-  if (state.direction === 'grid' && state.gridCols > 0) {
-    parts.push(`grid ${state.gridCols}`)
-  } else if (state.direction === 'stacked') {
-    parts.push('ver')
-    parts.push('stacked')
-  } else {
-    parts.push(state.direction)
+  // 2. DIRECTION (hor, ver, grid, stacked) - only if set
+  if (state.direction) {
+    if (state.direction === 'grid' && state.gridCols > 0) {
+      parts.push(`grid ${state.gridCols}`)
+    } else if (state.direction === 'stacked') {
+      parts.push('ver')
+      parts.push('stacked')
+    } else {
+      parts.push(state.direction)
+    }
   }
 
-  // 3. ALIGNMENT (cen, spread, hor-center, right, ver-center, bottom)
+  // 3. ALIGNMENT (cen, spread, hor-center, right, ver-center, bottom) - only if set
   if (state.between) {
     parts.push('spread')
   }
 
-  if (state.alignH === 'center' && state.alignV === 'center') {
-    parts.push('cen')
-  } else {
-    if (state.alignH === 'center') parts.push('hor-center')
-    else if (state.alignH === 'right') parts.push('right')
+  // Only output alignment if explicitly set (not null)
+  if (state.alignH !== null || state.alignV !== null) {
+    if (state.alignH === 'center' && state.alignV === 'center') {
+      parts.push('cen')
+    } else {
+      if (state.alignH === 'center') parts.push('hor-center')
+      else if (state.alignH === 'right') parts.push('right')
+      else if (state.alignH === 'left') parts.push('left')
 
-    if (state.alignV === 'center') parts.push('ver-center')
-    else if (state.alignV === 'bottom') parts.push('bottom')
+      if (state.alignV === 'center') parts.push('ver-center')
+      else if (state.alignV === 'bottom') parts.push('bottom')
+      else if (state.alignV === 'top') parts.push('top')
+    }
   }
 
   // 4. GAP (can be number or token)
@@ -296,10 +307,11 @@ function parseLayoutCode(code: string): Partial<LayoutState> {
   if (!code) return state
 
   // Direction - support both short and long forms
+  // IMPORTANT: Check for hor/ver NOT followed by -center to avoid matching hor-center/ver-center
   if (code.includes('stacked')) state.direction = 'stacked'
-  else if (/\b(hor|horizontal)\b/.test(code)) state.direction = 'hor'
+  else if (/\b(hor|horizontal)(?!-center)\b/.test(code)) state.direction = 'hor'
   else if (/\bgrid\b/.test(code)) state.direction = 'grid'
-  else if (/\b(ver|vertical)\b/.test(code)) state.direction = 'ver'
+  else if (/\b(ver|vertical)(?!-center)\b/.test(code)) state.direction = 'ver'
 
   // Spread (space-between) - also "between"
   if (/\b(spread|between)\b/.test(code)) state.between = true
@@ -681,6 +693,8 @@ function PaddingValueRow({
   useTokenMode?: boolean
   editorCode?: string
 }) {
+  // Check if value is explicitly set (not empty string)
+  const isSet = value !== ''
   // Get numeric value for preset comparison
   const numValue = typeof value === 'number' ? value : 0
   const isToken = typeof value === 'string' && value.startsWith('$')
@@ -708,9 +722,9 @@ function PaddingValueRow({
       <DecorativeIcon>
         <PaddingIcon mode={mode} />
       </DecorativeIcon>
-      <PresetButton value={0} selected={!isToken && numValue === 0} onClick={() => onChange(0)} />
-      <PresetButton value={8} selected={!isToken && numValue === 8} onClick={() => onChange(8)} />
-      <PresetButton value={16} selected={!isToken && numValue === 16} onClick={() => onChange(16)} />
+      <PresetButton value={0} selected={isSet && !isToken && numValue === 0} onClick={() => onChange(0)} />
+      <PresetButton value={8} selected={isSet && !isToken && numValue === 8} onClick={() => onChange(8)} />
+      <PresetButton value={16} selected={isSet && !isToken && numValue === 16} onClick={() => onChange(16)} />
       <NumberInput value={numValue} onChange={(v) => onChange(v)} presets={[0, 8, 16]} />
       {showExpand && (
         <button
@@ -807,32 +821,37 @@ function DirectionPicker({
   value: Direction
   onChange: (v: Direction) => void
 }) {
+  // Toggle behavior: clicking selected item deselects it
+  const handleClick = (dir: 'hor' | 'ver' | 'grid' | 'stacked') => {
+    onChange(value === dir ? null : dir)
+  }
+
   return (
     <div style={{ display: 'flex', gap: '4px' }}>
       <IconButton
         selected={value === 'hor'}
-        onClick={() => onChange('hor')}
+        onClick={() => handleClick('hor')}
         title="Horizontal"
       >
         <ArrowRight size={16} />
       </IconButton>
       <IconButton
         selected={value === 'ver'}
-        onClick={() => onChange('ver')}
+        onClick={() => handleClick('ver')}
         title="Vertical"
       >
         <ArrowDown size={16} />
       </IconButton>
       <IconButton
         selected={value === 'grid'}
-        onClick={() => onChange('grid')}
+        onClick={() => handleClick('grid')}
         title="Grid"
       >
         <Grid3X3 size={16} />
       </IconButton>
       <IconButton
         selected={value === 'stacked'}
-        onClick={() => onChange('stacked')}
+        onClick={() => handleClick('stacked')}
         title="Stacked"
       >
         <Layers size={16} />
@@ -875,11 +894,24 @@ function AlignmentGrid({
   alignV: AlignV
   onChange: (h: AlignH, v: AlignV) => void
 }) {
-  const positions: { h: AlignH; v: AlignV }[][] = [
+  type NonNullAlignH = 'left' | 'center' | 'right'
+  type NonNullAlignV = 'top' | 'center' | 'bottom'
+  const positions: { h: NonNullAlignH; v: NonNullAlignV }[][] = [
     [{ h: 'left', v: 'top' }, { h: 'center', v: 'top' }, { h: 'right', v: 'top' }],
     [{ h: 'left', v: 'center' }, { h: 'center', v: 'center' }, { h: 'right', v: 'center' }],
     [{ h: 'left', v: 'bottom' }, { h: 'center', v: 'bottom' }, { h: 'right', v: 'bottom' }],
   ]
+
+  // Toggle behavior: clicking selected item deselects it
+  const handleClick = (h: NonNullAlignH, v: NonNullAlignV) => {
+    const isSelected = h === alignH && v === alignV
+    if (isSelected) {
+      // Deselect both
+      onChange(null, null)
+    } else {
+      onChange(h, v)
+    }
+  }
 
   // 3 columns × 24px + 2 gaps × 4px = 80px
   return (
@@ -893,7 +925,7 @@ function AlignmentGrid({
         return (
           <button
             key={i}
-            onMouseDown={(e) => { e.preventDefault(); onChange(pos.h, pos.v) }}
+            onMouseDown={(e) => { e.preventDefault(); handleClick(pos.h, pos.v) }}
             style={{
               height: '24px',
               backgroundColor: isSelected ? COLORS.buttonBgSelected : COLORS.buttonBg,
@@ -968,6 +1000,8 @@ function GapRow({
   useTokenMode?: boolean
   editorCode?: string
 }) {
+  // Check if value is explicitly set (not empty string)
+  const isSet = value !== ''
   // Get numeric value for preset comparison
   const numValue = typeof value === 'number' ? value : 0
   const isToken = typeof value === 'string' && value.startsWith('$')
@@ -986,9 +1020,9 @@ function GapRow({
 
   return (
     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-      <PresetButton value={0} selected={!isToken && numValue === 0} onClick={() => onChange(0)} />
-      <PresetButton value={4} selected={!isToken && numValue === 4} onClick={() => onChange(4)} />
-      <PresetButton value={8} selected={!isToken && numValue === 8} onClick={() => onChange(8)} />
+      <PresetButton value={0} selected={isSet && !isToken && numValue === 0} onClick={() => onChange(0)} />
+      <PresetButton value={4} selected={isSet && !isToken && numValue === 4} onClick={() => onChange(4)} />
+      <PresetButton value={8} selected={isSet && !isToken && numValue === 8} onClick={() => onChange(8)} />
       <NumberInput value={numValue} onChange={(v) => onChange(v)} presets={[0, 4, 8]} width={24} />
     </div>
   )
@@ -1108,7 +1142,7 @@ function MiniColorPicker({
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div style={{ padding: '12px' }}>
-        <TailwindColorPalette
+        <ColorSystemPalette
           color={color || '#FFFFFF'}
           onChange={(c) => onChange(c.toUpperCase())}
         />
@@ -1186,17 +1220,17 @@ function setStoredTokenMode(mode: boolean) {
 }
 
 const defaultState: LayoutState = {
-  direction: 'hor',
+  direction: null,
   between: false,
-  alignH: 'left',
-  alignV: 'top',
-  gap: 0,
+  alignH: null,
+  alignV: null,
+  gap: '',
   widthMode: 'auto',
   widthValue: 0,
   heightMode: 'auto',
   heightValue: 0,
-  padH: 0,
-  padV: 0,
+  padH: '',
+  padV: '',
   padLeft: 0,
   padRight: 0,
   padTop: 0,
@@ -1221,6 +1255,8 @@ export function InlineLayoutPanel({
   showTabs,
   onSwitchPanel,
   availableTabs,
+  useTokenMode: useTokenModeProp,
+  onTokenModeChange,
 }: InlineLayoutPanelProps) {
   // Set to true for design iteration
   const debugAlwaysOpen = false
@@ -1239,16 +1275,18 @@ export function InlineLayoutPanel({
       hasUserInteractedRef.current = false
       pendingSyncRef.current = false
       const parsed = parseLayoutCode(initialCode || '')
-      // Load stored token mode preference
-      const storedTokenMode = getStoredTokenMode()
-      setState({ ...defaultState, ...parsed, useTokenMode: storedTokenMode })
+      // Use prop if provided, otherwise fall back to localStorage
+      const tokenMode = useTokenModeProp !== undefined ? useTokenModeProp : getStoredTokenMode()
+      setState({ ...defaultState, ...parsed, useTokenMode: tokenMode })
     }
-  }, [isOpen, initialCode])
+  }, [isOpen, initialCode, useTokenModeProp])
 
-  // Persist token mode preference
+  // Sync token mode with prop when it changes externally
   useEffect(() => {
-    setStoredTokenMode(state.useTokenMode)
-  }, [state.useTokenMode])
+    if (useTokenModeProp !== undefined && state.useTokenMode !== useTokenModeProp) {
+      setState(prev => ({ ...prev, useTokenMode: useTokenModeProp }))
+    }
+  }, [useTokenModeProp])
 
   // Sync to editor after user interaction (runs after render)
   useEffect(() => {
@@ -1325,6 +1363,7 @@ export function InlineLayoutPanel({
       width={360}
       maxHeight={400}
       testId="panel-layout-picker"
+      disableClickOutsideClose
     >
       {/* Tabs header when showTabs is true */}
       {showTabs && onSwitchPanel && (
@@ -1333,7 +1372,11 @@ export function InlineLayoutPanel({
           onSwitchPanel={onSwitchPanel}
           availableTabs={availableTabs}
           useTokenMode={state.useTokenMode}
-          onTokenModeChange={(mode) => updateState(s => ({ ...s, useTokenMode: mode }))}
+          onTokenModeChange={(mode) => {
+            updateState(s => ({ ...s, useTokenMode: mode }))
+            // Notify parent if callback provided (saves to project)
+            onTokenModeChange?.(mode)
+          }}
         />
       )}
       <div
@@ -1452,14 +1495,25 @@ export function InlineLayoutPanel({
                 <AlignmentGrid
                   alignH={state.alignH}
                   alignV={state.alignV}
-                  onChange={(h, v) => updateState(s => ({ ...s, alignH: h, alignV: v }))}
+                  onChange={(h, v) => updateState(s => ({
+                    ...s,
+                    alignH: h,
+                    alignV: v,
+                    // Disable spread when horizontal alignment is center or right (not null/left)
+                    between: (h === 'center' || h === 'right') ? false : s.between,
+                  }))}
                 />
               </div>
               <div>
                 <SectionLabel>Spread</SectionLabel>
                 <IconButton
                   selected={state.between}
-                  onClick={() => updateState(s => ({ ...s, between: !s.between }))}
+                  onClick={() => updateState(s => ({
+                    ...s,
+                    between: !s.between,
+                    // Reset horizontal alignment to null when enabling spread
+                    alignH: !s.between ? null : s.alignH,
+                  }))}
                   title="Spread (space-between)"
                 >
                   <ChevronsLeftRight size={14} />

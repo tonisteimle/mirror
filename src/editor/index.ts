@@ -57,7 +57,7 @@ export {
 } from './mock-editor'
 
 // DSL-specific extensions
-export { dslTheme, dslHighlighter } from './dsl-syntax'
+export { dslTheme, dslHighlighter, requestDecorationRefresh, clearDecorationCache } from './dsl-syntax'
 export { dslAutocomplete, triggerAutocompleteWithBoost } from './dsl-autocomplete'
 export { createEditorKeymaps, createSmartEnterKeymap, createSmartTabKeymap, createMultilineIndentKeymaps, createNLModeEnterKeymap } from './keymaps'
 export type { KeymapCallbacks, KeymapConfig, NLModeConfig } from './keymaps'
@@ -74,6 +74,35 @@ export type { EditorExtensionsConfig } from './editor-extensions'
 // Color swatches
 export { createColorSwatchPlugin } from './color-swatches'
 export type { ColorSwatchConfig } from './color-swatches'
+
+// Double-click picker
+export { createDoubleClickPickerExtension } from './double-click-picker'
+export type { DoubleClickPickerConfig } from './double-click-picker'
+
+// Translating lines (LLM translation indicator)
+export { createTranslatingLinesExtension, setTranslatingLines } from './translating-lines'
+
+// Extract utilities
+export {
+  getPropertyAtCursor,
+  getComponentAtLine,
+  getComponentBlock,
+  getCurrentLineNumber,
+  getCurrentLineText,
+  generateTokenName,
+  createTokenDefinition,
+  createComponentDefinition,
+  createComponentUsage,
+  createComponentDefinitionWithChildren,
+  replaceInEditor,
+  replaceCurrentLine,
+  replaceLines,
+} from './extract-utils'
+export type {
+  PropertyInfo,
+  ComponentInfo,
+  ComponentBlockInfo,
+} from './extract-utils'
 
 // Ghost suggestions removed - using contextual autocomplete boost instead
 // See triggerAutocompleteWithBoost in dsl-autocomplete.ts

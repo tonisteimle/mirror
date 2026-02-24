@@ -302,3 +302,83 @@ export {
 // Re-export schema validator
 export { SchemaValidator, getSchemaValidator } from './schema-validator'
 export type { SchemaError, ErrorCategory, ValidationResult as SchemaValidationResult } from './schema-validator'
+
+// ============================================
+// NEW: Unified Validation System
+// ============================================
+
+// Core types and utilities
+export {
+  type Diagnostic,
+  type DiagnosticLocation,
+  type DiagnosticSuggestion,
+  type DiagnosticContext,
+  type DiagnosticCategory,
+  type DiagnosticSeverity,
+  DiagnosticBuilder,
+  createDiagnostic,
+  sortDiagnostics,
+  hasErrors,
+  getErrors,
+  getWarnings,
+} from './core'
+
+// Unified result types
+export {
+  type ValidationResult as UnifiedValidationResult,
+  type ValidationMetadata,
+  ValidationResultBuilder,
+  validResult,
+  mergeResults,
+} from './core'
+
+// Error codes
+export {
+  ErrorCodes,
+  ValidatorErrorCodes as UnifiedValidatorErrorCodes,
+  getErrorDescription,
+} from './core'
+
+// Unified validation pipeline
+export {
+  validate as unifiedValidate,
+  isValid,
+  getFirstError,
+  validateAndCorrect,
+  type ValidationMode,
+  type ValidationOptions as UnifiedValidationOptions,
+} from './pipeline'
+
+// Generated schemas (selective exports to avoid conflicts with ./types)
+export {
+  VALID_PROPERTIES,
+  VALID_DIRECTIONS,
+  BORDER_STYLES,
+  PROPERTY_KEYWORD_VALUES,
+  VALUE_CONSTRAINTS,
+  isValidProperty as isValidPropertySchema,
+  getPropertyType,
+  isDirectionalProperty,
+  isValidDirection as isValidDirectionSchema,
+  isValidCornerDirection,
+} from './schema/property-schema.generated'
+
+export {
+  VALID_EVENTS,
+  KEY_MODIFIERS,
+  TIMING_MODIFIERS,
+  VALID_ACTIONS,
+  BEHAVIOR_TARGETS,
+  VALID_ANIMATIONS,
+  POSITION_KEYWORDS,
+  SYSTEM_STATES,
+  BEHAVIOR_STATES,
+  isValidEvent as isValidEventSchema,
+  isValidKeyModifier,
+  isValidAction as isValidActionSchema,
+  isValidAnimation as isValidAnimationSchema,
+  isValidPosition as isValidPositionSchema,
+  isValidTarget as isValidTargetSchema,
+  isSystemState,
+  isBehaviorState,
+} from './schema/event-schema.generated'

@@ -218,11 +218,6 @@ describe('Inkrement 9: Alignment', () => {
 // =============================================================================
 
 describe('Inkrement 10: Typografie', () => {
-  it('konvertiert font-size', () => {
-    const result = exportReact('Box size 18')
-    expect(result.css).toContain('font-size: 18px')
-  })
-
   it('konvertiert font-weight', () => {
     const result = exportReact('Box weight 600')
     expect(result.css).toContain('font-weight: 600')

@@ -34,7 +34,7 @@ doc
     'Btn "Hello World"'
 
   text
-    '$p $code[Btn] is the component name, $code["Hello World"] is its content.
+    '$p `Btn` is the component name, `"Hello World"` is its content.
 
      $h4 2. Add Styling
 
@@ -58,7 +58,7 @@ doc
   text
     '$h4 4. Reusable Templates
 
-     $p Add $code[:] after a name to define a template.'
+     $p Add `:` after a name to define a template.'
 
   playground
     'Dashboard grid 3 gap 16

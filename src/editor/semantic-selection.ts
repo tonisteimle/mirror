@@ -72,28 +72,16 @@ function selectComponentBlock(view: EditorView, lineNum: number): SelectionRange
 /**
  * Find a property-value pair at the given position.
  * Properties are lowercase words followed by a value.
+ * Supports property: value syntax.
+ * Uses simple O(n) approach to avoid catastrophic backtracking.
  */
 function findPropertyValue(lineText: string, posInLine: number, lineFrom: number): SelectionRange | null {
-  // Match property-value pairs: property followed by value(s)
-  // e.g., "pad 16", "bg #FFF", "font \"Inter\"", "pad 8 16"
-  const propRegex = /([a-z][-a-z]*)\s+([^\s]+(?:\s+[^\s]+)*?)(?=\s+[a-z][-a-z]*\s+|\s*$)/gi
+  // Syntax: property: value (with colon)
+  // e.g., "padding: 16", "background: #FFF"
+  const propRegex = /([a-z][-a-z]*)(?::\s*|\s+)(\S+)/gi
   let match: RegExpExecArray | null
 
   while ((match = propRegex.exec(lineText)) !== null) {
-    const start = match.index
-    const end = start + match[0].length
-
-    if (posInLine >= start && posInLine <= end) {
-      return {
-        from: lineFrom + start,
-        to: lineFrom + end
-      }
-    }
-  }
-
-  // Simpler fallback: just find property + immediate value
-  const simplePropRegex = /([a-z][-a-z]*)\s+(\S+)/gi
-  while ((match = simplePropRegex.exec(lineText)) !== null) {
     const start = match.index
     const end = start + match[0].length
 

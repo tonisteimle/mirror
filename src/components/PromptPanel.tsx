@@ -7,11 +7,15 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle, memo, useMemo } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { createEditorExtensions, type KeymapCallbacks, createNLModeEnterKeymap } from '../editor'
+import { createEditorExtensions, type KeymapCallbacks, createNLModeEnterKeymap, requestDecorationRefresh, setTranslatingLines } from '../editor'
 import type { ValuePickerType } from '../data/dsl-properties'
 import { InlineColorPanel } from './InlineColorPanel'
 import { InlineIconPanel } from './InlineIconPanel'
 import { InlineFontPanel } from './InlineFontPanel'
+import { InlineLayoutPanel } from './InlineLayoutPanel'
+import { InlineTypographyPanel } from './InlineTypographyPanel'
+import { InlineBorderPanel } from './InlineBorderPanel'
+import { InlineAiPanel } from './InlineAiPanel'
 import { CommandPalette } from './CommandPalette'
 import { TokenPicker } from './TokenPicker'
 import { PickerErrorBoundary } from './picker'
@@ -20,6 +24,17 @@ import type { TabType } from '../validation'
 import { usePickerState } from '../hooks/usePickerState'
 import { useColorPanel } from '../hooks/useColorPanel'
 import { useInlinePanel } from '../hooks/useInlinePanel'
+import { useLayoutPanel } from '../hooks/useLayoutPanel'
+import { useTypographyPanel } from '../hooks/useTypographyPanel'
+import { useBorderPanel } from '../hooks/useBorderPanel'
+import { useComponentPanel } from '../hooks/useComponentPanel'
+// Component Property Panels
+import { TabbedPropertyPanel } from './TabbedPropertyPanel'
+import { DefaultPropertyPanel } from './DefaultPropertyPanel'
+import { TextPropertyPanel } from './TextPropertyPanel'
+import { InputPropertyPanel } from './InputPropertyPanel'
+import { ImagePropertyPanel } from './ImagePropertyPanel'
+import { useAiPanel } from '../hooks/useAiPanel'
 import { useImageDragDrop } from '../hooks/useImageDragDrop'
 import { useEditorTriggers } from '../hooks/useEditorTriggers'
 import { searchIcons } from '../data/icon-synonyms'
@@ -52,6 +67,10 @@ interface PromptPanelProps {
   tab?: TabType
   getOtherTabCode?: () => string
   tokensCode?: string
+  /** Components code for AI context */
+  componentsCode?: string
+  /** Layout code for AI context */
+  layoutCode?: string
   designTokens?: Map<string, unknown>
   autoCompleteMode?: 'always' | 'delay' | 'off'
   onPreviewChange?: (override: PreviewOverride | null) => void
@@ -59,8 +78,8 @@ interface PromptPanelProps {
   onCursorLineChange?: (line: number) => void
   /** Called when cursor position changes (line and column, both 0-indexed) */
   onCursorChange?: (pos: CursorPosition) => void
-  // NL Mode props
-  /** Whether NL mode is enabled */
+  // NL Mode props (derived from API key presence)
+  /** Whether NL mode is enabled (true when API key exists) */
   nlModeEnabled?: boolean
   /** Callback when Enter is pressed in NL mode */
   onNlTranslate?: (lineIndex: number, content: string, allLines: string[]) => void
@@ -69,10 +88,38 @@ interface PromptPanelProps {
   // Picker Mode props
   /** Whether picker mode is enabled (autocomplete suggestions) */
   pickerModeEnabled?: boolean
+  // Shorthand expansion props
+  /** Whether to expand shorthand to long form (e.g., p → padding). Default: true */
+  expandShorthand?: boolean
+  // AI generation status callback
+  /** Called when AI generation state changes (for footer indicator) */
+  onAiGenerating?: (isGenerating: boolean, progress?: { currentStep: number; totalSteps: number; currentComponent: string }) => void
+  // Data Tab generation callback
+  /** Called when AI generates Data Tab content (for data-driven apps) */
+  onDataCodeGenerated?: (code: string) => void
+  // Token mode (project setting)
+  /** Token mode for picker panels (project-specific setting) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
 export interface PromptPanelRef {
-  goToLine: (line: number) => void
+  /** Navigate to a line. If select=true (default), selects the line content. If false, places cursor at start. */
+  goToLine: (line: number, select?: boolean) => void
+  refreshDecorations: () => void
+  /** Open the AI assistant panel at current cursor position */
+  openAiPanel: () => void
+  /** Get the CodeMirror EditorView (for extraction utilities) */
+  getEditorView: () => EditorView | null
+  /** Open the layout picker panel at current cursor position */
+  openLayoutPanel: () => void
+  /** Open the typography picker panel at current cursor position */
+  openTypographyPanel: () => void
+  /** Open the icon picker panel at current cursor position */
+  openIconPanel: () => void
+  /** Open the border picker panel at current cursor position */
+  openBorderPanel: () => void
 }
 
 export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
@@ -83,6 +130,8 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     highlightLine,
     tab,
     tokensCode = '',
+    componentsCode = '',
+    layoutCode = '',
     designTokens,
     autoCompleteMode = 'always',
     onPreviewChange,
@@ -92,24 +141,31 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     onNlTranslate,
     nlTranslations,
     pickerModeEnabled = true,
+    expandShorthand = true,
+    onAiGenerating,
+    onDataCodeGenerated,
+    useTokenMode,
+    onTokenModeChange,
   }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<EditorView | null>(null)
     const isInternalChange = useRef(false)
     const [editorError, setEditorError] = useState<Error | null>(null)
+    // Track when editor is mounted (triggers translating lines effect)
+    const [editorMounted, setEditorMounted] = useState(false)
 
     // Refs for values needed in editor callbacks
-    const autoCompleteModeRef = useRef(autoCompleteMode)
-    autoCompleteModeRef.current = autoCompleteMode
     const designTokensRef = useRef(designTokens)
     designTokensRef.current = designTokens
-    const tabRef = useRef(tab)
-    tabRef.current = tab
     const onCursorLineChangeRef = useRef(onCursorLineChange)
     onCursorLineChangeRef.current = onCursorLineChange
     const onCursorChangeRef = useRef(onCursorChange)
     onCursorChangeRef.current = onCursorChange
     const lastCursorPosRef = useRef<{ line: number; column: number }>({ line: -1, column: -1 })
+
+    // Shorthand expansion ref
+    const expandShorthandRef = useRef(expandShorthand)
+    expandShorthandRef.current = expandShorthand
 
     // NL mode refs
     const nlModeEnabledRef = useRef(nlModeEnabled)
@@ -146,7 +202,17 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     const colorPanel = useColorPanel(editorRef)
     const iconPanel = useInlinePanel({ editorRef, onAfterSelect: handleAfterPanelSelect })
     const fontPanel = useInlinePanel({ editorRef, onAfterSelect: handleAfterPanelSelect })
+    const layoutPanel = useLayoutPanel(editorRef)
+    const typographyPanel = useTypographyPanel(editorRef)
+    const borderPanel = useBorderPanel()
+    const componentPanel = useComponentPanel(editorRef)
     const picker = usePickerState(editorRef)
+    const aiPanel = useAiPanel(editorRef, { tokensCode, componentsCode, layoutCode, expandShorthand, onDataCodeGenerated })
+
+    // Notify parent when AI generation state changes (for footer indicator)
+    useEffect(() => {
+      onAiGenerating?.(aiPanel.state.isGenerating, aiPanel.state.generationProgress)
+    }, [aiPanel.state.isGenerating, aiPanel.state.generationProgress, onAiGenerating])
 
     // Ref for color panel setState (needed for keymap closures)
     const colorPanelSetStateRef = useRef(colorPanel.setState)
@@ -240,6 +306,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       onPreviewChange,
       colorPanel.state.isOpen,
       colorPanel.state.selectedIndex,
+      colorPanel.state.selectedValue,
       colorPanel.state.triggerPos,
       iconPanel.state.isOpen,
       iconPanel.state.selectedIndex,
@@ -255,9 +322,18 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
     // Image drag & drop
     useImageDragDrop({ containerRef, editorRef })
 
+    // Track the last value we reported via onChange to detect external vs internal changes
+    const lastReportedValueRef = useRef<string>(value)
+
+    // Update lastReportedValueRef when onChange is called
+    const wrappedOnChange = useCallback((newValue: string) => {
+      lastReportedValueRef.current = newValue
+      onChange(newValue)
+    }, [onChange])
+
     // Trigger handling
     const triggerConfig = useMemo(() => ({
-      onChange,
+      onChange: wrappedOnChange,
       getTriggerHandlers: () => ({
         openColorPanel: colorPanel.open,
         openTokenPicker: (ctx?: string) => openPicker('token', { propertyContext: ctx }),
@@ -273,20 +349,38 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       getIconPanelState: () => iconPanel.stateRef.current,
       closeIconPanel: iconPanel.close,
       updateIconPanelFilter: iconPanel.updateFilter,
+      openIconPanel: () => iconPanel.open('icon'),
       // Font panel
       getFontPanelState: () => fontPanel.stateRef.current,
       closeFontPanel: fontPanel.close,
       updateFontPanelFilter: fontPanel.updateFilter,
-    }), [onChange, colorPanel, openPicker, iconPanel, fontPanel])
+      // Layout panel
+      getLayoutPanelState: () => layoutPanel.stateRef.current,
+      openLayoutPanel: layoutPanel.open,
+      // Typography panel
+      getTypographyPanelState: () => typographyPanel.stateRef.current,
+      openTypographyPanel: typographyPanel.open,
+      // Border panel
+      getBorderPanelState: () => borderPanel.state,
+      openBorderPanel: (trigger?: string) => {
+        const view = editorRef.current
+        if (!view) return
+        const pos = view.state.selection.main.head
+        borderPanel.open(view, pos)
+      },
+      // Component panel (triggered by ComponentName + space)
+      getComponentPanelState: () => componentPanel.state,
+      openComponentPanel: componentPanel.open,
+      closeComponentPanel: componentPanel.close,
+    }), [wrappedOnChange, colorPanel, openPicker, iconPanel, fontPanel, layoutPanel, typographyPanel, borderPanel, componentPanel])
 
     const {
       triggerExtension,
       clearTriggers,
-      autoCompleteTimeoutRef,
     } = useEditorTriggers(triggerConfig)
 
-    // Navigation
-    const goToLine = useCallback((line: number) => {
+    // Navigation - optionally select the line or just place cursor at start
+    const goToLine = useCallback((line: number, select: boolean = true) => {
       const view = editorRef.current
       if (!view) return
 
@@ -295,13 +389,40 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
 
       const lineInfo = doc.line(line + 1)
       view.dispatch({
-        selection: { anchor: lineInfo.from, head: lineInfo.to },
+        selection: select
+          ? { anchor: lineInfo.from, head: lineInfo.to }
+          : { anchor: lineInfo.from },
         scrollIntoView: true,
       })
       view.focus()
     }, [])
 
-    useImperativeHandle(ref, () => ({ goToLine }), [goToLine])
+    // Refresh decorations (syntax highlighting) - call after external code changes
+    const refreshDecorations = useCallback(() => {
+      const view = editorRef.current
+      if (view) {
+        requestDecorationRefresh(view)
+      }
+    }, [])
+
+    // Get editor view for external access
+    const getEditorView = useCallback(() => editorRef.current, [])
+
+    useImperativeHandle(ref, () => ({
+      goToLine,
+      refreshDecorations,
+      openAiPanel: aiPanel.open,
+      getEditorView,
+      openLayoutPanel: layoutPanel.open,
+      openTypographyPanel: typographyPanel.open,
+      openIconPanel: () => iconPanel.open('icon'),
+      openBorderPanel: () => {
+        const view = editorRef.current
+        if (!view) return
+        const pos = view.state.selection.main.head
+        borderPanel.open(view, pos)
+      },
+    }), [goToLine, refreshDecorations, aiPanel.open, getEditorView, layoutPanel.open, typographyPanel.open, iconPanel, borderPanel])
 
     // Insert handlers for pickers
     const createInsertHandler = useCallback(
@@ -391,9 +512,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       const extensions = createEditorExtensions({
         keymapConfig: {
           callbacks: keymapCallbacks,
-          getAutoCompleteMode: () => autoCompleteModeRef.current,
-          getCurrentTab: () => tabRef.current,
-          autoCompleteTimeoutRef,
+          getExpandShorthand: () => expandShorthandRef.current,
         },
         panelKeymapConfig: {
           getColorPanelState: () => colorPanel.stateRef.current,
@@ -418,10 +537,49 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
             !pickerModeEnabledRef.current ||
             iconPanel.stateRef.current.isOpen ||
             fontPanel.stateRef.current.isOpen,
+          // Pass through expand shorthand setting for autocomplete labels
+          getExpandShorthand: () => expandShorthandRef.current,
         },
-        colorSwatchConfig: {
-          onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
-          getDesignTokens: () => designTokensRef.current ?? new Map(),
+        // Color swatches disabled - causing UI issues (jumping/blocking)
+        // colorSwatchConfig: {
+        //   onSwatchClick: (s, e, c) => swatchClickRef.current?.(s, e, c),
+        //   getDesignTokens: () => designTokensRef.current ?? new Map(),
+        // },
+        // Double-click picker - open picker when double-clicking on color/icon/font
+        doubleClickPickerConfig: {
+          onColorDoubleClick: (color, from, to) => {
+            const view = editorRef.current
+            if (!view) return
+            view.dispatch({ selection: { anchor: to } })
+            openPicker('color', { currentColor: color, replaceRange: { from, to } })
+          },
+          onIconDoubleClick: (iconName, from, to) => {
+            const view = editorRef.current
+            if (!view) return
+            view.dispatch({ selection: { anchor: to } })
+            iconPanel.open('icon', { replaceRange: { from, to } })
+          },
+          onFontDoubleClick: (fontName, from, to) => {
+            const view = editorRef.current
+            if (!view) return
+            view.dispatch({ selection: { anchor: to } })
+            fontPanel.open('font', { replaceRange: { from, to } })
+          },
+          onLayoutDoubleClick: (code, from, to) => {
+            const view = editorRef.current
+            if (!view) return
+            view.dispatch({ selection: { anchor: to } })
+            layoutPanel.openForEdit(code, from, to)
+          },
+          onTypographyDoubleClick: (code, from, to) => {
+            const view = editorRef.current
+            if (!view) return
+            view.dispatch({ selection: { anchor: to } })
+            typographyPanel.openForEdit(code, from, to)
+          },
+          onComponentDoubleClick: (componentName, pickerType, lineFrom, lineTo) => {
+            componentPanel.openForLine(componentName, pickerType, lineFrom, lineTo)
+          },
         },
       })
 
@@ -465,6 +623,7 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
         const state = EditorState.create({ doc: value, extensions })
         view = new EditorView({ state, parent: containerRef.current })
         editorRef.current = view
+        setEditorMounted(true)
         setEditorError(null)
       } catch (error) {
         logger.ui.error('Editor initialization failed', error)
@@ -475,22 +634,39 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
       return () => {
         view?.destroy()
         editorRef.current = null
+        setEditorMounted(false)
         clearTriggers()
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab])
 
-    // Sync external value changes
+    // Sync external value changes while preserving cursor position
+    // Only sync if the change is truly external (not from our own onChange)
     useEffect(() => {
       const view = editorRef.current
       if (!view) return
 
       const currentValue = view.state.doc.toString()
-      if (currentValue !== value) {
-        isInternalChange.current = true
-        view.dispatch({ changes: { from: 0, to: currentValue.length, insert: value } })
-        isInternalChange.current = false
-      }
+
+      // Skip if editor already has this value
+      if (currentValue === value) return
+
+      // Skip if this value came from our own onChange (internal change)
+      // This prevents race conditions where we overwrite user's typing
+      if (value === lastReportedValueRef.current) return
+
+      // This is a true external change (AI generation, undo, tab switch, etc.)
+      isInternalChange.current = true
+      // Preserve cursor position - clamp to new document length
+      const cursor = view.state.selection.main
+      const newAnchor = Math.min(cursor.anchor, value.length)
+      const newHead = Math.min(cursor.head, value.length)
+      view.dispatch({
+        changes: { from: 0, to: currentValue.length, insert: value },
+        selection: { anchor: newAnchor, head: newHead }
+      })
+      lastReportedValueRef.current = value
+      isInternalChange.current = false
     }, [value])
 
     // Auto-scroll to highlighted line
@@ -499,6 +675,28 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
         goToLine(highlightLine)
       }
     }, [highlightLine, goToLine])
+
+    // Update CodeMirror line decorations for translating lines
+    // Depends on editorMounted to re-run when editor becomes available
+    useEffect(() => {
+      const view = editorRef.current
+      if (!view) return
+
+      // Collect lines that are currently translating
+      const translatingLineSet = new Set<number>()
+      if (nlTranslations) {
+        nlTranslations.forEach((status, lineIndex) => {
+          if (status === 'translating') {
+            translatingLineSet.add(lineIndex)
+          }
+        })
+      }
+
+      // Dispatch effect to update line decorations
+      view.dispatch({
+        effects: setTranslatingLines.of(translatingLineSet),
+      })
+    }, [nlTranslations, editorMounted])
 
     return (
       <div style={{
@@ -575,11 +773,14 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           isOpen={colorPanel.state.isOpen}
           onClose={colorPanel.close}
           onSelect={colorPanel.selectColor}
+          onCodeChange={colorPanel.updateCode}
           position={colorPanel.state.position}
           filter={colorPanel.state.filter}
           selectedIndex={colorPanel.state.selectedIndex}
           onSelectedIndexChange={colorPanel.setSelectedIndex}
           onSelectedValueChange={colorPanel.setSelectedValue}
+          useTokenMode={useTokenMode}
+          editorCode={tokensCode}
         />
 
         {/* Color picker triggered by swatch click */}
@@ -596,17 +797,21 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
             filter=""
             selectedIndex={swatchColorSelectedIndex}
             onSelectedIndexChange={setSwatchColorSelectedIndex}
+            initialColor={picker.getContext().currentColor ?? undefined}
+            useTokenMode={useTokenMode}
+            editorCode={tokensCode}
           />
         )}
 
-        {/* Command Palette */}
-        <CommandPalette
+        {/* Command Palette - disabled, steals focus from editor */}
+        {/* TODO: Rebuild as InlineCommandPalette */}
+        {/* <CommandPalette
           isOpen={commandPaletteOpen}
           onClose={closePicker}
           onSelect={insertCommand}
           position={commandPalettePosition}
           initialQuery={commandPaletteQuery}
-        />
+        /> */}
 
         {/* Inline Font Panel */}
         <InlineFontPanel
@@ -625,15 +830,142 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
           isOpen={iconPanel.state.isOpen}
           onClose={iconPanel.close}
           onSelect={iconPanel.selectValue}
+          onCodeChange={iconPanel.updateCode}
           position={iconPanel.state.position}
           filter={iconPanel.state.filter}
           selectedIndex={iconPanel.state.selectedIndex}
           onSelectedIndexChange={iconPanel.setSelectedIndex}
           onSelectedValueChange={iconPanel.setSelectedValue}
+          iconLibrary={iconPanel.state.iconLibrary}
+          onLibraryChange={iconPanel.setIconLibrary}
+          editorCode={tokensCode}
         />
 
-        {/* Token Picker */}
-        <PickerErrorBoundary onClose={closePicker} pickerName="TokenPicker">
+        {/* Inline Layout Panel */}
+        <InlineLayoutPanel
+          isOpen={layoutPanel.state.isOpen}
+          onClose={layoutPanel.close}
+          onSelect={layoutPanel.selectLayout}
+          onCodeChange={layoutPanel.updateCode}
+          position={layoutPanel.state.position}
+          initialCode={layoutPanel.state.initialCode}
+          editorCode={tokensCode}
+        />
+
+        {/* Inline Typography Panel */}
+        <InlineTypographyPanel
+          isOpen={typographyPanel.state.isOpen}
+          onClose={typographyPanel.close}
+          onSelect={typographyPanel.selectTypography}
+          onCodeChange={typographyPanel.updateCode}
+          position={typographyPanel.state.position}
+          initialCode={typographyPanel.state.initialCode}
+          editorCode={tokensCode}
+        />
+
+        {/* Inline Border Panel */}
+        <InlineBorderPanel
+          isOpen={borderPanel.state.isOpen}
+          onClose={borderPanel.close}
+          onSelect={borderPanel.handleSelect}
+          onCodeChange={borderPanel.handleCodeChange}
+          position={borderPanel.state.position}
+          initialCode={borderPanel.state.initialCode}
+          editorCode={tokensCode}
+        />
+
+        {/* Component Property Panels - rendered based on pickerType */}
+        {componentPanel.state.pickerType === 'button' && (
+          <TabbedPropertyPanel
+            isOpen={componentPanel.state.isOpen}
+            position={componentPanel.state.position}
+            lineContent={componentPanel.state.lineContent}
+            onCodeChange={componentPanel.updateCode}
+            onClose={componentPanel.close}
+            editorCode={tokensCode}
+            useTokenMode={useTokenMode}
+            onTokenModeChange={onTokenModeChange}
+          />
+        )}
+        {componentPanel.state.pickerType === 'default' && (
+          <DefaultPropertyPanel
+            isOpen={componentPanel.state.isOpen}
+            position={componentPanel.state.position}
+            lineContent={componentPanel.state.lineContent}
+            onCodeChange={componentPanel.updateCode}
+            onClose={componentPanel.close}
+            editorCode={tokensCode}
+          />
+        )}
+        {componentPanel.state.pickerType === 'text' && (
+          <TextPropertyPanel
+            isOpen={componentPanel.state.isOpen}
+            position={componentPanel.state.position}
+            lineContent={componentPanel.state.lineContent}
+            onCodeChange={componentPanel.updateCode}
+            onClose={componentPanel.close}
+            editorCode={tokensCode}
+          />
+        )}
+        {componentPanel.state.pickerType === 'input' && (
+          <InputPropertyPanel
+            isOpen={componentPanel.state.isOpen}
+            position={componentPanel.state.position}
+            lineContent={componentPanel.state.lineContent}
+            onCodeChange={componentPanel.updateCode}
+            onClose={componentPanel.close}
+            editorCode={tokensCode}
+          />
+        )}
+        {componentPanel.state.pickerType === 'image' && (
+          <ImagePropertyPanel
+            isOpen={componentPanel.state.isOpen}
+            position={componentPanel.state.position}
+            lineContent={componentPanel.state.lineContent}
+            onCodeChange={componentPanel.updateCode}
+            onClose={componentPanel.close}
+            editorCode={tokensCode}
+          />
+        )}
+        {componentPanel.state.pickerType === 'icon' && (
+          <InlineIconPanel
+            isOpen={componentPanel.state.isOpen}
+            onClose={componentPanel.close}
+            onSelect={(iconCode) => {
+              // Update the line with the full icon code (name + options)
+              const line = componentPanel.state.lineContent
+              const match = line.match(/^(\s*(?:\w+:)?\s*\w+\s*)(.*)$/)
+              if (match) {
+                const [, prefix] = match
+                componentPanel.updateCode(`${prefix}${iconCode}`)
+              }
+              componentPanel.close()
+            }}
+            onCodeChange={(iconCode) => {
+              // Live update the line with the icon code
+              const line = componentPanel.state.lineContent
+              const match = line.match(/^(\s*(?:\w+:)?\s*\w+\s*)(.*)$/)
+              if (match) {
+                const [, prefix] = match
+                componentPanel.updateCode(`${prefix}${iconCode}`)
+              }
+            }}
+            position={componentPanel.state.position}
+            filter=""
+            selectedIndex={iconPanel.state.selectedIndex}
+            onSelectedIndexChange={iconPanel.setSelectedIndex}
+            onSelectedValueChange={iconPanel.setSelectedValue}
+            iconLibrary={iconPanel.state.iconLibrary}
+            onLibraryChange={iconPanel.setIconLibrary}
+            editorCode={tokensCode}
+            showTabs={true}
+            availableTabs={['icon']}
+          />
+        )}
+
+        {/* Token Picker - disabled, steals focus from editor */}
+        {/* TODO: Rebuild as InlineTokenPicker */}
+        {/* <PickerErrorBoundary onClose={closePicker} pickerName="TokenPicker">
           <TokenPicker
             isOpen={tokenPickerOpen}
             onClose={closePicker}
@@ -642,7 +974,17 @@ export const PromptPanel = memo(forwardRef<PromptPanelRef, PromptPanelProps>(
             tokensCode={tokensCode}
             propertyContext={tokenPickerPropertyContext}
           />
-        </PickerErrorBoundary>
+        </PickerErrorBoundary> */}
+
+        {/* AI Assistant Panel */}
+        <InlineAiPanel
+          isOpen={aiPanel.state.isOpen}
+          onClose={aiPanel.close}
+          onSubmit={aiPanel.generate}
+          position={aiPanel.state.position}
+          isGenerating={aiPanel.state.isGenerating}
+          selectedText={aiPanel.state.selectedText}
+        />
       </div>
     )
   }

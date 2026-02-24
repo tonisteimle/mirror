@@ -32,6 +32,10 @@ interface LazyPromptPanelProps {
   tab?: TabType
   getOtherTabCode?: () => string
   tokensCode?: string
+  /** Components code for AI context */
+  componentsCode?: string
+  /** Layout code for AI context */
+  layoutCode?: string
   designTokens?: Map<string, unknown>
   autoCompleteMode?: 'always' | 'delay' | 'off'
   onPreviewChange?: (override: PreviewOverride | null) => void
@@ -49,6 +53,20 @@ interface LazyPromptPanelProps {
   // Picker Mode props
   /** Whether picker mode is enabled (autocomplete suggestions) */
   pickerModeEnabled?: boolean
+  // Shorthand expansion props
+  /** Whether to expand shorthand to long form (e.g., p → padding). Default: true */
+  expandShorthand?: boolean
+  // AI generation status callback
+  /** Called when AI generation state changes (for footer indicator) */
+  onAiGenerating?: (isGenerating: boolean, progress?: { currentStep: number; totalSteps: number; currentComponent: string }) => void
+  // Data Tab generation callback
+  /** Called when AI generates Data Tab content (for data-driven apps) */
+  onDataCodeGenerated?: (code: string) => void
+  // Token mode (project setting)
+  /** Token mode for picker panels (project-specific setting) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
 /**

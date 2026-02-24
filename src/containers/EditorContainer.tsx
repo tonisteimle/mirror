@@ -29,29 +29,28 @@ interface EditorContainerProps {
   onDeletePage?: (pageId: string) => string[] | null
   onRenamePage?: (pageId: string, newName: string) => void
   referencedPages?: Set<string>
-  /** Preview mode - hides editor, shows only section navigation */
+  /** Preview mode - hides editor, shows only page navigation */
   previewMode?: boolean
-  // Section navigation props
-  /** Active section for layout tab (controlled) */
-  activeLayoutSection?: string | null
-  /** Callback when layout section changes */
-  onActiveLayoutSectionChange?: (section: string | null) => void
-  // NL Mode props
-  /** Whether NL mode is enabled */
-  nlModeEnabled?: boolean
-  /** Callback when NL mode changes */
-  onNlModeChange?: (enabled: boolean) => void
   // Picker Mode props
   /** Whether picker mode is enabled (autocomplete suggestions) */
   pickerModeEnabled?: boolean
   /** Callback when picker mode changes */
   onPickerModeChange?: (enabled: boolean) => void
-  // Deep Thinking Mode props
-  /** Whether deep thinking mode is enabled (Opus 4.5 with full context) */
-  deepThinkingEnabled?: boolean
-  /** Callback when deep thinking mode changes */
-  onDeepThinkingChange?: (enabled: boolean) => void
-  // Note: onOpenAiAssistant, onClear, onClean are now provided via EditorActionsContext
+  // Expand Shorthand props
+  /** Whether to expand shorthand to long form (e.g., p → padding). Default: true */
+  expandShorthand?: boolean
+  /** Callback when expand shorthand changes */
+  onExpandShorthandChange?: (enabled: boolean) => void
+  // Token mode (project setting)
+  /** Token mode for picker panels (project-specific setting) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes */
+  onTokenModeChange?: (mode: boolean) => void
+  // LLM enabled toggle
+  /** Whether LLM features are enabled (translation, generation) */
+  llmEnabled?: boolean
+  /** Callback when LLM enabled changes */
+  onLlmEnabledChange?: (enabled: boolean) => void
 }
 
 export function EditorContainer({
@@ -78,14 +77,14 @@ export function EditorContainer({
   onRenamePage,
   referencedPages,
   previewMode,
-  activeLayoutSection,
-  onActiveLayoutSectionChange,
-  nlModeEnabled,
-  onNlModeChange,
   pickerModeEnabled,
   onPickerModeChange,
-  deepThinkingEnabled,
-  onDeepThinkingChange,
+  expandShorthand,
+  onExpandShorthandChange,
+  useTokenMode,
+  onTokenModeChange,
+  llmEnabled,
+  onLlmEnabledChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -113,14 +112,14 @@ export function EditorContainer({
         onRenamePage={onRenamePage}
         referencedPages={referencedPages}
         previewMode={previewMode}
-        activeLayoutSection={activeLayoutSection}
-        onActiveLayoutSectionChange={onActiveLayoutSectionChange}
-        nlModeEnabled={nlModeEnabled}
-        onNlModeChange={onNlModeChange}
         pickerModeEnabled={pickerModeEnabled}
         onPickerModeChange={onPickerModeChange}
-        deepThinkingEnabled={deepThinkingEnabled}
-        onDeepThinkingChange={onDeepThinkingChange}
+        expandShorthand={expandShorthand}
+        onExpandShorthandChange={onExpandShorthandChange}
+        useTokenMode={useTokenMode}
+        onTokenModeChange={onTokenModeChange}
+        llmEnabled={llmEnabled}
+        onLlmEnabledChange={onLlmEnabledChange}
       />
     </EditorErrorBoundary>
   )

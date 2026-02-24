@@ -1,7 +1,54 @@
 /**
- * Component Parser Types Module
+ * @module component-parser/types
+ * @description Type-Definitionen für Component-Parser Module
  *
- * Type definitions used across the component parser modules.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Geteilte Types für alle Component-Parser Sub-Module
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TYPEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type NamedInstanceResult
+ *   Ergebnis vom Named-Instance-Parsing:
+ *   - componentName: Der finale Component-Name
+ *   - instanceName: Named Instance Name (Email, Save, etc.)
+ *   - componentType: HTML-Primitive Typ (Input, Button, etc.)
+ *   - libraryType: Library-Typ (Dialog, Dropdown, etc.)
+ *   - isExplicitDefinition: Ob mit Colon definiert
+ *
+ * @type InlinePropertyContext
+ *   Context für Inline-Property-Handler:
+ *   - componentName: Aktueller Component
+ *   - inlineSlots: Inline-definierte Slot-Kinder
+ *
+ * @type TemplateExtras
+ *   Extras die von Template auf Node kopiert werden:
+ *   - states: State-Definitionen
+ *   - variables: Variable-Declarations
+ *   - eventHandlers: Event-Handler
+ *   - _isLibrary: Library-Component Flag
+ *   - _libraryType: Original Library-Typ
+ *   - showAnimation, hideAnimation, continuousAnimation
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * NAMED INSTANCE PATTERNS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example NEW Syntax: Name as Type
+ *   Email as Input: "Enter email"
+ *   → componentName: Email, componentType: Input
+ *
+ * @example OLD Syntax: Type Name
+ *   Input Email: "Enter email"
+ *   → componentName: Email, componentType: Input
+ *
+ * @example Named Keyword
+ *   Button named Save: "Save"
+ *   → componentName: Button, instanceName: Save
  */
 
 import type { ASTNode, ComponentTemplate, DSLProperties, ConditionExpr, EventHandler } from '../types'
@@ -19,6 +66,7 @@ export interface NamedInstanceResult {
   instanceName?: string
   componentType?: string
   libraryType?: string
+  customComponentType?: string  // For "label as Standardtext" - the custom component to instantiate
   isExplicitDefinition: boolean
 }
 

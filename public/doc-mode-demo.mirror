@@ -12,7 +12,7 @@ doc
      $p Mirror uses a simple, indentation-based syntax to define user interfaces.
      Each component is defined on a single line with its properties.
 
-     $p Here is an example of a $b[basic button]:'
+     $p Here is an example of a **basic button**:'
 
   playground
     'Button bg #2271c1 col white pad 12 24 rad 8 "Click me"'
@@ -22,10 +22,10 @@ doc
 
      $p Mirror supports a wide range of components:
 
-     $li $b[Box] - A basic container element
-     $li $b[Button] - Clickable button with various styles
-     $li $b[Input] - Text input field
-     $li $b[Card] - A card container with shadow
+     $li **Box** - A basic container element
+     $li **Button** - Clickable button with various styles
+     $li **Input** - Text input field
+     $li **Card** - A card container with shadow
 
      $h3 Layout Example
 
@@ -42,7 +42,7 @@ doc
   text
     '$h2 Interactive Elements
 
-     $p Mirror supports interactive behaviors like $code[onclick], $code[onhover], and $code[toggle]:'
+     $p Mirror supports interactive behaviors like `onclick`, `onhover`, and `toggle`:'
 
   playground
     'Toggle: w 52 h 28 rad 14 cursor pointer
@@ -62,6 +62,6 @@ doc
   text
     '$h2 Learn More
 
-     $p Visit the $link[documentation](https://mirror.dev/docs) for more examples and guides.
+     $p Visit the [documentation](https://mirror.dev/docs) for more examples and guides.
 
      $p Happy prototyping!'

@@ -19,6 +19,16 @@ export interface InlinePanelProps {
   children: React.ReactNode
   width?: number
   maxHeight?: number
+  minHeight?: number
+  /** Fixed height - overrides maxHeight/minHeight */
+  height?: number
+  /** Test ID for E2E testing */
+  testId?: string
+  /**
+   * Disable click-outside-to-close behavior.
+   * Use for complex panels that should only close via buttons or Escape.
+   */
+  disableClickOutsideClose?: boolean
 }
 
 /**
@@ -31,14 +41,18 @@ export function InlinePanel({
   children,
   width = 240,
   maxHeight = 280,
+  minHeight,
+  height,
+  testId,
+  disableClickOutsideClose = false,
 }: InlinePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [flipAbove, setFlipAbove] = useState(false)
   const [adjustedLeft, setAdjustedLeft] = useState(position.x)
 
-  // Close on click outside
+  // Close on click outside (unless disabled for complex panels)
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || disableClickOutsideClose) return
 
     const handleClickOutside = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -49,7 +63,7 @@ export function InlinePanel({
     // Use mousedown to catch clicks before they propagate
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, disableClickOutsideClose])
 
   // Calculate position after render to get actual panel dimensions
   useLayoutEffect(() => {
@@ -100,14 +114,17 @@ export function InlinePanel({
   return (
     <div
       ref={panelRef}
+      data-testid={testId}
       style={{
         position: 'fixed',
         left: adjustedLeft,
         top,
         width,
-        maxHeight,
-        backgroundColor: colors.panel,
-        border: `1px solid ${colors.border}`,
+        height,
+        maxHeight: height ? undefined : maxHeight,
+        minHeight: height ? undefined : minHeight,
+        backgroundColor: '#0a0a0a',
+        border: '1px solid #222',
         borderRadius: '4px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
         zIndex: 1000,
@@ -148,7 +165,7 @@ export function PanelHeader({
 }) {
   return (
     <div style={{
-      borderBottom: `1px solid ${colors.border}`,
+      borderBottom: '1px solid #222',
     }}>
       {/* Tabs if provided */}
       {tabs && tabs.length > 0 && (
@@ -160,6 +177,7 @@ export function PanelHeader({
           {tabs.map(tab => (
             <button
               key={tab.id}
+              tabIndex={-1}
               onMouseDown={(e) => {
                 e.preventDefault()
                 onTabChange?.(tab.id)
@@ -188,7 +206,7 @@ export function PanelHeader({
         padding: '6px 8px',
         color: filter ? colors.text : colors.textMuted,
         fontSize: '11px',
-        borderTop: tabs ? `1px solid ${colors.border}` : 'none',
+        borderTop: tabs ? '1px solid #222' : 'none',
       }}>
         {filter || placeholder}
       </div>
@@ -260,41 +278,52 @@ export function PanelItem({
 export { ColorSwatch, ItemLabel } from './picker'
 
 /**
- * Panel footer with keyboard hints
+ * Panel footer with action buttons
  */
 export function PanelFooter({
   hints = [
-    { key: '↑↓', label: 'Navigation' },
-    { key: '↵', label: 'Einfügen' },
+    { label: 'Abbrechen' },
+    { label: 'Einfügen', primary: true },
   ],
 }: {
-  hints?: { key: string; label: string }[]
+  hints?: { key?: string; label: string; onClick?: () => void; primary?: boolean }[]
 }) {
   return (
     <div
       style={{
-        padding: '4px 8px',
-        borderTop: `1px solid ${colors.border}`,
+        padding: '8px 16px',
+        borderTop: '1px solid #222',
         display: 'flex',
-        gap: '12px',
+        justifyContent: 'flex-end',
+        gap: '8px',
         fontSize: '10px',
         color: colors.textMuted,
         flexShrink: 0,
       }}
     >
       {hints.map((hint, i) => (
-        <span key={i}>
-          <span style={{
-            color: colors.textDim,
-            backgroundColor: colors.lineActive,
-            padding: '1px 4px',
-            borderRadius: '2px',
-            marginRight: '4px',
-          }}>
-            {hint.key}
-          </span>
+        <button
+          key={i}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            hint.onClick?.()
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '5px 10px',
+            backgroundColor: '#181818',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: hint.onClick ? 'pointer' : 'default',
+            fontSize: '10px',
+            color: hint.primary ? '#3B82F6' : colors.textMuted,
+          }}
+        >
           {hint.label}
-        </span>
+        </button>
       ))}
     </div>
   )

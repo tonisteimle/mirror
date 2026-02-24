@@ -12,6 +12,20 @@ import { colors } from '../theme'
 import { LRUCache } from '../utils/lru-cache'
 import { isInsideString } from './utils'
 import { FUZZY_SCORE_CACHE_SIZE, PICKER_OPEN_DELAY_MS, MAX_AUTOCOMPLETE_OPTIONS } from './constants'
+import { LONG_TO_SHORT } from './shorthand-expansion'
+
+// =============================================================================
+// Pre-compiled Regex Patterns (Performance Optimization)
+// =============================================================================
+
+/** Pattern for "as " with space at end */
+const REGEX_AFTER_AS_SPACE = /\bas\s$/
+
+/** Pattern for "as " followed by word */
+const REGEX_TYPING_AFTER_AS = /\bas\s+$/
+
+/** Pattern for "property $token" context */
+const REGEX_PROPERTY_TOKEN_CONTEXT = /\b([a-z]+)\s+\$[a-zA-Z0-9_-]*$/
 
 /**
  * Property groups for contextual boosting.
@@ -36,6 +50,126 @@ const PROPERTY_BOOST_GROUPS: Record<string, string[]> = {
   // Layout: after hor/ver, suggest gap and alignment
   hor: ['gap', 'ver-cen', 'hor-cen', 'wrap'],
   ver: ['gap', 'ver-cen', 'hor-cen'],
+}
+
+// =============================================================================
+// Component Type to Property Mapping
+// =============================================================================
+// Properties that are most relevant for each component type.
+// These get boosted in autocomplete when working with that component type.
+
+/**
+ * Relevant properties for each component type.
+ * Properties are specified by their syntax name (short or long form).
+ */
+const COMPONENT_TYPE_PROPERTIES: Record<string, string[]> = {
+  // Input fields: form-related properties
+  Input: [
+    'padding', 'background', 'color', 'border', 'border-color', 'radius',
+    'width', 'height', 'font', 'size',
+    'hover-background', 'hover-border-color',
+  ],
+  Textarea: [
+    'padding', 'background', 'color', 'border', 'border-color', 'radius',
+    'width', 'height', 'min-height', 'font', 'size', 'line',
+    'hover-background', 'hover-border-color', 'scroll',
+  ],
+  // Text elements: typography properties
+  Text: [
+    'color', 'font', 'size', 'weight', 'line', 'uppercase', 'truncate',
+    'hor-l', 'hor-cen', 'hor-r',
+  ],
+  Link: [
+    'color', 'font', 'size', 'weight', 'line', 'uppercase', 'truncate',
+    'hover-color',
+  ],
+  // Images: image-specific and sizing
+  Image: [
+    'src', 'alt', 'fit', 'width', 'height', 'min-width', 'min-height',
+    'max-width', 'max-height', 'radius', 'border', 'shadow',
+  ],
+  // Buttons: interactive styling
+  Button: [
+    'background', 'color', 'padding', 'radius', 'border', 'border-color',
+    'font', 'size', 'weight', 'shadow',
+    'hover-background', 'hover-color', 'hover-border-color',
+    'horizontal', 'gap',
+  ],
+  // Icons: icon-specific
+  Icon: [
+    'color', 'size', 'opacity',
+  ],
+  // Container types: layout properties
+  Box: [
+    'background', 'padding', 'gap', 'horizontal', 'vertical',
+    'border', 'border-color', 'radius', 'shadow',
+    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+    'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
+    'wrap', 'grow', 'clip', 'scroll',
+  ],
+  Container: [
+    'background', 'padding', 'gap', 'horizontal', 'vertical',
+    'border', 'border-color', 'radius', 'shadow',
+    'width', 'max-width', 'hor-cen',
+  ],
+  Row: [
+    'gap', 'padding', 'background',
+    'hor-l', 'hor-cen', 'hor-r', 'hor-between',
+    'ver-t', 'ver-cen', 'ver-b',
+    'wrap', 'grow',
+  ],
+  Column: [
+    'gap', 'padding', 'background',
+    'hor-l', 'hor-cen', 'hor-r',
+    'ver-t', 'ver-cen', 'ver-b', 'ver-between',
+    'grow',
+  ],
+  Stack: [
+    'gap', 'padding', 'background',
+    'hor-l', 'hor-cen', 'hor-r',
+    'ver-t', 'ver-cen', 'ver-b',
+  ],
+  // Segment control
+  Segment: [
+    'background', 'padding', 'radius', 'border', 'gap',
+    'color', 'size', 'weight',
+  ],
+}
+
+// Aliases for component types
+const COMPONENT_TYPE_ALIASES: Record<string, string> = {
+  Col: 'Column',
+  Group: 'Box',
+  Wrapper: 'Box',
+  View: 'Box',
+}
+
+/** Pattern to detect component type at line start: "  ComponentName ..." */
+const REGEX_COMPONENT_AT_START = /^\s*([A-Z][a-zA-Z0-9]*)/
+
+/** Pattern to detect "as Type" syntax: "... as Type ..." */
+const REGEX_AS_TYPE_CONTEXT = /\bas\s+([A-Z][a-zA-Z0-9]*)/
+
+/**
+ * Detect the component type from the current line.
+ * Checks for "as Type" pattern first, then component name at line start.
+ */
+function detectComponentType(lineText: string): string | null {
+  // First check for "as Type" - this takes precedence
+  const asMatch = lineText.match(REGEX_AS_TYPE_CONTEXT)
+  if (asMatch) {
+    const type = asMatch[1]
+    return COMPONENT_TYPE_ALIASES[type] || type
+  }
+
+  // Then check for component name at line start
+  const startMatch = lineText.match(REGEX_COMPONENT_AT_START)
+  if (startMatch) {
+    const name = startMatch[1]
+    return COMPONENT_TYPE_ALIASES[name] || name
+  }
+
+  return null
 }
 
 /**
@@ -64,6 +198,11 @@ export const boostContextField = StateField.define<string | null>({
 })
 
 /**
+ * Track pending autocomplete boost timers per editor view for cleanup.
+ */
+const pendingBoostTimers = new WeakMap<EditorView, ReturnType<typeof setTimeout>>()
+
+/**
  * Trigger autocomplete with property boost context.
  * Call this after a picker closes to show related properties first.
  *
@@ -71,15 +210,26 @@ export const boostContextField = StateField.define<string | null>({
  * @param property - The property that was just completed (e.g., 'font')
  */
 export function triggerAutocompleteWithBoost(view: EditorView, property: string): void {
+  // Cancel any pending boost timer for this view
+  const existingTimer = pendingBoostTimers.get(view)
+  if (existingTimer !== undefined) {
+    clearTimeout(existingTimer)
+  }
+
   // Set the boost context
   view.dispatch({
     effects: setBoostContext.of(property),
   })
 
   // Trigger autocomplete after a short delay to let the state settle
-  setTimeout(() => {
-    startCompletion(view)
+  const timer = setTimeout(() => {
+    pendingBoostTimers.delete(view)
+    // Check if view is still valid (not destroyed)
+    if (view.dom?.isConnected) {
+      startCompletion(view)
+    }
   }, 50)
+  pendingBoostTimers.set(view, timer)
 }
 
 export interface DSLAutocompleteOptions {
@@ -87,6 +237,8 @@ export interface DSLAutocompleteOptions {
   getDesignTokens?: () => Map<string, unknown>
   /** Return true to suppress autocomplete (e.g., when inline panel is open) */
   isAutocompleteSuppressed?: () => boolean
+  /** Return true for long form (padding), false for short form (pad). Default: true */
+  getExpandShorthand?: () => boolean
 }
 
 /**
@@ -142,33 +294,48 @@ function getCachedScore(query: string, target: string): number {
 /**
  * Cache for empty query results by boost context.
  * Avoids recalculating the same property list repeatedly.
+ * Uses LRU to bound memory (max 50 entries covers all boost contexts).
  */
-const emptyQueryCache = new Map<string | null, ScoredProperty[]>()
+const emptyQueryCache = new LRUCache<string, ScoredProperty[]>(50)
 
 /**
  * Score properties against a search query using weighted multi-field fuzzy search.
  * @param query - The search query
  * @param boostContext - Optional property name to boost related properties (e.g., 'font' boosts size/weight/line)
+ * @param componentType - Optional component type to boost type-relevant properties
  */
-function scoreProperties(query: string, boostContext: string | null = null): ScoredProperty[] {
-  // Get boosted properties for the context
+function scoreProperties(
+  query: string,
+  boostContext: string | null = null,
+  componentType: string | null = null
+): ScoredProperty[] {
+  // Get boosted properties for the context (after completing a property)
   const boostedProps = boostContext ? PROPERTY_BOOST_GROUPS[boostContext] ?? [] : []
   const boostSet = new Set(boostedProps)
 
+  // Get type-relevant properties for the component
+  const typeProps = componentType ? COMPONENT_TYPE_PROPERTIES[componentType] ?? [] : []
+  const typeSet = new Set(typeProps)
+
   if (!query) {
     // Check cache for empty query results
-    const cached = emptyQueryCache.get(boostContext)
+    // Include component type in cache key for type-specific results
+    const cacheKey = `${boostContext ?? '_null_'}:${componentType ?? '_null_'}`
+    const cached = emptyQueryCache.get(cacheKey)
     if (cached) return cached
 
-    // No query - show boosted properties first, then all others
+    // No query - show type-relevant and boosted properties first
+    const typeRelevant = properties
+      .filter(p => typeSet.has(p.name) && !boostSet.has(p.name))
+      .map(p => ({ prop: p, score: 800, matchedKeyword: null })) // Type-relevant score
     const boosted = properties
       .filter(p => boostSet.has(p.name))
       .map(p => ({ prop: p, score: 1000, matchedKeyword: null })) // High score for boosted
     const others = properties
-      .filter(p => !boostSet.has(p.name))
+      .filter(p => !boostSet.has(p.name) && !typeSet.has(p.name))
       .map(p => ({ prop: p, score: 0, matchedKeyword: null }))
-    const result = [...boosted, ...others]
-    emptyQueryCache.set(boostContext, result)
+    const result = [...boosted, ...typeRelevant, ...others]
+    emptyQueryCache.set(cacheKey, result)
     return result
   }
 
@@ -197,9 +364,14 @@ function scoreProperties(query: string, boostContext: string | null = null): Sco
       // Take the best score from all fields
       let score = Math.max(nameScore, keywordScore, descScore, catScore)
 
-      // Boost score for context-related properties
+      // Boost score for context-related properties (after completing a property)
       if (boostSet.has(prop.name)) {
         score += 500 // Significant boost to appear at top
+      }
+
+      // Boost score for type-relevant properties
+      if (typeSet.has(prop.name)) {
+        score += 300 // Moderate boost for type relevance
       }
 
       return {
@@ -214,15 +386,31 @@ function scoreProperties(query: string, boostContext: string | null = null): Sco
 
 /**
  * Track pending picker timers per editor view for cleanup.
+ * Uses ReturnType<typeof setTimeout> for cross-environment compatibility.
  */
-const pendingPickers = new WeakMap<EditorView, number>()
+const pendingPickers = new WeakMap<EditorView, ReturnType<typeof setTimeout>>()
+
+/**
+ * Get the display name for a property based on the current mode.
+ * @param propName The long-form property name (e.g., 'padding')
+ * @param toLongForm If true, return long form; if false, return short form
+ */
+function getPropertyDisplayName(propName: string, toLongForm: boolean): string {
+  if (toLongForm) {
+    return propName
+  }
+  // Convert to short form
+  return LONG_TO_SHORT[propName] || propName
+}
 
 /**
  * Create an apply function that inserts the property and optionally opens a value picker.
+ * V1 syntax: inserts "property " with space for value entry.
  */
 function createApplyFunction(
   prop: Property,
-  onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
+  onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void,
+  getExpandShorthand?: () => boolean
 ): Completion['apply'] {
   return (view: EditorView, _completion: Completion, from: number, to: number) => {
     // Cancel any previous pending picker to avoid stacking timeouts
@@ -231,14 +419,20 @@ function createApplyFunction(
       clearTimeout(existingTimer)
     }
 
+    // Get the appropriate form based on current mode
+    const toLongForm = getExpandShorthand?.() ?? true
+    const propName = getPropertyDisplayName(prop.syntax, toLongForm)
+    // V1 syntax: property value (with space, no colon)
+    const insertText = `${propName} `
+
     view.dispatch({
-      changes: { from, to, insert: prop.syntax },
-      selection: { anchor: from + prop.syntax.length }
+      changes: { from, to, insert: insertText },
+      selection: { anchor: from + insertText.length }
     })
 
     // Open value picker after a short delay to let the editor state settle
     if (prop.valuePicker && prop.valuePicker !== 'none' && onValuePickerNeeded) {
-      const timerId = window.setTimeout(() => {
+      const timerId = setTimeout(() => {
         pendingPickers.delete(view)
         onValuePickerNeeded(prop.valuePicker!, prop.valuePickerProperty)
       }, PICKER_OPEN_DELAY_MS)
@@ -288,11 +482,44 @@ export function filterTokensForProperty(
  */
 export function getPropertyContextForToken(textBefore: string): string | null {
   // Match pattern: "property $" or "property $partial"
-  const match = textBefore.match(/\b([a-z]+)\s+\$[a-zA-Z0-9_-]*$/)
+  const match = textBefore.match(REGEX_PROPERTY_TOKEN_CONTEXT)
   if (match) {
     return match[1]
   }
   return null
+}
+
+/**
+ * Check if the current position is inside an NL prompt block.
+ * NL blocks start with "/" at the beginning of a line.
+ * Multi-line blocks: all lines from "/" until cursor are part of the block.
+ */
+function isInsideNLBlock(doc: { lineAt: (pos: number) => { text: string; number: number }; line: (n: number) => { text: string } }, pos: number): boolean {
+  const currentLine = doc.lineAt(pos)
+
+  // Check if current line starts with /
+  if (/^\s*\//.test(currentLine.text)) {
+    return true
+  }
+
+  // Check if any previous line in this block starts with /
+  // A block continues while lines are non-empty or indented
+  for (let lineNum = currentLine.number - 1; lineNum >= 1; lineNum--) {
+    const line = doc.line(lineNum)
+    const text = line.text
+
+    // Empty line breaks the block
+    if (text.trim() === '') {
+      return false
+    }
+
+    // Found the / start
+    if (/^\s*\//.test(text)) {
+      return true
+    }
+  }
+
+  return false
 }
 
 /**
@@ -305,6 +532,9 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
 
     const line = context.state.doc.lineAt(context.pos)
     const textBefore = line.text.slice(0, context.pos - line.from)
+
+    // Don't show autocomplete in NL prompt mode (lines starting with /)
+    if (isInsideNLBlock(context.state.doc, context.pos)) return null
 
     // Don't trigger autocomplete inside strings
     if (isInsideString(textBefore)) return null
@@ -368,9 +598,9 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
 
     // Check if we're after "as " - show library components for casting
     // This check comes BEFORE the early return so it works when no word is typed yet
-    const isAfterAsSpace = /\bas\s$/.test(textBefore)
+    const isAfterAsSpace = REGEX_AFTER_AS_SPACE.test(textBefore)
     const textBeforeWord = word ? textBefore.slice(0, textBefore.length - word.text.length) : textBefore
-    const isTypingAfterAs = word && /\bas\s+$/.test(textBeforeWord)
+    const isTypingAfterAs = word && REGEX_TYPING_AFTER_AS.test(textBeforeWord)
 
     if (isAfterAsSpace || isTypingAfterAs) {
       // Show HTML primitives and library components after "as "
@@ -469,9 +699,14 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
 
     // Get boost context from state (set by triggerAutocompleteWithBoost)
     const boostContext = context.state.field(boostContextField, false)
-    const scored = scoreProperties(query, boostContext)
+
+    // Detect component type from the current line for type-specific property boosting
+    const componentType = detectComponentType(line.text)
+
+    const scored = scoreProperties(query, boostContext, componentType)
 
     // Build completion options
+    const toLongForm = options.getExpandShorthand?.() ?? true
     const completionOptions: Completion[] = scored.map(({ prop, matchedKeyword }) => {
       // Build a concise detail string
       let detail = prop.description
@@ -479,10 +714,13 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
         detail = `${matchedKeyword}`
       }
 
+      // Get the appropriate display name based on mode
+      const displayName = getPropertyDisplayName(prop.name, toLongForm)
+
       return {
-        label: prop.name,
+        label: displayName,
         detail,
-        apply: createApplyFunction(prop, options.onValuePickerNeeded),
+        apply: createApplyFunction(prop, options.onValuePickerNeeded, options.getExpandShorthand),
       }
     })
 
@@ -556,7 +794,7 @@ export function dslAutocomplete(options: DSLAutocompleteOptions = {}) {
       activateOnTyping: true,
       selectOnOpen: true,
       maxRenderedOptions: MAX_AUTOCOMPLETE_OPTIONS,
-      interactionDelay: 100, // 100ms debounce to reduce CPU usage
+      interactionDelay: 150, // 150ms debounce prevents crash on rapid typing/backspace
     }),
     autocompleteTheme,
   ]

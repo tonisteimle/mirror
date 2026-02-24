@@ -84,9 +84,11 @@ $l.bor.width: 3
 
 // Icon Sizes
 
+$xs.is: 12
 $s.is: 16
-$m.is: 24
-$l.is: 32
+$m.is: 20
+$l.is: 24
+$xl.is: 32
 
 // Fonts
 

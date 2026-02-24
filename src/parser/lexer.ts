@@ -1,19 +1,63 @@
 /**
- * Mirror DSL Lexer
+ * @module lexer (re-export)
+ * @description Re-Export Barrel für modulares Lexer-System
  *
- * This file re-exports the modular lexer for backward compatibility.
- * The lexer implementation has been refactored into smaller modules:
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * - lexer/token-types.ts    - Token type definitions and constants
- * - lexer/heuristics.ts     - Error-tolerant parsing heuristics
- * - lexer/string-lexer.ts   - String parsing logic
- * - lexer/number-lexer.ts   - Number parsing logic
- * - lexer/json-lexer.ts     - JSON array/object parsing
- * - lexer/identifier-lexer.ts - Identifier/keyword parsing
- * - lexer/color-lexer.ts    - Color parsing logic
- * - lexer/operator-lexer.ts - Operator parsing logic
- * - lexer/token-lexer.ts    - Token reference parsing
- * - lexer/index.ts          - Main tokenize function
+ * @brief Backward-Compatible Re-Exports aus lexer/ Untermodulen
+ *
+ * Die Lexer-Implementierung wurde in spezialisierte Module aufgeteilt.
+ * Dieses Barrel re-exportiert alle öffentlichen APIs.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SUB-MODULE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @submodule lexer/token-types.ts
+ *   Token, TokenType, RESERVED_WORDS
+ *
+ * @submodule lexer/heuristics.ts
+ *   levenshteinDistance, looksLikeEvent, looksLikeAnimation, looksLikeProperty
+ *
+ * @submodule lexer/string-lexer.ts
+ *   parseString, parseMultilineString
+ *
+ * @submodule lexer/number-lexer.ts
+ *   parseNumber (inkl. Prozent und Dezimal)
+ *
+ * @submodule lexer/json-lexer.ts
+ *   parseJsonArray (für Daten-Definitionen)
+ *
+ * @submodule lexer/identifier-lexer.ts
+ *   parseIdentifier (Komponenten, Properties, Keywords)
+ *
+ * @submodule lexer/color-lexer.ts
+ *   parseColor (#RGB, #RRGGBB, #RRGGBBAA)
+ *
+ * @submodule lexer/operator-lexer.ts
+ *   parseArithmeticOperator, parseComparisonOperator
+ *
+ * @submodule lexer/token-lexer.ts
+ *   parseTokenRef ($name, $name.field)
+ *
+ * @submodule lexer/index.ts
+ *   tokenize - Haupt-Funktion
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXPORTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @export tokenize - Haupt-Tokenisierungsfunktion
+ * @export Token, TokenType, LexerToken - Type-Definitionen
+ * @export RESERVED_WORDS - Reservierte Wörter
+ * @export levenshteinDistance - Edit-Distanz für Korrekturvorschläge
+ * @export looksLikeEvent - Erkennt Event-ähnliche Tippfehler
+ * @export looksLikeAnimation - Erkennt Animation-ähnliche Tippfehler
+ * @export looksLikeProperty - Erkennt Property-ähnliche Tippfehler
+ *
+ * @used-by parser.ts, block-parser.ts
  */
 
 // Re-export everything from the modular lexer

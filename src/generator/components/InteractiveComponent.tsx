@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, useContext } from 'react'
-import type { ASTNode, EventHandler } from '../../parser/parser'
+import type { ASTNode, EventHandler, RuntimeValue } from '../../parser/parser'
 import { SYSTEM_STATES } from '../../dsl/properties'
 import { useBehaviorRegistry, BehaviorRegistryContext } from '../behaviors'
 import { useComponentRegistry } from '../component-registry-hooks'
@@ -18,9 +18,10 @@ import { useOverlayRegistry } from '../overlay-registry-hooks'
 import { propertiesToStyle } from '../../utils/style-converter'
 import { matchesKeyModifier } from '../utils/key-modifiers'
 import { executeEventHandler } from '../events'
-import { composeConditionalStyles, composeFinalStyle } from '../styles'
-import { useTemplateRegistry, useContainerContext, ContainerContext } from '../contexts'
+import { composeConditionalStyles, composeFinalStyle, getConditionalContent } from '../styles'
+import { useTemplateRegistry, useContainerContext, ContainerContext, StateOverrideProvider, useStateOverride } from '../contexts'
 import { executeAction as executeSharedAction, type ActionExecutorContext } from '../actions/action-executor'
+import { useRuntimeVariables } from '../runtime-context'
 
 // ============================================
 // Props Interfaces
@@ -50,19 +51,43 @@ export interface ToggleableNodeProps {
 
 export function ToggleableNode({ node, options, renderNode }: ToggleableNodeProps) {
   // Get raw state from context - undefined means not toggled yet
+  // Check both by name (component type) and by id (for named instances)
   const context = useContext(BehaviorRegistryContext)
-  const state = context?.states.get(node.name)
+  const stateByName = context?.states.get(node.name)
+  const stateById = node.id ? context?.states.get(node.id) : undefined
+  // Prefer id-based state (for named instances like "Box named Panel")
+  const state = stateById ?? stateByName
+
+  // Check for parent state override (e.g., parent's state collapsed { Content { hidden } })
+  // This allows dynamic visibility based on parent's current state
+  const parentOverride = useStateOverride(node.name)
+  const hasParentHiddenOverride = parentOverride?.hidden === true
+  const hasParentVisibleOverride = parentOverride?.visible === true
+
   const hasHiddenProperty = node.properties.hidden === true
 
   // Hide if:
   // 1. State is explicitly 'closed'
-  // 2. Has 'hidden' property AND state is undefined (initial state)
-  if (state === 'closed' || (hasHiddenProperty && state === undefined)) {
+  // 2. Has 'hidden' property AND state is undefined AND no parent visible override
+  //    (parent visible override means the parent's current state wants this child visible)
+  // 3. Parent state override sets hidden: true (and no visible override)
+  if (state === 'closed' ||
+      (hasHiddenProperty && state === undefined && !hasParentVisibleOverride) ||
+      (hasParentHiddenOverride && !hasParentVisibleOverride && state !== 'open')) {
     return null
   }
 
   // If state is 'open', render without the hidden property
   if (state === 'open' && hasHiddenProperty) {
+    const nodeWithoutHidden = {
+      ...node,
+      properties: { ...node.properties, hidden: false }
+    }
+    return <>{renderNode(nodeWithoutHidden, options)}</>
+  }
+
+  // If parent has visible override, ensure hidden is cleared
+  if (hasParentVisibleOverride && hasHiddenProperty) {
     const nodeWithoutHidden = {
       ...node,
       properties: { ...node.properties, hidden: false }
@@ -102,27 +127,137 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   const [isFocused, setIsFocused] = useState(false)
   const [isActive, setIsActive] = useState(false)
 
-  // Initialize state: always start with 'default' unless there's an explicit 'default' state
-  // Behavior states like 'highlighted', 'selected', 'open' should only activate via actions
-  const initialState = node.states?.find(s => s.name === 'default')?.name || 'default'
-  const [currentState, setCurrentState] = useState(initialState)
+  // Initialize state:
+  // 1. If activeState is explicitly set (e.g., Section { collapsed }), use that
+  // 2. If there's an explicit 'default' state, use that
+  // 3. For states with child overrides (accordion patterns), use 'default' when no activeState
+  //    - This ensures Content is visible until explicitly collapsed
+  // 4. For states with only properties (toggle patterns), use first custom state
+  // 5. Fall back to 'default' if no custom states
+  const initialState = useMemo(() => {
+    // V8: Use explicitly set activeState from parsing (e.g., Section { collapsed })
+    if (node.activeState) return node.activeState
+    if (!node.states) return 'default'
+    // Check for explicit 'default' state
+    const defaultState = node.states.find(s => s.name === 'default' && !s.category)
+    if (defaultState) return defaultState.name
+    // Check if states have child overrides (accordion pattern)
+    // States with children define visibility for slots - don't auto-activate
+    const hasChildOverrides = node.states.some(s => s.children && s.children.length > 0)
+    if (hasChildOverrides) {
+      // Accordion pattern: no initial state means "expanded" (no child overrides)
+      return 'default'
+    }
+    // Toggle pattern: use first non-system state (e.g., 'off' for on/off toggle)
+    const firstCustomState = node.states.find(s =>
+      !s.category && !SYSTEM_STATES.has(s.name)
+    )
+    if (firstCustomState) return firstCustomState.name
+    return 'default'
+  }, [node.states, node.activeState])
+  const [localState, setLocalState] = useState(initialState)
 
-  // Initialize variables from node.variables
-  const initialVars: Record<string, string | number | boolean> = {}
+  // Get global state from behaviorRegistry (set by "change X to Y" actions)
+  // Check by name (e.g., "Status") for singleton components
+  const globalStateByName = behaviorRegistry?.getState(node.name)
+  // Also check by ID for sibling actions (deactivate-siblings sets state by ID)
+  const globalStateById = behaviorRegistry?.getState(node.id)
+
+  // Priority: ID-based state (from deactivate-siblings) > name-based state > local state
+  const currentState = (globalStateById && globalStateById !== 'closed')
+    ? globalStateById
+    : (globalStateByName && globalStateByName !== 'closed')
+      ? globalStateByName
+      : localState
+
+  // Setter updates only local state - global state is set by actions
+  const setCurrentState = useCallback((newState: string) => {
+    setLocalState(newState)
+  }, [])
+
+  // V9: Initialize category states from node.activeStatesByCategory
+  const initialCategoryStates = useMemo(() => {
+    const states: Record<string, string> = {}
+    // First, set defaults for each category (first state in category)
+    if (node.states) {
+      const seenCategories = new Set<string>()
+      for (const state of node.states) {
+        if (state.category && !seenCategories.has(state.category)) {
+          states[state.category] = state.name
+          seenCategories.add(state.category)
+        }
+      }
+    }
+    // Then override with explicitly set states from parsing
+    if (node.activeStatesByCategory) {
+      Object.assign(states, node.activeStatesByCategory)
+    }
+    return states
+  }, [node.states, node.activeStatesByCategory])
+  const [categoryStates, setCategoryStates] = useState(initialCategoryStates)
+
+  // Get runtime variables from context (global tokens like $query)
+  const { variables: runtimeVariables, setVariable: setRuntimeVariable } = useRuntimeVariables()
+
+  // Initialize local variables from node.variables
+  const initialVars: Record<string, RuntimeValue> = {}
   if (node.variables) {
     for (const v of node.variables) {
       initialVars[v.name] = v.value
     }
   }
-  const [variables, setVariables] = useState(initialVars)
+  const [localVariables, setLocalVariables] = useState(initialVars)
+
+  // Merge runtime and local variables (local takes precedence)
+  const variables = useMemo(() => ({
+    ...runtimeVariables,
+    ...localVariables
+  }), [runtimeVariables, localVariables])
+
+  // setVariables that updates both runtime and local variables
+  // All variable updates go to runtime context so child components can see them
+  // Supports RuntimeValue (primitives + objects for Master-Detail pattern)
+  const setVariables: React.Dispatch<React.SetStateAction<Record<string, RuntimeValue>>> = useCallback((action) => {
+    if (typeof action === 'function') {
+      // For function updates, we need to handle both contexts
+      const updates = action(localVariables)
+      for (const [key, value] of Object.entries(updates)) {
+        // Always update runtime variable so child components see the change
+        setRuntimeVariable(key, value)
+      }
+      setLocalVariables(action)
+    } else {
+      // For direct updates
+      for (const [key, value] of Object.entries(action)) {
+        // Always update runtime variable so child components see the change
+        setRuntimeVariable(key, value)
+      }
+      setLocalVariables(prev => ({ ...prev, ...action }))
+    }
+  }, [localVariables, setRuntimeVariable])
 
   // Calculate style for current (non-system) state
+  // V9: Merge styles from flat state AND all active category states
   const stateStyle = useMemo(() => {
     if (!node.states) return baseStyle
-    const stateConfig = node.states.find(s => s.name === currentState && !SYSTEM_STATES.has(s.name))
-    if (!stateConfig) return baseStyle
-    return { ...baseStyle, ...propertiesToStyle(stateConfig.properties, node.children.length > 0, node.name) }
-  }, [node.states, node.children.length, currentState, baseStyle, node.name])
+    let composedStyle = { ...baseStyle }
+
+    // Apply flat state style if active
+    const flatStateConfig = node.states.find(s => s.name === currentState && !s.category && !SYSTEM_STATES.has(s.name))
+    if (flatStateConfig) {
+      composedStyle = { ...composedStyle, ...propertiesToStyle(flatStateConfig.properties, node.children.length > 0, node.name) }
+    }
+
+    // Apply category state styles
+    for (const [category, stateName] of Object.entries(categoryStates)) {
+      const categoryStateConfig = node.states.find(s => s.category === category && s.name === stateName)
+      if (categoryStateConfig) {
+        composedStyle = { ...composedStyle, ...propertiesToStyle(categoryStateConfig.properties, node.children.length > 0, node.name) }
+      }
+    }
+
+    return composedStyle
+  }, [node.states, node.children.length, currentState, categoryStates, baseStyle, node.name])
 
   // Calculate system state styles (hover, focus, active, disabled)
   // Priority order: hover < focus < active < disabled
@@ -228,7 +363,10 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
     node,
     currentState,
     setCurrentState,
-    variables,
+    // V9: Include category state management
+    categoryStates,
+    setCategoryStates,
+    variables: variables as Record<string, RuntimeValue>,
     setVariables,
     registry,
     behaviorRegistry,
@@ -237,8 +375,10 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
     containerContext: containerContext ? {
       containerId: containerContext.containerId,
       containerName: containerContext.containerName,
+      // Include toggle function for accordion patterns where children toggle parent state
+      toggleParentState: containerContext.toggleParentState,
     } : null,
-  }), [node, currentState, variables, registry, behaviorRegistry, overlayRegistry, templateRegistry, containerContext])
+  }), [node, currentState, categoryStates, variables, registry, behaviorRegistry, overlayRegistry, templateRegistry, containerContext])
 
   // Execute a single action using shared executor
   const executeAction = useCallback((action: Parameters<typeof executeSharedAction>[0], event?: React.SyntheticEvent) => {
@@ -372,7 +512,7 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     for (const handler of keyDownHandlers) {
-      if (matchesKeyModifier(e, handler.modifier)) {
+      if (matchesKeyModifier(e, handler.key)) {
         executeHandler(handler, e)
         break
       }
@@ -381,7 +521,7 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
 
   const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
     for (const handler of keyUpHandlers) {
-      if (matchesKeyModifier(e, handler.modifier)) {
+      if (matchesKeyModifier(e, handler.key)) {
         executeHandler(handler, e)
         break
       }
@@ -396,8 +536,37 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   // Final style
   const finalStyle = useMemo(() => {
     const baseComposed = composeFinalStyle(highlightStyle, stateStyle, conditionalStyle, hoverStyle, isHovered)
-    return { ...baseComposed, ...systemStateStyle, ...behaviorStateStyle }
-  }, [highlightStyle, stateStyle, conditionalStyle, hoverStyle, isHovered, systemStateStyle, behaviorStateStyle])
+    let style = { ...baseComposed, ...systemStateStyle, ...behaviorStateStyle }
+
+    // Handle visibility toggle:
+    // When toggle sets state to 'open', show the element (override hidden)
+    // When toggle sets state to 'closed', hide the element
+    const toggleState = globalStateByName || globalStateById
+    if (toggleState === 'open') {
+      // Override hidden by removing display: none
+      style = { ...style, display: style.display === 'none' ? 'flex' : style.display }
+    } else if (toggleState === 'closed') {
+      // Component was toggled closed (after being toggled open)
+      style = { ...style, display: 'none' }
+    }
+
+    return style
+  }, [highlightStyle, stateStyle, conditionalStyle, hoverStyle, isHovered, systemStateStyle, behaviorStateStyle, globalStateByName, globalStateById])
+
+  // State content: Get _content from active state
+  const stateContent = useMemo(() => {
+    if (!node.states) return null
+    const activeState = node.states.find(s => s.name === currentState && !s.category)
+    if (activeState?.properties._content) {
+      return String(activeState.properties._content)
+    }
+    return null
+  }, [node.states, currentState])
+
+  // Conditional content: Get _content from conditional properties
+  const conditionalContent = useMemo(() => {
+    return getConditionalContent(node.conditionalProperties, variables as Record<string, unknown>)
+  }, [node.conditionalProperties, variables])
 
   // Event existence checks
   const hasChangeEvent = eventHandlerMap.has('onchange')
@@ -412,16 +581,51 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   const hasActiveState = node.states?.some(s => s.name === 'active') ?? false
   const needsFocus = hasFocusState || hasKeyDownEvent || hasKeyUpEvent
 
+  // Toggle state function for children (accordion patterns)
+  // When a child calls toggle-state and doesn't have its own states,
+  // it can use this function to toggle the parent's state
+  const toggleParentState = useCallback(() => {
+    if (!node.states || node.states.length < 2) return
+
+    // Get flat states (non-category states)
+    const flatStates = node.states
+      .filter(s => !s.category && !SYSTEM_STATES.has(s.name))
+      .map(s => s.name)
+
+    if (flatStates.length < 2) return
+
+    const currentIndex = flatStates.indexOf(currentState)
+    const nextIndex = (currentIndex + 1) % flatStates.length
+    setCurrentState(flatStates[nextIndex])
+  }, [node.states, currentState, setCurrentState])
+
   // Container context for children
   const containerContextValue = useMemo(() => ({
     containerId: node.id,
-    containerName: node.instanceName || node.name
-  }), [node.id, node.instanceName, node.name])
+    containerName: node.instanceName || node.name,
+    // State toggle support for accordion patterns
+    parentStates: node.states,
+    parentCurrentState: currentState,
+    toggleParentState
+  }), [node.id, node.instanceName, node.name, node.states, currentState, toggleParentState])
 
-  const wrappedChildren = children ? (
-    <ContainerContext.Provider value={containerContextValue}>
-      {children}
-    </ContainerContext.Provider>
+  // Determine what content to render:
+  // Priority: state content > conditional content > original children
+  // - If state has _content, use that (state overrides)
+  // - If conditional has _content, use that (conditional based on variables)
+  // - Otherwise use original children
+  const renderedContent = stateContent !== null
+    ? stateContent
+    : conditionalContent !== null
+      ? conditionalContent
+      : children
+
+  const wrappedChildren = renderedContent ? (
+    <StateOverrideProvider states={node.states} currentState={currentState}>
+      <ContainerContext.Provider value={containerContextValue}>
+        {renderedContent}
+      </ContainerContext.Provider>
+    </StateOverrideProvider>
   ) : null
 
   return (

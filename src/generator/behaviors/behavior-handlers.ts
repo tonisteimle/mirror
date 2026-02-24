@@ -9,6 +9,7 @@ import type { BehaviorHandler } from './index'
 
 // Import available behavior handlers
 import { FormFieldBehavior } from './input'
+import { DropdownBehavior } from './dropdown'
 // Doc-mode behaviors
 import { DocTextBehavior } from './doc-text'
 import { PlaygroundBehavior } from './playground'
@@ -18,6 +19,8 @@ import { DocWrapperBehavior } from './doc-wrapper'
 const BEHAVIOR_HANDLERS: BehaviorHandler[] = [
   // Form
   FormFieldBehavior,
+  // UI Components
+  DropdownBehavior,
   // Doc-mode
   DocTextBehavior,
   PlaygroundBehavior,

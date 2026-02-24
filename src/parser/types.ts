@@ -1,8 +1,203 @@
 /**
- * Parser Types Module
+ * @module types
+ * @description Parser Types - Zentrale Type-Definitionen für AST
  *
- * Central type definitions for the AST and related structures.
- * Extracted from parser.ts for better modularity.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Alle Type-Definitionen für den AST und verwandte Strukturen
+ *
+ * Diese Datei definiert:
+ * - ASTNode: Kern-Struktur für alle geparsten Komponenten
+ * - Expression: Für Conditionals und Arithmetic
+ * - States, Events, Actions: Für Interaktivität
+ * - Templates und Mixins: Für Wiederverwendung
+ * - Parse Result: Output des Parsers
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AST-NODE STRUKTUR
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type ASTNode
+ *   type: 'component'              Immer 'component'
+ *   name: string                   Component-Name (Button, Card, etc.)
+ *   id: string                     Auto-generierte eindeutige ID
+ *   properties: DSLProperties      Alle Properties (pad, bg, w, etc.)
+ *   content?: string               Text-Content ("Click me")
+ *   children: ASTNode[]            Child-Komponenten
+ *
+ * @optional-fields
+ *   line, column                   Source-Position (0-indexed)
+ *   instanceName                   Named Instance (Input Email:)
+ *   extends                        Inheritance (DangerButton from Button)
+ *   states                         State-Definitionen
+ *   eventHandlers                  Event-Handler
+ *   condition                      Conditional Rendering (if $x)
+ *   iteration                      Loop (each $item in $list)
+ *   dataBinding                    Data-Binding (data Tasks)
+ *   conditionalProperties          Inline-Conditionals (if $x then bg #F00)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXPRESSION-TYPEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type Expression
+ *   Unions für verschiedene Expression-Arten:
+ *
+ * @subtype literal
+ *   { type: 'literal', value: 42 }
+ *   { type: 'literal', value: "Hello" }
+ *   { type: 'literal', value: true }
+ *
+ * @subtype variable
+ *   { type: 'variable', name: 'count' }
+ *   Für $count, $active, etc.
+ *
+ * @subtype property_access
+ *   { type: 'property_access', path: ['user', 'name'] }
+ *   Für $user.name, $data.items.length
+ *
+ * @subtype component_property
+ *   { type: 'component_property', componentName: 'Email', propertyName: 'value' }
+ *   Für Email.value, Submit.disabled
+ *
+ * @subtype binary
+ *   { type: 'binary', operator: '+', left: expr, right: expr }
+ *   Für $count + 1, $price * 2
+ *
+ * @subtype unary
+ *   { type: 'unary', operator: 'not', operand: expr }
+ *   Für not $flag
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ACTION-TYPEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @constant ACTION_TYPES
+ *   change      → change self to active
+ *   open        → open Dialog center fade
+ *   close       → close Dialog
+ *   toggle      → toggle self
+ *   page        → page Dashboard
+ *   show/hide   → show Panel, hide Tooltip
+ *   assign      → assign $count to $count + 1
+ *   alert       → alert "Saved!"
+ *   highlight   → highlight self
+ *   select      → select self
+ *   filter      → filter Results
+ *   focus       → focus next
+ *   activate    → activate self
+ *   deactivate  → deactivate self
+ *   toggle-state → toggle-state
+ *   validate    → validate Form
+ *   reset       → reset Form
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EVENT-HANDLER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type EventHandler
+ *   event: string                  onclick, onhover, onchange, etc.
+ *   key?: string                   Für onkeydown: escape, enter, arrow-down
+ *   debounce?: number              Debounce in ms
+ *   delay?: number                 Delay in ms
+ *   actions: ActionStatement[]     Auszuführende Actions
+ *
+ * @example
+ *   onclick toggle
+ *   onkeydown escape close Dialog
+ *   oninput debounce 300 filter Results
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * STATE-DEFINITIONEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type StateDefinition
+ *   name: string                   State-Name (hover, active, selected)
+ *   category?: string              Kategorie (interaction, selection)
+ *   properties: DSLProperties      Override-Properties
+ *   children: ASTNode[]            Override-Children
+ *
+ * @example
+ *   state hover
+ *     background #444
+ *   state selected
+ *     background #3B82F6
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CONDITION-EXPRESSIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type ConditionExpr
+ *   type: 'var' | 'not' | 'and' | 'or' | 'comparison'
+ *
+ * @subtype var
+ *   { type: 'var', name: 'isActive' }
+ *   Für $isActive (boolean check)
+ *
+ * @subtype not
+ *   { type: 'not', operand: ConditionExpr }
+ *   Für not $isActive
+ *
+ * @subtype and/or
+ *   { type: 'and', left: ConditionExpr, right: ConditionExpr }
+ *   Für $a and $b, $x or $y
+ *
+ * @subtype comparison
+ *   { type: 'comparison', operator: '>', left: expr, value: 0 }
+ *   Für $count > 0, $status == "active"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PARSE-RESULT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type ParseResult
+ *   nodes: ASTNode[]               Geparste Top-Level Nodes
+ *   errors: string[]               Legacy Error-Strings
+ *   diagnostics: ParseError[]      Strukturierte Errors
+ *   parseIssues: ParseIssue[]      Error-tolerant Issues
+ *   registry: Map<string, ComponentTemplate>
+ *   tokens: Map<string, TokenValue>
+ *   styles: Map<string, StyleMixin>
+ *   commands: SelectionCommand[]
+ *   centralizedEvents: CentralizedEventHandler[]
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TOKEN-VALUES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type TokenValue
+ *   string | number | TokenSequence
+ *
+ * @example Simple Values
+ *   $primary: #3B82F6     → string "#3B82F6"
+ *   $spacing: 16          → number 16
+ *
+ * @example Token Sequence
+ *   $padding: l-r 8       → TokenSequence { tokens: [...] }
+ *   $computed: $base * 2  → TokenSequence { tokens: [...] }
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DATA-TYPEN (für Data Tab)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type DataSchema
+ *   typeName: string              Task, User, Category
+ *   fields: DataField[]           Feld-Definitionen
+ *
+ * @type DataField
+ *   name: string                  Feld-Name (title, done, etc.)
+ *   type: DataFieldType           text, number, boolean, oder Relation
+ *
+ * @type DataInstance
+ *   typeName: string              Zugehöriger Typ
+ *   _id: string                   Auto-generierte ID
+ *   values: DataInstanceValue[]   Feld-Werte
+ *
+ * @example
+ *   Task title:text done:boolean category:Category
+ *   - Task "Einkaufen" false Category[0]
  */
 
 import type { DSLProperties } from '../types/dsl-properties'
@@ -31,20 +226,28 @@ export interface Expression {
 
 export interface StateDefinition {
   name: string
+  category?: string          // Category for grouped states (e.g., "interaction", "selection")
   properties: DSLProperties
   children: ASTNode[]
   line?: number
 }
 
+/**
+ * Runtime variable value type.
+ * Supports primitives and objects (for Master-Detail pattern with $item).
+ */
+export type RuntimeValue = string | number | boolean | Record<string, unknown> | null
+
 export interface VariableDeclaration {
   name: string
-  value: string | number | boolean
+  value: RuntimeValue
   line?: number
 }
 
 // Valid action types for ActionStatement
 export const ACTION_TYPES = [
   'change', 'open', 'close', 'toggle', 'page', 'show', 'hide', 'assign', 'set_property', 'alert',
+  'call',  // External JavaScript function calls
   'highlight', 'select', 'filter', 'focus',
   'deselect', 'clear-selection',
   'activate', 'deactivate', 'deactivate-siblings',
@@ -106,7 +309,7 @@ export interface ConditionExpr {
 
 export interface EventHandler {
   event: string  // onclick, onhover, onclick-outside, etc.
-  modifier?: string  // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
+  key?: string  // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
   debounce?: number  // Debounce in ms: oninput debounce 300 filter Results
   delay?: number     // Delay in ms: onblur delay 200 hide Results
   actions: (ActionStatement | Conditional)[]
@@ -120,7 +323,7 @@ export interface EventHandler {
 export interface CentralizedEventHandler {
   targetInstance: string  // The named instance (e.g., 'Email', 'Submit')
   event: string           // onclick, onhover, onchange, onclick-outside, etc.
-  modifier?: string       // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
+  key?: string            // For onkeydown: 'escape', 'enter', 'arrow-down', etc.
   debounce?: number       // Debounce in ms: oninput debounce 300 filter Results
   delay?: number          // Delay in ms: onblur delay 200 hide Results
   actions: (ActionStatement | Conditional)[]
@@ -159,6 +362,7 @@ export interface ASTNode {
   id: string  // Auto-generated unique ID
   properties: DSLProperties
   content?: string
+  contentExpression?: Expression  // For dynamic content like "Query: " + $query
   children: ASTNode[]
   line?: number      // Source line number (0-indexed)
   column?: number    // Source column number
@@ -166,6 +370,8 @@ export interface ASTNode {
   endColumn?: number // End column number
   // V5: Named instances (Input Email: -> instanceName: 'Email', name: 'Input')
   instanceName?: string  // For named instances like Input Email:
+  // V2 Roundtrip: Inheritance tracking
+  extends?: string  // Base component for inheritance (DangerButton: Button -> extends: 'Button')
   // V2: New fields for interactivity
   states?: StateDefinition[]
   variables?: VariableDeclaration[]
@@ -193,6 +399,7 @@ export interface ASTNode {
   _isLibrary?: boolean  // True if this is a library component (Dropdown, Dialog, etc.)
   _libraryParent?: string  // Name of parent library component (for slots)
   _libraryType?: string  // Original library name when using 'as' syntax (e.g., "Dialog" for "SettingsDialog as Dialog")
+  _customComponentType?: string  // Custom component type for "label as Standardtext" syntax
   // V4: List items (new instances)
   _isListItem?: boolean  // True if created with - prefix (new instance)
   // V5: Explicit definitions (template definitions with colon)
@@ -203,6 +410,16 @@ export interface ASTNode {
   continuousAnimation?: AnimationDefinition  // animate spin 1000
   // V7: Parse issues (error-tolerant parsing)
   parseIssues?: ParseIssue[]  // Collected issues during parsing
+  // V8: Active state (e.g., Status pending "Waiting" -> activeState: 'pending')
+  activeState?: string
+  // V9: Active states by category (e.g., Button selection selected -> { selection: 'selected' })
+  activeStatesByCategory?: Record<string, string>
+  // Syntax support
+  _syntaxVersion?: 2  // Syntax version
+  _sourceSpan?: {     // Full source range for blocks
+    start: { line: number; column: number }
+    end: { line: number; column: number }
+  }
 }
 
 // Animation definition for show/hide/animate
@@ -221,6 +438,8 @@ export interface ComponentTemplate {
   properties: DSLProperties
   content?: string
   children: ASTNode[]
+  // V2 Roundtrip: Inheritance tracking
+  extends?: string  // Base component name for inheritance
   // V2: New fields for interactivity
   states?: StateDefinition[]
   variables?: VariableDeclaration[]
@@ -295,6 +514,10 @@ export interface ParseResult {
   styles: Map<string, StyleMixin>
   commands: SelectionCommand[]
   centralizedEvents: CentralizedEventHandler[]  // Events from the `events` block
+  /** Theme definitions: Map<themeName, Map<tokenName, tokenValue>> */
+  themes: Map<string, Map<string, TokenValue>>
+  /** Currently active theme name (set by 'use theme X') */
+  activeTheme: string | null
 }
 
 // ============================================

@@ -84,6 +84,7 @@ function generateStyles(props: Record<string, string | number | boolean>): React
   if (props['ver-t']) style.alignItems = 'flex-start'
   if (props['ver-b']) style.alignItems = 'flex-end'
   if (props['ver-cen']) style.alignItems = 'center'
+  if (props.centered) { style.marginLeft = 'auto'; style.marginRight = 'auto' }
 
   // Spacing
   if (typeof props.gap === 'number') style.gap = `${props.gap}px`
@@ -107,8 +108,9 @@ function generateStyles(props: Record<string, string | number | boolean>): React
   if (typeof props.rad === 'number') style.borderRadius = `${props.rad}px`
   if (props.bor) style.borderStyle = 'solid'
 
-  // Typography
-  if (typeof props.size === 'number') style.fontSize = `${props.size}px`
+  // Typography (font-size: new, size: legacy)
+  const fontSize = props['font-size'] ?? props.size
+  if (typeof fontSize === 'number') style.fontSize = `${fontSize}px`
   if (typeof props.weight === 'number') style.fontWeight = props.weight
   if (typeof props.font === 'string') style.fontFamily = props.font
 

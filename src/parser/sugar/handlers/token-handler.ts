@@ -1,15 +1,58 @@
 /**
- * Token Reference Handler
+ * @module sugar/handlers/token-handler
+ * @description Token Handler - Token-Referenzen zu Properties
  *
- * Handles TOKEN_REF tokens as implicit property assignments.
- * Infers property name from token name suffix.
- * Example: $default-pad -> pad: <token value>
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Verarbeitet TOKEN_REF Tokens mit Property-Inferenz aus Suffix
+ *
+ * @example
+ *   $default-pad   → pad: <token value>
+ *   $primary-col   → col: <token value>
+ *   $card-bg       → bg: <token value>
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * INFERENZ-LOGIK
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @step 1 Name-basierte Inferenz
+ *   -pad, -padding, -spacing → pad
+ *   -col → col
+ *   -bg, -background, -color → bg
+ *   -rad, -radius → rad
+ *   etc.
+ *
+ * @step 2 Value-basierte Inferenz (Fallback)
+ *   Wenn Name-Inferenz fehlschlägt:
+ *   - Farbwert (#..., rgb(), hsl()) → col
+ *
+ * @step 3 Token-Sequences
+ *   Für Spacing-Tokens: Sequence expandieren
+ *   $spacing: 16 8 → pad_u: 16, pad_d: 16, pad_l: 8, pad_r: 8
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * WARNINGS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @warning S006 - Token ohne Property-Inferenz
+ *   Token existiert aber Property nicht ableitbar
+ *   Hint: Suffix hinzufügen oder explizite Property
+ *
+ * @warning S001 - Undefinierter Token
+ *   Token $name ist nicht definiert
+ *   Ausnahme: $item.field (Iterator-Variablen) → kein Warning
+ *
+ * @used-by sugar/index.ts
  */
 
 import type { SugarHandler, SugarContext, SugarResult } from '../types'
+import type { Expression } from '../../types'
 import { isTokenSequence } from '../../types'
 import { inferPropertyFromTokenName, isColorValue } from '../../property-inference'
 import { applyTokenSequenceSpacing } from '../../property-parser'
+import { isTextComponent, isItemComponent } from '../component-type-matcher'
 
 /**
  * Token reference handler.
@@ -75,16 +118,33 @@ export const tokenHandler: SugarHandler = {
       return { handled: true }
     }
 
-    // Token not found - warn only for simple tokens (not property access like $item.name)
-    // Property access tokens (containing '.') are runtime variables from iterators
-    if (!tokenName.includes('.')) {
-      ctx.addWarning(
-        'S001',
-        `Token "$${tokenName}" is not defined`,
-        token,
-        `Define it with: $${tokenName}: <value>`
-      )
+    // Token not found - check if it's a runtime variable (contains '.')
+    // Property access tokens like $item.name are runtime variables from iterators
+    if (tokenName.includes('.')) {
+      // For Text-like components, set the runtime variable as contentExpression
+      const isText = isTextComponent(node)
+      const isItem = isItemComponent(node)
+      if (isText || isItem) {
+        const parts = tokenName.split('.')
+        const expr: Expression = {
+          type: 'property_access',
+          path: parts
+        }
+        node.contentExpression = expr
+        // Clear any _text children inherited from template - dynamic content takes precedence
+        node.children = node.children.filter(child => child.name !== '_text')
+      }
+      // For other components, the variable is silently ignored (might be used elsewhere)
+      return { handled: true }
     }
+
+    // Simple token not defined - warn
+    ctx.addWarning(
+      'S001',
+      `Token "$${tokenName}" is not defined`,
+      token,
+      `Define it with: $${tokenName}: <value>`
+    )
     return { handled: true }
   }
 }

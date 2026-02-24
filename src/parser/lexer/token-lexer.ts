@@ -1,6 +1,57 @@
 /**
- * Token reference parsing logic for the Mirror DSL lexer.
- * Handles $variable references with dot notation and hyphens.
+ * @module token-lexer
+ * @description Token-Referenz-Parsing für den Mirror DSL Lexer
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst $variable Referenzen mit Dot-Notation und Bindestrichen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FORMATE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Einfache Variable
+ *   $primary, $count, $isActive
+ *   Beispiel: background $primary → TOKEN_REF "primary"
+ *
+ * @syntax Mit Bindestrich (Suffix-Inference)
+ *   $blue-color → Inferred als background
+ *   $card-padding → Inferred als padding
+ *   $heading-size → Inferred als font-size
+ *
+ * @syntax Dot-Notation (Property Access)
+ *   $user.name → Zugriff auf user.name
+ *   $data.items.length → Verschachtelter Zugriff
+ *   $task.done → Boolean-Property
+ *
+ * @allowed-chars [a-zA-Z0-9_.\-]
+ *   Trailing Punkte/Bindestriche werden entfernt
+ *
+ * @token TOKEN_REF
+ *   value enthält alles NACH dem $ (ohne $)
+ *   Beispiel: $user.name → value: "user.name"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @context Token-Definition
+ *   $primary: #3B82F6
+ *   $spacing: 16
+ *
+ * @context Token-Referenz
+ *   Button background $primary
+ *   Card padding $spacing
+ *
+ * @context Data-Binding
+ *   Text $user.name
+ *   Icon if $task.done then "check"
+ *
+ * @context Conditionals
+ *   if $isLoggedIn page Dashboard
+ *   if $count > 0 show Badge
  */
 
 import type { Token } from './token-types'

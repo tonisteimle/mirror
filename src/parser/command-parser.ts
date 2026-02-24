@@ -1,10 +1,79 @@
 /**
- * Command Parser Module
+ * @module command-parser
+ * @description Command Parser - Selection Commands für AST-Manipulation
  *
- * Parses selection commands:
- * - Modify: :id property value
- * - Add child: :id ComponentName "content"
- * - Add before/after: :id after/before ComponentName "content"
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst Selection Commands zur nachträglichen AST-Modifikation
+ *
+ * Selection Commands ermöglichen gezielte Änderungen an existierenden Nodes
+ * über ihre ID-Referenz.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Modify Property
+ *   :id property value
+ *   :button-1 col #3B82F6
+ *   :card-2 pad 24
+ *
+ * @syntax Add Child
+ *   :id ComponentName "content"
+ *   :container-1 Button "Click me"
+ *   :menu-1 Item pad 12 "New Item"
+ *
+ * @syntax Add Before/After
+ *   :id after ComponentName "content"
+ *   :id before ComponentName "content"
+ *   :item-2 after Item "Inserted After"
+ *   :item-2 before Divider
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * COMMAND TYPES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type modify
+ *   Ändert eine Property eines existierenden Nodes
+ *   { type: 'modify', targetId, property, value }
+ *
+ * @type addChild
+ *   Fügt ein Kind zum Node hinzu
+ *   { type: 'addChild', targetId, component }
+ *
+ * @type addBefore
+ *   Fügt Geschwister vor dem Node ein
+ *   { type: 'addBefore', targetId, component }
+ *
+ * @type addAfter
+ *   Fügt Geschwister nach dem Node ein
+ *   { type: 'addAfter', targetId, component }
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseSelectionCommand(ctx, targetId) → SelectionCommand | null
+ *   Parst einen Command für die gegebene Target-ID
+ *
+ * @algorithm
+ *   1. Prüfe auf KEYWORD (after/before) → Add-Command
+ *   2. Prüfe auf PROPERTY → Modify-Command
+ *   3. Prüfe auf COMPONENT_NAME → AddChild-Command
+ *   4. Parse Rest der Zeile für Properties/Content
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VALUE RESOLUTION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @supports NUMBER → parseInt
+ * @supports COLOR → direkter Wert
+ * @supports TOKEN_REF → Lookup in designTokens
+ * @supports Component.property → Template-Property-Referenz
+ *
+ * @used-by parser.ts für :id Selection Commands
  */
 
 import type { ParserContext } from './parser-context'

@@ -17,7 +17,9 @@ import {
   parseProjectFile,
   type MirrorProject
 } from '../lib/mirror-file'
-import { exportReact } from '../generator/export'
+import { generateMultiFileExport } from '../generator/multi-file-exporter'
+import { parse } from '../parser/parser'
+import JSZip from 'jszip'
 
 export interface ProjectState {
   pages: PageData[]
@@ -26,6 +28,11 @@ export interface ProjectState {
   dataCode: string
   componentsCode: string
   tokensCode: string
+  useTokenMode: boolean
+  // Editor settings (persisted per project)
+  llmEnabled: boolean
+  pickerModeEnabled: boolean
+  expandShorthand: boolean
 }
 
 export interface UseProjectStorageOptions {
@@ -37,6 +44,10 @@ export interface UseProjectStorageOptions {
     dataCode: string
     componentsCode: string
     tokensCode: string
+    useTokenMode: boolean
+    llmEnabled: boolean
+    pickerModeEnabled: boolean
+    expandShorthand: boolean
   }) => void
 }
 
@@ -69,6 +80,10 @@ export function useProjectStorage(
         dataCode: state.dataCode,
         componentsCode: state.componentsCode,
         tokensCode: state.tokensCode,
+        useTokenMode: state.useTokenMode,
+        llmEnabled: state.llmEnabled,
+        pickerModeEnabled: state.pickerModeEnabled,
+        expandShorthand: state.expandShorthand,
       }
       localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify(projectData))
     }, UI.DEBOUNCE_DELAY_MS)
@@ -78,7 +93,7 @@ export function useProjectStorage(
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode])
+  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode, state.useTokenMode, state.llmEnabled, state.pickerModeEnabled, state.expandShorthand])
 
   // Save project to .mirror file
   const saveProject = useCallback(() => {
@@ -105,36 +120,50 @@ export function useProjectStorage(
     URL.revokeObjectURL(url)
   }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode])
 
-  // Export to React (App.tsx + styles.css as ZIP)
-  const exportReactCode = useCallback(() => {
-    // Combine all code for export
-    const fullCode = [state.tokensCode, state.componentsCode, state.layoutCode]
-      .filter(Boolean)
-      .join('\n\n')
+  // Export to React (complete project as ZIP)
+  const exportReactCode = useCallback(async () => {
+    try {
+      // Parse the layout code to get AST nodes
+      const parseResult = parse(state.layoutCode)
 
-    const result = exportReact(fullCode)
+      // Generate multi-file export
+      const exportResult = generateMultiFileExport(
+        parseResult.nodes,
+        state.componentsCode,
+        state.tokensCode
+      )
 
-    // Create and download files
-    // App.tsx
-    const tsxBlob = new Blob([result.tsx], { type: 'text/typescript' })
-    const tsxUrl = URL.createObjectURL(tsxBlob)
-    const tsxLink = document.createElement('a')
-    tsxLink.href = tsxUrl
-    tsxLink.download = 'App.tsx'
-    tsxLink.click()
-    URL.revokeObjectURL(tsxUrl)
+      // Create ZIP file
+      const zip = new JSZip()
 
-    // styles.css (after small delay to avoid browser blocking)
-    setTimeout(() => {
-      const cssBlob = new Blob([result.css], { type: 'text/css' })
-      const cssUrl = URL.createObjectURL(cssBlob)
-      const cssLink = document.createElement('a')
-      cssLink.href = cssUrl
-      cssLink.download = 'styles.css'
-      cssLink.click()
-      URL.revokeObjectURL(cssUrl)
-    }, 100)
-  }, [state.tokensCode, state.componentsCode, state.layoutCode])
+      // Add all files to ZIP
+      for (const file of exportResult.files) {
+        zip.file(file.path, file.content)
+      }
+
+      // Generate ZIP blob
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+
+      // Download ZIP
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'mirror-react-export.zip'
+      a.click()
+      URL.revokeObjectURL(url)
+
+      logger.storage.info('React project exported successfully', {
+        fileCount: exportResult.files.length
+      })
+    } catch (error) {
+      logger.storage.error('Export failed', error)
+      onError({
+        title: 'Export fehlgeschlagen',
+        message: 'Das React-Projekt konnte nicht exportiert werden.',
+        details: error instanceof Error ? error.message : String(error)
+      })
+    }
+  }, [state.tokensCode, state.componentsCode, state.layoutCode, onError])
 
   // Open project from file (supports .mirror and .json)
   const openProject = useCallback(() => {
@@ -171,6 +200,10 @@ export function useProjectStorage(
           dataCode: project.dataCode,
           componentsCode: project.componentsCode,
           tokensCode: project.tokensCode,
+          useTokenMode: (project as any).useTokenMode ?? false,
+          llmEnabled: (project as any).llmEnabled ?? true,
+          pickerModeEnabled: (project as any).pickerModeEnabled ?? true,
+          expandShorthand: (project as any).expandShorthand ?? true,
         })
       }
 

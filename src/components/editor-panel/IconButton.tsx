@@ -8,13 +8,15 @@ import { memo } from 'react'
 import { colors } from '../../theme'
 
 interface IconButtonProps {
-  onClick: () => void
+  onClick: (event: React.MouseEvent) => void
   title: string
   children: React.ReactNode
   isLoading?: boolean
   highlight?: boolean
   /** Custom color for the icon (e.g., '#3B82F6' for blue) */
   color?: string
+  /** Prevent focus loss when clicking (uses onMouseDown with preventDefault) */
+  preventFocusLoss?: boolean
 }
 
 export const IconButton = memo(function IconButton({
@@ -24,12 +26,21 @@ export const IconButton = memo(function IconButton({
   isLoading,
   highlight,
   color,
+  preventFocusLoss,
 }: IconButtonProps) {
   const iconColor = color || (highlight ? '#FFF' : colors.textMuted)
 
+  const handleMouseDown = preventFocusLoss
+    ? (e: React.MouseEvent) => {
+        e.preventDefault()
+        onClick(e)
+      }
+    : undefined
+
   return (
     <button
-      onClick={onClick}
+      onClick={preventFocusLoss ? undefined : (e) => onClick(e)}
+      onMouseDown={handleMouseDown}
       title={title}
       disabled={isLoading}
       style={{

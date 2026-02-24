@@ -54,7 +54,7 @@ describe('Comma-chained actions', () => {
     const handler = menu.eventHandlers![0]
 
     expect(handler.event).toBe('onkeydown')
-    expect(handler.modifier).toBe('enter')
+    expect(handler.key).toBe('enter')
     expect(handler.actions).toHaveLength(2)
   })
 })

@@ -43,6 +43,8 @@ export interface UsePageManagerReturn {
   loadProject: (data: { pages: PageData[]; currentPageId: string; layoutCode?: string }) => void
   /** Sync pages with code references (creates missing, allows delete of unreferenced) */
   syncPagesWithCode: (componentsCode: string) => void
+  /** Restore pages from cloud save (replaces all pages) */
+  restorePages: (pages: PageData[], currentPageId: string) => void
 
   // Utilities
   getPageReferences: (pageName: string) => string[]
@@ -102,9 +104,14 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
 
   // Update layout code by updating the current page in pages array
   const setLayoutCode = useCallback((code: string) => {
-    setPages(prev => prev.map(p =>
-      p.id === currentPageId ? { ...p, layoutCode: code } : p
-    ))
+    console.log('B1-PAGES: start')
+    setPages(prev => {
+      console.log('B2-PAGES: updater running')
+      return prev.map(p =>
+        p.id === currentPageId ? { ...p, layoutCode: code } : p
+      )
+    })
+    console.log('B3-PAGES: done')
   }, [currentPageId])
 
   // Switch to a different page (no need to save current - already saved)
@@ -258,6 +265,18 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     }
   }, [pages])
 
+  // Restore pages from cloud save (replaces all pages)
+  const restorePages = useCallback((newPages: PageData[], newCurrentPageId: string) => {
+    if (newPages.length > 0) {
+      setPages(newPages)
+      // Ensure currentPageId exists in new pages
+      const validPageId = newPages.find(p => p.id === newCurrentPageId)
+        ? newCurrentPageId
+        : newPages[0].id
+      setCurrentPageId(validPageId)
+    }
+  }, [])
+
   return {
     pages,
     currentPageId,
@@ -276,5 +295,6 @@ export function usePageManager(options: UsePageManagerOptions = {}): UsePageMana
     getPageReferences,
     loadProject,
     syncPagesWithCode,
+    restorePages,
   }
 }

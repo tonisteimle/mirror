@@ -6,6 +6,7 @@
 
 // Primitive type checkers
 export {
+  isButtonPrimitive,
   isInputPrimitive,
   isTextareaPrimitive,
   isLinkPrimitive,
@@ -15,11 +16,15 @@ export {
   isHeadingComponent,
   isSegmentComponent,
   isSegmentPrimitive,
+  isSelectComponent,
+  isSelectPrimitive,
+  isOptionPrimitive,
   getHeadingLevel
 } from './primitive-checkers'
 
 // Render functions
 export {
+  renderButton,
   renderInput,
   renderTextarea,
   renderLink,
@@ -31,3 +36,6 @@ export {
 
 // Segment primitives
 export { SegmentInput, SegmentContainer } from './segment-primitive'
+
+// Native select primitives
+export { renderNativeSelect, generateSelectCSS } from './native-select-renderer'

@@ -1,8 +1,40 @@
 /**
- * Dimension Handler
+ * @module sugar/handlers/dimension-handler
+ * @description Dimension Handler - Zahlen zu Width/Height
  *
- * Handles NUMBER tokens as implicit width/height properties.
- * Example: Box 300 400 -> Box w 300 h 400
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Verarbeitet NUMBER Tokens als implizite w/h Properties
+ *
+ * @example
+ *   Box 300 400    → Box w 300 h 400
+ *   Card 200       → Card w 200
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXPORTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @export dimensionHandler (Priority 100)
+ *   Standard-Handler: Erste Zahl → w, zweite → h
+ *   Prüft ob w/h bereits gesetzt
+ *
+ * @export imageDimensionHandler (Priority 150)
+ *   Höhere Priorität für Images
+ *   Nur aktiv wenn src bereits gesetzt
+ *   Ermöglicht: Image "photo.jpg" 300 400
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LOGIK
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @algorithm
+ *   1. Prüfe ob w undefined → setze w
+ *   2. Prüfe ob h undefined → setze h
+ *   3. Beide gesetzt → nicht verarbeiten
+ *
+ * @used-by sugar/index.ts
  */
 
 import type { SugarHandler, SugarContext, SugarResult } from '../types'

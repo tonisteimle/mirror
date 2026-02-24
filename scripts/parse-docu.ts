@@ -1,5 +1,5 @@
 /**
- * Parse mirror-docu.html into structured JSON
+ * Parse tutorial.html into structured JSON
  * Run with: npx tsx scripts/parse-docu.ts
  */
 
@@ -205,8 +205,8 @@ function decodeHTMLEntities(text: string): string {
 }
 
 // Main
-const htmlPath = './docs/mirror-docu.html'
-const jsonPath = './docs/mirror-docu.json'
+const htmlPath = './docs/tutorial.html'
+const jsonPath = './docs/tutorial.json'
 
 const html = readFileSync(htmlPath, 'utf-8')
 const documentation = parseHTML(html)

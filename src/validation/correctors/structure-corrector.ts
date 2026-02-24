@@ -4,6 +4,7 @@
 
 import type { Correction, TabType } from '../types'
 import { structureConfidence } from '../utils/confidence'
+import { BUILT_IN_COMPONENTS } from '../../parser/component-parser/constants'
 
 /**
  * Analyze and fix indentation
@@ -95,9 +96,6 @@ export function findMissingDefinitions(
   const usedComponents = new Set<string>()
   const missing: string[] = []
 
-  // Built-in components that don't need definitions
-  const builtIns = new Set(['Box', 'Text', 'Row', 'Column', 'Stack', 'Image', 'Icon', 'Button', 'Input', 'Link'])
-
   for (const line of layoutLines) {
     const trimmed = line.trim()
     if (!trimmed) continue
@@ -117,7 +115,7 @@ export function findMissingDefinitions(
   }
 
   for (const component of usedComponents) {
-    if (!definedComponents.has(component) && !builtIns.has(component)) {
+    if (!definedComponents.has(component) && !BUILT_IN_COMPONENTS.has(component)) {
       // Check if it might be a scoped name
       let isScoped = false
       for (const defined of definedComponents) {

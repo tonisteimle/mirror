@@ -1,6 +1,49 @@
 /**
- * Operator parsing logic for the Mirror DSL lexer.
- * Handles comparison operators, arithmetic operators, and assignment.
+ * @module operator-lexer
+ * @description Operator-Parsing für den Mirror DSL Lexer
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst Vergleichs-, Arithmetik- und Zuweisungsoperatoren
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OPERATOR-TYPEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type OPERATOR (Vergleich)
+ *   ==  Gleichheit         if $count == 0
+ *   !=  Ungleichheit       if $status != "done"
+ *   >   Größer             if $count > 5
+ *   <   Kleiner            if $price < 100
+ *   >=  Größer-gleich      if $age >= 18
+ *   <=  Kleiner-gleich     if $level <= 3
+ *
+ * @type ARITHMETIC
+ *   +   Addition           $count + 1
+ *   -   Subtraktion        $total - discount
+ *   *   Multiplikation     $price * 2
+ *   /   Division           $sum / $count
+ *
+ * @type ASSIGNMENT
+ *   =   Zuweisung          Email.value = "test"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @context Conditionals
+ *   if $count > 0 show Badge
+ *   if $status == "active" then bg #10B981
+ *
+ * @context Assign Actions
+ *   assign $count to $count + 1
+ *   assign $total to $price * $quantity
+ *
+ * @context Property Assignment
+ *   Submit.disabled = true
+ *   Panel.visible = false
  */
 
 import type { Token } from './token-types'

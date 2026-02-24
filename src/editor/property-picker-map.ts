@@ -23,12 +23,13 @@ export interface PropertyPickerMapping {
 
 /**
  * Mapping of DSL properties to their corresponding value pickers.
+ * Uses long-form property names (padding, background, border-color).
  * Used by both Space keymap (after property) and Slash keymap (explicit trigger).
  */
 export const PROPERTY_PICKER_MAP: PropertyPickerMapping[] = [
-  // Color properties: col = text color, bg = background color
+  // Color properties: color = text color, background = background color
   {
-    properties: ['col', 'bg', 'boc', 'hover-col', 'hover-bg', 'hover-boc'],
+    properties: ['color', 'background', 'border-color', 'hover-color', 'hover-background', 'hover-border-color'],
     picker: 'color',
   },
   // Font property
@@ -36,19 +37,14 @@ export const PROPERTY_PICKER_MAP: PropertyPickerMapping[] = [
     properties: ['font'],
     picker: 'font',
   },
-  // Icon property
-  {
-    properties: ['icon'],
-    picker: 'icon',
-  },
   // Spacing properties
   {
-    properties: ['pad'],
+    properties: ['padding', 'padding-left', 'padding-right', 'padding-top', 'padding-bottom'],
     picker: 'spacing',
     spacingProperty: 'pad',
   },
   {
-    properties: ['mar'],
+    properties: ['margin', 'margin-left', 'margin-right', 'margin-top', 'margin-bottom'],
     picker: 'spacing',
     spacingProperty: 'mar',
   },
@@ -74,9 +70,9 @@ export const PROPERTY_PICKER_MAP: PropertyPickerMapping[] = [
     valueProperty: 'size',
   },
   {
-    properties: ['rad'],
+    properties: ['radius'],
     picker: 'value',
-    valueProperty: 'rad',
+    valueProperty: 'radius',
   },
   {
     properties: ['opacity'],
@@ -154,6 +150,7 @@ export function findPickerForTokenSection(
 
 /**
  * Regex patterns used in the editor.
+ * DSL uses long-form property names (padding, background, border-color).
  * Centralized to avoid duplication.
  */
 export const EDITOR_PATTERNS = {
@@ -165,9 +162,9 @@ export const EDITOR_PATTERNS = {
   COMPONENT_NAME: /\b([A-Z][a-zA-Z0-9]+)\s*$/,
   /** Match value patterns (number, color, string, token) */
   AFTER_VALUE: /\s(\d+|#[0-9A-Fa-f]{3,8}|"[^"]*"|\$\w+)$/,
-  /** Match no-value properties at end */
+  /** Match no-value (boolean) properties at end - long-form names */
   AFTER_NO_VALUE_PROPERTY:
-    /\s(hor|ver|wrap|grow|full|scroll|scroll-x|scroll-y|clip|uppercase|truncate|hor-l|hor-cen|hor-r|hor-between|ver-t|ver-cen|ver-b|ver-between)$/,
+    /\s(horizontal|vertical|wrap|grow|full|scroll|scroll-x|scroll-y|clip|uppercase|truncate|horizontal-left|horizontal-center|horizontal-right|horizontal-between|vertical-top|vertical-center|vertical-bottom|vertical-between|center|between)$/,
   /** Match token definition in tokens tab */
   TOKEN_DEFINITION: /^\$[\w-]+:\s*$/,
   /** Match section comment */
@@ -176,31 +173,36 @@ export const EDITOR_PATTERNS = {
 
 /**
  * Set of all known DSL properties that should trigger pickers.
+ * DSL uses long-form property names with hyphens (padding-left, border-color).
  */
 export const KNOWN_PROPERTIES = new Set([
-  // Color properties: col = text color, bg = background color
-  'col', 'bg', 'boc', 'hover-col', 'hover-bg', 'hover-boc',
+  // Color properties: color = text color, background = background color
+  'color', 'background', 'border-color',
+  'hover-color', 'hover-background', 'hover-border-color',
   // Special pickers
-  'font', 'icon',
+  'font',
   // Spacing
-  'pad', 'mar', 'gap',
+  'padding', 'margin', 'gap',
+  'padding-left', 'padding-right', 'padding-top', 'padding-bottom',
+  'margin-left', 'margin-right', 'margin-top', 'margin-bottom',
   // Value pickers
-  'fit', 'type', 'size', 'rad', 'opacity', 'line',
+  'fit', 'type', 'size', 'radius', 'opacity', 'line',
   // Layout (no value picker)
-  'hor', 'ver', 'wrap', 'grow', 'shrink',
+  'horizontal', 'vertical', 'wrap', 'grow', 'shrink',
   // Alignment
-  'hor-l', 'hor-cen', 'hor-r', 'hor-between',
-  'ver-t', 'ver-cen', 'ver-b', 'ver-between',
+  'horizontal-left', 'horizontal-center', 'horizontal-right', 'horizontal-between',
+  'vertical-top', 'vertical-center', 'vertical-bottom', 'vertical-between',
+  'center',
   // Size
-  'w', 'h', 'min-w', 'max-w', 'min-h', 'max-h', 'full',
+  'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'full',
   // Overflow
   'scroll', 'scroll-x', 'scroll-y', 'clip',
   // Border
-  'bor', 'bor_l', 'bor_r', 'bor_u', 'bor_d',
+  'border', 'border-left', 'border-right', 'border-top', 'border-bottom',
   // Text
   'uppercase', 'truncate',
   // Image
   'src', 'alt',
   // Hover
-  'hover-bor',
+  'hover-border',
 ])

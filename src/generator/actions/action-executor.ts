@@ -5,9 +5,9 @@
  * Handles: change, open, close, toggle, assign, page
  */
 
-import type { ActionStatement, Expression, ComponentTemplate, ASTNode } from '../../parser/parser'
+import type { ActionStatement, Expression, ComponentTemplate, ASTNode, RuntimeValue } from '../../parser/parser'
 import type { BehaviorRegistry } from '../behaviors'
-import type { ComponentRegistry } from '../component-registry-context'
+import type { ComponentRegistry, ComponentRegistryEntry } from '../component-registry-context'
 import type { OverlayRegistry } from '../overlay-registry-context'
 import { evaluateExpression } from '../utils'
 
@@ -17,6 +17,8 @@ import { evaluateExpression } from '../utils'
 export interface ContainerContextInfo {
   containerId: string
   containerName: string
+  // For accordion patterns: toggle parent's state from child
+  toggleParentState?: () => void
 }
 
 /**
@@ -26,8 +28,11 @@ export interface ActionExecutorContext {
   node: ASTNode
   currentState: string
   setCurrentState: (state: string) => void
-  variables: Record<string, string | number | boolean>
-  setVariables: React.Dispatch<React.SetStateAction<Record<string, string | number | boolean>>>
+  // V9: Category state management
+  categoryStates?: Record<string, string>
+  setCategoryStates?: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  variables: Record<string, RuntimeValue>
+  setVariables: React.Dispatch<React.SetStateAction<Record<string, RuntimeValue>>>
   registry: ComponentRegistry | null
   behaviorRegistry: BehaviorRegistry
   overlayRegistry: OverlayRegistry | null
@@ -50,6 +55,20 @@ export function templateToNode(name: string, template: ComponentTemplate): ASTNo
     variables: template.variables,
     eventHandlers: template.eventHandlers,
   }
+}
+
+/**
+ * Helper to find a component by name or id.
+ * First tries getByName, then falls back to getById.
+ * This supports both component names (e.g., "Options") and named instances (e.g., "Box named Panel").
+ */
+function getTarget(registry: ComponentRegistry | null, target: string): ComponentRegistryEntry | undefined {
+  if (!registry) return undefined
+  // Try by name first (for component names like "Options")
+  const byName = registry.getByName(target)
+  if (byName) return byName
+  // Fall back to by id (for named instances like "Box named Panel" → id="Panel")
+  return registry.getById(target)
 }
 
 /**
@@ -82,8 +101,8 @@ export function executeAction(
       } else if (action.target) {
         behaviorRegistry.setState(action.target, action.toState || '')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target && action.toState) target.setState(action.toState)
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry && action.toState) targetEntry.setState(action.toState)
         }
       }
       break
@@ -108,8 +127,8 @@ export function executeAction(
           // Fallback: Library component behavior
           behaviorRegistry.setState(action.target, 'open')
           if (registry) {
-            const target = registry.getByName(action.target)
-            if (target) target.setState('visible')
+            const targetEntry = getTarget(registry, action.target)
+            if (targetEntry) targetEntry.setState('visible')
           }
         }
       }
@@ -124,8 +143,8 @@ export function executeAction(
           // Fallback: Library component behavior
           behaviorRegistry.setState(action.target, 'closed')
           if (registry) {
-            const target = registry.getByName(action.target)
-            if (target) target.setState('hidden')
+            const targetEntry = getTarget(registry, action.target)
+            if (targetEntry) targetEntry.setState('hidden')
           }
         }
       } else {
@@ -142,10 +161,28 @@ export function executeAction(
           setCurrentState(node.states[nextIndex].name)
         }
       } else if (action.target) {
-        behaviorRegistry.toggle(action.target)
+        // Check if target has 'hidden' property to determine toggle direction
+        // Elements with 'hidden' start hidden (state undefined), first toggle shows them
+        // Elements without 'hidden' start visible, first toggle should hide them
+        const targetTemplate = templateRegistry?.get(action.target)
+        const targetHasHidden = targetTemplate?.properties?.hidden === true
+        const currentTargetState = behaviorRegistry.getState(action.target)
+
+        let newState: string
+        if (currentTargetState === undefined) {
+          // First toggle - direction depends on whether element starts hidden
+          newState = targetHasHidden ? 'open' : 'closed'
+        } else if (currentTargetState === 'open') {
+          newState = 'closed'
+        } else {
+          // closed or any other state → open
+          newState = 'open'
+        }
+
+        behaviorRegistry.setState(action.target, newState)
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.toggle()
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState(newState === 'open' ? 'visible' : 'hidden')
         }
       }
       break
@@ -153,13 +190,16 @@ export function executeAction(
     case 'assign':
       if (action.target && action.value !== undefined) {
         const actionValue = action.value
-        let resolvedValue: unknown
+        let resolvedValue: RuntimeValue
         if (typeof actionValue === 'object' && actionValue !== null && 'type' in actionValue) {
-          resolvedValue = evaluateExpression(actionValue as Expression, variables as Record<string, unknown>, event)
+          // Evaluate expression - supports $item for Master-Detail pattern
+          resolvedValue = evaluateExpression(actionValue as Expression, variables as Record<string, unknown>, event) as RuntimeValue
         } else {
-          resolvedValue = actionValue
+          resolvedValue = actionValue as RuntimeValue
         }
-        setVariables(prev => ({ ...prev, [action.target!]: resolvedValue as string | number | boolean }))
+        setVariables(prev => {
+          return { ...prev, [action.target!]: resolvedValue }
+        })
       }
       break
 
@@ -177,20 +217,22 @@ export function executeAction(
 
     case 'show':
       if (action.target) {
-        behaviorRegistry.setState(action.target, 'visible')
+        // Use 'open' state - this is what ToggleableNode checks for visibility
+        behaviorRegistry.setState(action.target, 'open')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.setState('visible')
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState('open')
         }
       }
       break
 
     case 'hide':
       if (action.target) {
-        behaviorRegistry.setState(action.target, 'hidden')
+        // Use 'closed' state - this is what ToggleableNode checks for hiding
+        behaviorRegistry.setState(action.target, 'closed')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.setState('hidden')
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState('closed')
         }
       }
       break
@@ -263,10 +305,10 @@ export function executeAction(
         // For now, focus actions are signals that the component handles
         // The actual focus logic is in the SegmentContainer component
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) {
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) {
             // Try to focus the element via its DOM node
-            const element = document.querySelector(`[data-id="${target.id}"]`) as HTMLElement
+            const element = document.querySelector(`[data-id="${targetEntry.id}"]`) as HTMLElement
             if (element && 'focus' in element) {
               element.focus()
             }
@@ -279,11 +321,13 @@ export function executeAction(
       // Activate behavior: set element to 'active' state
       if (action.target === 'self' || action.target === node.name || !action.target) {
         setCurrentState('active')
+        // Also set global state by ID so it overrides any 'inactive' from deactivate-siblings
+        behaviorRegistry.setState(node.id, 'active')
       } else if (action.target) {
         behaviorRegistry.setState(action.target, 'active')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.setState('active')
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState('active')
         }
       }
       break
@@ -292,11 +336,13 @@ export function executeAction(
       // Deactivate behavior: set element to 'inactive' state
       if (action.target === 'self' || action.target === node.name || !action.target) {
         setCurrentState('inactive')
+        // Also set global state by ID for consistency with activate
+        behaviorRegistry.setState(node.id, 'inactive')
       } else if (action.target) {
         behaviorRegistry.setState(action.target, 'inactive')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.setState('inactive')
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState('inactive')
         }
       }
       break
@@ -304,20 +350,60 @@ export function executeAction(
     case 'deactivate-siblings':
       // Deactivate all siblings: set their state to 'inactive'
       // This requires the behavior registry to track sibling relationships
+      // Use containerName (not containerId) because that's how items are registered
       {
-        const container = containerContext?.containerId || node.name
+        const container = containerContext?.containerName || node.name
         behaviorRegistry.deactivateSiblings(node.id, container)
       }
       break
 
     case 'toggle-state':
-      // Toggle between two states (e.g., expanded/collapsed for accordions)
-      // Uses the component's defined states to cycle
+      // Toggle between states (e.g., expanded/collapsed for accordions)
+      // V9: If states have categories, only cycle within the current state's category
       if (node.states && node.states.length >= 2) {
-        const stateNames = node.states.map(s => s.name)
-        const currentIndex = stateNames.indexOf(currentState)
-        const nextIndex = (currentIndex + 1) % stateNames.length
-        setCurrentState(stateNames[nextIndex])
+        const { categoryStates, setCategoryStates } = context
+
+        // Group states by category
+        const categories = new Map<string, string[]>()
+        const flatStates: string[] = []
+
+        for (const state of node.states) {
+          if (state.category) {
+            const list = categories.get(state.category) || []
+            list.push(state.name)
+            categories.set(state.category, list)
+          } else {
+            flatStates.push(state.name)
+          }
+        }
+
+        // Handle category-based toggle
+        let handled = false
+        if (categories.size > 0 && categoryStates && setCategoryStates) {
+          // Check which category the current state belongs to (for flat state compatibility)
+          // Or cycle through the first category with 2+ states
+          for (const [category, stateNames] of categories) {
+            if (stateNames.length >= 2) {
+              const currentCategoryState = categoryStates[category] || stateNames[0]
+              const currentIndex = stateNames.indexOf(currentCategoryState)
+              const nextIndex = (currentIndex + 1) % stateNames.length
+              setCategoryStates(prev => ({ ...prev, [category]: stateNames[nextIndex] }))
+              handled = true
+              break // Only toggle one category at a time
+            }
+          }
+        }
+
+        // If not handled by categories, cycle through flat states
+        if (!handled && flatStates.length >= 2) {
+          const currentIndex = flatStates.indexOf(currentState)
+          const nextIndex = (currentIndex + 1) % flatStates.length
+          setCurrentState(flatStates[nextIndex])
+        }
+      } else if (containerContext?.toggleParentState) {
+        // If current node doesn't have states, try to toggle parent's state
+        // This is used for accordion patterns where Header clicks toggle Section's state
+        containerContext.toggleParentState()
       }
       break
 
@@ -355,8 +441,8 @@ export function executeAction(
       if (action.target) {
         behaviorRegistry.setState(action.target, 'default')
         if (registry) {
-          const target = registry.getByName(action.target)
-          if (target) target.setState('default')
+          const targetEntry = getTarget(registry, action.target)
+          if (targetEntry) targetEntry.setState('default')
         }
       }
       break

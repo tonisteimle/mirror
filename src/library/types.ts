@@ -7,6 +7,7 @@ export interface SlotDefinition {
   required: boolean
   multiple: boolean      // Item can appear multiple times
   defaultProps: DSLProperties
+  aliases?: string[]     // Alternative names, e.g., "Option" for "Item"
 }
 
 export interface LibraryComponent {

@@ -209,7 +209,8 @@ function buildAttributes(node: ASTNode, classNameAttr: string, ctx: ExportContex
   }
 
   if (tag === 'input') {
-    const placeholder = node.properties.placeholder as string | undefined
+    // For Input primitives, content is the placeholder text
+    const placeholder = (node.properties.placeholder as string | undefined) || node.content
     if (placeholder) {
       attrs.push(`placeholder="${escapeHtml(placeholder)}"`)
     }
@@ -219,7 +220,8 @@ function buildAttributes(node: ASTNode, classNameAttr: string, ctx: ExportContex
   }
 
   if (tag === 'textarea') {
-    const placeholder = node.properties.placeholder as string | undefined
+    // For Textarea primitives, content is the placeholder text
+    const placeholder = (node.properties.placeholder as string | undefined) || node.content
     if (placeholder) {
       attrs.push(`placeholder="${escapeHtml(placeholder)}"`)
     }

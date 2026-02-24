@@ -174,26 +174,36 @@ export function generateColorGrid(config: ColorGridConfig = {}): string[][] {
  * @param rows - Number of lightness rows (default: 10)
  * @returns 2D array of hex color strings (without #)
  */
-export function generateHueVariations(hue: number | null, cols = 18, rows = 10): string[][] {
+export function generateHueVariations(hue: number | null, cols = 12, rows = 8): string[][] {
   const variations: string[][] = []
+  const totalCells = cols * rows
 
-  const saturations: number[] = []
-  for (let i = 0; i < cols; i++) {
-    saturations.push(100 - i * 5.5)
+  // GRAYSCALE: Use all cells for continuous lightness gradient
+  // From white (top-left) to black (bottom-right)
+  if (hue === null) {
+    for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+      const row: string[] = []
+      for (let colIndex = 0; colIndex < cols; colIndex++) {
+        const cellIndex = rowIndex * cols + colIndex
+        // Lightness: 100% (white) to 0% (black) across all cells
+        const lightness = 100 - (cellIndex / (totalCells - 1)) * 100
+        row.push(hslToHex(0, 0, Math.max(0, lightness)))
+      }
+      variations.push(row)
+    }
+    return variations
   }
 
-  const lightnesses: number[] = []
-  for (let i = 0; i < rows; i++) {
-    lightnesses.push(95 - i * 9)
-  }
-
-  for (const l of lightnesses) {
+  // COLORS: 2D grid with saturation × lightness
+  // - Rows (Y): Lightness from 95% (top) to 5% (bottom)
+  // - Columns (X): Saturation from 100% (left) to 10% (right)
+  for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
     const row: string[] = []
-    for (const s of saturations) {
-      // Use saturation 0 for grayscale
-      const sat = hue === null ? 0 : Math.max(5, s)
-      const h = hue ?? 0
-      row.push(hslToHex(h, sat, Math.max(5, l)))
+    const lightness = 95 - (rowIndex / (rows - 1)) * 90
+
+    for (let colIndex = 0; colIndex < cols; colIndex++) {
+      const saturation = 100 - (colIndex / (cols - 1)) * 90
+      row.push(hslToHex(hue, Math.max(5, saturation), Math.max(5, lightness)))
     }
     variations.push(row)
   }
@@ -251,13 +261,13 @@ export function isLightColor(hex: string): boolean | null {
  * Get the appropriate contrast text color for a background.
  *
  * @param backgroundColor - Hex color string of the background
- * @param lightText - Color to use on dark backgrounds (default: #fff)
+ * @param lightText - Color to use on dark backgrounds (default: #A5A5A5)
  * @param darkText - Color to use on light backgrounds (default: #000)
  * @returns The appropriate text color, or null if background is invalid
  */
 export function getContrastTextColor(
   backgroundColor: string,
-  lightText: string = '#fff',
+  lightText: string = '#A5A5A5',
   darkText: string = '#000'
 ): string | null {
   const isLight = isLightColor(backgroundColor)

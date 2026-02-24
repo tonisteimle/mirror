@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 import { logger } from '../services/logger'
 import type { PageData } from '../components/PageSidebar'
 import { isLibraryComponent, getLibraryDefinitions } from '../library/registry'
+import { defaultComponentsCode, defaultTokensCode } from './useEditor'
 import { STORAGE_KEYS } from '../constants'
 import { useHistory } from './useHistory'
 import { usePageManager } from './usePageManager'
@@ -23,6 +24,14 @@ export function useAppState() {
   // View mode (edit, preview, fullscreen)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')
 
+  // Token mode for panels (project-specific setting)
+  const [useTokenMode, setUseTokenMode] = useState<boolean>(false)
+
+  // Editor settings (project-specific, persisted with project)
+  const [llmEnabled, setLlmEnabled] = useState<boolean>(true)
+  const [pickerModeEnabled, setPickerModeEnabled] = useState<boolean>(true)
+  const [expandShorthand, setExpandShorthand] = useState<boolean>(true)
+
   // Page management
   const pageManager = usePageManager()
   const { pages, currentPageId, layoutCode, setLayoutCode } = pageManager
@@ -43,54 +52,9 @@ export function useAppState() {
   // Track cursor line for diagnostic suppression while typing
   const [activeCursorLine, setActiveCursorLine] = useState<number | null>(null)
 
-  // Active layout section for navigation (e.g., "--- Einführung ---")
-  const [activeLayoutSection, setActiveLayoutSection] = useState<string | null>(null)
 
-  // Extract sections from layout code
-  const layoutSections = useMemo(() => {
-    const sections: string[] = []
-    for (const line of layoutCode.split('\n')) {
-      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
-      if (match) sections.push(match[1])
-    }
-    return sections
-  }, [layoutCode])
-
-  // Auto-select first section when sections change and current is invalid
-  useEffect(() => {
-    if (layoutSections.length > 0 && !layoutSections.includes(activeLayoutSection || '')) {
-      setActiveLayoutSection(layoutSections[0])
-    }
-  }, [layoutSections, activeLayoutSection])
-
-  // Extract code for the active section (for preview filtering)
-  const sectionLayoutCode = useMemo(() => {
-    if (!activeLayoutSection || layoutSections.length === 0) {
-      return layoutCode
-    }
-
-    const lines = layoutCode.split('\n')
-    let inSection = false
-    const sectionLines: string[] = []
-
-    for (const line of lines) {
-      const match = line.match(/^---\s*(.+?)\s*---\s*$/)
-      if (match) {
-        if (inSection) break // Found next section, stop
-        if (match[1] === activeLayoutSection) {
-          inSection = true
-          sectionLines.push(line)
-        }
-      } else if (inSection) {
-        sectionLines.push(line)
-      }
-    }
-
-    return sectionLines.join('\n')
-  }, [layoutCode, activeLayoutSection, layoutSections.length])
-
-  // Code parsing - use section code when sections exist, full code otherwise
-  const parsing = useCodeParsing(tokensCode, componentsCode, sectionLayoutCode, {
+  // Code parsing - always show current page with all components and tokens
+  const parsing = useCodeParsing(tokensCode, componentsCode, layoutCode, {
     debounceMs: 150,
     previewOverride,
     activeCursorLine,
@@ -121,6 +85,13 @@ export function useAppState() {
           setViewMode('edit')
           return
         }
+      }
+
+      // Option+K (Mac) / Alt+K (Windows) - Toggle Autocomplete/Picker Mode (works even in editor)
+      if (e.altKey && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPickerModeEnabled(!pickerModeEnabled)
+        return
       }
 
       // Don't trigger other shortcuts when typing in inputs or CodeMirror
@@ -168,7 +139,7 @@ export function useAppState() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [setLayoutCode, setComponentsCode, viewMode])
+  }, [setLayoutCode, setComponentsCode, viewMode, pickerModeEnabled])
 
   // Auto-import library component definitions when used in layout
   useEffect(() => {
@@ -209,17 +180,17 @@ export function useAppState() {
     setComponentsCode('')
   }, [setLayoutCode, setComponentsCode])
 
-  // Create a completely new prototype (reset everything)
-  const handleNewPrototype = useCallback(() => {
-    // Reset pages to a single empty Home page
+  // Create empty prototype with dark/light themes
+  const handleNewEmpty = useCallback(() => {
+    const emptyPage = { id: 'page-1', name: 'Page 1', layoutCode: '' }
     pageManager.loadProject({
-      pages: [{ id: 'home', name: 'Home', layoutCode: '' }],
-      currentPageId: 'home',
+      pages: [emptyPage],
+      currentPageId: 'page-1',
       layoutCode: '',
     })
-    // Reset all code tabs
-    setComponentsCode('')
-    setTokensCode('')
+    // Use bound token format from defaults
+    setTokensCode(defaultTokensCode)
+    setComponentsCode(defaultComponentsCode)
     setDataCode('')
   }, [pageManager, setComponentsCode, setTokensCode, setDataCode])
 
@@ -230,7 +201,7 @@ export function useAppState() {
 
   // Project storage (auto-save, import, export)
   const projectStorage = useProjectStorage(
-    { pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode },
+    { pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode, useTokenMode, llmEnabled, pickerModeEnabled, expandShorthand },
     {
       onError: dialogs.setError,
       onImportSuccess: (data) => {
@@ -242,6 +213,10 @@ export function useAppState() {
         setDataCode(data.dataCode)
         setComponentsCode(data.componentsCode)
         setTokensCode(data.tokensCode)
+        setUseTokenMode(data.useTokenMode)
+        setLlmEnabled(data.llmEnabled)
+        setPickerModeEnabled(data.pickerModeEnabled)
+        setExpandShorthand(data.expandShorthand)
       },
     }
   )
@@ -251,7 +226,7 @@ export function useAppState() {
     pageManager.syncPagesWithCode(componentsCode)
   }, [componentsCode, layoutCode, pageManager.syncPagesWithCode])
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount, or load default library for first-time users
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PROJECT)
     if (saved) {
@@ -268,12 +243,46 @@ export function useAppState() {
           if (data.dataCode) setDataCode(data.dataCode)
           if (data.componentsCode) setComponentsCode(data.componentsCode)
           if (data.tokensCode) setTokensCode(data.tokensCode)
+          if (data.useTokenMode !== undefined) setUseTokenMode(data.useTokenMode)
+          if (data.llmEnabled !== undefined) setLlmEnabled(data.llmEnabled)
+          if (data.pickerModeEnabled !== undefined) setPickerModeEnabled(data.pickerModeEnabled)
+          if (data.expandShorthand !== undefined) setExpandShorthand(data.expandShorthand)
         }
       } catch (e) {
         logger.storage.error('Failed to load project', e)
       }
+    } else {
+      // First-time user: create empty project with default tokens
+      logger.storage.info('Creating empty project for first-time user')
+      const emptyPage = { id: 'page-1', name: 'Page 1', layoutCode: '' }
+      pageManager.loadProject({
+        pages: [emptyPage],
+        currentPageId: 'page-1',
+        layoutCode: '',
+      })
+      // Use bound token format from defaults
+      setTokensCode(defaultTokensCode)
+      setComponentsCode(defaultComponentsCode)
+      setDataCode('')
     }
   }, [pageManager.loadProject, setDataCode, setComponentsCode, setTokensCode])
+
+  // Expose setLayoutCode for E2E testing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__mirrorTestHelper = {
+        setLayoutCode,
+        setComponentsCode,
+        setTokensCode,
+        setDataCode,
+      }
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__mirrorTestHelper
+      }
+    }
+  }, [setLayoutCode, setComponentsCode, setTokensCode, setDataCode])
 
   return {
     // Domain state
@@ -309,17 +318,26 @@ export function useAppState() {
     previewOverride,
     setPreviewOverride,
 
-    // Section navigation
-    activeLayoutSection,
-    setActiveLayoutSection,
-
     // Cursor tracking (for diagnostic suppression while typing)
     onCursorLineChange: setActiveCursorLine,
+
+    // Token mode (project-specific setting for panels)
+    useTokenMode,
+    setUseTokenMode,
+
+    // Editor settings (project-specific)
+    llmEnabled,
+    setLlmEnabled,
+    pickerModeEnabled,
+    setPickerModeEnabled,
+    expandShorthand,
+    setExpandShorthand,
 
     // Actions
     editorActions,
     handleClear,
-    handleNewPrototype,
+    handleNewPrototype: handleNewEmpty,  // New prototype creates empty project
+    handleNewEmpty,
   }
 }
 

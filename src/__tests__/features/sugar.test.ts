@@ -153,7 +153,9 @@ describe('Sugar Handlers', () => {
     it('parses properties after string as text properties', () => {
       const result = parse('Box "Hello" size 18 weight 600')
       const textNode = result.nodes[0].children[0]
-      expect(textNode.properties.size).toBe(18)
+      // size expands to w and h (dimension shorthand)
+      expect(textNode.properties.w).toBe(18)
+      expect(textNode.properties.h).toBe(18)
       expect(textNode.properties.weight).toBe(600)
     })
   })

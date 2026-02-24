@@ -1,10 +1,93 @@
 /**
- * Doc-Mode Tokens
+ * @module doc-tokens
+ * @description Doc-Mode Tokens - Vordefinierte Styling-Tokens für Dokumentation
  *
- * Predefined tokens for documentation formatting.
- * These provide default styles for headings, paragraphs, and inline formatting.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Users can override these by defining their own tokens with the same names.
+ * @brief Vordefinierte Tokens für Doc-Mode Formatierung
+ *
+ * Doc-Mode bietet spezielle Syntax für Dokumentation mit:
+ * - Block-Tokens ($h1, $h2, $p, $lead, etc.)
+ * - Inline-Tokens ($bold, $italic, $code, $link)
+ * - Syntax-Highlighting-Tokens für Playground
+ *
+ * User können diese durch eigene Token-Definitionen überschreiben.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TOKEN KATEGORIEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @category Headings
+ *   h1 → size 48, weight 400, col #eee
+ *   h2 → size 28, weight 500, col #fff
+ *   h3 → size 18, weight 500, col #fff
+ *   h4 → size 15, weight 500, col #aaa
+ *
+ * @category Text Blocks
+ *   p → size 14, col #777, line 1.7, maxw 480
+ *   lead → size 14, col #777, erweiterte Margins
+ *   subtitle → size 14, col #777
+ *
+ * @category Inline Styles
+ *   b, bold → weight 600
+ *   i, italic → italic
+ *   u, underline → underline
+ *   code → monospace, bg #252525, pad 2 6, rad 3
+ *   link → col #5ba8f5, underline, cursor pointer
+ *
+ * @category Lists
+ *   ul → unordered list container
+ *   ol → ordered list container
+ *   li → list item
+ *
+ * @category Special
+ *   label → size 12, uppercase, col #666
+ *   divider → border top
+ *   comment → col #555, italic
+ *
+ * @category Syntax Highlighting
+ *   syntax-component → col #5ba8f5
+ *   syntax-property → col #888
+ *   syntax-value → col #b96
+ *   syntax-string → col #a88
+ *   syntax-keyword → col #2271c1
+ *   syntax-token → col #5ba8f5
+ *   syntax-comment → col #555
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function getDocToken(name) → DocTokenDef | undefined
+ *   Holt Token-Definition nach Namen
+ *
+ * @function isDocToken(name) → boolean
+ *   Prüft ob Name ein vordefinierter Doc-Token ist
+ *
+ * @function docTokenToStyles(token) → Record<string, string>
+ *   Konvertiert Token-Definition zu CSS-Styles
+ *
+ * @function isBlockToken(name) → boolean
+ *   Prüft ob Token Block-Level ist (h1, p, li, etc.)
+ *
+ * @function isInlineToken(name) → boolean
+ *   Prüft ob Token Inline ist (bold, italic, code, etc.)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Block Token
+ *   text
+ *     '$h2 Section Title
+ *      $p This is a paragraph with **bold** text.'
+ *
+ * @example Inline Formatting
+ *   text "Click *here*:link to continue"
+ *
+ * @used-by doc-text-parser.ts für Text-Formatierung
  */
 
 /**
@@ -44,7 +127,7 @@ export interface DocTokenDef {
 /**
  * Default doc-mode tokens
  *
- * Based on the styling from mirror-docu.html
+ * Based on the styling from tutorial.html
  */
 export const DOC_TOKENS: Record<string, DocTokenDef> = {
   // ============================================

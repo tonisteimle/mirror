@@ -1,10 +1,83 @@
 /**
- * Parser Debug Tools
+ * @module debug
+ * @description Parser Debug Tools - AST und Token Visualisierung
  *
- * Utilities for debugging and visualizing parser output:
- * - AST pretty printer
- * - Token stream visualizer
- * - Parse trace output
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Utilities für Debugging und Visualisierung von Parser-Output
+ *
+ * Features:
+ * - AST Pretty Printer mit ANSI-Farben
+ * - Token Stream Visualizer
+ * - Parse Result Summary
+ * - Kombinations-Debug-Funktion
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AST PRETTY PRINTER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function printAST(node, options?) → string
+ *   Formatiert AST-Baum für Debug-Output
+ *
+ * @interface PrintOptions
+ *   showLocations: boolean     → Line/Column anzeigen
+ *   showInternalProps: boolean → _prefixed Properties zeigen
+ *   maxDepth: number           → Maximale Tiefe (-1 = unbegrenzt)
+ *   indent: string             → Einrückungsstring
+ *   colors: boolean            → ANSI-Farben verwenden
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TOKEN VISUALIZER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function printTokens(tokens, options?) → string
+ *   Formatiert Token-Stream für Debug-Output
+ *   - Gruppiert nach Zeilen
+ *   - Zeigt Type, Column, Value
+ *   - Farbcodiert nach Token-Typ
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PARSE RESULT SUMMARY
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function printParseResult(result, source?, options?) → string
+ *   Vollständige Zusammenfassung eines Parse-Results
+ *   - Statistiken (Nodes, Templates, Tokens, Errors)
+ *   - Formatierte Fehler mit Source-Kontext
+ *   - AST-Dump
+ *   - Design Token Liste
+ *   - Template-Namen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DEBUG PARSE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function debugParse(input, options?) → DebugResult
+ *   Kombinierte Debug-Funktion
+ *
+ * @returns DebugResult
+ *   result: ParseResult
+ *   tokens: Token[]
+ *   tokenDump: string    → Formatierter Token-Stream
+ *   astDump: string      → Formatierter AST
+ *   summary: string      → Vollständige Zusammenfassung
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FARBSCHEMA
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @colors
+ *   cyan    → Component-Namen
+ *   green   → Properties, Token-Refs
+ *   yellow  → Strings, Locations
+ *   blue    → Numbers, States
+ *   magenta → Sections, Keywords
+ *   red     → Errors
+ *   dim     → IDs, Metadata
+ *
+ * @used-by Entwickler für Parser-Debugging
  */
 
 import type { Token } from './lexer'

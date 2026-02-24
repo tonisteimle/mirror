@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { colors } from './theme'
 import { ErrorDialog } from './components/ErrorDialog'
 import { SettingsDialog } from './components/SettingsDialog'
+import { ProjectsDialog } from './components/ProjectsDialog'
 import { HeaderBar } from './components/HeaderBar'
 import { EditorContainer } from './containers/EditorContainer'
-import { PreviewContainer } from './containers/PreviewContainer'
+import { PreviewContainer, type PreviewPanelMode } from './containers/PreviewContainer'
 import { PropertyPanel } from './components/PropertyPanel'
 import { EditorActionsProvider } from './contexts'
 import { useAppState } from './hooks/useAppState'
+import { useLibraryCloud } from './hooks/useLibraryCloud'
 
 /** Width of collapsed panel in preview mode (section navigation only) */
 const PREVIEW_PANEL_WIDTH = 160
@@ -15,61 +17,84 @@ const PREVIEW_PANEL_WIDTH = 160
 function App() {
   const app = useAppState()
 
+  // Cloud save for entire project (Tokens, Components, Data, Pages)
+  const cloudSave = useLibraryCloud({
+    projectState: {
+      tokensCode: app.tokensCode,
+      componentsCode: app.componentsCode,
+      dataCode: app.dataCode,
+      pages: app.pageManager.pages,
+      currentPageId: app.pageManager.currentPageId,
+    },
+    setTokensCode: app.setTokensCode,
+    setComponentsCode: app.setComponentsCode,
+    setDataCode: app.setDataCode,
+    restorePages: app.pageManager.restorePages,
+    enabled: true,
+  })
+
   // Selected element in preview (line number)
   const [selectedLine, setSelectedLine] = useState<number | null>(null)
 
   // Property panel visibility
   const [showPropertyPanel, setShowPropertyPanel] = useState(false)
 
-  // Content edit mode (edit text directly in preview)
-  const [contentEditMode, setContentEditMode] = useState(false)
+  // Preview panel mode (preview or react code view)
+  const [previewPanelMode, setPreviewPanelMode] = useState<PreviewPanelMode>('preview')
 
-  // Handle text changes from content edit mode
-  const handleTextChange = useCallback((sourceLine: number, newText: string, token?: string) => {
-    console.log('[ContentEdit] handleTextChange called:', { sourceLine, newText, token })
+  // Projects dialog
+  const [isProjectsDialogOpen, setIsProjectsDialogOpen] = useState(false)
 
-    // Find the line in layoutCode that corresponds to this source line
-    const lines = app.layoutCode.split('\n')
-
-    // The sourceLine points to the 'text' component line (1-indexed)
-    // We need to find and update the content within the multiline string
-    // Convert to 0-indexed for array access
-    const startIndex = Math.max(0, sourceLine - 1)
-
-    console.log('[ContentEdit] Searching from line', startIndex, 'total lines:', lines.length)
-
-    // Look for the token in the lines following sourceLine (inside the multiline string)
-    for (let i = startIndex; i < lines.length && i < startIndex + 50; i++) {
-      const line = lines[i]
-      const trimmed = line.trimStart()
-
-      // Check if this line has the token we're looking for
-      if (token && trimmed.startsWith(`$${token} `)) {
-        console.log('[ContentEdit] Found token at line', i, ':', line)
-        // Found the line with this token - update it
-        const indent = line.length - trimmed.length
-        const prefix = line.substring(0, indent)
-        const newLine = `${prefix}$${token} ${newText}`
-        console.log('[ContentEdit] Updating to:', newLine)
-        lines[i] = newLine
-        app.setLayoutCode(lines.join('\n'))
-        return
-      }
-
-      // Check if we've reached the end of the multiline string
-      if (trimmed === "'" && i > startIndex) {
-        console.log('[ContentEdit] Reached end of multiline string at line', i)
-        break
-      }
+  // Handle project selection - updates URL and reloads
+  const handleSelectProject = useCallback((projectId: string) => {
+    const url = new URL(window.location.href)
+    if (projectId) {
+      url.searchParams.set('project', projectId)
+    } else {
+      url.searchParams.delete('project')
     }
+    window.location.href = url.toString()
+  }, [])
 
-    console.log('[ContentEdit] Token not found in search range')
-  }, [app.layoutCode, app.setLayoutCode])
-
-  // Handle element selection
+  // Handle element selection (single click)
+  // Clicking on background (null) closes the property panel
   const handleElementSelect = useCallback((line: number | null) => {
     setSelectedLine(line)
+    if (line === null) {
+      setShowPropertyPanel(false)
+    }
   }, [])
+
+  // Handle element double-click (navigate to source in editor)
+  const handleElementDoubleClick = useCallback((line: number) => {
+    // Switch to layout tab if not active
+    if (app.editor.activeTab !== 'layout') {
+      app.editor.setActiveTab('layout')
+    }
+    // Set highlight line - this triggers goToLine in PromptPanel
+    app.editor.setHighlightLine(line)
+    // Also select the line for visual feedback
+    setSelectedLine(line)
+  }, [app.editor])
+
+  // Handle element option-click (open property panel)
+  const handleElementOptionClick = useCallback((line: number) => {
+    setSelectedLine(line)
+    setShowPropertyPanel(true)
+  }, [])
+
+  // Calculate the line offset where layoutCode starts in the combined code
+  // The parser combines: tokensCode + '\n\n' + componentsCode + '\n\n' + layoutCode
+  const layoutLineOffset = useMemo(() => {
+    let offset = 0
+    if (app.tokensCode.trim()) {
+      offset += app.tokensCode.split('\n').length + 2 // +2 for '\n\n' separator
+    }
+    if (app.componentsCode.trim()) {
+      offset += app.componentsCode.split('\n').length + 2 // +2 for '\n\n' separator
+    }
+    return offset
+  }, [app.tokensCode, app.componentsCode])
 
   const isEditMode = app.viewMode === 'edit'
   const isPreviewMode = app.viewMode === 'preview'
@@ -88,17 +113,17 @@ function App() {
       {/* Header - hidden in fullscreen mode */}
       {!isFullscreenMode && (
         <HeaderBar
-          onNewPrototype={app.handleNewPrototype}
-          onOpen={app.projectStorage.openProject}
-          onSave={app.projectStorage.saveProject}
           onExport={app.projectStorage.exportReactCode}
           onOpenSettings={app.dialogs.openSettings}
           viewMode={app.viewMode}
           onViewModeChange={app.setViewMode}
           showPropertyPanel={showPropertyPanel}
           onTogglePropertyPanel={() => setShowPropertyPanel(!showPropertyPanel)}
-          contentEditMode={contentEditMode}
-          onToggleContentEditMode={() => setContentEditMode(!contentEditMode)}
+          previewPanelMode={previewPanelMode}
+          onPreviewPanelModeChange={setPreviewPanelMode}
+          cloudSaveStatus={cloudSave.status}
+          cloudProjectId={cloudSave.projectId}
+          onOpenProjects={() => setIsProjectsDialogOpen(true)}
         />
       )}
 
@@ -137,14 +162,14 @@ function App() {
                 onRenamePage={app.pageManager.renamePage}
                 referencedPages={app.pageManager.referencedPages}
                 previewMode={isPreviewMode}
-                activeLayoutSection={app.activeLayoutSection}
-                onActiveLayoutSectionChange={app.setActiveLayoutSection}
-                nlModeEnabled={app.editor.nlModeEnabled}
-                onNlModeChange={app.editor.setNlModeEnabled}
-                pickerModeEnabled={app.editor.pickerModeEnabled}
-                onPickerModeChange={app.editor.setPickerModeEnabled}
-                deepThinkingEnabled={app.editor.deepThinkingEnabled}
-                onDeepThinkingChange={app.editor.setDeepThinkingEnabled}
+                pickerModeEnabled={app.pickerModeEnabled}
+                onPickerModeChange={app.setPickerModeEnabled}
+                expandShorthand={app.expandShorthand}
+                onExpandShorthandChange={app.setExpandShorthand}
+                llmEnabled={app.llmEnabled}
+                onLlmEnabledChange={app.setLlmEnabled}
+                useTokenMode={app.useTokenMode}
+                onTokenModeChange={app.setUseTokenMode}
               />
             </EditorActionsProvider>
 
@@ -183,18 +208,23 @@ function App() {
           dataRecords={app.dataRecords}
           dataSchemas={app.dataSchemas}
           onElementSelect={isEditMode && showPropertyPanel ? handleElementSelect : undefined}
+          onElementDoubleClick={isEditMode ? handleElementDoubleClick : undefined}
+          onElementOptionClick={isEditMode ? handleElementOptionClick : undefined}
           selectedLine={showPropertyPanel ? selectedLine : null}
-          contentEditMode={contentEditMode}
-          onTextChange={contentEditMode ? handleTextChange : undefined}
+          previewPanelMode={previewPanelMode}
+          layoutCode={app.layoutCode}
+          componentsCode={app.componentsCode}
+          tokensCode={app.tokensCode}
         />
 
         {/* Property Panel - only in edit mode when toggled on */}
         {isEditMode && showPropertyPanel && (
           <PropertyPanel
-            selectedLine={selectedLine}
+            selectedLine={selectedLine !== null ? selectedLine - layoutLineOffset : null}
             layoutCode={app.layoutCode}
             tokens={app.parsing.parseResult.tokens}
             onCodeChange={app.setLayoutCode}
+            onClose={() => setShowPropertyPanel(false)}
           />
         )}
       </div>
@@ -203,6 +233,14 @@ function App() {
       <SettingsDialog
         isOpen={app.dialogs.isSettingsOpen}
         onClose={app.dialogs.closeSettings}
+      />
+
+      {/* Projects Dialog */}
+      <ProjectsDialog
+        isOpen={isProjectsDialogOpen}
+        onClose={() => setIsProjectsDialogOpen(false)}
+        currentProjectId={cloudSave.projectId}
+        onSelectProject={handleSelectProject}
       />
 
       {/* Error Dialog */}

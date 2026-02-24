@@ -7,7 +7,7 @@
 export { HoverableDiv } from './HoverableDiv'
 export type { HoverableDivProps } from './HoverableDiv'
 export { SafeLibraryRenderer } from './SafeLibraryRenderer'
-export { DynamicIcon, renderDynamicIcon } from './DynamicIcon'
+export { DynamicIcon, renderDynamicIcon, type IconLibrary } from './DynamicIcon'
 export {
   InteractiveComponent,
   ToggleableNode,
@@ -15,3 +15,4 @@ export {
   type ToggleableNodeProps
 } from './InteractiveComponent'
 export { needsInteractiveComponent } from './interactive-utils'
+export { DynamicContent } from './DynamicContent'

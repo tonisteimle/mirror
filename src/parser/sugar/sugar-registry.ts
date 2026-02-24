@@ -1,8 +1,56 @@
 /**
- * Sugar Registry Module
+ * @module sugar/sugar-registry
+ * @description Sugar Registry - Handler-Verwaltung mit Prioritäten
  *
- * Registry for sugar handlers with priority-based execution.
- * Manages handler registration and token processing.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Registry für Sugar-Handler mit prioritätsbasierter Ausführung
+ *
+ * Features:
+ * - Handler-Registrierung mit Priorität
+ * - Indizierung nach Token-Typ für schnellen Lookup
+ * - Prioritäts-sortierte Ausführung
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CLASS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @class SugarRegistry
+ *
+ * @method register(handler)
+ *   Registriert Handler, sortiert nach Priorität
+ *
+ * @method handle(context) → SugarResult
+ *   Verarbeitet Token mit registrierten Handlern
+ *   - Sucht Handler für Token-Typ
+ *   - Führt in Prioritäts-Reihenfolge aus
+ *   - Stoppt bei erstem erfolgreichen Handler
+ *
+ * @method getHandlers() → readonly SugarHandler[]
+ *   Gibt alle registrierten Handler (für Tests)
+ *
+ * @method hasHandlerFor(tokenType) → boolean
+ *   Prüft ob Handler für Token-Typ existiert
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function createSugarRegistry() → SugarRegistry
+ *   Factory-Funktion für neue Registry-Instanz
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PRIORITÄTEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @priority Höher = läuft zuerst
+ *   Typ-spezifische Handler (Image, Input) → 200
+ *   Allgemeine Handler (Dimension, Color) → 100
+ *   Fallback Handler (orphan-number) → 50
+ *
+ * @used-by sugar/index.ts für Default-Registry
  */
 
 import type { SugarHandler, SugarContext, SugarResult } from './types'

@@ -6,6 +6,7 @@
  */
 
 import { createContext } from 'react'
+import type { RuntimeValue } from '../parser/types'
 
 // ============================================
 // Types
@@ -15,9 +16,9 @@ export interface ComponentRegistryEntry {
   id: string
   name: string
   setState: (state: string) => void
-  setVariable: (name: string, value: string | number | boolean) => void
+  setVariable: (name: string, value: RuntimeValue) => void
   getState: () => string
-  getVariable: (name: string) => string | number | boolean | undefined
+  getVariable: (name: string) => RuntimeValue | undefined
   toggle: () => void  // Toggle between states
 }
 

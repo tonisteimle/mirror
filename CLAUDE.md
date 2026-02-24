@@ -1,552 +1,722 @@
-# Mirror DSL Reference
+# Mirror DSL Reference (v1)
 
-> Mirror is a DSL for rapid UI prototyping. This reference is optimized for AI comprehension.
+> Mirror is a DSL for rapid UI prototyping. Auto-generated from src/dsl/properties.ts.
 
-## Property Names
+## Grundlagen
 
-Mirror supports both **long-form** (readable) and **shorthand** property names. **Prefer long forms** for clarity:
+Basis-Syntax und Kommentare
 
-| Long Form | Shorthand | Description |
-|-----------|-----------|-------------|
-| `padding` | `pad` | Inner spacing |
-| `margin` | `mar` | Outer spacing |
-| `background` | `bg` | Background color |
-| `color` | `col` | Text color |
-| `border` | `bor` | Border width/style |
-| `radius` | `rad` | Border radius |
-| `horizontal` | `hor` | Horizontal layout |
-| `vertical` | `ver` | Vertical layout |
-| `width` | `w` | Element width |
-| `height` | `h` | Element height |
-| `border-color` | `boc` | Border color |
-| `opacity` | `opa` | Transparency |
+### Inline-Syntax
 
-Both forms are fully supported. The editor auto-expands shortcuts to long forms.
-
-## Syntax Grammar
+Mirror v1 verwendet eine kompakte Inline-Syntax ohne geschweifte Klammern.
 
 ```
-LINE        ::= Component [dims] [props] ["text"]
-DEFINE      ::= Name: [props]                     -- Definition only, no render
-INHERIT     ::= Name from Parent: [props]         -- Inheritance
-PRIMITIVE   ::= Keyword Name: [props]             -- Input Email: "placeholder"
-CHILD       ::= 2-space indent                    -- Hierarchy via indentation
-LIST_ITEM   ::= - Component [props]               -- New instance (not modify)
-NAMED       ::= - Component named Name [props]    -- Named instance for referencing
-
-dims        ::= N [N]                             -- Box 300 400 → w 300 h 400
-props       ::= (prop value)* | token*
-token       ::= $name[-suffix]                    -- $primary-col → infers col
+Component property value
+Component property value, property2 value2
+Component vertical, horizontal
+Component "Text-Inhalt"
+Component\n  Child
 ```
 
-## Core Rules
-
+**Example:**
 ```
-1. First usage defines, subsequent inherit       Button #F00 "A"  Button "B" ← inherits #F00
-2. Colon = define only, no render               Button: padding 12   ← not visible
-3. No colon = render                            Button "Click"   ← visible
-4. 2-space indent = child                       Parent\n  Child
-5. - prefix = new instance                      - Item "New"     ← creates, not modifies
-6. Flat access to nested slots                  Header\n  Logo background #F00  ← finds Logo anywhere
-7. color = text color, background = bg (always) Button background #00F color #FFF
-8. Dimension shorthand: first numbers = w h     Card 200 150 padding 16 → width 200 height 150
-9. Component property references                Button radius Card.radius background Card.background
-10. Text content is LAST on line                Button background #F00 "Click"  ← text at end
-11. Use named instances for event targeting     Button named Btn1 "Click"  ← can reference Btn1
+Button pad 12, bg #3B82F6, "Click me"
 ```
 
-## Common Pitfalls
+### Kommentare
 
 ```
-// ❌ WRONG: Text on separate line
-Button background #F00
-  "Click me"
-
-// ✅ CORRECT: Text inline at end
-Button background #F00 "Click me"
-
-// ❌ WRONG: Semicolon chaining actions
-Button onclick show A; hide B
-
-// ✅ CORRECT: Use events block for multiple actions
-events
-  Button onclick
-    show A
-    hide B
-
-// ❌ WRONG: Referencing unnamed instances
-- Button "Save"
-- Button "Cancel"
-events
-  Button[0] onclick    // Can't reference by index
-
-// ✅ CORRECT: Name instances you need to reference
-- Button named SaveBtn "Save"
-- Button named CancelBtn "Cancel"
-events
-  SaveBtn onclick
-    show SuccessMsg
-  CancelBtn onclick
-    hide Form
-
-// ❌ WRONG: Missing behavior state definitions
-Item onhover highlight self      // highlight won't show visually
-
-// ✅ CORRECT: Define states that actions will activate
-Item: padding 12 cursor pointer
-  state default
-    background transparent
-  state highlighted
-    background #333
-  onhover highlight self
-
-// ❌ WRONG: Event handlers AFTER deeply nested children
-Accordion: vertical
-  Item:
-    Header: horizontal
-      Title:
-        Icon:
-    onclick toggle-state         // Won't attach to Header!
-
-// ✅ CORRECT: Event handlers BEFORE nested children
-Accordion: vertical
-  Item:
-    Header: horizontal
-      onclick toggle-state       // Attaches correctly
-      Title:
-        Icon:
-
-// ❌ WRONG: Hyphenated cursor values
-Button cursor not-allowed        // Lexer splits this incorrectly
-
-// ✅ CORRECT: Use single-word cursor values
-Button cursor pointer
-Button cursor move
-Button cursor grab
-Button disabled                  // Use disabled property instead
+// Einzeiliger Kommentar
+property value,  // Inline-Kommentar
 ```
 
-## Core Syntax
+### Dimension Shorthand
+
+Erste Zahlen nach Komponente werden als width/height interpretiert.
 
 ```
-ComponentName property value property value "text content"
+Box 300, 400, pad 16  // width: 300, height: 400
+Card 200, pad 8       // width: 200
 ```
 
-**Indentation:** 2 spaces = child relationship
-**Comments:** `// comment` or `Component "text" // inline`
-**Strings:** Double quotes `"Hello World"`
-**Numbers:** Default px, use `%` for percent: `w 50%`
+## Tokens (Design Variables)
 
-## Dimension Shorthand
+Zweistufiges Token-System: Basis-Palette + Semantische Tokens
 
-First 1-2 numbers after component = width [height]:
-```
-Box 300 400 padding 16    → width 300 height 400 padding 16
-Card 200 padding 8        → width 200 padding 8
-```
+### Basis-Palette
 
-## Colors
+Reine Farbwerte ohne semantische Bedeutung. Namensschema: `$farbe-stufe`
 
 ```
-background #3B82F6    // Background (always)
-color #FFFFFF         // Text color (always)
-border-color #333     // Border color
-#RRGGBBAA             // With alpha: #3B82F680
+// Grey Scale
+$grey-50: #FAFAFA
+$grey-100: #F4F4F5
+$grey-200: #E4E4E7
+$grey-300: #D4D4D8
+$grey-400: #A1A1AA
+$grey-500: #71717A
+$grey-600: #52525B
+$grey-700: #3F3F46
+$grey-800: #27272A
+$grey-900: #18181B
+$grey-950: #09090B
+
+// Accent Colors
+$blue-500: #3B82F6
+$blue-600: #2563EB
+$green-500: #22C55E
+$yellow-500: #F59E0B
+$red-500: #EF4444
 ```
 
-## Tokens (Variables)
+### Semantische Tokens (Bound Property Format)
+
+Tokens mit Property-Binding: `$name.property`
+
+Die Property im Namen bestimmt den Verwendungszweck:
+- `.bg` → Background
+- `.col` → Color (Text/Foreground)
+- `.pad` → Padding
+- `.gap` → Gap
+- `.rad` → Border-Radius
+- `.font.size` → Font-Size (Compound Property)
 
 ```
-$primary: #3B82F6
-$spacing: 16
-Button background $primary padding $spacing
+// Background (referenziert Palette)
+$app.bg: $grey-950
+$default.bg: $grey-900
+$elevated.bg: $grey-800
+$surface.bg: $grey-700
+
+// Foreground
+$default.col: $grey-300
+$muted.col: $grey-500
+$heading.col: $grey-50
+
+// Primary
+$primary.bg: $blue-500
+$primary.col: $blue-500
+$primary.hover.bg: $blue-600
+
+// Status
+$success.bg: $green-500
+$danger.bg: $red-500
+$warning.bg: $yellow-500
+
+// Spacing
+$sm.pad: 4
+$md.pad: 6
+$lg.pad: 8
+
+$sm.gap: 4
+$md.gap: 6
+$lg.gap: 8
+
+// Radius
+$sm.rad: 3
+$md.rad: 4
+$lg.rad: 6
+
+// Typography (Compound)
+$xs.font.size: 11
+$sm.font.size: 12
+$default.font.size: 13
 ```
 
-**Type suffixes** auto-infer property:
-- `-color` → background: `$blue-color`
-- `-size` → font-size: `$heading-size`
-- `-padding/-spacing` → padding: `$card-padding`
-- `-radius` → border-radius: `$btn-radius`
-- `-gap` → gap: `$grid-gap`
-- `-border` → border-width
-- `-border-color` → border-color
-
-## Component References
+### Verwendung in Komponenten
 
 ```
-Card: radius 16 padding 20 background #2A2A3E
-Button radius Card.radius background Card.background    // Reference Card's properties
+Button:
+    background $primary.bg
+    color $on-primary.col
+    padding $sm.pad $lg.pad
+    radius $md.rad
+    hover
+        background $primary.hover.bg
+
+Card:
+    background $elevated.bg
+    padding $lg.pad
+    radius $lg.rad
 ```
 
-## Layout Properties
+### Best Practices
 
-| Property | Shorthand | Description |
-|----------|-----------|-------------|
-| `horizontal` | `hor` | Horizontal (row) |
-| `vertical` | `ver` | Vertical (column) - default |
-| `gap 16` | | Space between children |
-| `between` | | Space-between distribution |
-| `wrap` | | Allow wrapping |
-| `grow`/`fill` | | Flex grow |
-| `shrink 0` | | Prevent shrinking |
-| `stacked` | | Stack children (z-layers) |
+| Regel | Beschreibung |
+|-------|--------------|
+| Palette zuerst | Basis-Farben ohne Semantik definieren |
+| Semantik referenziert | Semantische Tokens referenzieren Palette |
+| Property im Namen | `.bg`, `.col`, `.pad` zeigt Verwendung |
+| Konsistente Stufen | xs, sm, md, lg, xl für Größen |
+| Keine Magic Numbers | Alle Werte als Token definieren |
 
-## Alignment
+### Component References
 
-| Property | Shorthand | Description |
-|----------|-----------|-------------|
-| `horizontal-left` | `hor-l` | Align left |
-| `horizontal-center` | `hor-cen` | Center horizontal |
-| `horizontal-right` | `hor-r` | Align right |
-| `vertical-top` | `ver-t` | Align top |
-| `vertical-center` | `ver-cen` | Center vertical |
-| `vertical-bottom` | `ver-b` | Align bottom |
-| `center` | `cen` | Center both axes |
-
-## Sizing
-
-| Property | Shorthand | Description | Example |
-|----------|-----------|-------------|---------|
-| `width`/`height` | `w`/`h` | Width/Height | `width 200`, `height 100`, `width full` |
-| `min-width`/`max-width` | `minw`/`maxw` | Min/Max width | `min-width 100`, `max-width 500` |
-| `min-height`/`max-height` | `minh`/`maxh` | Min/Max height | `min-height 50`, `max-height 300` |
-| `full` | | 100% both | `Container full` |
-
-## Spacing
+Referenzieren von Properties anderer Komponenten.
 
 ```
-padding 16              // All sides
-padding 16 12           // Vertical Horizontal
-padding 16 12 8 4       // Top Right Bottom Left
-padding left 16         // Left only (left/right/top/bottom)
-padding left-right 16   // Left and right
-padding top-bottom 16   // Top and bottom
-margin 16               // Margin (same syntax)
+Component.property
+Button rad Card.radius
+Panel bg Theme.background
 ```
 
-Direction shortcuts: `l`=left, `r`=right, `t`/`u`=top, `b`/`d`=bottom
+## Komponenten
 
-## Border
+Definition, Vererbung und Instanzen
 
-```
-border 1               // 1px solid
-border 1 #333          // 1px solid #333
-border 2 dashed #3B82F6
-border left 1 #333     // Left only
-border left-right 2 dashed    // Left and right
-radius 8               // Border radius
-radius 8 8 0 0         // Per-corner
-```
+### Definition
 
-## Typography
-
-| Property | Description | Example |
-|----------|-------------|---------|
-| `size` | Font size (px) | `size 14` |
-| `weight` | Font weight | `weight 600`, `weight bold` |
-| `line` | Line height | `line 1.5` |
-| `font` | Font family | `font "Inter"` |
-| `align` | Text align | `align center` |
-| `italic` | Italic style | `italic` |
-| `underline` | Underlined | `underline` |
-| `uppercase`/`lowercase` | Text transform | |
-| `truncate` | Ellipsis overflow | `truncate` |
-
-## Inline Spans
-
-Format parts within strings:
-```
-"This is *important*:bold and *emphasized*:italic"
-"Click *here*:underline"
-"A *warning*:$customToken in text"
-```
-Built-in: `:bold`, `:italic`, `:underline`
-Custom: `:$tokenName` with token defining style properties
-
-## Icons (Lucide)
+Komponenten mit Doppelpunkt definieren (nicht rendern).
 
 ```
-Box icon "search"
-Icon icon "user" size 20
-```
-All icons: lucide.dev/icons
-
-## Visuals
-
-| Property | Shorthand | Description | Example |
-|----------|-----------|-------------|---------|
-| `opacity` | `opa` | Transparency 0-1 | `opacity 0.5` |
-| `shadow` | | Box shadow | `shadow sm`/`md`/`lg` |
-| `cursor` | | Cursor style | `cursor pointer` |
-| `z` | | Z-index | `z 100` |
-| `hidden` | | Start hidden | `hidden` |
-| `visible` | | Visibility | `visible true/false` |
-| `disabled` | | Disabled state | `disabled` |
-
-## Scroll
-
-| Property | Description |
-|----------|-------------|
-| `scroll`/`scroll-ver` | Vertical scroll |
-| `scroll-hor` | Horizontal scroll |
-| `scroll-both` | Both directions |
-| `snap` | Scroll snap |
-| `clip` | Overflow hidden |
-
-## Grid
-
-```
-grid 3              // 3 equal columns
-grid 2 gap 16       // With gap
-grid auto 250       // Auto-fill, min 250px
-grid 30% 70%        // Percentage columns
+Name: properties
 ```
 
-## HTML Primitives
-
-| Primitive | String becomes | Example |
-|-----------|---------------|---------|
-| `Image` | `src` | `Image "photo.jpg" 200 150 fit cover` |
-| `Input` | `placeholder` | `Input "Email..." type email` |
-| `Textarea` | `placeholder` | `Textarea "Message..." rows 5` |
-| `Link` | `href` | `Link "https://..." "Label"` |
-| `Button` | label | `Button "Submit"` |
-
-**Named primitives:**
+**Example:**
 ```
-Image Avatar: 48 48 radius 24 fit cover
-Input Email: "Enter email" type email
+Button: pad 12, bg #3B82F6, rad 8
 ```
 
-## Component Definition
+### Vererbung
+
+Von anderen Komponenten erben mit Child: Parent.
 
 ```
-// Define (not rendered)
-Button: padding 12 background #3B82F6 radius 8
+Child: Parent overrides
+```
 
-// Use
+**Example:**
+```
+DangerButton: Button bg #EF4444
+GhostButton: Button bg transparent, bor 1 $primary
+```
+
+### Vererbung mit Child-Overrides
+
+Kinder-Properties inline überschreiben mit Semicolon-Syntax.
+
+```
+Child: Parent childName property; childName2 property
+```
+
+**Example:**
+```
+Button:
+  icon "check", hidden
+  label "Click"
+
+Icon-Button: Button icon visible; label hidden
+```
+
+### Instanzen
+
+Komponenten verwenden (ohne Doppelpunkt).
+
+```
+Name content
+Name "text"
+```
+
+**Example:**
+```
 Button "Click me"
+Card
+  Title "Welcome"
 ```
 
-## Inheritance
+### Benannte Instanzen
+
+Für Referenzierung in Events.
 
 ```
-Button: padding 12 background #3B82F6 radius 8
-DangerButton from Button: background #EF4444
-GhostButton from Button: background transparent border 1 border-color #3B82F6
+Component named Name
 ```
 
-## Slots (Named Children)
+**Example:**
+```
+Button named SaveBtn "Save"
+- Item named FirstItem "Dashboard"
+```
+
+### Inline Define + Render (as)
+
+Komponenten definieren UND rendern in einem Schritt mit `as`.
 
 ```
-Card: vertical padding 16 background #1E1E1E radius 12 gap 8
-  Title: size 18 weight 600
-  Description: size 14 color #9CA3AF
-  Actions: horizontal gap 8
+Name as Type properties
+```
 
-// Usage - inline
-Card Title "Welcome" Description "Get started"
+**Example:**
+```
+Email as Input, pad 12, "placeholder@mail.com"
+SearchIcon as Icon, size 20, "search"
+Container bg #333, pad 16      // = Container as Box
+```
 
-// Usage - expanded
+### Slots
+
+Vordefinierte Kinder-Platzhalter.
+
+```
+Parent
+  Slot:
+```
+
+**Example:**
+```
+Card:
+  Title:
+  Description:
 Card
   Title "Welcome"
   Description "Get started"
-  Actions
-    Button "Learn more"
 ```
 
-## Flat Access
+### Flat Access
 
-Access nested elements directly by name:
+Direkter Zugriff auf verschachtelte Slots.
+
 ```
-Header: horizontal between
-  Left: horizontal gap 16
-    Logo: width 120 height 32
-    Nav: horizontal gap 8
-  Right:
-    Avatar: 36 36 radius 18
+Parent
+  NestedSlot props
+```
 
+**Example:**
+```
+Header:
+  Left:
+    Logo:
 Header
-  Logo background #FF0000      // Modifies Logo inside Left
-  Avatar background #3B82F6    // Modifies Avatar inside Right
+  Logo bg #F00  // Findet Logo in Left
 ```
 
-## List Items (New Instances)
+### Listen (- Prefix)
 
-Use `-` to create new instances:
+Neue Instanzen mit - erstellen.
+
 ```
-Menu: vertical width 200
-  Item: padding 8 12
+- Component
+```
 
+**Example:**
+```
 Menu
   - Item "Profile"
   - Item "Settings"
-  - Item color #EF4444 "Logout"
+  - Item col #EF4444, "Logout"
+```
+
+## Properties
+
+Styling und Layout
+
+### Layout
+
+| Name | Description |
+|------|-------------|
+| `horizontal / hor` | Horizontale Anordnung (row) |
+| `vertical / ver` | Vertikale Anordnung (column) - Default |
+| `center / cen` | Beide Achsen zentrieren |
+| `gap / g` | Abstand zwischen Kindern |
+| `spread` | Space-between Distribution |
+| `wrap` | Erlaubt Umbruch |
+| `stacked` | Kinder übereinander (z-layers) |
+
+### Alignment
+
+| Name | Description |
+|------|-------------|
+| `left` | Links ausrichten (horizontal) |
+| `right` | Rechts ausrichten (horizontal) |
+| `hor-center` | Horizontal zentrieren |
+| `top` | Oben ausrichten (vertikal) |
+| `bottom` | Unten ausrichten (vertikal) |
+| `ver-center` | Vertikal zentrieren |
+
+### Sizing
+
+| Name | Description |
+|------|-------------|
+| `size` | Kombinierte Dimension (size hug 32, size 100 200) |
+| `width hug` | Breite = Inhalt (fit-content) |
+| `width full` | Breite = 100% + flex-grow |
+| `width N` | Feste Breite in px |
+| `height hug` | Höhe = Inhalt (fit-content) |
+| `height full` | Höhe = 100% + flex-grow |
+| `height N` | Feste Höhe in px |
+| `min-width / minw` | Minimale Breite |
+| `max-width / maxw` | Maximale Breite |
+| `min-height / minh` | Minimale Höhe |
+| `max-height / maxh` | Maximale Höhe |
+
+### Spacing
+
+Padding mit optionalen Richtungen.
+
+```
+pad 16
+pad 16 12
+pad 16 12 8 4
+pad left 16
+pad top 8 bottom 24
+```
+
+| Name | Description |
+|------|-------------|
+| `padding / p` | Innenabstand |
+| `margin / m` | Außenabstand |
+
+### Farben
+
+| Name | Description |
+|------|-------------|
+| `color / c` | Textfarbe |
+| `background / bg` | Hintergrundfarbe |
+| `border-color / boc` | Rahmenfarbe |
+
+### Border & Radius
+
+```
+bor 1
+bor 1 #333
+bor 2 dashed #3B82F6
+bor t 1
+rad 8
+rad tl 8 br 8
+```
+
+| Name | Description |
+|------|-------------|
+| `border / bor` | Rahmen (width style color) |
+| `radius / rad` | Eckenradius |
+
+### Typography
+
+| Name | Description |
+|------|-------------|
+| `font-size` | Schriftgröße (px) |
+| `icon-size / is` | Icon-Größe (px) |
+| `icon-weight / iw` | Icon-Strichstärke (100-700, Standard: 400) |
+| `icon-color / ic` | Icon-Farbe (überschreibt color) |
+| `fill` | Icon gefüllt (Material only) |
+| `weight` | Schriftstärke (400, 600, bold) |
+| `line` | Zeilenhöhe |
+| `font` | Schriftart |
+| `align` | Textausrichtung |
+| `italic` | Kursiv |
+| `underline` | Unterstrichen |
+| `truncate` | Abschneiden mit Ellipsis |
+| `uppercase` | Großbuchstaben |
+| `lowercase` | Kleinbuchstaben |
+
+### Visuals
+
+| Name | Description |
+|------|-------------|
+| `opacity / o` | Transparenz (0-1) |
+| `shadow` | Schatten (sm, md, lg) |
+| `cursor` | Cursor-Stil |
+| `z` | Z-Index |
+| `hidden` | Versteckt starten |
+| `visible` | Sichtbarkeit |
+| `disabled` | Deaktiviert |
+| `rotate / rot` | Rotation in Grad |
+| `translate` | X Y Verschiebung |
+
+### Scroll
+
+| Name | Description |
+|------|-------------|
+| `scroll` | Vertikales Scrollen |
+| `scroll-ver` | Vertikales Scrollen |
+| `scroll-hor` | Horizontales Scrollen |
+| `scroll-both` | Beide Richtungen |
+| `clip` | Overflow hidden |
+
+### Hover Properties
+
+Inline Hover-Styles.
+
+| Name | Description |
+|------|-------------|
+| `hover-background / hover-bg` | Hover Hintergrund |
+| `hover-color / hover-col` | Hover Textfarbe |
+| `hover-opacity / hover-opa` | Hover Transparenz |
+| `hover-scale` | Hover Skalierung |
+| `hover-border / hover-bor` | Hover Rahmen |
+| `hover-border-color / hover-boc` | Hover Rahmenfarbe |
+| `hover-radius / hover-rad` | Hover Eckenradius |
+
+### Grid
+
+Grid-Layout für Spalten.
+
+```
+grid 3                    // 3 gleiche Spalten
+grid 2, g 16              // Mit Abstand
+grid auto 250             // Auto-fill, min 250px
+grid 30% 70%              // Prozentuale Spalten
+```
+
+### Inline Spans
+
+Formatierung innerhalb von Strings.
+
+```
+"This is *important*:bold"
+"Click *here*:underline"
+"A *warning*:$customToken"
+```
+
+| Name | Description |
+|------|-------------|
+| `:bold` | Fett |
+| `:italic` | Kursiv |
+| `:underline` | Unterstrichen |
+| `:$token` | Custom Token-Style |
+
+## HTML Primitives
+
+Native HTML-Elemente
+
+### Primitives
+
+| Name | Description |
+|------|-------------|
+| `Image "url"` | Bild (String = src) |
+| `Input "placeholder"` | Eingabefeld (String = placeholder) |
+| `Textarea "placeholder"` | Mehrzeiliges Eingabefeld |
+| `Link href "/url", "Label"` | Hyperlink (String = Label) |
+| `Button "Label"` | Button |
+| `Icon "name"` | Icon (Lucide oder Material) |
+| `Segment segments 4` | Segmentiertes Eingabefeld |
+
+### Icons
+
+Lucide (default) oder Material Icons.
+
+```
+Icon "search"
+Icon "home", material
+Icon "user", size 20, col #3B82F6
 ```
 
 ## States
 
+System- und Behavior-States
+
+### System States
+
+Automatisch vom Browser bei Interaktion.
+
+| Name | Description |
+|------|-------------|
+| `hover` | Maus über Element |
+| `focus` | Element hat Fokus |
+| `active` | Element ist aktiv (gedrückt) |
+| `disabled` | Element ist deaktiviert |
+
+### Behavior States
+
+Aktiviert durch Actions.
+
+| Name | Description |
+|------|-------------|
+| `highlighted` | Hervorgehoben (via highlight) |
+| `selected` | Ausgewählt (via select) |
+| `active` | Element ist aktiv (gedrückt) |
+| `inactive` |  |
+| `expanded` | Ausgeklappt |
+| `collapsed` | Eingeklappt |
+| `valid` | Eingabe valide |
+| `invalid` | Eingabe invalide |
+| `default` | Initialzustand |
+| `on` | Toggle an |
+| `off` | Toggle aus |
+
+### State Syntax
+
 ```
-Toggle: width 52 height 28 radius 14
-  state off
-    background #333
-  state on
-    background #3B82F6
-  Knob: 24 24 radius 12 background white
+hover
+  bg #555
+state hover
+  bg #555
+state highlighted
+  bg #333
+state selection
+  selected
+    bg #3B82F6
+  not-selected
+    bg transparent
 ```
-
-**System states** (automatic): `hover`, `focus`, `active`, `disabled`
-
-**Behavior states** (activated by actions):
-```
-Item: padding 12
-  state default
-    background transparent
-  state highlighted
-    background #333
-  state selected
-    background #3B82F6
-
-// Activated via: onhover highlight self
-```
-
-Common behavior states: `highlighted`, `selected`, `active`, `inactive`, `expanded`, `collapsed`, `valid`, `invalid`
-
-## Hover Shorthand
-
-```
-Button hover-background #3B82F6 hover-color #FFF hover-scale 1.05
-Card hover-opacity 0.8
-```
-
-Properties: `hover-color`, `hover-background`, `hover-border-color`, `hover-border`, `hover-radius`, `hover-opacity`, `hover-scale`
 
 ## Events
 
-| Event | Description |
-|-------|-------------|
-| `onclick` | Click |
-| `onclick-outside` | Click outside element |
-| `onhover` | Hover |
-| `onchange` | Value changed |
-| `oninput` | While typing |
-| `onfocus` | Focus gained |
-| `onblur` | Focus lost |
-| `onkeydown KEY` | Key pressed |
-| `onkeyup KEY` | Key released |
-| `onload` | Component loaded |
+Event-Handler und Keyboard-Events
 
-**Key modifiers** for `onkeydown`/`onkeyup`:
+### Basis Events
+
+| Name | Description |
+|------|-------------|
+| `onclick` | Klick-Event |
+| `onhover` | Hover-Event |
+| `onchange` | Wert geändert (nach Blur) |
+| `oninput` | Während Eingabe |
+| `onload` | Komponente geladen |
+| `onfocus` | Fokus erhalten |
+| `onblur` | Fokus verloren |
+
+### Keyboard Events
+
+Mit Key-Modifier zwischen Event und Doppelpunkt.
+
 ```
-onkeydown escape close self
-onkeydown enter select highlighted
-onkeydown arrow-down highlight next
-onkeydown arrow-up highlight prev
+onkeydown escape: close
+onkeydown enter: select highlighted
+onkeydown arrow-down: highlight next
 ```
 
-Available keys: `escape`, `enter`, `tab`, `space`, `arrow-up`, `arrow-down`, `arrow-left`, `arrow-right`, `backspace`, `delete`, `home`, `end`
+| Name | Description |
+|------|-------------|
+| `escape` | Escape-Taste |
+| `enter` | Enter-Taste |
+| `tab` | Tab-Taste |
+| `space` | Leertaste |
+| `arrow-up` | Pfeil hoch |
+| `arrow-down` | Pfeil runter |
+| `arrow-left` | Pfeil links |
+| `arrow-right` | Pfeil rechts |
+| `backspace` | Backspace |
+| `delete` | Delete |
+| `home` | Home |
+| `end` | End |
 
-**Timing modifiers** for debouncing/delaying:
+### Timing Modifiers
+
+| Name | Description |
+|------|-------------|
+| `debounce N` | Verzögert bis N ms nach letztem Event |
+| `delay N` | Verzögert um N ms |
+
+**Example:**
 ```
-oninput debounce 300 filter Results     // Wait 300ms after last input
-onblur delay 200 hide Results           // Hide after 200ms delay
-onkeydown escape debounce 100 close     // Combine with key modifier
+oninput debounce 300: filter Results
+onblur delay 200: hide Dropdown
+```
+
+### Zentralisierter Events Block
+
+Trennt Layout und Behavior.
+
+```
+events
+  ComponentName onclick
+    action1
+    action2
+```
+
+**Example:**
+```
+events
+  SaveBtn onclick
+    show Spinner
+    Submit.disabled = true
 ```
 
 ## Actions
 
-| Action | Syntax | Example |
-|--------|--------|---------|
-| `toggle` | `toggle` | `onclick toggle` |
-| `open` | `open Name [pos] [anim] [ms]` | `onclick open Dialog center fade 200` |
-| `close` | `close [Name] [anim] [ms]` | `onclick close` |
-| `show` | `show Name` | `onclick show Tooltip` |
-| `hide` | `hide Name` | `onclick hide Panel` |
-| `change` | `change self to state` | `onclick change self to active` |
-| `page` | `page Name` | `onclick page Dashboard` |
-| `assign` | `assign $var to expr` | `onclick assign $count to $count + 1` |
-| `highlight` | `highlight target` | `onhover highlight self` |
-| `select` | `select target` | `onclick select self` |
-| `deselect` | `deselect target` | `onclick deselect self` |
-| `clear-selection` | `clear-selection` | `onclick clear-selection` |
-| `filter` | `filter Container` | `oninput filter Dropdown` |
-| `focus` | `focus target` | `onfill focus next` |
-| `activate` | `activate target` | `onclick activate self` |
-| `deactivate` | `deactivate target` | `onclick deactivate self` |
-| `deactivate-siblings` | `deactivate-siblings` | `onclick deactivate-siblings` |
-| `toggle-state` | `toggle-state` | `onclick toggle-state` |
-| `validate` | `validate target` | `onclick validate Form` |
-| `reset` | `reset target` | `onclick reset Form` |
+Interaktive Aktionen
 
-**Animations:** `fade`, `scale`, `slide-up`, `slide-down`, `slide-left`, `slide-right`, `none`
-**Positions:** `below`, `above`, `left`, `right`, `center`
-**Targets:** `self`, `next`, `prev`, `first`, `last`, `highlighted`, `selected`
+### Navigation & Visibility
 
-### Multiple Actions
+| Name | Description |
+|------|-------------|
+| `toggle` | Toggle-State wechseln |
+| `show` | Element anzeigen |
+| `hide` | Element verstecken |
+| `open` | Overlay/Dialog öffnen |
+| `close` | Overlay schließen |
+| `page` | Zu Seite wechseln |
 
-**Single action** - inline is fine:
+### Selection & Highlight
+
+| Name | Description |
+|------|-------------|
+| `highlight` | Element hervorheben |
+| `select` | Element auswählen |
+| `deselect` | Auswahl aufheben |
+| `clear-selection` | Alle Auswahlen löschen |
+| `filter` | Liste filtern |
+
+### State Changes
+
+| Name | Description |
+|------|-------------|
+| `change` | State ändern (change self to X) |
+| `activate` | Element aktivieren |
+| `deactivate` | Element deaktivieren |
+| `deactivate-siblings` | Geschwister deaktivieren |
+| `toggle-state` | State umschalten |
+
+### Assignments & Forms
+
+| Name | Description |
+|------|-------------|
+| `assign` | Variable zuweisen |
+| `validate` | Formular validieren |
+| `reset` | Formular zurücksetzen |
+| `focus` | Fokus setzen |
+| `alert` | Alert anzeigen |
+
+### JavaScript Integration
+
+| Name | Description |
+|------|-------------|
+| `call` | Externe JavaScript-Funktion aufrufen |
+
+**Example:**
 ```
-Button onclick toggle "Toggle"
-Button onclick show Panel "Show"
-```
+// JavaScript-Funktion definieren (außerhalb von Mirror)
+function handleLogin(data) {
+  console.log('Login:', data)
+}
 
-**Multiple actions (inline)** - use comma chaining:
-```
-onclick select self, close Dropdown
-onclick highlight self, show Preview
-```
-
-**Multiple actions (complex)** - use events block:
-```
-// DON'T: No semicolon chaining (not supported)
-// Button onclick show A; hide B; assign $x to 1   ← WRONG
-
-// DO: Use events block for complex behavior
-Panel: padding 16 background #1E1E2E radius 8
-
-Content named Content1: "First content"
-Content named Content2: hidden "Second content"
-
-Nav horizontal gap 8
-  - Button named Btn1 "Show First"
-  - Button named Btn2 "Show Second"
-
-events
-  Btn1 onclick
-    show Content1
-    hide Content2
-    change self to active
-
-  Btn2 onclick
-    show Content2
-    hide Content1
-    change self to active
+// In Mirror aufrufen
+Button onclick call handleLogin, "Login"
 ```
 
-## Continuous Animations
+### Action Targets
+
+| Name | Description |
+|------|-------------|
+| `self` | Das aktuelle Element |
+| `next` | Nächstes Element |
+| `prev` | Vorheriges Element |
+| `first` | Erstes Element |
+| `last` | Letztes Element |
+| `first-empty` | Erstes leeres Element |
+| `highlighted` | Hervorgehobenes Element |
+| `selected` | Ausgewähltes Element |
+| `self-and-before` | Selbst und alle davor |
+| `all` | Alle Elemente |
+| `none` | Kein Element |
+
+## Conditionals & Logic
+
+Bedingungen und Operatoren
+
+### Block Conditionals
 
 ```
-Box icon "loader"
-  animate spin 1000     // Spinning loader
-
-Box 8 8 radius 4 background #3B82F6
-  animate pulse 800     // Pulsing dot
+if $condition
+  Component
+if $condition
+  Component
+else
+  Other
 ```
 
-Types: `spin`, `pulse`, `bounce`
-
-## Show/Hide Animations
-
-```
-Panel hidden
-  show fade slide-up 300
-  hide fade 150
-  "Content"
-```
-
-## Conditionals
-
-**Block:**
+**Example:**
 ```
 if $isLoggedIn
   Avatar
@@ -554,245 +724,219 @@ else
   Button "Login"
 ```
 
-**Property:**
+### Property Conditionals
+
+Inline Bedingungen für Properties.
+
+```
+if $cond then property value
+if $cond then property value else property value2
+```
+
+**Example:**
 ```
 Button if $active then bg #3B82F6 else bg #333
-Badge if $count > 0 then #10B981 else #666
+Icon if $task.done then "check" else "circle"
 ```
 
-## Operators
+### Operatoren
 
-| Type | Operators |
-|------|-----------|
-| Comparison | `==`, `!=`, `>`, `<`, `>=`, `<=` |
-| Logical | `and`, `or`, `not` |
-| Arithmetic | `+`, `-`, `*`, `/` |
+| Name | Description |
+|------|-------------|
+| `==, !=` | Gleichheit / Ungleichheit |
+| `>, <, >=, <=` | Vergleiche |
+| `and` | Logisches UND |
+| `or` | Logisches ODER |
+| `not` | Negation |
+| `+, -, *, /` | Arithmetik |
 
-## Iterators
+### Expressions
+
+| Name | Description |
+|------|-------------|
+| `$varName` | Variable |
+| `$obj.prop` | Property-Access |
+| `Component.prop` | Component-Property |
+| `$event.value` | Event-Wert |
+
+## Iterators & Data
+
+Schleifen und Data Binding
+
+### Each Loop
 
 ```
-$tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }]
+each $item in $collection
+  Component $item.prop
+```
 
+**Example:**
+```
 each $task in $tasks
   Card
     Text $task.title
     Icon if $task.done then "check" else "circle"
 ```
 
-## Named Instances
+### Data Binding
 
-There are **three ways** to create named/referenceable components:
-
-### 1. Named Primitives (Input, Image, Button, etc.)
-```
-Input Email: "Enter email" type email
-Input Password: "Password" type password
-Image Avatar: 48 48 radius 24 fit cover
-```
-The primitive keyword comes first, then the name, then colon.
-
-### 2. Named Custom Components (using `named`)
-```
-Panel: padding 16 background #1E1E2E radius 8
-
-Panel named Dashboard:
-  "Dashboard content"
-
-Panel named Settings:
-  "Settings content"
-```
-Use `named` between component and name to create a referenceable instance.
-
-### 3. Inheritance (using `from`)
-```
-Panel: padding 16 background #1E1E2E radius 8
-
-DashboardPanel from Panel:
-  "Dashboard content"
-
-SettingsPanel from Panel:
-  background #2A2A3E  // override background
-  "Settings content"
-```
-Creates a new component type that inherits from parent.
-
-### Usage Example
-```
-Input Email: "Email" type email
-Input Password: "Password" type password
-
-LoginForm vertical gap 16
-  Email
-  Password
-  Button onclick if Email.value page Dashboard "Submit"
-```
-
-## Component Properties
+Mit optionalem Filter.
 
 ```
-Email.value           // Read input value
-Submit.disabled = true // Write property (in events)
-Panel.visible = false  // Toggle visibility
+Component data Collection
+Component data Collection where field == value
 ```
 
-| Component | Properties |
-|-----------|------------|
-| All | `.visible`, `.disabled`, `.opacity`, `.color` |
-| Input/Textarea | `.value`, `.placeholder`, `.focus` |
-| Button | `.label`, `.loading` |
-| Checkbox/Switch | `.checked` |
-| Dialog/Overlay | `.open`, `.close` |
-| Text/Label | `.text` |
-| Image | `.src`, `.alt` |
-
-## $event Object
-
+**Example:**
 ```
-Input onchange assign $text to $event.value
-Checkbox onchange assign $active to $event.checked
+TaskList data Tasks where done == false
 ```
 
-## Centralized Events Block
+### Master-Detail Pattern
+
+Für Klick-auf-Liste-zeigt-Details Pattern.
 
 ```
-// Components
-Input Email: placeholder "Email"
-Button Submit: background #3B82F6 "Login"
+$selected: null
 
-// Layout
-LoginForm vertical gap 16
-  Email
-  Submit
+Master data Collection
+  - Item onclick assign $selected to $item
+    Text $item.title
 
-// Behavior
-events
-  Email onchange
-    Error.visible = false
-
-  Submit onclick
-    if Email.value
-      Submit.label = "Sending..."
-      page Dashboard
-    else
-      Error.visible = true
+Detail if $selected
+  Text $selected.title
 ```
 
----
+**Example:**
+```
+onclick assign $selected to $item
+$selected.field (access stored record fields)
+```
+
+## Animations
+
+Show/Hide und kontinuierliche Animationen
+
+### Show/Hide Animations
+
+```
+show fade slide-up 300
+hide fade 150
+```
+
+| Name | Description |
+|------|-------------|
+| `slide-up` | Von unten einblenden |
+| `slide-down` | Von oben einblenden |
+| `slide-left` | Von rechts einblenden |
+| `slide-right` | Von links einblenden |
+| `fade` | Ein-/Ausblenden (opacity) |
+| `scale` | Skalieren |
+| `none` | Keine Animation |
+
+### Kontinuierliche Animationen
+
+```
+animate spin 1000
+animate pulse 800
+```
+
+| Name | Description |
+|------|-------------|
+| `spin` | Rotation (kontinuierlich) |
+| `pulse` | Pulsieren |
+| `bounce` | Hüpfen |
+
+### Overlay Positions
+
+Für open-Action.
+
+| Name | Description |
+|------|-------------|
+| `below` | Unterhalb des Elements |
+| `above` | Oberhalb des Elements |
+| `left` | Links vom Element |
+| `right` | Rechts vom Element |
+| `center` | Zentriert im Viewport |
 
 ## Doc Mode
 
-Doc Mode provides a specialized syntax for writing documentation with formatted text and live code examples.
+Dokumentation mit formatiertem Text
 
-### Components
+### Komponenten
 
-- `text` – Formatted text blocks
-- `playground` – Live code examples with preview
-- `doc` – Container wrapper for documentation pages
+| Name | Description |
+|------|-------------|
+| `text` | Formatierte Text-Blöcke |
+| `playground` | Live Code-Beispiele |
+| `doc` | Container für Dokumentation |
 
-### Multiline Strings
+### Block-Level Syntax
 
-Use single quotes for multiline content:
-```
-text
-  '$h2 Welcome
-
-   $p This paragraph spans multiple lines.'
-```
-
-### Block Tokens
-
-Block tokens start a line and style all following text:
-```
-# Heading 1           // Markdown-style headings
-## Heading 2
-### Heading 3
-#### Heading 4
-
-$p                     // Paragraph (legacy token syntax)
-$lead                  // Lead paragraph
-$subtitle              // Subtitle
-$label                 // Small uppercase label
-$li                    // List item
-```
+| Name | Description |
+|------|-------------|
+| `# / ## / ### / ####` | Headings 1-4 |
+| `$p` | Paragraph |
+| `$lead` | Lead Paragraph |
+| `$label` | Label (uppercase) |
+| `$li` | List Item |
 
 ### Inline Formatting
 
-Inline formatting uses markdown-style syntax:
-```
-**bold**              // Bold text
-_italic_              // Italic text
-`code`                // Inline code
-[text](url)           // Hyperlink
-```
+| Name | Description |
+|------|-------------|
+| `**text**` | Bold |
+| `_text_` | Italic |
+| ``code`` | Inline Code |
+| `[text](url)` | Hyperlink |
 
-### Example
-
-```
-doc
-  text
-    '# Documentation
-
-     $p Welcome to **Mirror**. Visit [our site](https://example.com).'
-
-  playground
-    'Button background #2271c1 padding 12 24 radius 8 "Click me"'
-```
-
----
-
-## Quick Reference Card
+## Quick Reference
 
 ```
-LAYOUT      horizontal vertical gap between wrap grid stacked
-ALIGN       horizontal-left horizontal-center horizontal-right vertical-top vertical-center vertical-bottom center
-SPACING     padding margin (+ left right top bottom left-right top-bottom)
-SIZE        width height min-width max-width min-height max-height full grow fill shrink
-SHORTHAND   Box 300 400 → width 300 height 400
-COLOR       color (text) background (bg) border-color (border)
-BORDER      border [dir] [width] [style] [color] | radius
-TYPE        size weight line font align italic underline uppercase lowercase truncate
-INLINE      *text*:bold *text*:italic *text*:underline *text*:$token
-VISUAL      opacity shadow cursor z hidden visible disabled
-SCROLL      scroll scroll-horizontal scroll-both snap clip
-HOVER       hover-color hover-background hover-border-color hover-border hover-radius hover-opacity hover-scale
+SYNTAX      Component property value
+            Name: = definition | Name = instance
+            Child: Parent = inheritance
+            Child: Parent child1 prop; child2 prop = child overrides
+            Component named Name = named instance
+            Name as Type = inline define + render
+            Name props = implicit Box define + render
 
-TOKENS      $name: value | $name-suffix: value (auto-infer)
-REFERENCE   Component.prop
-DEFINE      Name: props                              // definition only
-INHERIT     Name from Parent: props                  // inheritance
-PRIMITIVE   Input Name: props                        // named primitive
-NAMED       Component named Name: props              // named instance
+LAYOUT      hor, ver, gap N, spread, wrap, stacked, grid N
+ALIGN       left, right, hor-center, top, bottom, ver-center, cen
+SIZE        size hug/full W H | width hug/full/N, height hug/full/N
+SPACING     pad N | pad left/right/top/bottom N | pad top 8 bottom 24
+COLOR       col (text), bg (background), boc (border-color)
+BORDER      bor [dir] [width] [style] [color]
+RADIUS      rad [corners] | tl tr bl br | t b l r
+TYPE        font-size/fs, icon-size/is, icon-weight/iw, icon-color/ic, fill, weight, line, font, align, italic, underline, truncate
+VISUAL      o (opacity), shadow, cursor, z, hidden, disabled, rot
 
-STATE       state name | system: hover focus active disabled
-BEHAVIOR    highlighted selected active inactive expanded collapsed valid invalid
+STATES      hover, focus, active, disabled (indented block)
+            state highlighted, state selected
 
-EVENTS      onclick onclick-outside onhover onfocus onblur onchange oninput onload
-KEYBOARD    onkeydown KEY | onkeyup KEY
-KEYS        escape enter tab space arrow-up arrow-down arrow-left arrow-right backspace delete home end
-TIMING      debounce N | delay N
+EVENTS      onclick, onhover, onfocus, onblur, onchange, oninput
+            onkeydown KEY: action, onkeyup KEY: action
+            debounce N, delay N
 
-ACTIONS     toggle | open X [pos] [anim] [ms] | close | show X | hide X | page X | assign $var to expr
-SELECTION   highlight X | select X | deselect X | clear-selection | filter X | focus X
-ACTIVATION  activate X | deactivate X | deactivate-siblings | toggle-state
-FORM        validate X | reset X
-TARGETS     self next prev first last highlighted selected self-and-before all none
+ACTIONS     toggle, show, hide, open, close, page
+            highlight, select, deselect, clear-selection
+            activate, deactivate, toggle-state
+            assign $var to expr, validate, reset, focus, filter
+            call functionName  // JS-Funktion aufrufen
 
-MULTI-ACT   Comma chain: onclick select self, close X
-            Complex: Use events block (no semicolon chaining)
+TARGETS     self, next, prev, first, last, highlighted, selected
+ANIMATIONS  fade, scale, slide-up/down/left/right, spin, pulse, bounce
+POSITIONS   below, above, left, right, center
 
-ANIMATIONS  fade scale slide-up slide-down slide-left slide-right spin pulse bounce
-POSITIONS   below above left right center
-
-CONDITION   if $cond ... else
-CONDPROP    if $x then prop val else prop val
-ITERATOR    each $x in $list
+CONDITION   if $cond (indented) else (indented)
+            if $x then prop val else prop val
+ITERATOR    each $x in $list (indented)
+            data Collection where field == value
 OPERATORS   == != > < >= <= | and or not | + - * /
 
-DOC-MODE    text | playground | doc
-DOC-STRING  '...' (multiline with single quotes)
-DOC-BLOCK   # ## ### #### (markdown headings) | $p $lead $subtitle $label $li (legacy)
-DOC-INLINE  **bold** | _italic_ | `code` | [text](url)
-
-SHORTCUTS   pad→padding mar→margin bg→background col→color rad→radius bor→border
-            hor→horizontal ver→vertical w→width h→height opa→opacity
+TOKENS      $name: value (palette) | $name.property: value (semantic)
+            $grey-500: #71717A | $primary.bg: $blue-500 | $sm.pad: 4
+BINDING     .bg (background), .col (color), .pad (padding), .gap, .rad
+            .font.size (compound) | .hover.bg (state-specific)
+REFERENCE   Component.property | Button rad Card.radius
 ```

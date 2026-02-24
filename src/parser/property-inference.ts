@@ -1,8 +1,79 @@
 /**
- * Property Inference Module
+ * @module property-inference
+ * @description Property Inference - Leitet Properties aus Token-Namen ab
  *
- * Infers property names from token name suffixes and component types.
- * Used for syntactic sugar where property names are omitted.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Inferiert Property-Namen aus Token-Suffixen und Component-Typen
+ *
+ * Ermöglicht syntaktischen Zucker wo Property-Namen weggelassen werden:
+ *   $primary-col          → col (text color)
+ *   $card-bg              → bg (background)
+ *   $default-pad          → pad (padding)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TOKEN-SUFFIX-MAPPING
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @mapping Spacing
+ *   -pad, -padding, -spacing → pad (padding)
+ *   -mar, -margin            → mar (margin)
+ *   -gap                     → gap
+ *
+ * @mapping Colors
+ *   -col                     → col (text color, short form only)
+ *   -bg, -background, -color → bg (background color)
+ *   -boc, -border-color      → boc (border color)
+ *
+ * @mapping Sizing
+ *   -rad, -radius            → rad (border radius)
+ *   -bor, -border            → bor (border width)
+ *   -siz, -size              → size (font size)
+ *   -wei, -weight            → weight (font weight)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * COLOR INFERENCE BY COMPONENT TYPE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @rule Text Components
+ *   Text, Label, Title, Heading, H1-H6, Paragraph, P, Span, Link, A,
+ *   Value, Description, Caption, Subtitle, Hint, Error, Message, Icon
+ *   → Shorthand-Farbe wird zu 'col' (text color)
+ *
+ * @rule Container Components
+ *   Alle anderen (Box, Card, Panel, etc.)
+ *   → Shorthand-Farbe wird zu 'bg' (background)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function isColorValue(value) → boolean
+ *   Prüft ob String ein Farbwert ist (hex, rgb, hsl)
+ *
+ * @function inferPropertyFromTokenName(tokenName) → string | null
+ *   Inferiert Property aus Token-Suffix
+ *
+ * @function inferColorProperty(componentName, properties) → string
+ *   Inferiert Farb-Property basierend auf Component-Typ
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIELE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Token-Suffix Inference
+ *   $primary-col      → inferPropertyFromTokenName → 'col'
+ *   $card-background  → inferPropertyFromTokenName → 'bg'
+ *   $default-pad      → inferPropertyFromTokenName → 'pad'
+ *
+ * @example Component-based Color Inference
+ *   Text #3B82F6      → inferColorProperty('Text', {}) → 'col'
+ *   Card #3B82F6      → inferColorProperty('Card', {}) → 'bg'
+ *   Icon #FFF         → inferColorProperty('Icon', {}) → 'col'
+ *
+ * @used-by sugar/token-handler.ts für implizite Property-Zuweisung
  */
 
 /**
@@ -35,23 +106,23 @@ export function inferPropertyFromTokenName(tokenName: string): string | null {
   // Border radius: -rad, -radius
   if (name.endsWith('-rad') || name.endsWith('-radius')) return 'rad'
 
-  // Gap: -gap
-  if (name.endsWith('-gap')) return 'gap'
+  // Gap: -gap → g (short form)
+  if (name.endsWith('-gap')) return 'g'
 
-  // Text color: -col, -color
-  if (name.endsWith('-col') || name.endsWith('-color')) return 'col'
-
-  // Background: -bg, -background
-  if (name.endsWith('-bg') || name.endsWith('-background')) return 'bg'
-
-  // Border color: -boc, -border-color
+  // Border color: -boc, -border-color (MUST be before -color check)
   if (name.endsWith('-boc') || name.endsWith('-border-color')) return 'boc'
+
+  // Text color: -col (short form only)
+  if (name.endsWith('-col')) return 'col'
+
+  // Background: -bg, -background, -color (long form -color maps to background)
+  if (name.endsWith('-bg') || name.endsWith('-background') || name.endsWith('-color')) return 'bg'
 
   // Border: -bor, -border (but not -border-color which is handled above)
   if ((name.endsWith('-bor') || name.endsWith('-border')) && !name.endsWith('-border-color')) return 'bor'
 
-  // Font size: -siz, -size
-  if (name.endsWith('-siz') || name.endsWith('-size')) return 'size'
+  // Font size: -siz, -size → text-size (normalized form)
+  if (name.endsWith('-siz') || name.endsWith('-size')) return 'text-size'
 
   // Font weight: -wei, -weight
   if (name.endsWith('-wei') || name.endsWith('-weight')) return 'weight'

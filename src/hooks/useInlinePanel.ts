@@ -13,6 +13,7 @@ import type { EditorView } from '@codemirror/view'
 import { usePanelPosition, PANEL_OFFSET_Y } from './usePanelPosition'
 
 export type InlinePanelType = 'icon' | 'font' | 'token' | 'value'
+export type IconLibrary = 'lucide' | 'material' | 'phosphor'
 
 export interface InlinePanelState {
   isOpen: boolean
@@ -21,6 +22,8 @@ export interface InlinePanelState {
   filter: string
   selectedIndex: number
   triggerPos: number // Position where panel was triggered (for replacement)
+  iconLibrary: IconLibrary // Selected icon library for icon picker
+  replaceRange: { from: number; to: number } | null // Optional range to replace (for double-click edit)
 }
 
 const initialState: InlinePanelState = {
@@ -30,6 +33,8 @@ const initialState: InlinePanelState = {
   filter: '',
   selectedIndex: 0,
   triggerPos: 0,
+  iconLibrary: 'lucide',
+  replaceRange: null,
 }
 
 export interface UseInlinePanelOptions {
@@ -52,11 +57,16 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
   /**
    * Open panel at current cursor position.
    * @param type - Panel type to open
-   * @param triggerChar - Optional trigger character to include in triggerPos (e.g., for replacement)
+   * @param options - Optional config: triggerChar or replaceRange for editing existing values
    */
-  const open = useCallback((type: InlinePanelType, triggerChar?: string) => {
+  const open = useCallback((
+    type: InlinePanelType,
+    options?: string | { replaceRange?: { from: number; to: number } }
+  ) => {
     // Don't reopen same panel - prevents triggerPos overwrite
-    if (state.isOpen && state.type === type) return
+    // K4 fix: Use stateRef.current to avoid stale closure
+    const currentState = stateRef.current
+    if (currentState.isOpen && currentState.type === type) return
 
     const view = editorRef.current
     if (!view) return
@@ -64,6 +74,10 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
     const cursorPos = view.state.selection.main.head
     const coords = view.coordsAtPos(cursorPos)
     if (!coords) return
+
+    // Parse options - can be string (triggerChar) or object with replaceRange
+    const triggerChar = typeof options === 'string' ? options : undefined
+    const replaceRange = typeof options === 'object' ? options?.replaceRange ?? null : null
 
     // Check if trigger char was typed before cursor - include it in triggerPos
     let triggerPos = cursorPos
@@ -74,38 +88,44 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
       }
     }
 
-    setState({
+    setState(prev => ({
+      ...prev,
       isOpen: true,
       type,
       position: { x: coords.left, y: coords.bottom + PANEL_OFFSET_Y },
       filter: '',
       selectedIndex: 0,
       triggerPos,
-    })
-  }, [editorRef, state.isOpen, state.type])
+      replaceRange,
+    }))
+  }, [editorRef])
 
   /**
    * Close panel and return focus to editor.
    */
   const close = useCallback(() => {
-    setState(prev => ({ ...prev, isOpen: false, type: null }))
+    setState(prev => ({ ...prev, isOpen: false, type: null, replaceRange: null }))
     returnFocus()
   }, [returnFocus])
 
   /**
-   * Select a value and insert it at triggerPos.
+   * Select a value and insert it at triggerPos (or replaceRange if set).
    */
   const selectValue = useCallback((value: string) => {
     const view = editorRef.current
     if (!view) return
 
-    const { triggerPos, type } = stateRef.current
+    const { triggerPos, type, replaceRange } = stateRef.current
     const cursorPos = view.state.selection.main.head
 
-    // Insert the value, replacing everything from triggerPos to cursor
+    // Use replaceRange if set (for double-click edit), otherwise triggerPos to cursor
+    const from = replaceRange ? replaceRange.from : triggerPos
+    const to = replaceRange ? replaceRange.to : cursorPos
+
+    // Insert the value
     view.dispatch({
-      changes: { from: triggerPos, to: cursorPos, insert: value },
-      selection: { anchor: triggerPos + value.length },
+      changes: { from, to, insert: value },
+      selection: { anchor: from + value.length },
     })
 
     close()
@@ -115,6 +135,32 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
       onAfterSelect(type, view)
     }
   }, [editorRef, close, onAfterSelect])
+
+  /**
+   * Update code live without closing (for live sync).
+   */
+  const updateCode = useCallback((value: string) => {
+    const view = editorRef.current
+    if (!view) return
+
+    const { triggerPos, replaceRange } = stateRef.current
+
+    // Use replaceRange if set, otherwise triggerPos to cursor
+    const from = replaceRange ? replaceRange.from : triggerPos
+    const to = replaceRange ? replaceRange.to : view.state.selection.main.head
+
+    // Insert the value
+    view.dispatch({
+      changes: { from, to, insert: value },
+      selection: { anchor: from + value.length },
+    })
+
+    // Update replaceRange to track the new position
+    setState(prev => ({
+      ...prev,
+      replaceRange: { from, to: from + value.length },
+    }))
+  }, [editorRef])
 
   /**
    * Update filter text (called when user types).
@@ -156,6 +202,13 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
     return state.isOpen && state.type === type
   }, [state.isOpen, state.type])
 
+  /**
+   * Set icon library (lucide or material).
+   */
+  const setIconLibrary = useCallback((library: IconLibrary) => {
+    setState(prev => ({ ...prev, iconLibrary: library, selectedIndex: 0 }))
+  }, [])
+
   return {
     state,
     setState,
@@ -164,12 +217,14 @@ export function useInlinePanel({ editorRef, onAfterSelect }: UseInlinePanelOptio
     open,
     close,
     selectValue,
+    updateCode,
     updateFilter,
     setSelectedIndex,
     setSelectedValue,
     getSelectedValue,
     getState,
     isTypeOpen,
+    setIconLibrary,
   }
 }
 

@@ -1,13 +1,78 @@
 /**
- * Slot Parser Module
+ * @module slot-parser
+ * @description Inline Slot Parser für Component-Instanzen
  *
- * Parses inline child slots for component instances.
- * Handles patterns like: ProductTile Name "text" Price "price"
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst Inline-Child-Slots in Component-Zeilen
+ *
+ * Ermöglicht das Befüllen von Slots auf einer Zeile:
+ * ProductTile Name "Product A" Price "€29.99"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Inline Slot mit Content
+ *   Card Title "Welcome" Description "Get started"
+ *        ↑     ↑        ↑           ↑
+ *        Slot  Content  Slot        Content
+ *
+ * @syntax Inline Slot mit Properties
+ *   Card Title size 24 "Big Title" Badge bg #3B82F6 "NEW"
+ *
+ * @syntax Nested Inline Slots (2 Ebenen)
+ *   Card Header Title "Nested" Badge "!"
+ *        ↑      ↑     ↑
+ *        Slot   Nested Slot
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseInlineChildSlot(ctx, componentName) → ASTNode | null
+ *   Parst einen Inline-Slot:
+ *   1. Konsumiert Slot-Namen
+ *   2. Erstellt Child-Node
+ *   3. Wendet Template an (falls vorhanden)
+ *   4. Parst Properties/Content bis String oder nächster Slot
+ *   5. Registriert als Template (falls Props vorhanden)
+ *
+ * @function parseNestedInlineChild(ctx, childName) → ASTNode | null
+ *   Parst verschachtelte Inline-Slots (2. Ebene)
+ *   Begrenzt auf 2 Ebenen für Übersichtlichkeit
+ *
+ * @internal parseInlineChildProperty(ctx, childNode)
+ *   Parst Property für Inline-Child
+ *   Handhabt pad/mar/bor mit CSS-Shorthand
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Definition
+ *   ProductTile: vertical padding 16
+ *     Name: size 18 weight 600
+ *     Price: color #10B981
+ *     Badge: background #3B82F6 radius 4
+ *
+ * @example Inline Usage
+ *   ProductTile Name "iPhone" Price "€999" Badge "Sale"
+ *
+ * @output Parsed AST
+ *   ProductTile
+ *     Name { content: "iPhone" }
+ *     Price { content: "€999" }
+ *     Badge { content: "Sale" }
  */
 
 import type { ParserContext } from './parser-context'
 import type { ASTNode } from './types'
 import { splitDirections, applySpacingToProperties, applyTemplate, createTemplateFromNode } from './parser-utils'
+import { parseBlockContent } from './block-parser'
+import { isIconComponent } from './sugar'
 
 /**
  * Parse an inline child slot (e.g., "ProductTile Name "text" Price "price"")
@@ -40,8 +105,20 @@ export function parseInlineChildSlot(ctx: ParserContext, componentName: string):
       parseInlineChildProperty(ctx, childNode)
     } else if (childToken.type === 'STRING') {
       childNode.content = ctx.advance().value
-      // Content ends this child's properties - break to handle next inline child
-      break
+      // Continue parsing - there might be properties AFTER the string content
+      // e.g., label "Label" col #5B5B5B size 16
+      // Only break when we hit another COMPONENT_NAME (next inline slot) or other non-property token
+    } else if ((childToken.type === 'COMPONENT_NAME' || childToken.type === 'UNKNOWN_PROPERTY') && isIconComponent(childNode) && !childNode.content) {
+      // Icon child: COMPONENT_NAME or UNKNOWN_PROPERTY becomes icon name (without quotes)
+      childNode.content = ctx.advance().value
+    } else if (childToken.type === 'BRACE_OPEN') {
+      // Block syntax: Icon { "check", hidden }
+      ctx.advance() // consume {
+      parseBlockContent(ctx, childNode)
+      if (ctx.current()?.type === 'BRACE_CLOSE') {
+        ctx.advance() // consume }
+      }
+      break // Block syntax ends this child's inline parsing
     } else if (childToken.type === 'COMPONENT_NAME') {
       // This is a nested child - add as child of current childNode
       const nestedNode = parseNestedInlineChild(ctx, childName)
@@ -81,10 +158,17 @@ function parseInlineChildProperty(ctx: ParserContext, childNode: ASTNode): void 
     applySpacingToProperties(childNode.properties, propName, values, directions)
   } else {
     const next = ctx.current()
-    if (next && (next.type === 'NUMBER' || next.type === 'COLOR')) {
-      childNode.properties[propName] = next.type === 'NUMBER'
-        ? parseInt(ctx.advance().value, 10)
-        : ctx.advance().value
+    if (next && next.type === 'NUMBER') {
+      childNode.properties[propName] = parseInt(ctx.advance().value, 10)
+    } else if (next && (next.type === 'COLOR' || next.type === 'STRING')) {
+      // Handle COLOR (#fff) and STRING values ("Inter" for font)
+      childNode.properties[propName] = ctx.advance().value
+    } else if (next && next.type === 'TOKEN_REF') {
+      // Handle token references ($primary, $spacing)
+      childNode.properties[propName] = `$${ctx.advance().value}`
+    } else if (propName === 'visible') {
+      // 'visible' is the inverse of 'hidden' - normalize to single property
+      childNode.properties['hidden'] = false
     } else {
       childNode.properties[propName] = true
     }

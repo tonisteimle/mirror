@@ -11,10 +11,12 @@ import { KNOWN_PROPERTIES } from './property-picker-map'
 
 /**
  * Context for property inference when using $ trigger.
+ * DSL uses hyphenated property names like "padding-left", "border-color".
  */
 export function findPropertyContext(textBefore: string): string | undefined {
-  // Match pattern like "bg " or "pad l-r " before cursor
-  const match = textBefore.match(/\b(\w+)\s+(?:[a-z-]+\s+)*$/)
+  // Match pattern like "background " or "padding-left " before cursor
+  // Property names can contain hyphens (e.g., padding-left, border-color)
+  const match = textBefore.match(/\b([a-z][-a-z]*)\s+(?:[a-z0-9-]+\s+)*$/i)
   if (match && KNOWN_PROPERTIES.has(match[1])) {
     return match[1]
   }
@@ -81,25 +83,5 @@ export function handleTriggerCharacter(
   }
 }
 
-/**
- * Check if a character is a trigger character.
- */
-export function isTriggerCharacter(char: string): boolean {
-  return char === '#' || char === '$'
-}
-
-/**
- * Get the trigger character for a specific picker type.
- */
-export function getTriggerForPicker(pickerType: string): string | null {
-  switch (pickerType) {
-    case 'color':
-      return '#'
-    case 'token':
-      return '$'
-    case 'command':
-      return '/'
-    default:
-      return null
-  }
-}
+// Note: isTriggerCharacter and getTriggerForPicker were removed as they were unused.
+// Trigger handling is done via keymaps in keymaps.ts

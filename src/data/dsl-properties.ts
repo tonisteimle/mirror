@@ -1350,33 +1350,6 @@ export const properties: Property[] = [
   },
 
   // ============================================
-  // Icon
-  // ============================================
-  {
-    name: 'icon',
-    syntax: 'icon ',
-    description: 'Lucide icon',
-    category: 'Icon',
-    keywords: [
-      // German
-      'symbol', 'zeichen', 'piktogramm', 'bildchen', 'grafik', 'ikon',
-      'icon einfügen', 'symbol einfügen',
-      // English
-      'icon', 'symbol', 'glyph', 'pictogram',
-      // Technical
-      'lucide', 'svg', 'iconify',
-      // Common icon searches
-      'pfeil', 'arrow', 'check', 'haken', 'kreuz', 'x', 'plus', 'minus',
-      'herz', 'heart', 'stern', 'star', 'suche', 'search', 'lupe',
-      'einstellungen', 'settings', 'zahnrad', 'cog', 'gear',
-      'benutzer', 'user', 'person', 'menu', 'hamburger',
-      // Typos
-      'icn', 'ikone', 'symbole',
-    ],
-    valuePicker: 'icon',
-  },
-
-  // ============================================
   // Effects
   // ============================================
   {

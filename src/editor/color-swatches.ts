@@ -53,7 +53,8 @@ class ColorSwatchWidget extends WidgetType {
       margin-left: 4px;
       vertical-align: middle;
     `
-    span.onclick = (e) => {
+    // M6 fix: Use onmousedown instead of onclick to prevent focus issues
+    span.onmousedown = (e) => {
       e.preventDefault()
       e.stopPropagation()
       this.onClick(this.valueStart, this.valueEnd, this.color)
@@ -166,11 +167,14 @@ function buildDecorations(
 
 /**
  * Create a ViewPlugin that displays color swatches.
+ * Uses debounced updates to prevent crashes on rapid typing/deleting.
  */
 export function createColorSwatchPlugin(config: ColorSwatchConfig) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet
+      updateTimeout: ReturnType<typeof setTimeout> | null = null
+      isDestroyed = false
 
       constructor(view: EditorView) {
         this.decorations = buildDecorations(view, config)
@@ -178,7 +182,37 @@ export function createColorSwatchPlugin(config: ColorSwatchConfig) {
 
       update(update: { docChanged: boolean; viewportChanged: boolean; view: EditorView }) {
         if (update.docChanged || update.viewportChanged) {
-          this.decorations = buildDecorations(update.view, config)
+          // Clear any pending timeout
+          if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout)
+            this.updateTimeout = null
+          }
+
+          // IMPORTANT: Clear decorations immediately on doc change to prevent ghost cursors
+          // Old decorations pointing to stale positions cause visual artifacts
+          if (update.docChanged) {
+            this.decorations = Decoration.set([])
+          }
+
+          // Capture view reference for closure
+          const view = update.view
+
+          // Debounce decoration rebuilds to prevent crashes on rapid typing
+          this.updateTimeout = setTimeout(() => {
+            this.updateTimeout = null
+            // Skip if plugin was destroyed while waiting
+            if (this.isDestroyed) return
+            // Build decorations with captured view reference
+            this.decorations = buildDecorations(view, config)
+          }, 100)
+        }
+      }
+
+      destroy() {
+        this.isDestroyed = true
+        if (this.updateTimeout) {
+          clearTimeout(this.updateTimeout)
+          this.updateTimeout = null
         }
       }
     },

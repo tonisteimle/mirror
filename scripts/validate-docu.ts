@@ -1,5 +1,5 @@
 /**
- * Validate mirror-docu.json against reference.json
+ * Validate tutorial.json against reference.json
  * Run with: npx tsx scripts/validate-docu.ts
  */
 
@@ -333,7 +333,7 @@ interface Documentation {
   sections: Section[]
 }
 
-const docuPath = './docs/mirror-docu.json'
+const docuPath = './docs/tutorial.json'
 const json = readFileSync(docuPath, 'utf-8')
 const docu: Documentation = JSON.parse(json)
 

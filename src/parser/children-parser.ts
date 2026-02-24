@@ -1,28 +1,293 @@
 /**
- * Children Parser Module
+ * @module children-parser
+ * @description Children-Parser - Parst Kinder-Hierarchie durch Einrueckung
  *
- * Parses children of a component (indented lines).
- * Handles:
- * - Text content (strings)
- * - State definitions
- * - Event handlers
- * - Variable declarations
- * - Conditional blocks (if/else)
- * - Iterator blocks (each)
- * - List items (- prefix)
- * - Child components
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SYNTAX-REFERENZ
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Uses dependency injection to avoid circular dependencies.
+ * @syntax Component\n  Child
+ *   Basis-Hierarchie durch 2-Leerzeichen-Einrueckung
+ *
+ * @syntax Component\n  Child\n    Grandchild
+ *   Beliebig tiefe Verschachtelung
+ *
+ * @syntax Component\n  - Item "text"
+ *   Liste: Neue Instanzen mit - Prefix
+ *
+ * @syntax Component named Name
+ *   Benannte Instanz fuer Referenzierung in Events
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * KINDER-HIERARCHIE (Einrueckung)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Parent\n  Child
+ *   2-Leerzeichen-Einrueckung = Kind-Beziehung
+ *   Beispiel:
+ *     Card
+ *       Header "Title"
+ *       Content "Body"
+ *
+ * @syntax Parent\n  Child1\n  Child2
+ *   Geschwister auf gleicher Einrueckung
+ *   Beispiel:
+ *     Menu
+ *       Item "Profile"
+ *       Item "Settings"
+ *
+ * @syntax Parent\n  Child\n    Grandchild
+ *   Beliebig tiefe Verschachtelung
+ *   Beispiel:
+ *     Layout
+ *       Header
+ *         Logo
+ *       Body
+ *         Sidebar
+ *           Nav
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LISTEN-ITEMS (Neue Instanzen)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax - Component "text"
+ *   Minus-Prefix = Neue Instanz (nicht modifizieren)
+ *   Beispiel:
+ *     Menu: vertical
+ *       Item: padding 12, background #333
+ *     Menu
+ *       - Item "Profile"
+ *       - Item "Settings"
+ *       - Item color #EF4444 "Logout"
+ *
+ * @syntax - "text"
+ *   Bare String in Liste = Wrapped in Default-Slot
+ *   Beispiel:
+ *     Menu with Item: slot
+ *     Menu
+ *       - "Dashboard"   → wird zu: - Item "Dashboard"
+ *       - "Profile"     → wird zu: - Item "Profile"
+ *
+ * @behavior Liste-Items erben Properties vom Template, koennen aber ueberschreiben
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BENANNTE INSTANZEN (Named)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Component named Name
+ *   Benannte Instanz fuer Referenzierung in Events
+ *   Beispiel:
+ *     Button named SaveBtn "Save"
+ *     Button named CancelBtn "Cancel"
+ *     events
+ *       SaveBtn onclick show SuccessMsg
+ *       CancelBtn onclick hide Form
+ *
+ * @syntax - Component named Name "text"
+ *   Benanntes Listen-Item
+ *   Beispiel:
+ *     Menu
+ *       - Item named DashboardItem "Dashboard"
+ *     events
+ *       DashboardItem onclick page Dashboard
+ *
+ * @required Name muss eindeutig im Scope sein
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ITERATOREN (each)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax each $item in $list
+ *   Schleife ueber Collection
+ *   Beispiel:
+ *     $tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }]
+ *     each $task in $tasks
+ *       Card
+ *         Text $task.title
+ *         Icon if $task.done then "check" else "circle"
+ *
+ * @syntax each $x in $items.nested.path
+ *   Collection mit Pfad
+ *   Beispiel:
+ *     each $user in $data.users.active
+ *       UserCard $user.name
+ *
+ * @iteration Erzeugt ITERATOR-Node mit iteration: { itemVar, collectionVar, collectionPath }
+ *
+ * @children Template-Children werden fuer jedes Item gerendert
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DATA BINDING (Filter)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Component data Collection where field == value
+ *   Data-Binding mit Filter
+ *   Beispiel:
+ *     TaskList data Tasks where done == false
+ *       Card $item.title
+ *
+ * @syntax Component data Collection
+ *   Ohne Filter - alle Items
+ *   Beispiel:
+ *     UserList data Users
+ *       UserCard $item.name
+ *
+ * @binding Setzt node.dataBinding: { collection, filter }
+ *
+ * @variable $item ist implizit verfuegbar in Template
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEXT-INHALTE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Component "text"
+ *   Inline-Text am Ende der Zeile
+ *   Beispiel: Button "Click me"
+ *
+ * @syntax Component\n  "text"
+ *   Text als Kind (eigene Zeile)
+ *   Beispiel:
+ *     Button
+ *       "Click me"
+ *
+ * @syntax Component\n  "Bold" weight 600 "Normal"
+ *   Strings mit Properties (Inline-Styling)
+ *   Beispiel:
+ *     Text
+ *       "Welcome" weight 700 size 24
+ *       "Subtitle" size 16 color #666
+ *
+ * @syntax Component\n  '...'
+ *   Multiline-String (Doc-Mode)
+ *   Beispiel:
+ *     text
+ *       '# Heading
+ *
+ *        $p Paragraph with **bold** text.'
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * STATES & EVENTS (als Kinder)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Component\n  state hover\n    property value
+ *   State-Definition als Kind
+ *   Beispiel:
+ *     Button
+ *       state hover
+ *         background #555
+ *       state active
+ *         background #3B82F6
+ *
+ * @syntax Component\n  hover\n    property value
+ *   Impliziter State (ohne 'state' Keyword)
+ *   Beispiel:
+ *     Button
+ *       hover
+ *         background #555
+ *
+ * @syntax Component\n  onclick action
+ *   Event-Handler als Kind
+ *   Beispiel:
+ *     Button
+ *       onclick toggle
+ *
+ * @syntax Component\n  show fade 300\n  hide scale 200
+ *   Animation-Actions (show/hide/animate)
+ *   Beispiel:
+ *     Dialog
+ *       show fade slide-up 300
+ *       hide fade 150
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CONDITIONALS (if/else)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax if $cond\n  Child
+ *   Bedingte Kinder
+ *   Beispiel:
+ *     if $isLoggedIn
+ *       Avatar
+ *     else
+ *       Button "Login"
+ *
+ * @syntax if $cond\n  property value\nelse\n  property value
+ *   Bedingte Properties
+ *   Beispiel:
+ *     Button
+ *       if $active
+ *         background #3B82F6
+ *       else
+ *         background #333
+ *
+ * @conditional Erzeugt CONDITIONAL-Node mit condition, children, elseChildren
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VARIABLEN-DEKLARATION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax $name = value
+ *   Variable innerhalb Component
+ *   Beispiel:
+ *     App
+ *       $count = 0
+ *       Button onclick assign $count to $count + 1
+ *       Text "Count: {$count}"
+ *
+ * @scope Variablen sind im Component-Scope und Kinder verfuegbar
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DOC-MODE (Multiline-Strings)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax text\n  '...'
+ *   Doc-Mode Content mit Markdown
+ *   Beispiel:
+ *     text
+ *       '# Welcome
+ *
+ *        $p This is **Mirror** documentation.
+ *        $p Visit [our site](https://example.com).'
+ *
+ * @syntax playground\n  '...'
+ *   Live Code Example
+ *   Beispiel:
+ *     playground
+ *       'Button background #2271c1, padding 12 24, radius 8, "Click me"'
+ *
+ * @breakout Multiline-Strings koennen an beliebiger Einrueckung starten (Editor-Width)
+ *
+ * @properties Setzt node.properties._docContent = content
+ *
+ * @marks node._isLibrary = true, node._libraryType = "text"|"playground"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DEPENDENCY INJECTION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @pattern Verwendet Function-Injection um zirkulaere Dependencies zu vermeiden
+ *
+ * @parameter parseComponentFn: ComponentParserFn
+ *   Injizierte Funktion zum Parsen von Kind-Komponenten
+ *
+ * @parameter parseIteratorFn: IteratorParserFn
+ *   Injizierte Funktion zum Parsen von Iteratoren
+ *
+ * @reason parser.ts und component-parser nutzen children-parser,
+ *         children-parser braucht parseComponent() aus component-parser
+ *         → Injection loest zirkulaere Abhaengigkeit
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import type { ParserContext } from './parser-context'
-import type { ASTNode, ConditionExpr } from './types'
+import type { ASTNode, ConditionExpr, DSLProperties } from './types'
 import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction, parseBehaviorStateDefinition } from './state-parser'
 import { parseCondition } from './condition-parser'
 import { createTextNode } from './parser-utils'
 import { isTokenSequence } from './types'
 import { INTERNAL_NODES } from '../constants'
 import { BEHAVIOR_STATE_KEYWORDS, SYSTEM_STATES } from '../dsl/properties'
+import { parseInlineConditionalProperties } from './component-parser/inline-properties'
 
 /**
  * Type for the component parser function (dependency injection).
@@ -44,7 +309,39 @@ export type IteratorParserFn = (
 ) => ASTNode
 
 /**
- * Parse children of a component (indented lines).
+ * ═══════════════════════════════════════════════════════════════════════════
+ * HAUPT-FUNKTION: parseChildren
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @doc parseChildren
+ * @brief Parst alle Kinder eines Components (eingerueckte Zeilen)
+ * @input ctx: ParserContext, node: Parent-Node, baseIndent: Basis-Einrueckung
+ * @output ASTNode[] - Array von Kind-Nodes
+ *
+ * @handles INDENT > baseIndent → Kind
+ * @handles MULTILINE_STRING → Doc-Mode Content (_docContent)
+ * @handles STRING → Text-Nodes mit Properties
+ * @handles STATE → State-Definitionen
+ * @handles BEHAVIOR_STATE → highlight/select/hover/focus States
+ * @handles EVENT → Event-Handlers
+ * @handles ANIMATION_ACTION → show/hide/animate
+ * @handles TOKEN_REF + ASSIGNMENT → Variable-Deklaration
+ * @handles CONTROL "if" → Conditional-Block
+ * @handles CONTROL "each" → Iterator-Block
+ * @handles LIST_ITEM → Liste-Items (- prefix)
+ * @handles COMPONENT_NAME → Kind-Komponenten
+ *
+ * @injection parseComponentFn zum Parsen von Kind-Komponenten
+ * @injection parseIteratorFn zum Parsen von Iteratoren
+ *
+ * @example
+ *   Card
+ *     Header "Title"          ← STRING → Text-Node
+ *     - Item "Profile"        ← LIST_ITEM → List-Item
+ *     if $active              ← CONTROL "if" → Conditional
+ *       Icon "check"
+ *     each $task in $tasks    ← CONTROL "each" → Iterator
+ *       Task $task.title
  */
 export function parseChildren(
   ctx: ParserContext,
@@ -362,7 +659,35 @@ export function parseChildren(
 }
 
 /**
- * Parse a conditional (if/else) block.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CONDITIONALS (if/else)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @doc parseConditional
+ * @brief Parst einen Conditional-Block (if/else)
+ * @input ctx am CONTROL "if" Token
+ * @output Conditional-Node oder null (bei Property-Conditional)
+ *
+ * @detection Property-Conditional: if nächstes Token nach INDENT = PROPERTY
+ * @detection Child-Conditional: sonst (COMPONENT_NAME, STRING, CONTROL)
+ *
+ * @syntax Property-Conditional:
+ *   Button
+ *     if $active
+ *       background #3B82F6
+ *     else
+ *       background #333
+ *   → Schreibt in node.conditionalProperties
+ *
+ * @syntax Child-Conditional:
+ *   if $isLoggedIn
+ *     Avatar
+ *   else
+ *     Button "Login"
+ *   → Erzeugt CONDITIONAL-Node mit children + elseChildren
+ *
+ * @delegates parseConditionalProperties für Property-Conditionals
+ * @delegates parseConditionalChildren für Child-Conditionals
  */
 function parseConditional(
   ctx: ParserContext,
@@ -374,6 +699,19 @@ function parseConditional(
   const ifLine = ctx.current()!.line
   ctx.advance() // consume 'if'
   const condition = parseCondition(ctx)
+
+  // Check for inline conditional on child line: if $cond then prop value else prop value
+  // This is when 'then' follows immediately (no NEWLINE between condition and 'then')
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'then') {
+    if (condition) {
+      parseInlineConditionalOnChildLine(ctx, node, condition)
+    }
+    // Consume the rest of the line
+    if (ctx.current()?.type === 'NEWLINE') {
+      ctx.advance()
+    }
+    return null
+  }
 
   if (ctx.current()?.type === 'NEWLINE') {
     ctx.advance()
@@ -397,8 +735,57 @@ function parseConditional(
 }
 
 /**
- * Parse a simple property value (NUMBER, COLOR, TOKEN_REF, COMPONENT_NAME, or boolean).
- * Returns the parsed value or true as default.
+ * @doc parseInlineConditionalOnChildLine
+ * @brief Parst inline conditional auf einer Kind-Zeile
+ * @input ctx am CONTROL 'then' Token, condition bereits geparst
+ * @output Schreibt in node.conditionalProperties
+ *
+ * @syntax if $cond then prop value else prop value
+ *   Beispiel (als Kind-Zeile mit Einrückung):
+ *     Checkbox
+ *       if $showDone then bg #2271c1 else bg #333
+ *
+ * Reuses parseInlineConditionalProperties from inline-properties.ts
+ */
+function parseInlineConditionalOnChildLine(
+  ctx: ParserContext,
+  node: ASTNode,
+  condition: ConditionExpr
+): void {
+  // Consume 'then'
+  ctx.advance()
+
+  // Parse then properties
+  const thenProperties = parseInlineConditionalProperties(ctx)
+
+  let elseProperties: DSLProperties | undefined
+
+  // Check for 'else'
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'else') {
+    ctx.advance() // consume 'else'
+    elseProperties = parseInlineConditionalProperties(ctx)
+  }
+
+  // Add to conditionalProperties
+  if (!node.conditionalProperties) node.conditionalProperties = []
+  node.conditionalProperties.push({
+    condition,
+    thenProperties,
+    elseProperties
+  })
+}
+
+/**
+ * @doc parseSimplePropertyValue
+ * @brief Parst einen einfachen Property-Wert
+ * @input ctx am aktuellen Token (NUMBER, COLOR, TOKEN_REF, COMPONENT_NAME)
+ * @output number | string | boolean
+ *
+ * @syntax NUMBER → number
+ * @syntax COLOR → string
+ * @syntax TOKEN_REF → resolved value aus designTokens
+ * @syntax COMPONENT_NAME → string (keyword)
+ * @default true (boolean properties)
  */
 function parseSimplePropertyValue(
   ctx: ParserContext
@@ -422,8 +809,18 @@ function parseSimplePropertyValue(
 }
 
 /**
- * Parse properties block (for conditional then/else).
- * Returns parsed properties object.
+ * @doc parsePropertiesBlock
+ * @brief Parst einen Block von Properties (fuer then/else Zweige)
+ * @input ctx am INDENT Token, childIndent: Basis-Einrueckung
+ * @output Record<string, string | number | boolean>
+ *
+ * @syntax Mehrere Properties eingerueckt:
+ *   if $active
+ *     background #3B82F6
+ *     color #FFF
+ *     padding 16
+ *
+ * @stops wenn Einrueckung <= childIndent (Ende des Blocks)
  */
 function parsePropertiesBlock(
   ctx: ParserContext,
@@ -455,7 +852,26 @@ function parsePropertiesBlock(
 }
 
 /**
- * Parse conditional properties (if $cond then props else props).
+ * @doc parseConditionalProperties
+ * @brief Parst bedingte Properties und speichert in node.conditionalProperties
+ * @input ctx am eingerueckten Property-Block, condition: Parsed Condition
+ * @output Schreibt in node.conditionalProperties
+ *
+ * @syntax
+ *   Button
+ *     if $active
+ *       background #3B82F6    ← then-Block
+ *       color #FFF
+ *     else
+ *       background #333       ← else-Block
+ *       color #999
+ *
+ * @structure
+ *   node.conditionalProperties = [{
+ *     condition: ConditionExpr,
+ *     thenProperties: { background: "#3B82F6", color: "#FFF" },
+ *     elseProperties: { background: "#333", color: "#999" }
+ *   }]
  */
 function parseConditionalProperties(
   ctx: ParserContext,
@@ -464,7 +880,7 @@ function parseConditionalProperties(
   childIndent: number
 ): void {
   const thenProperties = parsePropertiesBlock(ctx, childIndent)
-  let elseProperties: Record<string, string | number | boolean> | undefined
+  let elseProperties: DSLProperties | undefined
 
   // Check for 'else' block
   if (ctx.current()?.type === 'INDENT') {
@@ -495,7 +911,23 @@ function parseConditionalProperties(
 }
 
 /**
- * Parse a child inside a conditional block (handles nested if, components, strings).
+ * @doc parseConditionalBlockChild
+ * @brief Parst ein Kind innerhalb eines Conditional-Blocks
+ * @input ctx am aktuellen Token, innerIndent: Einrueckung des then/else Blocks
+ * @output ASTNode oder null
+ *
+ * @handles CONTROL "if" → Nested Conditional
+ * @handles STRING → Text-Node
+ * @handles COMPONENT_NAME → Kind-Component
+ *
+ * @recursion Unterstuetzt verschachtelte if/else Bloecke
+ *
+ * @example
+ *   if $loggedIn
+ *     if $isPremium        ← Nested if
+ *       PremiumBadge
+ *     else
+ *       FreeBadge
  */
 function parseConditionalBlockChild(
   ctx: ParserContext,
@@ -537,7 +969,28 @@ function parseConditionalBlockChild(
 }
 
 /**
- * Parse conditional child components (if/else with component children).
+ * @doc parseConditionalChildren
+ * @brief Parst Child-Conditional (if/else mit Component-Kindern)
+ * @input ctx nach CONTROL "if", condition: Parsed Condition
+ * @output CONDITIONAL-Node mit children + elseChildren
+ *
+ * @syntax
+ *   if $isLoggedIn
+ *     Avatar          ← then-child
+ *     Text $user.name ← then-child
+ *   else
+ *     Button "Login"  ← else-child
+ *
+ * @node-structure
+ *   {
+ *     type: 'component',
+ *     name: INTERNAL_NODES.CONDITIONAL,
+ *     condition: ConditionExpr,
+ *     children: [...],      // then-children
+ *     elseChildren: [...]   // else-children (optional)
+ *   }
+ *
+ * @rendering Beim Rendern wird basierend auf condition children ODER elseChildren gerendert
  */
 function parseConditionalChildren(
   ctx: ParserContext,
@@ -608,4 +1061,197 @@ function parseConditionalChildren(
   }
 
   return condNode
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOP-LEVEL PARSING (Root-Ebene)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * @doc parseTopLevelConditional
+ * @brief Parst Conditional-Block auf Root-Ebene (ohne Parent-Einrueckung)
+ * @input ctx am CONTROL "if" Token
+ * @output CONDITIONAL-Node
+ *
+ * @syntax
+ *   if $darkMode
+ *     ThemeProvider theme "dark"
+ *   else
+ *     ThemeProvider theme "light"
+ *
+ * @difference Root-Level: else kommt direkt als CONTROL (ohne INDENT davor)
+ * @difference Child-Level: else kommt mit INDENT auf gleicher Stufe wie if
+ *
+ * @exported Wird von parser.ts verwendet fuer Root-Conditionals
+ */
+export function parseTopLevelConditional(
+  ctx: ParserContext,
+  parseComponentFn: ComponentParserFn
+): ASTNode | null {
+  const ifLine = ctx.current()!.line
+  ctx.advance() // consume 'if'
+  const condition = parseCondition(ctx)
+
+  if (ctx.current()?.type === 'NEWLINE') {
+    ctx.advance()
+  }
+
+  // Create conditional node
+  const condNode: ASTNode = {
+    type: 'component',
+    name: INTERNAL_NODES.CONDITIONAL,
+    id: ctx.generateId('cond'),
+    properties: {},
+    children: [],
+    condition: condition || undefined,
+    line: ifLine
+  }
+
+  // Parse 'then' children (indent > 0)
+  while (ctx.current()?.type === 'INDENT') {
+    const thenIndent = parseInt(ctx.current()!.value, 10)
+    if (thenIndent > 0) {
+      ctx.advance() // consume indent
+      const thenChild = parseComponentFn(ctx, thenIndent, '')
+      if (thenChild) {
+        condNode.children.push(thenChild)
+      }
+      if (ctx.current()?.type === 'NEWLINE') {
+        ctx.advance()
+      }
+    } else {
+      break
+    }
+  }
+
+  // At top level, 'else' comes without INDENT (directly as CONTROL token)
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'else') {
+    ctx.advance() // consume 'else'
+    condNode.elseChildren = []
+
+    if (ctx.current()?.type === 'NEWLINE') {
+      ctx.advance()
+    }
+
+    // Parse 'else' children (indent > 0)
+    while (ctx.current()?.type === 'INDENT') {
+      const elseIndent = parseInt(ctx.current()!.value, 10)
+      if (elseIndent > 0) {
+        ctx.advance() // consume indent
+        const elseChild = parseComponentFn(ctx, elseIndent, '')
+        if (elseChild) {
+          condNode.elseChildren.push(elseChild)
+        }
+        if (ctx.current()?.type === 'NEWLINE') {
+          ctx.advance()
+        }
+      } else {
+        break
+      }
+    }
+  }
+
+  return condNode
+}
+
+/**
+ * @doc parseTopLevelIterator
+ * @brief Parst Iterator-Block auf Root-Ebene (ohne Parent-Einrueckung)
+ * @input ctx am CONTROL "each" Token
+ * @output ITERATOR-Node
+ *
+ * @syntax each $item in $collection
+ *   Schleife ueber Collection
+ *   Beispiel:
+ *     $users: [{ name: "Alice" }, { name: "Bob" }]
+ *     each $user in $users
+ *       UserCard $user.name
+ *
+ * @syntax each $item in $data.nested.path
+ *   Collection mit verschachteltem Pfad
+ *   Beispiel:
+ *     each $task in $project.tasks.active
+ *       Task $task.title
+ *
+ * @node-structure
+ *   {
+ *     type: 'component',
+ *     name: INTERNAL_NODES.ITERATOR,
+ *     iteration: {
+ *       itemVar: '$item',
+ *       collectionVar: '$collection',
+ *       collectionPath: ['$collection', 'nested', 'path']  // optional
+ *     },
+ *     children: [...]  // Template-Children, werden fuer jedes Item gerendert
+ *   }
+ *
+ * @exported Wird von parser.ts verwendet fuer Root-Iterators
+ */
+export function parseTopLevelIterator(
+  ctx: ParserContext,
+  parseComponentFn: ComponentParserFn
+): ASTNode {
+  const eachLine = ctx.current()!.line
+  ctx.advance() // consume 'each'
+
+  // Parse: each $item in $items
+  let itemVar = ''
+  if (ctx.current()?.type === 'TOKEN_REF') {
+    itemVar = ctx.advance().value
+  }
+
+  // Consume 'in'
+  if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'in') {
+    ctx.advance()
+  }
+
+  // Parse collection
+  let collectionVar = ''
+  let collectionPath: string[] | undefined
+  if (ctx.current()?.type === 'TOKEN_REF') {
+    const collectionValue = ctx.advance().value
+    const parts = collectionValue.split('.')
+    collectionVar = parts[0]
+    if (parts.length > 1) {
+      collectionPath = parts
+    }
+  }
+
+  const iterNode: ASTNode = {
+    type: 'component',
+    name: INTERNAL_NODES.ITERATOR,
+    id: ctx.generateId('iter'),
+    properties: {},
+    children: [],
+    iteration: {
+      itemVar,
+      collectionVar,
+      collectionPath
+    },
+    line: eachLine
+  }
+
+  // Skip newline
+  if (ctx.current()?.type === 'NEWLINE') {
+    ctx.advance()
+  }
+
+  // Parse template children (indent > 0 at top level)
+  while (ctx.current()?.type === 'INDENT') {
+    const templateIndent = parseInt(ctx.current()!.value, 10)
+    if (templateIndent > 0) {
+      ctx.advance() // consume indent
+      const templateChild = parseComponentFn(ctx, templateIndent, '')
+      if (templateChild) {
+        iterNode.children.push(templateChild)
+      }
+      if (ctx.current()?.type === 'NEWLINE') {
+        ctx.advance()
+      }
+    } else {
+      break
+    }
+  }
+
+  return iterNode
 }

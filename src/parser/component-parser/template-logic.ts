@@ -1,7 +1,77 @@
 /**
- * Template Logic Module
+ * @module component-parser/template-logic
+ * @description Template Registrierung und Anwendungs-Logik
  *
- * Handles template registration and application logic.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Verwaltet Templates (Definitionen) und deren Anwendung auf Instanzen
+ *
+ * Templates sind wiederverwendbare Komponenten-Definitionen:
+ * - Explizit mit Colon: Button: padding 12
+ * - Implizit durch erste Verwendung: Button #blue "Click"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEMPLATE REGISTRIERUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Explizite Definition
+ *   Button: padding 12 background #3B82F6 radius 8
+ *   → ctx.registry.set('Button', template)
+ *
+ * @syntax Implizite Definition (erste Verwendung mit Props)
+ *   Button #blue "Click"
+ *   → Wird als Template registriert
+ *   Button "Other"
+ *   → Erbt #blue von implizitem Template
+ *
+ * @exception Generic Containers
+ *   Box, Container, etc. erstellen KEINE impliziten Templates
+ *   Jede Box-Instanz ist unabhängig
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEMPLATE ANWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @algorithm handleTemplateLogic
+ * 1. Falls explizite Definition: Template speichern
+ * 2. Falls Instanz: Template anwenden
+ *    a. Properties mergen (Template zuerst, dann Override)
+ *    b. Content nur setzen wenn nicht spezifiziert
+ *    c. Children klonen mit neuen IDs
+ *    d. _text Children intelligent handhaben
+ *    e. Extras kopieren (states, events, etc.)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXTRAS KOPIEREN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function copyTemplateExtras
+ *   Kopiert von Template zu Node:
+ *   - states (mit Deep-Copy)
+ *   - variables
+ *   - eventHandlers
+ *   - _isLibrary, _libraryType
+ *   - showAnimation, hideAnimation, continuousAnimation
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEMPLATE SPEICHERN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function saveToTemplate
+ *   Speichert Node-Daten zurück ins Template:
+ *   - Children (für vollständige Definitionen)
+ *   - Event handlers
+ *   - States
+ *   - Variables
+ *   - Animations
+ *
+ * @condition Nur für definierende Instanz
+ *   Explizite Definitionen: Immer
+ *   Implizite: Nur wenn Template noch keine Children hat
+ *
+ * @used-by component-parser/index.ts für gesamte Template-Verarbeitung
  */
 
 import type { ParserContext } from '../parser-context'
@@ -9,6 +79,41 @@ import type { ASTNode, ComponentTemplate } from './types'
 import { cloneChildrenWithNewIds } from '../parser-context'
 import { createTemplateFromNode } from '../parser-utils'
 import { GENERIC_CONTAINERS } from './constants'
+import { hasLayoutSlot } from '../../library/layout-defaults'
+
+/**
+ * Recursively merge inline children into template children.
+ *
+ * @param templateChild Template child to merge into
+ * @param inlineChild Inline child to merge from
+ */
+function mergeInlineChildren(templateChild: ASTNode, inlineChild: ASTNode): void {
+  for (const grandchild of inlineChild.children) {
+    const templateGrandchild = templateChild.children.find(c => c.name === grandchild.name)
+    if (templateGrandchild) {
+      // Merge properties
+      Object.assign(templateGrandchild.properties, grandchild.properties)
+      // Override content if present
+      if (grandchild.content) {
+        templateGrandchild.content = grandchild.content
+      }
+      // Recursively merge deeper children
+      if (grandchild.children.length > 0) {
+        mergeInlineChildren(templateGrandchild, grandchild)
+      }
+      // Merge eventHandlers from grandchild
+      if (grandchild.eventHandlers && grandchild.eventHandlers.length > 0) {
+        if (!templateGrandchild.eventHandlers) {
+          templateGrandchild.eventHandlers = []
+        }
+        templateGrandchild.eventHandlers.push(...grandchild.eventHandlers)
+      }
+    } else {
+      // No match, add the grandchild
+      templateChild.children.push(grandchild)
+    }
+  }
+}
 
 /**
  * Copy states, variables, event handlers, and library type from template to node.
@@ -26,7 +131,9 @@ export function copyTemplateExtras(
   if (template.variables && template.variables.length > 0) {
     node.variables = template.variables.map(v => ({ ...v }))
   }
-  if (template.eventHandlers && template.eventHandlers.length > 0) {
+  // Only copy event handlers if node doesn't have its own
+  // (node's own handlers from inline parsing take precedence)
+  if (template.eventHandlers && template.eventHandlers.length > 0 && (!node.eventHandlers || node.eventHandlers.length === 0)) {
     node.eventHandlers = template.eventHandlers.map(h => ({ ...h, actions: [...h.actions] }))
   }
   // Copy library type (for 'as Text' etc.)
@@ -58,6 +165,7 @@ export function copyTemplateExtras(
  * @param isExplicitDefinition Whether this is an explicit definition
  * @param isChildOfDefinition Whether this is a child of a definition
  * @param hasOwnProps Whether the node has its own properties
+ * @param parentName Optional direct parent name for layout slot detection
  */
 export function handleTemplateLogic(
   ctx: ParserContext,
@@ -66,17 +174,26 @@ export function handleTemplateLogic(
   componentName: string,
   isExplicitDefinition: boolean,
   isChildOfDefinition: boolean,
-  hasOwnProps: boolean
+  hasOwnProps: boolean,
+  parentName?: string
 ): void {
   if (isExplicitDefinition) {
     // Explicit definition: save as template
     ctx.registry.set(scopedName, createTemplateFromNode(node))
   } else {
+    // Check if this is a layout slot (e.g., Header inside Card)
+    // Layout slots should NOT inherit from global component templates
+    // They have their own slot-specific defaults applied by layout-defaults
+    const isLayoutSlotComponent = parentName && hasLayoutSlot(parentName, componentName)
+
     // Instance: apply template first, then override with local props
-    const template = ctx.registry.get(scopedName) || ctx.registry.get(componentName)
+    // Skip template inheritance for layout slots - they use slot defaults instead
+    const template = isLayoutSlotComponent
+      ? undefined
+      : (ctx.registry.get(scopedName) || ctx.registry.get(componentName))
     if (template) {
-      // Save inline _text child before applying template (created from inline string)
-      const inlineTextChild = node.children.find(c => c.name === '_text')
+      // Save ALL inline children before applying template (parsed from block syntax)
+      const inlineChildren = [...node.children]
 
       // Merge: template first, then node's own values override
       node.properties = { ...template.properties, ...node.properties }
@@ -87,26 +204,71 @@ export function handleTemplateLogic(
       }
 
       // Clone template children with new IDs
+      // Skip _text children if node has contentExpression (dynamic content takes precedence)
       if (template.children.length > 0) {
-        node.children = cloneChildrenWithNewIds(template.children, ctx.generateId.bind(ctx))
+        const childrenToClone = node.contentExpression
+          ? template.children.filter(c => c.name !== '_text')
+          : template.children
+        node.children = cloneChildrenWithNewIds(childrenToClone, ctx.generateId.bind(ctx))
 
-        // If we had an inline _text child, use it instead of the template's _text
-        if (inlineTextChild) {
-          const templateTextIndex = node.children.findIndex(c => c.name === '_text')
-          if (templateTextIndex >= 0) {
-            // Replace template's _text with inline _text (preserves template text properties like color)
-            const templateText = node.children[templateTextIndex]
-            node.children[templateTextIndex] = {
-              ...templateText,
-              ...inlineTextChild,
-              // Merge properties: template first, then inline overrides
-              properties: { ...templateText.properties, ...inlineTextChild.properties }
+        // Merge inline children with cloned template children
+        for (const inlineChild of inlineChildren) {
+          // List items (with - prefix) should NOT be merged - they're new instances
+          // They should inherit styling from matching template slot, but be added as separate children
+          if (inlineChild._isListItem) {
+            // Find matching template slot for styling inheritance
+            const templateSlot = node.children.find(c => c.name === inlineChild.name && !c._isListItem)
+            if (templateSlot) {
+              // Inherit template slot properties (slot template provides styling)
+              inlineChild.properties = { ...templateSlot.properties, ...inlineChild.properties }
+              // Copy states from template slot
+              if (templateSlot.states) {
+                inlineChild.states = templateSlot.states.map(s => ({ ...s, properties: { ...s.properties } }))
+              }
             }
+            // Always add list items as new children
+            node.children.push(inlineChild)
+            continue
+          }
+
+          const templateChild = node.children.find(c => c.name === inlineChild.name)
+          if (templateChild) {
+            // Merge properties: template first, then inline overrides
+            Object.assign(templateChild.properties, inlineChild.properties)
+            // When setting visible: true on a slot, clear hidden from its direct children
+            // This allows patterns like: IconLeft { visible } to show the hidden Icon inside
+            if (inlineChild.properties.visible === true && templateChild.children.length > 0) {
+              for (const child of templateChild.children) {
+                if (child.properties.hidden === true) {
+                  delete child.properties.hidden
+                }
+              }
+            }
+            // Override content if inline child has it
+            if (inlineChild.content) {
+              templateChild.content = inlineChild.content
+            }
+            // Recursively merge children if inline child has them
+            if (inlineChild.children.length > 0) {
+              mergeInlineChildren(templateChild, inlineChild)
+            }
+            // Merge eventHandlers from inline child
+            if (inlineChild.eventHandlers && inlineChild.eventHandlers.length > 0) {
+              if (!templateChild.eventHandlers) {
+                templateChild.eventHandlers = []
+              }
+              templateChild.eventHandlers.push(...inlineChild.eventHandlers)
+            }
+            // Mark as filled (not just a definition)
+            templateChild._isExplicitDefinition = false
           } else {
-            // Template had no _text, add the inline one
-            node.children.push(inlineTextChild)
+            // No matching template child, add the inline child
+            node.children.push(inlineChild)
           }
         }
+      } else if (inlineChildren.length > 0) {
+        // Template has no children, just use inline children
+        node.children = inlineChildren
       }
 
       // Copy states, variables, eventHandlers
@@ -123,7 +285,12 @@ export function handleTemplateLogic(
     // EXCLUDE generic containers like Box - they should NOT inherit implicitly
     const isGenericContainer = GENERIC_CONTAINERS.includes(node.name)
     if (hasOwnProps && !template && !isChildOfDefinition && !isGenericContainer) {
-      ctx.registry.set(scopedName, createTemplateFromNode(node))
+      const newTemplate = createTemplateFromNode(node)
+      ctx.registry.set(scopedName, newTemplate)
+      // Also register globally for cross-scope inheritance (e.g., Button in different parents)
+      if (scopedName !== componentName && !ctx.registry.has(componentName)) {
+        ctx.registry.set(componentName, newTemplate)
+      }
     }
   }
 }

@@ -1,19 +1,98 @@
 /**
- * Doc Text Parser
+ * @module doc-text-parser
+ * @description Doc Text Parser - Markdown-Formatierung für Multiline-Strings
  *
- * Parses multiline strings with markdown-style formatting for doc-mode.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Block-level syntax:
- * - # Heading 1
- * - ## Heading 2
- * - ### Heading 3
- * - $token Text (legacy block tokens)
+ * @brief Parst Multiline-Strings mit Markdown-ähnlicher Formatierung
  *
- * Inline syntax:
- * - **bold** text
- * - _italic_ text
- * - `code` text
- * - [link text](url)
+ * Unterstützt:
+ * - Block-Level: # Heading, $token Text
+ * - Inline: **bold**, _italic_, `code`, [link](url)
+ * - Soft Wrapping: Zeilenumbrüche werden zu Leerzeichen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BLOCK SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Markdown Headings
+ *   # Heading 1
+ *   ## Heading 2
+ *   ### Heading 3
+ *   #### Heading 4
+ *
+ * @syntax Legacy Block Tokens
+ *   $p Paragraph text
+ *   $lead Lead paragraph
+ *   $label SMALL LABEL
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * INLINE SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Bold
+ *   **bold text**
+ *
+ * @syntax Italic
+ *   _italic text_
+ *
+ * @syntax Code
+ *   `inline code`
+ *
+ * @syntax Link
+ *   [link text](https://url)
+ *
+ * @syntax Escaped Characters
+ *   \* \_ \` \[ \] \( \) \\
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OUTPUT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @interface TextSegment
+ *   type: 'text' | 'block' | 'inline' | 'link'
+ *   content: string
+ *   token?: string     → Token-Name ohne $
+ *   url?: string       → Für Links
+ *   children?: TextSegment[] → Verschachtelte Segmente
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseDocText(input) → TextSegment[]
+ *   Hauptfunktion: Parst kompletten Multiline-String
+ *   - Erkennt Block-Tokens am Zeilenanfang
+ *   - Kontinuationszeilen werden angehängt
+ *   - Leerzeilen beenden Blöcke
+ *
+ * @function parseInlineTokens(text) → TextSegment[]
+ *   Parst Inline-Formatierung innerhalb von Text
+ *   - **bold**, _italic_, `code`, [link](url)
+ *
+ * @function normalizeIndent(content) → string
+ *   Entfernt gemeinsame führende Einrückung
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Input
+ *   text
+ *     '# Welcome
+ *
+ *      $p This is **bold** and _italic_ text.
+ *      Click [here](https://example.com).'
+ *
+ * @example Output
+ *   [
+ *     { type: 'block', token: 'h1', content: 'Welcome' },
+ *     { type: 'block', token: 'p', content: 'This is **bold** and _italic_ text...', children: [...] }
+ *   ]
+ *
+ * @used-by Generator für text-Component Rendering
  */
 
 import { getBlockShortcuts, getInlineShortcuts } from './doc-shortcuts'

@@ -2,10 +2,7 @@
  * CodeMirror keymap configurations for the DSL editor.
  * Extracted from PromptPanel.tsx for better organization and testability.
  */
-import { keymap } from '@codemirror/view'
-import { insertNewline } from '@codemirror/commands'
-import { startCompletion } from '@codemirror/autocomplete'
-import type { EditorView } from '@codemirror/view'
+import { keymap, EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import {
   EDITOR_PATTERNS,
@@ -21,13 +18,14 @@ import {
   STRING_PROPERTIES,
 } from '../dsl/properties'
 import { createMultilineIndentKeymaps } from './multiline-indent'
+import { getExpansionAtCursor } from './shorthand-expansion'
 
 // Properties that expect a value after them - don't trigger autocomplete
-// Note: 'font' and 'icon' are excluded as they have special picker handlers
+// Note: 'font' is excluded as it has a special picker handler
 const VALUE_EXPECTING_PROPERTIES = new Set([
   ...COLOR_PROPERTIES,
   ...NUMBER_PROPERTIES,
-  ...Array.from(STRING_PROPERTIES).filter(p => p !== 'font' && p !== 'icon'),
+  ...Array.from(STRING_PROPERTIES).filter(p => p !== 'font'),
 ])
 
 // Types for keymap configuration
@@ -41,9 +39,8 @@ export interface KeymapCallbacks {
 
 export interface KeymapConfig {
   callbacks: KeymapCallbacks
-  getAutoCompleteMode: () => 'always' | 'delay' | 'off'
-  getCurrentTab: () => string | undefined
-  autoCompleteTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>
+  /** Whether to expand shorthand to long form (e.g., p → padding). Default: true */
+  getExpandShorthand?: () => boolean
 }
 
 // Helper: Map a property match to an opener function
@@ -139,25 +136,13 @@ export function createQuestionKeymap(callbacks: KeymapCallbacks): Extension {
 
 /**
  * Creates the slash keymap for command palette
- * '/' at line start opens command palette
+ * '/' at line start now begins NL prompt mode (no command palette)
+ * Command palette can be opened with Cmd+Shift+P or similar
  */
-export function createSlashKeymap(callbacks: KeymapCallbacks): Extension {
-  return keymap.of([{
-    key: '/',
-    run: (view: EditorView) => {
-      const pos = view.state.selection.main.head
-      const line = view.state.doc.lineAt(pos)
-      const textBefore = line.text.slice(0, pos - line.from)
-
-      // Only trigger at start of line or after whitespace
-      // This prevents triggering when typing '//' for comments
-      if (textBefore.length === 0 || /\s$/.test(textBefore)) {
-        callbacks.openCommandPalette()
-        return true
-      }
-      return false
-    }
-  }])
+export function createSlashKeymap(_callbacks: KeymapCallbacks): Extension {
+  // Slash at line start is now used for NL prompt mode
+  // Let the character be inserted normally
+  return keymap.of([])
 }
 
 /**
@@ -174,7 +159,8 @@ function insertSpaceAndTrigger(view: EditorView, trigger: () => void): void {
 
 /**
  * Creates the space keymap.
- * Space after 'font' or 'icon' triggers the appropriate picker automatically.
+ * Space after shorthand expands it (e.g., "p" → "padding", "bg" → "background").
+ * Space after 'font' triggers the font picker automatically.
  * Space after boolean properties (hor, ver, full, etc.) triggers autocomplete.
  * Space after a value (e.g., "search", #FF0000, 12) triggers autocomplete.
  * Space after value-expecting properties (pad, bg, col, etc.) does NOT trigger.
@@ -185,20 +171,36 @@ export function createSpaceKeymap(config: KeymapConfig): Extension {
   return keymap.of([{
     key: ' ',
     run: (view: EditorView) => {
-      const textBefore = getTextBeforeCursor(view)
+      const pos = view.state.selection.main.head
+      const line = view.state.doc.lineAt(pos)
+      const textBefore = line.text.slice(0, pos - line.from)
 
       // Don't trigger inside strings
       if (isInsideString(textBefore)) return false
 
-      // Check if we just typed "font" (with word boundary)
-      if (/\bfont$/.test(textBefore)) {
-        insertSpaceAndTrigger(view, callbacks.openFontPicker)
+      // Check for shorthand expansion (p → pad/padding, bg → background, etc.)
+      // Always expand, but to different forms based on mode:
+      // - Long mode (default): p → padding
+      // - Short mode: p → pad
+      const toLongForm = config.getExpandShorthand?.() ?? true
+      const expansion = getExpansionAtCursor(textBefore, textBefore.length, toLongForm)
+      if (expansion) {
+        // Replace the shorthand with the expanded form and add space
+        const lineStart = line.from
+        view.dispatch({
+          changes: {
+            from: lineStart + expansion.start,
+            to: lineStart + expansion.end,
+            insert: expansion.expanded + ' '
+          },
+          selection: { anchor: lineStart + expansion.start + expansion.expanded.length + 1 }
+        })
         return true
       }
 
-      // Check if we just typed "icon" (with word boundary)
-      if (/\bicon$/.test(textBefore)) {
-        insertSpaceAndTrigger(view, callbacks.openIconPicker)
+      // Check if we just typed "font" (with word boundary)
+      if (/\bfont$/.test(textBefore)) {
+        insertSpaceAndTrigger(view, callbacks.openFontPicker)
         return true
       }
 
@@ -211,42 +213,42 @@ export function createSpaceKeymap(config: KeymapConfig): Extension {
         return false
       }
 
-      // Otherwise: trigger autocomplete
-      // This covers:
-      // - Boolean properties (hor, ver, full, cen, etc.)
-      // - After values ("...", #FFF, 123, 50%)
-      // - Component names and unknown words
-      insertSpaceAndTrigger(view, () => startCompletion(view))
-      return true
+      // Otherwise: just insert space (autocomplete disabled temporarily)
+      return false
     }
   }])
 }
 
 /**
- * Creates the hash (#) keymap for opening the color picker.
- * Inserts # and opens the color picker after a short delay.
+ * Creates the hash (#) input handler for opening the color picker.
+ * Uses EditorView.inputHandler instead of keymap for cross-browser compatibility
+ * (Safari handles Option+3 differently than Chrome for '#').
  */
 export function createHashKeymap(openColorPicker: () => void): Extension {
-  return keymap.of([{
-    key: '#',
-    run: (view: EditorView) => {
-      const textBefore = getTextBeforeCursor(view)
+  return EditorView.inputHandler.of((view, from, to, text) => {
+    // Only handle '#' character
+    if (text !== '#') return false
 
-      // Don't trigger inside strings
-      if (isInsideString(textBefore)) return false
+    const line = view.state.doc.lineAt(from)
+    const textBefore = line.text.slice(0, from - line.from)
 
-      // Insert # character
-      const pos = view.state.selection.main.head
-      view.dispatch({
-        changes: { from: pos, to: pos, insert: '#' },
-        selection: { anchor: pos + 1 }
-      })
+    // Don't trigger inside strings
+    if (isInsideString(textBefore)) return false
 
-      // Open color picker after short delay to let editor state settle
-      setTimeout(openColorPicker, PICKER_OPEN_DELAY_MS)
-      return true
-    }
-  }])
+    // M8 fix: If text is selected (from !== to), don't open picker
+    // Just let the character replace the selection normally
+    if (from !== to) return false
+
+    // Insert # character
+    view.dispatch({
+      changes: { from, to, insert: '#' },
+      selection: { anchor: from + 1 }
+    })
+
+    // Open color picker after short delay
+    setTimeout(openColorPicker, PICKER_OPEN_DELAY_MS)
+    return true
+  })
 }
 
 /**
@@ -279,16 +281,6 @@ export function createDollarKeymap(openTokenPicker: (propertyContext?: string) =
   }])
 }
 
-/**
- * Creates keymap to disable auto-indent on Enter
- * @deprecated Use createSmartEnterKeymap from multiline-indent.ts instead
- */
-export function createNoAutoIndentKeymap(): Extension {
-  return keymap.of([
-    { key: 'Enter', run: insertNewline },
-  ])
-}
-
 // Re-export smart indent keymaps for convenience
 export { createSmartEnterKeymap, createSmartTabKeymap, createMultilineIndentKeymaps } from './multiline-indent'
 
@@ -298,44 +290,179 @@ export { createSmartEnterKeymap, createSmartTabKeymap, createMultilineIndentKeym
 export interface NLModeConfig {
   /** Whether NL mode is currently enabled */
   isEnabled: () => boolean
-  /** Callback when a line should be translated */
+  /** Callback when a prompt block should be translated */
   onTranslate: (lineIndex: number, content: string, allLines: string[]) => void
 }
 
 /**
+ * Get the indentation string from the current line.
+ * Returns leading whitespace (spaces/tabs).
+ */
+function getLineIndent(view: EditorView, pos: number): string {
+  const line = view.state.doc.lineAt(pos)
+  const lineText = line.text
+  const match = lineText.match(/^(\s*)/)
+  return match ? match[1] : ''
+}
+
+/**
+ * Insert newline while preserving indentation from current line.
+ */
+function insertNewlineWithIndent(view: EditorView): void {
+  const { from, to } = view.state.selection.main
+  const indent = getLineIndent(view, from)
+
+  view.dispatch({
+    changes: { from, to, insert: '\n' + indent },
+    selection: { anchor: from + 1 + indent.length }
+  })
+}
+
+/**
+ * Find the NL prompt block starting with "/" that contains the current position.
+ * Returns null if not inside an NL block.
+ */
+function findNLBlock(view: EditorView, pos: number): {
+  startLine: number
+  endLine: number
+  content: string
+  blockStartPos: number
+  blockEndPos: number
+} | null {
+  const doc = view.state.doc
+  const currentLine = doc.lineAt(pos)
+  let startLineNum = -1
+
+  // Check if current line starts with /
+  if (/^\s*\//.test(currentLine.text)) {
+    startLineNum = currentLine.number
+  } else {
+    // Search backwards for a line starting with /
+    for (let lineNum = currentLine.number - 1; lineNum >= 1; lineNum--) {
+      const line = doc.line(lineNum)
+      const text = line.text
+
+      // Empty line breaks the block
+      if (text.trim() === '') {
+        return null
+      }
+
+      // Found the / start
+      if (/^\s*\//.test(text)) {
+        startLineNum = lineNum
+        break
+      }
+    }
+  }
+
+  if (startLineNum === -1) {
+    return null
+  }
+
+  // Collect all lines in the block (from / to current line)
+  const lines: string[] = []
+  const startLine = doc.line(startLineNum)
+  const blockStartPos = startLine.from
+  const blockEndPos = currentLine.to
+
+  for (let lineNum = startLineNum; lineNum <= currentLine.number; lineNum++) {
+    const line = doc.line(lineNum)
+    let text = line.text
+
+    // Remove the leading / from the first line
+    if (lineNum === startLineNum) {
+      text = text.replace(/^(\s*)\/\s?/, '$1')
+    }
+
+    lines.push(text)
+  }
+
+  return {
+    startLine: startLineNum - 1, // 0-indexed
+    endLine: currentLine.number - 1, // 0-indexed
+    content: lines.join('\n').trim(),
+    blockStartPos,
+    blockEndPos,
+  }
+}
+
+/**
  * Creates the NL Mode Enter keymap.
- * When NL mode is enabled, Enter triggers translation of the current line
- * before inserting a newline.
+ * - "/" at line start begins NL prompt mode (no autocomplete)
+ * - Enter sends the entire block (from "/" to cursor) to LLM
+ * - Shift+Enter inserts newline (continues the block)
  */
 export function createNLModeEnterKeymap(config: NLModeConfig): Extension {
-  return keymap.of([{
-    key: 'Enter',
-    run: (view: EditorView) => {
-      // If NL mode is not enabled, let other handlers process
-      if (!config.isEnabled()) {
-        return false
+  return keymap.of([
+    // Shift+Enter: Just insert newline, stay in NL block
+    {
+      key: 'Shift-Enter',
+      run: (view: EditorView) => {
+        const pos = view.state.selection.main.head
+        const block = findNLBlock(view, pos)
+
+        // Only handle if we're inside an NL block
+        if (!block) {
+          return false
+        }
+
+        // Insert newline with indent (continues the NL block)
+        insertNewlineWithIndent(view)
+        return true
       }
+    },
+    // Enter: Send the NL block to LLM
+    {
+      key: 'Enter',
+      run: (view: EditorView) => {
+        // Check if we're inside an NL block (starts with /)
+        const pos = view.state.selection.main.head
+        const block = findNLBlock(view, pos)
 
-      // Get current line info
-      const pos = view.state.selection.main.head
-      const line = view.state.doc.lineAt(pos)
-      const lineContent = line.text
-      const lineIndex = line.number - 1 // 0-indexed
+        if (!block) {
+          // Not in NL block - check if old NL mode behavior should apply
+          if (!config.isEnabled()) {
+            return false
+          }
 
-      // Get all lines for context
-      const allLines: string[] = []
-      for (let i = 1; i <= view.state.doc.lines; i++) {
-        allLines.push(view.state.doc.line(i).text)
+          // Legacy behavior: translate current line
+          const line = view.state.doc.lineAt(pos)
+          const lineContent = line.text
+          const lineIndex = line.number - 1
+
+          const allLines: string[] = []
+          for (let i = 1; i <= view.state.doc.lines; i++) {
+            allLines.push(view.state.doc.line(i).text)
+          }
+
+          config.onTranslate(lineIndex, lineContent, allLines)
+          insertNewlineWithIndent(view)
+          return true
+        }
+
+        // We're in an NL block - send the whole block
+        console.log('[NL Block] Sending prompt:', block.content)
+
+        // Get all lines for context
+        const allLines: string[] = []
+        for (let i = 1; i <= view.state.doc.lines; i++) {
+          allLines.push(view.state.doc.line(i).text)
+        }
+
+        // Trigger translation with the block content
+        // lineIndex points to where the block started (for insertion)
+        config.onTranslate(block.startLine, block.content, allLines)
+
+        // Delete the NL block (it will be replaced by generated code)
+        view.dispatch({
+          changes: { from: block.blockStartPos, to: block.blockEndPos, insert: '' },
+          selection: { anchor: block.blockStartPos }
+        })
+
+        return true
       }
-
-      // Trigger translation callback (async, handled externally)
-      config.onTranslate(lineIndex, lineContent, allLines)
-
-      // Insert newline immediately so user can continue typing
-      insertNewline(view)
-      return true
     }
-  }])
+  ])
 }
 
 /**

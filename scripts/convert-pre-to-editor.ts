@@ -6,8 +6,8 @@
 
 import * as fs from 'fs'
 
-const inputFile = 'docs/mirror-docu.html'
-const outputFile = 'docs/mirror-docu.html'
+const inputFile = 'docs/tutorial.html'
+const outputFile = 'docs/tutorial.html'
 
 // Read the file
 let html = fs.readFileSync(inputFile, 'utf-8')

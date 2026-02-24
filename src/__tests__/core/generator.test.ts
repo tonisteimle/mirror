@@ -171,8 +171,9 @@ describe('Generator', () => {
   })
 
   describe('Typography', () => {
-    it('size generates fontSize', () => {
-      const style = getStyleFromDSL('Box size 16')
+    it('text-size generates fontSize', () => {
+      // Use text-size (or ts) for font size, 'size' is dimension shorthand
+      const style = getStyleFromDSL('Text text-size 16')
       expect(style.fontSize).toBe('16px')
     })
 

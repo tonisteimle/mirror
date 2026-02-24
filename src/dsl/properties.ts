@@ -1,24 +1,153 @@
 /**
- * Single source of truth for DSL properties
- * Used by lexer, validator, and linter
+ * @module dsl/properties
+ * @description Single Source of Truth für alle DSL Properties
  *
- * PROPERTY NAMING CONVENTIONS:
- * ----------------------------
- * PRIMARY: Full, readable names (natural language):
- *   padding, margin, color, background, radius, border, border-color
- *   width, height, horizontal, vertical, center, opacity
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PROPERTY-MAPPINGS (Short ↔ Long)
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * SHORTCUTS: Short forms accepted for fast typing, auto-expanded to long forms:
- *   pad → padding, mar → margin, col → color, bg → background
- *   rad → radius, bor → border, boc → border-color
- *   w → width, h → height, hor → horizontal, ver → vertical
- *   opa → opacity, cen → center
+ * @category Layout
+ * @property hor ↔ horizontal       Horizontale Ausrichtung (row)
+ * @property ver ↔ vertical         Vertikale Ausrichtung (column)
+ * @property cen ↔ center           Zentrierung (beide Achsen)
  *
- * DIRECTIONS: Full names for readability:
- *   top, bottom, left, right (shortcuts: u/t, d/b, l, r)
- *   Combinations: left-right, top-bottom (shortcuts: l-r, u-d, t-b)
+ * @category Sizing
+ * @property w ↔ width              Breite (px oder %)
+ * @property h ↔ height             Höhe (px oder %)
+ * @property minw ↔ min-width       Mindestbreite
+ * @property maxw ↔ max-width       Maximalbreite
+ * @property minh ↔ min-height      Mindesthöhe
+ * @property maxh ↔ max-height      Maximalhöhe
  *
- * The editor auto-completes shortcuts to full forms for readable code.
+ * @category Spacing
+ * @property p, pad ↔ padding       Innenabstand
+ * @property m, mar ↔ margin        Außenabstand
+ * @property g ↔ gap                Abstand zwischen Kindern
+ *
+ * @category Colors
+ * @property c, col ↔ color         Textfarbe
+ * @property bg ↔ background        Hintergrundfarbe
+ * @property boc ↔ border-color     Rahmenfarbe
+ *
+ * @category Border
+ * @property bor ↔ border           Rahmen (Breite)
+ * @property rad ↔ radius           Eckenradius
+ *
+ * @category Visual
+ * @property o, opa, op ↔ opacity   Transparenz (0-1)
+ * @property rot ↔ rotate           Rotation (Grad)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * RICHTUNGEN (Directions)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @direction l = left              Links
+ * @direction r = right             Rechts
+ * @direction u, t = top            Oben (u=up, t=top)
+ * @direction d, b = bottom         Unten (d=down, b=bottom)
+ *
+ * @combo l-r = left + right        Kombiniert links UND rechts
+ * @combo u-d, t-b = top + bottom   Kombiniert oben UND unten
+ *
+ * @internal Intern immer u/d/l/r (t→u, b→d normalisiert)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ECKEN (Corners) - für radius
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @corner tl = top-left            Oben links
+ * @corner tr = top-right           Oben rechts
+ * @corner bl = bottom-left         Unten links
+ * @corner br = bottom-right        Unten rechts
+ *
+ * @edge t = tl + tr                Beide oberen Ecken
+ * @edge b = bl + br                Beide unteren Ecken
+ * @edge l = tl + bl                Beide linken Ecken
+ * @edge r = tr + br                Beide rechten Ecken
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ALIGNMENT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @align hor-l, horizontal-left    Links ausrichten
+ * @align hor-cen, horizontal-center Horizontal zentrieren
+ * @align hor-r, horizontal-right   Rechts ausrichten
+ * @align ver-t, vertical-top       Oben ausrichten
+ * @align ver-cen, vertical-center  Vertikal zentrieren
+ * @align ver-b, vertical-bottom    Unten ausrichten
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * HOVER-PROPERTIES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @hover hover-col ↔ hover-color          Textfarbe bei Hover
+ * @hover hover-bg ↔ hover-background      Hintergrund bei Hover
+ * @hover hover-boc ↔ hover-border-color   Rahmenfarbe bei Hover
+ * @hover hover-bor ↔ hover-border         Rahmen bei Hover
+ * @hover hover-rad ↔ hover-radius         Radius bei Hover
+ * @hover hover-opa ↔ hover-opacity        Transparenz bei Hover
+ * @hover hover-scale                      Skalierung bei Hover
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * STATES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @system-states hover, focus, active, disabled
+ *   Automatisch vom Browser/System getriggert
+ *
+ * @behavior-states highlighted, selected, active, inactive,
+ *                   expanded, collapsed, valid, invalid
+ *   Durch Actions aktiviert (highlight, select, change, etc.)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EVENTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @event onclick                   Klick
+ * @event onclick-outside           Klick außerhalb
+ * @event onhover                   Hover
+ * @event onfocus                   Fokus erhalten
+ * @event onblur                    Fokus verloren
+ * @event onchange                  Wert geändert (nach Blur)
+ * @event oninput                   Wert geändert (während Eingabe)
+ * @event onload                    Komponente geladen
+ * @event onkeydown KEY             Taste gedrückt
+ * @event onkeyup KEY               Taste losgelassen
+ *
+ * @keys escape, enter, tab, space, arrow-up, arrow-down,
+ *       arrow-left, arrow-right, backspace, delete, home, end
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ACTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @action toggle                   State umschalten
+ * @action show Target              Element anzeigen
+ * @action hide Target              Element verstecken
+ * @action open Target [pos] [anim] [ms]  Overlay öffnen
+ * @action close                    Overlay schließen
+ * @action page Target              Seite wechseln
+ * @action change self to State     State ändern
+ * @action assign $var to expr      Variable zuweisen
+ * @action alert "message"          Alert anzeigen
+ * @action highlight Target         Hervorheben
+ * @action select Target            Auswählen
+ * @action deselect Target          Auswahl aufheben
+ * @action clear-selection          Alle Auswahlen löschen
+ * @action focus Target             Fokus setzen
+ * @action filter Container         Liste filtern
+ * @action activate Target          Aktivieren
+ * @action deactivate Target        Deaktivieren
+ * @action deactivate-siblings      Geschwister deaktivieren
+ * @action toggle-state             State umschalten
+ * @action validate Target          Formular validieren
+ * @action reset Target             Formular zurücksetzen
+ *
+ * @targets self, next, prev, first, last, highlighted, selected
+ * @positions below, above, left, right, center
+ * @animations fade, scale, slide-up, slide-down, slide-left, slide-right
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 // ============================================
@@ -30,6 +159,7 @@ export const PROPERTY_LONG_FORMS: Record<string, string> = {
   // Layout
   'hor': 'horizontal',
   'ver': 'vertical',
+  'vert': 'vertical',  // Alternative short form
   'cen': 'center',
   // Sizing
   'w': 'width',
@@ -39,24 +169,69 @@ export const PROPERTY_LONG_FORMS: Record<string, string> = {
   'minh': 'min-height',
   'maxh': 'max-height',
   // Spacing
+  'p': 'padding',
   'pad': 'padding',
+  'm': 'margin',
   'mar': 'margin',
+  'g': 'gap',
+  // CSS-style directional shorthands (for LLM compatibility)
+  'pt': 'padding-top',
+  'pb': 'padding-bottom',
+  'pl': 'padding-left',
+  'pr': 'padding-right',
+  'mt': 'margin-top',
+  'mb': 'margin-bottom',
+  'ml': 'margin-left',
+  'mr': 'margin-right',
   // Colors
+  'c': 'color',
   'col': 'color',
   'bg': 'background',
   'boc': 'border-color',
   // Border
   'rad': 'radius',
   'bor': 'border',
+  // Typography
+  'ts': 'text-size',
+  'fs': 'text-size',  // backwards compatibility
+  // Icon
+  'is': 'icon-size',
+  'iw': 'icon-weight',
+  'ic': 'icon-color',
   // Visuals
+  'o': 'opacity',
   'opa': 'opacity',
   'op': 'opacity',
+  // Transform
+  'rot': 'rotate',
   // Hover states
   'hover-col': 'hover-color',
   'hover-bg': 'hover-background',
   'hover-boc': 'hover-border-color',
   'hover-bor': 'hover-border',
   'hover-rad': 'hover-radius',
+  'hover-opa': 'hover-opacity',
+  // Alignment (horizontal) - short forms
+  'hor-l': 'horizontal-left',
+  'hor-cen': 'horizontal-center',
+  'hor-r': 'horizontal-right',
+  // Alignment (horizontal) - new ausgeschriebene Formen
+  'left': 'horizontal-left',
+  'right': 'horizontal-right',
+  'hor-center': 'horizontal-center',
+  // Alignment (vertical) - short forms
+  'ver-t': 'vertical-top',
+  'ver-cen': 'vertical-center',
+  'ver-b': 'vertical-bottom',
+  // Alignment (vertical) - new ausgeschriebene Formen
+  'top': 'vertical-top',
+  'bottom': 'vertical-bottom',
+  'ver-center': 'vertical-center',
+  // Distribution - new alias
+  'spread': 'between',
+  // Sizing keywords - new aliases
+  'hug': 'min',  // hug = fit-content
+  'full': 'max', // full = 100% + flex-grow (was already implied, now explicit)
 }
 
 // Reverse mapping: Long → Short (for internal storage compatibility)
@@ -82,31 +257,71 @@ export const DIRECTION_SHORT_FORMS: Record<string, string> = {
   'right': 'r',
 }
 
+// Corner direction mappings for radius (Short → Long)
+export const CORNER_LONG_FORMS: Record<string, string> = {
+  'tl': 'top-left',
+  'tr': 'top-right',
+  'bl': 'bottom-left',
+  'br': 'bottom-right',
+}
+
+// Reverse mapping: Long corner → Short
+export const CORNER_SHORT_FORMS: Record<string, string> = {
+  'top-left': 'tl',
+  'top-right': 'tr',
+  'bottom-left': 'bl',
+  'bottom-right': 'br',
+}
+
+// All corner directions (both short and long forms)
+export const CORNER_DIRECTIONS = new Set([
+  'tl', 'tr', 'bl', 'br',
+  'top-left', 'top-right', 'bottom-left', 'bottom-right'
+])
+
 // All known properties (both short and long forms accepted)
 // Editor expands shortcuts to long forms for readability
 export const PROPERTIES = new Set([
   // Layout - both forms
-  // Note: 'center' is NOT included here to allow it to be tokenized as COMPONENT_NAME
-  // for overlay position keywords. Use 'cen' shorthand for layout centering.
-  'hor', 'horizontal', 'ver', 'vertical', 'cen',
-  'gap', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'shrink', 'fill', 'grid', 'rows', 'stacked',
+  // Note: 'center' is also in POSITION_KEYWORDS for overlays, but the parser
+  // handles context-dependent interpretation (property vs position)
+  'hor', 'horizontal', 'ver', 'vert', 'vertical', 'cen', 'center',
+  'gap', 'gap-x', 'gap-y', 'gap-col', 'gap-row', 'between', 'wrap', 'grow', 'shrink', 'fill', 'grid', 'rows', 'stacked',
   // Data binding
   'data',
-  // Alignment - both forms
+  // Alignment - all forms (short, ausgeschrieben, hyphenated)
   'hor-l', 'horizontal-left', 'hor-cen', 'horizontal-center', 'hor-r', 'horizontal-right',
   'ver-t', 'vertical-top', 'ver-cen', 'vertical-center', 'ver-b', 'vertical-bottom',
+  'left', 'right', 'hor-center',  // NEU: ausgeschriebene Horizontal-Alignment
+  'top', 'bottom', 'ver-center',  // NEU: ausgeschriebene Vertical-Alignment
+  'spread',  // NEU: Alias für between
+  'centered',  // Horizontal centering (margin auto)
   // Sizing - both forms
   'w', 'width', 'h', 'height',
+  // Combined sizing shorthand: w-min, w-max, h-min, h-max
+  'w-min', 'w-max', 'h-min', 'h-max',
   'minw', 'min-width', 'maxw', 'max-width', 'minh', 'min-height', 'maxh', 'max-height',
-  'full',
+  // Sizing keywords: 'min' (fit-content), 'max' (100% + flex-grow), 'full' (legacy → max), 'hug' (alias for min)
+  'min', 'max', 'full', 'hug',
   // Spacing - both forms
-  'pad', 'padding', 'mar', 'margin',
+  'p', 'pad', 'padding', 'm', 'mar', 'margin', 'g',
+  // CSS-style directional spacing shorthands (for LLM compatibility)
+  'pt', 'pb', 'pl', 'pr', 'mt', 'mb', 'ml', 'mr',
+  'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
+  'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
   // Colors - both forms
-  'col', 'color', 'bg', 'background', 'boc', 'border-color',
+  'c', 'col', 'color', 'bg', 'background', 'boc', 'border-color',
   // Border - both forms
   'rad', 'radius', 'bor', 'border',
   // Typography
-  'size', 'weight', 'font', 'line', 'align', 'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
+  'text-size', 'ts', 'fs', 'weight', 'font', 'line', 'text-align', 'align', 'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
+  // Icon properties
+  'icon-size', 'is',
+  'icon-weight', 'iw',
+  'icon-color', 'ic',
+  'fill',  // Material Icons filled variant
+  // Combined dimensions shorthand
+  'size',
   // Form inputs
   'placeholder', 'type', 'disabled', 'visible', 'rows',
   // Segment (masked input)
@@ -116,10 +331,10 @@ export const PROPERTIES = new Set([
   // Slider/Range
   'min', 'max', 'step', 'value',
   // Visuals - both forms
-  'opa', 'op', 'opacity',
-  'icon', 'src', 'alt', 'fit', 'shadow', 'cursor', 'pointer', 'z', 'hidden', 'shortcut',
+  'o', 'opa', 'op', 'opacity',
+  'src', 'alt', 'fit', 'shadow', 'cursor', 'pointer', 'z', 'hidden', 'shortcut', 'material', 'phosphor',
   // Transform (note: 'scale' is in ANIMATION_KEYWORDS, so not listed here)
-  'rotate', 'translate',
+  'rot', 'rotate', 'translate',
   // Overflow / Scroll - both forms
   'scroll', 'scroll-ver', 'scroll-vertical', 'scroll-hor', 'scroll-horizontal', 'scroll-both', 'snap', 'clip',
   // Hover states - both forms
@@ -134,8 +349,8 @@ export const BORDER_STYLES = new Set(['solid', 'dashed', 'dotted'])
 
 // Properties that can take direction modifiers (both forms)
 export const DIRECTIONAL_PROPERTIES = new Set([
-  'pad', 'padding',
-  'mar', 'margin',
+  'p', 'pad', 'padding',
+  'm', 'mar', 'margin',
   'bor', 'border'
 ])
 
@@ -154,7 +369,11 @@ export const LONG_DIRECTIONS = new Set(['left', 'right', 'top', 'bottom'])
 
 // Check if a string is a valid direction or combo
 // Supports: l, left, l-r, left-right, top-bottom, etc.
+// EXCLUDES corner directions (tl, tr, bl, br) which are used for radius
 export function isDirectionOrCombo(value: string): boolean {
+  // Exclude corner directions - these are for radius, not padding/margin
+  if (CORNER_DIRECTIONS.has(value)) return false
+
   // Single direction (short or long)
   if (DIRECTIONS.has(value)) return true
 
@@ -165,7 +384,15 @@ export function isDirectionOrCombo(value: string): boolean {
   }
 
   // Combo without hyphen (short forms only): ud, lr, udlr, tb
-  return value.length > 0 && /^[lrudtb]+$/.test(value)
+  // But NOT corner combos like tl, tr, bl, br
+  if (/^[lrudtb]+$/.test(value)) {
+    // Exclude corner patterns: tl, tr, bl, br (and their reverses lt, rt, lb, rb)
+    const cornerPatterns = ['tl', 'lt', 'tr', 'rt', 'bl', 'lb', 'br', 'rb']
+    if (cornerPatterns.includes(value)) return false
+    return value.length > 0
+  }
+
+  return false
 }
 
 // Normalize direction to internal short form for storage
@@ -214,33 +441,48 @@ export function directionComboToLongForm(value: string): string {
 // Properties by type (both short and long forms)
 export const BOOLEAN_PROPERTIES = new Set([
   // Short forms
-  'hor', 'ver', 'cen',
+  'hor', 'ver', 'vert', 'cen',
   'hor-l', 'hor-cen', 'hor-r', 'ver-t', 'ver-cen', 'ver-b',
   // Long forms
   'horizontal', 'vertical', 'center',
   'horizontal-left', 'horizontal-center', 'horizontal-right',
   'vertical-top', 'vertical-center', 'vertical-bottom',
+  // NEU: ausgeschriebene Alignment-Formen
+  'left', 'right', 'hor-center',
+  'top', 'bottom', 'ver-center',
+  'spread',  // Alias für between
+  // Sizing keywords (standalone): min = fit-content, max = 100% + flex-grow
+  'min', 'max', 'hug',  // hug ist Alias für min
+  // Combined sizing shorthand: w-min, w-max, h-min, h-max
+  'w-min', 'w-max', 'h-min', 'h-max',
+  // Legacy sizing (kept for backwards compatibility, now equivalent to 'max')
+  'full', 'grow', 'fill',
+  // Horizontal centering (margin auto)
+  'centered',
   // Common
-  'full', 'between', 'wrap', 'grow', 'fill', 'stacked',
+  'between', 'wrap', 'stacked',
   'italic', 'underline', 'lowercase', 'uppercase', 'truncate',
   'hidden', 'visible',
-  'mask'  // Segment (masked input) - hide characters
+  'mask',  // Segment (masked input) - hide characters
+  'material',  // Switch to Material Icons
+  'phosphor',  // Switch to Phosphor Icons
+  'fill',      // Material Icons filled variant (default: outlined)
 ])
 
 export const COLOR_PROPERTIES = new Set([
   // Short forms
-  'col', 'bg', 'boc',
+  'c', 'col', 'bg', 'boc', 'ic',
   'hover-col', 'hover-bg', 'hover-boc',
   // Long forms
-  'color', 'background', 'border-color',
+  'color', 'background', 'border-color', 'icon-color',
   'hover-color', 'hover-background', 'hover-border-color'
 ])
 
 export const NUMBER_PROPERTIES = new Set([
   // Short forms
   'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
-  'pad', 'mar', 'rad', 'bor',
-  'opa', 'op',
+  'p', 'pad', 'm', 'mar', 'g', 'rad', 'bor',
+  'o', 'opa', 'op',
   'hover-bor', 'hover-rad',
   // Long forms
   'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height',
@@ -251,11 +493,15 @@ export const NUMBER_PROPERTIES = new Set([
   'gap', 'gap-col', 'gap-row', 'shrink',
   'size', 'weight', 'line', 'z',
   'hover-opa', 'hover-opacity', 'hover-scale',
+  // Transform
+  'rot', 'rotate',
   'min', 'max', 'step', 'value', 'rows',
-  'length', 'segments'  // Segment (masked input)
+  'length', 'segments',  // Segment (masked input)
+  // Icon weight
+  'icon-weight', 'iw'
 ])
 
-export const STRING_PROPERTIES = new Set(['font', 'icon', 'src', 'alt', 'fit', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type', 'pattern', 'shortcut'])
+export const STRING_PROPERTIES = new Set(['font', 'src', 'alt', 'fit', 'text-align', 'align', 'cursor', 'pointer', 'shadow', 'href', 'target', 'placeholder', 'type', 'pattern', 'shortcut'])
 
 // ============================================
 // Property Normalization Functions
@@ -342,6 +588,8 @@ export const KEYWORDS = new Set(['after', 'before', 'from', 'as', 'named'])
 // Action Keywords (for state changes and interactions)
 export const ACTION_KEYWORDS = new Set([
   'open', 'close', 'toggle', 'change', 'to', 'page', 'show', 'hide', 'assign', 'alert',
+  // External function calls
+  'call',
   // Behavior actions (for dropdowns, lists, etc.)
   'highlight', 'select', 'filter',
   // Selection management
@@ -380,6 +628,10 @@ export const CONTROL_KEYWORDS = new Set([
 // Event Keywords
 export const EVENT_KEYWORDS = new Set([
   'onclick', 'onhover', 'onchange', 'oninput', 'onload', 'onfocus', 'onblur', 'onkeydown', 'onkeyup',
+  // Form events
+  'onsubmit',
+  // Overlay/Dialog events
+  'onopen', 'onclose',
   // Behavior events (click outside, key-specific)
   'onclick-outside', 'onclick-inside',
   // Segment events (for masked input)
@@ -438,6 +690,12 @@ export const BEHAVIOR_STATES = new Set([
 // Events Keyword (for centralized event block)
 export const EVENTS_KEYWORD = 'events'
 
+// Theme Keyword (for theme block definition)
+export const THEME_KEYWORD = 'theme'
+
+// Use Keyword (for activating themes)
+export const USE_KEYWORD = 'use'
+
 // Animation Keywords (for overlay open/close animations)
 // Note: 'none' also exists in BORDER_STYLES, but the parser handles context
 export const ANIMATION_KEYWORDS = new Set([
@@ -459,4 +717,246 @@ export const ANIMATION_ACTION_KEYWORDS = new Set([
 export const POSITION_KEYWORDS = new Set([
   'below', 'above', 'left', 'right',  // Relative to trigger element
   'center', 'cen'                      // Relative to viewport (for modals)
+])
+
+// =============================================================================
+// PROPERTY CATEGORIES (Source of Truth for DSL_SCHEMA)
+// =============================================================================
+
+/**
+ * Layout properties
+ */
+export const LAYOUT_PROPERTIES = new Set([
+  'horizontal', 'hor', 'vertical', 'ver', 'gap', 'g', 'gap-col', 'gap-row',
+  'gap-x', 'gap-y', 'between', 'wrap', 'grow', 'fill', 'shrink', 'stacked',
+  'grid', 'rows'
+])
+
+/**
+ * Alignment properties
+ */
+export const ALIGNMENT_PROPERTIES = new Set([
+  'horizontal-left', 'hor-l', 'horizontal-center', 'hor-cen', 'horizontal-right', 'hor-r',
+  'vertical-top', 'ver-t', 'vertical-center', 'ver-cen', 'vertical-bottom', 'ver-b',
+  'center', 'cen', 'centered', 'left', 'right', 'top', 'bottom'
+])
+
+/**
+ * Sizing properties
+ */
+export const SIZING_PROPERTIES = new Set([
+  'width', 'w', 'height', 'h', 'size',
+  'min-width', 'minw', 'w-min', 'max-width', 'maxw', 'w-max',
+  'min-height', 'minh', 'h-min', 'max-height', 'maxh', 'h-max',
+  'full', 'hug'
+])
+
+/**
+ * Spacing properties
+ */
+export const SPACING_PROPERTIES = new Set([
+  'padding', 'p', 'pad', 'margin', 'm', 'mar'
+])
+
+/**
+ * Color properties (can take color values)
+ */
+export const COLORS_PROPERTIES = new Set([
+  'background', 'bg', 'color', 'c', 'col', 'border-color', 'boc'
+])
+
+/**
+ * Border properties
+ */
+export const BORDER_PROPERTIES = new Set([
+  'border', 'bor', 'radius', 'rad'
+])
+
+/**
+ * Typography properties
+ */
+export const TYPOGRAPHY_PROPERTIES = new Set([
+  'font-size', 'fs', 'size', 'weight', 'font', 'line', 'align',
+  'italic', 'underline', 'uppercase', 'lowercase', 'truncate'
+])
+
+/**
+ * Visual properties
+ */
+export const VISUAL_PROPERTIES = new Set([
+  'opacity', 'o', 'opa', 'op', 'shadow', 'cursor', 'z',
+  'hidden', 'visible', 'disabled', 'rotate', 'rot', 'translate', 'shortcut'
+])
+
+/**
+ * Scroll properties
+ */
+export const SCROLL_PROPERTIES = new Set([
+  'scroll', 'scroll-ver', 'scroll-vertical', 'scroll-hor', 'scroll-horizontal',
+  'scroll-both', 'snap', 'clip'
+])
+
+/**
+ * Hover properties
+ */
+export const HOVER_PROPERTIES = new Set([
+  'hover-background', 'hover-bg', 'hover-color', 'hover-col',
+  'hover-border-color', 'hover-boc', 'hover-border', 'hover-bor',
+  'hover-radius', 'hover-rad', 'hover-opacity', 'hover-opa', 'hover-scale'
+])
+
+/**
+ * Icon properties
+ */
+export const ICON_PROPERTIES = new Set([
+  'icon', 'icon-size', 'is', 'icon-weight', 'iw', 'icon-color', 'ic', 'fill', 'material', 'phosphor'
+])
+
+/**
+ * Form properties
+ */
+export const FORM_PROPERTIES = new Set([
+  'type', 'placeholder', 'value', 'min', 'max', 'step'
+])
+
+/**
+ * Segment properties
+ */
+export const SEGMENT_PROPERTIES = new Set([
+  'segments', 'length', 'pattern', 'mask'
+])
+
+/**
+ * Image properties
+ */
+export const IMAGE_PROPERTIES = new Set([
+  'src', 'alt', 'fit'
+])
+
+/**
+ * Link properties
+ */
+export const LINK_PROPERTIES = new Set([
+  'href', 'target'
+])
+
+/**
+ * Data properties
+ */
+export const DATA_PROPERTIES = new Set([
+  'data'
+])
+
+// =============================================================================
+// ACTION CATEGORIES (Source of Truth for DSL_SCHEMA)
+// =============================================================================
+
+/**
+ * Visibility actions
+ */
+export const VISIBILITY_ACTIONS = new Set([
+  'show', 'hide', 'toggle', 'open', 'close'
+])
+
+/**
+ * State actions
+ */
+export const STATE_ACTIONS = new Set([
+  'change', 'toggle-state', 'activate', 'deactivate', 'deactivate-siblings'
+])
+
+/**
+ * Selection actions
+ */
+export const SELECTION_ACTIONS = new Set([
+  'highlight', 'select', 'deselect', 'clear-selection', 'filter'
+])
+
+/**
+ * Navigation actions
+ */
+export const NAVIGATION_ACTIONS = new Set([
+  'page', 'assign', 'alert', 'call'
+])
+
+/**
+ * Form actions
+ */
+export const FORM_ACTIONS = new Set([
+  'focus', 'validate', 'reset'
+])
+
+// =============================================================================
+// OTHER CONSTANTS
+// =============================================================================
+
+/**
+ * Direction combos
+ */
+export const DIRECTION_COMBOS = new Set([
+  'l-r', 'left-right', 'u-d', 't-b', 'top-bottom', 'lr', 'ud', 'tb'
+])
+
+/**
+ * Segment events
+ */
+export const SEGMENT_EVENTS = new Set([
+  'onfill', 'oncomplete', 'onempty'
+])
+
+/**
+ * DSL keywords
+ */
+export const DSL_KEYWORDS = new Set([
+  'from', 'as', 'named', 'state', 'events', 'if', 'then', 'else',
+  'each', 'in', 'where', 'and', 'or', 'not', 'to', 'show', 'hide', 'animate'
+])
+
+/**
+ * Primitive component names
+ */
+export const PRIMITIVES = new Set([
+  'Input', 'Textarea', 'Image', 'Link', 'Button', 'Segment', 'Icon'
+])
+
+/**
+ * All DSL keywords and properties combined (for token-fixes)
+ * This is used to distinguish DSL syntax from token names
+ */
+export const ALL_DSL_KEYWORDS = new Set([
+  // Spread all property categories
+  ...LAYOUT_PROPERTIES,
+  ...ALIGNMENT_PROPERTIES,
+  ...SIZING_PROPERTIES,
+  ...SPACING_PROPERTIES,
+  ...COLORS_PROPERTIES,
+  ...BORDER_PROPERTIES,
+  ...TYPOGRAPHY_PROPERTIES,
+  ...VISUAL_PROPERTIES,
+  ...SCROLL_PROPERTIES,
+  ...HOVER_PROPERTIES,
+  ...ICON_PROPERTIES,
+  ...FORM_PROPERTIES,
+  ...SEGMENT_PROPERTIES,
+  ...IMAGE_PROPERTIES,
+  ...LINK_PROPERTIES,
+  ...DATA_PROPERTIES,
+  // Directions
+  ...DIRECTIONS,
+  ...DIRECTION_COMBOS,
+  // Events
+  ...EVENT_KEYWORDS,
+  // Actions
+  ...ACTION_KEYWORDS,
+  // Targets
+  ...BEHAVIOR_TARGETS,
+  // States
+  ...SYSTEM_STATES,
+  ...BEHAVIOR_STATES,
+  // Animations
+  ...ANIMATION_KEYWORDS,
+  // Positions
+  ...POSITION_KEYWORDS,
+  // Keywords
+  ...DSL_KEYWORDS,
 ])

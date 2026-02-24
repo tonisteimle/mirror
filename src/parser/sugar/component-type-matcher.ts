@@ -1,8 +1,81 @@
 /**
- * Component Type Matcher Module
+ * @module sugar/component-type-matcher
+ * @description Component Type Matcher - Zentralisierte Component-Typ-Erkennung
  *
- * Centralized component type detection for sugar syntax.
- * Determines component category based on name and properties.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Erkennt Component-Typen für Sugar-Syntax-Handling
+ *
+ * Bestimmt Component-Kategorie basierend auf:
+ * - Node-Namen (Button, Input, etc.)
+ * - _primitiveType Property
+ * - Namen-Suffix (SubmitButton → button)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * KATEGORIEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type ComponentCategory
+ *   'image'      → Image-Komponenten (Image, AvatarImage)
+ *   'input'      → Input-Felder (Input, SearchInput)
+ *   'textarea'   → Textarea-Felder
+ *   'link'       → Link-Komponenten (Link, NavLink)
+ *   'item'       → List-Items (Item, MenuItem, Option)
+ *   'button'     → Button-Komponenten
+ *   'text'       → Text-Komponenten (Text, P, Span)
+ *   'heading'    → Headings (H1-H6)
+ *   'segment'    → Segment für Masked-Input
+ *   'select'     → Native Select
+ *   'container'  → Default für Box, Card, etc.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TYPE CHECKER FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function isImageComponent(node) → boolean
+ * @function isInputComponent(node) → boolean
+ * @function isTextareaComponent(node) → boolean
+ * @function isLinkComponent(node) → boolean
+ * @function isButtonComponent(node) → boolean
+ * @function isIconComponent(node) → boolean
+ * @function isItemComponent(node) → boolean
+ * @function isSelectComponent(node) → boolean
+ * @function isHeadingComponent(node) → boolean
+ * @function isTextComponent(node) → boolean
+ * @function isSegmentComponent(node) → boolean
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * UTILITY FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function getComponentCategory(node) → ComponentCategory
+ *   Bestimmt Kategorie für Sugar-Handling
+ *
+ * @function getHeadingLevel(node) → HeadingLevel | null
+ *   Gibt Heading-Level (1-6) zurück
+ *
+ * @function getStringPropertyForCategory(category) → string | null
+ *   Gibt Default-String-Property für Kategorie zurück
+ *   - image → 'src'
+ *   - input/textarea/select → 'placeholder'
+ *   - link → 'href'
+ *   - item → null (verwendet content)
+ *   - container → null (erstellt Text-Child)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Category Detection
+ *   Button           → 'button'
+ *   SubmitButton     → 'button' (endet mit Button)
+ *   Input            → 'input'
+ *   SearchInput      → 'input' (endet mit Input)
+ *   Avatar           → 'container' (Default)
+ *
+ * @used-by handlers/string-handler.ts, handlers/dimension-handler.ts
  */
 
 import type { ASTNode } from '../types'
@@ -20,6 +93,7 @@ export type ComponentCategory =
   | 'text'
   | 'heading'  // H1-H6
   | 'segment'  // Masked input segment
+  | 'select'   // Native select with appearance: base-select
   | 'container'
 
 /**
@@ -83,6 +157,19 @@ export function isButtonComponent(node: ASTNode): boolean {
 }
 
 /**
+ * Check if a node represents an Icon component.
+ * Case-insensitive: matches "Icon", "icon", "SearchIcon", etc.
+ */
+export function isIconComponent(node: ASTNode): boolean {
+  const nameLower = node.name.toLowerCase()
+  return (
+    node.properties._primitiveType === 'Icon' ||
+    nameLower === 'icon' ||
+    nameLower.endsWith('icon')
+  )
+}
+
+/**
  * Check if a node represents an Item or Option component.
  */
 export function isItemComponent(node: ASTNode): boolean {
@@ -93,6 +180,17 @@ export function isItemComponent(node: ASTNode): boolean {
     node.name.endsWith('Item') ||
     node.name === 'Option' ||
     node.name.endsWith('Option')
+  )
+}
+
+/**
+ * Check if a node represents a Select component.
+ */
+export function isSelectComponent(node: ASTNode): boolean {
+  return (
+    node.properties._primitiveType === 'Select' ||
+    node.name === 'Select' ||
+    node.name.endsWith('Select')
   )
 }
 
@@ -167,6 +265,7 @@ export function getComponentCategory(node: ASTNode): ComponentCategory {
   if (isItemComponent(node)) return 'item'
   if (isHeadingComponent(node)) return 'heading'
   if (isSegmentComponent(node)) return 'segment'
+  if (isSelectComponent(node)) return 'select'
   if (isTextComponent(node)) return 'text'
 
   // Default to container for Box, Card, etc.
@@ -183,6 +282,7 @@ export function getStringPropertyForCategory(category: ComponentCategory): strin
       return 'src'
     case 'input':
     case 'textarea':
+    case 'select':
       return 'placeholder'
     case 'link':
       return 'href'

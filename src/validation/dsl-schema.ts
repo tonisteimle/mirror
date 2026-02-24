@@ -1,13 +1,112 @@
 /**
- * DSL Schema - Single Source of Truth
+ * DSL Schema - Compatibility Layer
  *
- * Extrahiert aus docs/reference.json
- * Definiert ALLE gültigen Properties, Events, Actions, etc.
+ * @deprecated This file is a compatibility layer. New code should import
+ * directly from './schema' or '../dsl/properties'.
+ *
+ * This file re-exports validation functions from the generated schemas
+ * to maintain backwards compatibility with existing imports.
  */
 
-// =============================================================================
-// Schema Types
-// =============================================================================
+// Re-export from generated property schema
+export {
+  VALID_PROPERTIES,
+  BOOLEAN_PROPERTIES,
+  COLOR_PROPERTIES,
+  NUMBER_PROPERTIES,
+  STRING_PROPERTIES,
+  DIRECTIONAL_PROPERTIES,
+  VALID_DIRECTIONS,
+  CORNER_DIRECTIONS,
+  BORDER_STYLES,
+  PROPERTY_KEYWORD_VALUES,
+  VALUE_CONSTRAINTS,
+  isValidProperty,
+  getPropertyType,
+  isDirectionalProperty,
+  isValidDirection,
+  isValidCornerDirection,
+  isValidOpacity,
+} from './schema/property-schema.generated'
+
+// Re-export from generated event schema
+export {
+  VALID_EVENTS,
+  KEY_MODIFIERS,
+  TIMING_MODIFIERS,
+  VALID_ACTIONS,
+  BEHAVIOR_TARGETS,
+  VALID_ANIMATIONS,
+  POSITION_KEYWORDS,
+  SYSTEM_STATES,
+  BEHAVIOR_STATES,
+  isValidEvent,
+  isValidKeyModifier,
+  isValidAction,
+  isValidAnimation,
+  isValidPosition,
+  isValidTarget,
+  isSystemState,
+  isBehaviorState,
+} from './schema/event-schema.generated'
+
+// Import for building DSL_SCHEMA compatibility object
+import {
+  VALID_PROPERTIES,
+  BOOLEAN_PROPERTIES,
+  COLOR_PROPERTIES,
+  NUMBER_PROPERTIES,
+  STRING_PROPERTIES,
+  DIRECTIONAL_PROPERTIES,
+  VALID_DIRECTIONS,
+  CORNER_DIRECTIONS,
+  BORDER_STYLES,
+  VALUE_CONSTRAINTS,
+} from './schema/property-schema.generated'
+
+import {
+  VALID_EVENTS,
+  KEY_MODIFIERS,
+  TIMING_MODIFIERS,
+  VALID_ACTIONS,
+  BEHAVIOR_TARGETS,
+  VALID_ANIMATIONS,
+  POSITION_KEYWORDS,
+  SYSTEM_STATES,
+} from './schema/event-schema.generated'
+
+// Import categorized properties from source of truth
+import {
+  LAYOUT_PROPERTIES,
+  ALIGNMENT_PROPERTIES,
+  SIZING_PROPERTIES,
+  SPACING_PROPERTIES,
+  COLORS_PROPERTIES,
+  BORDER_PROPERTIES,
+  TYPOGRAPHY_PROPERTIES,
+  VISUAL_PROPERTIES,
+  SCROLL_PROPERTIES,
+  HOVER_PROPERTIES,
+  ICON_PROPERTIES,
+  FORM_PROPERTIES,
+  SEGMENT_PROPERTIES,
+  IMAGE_PROPERTIES,
+  LINK_PROPERTIES,
+  DATA_PROPERTIES,
+  VISIBILITY_ACTIONS,
+  STATE_ACTIONS,
+  SELECTION_ACTIONS,
+  NAVIGATION_ACTIONS,
+  FORM_ACTIONS,
+  DIRECTION_COMBOS,
+  SEGMENT_EVENTS,
+  DSL_KEYWORDS,
+  PRIMITIVES,
+} from '../dsl/properties'
+
+// ============================================
+// Schema Types (backwards compatibility)
+// ============================================
 
 export interface DSLSchema {
   properties: PropertySchema
@@ -23,7 +122,7 @@ export interface DSLSchema {
   positions: Set<string>
   keywords: Set<string>
   primitives: Set<string>
-  valueConstraints: ValueConstraints
+  valueConstraints: typeof VALUE_CONSTRAINTS
   borderStyles: Set<string>
 }
 
@@ -54,524 +153,86 @@ export interface ActionSchema {
   form: Set<string>
 }
 
-export interface ValueConstraints {
-  opacity: { min: number; max: number }
-  shadow: Set<string>
-  cursor: Set<string>
-  fit: Set<string>
-  pattern: Set<string>
-  align: Set<string>
-  inputType: Set<string>
-  linkTarget: Set<string>
-}
+// ============================================
+// Legacy DSL_SCHEMA Object
+// ============================================
 
-// =============================================================================
-// Schema Definition (from reference.json)
-// =============================================================================
-
+/**
+ * @deprecated Use individual schema imports instead
+ * Now uses imports from dsl/properties.ts (Source of Truth)
+ */
 export const DSL_SCHEMA: DSLSchema = {
-  // ---------------------------------------------------------------------------
-  // Properties
-  // ---------------------------------------------------------------------------
   properties: {
-    // Layout
-    layout: new Set([
-      'horizontal', 'hor',
-      'vertical', 'ver',
-      'gap', 'g',
-      'gap-col', 'gap-row',
-      'between',
-      'wrap',
-      'grow', 'fill',
-      'shrink',
-      'stacked',
-      'grid',
-      'rows',  // for grid
-    ]),
-
-    // Alignment
-    alignment: new Set([
-      'horizontal-left', 'hor-l',
-      'horizontal-center', 'hor-cen',
-      'horizontal-right', 'hor-r',
-      'vertical-top', 'ver-t',
-      'vertical-center', 'ver-cen',
-      'vertical-bottom', 'ver-b',
-      'center', 'cen',
-    ]),
-
-    // Sizing
-    sizing: new Set([
-      'width', 'w',
-      'height', 'h',
-      'min-width', 'minw',
-      'max-width', 'maxw',
-      'min-height', 'minh',
-      'max-height', 'maxh',
-      'full',
-    ]),
-
-    // Spacing
-    spacing: new Set([
-      'padding', 'p', 'pad',
-      'margin', 'm', 'mar',
-    ]),
-
-    // Colors
-    colors: new Set([
-      'background', 'bg',
-      'color', 'c', 'col',
-      'border-color', 'boc',
-    ]),
-
-    // Border
-    border: new Set([
-      'border', 'bor',
-      'radius', 'rad',
-    ]),
-
-    // Typography
-    typography: new Set([
-      'size',
-      'weight',
-      'font',
-      'line',
-      'align',
-      'italic',
-      'underline',
-      'uppercase',
-      'lowercase',
-      'truncate',
-    ]),
-
-    // Visual
-    visual: new Set([
-      'opacity', 'o', 'opa', 'op',
-      'shadow',
-      'cursor',
-      'z',
-      'hidden',
-      'visible',
-      'disabled',
-      'rotate',
-      'translate',
-      'shortcut',
-    ]),
-
-    // Scroll
-    scroll: new Set([
-      'scroll',
-      'scroll-ver', 'scroll-vertical',
-      'scroll-hor', 'scroll-horizontal',
-      'scroll-both',
-      'snap',
-      'clip',
-    ]),
-
-    // Hover
-    hover: new Set([
-      'hover-background', 'hover-bg',
-      'hover-color', 'hover-col',
-      'hover-border-color', 'hover-boc',
-      'hover-border', 'hover-bor',
-      'hover-radius', 'hover-rad',
-      'hover-opacity', 'hover-opa',
-      'hover-scale',
-    ]),
-
-    // Icon
-    icon: new Set(['icon']),
-
-    // Form inputs
-    form: new Set([
-      'type',
-      'placeholder',
-      'value',
-      'min', 'max', 'step',
-    ]),
-
-    // Segment (masked input)
-    segment: new Set([
-      'segments',
-      'length',
-      'pattern',
-      'mask',
-    ]),
-
-    // Image
-    image: new Set([
-      'src',
-      'alt',
-      'fit',
-    ]),
-
-    // Link
-    link: new Set([
-      'href',
-      'target',
-    ]),
-
-    // Data binding
-    data: new Set(['data']),
+    layout: LAYOUT_PROPERTIES,
+    alignment: ALIGNMENT_PROPERTIES,
+    sizing: SIZING_PROPERTIES,
+    spacing: SPACING_PROPERTIES,
+    colors: COLORS_PROPERTIES,
+    border: BORDER_PROPERTIES,
+    typography: TYPOGRAPHY_PROPERTIES,
+    visual: VISUAL_PROPERTIES,
+    scroll: SCROLL_PROPERTIES,
+    hover: HOVER_PROPERTIES,
+    form: FORM_PROPERTIES,
+    segment: SEGMENT_PROPERTIES,
+    image: IMAGE_PROPERTIES,
+    link: LINK_PROPERTIES,
+    data: DATA_PROPERTIES,
+    icon: ICON_PROPERTIES,
   },
-
-  // ---------------------------------------------------------------------------
-  // Directions (for padding, margin, border)
-  // ---------------------------------------------------------------------------
-  directions: new Set([
-    'l', 'left',
-    'r', 'right',
-    't', 'top', 'u',  // u = up = top
-    'b', 'bottom', 'd',  // d = down = bottom
-  ]),
-
-  directionCombos: new Set([
-    'l-r', 'left-right',
-    'u-d', 't-b', 'top-bottom',
-    'lr', 'ud', 'tb',  // without hyphen
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Events
-  // ---------------------------------------------------------------------------
-  events: new Set([
-    'onclick',
-    'onclick-outside',
-    'onclick-inside',
-    'onhover',
-    'onchange',
-    'oninput',
-    'onfocus',
-    'onblur',
-    'onkeydown',
-    'onkeyup',
-    'onload',
-  ]),
-
-  segmentEvents: new Set([
-    'onfill',
-    'oncomplete',
-    'onempty',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Key Modifiers (for onkeydown/onkeyup)
-  // ---------------------------------------------------------------------------
-  keyModifiers: new Set([
-    'escape',
-    'enter',
-    'tab',
-    'space',
-    'arrow-up',
-    'arrow-down',
-    'arrow-left',
-    'arrow-right',
-    'backspace',
-    'delete',
-    'home',
-    'end',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Timing Modifiers
-  // ---------------------------------------------------------------------------
-  timingModifiers: new Set([
-    'debounce',
-    'delay',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
+  directions: VALID_DIRECTIONS,
+  directionCombos: DIRECTION_COMBOS,
+  events: VALID_EVENTS,
+  segmentEvents: SEGMENT_EVENTS,
+  keyModifiers: KEY_MODIFIERS,
+  timingModifiers: TIMING_MODIFIERS,
   actions: {
-    visibility: new Set([
-      'show',
-      'hide',
-      'toggle',
-      'open',
-      'close',
-    ]),
-
-    state: new Set([
-      'change',
-      'toggle-state',
-      'activate',
-      'deactivate',
-      'deactivate-siblings',
-    ]),
-
-    selection: new Set([
-      'highlight',
-      'select',
-      'deselect',
-      'clear-selection',
-      'filter',
-    ]),
-
-    navigation: new Set([
-      'page',
-      'assign',
-      'alert',
-    ]),
-
-    form: new Set([
-      'focus',
-      'validate',
-      'reset',
-    ]),
+    visibility: VISIBILITY_ACTIONS,
+    state: STATE_ACTIONS,
+    selection: SELECTION_ACTIONS,
+    navigation: NAVIGATION_ACTIONS,
+    form: FORM_ACTIONS,
   },
-
-  // ---------------------------------------------------------------------------
-  // Action Targets
-  // ---------------------------------------------------------------------------
-  targets: new Set([
-    'self',
-    'next',
-    'prev',
-    'first',
-    'last',
-    'first-empty',
-    'highlighted',
-    'selected',
-    'self-and-before',
-    'all',
-    'none',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Animations
-  // ---------------------------------------------------------------------------
-  animations: new Set([
-    'fade',
-    'scale',
-    'slide-up',
-    'slide-down',
-    'slide-left',
-    'slide-right',
-    'none',
-    // Continuous (NOT fully implemented!)
-    'spin',
-    'pulse',
-    'bounce',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Positions (for open action)
-  // ---------------------------------------------------------------------------
-  positions: new Set([
-    'below',
-    'above',
-    'left',
-    'right',
-    'center',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Keywords
-  // ---------------------------------------------------------------------------
-  keywords: new Set([
-    'from',
-    'as',
-    'named',
-    'state',
-    'events',
-    'if',
-    'then',
-    'else',
-    'each',
-    'in',
-    'where',
-    'and',
-    'or',
-    'not',
-    'to',
-    'show',  // also animation block
-    'hide',  // also animation block
-    'animate',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Primitives (HTML elements)
-  // ---------------------------------------------------------------------------
-  primitives: new Set([
-    'Input',
-    'Textarea',
-    'Image',
-    'Link',
-    'Button',
-    'Segment',
-    'Icon',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Border Styles
-  // ---------------------------------------------------------------------------
-  borderStyles: new Set([
-    'solid',
-    'dashed',
-    'dotted',
-  ]),
-
-  // ---------------------------------------------------------------------------
-  // Value Constraints
-  // ---------------------------------------------------------------------------
-  valueConstraints: {
-    // Opacity: 0-1 (NOT 0-100!)
-    opacity: { min: 0, max: 1 },
-
-    // Shadow sizes
-    shadow: new Set(['sm', 'md', 'lg', 'xl', 'xs', '2xl', '3xl', 'none']),
-
-    // Cursor values (NO HYPHENS - lexer splits on hyphens!)
-    cursor: new Set([
-      'pointer',
-      'default',
-      'text',
-      'move',
-      'grab',
-      'grabbing',
-      'wait',
-      'crosshair',
-      // Note: 'not-allowed' does NOT work due to lexer!
-    ]),
-
-    // Image fit values
-    fit: new Set(['cover', 'contain', 'fill', 'none', 'scale-down']),
-
-    // Segment pattern values
-    pattern: new Set(['digits', 'alpha', 'alphanumeric']),
-
-    // Text align values
-    align: new Set(['left', 'center', 'right', 'justify']),
-
-    // Input type values
-    inputType: new Set([
-      'email',
-      'password',
-      'text',
-      'number',
-      'tel',
-      'url',
-      'search',
-      'date',
-      'time',
-      'datetime-local',
-    ]),
-
-    // Link target values
-    linkTarget: new Set(['_blank', '_self', '_parent', '_top']),
-  },
+  targets: BEHAVIOR_TARGETS,
+  animations: VALID_ANIMATIONS,
+  positions: POSITION_KEYWORDS,
+  keywords: DSL_KEYWORDS,
+  primitives: PRIMITIVES,
+  borderStyles: BORDER_STYLES,
+  valueConstraints: VALUE_CONSTRAINTS,
 }
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
+// ============================================
+// Helper Functions (backwards compatibility)
+// ============================================
 
 /**
  * Get all valid properties as a flat set
+ * @deprecated Use VALID_PROPERTIES directly
  */
 export function getAllProperties(): Set<string> {
-  const all = new Set<string>()
-  for (const category of Object.values(DSL_SCHEMA.properties)) {
-    for (const prop of category) {
-      all.add(prop)
-    }
-  }
-  return all
+  return VALID_PROPERTIES
 }
 
 /**
- * Get all valid events (including segment events)
+ * Get all valid events
+ * @deprecated Use VALID_EVENTS directly
  */
 export function getAllEvents(): Set<string> {
-  return new Set([
-    ...DSL_SCHEMA.events,
-    ...DSL_SCHEMA.segmentEvents,
-  ])
+  const allEvents = new Set<string>()
+  VALID_EVENTS.forEach(e => allEvents.add(e))
+  allEvents.add('onfill')
+  allEvents.add('oncomplete')
+  allEvents.add('onempty')
+  return allEvents
 }
 
 /**
  * Get all valid actions as a flat set
+ * @deprecated Use VALID_ACTIONS directly
  */
 export function getAllActions(): Set<string> {
-  const all = new Set<string>()
-  for (const category of Object.values(DSL_SCHEMA.actions)) {
-    for (const action of category) {
-      all.add(action)
-    }
-  }
-  return all
-}
-
-/**
- * Check if a property is valid
- */
-export function isValidProperty(name: string): boolean {
-  return getAllProperties().has(name)
-}
-
-/**
- * Check if an event is valid
- */
-export function isValidEvent(name: string): boolean {
-  return getAllEvents().has(name)
-}
-
-/**
- * Check if an action is valid
- */
-export function isValidAction(name: string): boolean {
-  return getAllActions().has(name)
-}
-
-/**
- * Check if a target is valid
- */
-export function isValidTarget(name: string): boolean {
-  return DSL_SCHEMA.targets.has(name)
-}
-
-/**
- * Check if an animation is valid
- */
-export function isValidAnimation(name: string): boolean {
-  return DSL_SCHEMA.animations.has(name)
-}
-
-/**
- * Check if a position is valid
- */
-export function isValidPosition(name: string): boolean {
-  return DSL_SCHEMA.positions.has(name)
-}
-
-/**
- * Check if a direction is valid
- */
-export function isValidDirection(name: string): boolean {
-  return DSL_SCHEMA.directions.has(name) || DSL_SCHEMA.directionCombos.has(name)
-}
-
-/**
- * Check if a keyword is valid
- */
-export function isValidKeyword(name: string): boolean {
-  return DSL_SCHEMA.keywords.has(name)
-}
-
-/**
- * Check if a primitive is valid
- */
-export function isValidPrimitive(name: string): boolean {
-  return DSL_SCHEMA.primitives.has(name)
-}
-
-/**
- * Validate opacity value (must be 0-1)
- */
-export function isValidOpacity(value: number): boolean {
-  const { min, max } = DSL_SCHEMA.valueConstraints.opacity
-  return value >= min && value <= max
+  return VALID_ACTIONS
 }
 
 /**
@@ -596,4 +257,52 @@ export function getActionCategory(name: string): string | null {
     }
   }
   return null
+}
+
+/**
+ * Check if a keyword is valid
+ */
+export function isValidKeyword(name: string): boolean {
+  return DSL_SCHEMA.keywords.has(name)
+}
+
+/**
+ * Check if a primitive is valid
+ */
+export function isValidPrimitive(name: string): boolean {
+  return DSL_SCHEMA.primitives.has(name)
+}
+
+/**
+ * Simple code validation - validates lines for common errors
+ * @deprecated Use the unified validation pipeline instead
+ */
+export function validateCode(code: string): { errors: Array<{ line: number; message: string; category: string }> } {
+  const errors: Array<{ line: number; message: string; category: string }> = []
+  const lines = code.split('\n')
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('//')) return
+
+    // Check for px suffix
+    if (/\b\d+px\b/.test(trimmed)) {
+      errors.push({
+        line: index + 1,
+        message: 'Remove "px" suffix - numbers are already in pixels',
+        category: 'PX_SUFFIX'
+      })
+    }
+
+    // Check for colons after properties
+    if (/\b(pad|margin|border|radius|width|height|gap)\s*:/.test(trimmed)) {
+      errors.push({
+        line: index + 1,
+        message: 'Remove colon after property - use space instead',
+        category: 'COLON_AFTER_PROPERTY'
+      })
+    }
+  })
+
+  return { errors }
 }

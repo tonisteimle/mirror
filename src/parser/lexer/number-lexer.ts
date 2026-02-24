@@ -1,6 +1,53 @@
 /**
- * Number parsing logic for the Mirror DSL lexer.
- * Handles integers, decimals, and percentages.
+ * @module number-lexer
+ * @description Number-Parsing für den Mirror DSL Lexer
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst Integer, Dezimalzahlen und Prozente
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FORMATE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Integer
+ *   42, 200, 0
+ *   Beispiel: width 200 → NUMBER "200"
+ *
+ * @syntax Decimal
+ *   0.5, 1.5, 2.75
+ *   Beispiel: opacity 0.5 → NUMBER "0.5"
+ *
+ * @syntax Percentage
+ *   50%, 100%, 33.33%
+ *   Beispiel: width 50% → NUMBER "50%"
+ *
+ * @syntax Inline Token Definition
+ *   16:spacing
+ *   Beispiel: 16:base → NUMBER "16", TOKEN_DEF "base"
+ *
+ * @token NUMBER
+ *   value enthält den String ("42", "0.5", "50%")
+ *   Parser konvertiert zu echten Zahlen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERWENDUNG
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @context Dimensionen
+ *   width 200, height 150
+ *   Box 300 400 → Dimension Shorthand
+ *
+ * @context Spacing
+ *   padding 16, margin 8, gap 12
+ *
+ * @context Typography
+ *   size 14, weight 600, line 1.5
+ *
+ * @context Visual
+ *   opacity 0.5, radius 8, rotate 45
  */
 
 import type { Token } from './token-types'

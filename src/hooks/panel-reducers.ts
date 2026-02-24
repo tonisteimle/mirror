@@ -24,6 +24,8 @@ export const colorPanelInitialState: ColorPanelState = {
   filter: '',
   selectedIndex: 0,
   triggerPos: 0,
+  replaceRange: null,
+  selectedValue: null,
 }
 
 /**
@@ -43,6 +45,8 @@ export function colorPanelReducer(
         filter: '',
         selectedIndex: 0,
         triggerPos: action.triggerPos,
+        replaceRange: null,
+        selectedValue: null,
       }
 
     case 'CLOSE':

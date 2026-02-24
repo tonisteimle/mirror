@@ -6,8 +6,9 @@
  */
 
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
-import type { Extension } from '@codemirror/state'
-import { defaultKeymap, indentWithTab } from '@codemirror/commands'
+import { EditorState, type Extension } from '@codemirror/state'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { indentUnit } from '@codemirror/language'
 import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { dslAutocomplete, type DSLAutocompleteOptions } from './dsl-autocomplete'
 import { createEditorKeymaps, type KeymapConfig } from './keymaps'
@@ -15,6 +16,8 @@ import { createPanelKeymap, type PanelKeymapConfig } from './panel-keymap'
 import { createNumberScrubbingKeymap } from './number-scrubbing'
 import { createSemanticSelectionExtension } from './semantic-selection'
 import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
+import { createDoubleClickPickerExtension, type DoubleClickPickerConfig } from './double-click-picker'
+import { createTranslatingLinesExtension } from './translating-lines'
 // Ghost suggestions removed - using contextual autocomplete boost instead
 
 /**
@@ -41,6 +44,9 @@ export interface EditorExtensionsConfig {
 
   /** Color swatch configuration (optional) */
   colorSwatchConfig?: ColorSwatchConfig
+
+  /** Double-click picker configuration (optional) */
+  doubleClickPickerConfig?: DoubleClickPickerConfig
 }
 
 /**
@@ -63,7 +69,7 @@ function createUpdateListener(onDocChange?: (view: EditorView) => void): Extensi
  * @example
  * ```ts
  * const extensions = createEditorExtensions({
- *   keymapConfig: { callbacks, getAutoCompleteMode, getCurrentTab, autoCompleteTimeoutRef },
+ *   keymapConfig: { callbacks },
  *   panelKeymapConfig: { getColorPanelState, setColorPanelState, getSelectedValue },
  *   autocompleteOptions: { onValuePickerNeeded, getDesignTokens },
  *   onDocChange: (view) => console.log('Changed:', view.state.doc.toString()),
@@ -79,9 +85,18 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
     lineNumbers: showLineNumbers = false,
     highlightActiveLine: showHighlightActiveLine = true,
     colorSwatchConfig,
+    doubleClickPickerConfig,
   } = config
 
   const extensions: Extension[] = []
+
+  // Indentation: 2 spaces (not tabs)
+  extensions.push(indentUnit.of('  '))
+  extensions.push(EditorState.tabSize.of(2))
+
+  // History for undo/redo
+  extensions.push(history())
+  extensions.push(keymap.of(historyKeymap))
 
   // Line numbers
   if (showLineNumbers) {
@@ -103,14 +118,14 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
   // Semantic selection (Alt+Click for intelligent selection)
   extensions.push(createSemanticSelectionExtension())
 
+  // Editor keymaps (triggers, shortcuts) - MUST come before autocomplete
+  extensions.push(...createEditorKeymaps(keymapConfig))
+
   // DSL autocomplete
   extensions.push(dslAutocomplete(autocompleteOptions))
 
-  // Editor keymaps (triggers, shortcuts)
-  extensions.push(...createEditorKeymaps(keymapConfig))
-
-  // Default keymaps
-  extensions.push(keymap.of([...defaultKeymap, indentWithTab]))
+  // Default keymaps (Tab is handled by createSmartTabKeymap in multiline-indent.ts)
+  extensions.push(keymap.of(defaultKeymap))
 
   // DSL syntax highlighting
   extensions.push(dslTheme)
@@ -120,6 +135,14 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
   if (colorSwatchConfig) {
     extensions.push(createColorSwatchPlugin(colorSwatchConfig))
   }
+
+  // Double-click picker (open picker when double-clicking on color/icon/font)
+  if (doubleClickPickerConfig) {
+    extensions.push(createDoubleClickPickerExtension(doubleClickPickerConfig))
+  }
+
+  // Translating lines (animated background for lines being translated by LLM)
+  extensions.push(createTranslatingLinesExtension())
 
   // Update listener for document changes
   extensions.push(createUpdateListener(onDocChange))
@@ -132,8 +155,12 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
  */
 export function createMinimalExtensions(): Extension[] {
   return [
+    indentUnit.of('  '),
+    EditorState.tabSize.of(2),
+    history(),
+    keymap.of(historyKeymap),
     dslTheme,
     dslHighlighter,
-    keymap.of([...defaultKeymap, indentWithTab]),
+    keymap.of(defaultKeymap),
   ]
 }

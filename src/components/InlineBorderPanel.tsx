@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { InlinePanel, PanelFooter } from './InlinePanel'
-import { TailwindColorPalette } from './TailwindColorPalette'
+import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { PanelTabsHeader, type PanelTabId } from './InlineLayoutPanel'
@@ -92,6 +92,10 @@ interface InlineBorderPanelProps {
   onSwitchPanel?: (panel: PanelTabId) => void
   /** Which tabs to show (defaults to layout, font, border) */
   availableTabs?: PanelTabId[]
+  /** Token mode from project settings (if provided, overrides localStorage) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes (if provided, updates project settings) */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
 // ============================================
@@ -112,7 +116,7 @@ const COLORS = {
 }
 
 const defaultState: BorderState = {
-  width: 0,
+  width: -1,  // -1 = not set, 0 = explicitly no border
   style: 'solid',
   color: '',
   sides: { top: true, right: true, bottom: true, left: true },  // All sides selected by default
@@ -121,7 +125,7 @@ const defaultState: BorderState = {
   widthBottom: 0,
   widthLeft: 0,
   sidesExpanded: false,
-  radius: 0,
+  radius: -1,  // -1 = not set, 0 = explicitly square corners
   radiusTL: 0,
   radiusTR: 0,
   radiusBR: 0,
@@ -148,7 +152,7 @@ function anySideSelected(sides: BorderSides): boolean {
 function generateBorderCode(state: BorderState): string {
   const parts: string[] = []
 
-  // Border
+  // Border - only generate if width is explicitly set (>= 0)
   if (state.sidesExpanded) {
     // Per-side borders with individual widths
     if (state.widthTop > 0) {
@@ -163,7 +167,7 @@ function generateBorderCode(state: BorderState): string {
     if (state.widthLeft > 0) {
       parts.push(`bor left ${state.widthLeft}${state.style !== 'solid' ? ` ${state.style}` : ''}${state.color ? ` ${state.color}` : ''}`)
     }
-  } else if (state.width > 0 && anySideSelected(state.sides)) {
+  } else if (state.width >= 0 && state.width > 0 && anySideSelected(state.sides)) {
     const styleStr = state.style !== 'solid' ? ` ${state.style}` : ''
     const colorStr = state.color ? ` ${state.color}` : ''
 
@@ -187,7 +191,7 @@ function generateBorderCode(state: BorderState): string {
     }
   }
 
-  // Radius
+  // Radius - only generate if radius is explicitly set (>= 0)
   if (state.cornersExpanded) {
     // Per-corner radius
     const corners: string[] = []
@@ -198,7 +202,7 @@ function generateBorderCode(state: BorderState): string {
     if (corners.length > 0) {
       parts.push(`rad ${corners.join(' ')}`)
     }
-  } else if (state.radius > 0) {
+  } else if (state.radius >= 0 && state.radius > 0) {
     parts.push(`rad ${state.radius}`)
   }
 
@@ -718,7 +722,7 @@ function BorderColorPicker({
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div style={{ padding: '12px' }}>
-        <TailwindColorPalette
+        <ColorSystemPalette
           color={color || '#333333'}
           onChange={onChange}
         />
@@ -788,6 +792,8 @@ export function InlineBorderPanel({
   showTabs,
   onSwitchPanel,
   availableTabs,
+  useTokenMode: useTokenModeProp,
+  onTokenModeChange,
 }: InlineBorderPanelProps) {
   const [state, setState] = useState<BorderState>(defaultState)
   const hasUserInteractedRef = useRef(false)
@@ -801,9 +807,18 @@ export function InlineBorderPanel({
       hasUserInteractedRef.current = false
       pendingSyncRef.current = false
       const parsed = parseBorderCode(initialCode || '')
-      setState({ ...defaultState, ...parsed })
+      // Use prop if provided, otherwise fall back to localStorage
+      const tokenMode = useTokenModeProp !== undefined ? useTokenModeProp : getStoredTokenMode()
+      setState({ ...defaultState, ...parsed, useTokenMode: tokenMode })
     }
-  }, [isOpen, initialCode])
+  }, [isOpen, initialCode, useTokenModeProp])
+
+  // Sync token mode with prop when it changes externally
+  useEffect(() => {
+    if (useTokenModeProp !== undefined && state.useTokenMode !== useTokenModeProp) {
+      setState(prev => ({ ...prev, useTokenMode: useTokenModeProp }))
+    }
+  }, [useTokenModeProp])
 
   // Sync to editor when state changes
   useEffect(() => {
@@ -851,6 +866,7 @@ export function InlineBorderPanel({
       width={360}
       maxHeight={400}
       testId="panel-border-picker"
+      disableClickOutsideClose
     >
       {/* Tab Header - only shown when showTabs is true */}
       {showTabs && onSwitchPanel && (
@@ -860,8 +876,9 @@ export function InlineBorderPanel({
           availableTabs={availableTabs}
           useTokenMode={state.useTokenMode}
           onTokenModeChange={(mode) => {
-            setStoredTokenMode(mode)
             updateState({ useTokenMode: mode })
+            // Notify parent if callback provided (saves to project)
+            onTokenModeChange?.(mode)
           }}
         />
       )}
@@ -880,7 +897,7 @@ export function InlineBorderPanel({
             <PresetButton value={1} selected={state.width === 1} onClick={() => updateState({ width: 1 })} />
             <PresetButton value={2} selected={state.width === 2} onClick={() => updateState({ width: 2 })} />
             <PresetButton value={3} selected={state.width === 3} onClick={() => updateState({ width: 3 })} />
-            <NumberInput value={state.width} onChange={(v) => updateState({ width: v })} presets={[0, 1, 2, 3]} width={24} />
+            <NumberInput value={state.width >= 0 ? state.width : 0} onChange={(v) => updateState({ width: v })} presets={[0, 1, 2, 3]} width={24} />
             <div style={{ width: '8px' }} />
             <IconButton
               selected={state.style === 'solid'}
@@ -1012,7 +1029,7 @@ export function InlineBorderPanel({
 
           {/* All corners */}
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginBottom: '4px' }}>
-            <PresetButton value={0} selected={state.radius === 0 && !state.cornersExpanded} onClick={() => updateState({ radius: 0, cornersExpanded: false })} />
+            <PresetButton value={0} selected={state.radius === 0} onClick={() => updateState({ radius: 0, cornersExpanded: false })} />
             <PresetButton value={4} selected={state.radius === 4} onClick={() => updateState({ radius: 4, cornersExpanded: false })} />
             <PresetButton value={8} selected={state.radius === 8} onClick={() => updateState({ radius: 8, cornersExpanded: false })} />
             <PresetButton value={12} selected={state.radius === 12} onClick={() => updateState({ radius: 12, cornersExpanded: false })} />

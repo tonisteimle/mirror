@@ -183,15 +183,15 @@ export function createKeyDownHandler(
     const pressedKey = keyToModifier(e)
 
     for (const handler of keydownHandlers) {
-      // If handler has a modifier, only execute if key matches
-      if (handler.modifier) {
-        if (pressedKey === handler.modifier) {
+      // If handler has a key, only execute if key matches
+      if (handler.key) {
+        if (pressedKey === handler.key) {
           e.preventDefault()
           executeHandler(handler, e)
           return
         }
       } else {
-        // No modifier specified - execute for any keydown
+        // No key specified - execute for any keydown
         executeHandler(handler, e)
         return
       }
@@ -213,15 +213,15 @@ export function createKeyUpHandler(
     const pressedKey = keyToModifier(e)
 
     for (const handler of keyupHandlers) {
-      // If handler has a modifier, only execute if key matches
-      if (handler.modifier) {
-        if (pressedKey === handler.modifier) {
+      // If handler has a key, only execute if key matches
+      if (handler.key) {
+        if (pressedKey === handler.key) {
           e.preventDefault()
           executeHandler(handler, e)
           return
         }
       } else {
-        // No modifier specified - execute for any keyup
+        // No key specified - execute for any keyup
         executeHandler(handler, e)
         return
       }

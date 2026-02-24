@@ -2,6 +2,9 @@
  * Primitive Renderers Module
  *
  * Renders HTML primitives: Input, Textarea, Link, Icon, Image, H1-H6
+ *
+ * Dark UI defaults are applied automatically. User styles override defaults.
+ * Typography can be inherited from App (font, size, color, line-height).
  */
 
 import React from 'react'
@@ -11,6 +14,86 @@ import { renderDynamicIcon } from '../components'
 import { sanitizeHref, sanitizePlaceholder } from '../../utils/sanitize'
 import { getHeadingLevel } from '../../parser/sugar/component-type-matcher'
 import { isImageComponent } from './primitive-checkers'
+import { useTypography, type TypographyContextValue } from '../contexts/typography-context'
+
+/**
+ * Dark UI Default Styles
+ * These are applied when user doesn't specify styles.
+ * User-provided styles always override these defaults.
+ * Design: Grayscale only, flat surfaces (no borders), refined typography.
+ *
+ * Typography Scale (for fine UI):
+ * - Base: 15px
+ * - Small: 13px (inputs, labels)
+ * - H1: 28px, H2: 22px, H3: 18px, H4: 16px, H5: 14px, H6: 13px
+ */
+const DEFAULTS = {
+  input: {
+    backgroundColor: '#2A2A2A',
+    color: '#E0E0E0',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 10px',
+    fontSize: '13px',
+    lineHeight: 1.4,
+    fontWeight: 400,
+    outline: 'none',
+    minWidth: '120px',
+  } as React.CSSProperties,
+
+  textarea: {
+    backgroundColor: '#2A2A2A',
+    color: '#E0E0E0',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '8px 10px',
+    fontSize: '13px',
+    lineHeight: 1.5,
+    fontWeight: 400,
+    outline: 'none',
+    resize: 'vertical' as const,
+    minHeight: '60px',
+  } as React.CSSProperties,
+
+  link: {
+    color: '#A0A0A0',
+    textDecoration: 'none',
+    fontSize: '13px',
+    fontWeight: 500,
+  } as React.CSSProperties,
+
+  heading: {
+    color: '#E8E8E8',
+    margin: 0,
+    fontWeight: 500,
+    lineHeight: 1.3,
+  } as React.CSSProperties,
+
+  // Heading sizes - refined scale for UI
+  h1: { fontSize: '28px', fontWeight: 600, letterSpacing: '-0.5px' } as React.CSSProperties,
+  h2: { fontSize: '22px', fontWeight: 600, letterSpacing: '-0.3px' } as React.CSSProperties,
+  h3: { fontSize: '18px', fontWeight: 500 } as React.CSSProperties,
+  h4: { fontSize: '16px', fontWeight: 500 } as React.CSSProperties,
+  h5: { fontSize: '14px', fontWeight: 500 } as React.CSSProperties,
+  h6: { fontSize: '13px', fontWeight: 500, textTransform: 'uppercase' as const, letterSpacing: '0.5px' } as React.CSSProperties,
+
+  icon: {
+    color: '#C0C0C0',
+  } as React.CSSProperties,
+
+  button: {
+    backgroundColor: '#333333',
+    color: '#E0E0E0',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 12px',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    outline: 'none',
+    lineHeight: 1.4,
+  } as React.CSSProperties,
+}
 
 interface PrimitiveProps {
   node: ASTNode
@@ -18,20 +101,82 @@ interface PrimitiveProps {
   onMouseEnter?: () => void
   onMouseLeave?: () => void
   onClick?: (e: React.MouseEvent) => void
+  /** Inherited typography from App (font, size, color, line-height) */
+  typography?: TypographyContextValue
+}
+
+/**
+ * Apply inherited typography to primitive defaults.
+ * Merge order: DARK_DEFAULTS < inherited typography < user styles
+ */
+function applyInheritedTypography(
+  defaults: React.CSSProperties,
+  typography: TypographyContextValue
+): React.CSSProperties {
+  const result = { ...defaults }
+
+  // Apply inherited typography (overrides defaults, but user styles will override these)
+  if (typography.fontFamily) {
+    result.fontFamily = typography.fontFamily
+  }
+  if (typography.fontSize) {
+    result.fontSize = `${typography.fontSize}px`
+  }
+  if (typography.lineHeight) {
+    result.lineHeight = typography.lineHeight
+  }
+  if (typography.color) {
+    result.color = typography.color
+  }
+
+  return result
+}
+
+/**
+ * Render Button primitive.
+ * Uses native <button> for accessibility (focusable, Enter/Space activation).
+ * Dark UI defaults applied, user styles override.
+ * Typography can be inherited from App.
+ */
+export function renderButton(
+  { node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps,
+  children: React.ReactNode
+): React.JSX.Element {
+  const baseDefaults = applyInheritedTypography(DEFAULTS.button, typography)
+  return (
+    <button
+      key={node.id}
+      data-id={node.id}
+      data-source-line={node.line}
+      className={node.name}
+      type={(node.properties.type as 'button' | 'submit' | 'reset') || 'button'}
+      disabled={node.properties.disabled as boolean}
+      style={{ ...baseDefaults, ...style }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  )
 }
 
 /**
  * Render Input primitive.
+ * Dark UI defaults applied, user styles override.
+ * Typography can be inherited from App.
  */
-export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element {
+export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
+  const baseDefaults = applyInheritedTypography(DEFAULTS.input, typography)
   return (
     <input
       key={node.id}
       data-id={node.id}
+      data-source-line={node.line}
       className={node.name}
       type={(node.properties.type as string) || 'text'}
       placeholder={sanitizePlaceholder(node.properties.placeholder as string)}
-      style={style}
+      style={{ ...baseDefaults, ...style }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
@@ -41,16 +186,20 @@ export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick }
 
 /**
  * Render Textarea primitive.
+ * Dark UI defaults applied, user styles override.
+ * Typography can be inherited from App.
  */
-export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element {
+export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
+  const baseDefaults = applyInheritedTypography(DEFAULTS.textarea, typography)
   return (
     <textarea
       key={node.id}
       data-id={node.id}
+      data-source-line={node.line}
       className={node.name}
       placeholder={sanitizePlaceholder(node.properties.placeholder as string)}
       rows={(node.properties.rows as number) || 3}
-      style={style}
+      style={{ ...baseDefaults, ...style }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
@@ -60,29 +209,29 @@ export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClic
 
 /**
  * Render Link primitive.
+ * Icon children are rendered as part of children (no separate icon handling).
+ * Dark UI defaults applied, user styles override.
+ * Typography can be inherited from App.
  */
 export function renderLink(
-  { node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps,
-  children: React.ReactNode,
-  iconName?: string
+  { node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps,
+  children: React.ReactNode
 ): React.JSX.Element {
-  const iconSize = typeof node.properties.size === 'number' ? node.properties.size : 20
-  const iconColor = typeof node.properties.col === 'string' ? node.properties.col : 'currentColor'
-
+  const baseDefaults = applyInheritedTypography(DEFAULTS.link, typography)
   return (
     <a
       key={node.id}
       data-id={node.id}
+      data-source-line={node.line}
       className={node.name}
       href={sanitizeHref(node.properties.href as string)}
       target={(node.properties.target as string) || undefined}
       rel={node.properties.target === '_blank' ? 'noopener noreferrer' : undefined}
-      style={style}
+      style={{ ...baseDefaults, ...style }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      {renderDynamicIcon(iconName, iconSize, iconColor)}
       {children}
     </a>
   )
@@ -90,19 +239,36 @@ export function renderLink(
 
 /**
  * Render Icon component.
+ * Icon name comes from content: Icon "search" → content = "search"
+ * Library detection: Icon "home" material → uses Material Icons
+ * Dark UI defaults applied, user styles override.
  */
 export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps): React.JSX.Element | null {
-  const iconName = node.properties.icon as string | undefined
+  // Icon name from text content: Icon "search"
+  const iconName = node.content
 
   if (!iconName) return null
 
-  const iconSize = typeof node.properties.size === 'number' ? node.properties.size : 20
-  const iconColor = typeof node.properties.col === 'string' ? node.properties.col : 'currentColor'
+  // icon-size: new, size: legacy
+  const iconSizeValue = node.properties['icon-size'] ?? node.properties.size
+  const iconSize = typeof iconSizeValue === 'number' ? iconSizeValue : 20
+  // Icon color priority: icon-color/ic > color/col > default
+  // This allows explicit icon coloring separate from text color
+  const iconColorValue = node.properties['icon-color'] ?? node.properties.ic ?? node.properties.col
+  const iconColor = typeof iconColorValue === 'string' ? iconColorValue : DEFAULTS.icon.color
+  // Check for material/phosphor property: Icon "home" material, Icon "House" phosphor
+  const library = node.properties.material ? 'material' : node.properties.phosphor ? 'phosphor' : 'lucide'
+  // Icon weight: Lucide uses strokeWidth (mapped from 100-700), Material uses wght (100-700)
+  const iconWeight = node.properties['icon-weight'] ?? node.properties.iw
+  const weight = typeof iconWeight === 'number' ? iconWeight : undefined
+  // Fill (Material only): true = filled, false = outlined (default)
+  const fill = node.properties.fill === true
 
   return (
     <span
       key={node.id}
       data-id={node.id}
+      data-source-line={node.line}
       className={node.name}
       style={{
         display: 'inline-flex',
@@ -114,7 +280,7 @@ export function renderIcon({ node, style, onMouseEnter, onMouseLeave, onClick }:
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      {renderDynamicIcon(iconName, iconSize, iconColor)}
+      {renderDynamicIcon(iconName, iconSize, iconColor as string, library, weight, fill)}
     </span>
   )
 }
@@ -157,21 +323,31 @@ export function getImageSrc(node: ASTNode): string | undefined {
 
 /**
  * Render Heading element (H1-H6).
+ * Dark UI defaults applied with level-specific sizing, user styles override.
+ * Typography can be inherited from App.
  */
 export function renderHeading(
-  { node, style, onMouseEnter, onMouseLeave, onClick }: PrimitiveProps,
+  { node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps,
   children: React.ReactNode
 ): React.JSX.Element {
   const level = getHeadingLevel(node) || 1
   const Tag = `h${level}` as keyof React.JSX.IntrinsicElements
+
+  // Get level-specific defaults
+  const levelKey = `h${level}` as keyof typeof DEFAULTS
+  const levelDefaults = DEFAULTS[levelKey] || {}
+
+  // Apply inherited typography to base heading defaults
+  const baseDefaults = applyInheritedTypography({ ...DEFAULTS.heading, ...levelDefaults }, typography)
 
   return React.createElement(
     Tag,
     {
       key: node.id,
       'data-id': node.id,
+      'data-source-line': node.line,
       className: node.name,
-      style,
+      style: { ...baseDefaults, ...style },
       onMouseEnter,
       onMouseLeave,
       onClick,

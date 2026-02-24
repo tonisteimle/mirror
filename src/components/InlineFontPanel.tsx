@@ -178,6 +178,8 @@ export function InlineFontPanel({
       position={position}
       width={240}
       maxHeight={320}
+      testId="panel-font-picker"
+      disableClickOutsideClose
     >
       <PanelList listRef={listRef}>
         {filteredFonts.length === 0 ? (
@@ -252,8 +254,8 @@ export function InlineFontPanel({
 
       <PanelFooter
         hints={[
-          { key: '↑↓', label: 'nav' },
-          { key: '↵', label: 'select' },
+          { label: 'Abbrechen', onClick: onClose },
+          { label: 'Einfügen', primary: true },
         ]}
       />
     </InlinePanel>

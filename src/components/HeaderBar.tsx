@@ -6,11 +6,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { colors } from '../theme'
 import type { ViewMode } from '../hooks/useAppState'
+import type { PreviewPanelMode } from '../containers/PreviewContainer'
+import type { SaveStatus } from '../hooks/useLibraryCloud'
 
 interface HeaderBarProps {
-  onNewPrototype: () => void
-  onOpen: () => void
-  onSave: () => void
   onExport: () => void
   onOpenSettings: () => void
   viewMode?: ViewMode
@@ -19,24 +18,30 @@ interface HeaderBarProps {
   showPropertyPanel?: boolean
   /** Callback to toggle property panel */
   onTogglePropertyPanel?: () => void
-  /** Whether content edit mode is active (edit text directly in preview) */
-  contentEditMode?: boolean
-  /** Callback to toggle content edit mode */
-  onToggleContentEditMode?: () => void
+  /** Preview panel mode (preview or react code view) */
+  previewPanelMode?: PreviewPanelMode
+  /** Callback to change preview panel mode */
+  onPreviewPanelModeChange?: (mode: PreviewPanelMode) => void
+  /** Cloud save status */
+  cloudSaveStatus?: SaveStatus
+  /** Current project ID (always set, defaults to "default") */
+  cloudProjectId?: string
+  /** Open projects dialog */
+  onOpenProjects?: () => void
 }
 
 export function HeaderBar({
-  onNewPrototype,
-  onOpen,
-  onSave,
   onExport,
   onOpenSettings,
   viewMode = 'edit',
   onViewModeChange,
   showPropertyPanel = false,
   onTogglePropertyPanel,
-  contentEditMode = false,
-  onToggleContentEditMode,
+  previewPanelMode = 'preview',
+  onPreviewPanelModeChange,
+  cloudSaveStatus,
+  cloudProjectId,
+  onOpenProjects,
 }: HeaderBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -56,38 +61,54 @@ export function HeaderBar({
   }, [menuOpen])
 
   return (
-    <div style={{
-      height: '40px',
-      backgroundColor: colors.header,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingLeft: '20px',
-      paddingRight: '16px',
-    }}>
+    <header
+      role="banner"
+      data-testid="header-bar"
+      style={{
+        height: '44px',
+        backgroundColor: colors.header,
+        borderBottom: '1px solid #1a1a1a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingLeft: '20px',
+        paddingRight: '16px',
+        position: 'relative',
+      }}
+    >
       {/* Left: Logo */}
-      <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="mirror" style={{ height: '24px', marginTop: '-4px', marginLeft: '-2px' }} />
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+        <img
+          src={`${import.meta.env.BASE_URL}Logo.png`}
+          alt="Mirror Logo"
+          data-testid="header-logo"
+          style={{ height: '24px', marginTop: '-4px', marginLeft: '-2px' }}
+        />
+      </div>
 
+      {/* Center: Project Title */}
+      {cloudProjectId && (
+        <div
+          style={{
+            fontSize: '13px',
+            fontWeight: 400,
+            color: colors.textMuted,
+          }}
+        >
+          {cloudProjectId}
+        </div>
+      )}
 
       {/* Right: Actions */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-        {/* View Mode Toggle */}
+      <div style={{ flex: 1, display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'flex-end' }}>
+        {/* Fullscreen Toggle */}
         {onViewModeChange && (
           <>
-            <IconButton
-              onClick={() => onViewModeChange(viewMode === 'preview' ? 'edit' : 'preview')}
-              title={viewMode === 'preview' ? 'Edit Mode (⌘.)' : 'Preview Mode (⌘.)'}
-              active={viewMode === 'preview'}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </IconButton>
             <IconButton
               onClick={() => onViewModeChange(viewMode === 'fullscreen' ? 'edit' : 'fullscreen')}
               title={viewMode === 'fullscreen' ? 'Exit Fullscreen (Esc)' : 'Fullscreen (⌘⇧.)'}
               active={viewMode === 'fullscreen'}
+              testId="header-toggle-fullscreen"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 3 21 3 21 9"/>
@@ -100,53 +121,63 @@ export function HeaderBar({
           </>
         )}
 
-        {/* Property Panel Toggle - temporarily disabled */}
-        {/* {onTogglePropertyPanel && viewMode === 'edit' && (
+        {/* Component Library Toggle */}
+        {onPreviewPanelModeChange && (
           <IconButton
-            onClick={onTogglePropertyPanel}
-            title={showPropertyPanel ? 'Properties ausblenden' : 'Properties einblenden'}
-            active={showPropertyPanel}
+            onClick={() => onPreviewPanelModeChange(previewPanelMode === 'components' ? 'preview' : 'components')}
+            title={previewPanelMode === 'components' ? 'Preview anzeigen' : 'Component Library'}
+            active={previewPanelMode === 'components'}
+            testId="header-toggle-components"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="21" x2="4" y2="14"/>
-              <line x1="4" y1="10" x2="4" y2="3"/>
-              <line x1="12" y1="21" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12" y2="3"/>
-              <line x1="20" y1="21" x2="20" y2="16"/>
-              <line x1="20" y1="12" x2="20" y2="3"/>
-              <line x1="1" y1="14" x2="7" y2="14"/>
-              <line x1="9" y1="8" x2="15" y2="8"/>
-              <line x1="17" y1="16" x2="23" y2="16"/>
-            </svg>
-          </IconButton>
-        )} */}
-
-        {/* Content Edit Mode Toggle (Pencil) */}
-        {onToggleContentEditMode && (
-          <IconButton
-            onClick={onToggleContentEditMode}
-            title={contentEditMode ? 'Edit-Modus beenden' : 'Text direkt bearbeiten'}
-            active={contentEditMode}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-              <path d="m15 5 4 4"/>
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
             </svg>
           </IconButton>
         )}
 
-        {/* Documentation Link - opens in new tab */}
-        <IconButton
-          onClick={() => window.open('http://ux-strategy.ch/mirror/mirror-docu-generated.html', '_blank')}
-          title="Dokumentation öffnen"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-        </IconButton>
+        {/* React Code Toggle */}
+        {onPreviewPanelModeChange && (
+          <IconButton
+            onClick={() => onPreviewPanelModeChange(previewPanelMode === 'react' ? 'preview' : 'react')}
+            title={previewPanelMode === 'react' ? 'Preview anzeigen' : 'React Code anzeigen'}
+            active={previewPanelMode === 'react'}
+            testId="header-toggle-react-code"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </IconButton>
+        )}
 
         <div style={{ width: '1px', backgroundColor: colors.border, height: '20px', margin: '0 4px' }} />
+
+        {/* Save Status Indicator */}
+        {cloudProjectId && (
+          <div
+            title={
+              cloudSaveStatus === 'saved' ? 'Gespeichert' :
+              cloudSaveStatus === 'saving' ? 'Speichert...' :
+              cloudSaveStatus === 'error' ? 'Speichern fehlgeschlagen' :
+              'Bereit'
+            }
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor:
+                cloudSaveStatus === 'saved' ? '#22C55E' :
+                cloudSaveStatus === 'saving' ? '#F59E0B' :
+                cloudSaveStatus === 'error' ? '#EF4444' :
+                '#666',
+              marginRight: '8px',
+              transition: 'background-color 0.3s ease',
+            }}
+          />
+        )}
 
         {/* Menu */}
         <div ref={menuRef} style={{ position: 'relative' }}>
@@ -156,6 +187,7 @@ export function HeaderBar({
             active={menuOpen}
             ariaHaspopup={true}
             ariaExpanded={menuOpen}
+            testId="header-menu-trigger"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"/>
@@ -181,33 +213,20 @@ export function HeaderBar({
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 zIndex: 1000,
               }}>
-              <MenuItem
-                onClick={() => { onNewPrototype(); setMenuOpen(false) }}
-                icon={<NewIcon />}
-              >
-                New
-              </MenuItem>
-
-              <MenuDivider />
-
-              <MenuItem
-                onClick={() => { onOpen(); setMenuOpen(false) }}
-                icon={<FolderOpenIcon />}
-              >
-                Open
-              </MenuItem>
-              <MenuItem
-                onClick={() => { onSave(); setMenuOpen(false) }}
-                icon={<SaveIcon />}
-              >
-                Save
-              </MenuItem>
-
-              <MenuDivider />
+              {onOpenProjects && (
+                <MenuItem
+                  onClick={() => { onOpenProjects(); setMenuOpen(false) }}
+                  icon={<CloudIcon />}
+                  testId="header-menu-projects"
+                >
+                  Projekte
+                </MenuItem>
+              )}
 
               <MenuItem
                 onClick={() => { onExport(); setMenuOpen(false) }}
                 icon={<ExportIcon />}
+                testId="header-menu-export"
               >
                 Export
               </MenuItem>
@@ -215,8 +234,25 @@ export function HeaderBar({
               <MenuDivider />
 
               <MenuItem
+                onClick={() => { window.open('https://ux-strategy.ch/mirror/tutorial.html', '_blank'); setMenuOpen(false) }}
+                icon={<BookIcon />}
+                testId="header-menu-tutorial"
+              >
+                Tutorial
+              </MenuItem>
+              <MenuItem
+                onClick={() => { window.open('https://ux-strategy.ch/mirror/reference.html', '_blank'); setMenuOpen(false) }}
+                icon={<ListIcon />}
+                testId="header-menu-reference"
+              >
+                Referenz
+              </MenuItem>
+              <MenuDivider />
+
+              <MenuItem
                 onClick={() => { onOpenSettings(); setMenuOpen(false) }}
                 icon={<SettingsIcon />}
+                testId="header-menu-settings"
               >
                 Settings
               </MenuItem>
@@ -224,7 +260,7 @@ export function HeaderBar({
           )}
         </div>
       </div>
-    </div>
+    </header>
   )
 }
 
@@ -236,6 +272,7 @@ function IconButton({
   disabled = false,
   ariaHaspopup,
   ariaExpanded,
+  testId,
 }: {
   onClick: () => void
   title: string
@@ -244,6 +281,7 @@ function IconButton({
   disabled?: boolean
   ariaHaspopup?: boolean
   ariaExpanded?: boolean
+  testId?: string
 }) {
   return (
     <button
@@ -253,6 +291,7 @@ function IconButton({
       aria-haspopup={ariaHaspopup}
       aria-expanded={ariaExpanded}
       disabled={disabled}
+      data-testid={testId}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -276,10 +315,12 @@ function MenuItem({
   onClick,
   icon,
   children,
+  testId,
 }: {
   onClick: () => void
   icon: React.ReactNode
   children: React.ReactNode
+  testId?: string
 }) {
   const [hovered, setHovered] = useState(false)
   const label = typeof children === 'string' ? children : undefined
@@ -288,6 +329,7 @@ function MenuItem({
     <button
       role="menuitem"
       aria-label={label}
+      data-testid={testId}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -370,3 +412,34 @@ function SettingsIcon() {
     </svg>
   )
 }
+
+function BookIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+    </svg>
+  )
+}
+
+function ListIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/>
+      <line x1="8" y1="12" x2="21" y2="12"/>
+      <line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/>
+      <line x1="3" y1="12" x2="3.01" y2="12"/>
+      <line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+  )
+}
+
+function CloudIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    </svg>
+  )
+}
+

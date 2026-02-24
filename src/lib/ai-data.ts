@@ -3,17 +3,20 @@
  *
  * Uses LLM to generate realistic demo data based on schemas.
  * Outputs data in Mirror instance syntax for the Data tab.
+ * Syntax based on reference.json.
  */
 
 import type { DataSchema, DataRecord } from '../parser/types'
 import { parseDataCode, getCollectionName, generateInstancesSyntax } from '../parser/data-parser'
 import { API } from '../constants'
 import { hasApiKey, getApiKey } from './ai'
+import { REFERENCE_VERSION } from './llm/prompt-generator'
 
 /**
  * System prompt for Mirror syntax data generation
+ * Uses Mirror list syntax (- prefix) from reference.json
  */
-const DATA_GENERATION_PROMPT = `Du bist ein Daten-Generator für UI-Prototypen.
+const DATA_GENERATION_PROMPT = `Du bist ein Daten-Generator für UI-Prototypen (Mirror ${REFERENCE_VERSION}).
 Generiere realistische Demo-Daten basierend auf den gegebenen Schemas.
 
 WICHTIG:
@@ -25,6 +28,10 @@ WICHTIG:
 - Relationen: TypeName[index] z.B. Category[0]
 - WICHTIG: Typen mit Relationen MÜSSEN nach den referenzierten Typen kommen!
 - Verwende realistische, deutschsprachige Inhalte wo sinnvoll
+
+## Mirror List Syntax (- prefix)
+Die - Syntax erstellt neue Instanzen eines Types:
+- TypeName wert1, wert2    // Neue Instanz mit Werten
 
 Beispiel für Schema:
 Category:

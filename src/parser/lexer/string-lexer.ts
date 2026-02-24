@@ -1,6 +1,46 @@
 /**
- * String parsing logic for the Mirror DSL lexer.
- * Handles both regular strings ("...") and multiline strings ('...').
+ * @module string-lexer
+ * @description String-Parsing für den Mirror DSL Lexer
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst reguläre und mehrzeilige Strings
+ *
+ * Zwei String-Typen:
+ * 1. Regulär: "Hello World" (Doppelte Anführungszeichen)
+ * 2. Multiline: 'Spans\nmultiple\nlines' (Einfache Anführungszeichen)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * REGULÄRE STRINGS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax "content"
+ * @example "Click me"
+ * @example "Hello, World!"
+ * @example ""  (leerer String)
+ *
+ * @token STRING
+ * @error Unterminated string: "xyz (kein schließendes ")
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * MULTILINE STRINGS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax 'content spanning
+ *         multiple lines'
+ *
+ * @example
+ *   text '# Welcome
+ *
+ *         This is a paragraph with **bold**.'
+ *
+ * @escape \' für Apostroph im String
+ * @token MULTILINE_STRING
+ * @error Unterminated multiline string starting at line N
+ *
+ * @used-by Doc-Mode für formatierte Texte
  */
 
 import type { Token, TokenType } from './token-types'

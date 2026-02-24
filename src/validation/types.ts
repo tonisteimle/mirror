@@ -113,5 +113,5 @@ export {
 export const PROPERTIES_WITH_VALUES = new Set([
   'gap', 'w', 'h', 'minw', 'maxw', 'minh', 'maxh',
   'pad', 'mar', 'col', 'boc', 'rad', 'border', 'bor',
-  'size', 'weight', 'font', 'icon'
+  'size', 'weight', 'font'
 ])

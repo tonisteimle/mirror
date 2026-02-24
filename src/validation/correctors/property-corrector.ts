@@ -96,8 +96,6 @@ const COMMON_TYPOS: Record<string, string> = {
   'heigh': 'height',
   'hgt': 'height',
   // Other typos
-  'ic': 'icon',
-  'ico': 'icon',
   'gp': 'gap',
   'spacing': 'gap',
   'grw': 'grow',

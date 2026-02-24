@@ -1,8 +1,36 @@
 /**
- * Color Handler
+ * @module sugar/handlers/color-handler
+ * @description Color Handler - Farben zu bg/col Properties
  *
- * Handles COLOR tokens as implicit color properties.
- * Uses inferColorProperty to determine the correct property.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Verarbeitet COLOR Tokens als implizite Farb-Properties
+ *
+ * Verwendet inferColorProperty für Component-spezifische Zuweisung.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VERHALTEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @rule Text Components → col (text color)
+ *   Text #3B82F6   → col: #3B82F6
+ *   Label #FFFFFF  → col: #FFFFFF
+ *
+ * @rule Container Components → bg (background)
+ *   Box #3B82F6    → bg: #3B82F6
+ *   Card #1E1E1E   → bg: #1E1E1E
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXPORT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @export colorHandler (Priority 100)
+ *   tokenTypes: ['COLOR']
+ *   canHandle: immer true
+ *
+ * @used-by sugar/index.ts
  */
 
 import type { SugarHandler, SugarContext, SugarResult } from '../types'

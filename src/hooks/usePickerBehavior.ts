@@ -105,6 +105,10 @@ export function usePickerBehavior(config: UsePickerBehaviorConfig): UsePickerBeh
     setSelectedIndex(initialIndex)
   }, [initialIndex])
 
+  // N1: Use ref for selectedIndex to avoid recreating handler on every selection change
+  const selectedIndexRef = useRef(selectedIndex)
+  selectedIndexRef.current = selectedIndex
+
   // Keyboard navigation handler
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -155,7 +159,8 @@ export function usePickerBehavior(config: UsePickerBehaviorConfig): UsePickerBeh
         case ' ':
           e.preventDefault()
           if (onSelect && itemCount > 0) {
-            onSelect(selectedIndex)
+            // N1: Use ref to get current selectedIndex
+            onSelect(selectedIndexRef.current)
           }
           break
 
@@ -175,7 +180,7 @@ export function usePickerBehavior(config: UsePickerBehaviorConfig): UsePickerBeh
           break
       }
     },
-    [columns, itemCount, onSelect, onClose, selectedIndex, customKeyHandlers]
+    [columns, itemCount, onSelect, onClose, customKeyHandlers]
   )
 
   return {

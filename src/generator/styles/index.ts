@@ -7,7 +7,8 @@ export {
   composeFinalStyle,
   createHighlightStyle,
   getAnimationStyle,
-  getAnimationClasses
+  getAnimationClasses,
+  getConditionalContent
 } from './style-composer'
 
 export {

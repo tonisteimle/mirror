@@ -99,6 +99,7 @@ export function PageSidebar({
     <nav
       role="navigation"
       aria-label="Page navigation"
+      data-testid="sidebar-pages"
       style={{
         width: '120px',
         minWidth: '120px',
@@ -121,6 +122,7 @@ export function PageSidebar({
             tabIndex={0}
             aria-current={isActive ? 'page' : undefined}
             aria-label={`Page: ${page.name}`}
+            data-testid={`sidebar-page-${page.id}`}
             onClick={() => !isEditing && onSelectPage(page.id)}
             onDoubleClick={() => handleDoubleClick(page)}
             onMouseEnter={() => setHoveredId(page.id)}

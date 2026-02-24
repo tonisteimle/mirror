@@ -125,8 +125,19 @@ export function evaluateExpression(
     }
 
     case 'binary': {
-      const l = Number(evaluateExpression(expr.left!, variables, event))
-      const r = Number(evaluateExpression(expr.right!, variables, event))
+      const leftVal = evaluateExpression(expr.left!, variables, event)
+      const rightVal = evaluateExpression(expr.right!, variables, event)
+
+      // For + operator, check if either operand is a string → string concatenation
+      if (expr.operator === '+') {
+        if (typeof leftVal === 'string' || typeof rightVal === 'string') {
+          return String(leftVal ?? '') + String(rightVal ?? '')
+        }
+      }
+
+      // For arithmetic, convert to numbers
+      const l = Number(leftVal)
+      const r = Number(rightVal)
       switch (expr.operator) {
         case '+': return l + r
         case '-': return l - r
@@ -134,6 +145,14 @@ export function evaluateExpression(
         case '/': return r !== 0 ? l / r : 0
         default: return 0
       }
+    }
+
+    case 'unary': {
+      const operandVal = evaluateExpression(expr.operand!, variables, event)
+      if (expr.operator === 'not') {
+        return !operandVal
+      }
+      return undefined
     }
   }
   return undefined

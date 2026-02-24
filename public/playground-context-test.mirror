@@ -29,7 +29,7 @@ doc
   text
     '$h2 Test 1: Token-Vererbung
 
-     $p Der Playground sollte $code[$primary], $code[$spacing] und $code[$radius] kennen:'
+     $p Der Playground sollte `$primary`, `$spacing` und `$radius` kennen:'
 
   playground
     'Box pad $spacing rad $radius bg $primary col white "Token-Test OK"'
@@ -37,7 +37,7 @@ doc
   text
     '$h2 Test 2: Komponenten-Vererbung
 
-     $p Der Playground sollte $code[Button], $code[PrimaryButton] etc. kennen:'
+     $p Der Playground sollte `Button`, `PrimaryButton` etc. kennen:'
 
   playground
     'Row gap $spacing

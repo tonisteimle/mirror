@@ -814,7 +814,7 @@ export function resolveTokenInContext(
 
 /**
  * Check if a token type is compatible with a property.
- * Used for flexible matching where spacing tokens can be used for radius, size, etc.
+ * Used for flexible matching where spacing tokens can be used for radius, etc.
  */
 function isTypeCompatibleWithProperty(
   tokenType: TokenValueType,
@@ -825,9 +825,17 @@ function isTypeCompatibleWithProperty(
   // Exact type match
   if (tokenType === expectedType) return true
 
-  // Spacing tokens are compatible with radius, size, icon-size, and border properties
+  // Spacing tokens are compatible with radius and border properties
+  // NOT with size/is - those need explicit size tokens
   if (tokenType === 'spacing') {
-    if (['rad', 'radius', 'size', 'is', 'bor', 'border'].includes(property)) {
+    if (['rad', 'radius', 'bor', 'border'].includes(property)) {
+      return true
+    }
+  }
+
+  // Size tokens are compatible with icon-size
+  if (tokenType === 'size') {
+    if (['is', 'size'].includes(property)) {
       return true
     }
   }

@@ -72,10 +72,10 @@ export interface DSLProperties {
   // ============================================
   // Sizing
   // ============================================
-  /** Width in pixels or 'full' for 100% */
-  w?: number | 'full'
-  /** Height in pixels or 'full' for 100% */
-  h?: number | 'full'
+  /** Width: number (px), 'min' (fit-content), 'max' (100% + flex-grow), 'full' (legacy), or percentage string */
+  w?: number | 'min' | 'max' | 'full' | string
+  /** Height: number (px), 'min' (fit-content), 'max' (100% + flex-grow), 'full' (legacy), or percentage string */
+  h?: number | 'min' | 'max' | 'full' | string
   /** Minimum width */
   minw?: number
   /** Maximum width */

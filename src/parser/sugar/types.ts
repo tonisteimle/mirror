@@ -1,8 +1,54 @@
 /**
- * Sugar Module Types
+ * @module sugar/types
+ * @description Sugar Types - Typdefinitionen für Syntactic Sugar
  *
- * Type definitions for the syntactic sugar handling system.
- * Handlers process implicit property assignments based on token types.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Typdefinitionen für das Syntactic Sugar Handling System
+ *
+ * Handler verarbeiten implizite Property-Zuweisungen basierend auf Token-Typen.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * INTERFACES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @interface SugarContext
+ *   ctx: ParserContext     → Parser-Kontext für Token-Zugriff
+ *   node: ASTNode          → AST-Node der gerade gebaut wird
+ *   componentName: string  → Component-Name für typ-spezifisches Handling
+ *   token: Token           → Aktuelles Token
+ *
+ * @interface SugarResult
+ *   handled: boolean       → Ob Handler das Token verarbeitet hat
+ *   tokensConsumed?: number → Anzahl zusätzlich konsumierter Tokens
+ *
+ * @interface SugarHandler
+ *   name: string           → Handler-Name für Debugging
+ *   priority: number       → Priorität (höher = läuft zuerst)
+ *   tokenTypes: string[]   → Token-Typen die verarbeitet werden
+ *   canHandle(ctx): boolean → Prüft ob Handler Token verarbeiten kann
+ *   handle(ctx): SugarResult → Verarbeitet Token
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Handler Implementation
+ *   const colorHandler: SugarHandler = {
+ *     name: 'color',
+ *     priority: 100,
+ *     tokenTypes: ['COLOR'],
+ *     canHandle: (ctx) => true,
+ *     handle: (ctx) => {
+ *       const color = ctx.ctx.advance().value
+ *       ctx.node.properties.bg = color
+ *       return { handled: true }
+ *     }
+ *   }
+ *
+ * @used-by sugar-registry.ts, handlers/*
  */
 
 import type { ParserContext } from '../parser-context'

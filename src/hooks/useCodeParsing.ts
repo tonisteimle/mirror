@@ -1,9 +1,9 @@
 import { useMemo, useCallback } from 'react'
 import { parse } from '../parser/parser'
-import { validateCode } from '../validator'
+import { unifiedValidate } from '../validation'
+import type { Diagnostic } from '../validation/core'
 import { useDebouncedValue } from './useDebouncedValue'
 import type { ASTNode, ParseIssue, ParseResult as ParserParseResult } from '../parser/types'
-import type { ValidationDiagnostic } from '../validator/types'
 
 // Re-export parser's ParseResult for backward compatibility
 export type ParseResult = ParserParseResult
@@ -37,6 +37,8 @@ const emptyParseResult: ParseResult = {
   styles: new Map(),
   commands: [],
   centralizedEvents: [],
+  themes: new Map(),
+  activeTheme: null,
 }
 
 /**
@@ -136,28 +138,17 @@ export function useCodeParsing(
       })
     }
 
-    // Run full validation (reuse parseResult, don't parse again)
-    const validation = validateCode(parseResult, debouncedCode)
+    // Run unified validation (reuse parseResult, don't parse again)
+    const validation = unifiedValidate(parseResult, { mode: 'ast' })
 
-    // Collect validation errors
-    validation.errors.forEach((error: ValidationDiagnostic) => {
+    // Convert unified Diagnostics to CodeDiagnostics
+    validation.diagnostics.forEach((diag: Diagnostic) => {
       allDiagnostics.push({
-        type: 'error',
-        line: error.location.line,
-        column: error.location.column,
-        message: error.message,
-        suggestion: error.suggestions?.[0]?.label
-      })
-    })
-
-    // Collect validation warnings
-    validation.warnings.forEach((warning: ValidationDiagnostic) => {
-      allDiagnostics.push({
-        type: 'warning',
-        line: warning.location.line,
-        column: warning.location.column,
-        message: warning.message,
-        suggestion: warning.suggestions?.[0]?.label
+        type: diag.severity === 'info' ? 'info' : diag.severity,
+        line: diag.location.line,
+        column: diag.location.column,
+        message: diag.message,
+        suggestion: diag.suggestions?.[0]?.label
       })
     })
 

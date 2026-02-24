@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { InlinePanel, PanelFooter } from './InlinePanel'
-import { TailwindColorPalette } from './TailwindColorPalette'
+import { ColorSystemPalette } from './ColorSystemPalette'
 import { TokenSwatches } from './TokenSwatches'
 import { TokenButtonRow } from './TokenButtonRow'
 import { AlignLeft, AlignCenter, AlignRight, Scissors, ChevronDown } from 'lucide-react'
@@ -73,6 +73,10 @@ interface InlineTypographyPanelProps {
   onSwitchPanel?: (panel: PanelTabId) => void
   /** Which tabs to show (defaults to layout, font, border) */
   availableTabs?: PanelTabId[]
+  /** Token mode from project settings (if provided, overrides localStorage) */
+  useTokenMode?: boolean
+  /** Callback when token mode changes (if provided, updates project settings) */
+  onTokenModeChange?: (mode: boolean) => void
 }
 
 // ============================================
@@ -189,6 +193,7 @@ function generateTypographyCode(state: TypographyState): string {
   // ============================================
 
   // 1. Size (most important, comes first) - can be number or token
+  // Only output if explicitly set (> 0 or token)
   if (state.size) {
     if (typeof state.size === 'string' && state.size.startsWith('$')) {
       parts.push(`size ${state.size}`)
@@ -197,8 +202,8 @@ function generateTypographyCode(state: TypographyState): string {
     }
   }
 
-  // 2. Weight (boldness)
-  if (state.weight && state.weight !== 400) {
+  // 2. Weight (boldness) - only output if explicitly set (> 0)
+  if (state.weight && state.weight > 0) {
     parts.push(`weight ${state.weight}`)
   }
 
@@ -207,8 +212,8 @@ function generateTypographyCode(state: TypographyState): string {
     parts.push(`font ${state.font}`)
   }
 
-  // 4. Line height
-  if (state.line && state.line !== 1.5) {
+  // 4. Line height - only output if explicitly set (> 0)
+  if (state.line && state.line > 0) {
     parts.push(`line ${state.line}`)
   }
 
@@ -485,7 +490,7 @@ function MiniColorPicker({
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div style={{ padding: '12px' }}>
-        <TailwindColorPalette
+        <ColorSystemPalette
           color={color || '#FFFFFF'}
           onChange={(c) => onChange(c.toUpperCase())}
         />
@@ -712,9 +717,9 @@ function MiniFontPicker({
 
 const defaultState: TypographyState = {
   font: '',
-  weight: 400,
-  size: 16,
-  line: 1.5,
+  weight: 0,  // 0 = not set, shows no preset selected
+  size: 0,    // 0 = not set, shows no preset selected
+  line: 0,    // 0 = not set, shows no preset selected
   color: '',
   align: '',
   truncate: false,
@@ -734,6 +739,8 @@ export function InlineTypographyPanel({
   showTabs,
   onSwitchPanel,
   availableTabs,
+  useTokenMode: useTokenModeProp,
+  onTokenModeChange,
 }: InlineTypographyPanelProps) {
   const [state, setState] = useState<TypographyState>(defaultState)
   const hasUserInteractedRef = useRef(false)
@@ -746,11 +753,20 @@ export function InlineTypographyPanel({
       hasUserInteractedRef.current = false
       pendingSyncRef.current = false
       const parsed = parseTypographyCode(initialCode || '')
-      setState({ ...defaultState, ...parsed })
+      // Use prop if provided, otherwise fall back to localStorage
+      const tokenMode = useTokenModeProp !== undefined ? useTokenModeProp : getStoredTokenMode()
+      setState({ ...defaultState, ...parsed, useTokenMode: tokenMode })
       // Pre-load fonts
       loadGoogleFonts()
     }
-  }, [isOpen, initialCode])
+  }, [isOpen, initialCode, useTokenModeProp])
+
+  // Sync token mode with prop when it changes externally
+  useEffect(() => {
+    if (useTokenModeProp !== undefined && state.useTokenMode !== useTokenModeProp) {
+      setState(prev => ({ ...prev, useTokenMode: useTokenModeProp }))
+    }
+  }, [useTokenModeProp])
 
   // Sync to editor after user interaction
   useEffect(() => {
@@ -805,6 +821,7 @@ export function InlineTypographyPanel({
       width={360}
       maxHeight={400}
       testId="panel-typography-picker"
+      disableClickOutsideClose
     >
       {/* Tabs header when showTabs is true */}
       {showTabs && onSwitchPanel && (
@@ -814,8 +831,9 @@ export function InlineTypographyPanel({
           availableTabs={availableTabs}
           useTokenMode={state.useTokenMode}
           onTokenModeChange={(mode) => {
-            setStoredTokenMode(mode)
             updateState(s => ({ ...s, useTokenMode: mode }))
+            // Notify parent if callback provided (saves to project)
+            onTokenModeChange?.(mode)
           }}
         />
       )}

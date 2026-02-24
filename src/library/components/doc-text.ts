@@ -18,7 +18,7 @@ export const DocTextComponent: LibraryComponent = {
   layoutExample: `text
   '$h2 Title
 
-   $p Paragraph with $b[bold] text.'`
+   $p Paragraph with **bold** text.'`
 }
 
 export default DocTextComponent

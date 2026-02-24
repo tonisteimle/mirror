@@ -1,6 +1,7 @@
 /**
  * Vitest Setup File
  *
- * Configures testing-library/jest-dom matchers for all tests.
+ * Configures matchers and globals for all tests.
  */
 import '@testing-library/jest-dom/vitest'
+import './matchers'

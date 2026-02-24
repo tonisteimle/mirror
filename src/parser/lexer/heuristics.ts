@@ -1,6 +1,71 @@
 /**
- * Heuristic functions for error-tolerant parsing.
- * These functions help detect likely typos and provide better error messages.
+ * @module heuristics
+ * @description Heuristik-Funktionen für Error-Tolerant Parsing
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Erkennt Tippfehler und liefert bessere Error-Messages
+ *
+ * Diese Funktionen ermöglichen "error-tolerant parsing":
+ * - Parser bricht nicht ab bei Tippfehlern
+ * - Stattdessen: ParseIssue mit Suggestion
+ * - Editor zeigt Squiggle + "Did you mean...?"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNKTIONEN
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function levenshteinDistance(a, b) → number
+ *   Berechnet Edit-Distanz zwischen zwei Strings
+ *   Verwendet für Fuzzy-Matching
+ *   Beispiel: levenshteinDistance("paddin", "padding") → 1
+ *
+ * @function looksLikeEvent(value) → boolean
+ *   Prüft ob value wie ein Event aussieht
+ *   Pattern: on[a-z]+ (onclck, onhovr, onchng)
+ *   Returns true wenn close zu EVENT_KEYWORDS
+ *
+ * @function looksLikeAnimation(value) → boolean
+ *   Prüft ob value wie eine Animation aussieht
+ *   Pattern: slideup, fde, sacle (fehlende Bindestriche/Typos)
+ *   Returns true wenn close zu ANIMATION_KEYWORDS
+ *
+ * @function looksLikeProperty(value) → boolean
+ *   Prüft ob value wie eine Property aussieht
+ *   Pattern: paddin, colr, radus (typische Typos)
+ *   Returns true wenn close zu PROPERTIES
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LEVENSHTEIN-SCHWELLWERTE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @threshold Events
+ *   Max 2 Character-Unterschiede nach "on" Prefix
+ *   Beispiel: "onclck" → onclick (1 Zeichen fehlt)
+ *
+ * @threshold Animations
+ *   Max 2 Character-Unterschiede (ohne Bindestriche)
+ *   Beispiel: "slideup" → slide-up (Bindestrich fehlt)
+ *
+ * @threshold Properties
+ *   Kurze Props (≤3 chars): Max 1 Unterschied
+ *   Lange Props: Max 2 Unterschiede
+ *   Beispiel: "paddin" → padding (1 Zeichen fehlt)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EXCLUSIONS (FALSE-POSITIVE SCHUTZ)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Folgende werden NICHT als Tippfehler geflagt:
+ * - PascalCase Namen (Component Names)
+ * - RESERVED_WORDS (true, false, auto, etc.)
+ * - Gültige DSL-Keywords (action, position, state)
+ * - Behavior Targets (self, next, prev)
+ *
+ * @used-by identifier-lexer.ts für Token-Typ-Bestimmung
+ * @used-by parser-context.ts für ParseIssue-Generierung
  */
 
 import {
@@ -14,7 +79,8 @@ import {
   ANIMATION_ACTION_KEYWORDS,
   SYSTEM_STATES,
   BEHAVIOR_STATES,
-  TIMING_MODIFIERS
+  TIMING_MODIFIERS,
+  CORNER_DIRECTIONS
 } from '../../dsl/properties'
 import { RESERVED_WORDS } from './token-types'
 
@@ -189,6 +255,11 @@ export function looksLikeProperty(value: string): boolean {
 
   // Don't flag behavior states (valid, invalid, highlighted, selected, etc.)
   if (BEHAVIOR_STATES.has(value)) {
+    return false
+  }
+
+  // Don't flag corner directions (tl, tr, bl, br, top-left, etc.)
+  if (CORNER_DIRECTIONS.has(value)) {
     return false
   }
 

@@ -1,13 +1,74 @@
 /**
- * Semantic Validation Module
+ * @module semantic-validation
+ * @description Semantic Validation - Post-Parse AST Validierung
  *
- * Post-parse validation for semantic errors:
- * - Undefined token references
- * - Undefined component references
- * - Duplicate definitions
- * - Type mismatches
- * - Circular references
- * - Invalid property values
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Validiert AST nach dem Parsing auf semantische Fehler
+ *
+ * Geprüft werden:
+ * - Undefinierte Token-Referenzen ($unknown)
+ * - Undefinierte Component-Referenzen
+ * - Doppelte Definitionen
+ * - Typ-Mismatches (z.B. String wo Number erwartet)
+ * - Zirkuläre Referenzen in Tokens
+ * - Ungültige Property-Werte
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VALIDATION RESULT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @interface ValidationResult
+ *   valid: boolean      → true wenn keine Errors (Warnings erlaubt)
+ *   errors: ParseError[] → Blocking Errors
+ *   warnings: ParseError[] → Advisory Warnings
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function validateSemantics(result, source?) → ValidationResult
+ *   Hauptfunktion: Validiert komplettes ParseResult
+ *   - Sammelt definierte Tokens und Templates
+ *   - Traversiert AST rekursiv
+ *   - Gruppiert Fehler nach Token/Component-Namen
+ *
+ * @function checkCircularReferences(tokens) → ParseError[]
+ *   Prüft Token-Definitionen auf Zirkel
+ *   Verwendet DFS mit visiting/visited Sets
+ *
+ * @function checkDuplicateDefinitions(registry, source?) → ParseError[]
+ *   Placeholder für Duplikat-Prüfung
+ *   (Benötigt Line-Tracking in Registry)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VALIDIERTE PROPERTIES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @validate Numeric Properties
+ *   pad, mar, gap, w, h, rad, bor, size, z
+ *   → Warning wenn String statt Number
+ *
+ * @validate Color Properties
+ *   col, boc
+ *   → Warning wenn kein Farbwert (#, rgb, hsl)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIEL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Undefined Token Warning
+ *   Button background $unknown
+ *   → Warning [S001]: Token "$unknown" is not defined
+ *   → Hint: Define it with: $unknown: <value>
+ *
+ * @example Type Mismatch Warning
+ *   Button padding "sixteen"
+ *   → Warning [S005]: Property "pad" expects a number, got string "sixteen"
+ *
+ * @used-by parser.ts nach dem Haupt-Parsing
  */
 
 import type { ASTNode, ParseResult } from './types'

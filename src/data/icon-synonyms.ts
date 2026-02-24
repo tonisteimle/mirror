@@ -1158,10 +1158,169 @@ export const iconSynonyms: Record<string, string[]> = {
 }
 
 /**
- * Get all synonyms for an icon name
+ * Common word translations and synonyms for automatic generation
+ */
+const wordSynonyms: Record<string, string[]> = {
+  // Directions & Positions
+  arrow: ['pfeil', 'direction'],
+  up: ['hoch', 'oben', 'aufwärts', 'top'],
+  down: ['runter', 'unten', 'abwärts', 'bottom'],
+  left: ['links', 'zurück', 'back'],
+  right: ['rechts', 'weiter', 'forward'],
+  top: ['oben', 'up'],
+  bottom: ['unten', 'down'],
+  center: ['mitte', 'zentrum', 'middle'],
+  horizontal: ['waagerecht', 'hor'],
+  vertical: ['senkrecht', 'ver'],
+
+  // Actions
+  add: ['hinzufügen', 'plus', 'neu', 'new', 'create'],
+  remove: ['entfernen', 'löschen', 'delete'],
+  edit: ['bearbeiten', 'ändern', 'modify', 'change'],
+  save: ['speichern', 'sichern', 'store'],
+  delete: ['löschen', 'entfernen', 'remove', 'trash'],
+  copy: ['kopieren', 'duplicate', 'clone'],
+  paste: ['einfügen', 'insert'],
+  cut: ['ausschneiden', 'schneiden'],
+  search: ['suchen', 'finden', 'find', 'lookup'],
+  filter: ['filtern', 'sortieren'],
+  sort: ['sortieren', 'ordnen'],
+  refresh: ['aktualisieren', 'reload', 'update'],
+  sync: ['synchronisieren', 'abgleichen'],
+  upload: ['hochladen', 'senden'],
+  download: ['herunterladen', 'laden'],
+  share: ['teilen', 'send'],
+  send: ['senden', 'schicken', 'abschicken'],
+  open: ['öffnen', 'aufmachen'],
+  close: ['schließen', 'zumachen', 'exit'],
+  expand: ['erweitern', 'ausklappen', 'open'],
+  collapse: ['einklappen', 'zuklappen', 'minimize'],
+  zoom: ['vergrößern', 'magnify'],
+  rotate: ['drehen', 'turn'],
+  flip: ['spiegeln', 'umdrehen'],
+  move: ['verschieben', 'bewegen', 'drag'],
+  resize: ['größe-ändern', 'skalieren'],
+  lock: ['sperren', 'schützen', 'secure'],
+  unlock: ['entsperren', 'freigeben'],
+  show: ['anzeigen', 'zeigen', 'visible'],
+  hide: ['verstecken', 'ausblenden', 'invisible'],
+  play: ['abspielen', 'starten', 'start'],
+  pause: ['pausieren', 'anhalten', 'stop'],
+  stop: ['stoppen', 'beenden', 'halt'],
+  record: ['aufnehmen', 'aufzeichnen'],
+
+  // Objects
+  file: ['datei', 'dokument', 'document'],
+  folder: ['ordner', 'verzeichnis', 'directory'],
+  image: ['bild', 'foto', 'picture', 'photo'],
+  video: ['film', 'movie', 'clip'],
+  audio: ['ton', 'sound', 'musik', 'music'],
+  text: ['schrift', 'wort', 'word'],
+  code: ['programmierung', 'entwicklung', 'dev'],
+  link: ['verbindung', 'url', 'href'],
+  mail: ['email', 'nachricht', 'message', 'brief'],
+  message: ['nachricht', 'mitteilung', 'chat'],
+  calendar: ['kalender', 'datum', 'date', 'termin'],
+  clock: ['uhr', 'zeit', 'time'],
+  user: ['benutzer', 'person', 'profil', 'account'],
+  users: ['benutzer', 'personen', 'gruppe', 'team'],
+  settings: ['einstellungen', 'optionen', 'config', 'preferences'],
+  home: ['startseite', 'zuhause', 'heim', 'start'],
+  menu: ['menü', 'navigation', 'nav'],
+  list: ['liste', 'aufzählung'],
+  grid: ['raster', 'gitter', 'tiles'],
+  table: ['tabelle', 'matrix'],
+  chart: ['diagramm', 'grafik', 'graph'],
+  tag: ['etikett', 'label', 'markierung'],
+  badge: ['abzeichen', 'marker'],
+  bell: ['glocke', 'benachrichtigung', 'notification', 'alert'],
+  star: ['stern', 'favorit', 'favorite', 'rating'],
+  heart: ['herz', 'favorit', 'love', 'like'],
+  flag: ['flagge', 'markierung', 'mark'],
+  bookmark: ['lesezeichen', 'merken', 'save'],
+  pin: ['nadel', 'anheften', 'marker'],
+  key: ['schlüssel', 'passwort', 'password'],
+  shield: ['schild', 'schutz', 'security', 'safe'],
+  cloud: ['wolke', 'online', 'storage'],
+  sun: ['sonne', 'hell', 'light', 'day'],
+  moon: ['mond', 'dunkel', 'dark', 'night'],
+
+  // UI Elements
+  button: ['knopf', 'schaltfläche', 'btn'],
+  input: ['eingabe', 'feld', 'field'],
+  check: ['häkchen', 'fertig', 'done', 'ok', 'yes'],
+  x: ['schließen', 'close', 'cancel', 'remove', 'delete'],
+  plus: ['hinzufügen', 'add', 'new', 'mehr'],
+  minus: ['entfernen', 'weniger', 'remove', 'less'],
+  circle: ['kreis', 'rund', 'dot'],
+  square: ['quadrat', 'rechteck', 'box'],
+  triangle: ['dreieck', 'pfeil'],
+
+  // States
+  on: ['an', 'aktiv', 'active', 'enabled'],
+  off: ['aus', 'inaktiv', 'inactive', 'disabled'],
+  loading: ['laden', 'warten', 'spinner', 'progress'],
+  error: ['fehler', 'problem', 'wrong'],
+  warning: ['warnung', 'achtung', 'caution'],
+  success: ['erfolg', 'ok', 'done', 'complete'],
+  info: ['information', 'details', 'help'],
+
+  // Misc
+  external: ['extern', 'außen', 'outside'],
+  internal: ['intern', 'innen', 'inside'],
+  more: ['mehr', 'weitere', 'dots', 'ellipsis'],
+  less: ['weniger', 'minus'],
+  all: ['alle', 'gesamt', 'everything'],
+  none: ['keine', 'nichts', 'empty'],
+  new: ['neu', 'erstellen', 'create', 'add'],
+  old: ['alt', 'früher', 'previous'],
+}
+
+/**
+ * Split PascalCase into words
+ */
+function splitPascalCase(name: string): string[] {
+  return name
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .toLowerCase()
+    .split(' ')
+    .filter(w => w.length > 0)
+}
+
+/**
+ * Generate synonyms automatically based on icon name
+ */
+function generateSynonyms(iconName: string): string[] {
+  const words = splitPascalCase(iconName)
+  const synonyms = new Set<string>()
+
+  // Add each word's synonyms
+  for (const word of words) {
+    const wordSyns = wordSynonyms[word]
+    if (wordSyns) {
+      wordSyns.forEach(s => synonyms.add(s))
+    }
+  }
+
+  // Add the words themselves (for partial matching)
+  words.forEach(w => {
+    if (w.length > 2) synonyms.add(w)
+  })
+
+  return Array.from(synonyms)
+}
+
+/**
+ * Get all synonyms for an icon name (manual + auto-generated)
  */
 export function getIconSynonyms(iconName: string): string[] {
-  return iconSynonyms[iconName] || []
+  const manual = iconSynonyms[iconName] || []
+  const auto = generateSynonyms(iconName)
+
+  // Merge and deduplicate, manual synonyms first (higher priority)
+  const all = new Set([...manual, ...auto])
+  return Array.from(all)
 }
 
 /**
@@ -1204,7 +1363,7 @@ export function searchIcons(allIconNames: string[], query: string): string[] {
     .map(iconName => {
       const lowerIconName = iconName.toLowerCase()
       const kebabName = iconName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-      const synonyms = iconSynonyms[iconName] || []
+      const synonyms = getIconSynonyms(iconName)
 
       let score = 0
 

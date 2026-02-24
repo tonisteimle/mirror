@@ -26,7 +26,7 @@ function getEnvApiKey(): string {
       return import.meta.env.VITE_OPENROUTER_API_KEY
     }
   } catch {
-    // import.meta not available
+    // Expected in Node.js environment - import.meta is browser-only
   }
   // Try Node.js process.env (for E2E tests)
   try {
@@ -35,7 +35,7 @@ function getEnvApiKey(): string {
       return global.process.env.VITE_OPENROUTER_API_KEY
     }
   } catch {
-    // process not available
+    // Expected in browser environment - process is Node.js-only
   }
   return ''
 }
@@ -49,7 +49,7 @@ try {
     OPENROUTER_API_KEY = getEnvApiKey()
   }
 } catch {
-  // sessionStorage not available (SSR, Node.js, etc.)
+  // Expected in SSR/Node.js - sessionStorage is browser-only, fallback to env
   OPENROUTER_API_KEY = getEnvApiKey()
 }
 
@@ -66,7 +66,7 @@ export function setApiKey(key: string): void {
       sessionStorage.removeItem(STORAGE_KEYS.API_KEY)
     }
   } catch {
-    // sessionStorage not available
+    // Expected in SSR/Node.js - sessionStorage is browser-only
   }
 }
 
@@ -92,7 +92,7 @@ export function clearApiKey(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEYS.API_KEY)
   } catch {
-    // sessionStorage not available
+    // Expected in SSR/Node.js - sessionStorage is browser-only
   }
 }
 

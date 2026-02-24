@@ -1,18 +1,85 @@
 /**
- * String Handler
+ * @module sugar/handlers/string-handler
+ * @description String Handler - Strings zu Component-spezifischen Properties
  *
- * Handles STRING tokens based on component type.
- * - Image: string becomes src, following numbers become w/h
- * - Input/Textarea: string becomes placeholder
- * - Link: string becomes href
- * - Item/Option: string becomes content
- * - Others: creates a _text child node
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Inline Span Syntax:
- * - *text*:bold → bold text
- * - *text*:italic → italic text
- * - *text*:underline → underlined text
- * - *text*:$token → styled with token properties
+ * @brief Verarbeitet STRING Tokens basierend auf Component-Typ
+ *
+ * Jeder Component-Typ hat eine spezifische String-Interpretation:
+ *
+ * @mapping Component → Property
+ *   Image         → src     Image "photo.jpg" 200 150
+ *   Input         → placeholder  Input "Enter email..."
+ *   Textarea      → placeholder  Textarea "Message..."
+ *   Link          → content (text)  Link "Label" href "/url"
+ *   Icon          → content     Icon "search"
+ *   Item/Option   → content     Item "Menu Entry"
+ *   Default       → _text child  Button "Click me"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * INLINE SPAN SYNTAX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax *text*:style
+ *   Inline-Formatierung innerhalb von Strings
+ *
+ * @builtin-styles
+ *   *text*:bold       → weight: 700
+ *   *text*:italic     → italic: true
+ *   *text*:underline  → underline: true
+ *
+ * @custom-styles
+ *   *text*:$tokenName → Properties aus Design-Token
+ *   $highlight: col #3B82F6 weight 600
+ *   Text "This is *important*:$highlight"
+ *
+ * @escape
+ *   \* → Literal asterisk (kein Span-Start)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * HANDLER EXPORTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @export imageStringHandler (Priority 200)
+ *   Image: String → src, folgende Numbers → w, h
+ *   Image "photo.jpg" 300 400 → src, w 300, h 400
+ *
+ * @export inputStringHandler (Priority 200)
+ *   Input: String → placeholder
+ *
+ * @export textareaStringHandler (Priority 200)
+ *   Textarea: String → placeholder
+ *
+ * @export linkStringHandler (Priority 200)
+ *   Link: String → content (_text child), href via explicit property
+ *
+ * @export iconStringHandler (Priority 200)
+ *   Icon: String → content (Icon-Name für Lucide/Material)
+ *
+ * @export itemStringHandler (Priority 200)
+ *   Item/Option: String → content
+ *
+ * @export defaultStringHandler (Priority 50)
+ *   Default: String → _text child node mit Inline-Span-Parsing
+ *   Verarbeitet auch Properties nach String: "bold" weight 600
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * UTILITY FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseInlineSpans(input: string) → InlineSpan[]
+ *   Parst String nach *text*:style Syntax
+ *   Gibt Array von { text, style? } zurück
+ *
+ * @function resolveSpanStyle(style: string, ctx) → Properties
+ *   Löst Style-Name zu Properties auf
+ *   - Built-in: bold, italic, underline
+ *   - Token: $tokenName → Token-Properties
+ *
+ * @used-by sugar/index.ts
  */
 
 import type { SugarHandler, SugarContext, SugarResult } from '../types'
@@ -25,7 +92,8 @@ import {
   isInputComponent,
   isTextareaComponent,
   isLinkComponent,
-  isItemComponent
+  isItemComponent,
+  isIconComponent
 } from '../component-type-matcher'
 
 /**
@@ -306,7 +374,11 @@ export const textareaStringHandler: SugarHandler = {
 }
 
 /**
- * Link string handler - first string becomes href, subsequent strings become content.
+ * Link string handler - strings become visible text content.
+ * href must be set explicitly: Link href "/docs", "Documentation"
+ *
+ * This is consistent with Button and other components where
+ * strings = visible content, not technical attributes.
  */
 export const linkStringHandler: SugarHandler = {
   name: 'link-string',
@@ -321,23 +393,61 @@ export const linkStringHandler: SugarHandler = {
     const { ctx, node, token } = context
     const stringValue = ctx.advance().value
 
-    // If href is already set, this string becomes content (text child)
-    if (node.properties.href) {
-      const textNode: ASTNode = {
-        type: 'component',
-        name: INTERNAL_NODES.TEXT,
-        id: ctx.generateId('text'),
-        properties: {},
-        content: stringValue,
-        children: [],
-        line: token.line,
-        column: token.column
-      }
-      node.children.push(textNode)
-    } else {
-      // First string becomes href
-      node.properties.href = stringValue
+    // String always becomes visible text content (consistent with Button etc.)
+    const textNode: ASTNode = {
+      type: 'component',
+      name: INTERNAL_NODES.TEXT,
+      id: ctx.generateId('text'),
+      properties: {},
+      content: stringValue,
+      children: [],
+      line: token.line,
+      column: token.column
     }
+    node.children.push(textNode)
+    return { handled: true }
+  }
+}
+
+/**
+ * Icon string handler - string becomes content (the icon name).
+ * Example: Icon "search" → content = "search"
+ *          icon "arrow-left" → content = "arrow-left"
+ */
+export const iconStringHandler: SugarHandler = {
+  name: 'icon-string',
+  priority: 200,
+  tokenTypes: ['STRING'],
+
+  canHandle(context: SugarContext): boolean {
+    return isIconComponent(context.node)
+  },
+
+  handle(context: SugarContext): SugarResult {
+    const { ctx, node } = context
+    node.content = ctx.advance().value
+    return { handled: true }
+  }
+}
+
+/**
+ * Icon name handler - COMPONENT_NAME becomes content (without quotes).
+ * Example: Icon search → content = "search"
+ *          Icon arrow-right → content = "arrow-right"
+ */
+export const iconNameHandler: SugarHandler = {
+  name: 'icon-name',
+  priority: 200,
+  tokenTypes: ['COMPONENT_NAME'],
+
+  canHandle(context: SugarContext): boolean {
+    // Only handle if it's an Icon component and doesn't already have content
+    return isIconComponent(context.node) && !context.node.content
+  },
+
+  handle(context: SugarContext): SugarResult {
+    const { ctx, node } = context
+    node.content = ctx.advance().value
     return { handled: true }
   }
 }
@@ -357,6 +467,49 @@ export const itemStringHandler: SugarHandler = {
   handle(context: SugarContext): SugarResult {
     const { ctx, node } = context
     node.content = ctx.advance().value
+    return { handled: true }
+  }
+}
+
+/**
+ * Label-like components string handler - string becomes content.
+ * For components like "label", "title", "description" etc. where:
+ * - The string should be the content of the component itself (not a child)
+ * - Properties AFTER the string should apply to the component, not a text child
+ *
+ * Example: label "Label" col #5B5B5B size 16
+ *   → label.content = "Label"
+ *   → label.properties = { col: "#5B5B5B", size: 16 }
+ *   (NOT: label._text child with those properties)
+ */
+function isContentComponent(node: ASTNode): boolean {
+  const nameLower = node.name.toLowerCase()
+  // Components where strings should be content (not text children)
+  const contentComponents = [
+    'label', 'title', 'subtitle', 'heading', 'caption',
+    'description', 'hint', 'error', 'message', 'value',
+    'name', 'tag', 'badge'
+  ]
+  return (
+    contentComponents.includes(nameLower) ||
+    contentComponents.some(suffix => nameLower.endsWith(suffix))
+  )
+}
+
+export const contentComponentStringHandler: SugarHandler = {
+  name: 'content-component-string',
+  priority: 180, // Higher than default (50), lower than item (200)
+  tokenTypes: ['STRING'],
+
+  canHandle(context: SugarContext): boolean {
+    return isContentComponent(context.node)
+  },
+
+  handle(context: SugarContext): SugarResult {
+    const { ctx, node } = context
+    node.content = ctx.advance().value
+    // Return immediately - let parseInlineProperties handle trailing properties
+    // This way, properties after the string apply to the node, not a text child
     return { handled: true }
   }
 }

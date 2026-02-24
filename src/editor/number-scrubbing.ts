@@ -73,6 +73,16 @@ function getPropertyBeforeCursor(lineText: string, cursorInLine: number): string
   return match ? match[1].toLowerCase() : null
 }
 
+// N6: Properties that allow negative values
+const ALLOW_NEGATIVE_PROPERTIES = new Set([
+  'z', 'z-index',
+  'rotate', 'rotation',
+  'translate', 'translate-x', 'translate-y',
+  'top', 'left', 'right', 'bottom',
+  'margin', 'mar', 'm',
+  'margin-top', 'margin-left', 'margin-right', 'margin-bottom',
+])
+
 /**
  * Determine default starting value based on property type.
  */
@@ -109,6 +119,10 @@ function scrubNumber(view: EditorView, delta: number): boolean {
   const lineText = line.text
   const cursorInLine = cursor - line.from
 
+  // Get property context to check if negative values are allowed
+  const property = getPropertyBeforeCursor(lineText, cursorInLine)
+  const allowNegative = property ? ALLOW_NEGATIVE_PROPERTIES.has(property) : false
+
   // Try to find existing number
   const numberMatch = findNumberAtCursor(lineText, cursorInLine)
 
@@ -119,8 +133,9 @@ function scrubNumber(view: EditorView, delta: number): boolean {
     // Clamp to reasonable values
     if (numberMatch.hasPercent) {
       newValue = Math.max(0, Math.min(100, newValue))
-    } else {
-      newValue = Math.max(0, newValue) // Don't go negative for most values
+    } else if (!allowNegative) {
+      // N6: Only clamp to 0 for properties that don't allow negative
+      newValue = Math.max(0, newValue)
     }
 
     // Format the new value
@@ -146,11 +161,12 @@ function scrubNumber(view: EditorView, delta: number): boolean {
   }
 
   // No number found - check if we should insert one
-  const property = getPropertyBeforeCursor(lineText, cursorInLine)
+  // Note: property was already computed above for allowNegative check
   if (property) {
     // Insert a starting value
     const defaultVal = getDefaultValue(property)
-    const newValue = Math.max(0, defaultVal + delta)
+    // N6: Allow negative for properties that support it
+    const newValue = allowNegative ? defaultVal + delta : Math.max(0, defaultVal + delta)
     const insertText = ' ' + String(newValue)
 
     view.dispatch({

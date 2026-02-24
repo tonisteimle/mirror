@@ -7,11 +7,14 @@ describe('New inheritance syntax: ComponentName from BaseComponent:', () => {
     const code = 'DangerButton from Button: col #EF4444'
     const tokens = tokenize(code).filter(t => t.type !== 'NEWLINE' && t.type !== 'EOF')
 
-    expect(tokens[0]).toMatchObject({ type: 'COMPONENT_DEF', value: 'DangerButton' })
+    // Lexer produces COMPONENT_NAME, parser determines definition vs instance
+    expect(tokens[0]).toMatchObject({ type: 'COMPONENT_NAME', value: 'DangerButton' })
     expect(tokens[1]).toMatchObject({ type: 'KEYWORD', value: 'from' })
     expect(tokens[2]).toMatchObject({ type: 'COMPONENT_NAME', value: 'Button' })
-    expect(tokens[3]).toMatchObject({ type: 'PROPERTY', value: 'col' })
-    expect(tokens[4]).toMatchObject({ type: 'COLOR', value: '#EF4444' })
+    // After colon, we have properties
+    expect(tokens[3]).toMatchObject({ type: 'COLON', value: ':' })
+    expect(tokens[4]).toMatchObject({ type: 'PROPERTY', value: 'col' })
+    expect(tokens[5]).toMatchObject({ type: 'COLOR', value: '#EF4444' })
   })
 
   it('should parse inheritance and apply base properties', () => {

@@ -55,24 +55,15 @@ export function generateReactCode(nodes: ASTNode[], indent = 0): string {
       .map((line, i) => (i === 0 ? line : spaces + '    ' + line))
       .join('\n')
     const hasContent = node.content !== undefined
-    const iconName = node.properties.icon as string | undefined
 
     if (hasRealChildren || hasTextChildren) {
       code += `${spaces}<div className="${node.name}" style={${styleStr}}>\n`
-      if (iconName) {
-        code += `${spaces}  <${toPascalCase(iconName)} size={20} />\n`
-      }
       code += generateReactCode(node.children, indent + 1)
       code += `${spaces}</div>\n`
-    } else if (hasContent || iconName) {
+    } else if (hasContent) {
       code += `${spaces}<div className="${node.name}" style={${styleStr}}>`
-      if (iconName) {
-        code += `<${toPascalCase(iconName)} size={20} />`
-      }
-      if (hasContent) {
-        // Use JSON.stringify to safely escape content for JSX
-        code += `{${JSON.stringify(node.content)}}`
-      }
+      // Use JSON.stringify to safely escape content for JSX
+      code += `{${JSON.stringify(node.content)}}`
       code += `</div>\n`
     } else {
       code += `${spaces}<div className="${node.name}" style={${styleStr}} />\n`

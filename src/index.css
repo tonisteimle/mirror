@@ -1,11 +1,24 @@
+/* Load DM Sans from Google Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
 * {
   box-sizing: border-box;
 }
 
+/* Reset browser defaults for form elements in preview */
+input, textarea {
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   line-height: 1.5;
   font-weight: 400;
+  color: #A5A5A5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -267,4 +280,88 @@ body {
 
 .mirror-anim-bounce {
   animation: bounce var(--mirror-anim-duration, 1000ms) ease-in-out infinite;
+}
+
+/* ============================================
+   Native Select with appearance: base-select
+   ============================================ */
+
+/* Global base-select support */
+@supports (appearance: base-select) {
+  select[style*="base-select"],
+  select[style*="base-select"]::picker(select) {
+    appearance: base-select;
+  }
+
+  /* Remove default browser styling */
+  select[style*="base-select"] {
+    background: transparent;
+    border: none;
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Button inside select acts as trigger */
+  select[style*="base-select"] > button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* selectedcontent shows current selection */
+  select[style*="base-select"] selectedcontent {
+    flex: 1;
+    text-align: left;
+  }
+
+  /* Picker icon rotation on open */
+  select[style*="base-select"]::picker-icon {
+    display: flex;
+    align-items: center;
+    transition: rotate 0.2s ease;
+  }
+
+  select[style*="base-select"]:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  /* Picker (dropdown) base styles */
+  select[style*="base-select"]::picker(select) {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-top: 4px;
+  }
+
+  /* Option base styles */
+  select[style*="base-select"] option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  /* Option disabled state */
+  select[style*="base-select"] option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Checkmark for selected option */
+  select[style*="base-select"] option::checkmark {
+    content: "";
+    width: 16px;
+    margin-right: 4px;
+  }
+
+  select[style*="base-select"] option:checked::checkmark {
+    content: "\2713"; /* Checkmark */
+  }
 }

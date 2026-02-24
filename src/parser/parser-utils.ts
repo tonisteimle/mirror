@@ -1,8 +1,77 @@
 /**
- * Parser Utilities Module
+ * @module parser-utils
+ * @description Parser Utilities - Low-Level Helper Functions
  *
- * Low-level helper functions for the parser.
- * Includes CSS utilities, node traversal, and AST manipulation.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Hilfsfunktionen für CSS, Node-Traversal und AST-Manipulation
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DIRECTION UTILITIES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function splitDirections(dirValue) → string[]
+ *   Splittet kombinierte Directions: 'u-d' → ['u', 'd']
+ *   Normalisiert: t→u, b→d
+ *
+ * @function expandCSSShorthand(values) → {u, r, d, l}
+ *   Expandiert CSS-Shorthand: [16] → alle 16
+ *   [16, 8] → u/d: 16, l/r: 8
+ *   [16, 8, 4] → u: 16, l/r: 8, d: 4
+ *   [16, 12, 8, 4] → u: 16, r: 12, d: 8, l: 4
+ *
+ * @function applySpacingToProperties(props, prefix, values, directions)
+ *   Wendet Spacing auf Properties an
+ *   Mit Directions: pad_l, pad_r
+ *   Ohne: pad (einzeln) oder pad_u/r/d/l (shorthand)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AST NODE CREATION
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function createTextNode(content, generateId, line, column) → ASTNode
+ *   Erstellt _text Node für Inline-String-Content
+ *   name: '_text', content: "Hello World"
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AST TRAVERSAL
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function findNode(nodes, id) → FindNodeResult | null
+ *   Sucht Node nach ID, gibt {node, parent, index} zurück
+ *
+ * @function findNodeRecursive(parent, id) → FindNodeResult | null
+ *   Rekursive Suche in Children
+ *
+ * @function cloneChildrenWithNewIds(children, generateId) → ASTNode[]
+ *   Deep-Clone mit neuen IDs für Template-Instanziierung
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SELECTION COMMANDS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function applyCommands(nodes, commands, generateId)
+ *   Wendet Selection-Commands auf AST an:
+ *   - modify: Property ändern
+ *   - addChild: Kind hinzufügen
+ *   - addAfter/addBefore: Geschwister hinzufügen
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TEMPLATE UTILITIES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function createTemplateFromNode(node) → ComponentTemplate
+ *   Erstellt Template aus Node-Zustand
+ *   Kopiert: properties, content, states, eventHandlers, variables
+ *
+ * @function applyTemplate(registry, node, scopedName, name, cloneChildren?)
+ *   Wendet Template auf Node an
+ *   Prüft scopedName zuerst, dann unscoped
+ *
+ * @constant CSS_COLOR_KEYWORDS
+ *   Set mit CSS-Farbnamen: transparent, black, white, etc.
  */
 
 import type { ASTNode, SelectionCommand, ComponentTemplate } from './types'

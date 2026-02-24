@@ -1,10 +1,75 @@
 /**
- * Style Parser Module
+ * @module style-parser
+ * @description Style Group und Mixin Parser
  *
- * Parses style-related constructs:
- * - Style groups: (hor cen gap 8)
- * - Style mixins: (hor cen gap 8):styleName
- * - Applying styles to nodes
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @brief Parst Style-Gruppen und Mixins in Klammern
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * STYLE GROUPS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @syntax Style Group (anonymes Mixin)
+ *   Button (hor cen gap 8) "Click"
+ *          ↑──────────────↑
+ *          Properties werden direkt angewendet
+ *
+ * @syntax Named Style Mixin
+ *   (hor cen gap 8):centered
+ *   Button centered "Click"    // Mixin wird referenziert
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SUPPORTED PROPERTIES IN GROUPS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @property pad, mar, bor
+ *   Mit CSS-Shorthand: (pad 16 8)
+ *   Mit Directions: (pad l-r 16)
+ *
+ * @property hor, ver
+ *   Layout Direction: (hor) oder (ver)
+ *   Mit Alignment: (hor cen) oder (hor l cen)
+ *
+ * @property cen
+ *   Center Shorthand: (cen cen) = beide Achsen
+ *
+ * @property gap, bg, col, rad, etc.
+ *   Standard Properties mit Werten
+ *
+ * @property boolean
+ *   Properties ohne Wert: (wrap) = wrap: true
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function parseStyleGroup(ctx) → StyleMixin
+ *   Parst Properties zwischen ( und )
+ *   Gibt StyleMixin { properties: {...} } zurück
+ *
+ * @function applyMixin(node, mixin)
+ *   Wendet Mixin-Properties auf Node an
+ *   Überschreibt NICHT existierende Properties
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BEISPIELE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @example Inline Style Group
+ *   Box (hor cen gap 16) "Content"
+ *   → hor: true, align_main: 'cen', gap: 16
+ *
+ * @example Named Mixin Definition
+ *   (ver pad 24 gap 16):section
+ *   Section section "First"
+ *   Section section "Second"
+ *
+ * @example CSS Shorthand in Group
+ *   (pad 16 8):padded
+ *   → pad_u: 16, pad_d: 16, pad_l: 8, pad_r: 8
  */
 
 import type { ParserContext } from './parser-context'

@@ -68,10 +68,17 @@ const MirrorEditorAPI = {
 
   /**
    * Initialize all editors with data-code attribute
+   * Uses IntersectionObserver for lazy loading to prevent browser crashes
+   * with many editors on a single page.
    */
   initAll() {
     const elements = document.querySelectorAll('.mirror-editor[data-code]')
-    elements.forEach((el) => {
+    const initializedSet = new WeakSet<Element>()
+
+    const initEditor = (el: Element) => {
+      if (initializedSet.has(el)) return
+      initializedSet.add(el)
+
       const code = el.getAttribute('data-code') || ''
       const prelude = el.getAttribute('data-prelude') || ''
       const previewHeightAttr = el.getAttribute('data-preview-height')
@@ -79,7 +86,30 @@ const MirrorEditorAPI = {
       const readOnly = el.hasAttribute('data-readonly')
 
       this.render(el as HTMLElement, { code, prelude, previewHeight, readOnly })
-    })
+    }
+
+    // Use IntersectionObserver for lazy loading
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              initEditor(entry.target)
+              observer.unobserve(entry.target)
+            }
+          })
+        },
+        {
+          rootMargin: '200px', // Pre-load editors 200px before they enter viewport
+          threshold: 0
+        }
+      )
+
+      elements.forEach((el) => observer.observe(el))
+    } else {
+      // Fallback for browsers without IntersectionObserver
+      elements.forEach((el) => initEditor(el))
+    }
   }
 }
 

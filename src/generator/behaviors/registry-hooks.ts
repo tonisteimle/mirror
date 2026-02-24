@@ -22,7 +22,7 @@ export function useBehaviorRegistry(): BehaviorRegistry {
     // Return a no-op registry if not in provider
     return {
       getHandler: getBehaviorHandler,
-      getState: () => 'closed',
+      getState: () => undefined,
       setState: () => {},
       toggle: () => {},
       highlight: () => {},
@@ -54,7 +54,7 @@ export function useBehaviorRegistry(): BehaviorRegistry {
 
   return {
     getHandler: getBehaviorHandler,
-    getState: (id: string) => context.states.get(id) || 'closed',
+    getState: (id: string) => context.states.get(id),
     setState: context.setState,
     toggle: (id: string) => context.toggle(id, ['closed', 'open']),
     highlight: context.highlight,

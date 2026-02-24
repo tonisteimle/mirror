@@ -1,43 +1,75 @@
 import { EditorView, ViewPlugin, Decoration } from '@codemirror/view'
 import type { ViewUpdate, DecorationSet } from '@codemirror/view'
+import { StateEffect } from '@codemirror/state'
 // Note: RangeSetBuilder could be used for performance optimization if needed
 import { colors } from '../theme'
 
+// StateEffect to force decoration refresh
+export const forceDecorationRefresh = StateEffect.define<null>()
+
 // =============================================================================
-// PERFORMANCE: Line-based decoration cache
+// PERFORMANCE: Line-based decoration cache using LRU strategy
+// =============================================================================
+//
+// Design notes:
+// - Module-level cache is intentional for sharing across editor instances
+// - Bounded at MAX_CACHE_SIZE entries with automatic LRU eviction (20% batch)
+// - DSL lines are typically short (<100 chars), so memory per entry is minimal
+// - Cache is cleared when the last editor instance is destroyed
 // =============================================================================
 
-interface LineCacheEntry {
-  text: string
-  decorations: Array<{ from: number; to: number; class: string }>
-}
+type LineDecorations = Array<{ from: number; to: number; class: string }>
 
-// Global cache for line decorations - keyed by line content hash
-const lineDecorationCache = new Map<string, LineCacheEntry['decorations']>()
-const MAX_CACHE_SIZE = 5000  // Limit cache growth
+// Use text directly as key to avoid hash collisions
+// DSL lines are typically short, so memory impact is minimal
+const lineDecorationCache = new Map<string, LineDecorations>()
+const MAX_CACHE_SIZE = 5000
 
-function getLineHash(text: string): string {
-  // Simple but fast hash for line content
-  let hash = 0
-  for (let i = 0; i < text.length; i++) {
-    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
+// H5 fix: Use WeakSet instead of counter for HMR safety
+// WeakSet automatically removes entries when EditorView is garbage collected
+const activeEditors = new WeakSet<EditorView>()
+
+function getCachedLineDecorations(text: string): LineDecorations | null {
+  const cached = lineDecorationCache.get(text)
+  if (cached) {
+    // Move to end for LRU behavior (Map maintains insertion order)
+    lineDecorationCache.delete(text)
+    lineDecorationCache.set(text, cached)
   }
-  return hash.toString(36)
+  return cached ?? null
 }
 
-function getCachedLineDecorations(text: string): LineCacheEntry['decorations'] | null {
-  return lineDecorationCache.get(getLineHash(text)) ?? null
-}
-
-function setCachedLineDecorations(text: string, decorations: LineCacheEntry['decorations']): void {
-  // Evict old entries if cache is too large
+function setCachedLineDecorations(text: string, decorations: LineDecorations): void {
+  // Evict oldest entries if cache is too large (LRU)
   if (lineDecorationCache.size >= MAX_CACHE_SIZE) {
-    const keysToDelete = Array.from(lineDecorationCache.keys()).slice(0, 1000)
-    for (const key of keysToDelete) {
-      lineDecorationCache.delete(key)
+    // Delete first 20% of entries (oldest due to Map insertion order)
+    const deleteCount = Math.floor(MAX_CACHE_SIZE * 0.2)
+    const iterator = lineDecorationCache.keys()
+    for (let i = 0; i < deleteCount; i++) {
+      const key = iterator.next().value
+      if (key) lineDecorationCache.delete(key)
     }
   }
-  lineDecorationCache.set(getLineHash(text), decorations)
+  lineDecorationCache.set(text, decorations)
+}
+
+/**
+ * Clear the line decoration cache.
+ * Call this when the editor content changes externally (e.g., short/long form toggle).
+ */
+export function clearDecorationCache(): void {
+  lineDecorationCache.clear()
+}
+
+/**
+ * Request a decoration refresh for a specific editor view.
+ * This clears the cache and dispatches a StateEffect to force re-rendering.
+ */
+export function requestDecorationRefresh(view: EditorView): void {
+  lineDecorationCache.clear()
+  view.dispatch({
+    effects: forceDecorationRefresh.of(null)
+  })
 }
 
 const editorBg = colors.panel
@@ -74,6 +106,11 @@ export const dslTheme = EditorView.theme({
   },
   '.cm-cursor': {
     borderLeftColor: '#FFFFFF',
+    borderLeftWidth: '2px',
+  },
+  // Prevent stale cursor artifacts on rapid typing/deletion
+  '.cm-cursorLayer': {
+    willChange: 'transform',
   },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
     backgroundColor: '#264F78 !important',
@@ -111,8 +148,13 @@ export const dslTheme = EditorView.theme({
   '.dsl-multiline-string': { color: '#a88' },   // Multiline string content (same as regular strings)
   '.dsl-multiline-quote': { color: '#555' },    // Single quote delimiters
   '.dsl-doc-token': { color: '#5ba8f5' },       // $h2, $p, $b, etc.
-  '.dsl-doc-bracket': { color: '#888' },        // [] brackets in $b[text]
+  '.dsl-doc-bracket': { color: '#888' },        // [] brackets in [link](url)
   '.dsl-doc-link-url': { color: '#666', textDecoration: 'underline' },  // (url) in links
+  // brace-syntax highlighting (legacy)
+  '.dsl-brace': { color: '#888' },              // { } braces
+  '.dsl-colon': { color: '#888' },              // : colons
+  '.dsl-comma': { color: '#888' },              // , commas
+  '.dsl-state-keyword': { color: '#2271c1' },   // state keyword
   // Lint gutter and diagnostics
   '.cm-lintRange-error': {
     backgroundImage: 'none',
@@ -157,10 +199,11 @@ export const dslTheme = EditorView.theme({
 }, { dark: true })
 
 // Token patterns - using Unicode property escapes for proper umlaut support
-const PROPERTIES = /^(w|h|minw|maxw|minh|maxh|full|grow|padding|pad|margin|mar|hor-l|hor-cen|hor-r|ver-t|ver-cen|ver-b|hor|ver|gap|cen|between|wrap|color|col|boc|radius|rad|border|size|weight|font|line|align|italic|underline|lowercase|uppercase|truncate|icon|src|alt|fit|shadow|opacity|opa|cursor|pointer|z|hidden|visible)\b/
-const DIRECTIONS = /^[lrud](-[lrud])*\b/
-const COMPONENT_DEF = /^[\p{Lu}][\p{L}\p{N}_]*:/u
-const COMPONENT_NAME = /^[\p{L}_][\p{L}\p{N}_]*/u
+// Both short (pad, bg, col) and long (padding, background, color) forms are supported
+const PROPERTIES = /^(w|h|width|height|minw|maxw|minh|maxh|min-width|max-width|min-height|max-height|min|max|full|grow|shrink|padding|pad|p|margin|mar|m|hor-l|hor-cen|hor-r|hor-center|ver-t|ver-cen|ver-b|ver-center|hor|ver|gap|g|cen|center|between|spread|wrap|color|col|c|background|bg|boc|border-color|radius|rad|border|bor|text-size|font-size|fs|ts|icon-size|is|icon-weight|iw|icon-color|ic|size|weight|font|line|align|text-align|italic|underline|lowercase|uppercase|truncate|icon|src|alt|fit|shadow|opacity|opa|o|cursor|pointer|z|hidden|visible|disabled|horizontal|vertical|horizontal-left|horizontal-center|horizontal-right|vertical-top|vertical-center|vertical-bottom|left|right|top|bottom|scroll|scroll-ver|scroll-hor|scroll-vertical|scroll-horizontal|scroll-both|clip|grid|stack|stacked|rotate|rot|translate|hover-background|hover-bg|hover-color|hover-col|hover-opacity|hover-opa|hover-border|hover-bor|hover-border-color|hover-boc|hover-radius|hover-rad|hover-scale|material|lucide|fill|solid|dashed|dotted|hug|segments|href|placeholder|escape|enter|tab|space|arrow-up|arrow-down|arrow-left|arrow-right|backspace|delete|home|end|bold|on|off|expanded|collapsed|valid|invalid|default|active|inactive|hover|focus)\b/
+const DIRECTIONS = /^([lrud](-[lrud])*|tl|tr|bl|br|top-left|top-right|bottom-left|bottom-right)\b/
+const COMPONENT_DEF = /^[\p{Lu}][\p{L}\p{N}_-]*:/u
+const COMPONENT_NAME = /^[\p{L}_][\p{L}\p{N}_-]*/u
 const NUMBER = /^[0-9]+/
 const STRING = /^"[^"]*"/
 const COLOR = /^#[0-9a-fA-F]{3,8}/
@@ -168,7 +211,7 @@ const COMMENT = /^\/\/.*/
 const MODIFIER = /^-[\p{L}][\p{L}\p{N}_-]*/u
 const TOKEN_REF = /^\$[\p{L}][\p{L}\p{N}_-]*/u
 const TOKEN_DEF = /^:[\p{L}][\p{L}\p{N}_-]*/u
-const KEYWORD = /^(from|after|before)\b/
+const KEYWORD = /^(from|after|before|state|if|then|else|each|in|data|where|named|as|show|hide|toggle|open|close|page|animate|onclick|onhover|onchange|oninput|onload|onfocus|onblur|onkeydown|onkeyup|debounce|delay|highlight|select|deselect|clear-selection|filter|change|activate|deactivate|deactivate-siblings|toggle-state|assign|to|validate|reset|focus|alert|call|self|next|prev|first|last|first-empty|highlighted|selected|self-and-before|all|none|below|above|fade|scale|slide-up|slide-down|slide-left|slide-right|spin|pulse|bounce)\b/
 // Doc-mode patterns
 const DOC_KEYWORD = /^(text|playground|doc)\b/
 const DOC_TOKEN = /^\$[\p{L}][\p{L}\p{N}_-]*/u
@@ -325,19 +368,7 @@ function tokenizeLineRelative(line: string): Array<{ from: number; to: number; c
       continue
     }
 
-    // Doc-mode keywords (text, playground, doc) - check before property
-    const docKeywordMatch = rest.match(DOC_KEYWORD)
-    if (docKeywordMatch) {
-      tokens.push({
-        from: pos,
-        to: pos + docKeywordMatch[0].length,
-        class: 'dsl-doc-keyword'
-      })
-      pos += docKeywordMatch[0].length
-      continue
-    }
-
-    // Property
+    // Property - check BEFORE doc-keywords to catch text-size before text
     const propertyMatch = rest.match(PROPERTIES)
     if (propertyMatch) {
       tokens.push({
@@ -346,6 +377,18 @@ function tokenizeLineRelative(line: string): Array<{ from: number; to: number; c
         class: 'dsl-property'
       })
       pos += propertyMatch[0].length
+      continue
+    }
+
+    // Doc-mode keywords (text, playground, doc) - check AFTER properties
+    const docKeywordMatch = rest.match(DOC_KEYWORD)
+    if (docKeywordMatch) {
+      tokens.push({
+        from: pos,
+        to: pos + docKeywordMatch[0].length,
+        class: 'dsl-doc-keyword'
+      })
+      pos += docKeywordMatch[0].length
       continue
     }
 
@@ -358,6 +401,39 @@ function tokenizeLineRelative(line: string): Array<{ from: number; to: number; c
         class: 'dsl-component'
       })
       pos += compNameMatch[0].length
+      continue
+    }
+
+    // brace-syntax: Braces (legacy)
+    if (rest[0] === '{' || rest[0] === '}') {
+      tokens.push({
+        from: pos,
+        to: pos + 1,
+        class: 'dsl-brace'
+      })
+      pos++
+      continue
+    }
+
+    // brace-syntax: Colon (inside blocks, after properties)
+    if (rest[0] === ':') {
+      tokens.push({
+        from: pos,
+        to: pos + 1,
+        class: 'dsl-colon'
+      })
+      pos++
+      continue
+    }
+
+    // brace-syntax: Comma
+    if (rest[0] === ',') {
+      tokens.push({
+        from: pos,
+        to: pos + 1,
+        class: 'dsl-comma'
+      })
+      pos++
       continue
     }
 
@@ -384,7 +460,7 @@ function tokenizeLine(line: string, offset: number): Token[] {
 
 /**
  * Tokenize content inside a multiline string (doc-mode content)
- * Handles $token, $token[text], $link[text](url) syntax
+ * Handles $token (block tokens like $h2, $p) and [text](url) link syntax
  */
 function tokenizeDocContent(content: string, contentStart: number): Token[] {
   const tokens: Token[] = []
@@ -393,7 +469,7 @@ function tokenizeDocContent(content: string, contentStart: number): Token[] {
   while (pos < content.length) {
     const rest = content.slice(pos)
 
-    // Doc token: $name or $name[text] or $link[text](url)
+    // Doc token: $name (e.g., $h2, $p, $lead)
     const tokenMatch = rest.match(DOC_TOKEN)
     if (tokenMatch) {
       const tokenName = tokenMatch[0]
@@ -495,15 +571,53 @@ function findMultilineStrings(text: string, offset: number): Array<{
 }
 
 // ViewPlugin for syntax highlighting
+// Builds decorations synchronously to avoid visible flashing during typing
 export const dslHighlighter = ViewPlugin.fromClass(class {
   decorations: DecorationSet
+  private view: EditorView
+  private pendingUpdate: number | null = null
 
   constructor(view: EditorView) {
+    this.view = view
+    activeEditors.add(view)
     this.decorations = this.buildDecorations(view)
   }
 
+  destroy() {
+    if (this.pendingUpdate !== null) {
+      cancelAnimationFrame(this.pendingUpdate)
+    }
+    activeEditors.delete(this.view)
+    // Note: WeakSet doesn't have a size property, so we can't detect "last editor".
+    // Cache cleanup happens via LRU eviction in setCachedLineDecorations.
+    // For explicit cleanup, call clearDecorationCache() externally.
+  }
+
   update(update: ViewUpdate) {
+    // Check if we need to force refresh (e.g., after short/long toggle)
+    const needsRefresh = update.transactions.some(tr =>
+      tr.effects.some(e => e.is(forceDecorationRefresh))
+    )
+
+    // Force refresh happens immediately
+    if (needsRefresh) {
+      if (this.pendingUpdate !== null) {
+        cancelAnimationFrame(this.pendingUpdate)
+        this.pendingUpdate = null
+      }
+      this.decorations = this.buildDecorations(update.view)
+      return
+    }
+
+    // Rebuild decorations immediately on doc/viewport change
+    // Keeping old decorations while typing causes issues with stale positions,
+    // but clearing them causes visible flashing. Build synchronously instead.
     if (update.docChanged || update.viewportChanged) {
+      if (this.pendingUpdate !== null) {
+        cancelAnimationFrame(this.pendingUpdate)
+        this.pendingUpdate = null
+      }
+      // Build decorations synchronously to avoid flashing
       this.decorations = this.buildDecorations(update.view)
     }
   }

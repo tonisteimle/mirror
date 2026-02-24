@@ -83,7 +83,7 @@ export function useCodeMirror({
     view.focus()
   }, [])
 
-  // Update editor content externally
+  // Update editor content externally while preserving cursor position
   const setValue = useCallback((value: string) => {
     const view = editorRef.current
     if (!view) return
@@ -92,8 +92,13 @@ export function useCodeMirror({
     if (currentValue === value) return
 
     isInternalChange.current = true
+    // Preserve cursor position - clamp to new document length
+    const cursor = view.state.selection.main
+    const newAnchor = Math.min(cursor.anchor, value.length)
+    const newHead = Math.min(cursor.head, value.length)
     view.dispatch({
       changes: { from: 0, to: currentValue.length, insert: value },
+      selection: { anchor: newAnchor, head: newHead }
     })
     isInternalChange.current = false
     valueRef.current = value
@@ -144,8 +149,10 @@ export function useCodeMirror({
       view?.destroy()
       editorRef.current = null
     }
-    // Note: We intentionally only depend on initialValue for creation.
-    // Extensions changes require full re-mount which is handled by parent.
+    // K5: Extensions are intentionally excluded from dependencies.
+    // CodeMirror extensions cannot be dynamically updated - the editor must be
+    // recreated. Parent components handle this by changing `tab` or `key` prop
+    // to force remount when extension configuration changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValue])
 

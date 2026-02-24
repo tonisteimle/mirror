@@ -1,8 +1,14 @@
 import { memo } from 'react'
 import { Preview } from '../components/Preview'
+import { ReactCodePanel } from '../components/ReactCodePanel'
+import { ComponentLibraryView } from '../components/ComponentLibraryView'
 import { PreviewErrorBoundary } from '../components/boundaries'
+import { useReactExport } from '../hooks/useReactExport'
 import type { UseCodeParsingReturn } from '../hooks/useCodeParsing'
 import type { DataRecord, DataSchema } from '../parser/types'
+
+/** Preview panel mode: 'preview' shows live render, 'react' shows generated code, 'components' shows component library */
+export type PreviewPanelMode = 'preview' | 'react' | 'components'
 
 interface PreviewContainerProps {
   parsing: UseCodeParsingReturn
@@ -11,14 +17,22 @@ interface PreviewContainerProps {
   dataRecords?: Map<string, DataRecord[]>
   /** Data schemas for data binding */
   dataSchemas?: DataSchema[]
-  /** Callback when an element is selected in the preview */
+  /** Callback when an element is selected in the preview (single click) */
   onElementSelect?: (line: number | null) => void
+  /** Callback when an element is double-clicked (navigates to source) */
+  onElementDoubleClick?: (line: number) => void
+  /** Callback when an element is option-clicked (opens property panel) */
+  onElementOptionClick?: (line: number) => void
   /** Currently selected line */
   selectedLine?: number | null
-  /** Whether content edit mode is active */
-  contentEditMode?: boolean
-  /** Callback when text content changes in edit mode */
-  onTextChange?: (sourceLine: number, newText: string, token?: string) => void
+  /** Preview panel mode (preview or react code view) */
+  previewPanelMode?: PreviewPanelMode
+  /** Layout code for React export */
+  layoutCode?: string
+  /** Components code for React export */
+  componentsCode?: string
+  /** Tokens code for React export */
+  tokensCode?: string
 }
 
 export const PreviewContainer = memo(function PreviewContainer({
@@ -27,26 +41,49 @@ export const PreviewContainer = memo(function PreviewContainer({
   dataRecords,
   dataSchemas,
   onElementSelect,
+  onElementDoubleClick,
+  onElementOptionClick,
   selectedLine,
-  contentEditMode,
-  onTextChange,
+  previewPanelMode = 'preview',
+  componentsCode = '',
+  tokensCode = '',
 }: PreviewContainerProps) {
+  // Generate React code for the React code panel
+  const { files } = useReactExport({
+    nodes: parsing.parseResult.nodes,
+    componentsCode,
+    tokensCode,
+  })
+
   return (
     <div style={{ flex: 1, height: '100%', overflow: 'hidden' }} data-testid="preview-container">
-      <PreviewErrorBoundary>
-        <Preview
-          nodes={parsing.parseResult.nodes}
-          registry={parsing.parseResult.registry}
-          tokens={parsing.parseResult.tokens}
-          onPageNavigate={onPageNavigate}
-          dataRecords={dataRecords}
-          dataSchemas={dataSchemas}
-          onElementSelect={onElementSelect}
-          selectedLine={selectedLine}
-          contentEditMode={contentEditMode}
-          onTextChange={onTextChange}
-        />
-      </PreviewErrorBoundary>
+      {previewPanelMode === 'preview' && (
+        <PreviewErrorBoundary>
+          <Preview
+            nodes={parsing.parseResult.nodes}
+            registry={parsing.parseResult.registry}
+            tokens={parsing.parseResult.tokens}
+            onPageNavigate={onPageNavigate}
+            dataRecords={dataRecords}
+            dataSchemas={dataSchemas}
+            onElementSelect={onElementSelect}
+            onElementDoubleClick={onElementDoubleClick}
+            onElementOptionClick={onElementOptionClick}
+            selectedLine={selectedLine}
+          />
+        </PreviewErrorBoundary>
+      )}
+      {previewPanelMode === 'react' && (
+        <ReactCodePanel files={files} />
+      )}
+      {previewPanelMode === 'components' && (
+        <PreviewErrorBoundary>
+          <ComponentLibraryView
+            registry={parsing.parseResult.registry}
+            tokens={parsing.parseResult.tokens}
+          />
+        </PreviewErrorBoundary>
+      )}
     </div>
   )
 })

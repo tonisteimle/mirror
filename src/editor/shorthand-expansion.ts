@@ -25,10 +25,14 @@ export const PROPERTY_EXPANSIONS: Record<string, string> = {
   'maxh': 'max-height',
 
   // Spacing
+  'p': 'padding',
   'pad': 'padding',
+  'm': 'margin',
   'mar': 'margin',
+  'g': 'gap',
 
   // Colors
+  'c': 'color',
   'col': 'color',
   'bg': 'background',
   'boc': 'border-color',
@@ -38,8 +42,12 @@ export const PROPERTY_EXPANSIONS: Record<string, string> = {
   'bor': 'border',
 
   // Visuals
+  'o': 'opacity',
   'opa': 'opacity',
   'op': 'opacity',
+
+  // Transform
+  'rot': 'rotate',
 
   // Hover states
   'hover-col': 'hover-color',
@@ -47,6 +55,7 @@ export const PROPERTY_EXPANSIONS: Record<string, string> = {
   'hover-boc': 'hover-border-color',
   'hover-bor': 'hover-border',
   'hover-rad': 'hover-radius',
+  'hover-opa': 'hover-opacity',
 
   // Scroll
   'scroll-ver': 'scroll-vertical',
@@ -75,6 +84,73 @@ export const DIRECTION_EXPANSIONS: Record<string, string> = {
   'l-r': 'left-right',
   'u-d': 'top-bottom',
   't-b': 'top-bottom',
+}
+
+/**
+ * Long form → preferred shorthand mappings (reverse of above)
+ * Use 3-character forms except for w/h (standard Mirror convention)
+ */
+export const LONG_TO_SHORT: Record<string, string> = {
+  // Layout
+  'horizontal': 'hor',
+  'vertical': 'ver',
+  'center': 'cen',
+
+  // Sizing (w/h are exceptions - single char)
+  'width': 'w',
+  'height': 'h',
+  'min-width': 'minw',
+  'max-width': 'maxw',
+  'min-height': 'minh',
+  'max-height': 'maxh',
+
+  // Spacing (3-char forms)
+  'padding': 'pad',
+  'margin': 'mar',
+  // gap stays as 'gap' (already 3 chars)
+
+  // Colors (3-char forms)
+  'color': 'col',
+  'background': 'bg',
+  'border-color': 'boc',
+
+  // Border
+  'radius': 'rad',
+  'border': 'bor',
+
+  // Visuals (3-char form)
+  'opacity': 'opa',
+
+  // Transform
+  'rotate': 'rot',
+
+  // Hover states
+  'hover-color': 'hover-col',
+  'hover-background': 'hover-bg',
+  'hover-border-color': 'hover-boc',
+  'hover-border': 'hover-bor',
+  'hover-radius': 'hover-rad',
+  'hover-opacity': 'hover-opa',
+
+  // Scroll
+  'scroll-vertical': 'scroll-ver',
+  'scroll-horizontal': 'scroll-hor',
+
+  // Alignment
+  'horizontal-left': 'hor-l',
+  'horizontal-center': 'hor-cen',
+  'horizontal-right': 'hor-r',
+  'vertical-top': 'ver-t',
+  'vertical-center': 'ver-cen',
+  'vertical-bottom': 'ver-b',
+
+  // Directions (single char for directions after properties)
+  'left': 'l',
+  'right': 'r',
+  'top': 't',
+  'bottom': 'b',
+  'left-right': 'l-r',
+  'top-bottom': 't-b',
 }
 
 /**
@@ -123,8 +199,8 @@ export function expandLine(line: string): string {
       continue
     }
 
-    // Space or other delimiter
-    if (char === ' ' || char === '\t') {
+    // Space, tab, or brace-syntax delimiters
+    if (char === ' ' || char === '\t' || char === ':' || char === ',' || char === '{' || char === '}') {
       if (current) {
         parts.push(expandWord(current))
         current = ''
@@ -145,13 +221,40 @@ export function expandLine(line: string): string {
 }
 
 /**
+ * Expand a word to the appropriate form based on mode
+ * @param word The word to expand
+ * @param toLongForm If true, expand to long form; if false, expand to short (3-char) form
+ */
+export function expandWordForMode(word: string, toLongForm: boolean): string {
+  // First check if it's a known shorthand
+  const longForm = PROPERTY_EXPANSIONS[word] || DIRECTION_EXPANSIONS[word]
+  if (!longForm) {
+    return word // Not a shorthand, return as-is
+  }
+
+  if (toLongForm) {
+    return longForm // Return the long form
+  } else {
+    // Return the short (3-char) form
+    return LONG_TO_SHORT[longForm] || longForm
+  }
+}
+
+/**
  * Get the expansion for a word at cursor position
  * Returns null if no expansion available
+ * @param toLongForm If true, expand to long form; if false, expand to short form
  */
 export function getExpansionAtCursor(
   text: string,
-  cursorPos: number
+  cursorPos: number,
+  toLongForm: boolean = true
 ): { word: string; expanded: string; start: number; end: number } | null {
+  // Safety checks
+  if (!text || cursorPos < 0 || cursorPos > text.length) {
+    return null
+  }
+
   // Find word boundaries
   let start = cursorPos
   let end = cursorPos
@@ -168,14 +271,107 @@ export function getExpansionAtCursor(
 
   const word = text.slice(start, end)
 
+  // Don't expand empty words
+  if (!word || word.length === 0) {
+    return null
+  }
+
   if (shouldExpand(word)) {
-    return {
-      word,
-      expanded: expandWord(word),
-      start,
-      end
+    const expanded = expandWordForMode(word, toLongForm)
+    // Only return if actually expanded to something different
+    if (expanded !== word) {
+      return {
+        word,
+        expanded,
+        start,
+        end
+      }
     }
   }
 
   return null
+}
+
+/**
+ * Contract a single word from long form to short form
+ */
+export function contractWord(word: string): string {
+  return LONG_TO_SHORT[word] || word
+}
+
+/**
+ * Check if a word can be contracted (is a long form)
+ */
+export function shouldContract(word: string): boolean {
+  return word in LONG_TO_SHORT
+}
+
+/**
+ * Contract all long forms in a line to short forms
+ * Preserves strings (quoted content) and only contracts property keywords
+ */
+export function contractLine(line: string): string {
+  const parts: string[] = []
+  let current = ''
+  let inString = false
+  let stringChar = ''
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i]
+
+    // Handle string boundaries
+    if ((char === '"' || char === "'") && (i === 0 || line[i-1] !== '\\')) {
+      if (!inString) {
+        inString = true
+        stringChar = char
+      } else if (char === stringChar) {
+        inString = false
+      }
+      current += char
+      continue
+    }
+
+    // Inside string - don't contract
+    if (inString) {
+      current += char
+      continue
+    }
+
+    // Space, tab, or brace-syntax delimiters
+    if (char === ' ' || char === '\t' || char === ':' || char === ',' || char === '{' || char === '}') {
+      if (current) {
+        parts.push(contractWord(current))
+        current = ''
+      }
+      parts.push(char)
+      continue
+    }
+
+    current += char
+  }
+
+  // Don't forget last word
+  if (current) {
+    parts.push(contractWord(current))
+  }
+
+  return parts.join('')
+}
+
+/**
+ * Transform code between short and long form
+ * @param code The code to transform
+ * @param toLongForm If true, expand to long form; if false, contract to short form
+ * @returns Transformed code
+ */
+export function transformCode(code: string, toLongForm: boolean): string {
+  const lines = code.split('\n')
+  const transformedLines = lines.map(line => {
+    // Skip empty lines and comment-only lines
+    if (!line.trim() || line.trim().startsWith('//')) {
+      return line
+    }
+    return toLongForm ? expandLine(line) : contractLine(line)
+  })
+  return transformedLines.join('\n')
 }

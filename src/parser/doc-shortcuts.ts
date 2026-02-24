@@ -1,10 +1,73 @@
 /**
- * Doc-Mode Shortcuts
+ * @module doc-shortcuts
+ * @description Doc-Mode Shortcuts - Markdown-kompatible Formatierungs-Syntax
  *
- * Default markdown-style shortcuts for documentation formatting.
- * These provide Markdown-compatible syntax for headings, inline formatting, and links.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ÜBERSICHT
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Users can override these by defining components with the `shortcut` property.
+ * @brief Vordefinierte Markdown-Shortcuts für Doc-Mode Formatierung
+ *
+ * Bietet Markdown-kompatible Syntax für:
+ * - Headings: # ## ### ####
+ * - Inline: **bold**, _italic_, `code`
+ * - Links: [text](url)
+ *
+ * User können Shortcuts überschreiben durch Components mit `shortcut` Property.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SHORTCUT TYPES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @type block
+ *   Matcht am Zeilenanfang
+ *   Beispiel: # Heading 1
+ *
+ * @type inline
+ *   Wraps Text mit Marker
+ *   Beispiel: **bold** oder _italic_
+ *
+ * @type link
+ *   Spezielle [text](url) Syntax
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DEFAULT SHORTCUTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @category Block (Line Start)
+ *   #    → h1 (size 48, weight 400)
+ *   ##   → h2 (size 28, weight 500)
+ *   ###  → h3 (size 18, weight 500)
+ *   #### → h4 (size 15, weight 500)
+ *
+ * @category Inline (Wrapping)
+ *   **   → bold (weight 600)
+ *   _    → italic
+ *   `    → code (monospace, bg #333)
+ *
+ * @category Link
+ *   []   → link (col #5ba8f5, underline)
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FUNCTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * @function getBlockShortcuts() → DocShortcut[]
+ *   Gibt Block-Shortcuts sortiert nach Länge (längste zuerst)
+ *
+ * @function getInlineShortcuts() → DocShortcut[]
+ *   Gibt alle Inline-Shortcuts
+ *
+ * @function getLinkShortcut() → DocShortcut | undefined
+ *   Gibt den Link-Shortcut
+ *
+ * @function findShortcutByMarker(marker) → DocShortcut | undefined
+ *   Findet Shortcut nach Syntax-Marker
+ *
+ * @function findShortcutByName(name) → DocShortcut | undefined
+ *   Findet Shortcut nach Token-Namen
+ *
+ * @used-by doc-text-parser.ts für Markdown-Parsing
  */
 
 import type { DocTokenDef } from './doc-tokens'
