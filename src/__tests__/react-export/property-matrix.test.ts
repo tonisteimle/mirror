@@ -430,6 +430,34 @@ const PROPERTY_TESTS: PropertyTestCase[] = [
     mirror: 'Icon size 24, "search"',
     expectedCss: { 'font-size': '24px' },
   },
+
+  // -------------------------------------------------------------------------
+  // TEXT DECORATION
+  // -------------------------------------------------------------------------
+  {
+    name: 'italic',
+    mirror: 'Text italic, "emphasis"',
+    expectedCss: { 'font-style': 'italic' },
+  },
+  {
+    name: 'underline',
+    mirror: 'Text underline, "link"',
+    expectedCss: { 'text-decoration': 'underline' },
+  },
+  {
+    name: 'uppercase',
+    mirror: 'Text uppercase, "title"',
+    expectedCss: { 'text-transform': 'uppercase' },
+  },
+
+  // -------------------------------------------------------------------------
+  // DISABLED
+  // -------------------------------------------------------------------------
+  {
+    name: 'disabled',
+    mirror: 'Button disabled, "Save"',
+    expectedCss: { opacity: '0.5', 'pointer-events': 'none' },
+  },
 ]
 
 // =============================================================================

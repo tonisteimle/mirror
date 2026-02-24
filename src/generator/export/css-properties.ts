@@ -499,6 +499,14 @@ function convertTypography(props: DSLProperties): CssDeclaration[] {
     declarations.push({ property: 'white-space', value: 'nowrap' })
   }
 
+  if (props.italic) {
+    declarations.push({ property: 'font-style', value: 'italic' })
+  }
+
+  if (props.underline) {
+    declarations.push({ property: 'text-decoration', value: 'underline' })
+  }
+
   return declarations
 }
 
@@ -536,6 +544,12 @@ function convertVisuals(props: DSLProperties): CssDeclaration[] {
   // Hidden - override display
   if (props.hidden === true) {
     declarations.push({ property: 'display', value: 'none' })
+  }
+
+  // Disabled state
+  if (props.disabled === true) {
+    declarations.push({ property: 'opacity', value: '0.5' })
+    declarations.push({ property: 'pointer-events', value: 'none' })
   }
 
   // Rotation (rot property)
