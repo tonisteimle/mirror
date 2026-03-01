@@ -423,31 +423,30 @@ function generateStyles(styles: MirrorStyles): string {
   }
 
   // Alignment
-  const s = styles as any
-  if (s.align === 'center' || (s.alignItems === 'center' && s.justifyContent === 'center')) {
+  if (styles.align === 'center' || (styles.alignItems === 'center' && styles.justifyContent === 'center')) {
     parts.push('center')
   } else {
-    if (s.alignItems === 'center') {
+    if (styles.alignItems === 'center') {
       parts.push('ver-center')
-    } else if (s.alignItems === 'start' || s.alignItems === 'flex-start') {
+    } else if (styles.alignItems === 'start' || styles.alignItems === 'flex-start') {
       parts.push('top')
-    } else if (s.alignItems === 'end' || s.alignItems === 'flex-end') {
+    } else if (styles.alignItems === 'end' || styles.alignItems === 'flex-end') {
       parts.push('bottom')
-    } else if (s.alignItems === 'stretch') {
+    } else if (styles.alignItems === 'stretch') {
       parts.push('stretch')
     }
 
-    if (s.justifyContent === 'center') {
+    if (styles.justifyContent === 'center') {
       parts.push('hor-center')
-    } else if (s.justifyContent === 'between' || s.justifyContent === 'space-between') {
+    } else if (styles.justifyContent === 'between' || styles.justifyContent === 'space-between') {
       parts.push('spread')
-    } else if (s.justifyContent === 'start' || s.justifyContent === 'flex-start') {
+    } else if (styles.justifyContent === 'start' || styles.justifyContent === 'flex-start') {
       parts.push('left')
-    } else if (s.justifyContent === 'end' || s.justifyContent === 'flex-end') {
+    } else if (styles.justifyContent === 'end' || styles.justifyContent === 'flex-end') {
       parts.push('right')
-    } else if (s.justifyContent === 'around' || s.justifyContent === 'space-around') {
+    } else if (styles.justifyContent === 'around' || styles.justifyContent === 'space-around') {
       parts.push('around')
-    } else if (s.justifyContent === 'evenly' || s.justifyContent === 'space-evenly') {
+    } else if (styles.justifyContent === 'evenly' || styles.justifyContent === 'space-evenly') {
       parts.push('evenly')
     }
   }
@@ -506,7 +505,7 @@ function generateStyles(styles: MirrorStyles): string {
   }
 
   // flexGrow
-  if ((styles as any).flexGrow !== undefined && (styles as any).flexGrow) {
+  if (styles.flexGrow !== undefined && styles.flexGrow) {
     parts.push('grow')
   }
 

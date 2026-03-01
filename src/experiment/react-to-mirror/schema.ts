@@ -26,11 +26,11 @@ export interface MirrorStyles {
   layout?: 'vertical' | 'horizontal' | 'stacked' | 'grid'
   direction?: 'row' | 'column'  // React-style alias
 
-  // Alignment
+  // Alignment (supports both Mirror and CSS/React values)
   align?: 'start' | 'center' | 'end' | 'between' | 'stretch'
   justify?: 'start' | 'center' | 'end' | 'between' | 'around'
-  alignItems?: 'start' | 'center' | 'end' | 'stretch'
-  justifyContent?: 'start' | 'center' | 'end' | 'between' | 'around'
+  alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'flex-start' | 'flex-end'
+  justifyContent?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly' | 'flex-start' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly'
 
   // Spacing
   gap?: number | string

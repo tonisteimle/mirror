@@ -39,6 +39,10 @@ export interface MirrorProject {
   componentsCode: string
   pages: MirrorPage[]
   currentPageId: string
+  // Editor settings (optional, for backwards compatibility with older files)
+  useTokenMode?: boolean
+  pickerModeEnabled?: boolean
+  expandShorthand?: boolean
 }
 
 export interface ParseResult {

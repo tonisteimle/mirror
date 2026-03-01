@@ -197,9 +197,9 @@ export function useProjectStorage(
           dataCode: project.dataCode,
           componentsCode: project.componentsCode,
           tokensCode: project.tokensCode,
-          useTokenMode: (project as any).useTokenMode ?? false,
-          pickerModeEnabled: (project as any).pickerModeEnabled ?? true,
-          expandShorthand: (project as any).expandShorthand ?? true,
+          useTokenMode: project.useTokenMode ?? false,
+          pickerModeEnabled: project.pickerModeEnabled ?? true,
+          expandShorthand: project.expandShorthand ?? true,
         })
       }
 

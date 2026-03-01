@@ -13,6 +13,20 @@ import { useDialogs } from './useDialogs'
 import { useCodeParsing, type PreviewOverride } from './useCodeParsing'
 import type { EditorActions } from '../contexts'
 
+// Type declaration for E2E test helper exposed on window
+interface MirrorTestHelper {
+  setLayoutCode: (code: string) => void
+  setComponentsCode: (code: string) => void
+  setTokensCode: (code: string) => void
+  setDataCode: (code: string) => void
+}
+
+declare global {
+  interface Window {
+    __mirrorTestHelper?: MirrorTestHelper
+  }
+}
+
 /** View mode for the app: edit (full), preview (pages only), fullscreen (preview only) */
 export type ViewMode = 'edit' | 'preview' | 'fullscreen'
 
@@ -267,7 +281,7 @@ export function useAppState() {
   // Expose setLayoutCode for E2E testing
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__mirrorTestHelper = {
+      window.__mirrorTestHelper = {
         setLayoutCode,
         setComponentsCode,
         setTokensCode,
@@ -276,7 +290,7 @@ export function useAppState() {
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).__mirrorTestHelper
+        delete window.__mirrorTestHelper
       }
     }
   }, [setLayoutCode, setComponentsCode, setTokensCode, setDataCode])
