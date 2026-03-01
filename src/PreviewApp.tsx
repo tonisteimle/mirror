@@ -13,7 +13,6 @@ import { useMemo, useState } from 'react'
 import { Preview } from './components/Preview'
 import { CodeDisplay } from './components/CodeDisplay'
 import { useCodeParsing } from './hooks/useCodeParsing'
-import { getDefaultsContent } from './library/defaults-loader'
 import { colors } from './theme'
 
 interface UrlParams {
@@ -44,11 +43,10 @@ export function PreviewApp() {
   const { code: previewCode, showCode: initialShowCode } = useMemo(() => getUrlParams(), [])
   const [showCode, setShowCode] = useState(initialShowCode)
 
-  // Parse the code with library defaults
-  const defaultsContent = useMemo(() => getDefaultsContent(), [])
+  // Parse the code
   const { parseResult, diagnostics } = useCodeParsing(
     '',                  // tokensCode (tokens can be inline in previewCode)
-    defaultsContent,     // componentsCode (library defaults)
+    '',                  // componentsCode
     previewCode || '',   // layoutCode (user's preview code)
     { debounceMs: 0 }
   )

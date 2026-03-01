@@ -12,21 +12,7 @@ export * from './types'
 // Primitive Components (Box, Text, Icon, etc.)
 export { COMPONENTS } from './components'
 
-// Core Components (Nav, Field, PrimaryButton, etc.)
-export {
-  NAVIGATION_COMPONENTS,
-  FORM_COMPONENTS,
-  BUTTON_COMPONENTS,
-  CORE_COMPONENTS,
-} from './core-components-schema'
-
-// Core Tokens
-export {
-  NAVIGATION_TOKENS,
-  FORM_TOKENS,
-  BUTTON_TOKENS,
-  CORE_TOKENS,
-} from './core-tokens'
+// Core Components entfernt - alle Komponenten kommen aus _template Projekt
 
 // Events
 export { EVENTS } from './events'
