@@ -90,6 +90,8 @@ interface InlineLayoutPanelProps {
   useTokenMode?: boolean
   /** Callback when token mode changes (if provided, updates project settings) */
   onTokenModeChange?: (mode: boolean) => void
+  /** If true, panel is embedded in sidebar (no absolute positioning) */
+  embedded?: boolean
   /** If true, output long form (e.g., "padding"); if false, output short form (e.g., "pad") */
   toLongForm?: boolean
 }

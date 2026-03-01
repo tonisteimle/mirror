@@ -43,6 +43,18 @@ function App() {
   // Preview panel mode (preview or react code view)
   const [previewPanelMode, setPreviewPanelMode] = useState<PreviewPanelMode>('preview')
 
+  // Handle tab change - auto-switches preview mode based on active tab
+  const handleTabChange = useCallback((tab: 'layout' | 'components' | 'tokens' | 'data') => {
+    app.editor.setActiveTab(tab)
+    if (tab === 'components') {
+      setPreviewPanelMode('components')
+    } else if (tab === 'tokens') {
+      setPreviewPanelMode('tokens')
+    } else if (tab === 'layout') {
+      setPreviewPanelMode('preview')
+    }
+  }, [app.editor])
+
   // Projects dialog
   const [isProjectsDialogOpen, setIsProjectsDialogOpen] = useState(false)
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false)
@@ -229,7 +241,7 @@ function App() {
               <EditorContainer
                 width={panelWidth}
                 activeTab={app.editor.activeTab}
-                onTabChange={app.editor.setActiveTab}
+                onTabChange={handleTabChange}
                 layoutCode={app.layoutCode}
                 componentsCode={app.componentsCode}
                 tokensCode={app.tokensCode}
@@ -254,8 +266,6 @@ function App() {
                 onPickerModeChange={app.setPickerModeEnabled}
                 expandShorthand={app.expandShorthand}
                 onExpandShorthandChange={app.setExpandShorthand}
-                llmEnabled={app.llmEnabled}
-                onLlmEnabledChange={app.setLlmEnabled}
                 useTokenMode={app.useTokenMode}
                 onTokenModeChange={app.setUseTokenMode}
               />

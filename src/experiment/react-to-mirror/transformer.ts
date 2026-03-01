@@ -407,7 +407,7 @@ function generateStyles(styles: MirrorStyles): string {
   const parts: string[] = []
 
   // Layout
-  if (styles.layout === 'horizontal' || styles.direction === 'row' || styles.direction === 'horizontal') {
+  if (styles.layout === 'horizontal' || styles.direction === 'row') {
     parts.push('hor')
   }
   if (styles.layout === 'stacked') {

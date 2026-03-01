@@ -46,11 +46,6 @@ interface EditorContainerProps {
   useTokenMode?: boolean
   /** Callback when token mode changes */
   onTokenModeChange?: (mode: boolean) => void
-  // LLM enabled toggle
-  /** Whether LLM features are enabled (translation, generation) */
-  llmEnabled?: boolean
-  /** Callback when LLM enabled changes */
-  onLlmEnabledChange?: (enabled: boolean) => void
 }
 
 export function EditorContainer({
@@ -83,8 +78,6 @@ export function EditorContainer({
   onExpandShorthandChange,
   useTokenMode,
   onTokenModeChange,
-  llmEnabled,
-  onLlmEnabledChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -118,8 +111,6 @@ export function EditorContainer({
         onExpandShorthandChange={onExpandShorthandChange}
         useTokenMode={useTokenMode}
         onTokenModeChange={onTokenModeChange}
-        llmEnabled={llmEnabled}
-        onLlmEnabledChange={onLlmEnabledChange}
       />
     </EditorErrorBoundary>
   )

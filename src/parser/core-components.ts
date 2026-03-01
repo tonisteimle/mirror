@@ -675,7 +675,6 @@ function createPasswordInput(): ComponentTemplate {
     eventHandlers: [
       {
         event: 'onclick',
-        target: 'Toggle',
         actions: [{ type: 'toggle-state', target: 'self' }],
       },
     ],

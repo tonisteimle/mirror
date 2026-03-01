@@ -28,7 +28,6 @@ export function useAppState() {
   const [useTokenMode, setUseTokenMode] = useState<boolean>(false)
 
   // Editor settings (project-specific, persisted with project)
-  const [llmEnabled, setLlmEnabled] = useState<boolean>(true)
   const [pickerModeEnabled, setPickerModeEnabled] = useState<boolean>(true)
   const [expandShorthand, setExpandShorthand] = useState<boolean>(true)
 
@@ -201,7 +200,7 @@ export function useAppState() {
 
   // Project storage (auto-save, import, export)
   const projectStorage = useProjectStorage(
-    { pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode, useTokenMode, llmEnabled, pickerModeEnabled, expandShorthand },
+    { pages, currentPageId, layoutCode, dataCode, componentsCode, tokensCode, useTokenMode, pickerModeEnabled, expandShorthand },
     {
       onError: dialogs.setError,
       onImportSuccess: (data) => {
@@ -214,7 +213,6 @@ export function useAppState() {
         setComponentsCode(data.componentsCode)
         setTokensCode(data.tokensCode)
         setUseTokenMode(data.useTokenMode)
-        setLlmEnabled(data.llmEnabled)
         setPickerModeEnabled(data.pickerModeEnabled)
         setExpandShorthand(data.expandShorthand)
       },
@@ -244,7 +242,6 @@ export function useAppState() {
           if (data.componentsCode) setComponentsCode(data.componentsCode)
           if (data.tokensCode) setTokensCode(data.tokensCode)
           if (data.useTokenMode !== undefined) setUseTokenMode(data.useTokenMode)
-          if (data.llmEnabled !== undefined) setLlmEnabled(data.llmEnabled)
           if (data.pickerModeEnabled !== undefined) setPickerModeEnabled(data.pickerModeEnabled)
           if (data.expandShorthand !== undefined) setExpandShorthand(data.expandShorthand)
         }
@@ -326,8 +323,6 @@ export function useAppState() {
     setUseTokenMode,
 
     // Editor settings (project-specific)
-    llmEnabled,
-    setLlmEnabled,
     pickerModeEnabled,
     setPickerModeEnabled,
     expandShorthand,

@@ -2,13 +2,14 @@ import { memo } from 'react'
 import { Preview } from '../components/Preview'
 import { ReactCodePanel } from '../components/ReactCodePanel'
 import { ComponentLibraryView } from '../components/ComponentLibraryView'
+import { TokensPreview } from '../components/TokensPreview'
 import { PreviewErrorBoundary } from '../components/boundaries'
 import { useReactExport } from '../hooks/useReactExport'
 import type { UseCodeParsingReturn } from '../hooks/useCodeParsing'
 import type { DataRecord, DataSchema } from '../parser/types'
 
-/** Preview panel mode: 'preview' shows live render, 'react' shows generated code, 'components' shows component library */
-export type PreviewPanelMode = 'preview' | 'react' | 'components'
+/** Preview panel mode: 'preview' shows live render, 'react' shows generated code, 'components' shows component library, 'tokens' shows token preview */
+export type PreviewPanelMode = 'preview' | 'react' | 'components' | 'tokens'
 
 interface PreviewContainerProps {
   parsing: UseCodeParsingReturn
@@ -83,6 +84,12 @@ export const PreviewContainer = memo(function PreviewContainer({
             tokens={parsing.parseResult.tokens}
           />
         </PreviewErrorBoundary>
+      )}
+      {previewPanelMode === 'tokens' && (
+        <TokensPreview
+          tokens={parsing.parseResult.tokens}
+          tokensCode={tokensCode}
+        />
       )}
     </div>
   )

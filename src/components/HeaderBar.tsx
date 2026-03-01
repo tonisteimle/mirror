@@ -121,23 +121,6 @@ export function HeaderBar({
           </>
         )}
 
-        {/* Component Library Toggle */}
-        {onPreviewPanelModeChange && (
-          <IconButton
-            onClick={() => onPreviewPanelModeChange(previewPanelMode === 'components' ? 'preview' : 'components')}
-            title={previewPanelMode === 'components' ? 'Preview anzeigen' : 'Component Library'}
-            active={previewPanelMode === 'components'}
-            testId="header-toggle-components"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
-            </svg>
-          </IconButton>
-        )}
-
         {/* React Code Toggle */}
         {onPreviewPanelModeChange && (
           <IconButton

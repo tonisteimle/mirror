@@ -30,7 +30,6 @@ export interface ProjectState {
   tokensCode: string
   useTokenMode: boolean
   // Editor settings (persisted per project)
-  llmEnabled: boolean
   pickerModeEnabled: boolean
   expandShorthand: boolean
 }
@@ -45,7 +44,6 @@ export interface UseProjectStorageOptions {
     componentsCode: string
     tokensCode: string
     useTokenMode: boolean
-    llmEnabled: boolean
     pickerModeEnabled: boolean
     expandShorthand: boolean
   }) => void
@@ -81,7 +79,6 @@ export function useProjectStorage(
         componentsCode: state.componentsCode,
         tokensCode: state.tokensCode,
         useTokenMode: state.useTokenMode,
-        llmEnabled: state.llmEnabled,
         pickerModeEnabled: state.pickerModeEnabled,
         expandShorthand: state.expandShorthand,
       }
@@ -93,7 +90,7 @@ export function useProjectStorage(
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode, state.useTokenMode, state.llmEnabled, state.pickerModeEnabled, state.expandShorthand])
+  }, [state.pages, state.currentPageId, state.dataCode, state.componentsCode, state.tokensCode, state.useTokenMode, state.pickerModeEnabled, state.expandShorthand])
 
   // Save project to .mirror file
   const saveProject = useCallback(() => {
@@ -201,7 +198,6 @@ export function useProjectStorage(
           componentsCode: project.componentsCode,
           tokensCode: project.tokensCode,
           useTokenMode: (project as any).useTokenMode ?? false,
-          llmEnabled: (project as any).llmEnabled ?? true,
           pickerModeEnabled: (project as any).pickerModeEnabled ?? true,
           expandShorthand: (project as any).expandShorthand ?? true,
         })

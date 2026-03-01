@@ -1,7 +1,5 @@
 import { useMemo, useCallback } from 'react'
 import { parse } from '../parser/parser'
-import { unifiedValidate } from '../validation'
-import type { Diagnostic } from '../validation/core'
 import { useDebouncedValue } from './useDebouncedValue'
 import type { ASTNode, ParseIssue, ParseResult as ParserParseResult } from '../parser/types'
 
@@ -138,19 +136,17 @@ export function useCodeParsing(
       })
     }
 
-    // Run unified validation (reuse parseResult, don't parse again)
-    const validation = unifiedValidate(parseResult, { mode: 'ast' })
-
-    // Convert unified Diagnostics to CodeDiagnostics
-    validation.diagnostics.forEach((diag: Diagnostic) => {
-      allDiagnostics.push({
-        type: diag.severity === 'info' ? 'info' : diag.severity,
-        line: diag.location.line,
-        column: diag.location.column,
-        message: diag.message,
-        suggestion: diag.suggestions?.[0]?.label
+    // Collect parser errors (strings)
+    if (parseResult.errors) {
+      parseResult.errors.forEach((error, index) => {
+        allDiagnostics.push({
+          type: 'error',
+          line: index + 1,
+          column: 0,
+          message: typeof error === 'string' ? error : String(error),
+        })
       })
-    })
+    }
 
     // Sort by line number
     allDiagnostics.sort((a, b) => a.line - b.line)
