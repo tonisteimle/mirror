@@ -900,6 +900,168 @@ function createDangerButton(): ComponentTemplate {
 }
 
 // =============================================================================
+// CHECKBOX / RADIO / SWITCH COMPONENTS
+// =============================================================================
+
+/**
+ * CheckboxInput - Checkbox with checked/unchecked state
+ *
+ * Usage:
+ *   CheckboxInput
+ *   CheckboxInput checked
+ */
+function createCheckboxInput(): ComponentTemplate {
+  const node = createNode('CheckboxInput', {
+    _layout: 'horizontal',
+    _align: 'center',
+    width: 18,
+    height: 18,
+    radius: 4,
+    background: '$form.input',
+    'border-width': 1,
+    'border-color': '$form.border',
+    cursor: 'pointer',
+  }, [
+    createNode('Checkmark', {
+      _primitiveType: 'Icon',
+      content: 'check',
+      color: 'white',
+      'icon-size': 14,
+      hidden: true,
+    }),
+  ], {
+    states: [
+      createState('checked', {
+        background: '$primary.bg',
+        'border-color': '$primary.bg',
+      }, [
+        createNode('Checkmark', { hidden: false, visible: true }),
+      ]),
+      createState('hover', { 'border-color': '$form.muted' }),
+      createState('disabled', {
+        opacity: 0.5,
+        cursor: 'not-allowed',
+      }),
+    ],
+    eventHandlers: [
+      {
+        event: 'onclick',
+        actions: [{ type: 'toggle-state', target: 'self' }],
+      },
+    ],
+  })
+
+  return createTemplate(node)
+}
+
+/**
+ * RadioInput - Radio button for single selection in groups
+ *
+ * Usage:
+ *   RadioInput
+ *   RadioInput checked
+ */
+function createRadioInput(): ComponentTemplate {
+  const node = createNode('RadioInput', {
+    _layout: 'horizontal',
+    _align: 'center',
+    width: 18,
+    height: 18,
+    radius: 9,
+    background: '$form.input',
+    'border-width': 1,
+    'border-color': '$form.border',
+    cursor: 'pointer',
+  }, [
+    createNode('Dot', {
+      width: 8,
+      height: 8,
+      radius: 4,
+      background: 'white',
+      hidden: true,
+    }),
+  ], {
+    states: [
+      createState('checked', {
+        background: '$primary.bg',
+        'border-color': '$primary.bg',
+      }, [
+        createNode('Dot', { hidden: false, visible: true }),
+      ]),
+      createState('hover', { 'border-color': '$form.muted' }),
+      createState('disabled', {
+        opacity: 0.5,
+        cursor: 'not-allowed',
+      }),
+    ],
+    eventHandlers: [
+      {
+        event: 'onclick',
+        actions: [
+          { type: 'activate', target: 'self' },
+          { type: 'deactivate-siblings' },
+        ],
+      },
+    ],
+  })
+
+  return createTemplate(node)
+}
+
+/**
+ * SwitchInput - Toggle switch for on/off settings
+ *
+ * Usage:
+ *   SwitchInput
+ *   SwitchInput on
+ */
+function createSwitchInput(): ComponentTemplate {
+  const node = createNode('SwitchInput', {
+    _layout: 'horizontal',
+    _align: 'center',
+    width: 40,
+    height: 22,
+    radius: 11,
+    background: '$form.border',
+    cursor: 'pointer',
+    padding: 2,
+  }, [
+    createNode('Thumb', {
+      width: 18,
+      height: 18,
+      radius: 9,
+      background: 'white',
+    }),
+  ], {
+    states: [
+      createState('on', {
+        background: '$primary.bg',
+      }, [
+        createNode('Thumb', { 'margin-left': 18 }),
+      ]),
+      createState('off', {
+        background: '$form.border',
+      }, [
+        createNode('Thumb', { 'margin-left': 0 }),
+      ]),
+      createState('hover', { opacity: 0.9 }),
+      createState('disabled', {
+        opacity: 0.5,
+        cursor: 'not-allowed',
+      }),
+    ],
+    eventHandlers: [
+      {
+        event: 'onclick',
+        actions: [{ type: 'toggle-state', target: 'self' }],
+      },
+    ],
+  })
+
+  return createTemplate(node)
+}
+
+// =============================================================================
 // REGISTRY BUILDER
 // =============================================================================
 
@@ -936,6 +1098,11 @@ export function buildCoreComponentRegistry(): Map<string, ComponentTemplate> {
   registry.set('GhostButton', createGhostButton())
   registry.set('DangerButton', createDangerButton())
 
+  // Checkbox / Radio / Switch
+  registry.set('CheckboxInput', createCheckboxInput())
+  registry.set('RadioInput', createRadioInput())
+  registry.set('SwitchInput', createSwitchInput())
+
   return registry
 }
 
@@ -969,6 +1136,11 @@ export const CORE_COMPONENT_NAMES = [
   'SecondaryButton',
   'GhostButton',
   'DangerButton',
+
+  // Checkbox / Radio / Switch
+  'CheckboxInput',
+  'RadioInput',
+  'SwitchInput',
 ] as const
 
 export type CoreComponentName = typeof CORE_COMPONENT_NAMES[number]

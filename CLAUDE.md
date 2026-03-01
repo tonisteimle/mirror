@@ -522,6 +522,91 @@ Icon "home", material
 Icon "user", size 20, col #3B82F6
 ```
 
+## Core Components
+
+Vorgefertigte, thematisierbare Komponenten-Templates mit Slots, States und Design Tokens.
+
+### Navigation Components
+
+| Name | Description |
+|------|-------------|
+| `Nav` | Navigation Container |
+| `NavItem` | Navigation Item mit Icon + Label Slots |
+| `NavItemBadge` | NavItem mit zusätzlichem Badge Slot |
+| `NavSection` | Gruppierte Navigation mit Header |
+| `ToggleNav` | Collapsible Navigation mit Chevron |
+| `TreeItem` | Hierarchisches Item mit Children |
+| `TreeLeaf` | Leaf-Node ohne Children |
+| `DrawerNav` | Mobile Drawer Navigation |
+| `DrawerBackdrop` | Backdrop für Drawer |
+| `MenuButton` | Hamburger Menu Button |
+
+```
+NavItem Icon "home"; Label "Dashboard"
+NavItem active, Icon "settings"; Label "Settings"
+NavSection Header "Admin"
+  NavItem Icon "users"; Label "Users"
+```
+
+### Form Components
+
+| Name | Description |
+|------|-------------|
+| `Field` | Form Field mit Label, Input, Helper, Error Slots |
+| `TextInput` | Einfaches Textfeld |
+| `IconInput` | Input mit Icon-Slot |
+| `PasswordInput` | Password Input mit Toggle |
+| `TextareaInput` | Mehrzeiliges Textfeld |
+| `SelectInput` | Dropdown Select |
+| `CheckboxInput` | Checkbox mit Label |
+| `RadioInput` | Radio Button mit Label |
+| `SwitchInput` | Toggle Switch |
+
+```
+Field Label "E-Mail"; Input placeholder "name@example.com"
+Field invalid, Label "Name"; Error "Pflichtfeld"
+IconInput Icon "search"; Input placeholder "Suchen..."
+CheckboxInput Label "Ich akzeptiere die AGB"
+SwitchInput on, Label "Benachrichtigungen"
+```
+
+### Button Components
+
+| Name | Description |
+|------|-------------|
+| `PrimaryButton` | Primary Action Button (blau) |
+| `SecondaryButton` | Secondary Action Button (grau) |
+| `GhostButton` | Transparenter Button mit Border |
+| `DangerButton` | Destructive Action Button (rot) |
+
+```
+PrimaryButton "Speichern"
+SecondaryButton "Abbrechen"
+GhostButton Icon "plus"; Label "Hinzufügen"
+DangerButton "Löschen"
+```
+
+### Core Tokens
+
+Design Tokens für Core Components:
+
+| Token | Description |
+|-------|-------------|
+| `$nav.bg` | Navigation Hintergrund |
+| `$nav.hover` | Navigation Hover |
+| `$nav.active` | Navigation Aktiv |
+| `$nav.text` | Navigation Text |
+| `$nav.muted` | Navigation gedämpft |
+| `$form.bg` | Form Hintergrund |
+| `$form.input` | Input Hintergrund |
+| `$form.border` | Input Border |
+| `$form.focus` | Focus-Ring Farbe |
+| `$form.error` | Fehler-Farbe |
+| `$form.text` | Form Text |
+| `$primary.bg` | Primary Button Hintergrund |
+| `$primary.hover` | Primary Button Hover |
+| `$danger.bg` | Danger Button Hintergrund |
+
 ## States
 
 System- und Behavior-States
@@ -931,6 +1016,12 @@ BORDER      bor [dir] [width] [style] [color]
 RADIUS      rad [corners] | tl tr bl br | t b l r
 TYPE        font-size/fs, icon-size/is, icon-weight/iw, icon-color/ic, fill, weight, line, font, align, italic, underline, truncate
 VISUAL      o (opacity), shadow, cursor, z, hidden, disabled, rot
+
+CORE        Nav, NavItem, NavSection, ToggleNav, TreeItem, DrawerNav
+            Field, TextInput, IconInput, PasswordInput, SelectInput
+            CheckboxInput, RadioInput, SwitchInput
+            PrimaryButton, SecondaryButton, GhostButton, DangerButton
+            Tokens: $nav.*, $form.*, $primary.*, $danger.*
 
 STATES      hover, focus, active, disabled (indented block)
             state highlighted, state selected

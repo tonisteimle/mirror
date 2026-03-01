@@ -12,8 +12,7 @@
 6. [Editor System](#editor-system)
 7. [Validation System](#validation-system)
 8. [State Management](#state-management)
-9. [LLM Integration](#llm-integration)
-10. [Design Patterns](#design-patterns)
+9. [Design Patterns](#design-patterns)
 
 ---
 
@@ -61,15 +60,26 @@ src/
 │   ├── dsl-autocomplete.ts
 │   └── keymaps.ts
 │
-├── validation/            # Validierung & Korrektur
-│   ├── pipeline/          # Validierungs-Pipeline
-│   ├── correctors/        # Auto-Korrektur
-│   └── dsl-schema.ts      # Schema-Definition
+├── dsl/                   # DSL Schema & Validation
+│   ├── schema/            # Modulares Schema (aufgeteilt)
+│   │   ├── types.ts       # Type-Definitionen
+│   │   ├── components.ts  # Primitive Components
+│   │   ├── core-components-schema.ts  # Core Components (Nav, Field, etc.)
+│   │   ├── core-tokens.ts # Design Tokens
+│   │   ├── events.ts      # Event-Definitionen
+│   │   ├── actions.ts     # Action-Definitionen
+│   │   ├── states.ts      # State-Definitionen
+│   │   ├── animations.ts  # Animation-Definitionen
+│   │   ├── keywords.ts    # Keyword-Definitionen
+│   │   └── index.ts       # Re-exports
+│   ├── master-schema.ts   # Haupt-Schema + Properties + Helpers
+│   ├── normalizer.ts      # Property-Normalisierung
+│   └── schema-validator.ts # Validierung
 │
 ├── components/            # React UI-Komponenten
 ├── hooks/                 # Custom Hooks
-├── services/              # NL-Translation, Logger
-├── lib/                   # LLM-Integration, Utils
+├── services/              # Error-Handling, Logger, Utilities
+├── lib/                   # Errors, Analysis, Context
 └── library/               # Component Library
 ```
 
@@ -229,6 +239,29 @@ generateReactElement(nodes: ASTNode[]) {
 | `Image` | `<img>` |
 | `Link` | `<a>` |
 
+### Core Components
+
+Vorgefertigte, thematisierbare Komponenten-Templates:
+
+| Kategorie | Components |
+|-----------|------------|
+| **Navigation** | Nav, NavItem, NavItemBadge, NavSection, ToggleNav, TreeItem, TreeLeaf, DrawerNav, DrawerBackdrop, MenuButton |
+| **Forms** | Field, TextInput, IconInput, PasswordInput, TextareaInput, SelectInput, CheckboxInput, RadioInput, SwitchInput |
+| **Buttons** | PrimaryButton, SecondaryButton, GhostButton, DangerButton |
+
+Core Components bieten:
+- Vordefinierte Slots (Icon, Label, etc.)
+- Eingebaute States (hover, active, disabled, etc.)
+- Design Tokens ($nav.*, $form.*, $primary.*)
+- Event-Handler für Interaktionen
+
+```
+// Verwendung
+NavItem Icon "home"; Label "Dashboard"
+Field Label "E-Mail"; Input placeholder "name@example.com"
+PrimaryButton "Speichern"
+```
+
 ---
 
 ## Editor System
@@ -347,53 +380,6 @@ useAppState
 ├── useProjectStorage   ← Persistenz
 └── usePanel            ← Panel-Sizing
 ```
-
----
-
-## LLM Integration
-
-### Request-Klassifizierung
-
-```
-User Prompt
-     │
-     ▼
-┌──────────────────┐
-│ classifyRequest()│
-└────────┬─────────┘
-         │
-    ┌────┴────┐
-    │         │
-    ▼         ▼
- CREATE    MODIFY
-    │         │
-    ▼         ▼
- Neues     Änderung
- Design    bestehend
-```
-
-### CREATE Flow
-
-```
-Prompt → buildCreatePrompt() → LLM → Intent JSON → intentToMirror() → DSL
-```
-
-### MODIFY Flow
-
-```
-Prompt + Code → mirrorToIntent() → buildModifyPrompt() → LLM → Diff → DSL
-```
-
-### Module
-
-| Modul | Verantwortlichkeit |
-|-------|-------------------|
-| `lib/ai.ts` | LLM API Interface |
-| `lib/ai-context.ts` | Kontext-Aufbau |
-| `intent/generation.ts` | CREATE/MODIFY Orchestrierung |
-| `intent/mirror-to-intent.ts` | Mirror → Intent |
-| `intent/intent-to-mirror.ts` | Intent → Mirror |
-| `lib/self-healing/` | Auto-Korrektur |
 
 ---
 
