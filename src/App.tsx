@@ -3,6 +3,7 @@ import { colors } from './theme'
 import { ErrorDialog } from './components/ErrorDialog'
 import { SettingsDialog } from './components/SettingsDialog'
 import { ProjectsDialog } from './components/ProjectsDialog'
+import { NewProjectDialog } from './components/NewProjectDialog'
 import { HeaderBar } from './components/HeaderBar'
 import { EditorContainer } from './containers/EditorContainer'
 import { PreviewContainer, type PreviewPanelMode } from './containers/PreviewContainer'
@@ -44,6 +45,8 @@ function App() {
 
   // Projects dialog
   const [isProjectsDialogOpen, setIsProjectsDialogOpen] = useState(false)
+  const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false)
+  const [existingProjectNames, setExistingProjectNames] = useState<string[]>([])
 
   // Handle project selection - updates URL and reloads
   const handleSelectProject = useCallback((projectId: string) => {
@@ -54,6 +57,91 @@ function App() {
       url.searchParams.delete('project')
     }
     window.location.href = url.toString()
+  }, [])
+
+  // Handle new project creation from NewProjectDialog
+  const handleCreateProject = useCallback(async (projectName: string, templateId: 'example' | 'empty') => {
+    const LIBRARY_ENDPOINT = 'https://ux-strategy.ch/mirror/save-library.php'
+
+    try {
+      let projectContent: string
+
+      if (templateId === 'example') {
+        // Load from _template project
+        try {
+          const templateResponse = await fetch(`${LIBRARY_ENDPOINT}?id=_template`)
+          if (templateResponse.ok) {
+            const templateText = await templateResponse.text()
+            if (templateText && templateText.trim() && !templateText.trim().startsWith('//')) {
+              const templateData = JSON.parse(templateText)
+              templateData.savedAt = new Date().toISOString()
+              projectContent = JSON.stringify(templateData, null, 2)
+              console.log('[Projects] Neues Projekt von _template erstellt')
+            } else {
+              throw new Error('Template leer')
+            }
+          } else {
+            throw new Error('Template nicht gefunden')
+          }
+        } catch {
+          // Fallback to empty if template not found
+          console.log('[Projects] _template nicht gefunden, erstelle leeres Projekt')
+          projectContent = JSON.stringify({
+            version: 2,
+            tokensCode: '',
+            componentsCode: '',
+            dataCode: '',
+            pages: [{ id: 'page-1', name: 'Page 1', layoutCode: '' }],
+            currentPageId: 'page-1',
+            savedAt: new Date().toISOString(),
+          }, null, 2)
+        }
+      } else {
+        // Create empty project
+        console.log('[Projects] Leeres Projekt erstellt')
+        projectContent = JSON.stringify({
+          version: 2,
+          tokensCode: '',
+          componentsCode: '',
+          dataCode: '',
+          pages: [{ id: 'page-1', name: 'Page 1', layoutCode: '' }],
+          currentPageId: 'page-1',
+          savedAt: new Date().toISOString(),
+        }, null, 2)
+      }
+
+      // Save to server
+      const response = await fetch(`${LIBRARY_ENDPOINT}?id=${projectName}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: projectContent,
+      })
+
+      if (!response.ok) {
+        throw new Error('Projekt konnte nicht erstellt werden')
+      }
+
+      // Navigate to new project
+      handleSelectProject(projectName)
+    } catch (err) {
+      console.error('[Projects] Fehler beim Erstellen:', err)
+    }
+  }, [handleSelectProject])
+
+  // Handle opening new project dialog (from ProjectsDialog)
+  const handleOpenNewProject = useCallback(async () => {
+    // Load existing project names
+    try {
+      const response = await fetch('https://ux-strategy.ch/mirror/save-library.php?list=1')
+      if (response.ok) {
+        const data = await response.json()
+        setExistingProjectNames((data.projects || []).map((p: { id: string }) => p.id))
+      }
+    } catch {
+      // Ignore errors
+    }
+    setIsProjectsDialogOpen(false)
+    setIsNewProjectDialogOpen(true)
   }, [])
 
   // Handle element selection (single click)
@@ -241,6 +329,15 @@ function App() {
         onClose={() => setIsProjectsDialogOpen(false)}
         currentProjectId={cloudSave.projectId}
         onSelectProject={handleSelectProject}
+        onOpenNewProject={handleOpenNewProject}
+      />
+
+      {/* New Project Dialog */}
+      <NewProjectDialog
+        isOpen={isNewProjectDialogOpen}
+        onClose={() => setIsNewProjectDialogOpen(false)}
+        onCreateProject={handleCreateProject}
+        existingProjectNames={existingProjectNames}
       />
 
       {/* Error Dialog */}

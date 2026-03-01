@@ -39,6 +39,7 @@ interface ProjectsDialogProps {
   onClose: () => void
   currentProjectId: string
   onSelectProject: (projectId: string) => void
+  onOpenNewProject?: () => void
 }
 
 export function ProjectsDialog({
@@ -46,11 +47,13 @@ export function ProjectsDialog({
   onClose,
   currentProjectId,
   onSelectProject,
+  onOpenNewProject,
 }: ProjectsDialogProps) {
   const [projects, setProjects] = useState<ProjectInfo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newProjectName, setNewProjectName] = useState('')
+  const [useTemplate, setUseTemplate] = useState(true) // true = from _template, false = empty
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -80,7 +83,7 @@ export function ProjectsDialog({
     }
   }, [isOpen, loadProjects])
 
-  // Create new project with default content
+  // Create new project (empty or from _template)
   const handleCreate = useCallback(async () => {
     const name = newProjectName.trim()
     if (!name) return
@@ -89,36 +92,73 @@ export function ProjectsDialog({
     const sanitized = name.trim().replace(/[^a-zA-Z0-9-]/g, '-').replace(/-+/g, '-')
     if (!sanitized) return
 
-    // Create default project content
-    const defaultProject = {
-      version: 2,
-      tokensCode: DEFAULT_TOKENS,
-      componentsCode: defaultComponentsCode,
-      dataCode: '',
-      pages: [{ id: 'page-1', name: 'Page 1', layoutCode: '' }],
-      currentPageId: 'page-1',
-      savedAt: new Date().toISOString(),
-    }
-
     try {
-      // Save default content to server first
+      let projectContent: string
+
+      if (useTemplate) {
+        // Load from _template project
+        try {
+          const templateResponse = await fetch(`${LIBRARY_ENDPOINT}?id=_template`)
+          if (templateResponse.ok) {
+            const templateText = await templateResponse.text()
+            if (templateText && templateText.trim() && !templateText.trim().startsWith('//')) {
+              const templateData = JSON.parse(templateText)
+              templateData.savedAt = new Date().toISOString()
+              projectContent = JSON.stringify(templateData, null, 2)
+              console.log('[Projects] Neues Projekt von _template erstellt')
+            } else {
+              throw new Error('Template leer')
+            }
+          } else {
+            throw new Error('Template nicht gefunden')
+          }
+        } catch {
+          // Fallback to empty if template not found
+          console.log('[Projects] _template nicht gefunden, erstelle leeres Projekt')
+          const emptyProject = {
+            version: 2,
+            tokensCode: '',
+            componentsCode: '',
+            dataCode: '',
+            pages: [{ id: 'page-1', name: 'Page 1', layoutCode: '' }],
+            currentPageId: 'page-1',
+            savedAt: new Date().toISOString(),
+          }
+          projectContent = JSON.stringify(emptyProject, null, 2)
+        }
+      } else {
+        // Create empty project
+        console.log('[Projects] Leeres Projekt erstellt')
+        const emptyProject = {
+          version: 2,
+          tokensCode: '',
+          componentsCode: '',
+          dataCode: '',
+          pages: [{ id: 'page-1', name: 'Page 1', layoutCode: '' }],
+          currentPageId: 'page-1',
+          savedAt: new Date().toISOString(),
+        }
+        projectContent = JSON.stringify(emptyProject, null, 2)
+      }
+
+      // Save to server
       const response = await fetch(`${LIBRARY_ENDPOINT}?id=${sanitized}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(defaultProject, null, 2),
+        body: projectContent,
       })
 
       if (!response.ok) {
         throw new Error('Projekt konnte nicht erstellt werden')
       }
 
-      // Then navigate to the new project
+      // Navigate to new project
       onSelectProject(sanitized)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Erstellen')
     }
-  }, [newProjectName, onSelectProject, onClose])
+  }, [newProjectName, useTemplate, onSelectProject, onClose])
 
   // Rename project
   const handleRename = useCallback(async (oldId: string, newName: string) => {
@@ -248,50 +288,37 @@ export function ProjectsDialog({
           Cloud-Projekte
         </div>
 
-        {/* New Project */}
-        <div
-          style={{
-            padding: '8px',
-            borderBottom: `1px solid ${COLORS.border}`,
-            display: 'flex',
-            gap: '6px',
-          }}
-        >
-          <input
-            type="text"
-            placeholder="Neues Projekt..."
-            value={newProjectName}
-            onChange={e => setNewProjectName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
+        {/* New Project Button */}
+        {onOpenNewProject && (
+          <div
             style={{
-              flex: 1,
-              padding: '6px 10px',
-              backgroundColor: COLORS.buttonBg,
-              border: 'none',
-              borderRadius: '4px',
-              color: COLORS.text,
-              fontSize: '11px',
-              fontFamily: 'inherit',
-              outline: 'none',
-            }}
-          />
-          <button
-            onClick={handleCreate}
-            disabled={!newProjectName.trim()}
-            style={{
-              padding: '5px 10px',
-              backgroundColor: newProjectName.trim() ? COLORS.buttonBgSelected : COLORS.buttonBg,
-              color: newProjectName.trim() ? '#fff' : COLORS.textMuted,
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              cursor: newProjectName.trim() ? 'pointer' : 'default',
+              padding: '8px',
+              borderBottom: `1px solid ${COLORS.border}`,
             }}
           >
-            +
-          </button>
-        </div>
+            <button
+              onClick={onOpenNewProject}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: COLORS.buttonBg,
+                color: COLORS.text,
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>+</span>
+              Neues Projekt
+            </button>
+          </div>
+        )}
 
         {/* Projects List */}
         <div
