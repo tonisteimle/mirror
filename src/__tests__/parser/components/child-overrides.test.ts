@@ -2,7 +2,7 @@
  * Parser Tests: Child Overrides
  *
  * Tests for overriding child properties inline using semicolon syntax.
- * Syntax: Child: Parent childName property; childName2 property
+ * Syntax: Child as Parent: childName property; childName2 property
  */
 
 import { describe, it, expect } from 'vitest'
@@ -14,7 +14,7 @@ describe('Basic Child Overrides', () => {
   it('inherits from parent with overrides', () => {
     const code = `Button: pad 12, bg #3B82F6
 
-DangerButton: Button bg #EF4444`
+DangerButton as Button: bg #EF4444`
 
     const result = parse(code)
     expect(result.errors).toHaveLength(0)
@@ -47,7 +47,7 @@ describe('Child Overrides with Property Values', () => {
   it('inheritance with color override', () => {
     const code = `Alert: pad 12, bg #333
 
-SuccessAlert: Alert bg #22C55E`
+SuccessAlert as Alert: bg #22C55E`
 
     const result = parse(code)
     const template = result.registry.get('SuccessAlert')
@@ -73,8 +73,8 @@ describe('Child Override Inheritance Chain', () => {
   header bg #333
   content pad 16
 
-Level1: Base header bg #444
-Level2: Level1 header bg #555; content pad 24`
+Level1 as Base: header bg #444
+Level2 as Level1: header bg #555; content pad 24`
 
     const result = parse(code)
 

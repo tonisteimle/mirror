@@ -115,7 +115,7 @@ Button "Click"`)
   hover
     bg #2563EB
 
-DangerButton: Button bg #EF4444
+DangerButton as Button: bg #EF4444
 
 DangerButton "Delete"`)
 

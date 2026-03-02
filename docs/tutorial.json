@@ -846,11 +846,11 @@
             },
             {
               "type": "paragraph",
-              "text": "The from keyword creates a true parent-child relationship. Primary-Button from Button means: \"Take everything Button has, then add or change these properties.\" The base defines the shared DNA; variants add their unique traits."
+              "text": "The as keyword creates a true parent-child relationship. Primary-Button as Button: means: \"Take everything Button has, then add or change these properties.\" The base defines the shared DNA; variants add their unique traits."
             },
             {
               "type": "code",
-              "code": "Button:\n    padding 8 16\n    radius 8\nPrimary-Button:\n    Button bg #2271c1\nSecondary-Button:\n    Button bg transparent\n    border 1 #2271c1\nDanger-Button:\n    Button bg #c14022\n\nActions\n    horizontal\n    gap 12\n    Primary-Button\n        \"Save\"\n    Secondary-Button\n        \"Cancel\"\n    Danger-Button\n        \"Delete\"",
+              "code": "Button:\n    padding 8 16\n    radius 8\nPrimary-Button as Button:\n    bg #2271c1\nSecondary-Button as Button:\n    bg transparent\n    border 1 #2271c1\nDanger-Button as Button:\n    bg #c14022\n\nActions\n    horizontal\n    gap 12\n    Primary-Button\n        \"Save\"\n    Secondary-Button\n        \"Cancel\"\n    Danger-Button\n        \"Delete\"",
               "expects": {
                 "nodes": [
                   {
@@ -875,7 +875,7 @@
             {
               "type": "exercise",
               "task": "Create a GhostBtn variant with transparent background and a blue border.",
-              "code": "Btn: pad 8 16, rad 8\n\nPrimaryBtn: Btn bg #2271c1\nDangerBtn: Btn bg #c14022\n\n// Add GhostBtn here (hint: bg transparent, bor 1 #2271c1)\n\nRow hor, g 8\n  PrimaryBtn \"Save\"\n  DangerBtn \"Delete\""
+              "code": "Btn: pad 8 16, rad 8\n\nPrimaryBtn as Btn: bg #2271c1\nDangerBtn as Btn: bg #c14022\n\n// Add GhostBtn here (hint: GhostBtn as Btn: bg transparent, bor 1 #2271c1)\n\nRow hor, g 8\n  PrimaryBtn \"Save\"\n  DangerBtn \"Delete\""
             }
           ]
         },
@@ -956,7 +956,7 @@
             },
             {
               "type": "code",
-              "code": "Button:\n    horizontal\n    gap 8\n    padding 12 24\n    radius 8\n    background #2271c1\n    color white\n    IconLeft:\n        Icon \"check\"\n        hidden\n    Label:\n        \"Button\"\n\nPrimary-Button:\n    Button\n    IconLeft\n        visible\n\nSecondary-Button:\n    Button bg #E2E8F0\n    color #1E293B\n\nGhost-Button:\n    Button bg transparent\n    color #2271c1\n    border 1 #2271c1\n\nRow\n    horizontal\n    gap 12\n    Primary-Button\n        Label\n            \"Next\"\n    Secondary-Button\n        Label\n            \"Cancel\"\n    Ghost-Button\n        Label\n            \"Info\"",
+              "code": "Button:\n    horizontal\n    gap 8\n    padding 12 24\n    radius 8\n    background #2271c1\n    color white\n    IconLeft:\n        Icon \"check\"\n        hidden\n    Label:\n        \"Button\"\n\nPrimary-Button as Button:\n    IconLeft\n        visible\n\nSecondary-Button as Button:\n    bg #E2E8F0\n    color #1E293B\n\nGhost-Button as Button:\n    bg transparent\n    color #2271c1\n    border 1 #2271c1\n\nRow\n    horizontal\n    gap 12\n    Primary-Button\n        Label\n            \"Next\"\n    Secondary-Button\n        Label\n            \"Cancel\"\n    Ghost-Button\n        Label\n            \"Info\"",
               "expects": {
                 "render": {
                   "Row": {
@@ -2564,11 +2564,11 @@
           "content": [
             {
               "type": "paragraph",
-              "text": "When you need to reference an input – to read its value, validate it, or react to changes – give it a name. Define it using inheritance syntax: Name: Input properties."
+              "text": "When you need to reference an input – to read its value, validate it, or react to changes – give it a name. Define it using inheritance syntax: Name as Input: properties."
             },
             {
               "type": "code",
-              "code": "Email:\n    Input \"Enter email\"\n    type email\n    padding 12\n    background #27272A\n    radius 8\nPassword:\n    Input \"Password\"\n    type password\n    padding 12\n    background #27272A\n    radius 8\n\nLoginForm\n    vertical\n    background #1a1a1a\n    padding 24\n    radius 12\n    gap 16\n    width 300\n    Email\n    Password\n    Button\n        background #2271c1\n        padding 12 24\n        radius 6\n        \"Login\"",
+              "code": "Email as Input:\n    \"Enter email\"\n    type email\n    padding 12\n    background #27272A\n    radius 8\nPassword as Input:\n    \"Password\"\n    type password\n    padding 12\n    background #27272A\n    radius 8\n\nLoginForm\n    vertical\n    background #1a1a1a\n    padding 24\n    radius 12\n    gap 16\n    width 300\n    Email\n    Password\n    Button\n        background #2271c1\n        padding 12 24\n        radius 6\n        \"Login\"",
               "expects": {
                 "nodes": [
                   {
@@ -2939,7 +2939,7 @@
             {
               "type": "exercise",
               "task": "Create a user profile card with avatar, name, and a \"View Profile\" link.",
-              "code": "Avatar: Image 64, 64, rad 32, fit cover\n\nProfileCard hor, g 16, ver-cen, bg #1a1a1a, pad 16, rad 12\n  Avatar \"https://i.pravatar.cc/64\"\n  Info ver, g 4\n    Name weight 600, \"Alice Chen\"\n    Link \"#profile\", col #3B82F6, text-size 13, \"View Profile\""
+              "code": "Avatar as Image: 64, 64, rad 32, fit cover\n\nProfileCard hor, g 16, ver-cen, bg #1a1a1a, pad 16, rad 12\n  Avatar \"https://i.pravatar.cc/64\"\n  Info ver, g 4\n    Name weight 600, \"Alice Chen\"\n    Link \"#profile\", col #3B82F6, text-size 13, \"View Profile\""
             },
             {
               "type": "list",
@@ -4127,7 +4127,7 @@
             {
               "type": "exercise",
               "task": "Create a form where clicking Submit shows an alert with the Email value (use if Email.value to check if it's filled).",
-              "code": "Email: Input \"Enter email\"\nSubmit: Button bg #2271c1, pad 12, rad 8, \"Submit\"\n\nForm bg #1a1a1a, pad 24, rad 12, g 16, w 300\n  Email\n  Submit"
+              "code": "Email as Input: \"Enter email\"\nSubmit as Button: bg #2271c1, pad 12, rad 8, \"Submit\"\n\nForm bg #1a1a1a, pad 24, rad 12, g 16, w 300\n  Email\n  Submit"
             }
           ]
         }

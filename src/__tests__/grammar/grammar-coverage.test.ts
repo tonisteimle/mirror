@@ -110,9 +110,9 @@ describe('Grammar Coverage', () => {
 
   describe('Inheritance', () => {
     const testCases = [
-      { name: 'Simple inheritance', code: 'PrimaryButton: Button' },
-      { name: 'Inheritance with override', code: 'DangerButton: Button bg #EF4444' },
-      { name: 'Multiple overrides', code: 'GhostButton: Button bg transparent, bor 1' }
+      { name: 'Simple inheritance', code: 'PrimaryButton as Button:' },
+      { name: 'Inheritance with override', code: 'DangerButton as Button: bg #EF4444' },
+      { name: 'Multiple overrides', code: 'GhostButton as Button: bg transparent, bor 1' }
     ]
 
     for (const { name, code } of testCases) {

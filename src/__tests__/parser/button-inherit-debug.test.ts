@@ -2,16 +2,16 @@ import { describe, it, expect } from 'vitest'
 import { parse } from '../../parser/parser'
 
 describe('Button Inheritance with Child Overrides', () => {
-  it('should test user exact syntax with colon before from', () => {
-    // User's EXACT syntax - colon BEFORE from
+  it('should test user syntax with as keyword', () => {
+    // Syntax with as keyword
     const code = `
 Button: hor, cen, size hug 32, pad left 8 right 12, bg #2E2E2E, rad 6
   icon "circle-check", pad right 4, col #B7B7B7, is 16, hidden
   label "Label", pad left 4, font "DM Sans", weight 500, fs 16, col #B7B7B7
 
-Label-Button: from Button
-Icon-Label-Button: from Button icon visible
-Icon-Button: from Button icon visible; label hidden
+Label-Button as Button:
+Icon-Label-Button as Button: icon visible
+Icon-Button as Button: icon visible; label hidden
 
 App ver, size full, pad 32, gap 16
   Label-Button
@@ -62,16 +62,16 @@ App ver, size full, pad 32, gap 16
     expect(labelInIconBtn?.properties.hidden).toBe(true)
   })
 
-  it('should work with correct syntax: from before colon', () => {
-    // CORRECT syntax - from BEFORE colon
+  it('should work with as syntax', () => {
+    // As syntax for inheritance
     const code = `
 Button: hor, cen, size hug 32, pad left 8 right 12, bg #2E2E2E, rad 6
   icon "circle-check", pad right 4, col #B7B7B7, is 16, hidden
   label "Label", pad left 4, font "DM Sans", weight 500, fs 16, col #B7B7B7
 
-Label-Button from Button:
-Icon-Label-Button from Button: icon visible
-Icon-Button from Button: icon visible; label hidden
+Label-Button as Button:
+Icon-Label-Button as Button: icon visible
+Icon-Button as Button: icon visible; label hidden
 
 App ver, size full, pad 32, gap 16
   Label-Button

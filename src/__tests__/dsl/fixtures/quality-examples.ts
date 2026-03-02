@@ -157,7 +157,7 @@ export const reusabilityExamples: QualityExample[] = [
   {
     name: 'Komponente definiert und verwendet',
     code: `
-PrimaryButton: Button bg $primary.bg, pad 12, rad 8
+PrimaryButton as Button: bg $primary.bg, pad 12, rad 8
   hover
     bg $primary.hover.bg
 
@@ -188,7 +188,7 @@ export const combinedExamples: QualityExample[] = [
   {
     name: 'Perfekter Code',
     code: `
-PrimaryButton: Button
+PrimaryButton as Button:
   padding $md.pad
   background $primary.bg
   color $on-primary.col

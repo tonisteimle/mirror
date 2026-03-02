@@ -173,50 +173,16 @@ function processComponent(
 
   i++
 
-  // Check for inheritance patterns:
-  // 1. Old syntax: ChildComponent: ParentComponent (COMPONENT_DEF followed by COMPONENT)
-  // 2. New syntax: ChildComponent from ParentComponent: (COMPONENT followed by 'from' COMPONENT COLON)
-  // 3. Old 'from' syntax: ChildComponent: from ParentComponent (COMPONENT_DEF followed by 'from')
-  let inheritance = ''
+  // Note: Inheritance via ": Parent" and "from Parent" has been removed.
+  // Use "Name as Parent:" syntax instead.
   let namedInstance = ''
-  let actuallyDefinition = isDefinition
+  const inheritance = '' // Inheritance is now handled via 'as' keyword in the parser
+  const actuallyDefinition = isDefinition
 
-  // Check for new 'from' syntax: DangerButton from Button:
-  if (!isDefinition && i < tokens.length &&
-      tokens[i].type === 'KEYWORD' && tokens[i].value === 'from' &&
-      i + 1 < tokens.length && (tokens[i + 1].type === 'COMPONENT' || tokens[i + 1].type === 'COMPONENT_DEF')) {
-    i++ // skip 'from'
-    let parentName = tokens[i].value
-    // Check if parent has colon (Button: means it's also defining a colon at end)
-    if (tokens[i].type === 'COMPONENT_DEF') {
-      parentName = parentName.slice(0, -1) // Remove trailing :
-      actuallyDefinition = true
-    }
-    inheritance = ' from ' + parentName
-    i++
-    // Check for COLON after parent
-    if (i < tokens.length && tokens[i].type === 'COLON') {
-      actuallyDefinition = true
-      i++ // skip ':'
-    }
-  }
-  // Old syntax: ChildComponent: ParentComponent
-  else if (isDefinition && i < tokens.length && tokens[i].type === 'COMPONENT') {
-    inheritance = ' ' + tokens[i].value
-    i++
-  }
-  // Old 'from' syntax: ChildComponent: from ParentComponent
-  else if (isDefinition && i < tokens.length &&
-           tokens[i].type === 'KEYWORD' && tokens[i].value === 'from' &&
-           i + 1 < tokens.length && (tokens[i + 1].type === 'COMPONENT' || tokens[i + 1].type === 'COMPONENT_DEF')) {
-    i++ // skip 'from'
-    inheritance = ' from ' + tokens[i].value.replace(/:$/, '')
-    i++
-  }
   // Check for named instance pattern: Primitive Name (e.g., Input Email)
   // Only for instances (not definitions), when main component is a primitive
   // and the next token is a COMPONENT that is NOT itself a primitive
-  else if (!isDefinition && isPrimitive && i < tokens.length &&
+  if (!isDefinition && isPrimitive && i < tokens.length &&
            (tokens[i].type === 'COMPONENT' || tokens[i].type === 'COMPONENT_DEF') &&
            !HTML_PRIMITIVES.has(tokens[i].value.replace(/:$/, ''))) {
     namedInstance = ' ' + tokens[i].value

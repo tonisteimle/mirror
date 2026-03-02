@@ -32,11 +32,11 @@ Button: pad 12 24, bg #3B82F6, col white, rad 8, cursor pointer
   hover
     bg #2563EB
 
-DangerButton: Button bg #EF4444
+DangerButton as Button: bg #EF4444
   hover
     bg #DC2626
 
-GhostButton: Button bg transparent, bor 1 #3B82F6, col #3B82F6
+GhostButton as Button: bg transparent, bor 1 #3B82F6, col #3B82F6
   hover
     bg #EFF6FF
 
@@ -478,8 +478,8 @@ describe('ComponentInheritance: Edge Cases', () => {
   it('sollte mit dreifacher Vererbung funktionieren', () => {
     const code = `
 Button: pad 12, bg #3B82F6, rad 8
-PrimaryButton: Button col white
-LargePrimaryButton: PrimaryButton pad 16 32
+PrimaryButton as Button: col white
+LargePrimaryButton as PrimaryButton: pad 16 32
 
 LargePrimaryButton "Large"
     `.trim()
@@ -496,7 +496,7 @@ LargePrimaryButton "Large"
   it('sollte mit Override aller Properties funktionieren', () => {
     const code = `
 Button: pad 12, bg #3B82F6, rad 8
-CustomButton: Button pad 8, bg #333, rad 4
+CustomButton as Button: pad 8, bg #333, rad 4
 
 CustomButton "Custom"
     `.trim()
@@ -513,7 +513,7 @@ CustomButton "Custom"
   it('sollte Definition ohne Instanz in Registry haben', () => {
     const code = `
 Button: pad 12, bg #3B82F6
-SecondaryButton: Button bg #333
+SecondaryButton as Button: bg #333
     `.trim()
 
     const result = parse(code)
@@ -526,7 +526,7 @@ SecondaryButton: Button bg #333
   it('sollte Text-Content vererben können', () => {
     const code = `
 Label: col #888, "Default Label"
-WarningLabel: Label col #F59E0B
+WarningLabel as Label: col #F59E0B
 
 WarningLabel
     `.trim()

@@ -130,7 +130,7 @@ Button "Click"`)
   it('inherited events preserve', () => {
     const result = parse(`Button: pad 12, onclick toggle
 
-PrimaryBtn: Button bg #3B82F6
+PrimaryBtn as Button: bg #3B82F6
 
 PrimaryBtn "Click"`)
 

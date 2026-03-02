@@ -33,20 +33,20 @@ Button:
   icon "check", hidden
   label "Click"
 
-Label-Button from Button:
-Icon-Label-Button from Button: icon visible
-Icon-Button from Button: icon visible; label hidden
+LabelButton as Button:
+IconLabelButton as Button: icon visible
+IconButton as Button: icon visible; label hidden
 
-Label-Button "Label Only"
-Icon-Label-Button "Both"
-Icon-Button "Icon Only"
+LabelButton "Label Only"
+IconLabelButton "Both"
+IconButton "Icon Only"
 `
     const result = parse(code)
 
     // Find instances (not definitions)
-    const labelBtn = result.nodes.find(n => n.name === 'Label-Button' && !(n as any)._isExplicitDefinition)
-    const iconLabelBtn = result.nodes.find(n => n.name === 'Icon-Label-Button' && !(n as any)._isExplicitDefinition)
-    const iconBtn = result.nodes.find(n => n.name === 'Icon-Button' && !(n as any)._isExplicitDefinition)
+    const labelBtn = result.nodes.find(n => n.name === 'LabelButton' && !(n as any)._isExplicitDefinition)
+    const iconLabelBtn = result.nodes.find(n => n.name === 'IconLabelButton' && !(n as any)._isExplicitDefinition)
+    const iconBtn = result.nodes.find(n => n.name === 'IconButton' && !(n as any)._isExplicitDefinition)
 
     expect(labelBtn).toBeDefined()
     expect(iconLabelBtn).toBeDefined()
@@ -61,20 +61,20 @@ Icon-Button "Icon Only"
       </PreviewWrapper>
     )
 
-    // Label-Button: icon hidden, label visible
-    const labelBtnEl = container.querySelector('.Label-Button')
+    // LabelButton: icon hidden, label visible
+    const labelBtnEl = container.querySelector('.LabelButton')
     expect(labelBtnEl).toBeTruthy()
     expect(labelBtnEl!.querySelector('.icon')).toBeNull() // icon should not render
     expect(labelBtnEl!.querySelector('.label')).toBeTruthy() // label should render
 
-    // Icon-Label-Button: both visible
-    const iconLabelBtnEl = container.querySelector('.Icon-Label-Button')
+    // IconLabelButton: both visible
+    const iconLabelBtnEl = container.querySelector('.IconLabelButton')
     expect(iconLabelBtnEl).toBeTruthy()
     expect(iconLabelBtnEl!.querySelector('.icon')).toBeTruthy() // icon should render
     expect(iconLabelBtnEl!.querySelector('.label')).toBeTruthy() // label should render
 
-    // Icon-Button: icon visible, label hidden
-    const iconBtnEl = container.querySelector('.Icon-Button')
+    // IconButton: icon visible, label hidden
+    const iconBtnEl = container.querySelector('.IconButton')
     expect(iconBtnEl).toBeTruthy()
     expect(iconBtnEl!.querySelector('.icon')).toBeTruthy() // icon should render
     expect(iconBtnEl!.querySelector('.label')).toBeNull() // label should NOT render

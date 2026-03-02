@@ -69,7 +69,7 @@ export { createSemanticSelectionExtension } from './semantic-selection'
 
 // Editor extensions factory
 export { createEditorExtensions, createMinimalExtensions } from './editor-extensions'
-export type { EditorExtensionsConfig } from './editor-extensions'
+export type { EditorExtensionsConfig, MinimalExtensionsOptions } from './editor-extensions'
 
 // Color swatches
 export { createColorSwatchPlugin } from './color-swatches'

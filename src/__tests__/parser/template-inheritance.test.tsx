@@ -171,7 +171,7 @@ Button:
   ButtonIcon as Icon "check", hidden
   ButtonLabel as Text "OK"
 
-DangerButton: Button
+DangerButton as Button:
   ButtonIcon "alert-triangle", visible
 
 DangerButton

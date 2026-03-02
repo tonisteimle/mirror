@@ -17,6 +17,7 @@ export type ValuePickerType =
   | 'spacing'
   | 'font'
   | 'icon'
+  | 'token'
   | 'shadow'
   | 'weight'
   | 'value'

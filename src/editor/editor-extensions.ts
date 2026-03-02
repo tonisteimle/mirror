@@ -11,6 +11,7 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { indentUnit } from '@codemirror/language'
 import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { dslAutocomplete, type DSLAutocompleteOptions } from './dsl-autocomplete'
+import type { ValuePickerType } from '../data/dsl-properties'
 import { createEditorKeymaps, type KeymapConfig } from './keymaps'
 import { createPanelKeymap, type PanelKeymapConfig } from './panel-keymap'
 import { createNumberScrubbingKeymap } from './number-scrubbing'
@@ -147,9 +148,24 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
 }
 
 /**
- * Create minimal editor extensions for testing or simple use cases.
+ * Options for minimal editor extensions.
  */
-export function createMinimalExtensions(): Extension[] {
+export interface MinimalExtensionsOptions {
+  /** Function to get design tokens for token autocomplete (e.g., $primary.bg) */
+  getDesignTokens?: () => Map<string, unknown>
+  /** Function to get user-defined component names for < trigger autocomplete */
+  getUserDefinedComponents?: () => string[]
+  /** Callback when a value picker is needed (e.g., after typing #) */
+  onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
+  /** Return true to suppress autocomplete (e.g., when a picker is open) */
+  isAutocompleteSuppressed?: () => boolean
+}
+
+/**
+ * Create minimal editor extensions for testing or simple use cases.
+ * Includes autocomplete for basic property suggestions.
+ */
+export function createMinimalExtensions(options: MinimalExtensionsOptions = {}): Extension[] {
   return [
     indentUnit.of('  '),
     EditorState.tabSize.of(2),
@@ -157,6 +173,16 @@ export function createMinimalExtensions(): Extension[] {
     keymap.of(historyKeymap),
     dslTheme,
     dslHighlighter,
+    dslAutocomplete({
+      // Pass through design tokens getter for $ autocomplete
+      getDesignTokens: options.getDesignTokens,
+      // Pass through user-defined components for < trigger autocomplete
+      getUserDefinedComponents: options.getUserDefinedComponents,
+      // Pass through value picker callback
+      onValuePickerNeeded: options.onValuePickerNeeded,
+      // Pass through suppression check
+      isAutocompleteSuppressed: options.isAutocompleteSuppressed,
+    }),
     keymap.of(defaultKeymap),
   ]
 }

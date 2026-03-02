@@ -40,7 +40,7 @@ Button bg #00FF00 "Override"`)
 describe('Component Inheritance', () => {
   it('inherits properties from parent', () => {
     const btn = parseOne(`Button: pad 12 bg #3B82F6 rad 8
-DangerButton: Button bg #EF4444
+DangerButton as Button: bg #EF4444
 DangerButton "Delete"`)
     expect(btn.properties.pad).toBe(12)
     expect(btn.properties.rad).toBe(8)

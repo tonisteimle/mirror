@@ -182,19 +182,8 @@ export function parseComponent(
     ctx.advance() // consume the colon
   }
 
-  // Check for inline inheritance: DangerButton: Button bg #EF4444
-  // Also handles inheriting from primitives: InputBase: Input pad 8
-  let baseComponentName: string | undefined
-  let basePrimitiveType: string | undefined
-  if (isExplicitDefinition &&
-      ctx.current()?.type === 'COMPONENT_NAME') {
-    const nextValue = ctx.current()!.value
-    if (ctx.registry.has(nextValue)) {
-      baseComponentName = ctx.advance().value // consume the base component name
-    } else if (HTML_PRIMITIVES.includes(nextValue)) {
-      basePrimitiveType = ctx.advance().value // consume the primitive type
-    }
-  }
+  // Note: ": Parent" inheritance syntax has been removed.
+  // Use "Name as Parent:" instead. Example: DangerBtn as Button: bg #F00
 
   // Parse named instance patterns
   const namedResult = parseNamedInstance(ctx, componentName, isExplicitDefinition)
@@ -231,11 +220,6 @@ export function parseComponent(
     node.properties._primitiveType = componentType
   }
 
-  // Mark the primitive type for inheritance from primitives (e.g., InputBase: Input)
-  if (basePrimitiveType) {
-    node.properties._primitiveType = basePrimitiveType
-  }
-
   // Apply library component defaults (states, slot properties)
   applyLibraryDefaults(ctx, node, libraryType, parentScope, startToken)
 
@@ -256,36 +240,7 @@ export function parseComponent(
   // Collect inline child slots (to be merged after template application)
   const inlineSlots: ASTNode[] = []
 
-  // Apply inline inheritance: DangerButton: Button ...
-  // baseComponentName was detected above after the COLON
-  if (baseComponentName) {
-    applyTemplate(
-      ctx.registry,
-      node,
-      baseComponentName,
-      baseComponentName,
-      (children) => cloneChildrenWithNewIds(children, ctx.generateId.bind(ctx))
-    )
-    // Mark the extends property for template storage
-    node.extends = baseComponentName
-  }
-
-  // Check for "from" keyword: NewComponent from BaseComponent ...
-  if (ctx.current()?.type === 'KEYWORD' && ctx.current()?.value === 'from') {
-    ctx.advance() // consume 'from'
-
-    // Get base component name and apply its template
-    if (ctx.current()?.type === 'COMPONENT_NAME') {
-      const baseName = ctx.advance().value
-      applyTemplate(
-        ctx.registry,
-        node,
-        baseName,
-        baseName,
-        (children) => cloneChildrenWithNewIds(children, ctx.generateId.bind(ctx))
-      )
-    }
-  }
+  // Note: "from" keyword has been removed. Use "Name as Type:" instead.
 
   // Initialize source span
   node._sourceSpan = {

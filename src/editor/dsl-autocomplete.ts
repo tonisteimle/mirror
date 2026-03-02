@@ -235,6 +235,8 @@ export function triggerAutocompleteWithBoost(view: EditorView, property: string)
 export interface DSLAutocompleteOptions {
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
   getDesignTokens?: () => Map<string, unknown>
+  /** Return user-defined component names from the current parse result */
+  getUserDefinedComponents?: () => string[]
   /** Return true to suppress autocomplete (e.g., when inline panel is open) */
   isAutocompleteSuppressed?: () => boolean
   /** Return true for long form (padding), false for short form (pad). Default: true */
@@ -244,20 +246,49 @@ export interface DSLAutocompleteOptions {
 /**
  * Token suffix mappings for context-aware filtering.
  * Maps property names to their valid token suffixes.
+ * The suffix matching is case-insensitive and checks if token name ends with suffix.
  */
 export const PROPERTY_TO_TOKEN_SUFFIXES: Record<string, string[]> = {
-  'col': ['-col', '-color'],
-  'pad': ['-pad', '-padding'],
-  'mar': ['-mar', '-margin'],
-  'rad': ['-rad', '-radius'],
-  'gap': ['-gap'],
-  'boc': ['-boc', '-border-color'],
-  'bor': ['-bor', '-border'],
-  'size': ['-size', '-font-size'],
-  'weight': ['-weight', '-font-weight'],
-  'w': ['-w', '-width'],
-  'h': ['-h', '-height'],
-  'z': ['-z', '-index'],
+  // Color properties - accept both color-specific and general color tokens
+  'col': ['.col', '-col', '.color', '-color'],
+  'color': ['.col', '-col', '.color', '-color'],
+  'bg': ['.bg', '-bg', '.background', '-background', '.col', '-col', '.color', '-color'],
+  'background': ['.bg', '-bg', '.background', '-background', '.col', '-col', '.color', '-color'],
+  'boc': ['.boc', '-boc', '.border-color', '-border-color', '.col', '-col', '.color', '-color'],
+  'border-color': ['.boc', '-boc', '.border-color', '-border-color', '.col', '-col', '.color', '-color'],
+  'hover-bg': ['.bg', '-bg', '.background', '-background', '.hover.bg', '.col', '-col', '.color', '-color'],
+  'hover-col': ['.col', '-col', '.color', '-color', '.hover.col'],
+  'hover-boc': ['.boc', '-boc', '.border-color', '-border-color', '.hover.boc', '.col', '-col'],
+
+  // Spacing properties
+  'pad': ['.pad', '-pad', '.padding', '-padding'],
+  'padding': ['.pad', '-pad', '.padding', '-padding'],
+  'mar': ['.mar', '-mar', '.margin', '-margin'],
+  'margin': ['.mar', '-mar', '.margin', '-margin'],
+  'gap': ['.gap', '-gap'],
+
+  // Border and radius
+  'bor': ['.bor', '-bor', '.border', '-border'],
+  'border': ['.bor', '-bor', '.border', '-border'],
+  'rad': ['.rad', '-rad', '.radius', '-radius'],
+  'radius': ['.rad', '-rad', '.radius', '-radius'],
+
+  // Typography
+  'size': ['.size', '-size', '.font.size', '-font-size', '.font-size'],
+  'font-size': ['.size', '-size', '.font.size', '-font-size', '.font-size'],
+  'weight': ['.weight', '-weight', '.font.weight', '-font-weight', '.font-weight'],
+  'font-weight': ['.weight', '-weight', '.font.weight', '-font-weight', '.font-weight'],
+
+  // Sizing
+  'w': ['.w', '-w', '.width', '-width'],
+  'width': ['.w', '-w', '.width', '-width'],
+  'h': ['.h', '-h', '.height', '-height'],
+  'height': ['.h', '-h', '.height', '-height'],
+
+  // Other
+  'z': ['.z', '-z', '.index', '-index'],
+  'opacity': ['.opacity', '-opacity', '.o', '-o'],
+  'shadow': ['.shadow', '-shadow'],
 }
 
 interface ScoredProperty {
@@ -539,9 +570,16 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
     // Don't trigger autocomplete inside strings
     if (isInsideString(textBefore)) return null
 
-    // Don't trigger autocomplete when typing hex color values (after #)
-    // This prevents interference with the color picker
-    if (/#[0-9a-fA-F]*$/.test(textBefore)) return null
+    // Check for color value after # - show color picker trigger
+    // Match # followed by optional hex characters
+    const colorMatch = textBefore.match(/#([0-9a-fA-F]*)$/)
+    if (colorMatch) {
+      // If we have a color picker callback, trigger it
+      if (options.onValuePickerNeeded) {
+        // Don't show text completions for hex colors - the color picker handles this
+        return null
+      }
+    }
 
     // Don't trigger autocomplete when typing pure numbers (property values like "pad 16")
     // Check if the current word is purely numeric
@@ -549,7 +587,8 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
     if (currentWord && /^\d+$/.test(currentWord.text)) return null
 
     // Check for token reference: $...
-    const tokenMatch = context.matchBefore(/\$[a-zA-Z0-9_-]*/)
+    // Support dots in token names for semantic tokens (e.g., $primary.bg)
+    const tokenMatch = context.matchBefore(/\$[a-zA-Z0-9_.-]*/)
     if (tokenMatch && options.getDesignTokens) {
       const tokens = options.getDesignTokens()
       const propertyContext = getPropertyContextForToken(textBefore)
@@ -589,6 +628,84 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
           from: tokenMatch.from,
           filter: false,
           options: completionOptions,
+        }
+      }
+    }
+
+    // Check for < trigger - show all components (library + user-defined)
+    const angleBracketMatch = context.matchBefore(/<[\w-]*/)
+    if (angleBracketMatch) {
+      const query = angleBracketMatch.text.slice(1).toLowerCase() // Remove <
+
+      // HTML primitives
+      const htmlPrimitives = [
+        { name: 'Box', detail: 'Container', description: 'Generic container element' },
+        { name: 'Text', detail: 'Content', description: 'Text content element' },
+        { name: 'Input', detail: 'Form', description: 'Text input field → <input>' },
+        { name: 'Textarea', detail: 'Form', description: 'Multi-line text → <textarea>' },
+        { name: 'Button', detail: 'Form', description: 'Clickable button → <button>' },
+        { name: 'Link', detail: 'Navigation', description: 'Hyperlink → <a>' },
+        { name: 'Image', detail: 'Media', description: 'Image element → <img>' },
+        { name: 'Icon', detail: 'Media', description: 'Icon element (Lucide/Material)' },
+      ]
+
+      const htmlOptions: Completion[] = htmlPrimitives
+        .filter(el => !query || el.name.toLowerCase().includes(query))
+        .map(el => ({
+          label: el.name,
+          detail: el.detail,
+          info: el.description,
+          boost: 20, // Boost primitives highest
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            // Replace <query with ComponentName
+            view.dispatch({
+              changes: { from, to, insert: el.name },
+              selection: { anchor: from + el.name.length }
+            })
+          }
+        }))
+
+      // Library components
+      const libraryComponents = getAllLibraryComponents()
+      const libraryOptions: Completion[] = libraryComponents
+        .filter(c => !query || c.name.toLowerCase().includes(query))
+        .map(component => ({
+          label: component.name,
+          detail: component.category,
+          info: component.description,
+          boost: 10,
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            view.dispatch({
+              changes: { from, to, insert: component.name },
+              selection: { anchor: from + component.name.length }
+            })
+          }
+        }))
+
+      // User-defined components
+      const userComponents = options.getUserDefinedComponents?.() ?? []
+      const userOptions: Completion[] = userComponents
+        .filter(name => !query || name.toLowerCase().includes(query))
+        .map(name => ({
+          label: name,
+          detail: 'User',
+          info: 'User-defined component',
+          boost: 15, // Between primitives and library
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            view.dispatch({
+              changes: { from, to, insert: name },
+              selection: { anchor: from + name.length }
+            })
+          }
+        }))
+
+      const allOptions = [...htmlOptions, ...userOptions, ...libraryOptions]
+
+      if (allOptions.length > 0) {
+        return {
+          from: angleBracketMatch.from,
+          filter: false,
+          options: allOptions,
         }
       }
     }
@@ -657,12 +774,21 @@ function createDSLCompletionSource(options: DSLAutocompleteOptions) {
       }
     }
 
-    // Don't show autocomplete unless typing or explicitly triggered
-    if (!word && !context.explicit) return null
-
     // Check if we're at the start of a line (only whitespace before the current word)
     // This means we're typing a component name, not a property
     const isAtLineStart = /^\s*$/.test(textBeforeWord)
+
+    // Check if cursor is right after a space (following a component/property)
+    const isAfterSpace = textBefore.endsWith(' ')
+
+    // Don't show autocomplete unless:
+    // - typing a word, OR
+    // - explicitly triggered, OR
+    // - right after a space (to show properties immediately)
+    if (!word && !context.explicit && !isAfterSpace) return null
+
+    // If at line start with no word and not explicit, don't show (user just pressed space at start)
+    if (isAtLineStart && !word && !context.explicit) return null
 
     if (isAtLineStart) {
       // Show component suggestions

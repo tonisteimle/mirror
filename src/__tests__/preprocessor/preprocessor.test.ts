@@ -164,8 +164,9 @@ describe('Preprocessor', () => {
       })
 
       it('should preserve inheritance', () => {
-        const result = preprocess('DangerButton: Button bg #EF4444')
-        expect(result).toContain('DangerButton: Button')
+        const result = preprocess('DangerButton as Button: bg #EF4444')
+        expect(result).toContain('DangerButton')
+        expect(result).toContain('Button')
         // Preprocessor normalizes to canonical forms
         expect(result).toContain('background #EF4444')
       })
@@ -438,8 +439,9 @@ describe('Child Override Syntax', () => {
   })
 
   it('should preserve inheritance for definitions', () => {
-    const result = preprocess('DangerButton: Button bg #EF4444')
-    expect(result).toContain('DangerButton: Button')
+    const result = preprocess('DangerButton as Button: bg #EF4444')
+    expect(result).toContain('DangerButton')
+    expect(result).toContain('Button')
     // Properties normalized to canonical forms
     expect(result).toContain('background #EF4444')
   })

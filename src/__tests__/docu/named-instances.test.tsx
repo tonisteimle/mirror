@@ -80,7 +80,7 @@ Row hor, g 12
 // ============================================================
 
 const COMPONENT_PROPERTIES_CODE = `
-Email: Input bg #1a1a1a, pad 12, rad 8, bor 1 #333
+Email as Input: bg #1a1a1a, pad 12, rad 8, bor 1 #333
 
 Card bg #1a1a1a, pad 16, rad 8, g 12
   Email "Type something..."

@@ -297,9 +297,9 @@ Nav
     expect(navItem.properties.radius).toBe(4)
   })
 
-  it('can extend core component with from', () => {
+  it('can extend core component with as', () => {
     const code = `
-BrandNavItem from NavItem:
+BrandNavItem as NavItem:
   Label col #3B82F6
 
 BrandNavItem Icon "star"; Label "Featured"

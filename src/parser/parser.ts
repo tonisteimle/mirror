@@ -116,7 +116,7 @@ import type {
 // Import modules
 import { createParserContext } from './parser-context'
 import { parseComponent } from './component-parser'
-import { parseComponentDefinition, parseInlineDefinition, parseInheritanceDefinition, parseLibraryDefinition, parseLibraryDefinitionV1, parseTokenDefinition } from './definition-parser'
+import { parseComponentDefinition, parseInlineDefinition, parseLibraryDefinition, parseLibraryDefinitionV1, parseTokenDefinition } from './definition-parser'
 import { parseSelectionCommand } from './command-parser'
 import { parseEventsBlock } from './events-parser'
 import { parseThemeDefinition, parseUseTheme } from './theme-parser'
@@ -594,8 +594,7 @@ function runValidation(result: ParseResult, input: string, options: ParseOptions
  *    - SELECTOR → parseSelectionCommand (:id ...)
  *    - TOKEN_VAR_DEF → parseTokenDefinition ($name: value)
  *    - COMPONENT_DEF → parseComponentDefinition (Name: props)
- *    - COMPONENT_NAME + 'from' + COMPONENT_NAME + COLON → parseInheritanceDefinition
- *    - COMPONENT_NAME + 'as' + COMPONENT_DEF → parseLibraryDefinitionV1 (Name as Library:)
+ *    - COMPONENT_NAME + 'as' + COMPONENT_DEF → parseLibraryDefinitionV1 (Name as Type:)
  *    - COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON + BRACE → parseLibraryDefinition
  *    - COMPONENT_NAME + COLON + BRACE → parseInlineDefinition (brace-syntax)
  *    - EVENTS → parseEventsBlock
@@ -661,17 +660,8 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
       continue
     }
 
-    // Component definition with inheritance: Icon-Button from Button: pad l 12
-    // Pattern: COMPONENT_NAME + KEYWORD("from") + COMPONENT_NAME + COLON
-    if (ctx.current()?.type === 'COMPONENT_NAME' &&
-        ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'from' &&
-        ctx.peek(2)?.type === 'COMPONENT_NAME' &&
-        ctx.peek(3)?.type === 'COLON') {
-      parseInheritanceDefinition(ctx)
-      continue
-    }
-
-    // Inline Definition: Button: pad 12 or DangerButton: Button bg #EF4444
+    // Inline Definition: Button: pad 12
+    // Note: "from" inheritance syntax has been removed. Use "Name as Parent:" instead.
     // Pattern: COMPONENT_NAME + COLON + properties (inline) or + BRACE_OPEN (brace-syntax)
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'COLON') {
@@ -697,9 +687,11 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
 
     // Library Definition (inline syntax): OptionsMenu as Dropdown: w 200
     // Pattern: COMPONENT_NAME + 'as' + COMPONENT_DEF (e.g., "Tooltip:")
+    // Also accepts: COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON (when COMPONENT_DEF not at line start)
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&
-        ctx.peek(2)?.type === 'COMPONENT_DEF') {
+        (ctx.peek(2)?.type === 'COMPONENT_DEF' ||
+         (ctx.peek(2)?.type === 'COMPONENT_NAME' && ctx.peek(3)?.type === 'COLON' && ctx.peek(4)?.type !== 'BRACE_OPEN'))) {
       parseLibraryDefinitionV1(ctx)
       continue
     }

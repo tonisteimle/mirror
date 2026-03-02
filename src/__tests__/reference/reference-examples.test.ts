@@ -247,7 +247,7 @@ Box $card-padding`)
 
     it('inherits from parent component', () => {
       const result = expectParseSuccess(`Button: pad 12, bg #3B82F6
-DangerButton: Button bg #EF4444`)
+DangerButton as Button: bg #EF4444`)
       const danger = result.registry.get('DangerButton')
       expect(danger?.extends).toBe('Button')
     })
@@ -300,7 +300,7 @@ Card
   icon "check", hidden
   label "Click"
 
-IconButton: Button icon visible; label hidden`)
+IconButton as Button: icon visible; label hidden`)
       expect(result.registry.has('IconButton')).toBe(true)
     })
   })
@@ -1056,8 +1056,8 @@ describe('Feature Combinations', () => {
 $radius: 8
 
 Button: pad 12, bg $primary, rad $radius
-PrimaryButton: Button
-SecondaryButton: Button bg transparent, bor 1 $primary`)
+PrimaryButton as Button:
+SecondaryButton as Button: bg transparent, bor 1 $primary`)
   })
 
   it('combines states with conditionals', () => {

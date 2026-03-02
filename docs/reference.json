@@ -150,13 +150,13 @@
         {
           "id": "vererbung",
           "title": "Vererbung",
-          "description": "Von anderen Komponenten erben mit Child: Parent.",
+          "description": "Von anderen Komponenten erben mit Child as Parent:",
           "syntax": [
-            "Child: Parent overrides"
+            "Child as Parent: overrides"
           ],
           "examples": [
-            "DangerButton: Button bg #EF4444",
-            "GhostButton: Button bg transparent, bor 1 $primary"
+            "DangerButton as Button: bg #EF4444",
+            "GhostButton as Button: bg transparent, bor 1 $primary"
           ]
         },
         {
@@ -164,10 +164,10 @@
           "title": "Vererbung mit Child-Overrides",
           "description": "Kinder-Properties inline überschreiben mit Semicolon-Syntax.",
           "syntax": [
-            "Child: Parent childName property; childName2 property"
+            "Child as Parent: childName property; childName2 property"
           ],
           "examples": [
-            "Button:\n  icon \"check\", hidden\n  label \"Click\"\n\nIcon-Button: Button icon visible; label hidden"
+            "Button:\n  icon \"check\", hidden\n  label \"Click\"\n\nIcon-Button as Button: icon visible; label hidden"
           ]
         },
         {

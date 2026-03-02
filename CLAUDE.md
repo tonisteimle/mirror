@@ -207,16 +207,16 @@ Button: pad 12, bg #3B82F6, rad 8
 
 ### Vererbung
 
-Von anderen Komponenten erben mit Child: Parent.
+Von anderen Komponenten erben mit `Child as Parent:`.
 
 ```
-Child: Parent overrides
+Child as Parent: overrides
 ```
 
 **Example:**
 ```
-DangerButton: Button bg #EF4444
-GhostButton: Button bg transparent, bor 1 $primary
+DangerButton as Button: bg #EF4444
+GhostButton as Button: bg transparent, bor 1 $primary
 ```
 
 ### Vererbung mit Child-Overrides
@@ -224,7 +224,7 @@ GhostButton: Button bg transparent, bor 1 $primary
 Kinder-Properties inline überschreiben mit Semicolon-Syntax.
 
 ```
-Child: Parent childName property; childName2 property
+Child as Parent: childName property; childName2 property
 ```
 
 **Example:**
@@ -233,7 +233,7 @@ Button:
   icon "check", hidden
   label "Click"
 
-Icon-Button: Button icon visible; label hidden
+IconButton as Button: icon visible; label hidden
 ```
 
 ### Instanz Child-Overrides
@@ -1010,8 +1010,8 @@ Dokumentation mit formatiertem Text
 ```
 SYNTAX      Component property value
             Name: = definition | Name = instance
-            Child: Parent = inheritance
-            Child: Parent child1 prop; child2 prop = child overrides
+            Child as Parent: = inheritance
+            Child as Parent: child1 prop; child2 prop = child overrides
             Component named Name = named instance
             Name as Type = inline define + render
             Name props = implicit Box define + render

@@ -8,6 +8,7 @@ import { TabButton, IconButton } from './editor-panel'
 import type { PreviewOverride } from '../hooks/useCodeParsing'
 import { hasSchemas } from '../parser/data-parser'
 import { PageSidebar, type PageData } from './PageSidebar'
+import type { ComponentTemplate } from '../parser/parser'
 
 export type EditorTab = 'layout' | 'components' | 'tokens' | 'data'
 
@@ -23,6 +24,7 @@ interface EditorPanelProps {
   onTokensChange: (code: string) => void
   highlightLine?: number
   designTokens?: Map<string, unknown>
+  componentRegistry?: Map<string, ComponentTemplate>
   autoCompleteMode?: 'always' | 'delay' | 'off'
   onPreviewChange?: (override: PreviewOverride | null) => void
   onCursorLineChange?: (line: number) => void
@@ -55,6 +57,7 @@ export const EditorPanel = memo(function EditorPanel({
   onTokensChange,
   highlightLine,
   designTokens,
+  componentRegistry,
   onCursorLineChange,
   dataCode = '',
   onDataCodeChange,
@@ -246,6 +249,9 @@ export const EditorPanel = memo(function EditorPanel({
                 onChange={currentOnChange}
                 highlightLine={activeTab === 'layout' ? highlightLine : undefined}
                 designTokens={designTokens}
+                componentRegistry={componentRegistry}
+                enablePickers
+                tokensCode={tokensCode}
               />
             </div>
           )}

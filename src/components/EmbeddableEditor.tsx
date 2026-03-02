@@ -93,6 +93,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   // Refs for callbacks to avoid recreating editor on every state change
   const keymapCallbacksRef = useRef<KeymapCallbacks | null>(null)
   const designTokensRef = useRef<Map<string, unknown>>(new Map())
+  const componentRegistryRef = useRef<Map<string, unknown>>(new Map())
 
   // Ref for swatch click handler (used by color swatch plugin)
   const swatchClickRef = useRef<((start: number, end: number, color: string) => void) | null>(null)
@@ -207,7 +208,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
   designTokensRef.current = designTokens
 
   // Parse and generate preview (prelude + visible code)
-  const { nodes, registry } = useMemo(() => {
+  const { nodes, registry: componentRegistry } = useMemo(() => {
     try {
       const fullCode = prelude ? `${prelude.trim()}\n\n${code}` : code
       const result = parse(fullCode)
@@ -223,6 +224,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
       return { nodes: [], registry: new Map() }
     }
   }, [code, prelude])
+  componentRegistryRef.current = componentRegistry
 
   // Initialize CodeMirror editor with full extensions
   // Uses refs for callbacks so editor doesn't recreate on every state change
@@ -249,6 +251,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
       },
       autocompleteOptions: {
         getDesignTokens: () => designTokensRef.current,
+        getUserDefinedComponents: () => Array.from(componentRegistryRef.current.keys()),
       },
       // Color swatches disabled - causing UI issues
       // colorSwatchConfig: {
@@ -299,10 +302,10 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
     return (
       <Preview
         nodes={nodes}
-        registry={registry}
+        registry={componentRegistry}
       />
     )
-  }, [nodes, registry, error])
+  }, [nodes, componentRegistry, error])
 
   return (
     <div style={styles.container}>

@@ -1,7 +1,7 @@
 /**
  * Inheritance Arbitraries for Mirror DSL
  *
- * Generates random inheritance patterns: Child: Parent
+ * Generates random inheritance patterns: Child as Parent:
  */
 
 import * as fc from 'fast-check'
@@ -16,11 +16,11 @@ import {
 // Simple Inheritance
 // =============================================================================
 
-/** Basic inheritance: Child: Parent */
+/** Basic inheritance: Child as Parent: */
 export const simpleInheritance = fc.record({
   child: anyComponentName,
   parent: componentName
-}).map(({ child, parent }) => `${child}: ${parent}`)
+}).map(({ child, parent }) => `${child} as ${parent}:`)
 
 /** Inheritance with property overrides */
 export const inheritanceWithOverrides = fc.record({
@@ -35,21 +35,21 @@ export const inheritanceWithOverrides = fc.record({
   if (pad !== undefined) props.push(`pad ${pad}`)
   if (rad !== undefined) props.push(`rad ${rad}`)
   const propsStr = props.length > 0 ? ` ${props.join(', ')}` : ''
-  return `${child}: ${parent}${propsStr}`
+  return `${child} as ${parent}:${propsStr}`
 })
 
 // =============================================================================
 // Child Overrides (Semicolon Syntax)
 // =============================================================================
 
-/** Inheritance with child overrides: Child: Parent childName property */
+/** Inheritance with child overrides: Child as Parent: childName property */
 export const inheritanceWithChildOverrides = fc.record({
   child: anyComponentName,
   parent: componentName,
   slotName: fc.constantFrom('Icon', 'Label', 'Title', 'Content'),
   property: fc.constantFrom('hidden', 'visible', 'col #FFF', 'bg #333')
 }).map(({ child, parent, slotName, property }) =>
-  `${child}: ${parent} ${slotName.toLowerCase()} ${property}`
+  `${child} as ${parent}: ${slotName.toLowerCase()} ${property}`
 )
 
 /** Multiple child overrides */
@@ -65,7 +65,7 @@ export const multipleChildOverrides = fc.record({
   )
 }).map(({ child, parent, overrides }) => {
   const overrideStrs = overrides.map(o => `${o.slot.toLowerCase()} ${o.prop}`)
-  return `${child}: ${parent} ${overrideStrs.join('; ')}`
+  return `${child} as ${parent}: ${overrideStrs.join('; ')}`
 })
 
 // =============================================================================
@@ -91,7 +91,7 @@ export const buttonVariants = fc.record({
     const props: string[] = []
     if (v.bg) props.push(`bg ${v.bg}`)
     if (v.bor !== undefined) props.push(`bor ${v.bor}`)
-    code += `${v.name}Button: Button${props.length > 0 ? ' ' + props.join(', ') : ''}\n`
+    code += `${v.name}Button as Button:${props.length > 0 ? ' ' + props.join(', ') : ''}\n`
   })
   return code.trimEnd()
 })
@@ -111,7 +111,7 @@ export const cardVariants = fc.record({
   ).map(variantList => {
     let code = `Card: pad ${basePad}, bg ${baseBg}, rad 8\n\n`
     variantList.forEach(v => {
-      code += `${v.name}Card: Card shadow ${v.shadow}\n`
+      code += `${v.name}Card as Card: shadow ${v.shadow}\n`
     })
     return code.trimEnd()
   })
@@ -130,7 +130,7 @@ export const twoLevelInheritance = fc.record({
   pPad: smallPixelValue,
   cRad: smallPixelValue
 }).map(({ grandparent, parent, child, gpBg, pPad, cRad }) =>
-  `${grandparent}: bg ${gpBg}\n${parent}: ${grandparent} pad ${pPad}\n${child}: ${parent} rad ${cRad}`
+  `${grandparent}: bg ${gpBg}\n${parent} as ${grandparent}: pad ${pPad}\n${child} as ${parent}: rad ${cRad}`
 )
 
 /** Three-level inheritance chain */
@@ -140,7 +140,7 @@ export const threeLevelInheritance = fc.record({
   level2: anyComponentName,
   level3: anyComponentName
 }).map(({ base, level1, level2, level3 }) =>
-  `${base}: pad 8\n${level1}: ${base} bg #333\n${level2}: ${level1} rad 4\n${level3}: ${level2} col #FFF`
+  `${base}: pad 8\n${level1} as ${base}: bg #333\n${level2} as ${level1}: rad 4\n${level3} as ${level2}: col #FFF`
 )
 
 // =============================================================================
@@ -208,7 +208,7 @@ export const completeInheritanceExample = fc.record({
 
       // Variants
       variants.forEach((v, i) => {
-        code += `${v}: ${baseName} bg #${(i + 4).toString(16).repeat(6).slice(0, 6)}\n`
+        code += `${v} as ${baseName}: bg #${(i + 4).toString(16).repeat(6).slice(0, 6)}\n`
       })
       code += '\n'
 

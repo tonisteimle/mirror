@@ -93,6 +93,7 @@ export function EditorContainer({
         onTokensChange={onTokensChange}
         highlightLine={highlightLine}
         designTokens={parsing.parseResult.tokens}
+        componentRegistry={parsing.parseResult.registry}
         autoCompleteMode={autoCompleteMode}
         onPreviewChange={onPreviewChange}
         onCursorLineChange={onCursorLineChange}

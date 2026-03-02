@@ -217,7 +217,7 @@ Card "Hello"`)
 
     it('generates valid JSX for inherited components', () => {
       const result = exportReact(`Button: pad 12, bg #3B82F6
-DangerButton: Button bg #EF4444
+DangerButton as Button: bg #EF4444
 
 DangerButton "Delete"`)
       const validation = validateJsxStructure(result.tsx)

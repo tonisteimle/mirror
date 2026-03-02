@@ -780,7 +780,7 @@ Footer
 })
 
 // ============================================================
-// BEISPIEL 7: INHERITANCE (Child: Parent)
+// BEISPIEL 7: INHERITANCE (Child as Parent)
 // ============================================================
 
 describe('Tutorial Components: 7. Inheritance', () => {
@@ -788,9 +788,9 @@ describe('Tutorial Components: 7. Inheritance', () => {
 Button: pad 8 16, rad 8
 
 // Variants
-Primary-Button: Button bg #2271c1
-Secondary-Button: Button bg transparent, bor 1 #2271c1
-Danger-Button: Button bg #c14022
+Primary-Button as Button: bg #2271c1
+Secondary-Button as Button: bg transparent, bor 1 #2271c1
+Danger-Button as Button: bg #c14022
 
 Row hor, g 8
   Primary-Button "Save"

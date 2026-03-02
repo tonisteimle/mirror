@@ -309,11 +309,11 @@ Nav
 })
 
 // ============================================================
-// BEISPIEL 5: Extending with from
+// BEISPIEL 5: Extending with as
 // ============================================================
 
-describe('Core Components: 5. Extending with from', () => {
-  const EXAMPLE_CODE = `BrandNavItem from NavItem:
+describe('Core Components: 5. Extending with as', () => {
+  const EXAMPLE_CODE = `BrandNavItem as NavItem:
     Label
         color #3B82F6
 

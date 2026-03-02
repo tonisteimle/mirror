@@ -181,7 +181,7 @@ Button "Click me"
   it('inheritance', () => {
     const result = roundtrip(`
 Button: pad 12 bg #3B82F6
-DangerButton: Button bg #EF4444
+DangerButton as Button: bg #EF4444
 DangerButton "Delete"
 `)
     expectNoErrors(result)

@@ -206,7 +206,8 @@ export function tokenize(input: string): Token[] {
     }
 
     // Check for token variable definition at start of line: $primary: #3B82F6
-    const tokenVarDefMatch = content.match(/^\$([a-zA-Z_][a-zA-Z0-9_-]*):\s*/)
+    // Supports dot notation for semantic tokens: $primary.bg: #3B82F6
+    const tokenVarDefMatch = content.match(/^\$([a-zA-Z_][a-zA-Z0-9_.\-]*):\s*/)
     if (tokenVarDefMatch) {
       tokens.push({ type: 'TOKEN_VAR_DEF', value: tokenVarDefMatch[1], line: lineNum, column })
       column += tokenVarDefMatch[0].length
