@@ -115,9 +115,11 @@ export const Preview = memo(function Preview({
   }, [onElementDoubleClick])
 
   // Memoize generated elements to avoid re-generating on provider changes
+  // NOTE: registry is included because component definitions affect rendering
+  // (e.g., changing "Input: pad 12" should update all Input instances)
   const generatedElements = useMemo(
     () => generateReactElement(nodes, generateOptions),
-    [nodes, generateOptions]
+    [nodes, generateOptions, registry]
   )
 
   // Generate a key that changes when the component structure changes
