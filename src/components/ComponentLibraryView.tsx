@@ -199,7 +199,7 @@ const StatePreview = memo(function StatePreview({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: '6px',
     }}>
       {/* State Label */}
@@ -213,7 +213,7 @@ const StatePreview = memo(function StatePreview({
       </div>
 
       {/* Rendered Component */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         {element}
       </div>
     </div>
