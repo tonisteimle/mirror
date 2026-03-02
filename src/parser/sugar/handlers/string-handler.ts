@@ -486,7 +486,7 @@ function isContentComponent(node: ASTNode): boolean {
   const nameLower = node.name.toLowerCase()
   // Components where strings should be content (not text children)
   const contentComponents = [
-    'label', 'title', 'subtitle', 'heading', 'caption',
+    'text', 'label', 'title', 'subtitle', 'heading', 'caption',
     'description', 'hint', 'error', 'message', 'value',
     'name', 'tag', 'badge'
   ]

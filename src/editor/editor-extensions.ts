@@ -90,9 +90,9 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
 
   const extensions: Extension[] = []
 
-  // Indentation: 2 spaces (not tabs)
-  extensions.push(indentUnit.of('  '))
-  extensions.push(EditorState.tabSize.of(2))
+  // Indentation: 3 spaces (not tabs)
+  extensions.push(indentUnit.of('   '))
+  extensions.push(EditorState.tabSize.of(3))
 
   // History for undo/redo
   extensions.push(history())
@@ -169,8 +169,8 @@ export interface MinimalExtensionsOptions {
  */
 export function createMinimalExtensions(options: MinimalExtensionsOptions = {}): Extension[] {
   const extensions: Extension[] = [
-    indentUnit.of('  '),
-    EditorState.tabSize.of(2),
+    indentUnit.of('   '),
+    EditorState.tabSize.of(3),
     history(),
     keymap.of(historyKeymap),
     dslTheme,
