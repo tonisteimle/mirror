@@ -79,9 +79,6 @@ export type { ColorSwatchConfig } from './color-swatches'
 export { createDoubleClickPickerExtension } from './double-click-picker'
 export type { DoubleClickPickerConfig } from './double-click-picker'
 
-// Translating lines (LLM translation indicator)
-export { createTranslatingLinesExtension, setTranslatingLines } from './translating-lines'
-
 // Extract utilities
 export {
   getPropertyAtCursor,

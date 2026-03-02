@@ -221,7 +221,7 @@ export interface Expression {
 }
 
 // ============================================
-// V2: State, Variable, Event, Action Types
+// State, Variable, Event, Action Types
 // ============================================
 
 export interface StateDefinition {
@@ -368,15 +368,11 @@ export interface ASTNode {
   column?: number    // Source column number
   endLine?: number   // End line number (0-indexed)
   endColumn?: number // End column number
-  // V5: Named instances (Input Email: -> instanceName: 'Email', name: 'Input')
   instanceName?: string  // For named instances like Input Email:
-  // V2 Roundtrip: Inheritance tracking
   extends?: string  // Base component for inheritance (DangerButton: Button -> extends: 'Button')
-  // V2: New fields for interactivity
   states?: StateDefinition[]
   variables?: VariableDeclaration[]
   eventHandlers?: EventHandler[]
-  // V3: Conditional rendering and iteration
   condition?: ConditionExpr          // For if-nodes (_conditional)
   elseChildren?: ASTNode[]           // For else-branch
   iteration?: {                      // For each-loops (_iterator)
@@ -408,14 +404,9 @@ export interface ASTNode {
   showAnimation?: AnimationDefinition    // show fade slide-up 300
   hideAnimation?: AnimationDefinition    // hide fade 200
   continuousAnimation?: AnimationDefinition  // animate spin 1000
-  // V7: Parse issues (error-tolerant parsing)
   parseIssues?: ParseIssue[]  // Collected issues during parsing
-  // V8: Active state (e.g., Status pending "Waiting" -> activeState: 'pending')
-  activeState?: string
-  // V9: Active states by category (e.g., Button selection selected -> { selection: 'selected' })
-  activeStatesByCategory?: Record<string, string>
-  // Syntax support
-  _syntaxVersion?: 2  // Syntax version
+  activeState?: string  // e.g., Status pending "Waiting" -> activeState: 'pending'
+  activeStatesByCategory?: Record<string, string>  // e.g., Button selection selected -> { selection: 'selected' }
   _sourceSpan?: {     // Full source range for blocks
     start: { line: number; column: number }
     end: { line: number; column: number }
@@ -438,16 +429,12 @@ export interface ComponentTemplate {
   properties: DSLProperties
   content?: string
   children: ASTNode[]
-  // V2 Roundtrip: Inheritance tracking
   extends?: string  // Base component name for inheritance
-  // V2: New fields for interactivity
   states?: StateDefinition[]
   variables?: VariableDeclaration[]
   eventHandlers?: EventHandler[]
-  // V5: Library type for 'as Text' etc.
   _isLibrary?: boolean
   _libraryType?: string
-  // V6: Animation definitions
   showAnimation?: AnimationDefinition
   hideAnimation?: AnimationDefinition
   continuousAnimation?: AnimationDefinition

@@ -25,7 +25,6 @@
  *   children?: MirrorConfig[] → Kinder
  *   states?: Record           → State-Definitionen
  *   instanceName?: string     → Named Instance Name
- *   syntaxVersion?: 1 | 2     → Syntax-Version
  *   sourceSpan?: { start, end } → Source Location
  *
  * ═══════════════════════════════════════════════════════════════════════════
@@ -39,7 +38,7 @@
  *   rad → radius
  *
  * @rule Internal Properties werden übersprungen
- *   _syntaxVersion, _isLibrary, etc.
+ *   _isLibrary, _sourceSpan, etc.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * FUNCTIONS
@@ -96,9 +95,6 @@ export interface MirrorConfig {
 
   /** Instance name (for named instances) */
   instanceName?: string
-
-  /** Syntax version used */
-  syntaxVersion?: 1 | 2
 
   /** Source location */
   sourceSpan?: {
@@ -173,11 +169,6 @@ export function exportToMirrorConfig(node: ASTNode): MirrorConfig {
   // Add instance name if present
   if (node.instanceName) {
     config.instanceName = node.instanceName
-  }
-
-  // Add syntax version if present
-  if (node._syntaxVersion) {
-    config.syntaxVersion = node._syntaxVersion
   }
 
   // Add source span if present

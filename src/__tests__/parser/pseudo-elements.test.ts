@@ -4,8 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../parser/parser'
 
-// TODO: Pseudo-element parsing not yet implemented
-describe.skip('Pseudo-element parsing', () => {
+describe('Pseudo-element parsing', () => {
   describe('placeholder pseudo-element', () => {
     it('should parse placeholder block with color', () => {
       const code = `

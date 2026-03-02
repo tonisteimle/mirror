@@ -84,6 +84,7 @@ import {
   ACTION_KEYWORDS,
   STATE_KEYWORD,
   EVENTS_KEYWORD,
+  KEYS_KEYWORD,
   THEME_KEYWORD,
   USE_KEYWORD,
   BORDER_STYLES,
@@ -231,6 +232,10 @@ function determineTokenType(value: string, content: string, pos: number): TokenT
   if (value === EVENTS_KEYWORD) {
     return 'EVENTS'
   }
+  // Keys keyword: keys block for grouped keyboard events
+  if (value === KEYS_KEYWORD) {
+    return 'KEYS'
+  }
   // Theme keyword: theme dark: or theme light:
   if (value === THEME_KEYWORD) {
     return 'THEME'
@@ -279,8 +284,8 @@ function determineTokenType(value: string, content: string, pos: number): TokenT
   if (content[pos] === ':' && /^[A-Z]/.test(value) && content[pos + 1] !== ':') {
     // Check for brace-syntax: Name: { } or Name: Parent { }
     const afterColon = content.slice(pos + 1).trim()
-    const isV2Syntax = afterColon.startsWith('{') || /^[A-Z][a-zA-Z0-9_-]*\s*\{/.test(afterColon)
-    if (!isV2Syntax) {
+    const isBraceSyntax = afterColon.startsWith('{') || /^[A-Z][a-zA-Z0-9_-]*\s*\{/.test(afterColon)
+    if (!isBraceSyntax) {
       return 'COMPONENT_DEF'
     }
   }

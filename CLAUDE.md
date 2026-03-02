@@ -150,6 +150,34 @@ Card:
 | Konsistente Stufen | xs, sm, md, lg, xl für Größen |
 | Keine Magic Numbers | Alle Werte als Token definieren |
 
+### Token-Scope (Gruppierung)
+
+Tokens mit gemeinsamem Prefix können gruppiert werden:
+
+```
+$dropdown:
+  bg #1A1A23
+  border #333
+  item.hover #444
+  item.selected #2271c1
+```
+
+Entspricht:
+```
+$dropdown.bg: #1A1A23
+$dropdown.border: #333
+$dropdown.item.hover: #444
+$dropdown.item.selected: #2271c1
+```
+
+Verwendung:
+```
+DropdownMenu bg $dropdown.bg, bor 1 $dropdown.border
+DropdownItem:
+  state highlighted bg $dropdown.item.hover
+  state selected bg $dropdown.item.selected
+```
+
 ### Component References
 
 Referenzieren von Properties anderer Komponenten.
@@ -228,6 +256,28 @@ NavItem Icon "home"; Label "Home"
 NavItem Icon "settings"; Label "Settings"
 NavItem Icon "user"; Label "Profile"
 ```
+
+### Definition Merging (Optional)
+
+Mehrere Definitionen derselben Komponente werden automatisch gemerged. Das ist **optional** - man kann weiterhin alles in einer Definition schreiben. Aber bei komplexen Komponenten kann es die Lesbarkeit verbessern.
+
+```
+// Alles zusammen (Standard)
+Option: pad 10, rad 6, cursor pointer
+  onclick select self
+  onhover highlight self
+  state highlighted bg #333
+
+// ODER getrennt (optional, für bessere Übersicht)
+Option:
+  onclick select self
+  onhover highlight self
+
+Option: pad 10, rad 6, cursor pointer
+  state highlighted bg #333
+```
+
+**Merge-Regeln:** Properties überschreiben, Events/Children/States werden gemerged.
 
 ### Instanzen
 
@@ -522,91 +572,6 @@ Icon "home", material
 Icon "user", size 20, col #3B82F6
 ```
 
-## Core Components
-
-Vorgefertigte, thematisierbare Komponenten-Templates mit Slots, States und Design Tokens.
-
-### Navigation Components
-
-| Name | Description |
-|------|-------------|
-| `Nav` | Navigation Container |
-| `NavItem` | Navigation Item mit Icon + Label Slots |
-| `NavItemBadge` | NavItem mit zusätzlichem Badge Slot |
-| `NavSection` | Gruppierte Navigation mit Header |
-| `ToggleNav` | Collapsible Navigation mit Chevron |
-| `TreeItem` | Hierarchisches Item mit Children |
-| `TreeLeaf` | Leaf-Node ohne Children |
-| `DrawerNav` | Mobile Drawer Navigation |
-| `DrawerBackdrop` | Backdrop für Drawer |
-| `MenuButton` | Hamburger Menu Button |
-
-```
-NavItem Icon "home"; Label "Dashboard"
-NavItem active, Icon "settings"; Label "Settings"
-NavSection Header "Admin"
-  NavItem Icon "users"; Label "Users"
-```
-
-### Form Components
-
-| Name | Description |
-|------|-------------|
-| `Field` | Form Field mit Label, Input, Helper, Error Slots |
-| `TextInput` | Einfaches Textfeld |
-| `IconInput` | Input mit Icon-Slot |
-| `PasswordInput` | Password Input mit Toggle |
-| `TextareaInput` | Mehrzeiliges Textfeld |
-| `SelectInput` | Dropdown Select |
-| `CheckboxInput` | Checkbox mit Label |
-| `RadioInput` | Radio Button mit Label |
-| `SwitchInput` | Toggle Switch |
-
-```
-Field Label "E-Mail"; Input placeholder "name@example.com"
-Field invalid, Label "Name"; Error "Pflichtfeld"
-IconInput Icon "search"; Input placeholder "Suchen..."
-CheckboxInput Label "Ich akzeptiere die AGB"
-SwitchInput on, Label "Benachrichtigungen"
-```
-
-### Button Components
-
-| Name | Description |
-|------|-------------|
-| `PrimaryButton` | Primary Action Button (blau) |
-| `SecondaryButton` | Secondary Action Button (grau) |
-| `GhostButton` | Transparenter Button mit Border |
-| `DangerButton` | Destructive Action Button (rot) |
-
-```
-PrimaryButton "Speichern"
-SecondaryButton "Abbrechen"
-GhostButton Icon "plus"; Label "Hinzufügen"
-DangerButton "Löschen"
-```
-
-### Core Tokens
-
-Design Tokens für Core Components:
-
-| Token | Description |
-|-------|-------------|
-| `$nav.bg` | Navigation Hintergrund |
-| `$nav.hover` | Navigation Hover |
-| `$nav.active` | Navigation Aktiv |
-| `$nav.text` | Navigation Text |
-| `$nav.muted` | Navigation gedämpft |
-| `$form.bg` | Form Hintergrund |
-| `$form.input` | Input Hintergrund |
-| `$form.border` | Input Border |
-| `$form.focus` | Focus-Ring Farbe |
-| `$form.error` | Fehler-Farbe |
-| `$form.text` | Form Text |
-| `$primary.bg` | Primary Button Hintergrund |
-| `$primary.hover` | Primary Button Hover |
-| `$danger.bg` | Danger Button Hintergrund |
-
 ## States
 
 System- und Behavior-States
@@ -642,6 +607,7 @@ Aktiviert durch Actions.
 
 ### State Syntax
 
+Block-Syntax mit Einrückung:
 ```
 hover
   bg #555
@@ -654,6 +620,12 @@ state selection
     bg #3B82F6
   not-selected
     bg transparent
+```
+
+Inline-Syntax für kompakte Definitionen:
+```
+state highlighted bg #333, col white
+state selected bg $primary.bg
 ```
 
 ## Events
@@ -696,6 +668,25 @@ onkeydown arrow-down: highlight next
 | `delete` | Delete |
 | `home` | Home |
 | `end` | End |
+
+### Keys-Block
+
+Gruppierte Keyboard-Events für kompaktere Syntax. Doppelpunkt nach Key ist optional:
+
+```
+SelectPopup:
+  keys
+    escape close             // Doppelpunkt optional
+    arrow-down highlight next
+    arrow-up highlight prev
+    enter select, close      // Chained actions
+```
+
+Entspricht:
+```
+onkeydown escape: close self
+onkeydown arrow-down: highlight next
+```
 
 ### Timing Modifiers
 
@@ -806,6 +797,24 @@ Button onclick call handleLogin, "Login"
 | `self-and-before` | Selbst und alle davor |
 | `all` | Alle Elemente |
 | `none` | Kein Element |
+
+### Implicit Self
+
+Bei diesen Actions ist `self` der Default-Target und kann weggelassen werden:
+
+```
+// Mit explizitem self
+onclick select self
+onhover highlight self
+onclick-outside close self
+
+// Vereinfacht (self ist implizit)
+onclick select
+onhover highlight
+onclick-outside close
+```
+
+**Betrifft:** `highlight`, `select`, `deselect`, `activate`, `deactivate`, `toggle-state`, `close`, `show`, `hide`
 
 ## Conditionals & Logic
 
@@ -1006,6 +1015,7 @@ SYNTAX      Component property value
             Component named Name = named instance
             Name as Type = inline define + render
             Name props = implicit Box define + render
+            Name: ... + Name: ... = definition merging (optional)
 
 LAYOUT      hor, ver, gap N, spread, wrap, stacked, grid N
 ALIGN       left, right, hor-center, top, bottom, ver-center, cen
@@ -1017,26 +1027,24 @@ RADIUS      rad [corners] | tl tr bl br | t b l r
 TYPE        font-size/fs, icon-size/is, icon-weight/iw, icon-color/ic, fill, weight, line, font, align, italic, underline, truncate
 VISUAL      o (opacity), shadow, cursor, z, hidden, disabled, rot
 
-CORE        Nav, NavItem, NavSection, ToggleNav, TreeItem, DrawerNav
-            Field, TextInput, IconInput, PasswordInput, SelectInput
-            CheckboxInput, RadioInput, SwitchInput
-            PrimaryButton, SecondaryButton, GhostButton, DangerButton
-            Tokens: $nav.*, $form.*, $primary.*, $danger.*
-
 STATES      hover, focus, active, disabled (indented block)
             state highlighted, state selected
+            state highlighted bg #333, col white (inline syntax)
 
 EVENTS      onclick, onhover, onfocus, onblur, onchange, oninput
             onkeydown KEY: action, onkeyup KEY: action
             debounce N, delay N
+KEYS        keys (block: escape close, arrow-down highlight next)
+            colon after key is optional
 
 ACTIONS     toggle, show, hide, open, close, page
             highlight, select, deselect, clear-selection
             activate, deactivate, toggle-state
             assign $var to expr, validate, reset, focus, filter
             call functionName  // JS-Funktion aufrufen
+            implicit self: highlight = highlight self
 
-TARGETS     self, next, prev, first, last, highlighted, selected
+TARGETS     self (default), next, prev, first, last, highlighted, selected
 ANIMATIONS  fade, scale, slide-up/down/left/right, spin, pulse, bounce
 POSITIONS   below, above, left, right, center
 
@@ -1048,6 +1056,7 @@ OPERATORS   == != > < >= <= | and or not | + - * /
 
 TOKENS      $name: value (palette) | $name.property: value (semantic)
             $grey-500: #71717A | $primary.bg: $blue-500 | $sm.pad: 4
+            $scope: (newline + indented tokens = token-scope)
 BINDING     .bg (background), .col (color), .pad (padding), .gap, .rad
             .font.size (compound) | .hover.bg (state-specific)
 REFERENCE   Component.property | Button rad Card.radius

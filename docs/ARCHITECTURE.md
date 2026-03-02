@@ -63,16 +63,15 @@ src/
 ├── dsl/                   # DSL Schema & Validation
 │   ├── schema/            # Modulares Schema (aufgeteilt)
 │   │   ├── types.ts       # Type-Definitionen
-│   │   ├── components.ts  # Primitive Components
-│   │   ├── core-components-schema.ts  # Core Components (Nav, Field, etc.)
-│   │   ├── core-tokens.ts # Design Tokens
+│   │   ├── components.ts  # Primitive Components (Box, Text, etc.)
+│   │   ├── properties.ts  # Property-Definitionen
 │   │   ├── events.ts      # Event-Definitionen
 │   │   ├── actions.ts     # Action-Definitionen
 │   │   ├── states.ts      # State-Definitionen
 │   │   ├── animations.ts  # Animation-Definitionen
 │   │   ├── keywords.ts    # Keyword-Definitionen
 │   │   └── index.ts       # Re-exports
-│   ├── master-schema.ts   # Haupt-Schema + Properties + Helpers
+│   ├── master-schema.ts   # Haupt-Schema + Helpers
 │   ├── normalizer.ts      # Property-Normalisierung
 │   └── schema-validator.ts # Validierung
 │
@@ -239,28 +238,10 @@ generateReactElement(nodes: ASTNode[]) {
 | `Image` | `<img>` |
 | `Link` | `<a>` |
 
-### Core Components
+### Library Components
 
-Vorgefertigte, thematisierbare Komponenten-Templates:
-
-| Kategorie | Components |
-|-----------|------------|
-| **Navigation** | Nav, NavItem, NavItemBadge, NavSection, ToggleNav, TreeItem, TreeLeaf, DrawerNav, DrawerBackdrop, MenuButton |
-| **Forms** | Field, TextInput, IconInput, PasswordInput, TextareaInput, SelectInput, CheckboxInput, RadioInput, SwitchInput |
-| **Buttons** | PrimaryButton, SecondaryButton, GhostButton, DangerButton |
-
-Core Components bieten:
-- Vordefinierte Slots (Icon, Label, etc.)
-- Eingebaute States (hover, active, disabled, etc.)
-- Design Tokens ($nav.*, $form.*, $primary.*)
-- Event-Handler für Interaktionen
-
-```
-// Verwendung
-NavItem Icon "home"; Label "Dashboard"
-Field Label "E-Mail"; Input placeholder "name@example.com"
-PrimaryButton "Speichern"
-```
+Komplexere Komponenten werden aus einer externen Component Library (`_template` Projekt) geladen.
+Die Library bietet vorgefertigte Templates für Navigation, Forms, Buttons etc.
 
 ---
 
@@ -362,7 +343,7 @@ useAppState() {
   history: { undo(), redo() }
 
   // Settings
-  llmEnabled, pickerModeEnabled, useTokenMode
+  pickerModeEnabled, useTokenMode, expandShorthand
 
   // Project
   projectStorage: { save(), load() }

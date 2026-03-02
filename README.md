@@ -33,7 +33,6 @@ A visual UI designer with a custom DSL (Domain-Specific Language) for rapid prot
 - [Key Concepts](#key-concepts)
 - [Tipps & Best Practices](#tipps--best-practices)
 - [Multi-Page Support](#multi-page-support)
-- [AI Generation](#ai-generation)
 - [Extract Function](#extract-function)
 - [Projekt speichern & exportieren](#projekt-speichern--exportieren)
 - [Architecture](#architecture)
@@ -47,7 +46,6 @@ A visual UI designer with a custom DSL (Domain-Specific Language) for rapid prot
 - **Multi-Page Support**: Create and manage multiple pages
 - **Three-Tab Workflow**: Separate Tokens, Components, and Layout
 - **Live Preview**: Real-time rendering of your UI
-- **AI Generation**: Describe what you want, get DSL code (via OpenRouter/Claude)
 - **Component Library**: 19 pre-built Radix-based components (Dropdown, Dialog, Tabs, etc.)
 - **Component Templates**: Define once, reuse everywhere
 - **Extract Function**: Auto-extract component definitions from layout
@@ -1183,58 +1181,7 @@ ProfileCard
 
 ---
 
-### Teil 22: AI Generation nutzen
-
-Lass dir UI-Code von KI generieren.
-
-**Voraussetzungen:**
-1. OpenRouter API Key (kostenlos registrieren)
-2. Key in den Einstellungen hinterlegen
-
-**So funktioniert es:**
-
-1. Klicke auf das **AI-Icon** (✨) in der Toolbar
-2. Beschreibe was du willst
-3. Der Code wird generiert und eingefügt
-
-**Beispiel-Prompts:**
-
-```
-"Erstelle eine Pricing-Tabelle mit 3 Spalten: Basic (kostenlos),
-Pro (9€/Monat) und Enterprise (49€/Monat). Jede Spalte hat
-einen Titel, Preis, Feature-Liste und einen Button."
-```
-
-```
-"Baue eine Sidebar-Navigation mit Logo oben, 5 Menüpunkten
-mit Icons (Dashboard, Projekte, Team, Kalender, Einstellungen)
-und einem Profil-Bereich unten."
-```
-
-```
-"Erstelle ein Kontaktformular mit Feldern für Name, E-Mail,
-Betreff und Nachricht. Füge Validierungshinweise hinzu und
-einen Absende-Button."
-```
-
-**Tipps für bessere Ergebnisse:**
-
-| Tipp | Beispiel |
-|------|----------|
-| Sei spezifisch | "3 Spalten" statt "mehrere Spalten" |
-| Nenne Farben | "blauer Button" oder "dunkles Theme" |
-| Beschreibe Hierarchie | "Card mit Header und Footer" |
-| Erwähne Komponenten | "nutze einen Dialog" |
-| Gib Text vor | 'Button sagt "Jetzt starten"' |
-
-**Nach der Generierung:**
-- Prüfe den Code auf Fehler
-- Passe Tokens an dein Design-System an
-- Extrahiere wiederverwendbare Komponenten
-
----
-
-### Teil 23: React Export
+### Teil 22: React Export
 
 Exportiere dein Design als funktionierenden React-Code.
 
@@ -1379,7 +1326,6 @@ Du hast jetzt **alle Features** von Mirror kennengelernt:
 **Workflow:**
 - ✅ Multi-Page Support
 - ✅ Extract Function
-- ✅ AI Generation
 - ✅ React Export
 - ✅ JSON Import/Export
 
@@ -2709,42 +2655,6 @@ NavLink: col #3B82F6 hover-col #60A5FA
 
 ---
 
-## AI Generation
-
-Mirror kann UI-Code automatisch generieren. Beschreibe was du willst, und erhalte DSL-Code.
-
-### Voraussetzungen
-
-1. **OpenRouter API Key** erforderlich
-2. Nutzt Claude als Backend-Modell
-
-### Verwendung
-
-1. Klicke auf das **AI-Icon** in der Toolbar
-2. Beschreibe deine gewünschte UI auf Deutsch oder Englisch
-3. Der generierte Code wird in den Editor eingefügt
-
-### Beispiel-Prompts
-
-```
-"Erstelle eine Login-Card mit E-Mail und Passwort Feldern"
-
-"Baue eine Pricing-Tabelle mit 3 Spalten für Basic, Pro und Enterprise"
-
-"Erstelle eine Sidebar-Navigation mit Icons und aktivem State"
-
-"Baue ein Dashboard mit 4 Statistik-Karten oben und einer Tabelle darunter"
-```
-
-### Tipps für bessere Ergebnisse
-
-- Sei spezifisch über Layout und Farben
-- Erwähne welche Komponenten du nutzen willst
-- Beschreibe die Hierarchie (z.B. "in einer Card")
-- Nenne konkrete Texte und Platzhalter
-
----
-
 ## Extract Function
 
 Extrahiere wiederverwendbare Komponenten aus deinem Layout-Code.
@@ -2839,9 +2749,9 @@ src/
 │   ├── types.ts              # Library types
 │   ├── registry.ts           # Component registry
 │   └── components/           # 19 component definitions
-├── validation/               # LLM output validation
-└── lib/
-    └── ai.ts                 # OpenRouter API integration
+└── dsl/
+    ├── schema/               # Modular schema definitions
+    └── master-schema.ts      # Main schema + helpers
 ```
 
 ---
@@ -2865,5 +2775,4 @@ npm run lint      # Lint code
 - CodeMirror 6
 - Radix UI (accessible components)
 - Lucide React (icons)
-- Vitest (264 tests)
-- OpenRouter API (Claude)
+- Vitest

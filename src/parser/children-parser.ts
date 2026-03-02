@@ -281,7 +281,7 @@
 
 import type { ParserContext } from './parser-context'
 import type { ASTNode, ConditionExpr, DSLProperties } from './types'
-import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction, parseBehaviorStateDefinition } from './state-parser'
+import { parseStateDefinition, parseVariableDeclaration, parseEventHandler, parseAnimationAction, parseBehaviorStateDefinition, parseKeysBlock } from './state-parser'
 import { parseCondition } from './condition-parser'
 import { createTextNode } from './parser-utils'
 import { isTokenSequence } from './types'
@@ -448,7 +448,7 @@ export function parseChildren(
             ctx.advance()
           }
         }
-        // V2: Check for state definition
+        // Check for state definition
         else if (ctx.current()?.type === 'STATE') {
           const stateDef = parseStateDefinition(ctx, childIndent)
           if (stateDef) {
@@ -456,7 +456,7 @@ export function parseChildren(
             node.states.push(stateDef)
           }
         }
-        // V8: Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
+        // Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
         // These are state blocks where the keyword IS the state name
         else if (
           ctx.current()?.type === 'COMPONENT_NAME' &&
@@ -469,7 +469,7 @@ export function parseChildren(
             node.states.push(stateDef)
           }
         }
-        // V2: Check for event handler
+        // Check for event handler
         else if (ctx.current()?.type === 'EVENT') {
           const handler = parseEventHandler(ctx, childIndent)
           if (handler) {
@@ -477,7 +477,15 @@ export function parseChildren(
             node.eventHandlers.push(handler)
           }
         }
-        // V6: Check for animation action (show/hide/animate)
+        // Keys block: grouped keyboard event handlers
+        else if (ctx.current()?.type === 'KEYS') {
+          const handlers = parseKeysBlock(ctx, childIndent)
+          if (handlers.length > 0) {
+            if (!node.eventHandlers) node.eventHandlers = []
+            node.eventHandlers.push(...handlers)
+          }
+        }
+        // Check for animation action (show/hide/animate)
         else if (ctx.current()?.type === 'ANIMATION_ACTION') {
           const animDef = parseAnimationAction(ctx)
           if (animDef) {
@@ -493,7 +501,7 @@ export function parseChildren(
             ctx.advance()
           }
         }
-        // V2: Check for variable declaration ($name = value)
+        // Check for variable declaration ($name = value)
         else if (ctx.current()?.type === 'TOKEN_REF' && ctx.peek(1)?.type === 'ASSIGNMENT') {
           const varDecl = parseVariableDeclaration(ctx)
           if (varDecl) {
@@ -504,21 +512,21 @@ export function parseChildren(
             ctx.advance()
           }
         }
-        // V3: Check for 'if' conditional
+        // Check for 'if' conditional
         else if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'if') {
           const condChild = parseConditional(ctx, node, childIndent, componentName, parseComponentFn)
           if (condChild) {
             instanceChildren.push(condChild)
           }
         }
-        // V3: Check for 'each' iterator
+        // Check for 'each' iterator
         else if (ctx.current()?.type === 'CONTROL' && ctx.current()?.value === 'each') {
           const iterChild = parseIteratorFn(ctx, childIndent, componentName, parseComponentFn)
           if (iterChild) {
             instanceChildren.push(iterChild)
           }
         }
-        // V4: Check for list item (- prefix for new instance)
+        // Check for list item (- prefix for new instance)
         else if (ctx.current()?.type === 'LIST_ITEM') {
           ctx.advance() // consume '-'
           if (ctx.current()?.type === 'COMPONENT_NAME') {
@@ -528,7 +536,7 @@ export function parseChildren(
               instanceChildren.push(child)
             }
           }
-          // V7: Bare strings in list items - wrap in default slot
+          // Bare strings in list items - wrap in default slot
           // e.g., Menu with Item: slot → `- "Dashboard"` becomes `- Item "Dashboard"`
           else if (ctx.current()?.type === 'STRING') {
             const stringToken = ctx.current()!

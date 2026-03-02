@@ -93,7 +93,7 @@ Dropdown
     const selectState = itemInContent?.states?.find(s => s.name === 'select')
     expect(selectState).toBeDefined()
     expect(selectState?.properties.bg).toBe('#2563EB')
-    expect(selectState?.properties.col).toBe('white') // V2: CSS color names are preserved
+    expect(selectState?.properties.col).toBe('white') // CSS color names are preserved
   })
 
   it('renders Dropdown instance with all items', () => {

@@ -597,7 +597,7 @@ function runValidation(result: ParseResult, input: string, options: ParseOptions
  *    - COMPONENT_NAME + 'from' + COMPONENT_NAME + COLON → parseInheritanceDefinition
  *    - COMPONENT_NAME + 'as' + COMPONENT_DEF → parseLibraryDefinitionV1 (Name as Library:)
  *    - COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON + BRACE → parseLibraryDefinition
- *    - COMPONENT_NAME + COLON + BRACE → parseInlineDefinition (v2 brace-syntax)
+ *    - COMPONENT_NAME + COLON + BRACE → parseInlineDefinition (brace-syntax)
  *    - EVENTS → parseEventsBlock
  *    - CONTROL 'if' → parseTopLevelConditional
  *    - CONTROL 'each' → parseTopLevelIterator
@@ -672,11 +672,11 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
     }
 
     // Inline Definition: Button: pad 12 or DangerButton: Button bg #EF4444
-    // Pattern: COMPONENT_NAME + COLON + properties (v1) or + BRACE_OPEN (v2 legacy)
+    // Pattern: COMPONENT_NAME + COLON + properties (inline) or + BRACE_OPEN (brace-syntax)
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'COLON') {
       const peekAfterColon = ctx.peek(2)
-      // Check for brace-based definition patterns (v2 legacy)
+      // Check for brace-based definition patterns
       if (peekAfterColon?.type === 'BRACE_OPEN' ||
           (peekAfterColon?.type === 'COMPONENT_NAME' && ctx.peek(3)?.type === 'BRACE_OPEN')) {
         parseInlineDefinition(ctx)
@@ -684,7 +684,7 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
       }
     }
 
-    // Library Definition v2: OptionsMenu as Dropdown: { w 200 }
+    // Library Definition (brace-syntax): OptionsMenu as Dropdown: { w 200 }
     // Pattern: COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON + BRACE_OPEN
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&
@@ -695,7 +695,7 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
       continue
     }
 
-    // Library Definition v1: OptionsMenu as Dropdown: w 200
+    // Library Definition (inline syntax): OptionsMenu as Dropdown: w 200
     // Pattern: COMPONENT_NAME + 'as' + COMPONENT_DEF (e.g., "Tooltip:")
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&

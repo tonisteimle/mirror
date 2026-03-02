@@ -17,7 +17,6 @@ import { createNumberScrubbingKeymap } from './number-scrubbing'
 import { createSemanticSelectionExtension } from './semantic-selection'
 import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
 import { createDoubleClickPickerExtension, type DoubleClickPickerConfig } from './double-click-picker'
-import { createTranslatingLinesExtension } from './translating-lines'
 // Ghost suggestions removed - using contextual autocomplete boost instead
 
 /**
@@ -140,9 +139,6 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
   if (doubleClickPickerConfig) {
     extensions.push(createDoubleClickPickerExtension(doubleClickPickerConfig))
   }
-
-  // Translating lines (animated background for lines being translated by LLM)
-  extensions.push(createTranslatingLinesExtension())
 
   // Update listener for document changes
   extensions.push(createUpdateListener(onDocChange))

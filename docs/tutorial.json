@@ -3573,6 +3573,46 @@
           ]
         },
         {
+          "id": "keys-block",
+          "title": "Keys Block – Compact Keyboard Events",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "When you have many keyboard handlers, the keys block provides a cleaner syntax. The colon after the key name is optional:"
+            },
+            {
+              "type": "code",
+              "code": "Menu:\n    vertical\n    padding 8\n    keys\n        escape close\n        arrow-down highlight next\n        arrow-up highlight prev\n        enter select, close\n\nMenu\n    - Item \"Dashboard\"\n    - Item \"Settings\""
+            },
+            {
+              "type": "paragraph",
+              "text": "This is equivalent to writing each onkeydown separately, but much more readable when you have several keyboard shortcuts."
+            }
+          ]
+        },
+        {
+          "id": "implicit-self",
+          "title": "Implicit Self – Less Typing",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "For common actions, self is the default target and can be omitted:"
+            },
+            {
+              "type": "code",
+              "code": "// These are equivalent:\nonclick select self\nonclick select\n\nonhover highlight self\nonhover highlight\n\nonclick-outside close self\nonclick-outside close"
+            },
+            {
+              "type": "paragraph",
+              "text": "This works for: highlight, select, deselect, activate, deactivate, toggle-state, close, show, hide."
+            },
+            {
+              "type": "paragraph",
+              "text": "When you need a different target, specify it explicitly: onclick close Menu or onclick highlight next."
+            }
+          ]
+        },
+        {
           "id": "dropdown-pattern",
           "title": "Pattern: Complete Dropdown",
           "content": [

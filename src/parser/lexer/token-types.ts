@@ -147,6 +147,7 @@ export type TokenType =
   | 'EVENT'           // onclick, onhover, etc.
   | 'STATE'           // state keyword
   | 'EVENTS'          // events keyword (for centralized event block)
+  | 'KEYS'            // keys keyword (for grouped keyboard event handlers)
   | 'THEME'           // theme keyword (for theme block definition)
   | 'CONTROL'         // if, not, and, or, else, each, in
   | 'ANIMATION'       // slide-up, slide-down, fade, scale, spin, pulse, bounce

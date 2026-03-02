@@ -271,12 +271,12 @@ export function tokenize(input: string): Token[] {
     // Check if this is a brace-based definition (Name: {) or inheritance (Name: Parent {)
     // In these cases, don't emit COMPONENT_DEF - let the tokens be separate
     const restAfterDef = componentDefMatch ? content.slice(componentDefMatch[0].length).trim() : ''
-    const isV2Syntax = componentDefMatch && (
+    const isBraceSyntax = componentDefMatch && (
       restAfterDef.startsWith('{') ||
       /^[A-Z][a-zA-Z0-9_-]*\s*\{/.test(restAfterDef)
     )
 
-    if (componentDefMatch && !isV2Syntax && !PROPERTIES.has(componentDefMatch[1]) && !DIRECTIONS.has(componentDefMatch[1])) {
+    if (componentDefMatch && !isBraceSyntax && !PROPERTIES.has(componentDefMatch[1]) && !DIRECTIONS.has(componentDefMatch[1])) {
       const isMultiple = componentDefMatch[2] === '*'
       tokens.push({
         type: isMultiple ? 'MULTIPLE_DEF' : 'COMPONENT_DEF',
@@ -289,7 +289,7 @@ export function tokenize(input: string): Token[] {
 
     // Tokenize the rest of the line
     // Note: When brace-syntax, we don't consume componentDefMatch - let identifier-lexer handle it
-    const useComponentDefMatch = componentDefMatch && !isV2Syntax
+    const useComponentDefMatch = componentDefMatch && !isBraceSyntax
     let pos = listItemMatch ? listItemMatch[0].length :
               (selectorMatch ? selectorMatch[0].length :
               (tokenVarDefMatch ? tokenVarDefMatch[0].length :
@@ -379,10 +379,10 @@ export function tokenize(input: string): Token[] {
       if (char === ':') {
         const restAfterColon = content.slice(pos + 1).trim()
         // Check if followed by { or Parent { (brace-syntax) or inside braces (property)
-        const isV2Colon = braceDepth > 0 ||
+        const isBraceColon = braceDepth > 0 ||
           restAfterColon.startsWith('{') ||
           /^[A-Z][a-zA-Z0-9_-]*\s*\{/.test(restAfterColon)
-        if (isV2Colon) {
+        if (isBraceColon) {
           tokens.push({ type: 'COLON', value: ':', line: lineNum, column })
           pos++
           column++

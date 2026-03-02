@@ -66,12 +66,6 @@
  *   Aktiviert via applyLayoutDefaultsToNode()
  *   Nur wenn keine expliziten Layout-Properties gesetzt
  *
- * @syntax-version
- * _syntaxVersion: 2 wird gesetzt wenn:
- *   - Block-Syntax verwendet wird (mit Block-Content)
- *   - Inline-Syntax ohne Braces verwendet wird
- *   Markiert v2-kompatible Syntax für Generator
- *
  * @example
  * // Tokens: COMPONENT_NAME 'Button', BRACE_OPEN, PROPERTY 'pad', ...
  * parseComponent(ctx, 0)
@@ -144,8 +138,7 @@ export { parseInlineProperties, parseInlineEventHandler, parseInlineConditional,
  *   children: [],           // Kinder-Nodes
  *   eventHandlers?: [],     // Inline-Events
  *   states?: [],            // State-Definitionen
- *   _isExplicitDefinition?: boolean,
- *   _syntaxVersion?: 2
+ *   _isExplicitDefinition?: boolean
  * }
  *
  * @algorithm
@@ -182,8 +175,8 @@ export function parseComponent(
     isExplicitDefinition = true
   }
 
-  // V2 syntax: Check for COLON after component name (e.g., "Header:" in block syntax)
-  // In V2, the lexer emits COMPONENT_NAME + COLON + BRACE_OPEN as separate tokens
+  // Check for COLON after component name (e.g., "Header:" in block syntax)
+  // In brace-syntax, the lexer emits COMPONENT_NAME + COLON + BRACE_OPEN as separate tokens
   if (ctx.current()?.type === 'COLON') {
     isExplicitDefinition = true
     ctx.advance() // consume the colon
@@ -303,10 +296,8 @@ export function parseComponent(
   // Track if we used block syntax (children already parsed inside braces)
   let usedBlockSyntax = false
 
-  // Check for v2 brace-based syntax
+  // Check for brace-based syntax
   if (isBlockStart(ctx)) {
-    // v2 brace syntax
-    node._syntaxVersion = 2
     usedBlockSyntax = true
     ctx.advance() // consume {
     parseBlockContent(ctx, node, (innerCtx, _indent) => parseComponent(innerCtx, 0))
@@ -318,8 +309,7 @@ export function parseComponent(
       ctx.advance()
     }
   } else {
-    // Inline syntax (without braces) - parsed directly, no normalization needed
-    node._syntaxVersion = 2
+    // Inline syntax (without braces)
     parseInlineProperties(ctx, node, componentName, inlineSlots, baseIndent)
   }
 

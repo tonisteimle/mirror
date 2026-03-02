@@ -523,6 +523,9 @@ export function parseStateCategoryDefinition(
 
 /**
  * Parse a state definition: state name \n properties...
+ *
+ * Supports inline syntax: state highlighted bg #333, col white
+ * And block syntax with indentation.
  */
 export function parseStateDefinition(ctx: ParserContext, baseIndent: number): StateDefinition | null {
   // Current token should be STATE
@@ -546,9 +549,98 @@ export function parseStateDefinition(ctx: ParserContext, baseIndent: number): St
     line: stateLine
   }
 
-  // Skip newline
+  // NEW: Parse inline properties on the same line (before NEWLINE or SEMICOLON)
+  // Syntax: state highlighted bg #333, col white
+  while (ctx.current() &&
+         ctx.current()!.type !== 'NEWLINE' &&
+         ctx.current()!.type !== 'EOF' &&
+         ctx.current()!.type !== 'SEMICOLON' &&
+         ctx.current()!.type !== 'STATE') {  // Stop at next state keyword
+    const token = ctx.current()!
+
+    // Skip comma separators
+    if (token.type === 'COMMA') {
+      ctx.advance()
+      continue
+    }
+
+    // Parse property
+    if (token.type === 'PROPERTY') {
+      const propName = ctx.advance().value
+
+      // Handle directional properties inline: pad l 8
+      if (ctx.current()?.type === 'DIRECTION') {
+        const directions: string[] = []
+        while (ctx.current()?.type === 'DIRECTION') {
+          const dir = ctx.advance().value
+          if (dir.includes('-')) {
+            directions.push(...dir.split('-'))
+          } else {
+            directions.push(dir)
+          }
+        }
+        const val = parseValue(ctx)
+        if (val !== null) {
+          for (const dir of directions) {
+            stateDef.properties[`${propName}-${dir}`] = val
+          }
+        }
+      } else {
+        // Regular property with value
+        const val = parseValue(ctx)
+        if (val !== null) {
+          stateDef.properties[propName] = val
+        } else {
+          stateDef.properties[propName] = true
+        }
+      }
+      continue
+    }
+
+    // Parse string content
+    if (token.type === 'STRING') {
+      stateDef.properties['_content'] = ctx.advance().value
+      continue
+    }
+
+    // Parse color value (sugar for bg)
+    if (token.type === 'COLOR') {
+      stateDef.properties['bg'] = ctx.advance().value
+      continue
+    }
+
+    // Parse token reference (sugar)
+    if (token.type === 'TOKEN_REF') {
+      const tokenName = ctx.advance().value
+      // Infer property from token suffix - store as token reference string
+      if (tokenName.endsWith('.bg') || tokenName.includes('.bg.')) {
+        stateDef.properties['bg'] = tokenName
+      } else if (tokenName.endsWith('.col') || tokenName.includes('.col.')) {
+        stateDef.properties['col'] = tokenName
+      } else {
+        stateDef.properties['bg'] = tokenName
+      }
+      continue
+    }
+
+    // Unknown token - stop inline parsing
+    break
+  }
+
+  // If we parsed inline properties, check if we should return early
+  const hasInlineProps = Object.keys(stateDef.properties).length > 0
+
+  // Skip newline if present
   if (ctx.current()?.type === 'NEWLINE') {
     ctx.advance()
+  }
+
+  // If we have inline props and no deeper indent follows, return early
+  if (hasInlineProps) {
+    const nextToken = ctx.current()
+    if (!nextToken || nextToken.type !== 'INDENT' || parseInt(nextToken.value, 10) <= baseIndent) {
+      return stateDef
+    }
   }
 
   // Parse state properties (indented lines)
@@ -955,6 +1047,18 @@ export function parseAction(ctx: ParserContext): ActionStatement | null {
       break
   }
 
+  // Implicit self: if no target specified, default to 'self' for these actions
+  if (!action.target) {
+    const implicitSelfActions = new Set([
+      'highlight', 'select', 'deselect',
+      'activate', 'deactivate', 'toggle-state',
+      'close', 'show', 'hide'
+    ])
+    if (implicitSelfActions.has(actionValue)) {
+      action.target = 'self'
+    }
+  }
+
   return action
 }
 
@@ -1110,6 +1214,99 @@ export function parseEventHandler(ctx: ParserContext, baseIndent: number): Event
   }
 
   return handler
+}
+
+/**
+ * Parse a keys block: keys \n key: action...
+ *
+ * Syntax:
+ *   keys
+ *     escape: close self
+ *     arrow-down: highlight next
+ *     arrow-up: highlight prev
+ *     enter: select highlighted, close self
+ *
+ * Generates event handlers for onkeydown with the specified key modifiers.
+ * This is syntactic sugar for writing multiple onkeydown KEY: action lines.
+ */
+export function parseKeysBlock(ctx: ParserContext, baseIndent: number): EventHandler[] {
+  // Current token should be KEYS
+  if (ctx.current()?.type !== 'KEYS') return []
+
+  const keysLine = ctx.current()!.line
+  ctx.advance() // consume 'keys'
+
+  const handlers: EventHandler[] = []
+
+  // Skip newline
+  if (ctx.current()?.type === 'NEWLINE') {
+    ctx.advance()
+  }
+
+  // Parse key handlers (indented lines)
+  while (ctx.current() && ctx.current()!.type !== 'EOF') {
+    const token = ctx.current()!
+
+    if (token.type === 'INDENT') {
+      const indent = parseInt(token.value, 10)
+      if (indent > baseIndent) {
+        ctx.advance() // consume indent
+
+        // Expect key modifier name (escape, enter, arrow-down, etc.)
+        // May be tokenized as COMPONENT_NAME or COMPONENT_DEF (if followed by colon)
+        const keyToken = ctx.current()
+        if ((keyToken?.type === 'COMPONENT_NAME' || keyToken?.type === 'COMPONENT_DEF') &&
+            KEY_MODIFIERS.has(keyToken.value.toLowerCase())) {
+          const keyName = ctx.advance().value.toLowerCase()
+
+          // Consume colon separator (if it wasn't already consumed as part of COMPONENT_DEF)
+          if (ctx.current()?.type === 'COLON') {
+            ctx.advance()
+          }
+
+          const handler: EventHandler = {
+            event: 'onkeydown',
+            key: keyName,
+            actions: [],
+            line: keysLine
+          }
+
+          // Parse inline actions (supports comma-chaining)
+          while (isActionKeyword(ctx)) {
+            const action = parseAction(ctx)
+            if (action) handler.actions.push(action)
+
+            // Check for comma to continue parsing more actions
+            if (ctx.current()?.type === 'COMMA') {
+              ctx.advance() // consume comma
+            } else {
+              break
+            }
+          }
+
+          handlers.push(handler)
+        }
+
+        // Skip to end of line
+        while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
+          ctx.advance()
+        }
+
+        if (ctx.current()?.type === 'NEWLINE') {
+          ctx.advance()
+        }
+      } else {
+        // Less indent - done with keys block
+        break
+      }
+    } else if (token.type === 'NEWLINE') {
+      ctx.advance()
+    } else {
+      break
+    }
+  }
+
+  return handlers
 }
 
 /**

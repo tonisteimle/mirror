@@ -94,4 +94,102 @@ events
     expect(list?.eventHandlers![1].key).toBe('end')
     expect(list?.eventHandlers![1].actions[0]).toHaveProperty('target', 'last')
   })
+
+  describe('keys block syntax', () => {
+    it('should parse basic keys block', () => {
+      const input = `Menu: ver pad 8
+  keys
+    escape: close self
+    arrow-down: highlight next
+    arrow-up: highlight prev`
+      const result = parse(input)
+
+      expect(result.errors).toHaveLength(0)
+      const menu = result.registry.get('Menu')
+      expect(menu?.eventHandlers).toHaveLength(3)
+      expect(menu?.eventHandlers![0].event).toBe('onkeydown')
+      expect(menu?.eventHandlers![0].key).toBe('escape')
+      expect(menu?.eventHandlers![0].actions[0]).toHaveProperty('type', 'close')
+      expect(menu?.eventHandlers![1].key).toBe('arrow-down')
+      expect(menu?.eventHandlers![1].actions[0]).toHaveProperty('type', 'highlight')
+      expect(menu?.eventHandlers![1].actions[0]).toHaveProperty('target', 'next')
+      expect(menu?.eventHandlers![2].key).toBe('arrow-up')
+      expect(menu?.eventHandlers![2].actions[0]).toHaveProperty('target', 'prev')
+    })
+
+    it('should parse keys block with chained actions', () => {
+      const input = `Dropdown: ver pad 8
+  keys
+    enter: select highlighted, close self
+    escape: close self`
+      const result = parse(input)
+
+      expect(result.errors).toHaveLength(0)
+      const dropdown = result.registry.get('Dropdown')
+      expect(dropdown?.eventHandlers).toHaveLength(2)
+      // Enter key has two actions
+      expect(dropdown?.eventHandlers![0].key).toBe('enter')
+      expect(dropdown?.eventHandlers![0].actions).toHaveLength(2)
+      expect(dropdown?.eventHandlers![0].actions[0]).toHaveProperty('type', 'select')
+      expect(dropdown?.eventHandlers![0].actions[1]).toHaveProperty('type', 'close')
+      // Escape key has one action
+      expect(dropdown?.eventHandlers![1].key).toBe('escape')
+      expect(dropdown?.eventHandlers![1].actions).toHaveLength(1)
+    })
+
+    it('should parse keys block with all common modifiers', () => {
+      const input = `SelectPopup: ver pad 6
+  keys
+    escape: close self
+    arrow-down: highlight next
+    arrow-up: highlight prev
+    enter: select highlighted
+    home: highlight first
+    end: highlight last`
+      const result = parse(input)
+
+      expect(result.errors).toHaveLength(0)
+      const popup = result.registry.get('SelectPopup')
+      expect(popup?.eventHandlers).toHaveLength(6)
+      expect(popup?.eventHandlers!.map(h => h.key)).toEqual([
+        'escape', 'arrow-down', 'arrow-up', 'enter', 'home', 'end'
+      ])
+    })
+
+    it('should allow keys block alongside other events', () => {
+      const input = `DropdownMenu: ver pad 8
+  onclick-outside close self
+  keys
+    escape: close self
+    arrow-down: highlight next`
+      const result = parse(input)
+
+      expect(result.errors).toHaveLength(0)
+      const menu = result.registry.get('DropdownMenu')
+      expect(menu?.eventHandlers).toHaveLength(3)
+      // First is onclick-outside
+      expect(menu?.eventHandlers![0].event).toBe('onclick-outside')
+      // Then keys block handlers
+      expect(menu?.eventHandlers![1].event).toBe('onkeydown')
+      expect(menu?.eventHandlers![1].key).toBe('escape')
+      expect(menu?.eventHandlers![2].event).toBe('onkeydown')
+      expect(menu?.eventHandlers![2].key).toBe('arrow-down')
+    })
+
+    it('should parse keys block without colon (optional)', () => {
+      const input = `Menu: ver pad 8
+  keys
+    escape close self
+    arrow-down highlight next`
+      const result = parse(input)
+
+      expect(result.errors).toHaveLength(0)
+      const menu = result.registry.get('Menu')
+      expect(menu?.eventHandlers).toHaveLength(2)
+      expect(menu?.eventHandlers![0].key).toBe('escape')
+      expect(menu?.eventHandlers![0].actions[0]).toHaveProperty('type', 'close')
+      expect(menu?.eventHandlers![1].key).toBe('arrow-down')
+      expect(menu?.eventHandlers![1].actions[0]).toHaveProperty('type', 'highlight')
+    })
+  })
 })

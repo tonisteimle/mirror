@@ -2,7 +2,7 @@
  * @module block-parser
  * @description Block-Syntax Parser - Parst Properties, States, Events innerhalb von Blöcken
  *
- * Wird sowohl für v1 (Indentation-basiert) als auch v2 (Brace-basiert) verwendet.
+ * Wird sowohl für Indentation-basierte als auch Brace-basierte Syntax verwendet.
  * Die öffentlichen Beispiele zeigen v1 Syntax, interne Details dokumentieren beide.
  *
  * ═══════════════════════════════════════════════════════════════════════════
@@ -33,7 +33,7 @@
  * @internal PROPERTIES
  * @internal @syntax property value - Property mit Wert (v1 Inline-Syntax)
  * @internal @syntax booleanProp - Boolean ohne Wert = true
- * @internal @syntax property: value - Property mit Colon (v2 Block-Syntax)
+ * @internal @syntax property: value - Property mit Colon (Block-Syntax)
  *
  * @internal SPACING (v1 Inline-Syntax)
  * @internal @syntax pad 16 - Alle Seiten
@@ -68,11 +68,11 @@
  *
  * @function parseBlockContent(ctx, node, baseIndent) → void
  *   Parst Block-Inhalt (Properties, States, Events) innerhalb eines Blocks
- *   Hauptfunktion für v1/v2 Block-Parsing
+ *   Hauptfunktion für Block-Parsing
  *
  * @function isBlockStart(ctx) → boolean
  *   Prüft ob aktuelles Token einen Block startet
- *   Verwendet für v2 Brace-Syntax Detection
+ *   Verwendet für Brace-Syntax Detection
  *
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -457,12 +457,12 @@ function inferPropertyFromSuffix(tokenName: string): string | null {
 
 /**
  * @doc parseBlockState
- * @brief Parst einen expliziten State-Block mit 'state' Keyword (v2 Brace-Syntax)
+ * @brief Parst einen expliziten State-Block mit 'state' Keyword (Brace-Syntax)
  * @input Token STATE/KEYWORD("state") am Cursor, erwartet BRACE_OPEN
  * @output Fügt StateDefinition zu node.states hinzu
  *
- * @syntax-v2 state hover { bg #555 }
- * @syntax-v2 state active { col #FFF, bg #3B82F6 }
+ * @syntax-brace state hover { bg #555 }
+ * @syntax-brace state active { col #FFF, bg #3B82F6 }
  *
  * @note Für v1 Indentation-Syntax siehe state-parser.ts parseStateDefinition
  *
@@ -626,13 +626,13 @@ function isStateName(name: string): boolean {
 
 /**
  * @doc parseImplicitBlockState
- * @brief Parst impliziten State-Block ohne 'state' Keyword (v2 Brace-Syntax)
+ * @brief Parst impliziten State-Block ohne 'state' Keyword (Brace-Syntax)
  * @input Token COMPONENT_NAME mit bekanntem State-Namen + BRACE_OPEN
  * @output Fügt StateDefinition zu node.states hinzu
  *
- * @syntax-v2 hover { bg #555 }
- * @syntax-v2 active { col #FFF }
- * @syntax-v2 disabled { o 0.5 }
+ * @syntax-brace hover { bg #555 }
+ * @syntax-brace active { col #FFF }
+ * @syntax-brace disabled { o 0.5 }
  *
  * @note Für v1 Indentation-Syntax siehe state-parser.ts parseBehaviorStateDefinition
  *
@@ -698,7 +698,7 @@ function parseImplicitBlockState(ctx: ParserContext, node: ASTNode): void {
 
 /**
  * @doc parseBlockEvent
- * @brief Parst einen Event-Handler (inline innerhalb v2 Block)
+ * @brief Parst einen Event-Handler (inline innerhalb Brace-Block)
  * @input Token EVENT am Cursor
  * @output Fügt EventHandler zu node.eventHandlers hinzu
  *
@@ -708,7 +708,7 @@ function parseImplicitBlockState(ctx: ParserContext, node: ASTNode): void {
  * @syntax onhover highlight self
  * @syntax onkeydown escape close
  *
- * @note Innerhalb v2 Blocks: onclick toggle (ohne Colon nach Event)
+ * @note Innerhalb Brace-Blocks: onclick toggle (ohne Colon nach Event)
  *       Für v1 Block-Events mit Indentation siehe state-parser.ts parseEventHandler
  *
  * @events onclick, onhover, onfocus, onblur, onchange, oninput, onload
@@ -1011,22 +1011,22 @@ function parseBlockChild(ctx: ParserContext, parseComponent: (ctx: ParserContext
 
 /**
  * @doc parseBlockContent
- * @brief Parst den Inhalt eines v2 Blocks { ... }
+ * @brief Parst den Inhalt eines Brace-Blocks { ... }
  * @input ctx am BRACE_OPEN (bereits konsumiert), node zum Befüllen
  * @output Befüllt node.properties, node.content, node.children, node.states, node.eventHandlers
  *
- * @syntax-v2 Button { pad 12, bg #3B82F6, "Click" }
- * @syntax-v2 Card { state hover { bg #555 } }
- * @syntax-v2 Panel { onclick toggle }
+ * @syntax-brace Button { pad 12, bg #3B82F6, "Click" }
+ * @syntax-brace Card { state hover { bg #555 } }
+ * @syntax-brace Panel { onclick toggle }
  *
  * @handles STRING → node.content
  * @handles PROPERTY → parseBlockProperty
- * @handles STATE → parseBlockState (v2)
+ * @handles STATE → parseBlockState
  * @handles EVENT → parseBlockEvent
  * @handles COMPONENT_NAME + isStateName + BRACE_OPEN → parseImplicitBlockState
  * @handles COMPONENT_NAME → parseBlockChild
  *
- * @note Diese Funktion parst v2 Brace-Syntax.
+ * @note Diese Funktion parst Brace-Syntax.
  *       Für v1 siehe component-parser/inline-properties.ts
  *
  * @export Wird von component-parser verwendet
@@ -1201,7 +1201,7 @@ export function parseBlockContent(
 }
 
 /**
- * Check if the current position has a v2 block opening.
+ * Check if the current position has a brace block opening.
  */
 export function isBlockStart(ctx: ParserContext): boolean {
   return ctx.current()?.type === 'BRACE_OPEN'

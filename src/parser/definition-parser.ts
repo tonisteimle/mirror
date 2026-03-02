@@ -61,10 +61,10 @@
  * ═══════════════════════════════════════════════════════════════════════════
  *
  * @function parseInlineDefinition (für brace-syntax)
- *   Parst Definition: Button: { pad 12 } (v2 brace-syntax)
+ *   Parst Definition: Button: { pad 12 } (brace-syntax)
  *   Input: COMPONENT_NAME + COLON + BRACE_OPEN am Cursor
  *   Output: Registriert Template in ctx.registry
- *   Note: v1 inline (Button: pad 12) wird von parseComponentDefinition behandelt
+ *   Note: Inline (Button: pad 12) wird von parseComponentDefinition behandelt
  *
  * @function parseTokenDefinition
  *   Parst Token-Definition: $primary: #3B82F6
@@ -131,7 +131,7 @@
 import type { ParserContext } from './parser-context'
 import type { ASTNode, ComponentTemplate } from './types'
 import { CSS_COLOR_KEYWORDS, splitDirections, applySpacingToProperties } from './parser-utils'
-import { parseStateDefinition, parseStateCategoryDefinition, parseVariableDeclaration, parseEventHandler, parseBehaviorStateDefinition, parseAnimationAction, parseAction } from './state-parser'
+import { parseStateDefinition, parseStateCategoryDefinition, parseVariableDeclaration, parseEventHandler, parseBehaviorStateDefinition, parseAnimationAction, parseAction, parseKeysBlock } from './state-parser'
 import { ACTION_KEYWORDS, KEY_MODIFIERS, DIRECTION_SHORT_FORMS } from '../dsl/properties'
 import { BEHAVIOR_STATE_KEYWORDS, PROPERTY_KEYWORD_VALUES, SYSTEM_STATES } from '../dsl/properties'
 import { parseComponent } from './component-parser'
@@ -140,6 +140,92 @@ import { parseLayoutProperty, parseCenterProperty } from './property-parser'
 import { createTextNode } from './parser-utils'
 import { parseBlockContent } from './block-parser'
 import { inferPropertyFromTokenName } from './property-inference'
+
+/**
+ * Merge two component templates.
+ * Later template properties override earlier ones, but events/states/children are merged.
+ *
+ * @param existing - The existing template in the registry
+ * @param incoming - The new template being defined
+ * @returns Merged template
+ */
+function mergeTemplates(existing: ComponentTemplate, incoming: ComponentTemplate): ComponentTemplate {
+  const merged: ComponentTemplate = {
+    // Properties from incoming override existing
+    properties: { ...existing.properties, ...incoming.properties },
+    // Children are merged (append new children)
+    children: [...(existing.children || []), ...(incoming.children || [])]
+  }
+
+  // Merge content (incoming wins if present)
+  if (incoming.content !== undefined) {
+    merged.content = incoming.content
+  } else if (existing.content !== undefined) {
+    merged.content = existing.content
+  }
+
+  // Merge states (incoming overrides existing states with same name)
+  if (existing.states || incoming.states) {
+    const existingStates = existing.states || []
+    const incomingStates = incoming.states || []
+
+    // Create a map of incoming state names for quick lookup
+    const incomingStateNames = new Set(incomingStates.map(s => s.name))
+
+    // Keep existing states that aren't overridden by incoming states
+    const keptExisting = existingStates.filter(s => !incomingStateNames.has(s.name))
+
+    // Combine: kept existing + all incoming
+    merged.states = [...keptExisting, ...incomingStates]
+  }
+
+  // Merge event handlers (append)
+  if (existing.eventHandlers || incoming.eventHandlers) {
+    merged.eventHandlers = [
+      ...(existing.eventHandlers || []),
+      ...(incoming.eventHandlers || [])
+    ]
+  }
+
+  // Animations (incoming wins)
+  if (incoming.showAnimation || existing.showAnimation) {
+    merged.showAnimation = incoming.showAnimation || existing.showAnimation
+  }
+  if (incoming.hideAnimation || existing.hideAnimation) {
+    merged.hideAnimation = incoming.hideAnimation || existing.hideAnimation
+  }
+  if (incoming.continuousAnimation || existing.continuousAnimation) {
+    merged.continuousAnimation = incoming.continuousAnimation || existing.continuousAnimation
+  }
+
+  // Preserve extends if present
+  if (incoming.extends || existing.extends) {
+    merged.extends = incoming.extends || existing.extends
+  }
+
+  // Preserve library flags
+  if (incoming._isLibrary || existing._isLibrary) {
+    merged._isLibrary = incoming._isLibrary || existing._isLibrary
+  }
+  if (incoming._libraryType || existing._libraryType) {
+    merged._libraryType = incoming._libraryType || existing._libraryType
+  }
+
+  return merged
+}
+
+/**
+ * Register or merge a template into the registry.
+ * If a template already exists, merge the new template into it.
+ */
+function registerTemplate(ctx: ParserContext, name: string, template: ComponentTemplate): void {
+  const existing = ctx.registry.get(name)
+  if (existing) {
+    ctx.registry.set(name, mergeTemplates(existing as ComponentTemplate, template))
+  } else {
+    ctx.registry.set(name, template)
+  }
+}
 
 /**
  * Parse a component definition: Button: pad 12 or DangerButton: Button bg red
@@ -217,7 +303,7 @@ export function parseInlineDefinition(ctx: ParserContext): void {
 
   // Parse block content using block-parser
   parseBlockContent(ctx, tempNode, (_ctx: ParserContext, _indent: number) => {
-    // Nested components in v2 definitions
+    // Nested components in brace definitions
     return parseComponent(_ctx, 0, componentName, false, true)
   })
 
@@ -242,19 +328,20 @@ export function parseInlineDefinition(ctx: ParserContext): void {
   }
 
   // Register the template
-  ctx.registry.set(componentName, template)
+  registerTemplate(ctx, componentName, template)
 }
 
 /**
- * Parse a v2 library component definition.
+ * Parse a library component definition (brace-syntax).
  *
  * Library components have special behavior handlers (Dropdown, Dialog, Accordion, etc.)
  * The 'as' syntax allows custom naming while using library behavior.
  *
- * Pattern: COMPONENT_NAME + 'as' + LIBRARY_TYPE + COLON + (v2: BRACE_OPEN)
- * v1 Example: OptionsMenu as Dropdown: width 200
+ * Pattern: COMPONENT_NAME + 'as' + LIBRARY_TYPE + COLON + BRACE_OPEN
+ * Example: OptionsMenu as Dropdown: { width 200
  *   Trigger
  *   Menu
+ * }
  */
 export function parseLibraryDefinition(ctx: ParserContext): void {
   const componentName = ctx.advance().value // COMPONENT_NAME (e.g., "OptionsMenu")
@@ -290,7 +377,7 @@ export function parseLibraryDefinition(ctx: ParserContext): void {
 
   // Parse block content using block-parser
   parseBlockContent(ctx, tempNode, (_ctx: ParserContext, _indent: number) => {
-    // Nested components in v2 definitions
+    // Nested components in brace definitions
     return parseComponent(_ctx, 0, componentName, false, true)
   })
 
@@ -315,14 +402,14 @@ export function parseLibraryDefinition(ctx: ParserContext): void {
   }
 
   // Register the template
-  ctx.registry.set(componentName, template)
+  registerTemplate(ctx, componentName, template)
 }
 
 /**
- * Parse a v1 library component definition (inline syntax, no braces).
+ * Parse a library component definition (inline syntax, no braces).
  *
  * Pattern: COMPONENT_NAME + 'as' + COMPONENT_DEF (e.g., "Tooltip:")
- * v1 Example: HelpTip as Tooltip:
+ * Example: HelpTip as Tooltip:
  *   Trigger
  *     Button "?"
  *   Content: pad 8, bg #333
@@ -398,7 +485,7 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
   }
 
   // Register the template
-  ctx.registry.set(componentName, template)
+  registerTemplate(ctx, componentName, template)
 }
 
 /**
@@ -488,7 +575,7 @@ export function parseComponentDefinition(ctx: ParserContext): void {
   // Pass isInheriting to enable merging for inherited children
   parseDefinitionChildren(ctx, template, componentName, isInheriting)
 
-  ctx.registry.set(componentName, template)
+  registerTemplate(ctx, componentName, template)
 }
 
 /**
@@ -546,7 +633,7 @@ export function parseInheritanceDefinition(ctx: ParserContext): void {
   // Pass isInheriting=true to enable merging for inherited children
   parseDefinitionChildren(ctx, template, componentName, true)
 
-  ctx.registry.set(componentName, template)
+  registerTemplate(ctx, componentName, template)
 }
 
 /**
@@ -615,7 +702,7 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
 
     if (token.type === 'PROPERTY') {
       const propName = ctx.advance().value
-      // Skip optional colon after property name (v2 syntax: prop: value)
+      // Skip optional colon after property name (brace-syntax: prop: value)
       if (ctx.current()?.type === 'COLON') {
         ctx.advance()
       }
@@ -1078,8 +1165,8 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
         )
         template.children.push(textNode)
       }
-      // V2: Check for state definition
-      // V9: Try category definition first (state categoryName \n nested states)
+      // Check for state definition
+      // Try category definition first (state categoryName \n nested states)
       else if (ctx.current()?.type === 'STATE') {
         const categoryResult = parseStateCategoryDefinition(ctx, childIndent)
         if (categoryResult) {
@@ -1097,7 +1184,7 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           }
         }
       }
-      // V8: Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
+      // Check for behavior state block (highlight, select) or system state (hover, focus, active, disabled)
       // These are state blocks where the keyword IS the state name
       // e.g., `highlight` followed by newline and indented properties
       else if (
@@ -1111,7 +1198,7 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           template.states.push(stateDef)
         }
       }
-      // V2: Check for event handler
+      // Check for event handler
       else if (ctx.current()?.type === 'EVENT') {
         const handler = parseEventHandler(ctx, childIndent)
         if (handler) {
@@ -1119,7 +1206,15 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           template.eventHandlers.push(handler)
         }
       }
-      // V2: Check for variable declaration ($name = value)
+      // Keys block: grouped keyboard event handlers
+      else if (ctx.current()?.type === 'KEYS') {
+        const handlers = parseKeysBlock(ctx, childIndent)
+        if (handlers.length > 0) {
+          if (!template.eventHandlers) template.eventHandlers = []
+          template.eventHandlers.push(...handlers)
+        }
+      }
+      // Check for variable declaration ($name = value)
       else if (ctx.current()?.type === 'TOKEN_REF' && ctx.peek(1)?.type === 'ASSIGNMENT') {
         const varDecl = parseVariableDeclaration(ctx)
         if (varDecl) {
@@ -1161,7 +1256,7 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           }
         }
       }
-      // V6: Check for animation action (show/hide/animate)
+      // Check for animation action (show/hide/animate)
       else if (ctx.current()?.type === 'ANIMATION_ACTION') {
         const animDef = parseAnimationAction(ctx)
         if (animDef) {
@@ -1177,7 +1272,7 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
           ctx.advance()
         }
       }
-      // V4: Check for list item (- prefix for new instance)
+      // Check for list item (- prefix for new instance)
       else if (ctx.current()?.type === 'LIST_ITEM') {
         ctx.advance() // consume '-'
         if (ctx.current()?.type === 'COMPONENT_NAME') {
@@ -1236,11 +1331,28 @@ function parseDefinitionChildren(ctx: ParserContext, template: ComponentTemplate
  * - Simple values: $size: 16, $color: #FF0000
  * - Complex sequences: $default-pad: l-r 4
  * - Nested tokens: $lg-pad: $base-pad 8
+ * - Token-Scope: $dropdown: \n bg $elevated.bg
  */
 export function parseTokenDefinition(ctx: ParserContext): void {
   const tokenName = ctx.advance().value
 
-  // Collect all tokens until end of line
+  // Check for Token-Scope syntax: $scope: followed by NEWLINE and indented tokens
+  // Example:
+  //   $dropdown:
+  //     bg $elevated.bg
+  //     item.hover $surface.bg
+  if (ctx.current()?.type === 'NEWLINE') {
+    // Peek ahead to check for indent (scope block)
+    const afterNewline = ctx.peek(1)
+    if (afterNewline?.type === 'INDENT') {
+      // This is a scope block - parse indented token definitions
+      ctx.advance() // consume NEWLINE
+      parseTokenScopeBlock(ctx, tokenName)
+      return
+    }
+  }
+
+  // Collect all tokens until end of line (regular token definition)
   const valueTokens: import('./lexer').Token[] = []
 
   while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
@@ -1298,5 +1410,99 @@ export function parseTokenDefinition(ctx: ParserContext): void {
 
   if (ctx.current()?.type === 'NEWLINE') {
     ctx.advance()
+  }
+}
+
+/**
+ * Parse a token scope block: indented token definitions with a shared prefix.
+ *
+ * Syntax:
+ *   $dropdown:
+ *     bg $elevated.bg
+ *     item.hover $surface.bg
+ *     item.selected $primary.bg
+ *
+ * This is syntactic sugar for:
+ *   $dropdown.bg: $elevated.bg
+ *   $dropdown.item.hover: $surface.bg
+ *   $dropdown.item.selected: $primary.bg
+ */
+function parseTokenScopeBlock(ctx: ParserContext, scopeName: string): void {
+  while (ctx.current()?.type === 'INDENT') {
+    const indent = parseInt(ctx.current()!.value, 10)
+    if (indent > 0) {
+      ctx.advance() // consume INDENT
+
+      // Expect property name (e.g., "bg", "item.hover")
+      // This could be tokenized as PROPERTY, COMPONENT_NAME, or UNKNOWN_PROPERTY
+      // Handle compound names like "item.hover" which gets lexed as "item" + "hover"
+      const nameToken = ctx.current()
+      if (nameToken?.type === 'PROPERTY' ||
+          nameToken?.type === 'COMPONENT_NAME' ||
+          nameToken?.type === 'UNKNOWN_PROPERTY') {
+        let localName = ctx.advance().value
+
+        // Check for compound name: if followed by COMPONENT_NAME before a value token,
+        // concatenate with dot (handles item.hover → item + hover)
+        while (ctx.current()?.type === 'COMPONENT_NAME' ||
+               ctx.current()?.type === 'UNKNOWN_PROPERTY' ||
+               ctx.current()?.type === 'PROPERTY') {
+          // Only continue if this looks like a name part (not a value)
+          const nextToken = ctx.current()!
+          // Check if the next-next token is a value type - if so, this is still part of the name
+          const afterNext = ctx.peek(1)
+          if (afterNext?.type === 'COLOR' || afterNext?.type === 'NUMBER' ||
+              afterNext?.type === 'STRING' || afterNext?.type === 'TOKEN_REF' ||
+              afterNext?.type === 'NEWLINE' || afterNext?.type === 'EOF') {
+            // Current token is the last part of the name
+            localName += '.' + ctx.advance().value
+            break
+          } else if (nextToken.type === 'COMPONENT_NAME' || nextToken.type === 'UNKNOWN_PROPERTY') {
+            // Continue collecting name parts
+            localName += '.' + ctx.advance().value
+          } else {
+            break
+          }
+        }
+
+        const fullTokenName = `${scopeName}.${localName}`
+
+        // Collect value tokens until end of line
+        const valueTokens: import('./lexer').Token[] = []
+        while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
+          valueTokens.push(ctx.advance())
+        }
+
+        // Store the token value
+        if (valueTokens.length === 1) {
+          const token = valueTokens[0]
+          if (token.type === 'COLOR') {
+            ctx.designTokens.set(fullTokenName, token.value)
+          } else if (token.type === 'NUMBER') {
+            ctx.designTokens.set(fullTokenName, parseInt(token.value, 10))
+          } else if (token.type === 'STRING') {
+            ctx.designTokens.set(fullTokenName, token.value)
+          } else if (token.type === 'TOKEN_REF') {
+            const referencedValue = ctx.designTokens.get(token.value)
+            if (referencedValue !== undefined && typeof referencedValue !== 'object') {
+              ctx.designTokens.set(fullTokenName, referencedValue)
+            } else {
+              ctx.designTokens.set(fullTokenName, { type: 'sequence', tokens: valueTokens })
+            }
+          } else {
+            ctx.designTokens.set(fullTokenName, { type: 'sequence', tokens: valueTokens })
+          }
+        } else if (valueTokens.length > 1) {
+          ctx.designTokens.set(fullTokenName, { type: 'sequence', tokens: valueTokens })
+        }
+      }
+
+      // Consume NEWLINE
+      if (ctx.current()?.type === 'NEWLINE') {
+        ctx.advance()
+      }
+    } else {
+      break
+    }
   }
 }

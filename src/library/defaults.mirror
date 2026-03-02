@@ -1,0 +1,1520 @@
+// ==============================================
+// MIRROR DEFAULT COMPONENTS
+// ==============================================
+// Diese Datei wird vor dem User-Code geparst.
+// User-Definitionen überschreiben diese Defaults.
+// ==============================================
+
+
+// ==============================================
+// PAGE STRUCTURE
+// ==============================================
+
+App:
+  vertical, width full, height full
+
+Header:
+  horizontal, ver-center, spread, pad 8 16, height 48
+
+Footer:
+  horizontal, center, pad 8 16, height 40
+
+Content:
+  horizontal, width full, height full
+
+Main:
+  vertical, gap 16, pad 16, width full, height full, scroll
+
+Sidebar:
+  vertical, gap 12, pad 12, width 240, height full
+
+Page:
+  vertical, gap 24, pad 24, width full, max-width 1200
+
+Container:
+  vertical, gap 16, width full, max-width 800
+
+
+// ==============================================
+// BUTTONS
+// ==============================================
+
+Button:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, weight 500, bg #252525, col #FFF
+  hover
+    bg #333
+
+PrimaryButton:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, weight 500, bg #3B82F6, col #FFF
+  hover
+    bg #2563EB
+
+SecondaryButton:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, weight 500, bg #252525, col #FFF
+  hover
+    bg #333
+
+GhostButton:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, col #FFF, bg transparent
+  hover
+    bg #252525
+
+DangerButton:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, weight 500, bg #EF4444, col #FFF
+  hover
+    bg #DC2626
+
+IconButton:
+  center, pad 6, rad 6, cursor pointer, col #FFF
+  hover
+    bg #333
+
+SmallButton:
+  horizontal, ver-center, center, gap 4, pad 4 8, rad 4, cursor pointer, size 12, bg #252525, col #FFF
+  hover
+    bg #333
+
+LargeButton:
+  horizontal, ver-center, center, gap 8, pad 10 20, rad 8, cursor pointer, size 14, weight 500, bg #252525, col #FFF
+  hover
+    bg #333
+
+
+// ==============================================
+// CARD
+// ==============================================
+
+Card:
+  vertical, gap 8, pad 16, bg #252525, rad 12
+
+CardHeader:
+  horizontal, ver-center, spread
+
+CardTitle:
+  weight 600, size 15
+
+CardDescription:
+  size 13, opacity 0.6
+
+CardContent:
+  vertical, gap 12
+
+CardFooter:
+  horizontal, ver-center, gap 8, pad top 8
+
+CompactCard:
+  vertical, gap 6, pad 12, bg #252525, rad 8
+
+ImageCard:
+  vertical, gap 0, bg #252525, rad 12, clip
+  Image:
+    width full, height 160
+  Content:
+    vertical, gap 8, pad 12
+
+
+// ==============================================
+// FORM
+// ==============================================
+
+Form:
+  vertical, gap 24, width full, max-width 600
+
+FormContent:
+  vertical, gap 24
+
+FormSection:
+  vertical, gap 16
+
+FormGroup:
+  vertical, gap 8
+
+FormRow:
+  horizontal, gap 12
+
+FormFooter:
+  horizontal, gap 8, right, pad top 16
+
+FormActions:
+  horizontal, gap 8, spread, pad top 16
+
+InputField:
+  vertical, gap 6
+
+Label:
+  size 13, weight 500
+
+Title:
+  weight 600, size 15
+
+Subtitle:
+  weight 500, size 13, opacity 0.7
+
+Description:
+  size 13, opacity 0.6
+
+Hint:
+  size 12, opacity 0.5
+
+Error:
+  size 12, col #EF4444
+
+Success:
+  size 12, col #22C55E
+
+Required:
+  col #EF4444
+
+
+// ==============================================
+// FORM CONTROLS
+// ==============================================
+// Design: Minimalistisch, keine Borders, nur Flächen
+// Höhe 36px, Border nur bei Fehler, dezente Typo
+
+// Basis Input (36px hoch, kein Border)
+InputWrapper:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6
+  hover
+    bg #333
+
+TextareaWrapper:
+  vertical, pad 10 12, bg #252525, rad 6, min-height 80
+  hover
+    bg #333
+
+SelectWrapper:
+  horizontal, ver-center, spread, height 36, pad 0 12, bg #252525, rad 6, cursor pointer
+  hover
+    bg #333
+
+
+// Input mit Icons
+IconInput:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full
+  LeftIcon Icon "", is 16, col #666, hidden
+  Input "", bg transparent, width full, size 13
+  RightIcon Icon "", is 16, col #666, hidden
+  hover
+    bg #333
+
+SearchField:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full
+  Icon "search", is 16, col #666
+  Input "", bg transparent, width full, size 13, placeholder "Suchen..."
+  hover
+    bg #333
+
+PasswordField:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full
+  Icon "lock", is 16, col #666
+  Input "", bg transparent, width full, size 13, type password
+  ToggleIcon Icon "eye", is 16, col #666, cursor pointer
+  hover
+    bg #333
+
+CurrencyField:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full
+  CurrencySymbol "€", col #666, size 13
+  Input "", bg transparent, width full, size 13, align right
+  hover
+    bg #333
+
+DateField:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full, cursor pointer
+  Input "", bg transparent, width full, size 13, placeholder "TT.MM.JJJJ"
+  Icon "calendar", is 16, col #666
+  hover
+    bg #333
+
+SelectField:
+  horizontal, ver-center, gap 8, height 36, pad 0 12, bg #252525, rad 6, width full, cursor pointer
+  SelectValue "", width full, size 13
+  Icon "chevron-down", is 16, col #666
+  hover
+    bg #333
+  state open
+    Icon rotate 180
+
+
+// Switch (kompakt, 32x18)
+Switch:
+  horizontal, width 32, height 18, rad 999, bg #333, cursor pointer, pad 2
+  state on
+    bg #3B82F6
+
+SwitchThumb:
+  width 14, height 14, rad 999, bg #FFF
+
+// Checkbox (16x16, kein Border, nur bg)
+Checkbox:
+  center, width 16, height 16, rad 4, bg #333, cursor pointer
+  Icon "check", is 10, col #FFF, hidden
+  state checked
+    bg #3B82F6
+    Icon visible
+  hover
+    bg #444
+
+CheckboxGroup:
+  vertical, gap 6
+
+// Radio (16x16, kein Border)
+Radio:
+  center, width 16, height 16, rad 999, bg #333, cursor pointer
+  Dot width 6, height 6, rad 999, bg #FFF, hidden
+  state selected
+    bg #3B82F6
+    Dot visible
+  hover
+    bg #444
+
+RadioGroup:
+  vertical, gap 6
+
+Option:
+  horizontal, ver-center, gap 8, cursor pointer
+
+Slider:
+  horizontal, ver-center, height 20, width full
+
+SliderTrack:
+  horizontal, height 4, width full, bg #333, rad 999
+
+SliderFill:
+  height 4, bg #3B82F6, rad 999
+
+SliderThumb:
+  width 14, height 14, rad 999, bg #FFF, cursor pointer
+
+
+// ==============================================
+// ERWEITERTE FORM CONTROLS
+// ==============================================
+
+// Checkbox mit Label (klickbare Zeile, 36px)
+CheckboxOption:
+  horizontal, ver-center, gap 10, height 36, pad 0 10, rad 6, cursor pointer
+  Checkbox:
+  Label "", size 13, col #999
+  onclick toggle Checkbox
+  hover
+    bg #252525
+    Label col #FFF
+
+// Radio mit Label (klickbare Zeile, 36px)
+RadioOption:
+  horizontal, ver-center, gap 10, height 36, pad 0 10, rad 6, cursor pointer
+  Radio:
+  Label "", size 13, col #999
+  onclick select Radio, deselect-siblings Radio
+  hover
+    bg #252525
+    Label col #FFF
+
+// Switch mit Label (36px)
+SwitchOption:
+  horizontal, ver-center, spread, height 36, pad 0 10, rad 6, cursor pointer, width full
+  Label "", size 13, col #999
+  Switch:
+    SwitchThumb:
+  onclick toggle Switch
+  hover
+    bg #252525
+    Label col #FFF
+  state on
+    Switch bg #3B82F6
+
+
+// Toggle Button (36px)
+ToggleButton:
+  horizontal, ver-center, center, gap 6, height 36, pad 0 12, rad 6, cursor pointer, size 13, bg #252525, col #999
+  onclick toggle self
+  hover
+    bg #333, col #FFF
+  state on
+    bg #3B82F6, col #FFF
+
+// Toggle Button nur mit Icon (36x36)
+ToggleIconButton:
+  center, width 36, height 36, rad 6, cursor pointer
+  Icon "", is 18, col #666
+  onclick toggle self
+  hover
+    bg #333
+    Icon col #FFF
+  state on
+    bg #3B82F6
+    Icon col #FFF
+
+// Toggle Group (36px)
+ToggleGroup:
+  horizontal, gap 0, bg #252525, rad 6
+
+ToggleGroupItem:
+  horizontal, ver-center, center, gap 6, height 36, pad 0 12, rad 6, cursor pointer, size 13, col #666
+  onclick activate self, deactivate-siblings
+  hover
+    col #FFF
+  state active
+    bg #333, col #FFF
+
+// Segmented Control (36px)
+SegmentedControl:
+  horizontal, gap 0, bg #252525, rad 6
+
+Segment:
+  horizontal, ver-center, center, gap 6, height 36, pad 0 16, rad 6, cursor pointer, size 13, col #666
+  onclick activate self, deactivate-siblings
+  hover
+    col #FFF
+  state active
+    bg #333, col #FFF
+
+// Chip Toggle (28px, kompakter)
+ChipToggle:
+  horizontal, ver-center, gap 4, height 28, pad 0 10, rad 999, cursor pointer, size 12, bg #252525, col #666
+  onclick toggle self
+  hover
+    bg #333, col #FFF
+  state on
+    bg #3B82F6, col #FFF
+
+ChipToggleGroup:
+  horizontal, gap 6, wrap
+
+// Rating Stars
+RatingStars:
+  horizontal, gap 2
+
+RatingStarItem:
+  center, width 28, height 28, cursor pointer
+  Icon "star", is 18, col #444
+  onclick select self-and-before
+  hover
+    Icon col #F59E0B
+  state selected
+    Icon col #F59E0B
+
+// Stepper (36px)
+Stepper:
+  horizontal, ver-center, gap 0, bg #252525, rad 6
+
+StepperMinus:
+  center, width 36, height 36, cursor pointer, col #666
+  Icon "minus", is 16
+  hover
+    bg #333, col #FFF
+
+StepperValue:
+  center, height 36, pad 0 12, size 13, min-width 40
+
+StepperPlus:
+  center, width 36, height 36, cursor pointer, col #666
+  Icon "plus", is 16
+  hover
+    bg #333, col #FFF
+
+
+// ==============================================
+// LIST / MENU / NAV
+// ==============================================
+
+List:
+  vertical, gap 4
+
+Menu:
+  vertical, gap 2
+
+Nav:
+  vertical, gap 12
+
+NavGroup:
+  vertical, gap 2
+
+NavHeader:
+  pad 8 12, size 11, weight 600, opacity 0.5, uppercase
+
+NavDivider:
+  height 1, bg #252525, margin 8 0
+
+Item:
+  horizontal, ver-center, gap 8, pad 6 10, rad 6, cursor pointer
+  hover
+    bg #333
+  state active
+    bg #3B82F6, col #FFF
+  state selected
+    bg #333
+
+MenuItem:
+  horizontal, ver-center, gap 8, pad 6 10, rad 4, cursor pointer
+  hover
+    bg #333
+
+MenuDivider:
+  height 1, bg #333, margin 4 0
+
+ListItem:
+  horizontal, ver-center, spread, pad 8 12, rad 6
+  hover
+    bg #252525
+
+ListItemContent:
+  horizontal, ver-center, gap 10
+
+ListItemActions:
+  horizontal, ver-center, gap 4, opacity 0
+
+
+// ==============================================
+// TABLE
+// ==============================================
+
+Table:
+  vertical, width full, gap 0
+
+TableHeader:
+  horizontal, ver-center, pad 8 12, bg #1A1A1A, size 12, weight 600, opacity 0.7
+
+TableBody:
+  vertical, gap 0
+
+Row:
+  horizontal, ver-center, pad 8 12, bor b 1 #252525
+  hover
+    bg #1E1E1E
+
+HeaderRow:
+  horizontal, ver-center, pad 8 12, bg #1A1A1A, size 12, weight 600
+
+Cell:
+  pad 8 12
+
+HeaderCell:
+  pad 8 12, size 12, weight 600, opacity 0.7
+
+SortableCell:
+  horizontal, ver-center, gap 4, pad 8 12, size 12, weight 600, opacity 0.7, cursor pointer
+  hover
+    opacity 1
+
+TableFooter:
+  horizontal, ver-center, spread, pad 8 12, bg #1A1A1A, size 12
+
+DataGrid:
+  vertical, width full, bg #1A1A1A, rad 8, clip
+
+DataRow:
+  horizontal, ver-center, pad 10 12, bor b 1 #252525
+  hover
+    bg #1E1E1E
+
+
+// ==============================================
+// TABS
+// ==============================================
+
+Tabs:
+  horizontal, gap 4, pad 4, bg #1E1E1E, rad 6
+
+TabList:
+  horizontal, gap 2
+
+Tab:
+  horizontal, ver-center, center, gap 6, pad 6 12, rad 6, cursor pointer, size 13, weight 500, bg #252525
+  onclick activate self, deactivate-siblings
+  hover
+    bg #333
+  state active
+    bg #3B82F6, col #FFF
+
+TabContent:
+  vertical, gap 16, pad 16
+
+UnderlineTabs:
+  horizontal, gap 0, bor b 1 #333
+
+UnderlineTab:
+  horizontal, ver-center, gap 6, pad 8 16, cursor pointer, size 13, bor b 2 transparent
+  hover
+    col #FFF
+  state active
+    bor b 2 #3B82F6, col #FFF
+
+VerticalTabs:
+  vertical, gap 2
+
+VerticalTab:
+  horizontal, ver-center, gap 8, pad 8 12, rad 6, cursor pointer, size 13
+  hover
+    bg #333
+  state active
+    bg #3B82F6, col #FFF
+
+
+// ==============================================
+// TOOLBAR
+// ==============================================
+
+Toolbar:
+  horizontal, ver-center, gap 8, pad 8
+
+ToolbarGroup:
+  horizontal, ver-center, gap 4
+
+ToolbarDivider:
+  width 1, height 20, bg #333, margin 0 4
+
+ToolbarButton:
+  center, pad 6, rad 4, cursor pointer
+  hover
+    bg #333
+  state active
+    bg #3B82F6
+
+
+// ==============================================
+// DIALOG / MODAL
+// ==============================================
+
+Dialog:
+  vertical, gap 16, pad 24, bg #1A1A1A, rad 12, shadow lg, min-width 400
+
+DialogHeader:
+  horizontal, ver-center, spread
+
+DialogTitle:
+  size 16, weight 600
+
+DialogDescription:
+  size 13, opacity 0.7
+
+DialogContent:
+  vertical, gap 16
+
+DialogFooter:
+  horizontal, gap 8, right, pad top 8
+
+Modal:
+  vertical, gap 16, pad 24, bg #1A1A1A, rad 12, shadow lg
+
+ModalHeader:
+  horizontal, ver-center, spread
+
+ModalBody:
+  vertical, gap 16
+
+ModalFooter:
+  horizontal, gap 8, right, pad top 8
+
+Backdrop:
+  width full, height full, bg #000, opacity 0.5
+
+Overlay:
+  stacked, center, width full, height full
+
+
+// ==============================================
+// PANEL / SECTION
+// ==============================================
+
+Panel:
+  vertical, gap 12, pad 16, bg #1A1A1A, rad 8
+
+PanelHeader:
+  horizontal, ver-center, spread, pad b 12, bor b 1 #252525
+
+PanelTitle:
+  size 14, weight 600
+
+PanelContent:
+  vertical, gap 12
+
+Section:
+  vertical, gap 16
+
+SectionHeader:
+  horizontal, ver-center, spread
+
+SectionTitle:
+  size 18, weight 600
+
+SectionDescription:
+  size 13, opacity 0.6
+
+Collapsible:
+  vertical, gap 0
+
+CollapsibleHeader:
+  horizontal, ver-center, spread, pad 12, cursor pointer
+  hover
+    bg #252525
+
+CollapsibleContent:
+  vertical, gap 12, pad 12
+
+
+// ==============================================
+// ALERT / TOAST / NOTIFICATION
+// ==============================================
+
+Alert:
+  horizontal, ver-center, gap 12, pad 12, rad 8, bg #1A1A1A
+
+AlertIcon:
+  icon-size 18
+
+AlertContent:
+  vertical, gap 2, grow
+
+AlertTitle:
+  size 13, weight 600
+
+AlertDescription:
+  size 12, opacity 0.8
+
+InfoAlert:
+  horizontal, ver-center, gap 12, pad 12, rad 8, bg #1E3A5F
+
+SuccessAlert:
+  horizontal, ver-center, gap 12, pad 12, rad 8, bg #14532D
+
+WarningAlert:
+  horizontal, ver-center, gap 12, pad 12, rad 8, bg #713F12
+
+ErrorAlert:
+  horizontal, ver-center, gap 12, pad 12, rad 8, bg #7F1D1D
+
+Toast:
+  horizontal, ver-center, gap 12, pad 12, bg #1A1A1A, rad 8, shadow lg, min-width 280
+
+ToastTitle:
+  size 13, weight 600
+
+ToastDescription:
+  size 12, opacity 0.8
+
+Notification:
+  horizontal, gap 12, pad 12, bg #1A1A1A, rad 8, bor l 3 #3B82F6
+
+NotificationDot:
+  width 8, height 8, rad 999, bg #EF4444
+
+NotificationBadge:
+  center, min-width 18, height 18, rad 999, bg #EF4444, col #FFF, size 11, weight 600
+
+
+// ==============================================
+// BREADCRUMB / PAGINATION
+// ==============================================
+
+Breadcrumb:
+  horizontal, ver-center, gap 8
+
+BreadcrumbItem:
+  horizontal, ver-center, gap 8, size 13, cursor pointer
+  hover
+    col #FFF
+
+BreadcrumbSeparator:
+  size 12, opacity 0.5
+
+BreadcrumbCurrent:
+  size 13, opacity 0.7
+
+Pagination:
+  horizontal, ver-center, gap 4
+
+PageButton:
+  center, width 32, height 32, rad 6, cursor pointer, size 13
+  hover
+    bg #333
+  state active
+    bg #3B82F6, col #FFF
+
+PageInfo:
+  horizontal, ver-center, gap 8, size 13, opacity 0.7
+
+
+// ==============================================
+// ACCORDION
+// ==============================================
+
+Accordion:
+  vertical, gap 0
+
+AccordionItem:
+  vertical, gap 0, bor b 1 #252525
+
+Trigger:
+  horizontal, spread, ver-center, pad 12, cursor pointer
+  hover
+    bg #252525
+
+TriggerIcon:
+  icon-size 16, opacity 0.6
+
+AccordionContent:
+  vertical, gap 12, pad 12
+
+
+// ==============================================
+// DROPDOWN
+// ==============================================
+
+Dropdown:
+  vertical, bg #1A1A1A, rad 8, shadow lg, pad 4, min-width 180
+
+DropdownHeader:
+  pad 8 12, size 11, weight 600, opacity 0.5
+
+DropdownItem:
+  horizontal, ver-center, gap 8, pad 6 12, rad 4, cursor pointer, size 13
+  hover
+    bg #333
+
+DropdownDivider:
+  height 1, bg #333, margin 4 0
+
+DropdownFooter:
+  pad 8 12, bor t 1 #333
+
+
+// ==============================================
+// SEARCH / FILTER
+// ==============================================
+
+Search:
+  horizontal, ver-center, gap 8, pad 8 12, bg #1E1E1E, rad 6
+
+SearchIcon:
+  icon-size 16, opacity 0.5
+
+SearchInput:
+  grow, bg transparent
+
+FilterBar:
+  horizontal, ver-center, gap 12, wrap
+
+FilterGroup:
+  horizontal, ver-center, gap 8
+
+FilterChip:
+  horizontal, ver-center, gap 6, pad 4 10, rad 999, bg #333, size 12, cursor pointer
+  hover
+    bg #3F3F46
+  state active
+    bg #3B82F6, col #FFF
+
+StatusBar:
+  horizontal, ver-center, spread, pad 4 12, size 12
+
+CommandPalette:
+  vertical, bg #1A1A1A, rad 12, shadow lg, width 500, max-height 400, clip
+
+
+// ==============================================
+// SPLIT VIEW
+// ==============================================
+
+Split:
+  horizontal, width full, height full
+
+SplitVertical:
+  vertical, width full, height full
+
+SplitPane:
+  vertical, height full
+
+Resizer:
+  width 4, height full, bg transparent, cursor pointer
+  hover
+    bg #3B82F6
+
+ResizerHorizontal:
+  height 4, width full, bg transparent, cursor pointer
+  hover
+    bg #3B82F6
+
+
+// ==============================================
+// EMPTY STATE
+// ==============================================
+
+EmptyState:
+  vertical, center, gap 16, pad 32, width full
+
+EmptyIcon:
+  icon-size 48, opacity 0.3
+
+EmptyTitle:
+  size 16, weight 600
+
+EmptyDescription:
+  size 13, opacity 0.6, align center, max-width 300
+
+EmptyAction:
+  pad top 8
+
+
+// ==============================================
+// SKELETON / LOADING
+// ==============================================
+
+Skeleton:
+  bg #333, rad 4, opacity 0.5
+
+SkeletonText:
+  height 14, width full, bg #333, rad 4, opacity 0.5
+
+SkeletonTitle:
+  height 20, width 200, bg #333, rad 4, opacity 0.5
+
+SkeletonAvatar:
+  width 40, height 40, rad 999, bg #333, opacity 0.5
+
+SkeletonButton:
+  height 32, width 80, bg #333, rad 6, opacity 0.5
+
+SkeletonCard:
+  vertical, gap 12, pad 16, bg #252525, rad 12
+
+Spinner:
+  width 20, height 20, bor 2 #333, bor t 2 #3B82F6, rad 999, animate spin 800
+
+SpinnerSmall:
+  width 14, height 14, bor 2 #333, bor t 2 #3B82F6, rad 999, animate spin 800
+
+SpinnerLarge:
+  width 32, height 32, bor 3 #333, bor t 3 #3B82F6, rad 999, animate spin 800
+
+LoadingDots:
+  horizontal, gap 4
+
+LoadingDot:
+  width 6, height 6, rad 999, bg #3B82F6, animate pulse 1000
+
+
+// ==============================================
+// TREE / TIMELINE
+// ==============================================
+
+Tree:
+  vertical, gap 0
+
+TreeItem:
+  vertical, gap 0
+
+TreeNode:
+  horizontal, ver-center, gap 6, pad 4 8, rad 4, cursor pointer
+  hover
+    bg #333
+
+TreeIndent:
+  width 20
+
+TreeToggle:
+  center, width 16, height 16, rad 4, cursor pointer
+  hover
+    bg #333
+
+TreeChildren:
+  vertical, gap 0, pad l 20
+
+Timeline:
+  vertical, gap 0
+
+TimelineItem:
+  horizontal, gap 12
+
+TimelineLine:
+  vertical, center, width 20
+
+TimelineDot:
+  width 10, height 10, rad 999, bg #333, bor 2 #3B82F6
+
+TimelineConnector:
+  width 2, grow, bg #333
+
+TimelineContent:
+  vertical, gap 4, pad b 24
+
+
+// ==============================================
+// STEPPER / PROGRESS
+// ==============================================
+
+Stepper:
+  horizontal, ver-center, gap 0
+
+Step:
+  horizontal, ver-center, gap 8
+
+StepNumber:
+  center, width 28, height 28, rad 999, bg #333, size 12, weight 600
+  state active
+    bg #3B82F6, col #FFF
+  state completed
+    bg #22C55E, col #FFF
+
+StepLabel:
+  size 13
+
+StepConnector:
+  height 2, width 40, bg #333
+  state completed
+    bg #3B82F6
+
+VerticalStepper:
+  vertical, gap 0
+
+VerticalStep:
+  horizontal, gap 12
+
+VerticalStepConnector:
+  width 2, height 24, bg #333, margin left 13
+
+Progress:
+  horizontal, height 6, width full, bg #333, rad 999, clip
+
+ProgressBar:
+  height full, bg #3B82F6, rad 999
+
+ProgressLabel:
+  size 12, weight 500
+
+CircularProgress:
+  width 40, height 40
+
+
+// ==============================================
+// CHIP / TAG / BADGE
+// ==============================================
+
+Chip:
+  horizontal, ver-center, gap 4, pad 4 10, rad 999, bg #333, size 12
+
+ChipClose:
+  center, width 14, height 14, rad 999, cursor pointer
+  hover
+    bg #555
+
+Tag:
+  horizontal, ver-center, gap 4, pad 2 6, rad 4, bg #333, size 11
+
+Badge:
+  horizontal, center, pad 2 8, rad 999, size 12
+
+BadgePrimary:
+  horizontal, center, pad 2 8, rad 999, size 12, bg #3B82F6, col #FFF
+
+BadgeSuccess:
+  horizontal, center, pad 2 8, rad 999, size 12, bg #22C55E, col #FFF
+
+BadgeWarning:
+  horizontal, center, pad 2 8, rad 999, size 12, bg #F59E0B, col #000
+
+BadgeError:
+  horizontal, center, pad 2 8, rad 999, size 12, bg #EF4444, col #FFF
+
+StatusDot:
+  width 8, height 8, rad 999
+
+StatusOnline:
+  width 8, height 8, rad 999, bg #22C55E
+
+StatusOffline:
+  width 8, height 8, rad 999, bg #6B7280
+
+StatusBusy:
+  width 8, height 8, rad 999, bg #EF4444
+
+StatusAway:
+  width 8, height 8, rad 999, bg #F59E0B
+
+
+// ==============================================
+// TILE
+// ==============================================
+
+Tile:
+  vertical, gap 8, pad 12, bg #1E1E1E, rad 8, cursor pointer
+  hover
+    bg #252525
+
+TileIcon:
+  icon-size 24, opacity 0.8
+
+TileTitle:
+  size 14, weight 600
+
+TileDescription:
+  size 12, opacity 0.6
+
+TileGrid:
+  grid auto 200, gap 16, width full
+
+Grid:
+  grid auto 200, gap 16, width full
+
+Grid2:
+  grid 2, gap 16, width full
+
+Grid3:
+  grid 3, gap 16, width full
+
+Grid4:
+  grid 4, gap 16, width full
+
+
+// ==============================================
+// AVATAR
+// ==============================================
+
+Avatar:
+  width 40, height 40, rad 999, bg #555, center, clip
+
+AvatarSmall:
+  width 28, height 28, rad 999, bg #555, center, clip
+
+AvatarLarge:
+  width 56, height 56, rad 999, bg #555, center, clip
+
+AvatarSquare:
+  width 40, height 40, rad 8, bg #555, center, clip
+
+AvatarGroup:
+  horizontal
+
+AvatarStack:
+  horizontal
+  Avatar:
+    margin left -8, bor 2 #1A1A1A
+
+Initials:
+  size 14, weight 600, col #FFF
+
+
+// ==============================================
+// USER / PROFILE
+// ==============================================
+
+UserCard:
+  horizontal, ver-center, gap 12
+
+UserInfo:
+  vertical, gap 2
+
+UserName:
+  size 14, weight 600
+
+UserEmail:
+  size 12, opacity 0.6
+
+UserRole:
+  size 11, opacity 0.5
+
+UserMeta:
+  horizontal, ver-center, gap 8, size 12, opacity 0.6
+
+ProfileCard:
+  vertical, center, gap 12, pad 24
+
+ProfileHeader:
+  horizontal, ver-center, gap 16
+
+ProfileStats:
+  horizontal, gap 24
+
+ProfileStat:
+  vertical, center, gap 2
+
+
+// ==============================================
+// STATS / METRICS
+// ==============================================
+
+Stat:
+  vertical, gap 2
+
+StatValue:
+  size 24, weight 600
+
+StatLabel:
+  size 12, opacity 0.6
+
+StatChange:
+  horizontal, ver-center, gap 4, size 12
+
+StatUp:
+  horizontal, ver-center, gap 4, size 12, col #22C55E
+
+StatDown:
+  horizontal, ver-center, gap 4, size 12, col #EF4444
+
+StatCard:
+  vertical, gap 8, pad 16, bg #252525, rad 8
+
+MetricCard:
+  vertical, gap 12, pad 16, bg #252525, rad 8
+
+MetricHeader:
+  horizontal, ver-center, spread
+
+MetricValue:
+  size 28, weight 600
+
+MetricLabel:
+  size 12, opacity 0.6
+
+MetricTrend:
+  horizontal, ver-center, gap 4, size 12
+
+KPI:
+  vertical, gap 8, pad 16, bg #1E1E1E, rad 8, bor l 3 #3B82F6
+
+
+// ==============================================
+// COMMENT / MESSAGE
+// ==============================================
+
+Comment:
+  horizontal, gap 12
+
+CommentAvatar:
+  width 32, height 32, rad 999, bg #555
+
+CommentContent:
+  vertical, gap 4, grow
+
+CommentHeader:
+  horizontal, ver-center, gap 8
+
+CommentAuthor:
+  size 13, weight 600
+
+CommentTime:
+  size 11, opacity 0.5
+
+CommentBody:
+  size 13
+
+CommentActions:
+  horizontal, gap 12, size 12, opacity 0.6
+
+Message:
+  horizontal, gap 8, max-width 70%
+
+MessageBubble:
+  vertical, gap 4, pad 8 12, bg #252525, rad 12
+
+MessageBubbleSent:
+  vertical, gap 4, pad 8 12, bg #3B82F6, rad 12
+
+MessageText:
+  size 13
+
+MessageTime:
+  size 10, opacity 0.5
+
+ChatContainer:
+  vertical, gap 12, pad 12, height full, scroll
+
+
+// ==============================================
+// FEATURE / CONTENT BLOCKS
+// ==============================================
+
+Feature:
+  horizontal, gap 12
+
+FeatureIcon:
+  center, width 40, height 40, bg #252525, rad 8
+
+FeatureContent:
+  vertical, gap 4, grow
+
+FeatureTitle:
+  size 14, weight 600
+
+FeatureDescription:
+  size 13, opacity 0.7
+
+FeatureCard:
+  vertical, gap 12, pad 16, bg #1E1E1E, rad 8
+
+Quote:
+  vertical, gap 8, pad l 12, bor l 2 #3B82F6
+
+QuoteText:
+  size 14, italic
+
+QuoteAuthor:
+  size 12, opacity 0.6
+
+Testimonial:
+  vertical, gap 12, pad 16, bg #1E1E1E, rad 8
+
+TestimonialText:
+  size 14, italic
+
+TestimonialAuthor:
+  horizontal, ver-center, gap 12
+
+CalloutBox:
+  horizontal, gap 12, pad 12, bg #1E3A5F, rad 8
+
+CalloutIcon:
+  icon-size 20
+
+CalloutContent:
+  vertical, gap 4
+
+
+// ==============================================
+// PRICING
+// ==============================================
+
+PricingCard:
+  vertical, gap 16, pad 24, bg #1E1E1E, rad 12
+
+PricingHeader:
+  vertical, gap 4
+
+PricingName:
+  size 16, weight 600
+
+PricingPrice:
+  horizontal, ver-center, gap 4
+
+PricingAmount:
+  size 32, weight 600
+
+PricingPeriod:
+  size 13, opacity 0.6
+
+PricingFeatures:
+  vertical, gap 8
+
+PricingFeature:
+  horizontal, ver-center, gap 8, size 13
+
+PricingAction:
+  pad top 8
+
+
+// ==============================================
+// CALENDAR / DATE
+// ==============================================
+
+Calendar:
+  vertical, gap 8, pad 12, bg #1A1A1A, rad 8
+
+CalendarHeader:
+  horizontal, ver-center, spread, pad b 8
+
+CalendarGrid:
+  grid 7, gap 2
+
+CalendarDay:
+  center, width 32, height 32, rad 6, size 12, cursor pointer
+  hover
+    bg #333
+  state selected
+    bg #3B82F6, col #FFF
+  state today
+    bor 1 #3B82F6
+
+CalendarDayHeader:
+  center, width 32, height 32, size 11, opacity 0.5
+
+DatePicker:
+  vertical, gap 8, pad 12, bg #1A1A1A, rad 8, shadow lg
+
+TimePicker:
+  horizontal, ver-center, gap 8, pad 8 12, bg #1E1E1E, rad 6
+
+
+// ==============================================
+// FILE / UPLOAD
+// ==============================================
+
+FileCard:
+  horizontal, ver-center, gap 12, pad 12, bg #1E1E1E, rad 8
+
+FileIcon:
+  center, width 40, height 40, bg #252525, rad 8
+
+FileInfo:
+  vertical, gap 2, grow
+
+FileName:
+  size 13, weight 500, truncate
+
+FileSize:
+  size 11, opacity 0.5
+
+FileActions:
+  horizontal, gap 4
+
+UploadZone:
+  vertical, center, gap 12, pad 24, bor 2 #333, rad 8, cursor pointer
+  hover
+    bor 2 #3B82F6, bg #1E1E1E
+
+UploadIcon:
+  icon-size 32, opacity 0.5
+
+UploadText:
+  size 13, opacity 0.7
+
+UploadHint:
+  size 11, opacity 0.5
+
+
+// ==============================================
+// RATING
+// ==============================================
+
+Rating:
+  horizontal, gap 2
+
+RatingStar:
+  icon-size 18, col #333, cursor pointer
+  hover
+    col #F59E0B
+  state selected
+    col #F59E0B
+
+RatingValue:
+  horizontal, ver-center, gap 4, size 13
+
+RatingCount:
+  size 12, opacity 0.6
+
+
+// ==============================================
+// TOOLTIP / POPOVER
+// ==============================================
+
+Tooltip:
+  pad 6 10, bg #FFF, col #000, rad 4, size 12, shadow md
+
+TooltipArrow:
+  width 8, height 8, bg #FFF, rotate 45
+
+Popover:
+  vertical, gap 8, pad 12, bg #1A1A1A, rad 8, shadow lg, min-width 200
+
+PopoverHeader:
+  horizontal, ver-center, spread
+
+PopoverTitle:
+  size 14, weight 600
+
+PopoverContent:
+  vertical, gap 8
+
+
+// ==============================================
+// UTILITY
+// ==============================================
+
+Divider:
+  height 1, width full, bg #333
+
+DividerVertical:
+  width 1, height full, bg #333
+
+DividerWithText:
+  horizontal, ver-center, gap 12, width full
+
+DividerLine:
+  height 1, grow, bg #333
+
+DividerText:
+  size 12, opacity 0.5
+
+Spacer:
+  grow
+
+SpacerFixed:
+  height 24
+
+Stack:
+  vertical, gap 8
+
+HStack:
+  horizontal, gap 8
+
+VStack:
+  vertical, gap 8
+
+Center:
+  horizontal, center, width full, height full
+
+ButtonGroup:
+  horizontal, gap 0
+  Button:
+    rad 0
+  Button:first
+    rad left 6
+  Button:last
+    rad right 6
+
+Inline:
+  horizontal, ver-center, gap 4, wrap
+
+Block:
+  vertical, gap 8
+
+Hidden:
+  hidden
+
+VisuallyHidden:
+  width 1, height 1, clip, opacity 0
+
+Clickable:
+  cursor pointer
+
+Truncate:
+  truncate, width full
+
+ScrollArea:
+  scroll, height full
+
+ScrollHorizontal:
+  scroll-hor, width full
+
+
+// ==============================================
+// RESPONSIVE HELPERS
+// ==============================================
+
+Row:
+  horizontal, ver-center, gap 8
+
+Column:
+  vertical, gap 8
+
+Flex:
+  horizontal, gap 8
+
+FlexWrap:
+  horizontal, gap 8, wrap
+
+FlexCenter:
+  horizontal, center, gap 8
+
+FlexSpread:
+  horizontal, spread, ver-center
+
+FlexEnd:
+  horizontal, right, gap 8
+
+Grow:
+  grow
+
+Shrink:
+  shrink 0

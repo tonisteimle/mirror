@@ -173,7 +173,7 @@ export function parseNamedInstance(
         instanceName = ctx.advance().value
         componentName = instanceName
 
-        // V2 syntax: Check for COLON after instance name (e.g., "Input Email: { ... }")
+        // Check for COLON after instance name (e.g., "Input Email: { ... }")
         if (ctx.current()?.type === 'COLON') {
           isExplicitDefinition = true
           ctx.advance() // consume the colon

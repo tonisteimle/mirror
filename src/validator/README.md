@@ -211,66 +211,6 @@ const best = getBestMatch('onclck', ['onclick', 'onchange', 'onhover'])
 // 'onclick'
 ```
 
-## LLM Self-Healing
-
-Der Validator kann LLM-generierten Code automatisch korrigieren:
-
-```typescript
-import { generateWithValidation } from './lib/ai'
-
-// Generiert Code und korrigiert automatisch bei Fehlern
-const result = await generateWithValidation("Erstelle ein Login-Formular", {
-  maxAttempts: 2,        // Max 2 Korrekturversuche
-  language: 'de',        // 'de' oder 'en' für Korrektur-Prompts
-  includeWarnings: false, // Warnings als Fehler behandeln?
-  onProgress: (status) => console.log(status)  // 'generating' | 'validating' | 'correcting'
-})
-
-if (result.valid) {
-  editor.setValue(result.code)
-} else {
-  // Nach 2 Versuchen immer noch Fehler
-  console.log("Fehler:", result.issues)
-}
-```
-
-### Ablauf
-
-1. LLM generiert Code
-2. Validator prüft auf Fehler (inkl. Deduplizierung)
-3. Bei Fehlern: Korrektur-Prompt mit Fehlerliste an LLM
-4. Wiederholung bis valide oder maxAttempts erreicht
-
-### Korrektur-Prompt (DE)
-
-```
-Der folgende Mirror Code enthält Fehler. Bitte korrigiere sie:
-
-FEHLER:
-- Zeile 3: Unknown property "paddin" → Did you mean "pad"?
-- Zeile 5: Unknown event "onclck" → Did you mean "onclick"?
-
-ORIGINAL CODE:
-[...]
-
-Gib NUR den korrigierten Mirror Code zurück, keine Erklärungen.
-```
-
-### Korrektur-Prompt (EN)
-
-```
-The following Mirror code contains errors. Please fix them:
-
-ERRORS:
-- Line 3: Unknown property "paddin" → Did you mean "pad"?
-- Line 5: Unknown event "onclck" → Did you mean "onclick"?
-
-ORIGINAL CODE:
-[...]
-
-Return ONLY the corrected Mirror code, no explanations.
-```
-
 ## Debounced Validation (Editor)
 
 Der `useCodeParsing` Hook validiert automatisch mit Debouncing:
@@ -312,8 +252,4 @@ src/validator/
 └── utils/
     ├── diagnostic-builder.ts   # Fluent API für Diagnostics
     └── suggestion-engine.ts    # Fuzzy-Match Algorithmen
-
-src/lib/
-├── ai.ts                       # LLM Generation + Self-Healing API
-└── ai-selfhealing.ts           # Validation + Korrektur-Logik
 ```

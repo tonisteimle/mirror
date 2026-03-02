@@ -2758,7 +2758,7 @@ export const MIRROR_SCHEMA = {
     },
     onkeydown: {
       name: 'onkeydown',
-      description: 'Taste gedrückt',
+      description: 'Taste gedrückt (colon optional). Also: keys block syntax for grouped keyboard handlers',
       keyModifiers: [
         'escape', 'enter', 'tab', 'space',
         'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
@@ -2767,20 +2767,22 @@ export const MIRROR_SCHEMA = {
       supportsTiming: false,
       examples: [
         'onkeydown escape: close',
+        'onkeydown escape close',
         'onkeydown enter: select highlighted',
-        'onkeydown arrow-down: highlight next',
+        'onkeydown arrow-down highlight next',
+        'keys\\n  escape close\\n  arrow-down highlight next',
       ],
     },
     onkeyup: {
       name: 'onkeyup',
-      description: 'Taste losgelassen',
+      description: 'Taste losgelassen (colon optional)',
       keyModifiers: [
         'escape', 'enter', 'tab', 'space',
         'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
         'backspace', 'delete', 'home', 'end',
       ],
       supportsTiming: false,
-      examples: ['onkeyup enter: submit'],
+      examples: ['onkeyup enter: submit', 'onkeyup enter submit'],
     },
     onsubmit: {
       name: 'onsubmit',
@@ -2833,19 +2835,19 @@ export const MIRROR_SCHEMA = {
     },
     show: {
       name: 'show',
-      description: 'Element anzeigen',
+      description: 'Element anzeigen (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'named'],
       supportsAnimation: true,
-      syntax: 'show Target [animation]',
-      examples: ['show Modal', 'show Dropdown fade'],
+      syntax: 'show [Target] [animation]',
+      examples: ['show', 'show Modal', 'show Dropdown fade'],
     },
     hide: {
       name: 'hide',
-      description: 'Element verstecken',
+      description: 'Element verstecken (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'named'],
       supportsAnimation: true,
-      syntax: 'hide Target [animation]',
-      examples: ['hide Modal', 'hide Tooltip fade'],
+      syntax: 'hide [Target] [animation]',
+      examples: ['hide', 'hide Modal', 'hide Tooltip fade'],
     },
     open: {
       name: 'open',
@@ -2863,10 +2865,10 @@ export const MIRROR_SCHEMA = {
     },
     close: {
       name: 'close',
-      description: 'Overlay schließen',
+      description: 'Overlay schließen (implicit self: Target optional, defaults to self)',
       supportsAnimation: true,
-      syntax: 'close [animation]',
-      examples: ['close', 'close fade'],
+      syntax: 'close [Target] [animation]',
+      examples: ['close', 'close self', 'close fade'],
     },
     page: {
       name: 'page',
@@ -2885,14 +2887,14 @@ export const MIRROR_SCHEMA = {
     },
     activate: {
       name: 'activate',
-      description: 'Element aktivieren',
+      description: 'Element aktivieren (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'named'],
       syntax: 'activate [Target]',
       examples: ['activate', 'activate Tab1'],
     },
     deactivate: {
       name: 'deactivate',
-      description: 'Element deaktivieren',
+      description: 'Element deaktivieren (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'named'],
       syntax: 'deactivate [Target]',
       examples: ['deactivate', 'deactivate Tab1'],
@@ -2905,18 +2907,19 @@ export const MIRROR_SCHEMA = {
     },
     'toggle-state': {
       name: 'toggle-state',
-      description: 'State umschalten',
-      syntax: 'toggle-state',
-      examples: ['onclick toggle-state'],
+      description: 'State umschalten (implicit self: Target optional, defaults to self)',
+      syntax: 'toggle-state [Target]',
+      examples: ['toggle-state', 'onclick toggle-state'],
     },
 
     // Selection & Highlight
     highlight: {
       name: 'highlight',
-      description: 'Element hervorheben',
+      description: 'Element hervorheben (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'next', 'prev', 'first', 'last', 'self-and-before', 'none'],
-      syntax: 'highlight Target',
+      syntax: 'highlight [Target]',
       examples: [
+        'highlight',
         'highlight next',
         'highlight prev',
         'highlight first',
@@ -2925,14 +2928,14 @@ export const MIRROR_SCHEMA = {
     },
     select: {
       name: 'select',
-      description: 'Element auswählen',
+      description: 'Element auswählen (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'highlighted', 'all'],
-      syntax: 'select Target',
-      examples: ['select highlighted', 'select self'],
+      syntax: 'select [Target]',
+      examples: ['select', 'select highlighted', 'select self'],
     },
     deselect: {
       name: 'deselect',
-      description: 'Auswahl aufheben',
+      description: 'Auswahl aufheben (implicit self: Target optional, defaults to self)',
       validTargets: ['self', 'all'],
       syntax: 'deselect [Target]',
       examples: ['deselect', 'deselect all'],

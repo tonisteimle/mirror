@@ -183,7 +183,7 @@ because the multiline string is not indented.'`
       expect(result.nodes).toHaveLength(1)
 
       // Navigate to the text node
-      // V2: component names are preserved as written
+      // Component names are preserved as written
       const docNode = result.nodes[0]
       expect(docNode.name).toBe('doc')
 

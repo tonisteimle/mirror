@@ -690,6 +690,9 @@ export const BEHAVIOR_STATES = new Set([
 // Events Keyword (for centralized event block)
 export const EVENTS_KEYWORD = 'events'
 
+// Keys Keyword (for grouped keyboard event handlers)
+export const KEYS_KEYWORD = 'keys'
+
 // Theme Keyword (for theme block definition)
 export const THEME_KEYWORD = 'theme'
 

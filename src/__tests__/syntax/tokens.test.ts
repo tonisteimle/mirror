@@ -39,3 +39,39 @@ Box bg $primary`).bg).toBe('#3B82F6')
 Box pad $spacing`).pad).toBe(16)
   })
 })
+
+describe('Token-Scope Syntax', () => {
+  it('defines scoped tokens with simple names', () => {
+    const result = parse(`$dropdown:
+  bg #1A1A23
+  border #333`)
+    expect(getToken(result, 'dropdown.bg')).toBe('#1A1A23')
+    expect(getToken(result, 'dropdown.border')).toBe('#333')
+  })
+
+  it('defines scoped tokens with compound names', () => {
+    const result = parse(`$dropdown:
+  item.hover #333
+  item.selected #2271c1`)
+    expect(getToken(result, 'dropdown.item.hover')).toBe('#333')
+    expect(getToken(result, 'dropdown.item.selected')).toBe('#2271c1')
+  })
+
+  it('uses scoped tokens in components', () => {
+    expect(props(`$dropdown:
+  bg #1A1A23
+  item.hover #333
+
+Box bg $dropdown.bg`).bg).toBe('#1A1A23')
+  })
+
+  it('mixes scoped and regular tokens', () => {
+    const result = parse(`$primary: #3B82F6
+$dropdown:
+  bg #1A1A23
+  selected $primary`)
+    expect(getToken(result, 'primary')).toBe('#3B82F6')
+    expect(getToken(result, 'dropdown.bg')).toBe('#1A1A23')
+    expect(getToken(result, 'dropdown.selected')).toBe('#3B82F6')
+  })
+})

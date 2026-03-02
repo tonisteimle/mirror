@@ -79,3 +79,56 @@ describe('Nested Children', () => {
     expect(child1?.children.length).toBe(1)
   })
 })
+
+describe('Definition Merging (Structure + Style)', () => {
+  it('merges multiple definitions of same component', () => {
+    const result = parse(`// Structure
+Option:
+  onclick select self
+  onhover highlight self
+
+// Styling
+Option: pad 10, rad 6, cursor pointer`)
+    const template = getTemplate(result, 'Option')
+    // Properties from styling
+    expect(template?.properties.pad).toBe(10)
+    expect(template?.properties.rad).toBe(6)
+    expect(template?.properties.cursor).toBe('pointer')
+    // Events from structure
+    expect(template?.eventHandlers?.length).toBe(2)
+  })
+
+  it('merges states from separate definitions', () => {
+    const result = parse(`// Structure with behavior
+Option:
+  onclick select self
+
+// Styling with states
+Option:
+  state highlighted bg #333
+  state selected bg #3B82F6`)
+    const template = getTemplate(result, 'Option')
+    expect(template?.eventHandlers?.length).toBe(1)
+    // States is an array
+    const stateNames = template?.states?.map(s => s.name)
+    expect(stateNames).toContain('highlighted')
+    expect(stateNames).toContain('selected')
+  })
+
+  it('later properties override earlier ones', () => {
+    const result = parse(`Button: bg #FF0000
+Button: bg #00FF00`)
+    const template = getTemplate(result, 'Button')
+    expect(template?.properties.bg).toBe('#00FF00')
+  })
+
+  it('merges children from both definitions', () => {
+    const result = parse(`Card:
+  Title:
+
+Card:
+  Description:`)
+    const template = getTemplate(result, 'Card')
+    expect(template?.children?.length).toBe(2)
+  })
+})

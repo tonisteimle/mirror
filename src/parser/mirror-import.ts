@@ -62,18 +62,6 @@
  * @function resetIdCounter() → void
  *   Setzt ID-Counter zurück (für Tests)
  *
- * @alias astToV2Mirror = astToMirror
- *   Alias für v2-Kompatibilität
- *
- * @alias astArrayToV2Mirror = astArrayToMirror
- *   Alias für v2-Kompatibilität
- *
- * @alias parseResultToV2Mirror = parseResultToMirror
- *   Alias für v2-Kompatibilität
- *
- * @alias mirrorCallToV2 = mirrorCallToMirror
- *   Alias für v2-Kompatibilität
- *
  * ═══════════════════════════════════════════════════════════════════════════
  * V1 OUTPUT FORMAT
  * ═══════════════════════════════════════════════════════════════════════════
@@ -179,11 +167,6 @@ export function importFromMirrorConfig(config: MirrorConfig): ASTNode {
     node.instanceName = config.instanceName
   }
 
-  // Add syntax version if present (v1 is standard, v2 brace-syntax is legacy)
-  if (config.syntaxVersion === 2) {
-    node._syntaxVersion = 2
-  }
-
   // Add source span if present
   if (config.sourceSpan) {
     node._sourceSpan = config.sourceSpan
@@ -255,9 +238,6 @@ export interface AstToMirrorOptions {
   /** Base component name for inheritance (Name: Base props) */
   extendsFrom?: string
 }
-
-/** @deprecated Use AstToMirrorOptions instead */
-export type AstToV2Options = AstToMirrorOptions
 
 /**
  * Convert an ASTNode to v1 Mirror DSL syntax.
@@ -331,9 +311,6 @@ export function astToMirror(node: ASTNode, indent = 0, options: AstToMirrorOptio
   return lines.join('\n')
 }
 
-/** @deprecated Use astToMirror instead */
-export const astToV2Mirror = astToMirror
-
 /**
  * Convert multiple ASTNodes to v1 Mirror DSL syntax.
  *
@@ -343,9 +320,6 @@ export const astToV2Mirror = astToMirror
 export function astArrayToMirror(nodes: ASTNode[]): string {
   return nodes.map(node => astToMirror(node)).join('\n\n')
 }
-
-/** @deprecated Use astArrayToMirror instead */
-export const astArrayToV2Mirror = astArrayToMirror
 
 /**
  * Convert a ComponentTemplate to v1 Mirror DSL syntax.
@@ -453,9 +427,6 @@ export function parseResultToMirror(result: import('./types').ParseResult): stri
   return sections.join('\n\n')
 }
 
-/** @deprecated Use parseResultToMirror instead */
-export const parseResultToV2Mirror = parseResultToMirror
-
 /**
  * Parse a mirror() function call from JavaScript/React code.
  * Extracts the MirrorConfig from the call.
@@ -501,6 +472,3 @@ export function mirrorCallToMirror(code: string): string | null {
   const ast = importFromMirrorConfig(config)
   return astToMirror(ast)
 }
-
-/** @deprecated Use mirrorCallToMirror instead */
-export const mirrorCallToV2 = mirrorCallToMirror

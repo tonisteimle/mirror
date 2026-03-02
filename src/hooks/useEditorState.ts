@@ -18,8 +18,7 @@ export interface UseEditorStateReturn {
   setHighlightLine: (line: number | undefined) => void
   autoCompleteMode: AutoCompleteMode
   setAutoCompleteMode: (mode: AutoCompleteMode) => void
-  // Note: pickerModeEnabled, qualityModeEnabled, expandShorthand, llmEnabled
-  // are now managed by useAppState and persisted with the project
+  // Note: pickerModeEnabled, expandShorthand are managed by useAppState
   // Data tab state (unified code for schema + instances)
   dataCode: string
   setDataCode: (code: string) => void
@@ -63,12 +62,6 @@ export function useEditorState(): UseEditorStateReturn {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.AUTOCOMPLETE, autoCompleteMode)
   }, [autoCompleteMode])
-
-  // NL Mode is now automatic - enabled when API key exists
-  // Hybrid detection handles DSL vs natural language automatically
-
-  // Note: pickerModeEnabled, qualityModeEnabled, expandShorthand, llmEnabled
-  // are now managed by useAppState and persisted with the project
 
   return {
     activeTab,

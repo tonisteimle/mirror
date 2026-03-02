@@ -44,13 +44,6 @@ export const PARSER = {
 export const STORAGE_KEYS = {
   PROJECT: 'mirror-project',
   AUTOCOMPLETE: 'mirror-autocomplete',
-  API_KEY: 'mirror-api-key',
-  AI_MODE: 'mirror-ai-mode',
-  NL_MODE: 'mirror-nl-mode',
-  PICKER_MODE: 'mirror-picker-mode',
-  QUALITY_MODE: 'mirror-quality-mode',
-  EXPAND_SHORTHAND: 'mirror-expand-shorthand',
-  LLM_ENABLED: 'mirror-llm-enabled',
 } as const
 
 // Editor Tabs
@@ -91,21 +84,6 @@ export const INTERNAL_NODES = {
   TEXT: '_text',
   CONDITIONAL: '_conditional',
   ITERATOR: '_iterator',
-} as const
-
-// API Configuration
-function getApiEndpoint(): string {
-  // Always use direct OpenRouter endpoint (CORS is allowed)
-  return 'https://openrouter.ai/api/v1/chat/completions'
-}
-
-export const API = {
-  MODEL: 'anthropic/claude-sonnet-4.5',
-  MODEL_FAST: 'anthropic/claude-sonnet-4.5',     // Generation model
-  MODEL_THINKING: 'anthropic/claude-opus-4.5',   // Deep thinking (~3-5s)
-  MAX_TOKENS: 4096,
-  get ENDPOINT() { return getApiEndpoint() },
-  REQUEST_TIMEOUT_MS: 60000,  // 60 seconds timeout for AI requests
 } as const
 
 // NOTE: Default tokens are now defined in hooks/useEditor.ts as defaultTokensCode

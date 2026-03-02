@@ -171,6 +171,17 @@
           ]
         },
         {
+          "id": "definition-merging",
+          "title": "Definition Merging (Optional)",
+          "description": "Mehrere Definitionen derselben Komponente werden automatisch gemerged. Optional - kann die Lesbarkeit bei komplexen Komponenten verbessern.",
+          "syntax": [
+            "Name: behavior\nName: styling"
+          ],
+          "examples": [
+            "// Getrennt (optional)\nOption:\n  onclick select self\n\nOption: pad 10, rad 6\n  state highlighted bg #333"
+          ]
+        },
+        {
           "id": "instanzen",
           "title": "Instanzen",
           "description": "Komponenten verwenden (ohne Doppelpunkt).",
@@ -874,6 +885,17 @@
           ]
         },
         {
+          "id": "keys-block",
+          "title": "Keys-Block",
+          "description": "Gruppierte Keyboard-Events für kompaktere Syntax. Doppelpunkt nach Key ist optional.",
+          "syntax": [
+            "keys\n  escape close\n  arrow-down highlight next\n  enter select, close"
+          ],
+          "examples": [
+            "SelectPopup:\n  keys\n    escape close\n    arrow-down highlight next\n    arrow-up highlight prev\n    enter select, close"
+          ]
+        },
+        {
           "id": "timing-modifiers",
           "title": "Timing Modifiers",
           "items": [
@@ -1078,6 +1100,19 @@
               "name": "none",
               "description": "Kein Element"
             }
+          ]
+        },
+        {
+          "id": "implicit-self",
+          "title": "Implicit Self",
+          "description": "Bei diesen Actions ist `self` der Default-Target und kann weggelassen werden.",
+          "syntax": [
+            "onclick select          // = onclick select self",
+            "onhover highlight       // = onhover highlight self",
+            "onclick-outside close   // = onclick-outside close self"
+          ],
+          "notes": [
+            "Betrifft: highlight, select, deselect, activate, deactivate, toggle-state, close, show, hide"
           ]
         }
       ]
