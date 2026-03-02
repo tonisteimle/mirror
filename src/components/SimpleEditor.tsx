@@ -7,7 +7,7 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo, useState } from 'react'
 import { EditorState, type Extension } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { createMinimalExtensions, TRIGGER_DELAY_MS } from '../editor'
+import { createMinimalExtensions, TRIGGER_DELAY_MS, type DoubleClickPickerConfig } from '../editor'
 import { usePickerState } from '../hooks/usePickerState'
 import { useColorPanel } from '../hooks/useColorPanel'
 import { InlineColorPanel } from './InlineColorPanel'
@@ -143,6 +143,24 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
   const insertIcon = useMemo(() => createInsertHandler(['?']), [createInsertHandler])
   const insertToken = useMemo(() => createInsertHandler(['?', '$']), [createInsertHandler])
 
+  // Double-click picker config - opens appropriate picker when double-clicking values
+  const doubleClickPickerConfig = useMemo<DoubleClickPickerConfig | undefined>(() => {
+    if (!enablePickers) return undefined
+
+    return {
+      onColorDoubleClick: (color, from, to) => {
+        // Open color picker with range to replace and initial color
+        pickerRef.current.openPicker('color', { replaceRange: { from, to }, currentColor: color })
+      },
+      onIconDoubleClick: (iconName, from, to) => {
+        pickerRef.current.openPicker('icon', { replaceRange: { from, to } })
+      },
+      onFontDoubleClick: (fontName, from, to) => {
+        // Font picker not implemented yet
+      },
+    }
+  }, [enablePickers])
+
   useImperativeHandle(ref, () => ({
     getEditorView: () => viewRef.current,
     focus: () => viewRef.current?.focus(),
@@ -224,6 +242,8 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
         // Only wire picker callback if pickers are enabled
         onValuePickerNeeded: enablePickers ? handleValuePickerNeeded : undefined,
         isAutocompleteSuppressed: enablePickers ? () => isPickerOpenRef.current : undefined,
+        // Double-click to open picker
+        doubleClickPickerConfig,
       }),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -253,7 +273,7 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
       view.destroy()
       viewRef.current = null
     }
-  }, [enablePickers, handleValuePickerNeeded, createTriggerExtension]) // Recreate editor if enablePickers changes
+  }, [enablePickers, handleValuePickerNeeded, createTriggerExtension, doubleClickPickerConfig]) // Recreate editor if enablePickers changes
 
   // Update content when value changes externally
   useEffect(() => {
@@ -300,7 +320,7 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
             />
           )}
 
-          {/* Color picker triggered by swatch click */}
+          {/* Color picker triggered by swatch click or double-click */}
           {colorPickerOpen && (
             <InlineColorPanel
               isOpen={true}
@@ -314,6 +334,7 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
               filter=""
               selectedIndex={swatchColorSelectedIndex}
               onSelectedIndexChange={setSwatchColorSelectedIndex}
+              initialColor={picker.getContext().currentColor}
               editorCode={tokensCode}
             />
           )}

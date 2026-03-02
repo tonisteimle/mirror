@@ -159,6 +159,8 @@ export interface MinimalExtensionsOptions {
   onValuePickerNeeded?: (picker: ValuePickerType, property?: string) => void
   /** Return true to suppress autocomplete (e.g., when a picker is open) */
   isAutocompleteSuppressed?: () => boolean
+  /** Double-click picker configuration (optional) */
+  doubleClickPickerConfig?: DoubleClickPickerConfig
 }
 
 /**
@@ -166,7 +168,7 @@ export interface MinimalExtensionsOptions {
  * Includes autocomplete for basic property suggestions.
  */
 export function createMinimalExtensions(options: MinimalExtensionsOptions = {}): Extension[] {
-  return [
+  const extensions: Extension[] = [
     indentUnit.of('  '),
     EditorState.tabSize.of(2),
     history(),
@@ -185,4 +187,11 @@ export function createMinimalExtensions(options: MinimalExtensionsOptions = {}):
     }),
     keymap.of(defaultKeymap),
   ]
+
+  // Double-click picker (open picker when double-clicking on color/icon/font)
+  if (options.doubleClickPickerConfig) {
+    extensions.push(createDoubleClickPickerExtension(options.doubleClickPickerConfig))
+  }
+
+  return extensions
 }

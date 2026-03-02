@@ -1,8 +1,9 @@
 /**
- * ComponentLibraryView - Simple table showing all defined components
+ * ComponentLibraryView - Shows all defined components with all their states
  *
- * Clean layout: Kategorie | Komponente | Status
- * Components render directly in the chosen theme without wrapper boxes.
+ * Layout: Name | [Default] [State1] [State2] ...
+ * Components render directly with their full styling.
+ * Section headers can be defined with "--- Title ---" in the code.
  */
 
 import { memo, useMemo } from 'react'
@@ -21,30 +22,15 @@ interface ComponentLibraryViewProps {
 // Known behavior states that can be toggled
 const BEHAVIOR_STATES = ['hover', 'active', 'focus', 'disabled', 'selected', 'highlighted', 'expanded', 'collapsed', 'on', 'off', 'valid', 'invalid']
 
-// Categorize components by their purpose
-function categorizeComponent(name: string): string {
-  const lower = name.toLowerCase()
-  if (['button', 'link', 'toggle', 'checkbox', 'radio', 'switch'].some(k => lower.includes(k))) return 'Actions'
-  if (['input', 'textarea', 'select', 'field', 'form'].some(k => lower.includes(k))) return 'Inputs'
-  if (['card', 'panel', 'modal', 'dialog', 'drawer', 'sheet'].some(k => lower.includes(k))) return 'Containers'
-  if (['nav', 'menu', 'tab', 'sidebar', 'header', 'footer', 'toolbar'].some(k => lower.includes(k))) return 'Navigation'
-  if (['list', 'table', 'grid', 'row', 'cell', 'item'].some(k => lower.includes(k))) return 'Data'
-  if (['alert', 'toast', 'badge', 'tag', 'chip'].some(k => lower.includes(k))) return 'Feedback'
-  if (['avatar', 'icon', 'image', 'logo'].some(k => lower.includes(k))) return 'Media'
-  if (['title', 'text', 'label', 'heading'].some(k => lower.includes(k))) return 'Typography'
-  return 'Other'
-}
-
 export const ComponentLibraryView = memo(function ComponentLibraryView({
   registry,
   tokens = new Map(),
 }: ComponentLibraryViewProps) {
-  // Get all component definitions
+  // Get all component definitions with their states
   const componentDefinitions = useMemo(() => {
     const definitions: Array<{
       name: string
       template: ComponentTemplate
-      category: string
       states: string[]
     }> = []
 
@@ -61,6 +47,7 @@ export const ComponentLibraryView = memo(function ComponentLibraryView({
         }
       }
 
+      // Also collect states from children
       const collectStatesFromChildren = (children: ASTNode[]) => {
         for (const child of children || []) {
           if (child.states) {
@@ -78,16 +65,12 @@ export const ComponentLibraryView = memo(function ComponentLibraryView({
       definitions.push({
         name,
         template,
-        category: categorizeComponent(name),
         states: Array.from(states).filter(s => BEHAVIOR_STATES.includes(s)),
       })
     })
 
-    // Sort by category, then name
-    return definitions.sort((a, b) => {
-      const catCompare = a.category.localeCompare(b.category)
-      return catCompare !== 0 ? catCompare : a.name.localeCompare(b.name)
-    })
+    // Keep order from registry (user-defined order via --- sections ---)
+    return definitions
   }, [registry])
 
   if (componentDefinitions.length === 0) {
@@ -128,54 +111,49 @@ export const ComponentLibraryView = memo(function ComponentLibraryView({
         overflow: 'auto',
         padding: '24px',
       }}>
-        {/* Table Header */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '120px 1fr 100px',
-          gap: '16px',
-          paddingBottom: '12px',
-          borderBottom: `1px solid ${colors.border}`,
-          marginBottom: '16px',
-        }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Kategorie
-          </div>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Komponente
-          </div>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Status
-          </div>
-        </div>
-
         {/* Component Rows */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {componentDefinitions.map(({ name, category, states }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {componentDefinitions.map(({ name, template, states }) => (
             <div
               key={name}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '120px 1fr 100px',
-                gap: '16px',
-                alignItems: 'center',
-                paddingBottom: '12px',
-                borderBottom: `1px solid ${colors.border}20`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
               }}
             >
-              {/* Category */}
-              <div style={{ fontSize: '12px', color: colors.textMuted }}>
-                {category}
+              {/* Component Name */}
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.text,
+              }}>
+                {name}
               </div>
 
-              {/* Component Preview - rendered directly */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '13px', color: colors.text, minWidth: '100px' }}>{name}</span>
-                <ComponentPreview name={name} />
-              </div>
+              {/* All States Row */}
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'flex-start',
+                gap: '16px',
+              }}>
+                {/* Default state */}
+                <StatePreview
+                  name={name}
+                  template={template}
+                  stateName="default"
+                />
 
-              {/* States */}
-              <div style={{ fontSize: '11px', color: colors.textMuted }}>
-                {states.length > 0 ? states.join(', ') : 'default'}
+                {/* Other states */}
+                {states.map(stateName => (
+                  <StatePreview
+                    key={stateName}
+                    name={name}
+                    template={template}
+                    stateName={stateName}
+                  />
+                ))}
               </div>
             </div>
           ))}
@@ -185,22 +163,28 @@ export const ComponentLibraryView = memo(function ComponentLibraryView({
   )
 })
 
-interface ComponentPreviewProps {
+interface StatePreviewProps {
   name: string
-  state?: string
+  template: ComponentTemplate
+  stateName: string
 }
 
-const ComponentPreview = memo(function ComponentPreview({
+const StatePreview = memo(function StatePreview({
   name,
-  state,
-}: ComponentPreviewProps) {
+  template,
+  stateName,
+}: StatePreviewProps) {
   const element = useMemo(() => {
+    // Create a full node from the template
     const node: ASTNode = {
-      id: `lib-preview-${name}-${state || 'default'}`,
+      id: `lib-preview-${name}-${stateName}`,
       name,
       type: 'component',
-      properties: {},
-      children: [],
+      properties: { ...template.properties },
+      children: template.children ? [...template.children] : [],
+      states: template.states,
+      eventHandlers: template.eventHandlers,
+      activeState: stateName === 'default' ? undefined : stateName,
       line: 0,
     }
 
@@ -209,15 +193,29 @@ const ComponentPreview = memo(function ComponentPreview({
     } catch {
       return <span style={{ color: colors.textMuted, fontSize: '12px' }}>Error</span>
     }
-  }, [name, state])
+  }, [name, template, stateName])
 
-  if (state) {
-    return (
-      <div data-force-state={state} style={{ display: 'contents' }}>
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '6px',
+    }}>
+      {/* State Label */}
+      <div style={{
+        fontSize: '10px',
+        color: colors.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+      }}>
+        {stateName}
+      </div>
+
+      {/* Rendered Component */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {element}
       </div>
-    )
-  }
-
-  return <>{element}</>
+    </div>
+  )
 })

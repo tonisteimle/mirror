@@ -31,6 +31,9 @@ export interface PickerContext {
   // Generic query (used by command/property picker in usePickerState)
   query?: string
   replaceRange?: { from: number; to: number } | null
+
+  // Initial value for picker (e.g., current color when double-clicking a color)
+  initialValue?: string
 }
 
 // State shape for picker management

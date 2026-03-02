@@ -108,9 +108,9 @@ export function InlineColorPanel({
 
   const handleColorSelect = useCallback((color: string) => {
     const upperColor = color.toUpperCase()
-    setPickerColor(upperColor)
-    onCodeChange?.(upperColor)
-  }, [onCodeChange])
+    onSelect(upperColor)
+    onClose()
+  }, [onSelect, onClose])
 
   const handleSubmit = useCallback(() => {
     onSelect(pickerColor)
