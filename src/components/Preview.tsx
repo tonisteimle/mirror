@@ -120,6 +120,14 @@ export const Preview = memo(function Preview({
     [nodes, generateOptions]
   )
 
+  // Generate a key that changes when the component structure changes
+  // This forces BehaviorRegistryProvider to remount and reset all states
+  // NOTE: Must be called before any early returns to maintain hook order
+  const structureKey = useMemo(() => {
+    const nodeIds = nodes.map(n => n.id).join(',')
+    return `${registry.size}-${nodeIds}`
+  }, [nodes, registry.size])
+
   if (nodes.length === 0) {
     return <div style={{ height: '100%', backgroundColor, color: textColor }} />
   }
@@ -134,6 +142,7 @@ export const Preview = memo(function Preview({
 
   return (
     <PreviewProviders
+      key={structureKey}
       registry={registry}
       onPageNavigate={onPageNavigate}
       dataRecords={dataRecords}
