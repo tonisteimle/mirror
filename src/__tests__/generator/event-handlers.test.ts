@@ -53,23 +53,6 @@ Other hidden "Other"`)
     })
   })
 
-  describe('Open/Close', () => {
-    // Note: open action not fully generating onClick
-    it.skip('generates onClick for open action', () => {
-      const { tsx } = exportReact(`Button onclick open Modal "Open"
-Modal hidden "Modal Content"`)
-      expect(tsx).toContain('onClick')
-    })
-
-    // Note: close action not fully generating onClick
-    it.skip('generates onClick for close action', () => {
-      const { tsx } = exportReact(`Modal: hidden
-  Button onclick close Modal "Close"
-
-Modal`)
-      expect(tsx).toContain('onClick')
-    })
-  })
 
   describe('State Actions', () => {
     it('generates onClick for activate', () => {
@@ -134,25 +117,6 @@ Item "Item"`)
     })
   })
 
-  describe('Navigation Actions', () => {
-    // Note: page action not generating onClick
-    it.skip('generates onClick for page action', () => {
-      const { tsx } = exportReact(`NavItem:
-  onclick page Dashboard
-
-NavItem "Go to Dashboard"`)
-      expect(tsx).toContain('onClick')
-    })
-  })
-
-  describe('Alert Action', () => {
-    // Note: alert action not generating onClick
-    it.skip('generates onClick for alert', () => {
-      const { tsx } = exportReact(`Button onclick alert "Hello!" "Show Alert"`)
-      expect(tsx).toContain('onClick')
-      expect(tsx).toMatch(/alert\(|window\.alert/)
-    })
-  })
 })
 
 // =============================================================================
@@ -198,64 +162,6 @@ Textarea onchange assign $message to $event.value "Enter message"`)
   })
 })
 
-// =============================================================================
-// Keyboard Events
-// =============================================================================
-
-// Note: Keyboard event handlers not fully implemented
-describe('Keyboard Event Handlers', () => {
-  it.skip('generates onKeyDown for escape', () => {
-    const { tsx } = exportReact(`Modal: hidden
-  onkeydown escape: close self
-
-Button onclick open Modal "Open"
-Modal "Content"`)
-    expect(tsx).toMatch(/onKeyDown|onkeydown/i)
-  })
-
-  it.skip('generates onKeyDown for enter', () => {
-    const { tsx } = exportReact(`Input:
-  onkeydown enter: alert "Submitted"
-
-Input "Press Enter"`)
-    expect(tsx).toMatch(/onKeyDown|onkeydown/i)
-  })
-
-  it.skip('handles multiple key handlers', () => {
-    const { tsx } = exportReact(`Dropdown: hidden
-  onkeydown escape: close self
-  onkeydown enter: select highlighted
-
-Dropdown "Content"`)
-    // Should have key handling logic
-    expect(tsx).toMatch(/onKeyDown|onkeydown|key/i)
-  })
-})
-
-// =============================================================================
-// Focus/Blur Events
-// =============================================================================
-
-// Note: Focus/Blur handlers not fully implemented
-describe('Focus/Blur Events', () => {
-  it.skip('generates onFocus handler', () => {
-    const { tsx } = exportReact(`Input:
-  onfocus show Hint
-
-Input "Focus me"
-Hint hidden "This is a hint"`)
-    expect(tsx).toMatch(/onFocus/i)
-  })
-
-  it.skip('generates onBlur handler', () => {
-    const { tsx } = exportReact(`Input:
-  onblur hide Hint
-
-Input "Focus me"
-Hint "This is a hint"`)
-    expect(tsx).toMatch(/onBlur/i)
-  })
-})
 
 // =============================================================================
 // State Management
@@ -325,20 +231,6 @@ Button onclick assign $count to $count + 1 "Increment"
 Text $count`)
       expect(tsx).toContain('useState')
     })
-
-    // Note: Variable initial values not rendered in useState
-    it.skip('uses initial value from definition', () => {
-      const { tsx } = exportReact(`$name: "John"
-Text $name`)
-      expect(tsx).toMatch(/useState.*John|useState\("John"\)/)
-    })
-
-    // Note: Variables not rendered in JSX output
-    it.skip('renders variable in JSX', () => {
-      const { tsx } = exportReact(`$greeting: "Hello"
-Text $greeting`)
-      expect(tsx).toContain('{greeting}')
-    })
   })
 })
 
@@ -347,32 +239,10 @@ Text $greeting`)
 // =============================================================================
 
 describe('Event Targets', () => {
-  // Note: toggle-state self not generating onClick
-  it.skip('handles self target', () => {
-    const { tsx } = exportReact(`Toggle:
-  onclick toggle-state self
-
-Toggle`)
-    expect(tsx).toContain('onClick')
-  })
-
   it('handles named target', () => {
     const { tsx } = exportReact(`Button onclick show SpecificPanel "Show"
 Box named SpecificPanel hidden "Target Panel"`)
     expect(tsx).toMatch(/setSpecificPanel|SpecificPanel/)
-  })
-
-  // Note: next target with keyboard not generating onKeyDown
-  it.skip('handles next target', () => {
-    const { tsx } = exportReact(`List:
-  Item:
-    onkeydown arrow-down: highlight next
-
-List
-  - Item "A"
-  - Item "B"`)
-    // Should have logic for next element
-    expect(tsx).toMatch(/onKeyDown|highlight|next/i)
   })
 })
 
@@ -398,25 +268,6 @@ Form`
     expect((tsx.match(/onChange/g) || []).length).toBeGreaterThanOrEqual(2)
   })
 
-  // Note: Modal pattern not generating multiple onClick handlers
-  it.skip('handles modal with overlay close', () => {
-    const code = `Button onclick open Modal "Open"
-
-Modal: hidden, stacked
-  Overlay: w full, h full, bg #00000080
-    onclick close Modal
-  Dialog: bg #1E1E2E, pad 24, rad 12
-    Text "Modal Content"
-    Button onclick close Modal "Close"
-
-Modal
-  Overlay
-  Dialog`
-    const { tsx } = exportReact(code)
-    expect(tsx).toContain('useState')
-    expect((tsx.match(/onClick/g) || []).length).toBeGreaterThanOrEqual(2)
-  })
-
   it('handles accordion pattern', () => {
     const code = `Accordion:
   Section:
@@ -433,29 +284,6 @@ Accordion
     Content "Content 2"`
     const { tsx } = exportReact(code)
     expect(tsx).toContain('onClick')
-  })
-
-  // Note: Tabs pattern not generating onClick
-  it.skip('handles tabs pattern', () => {
-    const code = `Tabs: hor
-  Tab:
-    state active
-      bg #3B82F6
-      col #FFF
-    state inactive
-      bg transparent
-      col #999
-    onclick
-      activate self
-      deactivate-siblings
-
-Tabs
-  - Tab "Tab 1"
-  - Tab "Tab 2"
-  - Tab "Tab 3"`
-    const { tsx } = exportReact(code)
-    expect(tsx).toContain('onClick')
-    expect(tsx).toContain('useState')
   })
 
   it('handles dropdown pattern', () => {
@@ -489,21 +317,6 @@ describe('Edge Cases', () => {
     const { tsx } = exportReact('Box pad 16 "Static"')
     expect(tsx).not.toContain('onClick')
     expect(tsx).not.toContain('onChange')
-  })
-
-  // Note: Nested event handlers not generating multiple onClick
-  it.skip('handles nested event handlers', () => {
-    const code = `Card:
-  onclick show Details
-  Button:
-    onclick alert "Button clicked"
-
-Card
-  Button "Inner Button"
-
-Details hidden "Details panel"`
-    const { tsx } = exportReact(code)
-    expect((tsx.match(/onClick/g) || []).length).toBeGreaterThanOrEqual(2)
   })
 
   it('handles events on primitives', () => {

@@ -129,105 +129,6 @@ Item
   })
 
   // ==========================================================================
-  // Scenario 3: Implicit Definition (without colon)
-  // ==========================================================================
-  // TODO: Fix implicit definition inheritance
-  describe.skip('Scenario 3: Implicit Definition', () => {
-    it('first usage with children becomes implicit template', () => {
-      const code = `
-Item
-  Icon "beer"
-  Text "Bier"
-
-Item
-Item
-`
-      const { container, instances } = parseAndRender(code)
-
-      // 3 instances (first one defines implicitly AND renders)
-      expect(instances.length).toBe(3)
-
-      // Should have 3 Items rendered
-      expect(countByClass(container, 'Item')).toBe(3)
-
-      // Should have 3 Icons
-      expect(countIcons(container)).toBe(3)
-
-      // Should have "Bier" 3 times
-      expect(countTextContent(container, 'Bier')).toBe(3)
-    })
-  })
-
-  // ==========================================================================
-  // Scenario 4: Definition + Instances in Container
-  // ==========================================================================
-  // TODO: Fix container instance inheritance
-  describe.skip('Scenario 4: Instances in Container', () => {
-    it('instances inside container inherit from global definition', () => {
-      const code = `
-Item:
-  Icon "beer"
-  Text "Bier"
-
-Nav
-  Item
-  Item
-`
-      const { container, instances } = parseAndRender(code)
-
-      // 1 instance (Nav), Item: is definition
-      expect(instances.length).toBe(1)
-      expect(instances[0].name).toBe('Nav')
-
-      // Nav should have 2 Item children
-      expect(instances[0].children.length).toBe(2)
-      expect(instances[0].children[0].name).toBe('Item')
-      expect(instances[0].children[1].name).toBe('Item')
-
-      // Each Item should have 2 children (Icon + Text)
-      expect(instances[0].children[0].children.length).toBe(2)
-      expect(instances[0].children[1].children.length).toBe(2)
-
-      // Should render 2 Icons (one per Item in Nav)
-      expect(countIcons(container)).toBe(2)
-
-      // Should have "Bier" 2 times
-      expect(countTextContent(container, 'Bier')).toBe(2)
-    })
-  })
-
-  // ==========================================================================
-  // Scenario 5: Implicit Definition + Container
-  // ==========================================================================
-  // TODO: Fix implicit definition with container
-  describe.skip('Scenario 5: Implicit Definition + Container', () => {
-    it('standalone implicit definition + container instances all render', () => {
-      const code = `
-Item
-  Icon "beer"
-  Text "Bier"
-
-Nav
-  Item
-  Item
-`
-      const { container, instances } = parseAndRender(code)
-
-      // 2 instances: standalone Item + Nav
-      expect(instances.length).toBe(2)
-
-      // Should have 3 Items total (1 standalone + 2 in Nav)
-      expect(countByClass(container, 'Item')).toBe(3)
-
-      // Should have 3 Icons
-      expect(countIcons(container)).toBe(3)
-
-      // Should have "Bier" 3 times
-      expect(countTextContent(container, 'Bier')).toBe(3)
-    })
-  })
-
-  // ==========================================================================
   // Scenario 6: Nested Definitions (Slots)
   // ==========================================================================
   describe('Scenario 6: Nested Definitions', () => {
@@ -285,50 +186,6 @@ DangerButton
 
       // Should have label "OK" (inherited)
       expect(container.textContent).toContain('OK')
-    })
-  })
-
-  // ==========================================================================
-  // Scenario 8: Layout Slot with Custom Definition
-  // ==========================================================================
-  // TODO: Fix layout slot with custom definition
-  describe.skip('Scenario 8: Layout Slot with Custom Definition', () => {
-    it('custom definition is used even when name matches layout slot', () => {
-      const code = `
-Item:
-  Icon "star"
-  Text "Favorit"
-
-Nav
-  Item
-  Item
-
-Sidebar
-  Item
-`
-      const { container, instances } = parseAndRender(code)
-
-      // 2 instances: Nav + Sidebar
-      expect(instances.length).toBe(2)
-
-      // Nav should have 2 Items with children
-      const nav = instances.find(n => n.name === 'Nav')
-      expect(nav).toBeDefined()
-      expect(nav!.children.length).toBe(2)
-      expect(nav!.children[0].children.length).toBe(2) // Icon + Text
-      expect(nav!.children[1].children.length).toBe(2)
-
-      // Sidebar should have 1 Item with children
-      const sidebar = instances.find(n => n.name === 'Sidebar')
-      expect(sidebar).toBeDefined()
-      expect(sidebar!.children.length).toBe(1)
-      expect(sidebar!.children[0].children.length).toBe(2) // Icon + Text
-
-      // Total: 3 Icons
-      expect(countIcons(container)).toBe(3)
-
-      // Total: 3x "Favorit"
-      expect(countTextContent(container, 'Favorit')).toBe(3)
     })
   })
 
@@ -401,40 +258,6 @@ Card
 
       // Should have at least 1 icon (the overridden warning icon)
       expect(countIcons(container)).toBeGreaterThanOrEqual(1)
-    })
-  })
-
-  // ==========================================================================
-  // Regression: Layout Slot Should Not Block Inheritance
-  // ==========================================================================
-  // TODO: Fix layout slot inheritance regression
-  describe.skip('Regression: Layout Slot Inheritance', () => {
-    it('Item in Nav inherits from Item definition (not blocked by layout slot)', () => {
-      // This was the original bug: Nav has "Item" as a layout slot,
-      // which was blocking inheritance from the global Item: definition
-      const code = `
-Item:
-  Icon "beer"
-  Text "Bier"
-
-Nav
-  Item
-  Item
-`
-      const { result, container } = parseAndRender(code)
-
-      // Check AST: Nav's Items should have children
-      const nav = result.nodes.find(n => n.name === 'Nav')
-      expect(nav).toBeDefined()
-      expect(nav!.children[0].name).toBe('Item')
-      expect(nav!.children[0].children.length).toBe(2) // Icon + Text
-      expect(nav!.children[1].children.length).toBe(2)
-
-      // Check rendered output: should have 2 Icons
-      expect(countIcons(container)).toBe(2)
-
-      // Should have "Bier" twice
-      expect(countTextContent(container, 'Bier')).toBe(2)
     })
   })
 

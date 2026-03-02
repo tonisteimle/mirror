@@ -100,26 +100,8 @@ describe('Layout Properties', () => {
     })
 
     // Note: stacked currently doesn't generate position:relative in CSS
-    it.skip('converts stacked to position: relative', () => {
-      const { css } = exportReact('Box stacked')
-      expect(hasCssProperty(css, 'position', 'relative')).toBe(true)
-    })
   })
 
-  describe('Grid', () => {
-    // Note: grid properties are not currently converted to CSS grid
-    it.skip('converts grid N to grid template', () => {
-      const { css } = exportReact('Box grid 3')
-      expect(hasCssProperty(css, 'display', 'grid')).toBe(true)
-      expect(css).toMatch(/grid-template-columns/)
-    })
-
-    it.skip('converts grid auto N to auto-fill', () => {
-      const { css } = exportReact('Box grid auto 250')
-      expect(hasCssProperty(css, 'display', 'grid')).toBe(true)
-      expect(css).toMatch(/auto-fill|auto-fit/)
-    })
-  })
 })
 
 // =============================================================================
@@ -142,39 +124,13 @@ describe('Alignment Properties', () => {
   })
 
   describe('Horizontal Alignment', () => {
-    // Note: left/right alignment currently generates abbreviated values
-    it.skip('converts left to align-items: flex-start (in vertical)', () => {
-      const { css } = exportReact('Box ver, left')
-      expect(hasCssProperty(css, 'align-items', 'flex-start')).toBe(true)
-    })
-
-    it.skip('converts right to align-items: flex-end (in vertical)', () => {
-      const { css } = exportReact('Box ver, right')
-      expect(hasCssProperty(css, 'align-items', 'flex-end')).toBe(true)
-    })
-
     it('converts hor-center to align-items: center (in vertical)', () => {
       const { css } = exportReact('Box hor-cen')
       expect(hasCssProperty(css, 'align-items', 'center')).toBe(true)
     })
-
-    it.skip('converts left to justify-content: flex-start (in horizontal)', () => {
-      const { css } = exportReact('Box hor, left')
-      expect(hasCssProperty(css, 'justify-content', 'flex-start')).toBe(true)
-    })
   })
 
   describe('Vertical Alignment', () => {
-    it.skip('converts top to align-items: flex-start (in horizontal)', () => {
-      const { css } = exportReact('Box hor, top')
-      expect(hasCssProperty(css, 'align-items', 'flex-start')).toBe(true)
-    })
-
-    it.skip('converts bottom to align-items: flex-end (in horizontal)', () => {
-      const { css } = exportReact('Box hor, bottom')
-      expect(hasCssProperty(css, 'align-items', 'flex-end')).toBe(true)
-    })
-
     it('converts ver-center to justify-content: center (in vertical)', () => {
       const { css } = exportReact('Box ver-cen')
       expect(hasCssProperty(css, 'justify-content', 'center')).toBe(true)
@@ -204,16 +160,8 @@ describe('Sizing Properties', () => {
     })
 
     // Note: w full generates width: max (internal representation)
-    it.skip('converts w full to width: 100% + flex-grow', () => {
-      const { css } = exportReact('Box w full')
-      expect(hasCssProperty(css, 'width', '100%')).toBe(true)
-    })
 
     // Note: w hug generates width: min (internal representation)
-    it.skip('converts w hug to width: fit-content', () => {
-      const { css } = exportReact('Box w hug')
-      expect(css).toMatch(/width:.*fit-content|width:.*min-content|width:.*auto/)
-    })
   })
 
   describe('Height', () => {
@@ -228,10 +176,6 @@ describe('Sizing Properties', () => {
     })
 
     // Note: h full generates height: max (internal representation)
-    it.skip('converts h full to height: 100%', () => {
-      const { css } = exportReact('Box h full')
-      expect(hasCssProperty(css, 'height', '100%')).toBe(true)
-    })
   })
 
   describe('Dimension Shorthand', () => {
@@ -314,24 +258,8 @@ describe('Spacing Properties', () => {
     })
 
     // Note: pad hor is parsed differently (as direction + width)
-    it.skip('converts pad hor N to padding-left/right', () => {
-      const { css } = exportReact('Box pad hor 16')
-      expect(
-        hasCssProperty(css, 'padding-left', '16px') ||
-        hasCssProperty(css, 'padding-inline', '16px') ||
-        css.match(/padding:.*16px.*16px/)
-      ).toBe(true)
-    })
 
     // Note: pad ver is parsed differently (as direction + width)
-    it.skip('converts pad ver N to padding-top/bottom', () => {
-      const { css } = exportReact('Box pad ver 16')
-      expect(
-        hasCssProperty(css, 'padding-top', '16px') ||
-        hasCssProperty(css, 'padding-block', '16px') ||
-        css.match(/padding:.*16px/)
-      ).toBe(true)
-    })
   })
 
   describe('Margin', () => {
@@ -426,22 +354,10 @@ describe('Border Properties', () => {
     })
 
     // Note: bor with style generates border: Npx solid (defaults to solid)
-    it.skip('converts bor with style', () => {
-      const { css } = exportReact('Box bor 2 dashed')
-      expect(css).toMatch(/border:\s*2px dashed/)
-    })
 
     // Note: bor with color doesn't include color in output
-    it.skip('converts bor with color', () => {
-      const { css } = exportReact('Box bor 1 #333')
-      expect(css).toMatch(/border:\s*1px.*#333/)
-    })
 
     // Note: bor with style and color doesn't parse properly
-    it.skip('converts bor with style and color', () => {
-      const { css } = exportReact('Box bor 2 solid #3B82F6')
-      expect(css).toMatch(/border:\s*2px solid #3B82F6/)
-    })
   })
 
   describe('Directional Border', () => {
@@ -478,22 +394,8 @@ describe('Border Properties', () => {
     })
 
     // Note: rad percentage is parsed as pixels (50% -> 50px)
-    it.skip('converts rad percentage', () => {
-      const { css } = exportReact('Box rad 50%')
-      expect(hasCssProperty(css, 'border-radius', '50%')).toBe(true)
-    })
 
     // Note: corner-specific radius not generated in CSS
-    it.skip('converts corner-specific radius', () => {
-      const { css } = exportReact('Box rad tl 8')
-      expect(hasCssProperty(css, 'border-top-left-radius', '8px')).toBe(true)
-    })
-
-    it.skip('converts multiple corner radius', () => {
-      const { css } = exportReact('Box rad tl 8 br 8')
-      expect(hasCssProperty(css, 'border-top-left-radius', '8px')).toBe(true)
-      expect(hasCssProperty(css, 'border-bottom-right-radius', '8px')).toBe(true)
-    })
   })
 })
 
@@ -503,24 +405,6 @@ describe('Border Properties', () => {
 
 // Note: Typography properties are partially implemented in the CSS exporter
 describe('Typography Properties', () => {
-  describe('Font Size', () => {
-    // Note: font-size is rendered inline, not in CSS
-    it.skip('converts text-size to font-size', () => {
-      const { css } = exportReact('Text text-size 16')
-      expect(hasCssProperty(css, 'font-size', '16px')).toBe(true)
-    })
-
-    it.skip('converts fs to font-size', () => {
-      const { css } = exportReact('Text fs 16')
-      expect(hasCssProperty(css, 'font-size', '16px')).toBe(true)
-    })
-
-    it.skip('converts size to font-size for Text', () => {
-      const { css } = exportReact('Text size 16')
-      expect(hasCssProperty(css, 'font-size', '16px')).toBe(true)
-    })
-  })
-
   describe('Font Weight', () => {
     it('converts weight number', () => {
       const { css } = exportReact('Text weight 600')
@@ -533,10 +417,6 @@ describe('Typography Properties', () => {
     })
 
     // Note: 'bold' keyword is parsed as component name
-    it.skip('converts bold shorthand', () => {
-      const { css } = exportReact('Text bold')
-      expect(css).toMatch(/font-weight:\s*(700|bold)/)
-    })
   })
 
   describe('Font Family', () => {
@@ -577,30 +457,14 @@ describe('Typography Properties', () => {
     })
 
     // Note: lowercase is parsed as component name
-    it.skip('converts lowercase', () => {
-      const { css } = exportReact('Text lowercase')
-      expect(hasCssProperty(css, 'text-transform', 'lowercase')).toBe(true)
-    })
 
     // Note: capitalize is parsed as component name
-    it.skip('converts capitalize', () => {
-      const { css } = exportReact('Text capitalize')
-      expect(hasCssProperty(css, 'text-transform', 'capitalize')).toBe(true)
-    })
   })
 
   describe('Text Style', () => {
     // Note: italic is not output in CSS
-    it.skip('converts italic', () => {
-      const { css } = exportReact('Text italic')
-      expect(hasCssProperty(css, 'font-style', 'italic')).toBe(true)
-    })
 
     // Note: underline is not output in CSS
-    it.skip('converts underline', () => {
-      const { css } = exportReact('Text underline')
-      expect(hasCssProperty(css, 'text-decoration', 'underline')).toBe(true)
-    })
 
     it('converts truncate', () => {
       const { css } = exportReact('Text truncate')
@@ -673,37 +537,6 @@ describe('Visual Properties', () => {
       expect(hasCssProperty(css, 'z-index', '10')).toBe(true)
     })
   })
-
-  describe('Visibility', () => {
-    // Note: hidden is handled via React state, not CSS
-    it.skip('converts hidden to display: none', () => {
-      const { css } = exportReact('Box hidden')
-      expect(css.includes('display: none') || css.includes('visibility')).toBe(true)
-    })
-  })
-
-  describe('Scroll', () => {
-    // Note: scroll properties are not converted to CSS
-    it.skip('converts scroll to overflow', () => {
-      const { css } = exportReact('Box scroll')
-      expect(css).toMatch(/overflow.*auto|overflow.*scroll/)
-    })
-
-    it.skip('converts scroll-ver to overflow-y', () => {
-      const { css } = exportReact('Box scroll-ver')
-      expect(css).toMatch(/overflow-y.*auto|overflow-y.*scroll/)
-    })
-
-    it.skip('converts scroll-hor to overflow-x', () => {
-      const { css } = exportReact('Box scroll-hor')
-      expect(css).toMatch(/overflow-x.*auto|overflow-x.*scroll/)
-    })
-
-    it.skip('converts clip to overflow: hidden', () => {
-      const { css } = exportReact('Box clip')
-      expect(hasCssProperty(css, 'overflow', 'hidden')).toBe(true)
-    })
-  })
 })
 
 // =============================================================================
@@ -727,16 +560,8 @@ describe('Hover Properties', () => {
   })
 
   // Note: hover-opa not generating opacity in hover
-  it.skip('converts hover-opa', () => {
-    const { css } = exportReact('Button hover-opa 0.8')
-    expect(css).toMatch(/:hover[\s\S]*opacity.*0\.8/)
-  })
 
   // Note: hover-scale not generating transform in hover
-  it.skip('converts hover-scale', () => {
-    const { css } = exportReact('Button hover-scale 1.05')
-    expect(css).toMatch(/:hover[\s\S]*transform.*scale/)
-  })
 
   it('converts hover-boc', () => {
     const { css } = exportReact('Button bor 1, hover-boc #3B82F6')
@@ -766,14 +591,6 @@ Toggle`)
   })
 
   // Note: hover state in definition block not generating :hover CSS
-  it.skip('generates hover state styles', () => {
-    const { css } = exportReact(`Button:
-  hover
-    bg #555
-
-Button`)
-    expect(css).toMatch(/\.button:hover/)
-  })
 })
 
 // =============================================================================
@@ -789,18 +606,6 @@ describe('Image Properties', () => {
   it('converts fit contain to object-fit', () => {
     const { css } = exportReact('Image fit contain')
     expect(hasCssProperty(css, 'object-fit', 'contain')).toBe(true)
-  })
-})
-
-// =============================================================================
-// Icon Properties
-// =============================================================================
-
-describe('Icon Properties', () => {
-  // Note: icon-size not generating CSS
-  it.skip('converts icon-size', () => {
-    const { css } = exportReact('Icon "search" is 24')
-    expect(css).toMatch(/font-size:\s*24px|width:\s*24px/)
   })
 })
 

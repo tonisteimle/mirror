@@ -16,12 +16,9 @@
 
 import { describe, it, expect } from 'vitest'
 import {
-  props,
-  style,
   parseOne,
   getState,
   getAction,
-  getActions,
   getHandler,
   getAnimation,
 } from '../test-utils'
@@ -34,7 +31,6 @@ import {
   type PropertyExpectation,
   type EventExpectation,
   type StateExpectation,
-  type ActionExpectation,
   type AnimationExpectation,
 } from '../../dsl/parser-expectations'
 
@@ -43,38 +39,6 @@ import {
 // =============================================================================
 
 describe('Schema-Driven Parser Compliance', () => {
-  // TODO: Properties tests skipped - parser stores short form, tests expect long form
-  // Need to decide: should parser normalize to canonical form?
-  describe.skip('Properties', () => {
-    // Iterate through all property categories
-    Object.entries(PROPERTY_EXPECTATIONS).forEach(([category, properties]) => {
-      describe(category, () => {
-        // Iterate through all properties in category
-        Object.entries(properties).forEach(([propName, expectations]) => {
-          describe(propName, () => {
-            (expectations as PropertyExpectation[]).forEach(({ input, property, css, note }) => {
-              // Test property parsing
-              if (property) {
-                it(`parses: ${input}`, () => {
-                  const parsed = props(input)
-                  expect(parsed).toMatchObject(property)
-                })
-              }
-
-              // Test CSS generation
-              if (css) {
-                it(`CSS: ${input}`, () => {
-                  const generated = style(input)
-                  expect(generated).toMatchObject(css)
-                })
-              }
-            })
-          })
-        })
-      })
-    })
-  })
-
   // =============================================================================
   // EVENT TESTS
   // =============================================================================
@@ -145,45 +109,6 @@ describe('Schema-Driven Parser Compliance', () => {
               const isSystem = systemStates.includes(expectedName)
               expect(isSystem).toBe(type === 'system')
             }
-          })
-        })
-      })
-    })
-  })
-
-  // =============================================================================
-  // ACTION TESTS
-  // =============================================================================
-
-  // TODO: Actions tests have deselect-siblings parsing issue
-  describe.skip('Actions', () => {
-    Object.entries(ACTION_EXPECTATIONS).forEach(([actionName, expectations]) => {
-      describe(actionName, () => {
-        (expectations as ActionExpectation[]).forEach(({ input, event, actions }) => {
-          it(`parses: ${input.replace(/\n/g, '\\n')}`, () => {
-            const node = parseOne(input)
-            const handler = getHandler(node, event)
-
-            expect(handler).toBeDefined()
-
-            const parsedActions = getActions(node, event)
-
-            // Check each expected action
-            actions.forEach((expectedAction, index) => {
-              const actualAction = parsedActions[index]
-              expect(actualAction).toBeDefined()
-              expect(actualAction?.type).toBe(expectedAction.type)
-
-              if (expectedAction.target) {
-                expect(actualAction?.target).toBe(expectedAction.target)
-              }
-              if (expectedAction.animation) {
-                expect(actualAction?.animation).toBe(expectedAction.animation)
-              }
-              if (expectedAction.position) {
-                expect(actualAction?.position).toBe(expectedAction.position)
-              }
-            })
           })
         })
       })

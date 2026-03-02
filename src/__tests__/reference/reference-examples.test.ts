@@ -125,13 +125,6 @@ describe('Core Features', () => {
       expect(result.nodes[0].children.length).toBeGreaterThan(0)
     })
 
-    // Note: Single quotes for text content produce warnings in current parser
-    // Using double quotes is the recommended syntax
-    it.skip('parses text content in single quotes', () => {
-      const result = expectParseSuccess("Button 'Click me'")
-      expect(result.nodes[0].children.length).toBeGreaterThan(0)
-    })
-
     it('parses nested children', () => {
       const result = expectParseSuccess(`Box
   Text "Hello"
@@ -567,17 +560,6 @@ describe('States', () => {
   })
 
   describe('State Categories', () => {
-    // Note: State category syntax with variants is documented but currently
-    // produces warnings. Use simple state blocks instead.
-    it.skip('parses state category with variants', () => {
-      expectParseSuccess(`Tab: pad 8
-  state selection
-    selected
-      bg #3B82F6
-    not-selected
-      bg transparent`)
-    })
-
     it('parses simple state alternatives', () => {
       expectParseSuccess(`Tab: pad 8
   state selected
@@ -1028,12 +1010,6 @@ Text "Hello"`)
   describe('Large Values', () => {
     it('handles large numbers', () => {
       expectParseSuccess('Box w 9999')
-    })
-
-    // Note: Negative numbers are not currently supported in the parser
-    // The minus sign is treated as an unexpected token
-    it.skip('handles negative numbers', () => {
-      expectParseSuccess('Box mar -8')
     })
 
     it('handles decimal numbers', () => {

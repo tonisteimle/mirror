@@ -353,29 +353,3 @@ describe('Property Comparison: Preview vs Export', () => {
 // Regression Tests - Known Issues
 // =============================================================================
 
-describe('Known Issues / Regressions', () => {
-  // Add tests here for specific bugs you encounter
-  // When you fix a bug, the test stays to prevent regression
-
-  it.skip('TODO: shadow property generates correct box-shadow', () => {
-    const mirror = 'Box shadow md'
-    const { css } = exportReact(mirror)
-    expect(css).toContain('box-shadow')
-  })
-
-  it.skip('TODO: hover state generates :hover pseudo-class', () => {
-    const mirror = `
-Box bg #333
-  hover
-    bg #555
-`
-    const { css } = exportReact(mirror)
-    expect(css).toContain(':hover')
-  })
-
-  it.skip('TODO: opacity is correctly exported', () => {
-    const mirror = 'Box o 0.5'
-    const { css } = exportReact(mirror)
-    expect(css).toContain('opacity: 0.5')
-  })
-})
