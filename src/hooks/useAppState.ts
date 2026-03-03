@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react'
+import type { EditorView } from '@codemirror/view'
 import { logger } from '../services/logger'
 import type { PageData } from '../components/PageSidebar'
 import { isLibraryComponent, getLibraryDefinitions } from '../library/registry'
@@ -65,12 +66,16 @@ export function useAppState() {
   // Track cursor line for diagnostic suppression while typing
   const [activeCursorLine, setActiveCursorLine] = useState<number | null>(null)
 
+  // EditorView reference for diagnostic decorations
+  const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   // Code parsing - always show current page with all components and tokens
   const parsing = useCodeParsing(tokensCode, componentsCode, layoutCode, {
     debounceMs: 150,
     previewOverride,
     activeCursorLine,
+    editorView,
+    activeTab: editor.activeTab,
   })
 
   // History for undo/redo
@@ -331,6 +336,9 @@ export function useAppState() {
 
     // Cursor tracking (for diagnostic suppression while typing)
     onCursorLineChange: setActiveCursorLine,
+
+    // EditorView tracking (for diagnostic decorations)
+    onEditorViewChange: setEditorView,
 
     // Token mode (project-specific setting for panels)
     useTokenMode,

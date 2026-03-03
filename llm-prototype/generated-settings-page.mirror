@@ -1,0 +1,59 @@
+// Component Definitions
+Sidebar: ver, width 240, height full, bg #18181B, pad 12
+  Logo: pad 12 16, font-size 16, weight bold, col #F4F4F5
+  NavSection: ver, gap 4
+    NavItem: hor, gap 8, pad 8 16, rad 6, col #E4E4E7
+      state hover bg #333
+      state active bg #2563EB, col white
+      NavIcon:
+      NavLabel:
+
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  HeaderLeft: ver, gap 2
+    Title: col #F4F4F5, font-size 16, weight bold
+    Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+  CardContent: pad 16
+
+Button: hor, gap 8, ver-center, bg #2563EB, col white, pad 8 16, rad 6
+  state hover bg #1D4ED8
+  state disabled opacity 0.5
+  Icon:
+  Label:
+
+ButtonGroup: hor, gap 12
+
+// Page
+SettingsPage
+  Sidebar
+    Logo "Settings"
+    NavItem
+      NavIcon "user"
+      NavLabel "Profile"
+    NavItem
+      NavIcon "lock"
+      NavLabel "Security"
+    NavItem
+      NavIcon "bell"
+      NavLabel "Notifications"
+    NavItem
+      NavIcon "credit-card"
+      NavLabel "Billing"
+  MainContent
+    Header
+      Title "Settings"
+      Subtitle "Manage your account preferences"
+    Card
+      CardTitle "Profile Settings"
+      CardContent "Form with fields: Name, Email, Bio"
+    ButtonGroup
+      Button
+        NavIcon "check"
+        NavLabel "Save"
+      Button
+        NavIcon "x"
+        NavLabel "Cancel"

@@ -1,0 +1,74 @@
+// Component Definitions
+
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  HeaderLeft: hor, gap 8, ver-center
+    BackButton: col #3B82F6, cursor pointer, font-size 16
+      state hover col #2563EB
+    Title: col #F4F4F5, font-size 16, weight bold
+  Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+Avatar: size 80, rad 40, bg #27272A, overflow hidden
+  AvatarImage: width full, height full
+  AvatarFallback: col #A1A1AA, font-size 24, weight 600
+
+ProfileInfo: ver, gap 4, ver-center
+  ProfileName: col #F4F4F5, font-size 20, weight bold
+  ProfileEmail: col #A1A1AA, font-size 14
+
+StatsContainer: hor, gap 16, spread
+
+StatsCard: ver, gap 4, bg #1A1A23, pad 16, rad 8
+  Label: col #A1A1AA, font-size 12, uppercase
+  Value: col #F4F4F5, font-size 24, weight bold
+  Trend: col #22C55E, font-size 12
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+    CardActions: hor, gap 8
+  CardContent: pad 16
+
+ActivityItem: ver, gap 8, pad 12, bor b 1 #333
+  ActivityTitle: col #F4F4F5, font-size 14, weight 500
+  ActivityTime: col #A1A1AA, font-size 12
+
+PageContainer: ver, gap 24, pad 24, bg #09090B, height full
+
+// Page
+
+PageContainer
+  Header
+    HeaderLeft
+      BackButton "←"
+      Title "Profile"
+  
+  ProfileInfo
+    Avatar
+      AvatarFallback "JD"
+    ProfileName "John Doe"
+    ProfileEmail "john@example.com"
+  
+  StatsContainer
+    - StatsCard
+      Label "Posts"
+      Value "142"
+    - StatsCard
+      Label "Followers"
+      Value "1.2k"
+    - StatsCard
+      Label "Following"
+      Value "89"
+  
+  Card
+    CardTitle "Recent Activity"
+    CardContent
+      - ActivityItem
+        ActivityTitle "Liked a post"
+        ActivityTime "2 hours ago"
+      - ActivityItem
+        ActivityTitle "Started following Sarah"
+        ActivityTime "5 hours ago"
+      - ActivityItem
+        ActivityTitle "Posted a new photo"
+        ActivityTime "1 day ago"

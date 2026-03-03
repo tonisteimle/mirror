@@ -481,9 +481,14 @@ export const itemStringHandler: SugarHandler = {
  *   → label.content = "Label"
  *   → label.properties = { col: "#5B5B5B", size: 16 }
  *   (NOT: label._text child with those properties)
+ *
+ * Also handles "Name as Text:" syntax where _primitiveType is set:
+ * Example: Txt as Text: "Text" size 13
+ *   → Txt.content = "Text", Txt.properties = { size: 13 }
  */
 function isContentComponent(node: ASTNode): boolean {
   const nameLower = node.name.toLowerCase()
+  const primitiveType = (node.properties._primitiveType as string | undefined)?.toLowerCase()
   // Components where strings should be content (not text children)
   const contentComponents = [
     'text', 'label', 'title', 'subtitle', 'heading', 'caption',
@@ -492,6 +497,7 @@ function isContentComponent(node: ASTNode): boolean {
   ]
   return (
     contentComponents.includes(nameLower) ||
+    (primitiveType && contentComponents.includes(primitiveType)) ||
     contentComponents.some(suffix => nameLower.endsWith(suffix))
   )
 }

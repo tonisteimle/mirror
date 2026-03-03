@@ -115,7 +115,7 @@ import type {
 
 // Import modules
 import { createParserContext } from './parser-context'
-import { parseComponent } from './component-parser'
+import { parseComponent, HTML_PRIMITIVES } from './component-parser'
 import { parseComponentDefinition, parseInlineDefinition, parseLibraryDefinition, parseLibraryDefinitionV1, parseTokenDefinition } from './definition-parser'
 import { parseSelectionCommand } from './command-parser'
 import { parseEventsBlock } from './events-parser'
@@ -424,6 +424,11 @@ const PROPERTY_TOKEN_SUFFIXES: Record<string, string[]> = {
   // Font
   'font': ['font'],
   'font-family': ['font'],
+  // Dimensions
+  'w': ['w', 'width'],
+  'width': ['w', 'width'],
+  'h': ['h', 'height'],
+  'height': ['h', 'height'],
 }
 
 /**
@@ -688,12 +693,23 @@ export function parse(input: string, options?: ParseOptions): ParseResult {
     // Library Definition (inline syntax): OptionsMenu as Dropdown: w 200
     // Pattern: COMPONENT_NAME + 'as' + COMPONENT_DEF (e.g., "Tooltip:")
     // Also accepts: COMPONENT_NAME + 'as' + COMPONENT_NAME + COLON (when COMPONENT_DEF not at line start)
+    // BUT NOT for HTML primitives like: SmallIcon as Icon: "circle" (handled by parseComponent)
     if (ctx.current()?.type === 'COMPONENT_NAME' &&
         ctx.peek(1)?.type === 'KEYWORD' && ctx.peek(1)?.value === 'as' &&
         (ctx.peek(2)?.type === 'COMPONENT_DEF' ||
          (ctx.peek(2)?.type === 'COMPONENT_NAME' && ctx.peek(3)?.type === 'COLON' && ctx.peek(4)?.type !== 'BRACE_OPEN'))) {
-      parseLibraryDefinitionV1(ctx)
-      continue
+      // Extract type name from COMPONENT_DEF or COMPONENT_NAME
+      const typeToken = ctx.peek(2)
+      const typeName = typeToken?.type === 'COMPONENT_DEF'
+        ? typeToken.value.replace(/:$/, '')
+        : typeToken?.value
+      // Use parseLibraryDefinitionV1 for:
+      // 1. Non-primitive types (custom components)
+      // 2. Primitive types that have a custom template registered (e.g., Button: with children)
+      if (typeName && (!HTML_PRIMITIVES.includes(typeName) || ctx.registry.has(typeName))) {
+        parseLibraryDefinitionV1(ctx)
+        continue
+      }
     }
 
     // Theme definition: theme dark: ...

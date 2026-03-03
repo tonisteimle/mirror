@@ -2767,6 +2767,51 @@
           ]
         },
         {
+          "id": "input-children",
+          "title": "Value & Placeholder Children",
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Input and Textarea support <code>Value</code> and <code>Placeholder</code> as styleable children. This gives you fine-grained control over text styling within form fields."
+            },
+            {
+              "type": "code",
+              "code": "StyledInput:\n    Input\n    width 250\n    height 36\n    background #27272A\n    radius 6\n    Placeholder \"Enter email...\" col #71717A\n    Value col #E4E4E7\n\nLoginForm\n    gap 12\n    StyledInput",
+              "expects": {
+                "nodes": [
+                  {
+                    "name": "LoginForm",
+                    "properties": {
+                      "gap": 12
+                    },
+                    "childCount": 1
+                  }
+                ]
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "<strong>State-Dependent Styling</strong>"
+            },
+            {
+              "type": "paragraph",
+              "text": "Combine with state child overrides to change Value or Placeholder styling based on component state:"
+            },
+            {
+              "type": "code",
+              "code": "ValidatedInput:\n    Input\n    width 250\n    background #27272A\n    radius 6\n    Placeholder \"Name\" col #71717A\n    Value col #71717A\n    state filled\n        Value col #E4E4E7\n    state invalid\n        Value col #EF4444\n\nForm\n    ValidatedInput",
+              "expects": {
+                "nodes": [
+                  {
+                    "name": "Form",
+                    "childCount": 1
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
           "id": "image",
           "title": "Image",
           "content": [
@@ -5420,40 +5465,32 @@
           "content": [
             {
               "type": "paragraph",
-              "text": "Combining everything into a production-ready pattern:"
+              "text": "Combining everything into a production-ready pattern with variable binding, hover/active states, and keyboard navigation:"
             },
             {
               "type": "code",
-              "code": "// The trigger button\nTrigger:\n    background #1A1A23\n    padding 12 16\n    radius 8\n    border 1 #333\n    horizontal\n    between\n    ver-cen\n    width 200\n    cursor pointer\n    onclick toggle Dropdown\n    Text\n        \"Select option...\"\n    Icon\n        icon-size 14\n        color #888\n        \"chevron-down\"\n\n// Menu items with three states\nItem:\n    padding 10 14\n    radius 6\n    cursor pointer\n    state default\n        background transparent\n    state highlighted\n        background #333\n    state selected\n        background #2271c1\n    onclick select self\n    close Dropdown\n    onhover highlight self\n\n// The dropdown with keyboard support\nDropdown:\n    vertical\n    background #1A1A23\n    padding 6\n    radius 8\n    width 200\n    hidden\n    shadow lg\n    border 1 #333\n    onclick-outside close self\n    onkeydown escape: close self\n    onkeydown arrow-down: highlight next\n    onkeydown arrow-up: highlight prev\n    onkeydown enter: select highlighted\n    close self\n\n// Usage\nSelect\n    vertical\n    gap 4\n    Trigger\n    Dropdown\n        Item\n            icon \"home\"\n            \"Dashboard\"\n        Item\n            icon \"user\"\n            \"Profile\"\n        Item\n            icon \"settings\"\n            \"Settings\"\n        Item\n            icon \"log-out\"\n            color #EF4444\n            \"Logout\"",
+              "code": "// Variable für den ausgewählten Wert\n$selected: \"Select...\"\n\n// Item-Templates für verschiedene Positionen\nDropdown.FirstItem: pad 8 12, rad tl 4 tr 4, cursor pointer\n    onhover highlight self\n    state highlighted bg #333\n    state active bg #222\n\nDropdown.Item: pad 8 12, rad 0, cursor pointer\n    onhover highlight self\n    state highlighted bg #333\n    state active bg #222\n\nDropdown.LastItem: pad 8 12, rad bl 4 br 4, cursor pointer\n    onhover highlight self\n    state highlighted bg #333\n    state active bg #222\n\n// Dropdown-Komponente\nDropdown\n    state closed\n    onclick-outside close\n    Trigger hor, ver-cen, gap 8, pad 8 12, bg #252525, rad 6, bor 1 #444, hover-bg #333, cursor pointer\n        onclick toggle\n        Label $selected\n        Icon \"chevron-down\", size 16\n    Menu ver, bg #1E1E1E, rad 6, pad 4, min-width 180, focusable, clip\n        if open\n        onload focus\n        keys\n            escape close\n            arrow-down highlight next\n            arrow-up highlight prev\n            enter select highlighted, close\n        - Dropdown.FirstItem onclick assign $selected to \"Option 1\", close\n            \"Option 1\"\n        - Dropdown.Item onclick assign $selected to \"Option 2\", close\n            \"Option 2\"\n        - Dropdown.LastItem onclick assign $selected to \"Option 3\", close\n            \"Option 3\"",
               "expects": {
                 "nodes": [
                   {
-                    "name": "Select",
-                    "properties": {
-                      "vertical": true,
-                      "gap": 4
-                    },
+                    "name": "Dropdown",
                     "childCount": 2
                   }
                 ],
                 "render": {
-                  "Select": {
-                    "style": {
-                      "flexDirection": "column",
-                      "gap": "4px"
-                    }
-                  },
-                  "Select > Trigger": {
+                  "Dropdown > Trigger": {
                     "style": {
                       "flexDirection": "row",
-                      "justifyContent": "space-between",
-                      "alignItems": "center"
+                      "alignItems": "center",
+                      "gap": "8px",
+                      "cursor": "pointer"
                     }
                   },
-                  "Select > Dropdown": {
+                  "Dropdown > Menu": {
                     "style": {
                       "flexDirection": "column",
-                      "padding": "6px"
+                      "borderRadius": "6px",
+                      "padding": "4px"
                     }
                   }
                 }
@@ -5461,7 +5498,39 @@
             },
             {
               "type": "paragraph",
-              "text": "~25 lines for a fully accessible dropdown with keyboard navigation, click-outside, and selection states. The behavior reads like documentation: \"on keydown arrow-down, highlight next.\""
+              "text": "Key features:"
+            },
+            {
+              "type": "list",
+              "items": [
+                "<strong>Variable binding:</strong> $selected stores the chosen value. The trigger displays $selected and updates on item click.",
+                "<strong>Hover effect:</strong> onhover highlight self activates the highlighted state with bg #333.",
+                "<strong>Active/click effect:</strong> state active bg #222 provides visual feedback during mousedown.",
+                "<strong>Rounded corners:</strong> FirstItem uses rad tl 4 tr 4 (top), LastItem uses rad bl 4 br 4 (bottom), middle items have rad 0.",
+                "<strong>Keyboard navigation:</strong> The keys block handles Escape, ArrowDown/Up, and Enter."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "<strong>Simplified version</strong> (without position-specific corners):"
+            },
+            {
+              "type": "code",
+              "code": "$selected: \"Select...\"\n\nDropdown.Item: pad 8 12, cursor pointer\n    onhover highlight self\n    state highlighted bg #333\n    state active bg #222\n\nDropdown\n    state closed\n    onclick-outside close\n    Trigger hor, ver-cen, gap 8, pad 8 12, bg #252525, rad 6, hover-bg #333, cursor pointer\n        onclick toggle\n        $selected\n        Icon \"chevron-down\"\n    Menu ver, bg #1E1E1E, rad 6, min-width 180, focusable, clip\n        if open\n        keys\n            escape close\n            arrow-down highlight next\n            arrow-up highlight prev\n        - Dropdown.Item onclick assign $selected to \"Option 1\", close\n            \"Option 1\"\n        - Dropdown.Item onclick assign $selected to \"Option 2\", close\n            \"Option 2\"\n        - Dropdown.Item onclick assign $selected to \"Option 3\", close\n            \"Option 3\"",
+              "expects": {
+                "render": {
+                  "Dropdown > Trigger": {
+                    "style": {
+                      "flexDirection": "row",
+                      "cursor": "pointer"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "paragraph",
+              "text": "Both versions provide a polished dropdown with mouse and keyboard support. The behavior reads like documentation: \"on keydown arrow-down, highlight next.\""
             }
           ]
         },

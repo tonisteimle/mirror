@@ -4,7 +4,7 @@
  * Validates token references ($var) and component references (Component.prop).
  */
 
-import type { ASTNode, ParseResult, Expression, ActionStatement, ConditionExpr } from '../../parser/types'
+import type { ASTNode, ParseResult, Expression, ActionStatement, ConditionExpr, ComponentTemplate } from '../../parser/types'
 import type { ValidationResult, ValidationDiagnostic } from '../types'
 import { ValidatorErrorCodes } from '../error-codes'
 import { DiagnosticBuilder } from '../utils/diagnostic-builder'
@@ -34,6 +34,17 @@ export function validateReferences(result: ParseResult, source?: string): Valida
   // Validate all nodes
   for (const node of result.nodes) {
     validateNodeReferences(node, {
+      definedTokens,
+      definedComponents,
+      allNames,
+      diagnostics,
+      sourceLines
+    })
+  }
+
+  // Validate component templates in registry
+  for (const [, template] of result.registry) {
+    validateTemplateReferences(template, {
       definedTokens,
       definedComponents,
       allNames,
@@ -110,12 +121,34 @@ function validateNodeReferences(node: ASTNode, ctx: ValidationContext): void {
   const column = node.column || 0
 
   // Check property values for token references
+  // Token references can be:
+  // 1. Strings starting with "$" (legacy/simple format)
+  // 2. Objects { type: 'token', name: 'tokenName' } (unresolved references)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for (const [key, value] of Object.entries(node.properties)) {
+    // Extract token name from either format
+    let tokenName: string | null = null
+
     if (typeof value === 'string' && value.startsWith('$')) {
-      const tokenName = value.slice(1)
-      // Skip path references ($user.name)
-      if (!tokenName.includes('.') && !ctx.definedTokens.has(tokenName)) {
+      tokenName = value.slice(1)
+    } else if (
+      typeof value === 'object' &&
+      value !== null &&
+      (value as Record<string, unknown>).type === 'token' &&
+      typeof (value as Record<string, unknown>).name === 'string'
+    ) {
+      // Unresolved token reference object
+      tokenName = (value as { type: 'token'; name: string }).name
+    }
+
+    if (tokenName) {
+      // Check if token is defined
+      // For dotted tokens like $control.bg, check if full name exists
+      // Skip dynamic path references like $item.name (from iteration variables)
+      const isIterationVariable = node.iteration?.itemVar === tokenName.split('.')[0]
+      const isDataPath = tokenName.split('.')[0] === 'event' || tokenName.split('.')[0] === 'item'
+
+      if (!isIterationVariable && !isDataPath && !ctx.definedTokens.has(tokenName)) {
         const suggestions = didYouMean(tokenName, ctx.definedTokens)
         ctx.diagnostics.push(
           DiagnosticBuilder
@@ -205,6 +238,87 @@ function validateNodeReferences(node: ASTNode, ctx: ValidationContext): void {
   }
 }
 
+/**
+ * Validate token references in component templates (from registry)
+ */
+function validateTemplateReferences(template: ComponentTemplate, ctx: ValidationContext): void {
+  const line = template.line || 0
+
+  // Check property values for token references
+  for (const [key, value] of Object.entries(template.properties)) {
+    // Extract token name from either format (string or object)
+    let tokenName: string | null = null
+
+    if (typeof value === 'string' && value.startsWith('$')) {
+      tokenName = value.slice(1)
+    } else if (
+      typeof value === 'object' &&
+      value !== null &&
+      (value as Record<string, unknown>).type === 'token' &&
+      typeof (value as Record<string, unknown>).name === 'string'
+    ) {
+      tokenName = (value as { type: 'token'; name: string }).name
+    }
+
+    if (tokenName) {
+      // Skip dynamic path references like $item.name, $event.value
+      const isDataPath = tokenName.split('.')[0] === 'event' || tokenName.split('.')[0] === 'item'
+
+      if (!isDataPath && !ctx.definedTokens.has(tokenName)) {
+        const suggestions = didYouMean(tokenName, ctx.definedTokens)
+        ctx.diagnostics.push(
+          DiagnosticBuilder
+            .warning(ValidatorErrorCodes.UNDEFINED_TOKEN, 'reference')
+            .message(`Token "$${tokenName}" is not defined`)
+            .at(line, 0)
+            .source(`$${tokenName}`)
+            .suggestAll(suggestions)
+            .suggest('Define the token', `$${tokenName}: <value>`)
+            .build()
+        )
+      }
+    }
+  }
+
+  // Recursively validate children
+  for (const child of template.children) {
+    validateNodeReferences(child, ctx)
+  }
+
+  // Validate states
+  if (template.states) {
+    for (const state of template.states) {
+      for (const [key, value] of Object.entries(state.properties)) {
+        let tokenName: string | null = null
+
+        if (typeof value === 'string' && value.startsWith('$')) {
+          tokenName = value.slice(1)
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          (value as Record<string, unknown>).type === 'token' &&
+          typeof (value as Record<string, unknown>).name === 'string'
+        ) {
+          tokenName = (value as { type: 'token'; name: string }).name
+        }
+
+        if (tokenName && !ctx.definedTokens.has(tokenName)) {
+          const suggestions = didYouMean(tokenName, ctx.definedTokens)
+          ctx.diagnostics.push(
+            DiagnosticBuilder
+              .warning(ValidatorErrorCodes.UNDEFINED_TOKEN, 'reference')
+              .message(`Token "$${tokenName}" is not defined`)
+              .at(line, 0)
+              .source(`$${tokenName}`)
+              .suggestAll(suggestions)
+              .build()
+          )
+        }
+      }
+    }
+  }
+}
+
 function validateConditionReferences(cond: ConditionExpr, ctx: ValidationContext): void {
   switch (cond.type) {
     case 'var':
@@ -284,7 +398,10 @@ function validateExpressionReferences(
     if (expr.operand) validateExpressionReferences(expr.operand, ctx, line)
   } else if (typeof value === 'string' && value.startsWith('$')) {
     const tokenName = value.slice(1)
-    if (!tokenName.includes('.') && !ctx.definedTokens.has(tokenName)) {
+    // Skip dynamic path references like $item.name, $event.value
+    const isDataPath = tokenName.split('.')[0] === 'event' || tokenName.split('.')[0] === 'item'
+
+    if (!isDataPath && !ctx.definedTokens.has(tokenName)) {
       ctx.diagnostics.push(
         DiagnosticBuilder
           .warning(ValidatorErrorCodes.UNDEFINED_TOKEN, 'reference')

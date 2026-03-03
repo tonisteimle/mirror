@@ -5,12 +5,11 @@
  * die inkrementelles UI-Building simulieren.
  */
 
-// Re-export all docu utils
-export * from '../../docu/utils'
+// Re-export from central test-utils
+export { parse, parseAndRender, getParseErrors, getSyntaxWarnings, colorsMatch } from '../../test-utils'
 
 // Journey-spezifische Utilities
-import { parse } from '../../../parser/parser'
-import { parseAndRender, getParseErrors, colorsMatch } from '../../docu/utils'
+import { parse, parseAndRender, getParseErrors, colorsMatch } from '../../test-utils'
 import { screen, fireEvent } from '@testing-library/react'
 
 // ============================================================

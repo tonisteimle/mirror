@@ -6,11 +6,12 @@
 }
 
 /* Reset browser defaults for form elements in preview */
-input, textarea {
+input, textarea, button {
   border: none;
   outline: none;
   font: inherit;
   color: inherit;
+  background: transparent;
 }
 
 :root {
@@ -38,96 +39,6 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-/* Radix UI animations */
-@keyframes slideDownAndFade {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUpAndFade {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Radix Dialog overlay animation */
-[data-state="open"][data-radix-dialog-overlay] {
-  animation: fadeIn 0.15s ease-out;
-}
-
-[data-state="closed"][data-radix-dialog-overlay] {
-  animation: fadeOut 0.15s ease-out;
-}
-
-/* Radix Dialog content animation */
-[data-state="open"][data-radix-dialog-content] {
-  animation: scaleIn 0.15s ease-out;
-}
-
-/* Radix Dropdown content animation */
-[data-radix-dropdown-menu-content] {
-  animation: slideDownAndFade 0.15s ease-out;
-}
-
-/* Radix Tooltip content animation */
-[data-radix-tooltip-content] {
-  animation: fadeIn 0.15s ease-out;
-}
-
-/* Radix Select content animation */
-[data-radix-select-content] {
-  animation: slideDownAndFade 0.15s ease-out;
-}
-
-/* Radix Accordion content animation */
-[data-state="open"][data-radix-accordion-content] {
-  animation: slideDownAndFade 0.2s ease-out;
-}
-
-[data-state="closed"][data-radix-accordion-content] {
-  animation: slideUpAndFade 0.2s ease-out;
 }
 
 /* Overlay backdrop animations */

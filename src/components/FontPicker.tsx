@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef, memo } from 'react'
 import { colors } from '../theme'
 import { usePickerWithSearch } from '../hooks/usePickerWithSearch'
 import { useGroupedItems } from '../hooks/useGroupedItems'
-import { BasePicker, PickerList, PickerFooter, PickerSearch, PickerItem, CategoryHeader, EmptyState } from './picker'
+import { BasePicker, PickerList, PickerFooter, PickerItem, CategoryHeader, EmptyState } from './picker'
 import type { Position } from '../types/common'
 
 interface FontPickerProps {
@@ -10,6 +10,8 @@ interface FontPickerProps {
   onClose: () => void
   onSelect: (value: string) => void
   position: Position
+  /** External filter query (typed in editor) - focus stays in editor */
+  initialQuery?: string
 }
 
 interface FontItem {
@@ -192,6 +194,7 @@ export const FontPicker = memo(function FontPicker({
   onClose,
   onSelect,
   position,
+  initialQuery = '',
 }: FontPickerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -202,15 +205,12 @@ export const FontPicker = memo(function FontPicker({
   )
 
   // Combined search, filter, and navigation
+  // Focus stays in editor - we receive filter via initialQuery prop
   const {
-    query,
-    setQuery,
     filteredItems,
     selectedIndex,
     setSelectedIndex,
     listRef,
-    inputRef,
-    handleKeyDown,
     handleSelect,
   } = usePickerWithSearch({
     isOpen,
@@ -218,6 +218,8 @@ export const FontPicker = memo(function FontPicker({
     items: googleFonts,
     getSearchableFields: getFontSearchableFields,
     onSelectItem: handleFontSelect,
+    initialQuery,
+    autoFocus: false, // Focus stays in editor
   })
 
   // Group by category with stable indices
@@ -233,6 +235,35 @@ export const FontPicker = memo(function FontPicker({
       loadAllGoogleFonts()
     }
   }, [isOpen])
+
+  // Global keyboard handler - focus stays in editor
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex(i => Math.min(i + 1, filteredItems.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex(i => Math.max(i - 1, 0))
+          break
+        case 'Enter':
+          e.preventDefault()
+          handleSelect(selectedIndex)
+          break
+        case 'Escape':
+          e.preventDefault()
+          onClose()
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, filteredItems.length, selectedIndex, setSelectedIndex, handleSelect, onClose])
 
   // Get the currently selected font for the preview
   const selectedFont = filteredItems[selectedIndex]
@@ -253,16 +284,7 @@ export const FontPicker = memo(function FontPicker({
         />
       }
     >
-      {/* Search Input */}
-      <PickerSearch
-        ref={inputRef}
-        value={query}
-        onChange={setQuery}
-        onKeyDown={handleKeyDown}
-        placeholder="Font suchen..."
-      />
-
-      {/* Font List - compact, font name in its own typeface */}
+      {/* Font List - no search input, focus stays in editor */}
       <PickerList ref={(el) => {
         // Combine refs
         if (listRef) (listRef as React.MutableRefObject<HTMLDivElement | null>).current = el

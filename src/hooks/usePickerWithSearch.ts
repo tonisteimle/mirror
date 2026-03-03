@@ -35,6 +35,8 @@ export interface UsePickerWithSearchConfig<T> {
   customKeyHandlers?: UsePickerBehaviorConfig['customKeyHandlers']
   /** Debounce delay in ms for search (default: 0 = no debounce, recommended: 100-200 for large lists) */
   debounceMs?: number
+  /** Whether to auto-focus when opened (default: true). Set to false to keep focus in editor. */
+  autoFocus?: boolean
 }
 
 export interface UsePickerWithSearchReturn<T> {
@@ -74,6 +76,7 @@ export function usePickerWithSearch<T>({
   columns = 1,
   customKeyHandlers,
   debounceMs = 0,
+  autoFocus = true,
 }: UsePickerWithSearchConfig<T>): UsePickerWithSearchReturn<T> {
   // Search state
   const [query, setQuery] = useState(initialQuery)
@@ -116,14 +119,13 @@ export function usePickerWithSearch<T>({
     columns,
     onSelect: handleSelectByIndex,
     customKeyHandlers,
+    autoFocus,
   })
 
-  // Reset query and selection when opened
+  // Sync query with external initialQuery (for inline editing where focus stays in editor)
   useEffect(() => {
-    if (isOpen) {
-      setQuery(initialQuery)
-    }
-  }, [isOpen, initialQuery])
+    setQuery(initialQuery)
+  }, [initialQuery])
 
   // Reset selection when query changes
   useEffect(() => {

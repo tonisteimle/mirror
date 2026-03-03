@@ -329,6 +329,7 @@ export const EmbeddableEditor = memo(function EmbeddableEditor({
             selectedIndex={colorPanel.state.selectedIndex}
             onSelectedIndexChange={colorPanel.setSelectedIndex}
             onSelectedValueChange={colorPanel.setSelectedValue}
+            propertyContext={colorPanel.state.propertyContext}
           />
         )}
 

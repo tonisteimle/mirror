@@ -1,0 +1,54 @@
+// Generated Dropdown - Test
+
+// STRUCTURE
+Dropdown:
+  Trigger:
+    Label:
+    ChevronIcon:
+  Menu:
+    Item:
+
+// LAYOUT
+Trigger: hor, center, spread
+Menu: ver
+Item: hor, center
+
+// STYLING
+Trigger: bg #1A1A23, bor 1 #333, rad 6, pad 8 12
+Menu: bg #1A1A23, bor 1 #333, rad 6, shadow md
+Item: pad 8 12, col #E4E4E7
+Label: col #E4E4E7, font-size 13
+ChevronIcon: col #71717A
+
+// STATES
+Menu: hidden
+
+Item:
+  state hover bg #333
+  state highlighted bg #333
+  state selected bg #2563EB, col white
+
+// EVENTS
+Trigger:
+  onclick toggle Menu
+
+Menu:
+  onclick-outside close
+  keys
+    escape close
+    arrow-down highlight next
+    arrow-up highlight prev
+    enter select highlighted, close
+
+Item:
+  onclick select
+  onhover highlight
+
+// USAGE
+Dropdown
+  Label "Select option"
+  ChevronIcon "chevron-down"
+  Menu
+    - Item "Option 1"
+    - Item "Option 2"
+    - Item "Option 3"

@@ -1,0 +1,127 @@
+// Design Tokens
+$default.bor: #333333
+$default.col: #E4E4E7
+$default.font-size: 14
+$elevated.bg: #1A1A23
+$heading.col: #F4F4F5
+$highlighted.bg: #333333
+$hover.bg: #333333
+$lg.font-size: 16
+$lg.gap: 16
+$lg.pad: 16
+$lg.rad: 8
+$md.pad: 12
+$md.rad: 6
+$muted.col: #A1A1AA
+$primary.bg: #3B82F6
+$selected.bg: #2563EB
+$sm.font-size: 12
+$sm.gap: 8
+$sm.pad: 8
+$subtle.bor: #3F3F46
+$surface.bg: #18181B
+$xs.gap: 4
+
+// Component Definitions
+Sidebar: ver, width 240, height full, bg $surface.bg, pad $md.pad
+  Logo: pad $md.pad $lg.pad
+    LogoIcon:
+    LogoText: font-size $lg.font-size, weight bold, col $heading.col
+  NavSection: ver, gap $xs.gap
+    SectionTitle: col $muted.col, font-size $sm.font-size, pad $sm.pad $lg.pad, uppercase
+  NavItem: hor, gap $sm.gap, ver-center, pad $sm.pad $lg.pad, rad $md.rad, col $default.col
+    state hover bg $hover.bg
+    state active bg $primary.bg, col white
+    NavIcon:
+    NavLabel: 
+
+Header: hor, spread, ver-center, pad $md.pad $lg.pad, bg $surface.bg, bor b 1 $default.bor
+  HeaderLeft: ver, gap $xs.gap
+    Title: col $heading.col, font-size $lg.font-size, weight bold
+    Subtitle: col $muted.col, font-size $sm.font-size
+  Actions: hor, gap $sm.gap
+
+StatsCard: ver, gap 4, bg $elevated.bg, pad $lg.pad, rad $lg.rad
+  Title: col $muted.col, font-size $sm.font-size, uppercase
+  Value: col $heading.col, font-size 24, weight bold
+  Trend: hor, gap 4, ver-center
+    TrendIcon: col $success.col
+    TrendValue: col $success.col, font-size $sm.font-size
+  Icon: col $muted.col
+
+DataTable: ver, bg $elevated.bg, rad $lg.rad, bor 1 $default.bor
+  TableHeader: hor, bg $surface.bg, pad $sm.pad $lg.pad
+    Column: col $muted.col, font-size $sm.font-size, weight 600
+  TableBody: ver
+    Row: hor, pad $sm.pad $lg.pad, bor b 1 $default.bor
+      state hover bg $hover.bg
+      Cell: col $default.col, font-size $default.font-size
+
+RecentOrders: ver, gap $lg.gap, bg $surface.bg, bor 1 $default.bor, rad $lg.rad, pad $lg.pad, shadow sm
+  state hover bg $highlighted.bg
+  state selected bg $selected.bg, col #FFFFFF
+  onhover highlight
+  DataTable: ver, gap $sm.gap, col $default.col, font-size $default.font-size, hidden
+    state hover bg $highlighted.bg
+    state selected bg $selected.bg, col #FFFFFF
+    onhover highlight
+
+StatsCardLayout:
+  StatsCard: bg $elevated.bg, bor 1 $subtle.bor, rad $md.rad, pad $md.pad $lg.pad, col $default.col, hidden
+    state hover bg $highlighted.bg
+    state selected bg $selected.bg, col #FFFFFF
+    state highlighted boc #2563EB
+    state active opacity 0.$lg.rad
+    onhover highlight
+  StatsCardTitle: col $muted.col, font-size $default.font-size
+  StatsCardValue: col $default.col, font-size 18
+  StatsCardTrend: col #2563EB, font-size $default.font-size
+
+StatsCardContainer: hor, gap $lg.gap, hor-center, bg $surface.bg, bor 1 $default.bor, rad $lg.rad, pad $lg.pad, shadow sm
+
+// Usage
+Sidebar
+  Logo
+    LogoIcon "command"
+    LogoText "Acme Inc"
+  NavSection
+    SectionTitle "Main"
+    - NavItem NavIcon "home"; NavLabel "Dashboard"
+    - NavItem NavIcon "users"; NavLabel "Users"
+    - NavItem NavIcon "orders"; NavLabel "Orders"
+    - NavItem NavIcon "settings"; NavLabel "Settings"
+
+Header
+  Title "Dashboard"
+  Subtitle "Welcome back, John"
+  Actions
+    Button "Export"
+    Button "Settings"
+
+StatsCardContainer
+  - StatsCard
+    Title "Total Users"
+    Value "12,345"
+    Trend
+      TrendIcon "trending-up"
+      TrendValue "+12%"
+    Icon "users"
+  - StatsCard
+    Title "Revenue"
+    Value "$45,678"
+    Trend
+      TrendIcon "trending-up"
+      TrendValue "+8%"
+    Icon "dollar-sign"
+  - StatsCard
+    Title "Active Orders"
+    Value "234"
+    Trend
+      TrendIcon "trending-down"
+      TrendValue "-3%"
+    Icon "shopping-cart"
+
+RecentOrders
+  DataTable
+    - Row "John Doe" "$123.45" "Completed" "2024-01-15"
+    - Row "Jane Smith" "$67.89" "Pending" "2024-01-14"

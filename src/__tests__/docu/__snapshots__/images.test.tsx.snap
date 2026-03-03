@@ -1,5 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`Images: Snapshot > sollte Basic Image dem Snapshot entsprechen 1`] = `"<div data-id="Image1" data-source-line="0" class="Image" style="display: inline-block;"><img alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" src="https://example.com/image.jpg"></div>"`;
-
-exports[`Images: Snapshot > sollte Image Size dem Snapshot entsprechen 1`] = `"<div data-id="Image1" data-source-line="0" class="Image" style="display: inline-block; width: 200px; max-width: 200px; flex-shrink: 0; height: 150px; max-height: 150px; border-radius: 8px;"><img alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" src="https://example.com/image.jpg"></div>"`;

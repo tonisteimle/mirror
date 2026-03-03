@@ -111,30 +111,34 @@ export function createSmartEnterKeymap(): Extension {
   ])
 }
 
+// Indent size for Tab/Shift-Tab
+const INDENT_SIZE = 3
+const INDENT_STRING = '   ' // 3 spaces
+
 /**
  * Tab handler - handles both single cursor and multi-line selection.
- * - Single cursor or selection within one line: insert 2 spaces
- * - Selection spanning multiple lines: indent all selected lines by 2 spaces
+ * - Single cursor or selection within one line: insert 3 spaces
+ * - Selection spanning multiple lines: indent all selected lines by 3 spaces
  */
 function smartTabHandler(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
   const startLine = view.state.doc.lineAt(from)
   const endLine = view.state.doc.lineAt(to)
 
-  // Multiple lines selected: indent each line by 2 spaces
+  // Multiple lines selected: indent each line by 3 spaces
   if (startLine.number !== endLine.number) {
     const changes: Array<{ from: number; to: number; insert: string }> = []
 
-    // Add 2 spaces at the start of each line in selection
+    // Add 3 spaces at the start of each line in selection
     for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
       const line = view.state.doc.line(lineNum)
-      changes.push({ from: line.from, to: line.from, insert: '  ' })
+      changes.push({ from: line.from, to: line.from, insert: INDENT_STRING })
     }
 
     // Calculate new selection: expand to include added spaces
     const linesCount = endLine.number - startLine.number + 1
-    const newFrom = from + 2 // First line gets 2 spaces added before selection start
-    const newTo = to + (linesCount * 2) // Each line adds 2 spaces
+    const newFrom = from + INDENT_SIZE // First line gets 3 spaces added before selection start
+    const newTo = to + (linesCount * INDENT_SIZE) // Each line adds 3 spaces
 
     view.dispatch({
       changes,
@@ -143,17 +147,17 @@ function smartTabHandler(view: EditorView): boolean {
     return true
   }
 
-  // Single line: insert 2 spaces (replacing selection if any)
+  // Single line: insert 3 spaces (replacing selection if any)
   view.dispatch({
-    changes: { from, to, insert: '  ' },
-    selection: { anchor: from + 2 }
+    changes: { from, to, insert: INDENT_STRING },
+    selection: { anchor: from + INDENT_SIZE }
   })
   return true
 }
 
 /**
  * Shift+Tab handler - removes indentation from selected lines.
- * Removes up to 2 spaces from the beginning of each line.
+ * Removes up to 3 spaces from the beginning of each line.
  */
 function smartShiftTabHandler(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
@@ -164,17 +168,19 @@ function smartShiftTabHandler(view: EditorView): boolean {
   let totalRemoved = 0
   let firstLineRemoved = 0
 
-  // Remove up to 2 spaces from the start of each line
+  // Remove up to 3 spaces from the start of each line
   for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
     const line = view.state.doc.line(lineNum)
     const lineText = line.text
 
-    // Count leading spaces (max 2)
+    // Count leading spaces (max 3)
     let spacesToRemove = 0
-    if (lineText.startsWith('  ')) {
-      spacesToRemove = 2
-    } else if (lineText.startsWith(' ')) {
-      spacesToRemove = 1
+    for (let i = 0; i < INDENT_SIZE && i < lineText.length; i++) {
+      if (lineText[i] === ' ') {
+        spacesToRemove++
+      } else {
+        break
+      }
     }
 
     if (spacesToRemove > 0) {

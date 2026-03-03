@@ -16,6 +16,8 @@ interface LazyIconPickerProps {
   onClose: () => void
   onSelect: (iconName: string) => void
   position: Position
+  /** External filter query (typed in editor) - focus stays in editor */
+  initialQuery?: string
 }
 
 // Loading fallback

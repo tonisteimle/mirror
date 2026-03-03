@@ -82,6 +82,8 @@ export const PreviewContainer = memo(function PreviewContainer({
           <ComponentLibraryView
             registry={parsing.parseResult.registry}
             tokens={parsing.parseResult.tokens}
+            componentsCode={componentsCode}
+            tokensCode={tokensCode}
           />
         </PreviewErrorBoundary>
       )}

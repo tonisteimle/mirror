@@ -12,7 +12,7 @@ import type { ColorPanelState } from './useColorPanel'
 // ============================================================================
 
 export type ColorPanelAction =
-  | { type: 'OPEN'; position: { x: number; y: number }; triggerPos: number }
+  | { type: 'OPEN'; position: { x: number; y: number }; triggerPos: number; propertyContext: string | null }
   | { type: 'CLOSE' }
   | { type: 'UPDATE_FILTER'; filter: string }
   | { type: 'SET_SELECTED_INDEX'; index: number }
@@ -26,6 +26,7 @@ export const colorPanelInitialState: ColorPanelState = {
   triggerPos: 0,
   replaceRange: null,
   selectedValue: null,
+  propertyContext: null,
 }
 
 /**
@@ -47,6 +48,7 @@ export function colorPanelReducer(
         triggerPos: action.triggerPos,
         replaceRange: null,
         selectedValue: null,
+        propertyContext: action.propertyContext,
       }
 
     case 'CLOSE':

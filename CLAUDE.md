@@ -279,6 +279,22 @@ Option: pad 10, rad 6, cursor pointer
 
 **Merge-Regeln:** Properties überschreiben, Events/Children/States werden gemerged.
 
+### Section Headers
+
+Gruppierung von Komponenten in der Component Library mit Titeln.
+
+```
+--- Buttons ---
+PrimaryButton: pad 12, bg #3B82F6
+SecondaryButton: pad 12, bg transparent, bor 1 #3B82F6
+
+--- Cards ---
+Card: pad 16, bg #1a1a23, rad 8
+InfoCard as Card: bor 1 #3B82F6
+```
+
+Die Sections werden in der Component Library View als Überschriften angezeigt.
+
 ### Instanzen
 
 Komponenten verwenden (ohne Doppelpunkt).
@@ -562,6 +578,38 @@ Native HTML-Elemente
 | `Icon "name"` | Icon (Lucide oder Material) |
 | `Segment segments 4` | Segmentiertes Eingabefeld |
 
+### Input/Textarea Children
+
+Input und Textarea unterstützen `Value` und `Placeholder` als stylbare Children.
+
+```
+Input:
+  Placeholder "E-Mail eingeben..." col #888
+  Value "john@example.com" col #fff
+```
+
+| Child | Description |
+|-------|-------------|
+| `Placeholder` | Placeholder-Text mit optionalem Styling |
+| `Value` | Vorausgefüllter Wert mit optionalem Styling |
+
+**Example:**
+```
+// Nur Placeholder
+Input:
+  Placeholder "Suchen..." col $muted
+
+// Mit Wert
+Input:
+  Placeholder "Name" col $muted
+  Value "Max Mustermann" col $text
+
+// Textarea mit Value
+Textarea:
+  Placeholder "Beschreibung..." col $muted
+  Value "Bestehender Text" col $text
+```
+
 ### Icons
 
 Lucide (default) oder Material Icons.
@@ -586,6 +634,7 @@ Automatisch vom Browser bei Interaktion.
 | `focus` | Element hat Fokus |
 | `active` | Element ist aktiv (gedrückt) |
 | `disabled` | Element ist deaktiviert |
+| `filled` | Input/Textarea hat Wert (CSS: `:not(:placeholder-shown)`) |
 
 ### Behavior States
 
@@ -626,6 +675,46 @@ Inline-Syntax für kompakte Definitionen:
 ```
 state highlighted bg #333, col white
 state selected bg $primary.bg
+```
+
+### State Child Overrides
+
+States können auch Child-Properties überschreiben. Nützlich für Input Value/Placeholder Styling pro State.
+
+```
+Input:
+  Placeholder "E-Mail..." col $muted
+  Value col $muted
+  state filled
+    Value col $text
+  state invalid
+    Value col $danger
+```
+
+**Syntax:**
+```
+state stateName
+  ChildName property value
+```
+
+**Example:**
+```
+// Input mit verschiedenen Value-Farben pro State
+Input: w 250, h 34, bg $control.bg
+  Placeholder "Name eingeben..." col $muted
+  Value col $muted
+  state filled
+    Value col $text
+  state invalid
+    Value col $danger.col
+
+// Toggle mit Child-Override
+Toggle:
+  Thumb:
+  state on
+    Thumb margin-left 18
+  state off
+    Thumb margin-left 0
 ```
 
 ## Events
@@ -1030,6 +1119,10 @@ VISUAL      o (opacity), shadow, cursor, z, hidden, disabled, rot
 STATES      hover, focus, active, disabled (indented block)
             state highlighted, state selected
             state highlighted bg #333, col white (inline syntax)
+            state filled { ChildName prop val } (child overrides)
+
+INPUT       Input: Placeholder "text" col $muted; Value "text" col $text
+            state filled { Value col $text } (state-dependent child styling)
 
 EVENTS      onclick, onhover, onfocus, onblur, onchange, oninput
             onkeydown KEY: action, onkeyup KEY: action

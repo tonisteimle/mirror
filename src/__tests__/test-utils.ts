@@ -10,6 +10,16 @@ import { propertiesToStyle } from '../utils/style-converter'
 import { tokenize } from '../parser/lexer'
 import { createParserContext, type ParserContext } from '../parser/parser-context'
 import type { ASTNode } from '../parser/types'
+import { render as rtlRender } from '@testing-library/react'
+import {
+  generateReactElement,
+  BehaviorRegistryProvider,
+  ComponentRegistryProvider,
+  TemplateRegistryProvider,
+  OverlayRegistryProvider,
+  DataProvider
+} from '../generator/react-generator'
+import React from 'react'
 
 // =============================================================================
 // Core Parsing Utilities
@@ -21,6 +31,119 @@ import type { ASTNode } from '../parser/types'
  */
 export function parse(code: string): ParseResult {
   return parseAST(code)
+}
+
+// =============================================================================
+// Render Utilities (for DOM testing)
+// =============================================================================
+
+/**
+ * Wrapper component providing all required contexts for rendering
+ */
+function RenderWrapper({ children, registry }: { children: React.ReactNode, registry?: Map<string, unknown> }) {
+  return React.createElement(
+    BehaviorRegistryProvider,
+    null,
+    React.createElement(
+      ComponentRegistryProvider,
+      null,
+      React.createElement(
+        TemplateRegistryProvider,
+        { registry: registry || new Map() },
+        React.createElement(
+          OverlayRegistryProvider,
+          null,
+          React.createElement(
+            DataProvider,
+            { allRecords: new Map(), schemas: [] },
+            children
+          )
+        )
+      )
+    )
+  )
+}
+
+/**
+ * Parse Mirror code and render to DOM.
+ * Returns the render result from @testing-library/react.
+ *
+ * @example
+ * parseAndRender('Button "Click me"')
+ * expect(screen.getByText('Click me')).toBeInTheDocument()
+ */
+export function parseAndRender(code: string) {
+  const result = parseAST(code)
+  // Only throw on actual errors, not warnings
+  const realErrors = result.errors.filter(e => !String(e).startsWith('Warning:'))
+  if (realErrors.length > 0) {
+    throw new Error(`Parse errors:\n${realErrors.map(e => `  - ${e}`).join('\n')}\n\nCode:\n${code}`)
+  }
+
+  const element = generateReactElement(result.nodes, {})
+  return rtlRender(
+    React.createElement(RenderWrapper, { registry: result.registry as Map<string, unknown> }, element)
+  )
+}
+
+/**
+ * Get parse errors from a parse result (excludes warnings).
+ *
+ * @example
+ * const result = parse('Box unknown-prop')
+ * const errors = getParseErrors(result)
+ */
+export function getParseErrors(result: ParseResult): Array<{ message: string }> {
+  return result.errors
+    .filter(e => !String(e).startsWith('Warning:'))
+    .map(e => ({ message: typeof e === 'string' ? e : String(e) }))
+}
+
+/**
+ * Get syntax warnings from a parse result.
+ *
+ * @example
+ * const result = parse('Dropdown\n  DropdownTrigger')
+ * const warnings = getSyntaxWarnings(result)
+ */
+export function getSyntaxWarnings(result: ParseResult): string[] {
+  return result.errors.filter(e => String(e).startsWith('Warning:')).map(e => String(e))
+}
+
+/**
+ * Compare two colors, normalizing format.
+ * Handles hex, rgb, rgba formats.
+ *
+ * @example
+ * colorsMatch('#FF0000', 'rgb(255, 0, 0)') // true
+ */
+export function colorsMatch(actual: string, expected: string): boolean {
+  const normalizeColor = (color: string): string => {
+    // Remove whitespace
+    color = color.trim().toLowerCase()
+
+    // Convert hex to rgb
+    if (color.startsWith('#')) {
+      const hex = color.slice(1)
+      if (hex.length === 3) {
+        const r = parseInt(hex[0] + hex[0], 16)
+        const g = parseInt(hex[1] + hex[1], 16)
+        const b = parseInt(hex[2] + hex[2], 16)
+        return `rgb(${r}, ${g}, ${b})`
+      }
+      if (hex.length === 6) {
+        const r = parseInt(hex.slice(0, 2), 16)
+        const g = parseInt(hex.slice(2, 4), 16)
+        const b = parseInt(hex.slice(4, 6), 16)
+        return `rgb(${r}, ${g}, ${b})`
+      }
+    }
+
+    // Normalize rgb/rgba whitespace
+    return color.replace(/\s+/g, ' ').replace(/,\s*/g, ', ')
+  }
+
+  return normalizeColor(actual) === normalizeColor(expected)
 }
 
 /**

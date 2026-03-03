@@ -1,0 +1,95 @@
+// Component Definitions
+
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  HeaderLeft: hor, gap 16, ver-center
+    Logo: col #F4F4F5, font-size 18, weight bold
+    SearchBar: bg #27272A, bor 1 #333, rad 6, pad 10 12, col #A1A1AA, width 300
+  HeaderRight: hor, gap 12, ver-center
+    CartButton: hor, gap 8, ver-center, cursor pointer, pos relative
+      CartIcon: col #F4F4F5, font-size 18
+      CartBadge: size 20, rad 10, bg #EF4444, col white, font-size 11, weight 600, ver-center, hor-center, pos absolute, right -8, top -8
+
+ProductContainer: hor, gap 32, pad 24, bg #0F0F12
+  ProductImage: width 400, height 500, bg #27272A, rad 8, bor 1 #333, ver-center, hor-center
+    ImagePlaceholder: col #A1A1AA, font-size 14
+  ProductDetails: ver, gap 16, width 400
+    ProductTitle: col #F4F4F5, font-size 28, weight bold
+    ProductPrice: col #22C55E, font-size 24, weight bold
+    ProductDescription: col #A1A1AA, font-size 14, line-height 1.6
+    SizeSection: ver, gap 8
+      SizeLabel: col #F4F4F5, font-size 12, weight 600, uppercase
+      SizeButtons: hor, gap 8
+        SizeButton: hor, ver-center, hor-center, width 60, height 40, bg #27272A, bor 1 #333, rad 6, col #E4E4E7, cursor pointer, font-size 14, weight 600
+          state hover bg #333, bor 1 #2563EB
+          state active bg #2563EB, col white, bor 1 #2563EB
+    AddToCartButton: hor, gap 8, ver-center, hor-center, bg #2563EB, col white, pad 12 24, rad 6, cursor pointer, font-size 14, weight 600
+      state hover bg #1D4ED8
+      CartIcon:
+      ButtonLabel:
+
+SimilarProductsSection: ver, gap 16, pad 24, bg #0F0F12
+  SectionTitle: col #F4F4F5, font-size 20, weight bold
+  ProductGrid: hor, gap 16, spread
+    ProductCard: ver, gap 12, bg #1A1A23, rad 8, bor 1 #333, pad 12, cursor pointer, width 280
+      state hover bor 1 #2563EB
+      CardImage: width full, height 250, bg #27272A, rad 6, bor 1 #333, ver-center, hor-center
+        ImagePlaceholder: col #A1A1AA, font-size 12
+      CardInfo: ver, gap 8
+        CardTitle: col #F4F4F5, font-size 14, weight 600
+        CardPrice: col #22C55E, font-size 16, weight bold
+        CardButton: hor, ver-center, hor-center, bg #2563EB, col white, pad 8 16, rad 6, cursor pointer, font-size 12, weight 600
+          state hover bg #1D4ED8
+
+// Page
+
+ProductContainer
+  ProductImage
+    ImagePlaceholder "Product Image"
+  ProductDetails
+    ProductTitle "Premium Sneakers"
+    ProductPrice "$199.99"
+    ProductDescription "High-quality premium sneakers with superior comfort and durability. Perfect for everyday wear and athletic activities. Features advanced cushioning technology and breathable materials."
+    SizeSection
+      SizeLabel "Select Size"
+      SizeButtons
+        - SizeButton "S"
+        - SizeButton "M"
+        - SizeButton "L"
+        - SizeButton "XL"
+    AddToCartButton
+      CartIcon "shopping-cart"
+      ButtonLabel "Add to Cart"
+
+Header
+  HeaderLeft
+    Logo "ShopName"
+    SearchBar "Search products..."
+  HeaderRight
+    CartButton
+      CartIcon "shopping-cart"
+      CartBadge "3"
+
+SimilarProductsSection
+  SectionTitle "Similar Products"
+  ProductGrid
+    - ProductCard
+      CardImage
+        ImagePlaceholder "Product 1"
+      CardInfo
+        CardTitle "Classic Sneakers"
+        CardPrice "$149.99"
+        CardButton "View"
+    - ProductCard
+      CardImage
+        ImagePlaceholder "Product 2"
+      CardInfo
+        CardTitle "Sport Shoes"
+        CardPrice "$179.99"
+        CardButton "View"
+    - ProductCard
+      CardImage
+        ImagePlaceholder "Product 3"
+      CardInfo
+        CardTitle "Casual Kicks"
+        CardPrice "$159.99"
+        CardButton "View"

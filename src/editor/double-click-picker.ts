@@ -14,12 +14,14 @@ import { TYPOGRAPHY_PROPERTIES, parseTypographyProperties } from '../hooks/useTy
 import { getPickerForType, type PickerType } from '../hooks/useEditorTriggers'
 
 export interface DoubleClickPickerConfig {
-  /** Called when double-clicking a color value */
-  onColorDoubleClick: (color: string, from: number, to: number) => void
+  /** Called when double-clicking a color value. replaceAll=true when Alt is held */
+  onColorDoubleClick: (color: string, from: number, to: number, propertyContext?: string, replaceAll?: boolean) => void
   /** Called when double-clicking an icon name */
   onIconDoubleClick: (iconName: string, from: number, to: number) => void
   /** Called when double-clicking a font name */
   onFontDoubleClick: (fontName: string, from: number, to: number) => void
+  /** Called when double-clicking a token reference ($xxx). replaceAll=true when Alt is held */
+  onTokenDoubleClick?: (tokenName: string, from: number, to: number, propertyContext?: string, replaceAll?: boolean) => void
   /** Called when double-clicking a layout property (optional) */
   onLayoutDoubleClick?: (code: string, from: number, to: number) => void
   /** Called when double-clicking a typography property (optional) */
@@ -30,7 +32,22 @@ export interface DoubleClickPickerConfig {
 
 // Regex patterns for detecting value types
 const COLOR_PATTERN = /#[0-9A-Fa-f]{3,8}\b/
+const TOKEN_PATTERN = /^\$[a-zA-Z][\w.-]*$/
+const NUMBER_PATTERN = /^-?\d+$/
 const STRING_PATTERN = /"([^"]*)"/
+
+// Known color properties for context detection
+const COLOR_PROPERTIES = new Set(['bg', 'col', 'color', 'background', 'boc', 'border-color'])
+
+// Known number/spacing properties for context detection
+const NUMBER_PROPERTIES = new Set([
+  'pad', 'padding', 'mar', 'margin', 'gap', 'g',
+  'rad', 'radius', 'width', 'w', 'height', 'h',
+  'size', 'min-width', 'minw', 'max-width', 'maxw',
+  'min-height', 'minh', 'max-height', 'maxh',
+  'font-size', 'fs', 'icon-size', 'is', 'line',
+  'z', 'opacity', 'o', 'rotate', 'rot'
+])
 
 /**
  * Find the token at the given position in the document.
@@ -160,8 +177,38 @@ export function createDoubleClickPickerExtension(config: DoubleClickPickerConfig
       const token = getTokenAtPosition(view, pos)
       if (token && COLOR_PATTERN.test(token.text)) {
         event.preventDefault()
-        config.onColorDoubleClick(token.text, token.from, token.to)
+        // Detect property context from text before the color
+        const textBefore = token.lineText.slice(0, token.from - token.lineFrom)
+        const propMatch = textBefore.match(/\b(\w+)\s*$/)
+        const propertyContext = propMatch ? propMatch[1] : undefined
+        config.onColorDoubleClick(token.text, token.from, token.to, propertyContext, event.altKey)
         return true
+      }
+
+      // Check if clicking on a token reference ($xxx)
+      if (token && TOKEN_PATTERN.test(token.text) && config.onTokenDoubleClick) {
+        event.preventDefault()
+        // Detect property context from text before the token
+        const textBefore = token.lineText.slice(0, token.from - token.lineFrom)
+        const propMatch = textBefore.match(/\b(\w+)\s*$/)
+        const propertyContext = propMatch ? propMatch[1] : undefined
+        config.onTokenDoubleClick(token.text, token.from, token.to, propertyContext, event.altKey)
+        return true
+      }
+
+      // Check if clicking on a number (spacing value)
+      if (token && NUMBER_PATTERN.test(token.text) && config.onTokenDoubleClick) {
+        // Detect property context from text before the number
+        const textBefore = token.lineText.slice(0, token.from - token.lineFrom)
+        const propMatch = textBefore.match(/\b([\w-]+)\s+(?:[\w-]+\s+)*$/)
+        const propertyContext = propMatch ? propMatch[1] : undefined
+
+        // Only trigger for known number properties
+        if (propertyContext && NUMBER_PROPERTIES.has(propertyContext)) {
+          event.preventDefault()
+          config.onTokenDoubleClick(token.text, token.from, token.to, propertyContext, event.altKey)
+          return true
+        }
       }
 
       // Check if clicking on a layout property

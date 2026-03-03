@@ -1,0 +1,47 @@
+// Component Definitions
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  Title: col #F4F4F5, font-size 16, weight bold
+  Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+Sidebar: ver, width 240, height full, bg #18181B, pad 12
+  Logo: pad 12 16, font-size 16, weight bold, col #F4F4F5
+  NavSection: ver, gap 4
+    NavItem: hor, gap 8, pad 8 16, rad 6, col #E4E4E7
+      state hover bg #333
+      state active bg #2563EB, col white
+      NavIcon:
+      NavLabel:
+
+// Page
+Page
+  Sidebar
+  Header
+    - HeaderContent
+      Title "Dashboard"
+      Subtitle "Welcome back"
+      - HeaderActions
+        UserMenu "Admin"
+        NotificationBell "3"
+  StatsSection
+  RecentOrdersCard
+    CardTitle "Recent Orders"
+    CardContent
+      - TableRow
+        OrderID "ORD-001"
+        Customer "John Doe"
+        Amount "$1,234.50"
+        Status "Completed"
+        Date "2024-01-15"
+      - TableRow
+        OrderID "ORD-002"
+        Customer "Jane Smith"
+        Amount "$2,456.00"
+        Status "Pending"
+        Date "2024-01-14"
+      - TableRow
+        OrderID "ORD-003"
+        Customer "Bob Johnson"
+        Amount "$890.25"
+        Status "Shipped"
+        Date "2024-01-13"

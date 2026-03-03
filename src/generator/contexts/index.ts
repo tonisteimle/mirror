@@ -30,3 +30,11 @@ export {
   extractTypography
 } from './typography-context'
 export type { TypographyContextValue } from './typography-context'
+
+// Hover Context (for passing hover state to primitives)
+export { HoverContext, useHoverContext } from './hover-context'
+export type { HoverContextValue } from './hover-context'
+
+// Filled Context (for primitives to report filled state to parent)
+export { FilledContext, useFilledContext } from './filled-context'
+export type { FilledContextValue } from './filled-context'

@@ -68,25 +68,50 @@ const SECTION_HINTS: Record<string, TokenValueType> = {
   'größen': 'size',
 }
 
-// Token name patterns → token type
-const NAME_HINTS: Array<{ pattern: RegExp; type: TokenValueType }> = [
-  { pattern: /col|bg|boc/i, type: 'color' },
-  { pattern: /pad|mar|gap/i, type: 'spacing' },
-  { pattern: /font|fam/i, type: 'font' },
-  { pattern: /fow|weight/i, type: 'weight' },
-  { pattern: /sha|shadow/i, type: 'shadow' },
-  { pattern: /rad|radius/i, type: 'radius' },
-  { pattern: /opa|opacity/i, type: 'opacity' },
-  { pattern: /bor|border/i, type: 'border' },
-  { pattern: /size|fos|\.is$/i, type: 'size' },  // includes icon-size (.is suffix)
+// Token name suffix patterns → token type
+// These match the property suffix (part after last dot) to determine type
+// e.g., "$primary.bg" → suffix is "bg" → type is "color"
+const NAME_SUFFIX_HINTS: Array<{ suffix: string; type: TokenValueType }> = [
+  { suffix: 'col', type: 'color' },
+  { suffix: 'bg', type: 'color' },
+  { suffix: 'boc', type: 'color' },
+  { suffix: 'pad', type: 'spacing' },
+  { suffix: 'mar', type: 'spacing' },
+  { suffix: 'gap', type: 'spacing' },
+  { suffix: 'font', type: 'font' },
+  { suffix: 'fam', type: 'font' },
+  { suffix: 'fow', type: 'weight' },
+  { suffix: 'weight', type: 'weight' },
+  { suffix: 'sha', type: 'shadow' },
+  { suffix: 'shadow', type: 'shadow' },
+  { suffix: 'rad', type: 'radius' },
+  { suffix: 'radius', type: 'radius' },
+  { suffix: 'opa', type: 'opacity' },
+  { suffix: 'opacity', type: 'opacity' },
+  { suffix: 'bor', type: 'border' },
+  { suffix: 'border', type: 'border' },
+  { suffix: 'size', type: 'size' },
+  { suffix: 'fos', type: 'size' },
+  { suffix: 'is', type: 'size' },
 ]
 
 /**
- * Infer type from token name
+ * Infer type from token name by checking the property suffix.
+ * For "$primary.bg", checks if "bg" matches a known suffix.
+ * For "$primary", returns null (no suffix to match).
  */
 function inferTypeFromName(name: string): TokenValueType | null {
-  for (const { pattern, type } of NAME_HINTS) {
-    if (pattern.test(name)) {
+  // Get the last part after the final dot (the property suffix)
+  const lastDotIndex = name.lastIndexOf('.')
+  if (lastDotIndex === -1) {
+    // No dot in name - no property suffix to match
+    return null
+  }
+
+  const suffix = name.slice(lastDotIndex + 1).toLowerCase()
+
+  for (const { suffix: hint, type } of NAME_SUFFIX_HINTS) {
+    if (suffix === hint) {
       return type
     }
   }
@@ -136,7 +161,7 @@ export function resolveTokenReferences(
 ): string {
   if (maxDepth <= 0) return value
 
-  return value.replace(/\$([a-zA-Z][\w-]*)/g, (match, name) => {
+  return value.replace(/\$([a-zA-Z][\w.-]*)/g, (match, name) => {
     const resolved = tokenMap.get(name)
     if (resolved === undefined) return match
 
@@ -178,7 +203,7 @@ export function parseTokens(
   // First pass: collect all raw token values for reference resolution
   const rawTokenMap = new Map<string, string>()
   for (const line of lines) {
-    const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+    const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
     if (tokenMatch) {
       rawTokenMap.set(tokenMatch[1], tokenMatch[2].trim())
     }
@@ -204,7 +229,7 @@ export function parseTokens(
     }
 
     // Parse token definition
-    const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+    const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
     if (tokenMatch) {
       const name = tokenMatch[1]
       const rawValue = tokenMatch[2].trim()
@@ -284,7 +309,7 @@ function parseGlobalColorTokens(code: string): ParsedToken[] {
 
     // Only collect tokens outside of theme blocks
     if (!inThemeBlock) {
-      const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+      const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
       if (tokenMatch) {
         rawTokenMap.set(tokenMatch[1], tokenMatch[2].trim())
       }
@@ -304,7 +329,7 @@ function parseGlobalColorTokens(code: string): ParsedToken[] {
     }
 
     if (!inThemeBlock) {
-      const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+      const tokenMatch = line.match(/^\s*\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
       if (tokenMatch) {
         const name = tokenMatch[1]
         const rawValue = tokenMatch[2].trim()
@@ -369,7 +394,7 @@ export function parseActiveThemeColorTokens(code: string): ParsedToken[] {
 
     if (inTheme) {
       // Check for token definition
-      const tokenMatch = line.match(/^(\s+)\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+      const tokenMatch = line.match(/^(\s+)\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
       if (tokenMatch) {
         const currentIndent = tokenMatch[1].length
         if (themeIndent === -1) {
@@ -404,7 +429,7 @@ export function parseActiveThemeColorTokens(code: string): ParsedToken[] {
     }
 
     if (inTheme) {
-      const tokenMatch = line.match(/^(\s+)\$([a-zA-Z][\w-]*)\s*:\s*(.+)$/)
+      const tokenMatch = line.match(/^(\s+)\$([a-zA-Z][\w.-]*)\s*:\s*(.+)$/)
       if (tokenMatch) {
         const currentIndent = tokenMatch[1].length
         if (themeIndent === -1) {

@@ -79,6 +79,10 @@ export type { ColorSwatchConfig } from './color-swatches'
 export { createDoubleClickPickerExtension } from './double-click-picker'
 export type { DoubleClickPickerConfig } from './double-click-picker'
 
+// Diagnostic decorations (undefined tokens, etc.)
+export { diagnosticDecorationsExtension, updateDiagnostics } from './diagnostic-decorations'
+export type { Diagnostic, DiagnosticLocation } from './diagnostic-decorations'
+
 // Extract utilities
 export {
   getPropertyAtCursor,

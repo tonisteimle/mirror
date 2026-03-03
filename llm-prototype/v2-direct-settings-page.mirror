@@ -1,0 +1,71 @@
+// Component Definitions
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  Title: col #F4F4F5, font-size 16, weight bold
+  Subtitle: col #A1A1AA, font-size 12
+
+Sidebar: ver, width 240, height full, bg #18181B, pad 12
+  Logo: pad 12 16, font-size 16, weight bold, col #F4F4F5
+  NavSection: ver, gap 4
+    NavItem: hor, gap 8, pad 8 16, rad 6, col #E4E4E7
+      state hover bg #333
+      state active bg #2563EB, col white
+      NavLabel:
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+  CardContent: pad 16
+
+Input: hor, bg #27272A, bor 1 #333, rad 6, pad 8 12
+  state focus bor 1 #2563EB
+  Placeholder: col #71717A
+
+Button: hor, gap 8, ver-center, bg #2563EB, col white, pad 8 16, rad 6
+  state hover bg #1D4ED8
+  state disabled opacity 0.5
+  Label:
+
+FormGroup: ver, gap 4
+  Label: col #E4E4E7, font-size 12, weight 600
+  Input:
+
+ButtonGroup: hor, gap 8
+
+// Page
+SettingsPage: hor, height full
+  Sidebar
+    Logo "Settings"
+    NavSection
+      - NavItem
+        NavLabel "Profile"
+        state active
+      - NavItem
+        NavLabel "Security"
+      - NavItem
+        NavLabel "Notifications"
+      - NavItem
+        NavLabel "Billing"
+  
+  MainContent: ver, flex 1, bg #0F0F12
+    Header
+      Title "Settings"
+      Subtitle "Manage your account preferences"
+    
+    ContentArea: pad 24
+      Card
+        CardHeader
+          CardTitle "Profile Settings"
+        CardContent
+          FormGroup
+            Label "Full Name"
+            Input
+              Placeholder "Enter your full name"
+          FormGroup
+            Label "Email Address"
+            Input
+              Placeholder "Enter your email address"
+          ButtonGroup
+            Button
+              Label "Save Changes"
+            Button
+              Label "Cancel"

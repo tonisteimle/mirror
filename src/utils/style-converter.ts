@@ -43,6 +43,21 @@ function isTokenReference(value: unknown): value is { type: 'token'; name: strin
 }
 
 /**
+ * Check if a value is a string token reference (e.g., "$primary" or "$surface.bg")
+ * This is used in v1 indentation syntax where tokens are stored as strings
+ */
+function isStringTokenReference(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('$')
+}
+
+/**
+ * Extract token name from a string reference (removes $ prefix)
+ */
+function getTokenNameFromString(value: string): string {
+  return value.startsWith('$') ? value.slice(1) : value
+}
+
+/**
  * Property to token suffix mapping for context-aware resolution.
  * When resolving $s for 'pad', first try $s.pad, then $s
  */
@@ -73,6 +88,11 @@ const PROPERTY_TOKEN_SUFFIXES: Record<string, string[]> = {
   // Font
   'font': ['font'],
   'font-family': ['font'],
+  // Dimensions
+  'w': ['w', 'width'],
+  'width': ['w', 'width'],
+  'h': ['h', 'height'],
+  'height': ['h', 'height'],
 }
 
 /**
@@ -120,11 +140,22 @@ export function resolveTokensInProperties(
 
   for (const [key, value] of Object.entries(properties)) {
     if (isTokenReference(value)) {
+      // Object token reference: { type: 'token', name: 'primary' }
       const tokenValue = resolveTokenWithContext(value.name, key, tokens)
       if (tokenValue !== undefined) {
         resolved[key] = tokenValue as DSLProperties[string]
       } else {
         // Token not found - keep original (will be handled as error elsewhere)
+        resolved[key] = value as DSLProperties[string]
+      }
+    } else if (isStringTokenReference(value)) {
+      // String token reference: "$primary" or "$surface.bg" (v1 indentation syntax)
+      const tokenName = getTokenNameFromString(value)
+      const tokenValue = resolveTokenWithContext(tokenName, key, tokens)
+      if (tokenValue !== undefined) {
+        resolved[key] = tokenValue as DSLProperties[string]
+      } else {
+        // Token not found - keep original string (will be handled as error elsewhere)
         resolved[key] = value as DSLProperties[string]
       }
     } else {
@@ -304,20 +335,22 @@ export function propertiesToStyle(
   properties: DSLProperties,
   hasChildren: boolean = false,
   componentName: string = '',
-  tokens?: Map<string, unknown>
+  tokens?: Map<string, unknown>,
+  isStateOverride: boolean = false
 ): React.CSSProperties {
   // Resolve token references first
   const resolvedProps = resolveTokensInProperties(properties, tokens)
 
   const style: React.CSSProperties = {}
 
-  // Only set flex display when needed
-  if (needsFlexDisplay(resolvedProps, hasChildren)) {
+  // Only set flex display when needed - but NOT for state overrides
+  // State overrides should only apply explicit properties, not reset layout defaults
+  if (!isStateOverride && needsFlexDisplay(resolvedProps, hasChildren)) {
     // Use inline-flex so containers fit their content instead of stretching
     style.display = 'inline-flex'
     // Default to vertical (column) - more natural for UI panels, cards, forms
     style.flexDirection = 'column'
-  } else if (componentName && /^[A-Z]/.test(componentName)) {
+  } else if (!isStateOverride && componentName && /^[A-Z]/.test(componentName)) {
     // Components without flex layout should use inline-block to fit content
     // This prevents them from stretching to full width
     style.display = 'inline-block'

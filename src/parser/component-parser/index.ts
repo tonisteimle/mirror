@@ -273,7 +273,11 @@ export function parseComponent(
 
   // Apply layout defaults for structural components (Header, Footer, Card, Table, etc.)
   // Defaults are applied UNDER user properties, so user props always win
+  // BUT: User-defined templates (Item:, Header:, etc.) take priority over layout defaults
   if (!node._isLibrary) {
+    // Check if user has defined a custom template for this component
+    const hasUserTemplate = ctx.registry.has(componentName)
+
     // Check if this is a SLOT of a layout parent (e.g., Header inside Card)
     const isLayoutSlot = directParentName && hasLayoutSlot(directParentName, componentName)
 
@@ -281,9 +285,9 @@ export function parseComponent(
     const isStandaloneLayoutComponent = hasLayoutDefaults(componentName)
 
     // Apply defaults if:
-    // 1. This is a slot of a layout parent (ALWAYS apply slot defaults, regardless of registry)
-    // 2. OR this is a standalone layout component AND not yet in registry (first occurrence)
-    if (isLayoutSlot || (isStandaloneLayoutComponent && !ctx.registry.has(componentName))) {
+    // 1. User has NOT defined a custom template (user templates take priority)
+    // 2. AND (this is a layout slot OR a standalone layout component)
+    if (!hasUserTemplate && (isLayoutSlot || isStandaloneLayoutComponent)) {
       // Store user-specified properties (these take precedence)
       const userProps = { ...node.properties }
 

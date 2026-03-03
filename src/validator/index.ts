@@ -17,6 +17,7 @@
 import type { ParseResult } from '../parser/types'
 import type { ValidationResult, ValidatorOptions } from './types'
 import { mergeResults, diagnosticToParseError } from './types'
+import { registerValidator } from '../parser/parser'
 
 // Import validators
 import { validateProperties } from './validators/property-validator'
@@ -235,3 +236,10 @@ export {
   isSystemState,
   getSystemStates
 } from './schemas/event-schema'
+
+// ============================================
+// Auto-register validator with parser
+// ============================================
+
+// Register the validator so diagnostics are added to parse results
+registerValidator(validateCode, diagnosticToParseError)

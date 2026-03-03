@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import * as LucideIcons from 'lucide-react'
 import { colors } from '../theme'
 import { usePickerBehavior } from '../hooks/usePickerBehavior'
-import { BasePicker, PickerList, PickerFooter, PickerSearch } from './picker'
+import { BasePicker, PickerList, PickerFooter } from './picker'
 import type { Position } from '../types/common'
 import { searchIcons } from '../data/icon-synonyms'
 
@@ -11,6 +11,8 @@ interface IconPickerProps {
   onClose: () => void
   onSelect: (iconName: string) => void
   position: Position
+  /** External filter query (typed in editor) - focus stays in editor */
+  initialQuery?: string
 }
 
 // Get all icon names from Lucide
@@ -75,9 +77,12 @@ export const IconPicker = memo(function IconPicker({
   onClose,
   onSelect,
   position,
+  initialQuery = '',
 }: IconPickerProps) {
-  const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('Beliebt')
+
+  // Use external query - focus stays in editor
+  const query = initialQuery
 
   // Filter icons based on query with synonym support
   const filteredIcons = useMemo(() => {
@@ -89,10 +94,9 @@ export const IconPicker = memo(function IconPicker({
     return iconCategories[activeCategory] || popularIcons
   }, [query, activeCategory])
 
-  // Reset when opened
+  // Reset category when opened
   useEffect(() => {
     if (isOpen) {
-      setQuery('')
       setActiveCategory('Beliebt')
     }
   }, [isOpen])
@@ -124,8 +128,6 @@ export const IconPicker = memo(function IconPicker({
     selectedIndex,
     setSelectedIndex,
     listRef,
-    inputRef,
-    handleKeyDown,
     resetSelection,
   } = usePickerBehavior({
     isOpen,
@@ -134,12 +136,58 @@ export const IconPicker = memo(function IconPicker({
     columns: COLUMNS,
     onSelect: handleSelect,
     customKeyHandlers: { Tab: handleTabKey },
+    autoFocus: false, // Focus stays in editor
   })
 
   // Reset selection when query or category changes
   useEffect(() => {
     resetSelection()
   }, [query, activeCategory, resetSelection])
+
+  // Global keyboard handler - focus stays in editor
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex(i => Math.min(i + COLUMNS, filteredIcons.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex(i => Math.max(i - COLUMNS, 0))
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          setSelectedIndex(i => Math.min(i + 1, filteredIcons.length - 1))
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          setSelectedIndex(i => Math.max(i - 1, 0))
+          break
+        case 'Enter':
+          e.preventDefault()
+          handleSelect(selectedIndex)
+          break
+        case 'Escape':
+          e.preventDefault()
+          onClose()
+          break
+        case 'Tab':
+          e.preventDefault()
+          const currentCatIndex = categoryNames.indexOf(activeCategory)
+          const nextCatIndex = e.shiftKey
+            ? (currentCatIndex - 1 + categoryNames.length) % categoryNames.length
+            : (currentCatIndex + 1) % categoryNames.length
+          setActiveCategory(categoryNames[nextCatIndex])
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, filteredIcons.length, selectedIndex, setSelectedIndex, handleSelect, onClose, activeCategory])
 
   return (
     <BasePicker
@@ -173,7 +221,6 @@ export const IconPicker = memo(function IconPicker({
             key={cat}
             onClick={() => {
               setActiveCategory(cat)
-              setQuery('')
             }}
             style={{
               padding: '4px 8px',
@@ -195,7 +242,6 @@ export const IconPicker = memo(function IconPicker({
           onChange={e => {
             if (e.target.value) {
               setActiveCategory(e.target.value)
-              setQuery('')
             }
           }}
           style={{
@@ -220,16 +266,7 @@ export const IconPicker = memo(function IconPicker({
         </select>
       </div>
 
-      {/* Search Input */}
-      <PickerSearch
-        ref={inputRef}
-        value={query}
-        onChange={setQuery}
-        onKeyDown={handleKeyDown}
-        placeholder="Icon suchen..."
-      />
-
-      {/* Icon Grid */}
+      {/* Icon Grid - no search input, focus stays in editor */}
       <PickerList ref={listRef} padding="8px">
         {filteredIcons.length === 0 ? (
           <div

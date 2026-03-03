@@ -328,6 +328,8 @@ export const PROPERTIES = new Set([
   'length', 'pattern', 'mask', 'segments',
   // Link attributes
   'href', 'target',
+  // Accessibility
+  'tabindex', 'focusable',
   // Slider/Range
   'min', 'max', 'step', 'value',
   // Visuals - both forms
@@ -669,6 +671,7 @@ export const SYSTEM_STATES = new Set([
   'focus',    // Bound to onFocus/onBlur
   'active',   // Bound to onMouseDown/Up
   'disabled', // Bound to disabled attribute
+  'filled',   // Bound to :not(:placeholder-shown) - Input/Textarea has value
 ])
 
 // Behavior States - activated by actions like highlight, select, etc.

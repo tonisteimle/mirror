@@ -7,7 +7,7 @@
  * Typography can be inherited from App (font, size, color, line-height).
  */
 
-import React from 'react'
+import React, { useEffect, useCallback } from 'react'
 import type { ASTNode } from '../../parser/parser'
 import { resolveImageSrc } from '../utils'
 import { renderDynamicIcon } from '../components'
@@ -15,6 +15,7 @@ import { sanitizeHref, sanitizePlaceholder } from '../../utils/sanitize'
 import { getHeadingLevel } from '../../parser/sugar/component-type-matcher'
 import { isImageComponent } from './primitive-checkers'
 import { useTypography, type TypographyContextValue } from '../contexts/typography-context'
+import { useStateOverride, useHoverContext, useFilledContext } from '../contexts'
 
 /**
  * Dark UI Default Styles
@@ -151,6 +152,7 @@ export function renderButton(
       className={node.name}
       type={(node.properties.type as 'button' | 'submit' | 'reset') || 'button'}
       disabled={node.properties.disabled as boolean}
+      tabIndex={node.properties.tabindex !== undefined ? Number(node.properties.tabindex) : undefined}
       style={{ ...baseDefaults, ...style }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -165,22 +167,95 @@ export function renderButton(
  * Render Input primitive.
  * Dark UI defaults applied, user styles override.
  * Typography can be inherited from App.
+ * Supports state overrides for Value and Placeholder children.
  */
 export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
+  return <InputPrimitive node={node} style={style} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick} typography={typography} />
+}
+
+function InputPrimitive({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
   const baseDefaults = applyInheritedTypography(DEFAULTS.input, typography)
+
+  // Get hover context from parent InteractiveComponent
+  const hoverContext = useHoverContext()
+
+  // Get filled context for reporting filled state to parent
+  const filledContext = useFilledContext()
+
+  // Get state overrides for Value and Placeholder children
+  const valueOverride = useStateOverride('Value')
+  const placeholderOverride = useStateOverride('Placeholder')
+
+  // Extract Placeholder and Value from children
+  const placeholderChild = node.children.find(c => c.name === 'Placeholder')
+  const valueChild = node.children.find(c => c.name === 'Value')
+
+  // Helper to get text content from a child (checks content or _text child)
+  const getChildContent = (child: typeof placeholderChild): string | undefined => {
+    if (!child) return undefined
+    // Check direct content first
+    if (child.content) return child.content
+    // Check for _text child (how strings are parsed for generic components)
+    const textChild = child.children?.find(c => c.name === '_text')
+    return textChild?.content
+  }
+
+  // Get placeholder text and color (state override takes precedence)
+  const placeholderText = getChildContent(placeholderChild) || node.properties.placeholder as string
+  const placeholderColor = placeholderOverride?.col || placeholderOverride?.color ||
+    placeholderChild?.properties?.col || placeholderChild?.properties?.color
+
+  // Get value text and color (state override takes precedence)
+  const valueText = getChildContent(valueChild) || node.properties.value as string | undefined
+  const valueColor = valueOverride?.col || valueOverride?.color ||
+    valueChild?.properties?.col || valueChild?.properties?.color
+
+  // Initialize filled state on mount and when valueText changes
+  useEffect(() => {
+    const isFilled = !!(valueText && valueText.length > 0)
+    filledContext?.setIsFilled(isFilled)
+  }, [valueText, filledContext])
+
+  // Handle input changes to track filled state
+  const handleInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const newValue = e.currentTarget.value
+    filledContext?.setIsFilled(newValue.length > 0)
+  }, [filledContext])
+
+  // Generate unique ID for placeholder styling
+  const inputId = `input-${node.id}`
+
+  // Build final style with value color if specified
+  // Apply hover styles from parent InteractiveComponent when hovered
+  const finalStyle: React.CSSProperties = {
+    ...baseDefaults,
+    ...style,
+    ...(valueColor ? { color: String(valueColor) } : {}),
+    ...(hoverContext?.isHovered ? hoverContext.hoverStyles : {})
+  }
+
   return (
-    <input
-      key={node.id}
-      data-id={node.id}
-      data-source-line={node.line}
-      className={node.name}
-      type={(node.properties.type as string) || 'text'}
-      placeholder={sanitizePlaceholder(node.properties.placeholder as string)}
-      style={{ ...baseDefaults, ...style }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
-    />
+    <>
+      {placeholderColor && (
+        <style>{`#${inputId}::placeholder { color: ${placeholderColor}; opacity: 1; }`}</style>
+      )}
+      <input
+        id={inputId}
+        key={node.id}
+        data-id={node.id}
+        data-source-line={node.line}
+        className={node.name}
+        type={(node.properties.type as string) || 'text'}
+        placeholder={sanitizePlaceholder(placeholderText)}
+        defaultValue={valueText}
+        tabIndex={node.properties.tabindex !== undefined ? Number(node.properties.tabindex) : undefined}
+        style={finalStyle}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+        onInput={handleInput}
+      />
+    </>
   )
 }
 
@@ -188,22 +263,95 @@ export function renderInput({ node, style, onMouseEnter, onMouseLeave, onClick, 
  * Render Textarea primitive.
  * Dark UI defaults applied, user styles override.
  * Typography can be inherited from App.
+ * Supports state overrides for Value and Placeholder children.
  */
 export function renderTextarea({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
+  return <TextareaPrimitive node={node} style={style} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick} typography={typography} />
+}
+
+function TextareaPrimitive({ node, style, onMouseEnter, onMouseLeave, onClick, typography = {} }: PrimitiveProps): React.JSX.Element {
   const baseDefaults = applyInheritedTypography(DEFAULTS.textarea, typography)
+
+  // Get hover context from parent InteractiveComponent
+  const hoverContext = useHoverContext()
+
+  // Get filled context for reporting filled state to parent
+  const filledContext = useFilledContext()
+
+  // Get state overrides for Value and Placeholder children
+  const valueOverride = useStateOverride('Value')
+  const placeholderOverride = useStateOverride('Placeholder')
+
+  // Extract Placeholder and Value from children
+  const placeholderChild = node.children.find(c => c.name === 'Placeholder')
+  const valueChild = node.children.find(c => c.name === 'Value')
+
+  // Helper to get text content from a child (checks content or _text child)
+  const getChildContent = (child: typeof placeholderChild): string | undefined => {
+    if (!child) return undefined
+    // Check direct content first
+    if (child.content) return child.content
+    // Check for _text child (how strings are parsed for generic components)
+    const textChild = child.children?.find(c => c.name === '_text')
+    return textChild?.content
+  }
+
+  // Get placeholder text and color (state override takes precedence)
+  const placeholderText = getChildContent(placeholderChild) || node.properties.placeholder as string
+  const placeholderColor = placeholderOverride?.col || placeholderOverride?.color ||
+    placeholderChild?.properties?.col || placeholderChild?.properties?.color
+
+  // Get value text and color (state override takes precedence)
+  const valueText = getChildContent(valueChild) || node.properties.value as string | undefined
+  const valueColor = valueOverride?.col || valueOverride?.color ||
+    valueChild?.properties?.col || valueChild?.properties?.color
+
+  // Initialize filled state on mount and when valueText changes
+  useEffect(() => {
+    const isFilled = !!(valueText && valueText.length > 0)
+    filledContext?.setIsFilled(isFilled)
+  }, [valueText, filledContext])
+
+  // Handle input changes to track filled state
+  const handleInput = useCallback((e: React.FormEvent<HTMLTextAreaElement>) => {
+    const newValue = e.currentTarget.value
+    filledContext?.setIsFilled(newValue.length > 0)
+  }, [filledContext])
+
+  // Generate unique ID for placeholder styling
+  const textareaId = `textarea-${node.id}`
+
+  // Build final style with value color if specified
+  // Apply hover styles from parent InteractiveComponent when hovered
+  const finalStyle: React.CSSProperties = {
+    ...baseDefaults,
+    ...style,
+    ...(valueColor ? { color: String(valueColor) } : {}),
+    ...(hoverContext?.isHovered ? hoverContext.hoverStyles : {})
+  }
+
   return (
-    <textarea
-      key={node.id}
-      data-id={node.id}
-      data-source-line={node.line}
-      className={node.name}
-      placeholder={sanitizePlaceholder(node.properties.placeholder as string)}
-      rows={(node.properties.rows as number) || 3}
-      style={{ ...baseDefaults, ...style }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
-    />
+    <>
+      {placeholderColor && (
+        <style>{`#${textareaId}::placeholder { color: ${placeholderColor}; opacity: 1; }`}</style>
+      )}
+      <textarea
+        id={textareaId}
+        key={node.id}
+        data-id={node.id}
+        data-source-line={node.line}
+        className={node.name}
+        placeholder={sanitizePlaceholder(placeholderText)}
+        defaultValue={valueText}
+        rows={(node.properties.rows as number) || 3}
+        tabIndex={node.properties.tabindex !== undefined ? Number(node.properties.tabindex) : undefined}
+        style={finalStyle}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+        onInput={handleInput}
+      />
+    </>
   )
 }
 

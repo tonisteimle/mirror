@@ -1,5 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`Typography: Snapshot > sollte Font Styling dem Snapshot entsprechen 1`] = `"<div data-id="Text1" data-source-line="0" class="Text" style="display: inline-block; font-size: 24px; font-weight: 700; color: rgb(59, 130, 246);"><span>Bold Title</span></div>"`;
-
-exports[`Typography: Snapshot > sollte Text Alignment dem Snapshot entsprechen 1`] = `"<div data-id="Container1" data-source-line="0" class="Container" style="display: inline-flex; flex-direction: column; width: 300px; max-width: 300px; flex-shrink: 0; gap: 8px;"><div data-id="Text1" data-source-line="1" class="Text" style="display: inline-block; text-align: left;"><span>Left aligned</span></div><div data-id="Text2" data-source-line="2" class="Text" style="display: inline-block; text-align: center;"><span>Center aligned</span></div><div data-id="Text3" data-source-line="3" class="Text" style="display: inline-block; text-align: right;"><span>Right aligned</span></div></div>"`;

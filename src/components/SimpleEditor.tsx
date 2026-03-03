@@ -37,10 +37,12 @@ interface SimpleEditorProps {
   enablePickers?: boolean
   /** Token code for TokenPicker (raw DSL code containing token definitions) */
   tokensCode?: string
+  /** Called when EditorView is created or destroyed (for diagnostics) */
+  onEditorViewChange?: (view: EditorView | null) => void
 }
 
 export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(function SimpleEditor(
-  { value, onChange, designTokens, componentRegistry, enablePickers = false, tokensCode = '' },
+  { value, onChange, designTokens, componentRegistry, enablePickers = false, tokensCode = '', onEditorViewChange },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -143,20 +145,88 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
   const insertIcon = useMemo(() => createInsertHandler(['?']), [createInsertHandler])
   const insertToken = useMemo(() => createInsertHandler(['?', '$']), [createInsertHandler])
 
+  // Replace all occurrences of a value with a new value
+  const replaceAllOccurrences = useCallback((oldValue: string, newValue: string, propertyContext?: string) => {
+    const view = viewRef.current
+    if (!view) return
+
+    const doc = view.state.doc.toString()
+    const changes: Array<{ from: number; to: number; insert: string }> = []
+
+    // Build regex pattern based on property context
+    // If propertyContext is set, only replace values after that property
+    let pattern: RegExp
+    if (propertyContext) {
+      // Match: property + whitespace + value (with word boundaries)
+      // e.g., "pad 16" or "bg #3B82F6" or "col $primary"
+      const escapedValue = oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const escapedProp = propertyContext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      pattern = new RegExp(`\\b${escapedProp}\\s+${escapedValue}\\b`, 'g')
+    } else {
+      // No context - just replace the exact value
+      const escapedValue = oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      pattern = new RegExp(`\\b${escapedValue}\\b`, 'g')
+    }
+
+    // Find all matches
+    let match
+    while ((match = pattern.exec(doc)) !== null) {
+      if (propertyContext) {
+        // The match includes "prop value", we only want to replace "value"
+        const fullMatch = match[0]
+        const valueStart = match.index + fullMatch.lastIndexOf(oldValue)
+        changes.push({
+          from: valueStart,
+          to: valueStart + oldValue.length,
+          insert: newValue,
+        })
+      } else {
+        changes.push({
+          from: match.index,
+          to: match.index + oldValue.length,
+          insert: newValue,
+        })
+      }
+    }
+
+    if (changes.length > 0) {
+      // Sort changes in reverse order to avoid offset issues
+      changes.sort((a, b) => b.from - a.from)
+      view.dispatch({ changes })
+    }
+  }, [])
+
   // Double-click picker config - opens appropriate picker when double-clicking values
   const doubleClickPickerConfig = useMemo<DoubleClickPickerConfig | undefined>(() => {
     if (!enablePickers) return undefined
 
     return {
-      onColorDoubleClick: (color, from, to) => {
-        // Open color picker with range to replace and initial color
-        pickerRef.current.openPicker('color', { replaceRange: { from, to }, currentColor: color })
+      onColorDoubleClick: (color, from, to, propertyContext, replaceAll) => {
+        // Open color picker, with replace-all support only when Alt is held
+        pickerRef.current.openPicker('color', {
+          replaceRange: { from, to },
+          currentColor: color,
+          propertyContext,
+          // Only set replace-all when Alt key is held
+          replaceAllValue: replaceAll ? color : undefined,
+          replaceAllProperty: replaceAll ? propertyContext : undefined,
+        })
       },
       onIconDoubleClick: (iconName, from, to) => {
         pickerRef.current.openPicker('icon', { replaceRange: { from, to } })
       },
       onFontDoubleClick: (fontName, from, to) => {
         // Font picker not implemented yet
+      },
+      onTokenDoubleClick: (tokenName, from, to, propertyContext, replaceAll) => {
+        // Open token picker, with replace-all support only when Alt is held
+        pickerRef.current.openPicker('token', {
+          replaceRange: { from, to },
+          propertyContext,
+          // Only set replace-all when Alt key is held
+          replaceAllValue: replaceAll ? tokenName : undefined,
+          replaceAllProperty: replaceAll ? propertyContext : undefined,
+        })
       },
     }
   }, [enablePickers])
@@ -268,12 +338,14 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
     })
 
     viewRef.current = view
+    onEditorViewChange?.(view)
 
     return () => {
       view.destroy()
       viewRef.current = null
+      onEditorViewChange?.(null)
     }
-  }, [enablePickers, handleValuePickerNeeded, createTriggerExtension, doubleClickPickerConfig]) // Recreate editor if enablePickers changes
+  }, [enablePickers, handleValuePickerNeeded, createTriggerExtension, doubleClickPickerConfig, onEditorViewChange]) // Recreate editor if enablePickers changes
 
   // Update content when value changes externally
   useEffect(() => {
@@ -317,6 +389,7 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
               onSelectedIndexChange={colorPanel.setSelectedIndex}
               onSelectedValueChange={colorPanel.setSelectedValue}
               editorCode={tokensCode}
+              propertyContext={colorPanel.state.propertyContext}
             />
           )}
 
@@ -328,7 +401,13 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
               onClose={closePicker}
               onSelect={(pickerValue) => {
                 const ctx = picker.getContext()
-                picker.insertAtCursor(pickerValue, { replaceRange: ctx.replaceRange ?? undefined })
+                if (ctx.replaceAllValue) {
+                  // Replace all occurrences
+                  replaceAllOccurrences(ctx.replaceAllValue, pickerValue, ctx.replaceAllProperty)
+                } else {
+                  // Normal single replace
+                  picker.insertAtCursor(pickerValue, { replaceRange: ctx.replaceRange ?? undefined })
+                }
                 closePicker()
               }}
               filter=""
@@ -336,6 +415,7 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
               onSelectedIndexChange={setSwatchColorSelectedIndex}
               initialColor={picker.getContext().currentColor}
               editorCode={tokensCode}
+              propertyContext={picker.getContext().propertyContext}
             />
           )}
 
@@ -359,7 +439,14 @@ export const SimpleEditor = forwardRef<SimpleEditorRef, SimpleEditorProps>(funct
               position={tokenPickerPosition}
               onClose={closePicker}
               onSelect={(tokenValue) => {
-                insertToken(tokenValue)
+                const ctx = picker.getContext()
+                if (ctx.replaceAllValue) {
+                  // Replace all occurrences
+                  replaceAllOccurrences(ctx.replaceAllValue, tokenValue, ctx.replaceAllProperty)
+                } else {
+                  // Normal single insert
+                  insertToken(tokenValue)
+                }
                 closePicker()
               }}
               tokensCode={tokensCode}

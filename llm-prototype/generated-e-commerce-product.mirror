@@ -1,0 +1,59 @@
+// Component Definitions
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  HeaderLeft: ver, gap 2
+    Title: col #F4F4F5, font-size 16, weight bold
+    Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+Button: hor, gap 8, ver-center, bg #2563EB, col white, pad 8 16, rad 6
+  state hover bg #1D4ED8
+  state disabled opacity 0.5
+  Icon:
+  Label:
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+  CardContent: pad 16
+
+ProductSection: hor, gap 32
+
+ProductDetailsArea: ver, gap 16
+
+SimilarProductsSection: ver, gap 16
+
+SimilarProductsGrid: hor, gap 16
+
+// Page
+ProductPage
+  Header
+    Title "Premium T-Shirt"
+    Actions "ShoppingCart"
+  ProductSection
+    ProductImageArea
+      ProductImage
+    ProductDetailsArea
+      ProductInfo
+        Title "Premium T-Shirt"
+        Price "$29.99"
+        Description "Comfortable cotton t-shirt"
+      SizeSelector
+        NavLabel "Size"
+        - Options "S"
+        - Options "M"
+        - Options "L"
+        - Options "XL"
+      Button
+        NavLabel "Add to Cart"
+  SimilarProductsSection
+    SectionTitle
+    SimilarProductsGrid
+      Card
+        CardTitle "Product 1"
+        CardContent "Similar product details"
+      Card
+        CardTitle "Product 2"
+        CardContent "Similar product details"
+      Card
+        CardTitle "Product 3"
+        CardContent "Similar product details"

@@ -1,0 +1,25 @@
+// Component Definitions
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+  CardContent: pad 16
+
+Button: hor, gap 8, ver-center, bg #2563EB, col white, pad 8 16, rad 6
+  state hover bg #1D4ED8
+  state disabled opacity 0.5
+  Icon:
+  Label:
+
+// Page
+LoginPage
+  CenterContainer
+    Card
+      CardTitle "MyApp"
+      CardContent "LoginForm with inputs and button"
+      LoginForm
+        EmailInput
+        PasswordInput
+        RememberMeCheckbox
+        Button
+          NavLabel "Login"
+        ForgotPasswordLink

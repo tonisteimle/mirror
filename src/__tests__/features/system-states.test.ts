@@ -21,11 +21,12 @@ function getErrors(result: ReturnType<typeof parse>) {
 
 describe('System States', () => {
   describe('SYSTEM_STATES constant', () => {
-    it('contains hover, focus, active, disabled', () => {
+    it('contains hover, focus, active, disabled, filled', () => {
       expect(SYSTEM_STATES.has('hover')).toBe(true)
       expect(SYSTEM_STATES.has('focus')).toBe(true)
       expect(SYSTEM_STATES.has('active')).toBe(true)
       expect(SYSTEM_STATES.has('disabled')).toBe(true)
+      expect(SYSTEM_STATES.has('filled')).toBe(true)
     })
 
     it('does not contain custom state names', () => {
@@ -98,6 +99,21 @@ Btn
       expect(button.states).toHaveLength(1)
       expect(button.states![0].name).toBe('disabled')
       expect(button.states![0].properties.opa).toBe(0.5)
+    })
+
+    it('parses state filled with properties', () => {
+      const input = `
+Input
+  state filled
+    col #FFF
+`
+      const result = parse(input)
+      expect(getErrors(result)).toHaveLength(0)
+
+      const inputEl = result.nodes[0]
+      expect(inputEl.states).toHaveLength(1)
+      expect(inputEl.states![0].name).toBe('filled')
+      expect(inputEl.states![0].properties.col).toBe('#FFF')
     })
 
     it('parses multiple system states on same element', () => {

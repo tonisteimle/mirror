@@ -2,6 +2,7 @@
  * EditorPanel component containing the code editor tabs.
  */
 import { memo, useState, useCallback, useRef, useMemo, useEffect } from 'react'
+import type { EditorView } from '@codemirror/view'
 import { colors } from '../theme'
 import { SimpleEditor, type SimpleEditorRef } from './SimpleEditor'
 import { TabButton, IconButton } from './editor-panel'
@@ -43,6 +44,8 @@ interface EditorPanelProps {
   onExpandShorthandChange?: (enabled: boolean) => void
   useTokenMode?: boolean
   onTokenModeChange?: (mode: boolean) => void
+  /** Called when EditorView is created or destroyed (for diagnostics) */
+  onEditorViewChange?: (view: EditorView | null) => void
 }
 
 export const EditorPanel = memo(function EditorPanel({
@@ -68,6 +71,7 @@ export const EditorPanel = memo(function EditorPanel({
   onDeletePage,
   onRenamePage,
   referencedPages = new Set(),
+  onEditorViewChange,
 }: EditorPanelProps) {
   const [deleteError, setDeleteError] = useState<{ pageId: string; references: string[] } | null>(null)
   const editorRef = useRef<SimpleEditorRef>(null)
@@ -252,6 +256,7 @@ export const EditorPanel = memo(function EditorPanel({
                 componentRegistry={componentRegistry}
                 enablePickers
                 tokensCode={tokensCode}
+                onEditorViewChange={onEditorViewChange}
               />
             </div>
           )}

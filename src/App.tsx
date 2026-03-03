@@ -268,6 +268,7 @@ function App() {
                 onExpandShorthandChange={app.setExpandShorthand}
                 useTokenMode={app.useTokenMode}
                 onTokenModeChange={app.setUseTokenMode}
+                onEditorViewChange={app.onEditorViewChange}
               />
             </EditorActionsProvider>
 

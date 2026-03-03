@@ -2,7 +2,6 @@ import type { LibraryComponent, LibraryCategory } from './types'
 
 // Import library components
 import { formFieldComponent } from './components/input'
-import { dropdownComponent } from './components/dropdown'
 // Doc-mode components
 import { DocTextComponent } from './components/doc-text'
 import { PlaygroundComponent } from './components/playground'
@@ -12,7 +11,6 @@ import { DocWrapperComponent } from './components/doc-wrapper'
 const LIBRARY_COMPONENTS: LibraryComponent[] = [
   // Form
   formFieldComponent,
-  dropdownComponent,
   // Doc-mode
   DocTextComponent,
   PlaygroundComponent,

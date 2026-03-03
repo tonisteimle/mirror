@@ -353,7 +353,9 @@ export function createTemplateFromNode(node: ASTNode): ComponentTemplate {
     children: [],
     // Preserve library type for 'as Text' etc.
     _isLibrary: node._isLibrary,
-    _libraryType: node._libraryType
+    _libraryType: node._libraryType,
+    // Preserve line number for section grouping in ComponentLibraryView
+    line: node.line
   }
 
   // V7: Copy states for component-local state definitions

@@ -6,8 +6,9 @@
  */
 import { useState, useCallback, useRef } from 'react'
 import type { EditorView } from '@codemirror/view'
-import { prepareInsertText, getCharBefore } from '../editor/utils'
+import { prepareInsertText, getCharBefore, getTextBeforeCursor } from '../editor/utils'
 import { usePanelPosition, PANEL_OFFSET_Y } from './usePanelPosition'
+import { findPropertyContext } from '../editor/trigger-handlers'
 
 export interface ColorPanelState {
   isOpen: boolean
@@ -19,6 +20,8 @@ export interface ColorPanelState {
   replaceRange: { from: number; to: number } | null
   /** Current selected value (triggers effect updates for live preview) */
   selectedValue: string | null
+  /** Property context for filtering tokens (e.g., "bg", "col") */
+  propertyContext: string | null
 }
 
 const initialState: ColorPanelState = {
@@ -29,6 +32,7 @@ const initialState: ColorPanelState = {
   triggerPos: 0,
   replaceRange: null,
   selectedValue: null,
+  propertyContext: null,
 }
 
 export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
@@ -44,6 +48,7 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
 
   /**
    * Open the color panel at the current cursor position.
+   * Automatically detects property context (e.g., "bg", "col") for token filtering.
    */
   const open = useCallback(() => {
     // Don't reopen if already open - prevents triggerPos from being overwritten
@@ -63,6 +68,10 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
       triggerPos = cursorPos - 1
     }
 
+    // Detect property context (e.g., "bg #" → propertyContext = "bg")
+    const textBefore = getTextBeforeCursor(view)
+    const propertyContext = findPropertyContext(textBefore.slice(0, -1)) || null
+
     setState({
       isOpen: true,
       position: { x: coords.left, y: coords.bottom + PANEL_OFFSET_Y },
@@ -71,6 +80,7 @@ export function useColorPanel(editorRef: React.RefObject<EditorView | null>) {
       triggerPos,
       replaceRange: null,
       selectedValue: null,
+      propertyContext,
     })
   }, [editorRef])
 

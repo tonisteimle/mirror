@@ -1,0 +1,46 @@
+// Component Definitions
+Container: ver, width full, height full, bg #0F0F12, ver-center, hor-center
+  LoginCard: ver, gap 24, bg #1A1A23, rad 12, bor 1 #333, pad 32, width 400
+
+AppLogo: col #F4F4F5, font-size 24, weight bold, hor-center
+
+FormContainer: ver, gap 16
+
+EmailInput: ver, gap 4
+  InputLabel: col #A1A1AA, font-size 12
+  InputField: bg #27272A, bor 1 #333, rad 6, pad 10 12, col #F4F4F5, width full
+    state focus bor 1 #2563EB
+
+PasswordInput: ver, gap 4
+  InputLabel: col #A1A1AA, font-size 12
+  InputField: bg #27272A, bor 1 #333, rad 6, pad 10 12, col #F4F4F5, width full
+    state focus bor 1 #2563EB
+
+RememberCheckbox: hor, gap 8, ver-center, cursor pointer
+  CheckBox: size 16, bg #27272A, bor 1 #333, rad 4
+    state checked bg #2563EB, bor 0
+  CheckLabel: col #E4E4E7, font-size 14
+
+LoginButton: hor, gap 8, ver-center, bg #2563EB, col white, pad 10 16, rad 6, width full, hor-center, cursor pointer
+  state hover bg #1D4ED8
+  Label: weight 600
+
+ForgotLink: col #3B82F6, cursor pointer, hor-center, font-size 14
+  state hover col #2563EB, underline
+
+// Page
+Container
+  LoginCard
+    AppLogo "MyApp"
+    FormContainer
+      EmailInput
+        InputLabel "Email"
+        InputField "Enter your email"
+      PasswordInput
+        InputLabel "Password"
+        InputField "Enter your password"
+      RememberCheckbox
+        CheckLabel "Remember me"
+    LoginButton
+      Label "Login"
+    ForgotLink "Forgot Password?"

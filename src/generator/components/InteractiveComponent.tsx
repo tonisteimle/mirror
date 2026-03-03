@@ -19,7 +19,7 @@ import { propertiesToStyle } from '../../utils/style-converter'
 import { matchesKeyModifier } from '../utils/key-modifiers'
 import { executeEventHandler } from '../events'
 import { composeConditionalStyles, composeFinalStyle, getConditionalContent } from '../styles'
-import { useTemplateRegistry, useContainerContext, ContainerContext, StateOverrideProvider, useStateOverride } from '../contexts'
+import { useTemplateRegistry, useContainerContext, ContainerContext, StateOverrideProvider, useStateOverride, HoverContext, FilledContext, useTokens } from '../contexts'
 import { executeAction as executeSharedAction, type ActionExecutorContext } from '../actions/action-executor'
 import { useRuntimeVariables } from '../runtime-context'
 
@@ -118,6 +118,7 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   const overlayRegistry = useOverlayRegistry()
   const templateRegistry = useTemplateRegistry()
   const containerContext = useContainerContext()
+  const tokens = useTokens()
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -126,6 +127,7 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   const [isHovered, setIsHovered] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [isActive, setIsActive] = useState(false)
+  const [isFilled, setIsFilled] = useState(false)
 
   // Initialize state:
   // 1. If activeState is explicitly set (e.g., Section { collapsed }), use that
@@ -245,58 +247,72 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
     // Apply flat state style if active
     const flatStateConfig = node.states.find(s => s.name === currentState && !s.category && !SYSTEM_STATES.has(s.name))
     if (flatStateConfig) {
-      composedStyle = { ...composedStyle, ...propertiesToStyle(flatStateConfig.properties, node.children.length > 0, node.name) }
+      composedStyle = { ...composedStyle, ...propertiesToStyle(flatStateConfig.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
     }
 
     // Apply category state styles
     for (const [category, stateName] of Object.entries(categoryStates)) {
       const categoryStateConfig = node.states.find(s => s.category === category && s.name === stateName)
       if (categoryStateConfig) {
-        composedStyle = { ...composedStyle, ...propertiesToStyle(categoryStateConfig.properties, node.children.length > 0, node.name) }
+        composedStyle = { ...composedStyle, ...propertiesToStyle(categoryStateConfig.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       }
     }
 
     return composedStyle
-  }, [node.states, node.children.length, currentState, categoryStates, baseStyle, node.name])
+  }, [node.states, node.children.length, currentState, categoryStates, baseStyle, node.name, tokens])
 
-  // Calculate system state styles (hover, focus, active, disabled)
-  // Priority order: hover < focus < active < disabled
+  // Pre-compute hover state styles (for passing to child primitives via context)
+  const hoverStateStyles = useMemo(() => {
+    const hoverState = node.states?.find(s => s.name === 'hover')
+    if (!hoverState) return {}
+    return propertiesToStyle(hoverState.properties, node.children.length > 0, node.name, tokens ?? undefined, true)
+  }, [node.states, node.children.length, node.name, tokens])
+
+  // Calculate system state styles (hover, focus, active, disabled, filled)
+  // Priority order: hover < filled < focus < active < disabled
+  // Also supports node.activeState for Component Library View simulation
   const systemStateStyle = useMemo(() => {
     if (!node.states) return {}
     let style: React.CSSProperties = {}
 
     // Check disabled first (overrides everything)
     const disabledState = node.states.find(s => s.name === 'disabled')
-    if (disabledState && node.properties.disabled) {
-      return propertiesToStyle(disabledState.properties, node.children.length > 0, node.name)
+    if (disabledState && (node.properties.disabled || node.activeState === 'disabled')) {
+      return propertiesToStyle(disabledState.properties, node.children.length > 0, node.name, tokens ?? undefined, true)
     }
 
-    // Hover state (lowest priority)
-    if (isHovered) {
-      const hoverState = node.states.find(s => s.name === 'hover')
-      if (hoverState) {
-        style = { ...style, ...propertiesToStyle(hoverState.properties, node.children.length > 0, node.name) }
+    // Hover state (lowest priority) - use pre-computed styles
+    // Also apply if node.activeState === 'hover' (for Component Library View)
+    if ((isHovered || node.activeState === 'hover') && Object.keys(hoverStateStyles).length > 0) {
+      style = { ...style, ...hoverStateStyles }
+    }
+
+    // Filled state (for Input/Textarea with value)
+    if (isFilled || node.activeState === 'filled') {
+      const filledState = node.states.find(s => s.name === 'filled')
+      if (filledState) {
+        style = { ...style, ...propertiesToStyle(filledState.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       }
     }
 
-    // Focus state
-    if (isFocused) {
+    // Focus state - also apply if node.activeState === 'focus'
+    if (isFocused || node.activeState === 'focus') {
       const focusState = node.states.find(s => s.name === 'focus')
       if (focusState) {
-        style = { ...style, ...propertiesToStyle(focusState.properties, node.children.length > 0, node.name) }
+        style = { ...style, ...propertiesToStyle(focusState.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       }
     }
 
     // Active state (mouse down) - highest priority among interactive states
-    if (isActive) {
+    if (isActive || node.activeState === 'active') {
       const activeState = node.states.find(s => s.name === 'active')
       if (activeState) {
-        style = { ...style, ...propertiesToStyle(activeState.properties, node.children.length > 0, node.name) }
+        style = { ...style, ...propertiesToStyle(activeState.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       }
     }
 
     return style
-  }, [node.states, node.properties.disabled, node.children.length, node.name, isHovered, isFocused, isActive])
+  }, [node.states, node.properties.disabled, node.children.length, node.name, isHovered, isFilled, isFocused, isActive, hoverStateStyles, tokens, node.activeState])
 
   // Check if this component is highlighted or selected in its parent container
   const parentContainerName = containerContext?.containerName
@@ -307,30 +323,32 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
     ? behaviorRegistry.isItemSelected(node.id, parentContainerName)
     : false
 
-  // Behavior state styles (highlight, select)
+  // Behavior state styles (highlighted, selected)
   const behaviorStateStyle = useMemo((): React.CSSProperties => {
     let style: React.CSSProperties = {}
 
     if (isHighlighted) {
-      const highlightState = node.states?.find(s => s.name === 'highlight')
+      // Support both 'highlighted' and 'highlight' state names
+      const highlightState = node.states?.find(s => s.name === 'highlighted' || s.name === 'highlight')
       if (highlightState) {
-        style = { ...style, ...propertiesToStyle(highlightState.properties, node.children.length > 0, node.name) }
+        style = { ...style, ...propertiesToStyle(highlightState.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       } else {
         style = { ...style, backgroundColor: 'rgba(59, 130, 246, 0.1)' }
       }
     }
 
     if (isSelected) {
-      const selectState = node.states?.find(s => s.name === 'select')
+      // Support both 'selected' and 'select' state names
+      const selectState = node.states?.find(s => s.name === 'selected' || s.name === 'select')
       if (selectState) {
-        style = { ...style, ...propertiesToStyle(selectState.properties, node.children.length > 0, node.name) }
+        style = { ...style, ...propertiesToStyle(selectState.properties, node.children.length > 0, node.name, tokens ?? undefined, true) }
       } else {
         style = { ...style, backgroundColor: 'rgba(59, 130, 246, 0.2)' }
       }
     }
 
     return style
-  }, [isHighlighted, isSelected, node.states, node.children.length, node.name])
+  }, [isHighlighted, isSelected, node.states, node.children.length, node.name, tokens])
 
   // Register this item with its parent container (for highlight next/prev)
   useEffect(() => {
@@ -579,7 +597,9 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
   // System state checks
   const hasFocusState = node.states?.some(s => s.name === 'focus') ?? false
   const hasActiveState = node.states?.some(s => s.name === 'active') ?? false
-  const needsFocus = hasFocusState || hasKeyDownEvent || hasKeyUpEvent
+  const hasExplicitTabIndex = node.properties.tabindex !== undefined
+  const isFocusable = node.properties.focusable === true
+  const needsFocus = hasFocusState || hasKeyDownEvent || hasKeyUpEvent || hasExplicitTabIndex || isFocusable
 
   // Toggle state function for children (accordion patterns)
   // When a child calls toggle-state and doesn't have its own states,
@@ -620,12 +640,27 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
       ? conditionalContent
       : children
 
+  // Hover context value for child primitives (Input, Textarea)
+  const hoverContextValue = useMemo(() => ({
+    isHovered,
+    hoverStyles: hoverStateStyles
+  }), [isHovered, hoverStateStyles])
+
+  // Filled context value for child primitives to report filled state
+  const filledContextValue = useMemo(() => ({
+    setIsFilled
+  }), [])
+
   const wrappedChildren = renderedContent ? (
-    <StateOverrideProvider states={node.states} currentState={currentState}>
-      <ContainerContext.Provider value={containerContextValue}>
-        {renderedContent}
-      </ContainerContext.Provider>
-    </StateOverrideProvider>
+    <FilledContext.Provider value={filledContextValue}>
+      <HoverContext.Provider value={hoverContextValue}>
+        <StateOverrideProvider states={node.states} currentState={currentState}>
+          <ContainerContext.Provider value={containerContextValue}>
+            {renderedContent}
+          </ContainerContext.Provider>
+        </StateOverrideProvider>
+      </HoverContext.Provider>
+    </FilledContext.Provider>
   ) : null
 
   return (
@@ -637,7 +672,7 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
       data-selected={isSelected || undefined}
       className={node.name}
       style={finalStyle}
-      tabIndex={needsFocus ? 0 : undefined}
+      tabIndex={hasExplicitTabIndex ? Number(node.properties.tabindex) : (needsFocus ? 0 : undefined)}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -645,8 +680,8 @@ export const InteractiveComponent = React.memo(function InteractiveComponent({
       onMouseUp={hasActiveState ? handleMouseUp : undefined}
       onChange={hasChangeEvent ? handleChange as React.ChangeEventHandler<HTMLDivElement> : undefined}
       onInput={hasInputEvent ? handleInput as React.FormEventHandler<HTMLDivElement> : undefined}
-      onFocus={(hasFocusEvent || hasFocusState) ? handleFocus : undefined}
-      onBlur={(hasBlurEvent || hasFocusState) ? handleBlur : undefined}
+      onFocusCapture={(hasFocusEvent || hasFocusState) ? handleFocus : undefined}
+      onBlurCapture={(hasBlurEvent || hasFocusState) ? handleBlur : undefined}
       onKeyDown={hasKeyDownEvent ? handleKeyDown : undefined}
       onKeyUp={hasKeyUpEvent ? handleKeyUp : undefined}
     >

@@ -34,6 +34,11 @@ export interface PickerContext {
 
   // Initial value for picker (e.g., current color when double-clicking a color)
   initialValue?: string
+
+  // Replace all occurrences of this value (for global token replacement)
+  replaceAllValue?: string
+  // Only replace values after this property (e.g., only "16" after "pad", not after "width")
+  replaceAllProperty?: string
 }
 
 // State shape for picker management

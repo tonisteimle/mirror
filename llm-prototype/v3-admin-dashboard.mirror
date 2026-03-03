@@ -1,0 +1,137 @@
+// Component Definitions
+
+Sidebar: ver, width 240, height full, bg #18181B, pad 12
+  Logo: pad 12 16, font-size 16, weight bold, col #F4F4F5
+  NavSection: ver, gap 4
+    NavItem: hor, gap 8, pad 8 16, rad 6, col #E4E4E7
+      state hover bg #333
+      state active bg #2563EB, col white
+      NavIcon:
+      NavLabel:
+
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  Title: col #F4F4F5, font-size 16, weight bold
+  Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+StatsCard: ver, gap 4, bg #1A1A23, pad 16, rad 8
+  Label: col #A1A1AA, font-size 12, uppercase
+  Value: col #F4F4F5, font-size 24, weight bold
+  Trend: col #22C55E, font-size 12
+
+StatsGrid: grid 4, gap 16
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+    CardActions: hor, gap 8
+  CardContent: pad 16
+
+DataTable: ver, bg #1A1A23, rad 8, bor 1 #333
+  TableHeader: hor, bg #18181B, pad 12 16
+    HeaderCell: col #A1A1AA, font-size 12, weight 600, width 150
+  TableBody: ver
+    TableRow: hor, pad 12 16, bor t 1 #333
+      state hover bg #27272A
+      Cell: col #E4E4E7, font-size 14, width 150
+
+Badge: pad 2 8, rad 10, font-size 11, weight 600
+  state success bg #22C55E, col white
+  state warning bg #F59E0B, col white
+  state error bg #EF4444, col white
+  state info bg #3B82F6, col white
+
+MainContainer: hor, gap 0, width full, height full, bg #09090B
+
+ContentArea: ver, width full, height full, bg #09090B
+
+DashboardGrid: ver, gap 16, pad 16
+
+// Page
+
+MainContainer
+  Sidebar
+    Logo "Acme"
+    NavSection
+      - NavItem
+        state active
+        NavIcon "home"
+        NavLabel "Dashboard"
+      - NavItem
+        NavIcon "users"
+        NavLabel "Users"
+      - NavItem
+        NavIcon "package"
+        NavLabel "Products"
+      - NavItem
+        NavIcon "shopping-cart"
+        NavLabel "Orders"
+      - NavItem
+        NavIcon "settings"
+        NavLabel "Settings"
+  
+  ContentArea
+    Header
+      Title "Dashboard"
+      Subtitle "Welcome back, Admin"
+    
+    DashboardGrid
+      StatsGrid
+        StatsCard
+          Label "Total Users"
+          Value "12,345"
+          Trend "+12%"
+        
+        StatsCard
+          Label "Revenue"
+          Value "$45,678"
+          Trend "+8%"
+        
+        StatsCard
+          Label "Orders"
+          Value "1,234"
+          Trend "+5%"
+        
+        StatsCard
+          Label "Conversion"
+          Value "3.2%"
+          Trend "-0.5%"
+      
+      Card
+        CardTitle "Recent Orders"
+        CardContent
+          DataTable
+            TableHeader
+              - HeaderCell "Order ID"
+              - HeaderCell "Customer"
+              - HeaderCell "Amount"
+              - HeaderCell "Status"
+            TableBody
+              - TableRow
+                - Cell "#ORD-001"
+                - Cell "John Doe"
+                - Cell "$1,234.50"
+                - Cell
+                  Badge "Completed"
+                    state success
+              - TableRow
+                - Cell "#ORD-002"
+                - Cell "Jane Smith"
+                - Cell "$2,456.75"
+                - Cell
+                  Badge "Pending"
+                    state warning
+              - TableRow
+                - Cell "#ORD-003"
+                - Cell "Bob Johnson"
+                - Cell "$890.25"
+                - Cell
+                  Badge "Shipped"
+                    state info
+              - TableRow
+                - Cell "#ORD-004"
+                - Cell "Alice Williams"
+                - Cell "$3,567.00"
+                - Cell
+                  Badge "Completed"
+                    state success

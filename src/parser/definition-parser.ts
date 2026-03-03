@@ -211,6 +211,13 @@ function mergeTemplates(existing: ComponentTemplate, incoming: ComponentTemplate
     merged._libraryType = incoming._libraryType || existing._libraryType
   }
 
+  // Preserve line number (use existing's line, which is the first definition)
+  if (existing.line !== undefined) {
+    merged.line = existing.line
+  } else if (incoming.line !== undefined) {
+    merged.line = incoming.line
+  }
+
   return merged
 }
 
@@ -239,12 +246,15 @@ function registerTemplate(ctx: ParserContext, name: string, template: ComponentT
  * - `Button "Click"` = Instance (uses template, renders)
  */
 export function parseInlineDefinition(ctx: ParserContext): void {
-  const componentName = ctx.advance().value // COMPONENT_NAME
+  const nameToken = ctx.advance() // COMPONENT_NAME
+  const componentName = nameToken.value
+  const definitionLine = nameToken.line // Capture line number for section grouping
   ctx.advance() // COLON
 
   const template: ComponentTemplate = {
     properties: {},
-    children: []
+    children: [],
+    line: definitionLine // Store line number for ComponentLibraryView sections
   }
 
   // Check for inheritance: DangerButton: Button { }
@@ -344,7 +354,9 @@ export function parseInlineDefinition(ctx: ParserContext): void {
  * }
  */
 export function parseLibraryDefinition(ctx: ParserContext): void {
-  const componentName = ctx.advance().value // COMPONENT_NAME (e.g., "OptionsMenu")
+  const nameToken = ctx.advance() // COMPONENT_NAME (e.g., "OptionsMenu")
+  const componentName = nameToken.value
+  const definitionLine = nameToken.line
   ctx.advance() // 'as' keyword
   const libraryType = ctx.advance().value // COMPONENT_NAME (e.g., "Dropdown")
   ctx.advance() // COLON
@@ -353,7 +365,8 @@ export function parseLibraryDefinition(ctx: ParserContext): void {
     properties: {},
     children: [],
     _isLibrary: true,
-    _libraryType: libraryType
+    _libraryType: libraryType,
+    line: definitionLine
   }
 
   // Expect BRACE_OPEN
@@ -415,7 +428,9 @@ export function parseLibraryDefinition(ctx: ParserContext): void {
  *   Content: pad 8, bg #333
  */
 export function parseLibraryDefinitionV1(ctx: ParserContext): void {
-  const componentName = ctx.advance().value // COMPONENT_NAME (e.g., "HelpTip")
+  const nameToken = ctx.advance() // COMPONENT_NAME (e.g., "HelpTip")
+  const componentName = nameToken.value
+  const definitionLine = nameToken.line
   ctx.advance() // 'as' keyword
   const libraryTypeWithColon = ctx.advance().value // COMPONENT_DEF (e.g., "Tooltip:")
   const libraryType = libraryTypeWithColon.replace(/:$/, '') // Remove trailing colon
@@ -424,25 +439,101 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
     properties: {},
     children: [],
     _isLibrary: true,
-    _libraryType: libraryType
+    _libraryType: libraryType,
+    line: definitionLine
+  }
+
+  // Inherit from base template if it exists in registry
+  if (ctx.registry.has(libraryType)) {
+    const baseTemplate = ctx.registry.get(libraryType)!
+    template.properties = { ...baseTemplate.properties }
+    template.extends = libraryType
+    if (baseTemplate.content) {
+      template.content = baseTemplate.content
+    }
+    if (baseTemplate.children.length > 0) {
+      // Deep clone children to prevent mutation of base template
+      template.children = baseTemplate.children.map(child => ({
+        ...child,
+        properties: { ...child.properties },
+        children: child.children.map(c => ({ ...c, properties: { ...c.properties } }))
+      }))
+    }
+    if (baseTemplate.states) {
+      template.states = baseTemplate.states.map(state => ({ ...state, properties: { ...state.properties } }))
+    }
+    if (baseTemplate.eventHandlers) {
+      template.eventHandlers = baseTemplate.eventHandlers.map(handler => ({ ...handler }))
+    }
   }
 
   // Parse inline properties on same line
+  // Track current child being overridden (for semicolon syntax: icon visible; label hidden)
+  let currentChildOverride: string | null = null
+
   while (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF') {
     const token = ctx.current()!
 
-    // Handle property name-value pairs
-    if (token.type === 'PROPERTY') {
+    // Handle child override syntax: childName property [value]; childName2 property [value]
+    if (token.type === 'COMPONENT_NAME') {
+      const childName = ctx.advance().value
+      // Check if this is a child in the inherited template
+      const childIndex = template.children.findIndex(c => c.name === childName)
+      if (childIndex >= 0) {
+        currentChildOverride = childName
+      } else {
+        // Not a known child, might be something else - skip
+        currentChildOverride = null
+      }
+    } else if (token.type === 'SEMICOLON') {
+      // Semicolon separates child overrides
+      ctx.advance()
+      currentChildOverride = null
+    } else if (token.type === 'PROPERTY') {
       const propName = ctx.advance().value
       // Handle spread → between alias
       if (propName === 'spread') {
         template.properties['between'] = true
-      } else if (ctx.current() && ctx.current()!.type !== 'NEWLINE' && ctx.current()!.type !== 'EOF' && ctx.current()!.type !== 'COMMA') {
-        const propValue = ctx.advance().value
-        template.properties[propName] = isNaN(Number(propValue)) ? propValue : Number(propValue)
       } else {
-        // Boolean property (no value)
-        template.properties[propName] = true
+        const nextToken = ctx.current()
+        // Check if next token is a value (not another property, keyword, or delimiter)
+        // Value tokens: NUMBER, COLOR, STRING, TOKEN_REF, UNKNOWN_PROPERTY (color names, etc.)
+        const isValueToken = nextToken && (
+          nextToken.type === 'NUMBER' ||
+          nextToken.type === 'COLOR' ||
+          nextToken.type === 'STRING' ||
+          nextToken.type === 'TOKEN_REF' ||
+          nextToken.type === 'UNKNOWN_PROPERTY'
+        )
+
+        let propValue: string | number | boolean
+        if (isValueToken) {
+          const rawValue = ctx.advance().value
+          propValue = isNaN(Number(rawValue)) ? rawValue : Number(rawValue)
+        } else {
+          // Boolean property (no value)
+          propValue = true
+        }
+
+        // Apply to child override or template properties
+        if (currentChildOverride) {
+          const childIndex = template.children.findIndex(c => c.name === currentChildOverride)
+          if (childIndex >= 0) {
+            // Handle 'visible' as inverse of 'hidden'
+            if (propName === 'visible') {
+              template.children[childIndex].properties['hidden'] = false
+            } else {
+              template.children[childIndex].properties[propName] = propValue
+            }
+          }
+        } else {
+          // Handle 'visible' as inverse of 'hidden' for template too
+          if (propName === 'visible') {
+            template.properties['hidden'] = false
+          } else {
+            template.properties[propName] = propValue
+          }
+        }
       }
     } else if (token.type === 'NUMBER') {
       // Dimension shorthand: width, height
@@ -454,6 +545,22 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
       }
     } else if (token.type === 'COMMA') {
       ctx.advance()
+    } else if (token.type === 'STRING') {
+      // For Icon components, STRING is the icon name (content)
+      // For other components, it would be text content
+      const stringValue = ctx.advance().value
+      if (currentChildOverride) {
+        // String value for child override (e.g., icon "home")
+        const childIndex = template.children.findIndex(c => c.name === currentChildOverride)
+        if (childIndex >= 0) {
+          template.children[childIndex].content = stringValue
+        }
+      } else if (libraryType === 'Icon' || libraryType.endsWith('Icon')) {
+        template.content = stringValue
+      } else {
+        // For non-Icon components, set as content too (e.g., Text, Button labels)
+        template.content = stringValue
+      }
     } else {
       ctx.advance()
     }
@@ -465,6 +572,7 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
   }
 
   // Parse indentation-based children
+  const isInheriting = ctx.registry.has(libraryType)
   const baseIndent = ctx.current()?.type === 'INDENT' ? Number(ctx.current()!.value) : 0
   if (baseIndent > 0) {
     while (ctx.current() && ctx.current()!.type === 'INDENT') {
@@ -478,7 +586,26 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
       if (childToken && (childToken.type === 'COMPONENT_NAME' || childToken.type === 'COMPONENT_DEF')) {
         const child = parseComponent(ctx, currentIndent, componentName, childToken.type === 'COMPONENT_DEF', true)
         if (child) {
-          template.children.push(child)
+          // When inheriting, merge children with same name to allow overriding
+          if (isInheriting) {
+            const existingIndex = template.children.findIndex(c => c.name === child.name)
+            if (existingIndex >= 0) {
+              // Merge: existing properties + new properties (new wins)
+              Object.assign(template.children[existingIndex].properties, child.properties)
+              // If child has content, override
+              if (child.content) {
+                template.children[existingIndex].content = child.content
+              }
+              // If child has children, use those (replacement)
+              if (child.children.length > 0) {
+                template.children[existingIndex].children = child.children
+              }
+            } else {
+              template.children.push(child)
+            }
+          } else {
+            template.children.push(child)
+          }
         }
       }
     }
@@ -492,10 +619,13 @@ export function parseLibraryDefinitionV1(ctx: ParserContext): void {
  * Parse a component definition: Button: hor cen gap 8 "Label"
  */
 export function parseComponentDefinition(ctx: ParserContext): void {
-  const componentName = ctx.advance().value
+  const nameToken = ctx.advance()
+  const componentName = nameToken.value
+  const definitionLine = nameToken.line
   const template: ComponentTemplate = {
     properties: {},
-    children: []
+    children: [],
+    line: definitionLine
   }
 
   // Track if we're inheriting from a base component
@@ -587,7 +717,9 @@ export function parseComponentDefinition(ctx: ParserContext): void {
  * Token sequence: COMPONENT_NAME + KEYWORD("from") + COMPONENT_NAME + COLON + properties
  */
 export function parseInheritanceDefinition(ctx: ParserContext): void {
-  const componentName = ctx.advance().value // COMPONENT_NAME (e.g., "Icon-Button")
+  const nameToken = ctx.advance() // COMPONENT_NAME (e.g., "Icon-Button")
+  const componentName = nameToken.value
+  const definitionLine = nameToken.line
   ctx.advance() // KEYWORD "from"
   const baseComponentName = ctx.advance().value // COMPONENT_NAME (e.g., "Button")
   ctx.advance() // COLON
@@ -595,7 +727,8 @@ export function parseInheritanceDefinition(ctx: ParserContext): void {
   const template: ComponentTemplate = {
     properties: {},
     children: [],
-    extends: baseComponentName
+    extends: baseComponentName,
+    line: definitionLine
   }
 
   // Apply base component template if it exists
@@ -951,53 +1084,10 @@ function parseDefinitionInlineProperties(ctx: ParserContext, template: Component
       }
       // Otherwise skip (token might be for other purposes or not yet defined)
     } else if (token.type === 'STRING') {
-      const stringToken = token
       const stringValue = ctx.advance().value
-      // Create _text child node for the string content
-      const textNode = createTextNode(
-        stringValue,
-        null, // Empty ID - will be generated on instantiation
-        stringToken.line,
-        stringToken.column
-      )
-      // Parse properties after the string - they belong to the text node
-      while (ctx.current() &&
-             ctx.current()!.type !== 'NEWLINE' &&
-             ctx.current()!.type !== 'EOF') {
-        const afterToken = ctx.current()!
-        if (afterToken.type === 'PROPERTY') {
-          const propName = ctx.advance().value
-          if (ctx.current()?.type === 'NUMBER') {
-            textNode.properties[propName] = parseInt(ctx.advance().value, 10)
-          } else if (ctx.current()?.type === 'STRING') {
-            textNode.properties[propName] = ctx.advance().value
-          } else if (ctx.current()?.type === 'COLOR') {
-            textNode.properties[propName] = ctx.advance().value
-          } else if (ctx.current()?.type === 'TOKEN_REF') {
-            textNode.properties[propName] = ctx.advance().value
-          } else {
-            textNode.properties[propName] = true
-          }
-        } else if (afterToken.type === 'COLOR') {
-          // Bare color after string → text color
-          textNode.properties['col'] = ctx.advance().value
-        } else if (afterToken.type === 'NUMBER') {
-          // Bare number after string → font size
-          textNode.properties['size'] = parseInt(ctx.advance().value, 10)
-        } else if (afterToken.type === 'TOKEN_REF') {
-          // Bare token ref after string → could be color or size
-          const tokenName = ctx.advance().value
-          const tokenValue = ctx.designTokens.get(tokenName)
-          if (typeof tokenValue === 'string') {
-            textNode.properties['col'] = tokenValue
-          } else if (typeof tokenValue === 'number') {
-            textNode.properties['size'] = tokenValue
-          }
-        } else {
-          break
-        }
-      }
-      template.children.push(textNode)
+      // For component definitions, STRING is the content (not a child)
+      // Properties following the string belong to the template, not a text child
+      template.content = stringValue
     } else if (token.type === 'EVENT') {
       // Inline event handler: onclick toggle, onhover show Tooltip, etc.
       const eventLine = token.line

@@ -32,6 +32,8 @@
  *   -bor, -border            → bor (border width)
  *   -siz, -size              → size (font size)
  *   -wei, -weight            → weight (font weight)
+ *   -w, -width               → w (width)
+ *   -h, -height              → h (height)
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * COLOR INFERENCE BY COMPONENT TYPE
@@ -126,6 +128,12 @@ export function inferPropertyFromTokenName(tokenName: string): string | null {
 
   // Font weight: -wei, -weight
   if (name.endsWith('-wei') || name.endsWith('-weight')) return 'weight'
+
+  // Width: -w, -width
+  if (name.endsWith('-w') || name.endsWith('-width')) return 'w'
+
+  // Height: -h, -height
+  if (name.endsWith('-h') || name.endsWith('-height')) return 'h'
 
   return null
 }

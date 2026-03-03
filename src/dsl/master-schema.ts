@@ -334,8 +334,8 @@ export const MIRROR_SCHEMA = {
       aliases: ['TextField', 'TextInput'],
       allowedCategories: ['form', 'typography', 'color', 'border', 'spacing', 'sizing', 'visual', 'hover'],
       acceptsTextContent: true, // placeholder
-      acceptsChildren: false,
-      description: 'Eingabefeld',
+      acceptsChildren: true, // Value und Placeholder als stylbare Children
+      description: 'Eingabefeld. Unterstützt Value und Placeholder als stylbare Children.',
     } as ComponentDefinition,
 
     Textarea: {
@@ -343,8 +343,8 @@ export const MIRROR_SCHEMA = {
       aliases: ['TextArea', 'MultilineInput'],
       allowedCategories: ['form', 'typography', 'color', 'border', 'spacing', 'sizing', 'visual', 'scroll', 'hover'],
       acceptsTextContent: true, // placeholder
-      acceptsChildren: false,
-      description: 'Mehrzeiliges Eingabefeld',
+      acceptsChildren: true, // Value und Placeholder als stylbare Children
+      description: 'Mehrzeiliges Eingabefeld. Unterstützt Value und Placeholder als stylbare Children.',
     } as ComponentDefinition,
 
     Button: {
@@ -3292,6 +3292,35 @@ export const MIRROR_SCHEMA = {
       notes: [
         'Semikolon trennt Kind-Overrides',
         'Funktioniert für Slots und Named Children',
+      ],
+    },
+    // State Child Overrides
+    stateChildOverrides: {
+      description: 'Child-Properties in States überschreiben',
+      syntax: 'state stateName\\n  ChildName property value',
+      examples: [
+        'state filled\\n  Value col $text',
+        'state invalid\\n  Value col $danger',
+        'state on\\n  Thumb margin-left 18',
+      ],
+      notes: [
+        'Nützlich für Input Value/Placeholder Styling pro State',
+        'Funktioniert mit allen Child-Typen',
+      ],
+    },
+    // Input/Textarea Value and Placeholder Children
+    inputChildren: {
+      description: 'Input und Textarea unterstützen Value und Placeholder als stylbare Children',
+      syntax: 'Input:\\n  Placeholder "text" col $muted\\n  Value "text" col $text',
+      examples: [
+        'Input:\\n  Placeholder "E-Mail..." col #888\\n  Value col $text',
+        'Textarea:\\n  Placeholder "Beschreibung..." col $muted\\n  Value "Bestehender Text" col $text',
+        'Input: state filled\\n  Value col $text',
+      ],
+      notes: [
+        'Placeholder: Placeholder-Text mit optionalem Styling',
+        'Value: Vorausgefüllter Wert mit optionalem Styling',
+        'State Child Overrides erlauben unterschiedliches Styling pro State',
       ],
     },
   },

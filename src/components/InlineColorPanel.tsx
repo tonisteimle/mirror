@@ -1,17 +1,17 @@
 /**
- * InlineColorPanel - Color picker with multiple color systems or token swatches
+ * InlineColorPanel - Color picker with token swatches at the top
  *
- * Normal mode: Shows color palette with tabs (Tailwind, Radix, etc.)
- * Token mode: Shows only defined color tokens from the editor
+ * Layout:
+ * - Token swatches at the top (always visible if tokens exist)
+ * - Color palette below for picking new colors
  *
- * Has a Token toggle button in the header to switch between modes.
+ * Clicking a token inserts the token reference (e.g., $primary.bg)
+ * Clicking a color inserts the hex value
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { InlinePanel, PanelFooter } from './InlinePanel'
 import { ColorSystemPalette } from './ColorSystemPalette'
-import { ColorTokenList } from './color-picker'
 import { parseColorTokens } from '../utils/token-parser'
-import { usePickerBehavior } from '../hooks/usePickerBehavior'
 
 interface InlineColorPanelProps {
   isOpen: boolean
@@ -24,69 +24,68 @@ interface InlineColorPanelProps {
   onSelectedIndexChange: (index: number) => void
   onSelectedValueChange?: (value: string | null) => void
   initialColor?: string
-  /** Token mode - show only tokens instead of color picker */
+  /** @deprecated Token mode is now always integrated */
   useTokenMode?: boolean
-  /** Callback when token mode changes */
+  /** @deprecated Token mode is now always integrated */
   onTokenModeChange?: (mode: boolean) => void
   /** Editor code for extracting tokens */
   editorCode?: string
+  /** Property context for filtering tokens (e.g., "bg" shows only $xxx.bg tokens) */
+  propertyContext?: string | null
 }
 
 export function InlineColorPanel({
   isOpen,
   onClose,
   onSelect,
-  onCodeChange,
   position,
   onSelectedValueChange,
   initialColor,
-  useTokenMode: useTokenModeProp = false,
-  onTokenModeChange,
   editorCode = '',
+  propertyContext,
 }: InlineColorPanelProps) {
   const [pickerColor, setPickerColor] = useState('#3B82F6')
+  const [hoveredToken, setHoveredToken] = useState<string | null>(null)
 
-  // Internal token mode state (synced with prop)
-  const [internalTokenMode, setInternalTokenMode] = useState(useTokenModeProp)
+  // Parse color tokens from editor code, filtered by property context
+  const colorTokens = useMemo(() => {
+    const allTokens = parseColorTokens(editorCode).map(t => ({ name: '$' + t.name, value: t.value }))
 
-  // Sync with prop when it changes
-  useEffect(() => {
-    setInternalTokenMode(useTokenModeProp)
-  }, [useTokenModeProp])
+    // Known color property suffixes - tokens ending with these are property-bound
+    const colorPropertySuffixes = ['.bg', '.col', '.boc']
 
-  // Effective token mode
-  const useTokenMode = internalTokenMode
+    // If we have a property context, smart filter:
+    // 1. Show tokens with matching suffix (e.g., $primary.bg when editing bg)
+    // 2. Show generic tokens without any color property suffix (e.g., $blue-500)
+    // 3. Hide tokens with wrong suffix (e.g., hide $primary.col when editing bg)
+    if (propertyContext) {
+      const matchingSuffix = '.' + propertyContext
+      const filtered = allTokens.filter(t => {
+        // Check if token ends with matching suffix
+        if (t.name.endsWith(matchingSuffix)) {
+          return true
+        }
+        // Check if token has NO color property suffix (generic palette token)
+        const hasColorPropertySuffix = colorPropertySuffixes.some(suffix => t.name.endsWith(suffix))
+        if (!hasColorPropertySuffix) {
+          return true
+        }
+        // Has a different color property suffix - exclude it
+        return false
+      })
 
-  // Handle token mode toggle
-  const handleTokenModeToggle = useCallback(() => {
-    const newMode = !internalTokenMode
-    setInternalTokenMode(newMode)
-    onTokenModeChange?.(newMode)
-  }, [internalTokenMode, onTokenModeChange])
+      // Sort: property-specific tokens first, then generic tokens
+      return filtered.sort((a, b) => {
+        const aHasMatchingSuffix = a.name.endsWith(matchingSuffix)
+        const bHasMatchingSuffix = b.name.endsWith(matchingSuffix)
+        if (aHasMatchingSuffix && !bHasMatchingSuffix) return -1
+        if (!aHasMatchingSuffix && bHasMatchingSuffix) return 1
+        return 0
+      })
+    }
 
-  // Parse color tokens from editor code
-  const colorTokens = useMemo(
-    () => parseColorTokens(editorCode).map(t => ({ name: '$' + t.name, value: t.value })),
-    [editorCode]
-  )
-
-  // Token picker behavior
-  const handleTokenSelect = useCallback(
-    (index: number) => {
-      if (colorTokens[index]) {
-        onSelect(colorTokens[index].name)
-        onClose()
-      }
-    },
-    [colorTokens, onSelect, onClose]
-  )
-
-  const tokenPicker = usePickerBehavior({
-    isOpen: isOpen && useTokenMode,
-    onClose,
-    itemCount: colorTokens.length,
-    onSelect: handleTokenSelect,
-  })
+    return allTokens
+  }, [editorCode, propertyContext])
 
   // Initialize when panel opens
   useEffect(() => {
@@ -97,9 +96,9 @@ export function InlineColorPanel({
       } else {
         setPickerColor('#3B82F6')
       }
-      tokenPicker.resetSelection()
+      setHoveredToken(null)
     }
-  }, [isOpen, initialColor, tokenPicker])
+  }, [isOpen, initialColor])
 
   // Report changes
   useEffect(() => {
@@ -112,14 +111,19 @@ export function InlineColorPanel({
     onClose()
   }, [onSelect, onClose])
 
+  const handleTokenSelect = useCallback((tokenName: string) => {
+    onSelect(tokenName)
+    onClose()
+  }, [onSelect, onClose])
+
   const handleSubmit = useCallback(() => {
     onSelect(pickerColor)
     onClose()
   }, [pickerColor, onSelect, onClose])
 
-  // Global keyboard handler (only for color mode, token mode uses picker behavior)
+  // Global keyboard handler
   useEffect(() => {
-    if (!isOpen || useTokenMode) return
+    if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -131,103 +135,82 @@ export function InlineColorPanel({
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, useTokenMode, handleSubmit, onClose])
+  }, [isOpen, handleSubmit, onClose])
 
-  // Header with Token toggle button
-  const renderHeader = () => (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '8px 12px',
-      borderBottom: '1px solid #222',
-    }}>
-      <span style={{
-        fontSize: '11px',
-        fontWeight: 500,
-        color: '#999',
+  // Token swatches component
+  const renderTokenSwatches = () => {
+    if (colorTokens.length === 0) return null
+
+    return (
+      <div style={{
+        padding: '8px 12px',
+        borderBottom: '1px solid #222',
       }}>
-        {useTokenMode ? 'Token-Farben' : 'Farbauswahl'}
-      </span>
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          handleTokenModeToggle()
-        }}
-        style={{
-          padding: '4px 8px',
+        <div style={{
           fontSize: '10px',
           fontWeight: 500,
-          backgroundColor: useTokenMode ? '#252525' : '#181818',
-          color: useTokenMode ? '#ccc' : '#555',
-          border: 'none',
-          borderRadius: '3px',
-          cursor: 'pointer',
-        }}
-        title="Token Mode"
-      >
-        Tokens
-      </button>
-    </div>
-  )
-
-  // Token mode: show token list
-  if (useTokenMode) {
-    return (
-      <InlinePanel
-        isOpen={isOpen}
-        onClose={onClose}
-        position={position}
-        width={300}
-        maxHeight={360}
-        testId="panel-color-tokens"
-      >
-        {renderHeader()}
-        {colorTokens.length === 0 ? (
-          <div style={{
-            padding: '24px 16px',
-            textAlign: 'center',
-            color: '#888',
-            fontSize: '13px',
-          }}>
-            Keine Farb-Tokens definiert.
-            <br />
-            <span style={{ fontSize: '12px', color: '#666' }}>
-              Definiere Tokens im Tokens-Tab:<br />
-              $primary: #3B82F6
-            </span>
-          </div>
-        ) : (
-          <ColorTokenList
-            ref={tokenPicker.listRef}
-            tokens={colorTokens}
-            selectedIndex={tokenPicker.selectedIndex}
-            onSelect={handleTokenSelect}
-            onHover={tokenPicker.setSelectedIndex}
-            onKeyDown={tokenPicker.handleKeyDown}
-          />
-        )}
-        <PanelFooter
-          hints={[
-            { label: 'Schliessen', onClick: onClose },
-          ]}
-        />
-      </InlinePanel>
+          color: '#666',
+          marginBottom: '6px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}>
+          Tokens
+        </div>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '4px',
+        }}>
+          {colorTokens.map((token) => (
+            <button
+              key={token.name}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleTokenSelect(token.name)
+              }}
+              onMouseEnter={() => setHoveredToken(token.name)}
+              onMouseLeave={() => setHoveredToken(null)}
+              title={token.name}
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '4px',
+                backgroundColor: token.value,
+                border: hoveredToken === token.name ? '2px solid #fff' : '1px solid #333',
+                cursor: 'pointer',
+                padding: 0,
+                boxSizing: 'border-box',
+                transition: 'border 0.1s',
+              }}
+            />
+          ))}
+        </div>
+        <div style={{
+          fontSize: '11px',
+          color: '#888',
+          marginTop: '6px',
+          height: '16px', // Fixed height to prevent jumping
+        }}>
+          {hoveredToken || '\u00A0'} {/* Non-breaking space as placeholder */}
+        </div>
+      </div>
     )
   }
 
-  // Normal mode: show color palette with system tabs
   return (
     <InlinePanel
       isOpen={isOpen}
       onClose={onClose}
       position={position}
       width={420}
-      maxHeight={400}
+      maxHeight={450}
       testId="panel-color-picker"
     >
-      {renderHeader()}
+      {/* Token swatches at the top */}
+      {renderTokenSwatches()}
+
+      {/* Color palette */}
       <div style={{ padding: '12px', paddingBottom: '8px' }}>
         <ColorSystemPalette
           color={pickerColor}

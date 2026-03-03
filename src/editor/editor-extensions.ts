@@ -12,12 +12,13 @@ import { indentUnit } from '@codemirror/language'
 import { dslTheme, dslHighlighter } from './dsl-syntax'
 import { dslAutocomplete, type DSLAutocompleteOptions } from './dsl-autocomplete'
 import type { ValuePickerType } from '../data/dsl-properties'
-import { createEditorKeymaps, type KeymapConfig } from './keymaps'
+import { createEditorKeymaps, createMultilineIndentKeymaps, type KeymapConfig } from './keymaps'
 import { createPanelKeymap, type PanelKeymapConfig } from './panel-keymap'
 import { createNumberScrubbingKeymap } from './number-scrubbing'
 import { createSemanticSelectionExtension } from './semantic-selection'
 import { createColorSwatchPlugin, type ColorSwatchConfig } from './color-swatches'
 import { createDoubleClickPickerExtension, type DoubleClickPickerConfig } from './double-click-picker'
+import { diagnosticDecorationsExtension } from './diagnostic-decorations'
 // Ghost suggestions removed - using contextual autocomplete boost instead
 
 /**
@@ -131,6 +132,9 @@ export function createEditorExtensions(config: EditorExtensionsConfig): Extensio
   extensions.push(dslTheme)
   extensions.push(dslHighlighter)
 
+  // Diagnostic decorations (undefined tokens show as red underline)
+  extensions.push(diagnosticDecorationsExtension())
+
   // Color swatches (inline color previews)
   if (colorSwatchConfig) {
     extensions.push(createColorSwatchPlugin(colorSwatchConfig))
@@ -173,8 +177,12 @@ export function createMinimalExtensions(options: MinimalExtensionsOptions = {}):
     EditorState.tabSize.of(3),
     history(),
     keymap.of(historyKeymap),
+    // Smart Tab/Shift-Tab for indentation (3 spaces)
+    ...createMultilineIndentKeymaps(),
     dslTheme,
     dslHighlighter,
+    // Diagnostic decorations (undefined tokens show as red underline)
+    diagnosticDecorationsExtension(),
     dslAutocomplete({
       // Pass through design tokens getter for $ autocomplete
       getDesignTokens: options.getDesignTokens,

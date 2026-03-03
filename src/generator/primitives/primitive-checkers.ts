@@ -26,8 +26,15 @@ function createPrimitiveChecker(typeName: string, checkPrimitiveType = true): (n
   }
 }
 
-/** Check if node is a Button primitive. */
-export const isButtonPrimitive = createPrimitiveChecker('Button')
+/**
+ * Check if node is a Button primitive.
+ * Note: Button is NOT a primitive anymore - users can define their own Button component.
+ * This only matches if _primitiveType is explicitly set to 'Button' (legacy support).
+ * A component named 'Button' will NOT be treated as a primitive.
+ */
+export function isButtonPrimitive(node: ASTNode): boolean {
+  return node.properties._primitiveType === 'Button'
+}
 
 /** Check if node is an Input primitive. */
 export const isInputPrimitive = createPrimitiveChecker('Input')

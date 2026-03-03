@@ -1,0 +1,78 @@
+// STRUCTURE
+Dropdown:
+  Trigger:
+    Label:
+    ChevronIcon:
+  Menu:
+    Item:
+    Item:
+    Item:
+
+// LAYOUT
+Dropdown: ver, gap 4
+Trigger: hor, center, gap 8
+Label: 
+ChevronIcon: 
+Menu: ver, gap 4
+Item: hor, gap 8, center
+
+// STYLING
+Dropdown: bg #18181B, rad 8
+Trigger: bg #1A1A23, bor 1 #333, rad 6, pad 8 16, col #E4E4E7
+Label: font-size 14
+ChevronIcon: col #A1A1AA
+Menu: bg #1A1A23, rad 8, shadow md, bor 1 #333
+Item: pad 8 12, col #E4E4E7, rad 4
+Item:hover: bg #2563EB
+Item:selected: bg #2563EB, col white
+
+// STATES
+Dropdown: 
+  state hover bor 1 #333
+
+Trigger:
+  state hover bg #333
+  state focus bor 1 #2563EB
+  state active bg #2C2C3A
+
+Label:
+  state disabled col #666
+  state hover col white
+
+ChevronIcon:
+  state hover col white
+  state disabled col #666
+
+Menu:
+  hidden
+  state hover sha 0 4 12 rgba(0,0,0,0.3)
+
+Item:
+  state hover bg #333
+  state selected bg #2563EB, col white
+  state highlighted bg #2C2C3A
+  state disabled col #666
+
+// EVENTS
+Dropdown:
+  onclick Trigger
+
+Trigger:
+  onclick toggle Menu
+  keys
+    enter toggle Menu
+
+ChevronIcon:
+  onclick toggle Menu
+
+Menu:
+  onclick-outside close
+  keys
+    escape close
+    arrow-down highlight next
+    arrow-up highlight prev
+    enter select highlighted, close
+
+Item:
+  onclick select, close Menu
+  onhover highlight

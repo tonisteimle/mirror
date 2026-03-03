@@ -82,6 +82,42 @@ import { GENERIC_CONTAINERS } from './constants'
 import { hasLayoutSlot } from '../../library/layout-defaults'
 
 /**
+ * Recursively resolve list item templates.
+ * List items (with _isListItem flag) need to inherit properties, states, and eventHandlers
+ * from their component templates in the registry.
+ *
+ * @param children Children to process
+ * @param registry Component template registry
+ */
+function resolveListItemTemplates(
+  children: ASTNode[],
+  registry: Map<string, ComponentTemplate>
+): void {
+  for (const child of children) {
+    // If this is a list item, resolve its template
+    if (child._isListItem) {
+      const template = registry.get(child.name)
+      if (template) {
+        // Inherit properties (template first, then child overrides)
+        child.properties = { ...template.properties, ...child.properties }
+        // Copy states if child doesn't have any
+        if (template.states && template.states.length > 0 && (!child.states || child.states.length === 0)) {
+          child.states = template.states.map(s => ({ ...s, properties: { ...s.properties } }))
+        }
+        // Copy eventHandlers if child doesn't have any
+        if (template.eventHandlers && template.eventHandlers.length > 0 && (!child.eventHandlers || child.eventHandlers.length === 0)) {
+          child.eventHandlers = template.eventHandlers.map(h => ({ ...h, actions: [...h.actions] }))
+        }
+      }
+    }
+    // Recursively process nested children
+    if (child.children && child.children.length > 0) {
+      resolveListItemTemplates(child.children, registry)
+    }
+  }
+}
+
+/**
  * Recursively merge inline children into template children.
  *
  * @param templateChild Template child to merge into
@@ -181,16 +217,10 @@ export function handleTemplateLogic(
     // Explicit definition: save as template
     ctx.registry.set(scopedName, createTemplateFromNode(node))
   } else {
-    // Check if this is a layout slot (e.g., Header inside Card)
-    // Layout slots should NOT inherit from global component templates
-    // They have their own slot-specific defaults applied by layout-defaults
-    const isLayoutSlotComponent = parentName && hasLayoutSlot(parentName, componentName)
-
     // Instance: apply template first, then override with local props
-    // Skip template inheritance for layout slots - they use slot defaults instead
-    const template = isLayoutSlotComponent
-      ? undefined
-      : (ctx.registry.get(scopedName) || ctx.registry.get(componentName))
+    // User-defined templates ALWAYS take priority over layout slot defaults
+    // This allows users to customize Item, Header, etc. even when used inside layout components
+    const template = ctx.registry.get(scopedName) || ctx.registry.get(componentName)
     if (template) {
       // Save ALL inline children before applying template (parsed from block syntax)
       const inlineChildren = [...node.children]
@@ -211,19 +241,47 @@ export function handleTemplateLogic(
           : template.children
         node.children = cloneChildrenWithNewIds(childrenToClone, ctx.generateId.bind(ctx))
 
+        // Resolve list item templates recursively
+        // This ensures list items (- Component) inherit properties, states, and eventHandlers
+        // from their component definitions, even if defined after first use
+        resolveListItemTemplates(node.children, ctx.registry)
+
         // Merge inline children with cloned template children
         for (const inlineChild of inlineChildren) {
           // List items (with - prefix) should NOT be merged - they're new instances
           // They should inherit styling from matching template slot, but be added as separate children
           if (inlineChild._isListItem) {
             // Find matching template slot for styling inheritance
-            const templateSlot = node.children.find(c => c.name === inlineChild.name && !c._isListItem)
+            // First try to find in parent's children (slot template pattern)
+            let templateSlot = node.children.find(c => c.name === inlineChild.name && !c._isListItem)
+
+            // If not found in children, look up in registry (top-level component definition)
+            if (!templateSlot) {
+              const templateFromRegistry = ctx.registry.get(inlineChild.name)
+              if (templateFromRegistry) {
+                // Create a temporary "slot" from the registry template
+                templateSlot = {
+                  type: 'component',
+                  name: inlineChild.name,
+                  id: '',
+                  properties: templateFromRegistry.properties,
+                  children: templateFromRegistry.children || [],
+                  states: templateFromRegistry.states,
+                  eventHandlers: templateFromRegistry.eventHandlers,
+                } as ASTNode
+              }
+            }
+
             if (templateSlot) {
               // Inherit template slot properties (slot template provides styling)
               inlineChild.properties = { ...templateSlot.properties, ...inlineChild.properties }
               // Copy states from template slot
               if (templateSlot.states) {
                 inlineChild.states = templateSlot.states.map(s => ({ ...s, properties: { ...s.properties } }))
+              }
+              // Copy eventHandlers from template slot (for onclick, onhover, etc.)
+              if (templateSlot.eventHandlers && templateSlot.eventHandlers.length > 0) {
+                inlineChild.eventHandlers = templateSlot.eventHandlers.map(h => ({ ...h, actions: [...h.actions] }))
               }
             }
             // Always add list items as new children

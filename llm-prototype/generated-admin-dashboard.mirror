@@ -1,0 +1,85 @@
+// Component Definitions
+Sidebar: ver, width 240, height full, bg #18181B, pad 12
+  Logo: pad 12 16, font-size 16, weight bold, col #F4F4F5
+  NavSection: ver, gap 4
+    NavItem: hor, gap 8, pad 8 16, rad 6, col #E4E4E7
+      state hover bg #333
+      state active bg #2563EB, col white
+      NavIcon:
+      NavLabel:
+
+Header: hor, spread, ver-center, pad 12 16, bg #18181B, bor b 1 #333
+  HeaderLeft: ver, gap 2
+    Title: col #F4F4F5, font-size 16, weight bold
+    Subtitle: col #A1A1AA, font-size 12
+  Actions: hor, gap 8
+
+StatsCard: ver, gap 4, bg #1A1A23, pad 16, rad 8
+  Title: col #A1A1AA, font-size 12, uppercase
+  Value: col #F4F4F5, font-size 24, weight bold
+  Trend: hor, gap 4, col #22C55E, font-size 12
+
+Card: ver, bg #1A1A23, rad 8, bor 1 #333
+  CardHeader: hor, spread, ver-center, pad 12 16, bor b 1 #333
+    CardTitle: col #F4F4F5, font-size 14, weight 600
+  CardContent: pad 16
+
+DataTable: ver, bg #1A1A23, rad 8, bor 1 #333
+  TableHeader: hor, bg #18181B, pad 8 16
+    Column: col #A1A1AA, font-size 12, weight 600
+  TableBody: ver
+    Row: hor, pad 8 16, bor b 1 #333
+      state hover bg #333
+      Cell: col #E4E4E7, font-size 14
+
+// Page
+AdminDashboard
+  Sidebar
+    Logo "Acme Admin"
+    NavItem
+      NavIcon "dashboard"
+      NavLabel "Dashboard"
+    NavItem
+      NavIcon "users"
+      NavLabel "Users"
+    NavItem
+      NavIcon "box"
+      NavLabel "Products"
+    NavItem
+      NavIcon "shopping-cart"
+      NavLabel "Orders"
+    NavItem
+      NavIcon "settings"
+      NavLabel "Settings"
+  MainContent
+    Header
+      Title "Dashboard"
+      Subtitle "Welcome to your admin panel"
+      Actions "User Avatar"
+    StatsGrid
+      StatsCard
+        Title "Users"
+        Value "12,345"
+        Trend "+12%"
+      StatsCard
+        Title "Revenue"
+        Value "$45,678"
+        Trend "+8%"
+      StatsCard
+        Title "Orders"
+        Value "1,234"
+        Trend "+5%"
+      StatsCard
+        Title "Conversion Rate"
+        Value "3.2%"
+        Trend "-0.5%"
+    Card
+      CardTitle "Recent Orders"
+      CardContent "DataTable"
+      DataTable
+        Column
+        Column
+        Column
+        Row
+        Row
+        Row

@@ -135,21 +135,28 @@ export function executeAction(
       break
 
     case 'close':
-      if (action.target) {
+      // Implicit self: close without target means close self
+      const closeTarget = action.target || 'self'
+      if (closeTarget === 'self') {
+        // Close self - use node.instanceName (for named instances) or node.name
+        const selfTarget = node.instanceName || node.name
+        behaviorRegistry.setState(selfTarget, 'closed')
+        if (registry) {
+          const targetEntry = getTarget(registry, selfTarget)
+          if (targetEntry) targetEntry.setState('hidden')
+        }
+      } else {
         // First: Check if it's an open overlay
-        if (overlayRegistry?.isOpen(action.target)) {
-          overlayRegistry.close(action.target, action.animation, action.duration)
+        if (overlayRegistry?.isOpen(closeTarget)) {
+          overlayRegistry.close(closeTarget, action.animation, action.duration)
         } else {
           // Fallback: Library component behavior
-          behaviorRegistry.setState(action.target, 'closed')
+          behaviorRegistry.setState(closeTarget, 'closed')
           if (registry) {
-            const targetEntry = getTarget(registry, action.target)
+            const targetEntry = getTarget(registry, closeTarget)
             if (targetEntry) targetEntry.setState('hidden')
           }
         }
-      } else {
-        // No target: close topmost overlay
-        overlayRegistry?.close(undefined, action.animation, action.duration)
       }
       break
 
@@ -216,22 +223,28 @@ export function executeAction(
       break
 
     case 'show':
-      if (action.target) {
+      {
+        // Implicit self: show without target means show self
+        const showTarget = action.target || 'self'
+        const showName = showTarget === 'self' ? (node.instanceName || node.name) : showTarget
         // Use 'open' state - this is what ToggleableNode checks for visibility
-        behaviorRegistry.setState(action.target, 'open')
+        behaviorRegistry.setState(showName, 'open')
         if (registry) {
-          const targetEntry = getTarget(registry, action.target)
+          const targetEntry = getTarget(registry, showName)
           if (targetEntry) targetEntry.setState('open')
         }
       }
       break
 
     case 'hide':
-      if (action.target) {
+      {
+        // Implicit self: hide without target means hide self
+        const hideTarget = action.target || 'self'
+        const hideName = hideTarget === 'self' ? (node.instanceName || node.name) : hideTarget
         // Use 'closed' state - this is what ToggleableNode checks for hiding
-        behaviorRegistry.setState(action.target, 'closed')
+        behaviorRegistry.setState(hideName, 'closed')
         if (registry) {
-          const targetEntry = getTarget(registry, action.target)
+          const targetEntry = getTarget(registry, hideName)
           if (targetEntry) targetEntry.setState('closed')
         }
       }

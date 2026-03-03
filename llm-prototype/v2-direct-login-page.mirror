@@ -1,0 +1,37 @@
+// Component Definitions
+Container: ver, hor-center, ver-center, height full, bg #0F0F12, pad 16
+
+Card: ver, gap 16, bg #1A1A23, rad 8, bor 1 #333, pad 32, width 400
+
+Logo: col #F4F4F5, font-size 24, weight bold, hor-center
+
+Input: hor, bg #27272A, bor 1 #333, rad 6, pad 12
+  state focus bor 1 #2563EB
+  Placeholder: col #71717A
+
+Checkbox: hor, gap 8, ver-center
+  Box: size 16, bg #27272A, bor 1 #333, rad 4
+    state checked bg #2563EB
+  CheckLabel: col #E4E4E7, font-size 14
+
+Button: hor, gap 8, ver-center, bg #2563EB, col white, pad 12 16, rad 6, width full, hor-center
+  state hover bg #1D4ED8
+  Label:
+
+Link: col #2563EB, font-size 14
+  state hover col #1D4ED8
+
+// Page
+Container
+  Card
+    Logo "MyApp"
+    Input
+      Placeholder "Email"
+    Input
+      Placeholder "Password"
+    Checkbox
+      Box
+      CheckLabel "Remember me"
+    Button
+      Label "Login"
+    Link "Forgot Password?"

@@ -1,3 +1,4 @@
+import type { EditorView } from '@codemirror/view'
 import { EditorPanel, type EditorTab } from '../components/EditorPanel'
 import { EditorErrorBoundary } from '../components/boundaries'
 import type { UseCodeParsingReturn, PreviewOverride } from '../hooks/useCodeParsing'
@@ -46,6 +47,8 @@ interface EditorContainerProps {
   useTokenMode?: boolean
   /** Callback when token mode changes */
   onTokenModeChange?: (mode: boolean) => void
+  /** Called when EditorView is created or destroyed (for diagnostics) */
+  onEditorViewChange?: (view: EditorView | null) => void
 }
 
 export function EditorContainer({
@@ -78,6 +81,7 @@ export function EditorContainer({
   onExpandShorthandChange,
   useTokenMode,
   onTokenModeChange,
+  onEditorViewChange,
 }: EditorContainerProps) {
   return (
     <EditorErrorBoundary>
@@ -112,6 +116,7 @@ export function EditorContainer({
         onExpandShorthandChange={onExpandShorthandChange}
         useTokenMode={useTokenMode}
         onTokenModeChange={onTokenModeChange}
+        onEditorViewChange={onEditorViewChange}
       />
     </EditorErrorBoundary>
   )

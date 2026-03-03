@@ -438,6 +438,7 @@ export interface ComponentTemplate {
   showAnimation?: AnimationDefinition
   hideAnimation?: AnimationDefinition
   continuousAnimation?: AnimationDefinition
+  line?: number  // Source line number for section grouping
 }
 
 export interface StyleMixin {

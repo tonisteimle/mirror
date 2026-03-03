@@ -572,6 +572,8 @@ function parsePadMarProperty(ctx: ParserContext, node: ASTNode, propName: string
         node.properties[propName] = resolved
         return
       }
+      // Store unresolved token reference for validation
+      node.properties[propName] = { type: 'token', name: tokenName }
     }
   }
 
@@ -1160,7 +1162,11 @@ function parseDimensionProperty(ctx: ParserContext, node: ASTNode, propName: str
     if (tokenValue !== undefined) {
       node.properties[propName] = tokenValue
     } else {
-      tryAssignResolvedRef(ctx, node, propName, tokenName)
+      const resolved = tryAssignResolvedRef(ctx, node, propName, tokenName)
+      if (!resolved) {
+        // Store unresolved token reference for validation
+        node.properties[propName] = { type: 'token', name: tokenName }
+      }
     }
   } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {
     tryAssignResolvedRef(ctx, node, propName, ctx.advance().value)
@@ -1331,7 +1337,8 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
   } else if (next?.type === 'STRING') {
     // Handle string values for properties like href, src, placeholder, etc.
     node.properties[propName] = ctx.advance().value
-  } else if (next?.type === 'COMPONENT_NAME' && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
+  } else if ((next?.type === 'COMPONENT_NAME' || next?.type === 'UNKNOWN_PROPERTY') && CSS_COLOR_KEYWORDS.has(next.value.toLowerCase())) {
+    // CSS color keywords like 'red', 'blue' may be tokenized as COMPONENT_NAME or UNKNOWN_PROPERTY
     node.properties[propName] = ctx.advance().value
   } else if ((next?.type === 'COMPONENT_NAME' || next?.type === 'PROPERTY') && STRING_PROPERTIES.has(propName)) {
     // Handle COMPONENT_NAME or PROPERTY values for string properties (e.g., align center/cen, fit cover)
@@ -1364,13 +1371,10 @@ function parseGenericProperty(ctx: ParserContext, node: ASTNode, propName: strin
     } else {
       // Token not found - try as component property reference
       const resolved = tryAssignResolvedRef(ctx, node, propName, tokenName)
-      // If both token and component property lookup failed, report via error collector
-      if (!resolved && !tokenName.includes('.')) {
-        ctx.addWarning(
-          'UNDEFINED_TOKEN',
-          `Token "$${tokenName}" is not defined`,
-          tokenRefToken
-        )
+      // If both token and component property lookup failed, store for validation
+      if (!resolved) {
+        // Store unresolved token reference for validator to detect
+        node.properties[propName] = { type: 'token', name: tokenName }
       }
     }
   } else if (next?.type === 'COMPONENT_NAME' && next.value.includes('.')) {

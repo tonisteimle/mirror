@@ -143,6 +143,10 @@ function validatePropertyValue(
   // Skip token references - they'll be validated separately
   if (typeof value === 'string' && value.startsWith('$')) return
 
+  // Skip unresolved token references (object format)
+  if (typeof value === 'object' && value !== null &&
+      (value as Record<string, unknown>).type === 'token') return
+
   switch (schema.type) {
     case 'boolean':
       // Boolean properties can be present without value (implicit true)

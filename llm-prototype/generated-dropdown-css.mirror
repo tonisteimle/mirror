@@ -1,0 +1,41 @@
+// Design Tokens
+$default.bor: #333333
+$default.col: #E4E4E7
+$default.font-size: 14
+$elevated.bg: #1A1A23
+$heading.col: #F4F4F5
+$highlighted.bg: #333333
+$lg.pad: 16
+$md.rad: 6
+$muted.col: #A1A1AA
+$primary.bg: #3B82F6
+$selected.bg: #2563EB
+$sm.gap: 8
+$sm.pad: 8
+$surface.bg: #18181B
+$xs.gap: 4
+
+// Components
+Dropdown: ver, bg $elevated.bg
+  state hover bg $highlighted.bg
+  onclick-outside hide Menu
+  Trigger: hor, spread, ver-center, gap $sm.gap, bg $surface.bg, col $default.col, bor 1 $default.bor, rad $md.rad, pad $sm.pad $lg.pad, shadow sm
+    state hover bg $highlighted.bg
+    state focus boc #2563EB
+    onclick toggle Menu
+  Label: col $default.col, font-size $default.font-size
+    state hover col $primary.bg
+  ChevronIcon: col $muted.col
+    state hover col $primary.bg
+  Menu: ver, gap $xs.gap, bg $elevated.bg, bor 1 $default.bor, rad $md.rad, shadow sm, hidden
+    keys
+      escape hide Menu
+      arrow-down highlight next
+      arrow-up highlight prev
+      enter hide Menu, select highlighted
+  Item: ver-center, col $default.col, pad $sm.pad $lg.pad, rad $md.rad
+    state hover bg $highlighted.bg, col $heading.col, opacity 0.9
+    state selected bg $selected.bg, col #FFFFFF
+    state disabled opacity 0.5
+    onclick hide Menu, select
+    onhover highlight
