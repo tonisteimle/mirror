@@ -4,6 +4,94 @@
 
 ---
 
+## Das Konzept
+
+**Mirror = UI. JavaScript = Logik.**
+
+| Mirror | JavaScript |
+|--------|------------|
+| *Was* die UI ist | *Wie* sie sich verhält |
+| Deklarativ | Imperativ |
+| Struktur, Styling, Layout | State, Logik, API Calls |
+
+### Eine Datei, zwei Sprachen
+
+Ein Mirror-File enthält beides – UI und Logik. Keine `<script>` Tags nötig.
+Der Parser erkennt JavaScript automatisch:
+
+```
+// === UI (Mirror) ===
+
+primary: #3B82F6
+surface: #1a1a23
+
+Text as text:
+    col #E4E4E7
+
+Counter as frame:
+    pad 16, gap 8, center, bg surface
+
+    Text count
+
+    Row hor, gap 8
+        Button bg primary, pad 8 16, rad 4, "-"
+            onclick decrement
+        Button bg primary, pad 8 16, rad 4, "+"
+            onclick increment
+
+Counter
+
+
+// === Logik (JavaScript) ===
+
+let count = 0
+
+function increment() {
+    count++
+    update()
+}
+
+function decrement() {
+    count--
+    update()
+}
+```
+
+JavaScript beginnt, sobald der Parser `let`, `const`, `var`, `function` oder `class` erkennt.
+
+### Strings vs. Referenzen
+
+**Eine einfache Regel:** Text in Anführungszeichen ist ein String. Alles andere ist eine Referenz.
+
+```
+Text "Hello"        // String → zeigt "Hello"
+Text count          // Referenz → zeigt den Wert von count
+Text user.name      // Referenz → zeigt user.name aus JavaScript
+```
+
+### Tokens vs. Variablen
+
+Tokens sind in Mirror definierte Werte. Variablen sind in JavaScript definiert.
+Der Compiler unterscheidet automatisch:
+
+```
+// Mirror: Token definieren
+primary: #3B82F6
+
+// Mirror: Token verwenden
+Button bg primary       // primary ist bekannt → Token
+
+// JavaScript: Variable definieren
+let count = 0
+
+// Mirror: Variable verwenden
+Text count              // count ist nicht als Token bekannt → JS Variable
+```
+
+Kein spezielles Prefix nötig. Der Compiler weiß, was was ist.
+
+---
+
 ## 1. Komponenten und Primitiven
 
 In Mirror gibt es eine kleine Menge eingebauter **Primitiven** (klein geschrieben):
@@ -104,79 +192,204 @@ Box as frame:
 
 ## 4. Layout
 
-Kinder werden standardmäßig vertikal gestapelt.
+Mirror ersetzt das komplexe CSS-Layout durch ein einfaches, konsistentes System.
+
+### Die Philosophie
+
+In CSS brauchst du für ein zentriertes Element:
+```css
+display: flex;
+justify-content: center;
+align-items: center;
+```
+
+In Mirror:
+```
+center
+```
+
+**Ein Wort statt drei Zeilen.** Das ist Mirror.
+
+### Richtung
+
+Kinder werden standardmäßig vertikal gestapelt (`ver`). Für horizontal: `hor`.
 
 ```
-Text as text:
-
 Column as frame:
     ver, gap 8
 
-Column
-    Text "Eins"
-    Text "Zwei"
-    Text "Drei"
-```
-
-Für horizontales Layout:
-
-```
 Row as frame:
     hor, gap 8
-
-Row
-    Text "Links"
-    Text "Mitte"
-    Text "Rechts"
 ```
 
-- `hor` - horizontale Anordnung
-- `ver` - vertikale Anordnung (Standard)
-- `gap 8` - Abstand zwischen Kindern
+| Mirror | CSS |
+|--------|-----|
+| `ver` | `display: flex; flex-direction: column` |
+| `hor` | `display: flex; flex-direction: row` |
+| `gap 8` | `gap: 8px` |
 
-Zentrieren:
+### Ausrichtung
 
 ```
-Center as frame:
-    center
+Box as frame:
+    hor, center           // Beides zentriert
 
-Center
-    Text "Zentriert"
+Box as frame:
+    hor, left, top        // Links oben
+
+Box as frame:
+    hor, right, bottom    // Rechts unten
+
+Box as frame:
+    hor, spread           // Verteilt (space-between)
 ```
+
+| Mirror | Beschreibung |
+|--------|--------------|
+| `center` | Beide Achsen zentriert |
+| `left` | Links ausrichten |
+| `right` | Rechts ausrichten |
+| `top` | Oben ausrichten |
+| `bottom` | Unten ausrichten |
+| `hor-center` | Nur horizontal zentriert |
+| `ver-center` | Nur vertikal zentriert |
+| `spread` | Kinder gleichmäßig verteilen |
+
+### Größen: hug vs. full
+
+Das Herzstück des Systems. Zwei Konzepte:
+
+- **hug** = So groß wie der Inhalt (fit-content)
+- **full** = So groß wie möglich (100% + grow)
+
+```
+// Breite passt sich dem Inhalt an
+Button as button:
+    width hug
+
+// Breite füllt verfügbaren Platz
+Input as input:
+    width full
+
+// Kombiniert
+Row as frame:
+    hor, gap 8
+    Input width full      // Nimmt allen Platz
+    Button width hug      // Nur so breit wie nötig
+```
+
+| Mirror | CSS |
+|--------|-----|
+| `width hug` | `width: fit-content` |
+| `width full` | `width: 100%; flex-grow: 1` |
+| `height hug` | `height: fit-content` |
+| `height full` | `height: 100%; flex-grow: 1` |
+| `width 200` | `width: 200px` |
+| `size 100 50` | `width: 100px; height: 50px` |
+
+### Wrap
+
+Erlaubt Umbruch bei zu wenig Platz:
+
+```
+Tags as frame:
+    hor, wrap, gap 4
+
+Tags
+    Tag "Design"
+    Tag "Code"
+    Tag "Mirror"
+    Tag "Layout"
+```
+
+### Stacked (Übereinander)
+
+Kinder übereinander stapeln (für Overlays, Badges, etc.):
+
+```
+Avatar as frame:
+    stacked, size 48
+
+    Image "user.jpg"
+    Badge as frame:
+        size 12, rad 6, bg green
+        right, bottom        // Positioniert rechts unten
+```
+
+### Grid
+
+Für Spalten-Layouts:
+
+```
+Gallery as frame:
+    grid 3, gap 16           // 3 gleiche Spalten
+
+Products as frame:
+    grid auto 250, gap 16    // Responsive, min 250px pro Item
+
+Sidebar as frame:
+    grid 30% 70%             // Sidebar 30%, Content 70%
+```
+
+| Mirror | Beschreibung |
+|--------|--------------|
+| `grid 3` | 3 gleiche Spalten |
+| `grid auto 250` | Responsive, min 250px |
+| `grid 30% 70%` | Prozentuale Breiten |
+
+### Komplettes Beispiel
+
+```
+Header as frame:
+    hor, spread, ver-center, pad 16, bg surface
+
+    Logo as frame:
+        hor, gap 8, ver-center
+        Icon "mirror"
+        Text "Mirror"
+
+    Nav as frame:
+        hor, gap 24
+        Link "Docs"
+        Link "Examples"
+        Link "GitHub"
+
+    Actions as frame:
+        hor, gap 8
+        Button width hug, "Login"
+```
+
+**Das ist Layout in Mirror.** Intuitiv, konsistent, ohne CSS-Chaos.
 
 ---
 
 ## 5. Tokens (Design-Variablen)
 
-Wiederverwendbare Werte definieren:
+Wiederverwendbare Design-Werte für Farben, Größen, Fonts.
 
 ```
-primary: color = #3B82F6
-danger: color = #EF4444
-surface: color = #1a1a23
+primary: #3B82F6
+danger: #EF4444
+surface: #1a1a23
 
-sm: size = 4
-md: size = 8
-lg: size = 16
+sm: 4
+md: 8
+lg: 16
 ```
 
-Struktur: `name: typ = wert`
+Struktur: `name: wert`
 
-Typen:
-- `color` - Farben (für bg, col, boc)
-- `size` - Größen (für pad, gap, rad, w, h)
-- `font` - Schriftarten
-- `icon` - Icon-Namen
-
-Verwendung - einfach den Namen:
+Verwendung – einfach den Namen:
 
 ```
-primary: color = #3B82F6
-sm: size = 4
+primary: #3B82F6
+sm: 4
 
 Box pad sm, bg primary
     Text "Styled"
 ```
+
+Der Compiler erkennt `primary` und `sm` als Tokens (weil sie definiert sind).
 
 ### Token-Gruppierung
 
@@ -184,13 +397,13 @@ Zusammengehörige Tokens gruppieren:
 
 ```
 dropdown:
-    bg: color = #1A1A23
-    border: color = #333
-    item-hover: color = #444
-    item-selected: color = #2271c1
+    bg: #1A1A23
+    border: #333
+    item-hover: #444
+    item-selected: #2271c1
 ```
 
-Verwendung mit Prefix:
+Verwendung mit Punkt-Notation:
 
 ```
 Menu bg dropdown.bg, bor 1 dropdown.border
@@ -207,9 +420,9 @@ Definitionen in separate Dateien auslagern und importieren.
 
 ```
 // tokens.mirror
-primary: color = #3B82F6
-text: color = #E4E4E7
-sm: size = 4
+primary: #3B82F6
+text: #E4E4E7
+sm: 4
 ```
 
 ```
@@ -383,6 +596,110 @@ Toggle as frame:
         Thumb margin-left 0
 ```
 
+### Initial State
+
+Komponenten können einen Anfangszustand haben:
+
+```
+Dropdown as frame:
+    closed                    // Startet geschlossen
+
+Accordion as frame:
+    expanded                  // Startet ausgeklappt
+
+Panel as frame:
+    collapsed                 // Startet eingeklappt
+```
+
+Unterstützte Initial States:
+- `closed` / `open` - Für Dropdowns, Modals
+- `collapsed` / `expanded` - Für Accordions, Panels
+
+### State-basierte Sichtbarkeit
+
+Kind-Elemente können basierend auf dem Eltern-State ein-/ausgeblendet werden:
+
+```
+Dropdown as frame:
+    closed
+
+    Trigger as frame:
+        onclick toggle
+
+    Menu as frame:
+        if (open)              // Nur sichtbar wenn open
+        pad 8
+        - Item "Option 1"
+        - Item "Option 2"
+```
+
+`if (state)` ohne Kinder macht das Element nur sichtbar, wenn der Eltern-State passt.
+
+Komplexe Bedingungen:
+
+```
+Menu as frame:
+    if (open && hasItems)     // Nur wenn open UND hasItems
+```
+
+### Selection Binding
+
+Container können eine Variable für die Auswahl binden:
+
+```
+Dropdown as frame:
+    closed
+
+    Menu as frame:
+        if (open)
+        selection $selected    // Auswahl in $selected speichern
+
+        - Item "Option 1"
+            onclick select
+        - Item "Option 2"
+            onclick select
+```
+
+Bei `onclick select` wird der ausgewählte Wert in `$selected` gespeichert.
+
+### Komplettes Dropdown-Pattern
+
+Alle Features zusammen:
+
+```
+$selected: "Auswählen..."
+
+Item as frame:
+    pad 8 12, cursor pointer
+    onhover highlight
+    onclick select
+    highlighted:
+        bg #333
+
+Dropdown as frame:
+    closed
+    onclick-outside close
+
+    Trigger as frame:
+        pad 8, cursor pointer
+        onclick toggle
+        Label $selected
+
+    Menu as frame:
+        if (open)
+        selection $selected
+        focusable
+        keys
+            escape close
+            arrow-down highlight next
+            arrow-up highlight prev
+            enter select, close
+
+        - Item "Option 1"
+        - Item "Option 2"
+        - Item "Option 3"
+```
+
 ---
 
 ## 10. Events
@@ -437,6 +754,25 @@ Button as button:
 
 - `debounce N` - Wartet N ms nach letztem Event
 - `delay N` - Verzögert um N ms
+
+### Click Outside Event
+
+Aktion ausführen, wenn außerhalb des Elements geklickt wird. Perfekt für Dropdowns und Modals:
+
+```
+Dropdown as frame:
+    onclick-outside close
+```
+
+Bei Klick außerhalb des Dropdowns wird es geschlossen.
+
+Kombiniert mit anderen Events:
+
+```
+Modal as frame:
+    onclick-outside close
+    onkeydown escape: close
+```
 
 ---
 
@@ -498,7 +834,148 @@ function handleSubmit() {
 
 ---
 
-## 12. Listen
+## 12. JavaScript-Integration
+
+Das Runtime API – wie JavaScript auf Mirror zugreift.
+
+### Named Instances als Objekte
+
+Jede `named` Instanz ist automatisch als JavaScript-Objekt verfügbar:
+
+```
+Button named saveBtn "Speichern"
+Input named searchField
+Menu named userMenu
+```
+
+```javascript
+// Sofort verwendbar – keine Query nötig
+saveBtn.onclick = () => save()
+searchField.value = ""
+userMenu.visible = false
+```
+
+### Properties lesen und schreiben
+
+```javascript
+// Lesen
+const text = myInput.value
+const isVisible = menu.visible
+
+// Schreiben
+saveBtn.text = "Gespeichert"
+avatar.src = user.imageUrl
+errorMsg.visible = false
+```
+
+### Verfügbare Properties
+
+| Property | Lesen | Schreiben | Beschreibung |
+|----------|-------|-----------|--------------|
+| `.text` | ✓ | ✓ | Textinhalt |
+| `.value` | ✓ | ✓ | Input/Textarea Wert |
+| `.visible` | ✓ | ✓ | Sichtbarkeit (boolean) |
+| `.disabled` | ✓ | ✓ | Deaktiviert (boolean) |
+| `.state` | ✓ | ✓ | Aktueller Behavior-State |
+| `.style` | ✓ | ✓ | Inline-Styles (Objekt) |
+| `.data` | ✓ | ✓ | Gebundene Daten |
+| `.el` | ✓ | - | Natives DOM-Element |
+
+### States ändern
+
+```javascript
+// State setzen
+item.state = "selected"
+toggle.state = "on"
+panel.state = "expanded"
+
+// State abfragen
+if (item.state === "selected") { ... }
+
+// State togglen
+item.toggleState("selected")
+```
+
+### Events binden
+
+```javascript
+// Direkte Zuweisung
+saveBtn.onclick = () => save()
+searchField.oninput = (e) => filter(e.value)
+form.onsubmit = handleSubmit
+
+// Keyboard Events
+input.onkeydown.enter = () => submit()
+input.onkeydown.escape = () => clear()
+
+// Mehrere Handler
+saveBtn.on("click", handler1)
+saveBtn.on("click", handler2)
+```
+
+### Collections (Each-Loops)
+
+```
+each task in tasks
+    TodoItem named taskList
+```
+
+```javascript
+// Daten ändern
+tasks.push({ title: "Neu", done: false })
+
+// UI aktualisieren
+update()
+```
+
+### Die `update()` Funktion
+
+Nach Datenänderungen die UI synchronisieren:
+
+```javascript
+update()              // Alles aktualisieren
+update(taskList)      // Nur eine Collection
+update(conditional)   // Nur ein Conditional
+```
+
+### Kompaktes Beispiel
+
+```
+// UI
+Container
+    Input named search "Suchen..."
+    List named results
+        each item in filteredItems
+            Item item.name
+    Text named status
+
+// Logic
+let items = []
+let filteredItems = []
+
+search.oninput = () => {
+    const query = search.value.toLowerCase()
+    filteredItems = items.filter(i =>
+        i.name.toLowerCase().includes(query)
+    )
+    status.text = `${filteredItems.length} Ergebnisse`
+    update()
+}
+
+fetch('/api/items')
+    .then(r => r.json())
+    .then(data => {
+        items = data
+        filteredItems = data
+        update()
+    })
+```
+
+**Das Prinzip:** Mirror-Elemente verhalten sich wie intelligente JavaScript-Objekte. Keine spezielle Syntax, keine Query-Selektoren, keine Wrapper-Funktionen. Direkt zugreifen und ändern.
+
+---
+
+## 13. Listen
 
 Mehrere gleichartige Elemente einfach untereinander.
 
@@ -522,7 +999,7 @@ Menu
 
 ---
 
-## 13. Daten und Iteration
+## 14. Daten und Iteration
 
 Daten durchlaufen mit `each`.
 
@@ -551,7 +1028,7 @@ TaskList as frame:
 
 ```
 TaskList as frame:
-    data tasks where done == false
+    data tasks where done === false
 
     Card
         Text task.title
@@ -561,7 +1038,7 @@ TaskList as frame:
 
 ```
 TaskList as frame:
-    data tasks where done == false
+    data tasks where done === false
 
     TodoItem
         Text task.title
@@ -571,17 +1048,39 @@ TaskList as frame:
 
 ---
 
-## 14. Conditionals
+## 15. Conditionals
+
+Conditionals nutzen **JavaScript-Syntax** für Ausdrücke.
 
 ### Block-Conditional
 
 ```
-if loggedIn
+if (loggedIn)
     Avatar
     Text username
 else
     Button "Login"
 ```
+
+Mit komplexeren Bedingungen:
+
+```
+if (user.isAdmin && hasPermission)
+    AdminPanel
+
+if (items.length > 0)
+    ItemList
+else
+    Text "Keine Einträge"
+```
+
+### JavaScript-Operatoren
+
+In Bedingungen verwenden:
+- `===`, `!==` - Strikte Gleichheit
+- `&&`, `||` - Logisches UND/ODER
+- `!` - Negation
+- `>`, `<`, `>=`, `<=` - Vergleiche
 
 ### Inline-Conditional (Ternary)
 
@@ -593,12 +1092,12 @@ bg active ? primary : surface
 Für Anfänger ist `if then else` lesbarer:
 
 ```
-Icon if done then "check" else "circle"
+Icon if (done) then "check" else "circle"
 ```
 
 ---
 
-## 15. Inline-Formatierung
+## 16. Inline-Formatierung
 
 Rich Text innerhalb von Strings:
 
@@ -616,7 +1115,7 @@ Formate:
 
 ---
 
-## 16. Section Headers
+## 17. Section Headers
 
 Komponenten in der Library gruppieren:
 
@@ -642,7 +1141,7 @@ Sections erscheinen als Überschriften in der Component Library.
 
 ---
 
-## 17. Slots
+## 18. Slots
 
 Platzhalter für Inhalte in Komponenten.
 
@@ -699,7 +1198,7 @@ NavItem Icon "user"; Label "Profile"
 
 ---
 
-## 18. Verschachtelte Komponenten
+## 19. Verschachtelte Komponenten
 
 Komponenten können andere Komponenten enthalten.
 
@@ -728,7 +1227,7 @@ Dialog
 
 ---
 
-## 19. Animations
+## 20. Animations
 
 ### Show/Hide Animations
 
@@ -756,42 +1255,42 @@ LoadingDot as frame:
 
 ---
 
-## 20. Vollständiges Beispiel: Todo-App
+## 21. Vollständiges Beispiel: Todo-App
+
+Eine komplette App in einer Datei – UI und Logik zusammen:
 
 ```
-// === TOKENS ===
+// ============================================================================
+// TOKENS
+// ============================================================================
 
-bg: color = #0a0a0f
-surface: color = #1a1a23
-elevated: color = #252530
-primary: color = #3B82F6
-primary-hover: color = #2563EB
-danger: color = #EF4444
-textColor: color = #E4E4E7
-muted: color = #71717A
+bg: #0a0a0f
+surface: #1a1a23
+elevated: #252530
+primary: #3B82F6
+primary-hover: #2563EB
+danger: #EF4444
+textColor: #E4E4E7
+muted: #71717A
 
-xs: size = 2
-sm: size = 4
-md: size = 8
-lg: size = 16
-xl: size = 24
+xs: 2
+sm: 4
+md: 8
+lg: 16
+xl: 24
 
-body: font = "Inter"
 
-// === BASIS-KOMPONENTEN ===
+// ============================================================================
+// KOMPONENTEN
+// ============================================================================
 
 Text as text:
     col textColor
-
-Icon as icon:
-    size 20
 
 Button as button:
     pad sm lg, bg primary, col white, rad sm, cursor pointer
     hover:
         bg primary-hover
-    disabled:
-        opacity 0.5, cursor default
 
 IconButton as button:
     pad sm, bg transparent, col muted, rad sm
@@ -808,8 +1307,6 @@ Checkbox as frame:
     checked:
         bg primary, bor 1 primary
 
-// === ZUSAMMENGESETZTE KOMPONENTEN ===
-
 TodoItem as frame:
     hor, ver-center, gap md, pad sm md, bg surface, rad sm
     hover:
@@ -817,97 +1314,97 @@ TodoItem as frame:
 
     Checkbox named checkbox
     Label as text:
-        w full, col textColor
+        w full
     IconButton named deleteBtn
-        Icon "trash-2", size 16
+        Icon "trash-2"
 
-Header as frame:
-    ver, gap sm, pad-bottom lg
 
-InputRow as frame:
-    hor, gap sm, pad-bottom lg
-
-TaskList as frame:
-    ver, gap sm
-
-// === APP ===
+// ============================================================================
+// APP
+// ============================================================================
 
 App as frame:
-    pad xl, bg bg, min-h 100vh, font body
+    pad xl, bg bg, min-h 100vh
 
-    Header
-        Text font-size 24, "My Tasks"
-        Text named subtitle, col muted
-            "0 remaining"
+    Text font-size 24, "My Tasks"
+    Text col muted, remainingText
 
-    InputRow
+    Row hor, gap sm, pad-top lg, pad-bottom lg
         Input named newTask
             Placeholder "Add a task..."
         Button named addBtn "Add"
 
-    TaskList
+    Column ver, gap sm
         each task in tasks
             TodoItem
                 checkbox checked task.done
+                    onchange toggleTask
                 Label task.title
                 deleteBtn
-                    onclick remove task
-```
+                    onclick removeTask
 
-### JavaScript-Integration
+App
 
-```javascript
-import ui from "./todo.mirror"
+
+// ============================================================================
+// LOGIK (JavaScript)
+// ============================================================================
 
 let tasks = []
 
-ui.addBtn.onclick = () => {
-    const text = ui.newTask.value.trim()
+function addTask() {
+    const text = newTask.value.trim()
     if (!text) return
 
-    tasks.push({ id: Date.now(), title: text, done: false })
-    ui.newTask.value = ""
-    render()
+    tasks.push({
+        id: Date.now(),
+        title: text,
+        done: false
+    })
+    newTask.value = ""
+    update()
 }
 
-ui.newTask.onkeydown.enter = () => {
-    ui.addBtn.click()
+function toggleTask(task) {
+    task.done = !task.done
+    update()
 }
 
-ui.TodoItem.checkbox.onchange = (item, index) => {
-    tasks[index].done = item.checkbox.checked
-    updateCount()
+function removeTask(task) {
+    tasks = tasks.filter(t => t.id !== task.id)
+    update()
 }
 
-ui.TodoItem.deleteBtn.onclick = (item, index) => {
-    tasks.splice(index, 1)
-    render()
-}
-
-function render() {
-    ui.tasks = tasks
-    updateCount()
-}
-
-function updateCount() {
+function update() {
     const remaining = tasks.filter(t => !t.done).length
-    ui.subtitle.text = `${remaining} remaining`
+    remainingText = `${remaining} remaining`
 }
 
-ui.render("#root")
+// Event Bindings
+addBtn.onclick = addTask
+newTask.onkeydown.enter = addTask
 ```
+
+**Das ist alles.** Eine Datei. UI oben, Logik unten. Der Parser erkennt wo JavaScript beginnt.
 
 ---
 
 ## Quick Reference
 
 ```
-PRIMITIVEN      frame, text, input, button, image, link, icon
-                (klein geschrieben, eingebaut)
+KONZEPT         Mirror = UI (deklarativ)
+                JavaScript = Logik (imperativ)
+                Eine Datei, Parser erkennt JS automatisch
 
-TOKENS          name: type = value
-                primary: color = #3B82F6
-                gruppiert: name: { sub: type = value }
+STRINGS         "Hello" = String literal
+                count = Referenz (Token oder JS Variable)
+
+TOKENS          name: value
+                primary: #3B82F6
+                sm: 4
+                gruppiert: name: { sub: value }
+
+PRIMITIVEN      frame, text, input, button, image, link, icon
 
 KOMPONENTE      Name as primitive:
                 Card as frame:
@@ -917,48 +1414,79 @@ VERERBUNG       Child extends Parent:
                 DangerButton extends Button:
                     bg danger
 
-INSTANZ         Component properties
-                Button "Click"
+INSTANZ         Component properties "content"
+                Button bg primary, "Click"
 
 BENANNT         Component named name
                 Button named saveBtn "Save"
 
 IMPORT          import "dateiname"
 
-PROPERTIES      pad, bg, col, rad, gap, w, h, hor, ver
-                Kommas verpflichtend: pad 8, bg primary, rad 4
+LAYOUT          hor, ver                    // Richtung
+                center, spread              // Verteilung
+                left, right, top, bottom    // Ausrichtung
+                hor-center, ver-center      // Einzelne Achse
+                wrap, stacked               // Spezial
+                grid 3, grid auto 250       // Spalten
+
+SIZING          width/height hug            // = Inhalt
+                width/height full           // = 100% + grow
+                width/height N              // = Npx
+                size W H                    // Breite + Höhe
+
+SPACING         pad N, pad V H, pad T R B L
+                gap N
+                margin N
+
+STYLING         bg, col, rad, bor, shadow, opacity
 
 STATES          statename:
                     properties
                     ChildName property    // Child Override
 
-EVENTS          onclick action
-                onkeydown key: action
-                keys { key action }       // Keys Block
-                debounce N, delay N       // Timing
+INITIAL STATE   closed, open              // Dropdown-States
+                collapsed, expanded       // Accordion-States
 
-ACTIONS         toggle, select, highlight, show, hide
-                call functionName         // JavaScript
-                kein Target = wirkt auf sich selbst
+VISIBILITY      if (open)                 // Sichtbar wenn Eltern open
+                if (open && hasItems)     // Komplexe Bedingung
 
-DATA            data collection
-                data collection where field == value
+SELECTION       selection $variable       // Auswahl-Binding
+
+EVENTS          onclick functionName
+                onkeydown key: functionName
+                onclick-outside close     // Klick außerhalb
+                keys { key action }
+
+ACTIONS         toggle, select, highlight, show, hide, close
+                call functionName
 
 ITERATION       each item in items
                     Component item.prop
 
-CONDITIONALS    if condition ... else ...
+CONDITIONALS    if (condition) ... else ...
                 prop condition ? value1 : value2
 
 SLOTS           Definition: Name:
                 Verwendung: Name "content"
-                Flat Access: verschachtelte Slots direkt
 
-CHILD-OVERRIDE  Component Child "x"; Child2 "y"
+JAVASCRIPT      let, const, var, function, class
+                automatisch erkannt am Dateianfang
 
-INLINE-TEXT     "*text*:bold"  "*text*:italic"  "*text*:token"
+JS-API          // Named Instances als Objekte
+                saveBtn.text = "Gespeichert"
+                input.value, menu.visible, item.state
 
-SECTIONS        --- Section Name ---
+                // Events
+                btn.onclick = () => { ... }
+                input.onkeydown.enter = submit
+
+                // State
+                item.state = "selected"
+                item.toggleState("selected")
+
+                // Update
+                update()              // Alles
+                update(collection)    // Nur Collection
 ```
 
 ---

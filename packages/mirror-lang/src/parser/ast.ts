@@ -15,6 +15,7 @@ export type NodeType =
   | 'Conditional'
   | 'Slot'
   | 'Text'
+  | 'JavaScript'
 
 export interface BaseNode {
   type: NodeType
@@ -22,17 +23,31 @@ export interface BaseNode {
   column: number
 }
 
+export interface ParseError {
+  message: string
+  line: number
+  column: number
+  hint?: string
+}
+
 export interface Program extends BaseNode {
   type: 'Program'
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
   instances: Instance[]
+  javascript?: JavaScriptBlock  // JavaScript code at end of file
+  errors: ParseError[]
+}
+
+export interface JavaScriptBlock extends BaseNode {
+  type: 'JavaScript'
+  code: string  // Raw JavaScript code
 }
 
 export interface TokenDefinition extends BaseNode {
   type: 'Token'
   name: string
-  tokenType: 'color' | 'size' | 'font' | 'icon'
+  tokenType?: 'color' | 'size' | 'font' | 'icon'  // Optional, inferred from value
   value: string | number
 }
 
@@ -45,6 +60,9 @@ export interface ComponentDefinition extends BaseNode {
   states: State[]
   events: Event[]
   children: (Instance | Slot)[]
+  initialState?: string       // initial state: "closed" → initialState: "closed"
+  selection?: string          // selection binding: "selection $selected" → selection: "$selected"
+  visibleWhen?: string        // state-based visibility: "if (open)" → visibleWhen: "open"
 }
 
 export interface Instance extends BaseNode {
@@ -53,12 +71,15 @@ export interface Instance extends BaseNode {
   name: string | null         // named instance
   properties: Property[]
   children: (Instance | Text)[]
+  visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"
+  initialState?: string       // initial state: "closed" → initialState: "closed"
+  selection?: string          // selection binding: "selection $selected" → selection: "$selected"
 }
 
 export interface Property extends BaseNode {
   type: 'Property'
   name: string
-  values: (string | number | TokenReference | Conditional)[]
+  values: (string | number | boolean | TokenReference | Conditional)[]
 }
 
 export interface TokenReference {
@@ -73,11 +94,8 @@ export interface Conditional {
   else: string | number
 }
 
-export interface Expression {
-  left: string
-  operator?: '==' | '!=' | '>' | '<' | '>=' | '<='
-  right?: string | number | boolean
-}
+// Expression is now a JavaScript expression string
+export type Expression = string
 
 export interface State extends BaseNode {
   type: 'State'
@@ -148,5 +166,6 @@ export type Node =
   | Each
   | Slot
   | Text
+  | JavaScriptBlock
 
 export type AST = Program

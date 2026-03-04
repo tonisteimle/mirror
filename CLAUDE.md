@@ -907,14 +907,12 @@ onclick-outside close
 
 ## Conditionals & Logic
 
-Bedingungen und Operatoren
+Bedingungen verwenden JavaScript-Syntax für Expressions.
 
 ### Block Conditionals
 
 ```
-if $condition
-  Component
-if $condition
+if (condition)
   Component
 else
   Other
@@ -922,10 +920,16 @@ else
 
 **Example:**
 ```
-if $isLoggedIn
+if (isLoggedIn)
   Avatar
 else
   Button "Login"
+
+if (user.isAdmin && hasPermission)
+  AdminPanel
+
+if (count > 0 || forceShow)
+  List
 ```
 
 ### Property Conditionals
@@ -933,35 +937,49 @@ else
 Inline Bedingungen für Properties.
 
 ```
-if $cond then property value
-if $cond then property value else property value2
+property if condition then value else value2
 ```
 
 **Example:**
 ```
-Button if $active then bg #3B82F6 else bg #333
-Icon if $task.done then "check" else "circle"
+Button bg if active then #3B82F6 else #333
+Icon if task.done then "check" else "circle"
+Box opacity if visible then 1 else 0
 ```
 
-### Operatoren
+### JavaScript Operatoren
 
-| Name | Description |
-|------|-------------|
-| `==, !=` | Gleichheit / Ungleichheit |
+Alle JavaScript-Operatoren werden unterstützt:
+
+| Operator | Description |
+|----------|-------------|
+| `===, !==` | Strikte Gleichheit |
+| `==, !=` | Lose Gleichheit |
 | `>, <, >=, <=` | Vergleiche |
-| `and` | Logisches UND |
-| `or` | Logisches ODER |
-| `not` | Negation |
-| `+, -, *, /` | Arithmetik |
+| `&&` | Logisches UND |
+| `\|\|` | Logisches ODER |
+| `!` | Negation |
+| `? :` | Ternary (in Expressions) |
 
 ### Expressions
 
-| Name | Description |
-|------|-------------|
-| `$varName` | Variable |
-| `$obj.prop` | Property-Access |
-| `Component.prop` | Component-Property |
-| `$event.value` | Event-Wert |
+```
+// Property Access
+user.profile.name
+item.count
+
+// Vergleiche
+count > 0
+status === "active"
+
+// Logische Verknüpfungen
+isAdmin && hasPermission
+isOwner || isAdmin
+!disabled
+
+// Kombiniert
+user.isAdmin && (hasPermission || isOwner)
+```
 
 ## Iterators & Data
 
@@ -970,30 +988,52 @@ Schleifen und Data Binding
 ### Each Loop
 
 ```
-each $item in $collection
-  Component $item.prop
+each item in collection
+  Component item.prop
 ```
 
 **Example:**
 ```
-each $task in $tasks
+each task in tasks
   Card
-    Text $task.title
-    Icon if $task.done then "check" else "circle"
+    Text task.title
+    if (task.done)
+      Icon "check"
+    else
+      Icon "circle"
+```
+
+### Each mit Filter
+
+Filter verwenden JavaScript-Syntax:
+
+```
+each item in collection where condition
+  Component
+```
+
+**Example:**
+```
+each task in tasks where !task.done
+  TaskCard
+
+each item in items where item.priority > 3 && item.status === "active"
+  HighPriorityItem
 ```
 
 ### Data Binding
 
-Mit optionalem Filter.
+Mit optionalem Filter (JavaScript-Syntax).
 
 ```
 Component data Collection
-Component data Collection where field == value
+Component data Collection where condition
 ```
 
 **Example:**
 ```
-TaskList data Tasks where done == false
+TaskList data tasks where done === false
+UserList data users where role === "admin" || isActive
 ```
 
 ### Master-Detail Pattern
@@ -1141,11 +1181,12 @@ TARGETS     self (default), next, prev, first, last, highlighted, selected
 ANIMATIONS  fade, scale, slide-up/down/left/right, spin, pulse, bounce
 POSITIONS   below, above, left, right, center
 
-CONDITION   if $cond (indented) else (indented)
-            if $x then prop val else prop val
-ITERATOR    each $x in $list (indented)
-            data Collection where field == value
-OPERATORS   == != > < >= <= | and or not | + - * /
+CONDITION   if (jsExpr) (indented) else (indented)
+            prop if condition then val else val (inline)
+ITERATOR    each item in list (indented)
+            each item in list where jsExpr (filtered)
+            data Collection where jsExpr
+OPERATORS   JavaScript: === !== == != > < >= <= && || ! ? :
 
 TOKENS      $name: value (palette) | $name.property: value (semantic)
             $grey-500: #71717A | $primary.bg: $blue-500 | $sm.pad: 4

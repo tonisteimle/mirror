@@ -1,0 +1,183 @@
+/**
+ * Parser Conditional Tests
+ *
+ * Tests parsing of if/else conditionals with JavaScript expressions
+ */
+
+import { describe, it, expect } from 'vitest'
+import { parse } from '../../parser'
+
+// ============================================================================
+// BLOCK CONDITIONALS
+// ============================================================================
+
+describe('Parser: Block Conditionals', () => {
+  it('parses basic if block', () => {
+    const ast = parse(`
+if (loggedIn)
+  Avatar
+`)
+    expect(ast.instances.length).toBe(1)
+    const conditional = ast.instances[0] as any
+    expect(conditional.type).toBe('Conditional')
+    expect(conditional.condition).toBe('(loggedIn)')
+    expect(conditional.then.length).toBe(1)
+    expect(conditional.then[0].component).toBe('Avatar')
+  })
+
+  it('parses if-else block', () => {
+    const ast = parse(`
+if (loggedIn)
+  Avatar
+else
+  LoginButton
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.type).toBe('Conditional')
+    expect(conditional.then[0].component).toBe('Avatar')
+    expect(conditional.else[0].component).toBe('LoginButton')
+  })
+
+  it('parses if with JavaScript expression', () => {
+    const ast = parse(`
+if (isAdmin && hasPermission)
+  AdminPanel
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.condition).toBe('(isAdmin && hasPermission)')
+  })
+
+  it('parses if with complex JavaScript expression', () => {
+    const ast = parse(`
+if (user.isAdmin && (hasPermission || isOwner))
+  Panel
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.condition).toBe('(user.isAdmin && (hasPermission || isOwner))')
+  })
+
+  it('parses if with comparison operators', () => {
+    const ast = parse(`
+if (count > 0 && status === "active")
+  List
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.condition).toBe('(count > 0 && status === "active")')
+  })
+
+  it('parses if with negation', () => {
+    const ast = parse(`
+if (!disabled)
+  Button
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.condition).toBe('(!disabled)')
+  })
+
+  it('parses nested if blocks', () => {
+    const ast = parse(`
+if (hasData)
+  if (isLoading)
+    Spinner
+  else
+    Content
+`)
+    const outer = ast.instances[0] as any
+    expect(outer.type).toBe('Conditional')
+    expect(outer.condition).toBe('(hasData)')
+
+    const inner = outer.then[0]
+    expect(inner.type).toBe('Conditional')
+    expect(inner.condition).toBe('(isLoading)')
+  })
+
+  it('parses if with multiple then children', () => {
+    const ast = parse(`
+if (showDetails)
+  Title
+  Description
+  Footer
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.then.length).toBe(3)
+  })
+})
+
+// ============================================================================
+// INLINE CONDITIONALS
+// ============================================================================
+
+describe('Parser: Inline Conditionals', () => {
+  it('parses inline if-then-else', () => {
+    const ast = parse(`Button bg if active then primary else muted`)
+    const bgProp = ast.instances[0].properties.find(p => p.name === 'bg')
+    const cond = bgProp?.values[0] as any
+    expect(cond.kind).toBe('conditional')
+    expect(cond.condition).toBe('active')
+    expect(cond.then).toBe('primary')
+    expect(cond.else).toBe('muted')
+  })
+
+  it('parses inline conditional with comparison', () => {
+    const ast = parse(`Icon content if done === true then "check" else "circle"`)
+    const contentProp = ast.instances[0].properties.find(p => p.name === 'content')
+    const cond = contentProp?.values[0] as any
+    expect(cond.kind).toBe('conditional')
+    expect(cond.condition).toBe('done === true')
+    expect(cond.then).toBe('check')
+    expect(cond.else).toBe('circle')
+  })
+
+  it('parses inline conditional with numbers', () => {
+    const ast = parse(`Box opacity if visible then 1 else 0`)
+    const opaProp = ast.instances[0].properties.find(p => p.name === 'opacity')
+    const cond = opaProp?.values[0] as any
+    expect(cond.then).toBe(1)
+    expect(cond.else).toBe(0)
+  })
+})
+
+// ============================================================================
+// EACH WITH CONDITIONS
+// ============================================================================
+
+describe('Parser: Each with Conditions', () => {
+  it('parses each with if inside', () => {
+    const ast = parse(`
+each task in tasks
+  if (task.done)
+    CheckIcon
+`)
+    const each = ast.instances[0] as any
+    expect(each.type).toBe('Each')
+    expect(each.children[0].type).toBe('Conditional')
+    expect(each.children[0].condition).toBe('(task.done)')
+  })
+})
+
+// ============================================================================
+// EDGE CASES
+// ============================================================================
+
+describe('Parser: Conditional Edge Cases', () => {
+  it('parses simple identifier condition', () => {
+    const ast = parse(`
+if (visible)
+  Content
+`)
+    const conditional = ast.instances[0] as any
+    expect(conditional.condition).toBe('(visible)')
+  })
+
+  it('parses multiple sequential if blocks', () => {
+    const ast = parse(`
+if (first)
+  A
+if (second)
+  B
+`)
+    expect(ast.instances.length).toBe(2)
+    expect((ast.instances[0] as any).condition).toBe('(first)')
+    expect((ast.instances[1] as any).condition).toBe('(second)')
+  })
+})

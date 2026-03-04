@@ -14,6 +14,18 @@ export type TokenType =
   | 'DOT'
   | 'EQUALS'
   | 'QUESTION'
+  | 'LPAREN'       // (
+  | 'RPAREN'       // )
+  | 'GT'           // >
+  | 'LT'           // <
+  | 'GTE'          // >=
+  | 'LTE'          // <=
+  | 'NOT_EQUAL'    // !=
+  | 'STRICT_EQUAL' // ===
+  | 'STRICT_NOT_EQUAL' // !==
+  | 'AND_AND'      // &&
+  | 'OR_OR'        // ||
+  | 'BANG'         // !
   | 'AS'
   | 'EXTENDS'
   | 'NAMED'
@@ -25,6 +37,11 @@ export type TokenType =
   | 'DATA'
   | 'IMPORT'
   | 'KEYS'
+  | 'AND'
+  | 'OR'
+  | 'NOT'
+  | 'THEN'
+  | 'SELECTION'
   | 'NEWLINE'
   | 'INDENT'
   | 'DEDENT'
@@ -94,6 +111,12 @@ export class Lexer {
       return
     }
 
+    // Negative numbers: -123, -45.6
+    if (this.peek() === '-' && this.isDigit(this.peekNext())) {
+      this.scanNegativeNumber()
+      return
+    }
+
     // Strings
     if (this.peek() === '"') {
       this.scanString()
@@ -106,20 +129,85 @@ export class Lexer {
       return
     }
 
+    // Variables starting with $ (e.g., $selected)
+    if (this.peek() === '$') {
+      this.scanVariable()
+      return
+    }
+
     // Identifiers and keywords
     if (this.isAlpha(this.peek())) {
       this.scanIdentifier()
       return
     }
 
-    // Single characters
+    // Single and multi-character operators
     switch (this.peek()) {
       case ':': this.addToken('COLON', ':'); this.advance(); break
       case ',': this.addToken('COMMA', ','); this.advance(); break
       case ';': this.addToken('SEMICOLON', ';'); this.advance(); break
       case '.': this.addToken('DOT', '.'); this.advance(); break
-      case '=': this.addToken('EQUALS', '='); this.advance(); break
       case '?': this.addToken('QUESTION', '?'); this.advance(); break
+      case '(': this.addToken('LPAREN', '('); this.advance(); break
+      case ')': this.addToken('RPAREN', ')'); this.advance(); break
+      case '=':
+        this.advance()
+        if (this.peek() === '=' && this.peekNext() === '=') {
+          this.advance()
+          this.advance()
+          this.addToken('STRICT_EQUAL', '===')
+        } else if (this.peek() === '=') {
+          this.advance()
+          this.addToken('EQUALS', '==')  // == as single token
+        } else {
+          this.addToken('EQUALS', '=')
+        }
+        break
+      case '&':
+        this.advance()
+        if (this.peek() === '&') {
+          this.advance()
+          this.addToken('AND_AND', '&&')
+        }
+        break
+      case '|':
+        this.advance()
+        if (this.peek() === '|') {
+          this.advance()
+          this.addToken('OR_OR', '||')
+        }
+        break
+      case '>':
+        this.advance()
+        if (this.peek() === '=') {
+          this.advance()
+          this.addToken('GTE', '>=')
+        } else {
+          this.addToken('GT', '>')
+        }
+        break
+      case '<':
+        this.advance()
+        if (this.peek() === '=') {
+          this.advance()
+          this.addToken('LTE', '<=')
+        } else {
+          this.addToken('LT', '<')
+        }
+        break
+      case '!':
+        this.advance()
+        if (this.peek() === '=' && this.peekNext() === '=') {
+          this.advance()
+          this.advance()
+          this.addToken('STRICT_NOT_EQUAL', '!==')
+        } else if (this.peek() === '=') {
+          this.advance()
+          this.addToken('NOT_EQUAL', '!=')
+        } else {
+          this.addToken('BANG', '!')
+        }
+        break
       default:
         // Unknown character, skip
         this.advance()
@@ -200,7 +288,41 @@ export class Lexer {
       }
     }
 
+    // Include % suffix for percentages
+    if (this.peek() === '%') {
+      value += this.advance()
+    }
+
     this.addToken('NUMBER', value)
+  }
+
+  private scanNegativeNumber(): void {
+    let value = this.advance() // consume -
+
+    // Regular number after the minus
+    while (this.isDigit(this.peek())) {
+      value += this.advance()
+    }
+
+    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
+      value += this.advance() // .
+      while (this.isDigit(this.peek())) {
+        value += this.advance()
+      }
+    }
+
+    this.addToken('NUMBER', value)
+  }
+
+  private scanVariable(): void {
+    let value = this.advance() // consume $
+
+    // Read the rest of the variable name
+    while (this.isAlphaNumeric(this.peek()) || this.peek() === '-' || this.peek() === '.') {
+      value += this.advance()
+    }
+
+    this.addToken('IDENTIFIER', value)
   }
 
   private scanIdentifier(): void {
@@ -223,6 +345,11 @@ export class Lexer {
       'data': 'DATA',
       'import': 'IMPORT',
       'keys': 'KEYS',
+      'and': 'AND',
+      'or': 'OR',
+      'not': 'NOT',
+      'then': 'THEN',
+      'selection': 'SELECTION',
     }
 
     const type = keywords[value] || 'IDENTIFIER'

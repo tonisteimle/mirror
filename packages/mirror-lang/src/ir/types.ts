@@ -9,6 +9,21 @@ export interface IR {
   tokens: IRToken[]
 }
 
+export interface IREach {
+  id: string
+  itemVar: string               // Loop variable name (e.g., 'task')
+  collection: string            // Collection variable (e.g., 'tasks')
+  filter?: string               // Optional filter expression
+  template: IRNode[]            // Template nodes to render for each item
+}
+
+export interface IRConditional {
+  id: string
+  condition: string             // JavaScript expression
+  then: IRNode[]                // Nodes to render if condition is true
+  else?: IRNode[]               // Nodes to render if condition is false
+}
+
 export interface IRNode {
   id: string
   tag: string                    // div, span, button, input, etc.
@@ -18,6 +33,11 @@ export interface IRNode {
   styles: IRStyle[]
   events: IREvent[]
   children: IRNode[]
+  each?: IREach                  // If this node is an each loop container
+  conditional?: IRConditional    // If this node is a conditional container
+  visibleWhen?: string           // State-based visibility: "if (open)" → "open"
+  initialState?: string          // Initial state: "closed", "open", etc.
+  selection?: string             // Selection binding: "$selected"
 }
 
 export interface IRProperty {
@@ -51,6 +71,6 @@ export interface IREventModifier {
 
 export interface IRToken {
   name: string
-  type: 'color' | 'size' | 'font' | 'icon'
+  type?: 'color' | 'size' | 'font' | 'icon'
   value: string | number
 }

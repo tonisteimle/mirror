@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Playground</title>
+
+  <!-- CodeMirror 6 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@codemirror/state": "https://esm.sh/@codemirror/state@6.5.4",
+      "@codemirror/view": "https://esm.sh/@codemirror/view@6.39.12?deps=@codemirror/state@6.5.4",
+      "@codemirror/language": "https://esm.sh/@codemirror/language@6.12.1?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12",
+      "@codemirror/commands": "https://esm.sh/@codemirror/commands@6.10.2?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12,@codemirror/language@6.12.1",
+      "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete@6.20.0?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12,@codemirror/language@6.12.1"
+    }
+  }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 200px 6px 1fr 6px 1fr;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+    }
+
+    /* File Browser Sidebar */
+    .sidebar {
+      background: #18181b;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    .sidebar-header {
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #71717a;
+    }
+
+    .file-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding-top: 8px;
+    }
+
+    .folder {
+      user-select: none;
+    }
+
+    .folder-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      color: #e4e4e7;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .folder-header:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .folder-header svg {
+      width: 16px;
+      height: 16px;
+      color: #00ADFF;
+      flex-shrink: 0;
+    }
+
+    .folder-header .chevron {
+      color: #71717a;
+    }
+
+    .folder-children {
+      display: block;
+    }
+
+    .folder.collapsed .folder-children {
+      display: none;
+    }
+
+    .folder.collapsed .folder-header .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .file {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px 4px 32px;
+      cursor: pointer;
+      color: #a1a1aa;
+      font-size: 13px;
+    }
+
+    .file:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .file.active {
+      background: #27272a;
+      color: #e4e4e7;
+    }
+
+    .file svg {
+      width: 16px;
+      height: 16px;
+      color: #00ADFF;
+      flex-shrink: 0;
+    }
+
+    .divider {
+      background: transparent;
+      cursor: col-resize;
+      position: relative;
+    }
+
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      background: #27272a;
+      transition: background 0.15s, width 0.15s;
+    }
+
+    .divider:hover::after,
+    .divider.dragging::after {
+      background: #3b82f6;
+    }
+
+    #editor-divider::after {
+      left: auto;
+      right: 0;
+    }
+
+    header {
+      grid-column: 1 / -1;
+      padding: 8px 16px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status {
+      display: none;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: none;
+    }
+
+    .editor-panel {
+    }
+
+    #editor-container {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* CodeMirror Theme */
+    .cm-editor {
+      height: 100%;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace !important;
+      font-size: 11px;
+      background: #0a0a0f;
+    }
+
+    .cm-editor .cm-scroller {
+      padding-top: 8px;
+    }
+
+    .cm-editor .cm-gutters {
+      background: #0a0a0f;
+      border-right: 1px solid #27272a;
+      color: #52525b;
+    }
+
+    .cm-editor .cm-activeLineGutter {
+      background: #18181b;
+    }
+
+    .cm-editor .cm-activeLine {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .cm-editor .cm-selectionBackground {
+      background: #3b82f640 !important;
+    }
+
+    .cm-editor.cm-focused .cm-selectionBackground {
+      background: #3b82f640 !important;
+    }
+
+    .cm-editor .cm-cursor {
+      border-left-color: #fafafa;
+    }
+
+    .cm-editor .cm-content {
+      caret-color: #fafafa;
+    }
+
+    /* Syntax Highlighting Classes */
+    .mir-comment { color: #525260 !important; font-style: italic; }
+    .mir-string { color: #a5d6ff !important; }
+    .mir-hex { color: #f9a8d4 !important; }
+    .mir-number { color: #fdba74 !important; }
+    .mir-keyword { color: #00ADFF !important; }
+    .mir-state { color: #a78bfa !important; }
+    .mir-event { color: #00ADFF !important; }
+    .mir-property { color: #7ee787 !important; }
+    .mir-action { color: #a78bfa !important; }
+    .mir-component { color: #00ADFF !important; font-weight: 500; }
+    .mir-variable { color: #fdba74 !important; }
+    .mir-punctuation { color: #71717a !important; }
+
+    /* Autocomplete */
+    .cm-tooltip-autocomplete {
+      background: #1f1f23 !important;
+      border: 1px solid #27272a !important;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      font-size: 12px;
+    }
+
+    .cm-tooltip-autocomplete ul {
+      max-height: 300px;
+    }
+
+    .cm-tooltip-autocomplete ul li {
+      padding: 4px 8px;
+      color: #e4e4e7;
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] {
+      background: #3b82f6;
+      color: white;
+    }
+
+    /* Hide completion icons */
+    .cm-tooltip-autocomplete .cm-completionIcon {
+      display: none !important;
+      width: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .cm-completionLabel {
+      color: #e4e4e7;
+    }
+
+    .cm-completionDetail {
+      color: #71717a;
+      margin-left: 8px;
+      font-style: italic;
+    }
+
+    .preview-panel {
+      background: #0f0f14;
+    }
+
+    #preview {
+      flex: 1;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    #preview .mirror-root {
+      min-height: 100%;
+    }
+
+    /* Tabs - hidden */
+    .tabs {
+      display: none;
+    }
+
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #generated-code {
+      padding: 16px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: #a1a1aa;
+    }
+
+    /* Error display */
+    .error-box {
+      padding: 16px;
+      background: #1c1012;
+      border: 1px solid #7f1d1d;
+      border-radius: 6px;
+      margin: 16px;
+    }
+
+    .error-box h3 {
+      color: #ef4444;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .error-box pre {
+      color: #fca5a5;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    /* Color Picker */
+    .color-picker {
+      position: fixed;
+      background: #1a1a1f;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+    }
+
+    .color-picker.visible {
+      display: block;
+    }
+
+    .color-picker-grid {
+      display: flex;
+      gap: 1px;
+    }
+
+    .color-picker-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.1s;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.3);
+      z-index: 1;
+      position: relative;
+    }
+
+    .color-picker-footer {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-preview {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid #444;
+    }
+
+    .color-hex {
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        <img src="Logo.png" alt="Mirror" style="height: 20px; margin-left: -6px;">
+      </h1>
+      <div id="status" class="status">Ready</div>
+    </header>
+
+    <div class="sidebar">
+      <div class="file-tree">
+        <div class="folder">
+          <div class="folder-header">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>my-project</span>
+          </div>
+          <div class="folder-children">
+            <div class="file active" data-file="index.mirror">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18"/>
+                <path d="M9 21V9"/>
+              </svg>
+              <span>Index</span>
+            </div>
+            <div class="file" data-file="components.mirror">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4a2 2 0 0 1-1.1-1.8V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"/>
+                <polyline points="2.32 6.16 12 11 21.68 6.16"/>
+                <line x1="12" y1="22.76" x2="12" y2="11"/>
+              </svg>
+              <span>Components</span>
+            </div>
+            <div class="file" data-file="tokens.mirror">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="13.5" cy="6.5" r="2.5"/>
+                <circle cx="17.5" cy="10.5" r="2.5"/>
+                <circle cx="8.5" cy="7.5" r="2.5"/>
+                <circle cx="6.5" cy="12.5" r="2.5"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
+              </svg>
+              <span>Tokens</span>
+            </div>
+            <div class="file" data-file="data.mirror">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
+              </svg>
+              <span>Data</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" id="sidebar-divider"></div>
+
+    <div class="panel editor-panel">
+      <div class="panel-header">Mirror Code</div>
+      <div id="editor-container"></div>
+    </div>
+
+    <div class="divider" id="editor-divider"></div>
+
+    <!-- Initial code template -->
+    <script type="text/plain" id="initial-code">// Design Tokens
+primary: #3B82F6
+surface: #1a1a23
+text: #e4e4e7
+
+// Components
+Card as frame:
+  pad 20, gap 12, bg surface, rad 8
+
+Title as text:
+  col text, weight 600, font-size 18
+
+Button as button:
+  pad 10 20, bg primary, rad 6
+  col white, weight 500
+  hover
+    bg #2563eb
+
+// Instance
+Card
+  Title "Welcome to Mirror"
+  Button "Get Started"
+</script>
+
+    <div class="panel preview-panel">
+      <div class="tabs">
+        <div class="tab active" data-tab="preview">Preview</div>
+        <div class="tab" data-tab="code">Generated JS</div>
+      </div>
+      <div id="preview" class="tab-content active"></div>
+      <pre id="generated-code" class="tab-content"></pre>
+    </div>
+  </div>
+
+  <!-- Color Picker -->
+  <div id="color-picker" class="color-picker">
+    <div id="color-picker-grid" class="color-picker-grid"></div>
+    <div class="color-picker-footer">
+      <div id="color-preview" class="color-preview"></div>
+      <span id="color-hex" class="color-hex"></span>
+    </div>
+  </div>
+
+  <script src="dist/browser/index.global.js"></script>
+  <script type="module">
+    import { EditorState, RangeSetBuilder } from '@codemirror/state'
+    import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, Decoration, ViewPlugin } from '@codemirror/view'
+    import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
+    import { autocompletion, completionKeymap, startCompletion } from '@codemirror/autocomplete'
+
+    // Virtual File System
+    const defaultFiles = {
+      'index.mirror': `// Main Application
+App ver, gap 16, pad 20
+  Header
+  Content
+  Footer`,
+
+      'components.mirror': `// Reusable Components
+Header: hor, spread, pad 16, bg #1a1a23
+  Logo "Mirror Studio"
+  Nav hor, gap 16
+    - NavItem "Home"
+    - NavItem "Docs"
+    - NavItem "Examples"
+
+Content: pad 20, gap 16
+  Title "Welcome"
+  Text "Build UIs with Mirror"
+
+Footer: pad 16, bg #27272a, center
+  Text "© 2024 Mirror" col #71717a`,
+
+      'tokens.mirror': `// Design Tokens
+$primary: #3B82F6
+$surface: #1a1a23
+$text: #e4e4e7
+$muted: #71717a
+
+$sm.pad: 8
+$md.pad: 16
+$lg.pad: 24
+
+$sm.rad: 4
+$md.rad: 8
+$lg.rad: 12`,
+
+      'data.mirror': `// Sample Data
+$users:
+  - name "Alice", role "Admin"
+  - name "Bob", role "User"
+  - name "Charlie", role "User"
+
+$menuItems:
+  - label "Dashboard", icon "home"
+  - label "Settings", icon "settings"
+  - label "Profile", icon "user"`
+    }
+
+    // Load files from localStorage or use defaults
+    const STORAGE_PREFIX = 'mirror-file-'
+    const files = {}
+    for (const [name, content] of Object.entries(defaultFiles)) {
+      const saved = localStorage.getItem(STORAGE_PREFIX + name)
+      files[name] = saved !== null ? saved : content
+    }
+
+    let currentFile = 'index.mirror'
+    const initialCode = files[currentFile]
+
+    // Token patterns
+    const patterns = [
+      { regex: /\/\/.*$/gm, class: 'mir-comment' },
+      { regex: /"[^"]*"/g, class: 'mir-string' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, class: 'mir-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, class: 'mir-number' },
+      { regex: /\b(as|extends|named|each|in|if|else|where|then|data)\b/g, class: 'mir-keyword' },
+      { regex: /\b(hover|focus|active|disabled|filled|state|selected|highlighted|on|off)\b/g, class: 'mir-state' },
+      { regex: /\b(onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|keys)\b/g, class: 'mir-event' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|min|max|animate|font-size)\b/g, class: 'mir-property' },
+      { regex: /\b(show|hide|toggle|select|highlight|activate|deactivate|call|open|close|page)\b/g, class: 'mir-action' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, class: 'mir-component' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, class: 'mir-variable' },
+    ]
+
+    // Create decoration marks
+    const decorations = {}
+    patterns.forEach(p => {
+      decorations[p.class] = Decoration.mark({ class: p.class })
+    })
+
+    // Tokenize text and build decorations
+    function tokenize(view) {
+      const builder = new RangeSetBuilder()
+      const text = view.state.doc.toString()
+      const matches = []
+
+      // Collect all matches with positions
+      for (const pattern of patterns) {
+        pattern.regex.lastIndex = 0
+        let match
+        while ((match = pattern.regex.exec(text)) !== null) {
+          matches.push({
+            from: match.index,
+            to: match.index + match[0].length,
+            class: pattern.class
+          })
+        }
+      }
+
+      // Sort by position and filter overlaps (first match wins)
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) {
+          filtered.push(m)
+          lastEnd = m.to
+        }
+      }
+
+      // Build range set
+      for (const m of filtered) {
+        builder.add(m.from, m.to, decorations[m.class])
+      }
+
+      return builder.finish()
+    }
+
+    // ViewPlugin for syntax highlighting
+    const mirrorHighlight = ViewPlugin.fromClass(class {
+      constructor(view) {
+        this.decorations = tokenize(view)
+      }
+      update(update) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = tokenize(update.view)
+        }
+      }
+    }, {
+      decorations: v => v.decorations
+    })
+
+    // Autocomplete - All Mirror properties
+    const mirrorProperties = [
+      // Layout
+      { label: 'hor', detail: 'horizontal layout', type: 'property' },
+      { label: 'ver', detail: 'vertical layout', type: 'property' },
+      { label: 'horizontal', detail: 'horizontal layout', type: 'property' },
+      { label: 'vertical', detail: 'vertical layout', type: 'property' },
+      { label: 'center', detail: 'center both axes', type: 'property' },
+      { label: 'spread', detail: 'space-between', type: 'property' },
+      { label: 'wrap', detail: 'allow wrapping', type: 'property' },
+      { label: 'stacked', detail: 'z-layers', type: 'property' },
+      { label: 'grid', detail: 'grid layout', type: 'property' },
+      // Alignment
+      { label: 'left', detail: 'align left', type: 'property' },
+      { label: 'right', detail: 'align right', type: 'property' },
+      { label: 'top', detail: 'align top', type: 'property' },
+      { label: 'bottom', detail: 'align bottom', type: 'property' },
+      { label: 'hor-center', detail: 'center horizontal', type: 'property' },
+      { label: 'ver-center', detail: 'center vertical', type: 'property' },
+      // Spacing
+      { label: 'pad', detail: 'padding', type: 'property' },
+      { label: 'padding', detail: 'padding', type: 'property' },
+      { label: 'margin', detail: 'margin', type: 'property' },
+      { label: 'gap', detail: 'gap between children', type: 'property' },
+      // Sizing
+      { label: 'width', detail: 'width (hug/full/px)', type: 'property' },
+      { label: 'height', detail: 'height (hug/full/px)', type: 'property' },
+      { label: 'size', detail: 'width + height', type: 'property' },
+      { label: 'min-width', detail: 'minimum width', type: 'property' },
+      { label: 'max-width', detail: 'maximum width', type: 'property' },
+      { label: 'min-height', detail: 'minimum height', type: 'property' },
+      { label: 'max-height', detail: 'maximum height', type: 'property' },
+      // Colors
+      { label: 'bg', detail: 'background color', type: 'property' },
+      { label: 'background', detail: 'background color', type: 'property' },
+      { label: 'col', detail: 'text color', type: 'property' },
+      { label: 'color', detail: 'text color', type: 'property' },
+      { label: 'boc', detail: 'border color', type: 'property' },
+      { label: 'border-color', detail: 'border color', type: 'property' },
+      // Border & Radius
+      { label: 'bor', detail: 'border', type: 'property' },
+      { label: 'border', detail: 'border', type: 'property' },
+      { label: 'rad', detail: 'border radius', type: 'property' },
+      { label: 'radius', detail: 'border radius', type: 'property' },
+      // Typography
+      { label: 'font-size', detail: 'font size', type: 'property' },
+      { label: 'weight', detail: 'font weight', type: 'property' },
+      { label: 'line', detail: 'line height', type: 'property' },
+      { label: 'font', detail: 'font family', type: 'property' },
+      { label: 'align', detail: 'text alignment', type: 'property' },
+      { label: 'italic', detail: 'italic text', type: 'property' },
+      { label: 'underline', detail: 'underlined text', type: 'property' },
+      { label: 'truncate', detail: 'truncate with ellipsis', type: 'property' },
+      { label: 'uppercase', detail: 'uppercase text', type: 'property' },
+      { label: 'lowercase', detail: 'lowercase text', type: 'property' },
+      // Icons
+      { label: 'icon-size', detail: 'icon size', type: 'property' },
+      { label: 'icon-weight', detail: 'icon stroke weight', type: 'property' },
+      { label: 'icon-color', detail: 'icon color', type: 'property' },
+      { label: 'fill', detail: 'filled icon', type: 'property' },
+      // Visuals
+      { label: 'opacity', detail: 'opacity 0-1', type: 'property' },
+      { label: 'shadow', detail: 'box shadow', type: 'property' },
+      { label: 'cursor', detail: 'cursor style', type: 'property' },
+      { label: 'z', detail: 'z-index', type: 'property' },
+      { label: 'hidden', detail: 'start hidden', type: 'property' },
+      { label: 'visible', detail: 'visibility', type: 'property' },
+      { label: 'disabled', detail: 'disabled state', type: 'property' },
+      { label: 'rotate', detail: 'rotation', type: 'property' },
+      { label: 'translate', detail: 'translate X Y', type: 'property' },
+      // Scroll
+      { label: 'scroll', detail: 'vertical scroll', type: 'property' },
+      { label: 'scroll-hor', detail: 'horizontal scroll', type: 'property' },
+      { label: 'scroll-both', detail: 'both directions', type: 'property' },
+      { label: 'clip', detail: 'overflow hidden', type: 'property' },
+      // Hover
+      { label: 'hover-bg', detail: 'hover background', type: 'property' },
+      { label: 'hover-col', detail: 'hover color', type: 'property' },
+      { label: 'hover-opacity', detail: 'hover opacity', type: 'property' },
+      { label: 'hover-scale', detail: 'hover scale', type: 'property' },
+      { label: 'hover-bor', detail: 'hover border', type: 'property' },
+      // Animation
+      { label: 'show', detail: 'show animation', type: 'property' },
+      { label: 'hide', detail: 'hide animation', type: 'property' },
+      { label: 'animate', detail: 'continuous animation', type: 'property' },
+    ]
+
+    const mirrorKeywords = [
+      // Structure
+      { label: 'as', detail: 'inherit from', type: 'keyword' },
+      { label: 'named', detail: 'named instance', type: 'keyword' },
+      // Conditionals
+      { label: 'if', detail: 'condition', type: 'keyword' },
+      { label: 'else', detail: 'else branch', type: 'keyword' },
+      { label: 'then', detail: 'then value', type: 'keyword' },
+      // Data
+      { label: 'each', detail: 'iterate', type: 'keyword' },
+      { label: 'in', detail: 'in collection', type: 'keyword' },
+      { label: 'where', detail: 'filter', type: 'keyword' },
+      { label: 'data', detail: 'data binding', type: 'keyword' },
+      // States
+      { label: 'hover', detail: 'hover state', type: 'keyword' },
+      { label: 'focus', detail: 'focus state', type: 'keyword' },
+      { label: 'active', detail: 'active state', type: 'keyword' },
+      { label: 'disabled', detail: 'disabled state', type: 'keyword' },
+      { label: 'state', detail: 'custom state', type: 'keyword' },
+      { label: 'selected', detail: 'selected state', type: 'keyword' },
+      { label: 'highlighted', detail: 'highlighted state', type: 'keyword' },
+      // Events
+      { label: 'onclick', detail: 'click event', type: 'keyword' },
+      { label: 'onhover', detail: 'hover event', type: 'keyword' },
+      { label: 'onfocus', detail: 'focus event', type: 'keyword' },
+      { label: 'onblur', detail: 'blur event', type: 'keyword' },
+      { label: 'onchange', detail: 'change event', type: 'keyword' },
+      { label: 'oninput', detail: 'input event', type: 'keyword' },
+      { label: 'onkeydown', detail: 'keydown event', type: 'keyword' },
+      { label: 'keys', detail: 'keyboard shortcuts', type: 'keyword' },
+      // Actions
+      { label: 'toggle', detail: 'toggle visibility', type: 'keyword' },
+      { label: 'select', detail: 'select item', type: 'keyword' },
+      { label: 'highlight', detail: 'highlight item', type: 'keyword' },
+      { label: 'open', detail: 'open overlay', type: 'keyword' },
+      { label: 'close', detail: 'close overlay', type: 'keyword' },
+      { label: 'page', detail: 'navigate to page', type: 'keyword' },
+      { label: 'call', detail: 'call JS function', type: 'keyword' },
+      { label: 'assign', detail: 'assign variable', type: 'keyword' },
+    ]
+
+    const allCompletions = [...mirrorProperties, ...mirrorKeywords]
+
+    function mirrorCompletions(context) {
+      const word = context.matchBefore(/[\w-]*/)
+      const from = word ? word.from : context.pos
+      const typed = word ? word.text.toLowerCase() : ''
+
+      // Get text before the current word
+      const line = context.state.doc.lineAt(context.pos)
+      const textBefore = line.text.slice(0, from - line.from)
+
+      // Smart triggering: only complete in property context
+      // - After comma (with optional space): ", p" or ",p"
+      // - After component name and space: "Box p"
+      // - After colon (definition): "Button: p"
+      // - At start of indented line (for nested props)
+      // - After first word on line that starts with uppercase
+      const isPropertyContext =
+        textBefore.match(/,\s*$/) ||           // after comma
+        textBefore.match(/:\s*$/) ||           // after colon (definition)
+        textBefore.match(/^\s+$/) ||           // indented line start
+        textBefore.match(/[A-Z]\w*\s+$/) ||    // after component name
+        textBefore.match(/^\s*[A-Z]\w*\s+[\w-]+\s+$/) // after component + one property
+
+      // If not in property context and not explicitly triggered, don't show
+      if (!isPropertyContext && !context.explicit && typed.length < 2) {
+        return null
+      }
+
+      // Filter completions based on what's typed
+      let options = allCompletions
+      if (typed) {
+        // Match prefix or fuzzy match for longer typed strings
+        options = allCompletions.filter(c => {
+          const label = c.label.toLowerCase()
+          return label.startsWith(typed) || label.includes(typed)
+        })
+        // Prioritize prefix matches
+        options.sort((a, b) => {
+          const aStarts = a.label.toLowerCase().startsWith(typed)
+          const bStarts = b.label.toLowerCase().startsWith(typed)
+          if (aStarts && !bStarts) return -1
+          if (!aStarts && bStarts) return 1
+          return 0
+        })
+      }
+
+      // Don't show empty completion list
+      if (options.length === 0) {
+        return null
+      }
+
+      return {
+        from,
+        options: options.slice(0, 15),
+        validFor: /^[\w-]*$/
+      }
+    }
+
+    // ==========================================
+    // Color Picker Setup (before editor)
+    // ==========================================
+
+    // Open Color - cleaner palette with single gray scale
+    const OPEN_COLORS = [
+      { name: 'gray', shades: ['#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da', '#adb5bd', '#868e96', '#495057', '#343a40', '#212529'] },
+      { name: 'red', shades: ['#fff5f5', '#ffe3e3', '#ffc9c9', '#ffa8a8', '#ff8787', '#ff6b6b', '#fa5252', '#f03e3e', '#e03131', '#c92a2a'] },
+      { name: 'pink', shades: ['#fff0f6', '#ffdeeb', '#fcc2d7', '#faa2c1', '#f783ac', '#f06595', '#e64980', '#d6336c', '#c2255c', '#a61e4d'] },
+      { name: 'grape', shades: ['#f8f0fc', '#f3d9fa', '#eebefa', '#e599f7', '#da77f2', '#cc5de8', '#be4bdb', '#ae3ec9', '#9c36b5', '#862e9c'] },
+      { name: 'violet', shades: ['#f3f0ff', '#e5dbff', '#d0bfff', '#b197fc', '#9775fa', '#845ef7', '#7950f2', '#7048e8', '#6741d9', '#5f3dc4'] },
+      { name: 'indigo', shades: ['#edf2ff', '#dbe4ff', '#bac8ff', '#91a7ff', '#748ffc', '#5c7cfa', '#4c6ef5', '#4263eb', '#3b5bdb', '#364fc7'] },
+      { name: 'blue', shades: ['#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6', '#1c7ed6', '#1971c2', '#1864ab'] },
+      { name: 'cyan', shades: ['#e3fafc', '#c5f6fa', '#99e9f2', '#66d9e8', '#3bc9db', '#22b8cf', '#15aabf', '#1098ad', '#0c8599', '#0b7285'] },
+      { name: 'teal', shades: ['#e6fcf5', '#c3fae8', '#96f2d7', '#63e6be', '#38d9a9', '#20c997', '#12b886', '#0ca678', '#099268', '#087f5b'] },
+      { name: 'green', shades: ['#ebfbee', '#d3f9d8', '#b2f2bb', '#8ce99a', '#69db7c', '#51cf66', '#40c057', '#37b24d', '#2f9e44', '#2b8a3e'] },
+      { name: 'lime', shades: ['#f4fce3', '#e9fac8', '#d8f5a2', '#c0eb75', '#a9e34b', '#94d82d', '#82c91e', '#74b816', '#66a80f', '#5c940d'] },
+      { name: 'yellow', shades: ['#fff9db', '#fff3bf', '#ffec99', '#ffe066', '#ffd43b', '#fcc419', '#fab005', '#f59f00', '#f08c00', '#e67700'] },
+      { name: 'orange', shades: ['#fff4e6', '#ffe8cc', '#ffd8a8', '#ffc078', '#ffa94d', '#ff922b', '#fd7e14', '#f76707', '#e8590c', '#d9480f'] },
+    ]
+
+    const colorPicker = document.getElementById('color-picker')
+    const colorPickerGrid = document.getElementById('color-picker-grid')
+    const colorPreview = document.getElementById('color-preview')
+    const colorHex = document.getElementById('color-hex')
+    let colorPickerVisible = false
+    let colorPickerInsertPos = null
+    let colorPickerReplaceRange = null // { from, to } for replacing existing colors
+
+    // Build the color grid
+    function buildColorGrid() {
+      colorPickerGrid.innerHTML = ''
+      OPEN_COLORS.forEach(scale => {
+        const col = document.createElement('div')
+        col.className = 'color-picker-column'
+        scale.shades.forEach(hex => {
+          const btn = document.createElement('button')
+          btn.className = 'color-swatch'
+          btn.style.backgroundColor = hex
+          btn.dataset.color = hex
+          btn.addEventListener('mouseenter', () => {
+            colorPreview.style.backgroundColor = hex
+            colorHex.textContent = hex.toUpperCase()
+          })
+          btn.addEventListener('click', (e) => {
+            e.preventDefault()
+            selectColor(hex.toUpperCase())
+          })
+          col.appendChild(btn)
+        })
+        colorPickerGrid.appendChild(col)
+      })
+    }
+    buildColorGrid()
+
+    function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = null) {
+      colorPickerInsertPos = insertPos
+      colorPickerReplaceRange = replaceRange
+      colorPicker.style.left = x + 'px'
+      colorPicker.style.top = y + 'px'
+      colorPicker.classList.add('visible')
+      colorPickerVisible = true
+      const displayColor = initialColor || '#3b82f6'
+      colorPreview.style.backgroundColor = displayColor
+      colorHex.textContent = displayColor.toUpperCase()
+    }
+
+    function hideColorPicker() {
+      colorPicker.classList.remove('visible')
+      colorPickerVisible = false
+      colorPickerInsertPos = null
+      colorPickerReplaceRange = null
+    }
+
+    function selectColor(hex) {
+      if (window.editor) {
+        if (colorPickerReplaceRange) {
+          // Replace existing color
+          window.editor.dispatch({
+            changes: { from: colorPickerReplaceRange.from, to: colorPickerReplaceRange.to, insert: hex }
+          })
+        } else if (colorPickerInsertPos !== null) {
+          // Insert new color
+          window.editor.dispatch({
+            changes: { from: colorPickerInsertPos, to: colorPickerInsertPos, insert: hex }
+          })
+        }
+        window.editor.focus()
+      }
+      hideColorPicker()
+    }
+
+    // Close on escape or click outside
+    document.addEventListener('keydown', (e) => {
+      if (colorPickerVisible && e.key === 'Escape') {
+        hideColorPicker()
+        if (window.editor) window.editor.focus()
+      }
+    })
+
+    document.addEventListener('mousedown', (e) => {
+      if (colorPickerVisible && !colorPicker.contains(e.target)) {
+        hideColorPicker()
+      }
+    })
+
+    // Color trigger extension (space after color property)
+    const colorTriggerExtension = EditorView.updateListener.of(update => {
+      if (!update.docChanged) return
+
+      update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+        const insertedText = inserted.toString()
+        if (insertedText === ' ') {
+          const line = update.view.state.doc.lineAt(fromB)
+          const textBefore = line.text.slice(0, fromB - line.from)
+
+          if (textBefore.match(/\b(bg|col|background|color|boc|border-color)$/)) {
+            const coords = update.view.coordsAtPos(fromB)
+            if (coords) {
+              showColorPicker(coords.left, coords.bottom + 4, fromB + 1)
+            }
+          }
+        }
+      })
+    })
+
+    // Double-click on color extension
+    const colorDoubleClickExtension = EditorView.domEventHandlers({
+      dblclick: (event, view) => {
+        const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+        if (pos === null) return false
+
+        const line = view.state.doc.lineAt(pos)
+        const lineText = line.text
+
+        // Find all hex colors in the line
+        const hexRegex = /#[0-9A-Fa-f]{3,8}\b/g
+        let match
+        while ((match = hexRegex.exec(lineText)) !== null) {
+          const colorStart = line.from + match.index
+          const colorEnd = colorStart + match[0].length
+
+          // Check if click position is within this color
+          if (pos >= colorStart && pos <= colorEnd) {
+            const coords = view.coordsAtPos(colorStart)
+            if (coords) {
+              event.preventDefault()
+              showColorPicker(
+                coords.left,
+                coords.bottom + 4,
+                null,
+                { from: colorStart, to: colorEnd },
+                match[0]
+              )
+              return true
+            }
+          }
+        }
+        return false
+      }
+    })
+
+    // Create editor
+    const editorContainer = document.getElementById('editor-container')
+
+    const editor = new EditorView({
+      state: EditorState.create({
+        doc: initialCode,
+        extensions: [
+          lineNumbers(),
+          highlightActiveLineGutter(),
+          highlightActiveLine(),
+          drawSelection(),
+          history(),
+          mirrorHighlight,
+          autocompletion({
+            override: [mirrorCompletions],
+            activateOnTyping: true,
+          }),
+          keymap.of([
+            ...completionKeymap,
+            ...defaultKeymap,
+            ...historyKeymap,
+            indentWithTab,
+          ]),
+          EditorView.updateListener.of(update => {
+            if (update.docChanged) {
+              debouncedCompile()
+            }
+          }),
+          colorTriggerExtension,
+          colorDoubleClickExtension,
+          EditorView.theme({
+            '&': { height: '100%' },
+            '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
+          }),
+        ],
+      }),
+      parent: editorContainer,
+    })
+
+    // Debounce helper
+    function debounce(fn, ms) {
+      let timeout
+      return (...args) => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => fn(...args), ms)
+      }
+    }
+
+    // Save current file to localStorage (debounced)
+    const debouncedSave = debounce((code) => {
+      files[currentFile] = code
+      localStorage.setItem(STORAGE_PREFIX + currentFile, code)
+    }, 500)
+
+    const debouncedCompile = debounce(() => {
+      const code = editor.state.doc.toString()
+      compile(code)
+      debouncedSave(code)
+    }, 300)
+
+    // File browser interaction
+    function switchFile(filename) {
+      // Save current file
+      files[currentFile] = editor.state.doc.toString()
+      localStorage.setItem(STORAGE_PREFIX + currentFile, files[currentFile])
+
+      // Switch to new file
+      currentFile = filename
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: files[filename] }
+      })
+
+      // Update active state in UI
+      document.querySelectorAll('.file').forEach(f => f.classList.remove('active'))
+      document.querySelector(`[data-file="${filename}"]`).classList.add('active')
+
+      // Compile new file
+      compile(files[filename])
+    }
+
+    // File click handlers
+    document.querySelectorAll('.file').forEach(fileEl => {
+      fileEl.addEventListener('click', () => {
+        switchFile(fileEl.dataset.file)
+      })
+    })
+
+    // Folder toggle
+    document.querySelectorAll('.folder-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.parentElement.classList.toggle('collapsed')
+      })
+    })
+
+    // Tab switching
+    const preview = document.getElementById('preview')
+    const generatedCode = document.getElementById('generated-code')
+    const status = document.getElementById('status')
+    const tabs = document.querySelectorAll('.tab')
+    const tabContents = document.querySelectorAll('.tab-content')
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.dataset.tab
+        tabs.forEach(t => t.classList.remove('active'))
+        tabContents.forEach(c => c.classList.remove('active'))
+        tab.classList.add('active')
+        document.getElementById(targetId === 'preview' ? 'preview' : 'generated-code').classList.add('active')
+      })
+    })
+
+    // Compile and render
+    function compile(code) {
+      if (!code.trim()) {
+        preview.innerHTML = ''
+        generatedCode.textContent = ''
+        status.textContent = 'Ready'
+        status.className = 'status'
+        return
+      }
+
+      try {
+        // Parse
+        const ast = Mirror.parse(code)
+
+        // Check for errors
+        if (ast.errors && ast.errors.length > 0) {
+          const errorMsg = ast.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n')
+          throw new Error(errorMsg)
+        }
+
+        // Generate DOM code
+        const jsCode = Mirror.generateDOM(ast)
+        generatedCode.textContent = jsCode
+
+        // Execute and render
+        preview.innerHTML = ''
+
+        // Check if code has auto-initialization (user JavaScript)
+        const hasAutoInit = jsCode.includes('// Auto-initialization')
+
+        let ui
+        if (hasAutoInit) {
+          const execCode = jsCode
+            .replace('export function createUI', 'function createUI')
+            .replace('document.body.appendChild(_ui.root)', '')
+
+          const fn = new Function(execCode + '\nreturn _ui;')
+          ui = fn()
+        } else {
+          const execCode = jsCode
+            .replace('export function createUI', 'function createUI')
+
+          const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
+          ui = fn()
+        }
+
+        if (ui && ui.root) {
+          preview.appendChild(ui.root)
+        }
+
+        status.textContent = `OK - ${ast.components.length} components, ${ast.instances.length} instances`
+        status.className = 'status ok'
+
+      } catch (err) {
+        status.textContent = 'Error'
+        status.className = 'status error'
+        preview.innerHTML = `
+          <div class="error-box">
+            <h3>Parse/Compile Error</h3>
+            <pre>${err.message}</pre>
+          </div>
+        `
+        generatedCode.textContent = `// Error: ${err.message}`
+      }
+    }
+
+    // Initial compile
+    compile(initialCode)
+
+    // Expose for debugging
+    window.editor = editor
+    window.startCompletion = startCompletion
+    window.files = files
+    window.resetCode = () => {
+      // Reset all files to defaults
+      for (const [name, content] of Object.entries(defaultFiles)) {
+        files[name] = content
+        localStorage.removeItem(STORAGE_PREFIX + name)
+      }
+      // Reload current file
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] }
+      })
+      compile(files[currentFile])
+    }
+
+    // Resizable dividers
+    const sidebarDivider = document.getElementById('sidebar-divider')
+    const editorDivider = document.getElementById('editor-divider')
+    const container = document.querySelector('.container')
+    let activeDivider = null
+    let sidebarWidth = 200
+    let editorRatio = 0.5 // 50% of remaining space
+
+    function updateLayout() {
+      const totalWidth = container.getBoundingClientRect().width
+      const remainingWidth = totalWidth - sidebarWidth - 12 // 2 dividers at 6px each
+      const editorWidth = remainingWidth * editorRatio
+      const previewWidth = remainingWidth * (1 - editorRatio)
+      container.style.gridTemplateColumns = `${sidebarWidth}px 6px ${editorWidth}px 6px ${previewWidth}px`
+    }
+
+    sidebarDivider.addEventListener('mousedown', (e) => {
+      activeDivider = 'sidebar'
+      sidebarDivider.classList.add('dragging')
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      e.preventDefault()
+    })
+
+    editorDivider.addEventListener('mousedown', (e) => {
+      activeDivider = 'editor'
+      editorDivider.classList.add('dragging')
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!activeDivider) return
+
+      const containerRect = container.getBoundingClientRect()
+      const x = e.clientX - containerRect.left
+      const totalWidth = containerRect.width
+
+      if (activeDivider === 'sidebar') {
+        // Clamp sidebar between 120px and 400px
+        sidebarWidth = Math.max(120, Math.min(400, x))
+        updateLayout()
+      } else if (activeDivider === 'editor') {
+        // Calculate editor ratio within remaining space
+        const remainingStart = sidebarWidth + 6
+        const remainingWidth = totalWidth - sidebarWidth - 12
+        const editorX = x - remainingStart
+        editorRatio = Math.max(0.2, Math.min(0.8, editorX / remainingWidth))
+        updateLayout()
+      }
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (activeDivider) {
+        if (activeDivider === 'sidebar') {
+          sidebarDivider.classList.remove('dragging')
+        } else {
+          editorDivider.classList.remove('dragging')
+        }
+        activeDivider = null
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    })
+
+  </script>
+</body>
+</html>
