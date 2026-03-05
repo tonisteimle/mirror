@@ -69,6 +69,54 @@ Text count          // Referenz → zeigt den Wert von count
 Text user.name      // Referenz → zeigt user.name aus JavaScript
 ```
 
+### Strings vs. Text-Kinder
+
+Ein String direkt an einer Komponente wird als `textContent` gesetzt.
+Ein Text-Kind ist ein separates Element.
+
+```
+Box "Label"
+```
+Generiert: `<div>Label</div>` – String direkt im Element.
+
+```
+Box
+    Text "Label"
+```
+Generiert: `<div><span>Label</span></div>` – Text als Kind-Element.
+
+**Visuell identisch, strukturell unterschiedlich.**
+
+| Situation | Syntax |
+|-----------|--------|
+| Ein Text, keine Extras | `Button "Label"` |
+| Mehrere Elemente oder unterschiedliche Styles | Kinder verwenden |
+
+**Beispiele wo Kinder nötig sind:**
+
+Button mit Icon + Text:
+```
+Button hor, gap 8
+    Icon "check"
+    Text "Speichern"
+```
+
+Card mit unterschiedlich gestylten Texten:
+```
+Card pad 16
+    Text font-size 20, weight bold, "Produkt"
+    Text col #888, font-size 14, "Beschreibung..."
+```
+
+Preis mit durchgestrichenem Originalpreis:
+```
+PriceRow hor, gap 8
+    Text col #888, text-decoration line-through, "€99"
+    Text font-size 20, weight bold, col green, "€49"
+```
+
+**Faustregel:** Sobald du mehrere Elemente oder gemischte Inhalte (Icon + Text) brauchst, nimm Kinder.
+
 ### Tokens vs. Variablen
 
 Tokens sind in Mirror definierte Werte. Variablen sind in JavaScript definiert.
@@ -627,19 +675,19 @@ Dropdown as frame:
         onclick toggle
 
     Menu as frame:
-        if (open)              // Nur sichtbar wenn open
+        if open              // Nur sichtbar wenn open
         pad 8
-        - Item "Option 1"
-        - Item "Option 2"
+        Item "Option 1"
+        Item "Option 2"
 ```
 
-`if (state)` ohne Kinder macht das Element nur sichtbar, wenn der Eltern-State passt.
+`if state` ohne Kinder macht das Element nur sichtbar, wenn der Eltern-State passt.
 
 Komplexe Bedingungen:
 
 ```
 Menu as frame:
-    if (open && hasItems)     // Nur wenn open UND hasItems
+    if open && hasItems     // Nur wenn open UND hasItems
 ```
 
 ### Selection Binding
@@ -651,23 +699,23 @@ Dropdown as frame:
     closed
 
     Menu as frame:
-        if (open)
-        selection $selected    // Auswahl in $selected speichern
+        if open
+        selection selected    // Auswahl in selected speichern
 
-        - Item "Option 1"
+        Item "Option 1"
             onclick select
-        - Item "Option 2"
+        Item "Option 2"
             onclick select
 ```
 
-Bei `onclick select` wird der ausgewählte Wert in `$selected` gespeichert.
+Bei `onclick select` wird der ausgewählte Wert in `selected` gespeichert.
 
 ### Komplettes Dropdown-Pattern
 
 Alle Features zusammen:
 
 ```
-$selected: "Auswählen..."
+selected: "Auswählen..."
 
 Item as frame:
     pad 8 12, cursor pointer
@@ -683,11 +731,11 @@ Dropdown as frame:
     Trigger as frame:
         pad 8, cursor pointer
         onclick toggle
-        Label $selected
+        Label selected
 
     Menu as frame:
-        if (open)
-        selection $selected
+        if open
+        selection selected
         focusable
         keys
             escape close
@@ -695,14 +743,482 @@ Dropdown as frame:
             arrow-up highlight prev
             enter select, close
 
-        - Item "Option 1"
-        - Item "Option 2"
-        - Item "Option 3"
+        Item "Option 1"
+        Item "Option 2"
+        Item "Option 3"
 ```
 
 ---
 
-## 10. Events
+## 10. Interaktives Dropdown: Ein vollständiges Beispiel
+
+Dieses Kapitel zeigt, wie du ein vollständiges, interaktives Dropdown in Mirror baust. Wir gehen Schritt für Schritt vor und erklären jedes Sprachelement ausführlich.
+
+### Was wir bauen
+
+Ein Dropdown mit:
+- Klick zum Öffnen/Schließen
+- Tastaturnavigation (Pfeiltasten, Enter, Escape)
+- Hover-Highlighting
+- Auswahl mit visueller Rückmeldung
+- Schließen bei Klick außerhalb
+
+### Die Grundstruktur
+
+Beginnen wir mit der einfachsten Version:
+
+```
+Dropdown as frame:
+  Trigger as frame:
+    "Bitte wählen..."
+
+  Menu as frame:
+    Item "Option A"
+    Item "Option B"
+    Item "Option C"
+
+Dropdown
+```
+
+Das ist nur die Struktur – noch keine Interaktion. Das Menu ist immer sichtbar.
+
+### Initial State: `closed`
+
+Ein Dropdown startet geschlossen. Dafür verwenden wir einen **Initial State**:
+
+```
+Dropdown as frame:
+  closed                      // ← Startet im Zustand "closed"
+
+  Trigger as frame:
+    "Bitte wählen..."
+
+  Menu as frame:
+    Item "Option A"
+    Item "Option B"
+    Item "Option C"
+```
+
+**Was `closed` bewirkt:**
+- Setzt `data-state="closed"` auf dem Element
+- Speichert intern `_initialState = "closed"`
+- Das Element "weiß" jetzt, dass es ein Toggle-Element ist
+
+**Unterstützte Initial States:**
+
+| State | Gegenteil | Verwendung |
+|-------|-----------|------------|
+| `closed` | `open` | Dropdowns, Modals |
+| `collapsed` | `expanded` | Accordions, Panels |
+
+### Bedingte Sichtbarkeit: `if (open)`
+
+Das Menu soll nur sichtbar sein, wenn das Dropdown offen ist:
+
+```
+Dropdown as frame:
+  closed
+
+  Trigger as frame:
+    "Bitte wählen..."
+
+  if (open)                   // ← Nur sichtbar wenn state === "open"
+    Menu as frame:
+      Item "Option A"
+      Item "Option B"
+      Item "Option C"
+```
+
+**Was `if (open)` bewirkt:**
+- Das Kind-Element bekommt `_visibleWhen = "open"`
+- Bei State-Wechsel prüft die Runtime die Bedingung
+- `display: none` wenn Bedingung nicht erfüllt
+
+**Wichtig:** Die Klammern sind optional: `if open` funktioniert genauso.
+
+**Komplexe Bedingungen sind möglich:**
+```
+if (open && hasItems)         // Logisches UND
+if (expanded || forceShow)    // Logisches ODER
+```
+
+### Toggle-Aktion: `onclick toggle`
+
+Der Trigger soll das Dropdown öffnen und schließen:
+
+```
+Dropdown as frame:
+  closed
+  onclick toggle              // ← Klick wechselt zwischen open/closed
+
+  Trigger as frame:
+    hor, spread, gap 8        // ← Horizontal mit Abstand, Inhalt verteilt
+    pad 10 16, bg #333, rad 4
+    cursor pointer
+    col #ccc
+
+    Label as text:
+    Chevron as icon:
+      is 16, col #888
+
+    Label "Bitte wählen..."
+    Chevron "chevron-down"    // ← Rechtsbündiges Chevron-Icon
+
+  if (open)
+    Menu as frame:
+      Item "Option A"
+```
+
+**Was `onclick toggle` bewirkt:**
+1. Registriert einen Click-Event-Handler
+2. Bei Klick: prüft den aktuellen State
+3. `closed` → `open`, `open` → `closed`
+4. Setzt `data-state` entsprechend
+5. Aktualisiert die Sichtbarkeit aller `if`-abhängigen Kinder
+
+**Die `toggle` Aktion ist intelligent:**
+- Bei `closed`/`open` States: wechselt zwischen diesen
+- Bei `collapsed`/`expanded` States: wechselt zwischen diesen
+- Sonst: wechselt `hidden` Attribut
+
+### Klick außerhalb: `onclick-outside close`
+
+Das Dropdown soll schließen, wenn der Benutzer woanders klickt:
+
+```
+Dropdown as frame:
+  closed
+  onclick toggle
+  onclick-outside close       // ← Schließt bei Klick außerhalb
+
+  Trigger as frame:
+    pad 10 16, bg #333, rad 4
+```
+
+**Was `onclick-outside close` bewirkt:**
+1. Registriert einen globalen Click-Handler auf `document`
+2. Prüft bei jedem Klick: `element.contains(event.target)`
+3. Wenn Klick außerhalb: führt `close` Aktion aus
+4. Handler wird bei Cleanup automatisch entfernt
+
+**Die `close` Aktion:**
+- Setzt den State auf `closed` (bei Toggle-Elementen)
+- Anders als `hide`, das das Element komplett versteckt
+- Das Element bleibt im DOM und kann wieder geöffnet werden
+
+### Menu-Items definieren
+
+Jetzt stylen wir die Items und machen sie interaktiv:
+
+```
+Item as frame:
+  pad 10 12, rad 4
+  cursor pointer
+  col #ccc
+```
+
+**`cursor pointer`:**
+- Setzt `cursor: pointer` CSS
+- Zeigt dem Benutzer, dass das Element klickbar ist
+
+### Hover-Highlighting: `onhover highlight`
+
+Items sollen beim Überfahren hervorgehoben werden:
+
+```
+Item as frame:
+  pad 10 12, rad 4
+  cursor pointer
+  col #ccc
+  onhover highlight           // ← Highlight bei Hover
+
+  state highlighted           // ← Style für highlighted State
+    bg #444
+```
+
+**Was `onhover highlight` bewirkt:**
+1. `mouseenter`: setzt `data-highlighted="true"` auf dem Element
+2. `mouseleave`: entfernt `data-highlighted`
+3. Wendet die Styles aus `state highlighted` an
+
+**Der `state highlighted` Block:**
+- Definiert CSS-Properties für den State
+- Wird automatisch angewendet wenn `data-highlighted="true"`
+- Basis-Styles werden beim Verlassen wiederhergestellt
+
+### Auswahl: `onclick select`
+
+Klick auf ein Item soll es auswählen:
+
+```
+Item as frame:
+  pad 10 12, rad 4
+  cursor pointer
+  col #ccc
+  onhover highlight
+  onclick select              // ← Wählt das Item aus
+
+  state highlighted
+    bg #444
+  state selected              // ← Style für selected State
+    bg #2563EB
+    col white
+```
+
+**Was `onclick select` bewirkt:**
+1. Setzt `data-selected="true"` auf dem Element
+2. **Entfernt automatisch** `data-selected` von allen Geschwistern
+3. Wendet die Styles aus `state selected` an
+4. Speichert den Text des Elements (für Selection Binding)
+
+**Wichtig:** `select` ist exklusiv – nur ein Element kann ausgewählt sein.
+
+### Verkettete Aktionen: `onclick select, close`
+
+Nach der Auswahl soll das Dropdown schließen:
+
+```
+Item as frame:
+  pad 10 12, rad 4
+  cursor pointer
+  col #ccc
+  onhover highlight
+  onclick select, close       // ← Zwei Aktionen mit Komma
+
+  state highlighted
+    bg #444
+  state selected
+    bg #2563EB
+    col white
+```
+
+**Verkettung mit Komma:**
+- Aktionen werden nacheinander ausgeführt
+- `select` → Item wird ausgewählt
+- `close` → Dropdown schließt
+- Beliebig viele Aktionen möglich: `action1, action2, action3`
+
+### Selection Binding: `selection variable`
+
+Der ausgewählte Wert soll in einer Variable gespeichert werden:
+
+```
+Dropdown as frame:
+  closed
+  onclick toggle
+  selection selected         // ← Speichert Auswahl in selected
+
+  Trigger as frame:
+    pad 10 16, bg #333, rad 4
+    cursor pointer
+    col #ccc
+
+  if (open)
+    Menu as frame:
+      Item as frame:
+        onclick select, close
+```
+
+**Was `selection selected` bewirkt:**
+1. Registriert `_selectionBinding = "selected"` auf dem Element
+2. Bei `select` Aktion: speichert Text in `window._mirrorState.selected`
+3. Variable ist für JavaScript-Logik verfügbar
+
+**Verwendung in JavaScript:**
+```javascript
+// Zugriff auf den ausgewählten Wert
+console.log(window._mirrorState.selected)  // → "Option A"
+```
+
+**Hinweis:** Die dynamische Anzeige des Wertes im Trigger (`selected ? selected : "Bitte wählen..."`) ist noch nicht implementiert.
+
+### Keyboard-Navigation: Der `keys` Block
+
+Für professionelle Dropdowns brauchen wir Tastatursteuerung:
+
+```
+Dropdown as frame:
+  closed
+  onclick toggle
+  selection selected
+
+  keys                        // ← Gruppierter Keyboard-Handler
+    escape close
+    arrow-down highlight next
+    arrow-up highlight prev
+    enter select highlighted, close
+
+  Trigger as frame:
+    ...
+```
+
+**Was der `keys` Block bewirkt:**
+1. Registriert einen `keydown` Event-Handler auf dem Element
+2. Setzt `tabindex="0"` für Fokussierbarkeit
+3. Mappt Tastennamen auf Aktionen
+
+**Syntax im `keys` Block:**
+```
+keys
+  tastenname aktion
+  tastenname aktion ziel
+  tastenname aktion1, aktion2
+```
+
+**Unterstützte Tasten:**
+
+| Tastenname | JavaScript Key |
+|------------|----------------|
+| `escape` | `Escape` |
+| `enter` | `Enter` |
+| `space` | ` ` |
+| `tab` | `Tab` |
+| `arrow-up` | `ArrowUp` |
+| `arrow-down` | `ArrowDown` |
+| `arrow-left` | `ArrowLeft` |
+| `arrow-right` | `ArrowRight` |
+| `backspace` | `Backspace` |
+| `delete` | `Delete` |
+| `home` | `Home` |
+| `end` | `End` |
+
+### Navigation-Aktionen: `highlight next/prev`
+
+Pfeiltasten sollen durch die Items navigieren:
+
+```
+keys
+  arrow-down highlight next   // ← Nächstes Item highlighten
+  arrow-up highlight prev     // ← Vorheriges Item highlighten
+```
+
+**Was `highlight next` bewirkt:**
+1. Findet alle highlightbaren Items im Container
+2. Sucht das aktuell highlighted Item
+3. Bewegt den Highlight zum nächsten/vorherigen
+4. Stoppt am Anfang/Ende (kein Wrap-around)
+
+**Wie Items als "highlightbar" erkannt werden:**
+- Haben `state highlighted` definiert (bevorzugt)
+- Oder haben `cursor: pointer` Style
+
+### Enter zum Auswählen: `select highlighted`
+
+Enter soll das aktuell hervorgehobene Item auswählen:
+
+```
+keys
+  enter select highlighted, close
+```
+
+**Was `select highlighted` bewirkt:**
+1. Findet das Element mit `data-highlighted="true"`
+2. Führt `select` darauf aus
+3. Die verkettete `close` Aktion schließt das Dropdown
+
+### Das vollständige Dropdown
+
+Alle Features zusammen:
+
+```
+// Token-Definitionen (optional)
+dropdown:
+  bg: #1a1a23
+  trigger-bg: #333
+  item-hover: #444
+  item-selected: #2563EB
+
+// Item-Definition mit allen States
+Item as frame:
+  pad 10 12, rad 4
+  cursor pointer
+  col #ccc
+  onhover highlight
+  onclick select, close
+
+  state highlighted
+    bg dropdown.item-hover
+  state selected
+    bg dropdown.item-selected
+    col white
+
+// Trigger mit rechtsbündigem Chevron
+Trigger as frame:
+  hor, spread, gap 8
+  pad 10 16, bg dropdown.trigger-bg, rad 4
+  cursor pointer, col #ccc
+
+  Label as text:
+  Chevron as icon:
+    is 16, col #888
+
+// Dropdown-Definition
+Dropdown as frame:
+  closed
+  onclick toggle
+  onclick-outside close
+  selection selected
+
+  keys
+    escape close
+    arrow-down highlight next
+    arrow-up highlight prev
+    enter select highlighted, close
+
+  if (open)
+    Menu as frame:
+      pad 4, bg dropdown.bg, rad 6
+      bor 1 #444
+
+      Item "Dashboard"
+      Item "Einstellungen"
+      Item "Profil"
+      Item "Abmelden"
+
+// Verwendung
+Container pad 40, bg #0a0a0f, min-height 300
+  Dropdown
+    Trigger
+      Label "Bitte wählen..."
+      Chevron "chevron-down"
+```
+
+### Zusammenfassung der Sprachelemente
+
+| Element | Zweck | Beispiel |
+|---------|-------|----------|
+| `closed` | Initial State | `closed` / `open` / `collapsed` / `expanded` |
+| `if (state)` | Bedingte Sichtbarkeit | `if (open)` |
+| `onclick toggle` | State wechseln | `onclick toggle` |
+| `onclick-outside` | Klick außerhalb | `onclick-outside close` |
+| `onhover highlight` | Hover-Highlighting | `onhover highlight` |
+| `onclick select` | Auswahl | `onclick select, close` |
+| `state name` | State-Styles | `state highlighted` / `state selected` |
+| `selection var` | Selection Binding | `selection selected` |
+| `keys` | Keyboard-Handler | `keys { escape close }` |
+| `highlight next/prev` | Navigation | `arrow-down highlight next` |
+| `select highlighted` | Highlighted auswählen | `enter select highlighted` |
+
+### Wichtige Konzepte
+
+**Implizites `self`:**
+Bei diesen Aktionen ist `self` der Default-Target:
+- `highlight` → `highlight self`
+- `select` → `select self`
+- `close` → `close self`
+
+**State vs. Hidden:**
+- `close` setzt State auf "closed" → Toggle funktioniert weiter
+- `hide` versteckt Element komplett → kein Toggle mehr möglich
+
+**Fokussierbarkeit:**
+- `keys` Block setzt automatisch `tabindex="0"`
+- Element muss fokussiert sein für Keyboard-Events
+- Bei Klick auf Trigger wird Dropdown fokussiert
+
+---
+
+## 11. Events
 
 Interaktion definieren.
 
@@ -1050,12 +1566,12 @@ TaskList as frame:
 
 ## 15. Conditionals
 
-Conditionals nutzen **JavaScript-Syntax** für Ausdrücke.
+Bedingte Darstellung von Komponenten.
 
 ### Block-Conditional
 
 ```
-if (loggedIn)
+if loggedIn
     Avatar
     Text username
 else
@@ -1065,16 +1581,16 @@ else
 Mit komplexeren Bedingungen:
 
 ```
-if (user.isAdmin && hasPermission)
+if user.isAdmin && hasPermission
     AdminPanel
 
-if (items.length > 0)
+if items.length > 0
     ItemList
 else
     Text "Keine Einträge"
 ```
 
-### JavaScript-Operatoren
+### Operatoren
 
 In Bedingungen verwenden:
 - `===`, `!==` - Strikte Gleichheit
@@ -1084,15 +1600,12 @@ In Bedingungen verwenden:
 
 ### Inline-Conditional (Ternary)
 
+Konsistente JavaScript-Syntax für Property-Bedingungen:
+
 ```
 Icon done ? "check" : "circle"
 bg active ? primary : surface
-```
-
-Für Anfänger ist `if then else` lesbarer:
-
-```
-Icon if (done) then "check" else "circle"
+opacity isVisible ? 1 : 0
 ```
 
 ---
@@ -1404,7 +1917,8 @@ TOKENS          name: value
                 sm: 4
                 gruppiert: name: { sub: value }
 
-PRIMITIVEN      frame, text, input, button, image, link, icon
+PRIMITIVEN      frame (div), text (span), button, input, textarea
+                image (img), link (a), icon
 
 KOMPONENTE      Name as primitive:
                 Card as frame:
@@ -1422,49 +1936,78 @@ BENANNT         Component named name
 
 IMPORT          import "dateiname"
 
-LAYOUT          hor, ver                    // Richtung
-                center, spread              // Verteilung
-                left, right, top, bottom    // Ausrichtung
-                hor-center, ver-center      // Einzelne Achse
-                wrap, stacked               // Spezial
-                grid 3, grid auto 250       // Spalten
+LAYOUT          hor/horizontal, ver/vertical
+                center/cen, spread, wrap, stacked
+                gap/g N, grid N
 
-SIZING          width/height hug            // = Inhalt
-                width/height full           // = 100% + grow
-                width/height N              // = Npx
-                size W H                    // Breite + Höhe
+ALIGN           left, right, top, bottom
+                hor-center, ver-center
+                align top left (combined)
 
-SPACING         pad N, pad V H, pad T R B L
-                gap N
-                margin N
+SIZING          width/w, height/h (hug/full/Npx)
+                min-width/minw, max-width/maxw
+                min-height/minh, max-height/maxh
+                size W H
 
-STYLING         bg, col, rad, bor, shadow, opacity
+SPACING         pad/padding/p N, margin/m N
+                pad left/right/top/bottom N
+                gap/g N
 
-STATES          statename:
-                    properties
-                    ChildName property    // Child Override
+COLORS          bg/background, col/color/c
+                boc/border-color
 
-INITIAL STATE   closed, open              // Dropdown-States
-                collapsed, expanded       // Accordion-States
+BORDER          bor/border [width] [style] [color]
+                rad/radius N, rad tl/tr/bl/br N
 
-VISIBILITY      if (open)                 // Sichtbar wenn Eltern open
-                if (open && hasItems)     // Komplexe Bedingung
+TYPE            font-size/fs, weight, line, font, text-align
+                italic, underline, truncate, uppercase, lowercase
 
-SELECTION       selection $variable       // Auswahl-Binding
+ICON            icon-size/is, icon-weight/iw, icon-color/ic
+                fill, material
 
-EVENTS          onclick functionName
-                onkeydown key: functionName
-                onclick-outside close     // Klick außerhalb
-                keys { key action }
+VISUAL          opacity/o, shadow (sm/md/lg), cursor, z
+                rotate/rot, translate, hidden, visible, disabled
+                clip, scroll, scroll-hor, scroll-both
 
-ACTIONS         toggle, select, highlight, show, hide, close
+HOVER           hover-bg, hover-col, hover-opacity/hover-opa
+                hover-scale, hover-bor, hover-boc, hover-rad
+
+STATES          hover, focus, active, disabled, filled (system)
+                highlighted, selected, expanded, collapsed (behavior)
+                valid, invalid, on, off, default, inactive
+                closed, open (initial states)
+
+VISIBILITY      if open                   // Sichtbar wenn Eltern open
+                if open && hasItems       // Komplexe Bedingung
+
+SELECTION       selection variable        // Auswahl-Binding
+
+EVENTS          onclick, onhover, onfocus, onblur, onchange, oninput, onload
+                onclick-outside           // Klick außerhalb
+                onkeydown KEY: action, onkeyup KEY: action
+                keys { escape close, enter select }
+                debounce N, delay N
+
+ACTIONS         toggle, show, hide, open, close, page
+                highlight, select, deselect, clear-selection, filter
+                activate, deactivate, deactivate-siblings, toggle-state
+                assign var to expr, validate, reset, focus, alert
                 call functionName
+
+TARGETS         self (default), next, prev, first, last
+                first-empty, highlighted, selected, self-and-before
+                all, none
+
+ANIMATIONS      fade, scale, slide-up/down/left/right (show/hide)
+                spin, pulse, bounce (continuous)
 
 ITERATION       each item in items
                     Component item.prop
+                each item in items where condition
+                data collection where condition
 
-CONDITIONALS    if (condition) ... else ...
-                prop condition ? value1 : value2
+CONDITIONALS    if condition ... else ... (block)
+                prop condition ? val : val2 (inline, ternary)
 
 SLOTS           Definition: Name:
                 Verwendung: Name "content"

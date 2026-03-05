@@ -278,7 +278,7 @@ Dropdown
 
   it('generates close action', () => {
     const output = compile(input)
-    expect(output).toContain('_runtime.hide') // close maps to hide
+    expect(output).toContain('_runtime.close') // close sets state to "closed"
   })
 
   it('stores handler for cleanup', () => {

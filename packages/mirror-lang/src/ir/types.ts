@@ -27,6 +27,7 @@ export interface IRConditional {
 export interface IRNode {
   id: string
   tag: string                    // div, span, button, input, etc.
+  primitive?: string             // Original primitive type (icon, frame, text, etc.)
   name?: string                  // Component name (Card, Button)
   instanceName?: string          // Named instance (saveBtn)
   properties: IRProperty[]
@@ -38,6 +39,8 @@ export interface IRNode {
   visibleWhen?: string           // State-based visibility: "if (open)" → "open"
   initialState?: string          // Initial state: "closed", "open", etc.
   selection?: string             // Selection binding: "$selected"
+  route?: string                 // Navigation target: "Home"
+  navContainer?: string          // ID of parent Nav container (for selected sync)
 }
 
 export interface IRProperty {

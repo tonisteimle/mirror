@@ -63,6 +63,7 @@ export interface ComponentDefinition extends BaseNode {
   initialState?: string       // initial state: "closed" → initialState: "closed"
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
   visibleWhen?: string        // state-based visibility: "if (open)" → visibleWhen: "open"
+  route?: string              // navigation target: "route Home" → route: "Home"
 }
 
 export interface Instance extends BaseNode {
@@ -74,6 +75,7 @@ export interface Instance extends BaseNode {
   visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"
   initialState?: string       // initial state: "closed" → initialState: "closed"
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
+  route?: string              // navigation target: "route Home" → route: "Home"
 }
 
 export interface Property extends BaseNode {

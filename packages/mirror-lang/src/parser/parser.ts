@@ -186,6 +186,22 @@ export class Parser {
     }
   }
 
+  // Parse a route path (e.g., "Home", "admin/users", "pages/settings")
+  // Combines identifiers separated by slashes into a single path string
+  private parseRoutePath(): string | null {
+    if (!this.check('IDENTIFIER')) return null
+
+    let path = this.advance().value  // First identifier
+
+    // Continue while we see SLASH followed by IDENTIFIER
+    while (this.check('SLASH') && this.checkNext('IDENTIFIER')) {
+      this.advance() // consume SLASH
+      path += '/' + this.advance().value  // append next segment
+    }
+
+    return path
+  }
+
   // Infer token type from value
   private inferTokenType(value: string | number): 'color' | 'size' | 'font' | 'icon' | undefined {
     const str = String(value)
@@ -361,6 +377,14 @@ export class Parser {
     // Parse inline properties and content
     this.parseInlineProperties(instance.properties)
 
+    // Extract _route property and move to instance.route
+    const routeIndex = instance.properties.findIndex(p => p.name === '_route')
+    if (routeIndex !== -1) {
+      const routeProp = instance.properties[routeIndex]
+      instance.route = String(routeProp.values[0])
+      instance.properties.splice(routeIndex, 1)
+    }
+
     // Skip newline before checking for indented children
     this.skipNewlines()
 
@@ -411,6 +435,16 @@ export class Parser {
         if (this.check('IDENTIFIER')) {
           const varToken = this.advance()
           component.selection = varToken.value
+        }
+        continue
+      }
+
+      // Route: route TargetComponent or route path/to/page
+      if (this.check('ROUTE')) {
+        this.advance() // consume 'route'
+        const routePath = this.parseRoutePath()
+        if (routePath) {
+          component.route = routePath
         }
         continue
       }
@@ -473,6 +507,55 @@ export class Parser {
             continue
           } else {
             // Not a state block, restore position
+            this.pos = savedPos
+          }
+        }
+
+        // Behavior state with "state" keyword: state highlighted\n  bg #333
+        // or inline: state highlighted bg #333
+        if (name === 'state') {
+          const savedPos = this.pos
+          this.advance() // consume 'state'
+
+          if (this.check('IDENTIFIER')) {
+            const stateNameToken = this.advance()
+
+            const state: State = {
+              type: 'State',
+              name: stateNameToken.value,
+              properties: [],
+              childOverrides: [],
+              line: stateNameToken.line,
+              column: stateNameToken.column,
+            }
+
+            // Check for inline properties: state highlighted bg #333
+            if (this.check('IDENTIFIER') || this.check('NUMBER') || this.check('STRING')) {
+              this.parseInlineProperties(state.properties)
+            }
+
+            // Check for block properties
+            this.skipNewlines()
+            if (this.check('INDENT')) {
+              this.advance() // consume INDENT
+              while (!this.check('DEDENT') && !this.isAtEnd()) {
+                this.skipNewlines()
+                if (this.check('DEDENT')) break
+
+                if (this.check('IDENTIFIER')) {
+                  const prop = this.parseProperty()
+                  if (prop) state.properties.push(prop)
+                } else {
+                  this.advance()
+                }
+              }
+              if (this.check('DEDENT')) this.advance()
+            }
+
+            component.states.push(state)
+            continue
+          } else {
+            // Not a valid state, restore position
             this.pos = savedPos
           }
         }
@@ -610,28 +693,50 @@ export class Parser {
         continue
       }
 
-      // Visibility condition: if (state) without children = visibleWhen
+      // Visibility condition: if (state) with or without children
       if (this.check('IF')) {
-        const savedPos = this.pos
         this.advance() // consume IF
         const condition = this.parseExpression()
         this.skipNewlines()
 
-        // If NOT followed by INDENT, it's a visibility condition
+        // Extract state name from condition like "(open)" → "open"
+        const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
+        const visibleWhen = match ? match[1] : condition
+
+        // If NOT followed by INDENT, it's a visibility condition for current component
         if (!this.check('INDENT')) {
-          // Extract state name from condition like "(open)" → "open"
-          const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
-          if (match) {
-            (component as any).visibleWhen = match[1]
-          } else {
-            (component as any).visibleWhen = condition
-          }
+          ;(component as any).visibleWhen = visibleWhen
           continue
-        } else {
-          // Has children - restore and let it be parsed as conditional block
-          this.pos = savedPos
-          // Fall through to child instance parsing which will handle it
         }
+
+        // Has children - parse them and set visibleWhen on each
+        this.advance() // consume INDENT
+        while (!this.isAtEnd() && !this.check('DEDENT')) {
+          this.skipNewlines()
+          if (this.check('DEDENT') || this.isAtEnd()) break
+
+          // Child component definition: ChildName as primitive:
+          if (this.check('IDENTIFIER') && this.checkNext('AS')) {
+            const childName = this.advance()
+            const child = this.parseComponentDefinition(childName)
+            ;(child as any).visibleWhen = visibleWhen
+            component.children.push(child as any)
+            continue
+          }
+
+          // Child instance
+          if (this.check('IDENTIFIER')) {
+            const name = this.advance()
+            const child = this.parseInstance(name)
+            ;(child as any).visibleWhen = visibleWhen
+            component.children.push(child)
+            continue
+          }
+
+          this.advance()
+        }
+        if (this.check('DEDENT')) this.advance()
+        continue
       }
 
       // Child component definition: ChildName as primitive:
@@ -670,27 +775,42 @@ export class Parser {
 
       if (this.check('DEDENT') || this.isAtEnd()) break
 
-      // Visibility condition: if (state) without children = visibleWhen
+      // Visibility condition: if (state) with or without children
       if (this.check('IF')) {
-        const savedPos = this.pos
         this.advance() // consume IF
         const condition = this.parseExpression()
         this.skipNewlines()
 
-        // If NOT followed by INDENT, it's a visibility condition
+        // Extract state name from condition like "(open)" → "open"
+        const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
+        const visibleWhen = match ? match[1] : condition
+
+        // If NOT followed by INDENT, it's a visibility condition for current instance
         if (!this.check('INDENT')) {
-          // Extract state name from condition like "(open)" → "open"
-          const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
-          if (match) {
-            instance.visibleWhen = match[1]
-          } else {
-            instance.visibleWhen = condition
-          }
+          instance.visibleWhen = visibleWhen
           continue
-        } else {
-          // Has children - restore position
-          this.pos = savedPos
         }
+
+        // Has children - parse them and set visibleWhen on each
+        this.advance() // consume INDENT
+        while (!this.isAtEnd() && !this.check('DEDENT')) {
+          this.skipNewlines()
+          if (this.check('DEDENT') || this.isAtEnd()) break
+
+          // Child instance
+          if (this.check('IDENTIFIER')) {
+            const name = this.advance()
+            const child = this.parseInstance(name)
+            ;(child as any).visibleWhen = visibleWhen
+            if (!instance.children) instance.children = []
+            instance.children.push(child)
+            continue
+          }
+
+          this.advance()
+        }
+        if (this.check('DEDENT')) this.advance()
+        continue
       }
 
       // Selection binding: selection $variable
@@ -699,6 +819,16 @@ export class Parser {
         if (this.check('IDENTIFIER')) {
           const varToken = this.advance()
           instance.selection = varToken.value
+        }
+        continue
+      }
+
+      // Route: route TargetComponent or route path/to/page
+      if (this.check('ROUTE')) {
+        this.advance() // consume 'route'
+        const routePath = this.parseRoutePath()
+        if (routePath) {
+          instance.route = routePath
         }
         continue
       }
@@ -799,6 +929,22 @@ export class Parser {
         continue
       }
 
+      // Route: route TargetComponent or route path/to/page (stored as property, moved to instance.route later)
+      if (this.check('ROUTE')) {
+        const routeToken = this.advance()
+        const routePath = this.parseRoutePath()
+        if (routePath) {
+          properties.push({
+            type: 'Property',
+            name: '_route',  // Special prefix to identify route properties
+            values: [routePath],
+            line: routeToken.line,
+            column: routeToken.column,
+          })
+        }
+        continue
+      }
+
       // Property: name value
       if (this.check('IDENTIFIER')) {
         const prop = this.parseProperty()
@@ -837,33 +983,124 @@ export class Parser {
     const name = this.advance()
     const values: (string | number | Conditional)[] = []
 
-    // Check for inline conditional: if condition then value else value
-    if (this.check('IF')) {
-      const conditional = this.parseInlineConditional()
-      if (conditional) {
-        values.push(conditional)
+    // Collect values, watching for ternary operator (?)
+    // JavaScript ternary: condition ? thenValue : elseValue
+    const collectedTokens: { type: string; value: string }[] = []
+
+    while (!this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+      // Check for ternary operator
+      if (this.check('QUESTION')) {
+        this.advance() // consume ?
+
+        // Everything collected so far is the condition
+        // Build condition string, combining property accesses (user.name → user.name)
+        let condition = ''
+
+        // If collected tokens start with DOT, include the property name (it's actually part of the condition)
+        // e.g., `Icon task.done ? "check" : "circle"` - task is parsed as property name but is really part of condition
+        const startsWithDot = collectedTokens.length > 0 && collectedTokens[0].type === 'DOT'
+        if (startsWithDot) {
+          condition = name.value
+        }
+
+        for (let j = 0; j < collectedTokens.length; j++) {
+          const t = collectedTokens[j]
+          // Don't add space before DOT or after DOT
+          if (t.type === 'DOT') {
+            condition += '.'
+          } else if (j > 0 && collectedTokens[j - 1].type !== 'DOT' && t.type !== 'DOT') {
+            condition += ' ' + t.value
+          } else if (condition && !condition.endsWith('.')) {
+            condition += ' ' + t.value
+          } else {
+            condition += t.value
+          }
+        }
+
+        // Parse then value
+        let thenValue: string | number = ''
+        if (this.check('STRING')) {
+          thenValue = this.advance().value
+        } else if (this.check('NUMBER')) {
+          thenValue = this.advance().value
+        } else if (this.check('IDENTIFIER')) {
+          thenValue = this.advance().value
+        }
+
+        // Expect colon for else
+        let elseValue: string | number = ''
+        if (this.check('COLON')) {
+          this.advance()
+          if (this.check('STRING')) {
+            elseValue = this.advance().value
+          } else if (this.check('NUMBER')) {
+            elseValue = this.advance().value
+          } else if (this.check('IDENTIFIER')) {
+            elseValue = this.advance().value
+          }
+        }
+
+        values.push({
+          kind: 'conditional',
+          condition,
+          then: thenValue,
+          else: elseValue,
+        })
+
+        // If the condition started with a dot, the "property name" was actually part of the expression
+        // So use 'content' as the implicit property name (like Icon "search" → content: "search")
+        const propertyName = startsWithDot ? 'content' : name.value
+
         return {
           type: 'Property',
-          name: name.value,
+          name: propertyName,
           values,
           line: name.line,
           column: name.column,
         }
       }
-    }
 
-    // Collect values until comma, newline, or end of context
-    while (!this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
-      if (this.check('NUMBER')) {
-        values.push(this.advance().value)
+      // Collect comparison and logical operators for conditions
+      if (this.check('STRICT_EQUAL') || this.check('STRICT_NOT_EQUAL') ||
+          this.check('NOT_EQUAL') || this.check('GT') || this.check('LT') ||
+          this.check('GTE') || this.check('LTE') || this.check('AND_AND') ||
+          this.check('OR_OR') || this.check('BANG') || this.check('DOT')) {
+        collectedTokens.push({ type: this.current().type, value: this.advance().value })
+      } else if (this.check('NUMBER')) {
+        collectedTokens.push({ type: 'NUMBER', value: this.advance().value })
       } else if (this.check('STRING')) {
-        values.push(this.advance().value)
+        collectedTokens.push({ type: 'STRING', value: `"${this.advance().value}"` })
       } else if (this.check('IDENTIFIER')) {
-        // Take identifier as value and continue collecting
-        values.push(this.advance().value)
+        collectedTokens.push({ type: 'IDENTIFIER', value: this.advance().value })
       } else {
         break
       }
+    }
+
+    // No ternary found - convert collected tokens to values
+    // Combine property accesses like user.name into single values
+    let i = 0
+    while (i < collectedTokens.length) {
+      const token = collectedTokens[i]
+
+      if (token.type === 'IDENTIFIER') {
+        // Check for property access chain: identifier.identifier.identifier...
+        let combined = token.value
+        while (i + 2 < collectedTokens.length &&
+               collectedTokens[i + 1].type === 'DOT' &&
+               collectedTokens[i + 2].type === 'IDENTIFIER') {
+          combined += '.' + collectedTokens[i + 2].value
+          i += 2
+        }
+        values.push(combined)
+      } else if (token.type === 'STRING') {
+        // Remove quotes we added for condition building
+        values.push(token.value.replace(/^"|"$/g, ''))
+      } else if (token.type !== 'DOT') {
+        // Push non-DOT tokens (DOTs are handled in the chain above)
+        values.push(token.value)
+      }
+      i++
     }
 
     return {
@@ -872,48 +1109,6 @@ export class Parser {
       values,
       line: name.line,
       column: name.column,
-    }
-  }
-
-  private parseInlineConditional(): Conditional | null {
-    if (!this.check('IF')) return null
-    this.advance() // if
-
-    // Parse condition
-    const condition = this.parseExpression()
-
-    // Expect 'then'
-    if (!this.check('THEN')) return null
-    this.advance()
-
-    // Parse then value
-    let thenValue: string | number = ''
-    if (this.check('STRING')) {
-      thenValue = this.advance().value
-    } else if (this.check('NUMBER')) {
-      thenValue = parseFloat(this.advance().value)
-    } else if (this.check('IDENTIFIER')) {
-      thenValue = this.advance().value
-    }
-
-    // Expect 'else'
-    let elseValue: string | number = ''
-    if (this.check('ELSE')) {
-      this.advance()
-      if (this.check('STRING')) {
-        elseValue = this.advance().value
-      } else if (this.check('NUMBER')) {
-        elseValue = parseFloat(this.advance().value)
-      } else if (this.check('IDENTIFIER')) {
-        elseValue = this.advance().value
-      }
-    }
-
-    return {
-      kind: 'conditional',
-      condition,
-      then: thenValue,
-      else: elseValue,
     }
   }
 

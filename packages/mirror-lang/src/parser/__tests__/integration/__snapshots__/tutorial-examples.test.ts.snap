@@ -260,10 +260,9 @@ exports[`Tutorial Examples: AST Snapshots > Block 2 (line 66): AST snapshot 1`] 
         {
           "name": "user",
           "type": "Property",
-        },
-        {
-          "name": "name",
-          "type": "Property",
+          "values": [
+            "name",
+          ],
         },
       ],
       "type": "Instance",
@@ -274,6 +273,284 @@ exports[`Tutorial Examples: AST Snapshots > Block 2 (line 66): AST snapshot 1`] 
 `;
 
 exports[`Tutorial Examples: AST Snapshots > Block 3 (line 77): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Box",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Label",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 4 (line 82): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Label",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Box",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 5 (line 98): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Icon",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "check",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Speichern",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Button",
+      "name": null,
+      "properties": [
+        {
+          "name": "hor",
+          "type": "Property",
+        },
+        {
+          "name": "gap",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 6 (line 105): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "font-size",
+              "type": "Property",
+              "values": [
+                "20",
+              ],
+            },
+            {
+              "name": "weight",
+              "type": "Property",
+              "values": [
+                "bold",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Produkt",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#888",
+              ],
+            },
+            {
+              "name": "font-size",
+              "type": "Property",
+              "values": [
+                "14",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Beschreibung...",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Card",
+      "name": null,
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "16",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 7 (line 112): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#888",
+              ],
+            },
+            {
+              "name": "text-decoration",
+              "type": "Property",
+              "values": [
+                "line-through",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "€99",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "font-size",
+              "type": "Property",
+              "values": [
+                "20",
+              ],
+            },
+            {
+              "name": "weight",
+              "type": "Property",
+              "values": [
+                "bold",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "green",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "€49",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "PriceRow",
+      "name": null,
+      "properties": [
+        {
+          "name": "hor",
+          "type": "Property",
+        },
+        {
+          "name": "gap",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 8 (line 125): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -310,7 +587,7 @@ Text count              // count ist nicht als Token bekannt → JS Variable",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 4 (line 109): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 9 (line 157): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -333,7 +610,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 4 (line 109): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 5 (line 118): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 10 (line 166): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -372,7 +649,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 5 (line 118): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 6 (line 137): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 11 (line 185): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -447,7 +724,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 6 (line 137): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 7 (line 152): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 12 (line 200): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -533,7 +810,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 7 (line 152): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 8 (line 173): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 13 (line 221): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -570,7 +847,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 8 (line 173): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 9 (line 184): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 14 (line 232): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -594,7 +871,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 9 (line 184): AST snapshot 1`]
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 10 (line 200): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 15 (line 248): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -638,7 +915,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 10 (line 200): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 11 (line 207): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 16 (line 255): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -651,7 +928,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 11 (line 207): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 12 (line 217): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 17 (line 265): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -703,7 +980,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 12 (line 217): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 13 (line 233): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 18 (line 281): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -813,7 +1090,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 13 (line 233): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 14 (line 265): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 19 (line 313): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -903,7 +1180,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 14 (line 265): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 15 (line 294): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 20 (line 342): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1005,7 +1282,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 15 (line 294): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 16 (line 309): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 21 (line 357): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1094,7 +1371,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 16 (line 309): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 17 (line 323): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 22 (line 371): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1163,7 +1440,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 17 (line 323): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 18 (line 342): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 23 (line 390): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1386,7 +1663,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 18 (line 342): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 19 (line 370): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 24 (line 418): AST snapshot 1`] = `
 {
   "tokens": [
     {
@@ -1430,7 +1707,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 19 (line 370): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 20 (line 384): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 25 (line 432): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -1489,7 +1766,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 20 (line 384): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 21 (line 398): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 26 (line 446): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1521,7 +1798,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 21 (line 398): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 22 (line 408): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 27 (line 456): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -1537,10 +1814,9 @@ exports[`Tutorial Examples: AST Snapshots > Block 22 (line 408): AST snapshot 1`
                     {
                       "name": "dropdown",
                       "type": "Property",
-                    },
-                    {
-                      "name": "item-hover",
-                      "type": "Property",
+                      "values": [
+                        "item-hover",
+                      ],
                     },
                   ],
                   "type": "Instance",
@@ -1563,24 +1839,16 @@ exports[`Tutorial Examples: AST Snapshots > Block 22 (line 408): AST snapshot 1`
           "name": "bg",
           "type": "Property",
           "values": [
-            "dropdown",
+            "dropdown.bg",
           ],
-        },
-        {
-          "name": "bg",
-          "type": "Property",
         },
         {
           "name": "bor",
           "type": "Property",
           "values": [
             "1",
-            "dropdown",
+            "dropdown.border",
           ],
-        },
-        {
-          "name": "border",
-          "type": "Property",
         },
       ],
       "type": "Instance",
@@ -1590,7 +1858,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 22 (line 408): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 23 (line 421): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 28 (line 469): AST snapshot 1`] = `
 {
   "tokens": [
     {
@@ -1616,7 +1884,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 23 (line 421): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 24 (line 428): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 29 (line 476): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1668,7 +1936,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 24 (line 428): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 25 (line 439): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 30 (line 487): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -1690,7 +1958,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 25 (line 439): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 26 (line 450): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 31 (line 498): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1743,7 +2011,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 26 (line 450): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 27 (line 467): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 32 (line 515): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1788,7 +2056,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 27 (line 467): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 28 (line 473): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 33 (line 521): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1811,7 +2079,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 28 (line 473): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 29 (line 480): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 34 (line 528): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -1847,7 +2115,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 29 (line 480): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 30 (line 487): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 35 (line 535): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -1945,7 +2213,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 30 (line 487): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 31 (line 509): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 36 (line 557): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -1981,7 +2249,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 31 (line 509): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 32 (line 530): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 37 (line 578): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2033,7 +2301,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 32 (line 530): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 33 (line 541): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 38 (line 589): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2105,7 +2373,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 33 (line 541): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 34 (line 558): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 39 (line 606): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2163,7 +2431,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 34 (line 558): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 35 (line 569): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 40 (line 617): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2261,7 +2529,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 35 (line 569): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 36 (line 585): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 41 (line 633): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2350,7 +2618,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 36 (line 585): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 37 (line 603): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 42 (line 651): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2379,104 +2647,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 37 (line 603): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 37 (line 605): AST snapshot 1`] = `
-{
-  "components": [
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "toggle",
-              "target": "Menu",
-              "type": "Action",
-            },
-          ],
-          "name": "onclick",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Button",
-      "primitive": "Frame",
-      "properties": [
-        {
-          "name": "pad",
-          "type": "Property",
-          "values": [
-            "8",
-          ],
-        },
-        {
-          "name": "bg",
-          "type": "Property",
-          "values": [
-            "primary",
-          ],
-        },
-      ],
-      "type": "Component",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 38 (line 620): AST snapshot 1`] = `
-{
-  "components": [
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "clear",
-              "type": "Action",
-            },
-          ],
-          "key": "escape",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-        {
-          "actions": [
-            {
-              "name": "submit",
-              "type": "Action",
-            },
-          ],
-          "key": "enter",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Input",
-      "primitive": "Frame",
-      "properties": [
-        {
-          "name": "pad",
-          "type": "Property",
-          "values": [
-            "8",
-          ],
-        },
-        {
-          "name": "bg",
-          "type": "Property",
-          "values": [
-            "surface",
-          ],
-        },
-      ],
-      "type": "Component",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 38 (line 622): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 43 (line 670): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2557,69 +2728,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 38 (line 622): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 39 (line 630): AST snapshot 1`] = `
-{
-  "components": [
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "close",
-              "type": "Action",
-            },
-          ],
-          "key": "escape",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-        {
-          "actions": [
-            {
-              "name": "highlight",
-              "target": "next",
-              "type": "Action",
-            },
-          ],
-          "key": "arrow-down",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-        {
-          "actions": [
-            {
-              "name": "highlight",
-              "target": "prev",
-              "type": "Action",
-            },
-          ],
-          "key": "arrow-up",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-        {
-          "actions": [
-            {
-              "name": "select",
-              "type": "Action",
-            },
-          ],
-          "key": "enter",
-          "name": "onkeydown",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Dropdown",
-      "primitive": "frame",
-      "type": "Component",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 39 (line 640): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 44 (line 688): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2627,71 +2736,14 @@ exports[`Tutorial Examples: AST Snapshots > Block 39 (line 640): AST snapshot 1`
       "name": "Menu",
       "primitive": "frame",
       "type": "Component",
-      "visibleWhen": "(open && hasItems)",
+      "visibleWhen": "open && hasItems",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 40 (line 643): AST snapshot 1`] = `
-{
-  "components": [
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "filter",
-              "target": "Results",
-              "type": "Action",
-            },
-          ],
-          "modifiers": [
-            {
-              "type": "debounce",
-              "value": 300,
-            },
-          ],
-          "name": "oninput",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Input",
-      "primitive": "input",
-      "type": "Component",
-    },
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "submit",
-              "type": "Action",
-            },
-          ],
-          "modifiers": [
-            {
-              "type": "delay",
-              "value": 200,
-            },
-          ],
-          "name": "onclick",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Button",
-      "primitive": "button",
-      "type": "Component",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 40 (line 649): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 45 (line 697): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -2772,48 +2824,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 40 (line 649): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 41 (line 660): AST snapshot 1`] = `
-{
-  "instances": [
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "toggle",
-          "type": "Property",
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "select",
-          "type": "Property",
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "highlight",
-          "type": "Property",
-        },
-      ],
-      "type": "Instance",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 41 (line 669): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 46 (line 717): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3070,71 +3081,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 41 (line 669): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 42 (line 668): AST snapshot 1`] = `
-{
-  "instances": [
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "show",
-          "type": "Property",
-          "values": [
-            "Menu",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "hide",
-          "type": "Property",
-          "values": [
-            "Modal",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "highlight",
-          "type": "Property",
-          "values": [
-            "next",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "close",
-          "type": "Property",
-          "values": [
-            "Dropdown",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-  ],
-  "type": "Program",
-}
-`;
-
-exports[`Tutorial Examples: AST Snapshots > Block 42 (line 709): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 47 (line 757): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3177,22 +3124,78 @@ exports[`Tutorial Examples: AST Snapshots > Block 42 (line 709): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 43 (line 677): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 47 (line 770): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "component": "onclick",
-      "name": null,
-      "properties": [
+      "children": [
         {
-          "name": "select",
-          "type": "Property",
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "type": "Component",
         },
         {
-          "name": "close",
-          "type": "Property",
+          "children": [
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option A",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option B",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option C",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
         },
       ],
+      "extends": null,
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "component": "Dropdown",
+      "name": null,
       "type": "Instance",
     },
   ],
@@ -3200,7 +3203,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 43 (line 677): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 43 (line 724): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 48 (line 772): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3254,82 +3257,80 @@ exports[`Tutorial Examples: AST Snapshots > Block 43 (line 724): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 44 (line 683): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 48 (line 789): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "component": "onclick",
-      "name": null,
-      "properties": [
+      "children": [
         {
-          "name": "highlight",
-          "type": "Property",
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "type": "Component",
         },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
         {
-          "name": "highlight",
-          "type": "Property",
-          "values": [
-            "next",
+          "children": [
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option A",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option B",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option C",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
           ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
         },
       ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "highlight",
-          "type": "Property",
-          "values": [
-            "prev",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "highlight",
-          "type": "Property",
-          "values": [
-            "first",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "onclick",
-      "name": null,
-      "properties": [
-        {
-          "name": "highlight",
-          "type": "Property",
-          "values": [
-            "last",
-          ],
-        },
-      ],
-      "type": "Instance",
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 44 (line 734): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 49 (line 782): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3391,45 +3392,73 @@ exports[`Tutorial Examples: AST Snapshots > Block 44 (line 734): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 45 (line 697): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 49 (line 818): AST snapshot 1`] = `
 {
   "components": [
     {
-      "events": [
+      "children": [
         {
-          "actions": [
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "type": "Component",
+        },
+        {
+          "children": [
             {
-              "name": "call",
-              "target": "handleSubmit",
-              "type": "Action",
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option A",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option B",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option C",
+                  ],
+                },
+              ],
+              "type": "Instance",
             },
           ],
-          "name": "onclick",
-          "type": "Event",
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
+          "visibleWhen": "open",
         },
       ],
       "extends": null,
-      "name": "Button",
-      "primitive": "button",
-      "type": "Component",
-    },
-    {
-      "events": [
-        {
-          "actions": [
-            {
-              "name": "call",
-              "target": "validateEmail",
-              "type": "Action",
-            },
-          ],
-          "name": "onchange",
-          "type": "Event",
-        },
-      ],
-      "extends": null,
-      "name": "Input",
-      "primitive": "input",
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
       "type": "Component",
     },
   ],
@@ -3437,7 +3466,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 45 (line 697): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 45 (line 747): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 50 (line 795): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3494,39 +3523,23 @@ exports[`Tutorial Examples: AST Snapshots > Block 45 (line 747): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 46 (line 722): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 50 (line 840): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "component": "Button",
-      "name": "saveBtn",
-      "properties": [
-        {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "Speichern",
-          ],
-        },
-      ],
-      "type": "Instance",
+      "condition": "(open && hasItems)",
+      "type": "Conditional",
     },
     {
-      "component": "Input",
-      "name": "searchField",
-      "type": "Instance",
-    },
-    {
-      "component": "Menu",
-      "name": "userMenu",
-      "type": "Instance",
+      "condition": "(expanded || forceShow)",
+      "type": "Conditional",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 46 (line 762): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 51 (line 810): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3552,7 +3565,103 @@ exports[`Tutorial Examples: AST Snapshots > Block 46 (line 762): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 47 (line 771): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 51 (line 849): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#333",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "cursor",
+              "type": "Property",
+              "values": [
+                "pointer",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#ccc",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Option A",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
+          "visibleWhen": "open",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 52 (line 819): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -3589,27 +3698,145 @@ exports[`Tutorial Examples: AST Snapshots > Block 47 (line 771): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 47 (line 795): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 52 (line 880): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
       "children": [
         {
-          "component": "TodoItem",
-          "name": "taskList",
-          "type": "Instance",
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#333",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+          ],
+          "type": "Component",
         },
       ],
-      "collection": "tasks",
-      "item": "task",
-      "type": "Each",
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 48 (line 783): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 52 (line 888): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#333",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 53 (line 831): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -3650,98 +3877,97 @@ exports[`Tutorial Examples: AST Snapshots > Block 48 (line 783): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 48 (line 820): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 53 (line 905): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "children": [
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
         {
-          "component": "Input",
-          "name": "search",
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Suchen...",
-              ],
-            },
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
           ],
-          "type": "Instance",
         },
         {
-          "children": [
-            {
-              "children": [
-                {
-                  "component": "Item",
-                  "name": null,
-                  "properties": [
-                    {
-                      "name": "item",
-                      "type": "Property",
-                    },
-                    {
-                      "name": "name",
-                      "type": "Property",
-                    },
-                  ],
-                  "type": "Instance",
-                },
-              ],
-              "component": "item",
-              "name": null,
-              "properties": [
-                {
-                  "name": "filteredItems",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
           ],
-          "component": "List",
-          "name": "results",
-          "type": "Instance",
         },
         {
-          "component": "Text",
-          "name": "status",
-          "type": "Instance",
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
         },
       ],
-      "component": "Container",
-      "name": null,
-      "type": "Instance",
+      "type": "Component",
     },
   ],
-  "javascript": {
-    "code": "let items = []
-let filteredItems = []
-
-search.oninput = () => {
-    const query = search.value.toLowerCase()
-    filteredItems = items.filter(i =>
-        i.name.toLowerCase().includes(query)
-    )
-    status.text = \`\${filteredItems.length} Ergebnisse\`
-    update()
-}
-
-fetch('/api/items')
-    .then(r => r.json())
-    .then(data => {
-        items = data
-        filteredItems = data
-        update()
-    })",
-    "type": "JavaScript",
-  },
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 49 (line 791): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 53 (line 913): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 54 (line 839): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -3805,64 +4031,151 @@ exports[`Tutorial Examples: AST Snapshots > Block 49 (line 791): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 49 (line 859): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 54 (line 920): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "children": [
+      "events": [
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
+          "actions": [
             {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Profil",
-              ],
+              "name": "highlight",
+              "type": "Action",
             },
           ],
-          "type": "Instance",
-        },
-        {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Einstellungen",
-              ],
-            },
-          ],
-          "type": "Instance",
-        },
-        {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Abmelden",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "name": "onhover",
+          "type": "Event",
         },
       ],
-      "component": "Menu",
-      "name": null,
-      "type": "Instance",
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#444",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 50 (line 800): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 54 (line 928): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#444",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 55 (line 848): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -3885,71 +4198,211 @@ exports[`Tutorial Examples: AST Snapshots > Block 50 (line 800): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 50 (line 870): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 55 (line 945): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "children": [
+      "events": [
         {
-          "component": "Item",
-          "name": null,
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
           "properties": [
             {
-              "name": "content",
+              "name": "bg",
               "type": "Property",
               "values": [
-                "Profil",
+                "#444",
               ],
             },
           ],
-          "type": "Instance",
+          "type": "State",
         },
         {
-          "component": "Item",
-          "name": null,
+          "name": "selected",
           "properties": [
             {
-              "name": "content",
+              "name": "bg",
               "type": "Property",
               "values": [
-                "Einstellungen",
+                "#2563EB",
               ],
             },
-          ],
-          "type": "Instance",
-        },
-        {
-          "component": "Item",
-          "name": null,
-          "properties": [
             {
               "name": "col",
               "type": "Property",
               "values": [
-                "danger",
-              ],
-            },
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Abmelden",
+                "white",
               ],
             },
           ],
-          "type": "Instance",
+          "type": "State",
         },
       ],
-      "component": "Menu",
-      "name": null,
-      "type": "Instance",
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 51 (line 806): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 55 (line 953): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#444",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+        {
+          "name": "selected",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#2563EB",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "white",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 56 (line 854): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4024,66 +4477,225 @@ exports[`Tutorial Examples: AST Snapshots > Block 51 (line 806): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 51 (line 883): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 56 (line 972): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
       "children": [
         {
-          "children": [
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "col",
-                  "type": "Property",
-                  "values": [
-                    "muted",
-                  ],
-                },
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "date",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-          ],
-          "component": "Card",
+          "component": "close",
           "name": null,
           "type": "Instance",
         },
       ],
-      "collection": "tasks",
-      "item": "task",
-      "type": "Each",
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#444",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+        {
+          "name": "selected",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#2563EB",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "white",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 52 (line 820): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 56 (line 980): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "component": "close",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#444",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+        {
+          "name": "selected",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#2563EB",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "white",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 57 (line 868): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -4129,46 +4741,107 @@ exports[`Tutorial Examples: AST Snapshots > Block 52 (line 820): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 52 (line 896): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 57 (line 997): AST snapshot 1`] = `
 {
   "components": [
     {
       "children": [
         {
-          "children": [
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
             {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
               ],
-              "type": "Instance",
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#333",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "cursor",
+              "type": "Property",
+              "values": [
+                "pointer",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#ccc",
+              ],
             },
           ],
-          "component": "Card",
-          "name": null,
-          "type": "Instance",
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "component": "close",
+                  "name": null,
+                  "type": "Instance",
+                },
+              ],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "name": "select",
+                      "type": "Action",
+                    },
+                  ],
+                  "name": "onclick",
+                  "type": "Event",
+                },
+              ],
+              "extends": null,
+              "name": "Item",
+              "primitive": "frame",
+              "type": "Component",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
+          "visibleWhen": "open",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
         },
       ],
       "extends": null,
-      "name": "TaskList",
+      "initialState": "closed",
+      "name": "Dropdown",
       "primitive": "frame",
-      "properties": [
-        {
-          "name": "data",
-          "type": "Property",
-          "values": [
-            "tasks",
-          ],
-        },
-      ],
+      "selection": "$selected",
       "type": "Component",
     },
   ],
@@ -4176,7 +4849,115 @@ exports[`Tutorial Examples: AST Snapshots > Block 52 (line 896): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 53 (line 845): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 57 (line 1005): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "#333",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "cursor",
+              "type": "Property",
+              "values": [
+                "pointer",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#ccc",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "component": "close",
+                  "name": null,
+                  "type": "Instance",
+                },
+              ],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "name": "select",
+                      "type": "Action",
+                    },
+                  ],
+                  "name": "onclick",
+                  "type": "Event",
+                },
+              ],
+              "extends": null,
+              "name": "Item",
+              "primitive": "frame",
+              "type": "Component",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "type": "Component",
+          "visibleWhen": "open",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "selection": "selected",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 58 (line 893): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4208,49 +4989,86 @@ exports[`Tutorial Examples: AST Snapshots > Block 53 (line 845): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 53 (line 906): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1031): AST snapshot 1`] = `
 {
   "components": [
     {
       "children": [
         {
-          "children": [
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "type": "Component",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
             {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
+              "name": "toggle",
+              "type": "Action",
             },
           ],
-          "component": "Card",
-          "name": null,
-          "type": "Instance",
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "target": "highlighted",
+              "type": "Action",
+            },
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
         },
       ],
       "extends": null,
-      "name": "TaskList",
+      "initialState": "closed",
+      "name": "Dropdown",
       "primitive": "frame",
-      "properties": [
-        {
-          "name": "data",
-          "type": "Property",
-          "values": [
-            "tasks",
-            {
-              "filter": "done === false",
-            },
-          ],
-        },
-      ],
+      "selection": "$selected",
       "type": "Component",
     },
   ],
@@ -4258,100 +5076,86 @@ exports[`Tutorial Examples: AST Snapshots > Block 53 (line 906): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 54 (line 916): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1039): AST snapshot 1`] = `
 {
   "components": [
     {
       "children": [
         {
-          "children": [
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "type": "Component",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
             {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "col",
-                  "type": "Property",
-                  "values": [
-                    "muted",
-                  ],
-                },
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "date",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "Icon",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "done",
-                  "type": "Property",
-                },
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "check",
-                  ],
-                },
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "circle",
-                  ],
-                },
-              ],
-              "type": "Instance",
+              "name": "toggle",
+              "type": "Action",
             },
           ],
-          "component": "TodoItem",
-          "name": null,
-          "type": "Instance",
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "target": "highlighted",
+              "type": "Action",
+            },
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
         },
       ],
       "extends": null,
-      "name": "TaskList",
+      "initialState": "closed",
+      "name": "Dropdown",
       "primitive": "frame",
-      "properties": [
-        {
-          "name": "data",
-          "type": "Property",
-          "values": [
-            "tasks",
-            {
-              "filter": "done === false",
-            },
-          ],
-        },
-      ],
+      "selection": "selected",
       "type": "Component",
     },
   ],
@@ -4359,7 +5163,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 54 (line 916): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 54 (line 918): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 59 (line 966): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4379,53 +5183,103 @@ exports[`Tutorial Examples: AST Snapshots > Block 54 (line 918): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 55 (line 934): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 59 (line 1053): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "condition": "(loggedIn)",
-      "else": [
+      "component": "tastenname",
+      "name": null,
+      "properties": [
         {
-          "component": "Button",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Login",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "name": "aktion",
+          "type": "Property",
         },
       ],
-      "then": [
+      "type": "Instance",
+    },
+    {
+      "component": "tastenname",
+      "name": null,
+      "properties": [
         {
-          "component": "Avatar",
-          "name": null,
-          "type": "Instance",
-        },
-        {
-          "component": "Text",
-          "name": null,
-          "properties": [
-            {
-              "name": "username",
-              "type": "Property",
-            },
+          "name": "aktion",
+          "type": "Property",
+          "values": [
+            "ziel",
           ],
-          "type": "Instance",
         },
       ],
-      "type": "Conditional",
+      "type": "Instance",
+    },
+    {
+      "component": "tastenname",
+      "name": null,
+      "properties": [
+        {
+          "name": "aktion1",
+          "type": "Property",
+        },
+        {
+          "name": "aktion2",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 55 (line 943): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 59 (line 1061): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "tastenname",
+      "name": null,
+      "properties": [
+        {
+          "name": "aktion",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "tastenname",
+      "name": null,
+      "properties": [
+        {
+          "name": "aktion",
+          "type": "Property",
+          "values": [
+            "ziel",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "tastenname",
+      "name": null,
+      "properties": [
+        {
+          "name": "aktion1",
+          "type": "Property",
+        },
+        {
+          "name": "aktion2",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 60 (line 991): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4455,10 +5309,9 @@ exports[`Tutorial Examples: AST Snapshots > Block 55 (line 943): AST snapshot 1`
                     {
                       "name": "item",
                       "type": "Property",
-                    },
-                    {
-                      "name": "name",
-                      "type": "Property",
+                      "values": [
+                        "name",
+                      ],
                     },
                   ],
                   "type": "Instance",
@@ -4516,53 +5369,79 @@ fetch('/api/items')
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 56 (line 944): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 60 (line 1081): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "condition": "(user.isAdmin && hasPermission)",
-      "then": [
+      "component": "arrow-down",
+      "name": null,
+      "properties": [
         {
-          "component": "AdminPanel",
-          "name": null,
-          "type": "Instance",
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "next",
+          ],
         },
       ],
-      "type": "Conditional",
+      "type": "Instance",
     },
     {
-      "condition": "(items.length > 0)",
-      "else": [
+      "component": "arrow-up",
+      "name": null,
+      "properties": [
         {
-          "component": "Text",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Keine Einträge",
-              ],
-            },
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "prev",
           ],
-          "type": "Instance",
         },
       ],
-      "then": [
-        {
-          "component": "ItemList",
-          "name": null,
-          "type": "Instance",
-        },
-      ],
-      "type": "Conditional",
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 56 (line 982): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 60 (line 1089): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "arrow-down",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "next",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "arrow-up",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "prev",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1030): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4619,48 +5498,22 @@ exports[`Tutorial Examples: AST Snapshots > Block 56 (line 982): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 57 (line 964): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1101): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "component": "Icon",
+      "component": "enter",
       "name": null,
       "properties": [
         {
-          "name": "done",
-          "type": "Property",
-        },
-        {
-          "name": "content",
+          "name": "select",
           "type": "Property",
           "values": [
-            "check",
+            "highlighted",
           ],
         },
         {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "circle",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "bg",
-      "name": null,
-      "properties": [
-        {
-          "name": "active",
-          "type": "Property",
-        },
-        {
-          "name": "primary",
-          "type": "Property",
-        },
-        {
-          "name": "surface",
+          "name": "close",
           "type": "Property",
         },
       ],
@@ -4671,7 +5524,33 @@ exports[`Tutorial Examples: AST Snapshots > Block 57 (line 964): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 57 (line 993): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1109): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "enter",
+      "name": null,
+      "properties": [
+        {
+          "name": "select",
+          "type": "Property",
+          "values": [
+            "highlighted",
+          ],
+        },
+        {
+          "name": "close",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1041): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4735,29 +5614,405 @@ exports[`Tutorial Examples: AST Snapshots > Block 57 (line 993): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 58 (line 971): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1115): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "component": "Icon",
-      "name": null,
-      "properties": [
+      "extends": null,
+      "name": "dropdown",
+      "primitive": "Frame",
+      "states": [
         {
-          "name": "done",
-          "type": "Property",
+          "name": "bg",
+          "type": "State",
         },
         {
-          "name": "content",
+          "name": "trigger-bg",
+          "type": "State",
+        },
+        {
+          "name": "item-hover",
+          "type": "State",
+        },
+        {
+          "name": "item-selected",
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "children": [
+        {
+          "component": "close",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
           "type": "Property",
           "values": [
-            "check",
+            "10",
+            "12",
           ],
         },
         {
-          "name": "content",
+          "name": "rad",
           "type": "Property",
           "values": [
-            "circle",
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.item-hover",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+        {
+          "name": "selected",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.item-selected",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "white",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "children": [
+        {
+          "extends": null,
+          "name": "Trigger",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "10",
+                "16",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.trigger-bg",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "cursor",
+              "type": "Property",
+              "values": [
+                "pointer",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#ccc",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Dashboard",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Einstellungen",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Profil",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Abmelden",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.bg",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "6",
+              ],
+            },
+            {
+              "name": "bor",
+              "type": "Property",
+              "values": [
+                "1",
+                "#444",
+              ],
+            },
+          ],
+          "type": "Component",
+          "visibleWhen": "open",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "target": "highlighted",
+              "type": "Action",
+            },
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "selection": "$selected",
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Trigger",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Bitte wählen...",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Dropdown",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "component": "Container",
+      "name": null,
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "40",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "#0a0a0f",
+          ],
+        },
+        {
+          "name": "min-height",
+          "type": "Property",
+          "values": [
+            "300",
           ],
         },
       ],
@@ -4768,7 +6023,488 @@ exports[`Tutorial Examples: AST Snapshots > Block 58 (line 971): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1006): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1123): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "dropdown",
+      "primitive": "Frame",
+      "states": [
+        {
+          "name": "bg",
+          "type": "State",
+        },
+        {
+          "name": "trigger-bg",
+          "type": "State",
+        },
+        {
+          "name": "item-hover",
+          "type": "State",
+        },
+        {
+          "name": "item-selected",
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "children": [
+        {
+          "component": "close",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "type": "Action",
+            },
+          ],
+          "name": "onhover",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Item",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "12",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "states": [
+        {
+          "name": "highlighted",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.item-hover",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+        {
+          "name": "selected",
+          "properties": [
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.item-selected",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "white",
+              ],
+            },
+          ],
+          "type": "State",
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "children": [
+        {
+          "extends": null,
+          "name": "Label",
+          "primitive": "text",
+          "type": "Component",
+        },
+        {
+          "extends": null,
+          "name": "Chevron",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "is",
+              "type": "Property",
+              "values": [
+                "16",
+              ],
+            },
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "#888",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+      ],
+      "extends": null,
+      "name": "Trigger",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "hor",
+          "type": "Property",
+          "values": [
+            true,
+          ],
+        },
+        {
+          "name": "spread",
+          "type": "Property",
+          "values": [
+            true,
+          ],
+        },
+        {
+          "name": "gap",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "10",
+            "16",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "dropdown.trigger-bg",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "4",
+          ],
+        },
+        {
+          "name": "cursor",
+          "type": "Property",
+          "values": [
+            "pointer",
+          ],
+        },
+        {
+          "name": "col",
+          "type": "Property",
+          "values": [
+            "#ccc",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Dashboard",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Einstellungen",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Profil",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Abmelden",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Menu",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "4",
+              ],
+            },
+            {
+              "name": "bg",
+              "type": "Property",
+              "values": [
+                "dropdown.bg",
+              ],
+            },
+            {
+              "name": "rad",
+              "type": "Property",
+              "values": [
+                "6",
+              ],
+            },
+            {
+              "name": "bor",
+              "type": "Property",
+              "values": [
+                "1",
+                "#444",
+              ],
+            },
+          ],
+          "type": "Component",
+          "visibleWhen": "open",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "target": "highlighted",
+              "type": "Action",
+            },
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "initialState": "closed",
+      "name": "Dropdown",
+      "primitive": "frame",
+      "selection": "selected",
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "component": "Label",
+                  "name": null,
+                  "properties": [
+                    {
+                      "name": "content",
+                      "type": "Property",
+                      "values": [
+                        "Bitte wählen...",
+                      ],
+                    },
+                  ],
+                  "type": "Instance",
+                },
+                {
+                  "component": "Chevron",
+                  "name": null,
+                  "properties": [
+                    {
+                      "name": "content",
+                      "type": "Property",
+                      "values": [
+                        "chevron-down",
+                      ],
+                    },
+                  ],
+                  "type": "Instance",
+                },
+              ],
+              "component": "Trigger",
+              "name": null,
+              "type": "Instance",
+            },
+          ],
+          "component": "Dropdown",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "component": "Container",
+      "name": null,
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "40",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "#0a0a0f",
+          ],
+        },
+        {
+          "name": "min-height",
+          "type": "Property",
+          "values": [
+            "300",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1054): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4782,10 +6518,9 @@ exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1006): AST snapshot 1
                 {
                   "name": "task",
                   "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
                 },
               ],
               "type": "Instance",
@@ -4804,10 +6539,9 @@ exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1006): AST snapshot 1
                 {
                   "name": "task",
                   "type": "Property",
-                },
-                {
-                  "name": "date",
-                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
                 },
               ],
               "type": "Instance",
@@ -4827,7 +6561,988 @@ exports[`Tutorial Examples: AST Snapshots > Block 58 (line 1006): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 59 (line 981): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1210): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "target": "Menu",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Button",
+      "primitive": "Frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1225): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "toggle",
+              "target": "Menu",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Button",
+      "primitive": "Frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1067): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1225): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "clear",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "submit",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Input",
+      "primitive": "Frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1240): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "clear",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "submit",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Input",
+      "primitive": "Frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1077): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1235): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1250): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "next",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "highlight",
+              "target": "prev",
+              "type": "Action",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "select",
+              "type": "Action",
+            },
+          ],
+          "key": "enter",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1087): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "col",
+                  "type": "Property",
+                  "values": [
+                    "muted",
+                  ],
+                },
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Icon",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    {
+                      "condition": "task.done",
+                      "else": "circle",
+                      "kind": "conditional",
+                      "then": "check",
+                    },
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "TodoItem",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1248): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "filter",
+              "target": "Results",
+              "type": "Action",
+            },
+          ],
+          "modifiers": [
+            {
+              "type": "debounce",
+              "value": 300,
+            },
+          ],
+          "name": "oninput",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Input",
+      "primitive": "input",
+      "type": "Component",
+    },
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "submit",
+              "type": "Action",
+            },
+          ],
+          "modifiers": [
+            {
+              "type": "delay",
+              "value": 200,
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1263): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "filter",
+              "target": "Results",
+              "type": "Action",
+            },
+          ],
+          "modifiers": [
+            {
+              "type": "debounce",
+              "value": 300,
+            },
+          ],
+          "name": "oninput",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Input",
+      "primitive": "input",
+      "type": "Component",
+    },
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "submit",
+              "type": "Action",
+            },
+          ],
+          "modifiers": [
+            {
+              "type": "delay",
+              "value": 200,
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1105): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "loggedIn",
+      "else": [
+        {
+          "component": "Button",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Login",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "Avatar",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "username",
+              "type": "Property",
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1263): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1278): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Dropdown",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 68 (line 1115): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "user.isAdmin && hasPermission",
+      "then": [
+        {
+          "component": "AdminPanel",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+    {
+      "condition": "items.length > 0",
+      "else": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Keine Einträge",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "ItemList",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 68 (line 1272): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Modal",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 68 (line 1287): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick-outside",
+          "type": "Event",
+        },
+        {
+          "actions": [
+            {
+              "name": "close",
+              "type": "Action",
+            },
+          ],
+          "key": "escape",
+          "name": "onkeydown",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Modal",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 69 (line 1137): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Icon",
+      "name": null,
+      "properties": [
+        {
+          "name": "done",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "circle",
+              "kind": "conditional",
+              "then": "check",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "bg",
+      "name": null,
+      "properties": [
+        {
+          "name": "active",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "surface",
+              "kind": "conditional",
+              "then": "primary",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "opacity",
+      "name": null,
+      "properties": [
+        {
+          "name": "isVisible",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "0",
+              "kind": "conditional",
+              "then": "1",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 69 (line 1284): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "toggle",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "select",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 69 (line 1299): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "toggle",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "select",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 70 (line 1149): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -4877,54 +7592,135 @@ exports[`Tutorial Examples: AST Snapshots > Block 59 (line 981): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 59 (line 1019): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 70 (line 1292): AST snapshot 1`] = `
 {
-  "components": [
+  "instances": [
     {
-      "children": [
-        {
-          "children": [
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-          ],
-          "component": "Card",
-          "name": null,
-          "type": "Instance",
-        },
-      ],
-      "extends": null,
-      "name": "TaskList",
-      "primitive": "frame",
+      "component": "onclick",
+      "name": null,
       "properties": [
         {
-          "name": "data",
+          "name": "show",
           "type": "Property",
           "values": [
-            "tasks",
+            "Menu",
           ],
         },
       ],
-      "type": "Component",
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "hide",
+          "type": "Property",
+          "values": [
+            "Modal",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "next",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "close",
+          "type": "Property",
+          "values": [
+            "Dropdown",
+          ],
+        },
+      ],
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 60 (line 999): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 70 (line 1307): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "show",
+          "type": "Property",
+          "values": [
+            "Menu",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "hide",
+          "type": "Property",
+          "values": [
+            "Modal",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "next",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "close",
+          "type": "Property",
+          "values": [
+            "Dropdown",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 71 (line 1167): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5007,57 +7803,53 @@ exports[`Tutorial Examples: AST Snapshots > Block 60 (line 999): AST snapshot 1`
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 60 (line 1029): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 71 (line 1301): AST snapshot 1`] = `
 {
-  "components": [
+  "instances": [
     {
-      "children": [
-        {
-          "children": [
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-          ],
-          "component": "Card",
-          "name": null,
-          "type": "Instance",
-        },
-      ],
-      "extends": null,
-      "name": "TaskList",
-      "primitive": "frame",
+      "component": "onclick",
+      "name": null,
       "properties": [
         {
-          "name": "data",
+          "name": "select",
           "type": "Property",
-          "values": [
-            "tasks",
-            {
-              "filter": "done === false",
-            },
-          ],
+        },
+        {
+          "name": "close",
+          "type": "Property",
         },
       ],
-      "type": "Component",
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1025): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 71 (line 1316): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "select",
+          "type": "Property",
+        },
+        {
+          "name": "close",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 72 (line 1193): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5083,108 +7875,157 @@ exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1025): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 61 (line 1039): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 72 (line 1307): AST snapshot 1`] = `
 {
-  "components": [
+  "instances": [
     {
-      "children": [
-        {
-          "children": [
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "title",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "col",
-                  "type": "Property",
-                  "values": [
-                    "muted",
-                  ],
-                },
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "date",
-                  "type": "Property",
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "Icon",
-              "name": null,
-              "properties": [
-                {
-                  "name": "task",
-                  "type": "Property",
-                },
-                {
-                  "name": "done",
-                  "type": "Property",
-                },
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "check",
-                  ],
-                },
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "circle",
-                  ],
-                },
-              ],
-              "type": "Instance",
-            },
-          ],
-          "component": "TodoItem",
-          "name": null,
-          "type": "Instance",
-        },
-      ],
-      "extends": null,
-      "name": "TaskList",
-      "primitive": "frame",
+      "component": "onclick",
+      "name": null,
       "properties": [
         {
-          "name": "data",
+          "name": "highlight",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
           "type": "Property",
           "values": [
-            "tasks",
-            {
-              "filter": "done === false",
-            },
+            "next",
           ],
         },
       ],
-      "type": "Component",
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "prev",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "first",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "last",
+          ],
+        },
+      ],
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1035): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 72 (line 1322): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "next",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "prev",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "first",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "onclick",
+      "name": null,
+      "properties": [
+        {
+          "name": "highlight",
+          "type": "Property",
+          "values": [
+            "last",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 73 (line 1203): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -5248,53 +8089,99 @@ exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1035): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 62 (line 1057): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 73 (line 1321): AST snapshot 1`] = `
 {
-  "instances": [
+  "components": [
     {
-      "condition": "(loggedIn)",
-      "else": [
+      "events": [
         {
-          "component": "Button",
-          "name": null,
-          "properties": [
+          "actions": [
             {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Login",
-              ],
+              "name": "call",
+              "target": "handleSubmit",
+              "type": "Action",
             },
           ],
-          "type": "Instance",
+          "name": "onclick",
+          "type": "Event",
         },
       ],
-      "then": [
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "type": "Component",
+    },
+    {
+      "events": [
         {
-          "component": "Avatar",
-          "name": null,
-          "type": "Instance",
-        },
-        {
-          "component": "Text",
-          "name": null,
-          "properties": [
+          "actions": [
             {
-              "name": "username",
-              "type": "Property",
+              "name": "call",
+              "target": "validateEmail",
+              "type": "Action",
             },
           ],
-          "type": "Instance",
+          "name": "onchange",
+          "type": "Event",
         },
       ],
-      "type": "Conditional",
+      "extends": null,
+      "name": "Input",
+      "primitive": "input",
+      "type": "Component",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1047): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 73 (line 1336): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "call",
+              "target": "handleSubmit",
+              "type": "Action",
+            },
+          ],
+          "name": "onclick",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "type": "Component",
+    },
+    {
+      "events": [
+        {
+          "actions": [
+            {
+              "name": "call",
+              "target": "validateEmail",
+              "type": "Action",
+            },
+          ],
+          "name": "onchange",
+          "type": "Event",
+        },
+      ],
+      "extends": null,
+      "name": "Input",
+      "primitive": "input",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 74 (line 1215): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5380,53 +8267,71 @@ exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1047): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 63 (line 1067): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 74 (line 1346): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "condition": "(user.isAdmin && hasPermission)",
-      "then": [
+      "component": "Button",
+      "name": "saveBtn",
+      "properties": [
         {
-          "component": "AdminPanel",
-          "name": null,
-          "type": "Instance",
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Speichern",
+          ],
         },
       ],
-      "type": "Conditional",
+      "type": "Instance",
     },
     {
-      "condition": "(items.length > 0)",
-      "else": [
-        {
-          "component": "Text",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Keine Einträge",
-              ],
-            },
-          ],
-          "type": "Instance",
-        },
-      ],
-      "then": [
-        {
-          "component": "ItemList",
-          "name": null,
-          "type": "Instance",
-        },
-      ],
-      "type": "Conditional",
+      "component": "Input",
+      "name": "searchField",
+      "type": "Instance",
+    },
+    {
+      "component": "Menu",
+      "name": "userMenu",
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1065): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 74 (line 1361): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Button",
+      "name": "saveBtn",
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Speichern",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "Input",
+      "name": "searchField",
+      "type": "Instance",
+    },
+    {
+      "component": "Menu",
+      "name": "userMenu",
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 75 (line 1233): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5517,59 +8422,47 @@ exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1065): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 64 (line 1087): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 75 (line 1419): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "component": "Icon",
-      "name": null,
-      "properties": [
+      "children": [
         {
-          "name": "done",
-          "type": "Property",
-        },
-        {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "check",
-          ],
-        },
-        {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "circle",
-          ],
+          "component": "TodoItem",
+          "name": "taskList",
+          "type": "Instance",
         },
       ],
-      "type": "Instance",
-    },
-    {
-      "component": "bg",
-      "name": null,
-      "properties": [
-        {
-          "name": "active",
-          "type": "Property",
-        },
-        {
-          "name": "primary",
-          "type": "Property",
-        },
-        {
-          "name": "surface",
-          "type": "Property",
-        },
-      ],
-      "type": "Instance",
+      "collection": "tasks",
+      "item": "task",
+      "type": "Each",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1082): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 75 (line 1434): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "TodoItem",
+          "name": "taskList",
+          "type": "Instance",
+        },
+      ],
+      "collection": "tasks",
+      "item": "task",
+      "type": "Each",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 76 (line 1250): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5795,90 +8688,187 @@ exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1082): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 65 (line 1094): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 76 (line 1444): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "component": "Icon",
-      "name": null,
-      "properties": [
+      "children": [
         {
-          "name": "done",
-          "type": "Property",
+          "component": "Input",
+          "name": "search",
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Suchen...",
+              ],
+            },
+          ],
+          "type": "Instance",
         },
         {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "check",
+          "children": [
+            {
+              "children": [
+                {
+                  "component": "Item",
+                  "name": null,
+                  "properties": [
+                    {
+                      "name": "item",
+                      "type": "Property",
+                      "values": [
+                        "name",
+                      ],
+                    },
+                  ],
+                  "type": "Instance",
+                },
+              ],
+              "component": "item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "filteredItems",
+                  "type": "Property",
+                },
+              ],
+              "type": "Instance",
+            },
           ],
+          "component": "List",
+          "name": "results",
+          "type": "Instance",
         },
         {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "circle",
-          ],
+          "component": "Text",
+          "name": "status",
+          "type": "Instance",
         },
       ],
+      "component": "Container",
+      "name": null,
       "type": "Instance",
     },
   ],
+  "javascript": {
+    "code": "let items = []
+let filteredItems = []
+
+search.oninput = () => {
+    const query = search.value.toLowerCase()
+    filteredItems = items.filter(i =>
+        i.name.toLowerCase().includes(query)
+    )
+    status.text = \`\${filteredItems.length} Ergebnisse\`
+    update()
+}
+
+fetch('/api/items')
+    .then(r => r.json())
+    .then(data => {
+        items = data
+        filteredItems = data
+        update()
+    })",
+    "type": "JavaScript",
+  },
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1104): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 76 (line 1459): AST snapshot 1`] = `
 {
   "instances": [
     {
-      "component": "Text",
-      "name": null,
-      "properties": [
+      "children": [
         {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "Das ist *wichtig*:bold und das ist *anders*:italic",
+          "component": "Input",
+          "name": "search",
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Suchen...",
+              ],
+            },
           ],
+          "type": "Instance",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "component": "Item",
+                  "name": null,
+                  "properties": [
+                    {
+                      "name": "item",
+                      "type": "Property",
+                      "values": [
+                        "name",
+                      ],
+                    },
+                  ],
+                  "type": "Instance",
+                },
+              ],
+              "component": "item",
+              "name": null,
+              "properties": [
+                {
+                  "name": "filteredItems",
+                  "type": "Property",
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "List",
+          "name": "results",
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": "status",
+          "type": "Instance",
         },
       ],
-      "type": "Instance",
-    },
-    {
-      "component": "Text",
+      "component": "Container",
       "name": null,
-      "properties": [
-        {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "Klicke *hier*:underline für mehr",
-          ],
-        },
-      ],
-      "type": "Instance",
-    },
-    {
-      "component": "Text",
-      "name": null,
-      "properties": [
-        {
-          "name": "content",
-          "type": "Property",
-          "values": [
-            "Status: *Aktiv*:primary",
-          ],
-        },
-      ],
       "type": "Instance",
     },
   ],
+  "javascript": {
+    "code": "let items = []
+let filteredItems = []
+
+search.oninput = () => {
+    const query = search.value.toLowerCase()
+    filteredItems = items.filter(i =>
+        i.name.toLowerCase().includes(query)
+    )
+    status.text = \`\${filteredItems.length} Ergebnisse\`
+    update()
+}
+
+fetch('/api/items')
+    .then(r => r.json())
+    .then(data => {
+        items = data
+        filteredItems = data
+        update()
+    })",
+    "type": "JavaScript",
+  },
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1111): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 77 (line 1279): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -5925,90 +8915,121 @@ exports[`Tutorial Examples: AST Snapshots > Block 66 (line 1111): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1122): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 77 (line 1483): AST snapshot 1`] = `
 {
-  "components": [
+  "instances": [
     {
-      "extends": null,
-      "name": "Button",
-      "primitive": "button",
-      "properties": [
+      "children": [
         {
-          "name": "pad",
-          "type": "Property",
-          "values": [
-            "8",
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Profil",
+              ],
+            },
           ],
+          "type": "Instance",
         },
         {
-          "name": "bg",
-          "type": "Property",
-          "values": [
-            "primary",
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Einstellungen",
+              ],
+            },
           ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Abmelden",
+              ],
+            },
+          ],
+          "type": "Instance",
         },
       ],
-      "type": "Component",
-    },
-    {
-      "extends": "Button",
-      "name": "DangerButton",
-      "primitive": null,
-      "properties": [
-        {
-          "name": "bg",
-          "type": "Property",
-          "values": [
-            "danger",
-          ],
-        },
-      ],
-      "type": "Component",
-    },
-    {
-      "extends": null,
-      "name": "Card",
-      "primitive": "frame",
-      "properties": [
-        {
-          "name": "pad",
-          "type": "Property",
-          "values": [
-            "16",
-          ],
-        },
-        {
-          "name": "bg",
-          "type": "Property",
-          "values": [
-            "surface",
-          ],
-        },
-      ],
-      "type": "Component",
-    },
-    {
-      "extends": "Card",
-      "name": "InfoCard",
-      "primitive": null,
-      "properties": [
-        {
-          "name": "bor",
-          "type": "Property",
-          "values": [
-            "1",
-            "primary",
-          ],
-        },
-      ],
-      "type": "Component",
+      "component": "Menu",
+      "name": null,
+      "type": "Instance",
     },
   ],
   "type": "Program",
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1124): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 77 (line 1498): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Profil",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Einstellungen",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Abmelden",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Menu",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 78 (line 1292): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6055,7 +9076,1197 @@ exports[`Tutorial Examples: AST Snapshots > Block 67 (line 1124): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 68 (line 1148): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 78 (line 1494): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Profil",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Einstellungen",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "danger",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Abmelden",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Menu",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 78 (line 1509): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Profil",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Einstellungen",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "component": "Item",
+          "name": null,
+          "properties": [
+            {
+              "name": "col",
+              "type": "Property",
+              "values": [
+                "danger",
+              ],
+            },
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Abmelden",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "component": "Menu",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 79 (line 1507): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "col",
+                  "type": "Property",
+                  "values": [
+                    "muted",
+                  ],
+                },
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "collection": "tasks",
+      "item": "task",
+      "type": "Each",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 79 (line 1522): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "col",
+                  "type": "Property",
+                  "values": [
+                    "muted",
+                  ],
+                },
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "collection": "tasks",
+      "item": "task",
+      "type": "Each",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 80 (line 1520): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 80 (line 1535): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 81 (line 1530): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 81 (line 1545): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Card",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 82 (line 1540): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "col",
+                  "type": "Property",
+                  "values": [
+                    "muted",
+                  ],
+                },
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Icon",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    {
+                      "condition": "task.done",
+                      "else": "circle",
+                      "kind": "conditional",
+                      "then": "check",
+                    },
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "TodoItem",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 82 (line 1555): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "title",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "col",
+                  "type": "Property",
+                  "values": [
+                    "muted",
+                  ],
+                },
+                {
+                  "name": "task",
+                  "type": "Property",
+                  "values": [
+                    "date",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Icon",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    {
+                      "condition": "task.done",
+                      "else": "circle",
+                      "kind": "conditional",
+                      "then": "check",
+                    },
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "TodoItem",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "TaskList",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Property",
+          "values": [
+            "tasks",
+            {
+              "filter": "done === false",
+            },
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 83 (line 1558): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "loggedIn",
+      "else": [
+        {
+          "component": "Button",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Login",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "Avatar",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "username",
+              "type": "Property",
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 83 (line 1573): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "loggedIn",
+      "else": [
+        {
+          "component": "Button",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Login",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "Avatar",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "username",
+              "type": "Property",
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 84 (line 1568): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "user.isAdmin && hasPermission",
+      "then": [
+        {
+          "component": "AdminPanel",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+    {
+      "condition": "items.length > 0",
+      "else": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Keine Einträge",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "ItemList",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 84 (line 1583): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "condition": "user.isAdmin && hasPermission",
+      "then": [
+        {
+          "component": "AdminPanel",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+    {
+      "condition": "items.length > 0",
+      "else": [
+        {
+          "component": "Text",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Keine Einträge",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+      ],
+      "then": [
+        {
+          "component": "ItemList",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "type": "Conditional",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 85 (line 1590): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Icon",
+      "name": null,
+      "properties": [
+        {
+          "name": "done",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "circle",
+              "kind": "conditional",
+              "then": "check",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "bg",
+      "name": null,
+      "properties": [
+        {
+          "name": "active",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "surface",
+              "kind": "conditional",
+              "then": "primary",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "opacity",
+      "name": null,
+      "properties": [
+        {
+          "name": "isVisible",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "0",
+              "kind": "conditional",
+              "then": "1",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 85 (line 1605): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Icon",
+      "name": null,
+      "properties": [
+        {
+          "name": "done",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "circle",
+              "kind": "conditional",
+              "then": "check",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "bg",
+      "name": null,
+      "properties": [
+        {
+          "name": "active",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "surface",
+              "kind": "conditional",
+              "then": "primary",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "opacity",
+      "name": null,
+      "properties": [
+        {
+          "name": "isVisible",
+          "type": "Property",
+          "values": [
+            {
+              "condition": "",
+              "else": "0",
+              "kind": "conditional",
+              "then": "1",
+            },
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 86 (line 1602): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Das ist *wichtig*:bold und das ist *anders*:italic",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Klicke *hier*:underline für mehr",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Status: *Aktiv*:primary",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 86 (line 1617): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Das ist *wichtig*:bold und das ist *anders*:italic",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Klicke *hier*:underline für mehr",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "Text",
+      "name": null,
+      "properties": [
+        {
+          "name": "content",
+          "type": "Property",
+          "values": [
+            "Status: *Aktiv*:primary",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 87 (line 1620): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": "Button",
+      "name": "DangerButton",
+      "primitive": null,
+      "properties": [
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "danger",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": null,
+      "name": "Card",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "16",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": "Card",
+      "name": "InfoCard",
+      "primitive": null,
+      "properties": [
+        {
+          "name": "bor",
+          "type": "Property",
+          "values": [
+            "1",
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 87 (line 1635): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "Button",
+      "primitive": "button",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": "Button",
+      "name": "DangerButton",
+      "primitive": null,
+      "properties": [
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "danger",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": null,
+      "name": "Card",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "16",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": "Card",
+      "name": "InfoCard",
+      "primitive": null,
+      "properties": [
+        {
+          "name": "bor",
+          "type": "Property",
+          "values": [
+            "1",
+            "primary",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 88 (line 1646): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6081,7 +10292,33 @@ exports[`Tutorial Examples: AST Snapshots > Block 68 (line 1148): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 69 (line 1158): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 88 (line 1661): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "component": "Title",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "component": "Content",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "Card",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 89 (line 1656): AST snapshot 1`] = `
 {
   "instances": [
     {
@@ -6145,7 +10382,71 @@ exports[`Tutorial Examples: AST Snapshots > Block 69 (line 1158): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 70 (line 1170): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 89 (line 1671): AST snapshot 1`] = `
+{
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Title",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Willkommen",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Dies ist der Inhalt.",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "Button",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "OK",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Content",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "component": "Card",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 90 (line 1668): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6231,7 +10532,93 @@ exports[`Tutorial Examples: AST Snapshots > Block 70 (line 1170): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 71 (line 1188): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 90 (line 1683): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Logo",
+              "name": null,
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Left",
+          "primitive": "frame",
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "component": "Actions",
+              "name": null,
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Right",
+          "primitive": "frame",
+          "type": "Component",
+        },
+      ],
+      "extends": null,
+      "name": "Header",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Logo",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "mirror-logo",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "children": [
+            {
+              "component": "Button",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Login",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Actions",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "component": "Header",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 91 (line 1686): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6322,7 +10709,98 @@ exports[`Tutorial Examples: AST Snapshots > Block 71 (line 1188): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 72 (line 1205): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 91 (line 1701): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "component": "Icon",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "component": "Label",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "extends": null,
+      "name": "NavItem",
+      "primitive": "frame",
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "component": "NavItem",
+      "name": null,
+      "properties": [
+        {
+          "name": "Icon",
+          "type": "Property",
+          "values": [
+            "home",
+          ],
+        },
+        {
+          "name": "Label",
+          "type": "Property",
+          "values": [
+            "Home",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "NavItem",
+      "name": null,
+      "properties": [
+        {
+          "name": "Icon",
+          "type": "Property",
+          "values": [
+            "settings",
+          ],
+        },
+        {
+          "name": "Label",
+          "type": "Property",
+          "values": [
+            "Settings",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+    {
+      "component": "NavItem",
+      "name": null,
+      "properties": [
+        {
+          "name": "Icon",
+          "type": "Property",
+          "values": [
+            "user",
+          ],
+        },
+        {
+          "name": "Label",
+          "type": "Property",
+          "values": [
+            "Profile",
+          ],
+        },
+      ],
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 92 (line 1703): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6548,7 +11026,233 @@ exports[`Tutorial Examples: AST Snapshots > Block 72 (line 1205): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 73 (line 1234): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 92 (line 1718): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "component": "Title",
+              "name": null,
+              "type": "Instance",
+            },
+            {
+              "component": "Button",
+              "name": "closeBtn",
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "×",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Header",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "hor",
+              "type": "Property",
+              "values": [
+                true,
+              ],
+            },
+            {
+              "name": "spread",
+              "type": "Property",
+              "values": [
+                true,
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "component": "Content",
+              "name": null,
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Body",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "pad",
+              "type": "Property",
+              "values": [
+                "16",
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+        {
+          "children": [
+            {
+              "component": "Actions",
+              "name": null,
+              "type": "Instance",
+            },
+          ],
+          "extends": null,
+          "name": "Footer",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "hor",
+              "type": "Property",
+              "values": [
+                true,
+              ],
+            },
+            {
+              "name": "gap",
+              "type": "Property",
+              "values": [
+                "8",
+              ],
+            },
+            {
+              "name": "right",
+              "type": "Property",
+              "values": [
+                true,
+              ],
+            },
+          ],
+          "type": "Component",
+        },
+      ],
+      "extends": null,
+      "name": "Dialog",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "pad",
+          "type": "Property",
+          "values": [
+            "24",
+          ],
+        },
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "shadow",
+          "type": "Property",
+          "values": [
+            "lg",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "instances": [
+    {
+      "children": [
+        {
+          "component": "Title",
+          "name": null,
+          "properties": [
+            {
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Bestätigung",
+              ],
+            },
+          ],
+          "type": "Instance",
+        },
+        {
+          "children": [
+            {
+              "component": "Text",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Bist du sicher?",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Content",
+          "name": null,
+          "type": "Instance",
+        },
+        {
+          "children": [
+            {
+              "component": "Button",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Abbrechen",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+            {
+              "component": "DangerButton",
+              "name": null,
+              "properties": [
+                {
+                  "name": "content",
+                  "type": "Property",
+                  "values": [
+                    "Löschen",
+                  ],
+                },
+              ],
+              "type": "Instance",
+            },
+          ],
+          "component": "Actions",
+          "name": null,
+          "type": "Instance",
+        },
+      ],
+      "component": "Dialog",
+      "name": null,
+      "type": "Instance",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 93 (line 1732): AST snapshot 1`] = `
 {
   "components": [
     {
@@ -6595,7 +11299,101 @@ exports[`Tutorial Examples: AST Snapshots > Block 73 (line 1234): AST snapshot 1
 }
 `;
 
-exports[`Tutorial Examples: AST Snapshots > Block 74 (line 1247): AST snapshot 1`] = `
+exports[`Tutorial Examples: AST Snapshots > Block 93 (line 1747): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "Modal",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "bg",
+          "type": "Property",
+          "values": [
+            "surface",
+          ],
+        },
+        {
+          "name": "rad",
+          "type": "Property",
+          "values": [
+            "8",
+          ],
+        },
+        {
+          "name": "show",
+          "type": "Property",
+          "values": [
+            "fade",
+            "scale",
+            "200",
+          ],
+        },
+        {
+          "name": "hide",
+          "type": "Property",
+          "values": [
+            "fade",
+            "150",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 94 (line 1745): AST snapshot 1`] = `
+{
+  "components": [
+    {
+      "extends": null,
+      "name": "Spinner",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "size",
+          "type": "Property",
+          "values": [
+            "24",
+          ],
+        },
+        {
+          "name": "animate",
+          "type": "Property",
+          "values": [
+            "spin",
+            "1000",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+    {
+      "extends": null,
+      "name": "LoadingDot",
+      "primitive": "frame",
+      "properties": [
+        {
+          "name": "animate",
+          "type": "Property",
+          "values": [
+            "pulse",
+            "800",
+          ],
+        },
+      ],
+      "type": "Component",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`Tutorial Examples: AST Snapshots > Block 94 (line 1760): AST snapshot 1`] = `
 {
   "components": [
     {

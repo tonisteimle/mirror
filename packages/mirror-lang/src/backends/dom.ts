@@ -206,17 +206,32 @@ class DOMGenerator {
       this.emit(`_elements['${node.instanceName}'] = ${varName}`)
     }
 
+    // Detect if this is an icon element (based on primitive type)
+    const isIcon = node.primitive === 'icon'
+    let iconName: string | null = null
+
     // Set HTML properties
     for (const prop of node.properties) {
       if (prop.name === 'textContent') {
         const value = typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
-        this.emit(`${varName}.textContent = ${value}`)
+        // For icons, store the name for loading instead of setting textContent
+        if (isIcon && typeof prop.value === 'string') {
+          iconName = prop.value
+        } else {
+          this.emit(`${varName}.textContent = ${value}`)
+        }
       } else if (prop.name === 'disabled' || prop.name === 'hidden') {
         this.emit(`${varName}.${prop.name} = ${prop.value}`)
       } else {
         const value = typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
         this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
       }
+    }
+
+    // Load icon from CDN if this is an icon element
+    if (isIcon && iconName) {
+      this.emit(`// Load Lucide icon`)
+      this.emit(`_runtime.loadIcon(${varName}, "${this.escapeString(iconName)}")`)
     }
 
     // Apply base styles
@@ -270,7 +285,22 @@ class DOMGenerator {
       this.emit(`${varName}._selectionBinding = '${selectionVar}'`)
     }
 
+    // Component name (for navigation targets)
+    if (node.name) {
+      this.emit(`${varName}.dataset.component = '${node.name}'`)
+    }
+
+    // Route (for navigation)
+    if (node.route) {
+      this.emit(`${varName}.dataset.route = '${node.route}'`)
+    }
+
     // Add event listeners
+    // Check if there are keyboard events and make element focusable
+    const hasKeyboardEvents = node.events.some(e => e.key || e.name === 'keydown' || e.name === 'keyup')
+    if (hasKeyboardEvents) {
+      this.emit(`${varName}.setAttribute('tabindex', '0')`)
+    }
     for (const event of node.events) {
       this.emitEventListener(varName, event)
     }
@@ -580,6 +610,27 @@ class DOMGenerator {
   private emitEventListener(varName: string, event: IREvent): void {
     const eventName = event.name
 
+    // Handle hover event specially - needs both mouseenter and mouseleave
+    if (eventName === 'mouseenter') {
+      const hasHighlight = event.actions.some(a => a.type === 'highlight')
+      if (hasHighlight) {
+        this.emit(`${varName}.addEventListener('mouseenter', (e) => {`)
+        this.indent++
+        for (const action of event.actions) {
+          this.emitAction(action, varName)
+        }
+        this.indent--
+        this.emit('})')
+        // Add mouseleave to clear highlight
+        this.emit(`${varName}.addEventListener('mouseleave', (e) => {`)
+        this.indent++
+        this.emit(`_runtime.unhighlight(${varName})`)
+        this.indent--
+        this.emit('})')
+        return
+      }
+    }
+
     // Handle click-outside event specially
     if (eventName === 'click-outside') {
       this.emit(`// Click outside handler`)
@@ -631,7 +682,7 @@ class DOMGenerator {
       'toggle', 'show', 'hide', 'select', 'deselect', 'highlight',
       'activate', 'deactivate', 'call', 'assign', 'page', 'open', 'close',
       'filter', 'validate', 'reset', 'focus', 'alert', 'clear-selection',
-      'deactivate-siblings', 'toggle-state', 'set-state', 'change'
+      'deactivate-siblings', 'toggle-state', 'set-state', 'change', 'navigate'
     ])
 
     switch (action.type) {
@@ -642,18 +693,34 @@ class DOMGenerator {
         this.emit(`_runtime.show(_elements['${target}'] || ${currentVar})`)
         break
       case 'hide':
-      case 'close':
-        // close is an alias for hide
         this.emit(`_runtime.hide(_elements['${target}'] || ${currentVar})`)
         break
+      case 'close':
+        // close sets state to "closed" for toggle elements, otherwise hides
+        this.emit(`_runtime.close(_elements['${target}'] || ${currentVar})`)
+        break
       case 'select':
-        this.emit(`_runtime.select(_elements['${target}'] || ${currentVar})`)
+        if (target === 'highlighted') {
+          this.emit(`_runtime.selectHighlighted(${currentVar})`)
+        } else {
+          this.emit(`_runtime.select(_elements['${target}'] || ${currentVar})`)
+        }
         break
       case 'deselect':
         this.emit(`_runtime.deselect(_elements['${target}'] || ${currentVar})`)
         break
       case 'highlight':
-        this.emit(`_runtime.highlight(_elements['${target}'] || ${currentVar})`)
+        if (target === 'next') {
+          this.emit(`_runtime.highlightNext(${currentVar})`)
+        } else if (target === 'prev') {
+          this.emit(`_runtime.highlightPrev(${currentVar})`)
+        } else if (target === 'first') {
+          this.emit(`_runtime.highlightFirst(${currentVar})`)
+        } else if (target === 'last') {
+          this.emit(`_runtime.highlightLast(${currentVar})`)
+        } else {
+          this.emit(`_runtime.highlight(_elements['${target}'] || ${currentVar})`)
+        }
         break
       case 'activate':
         this.emit(`_runtime.activate(_elements['${target}'] || ${currentVar})`)
@@ -675,6 +742,16 @@ class DOMGenerator {
         const fnName = action.target || ''
         const args = action.args?.map(a => `"${a}"`).join(', ') || ''
         this.emit(`if (typeof ${fnName} === 'function') ${fnName}(${args})`)
+        break
+      case 'navigate':
+        // Navigate to a target component or page
+        // Lowercase = page route (load file), Uppercase = component route
+        const isPageRoute = /^[a-z]/.test(target)
+        if (isPageRoute) {
+          this.emit(`_runtime.navigateToPage('${target}', ${currentVar})`)
+        } else {
+          this.emit(`_runtime.navigate('${target}', ${currentVar})`)
+        }
         break
       default:
         // Unknown action = treat as direct function call
@@ -949,11 +1026,50 @@ class DOMGenerator {
     this.emit('},')
     this.emit('')
 
+    this.emit('close(el) {')
+    this.indent++
+    this.emit('if (!el) return')
+    this.emit('// If element has toggle state (open/closed), set to closed')
+    this.emit('const initialState = el._initialState')
+    this.emit('if (initialState === "closed" || initialState === "open" || el.dataset.state === "open" || el.dataset.state === "closed") {')
+    this.indent++
+    this.emit('this.setState(el, "closed")')
+    this.indent--
+    this.emit('} else if (initialState === "expanded" || initialState === "collapsed" || el.dataset.state === "expanded" || el.dataset.state === "collapsed") {')
+    this.indent++
+    this.emit('this.setState(el, "collapsed")')
+    this.indent--
+    this.emit('} else {')
+    this.indent++
+    this.emit('// Fallback to hide')
+    this.emit('this.hide(el)')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
     this.emit('select(el) {')
     this.indent++
     this.emit('if (!el) return')
+    this.emit('// Clear previous selection from siblings')
+    this.emit('if (el.parentElement) {')
+    this.indent++
+    this.emit('Array.from(el.parentElement.children).forEach(sibling => {')
+    this.indent++
+    this.emit('if (sibling !== el && sibling.dataset.selected) {')
+    this.indent++
+    this.emit('this.deselect(sibling)')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('})')
+    this.indent--
+    this.emit('}')
     this.emit('el.dataset.selected = "true"')
     this.emit('this.applyState(el, "selected")')
+    this.emit('// Update selection binding if present')
+    this.emit('this.updateSelectionBinding(el)')
     this.indent--
     this.emit('},')
     this.emit('')
@@ -970,8 +1086,127 @@ class DOMGenerator {
     this.emit('highlight(el) {')
     this.indent++
     this.emit('if (!el) return')
+    this.emit('// Clear highlight from siblings first')
+    this.emit('if (el.parentElement) {')
+    this.indent++
+    this.emit('Array.from(el.parentElement.children).forEach(sibling => {')
+    this.indent++
+    this.emit('if (sibling !== el && sibling.dataset.highlighted) {')
+    this.indent++
+    this.emit('this.unhighlight(sibling)')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('})')
+    this.indent--
+    this.emit('}')
     this.emit('el.dataset.highlighted = "true"')
     this.emit('this.applyState(el, "highlighted")')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    this.emit('unhighlight(el) {')
+    this.indent++
+    this.emit('if (!el) return')
+    this.emit('delete el.dataset.highlighted')
+    this.emit('this.removeState(el, "highlighted")')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Add highlightNext - find and highlight next sibling item
+    this.emit('highlightNext(container) {')
+    this.indent++
+    this.emit('if (!container) return')
+    this.emit('// Find the menu/list container with items')
+    this.emit('const items = this.getHighlightableItems(container)')
+    this.emit('if (!items.length) return')
+    this.emit('const current = items.findIndex(el => el.dataset.highlighted === "true")')
+    this.emit('const next = current === -1 ? 0 : Math.min(current + 1, items.length - 1)')
+    this.emit('this.highlight(items[next])')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Add highlightPrev - find and highlight previous sibling item
+    this.emit('highlightPrev(container) {')
+    this.indent++
+    this.emit('if (!container) return')
+    this.emit('const items = this.getHighlightableItems(container)')
+    this.emit('if (!items.length) return')
+    this.emit('const current = items.findIndex(el => el.dataset.highlighted === "true")')
+    this.emit('const prev = current === -1 ? items.length - 1 : Math.max(current - 1, 0)')
+    this.emit('this.highlight(items[prev])')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Add highlightFirst
+    this.emit('highlightFirst(container) {')
+    this.indent++
+    this.emit('if (!container) return')
+    this.emit('const items = this.getHighlightableItems(container)')
+    this.emit('if (items.length) this.highlight(items[0])')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Add highlightLast
+    this.emit('highlightLast(container) {')
+    this.indent++
+    this.emit('if (!container) return')
+    this.emit('const items = this.getHighlightableItems(container)')
+    this.emit('if (items.length) this.highlight(items[items.length - 1])')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Helper to get highlightable items in a container
+    this.emit('getHighlightableItems(container) {')
+    this.indent++
+    this.emit('// Find all children that have _stateStyles.highlighted (proper highlight targets)')
+    this.emit('// Falls back to cursor: pointer only if no highlighted items found')
+    this.emit('const findItems = (el, requireHighlightState) => {')
+    this.indent++
+    this.emit('const items = []')
+    this.emit('for (const child of el.children) {')
+    this.indent++
+    this.emit('if (child._stateStyles?.highlighted) {')
+    this.indent++
+    this.emit('items.push(child)')
+    this.indent--
+    this.emit('} else if (!requireHighlightState && child.style.cursor === "pointer") {')
+    this.indent++
+    this.emit('items.push(child)')
+    this.indent--
+    this.emit('} else {')
+    this.indent++
+    this.emit('// Recurse into child containers')
+    this.emit('items.push(...findItems(child, requireHighlightState))')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('}')
+    this.emit('return items')
+    this.indent--
+    this.emit('}')
+    this.emit('// First try to find items with _stateStyles.highlighted')
+    this.emit('let items = findItems(container, true)')
+    this.emit('// Fall back to cursor: pointer if no highlighted items found')
+    this.emit('if (!items.length) items = findItems(container, false)')
+    this.emit('return items')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // Add selectHighlighted
+    this.emit('selectHighlighted(container) {')
+    this.indent++
+    this.emit('if (!container) return')
+    this.emit('const items = this.getHighlightableItems(container)')
+    this.emit('const highlighted = items.find(el => el.dataset.highlighted === "true")')
+    this.emit('if (highlighted) this.select(highlighted)')
     this.indent--
     this.emit('},')
     this.emit('')
@@ -1104,6 +1339,223 @@ class DOMGenerator {
     this.emit('},')
     this.emit('')
 
+    // navigate - navigate to a target component (for Nav routing)
+    this.emit('navigate(targetName, clickedElement) {')
+    this.indent++
+    this.emit('if (!targetName) return')
+    this.emit('')
+    this.emit('// Find the target component by name')
+    this.emit('const target = document.querySelector(`[data-component="${targetName}"]`)')
+    this.emit('if (!target) return')
+    this.emit('')
+    this.emit('// Show target, hide siblings')
+    this.emit('if (target.parentElement) {')
+    this.indent++
+    this.emit('Array.from(target.parentElement.children).forEach(sibling => {')
+    this.indent++
+    this.emit('if (sibling.dataset && sibling.dataset.component) {')
+    this.indent++
+    this.emit('sibling.style.display = sibling === target ? "" : "none"')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('})')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('// Update selected state in Nav container')
+    this.emit('this.updateNavSelection(clickedElement)')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // updateNavSelection - sync selected state for all nav items
+    this.emit('updateNavSelection(clickedElement) {')
+    this.indent++
+    this.emit('if (!clickedElement) return')
+    this.emit('')
+    this.emit('// Find the Nav container')
+    this.emit('const nav = clickedElement.closest("nav")')
+    this.emit('if (!nav) return')
+    this.emit('')
+    this.emit('// Find all elements with route in this nav')
+    this.emit('const navItems = nav.querySelectorAll("[data-route]")')
+    this.emit('navItems.forEach(item => {')
+    this.indent++
+    this.emit('if (item === clickedElement) {')
+    this.indent++
+    this.emit('item.dataset.selected = "true"')
+    this.emit('this.applyState(item, "selected")')
+    this.indent--
+    this.emit('} else {')
+    this.indent++
+    this.emit('delete item.dataset.selected')
+    this.emit('this.removeState(item, "selected")')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('})')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // navigateToPage - load and render a page from file
+    this.emit('// Navigate to page (load .mirror file)')
+    this.emit('navigateToPage(pageName, clickedElement) {')
+    this.indent++
+    this.emit('if (!pageName) return')
+    this.emit('')
+    this.emit('// Construct filename (support paths like admin/users)')
+    this.emit('const filename = pageName.endsWith(".mirror") ? pageName : pageName + ".mirror"')
+    this.emit('')
+    this.emit('// Get readFile from options or window')
+    this.emit('const readFile = this._readFile || window._mirrorReadFile')
+    this.emit('if (!readFile) {')
+    this.indent++
+    this.emit('console.warn("No readFile callback available for page navigation")')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('// Load file content')
+    this.emit('const content = readFile(filename)')
+    this.emit('if (!content) {')
+    this.indent++
+    this.emit('console.warn(`Page not found: ${filename}`)')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('// Compile the page (Mirror must be available globally)')
+    this.emit('if (typeof Mirror === "undefined" || !Mirror.compile) {')
+    this.indent++
+    this.emit('console.warn("Mirror compiler not available for dynamic page loading")')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('try {')
+    this.indent++
+    this.emit('const pageCode = Mirror.compile(content, { readFile })')
+    this.emit('')
+    this.emit('// Find page container')
+    this.emit('const container = this.getPageContainer()')
+    this.emit('if (!container) {')
+    this.indent++
+    this.emit('console.warn("No page container found for rendering")')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('// Clear and render new page')
+    this.emit('container.innerHTML = ""')
+    this.emit('const execCode = pageCode.replace("export function createUI", "function createUI")')
+    this.emit('const fn = new Function(execCode + "\\nreturn createUI();")')
+    this.emit('const ui = fn()')
+    this.emit('if (ui && ui.root) {')
+    this.indent++
+    this.emit('// Append children of root, not root itself')
+    this.emit('while (ui.root.firstChild) {')
+    this.indent++
+    this.emit('container.appendChild(ui.root.firstChild)')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('} catch (err) {')
+    this.indent++
+    this.emit('console.error(`Failed to load page ${filename}:`, err)')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('// Update selected state')
+    this.emit('this.updateNavSelection(clickedElement)')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // getPageContainer - find the container for page content
+    this.emit('// Get container for page content')
+    this.emit('getPageContainer() {')
+    this.indent++
+    this.emit('// First try named page container')
+    this.emit('let container = document.querySelector("[data-page-container]")')
+    this.emit('if (container) return container')
+    this.emit('')
+    this.emit('// Then try named instance "PageContent" or "Content"')
+    this.emit('container = document.querySelector("[data-instance-name=\\"PageContent\\"]")')
+    this.emit('if (container) return container')
+    this.emit('container = document.querySelector("[data-instance-name=\\"Content\\"]")')
+    this.emit('if (container) return container')
+    this.emit('')
+    this.emit('// Fallback: first sibling of nav that is not nav')
+    this.emit('const nav = document.querySelector("nav")')
+    this.emit('if (nav && nav.parentElement) {')
+    this.indent++
+    this.emit('for (const sibling of nav.parentElement.children) {')
+    this.indent++
+    this.emit('if (sibling !== nav && sibling.tagName !== "NAV") {')
+    this.indent++
+    this.emit('return sibling')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('}')
+    this.emit('')
+    this.emit('return null')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // updateSelectionBinding - update the selection variable when an item is selected
+    this.emit('updateSelectionBinding(el) {')
+    this.indent++
+    this.emit('if (!el) return')
+    this.emit('// Find parent with _selectionBinding')
+    this.emit('let parent = el.parentElement')
+    this.emit('while (parent) {')
+    this.indent++
+    this.emit('if (parent._selectionBinding) {')
+    this.indent++
+    this.emit('// Get the text content of the selected element')
+    this.emit('const value = el.textContent?.trim() || ""')
+    this.emit('// Store in global state')
+    this.emit('const varName = parent._selectionBinding')
+    this.emit('window._mirrorState = window._mirrorState || {}')
+    this.emit('window._mirrorState[varName] = value')
+    this.emit('// Update all bound elements')
+    this.emit('this.updateBoundElements(varName, value)')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('parent = parent.parentElement')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // updateBoundElements - update all elements bound to a variable
+    this.emit('updateBoundElements(varName, value) {')
+    this.indent++
+    this.emit('// Find all elements with _textBinding')
+    this.emit('document.querySelectorAll("[data-mirror-id]").forEach(el => {')
+    this.indent++
+    this.emit('if (el._textBinding === varName) {')
+    this.indent++
+    this.emit('// Simple update - just set the text')
+    this.emit('el.textContent = value || el._textPlaceholder || ""')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('})')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
     // destroy - cleanup handlers to prevent memory leaks
     this.emit('destroy(el) {')
     this.indent++
@@ -1119,6 +1571,52 @@ class DOMGenerator {
     this.emit('if (el.children) {')
     this.indent++
     this.emit('Array.from(el.children).forEach(child => this.destroy(child))')
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('},')
+    this.emit('')
+
+    // loadIcon - fetch Lucide SVG and inject into element
+    this.emit('// Load Lucide icon from CDN')
+    this.emit('async loadIcon(el, iconName) {')
+    this.indent++
+    this.emit('if (!el || !iconName) return')
+    this.emit('')
+    this.emit('// Get icon properties from data attributes')
+    this.emit("const size = el.dataset.iconSize || '24'")
+    this.emit('const color = el.dataset.iconColor || "currentColor"')
+    this.emit("const strokeWidth = el.dataset.iconWeight || '2'")
+    this.emit('')
+    this.emit('try {')
+    this.indent++
+    this.emit('const url = `https://unpkg.com/lucide-static/icons/${iconName}.svg`')
+    this.emit('const res = await fetch(url)')
+    this.emit('if (!res.ok) {')
+    this.indent++
+    this.emit('console.warn(`Icon "${iconName}" not found`)')
+    this.emit('el.textContent = iconName')
+    this.emit('return')
+    this.indent--
+    this.emit('}')
+    this.emit('const svgText = await res.text()')
+    this.emit('el.innerHTML = svgText')
+    this.emit('')
+    this.emit("const svg = el.querySelector('svg')")
+    this.emit('if (svg) {')
+    this.indent++
+    this.emit("svg.style.width = size + 'px'")
+    this.emit("svg.style.height = size + 'px'")
+    this.emit('svg.style.color = color')
+    this.emit("svg.setAttribute('stroke-width', strokeWidth)")
+    this.emit("svg.style.display = 'block'")
+    this.indent--
+    this.emit('}')
+    this.indent--
+    this.emit('} catch (err) {')
+    this.indent++
+    this.emit('console.warn(`Failed to load icon "${iconName}":`, err)')
+    this.emit('el.textContent = iconName')
     this.indent--
     this.emit('}')
     this.indent--

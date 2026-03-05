@@ -40,7 +40,7 @@ Dropdown
 
   it('generates close action', () => {
     const output = compile(input)
-    expect(output).toContain('_runtime.hide')
+    expect(output).toContain('_runtime.close')
   })
 })
 
@@ -190,7 +190,7 @@ Dropdown
 
   it('generates corresponding actions', () => {
     const output = compile(input)
-    expect(output).toContain('_runtime.hide') // close
+    expect(output).toContain('_runtime.close') // close sets state to "closed"
     expect(output).toContain('_runtime.select')
     expect(output).toContain('_runtime.highlight')
   })
@@ -259,7 +259,7 @@ Card
     const output = compile(input)
     // The action should be inside the key check block
     const keyCheckIndex = output.indexOf("e.key === 'Escape'")
-    const actionIndex = output.indexOf('_runtime.hide')
+    const actionIndex = output.indexOf('_runtime.close')
     expect(keyCheckIndex).toBeLessThan(actionIndex)
   })
 

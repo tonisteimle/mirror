@@ -65,13 +65,26 @@ class IRTransformer {
 
   constructor(ast: AST) {
     this.ast = ast
-    // Build component lookup map
+    // Build component lookup map (including nested component definitions)
     for (const comp of ast.components) {
-      this.componentMap.set(comp.name, comp)
+      this.registerComponent(comp)
     }
     // Build token lookup set
     for (const token of ast.tokens) {
       this.tokenSet.add(token.name)
+    }
+  }
+
+  /**
+   * Recursively register a component and all its nested component definitions
+   */
+  private registerComponent(comp: ComponentDefinition): void {
+    this.componentMap.set(comp.name, comp)
+    // Recursively register nested component definitions
+    for (const child of comp.children) {
+      if ((child as any).type === 'Component') {
+        this.registerComponent(child as unknown as ComponentDefinition)
+      }
     }
   }
 
@@ -144,10 +157,23 @@ class IRTransformer {
     const visibleWhen = (instance as any).visibleWhen || (resolvedComponent as any)?.visibleWhen
     const initialState = (instance as any).initialState || (resolvedComponent as any)?.initialState
     const selection = (instance as any).selection || (resolvedComponent as any)?.selection
+    const route = (instance as any).route || (resolvedComponent as any)?.route
+
+    // Generate node ID first so we can reference it
+    const nodeId = this.generateId()
+
+    // If this node has a route, add a click event with navigate action
+    if (route) {
+      events.push({
+        name: 'click',
+        actions: [{ type: 'navigate', target: route }]
+      })
+    }
 
     return {
-      id: this.generateId(),
+      id: nodeId,
       tag,
+      primitive,
       name: instance.component,
       instanceName: instance.name || undefined,
       properties: this.extractHTMLProperties(properties),
@@ -157,6 +183,7 @@ class IRTransformer {
       visibleWhen,
       initialState,
       selection,
+      route,
     }
   }
 
@@ -219,12 +246,17 @@ class IRTransformer {
     const nonSlotChildren: (Instance | Text)[] = []
 
     for (const child of instanceChildren) {
-      if (child.type === 'Instance') {
+      const childType = (child as any).type
+      if (childType === 'Instance') {
         const instance = child as Instance
         if (!slotFillers.has(instance.component)) {
           slotFillers.set(instance.component, [])
         }
         slotFillers.get(instance.component)!.push(instance)
+      } else if (childType === 'Component') {
+        // Skip Component children - they are template definitions, not actual content
+        // They will be processed when we iterate componentChildren
+        continue
       } else {
         // Text or other non-slot children
         nonSlotChildren.push(child)
@@ -233,25 +265,77 @@ class IRTransformer {
 
     const result: IRNode[] = []
 
+    // Identify which Component children are template definitions vs fillable slots
+    // If a Component has sibling Instances using it, it's a template (not a slot)
+    const templateNames = new Set<string>()
+    for (const child of componentChildren) {
+      const childType = (child as any).type
+      if (childType === 'Instance') {
+        const inst = child as Instance
+        templateNames.add(inst.component)
+      }
+    }
+
     // Process component's slot children
     if (componentChildren.length > 0) {
       for (const slot of componentChildren) {
-        if (slot.type === 'Instance') {
-          const slotInstance = slot as Instance
-          const slotName = slotInstance.component
+        // Handle both Instance slots (Title:) and Component slots (Title as frame:)
+        const slotType = (slot as any).type
+        if (slotType === 'Instance' || slotType === 'Component') {
+          const slotDef = slot as any
+          const slotName = slotDef.component || slotDef.name
+
+          // Skip Component definitions that are templates (have sibling instances using them)
+          if (slotType === 'Component' && templateNames.has(slotName)) {
+            // This is a template definition, not a fillable slot - skip it
+            // The instances using this template will be processed below
+            continue
+          }
+
+          // Get slot's visibility condition and initial state
+          const slotVisibleWhen = slotDef.visibleWhen
+          const slotInitialState = slotDef.initialState
 
           // Check if instance provided content for this slot
           const fillers = slotFillers.get(slotName)
           if (fillers && fillers.length > 0) {
             // Use instance's content instead of slot default
+            // But inherit visibility conditions from slot definition
             for (const filler of fillers) {
-              result.push(this.transformChild(filler))
+              const node = this.transformChild(filler)
+              // Transfer slot's visibleWhen to filler if slot has one
+              if (slotVisibleWhen && !node.visibleWhen) {
+                node.visibleWhen = slotVisibleWhen
+              }
+              if (slotInitialState && !node.initialState) {
+                node.initialState = slotInitialState
+              }
+              result.push(node)
             }
             // Mark as used
             slotFillers.delete(slotName)
           } else {
             // Use slot's default content (the slot definition itself)
-            result.push(this.transformInstance(slotInstance))
+            // For Component type, create an instance-like object
+            if (slotType === 'Component') {
+              const compSlot = slot as unknown as ComponentDefinition
+              const pseudoInstance: Instance = {
+                type: 'Instance',
+                component: compSlot.name,
+                name: null,
+                properties: compSlot.properties,
+                // Don't pass children here - they come from the component definition
+                // via resolveChildren's componentChildren parameter
+                children: [],
+                line: compSlot.line,
+                column: compSlot.column,
+              }
+              ;(pseudoInstance as any).visibleWhen = slotVisibleWhen
+              ;(pseudoInstance as any).initialState = slotInitialState
+              result.push(this.transformInstance(pseudoInstance))
+            } else {
+              result.push(this.transformInstance(slot as Instance))
+            }
           }
         } else if (slot.type === 'Slot') {
           // Named slot placeholder - check for filler
@@ -347,15 +431,37 @@ class IRTransformer {
     const primitive = resolved?.primitive || componentName.toLowerCase()
 
     const mapping: Record<string, string> = {
+      // Layout primitives
       frame: 'div',
+      box: 'div',
       text: 'span',
+
+      // Form elements
       button: 'button',
       input: 'input',
       textarea: 'textarea',
+
+      // Media
       image: 'img',
       link: 'a',
       icon: 'span',
-      box: 'div',
+
+      // Semantic structure
+      header: 'header',
+      nav: 'nav',
+      main: 'main',
+      section: 'section',
+      article: 'article',
+      aside: 'aside',
+      footer: 'footer',
+
+      // Headings
+      h1: 'h1',
+      h2: 'h2',
+      h3: 'h3',
+      h4: 'h4',
+      h5: 'h5',
+      h6: 'h6',
     }
 
     return mapping[primitive] || 'div'
@@ -401,6 +507,17 @@ class IRTransformer {
         continue
       }
 
+      // align property with values: align top left, align center
+      if (name === 'align' && !isBoolean) {
+        for (const val of prop.values) {
+          const alignValue = String(val).toLowerCase()
+          if (ALIGNMENT_PROPERTIES.has(alignValue)) {
+            this.applyAlignmentToContext(alignValue, layoutContext)
+          }
+        }
+        continue
+      }
+
       // Wrap
       if (name === 'wrap' && isBoolean) {
         layoutContext.flexWrap = 'wrap'
@@ -433,6 +550,7 @@ class IRTransformer {
       // Skip layout properties (already handled)
       if (DIRECTION_PROPERTIES.has(name) && isBoolean) continue
       if (ALIGNMENT_PROPERTIES.has(name) && isBoolean) continue
+      if (name === 'align' && !isBoolean) continue  // align top left → flex alignment
       if (name === 'wrap' && isBoolean) continue
       if ((name === 'gap' || name === 'g') && !isBoolean) continue
       if (name === 'grid') continue
@@ -838,7 +956,7 @@ class IRTransformer {
       weight: 'font-weight',
       line: 'line-height',
       font: 'font-family',
-      align: 'text-align',
+      'text-align': 'text-align',
 
       // Visual
       opacity: 'opacity',
@@ -1147,6 +1265,22 @@ class IRTransformer {
       }
       if (prop.name === 'hidden') {
         htmlProps.push({ name: 'hidden', value: true })
+      }
+      // Icon properties - pass through as data attributes for runtime handling
+      if (prop.name === 'icon-size' || prop.name === 'is') {
+        htmlProps.push({ name: 'data-icon-size', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'icon-color' || prop.name === 'ic') {
+        htmlProps.push({ name: 'data-icon-color', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'icon-weight' || prop.name === 'iw') {
+        htmlProps.push({ name: 'data-icon-weight', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'fill') {
+        htmlProps.push({ name: 'data-icon-fill', value: true })
+      }
+      if (prop.name === 'material') {
+        htmlProps.push({ name: 'data-icon-material', value: true })
       }
     }
 
