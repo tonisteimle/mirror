@@ -332,10 +332,25 @@ export class PreviewInteraction {
     this.currentSelectedElement = null
     this.currentHoverElement = null
 
-    // Reapply
+    // Reapply selection visual and update breadcrumb
     if (selectedId) {
       this.updateSelectionVisual(selectedId, null)
+      // Update breadcrumb based on new DOM
+      const element = this.findElementByNodeId(selectedId)
+      if (element) {
+        const chain = this.getAncestorChain(element).map(item => ({
+          nodeId: item.id,
+          name: item.name,
+        }))
+        this.selectionManager.setBreadcrumb(chain)
+      } else {
+        // Element no longer exists in DOM, clear breadcrumb
+        this.selectionManager.setBreadcrumb([])
+      }
+    } else {
+      this.selectionManager.setBreadcrumb([])
     }
+
     if (hoveredId && hoveredId !== selectedId) {
       this.updateHoverVisual(hoveredId, null)
     }

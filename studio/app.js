@@ -3501,6 +3501,16 @@ function compile(code) {
       status.textContent = 'Ready'
       status.className = 'status'
     }
+    // Clear selection and update studio state for empty code
+    if (studioSelectionManager) {
+      studioSelectionManager.clearSelection()
+      studioSelectionManager.setBreadcrumb([])
+    }
+    // Clear component palette user components
+    const userComponentsList = document.querySelector('.user-components-list')
+    if (userComponentsList) {
+      userComponentsList.innerHTML = ''
+    }
     return
   }
 
@@ -4094,6 +4104,7 @@ function updateStudio(ast, sourceMap, source) {
     if (!selectionStillValid) {
       console.log('Studio: Selection invalidated after compile, clearing:', currentSelection)
       studioSelectionManager.clearSelection()
+      studioSelectionManager.setBreadcrumb([])
     }
   }
 
