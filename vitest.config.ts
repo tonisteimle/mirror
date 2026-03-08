@@ -6,9 +6,10 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     exclude: ['src/__tests__/playwright/**'],
     testTimeout: 5000,
-    // Use jsdom for studio tests that need DOM
+    // Use jsdom for tests that need DOM
     environmentMatchGlobs: [
       ['src/__tests__/studio/**', 'jsdom'],
+      ['src/runtime/__tests__/dom-runtime.test.ts', 'jsdom'],
     ],
     coverage: {
       provider: 'v8',
