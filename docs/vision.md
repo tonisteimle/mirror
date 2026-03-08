@@ -72,18 +72,18 @@ const ui = mirror { ... }          // UI-Literal (Mirror)
 
 ### Komponenten
 
-**Parser**
+**Parser** ✅ Implementiert
 - Liest .mirror Syntax
 - Validiert Struktur
-- Existiert bereits (v1)
+- Vollständige DSL-Unterstützung
 
-**Intermediate Representation (IR)**
+**Intermediate Representation (IR)** ✅ Implementiert
 - Framework-unabhängiger AST
 - Saubere Datenstruktur
 - Grundlage für alle Backends
-- **NEU in v2**
+- Source-Maps für bidirektionales Editing
 
-**Backends**
+**Backends** ✅ Implementiert
 - DOM (Flaggschiff): Pure JavaScript, zero dependencies
 - React: Für Adoption in bestehenden Projekten
 - Static HTML: Für SSG/SSR
@@ -338,29 +338,32 @@ ui.render("#root")
 
 ## 6. Roadmap
 
-### Phase 1: Foundation
-- [ ] IR-Spezifikation definieren
-- [ ] Neuer Parser → IR
-- [ ] Test-Suite aufbauen
-- [ ] DOM-Backend (minimal)
+### Phase 1: Foundation ✅ Abgeschlossen
+- [x] IR-Spezifikation definieren
+- [x] Neuer Parser → IR
+- [x] Test-Suite aufbauen (1000+ Tests)
+- [x] DOM-Backend (vollständig)
 
-### Phase 2: Core Features
-- [ ] Reaktivität (Proxy-basiert)
-- [ ] Event-Konvention implementieren
-- [ ] .mirror Import in JS
-- [ ] render() API
+### Phase 2: Core Features ✅ Abgeschlossen
+- [x] Reaktivität (State-basiert)
+- [x] Event-System implementiert
+- [x] compile() API
+- [x] Keyboard-Navigation
 
-### Phase 3: Vollständigkeit
-- [ ] Alle Mirror-Features portieren
-- [ ] States, Animationen
-- [ ] Keyboard-Events
-- [ ] Listen & Iteration
+### Phase 3: Vollständigkeit ✅ Abgeschlossen
+- [x] Alle Mirror-Features portiert
+- [x] States, Animationen
+- [x] Keyboard-Events
+- [x] Listen & Iteration
+- [x] Conditionals
 
-### Phase 4: Ecosystem
+### Phase 4: Ecosystem 🔄 In Arbeit
+- [x] React-Backend
+- [x] Static HTML Backend
+- [x] Studio (Visual Editor)
 - [ ] VS Code Extension
-- [ ] React-Backend (für Migration)
-- [ ] Dokumentation
-- [ ] Beispiel-Apps
+- [ ] Dokumentation vervollständigen
+- [ ] Beispiel-Apps erweitern
 
 ---
 
@@ -389,4 +392,4 @@ Mirror v2 ist kein Neustart. Es ist die Befreiung der Syntax aus dem IDE-Gefäng
 
 ---
 
-*Draft v0.1 - März 2026*
+*Mirror v2 Vision - Stand März 2026*
