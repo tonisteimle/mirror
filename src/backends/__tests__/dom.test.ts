@@ -695,7 +695,7 @@ describe('DOM Backend: Runtime Helpers', () => {
 
     expect(js).toContain('updateVisibility(el)')
     expect(js).toContain('_visibleWhen')
-    expect(js).toContain('visible ? "" : "none"')
+    expect(js).toContain("visible ? '' : 'none'")
   })
 
   it('toggle method handles open/closed states', () => {
@@ -703,17 +703,17 @@ describe('DOM Backend: Runtime Helpers', () => {
     const js = generateDOM(ast)
 
     expect(js).toContain('toggle(el)')
-    expect(js).toContain('currentState === "closed"')
-    expect(js).toContain('currentState === "open"')
-    expect(js).toContain('newState = currentState === "closed" ? "open" : "closed"')
+    expect(js).toContain("currentState === 'closed'")
+    expect(js).toContain("currentState === 'open'")
+    expect(js).toContain("newState = currentState === 'closed' ? 'open' : 'closed'")
   })
 
   it('toggle method handles collapsed/expanded states', () => {
     const ast = parse(`Card as frame:`)
     const js = generateDOM(ast)
 
-    expect(js).toContain('currentState === "collapsed"')
-    expect(js).toContain('currentState === "expanded"')
+    expect(js).toContain("currentState === 'collapsed'")
+    expect(js).toContain("currentState === 'expanded'")
   })
 
   it('setState calls updateVisibility', () => {
