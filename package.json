@@ -1,16 +1,54 @@
 {
-  "name": "mirror",
-  "version": "2.0.0",
-  "description": "Mirror DSL - A design-focused UI language",
-  "private": true,
+  "name": "mirror-lang",
+  "version": "2.0.0-alpha.1",
+  "description": "Mirror DSL compiler - UI as code",
   "type": "module",
-  "workspaces": [
-    "packages/*"
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=mirror-lang",
-    "test": "npm run test --workspace=mirror-lang",
-    "build": "npm run build --workspace=mirror-lang"
+    "build": "tsup src/index.ts --format esm --dts && tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "dev:studio": "tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
+    "studio": "npx serve . -p 5173",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.0",
+    "@codemirror/commands": "^6.10.2",
+    "@codemirror/language": "^6.12.1",
+    "@codemirror/lint": "^6.9.3",
+    "@codemirror/state": "^6.5.4",
+    "@codemirror/view": "^6.39.12",
+    "@lezer/highlight": "^1.2.3"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.29.0",
+    "@babel/traverse": "^7.29.0",
+    "@babel/types": "^7.29.0",
+    "@playwright/test": "^1.58.2",
+    "esbuild": "^0.27.3",
+    "jsdom": "^28.1.0",
+    "serve": "^14.2.6",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "mirror",
+    "dsl",
+    "ui",
+    "compiler",
+    "parser"
+  ],
   "license": "MIT"
 }

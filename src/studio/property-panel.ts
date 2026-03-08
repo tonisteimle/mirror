@@ -1,0 +1,4115 @@
+/**
+ * PropertyPanel - Dynamic property panel UI
+ *
+ * Renders properties for the selected element and handles user input
+ * to update the source code.
+ */
+
+import type { SelectionManager, BreadcrumbItem } from './selection-manager'
+import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from './property-extractor'
+import type { CodeModifier, ModificationResult, FilesAccess } from './code-modifier'
+import { PROPERTY_ICON_PATHS } from './icons'
+
+/**
+ * Token info extracted from source
+ */
+interface SpacingToken {
+  name: string    // e.g., "sm", "md", "lg"
+  fullName: string // e.g., "sm.pad", "md.rad"
+  value: string   // e.g., "4", "8"
+}
+
+// Backwards compatibility alias
+type PaddingToken = SpacingToken
+
+/**
+ * Callback when code changes
+ */
+export type OnCodeChangeCallback = (result: ModificationResult) => void
+
+/**
+ * Callback to get all project source in processing order (data -> tokens -> components -> layouts)
+ */
+export type GetAllSourceCallback = () => string
+
+/**
+ * PropertyPanel options
+ */
+export interface PropertyPanelOptions {
+  /** Debounce time for input changes (ms) */
+  debounceTime?: number
+  /** Show source indicators (instance/component/inherited) */
+  showSourceIndicators?: boolean
+  /** Callback to get all project source for token extraction */
+  getAllSource?: GetAllSourceCallback
+  /** Access to multiple files for cross-file operations */
+  filesAccess?: FilesAccess
+}
+
+/**
+ * PropertyPanel class
+ */
+export class PropertyPanel {
+  private container: HTMLElement
+  private selectionManager: SelectionManager
+  private propertyExtractor: PropertyExtractor
+  private codeModifier: CodeModifier
+  private onCodeChange: OnCodeChangeCallback
+
+  private options: Required<Omit<PropertyPanelOptions, 'getAllSource' | 'filesAccess'>> & Pick<PropertyPanelOptions, 'getAllSource' | 'filesAccess'>
+  private unsubscribeSelection: (() => void) | null = null
+  private unsubscribeBreadcrumb: (() => void) | null = null
+  private currentElement: ExtractedElement | null = null
+  private currentBreadcrumb: BreadcrumbItem[] = []
+  private debounceTimers: Map<string, number> = new Map()
+
+  // Token caching for performance
+  private cachedSpacingTokens: Map<string, SpacingToken[]> = new Map()
+  private cachedColorTokens: Array<{ name: string; value: string }> | null = null
+  private cachedSourceHash: string = ''
+
+  // AbortController for autocomplete event cleanup
+  private autocompleteAbortController: AbortController | null = null
+
+  constructor(
+    container: HTMLElement,
+    selectionManager: SelectionManager,
+    propertyExtractor: PropertyExtractor,
+    codeModifier: CodeModifier,
+    onCodeChange: OnCodeChangeCallback,
+    options: PropertyPanelOptions = {}
+  ) {
+    this.container = container
+    this.selectionManager = selectionManager
+    this.propertyExtractor = propertyExtractor
+    this.codeModifier = codeModifier
+    this.onCodeChange = onCodeChange
+
+    this.options = {
+      debounceTime: options.debounceTime ?? 300,
+      showSourceIndicators: options.showSourceIndicators ?? true,
+      getAllSource: options.getAllSource,
+      filesAccess: options.filesAccess,
+    }
+
+    this.attach()
+  }
+
+  /**
+   * Attach to selection manager
+   */
+  attach(): void {
+    this.unsubscribeSelection = this.selectionManager.subscribe((nodeId) => {
+      this.updatePanel(nodeId)
+    })
+
+    this.unsubscribeBreadcrumb = this.selectionManager.subscribeBreadcrumb((chain) => {
+      this.currentBreadcrumb = chain
+      // Re-render if we have a current element
+      if (this.currentElement) {
+        this.render(this.currentElement)
+      }
+    })
+
+    // Initial render
+    const currentSelection = this.selectionManager.getSelection()
+    if (currentSelection) {
+      this.updatePanel(currentSelection)
+    } else {
+      this.renderEmpty()
+    }
+  }
+
+  /**
+   * Detach from selection manager
+   */
+  detach(): void {
+    if (this.unsubscribeSelection) {
+      this.unsubscribeSelection()
+      this.unsubscribeSelection = null
+    }
+    if (this.unsubscribeBreadcrumb) {
+      this.unsubscribeBreadcrumb()
+      this.unsubscribeBreadcrumb = null
+    }
+    this.clearDebounceTimers()
+  }
+
+  /**
+   * Update panel for a node
+   */
+  private updatePanel(nodeId: string | null): void {
+    // Clear debounce timers when selection changes to prevent stale updates
+    const selectionChanged = nodeId !== this.currentElement?.nodeId
+    if (selectionChanged) {
+      this.clearDebounceTimers()
+    }
+
+    if (!nodeId) {
+      this.renderEmpty()
+      this.currentElement = null
+      return
+    }
+
+    const element = this.propertyExtractor.getProperties(nodeId)
+    if (!element) {
+      // Element was selected but not found in AST (may have been deleted)
+      this.renderNotFound(nodeId)
+      this.currentElement = null
+      return
+    }
+
+    this.currentElement = element
+    this.render(element)
+  }
+
+  /**
+   * Render empty state (no selection)
+   */
+  private renderEmpty(): void {
+    this.container.innerHTML = `
+      <div class="pp-header">
+        <span class="pp-title">Properties</span>
+      </div>
+      <div class="pp-content">
+        <div class="pp-empty">
+          <p>Select an element to view properties</p>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render not found state (selection exists but element not in AST)
+   */
+  private renderNotFound(nodeId: string): void {
+    this.container.innerHTML = `
+      <div class="pp-header">
+        <span class="pp-title">Properties</span>
+      </div>
+      <div class="pp-content">
+        <div class="pp-empty pp-not-found">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>Element not found</p>
+          <p class="pp-hint">The selected element may have been removed from the code.</p>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render the property panel
+   */
+  private render(element: ExtractedElement): void {
+    const title = element.instanceName || element.componentName
+    const badge = element.isDefinition ? 'Definition' : ''
+
+    // Show "Define as Component" button only for:
+    // 1. Non-definitions (instances)
+    // 2. Elements with inline properties
+    // 3. When filesAccess is available
+    const hasInlineProperties = element.allProperties.some(p => p.source === 'instance')
+    const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess
+
+    this.container.innerHTML = `
+      ${this.renderBreadcrumb()}
+      <div class="pp-header">
+        <span class="pp-title">${this.escapeHtml(title)}</span>
+        ${badge ? `<span class="pp-badge">${badge}</span>` : ''}
+        <div class="pp-header-actions">
+          ${showDefineBtn ? `
+            <button class="pp-define-btn" title="Als Komponente definieren">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+            </button>
+          ` : ''}
+          <button class="pp-close" title="Clear selection">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      ${element.isTemplateInstance ? `
+        <div class="pp-template-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>Template instance - changes apply to all items</span>
+        </div>
+      ` : ''}
+      <div class="pp-content">
+        ${this.renderCategories(element.categories)}
+      </div>
+    `
+
+    // Attach event listeners
+    this.attachEventListeners()
+  }
+
+  /**
+   * Render breadcrumb navigation
+   */
+  private renderBreadcrumb(): string {
+    if (this.currentBreadcrumb.length === 0) {
+      return ''
+    }
+
+    const crumbs = this.currentBreadcrumb.map((item, index) => {
+      const isLast = index === this.currentBreadcrumb.length - 1
+      return `
+        <span class="pp-crumb${isLast ? ' active' : ''}" data-node-id="${this.escapeHtml(item.nodeId)}">${this.escapeHtml(item.name)}</span>
+        ${!isLast ? '<span class="pp-crumb-sep">›</span>' : ''}
+      `
+    }).join('')
+
+    return `<div class="pp-breadcrumb">${crumbs}</div>`
+  }
+
+  /**
+   * Render property categories
+   */
+  private renderCategories(categories: PropertyCategory[]): string {
+    if (categories.length === 0) {
+      return `<div class="pp-empty"><p>No properties</p></div>`
+    }
+
+    // Find special categories for custom rendering
+    const layoutCat = categories.find(c => c.name === 'layout')
+    const alignmentCat = categories.find(c => c.name === 'alignment')
+    const sizingCat = categories.find(c => c.name === 'sizing')
+    const spacingCat = categories.find(c => c.name === 'spacing')
+    const borderCat = categories.find(c => c.name === 'border')
+    const typographyCat = categories.find(c => c.name === 'typography')
+
+    const specialCats = ['layout', 'alignment', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover']
+    const otherCats = categories.filter(c => !specialCats.includes(c.name))
+
+    let result = ''
+
+    // Render layout section (includes alignment)
+    if (layoutCat) {
+      result += this.renderLayoutToggleGroup(layoutCat, alignmentCat)
+    }
+
+    // Render sizing section
+    if (sizingCat) {
+      result += this.renderSizingSection(sizingCat)
+    }
+
+    // Render spacing section
+    if (spacingCat) {
+      result += this.renderSpacingSection(spacingCat)
+    }
+
+    // Render border section
+    if (borderCat) {
+      result += this.renderBorderSection(borderCat)
+    }
+
+    // Render color section
+    result += this.renderColorSection()
+
+    // Render typography section
+    if (typographyCat) {
+      result += this.renderTypographySection(typographyCat)
+    }
+
+    return result
+  }
+
+  /**
+   * Render a single category
+   */
+  private renderCategory(category: PropertyCategory): string {
+    // Special handling for alignment - render as 3x3 grid
+    if (category.name === 'alignment') {
+      return this.renderAlignmentGrid(category)
+    }
+
+    // Note: layout and sizing are handled together in renderCategories
+
+    // Separate boolean toggles from other properties
+    const booleans = category.properties.filter(p => p.type === 'boolean')
+    const others = category.properties.filter(p => p.type !== 'boolean')
+
+    // Group booleans into rows of max 4
+    const booleanRows: ExtractedProperty[][] = []
+    for (let i = 0; i < booleans.length; i += 4) {
+      booleanRows.push(booleans.slice(i, i + 4))
+    }
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label">${this.escapeHtml(category.label)}</div>
+        ${booleanRows.map(row => this.renderToggleRow(row)).join('')}
+        ${others.map(prop => this.renderProperty(prop)).join('')}
+      </div>
+    `
+  }
+
+  /**
+   * Layout mode options (mutually exclusive)
+   */
+  private readonly LAYOUT_MODES = ['vertical', 'horizontal', 'grid', 'stacked'] as const
+
+  /**
+   * Gap token presets
+   */
+  private readonly GAP_TOKENS = [
+    { label: 'xs', value: '2' },
+    { label: 's', value: '4' },
+    { label: 'm', value: '8' },
+    { label: 'l', value: '16' },
+  ] as const
+
+  /**
+   * Render layout as exclusive toggle group (includes alignment)
+   */
+  private renderLayoutToggleGroup(category: PropertyCategory, alignmentCat?: PropertyCategory): string {
+    const props = category.properties
+
+    // Find which layout mode is active
+    const isActive = (name: string) => {
+      const prop = props.find(p => p.name === name || p.name === name.substring(0, 3))
+      return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
+    }
+
+    // Determine active mode (default to vertical if none set)
+    let activeMode: string = 'vertical'
+    for (const mode of this.LAYOUT_MODES) {
+      if (isActive(mode)) {
+        activeMode = mode
+        break
+      }
+    }
+    // Also check short forms
+    if (isActive('hor')) activeMode = 'horizontal'
+    if (isActive('ver')) activeMode = 'vertical'
+
+    // Find gap property
+    const gapProp = props.find(p => p.name === 'gap' || p.name === 'g')
+    const gapValue = gapProp?.value || ''
+
+    // Find wrap property
+    const wrapProp = props.find(p => p.name === 'wrap')
+    const wrapActive = wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false))
+
+    // Get dynamic gap tokens, fall back to hardcoded if none defined
+    const dynamicGapTokens = this.getGapTokens()
+    const gapTokensToUse = dynamicGapTokens.length > 0
+      ? dynamicGapTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+      : this.GAP_TOKENS.map(t => ({ label: t.label, value: t.value, tokenRef: `$${t.label}.gap` }))
+
+    // Check if current gapValue is a token reference
+    const isGapTokenRef = gapValue.startsWith('$')
+
+    // Render gap tokens
+    const gapTokens = gapTokensToUse.map(token => {
+      const active = isGapTokenRef
+        ? (gapValue === token.tokenRef)
+        : (gapValue === token.value)
+      return `<button class="token-btn ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${token.tokenRef}" title="${token.tokenRef}: ${token.value}">${token.label}</button>`
+    }).join('')
+
+    // Render alignment grid if alignmentCat is provided
+    let alignmentRow = ''
+    if (alignmentCat) {
+      const alignProps = alignmentCat.properties
+      const isAlignActive = (name: string) => {
+        const prop = alignProps.find(p => p.name === name)
+        return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
+      }
+
+      const vAlign = isAlignActive('top') ? 'top' : isAlignActive('bottom') ? 'bottom' : isAlignActive('ver-center') ? 'middle' : null
+      const hAlign = isAlignActive('left') ? 'left' : isAlignActive('right') ? 'right' : isAlignActive('hor-center') ? 'center' : null
+      const isCenter = isAlignActive('center')
+
+      const cells = [
+        ['top-left', 'top-center', 'top-right'],
+        ['middle-left', 'middle-center', 'middle-right'],
+        ['bottom-left', 'bottom-center', 'bottom-right'],
+      ]
+
+      const getCellActive = (v: string, h: string): boolean => {
+        if (v === 'middle' && h === 'center' && isCenter) return true
+        const vMatch = (v === 'top' && vAlign === 'top') ||
+                       (v === 'middle' && vAlign === 'middle') ||
+                       (v === 'bottom' && vAlign === 'bottom')
+        const hMatch = (h === 'left' && hAlign === 'left') ||
+                       (h === 'center' && hAlign === 'center') ||
+                       (h === 'right' && hAlign === 'right')
+        return vMatch && hMatch
+      }
+
+      const gridHtml = cells.map((row, vIdx) => {
+        const vName = ['top', 'middle', 'bottom'][vIdx]
+        return row.map((cell, hIdx) => {
+          const hName = ['left', 'center', 'right'][hIdx]
+          const active = getCellActive(vName, hName)
+          return `<button class="align-cell ${active ? 'active' : ''}" data-align="${cell}" title="${cell.replace('-', ' ')}"></button>`
+        }).join('')
+      }).join('')
+
+      alignmentRow = `
+          <div class="prop-row">
+            <span class="prop-label">Align</span>
+            <div class="prop-content">
+              <div class="align-grid">
+                ${gridHtml}
+              </div>
+            </div>
+          </div>`
+    }
+
+    // Return prototype structure
+    return `
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Direction</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${activeMode === 'horizontal' ? 'active' : ''}" data-layout="horizontal" title="Horizontal">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M2 7h10M9 4l3 3-3 3"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${activeMode === 'vertical' ? 'active' : ''}" data-layout="vertical" title="Vertical">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M7 2v10M4 9l3 3 3-3"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${activeMode === 'grid' ? 'active' : ''}" data-layout="grid" title="Grid">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <rect x="2" y="2" width="4" height="4" rx="1"/>
+                    <rect x="8" y="2" width="4" height="4" rx="1"/>
+                    <rect x="2" y="8" width="4" height="4" rx="1"/>
+                    <rect x="8" y="8" width="4" height="4" rx="1"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${activeMode === 'stacked' ? 'active' : ''}" data-layout="stacked" title="Stack">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <rect x="2" y="3" width="10" height="8" rx="1"/>
+                    <rect x="4" y="5" width="6" height="4" rx="0.5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Gap</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${gapTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Wrap</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${!wrapActive ? 'active' : ''}" data-wrap="off" title="No Wrap">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M2 7h10"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${wrapActive ? 'active' : ''}" data-wrap="on" title="Wrap">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M2 4h10M2 10h6M10 7l-2 3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>${alignmentRow}
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render sizing section (1:1 from prototype-v2.html)
+   */
+  private renderSizingSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find width and height values
+    const widthProp = props.find(p => p.name === 'width' || p.name === 'w')
+    const heightProp = props.find(p => p.name === 'height' || p.name === 'h')
+
+    const widthValue = widthProp?.value || ''
+    const heightValue = heightProp?.value || ''
+
+    // Check for hug/full values
+    const widthIsHug = widthValue === 'hug'
+    const widthIsFull = widthValue === 'full'
+    const heightIsHug = heightValue === 'hug'
+    const heightIsFull = heightValue === 'full'
+
+    return `
+      <div class="section">
+        <div class="section-label">Size</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Width</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${widthIsHug ? 'active' : ''}" data-size-mode="width-hug" title="Hug Content">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M4 3v8M10 3v8M1 7h3M10 7h3"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${widthIsFull ? 'active' : ''}" data-size-mode="width-full" title="Fill Container">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M2 3v8M12 3v8M2 7h10"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(widthValue)}" data-prop="width" placeholder="auto">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Height</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${heightIsHug ? 'active' : ''}" data-size-mode="height-hug" title="Hug Content">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M3 4h8M3 10h8M7 1v3M7 10v3"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${heightIsFull ? 'active' : ''}" data-size-mode="height-full" title="Fill Container">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <path d="M3 2h8M3 12h8M7 2v10"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Padding preset values (for dropdown)
+   */
+  private readonly PADDING_PRESETS = ['2', '4', '8', '16', '32']
+
+  /**
+   * Simple hash for cache invalidation
+   */
+  private hashSource(source: string): string {
+    let hash = 0
+    for (let i = 0; i < source.length; i++) {
+      const char = source.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32bit integer
+    }
+    return hash.toString(36)
+  }
+
+  /**
+   * Invalidate token cache (call when source changes)
+   */
+  private invalidateTokenCache(): void {
+    this.cachedSpacingTokens.clear()
+    this.cachedColorTokens = null
+    this.cachedSourceHash = ''
+  }
+
+  /**
+   * Get spacing tokens from source for a specific property type (cached)
+   * Parses tokens like "$sm.pad: 4", "$md.rad: 8", "$lg.gap: 16" from the source code
+   * Uses getAllSource callback if available to get tokens from all project files
+   * @param propType - The property type to extract (pad, rad, gap, etc.)
+   */
+  private getSpacingTokens(propType: string): SpacingToken[] {
+    // Use getAllSource callback if available, otherwise fall back to current file
+    const source = this.options.getAllSource
+      ? this.options.getAllSource()
+      : this.codeModifier.getSource()
+    const hash = this.hashSource(source)
+
+    // Check cache - invalidate all if source changed
+    if (hash !== this.cachedSourceHash) {
+      this.cachedSpacingTokens.clear()
+      this.cachedSourceHash = hash
+    }
+
+    // Return cached if available
+    const cached = this.cachedSpacingTokens.get(propType)
+    if (cached) {
+      return cached
+    }
+
+    const lines = source.split('\n')
+    // Use Map to deduplicate tokens by name (later definitions override earlier ones)
+    const tokenMap = new Map<string, SpacingToken>()
+
+    // Build regex for the specific property type
+    // Matches: $name.propType: value (e.g., "$sm.pad: 4", "$md.rad: 8")
+    const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${propType}\\s*:\\s*(\\d+)$`)
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('//')) continue
+
+      const match = trimmed.match(regex)
+      if (match) {
+        const name = match[1]
+        tokenMap.set(name, {
+          name,                     // e.g., "sm"
+          fullName: `${name}.${propType}`, // e.g., "sm.pad"
+          value: match[2]           // e.g., "4"
+        })
+      }
+    }
+
+    // Convert to array and cache
+    const tokens = Array.from(tokenMap.values())
+    this.cachedSpacingTokens.set(propType, tokens)
+    return tokens
+  }
+
+  /**
+   * Get padding tokens (convenience method)
+   */
+  private getPaddingTokens(): SpacingToken[] {
+    return this.getSpacingTokens('pad')
+  }
+
+  /**
+   * Get radius tokens
+   */
+  private getRadiusTokens(): SpacingToken[] {
+    return this.getSpacingTokens('rad')
+  }
+
+  /**
+   * Get gap tokens
+   */
+  private getGapTokens(): SpacingToken[] {
+    return this.getSpacingTokens('gap')
+  }
+
+  /**
+   * Resolve token value - get numeric value for a token reference
+   * Token ref can be "sm.pad" or "$sm.pad" - we normalize it
+   */
+  private resolveTokenValue(tokenRef: string): string | null {
+    // Normalize: remove $ prefix if present
+    const normalizedRef = tokenRef.startsWith('$') ? tokenRef.slice(1) : tokenRef
+
+    // Determine the property type from the token ref (e.g., "sm.pad" -> "pad")
+    const parts = normalizedRef.split('.')
+    if (parts.length < 2) return null
+
+    const propType = parts[parts.length - 1] // last part is the property type
+    const tokens = this.getSpacingTokens(propType)
+    const token = tokens.find(t => t.fullName === normalizedRef)
+    return token?.value || null
+  }
+
+  /**
+   * Get color tokens from source (cached)
+   * Parses tokens with hex colors like "$primary.bg: #3B82F6"
+   */
+  private getColorTokens(): Array<{ name: string; value: string }> {
+    const source = this.codeModifier.getSource()
+    const hash = this.hashSource(source)
+
+    // Return cached if source hasn't changed
+    if (hash === this.cachedSourceHash && this.cachedColorTokens) {
+      return this.cachedColorTokens
+    }
+
+    const tokens: Array<{ name: string; value: string }> = []
+
+    // Match token definitions with hex colors
+    const tokenRegex = /\$?([\w.-]+):\s*(#[0-9A-Fa-f]{3,8})/g
+    let match
+    while ((match = tokenRegex.exec(source)) !== null) {
+      tokens.push({
+        name: match[1],
+        value: match[2]
+      })
+    }
+
+    // Cache the result
+    this.cachedColorTokens = tokens
+    this.cachedSourceHash = hash
+    return tokens
+  }
+
+  // Default tokens for autocomplete when none are defined in source
+  private readonly DEFAULT_TOKENS: Array<{ name: string; value: string }> = [
+    // Spacing
+    { name: 'xs.pad', value: '2' },
+    { name: 'sm.pad', value: '4' },
+    { name: 'md.pad', value: '8' },
+    { name: 'lg.pad', value: '16' },
+    { name: 'xl.pad', value: '24' },
+    { name: 'xs.gap', value: '2' },
+    { name: 'sm.gap', value: '4' },
+    { name: 'md.gap', value: '8' },
+    { name: 'lg.gap', value: '16' },
+    // Colors
+    { name: 'primary.bg', value: '#3B82F6' },
+    { name: 'secondary.bg', value: '#6B7280' },
+    { name: 'surface.bg', value: '#1a1a23' },
+    { name: 'elevated.bg', value: '#27272A' },
+    { name: 'primary.col', value: '#3B82F6' },
+    { name: 'muted.col', value: '#71717A' },
+    { name: 'text.col', value: '#E5E5E5' },
+    // Radius
+    { name: 'sm.rad', value: '4' },
+    { name: 'md.rad', value: '8' },
+    { name: 'lg.rad', value: '12' },
+  ]
+
+  /**
+   * Get all tokens from source, optionally filtered by property suffix
+   * @param propertySuffix Optional suffix to filter (e.g., 'pad', 'bg', 'col')
+   */
+  private getAllTokens(propertySuffix?: string): Array<{ name: string; value: string }> {
+    const source = this.codeModifier.getSource()
+    const tokens: Array<{ name: string; value: string }> = []
+
+    // Match token definitions: $name.suffix: value or name.suffix: value
+    // Allow leading whitespace for indented tokens
+    const tokenRegex = /^\s*\$?([\w.-]+):\s*(.+)$/gm
+    let match
+    while ((match = tokenRegex.exec(source)) !== null) {
+      const name = match[1]
+      const value = match[2].trim()
+
+      // Skip if name doesn't contain a dot (not a semantic token)
+      if (!name.includes('.')) continue
+
+      // Filter by suffix if provided
+      if (propertySuffix) {
+        if (name.endsWith('.' + propertySuffix)) {
+          tokens.push({ name, value })
+        }
+      } else {
+        tokens.push({ name, value })
+      }
+    }
+
+    // If no tokens found in source, use defaults
+    if (tokens.length === 0) {
+      const defaults = propertySuffix
+        ? this.DEFAULT_TOKENS.filter(t => t.name.endsWith('.' + propertySuffix))
+        : this.DEFAULT_TOKENS
+      return defaults
+    }
+
+    return tokens
+  }
+
+  /**
+   * Map property name to token suffix for filtering
+   */
+  private getTokenSuffixForProperty(propName: string): string | undefined {
+    const mapping: Record<string, string> = {
+      'pad': 'pad',
+      'padding': 'pad',
+      'p': 'pad',
+      'gap': 'gap',
+      'g': 'gap',
+      'bg': 'bg',
+      'background': 'bg',
+      'col': 'col',
+      'color': 'col',
+      'c': 'col',
+      'rad': 'rad',
+      'radius': 'rad',
+      'border-radius': 'rad',
+      'font-size': 'font.size',
+      'fs': 'font.size',
+    }
+    return mapping[propName]
+  }
+
+  // Autocomplete state
+  private autocompleteDropdown: HTMLElement | null = null
+  private autocompleteInput: HTMLInputElement | null = null
+  private autocompleteIndex: number = -1
+  private autocompleteTokens: Array<{ name: string; value: string }> = []
+  private autocompleteKeyHandler: ((e: KeyboardEvent) => void) | null = null
+
+  /**
+   * Show token autocomplete dropdown
+   */
+  private showTokenAutocomplete(input: HTMLInputElement): void {
+    // Get property name from various data attributes
+    let propName = input.dataset.prop
+    if (!propName) {
+      // Check for padding direction inputs
+      if (input.dataset.padDir) {
+        propName = 'pad'
+      } else if (input.dataset.borderDir || input.dataset.borderColorDir) {
+        propName = 'border'
+      }
+    }
+    if (!propName) return
+
+    // Remove existing dropdown first (before setting new tokens)
+    this.hideTokenAutocomplete()
+
+    // Get filtered tokens based on property
+    const suffix = this.getTokenSuffixForProperty(propName)
+    this.autocompleteTokens = this.getAllTokens(suffix)
+
+    if (this.autocompleteTokens.length === 0) {
+      // If no specific tokens, show all tokens
+      this.autocompleteTokens = this.getAllTokens()
+    }
+
+    if (this.autocompleteTokens.length === 0) return
+
+    // Create dropdown
+    const dropdown = document.createElement('div')
+    dropdown.className = 'pp-token-autocomplete'
+
+    this.renderAutocompleteItems(dropdown)
+
+    // Position dropdown below input using fixed positioning
+    const rect = input.getBoundingClientRect()
+    dropdown.style.position = 'fixed'
+    dropdown.style.top = `${rect.bottom + 4}px`
+    dropdown.style.left = `${rect.left}px`
+    dropdown.style.minWidth = `${rect.width}px`
+
+    document.body.appendChild(dropdown)
+    this.autocompleteDropdown = dropdown
+    this.autocompleteInput = input
+    this.autocompleteIndex = -1
+
+    // Abort previous autocomplete listeners if any
+    if (this.autocompleteAbortController) {
+      this.autocompleteAbortController.abort()
+    }
+    this.autocompleteAbortController = new AbortController()
+    const signal = this.autocompleteAbortController.signal
+
+    // Add click handlers to items (mousedown fires before blur)
+    dropdown.querySelectorAll('.pp-token-item').forEach((item, index) => {
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault() // Prevent blur
+        this.selectAutocompleteItem(index)
+      }, { signal })
+      item.addEventListener('mouseenter', () => {
+        this.autocompleteIndex = index
+        this.updateAutocompleteHighlight()
+      }, { signal })
+    })
+
+    // Add document-level keyboard handler (survives input re-render)
+    this.autocompleteKeyHandler = (e: KeyboardEvent) => {
+      this.handleAutocompleteKeydown(e)
+    }
+    document.addEventListener('keydown', this.autocompleteKeyHandler)
+  }
+
+  /**
+   * Render autocomplete items
+   */
+  private renderAutocompleteItems(dropdown: HTMLElement): void {
+    dropdown.innerHTML = this.autocompleteTokens.map((token, index) => `
+      <div class="pp-token-item ${index === this.autocompleteIndex ? 'highlighted' : ''}" data-index="${index}">
+        <span class="pp-token-name">$${token.name}</span>
+        <span class="pp-token-value">${token.value}</span>
+      </div>
+    `).join('')
+  }
+
+  /**
+   * Update autocomplete highlight
+   */
+  private updateAutocompleteHighlight(): void {
+    if (!this.autocompleteDropdown) return
+
+    const items = this.autocompleteDropdown.querySelectorAll('.pp-token-item')
+    items.forEach((item, index) => {
+      item.classList.toggle('highlighted', index === this.autocompleteIndex)
+    })
+
+    // Scroll into view if needed
+    const highlighted = this.autocompleteDropdown.querySelector('.pp-token-item.highlighted')
+    if (highlighted) {
+      highlighted.scrollIntoView({ block: 'nearest' })
+    }
+  }
+
+  /**
+   * Select autocomplete item
+   */
+  private selectAutocompleteItem(index: number): void {
+    if (index < 0 || index >= this.autocompleteTokens.length) return
+    if (!this.autocompleteInput) return
+
+    const token = this.autocompleteTokens[index]
+    this.autocompleteInput.value = '$' + token.name
+    this.autocompleteInput.classList.add('token')
+
+    // Trigger update
+    const propName = this.autocompleteInput.dataset.prop
+    if (propName && this.currentElement) {
+      this.updateProperty(propName, '$' + token.name)
+    }
+
+    this.hideTokenAutocomplete()
+  }
+
+  /**
+   * Hide autocomplete dropdown
+   */
+  private hideTokenAutocomplete(): void {
+    if (this.autocompleteDropdown) {
+      this.autocompleteDropdown.remove()
+      this.autocompleteDropdown = null
+    }
+    // Abort autocomplete event listeners
+    if (this.autocompleteAbortController) {
+      this.autocompleteAbortController.abort()
+      this.autocompleteAbortController = null
+    }
+    // Remove document-level keyboard handler
+    if (this.autocompleteKeyHandler) {
+      document.removeEventListener('keydown', this.autocompleteKeyHandler)
+      this.autocompleteKeyHandler = null
+    }
+    this.autocompleteInput = null
+    this.autocompleteIndex = -1
+    this.autocompleteTokens = []
+  }
+
+  /**
+   * Handle autocomplete keyboard navigation
+   */
+  private handleAutocompleteKeydown(e: KeyboardEvent): boolean {
+    if (!this.autocompleteDropdown) return false
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        this.autocompleteIndex = Math.min(this.autocompleteIndex + 1, this.autocompleteTokens.length - 1)
+        this.updateAutocompleteHighlight()
+        return true
+      case 'ArrowUp':
+        e.preventDefault()
+        this.autocompleteIndex = Math.max(this.autocompleteIndex - 1, 0)
+        this.updateAutocompleteHighlight()
+        return true
+      case 'Enter':
+        if (this.autocompleteIndex >= 0) {
+          e.preventDefault()
+          this.selectAutocompleteItem(this.autocompleteIndex)
+          return true
+        }
+        break
+      case 'Escape':
+        e.preventDefault()
+        this.hideTokenAutocomplete()
+        return true
+      case 'Tab':
+        this.hideTokenAutocomplete()
+        break
+    }
+    return false
+  }
+
+  /**
+   * Default color swatches for v2
+   */
+  private readonly COLOR_V2_SWATCHES = {
+    bg: [
+      { label: 'Surface', value: '#1a1a23' },
+      { label: 'Elevated', value: '#27272A' },
+      { label: 'Primary', value: '#3B82F6' },
+      { label: 'Secondary', value: '#6B7280' },
+    ],
+    text: [
+      { label: 'Text', value: '#E5E5E5' },
+      { label: 'Muted', value: '#71717A' },
+      { label: 'Primary', value: '#3B82F6' },
+    ],
+  } as const
+
+  /**
+   * Render color picker section (v2)
+   */
+  /**
+   * Render color section (1:1 from prototype-v2.html)
+   */
+  // Default color tokens when none defined in source
+  private readonly DEFAULT_BG_TOKENS = [
+    { name: 'primary.bg', value: '#3B82F6' },
+    { name: 'success.bg', value: '#22C55E' },
+    { name: 'surface.bg', value: '#1a1a23' },
+    { name: 'elevated.bg', value: '#27272A' },
+  ]
+
+  private readonly DEFAULT_COL_TOKENS = [
+    { name: 'text.col', value: '#FFFFFF' },
+    { name: 'muted.col', value: '#A1A1AA' },
+    { name: 'subtle.col', value: '#71717A' },
+  ]
+
+  private renderColorSection(): string {
+    // Get current bg and color values
+    const nodeId = this.currentElement?.templateId || this.currentElement?.nodeId || ''
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const bgProp = props?.allProperties.find((p: {name: string}) => p.name === 'background' || p.name === 'bg')
+    const colProp = props?.allProperties.find((p: {name: string}) => p.name === 'color' || p.name === 'col' || p.name === 'c')
+    const bgValue = bgProp?.value || ''
+    const colValue = colProp?.value || ''
+
+    // Get color tokens from source
+    const allColorTokens = this.getColorTokens()
+
+    // Filter tokens by suffix for bg and col
+    const bgTokens = allColorTokens.filter(t => t.name.endsWith('.bg'))
+    const colTokens = allColorTokens.filter(t => t.name.endsWith('.col'))
+
+    // Use defaults if no tokens found
+    const bgTokensToUse = bgTokens.length > 0 ? bgTokens : this.DEFAULT_BG_TOKENS
+    const colTokensToUse = colTokens.length > 0 ? colTokens : this.DEFAULT_COL_TOKENS
+
+    // Check if current value is a token color
+    const bgTokenValues = bgTokensToUse.map(t => t.value.toLowerCase())
+    const bgHasCustom = bgValue && !bgTokenValues.includes(bgValue.toLowerCase())
+
+    const colTokenValues = colTokensToUse.map(t => t.value.toLowerCase())
+    const colHasCustom = colValue && !colTokenValues.includes(colValue.toLowerCase())
+
+    // Render bg swatches - include token name for code generation
+    const bgSwatches = bgTokensToUse.map(token => {
+      const isActive = bgValue.toLowerCase() === token.value.toLowerCase()
+      return `<button class="color-swatch ${isActive ? 'active' : ''}" style="background: ${token.value}" data-color-prop="bg" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`
+    }).join('')
+
+    // Render col swatches - include token name for code generation
+    const colSwatches = colTokensToUse.map(token => {
+      const isActive = colValue.toLowerCase() === token.value.toLowerCase()
+      return `<button class="color-swatch ${isActive ? 'active' : ''}" style="background: ${token.value}" data-color-prop="color" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`
+    }).join('')
+
+    return `
+      <div class="section">
+        <div class="section-label">Color</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Background</span>
+            <div class="prop-content">
+              <div class="color-group">
+                ${bgHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(bgValue)}" data-color-prop="bg" data-color="${this.escapeHtml(bgValue)}" title="Current"></button>` : ''}
+                ${bgSwatches}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(bgValue)}" data-prop="bg" placeholder="#hex">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Text</span>
+            <div class="prop-content">
+              <div class="color-group">
+                ${colHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(colValue)}" data-color-prop="color" data-color="${this.escapeHtml(colValue)}" title="Current"></button>` : ''}
+                ${colSwatches}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(colValue)}" data-prop="color" placeholder="#hex">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render a generic preset row
+   * Pattern: [Icon] [Presets] [Input][▾] [Extra]
+   */
+  private renderPresetRow(config: {
+    iconKey: string
+    presets: Array<{ value: string; label: string }>
+    value: string
+    dataAttr: string       // for preset buttons: data-{dataAttr}
+    dataProp?: string      // for input: data-prop (for event handlers)
+    inputClass: string
+    placeholder: string
+    showDropdown?: boolean
+    dropdownValues?: string[]
+    extraContent?: string
+  }): string {
+    const iconPath = PROPERTY_ICON_PATHS[config.iconKey]
+
+    // Render preset buttons
+    const presetButtons = config.presets.map(preset => {
+      const active = config.value === preset.value
+      return `<button class="pp-preset ${active ? 'active' : ''}" data-${config.dataAttr}="${preset.value}">${preset.label}</button>`
+    }).join('')
+
+    // Render dropdown button if needed
+    const dropdownBtn = config.showDropdown
+      ? `<button class="pp-dropdown" data-${config.dataAttr}-dropdown>▾</button>`
+      : ''
+
+    // data-prop attribute for input (used by event handlers)
+    const dataPropAttr = config.dataProp ? `data-prop="${config.dataProp}"` : ''
+
+    return `
+      <div class="pp-row-line">
+        <span class="pp-dim-icon" title="${config.iconKey}">
+          <svg viewBox="0 0 14 14" width="12" height="12">${iconPath || ''}</svg>
+        </span>
+        <div class="pp-presets">
+          ${presetButtons}
+        </div>
+        <div class="pp-input-wrap">
+          <input type="text" class="${config.inputClass}" value="${this.escapeHtml(config.value)}" ${dataPropAttr} placeholder="${config.placeholder}">
+          ${dropdownBtn}
+        </div>
+        ${config.extraContent || ''}
+      </div>
+    `
+  }
+
+  /**
+   * Padding token presets for v2
+   */
+  private readonly PADDING_V2_TOKENS = [
+    { label: 'xs', value: '2' },
+    { label: 's', value: '4' },
+    { label: 'm', value: '8' },
+    { label: 'l', value: '16' },
+  ] as const
+
+  /**
+   * Render spacing section with V/H inputs and tokens (v2)
+   */
+  /**
+   * Render spacing section (1:1 from prototype-v2.html)
+   */
+  private renderSpacingSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find padding values
+    const padProp = props.find(p => p.name === 'padding' || p.name === 'pad' || p.name === 'p')
+    const padValue = padProp?.value || ''
+
+    // Parse padding value to get T, R, B, L
+    const padParts = padValue.split(/\s+/).filter(Boolean)
+    let tPad = '', rPad = '', bPad = '', lPad = ''
+    if (padParts.length === 1) {
+      tPad = rPad = bPad = lPad = padParts[0]
+    } else if (padParts.length === 2) {
+      tPad = bPad = padParts[0]
+      rPad = lPad = padParts[1]
+    } else if (padParts.length === 4) {
+      tPad = padParts[0]
+      rPad = padParts[1]
+      bPad = padParts[2]
+      lPad = padParts[3]
+    }
+
+    const vPad = tPad, hPad = rPad
+
+    // Get dynamic tokens from source, fall back to hardcoded if none defined
+    const dynamicTokens = this.getPaddingTokens()
+    const tokensToUse = dynamicTokens.length > 0
+      ? dynamicTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+      : this.PADDING_V2_TOKENS.map(t => ({ label: t.label, value: t.value, tokenRef: `$${t.label}.pad` }))
+
+    // Render token buttons for padding
+    const renderPadTokens = (activeValue: string, direction: string) => {
+      // Check if activeValue is a token reference
+      const isTokenRef = activeValue.startsWith('$')
+      const resolvedValue = isTokenRef ? this.resolveTokenValue(activeValue) : null
+
+      return tokensToUse.map(token => {
+        // Match by token ref or by resolved value
+        const isActive = isTokenRef
+          ? (activeValue === token.tokenRef)
+          : (activeValue === token.value)
+        return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${token.tokenRef}" data-pad-dir="${direction}" title="${token.tokenRef}: ${token.value}">${token.label}</button>`
+      }).join('')
+    }
+
+    return `
+      <div class="section">
+        <div class="section-label">Spacing</div>
+        <div class="section-content" data-expand-container="spacing">
+          <div class="prop-row collapsed-row" data-expand-group="spacing">
+            <span class="prop-label">Padding H</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(hPad, 'h')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(hPad)}" data-pad-dir="h" placeholder="0">
+              <button class="toggle-btn expand-btn" data-expand="spacing" title="Expand">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <path d="M4 6l3 3 3-3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="prop-row collapsed-row" data-expand-group="spacing">
+            <span class="prop-label">Padding V</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(vPad, 'v')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(vPad)}" data-pad-dir="v" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="spacing">
+            <span class="prop-label">Pad Top</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(tPad, 't')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(tPad)}" data-pad-dir="t" placeholder="0">
+              <button class="toggle-btn expand-btn" data-expand="spacing" title="Collapse">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <path d="M4 8l3-3 3 3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="spacing">
+            <span class="prop-label">Pad Right</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(rPad, 'r')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(rPad)}" data-pad-dir="r" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="spacing">
+            <span class="prop-label">Pad Bottom</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(bPad, 'b')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(bPad)}" data-pad-dir="b" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="spacing">
+            <span class="prop-label">Pad Left</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderPadTokens(lPad, 'l')}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(lPad)}" data-pad-dir="l" placeholder="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render border section (1:1 from prototype-v2.html)
+   */
+  private renderBorderSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Get radius value
+    const radiusProp = props.find(p => p.name === 'radius' || p.name === 'rad')
+    const radiusValue = radiusProp?.value || ''
+
+    // Get border value
+    const borderProp = props.find(p => p.name === 'border' || p.name === 'bor')
+    const borderValue = borderProp?.value || ''
+    const borderParts = borderValue.split(/\s+/).filter(Boolean)
+    const borderWidth = borderParts[0] || '0'
+
+    // Get dynamic radius tokens, fall back to hardcoded if none defined
+    const dynamicRadiusTokens = this.getRadiusTokens()
+    const radiusTokens = dynamicRadiusTokens.length > 0
+      ? [{ label: '0', value: '0', tokenRef: '' }, ...dynamicRadiusTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))]
+      : [
+          { label: '0', value: '0', tokenRef: '' },
+          { label: 's', value: '4', tokenRef: '$s.rad' },
+          { label: 'm', value: '8', tokenRef: '$m.rad' },
+          { label: 'l', value: '16', tokenRef: '$l.rad' },
+        ]
+
+    // Check if current radiusValue is a token reference
+    const isRadiusTokenRef = radiusValue.startsWith('$')
+
+    const renderRadTokens = radiusTokens.map(token => {
+      const isActive = isRadiusTokenRef
+        ? (radiusValue === token.tokenRef)
+        : (radiusValue === token.value)
+      const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
+    }).join('')
+
+    // Render border width toggles
+    const borderWidths = ['0', '1', '2']
+    const borderWidthToggles = borderWidths.map(w => {
+      const isActive = borderWidth === w
+      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
+    }).join('')
+
+    return `
+      <div class="section">
+        <div class="section-label">Border</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Radius</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderRadTokens}
+                <button class="token-btn ${radiusValue === '999' ? 'active' : ''}" data-radius="999" title="Full: 999">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <circle cx="7" cy="7" r="5"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
+              <button class="toggle-btn expand-btn" data-expand="radius" title="Expand">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <path d="M4 6l3 3 3-3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="radius">
+            <span class="prop-label">Top Left</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderRadTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="radius">
+            <span class="prop-label">Top Right</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderRadTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="radius">
+            <span class="prop-label">Btm Right</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderRadTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="radius">
+            <span class="prop-label">Btm Left</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${renderRadTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Border</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              <div class="color-group">
+                <button class="color-swatch" style="background: #333" data-border-color="#333" title="$border.col"></button>
+                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6" title="$primary.col"></button>
+              </div>
+              <button class="toggle-btn expand-btn" data-expand="border" title="Expand">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <path d="M4 6l3 3 3-3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="border">
+            <span class="prop-label">Top</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              <div class="color-group">
+                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
+                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="border">
+            <span class="prop-label">Right</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              <div class="color-group">
+                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
+                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="border">
+            <span class="prop-label">Bottom</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              <div class="color-group">
+                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
+                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="border">
+            <span class="prop-label">Left</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              <div class="color-group">
+                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
+                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Google Font families
+   */
+  private readonly GOOGLE_FONTS = [
+    'Inter',
+    'Roboto',
+    'Open Sans',
+    'Lato',
+    'Montserrat',
+    'Poppins',
+    'Oswald',
+    'Raleway',
+    'Nunito',
+    'Playfair Display',
+    'Merriweather',
+    'Source Sans Pro',
+    'Ubuntu',
+    'Rubik',
+    'Work Sans',
+    'Fira Sans',
+    'Quicksand',
+    'Karla',
+    'Inconsolata',
+    'Space Mono',
+  ] as const
+
+  /**
+   * Font size presets
+   */
+  private readonly FONT_SIZE_PRESETS = ['11', '12', '14', '16', '18', '20', '24', '32'] as const
+
+  /**
+   * Font weight options
+   */
+  private readonly FONT_WEIGHT_OPTIONS = [
+    { label: '300', value: '300' },
+    { label: '400', value: '400' },
+    { label: '500', value: '500' },
+    { label: '600', value: '600' },
+    { label: '700', value: '700' },
+  ] as const
+
+  /**
+   * Text alignment options
+   */
+  private readonly TEXT_ALIGNS = ['left', 'center', 'right'] as const
+
+  /**
+   * Text style toggles (booleans)
+   */
+  private readonly TEXT_STYLES = ['italic', 'underline', 'uppercase', 'lowercase', 'truncate'] as const
+
+  /**
+   * Font size tokens for v2
+   */
+  private readonly FONT_SIZE_V2_TOKENS = [
+    { label: 'xs', value: '11' },
+    { label: 's', value: '12' },
+    { label: 'm', value: '14' },
+    { label: 'l', value: '16' },
+    { label: 'xl', value: '20' },
+  ] as const
+
+  /**
+   * Render typography section (v2) - matches prototype-v2.html
+   */
+  private renderTypographySection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find typography properties
+    const fontProp = props.find(p => p.name === 'font')
+    const fontSizeProp = props.find(p => p.name === 'font-size' || p.name === 'fs')
+    const weightProp = props.find(p => p.name === 'weight')
+    const textAlignProp = props.find(p => p.name === 'text-align')
+
+    const fontValue = fontProp?.value || ''
+    const fontSizeValue = fontSizeProp?.value || ''
+    const weightValue = weightProp?.value || ''
+    const textAlignValue = textAlignProp?.value || ''
+
+    // Font dropdown options - matching prototype
+    const prototypefonts = ['Inter', 'SF Pro', 'Helvetica', 'Arial', 'Georgia', 'Times', 'SF Mono', 'Menlo']
+    const fontOptions = prototypefonts.map(f =>
+      `<option value="${f}" ${fontValue === f ? 'selected' : ''}>${f}</option>`
+    ).join('')
+
+    // Weight dropdown options - matching prototype exactly
+    const prototypeWeights = [
+      { value: '100', label: '100 · Thin' },
+      { value: '200', label: '200 · Extra Light' },
+      { value: '300', label: '300 · Light' },
+      { value: '400', label: '400 · Regular' },
+      { value: '500', label: '500 · Medium' },
+      { value: '600', label: '600 · Semi Bold' },
+      { value: '700', label: '700 · Bold' },
+      { value: '800', label: '800 · Extra Bold' },
+      { value: '900', label: '900 · Black' },
+    ]
+    const weightOptions = prototypeWeights.map(w =>
+      `<option value="${w.value}" ${weightValue === w.value ? 'selected' : ''}>${w.label}</option>`
+    ).join('')
+
+    // Font size tokens - matching prototype (xs, s, m, l, xl)
+    const sizeTokens = this.FONT_SIZE_V2_TOKENS.map(token => {
+      const isActive = fontSizeValue === token.value
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.label}</button>`
+    }).join('')
+
+    // Align icons - matching prototype exactly
+    const alignIcons = {
+      left: '<path d="M2 3h10M2 7h6M2 11h8"/>',
+      center: '<path d="M2 3h10M4 7h6M3 11h8"/>',
+      right: '<path d="M2 3h10M6 7h6M4 11h8"/>',
+    }
+    const alignToggles = this.TEXT_ALIGNS.map(align => {
+      const isActive = textAlignValue === align
+      const iconPath = alignIcons[align as keyof typeof alignIcons] || ''
+      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-text-align="${align}" title="${align.charAt(0).toUpperCase() + align.slice(1)}">
+        <svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>
+      </button>`
+    }).join('')
+
+    // Style icons - matching prototype exactly
+    const styleIcons = {
+      italic: '<path d="M6 3h4M4 11h4M8 3L6 11"/>',
+      underline: '<path d="M4 3v5a3 3 0 006 0V3M3 12h8"/>',
+    }
+    const styleToggles = ['italic', 'underline'].map(style => {
+      const prop = props.find(p => p.name === style)
+      const isActive = prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
+      const iconPath = styleIcons[style as keyof typeof styleIcons]
+      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-text-style="${style}" title="${style.charAt(0).toUpperCase() + style.slice(1)}">
+        <svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>
+      </button>`
+    }).join('')
+
+    return `
+      <div class="section">
+        <div class="section-label">Typography</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Font</span>
+            <div class="prop-content">
+              <select class="prop-select" data-prop="font">
+                ${fontOptions}
+              </select>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Size</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${sizeTokens}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Weight</span>
+            <div class="prop-content">
+              <select class="prop-select" data-prop="weight">
+                ${weightOptions}
+              </select>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Align</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${alignToggles}
+              </div>
+              <div class="toggle-group">
+                ${styleToggles}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Shadow presets
+   */
+  private readonly SHADOW_PRESETS = ['none', 'sm', 'md', 'lg'] as const
+
+  /**
+   * Opacity presets
+   */
+  private readonly OPACITY_PRESETS = ['0', '0.25', '0.5', '0.75', '1'] as const
+
+  /**
+   * Render visual section with shadow, opacity, and visibility toggles
+   */
+  private renderVisualSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find visual properties
+    const shadowProp = props.find(p => p.name === 'shadow')
+    const opacityProp = props.find(p => p.name === 'opacity' || p.name === 'o')
+    const cursorProp = props.find(p => p.name === 'cursor')
+    const zIndexProp = props.find(p => p.name === 'z')
+
+    const shadowValue = shadowProp?.value || ''
+    const opacityValue = opacityProp?.value || ''
+    const cursorValue = cursorProp?.value || ''
+    const zIndexValue = zIndexProp?.value || ''
+
+    // Render shadow toggles
+    const shadowToggles = this.SHADOW_PRESETS.map(shadow => {
+      const active = shadowValue === shadow || (shadow === 'none' && !shadowValue)
+      const iconPath = PROPERTY_ICON_PATHS[`shadow-${shadow}`]
+      return `
+        <button class="pp-shadow-toggle ${active ? 'active' : ''}" data-shadow="${shadow}" title="${shadow}">
+          ${iconPath ? `<svg viewBox="0 0 14 14" width="14" height="14">${iconPath}</svg>` : shadow}
+        </button>
+      `
+    }).join('')
+
+    // Render opacity presets
+    const opacityPresets = this.OPACITY_PRESETS.map(val => {
+      const active = opacityValue === val
+      return `<button class="pp-opacity-preset ${active ? 'active' : ''}" data-opacity="${val}">${val}</button>`
+    }).join('')
+
+    // Render visibility toggles (hidden, visible, disabled)
+    const visibilityToggles = ['hidden', 'visible', 'disabled'].map(prop => {
+      const propObj = props.find(p => p.name === prop)
+      const isActive = propObj && (propObj.value === 'true' || (propObj.value === '' && propObj.hasValue !== false))
+      const iconPath = PROPERTY_ICON_PATHS[prop]
+      return `
+        <button class="pp-visibility-toggle ${isActive ? 'active' : ''}" data-visibility="${prop}" title="${prop}">
+          ${iconPath ? `<svg viewBox="0 0 14 14" width="14" height="14">${iconPath}</svg>` : prop}
+        </button>
+      `
+    }).join('')
+
+    // Cursor options
+    const cursorOptions = ['default', 'pointer', 'text', 'move', 'not-allowed', 'grab']
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label">Visual</div>
+        <div class="pp-visual-row">
+          <span class="pp-visual-label">Shadow</span>
+          <div class="pp-shadow-group">
+            ${shadowToggles}
+          </div>
+        </div>
+        <div class="pp-visual-row">
+          <span class="pp-visual-label">Opacity</span>
+          <div class="pp-opacity-group">
+            ${opacityPresets}
+          </div>
+          <input type="text" class="pp-opacity-input" value="${this.escapeHtml(opacityValue)}" data-prop="opacity" placeholder="1">
+        </div>
+        <div class="pp-visual-row">
+          <span class="pp-visual-label">Cursor</span>
+          <select class="pp-cursor-select" data-prop="cursor">
+            <option value="" ${!cursorValue ? 'selected' : ''}>-</option>
+            ${cursorOptions.map(opt => `<option value="${opt}" ${opt === cursorValue ? 'selected' : ''}>${opt}</option>`).join('')}
+          </select>
+        </div>
+        <div class="pp-visual-row">
+          <span class="pp-visual-label">Z-Index</span>
+          <input type="text" class="pp-zindex-input" value="${this.escapeHtml(zIndexValue)}" data-prop="z" placeholder="0">
+        </div>
+        <div class="pp-visual-row">
+          <div class="pp-visibility-group">
+            ${visibilityToggles}
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Hover opacity presets
+   */
+  private readonly HOVER_OPACITY_PRESETS = ['0.5', '0.7', '0.8', '0.9', '1'] as const
+
+  /**
+   * Hover scale presets
+   */
+  private readonly HOVER_SCALE_PRESETS = ['0.95', '1', '1.02', '1.05', '1.1'] as const
+
+  /**
+   * Render hover section with hover-specific properties (v2 design)
+   */
+  private renderHoverSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find hover properties
+    const hoverBgProp = props.find(p => p.name === 'hover-background' || p.name === 'hover-bg')
+    const hoverColProp = props.find(p => p.name === 'hover-color' || p.name === 'hover-col')
+    const hoverOpaProp = props.find(p => p.name === 'hover-opacity' || p.name === 'hover-opa')
+    const hoverScaleProp = props.find(p => p.name === 'hover-scale')
+    const hoverBorProp = props.find(p => p.name === 'hover-border' || p.name === 'hover-bor')
+    const hoverBocProp = props.find(p => p.name === 'hover-border-color' || p.name === 'hover-boc')
+
+    const hoverBgValue = hoverBgProp?.value || ''
+    const hoverColValue = hoverColProp?.value || ''
+    const hoverOpaValue = hoverOpaProp?.value || ''
+    const hoverScaleValue = hoverScaleProp?.value || ''
+    const hoverBorValue = hoverBorProp?.value || ''
+    const hoverBocValue = hoverBocProp?.value || ''
+
+    // Hover BG swatches (v2)
+    const bgSwatches = this.COLOR_V2_SWATCHES.bg.map(swatch => {
+      const isActive = hoverBgValue === swatch.value
+      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-bg" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
+    }).join('')
+
+    // Hover Color swatches (v2)
+    const colSwatches = this.COLOR_V2_SWATCHES.text.map(swatch => {
+      const isActive = hoverColValue === swatch.value
+      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-col" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
+    }).join('')
+
+    // Opacity tokens (v2)
+    const opacityTokens = this.HOVER_OPACITY_PRESETS.map(val => {
+      const isActive = hoverOpaValue === val
+      const label = val === '1' ? '1' : val.replace('0.', '.')
+      return `<button class="pp-token-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-opacity" data-value="${val}" title="Opacity: ${val}">${label}</button>`
+    }).join('')
+
+    // Border width toggles (v2)
+    const borderWidths = ['0', '1', '2']
+    // Parse border value to extract width (e.g., "1 #333" -> "1")
+    const currentBorderWidth = hoverBorValue.split(' ')[0] || '0'
+    const borderToggles = borderWidths.map(width => {
+      const isActive = currentBorderWidth === width
+      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-hover-bor-width="${width}" title="${width}px">${width}</button>`
+    }).join('')
+
+    // Border color swatches (v2)
+    const borderColors = [
+      { label: 'Border', value: '#333' },
+      { label: 'Primary', value: '#3B82F6' },
+    ]
+    const borderColorSwatches = borderColors.map(swatch => {
+      const isActive = hoverBocValue === swatch.value || hoverBorValue.includes(swatch.value)
+      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-boc" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
+    }).join('')
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label">Hover</div>
+        <div class="pp-prop-row">
+          <span class="pp-prop-label">BG</span>
+          <div class="pp-prop-content">
+            <div class="pp-color-group">
+              ${bgSwatches}
+            </div>
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverBgValue)}" data-hover-prop="hover-bg" placeholder="#color">
+          </div>
+        </div>
+        <div class="pp-prop-row">
+          <span class="pp-prop-label">Color</span>
+          <div class="pp-prop-content">
+            <div class="pp-color-group">
+              ${colSwatches}
+            </div>
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverColValue)}" data-hover-prop="hover-col" placeholder="#color">
+          </div>
+        </div>
+        <div class="pp-prop-row">
+          <span class="pp-prop-label">Opacity</span>
+          <div class="pp-prop-content">
+            <div class="pp-token-group">
+              ${opacityTokens}
+            </div>
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverOpaValue)}" data-hover-prop="hover-opacity" placeholder="1">
+          </div>
+        </div>
+        <div class="pp-prop-row">
+          <span class="pp-prop-label">Scale</span>
+          <div class="pp-prop-content">
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverScaleValue)}" data-hover-prop="hover-scale" placeholder="1.05">
+          </div>
+        </div>
+        <div class="pp-prop-row">
+          <span class="pp-prop-label">Border</span>
+          <div class="pp-prop-content">
+            <div class="pp-toggle-group">
+              ${borderToggles}
+            </div>
+            <div class="pp-color-group">
+              ${borderColorSwatches}
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Get short label from token name for display
+   * e.g., "sm.pad" -> "SM", "spacing.small.pad" -> "Sma"
+   */
+  private getTokenShortLabel(tokenName: string): string {
+    // Remove .pad suffix
+    const name = tokenName.replace(/\.pad$/, '')
+    // Get the most descriptive part
+    const parts = name.split('.')
+    // Use first part if short, otherwise abbreviate
+    const label = parts[0]
+    return label.length <= 3 ? label.toUpperCase() : label.charAt(0).toUpperCase() + label.slice(1, 3)
+  }
+
+  /**
+   * Render alignment as a 3x3 grid
+   */
+  private renderAlignmentGrid(category: PropertyCategory): string {
+    // Find current alignment state
+    const props = category.properties
+    const isActive = (name: string) => {
+      const prop = props.find(p => p.name === name)
+      return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
+    }
+
+    // Determine active cell based on current properties
+    const vAlign = isActive('top') ? 'top' : isActive('bottom') ? 'bottom' : isActive('ver-center') ? 'middle' : null
+    const hAlign = isActive('left') ? 'left' : isActive('right') ? 'right' : isActive('hor-center') ? 'center' : null
+    const isCenter = isActive('center')
+
+    // Grid positions: [vertical][horizontal]
+    const cells = [
+      ['top-left', 'top-center', 'top-right'],
+      ['middle-left', 'middle-center', 'middle-right'],
+      ['bottom-left', 'bottom-center', 'bottom-right'],
+    ]
+
+    const getCellActive = (v: string, h: string): boolean => {
+      if (v === 'middle' && h === 'center' && isCenter) return true
+      const vMatch = (v === 'top' && vAlign === 'top') ||
+                     (v === 'middle' && vAlign === 'middle') ||
+                     (v === 'bottom' && vAlign === 'bottom')
+      const hMatch = (h === 'left' && hAlign === 'left') ||
+                     (h === 'center' && hAlign === 'center') ||
+                     (h === 'right' && hAlign === 'right')
+      return vMatch && hMatch
+    }
+
+    const gridHtml = cells.map((row, vIdx) => {
+      const vName = ['top', 'middle', 'bottom'][vIdx]
+      return row.map((cell, hIdx) => {
+        const hName = ['left', 'center', 'right'][hIdx]
+        const active = getCellActive(vName, hName)
+        return `<button class="pp-align-cell ${active ? 'active' : ''}" data-align="${cell}" title="${cell.replace('-', ' ')}"><span></span></button>`
+      }).join('')
+    }).join('')
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label">${this.escapeHtml(category.label)}</div>
+        <div class="pp-align-grid">
+          ${gridHtml}
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render a row of boolean toggles
+   */
+  private renderToggleRow(props: ExtractedProperty[]): string {
+    return `
+      <div class="pp-toggle-row">
+        ${props.map(prop => this.renderToggleButton(prop)).join('')}
+      </div>
+    `
+  }
+
+  /**
+   * Render a single toggle button
+   */
+  private renderToggleButton(prop: ExtractedProperty): string {
+    const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
+    const tooltip = prop.description || prop.name
+    const sourceClass = this.options.showSourceIndicators ? `pp-source-${prop.source}` : ''
+    const iconPath = PROPERTY_ICON_PATHS[prop.name]
+
+    const content = iconPath
+      ? `<svg width="16" height="16" viewBox="0 0 16 16">${iconPath}</svg>`
+      : this.getDisplayLabel(prop.name)
+
+    return `
+      <button class="pp-toggle ${isActive ? 'active' : ''} ${sourceClass} ${iconPath ? 'pp-toggle-icon' : ''}" data-prop="${this.escapeHtml(prop.name)}" data-type="boolean" title="${this.escapeHtml(tooltip)}">
+        ${content}
+      </button>
+    `
+  }
+
+  /**
+   * Render a single property
+   */
+  private renderProperty(prop: ExtractedProperty): string {
+    const sourceClass = this.options.showSourceIndicators ? `pp-source-${prop.source}` : ''
+    const emptyClass = prop.hasValue === false ? 'pp-empty-prop' : ''
+
+    switch (prop.type) {
+      case 'color':
+        return this.renderColorProperty(prop, `${sourceClass} ${emptyClass}`)
+      case 'boolean':
+        return this.renderBooleanProperty(prop, `${sourceClass} ${emptyClass}`)
+      case 'select':
+        return this.renderSelectProperty(prop, `${sourceClass} ${emptyClass}`)
+      default:
+        return this.renderTextProperty(prop, `${sourceClass} ${emptyClass}`)
+    }
+  }
+
+  /**
+   * Render a color property
+   */
+  private renderColorProperty(prop: ExtractedProperty, sourceClass: string): string {
+    const colorValue = prop.isToken ? '' : prop.value
+    const displayValue = prop.value
+
+    return `
+      <div class="pp-row ${sourceClass}" data-prop="${this.escapeHtml(prop.name)}">
+        <div class="pp-color-row">
+          <span class="pp-color-label">${this.getDisplayLabel(prop.name)}</span>
+          <input type="color" class="pp-color-swatch" value="${this.escapeHtml(colorValue)}" data-prop="${this.escapeHtml(prop.name)}">
+          <input type="text" class="pp-color-input ${prop.isToken ? 'token' : ''}" value="${this.escapeHtml(displayValue)}" data-prop="${this.escapeHtml(prop.name)}" placeholder="Color">
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render a boolean property
+   */
+  private renderBooleanProperty(prop: ExtractedProperty, sourceClass: string): string {
+    const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
+    const tooltip = prop.description || prop.name
+
+    return `
+      <div class="pp-row ${sourceClass}" data-prop="${this.escapeHtml(prop.name)}">
+        <button class="pp-icon-btn ${isActive ? 'active' : ''}" data-prop="${this.escapeHtml(prop.name)}" data-type="boolean" title="${this.escapeHtml(tooltip)}">
+          <span style="font-size: 9px;">${this.getDisplayLabel(prop.name)}</span>
+        </button>
+      </div>
+    `
+  }
+
+  /**
+   * Render a select property
+   */
+  private renderSelectProperty(prop: ExtractedProperty, sourceClass: string): string {
+    // Use options from property schema first, then fallback to getSelectOptions
+    const options = prop.options || this.getSelectOptions(prop.name)
+    const tooltip = prop.description ? `title="${this.escapeHtml(prop.description)}"` : ''
+
+    return `
+      <div class="pp-row ${sourceClass}" data-prop="${this.escapeHtml(prop.name)}" ${tooltip}>
+        <span class="pp-input-prefix">${this.getDisplayLabel(prop.name)}</span>
+        <select class="pp-select" data-prop="${this.escapeHtml(prop.name)}">
+          <option value="" ${!prop.value ? 'selected' : ''}>-</option>
+          ${options.map(opt => `<option value="${opt}" ${opt === prop.value ? 'selected' : ''}>${opt}</option>`).join('')}
+        </select>
+      </div>
+    `
+  }
+
+  /**
+   * Render a text/number property
+   */
+  private renderTextProperty(prop: ExtractedProperty, sourceClass: string): string {
+    const placeholder = prop.description || prop.name
+    const tooltip = prop.description ? `title="${this.escapeHtml(prop.description)}"` : ''
+
+    return `
+      <div class="pp-row ${sourceClass}" data-prop="${this.escapeHtml(prop.name)}" ${tooltip}>
+        <div class="pp-input">
+          <span class="pp-input-prefix">${this.getDisplayLabel(prop.name)}</span>
+          <input type="text" class="${prop.isToken ? 'token' : ''}" value="${this.escapeHtml(prop.value)}" data-prop="${this.escapeHtml(prop.name)}" placeholder="${this.escapeHtml(placeholder)}">
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Attach event listeners to inputs
+   */
+  private attachEventListeners(): void {
+    // Close button
+    const closeBtn = this.container.querySelector('.pp-close')
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        this.selectionManager.clearSelection()
+      })
+    }
+
+    // Define as Component button
+    const defineBtn = this.container.querySelector('.pp-define-btn')
+    if (defineBtn) {
+      defineBtn.addEventListener('click', () => {
+        this.handleDefineAsComponent()
+      })
+    }
+
+    // Breadcrumb clicks
+    const breadcrumbs = this.container.querySelectorAll('.pp-crumb[data-node-id]')
+    breadcrumbs.forEach(crumb => {
+      crumb.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        const nodeId = target.dataset.nodeId
+        if (nodeId && !target.classList.contains('active')) {
+          this.selectionManager.select(nodeId)
+        }
+      })
+    })
+
+    // Text inputs with token autocomplete
+    const textInputs = this.container.querySelectorAll('input[type="text"]')
+    textInputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        this.handleInputChange(e)
+        // Show autocomplete when $ is typed
+        const target = e.target as HTMLInputElement
+        if (target.value === '$' || target.value.startsWith('$')) {
+          this.showTokenAutocomplete(target)
+        } else {
+          this.hideTokenAutocomplete()
+        }
+      })
+      input.addEventListener('keydown', (e) => {
+        this.handleAutocompleteKeydown(e as KeyboardEvent)
+      })
+      input.addEventListener('blur', (e) => {
+        const target = e.target as HTMLInputElement
+        // Delay to allow click on autocomplete item
+        // But only hide if the input is still in the DOM (not removed by re-render)
+        setTimeout(() => {
+          if (target.isConnected) {
+            this.hideTokenAutocomplete()
+          }
+        }, 150)
+      })
+    })
+
+    // Color inputs
+    const colorInputs = this.container.querySelectorAll('input[type="color"]')
+    colorInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleColorChange(e))
+    })
+
+    // Boolean buttons
+    const boolButtons = this.container.querySelectorAll('[data-type="boolean"]')
+    boolButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleBooleanToggle(e))
+    })
+
+    // Select inputs
+    const selects = this.container.querySelectorAll('.pp-select')
+    selects.forEach(select => {
+      select.addEventListener('change', (e) => this.handleSelectChange(e))
+    })
+
+    // Alignment grid
+    const alignCells = this.container.querySelectorAll('.pp-align-cell, .align-cell')
+    alignCells.forEach(cell => {
+      cell.addEventListener('click', (e) => this.handleAlignmentClick(e))
+    })
+
+    // Layout toggle group (prototype uses .toggle-btn[data-layout])
+    const layoutToggles = this.container.querySelectorAll('.pp-layout-toggle, .pp-toggle-btn[data-layout], .toggle-btn[data-layout]')
+    layoutToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleLayoutToggle(e))
+    })
+
+    // Gap token buttons (v2)
+    const gapTokens = this.container.querySelectorAll('[data-gap-token]')
+    gapTokens.forEach(token => {
+      token.addEventListener('click', (e) => this.handleGapTokenClick(e))
+    })
+
+    // Wrap toggle buttons (v2)
+    const wrapToggles = this.container.querySelectorAll('[data-wrap]')
+    wrapToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleWrapToggle(e))
+    })
+
+    // Size constraint toggles
+    const sizeToggles = this.container.querySelectorAll('.pp-size-toggle')
+    sizeToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleSizeConstraintToggle(e))
+    })
+
+    // Size mode toggles (v2 hug/full)
+    const sizeModeToggles = this.container.querySelectorAll('[data-size-mode]')
+    sizeModeToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleSizeModeToggle(e))
+    })
+
+    // Size inputs
+    const sizeInputs = this.container.querySelectorAll('.pp-size-input')
+    sizeInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleInputChange(e))
+    })
+
+    // Gap input (both v1 .pp-gap-field and prototype .prop-input[data-prop="gap"])
+    const gapInputs = this.container.querySelectorAll('.pp-gap-field, .pp-v2-input[data-prop="gap"], .prop-input[data-prop="gap"]')
+    gapInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleInputChange(e))
+    })
+
+    // v2 inputs (generic handler for all .pp-v2-input and prototype .prop-input)
+    const v2Inputs = this.container.querySelectorAll('.pp-v2-input:not([data-prop="gap"]), .prop-input:not([data-prop="gap"]):not([data-pad-dir])')
+    v2Inputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleInputChange(e))
+    })
+
+    // Padding token toggles (legacy)
+    const padTokens = this.container.querySelectorAll('.pp-pad-token')
+    padTokens.forEach(token => {
+      token.addEventListener('click', (e) => this.handlePadTokenClick(e))
+    })
+
+    // Padding v2 token toggles
+    const padV2Tokens = this.container.querySelectorAll('[data-pad-v2-token]')
+    padV2Tokens.forEach(token => {
+      token.addEventListener('click', (e) => this.handlePadV2TokenClick(e))
+    })
+
+    // Padding inputs (both legacy and prototype with data-pad-dir)
+    const padInputs = this.container.querySelectorAll('.pp-pad-input, .pp-v2-input[data-pad-dir], .prop-input[data-pad-dir]')
+    padInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handlePadInputChange(e))
+    })
+
+    // Padding token buttons (prototype)
+    const padTokenBtns = this.container.querySelectorAll('.token-btn[data-pad-token]')
+    padTokenBtns.forEach(token => {
+      token.addEventListener('click', (e) => this.handlePadTokenBtnClick(e))
+    })
+
+    // Expand/collapse buttons (prototype uses .expand-btn[data-expand])
+    const prototypeExpandBtns = this.container.querySelectorAll('.expand-btn[data-expand]')
+    prototypeExpandBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleExpandBtnClick(e))
+    })
+
+    // Legacy padding expand/collapse buttons
+    const expandBtns = this.container.querySelectorAll('.pp-pad-expand, [data-pad-expand]')
+    expandBtns.forEach(btn => {
+      btn.addEventListener('click', () => this.togglePaddingExpand(true))
+    })
+    const collapseBtns = this.container.querySelectorAll('.pp-pad-collapse, [data-pad-collapse]')
+    collapseBtns.forEach(btn => {
+      btn.addEventListener('click', () => this.togglePaddingExpand(false))
+    })
+
+    // Font dropdown button
+    const fontDropdownBtn = this.container.querySelector('[data-font-dropdown]')
+    if (fontDropdownBtn) {
+      fontDropdownBtn.addEventListener('click', (e) => this.showFontDropdown(e))
+    }
+
+    // Font size dropdown button
+    const fontsizeDropdownBtn = this.container.querySelector('[data-fontsize-dropdown]')
+    if (fontsizeDropdownBtn) {
+      fontsizeDropdownBtn.addEventListener('click', (e) => this.showFontsizeDropdown(e))
+    }
+
+    // Weight dropdown button
+    const weightDropdownBtn = this.container.querySelector('[data-weight-dropdown]')
+    if (weightDropdownBtn) {
+      weightDropdownBtn.addEventListener('click', (e) => this.showWeightDropdown(e))
+    }
+
+    // Padding dropdown buttons (exclude font, fontsize and weight dropdowns)
+    const dropdownBtns = this.container.querySelectorAll('.pp-pad-dropdown:not([data-font-dropdown]):not([data-fontsize-dropdown]):not([data-weight-dropdown])')
+    dropdownBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.showPaddingDropdown(e))
+    })
+
+    // Border width presets (generic pp-preset with data-border-width)
+    const borderWidthPresets = this.container.querySelectorAll('.pp-preset[data-border-width]')
+    borderWidthPresets.forEach(preset => {
+      preset.addEventListener('click', (e) => this.handleBorderWidthPreset(e))
+    })
+
+    // Border style toggles (both legacy .pp-toggle and v2 .pp-toggle-btn)
+    const borderStyleToggles = this.container.querySelectorAll('.pp-toggle[data-border-style], .pp-toggle-btn[data-border-style], .pp-layout-toggle[data-border-style]')
+    borderStyleToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleBorderStyleToggle(e))
+    })
+
+    // Border color inputs (swatch and text)
+    const borderColorSwatches = this.container.querySelectorAll('.pp-color-swatch[data-border-color-dir]')
+    borderColorSwatches.forEach(input => {
+      input.addEventListener('input', (e) => this.handleBorderColorChange(e))
+    })
+    const borderColorInputs = this.container.querySelectorAll('.pp-color-input[data-border-color-dir]')
+    borderColorInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleBorderColorChange(e))
+    })
+
+    // Radius presets (generic pp-preset with data-radius)
+    const radiusPresets = this.container.querySelectorAll('.pp-preset[data-radius]')
+    radiusPresets.forEach(preset => {
+      preset.addEventListener('click', (e) => this.handleRadiusPreset(e))
+    })
+
+    // Typography preset buttons (font size) - supports legacy, v2 and prototype
+    const fontSizePresets = this.container.querySelectorAll('.pp-pad-token[data-font-size], .pp-token-btn[data-font-size], .token-btn[data-font-size]')
+    fontSizePresets.forEach(preset => {
+      preset.addEventListener('click', (e) => this.handleFontSizePreset(e))
+    })
+
+    // Radius token buttons (prototype)
+    const radiusTokenBtns = this.container.querySelectorAll('.token-btn[data-radius]')
+    radiusTokenBtns.forEach(token => {
+      token.addEventListener('click', (e) => this.handleRadiusTokenClick(e))
+    })
+
+    // Border width toggle buttons (prototype)
+    const borderWidthToggles = this.container.querySelectorAll('.toggle-btn[data-border-width]')
+    borderWidthToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleBorderWidthToggle(e))
+    })
+
+    // Border color swatches (prototype)
+    const borderColorSwatchBtns = this.container.querySelectorAll('.color-swatch[data-border-color]')
+    borderColorSwatchBtns.forEach(swatch => {
+      swatch.addEventListener('click', (e) => this.handleBorderColorSwatchClick(e))
+    })
+
+    // Typography preset buttons (weight) - legacy only (v2 uses select)
+    const weightPresets = this.container.querySelectorAll('.pp-pad-token[data-weight]')
+    weightPresets.forEach(preset => {
+      preset.addEventListener('click', (e) => this.handleWeightPreset(e))
+    })
+
+    // Text align toggles - supports legacy, v2 and prototype
+    const textAlignToggles = this.container.querySelectorAll('.pp-pad-token[data-text-align], .pp-toggle-btn[data-text-align], .toggle-btn[data-text-align]')
+    textAlignToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleTextAlignToggle(e))
+    })
+
+    // Text style toggles - supports legacy, v2 and prototype
+    const textStyleToggles = this.container.querySelectorAll('.pp-pad-token[data-text-style], .pp-toggle-btn[data-text-style], .toggle-btn[data-text-style]')
+    textStyleToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleTextStyleToggle(e))
+    })
+
+    // Select dropdowns (font, weight) - supports v2 and prototype
+    const v2Selects = this.container.querySelectorAll('.pp-v2-select[data-prop], .prop-select[data-prop]')
+    v2Selects.forEach(select => {
+      select.addEventListener('change', (e) => this.handleV2SelectChange(e))
+    })
+
+    // Inputs with data-prop (font-size, etc.) - supports v2 and prototype
+    const v2PropInputs = this.container.querySelectorAll('.pp-v2-input[data-prop], .prop-input[data-prop]')
+    v2PropInputs.forEach(input => {
+      input.addEventListener('change', (e) => this.handleV2InputChange(e))
+    })
+
+    // Shadow toggles
+    const shadowToggles = this.container.querySelectorAll('.pp-shadow-toggle')
+    shadowToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleShadowToggle(e))
+    })
+
+    // Opacity presets
+    const opacityPresets = this.container.querySelectorAll('.pp-opacity-preset')
+    opacityPresets.forEach(preset => {
+      preset.addEventListener('click', (e) => this.handleOpacityPreset(e))
+    })
+
+    // Visibility toggles
+    const visibilityToggles = this.container.querySelectorAll('.pp-visibility-toggle')
+    visibilityToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleVisibilityToggle(e))
+    })
+
+    // Color swatches (legacy and prototype)
+    const colorSwatches = this.container.querySelectorAll('.pp-color-swatch, .color-swatch[data-color-prop]')
+    colorSwatches.forEach(swatch => {
+      swatch.addEventListener('click', (e) => this.handleColorSwatchClick(e))
+    })
+
+    // Color buttons (v2)
+    const colorBtns = this.container.querySelectorAll('.pp-color-btn[data-color-prop]')
+    colorBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleColorBtnClick(e))
+    })
+
+    // Hover color buttons (v2)
+    const hoverColorBtns = this.container.querySelectorAll('.pp-color-btn[data-hover-prop]')
+    hoverColorBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleHoverColorBtnClick(e))
+    })
+
+    // Hover opacity tokens (v2)
+    const hoverOpacityTokens = this.container.querySelectorAll('.pp-token-btn[data-hover-prop="hover-opacity"]')
+    hoverOpacityTokens.forEach(token => {
+      token.addEventListener('click', (e) => this.handleHoverOpacityTokenClick(e))
+    })
+
+    // Hover border width toggles (v2)
+    const hoverBorderToggles = this.container.querySelectorAll('.pp-toggle-btn[data-hover-bor-width]')
+    hoverBorderToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleHoverBorderWidthClick(e))
+    })
+
+    // Hover inputs (v2)
+    const hoverInputs = this.container.querySelectorAll('.pp-v2-input[data-hover-prop]')
+    hoverInputs.forEach(input => {
+      input.addEventListener('change', (e) => this.handleHoverInputChange(e))
+    })
+
+    // Color pickers
+    const colorPickers = this.container.querySelectorAll('.pp-color-picker')
+    colorPickers.forEach(picker => {
+      picker.addEventListener('input', (e) => this.handleColorPickerChange(e))
+    })
+
+    // Cursor select
+    const cursorSelect = this.container.querySelector('.pp-cursor-select')
+    if (cursorSelect) {
+      cursorSelect.addEventListener('change', (e) => this.handleSelectChange(e))
+    }
+  }
+
+  /**
+   * Handle alignment grid click
+   */
+  private handleAlignmentClick(e: Event): void {
+    const cell = (e.target as HTMLElement).closest('.pp-align-cell, .align-cell') as HTMLElement
+    if (!cell || !this.currentElement) return
+
+    const align = cell.dataset.align
+    if (!align) return
+
+    // Parse alignment: "top-left", "middle-center", etc.
+    const [vertical, horizontal] = align.split('-')
+
+    // Determine which properties to set
+    let newProps: string[]
+    if (vertical === 'middle' && horizontal === 'center') {
+      newProps = ['center']
+    } else {
+      const vProp = vertical === 'top' ? 'top' : vertical === 'bottom' ? 'bottom' : 'ver-center'
+      const hProp = horizontal === 'left' ? 'left' : horizontal === 'right' ? 'right' : 'hor-center'
+      newProps = [vProp, hProp]
+    }
+
+    // Use direct line manipulation to handle alignment atomically
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.modifyAlignmentInLine(nodeId, newProps)
+
+    if (result) {
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle layout toggle click
+   */
+  private handleLayoutToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-layout-toggle, .pp-toggle-btn[data-layout], .toggle-btn[data-layout]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const layout = toggle.dataset.layout
+    if (!layout) return
+
+    // Use direct line manipulation to handle layout atomically
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.modifyLayoutInLine(nodeId, layout)
+
+    if (result) {
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle gap token click (v2)
+   */
+  private handleGapTokenClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('[data-gap-token]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    // Use token reference if available, otherwise use numeric value
+    const tokenRef = btn.dataset.tokenRef
+    const value = tokenRef || btn.dataset.gapToken
+    if (!value) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'gap', value)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle wrap toggle click (v2)
+   */
+  private handleWrapToggle(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('[data-wrap]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const wrapValue = btn.dataset.wrap
+    if (!wrapValue) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (wrapValue === 'on') {
+      // Add wrap property
+      const result = this.codeModifier.updateProperty(nodeId, 'wrap', '')
+      this.onCodeChange(result)
+    } else {
+      // Remove wrap property
+      const result = this.codeModifier.removeProperty(nodeId, 'wrap')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle expand button click (prototype)
+   */
+  private handleExpandBtnClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.expand-btn[data-expand]') as HTMLElement
+    if (!btn) return
+
+    const expandGroup = btn.dataset.expand
+    if (!expandGroup) return
+
+    // Find the container and toggle expanded state
+    const container = this.container.querySelector(`[data-expand-container="${expandGroup}"]`)
+    if (container) {
+      container.classList.toggle('expanded')
+    }
+  }
+
+  /**
+   * Handle padding token button click (prototype)
+   */
+  private handlePadTokenBtnClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.token-btn[data-pad-token]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    // Use token reference if available, otherwise use numeric value
+    const tokenRef = btn.dataset.tokenRef
+    const value = tokenRef || btn.dataset.padToken
+    const dir = btn.dataset.padDir
+    if (!value || !dir) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get current padding values
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const padProp = props?.allProperties.find((p: {name: string}) => p.name === 'padding' || p.name === 'pad' || p.name === 'p')
+    const currentValue = padProp?.value || ''
+    const padParts = currentValue.split(/\s+/).filter(Boolean)
+
+    let tPad = '', rPad = '', bPad = '', lPad = ''
+    if (padParts.length === 1) {
+      tPad = rPad = bPad = lPad = padParts[0]
+    } else if (padParts.length === 2) {
+      tPad = bPad = padParts[0]
+      rPad = lPad = padParts[1]
+    } else if (padParts.length === 4) {
+      tPad = padParts[0]; rPad = padParts[1]; bPad = padParts[2]; lPad = padParts[3]
+    }
+
+    // Update based on direction
+    if (dir === 'h') { rPad = lPad = value }
+    else if (dir === 'v') { tPad = bPad = value }
+    else if (dir === 't') { tPad = value }
+    else if (dir === 'r') { rPad = value }
+    else if (dir === 'b') { bPad = value }
+    else if (dir === 'l') { lPad = value }
+
+    // Build new padding value
+    let newPadValue: string
+    if (tPad === rPad && rPad === bPad && bPad === lPad) {
+      newPadValue = tPad || '0'
+    } else if (tPad === bPad && rPad === lPad) {
+      newPadValue = `${tPad || '0'} ${rPad || '0'}`
+    } else {
+      newPadValue = `${tPad || '0'} ${rPad || '0'} ${bPad || '0'} ${lPad || '0'}`
+    }
+
+    const result = this.codeModifier.updateProperty(nodeId, 'pad', newPadValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle radius token click (prototype)
+   */
+  private handleRadiusTokenClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.token-btn[data-radius]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    // Use token reference if available, otherwise use numeric value
+    const tokenRef = btn.dataset.tokenRef
+    const value = tokenRef || btn.dataset.radius
+    if (!value) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'rad', value)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle border width toggle click (prototype)
+   */
+  private handleBorderWidthToggle(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.toggle-btn[data-border-width]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const width = btn.dataset.borderWidth
+    if (width === undefined) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (width === '0') {
+      // Remove border
+      const result = this.codeModifier.removeProperty(nodeId, 'bor')
+      this.onCodeChange(result)
+    } else {
+      // Set border width (default color #333)
+      const result = this.codeModifier.updateProperty(nodeId, 'bor', `${width} #333`)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle border color swatch click (prototype)
+   */
+  private handleBorderColorSwatchClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.color-swatch[data-border-color]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const color = btn.dataset.borderColor
+    if (!color) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get current border value and update color
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const borderProp = props?.allProperties.find((p: {name: string}) => p.name === 'border' || p.name === 'bor')
+    const currentValue = borderProp?.value || '1'
+    const parts = currentValue.split(/\s+/).filter(Boolean)
+    const width = parts[0] || '1'
+
+    const result = this.codeModifier.updateProperty(nodeId, 'bor', `${width} ${color}`)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle size mode toggle click (v2 hug/full)
+   */
+  private handleSizeModeToggle(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('[data-size-mode]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const mode = btn.dataset.sizeMode
+    if (!mode) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Parse mode: "width-hug", "width-full", "height-hug", "height-full"
+    const [prop, value] = mode.split('-')
+
+    const result = this.codeModifier.updateProperty(nodeId, prop, value)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle size constraint toggle click (min-width, max-width, etc.)
+   */
+  private handleSizeConstraintToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-size-toggle') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const constraint = toggle.dataset.sizeConstraint
+    if (!constraint) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the constraint property
+      const result = this.codeModifier.removeProperty(nodeId, constraint)
+      this.onCodeChange(result)
+    } else {
+      // Add the constraint with current width/height value as default
+      const isWidth = constraint.includes('width')
+      const baseProp = isWidth ? 'width' : 'height'
+      const baseInput = this.container.querySelector(`.pp-size-input[data-prop="${baseProp}"]`) as HTMLInputElement
+      const baseValue = baseInput?.value || '100'
+
+      const result = this.codeModifier.updateProperty(nodeId, constraint, baseValue)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle padding token click
+   */
+  private handlePadTokenClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-pad-token') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const tokenName = btn.dataset.padToken // Token name without $ (e.g., "sm.pad")
+    const dir = btn.dataset.padDir
+    if (!tokenName || !dir) return
+
+    // Check if clicking on already active token - deselect it
+    const isActive = btn.classList.contains('active')
+
+    // Token reference with $ prefix for code (e.g., "$sm.pad")
+    const tokenRef = `$${tokenName}`
+
+    // Get current padding values from token refs or input values
+    const vInput = this.container.querySelector('.pp-pad-input[data-pad-dir="v"]') as HTMLInputElement
+    const hInput = this.container.querySelector('.pp-pad-input[data-pad-dir="h"]') as HTMLInputElement
+
+    // Get current values - prefer token ref, then input value
+    let vVal = vInput?.dataset.tokenRef || vInput?.value || '0'
+    let hVal = hInput?.dataset.tokenRef || hInput?.value || '0'
+
+    // Update the appropriate direction
+    if (dir === 'v') {
+      vVal = isActive ? (this.resolveTokenValue(tokenName) || '0') : tokenRef
+    } else if (dir === 'h') {
+      hVal = isActive ? (this.resolveTokenValue(tokenName) || '0') : tokenRef
+    }
+
+    // Build padding value
+    const padValue = vVal === hVal ? vVal : `${vVal} ${hVal}`
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'pad', padValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle padding v2 token click
+   */
+  private handlePadV2TokenClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('[data-pad-v2-token]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const value = btn.dataset.padV2Token
+    const dir = btn.dataset.padDir
+    if (!value || !dir) return
+
+    // Get current padding values from v2 inputs
+    const vInput = this.container.querySelector('.pp-v2-input[data-pad-dir="v"]') as HTMLInputElement
+    const hInput = this.container.querySelector('.pp-v2-input[data-pad-dir="h"]') as HTMLInputElement
+
+    let vVal = vInput?.value || '0'
+    let hVal = hInput?.value || '0'
+
+    // Update the appropriate direction
+    if (dir === 'v') {
+      vVal = value
+    } else if (dir === 'h') {
+      hVal = value
+    } else if (dir === 't' || dir === 'b') {
+      vVal = value
+    } else if (dir === 'r' || dir === 'l') {
+      hVal = value
+    }
+
+    // Build padding value
+    const padValue = vVal === hVal ? vVal : `${vVal} ${hVal}`
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'pad', padValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle padding input change
+   */
+  private handlePadInputChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const dir = input.dataset.padDir
+    if (!dir) return
+
+    this.debounce('padding', () => {
+      this.updatePaddingFromInputs()
+    })
+  }
+
+  /**
+   * Get padding value from input - uses token ref if present, otherwise input value
+   */
+  private getPadValueFromInput(input: HTMLInputElement | null): string {
+    if (!input) return '0'
+    // If input has a token reference and is readonly, use the token
+    const tokenRef = input.dataset.tokenRef
+    if (tokenRef && input.readOnly) {
+      return tokenRef
+    }
+    // Otherwise use the input value
+    return input.value || '0'
+  }
+
+  /**
+   * Update padding from current input values (supports both legacy and v2 inputs)
+   */
+  private updatePaddingFromInputs(): void {
+    if (!this.currentElement) return
+
+    const spacingGroup = this.container.querySelector('.pp-spacing-group') as HTMLElement
+    const isExpanded = spacingGroup?.dataset.expanded === 'true'
+
+    // Helper to get input value (legacy or v2)
+    const getInput = (dir: string) => {
+      return (this.container.querySelector(`.pp-pad-input[data-pad-dir="${dir}"]`) ||
+              this.container.querySelector(`.pp-v2-input[data-pad-dir="${dir}"]`)) as HTMLInputElement
+    }
+
+    let padValue: string
+
+    if (isExpanded) {
+      // Get T, R, B, L values (respecting token refs)
+      const t = this.getPadValueFromInput(getInput('t'))
+      const r = this.getPadValueFromInput(getInput('r'))
+      const b = this.getPadValueFromInput(getInput('b'))
+      const l = this.getPadValueFromInput(getInput('l'))
+
+      // Simplify if possible
+      if (t === b && r === l && t === r) {
+        padValue = t
+      } else if (t === b && r === l) {
+        padValue = `${t} ${r}`
+      } else {
+        padValue = `${t} ${r} ${b} ${l}`
+      }
+    } else {
+      // Get V and H values (respecting token refs)
+      const v = this.getPadValueFromInput(getInput('v'))
+      const h = this.getPadValueFromInput(getInput('h'))
+
+      padValue = v === h ? v : `${v} ${h}`
+    }
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'pad', padValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Toggle padding expand/collapse
+   */
+  private togglePaddingExpand(expand: boolean): void {
+    const spacingGroup = this.container.querySelector('.pp-spacing-group') as HTMLElement
+    const compact = this.container.querySelector('.pp-spacing-compact') as HTMLElement
+    const expanded = this.container.querySelector('.pp-spacing-expanded') as HTMLElement
+
+    if (!spacingGroup || !compact || !expanded) return
+
+    spacingGroup.dataset.expanded = expand ? 'true' : 'false'
+    compact.style.display = expand ? 'none' : 'flex'
+    expanded.style.display = expand ? 'flex' : 'none'
+  }
+
+  /**
+   * Toggle border expand/collapse (T/R/B/L)
+   */
+  private toggleBorderExpand(expand: boolean): void {
+    const borderGroup = this.container.querySelector('.pp-border-group') as HTMLElement
+    const compact = this.container.querySelector('.pp-border-compact') as HTMLElement
+    const expanded = this.container.querySelector('.pp-border-expanded') as HTMLElement
+
+    if (!borderGroup || !compact || !expanded) return
+
+    borderGroup.dataset.expanded = expand ? 'true' : 'false'
+    compact.style.display = expand ? 'none' : 'block'
+    expanded.style.display = expand ? 'block' : 'none'
+  }
+
+  /**
+   * Show padding dropdown with dynamic token values
+   */
+  private showPaddingDropdown(e: Event): void {
+    const btn = e.target as HTMLElement
+    const dir = btn.dataset.padDir
+    if (!dir) return
+
+    // Remove existing dropdown
+    const existing = this.container.querySelector('.pp-pad-dropdown-menu')
+    if (existing) existing.remove()
+
+    // Get dynamic tokens from source
+    const tokens = this.getPaddingTokens()
+
+    // Create dropdown
+    const dropdown = document.createElement('div')
+    dropdown.className = 'pp-pad-dropdown-menu'
+
+    if (tokens.length > 0) {
+      // Show tokens with names and values
+      dropdown.innerHTML = tokens.map(token =>
+        `<button class="pp-pad-preset pp-token-preset" data-value="${token.value}" data-token-ref="$${token.fullName}">
+          <span class="pp-token-name">${token.name}</span>
+          <span class="pp-token-value">${token.value}</span>
+        </button>`
+      ).join('') + `<div class="pp-dropdown-divider"></div>` +
+        this.PADDING_PRESETS.map(val =>
+          `<button class="pp-pad-preset pp-numeric-preset" data-value="${val}">${val}</button>`
+        ).join('')
+    } else {
+      // Fallback to numeric presets
+      dropdown.innerHTML = this.PADDING_PRESETS.map(val =>
+        `<button class="pp-pad-preset" data-value="${val}">${val}</button>`
+      ).join('')
+    }
+
+    // Position below button
+    const rect = btn.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+    dropdown.style.position = 'absolute'
+    dropdown.style.top = `${rect.bottom - containerRect.top + 4}px`
+    dropdown.style.left = `${rect.left - containerRect.left}px`
+
+    this.container.style.position = 'relative'
+    this.container.appendChild(dropdown)
+
+    // Handle clicks
+    dropdown.addEventListener('click', (ev) => {
+      const preset = (ev.target as HTMLElement).closest('.pp-pad-preset') as HTMLElement
+      if (preset) {
+        const value = preset.dataset.value
+        const tokenRef = preset.dataset.tokenRef
+        const input = this.container.querySelector(`.pp-pad-input[data-pad-dir="${dir}"]`) as HTMLInputElement
+        if (input && value) {
+          input.value = value
+          if (tokenRef) {
+            // Token selected - store reference and make readonly
+            input.dataset.tokenRef = tokenRef
+            input.readOnly = true
+            input.classList.add('pp-token-bound')
+          } else {
+            // Numeric value selected - clear token binding
+            delete input.dataset.tokenRef
+            input.readOnly = false
+            input.classList.remove('pp-token-bound')
+          }
+          this.updatePaddingFromInputs()
+        }
+        dropdown.remove()
+      }
+    })
+
+    // Close on outside click
+    const closeDropdown = (ev: MouseEvent) => {
+      if (!dropdown.contains(ev.target as Node)) {
+        dropdown.remove()
+        document.removeEventListener('click', closeDropdown)
+      }
+    }
+    requestAnimationFrame(() => document.addEventListener('click', closeDropdown))
+  }
+
+  /**
+   * Show font dropdown with Google Fonts
+   */
+  private showFontDropdown(e: Event): void {
+    const btn = e.target as HTMLElement
+    if (!this.currentElement) return
+
+    // Remove existing dropdown
+    const existing = this.container.querySelector('.pp-pad-dropdown-menu')
+    if (existing) existing.remove()
+
+    // Get current font value
+    const fontInput = this.container.querySelector('.pp-font-input') as HTMLInputElement
+    const currentFont = fontInput?.value || ''
+
+    // Create dropdown
+    const dropdown = document.createElement('div')
+    dropdown.className = 'pp-pad-dropdown-menu pp-font-dropdown-menu'
+    dropdown.innerHTML = this.GOOGLE_FONTS.map(font =>
+      `<button class="pp-pad-preset pp-font-preset ${font === currentFont ? 'active' : ''}" data-font="${font}" style="font-family: '${font}', sans-serif">${font}</button>`
+    ).join('')
+
+    // Position below button
+    const rect = btn.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+    dropdown.style.position = 'absolute'
+    dropdown.style.top = `${rect.bottom - containerRect.top + 4}px`
+    dropdown.style.right = `${containerRect.right - rect.right}px`
+
+    this.container.style.position = 'relative'
+    this.container.appendChild(dropdown)
+
+    // Handle clicks
+    dropdown.addEventListener('click', (ev) => {
+      const preset = (ev.target as HTMLElement).closest('.pp-font-preset') as HTMLElement
+      if (preset) {
+        const font = preset.dataset.font
+        if (font && fontInput) {
+          fontInput.value = font
+          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
+          const result = this.codeModifier.updateProperty(nodeId, 'font', font)
+          this.onCodeChange(result)
+        }
+        dropdown.remove()
+      }
+    })
+
+    // Close on outside click
+    const closeFontDropdown = (ev: MouseEvent) => {
+      if (!dropdown.contains(ev.target as Node)) {
+        dropdown.remove()
+        document.removeEventListener('click', closeFontDropdown)
+      }
+    }
+    requestAnimationFrame(() => document.addEventListener('click', closeFontDropdown))
+  }
+
+  /**
+   * Show font size dropdown
+   */
+  private showFontsizeDropdown(e: Event): void {
+    const btn = e.target as HTMLElement
+    if (!this.currentElement) return
+
+    // Remove existing dropdown
+    const existing = this.container.querySelector('.pp-pad-dropdown-menu')
+    if (existing) existing.remove()
+
+    // Get current font size value
+    const fontsizeInput = this.container.querySelector('.pp-fontsize-input') as HTMLInputElement
+    const currentFontsize = fontsizeInput?.value || ''
+
+    // Font size options
+    const sizes = ['11', '12', '14', '16', '18', '20', '24', '32', '48']
+
+    // Create dropdown
+    const dropdown = document.createElement('div')
+    dropdown.className = 'pp-pad-dropdown-menu pp-fontsize-dropdown-menu'
+    dropdown.innerHTML = sizes.map(size =>
+      `<button class="pp-pad-preset pp-fontsize-preset ${size === currentFontsize ? 'active' : ''}" data-fontsize="${size}">${size}</button>`
+    ).join('')
+
+    // Position below button
+    const rect = btn.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+    dropdown.style.position = 'absolute'
+    dropdown.style.top = `${rect.bottom - containerRect.top + 4}px`
+    dropdown.style.right = `${containerRect.right - rect.right}px`
+
+    this.container.style.position = 'relative'
+    this.container.appendChild(dropdown)
+
+    // Handle clicks
+    dropdown.addEventListener('click', (ev) => {
+      const preset = (ev.target as HTMLElement).closest('.pp-fontsize-preset') as HTMLElement
+      if (preset) {
+        const size = preset.dataset.fontsize
+        if (size && fontsizeInput) {
+          fontsizeInput.value = size
+          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
+          const result = this.codeModifier.updateProperty(nodeId, 'font-size', size)
+          this.onCodeChange(result)
+        }
+        dropdown.remove()
+      }
+    })
+
+    // Close on outside click
+    const closeFontsizeDropdown = (ev: MouseEvent) => {
+      if (!dropdown.contains(ev.target as Node)) {
+        dropdown.remove()
+        document.removeEventListener('click', closeFontsizeDropdown)
+      }
+    }
+    requestAnimationFrame(() => document.addEventListener('click', closeFontsizeDropdown))
+  }
+
+  /**
+   * Show weight dropdown
+   */
+  private showWeightDropdown(e: Event): void {
+    const btn = e.target as HTMLElement
+    if (!this.currentElement) return
+
+    // Remove existing dropdown
+    const existing = this.container.querySelector('.pp-pad-dropdown-menu')
+    if (existing) existing.remove()
+
+    // Get current weight value
+    const weightInput = this.container.querySelector('.pp-weight-input') as HTMLInputElement
+    const currentWeight = weightInput?.value || ''
+
+    // Weight options
+    const weights = ['300', '400', '500', '600', '700']
+
+    // Create dropdown
+    const dropdown = document.createElement('div')
+    dropdown.className = 'pp-pad-dropdown-menu pp-weight-dropdown-menu'
+    dropdown.innerHTML = weights.map(weight =>
+      `<button class="pp-pad-preset pp-weight-preset ${weight === currentWeight ? 'active' : ''}" data-weight="${weight}">${weight}</button>`
+    ).join('')
+
+    // Position below button
+    const rect = btn.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+    dropdown.style.position = 'absolute'
+    dropdown.style.top = `${rect.bottom - containerRect.top + 4}px`
+    dropdown.style.right = `${containerRect.right - rect.right}px`
+
+    this.container.style.position = 'relative'
+    this.container.appendChild(dropdown)
+
+    // Handle clicks
+    dropdown.addEventListener('click', (ev) => {
+      const preset = (ev.target as HTMLElement).closest('.pp-weight-preset') as HTMLElement
+      if (preset) {
+        const weight = preset.dataset.weight
+        if (weight && weightInput) {
+          weightInput.value = weight
+          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
+          const result = this.codeModifier.updateProperty(nodeId, 'weight', weight)
+          this.onCodeChange(result)
+        }
+        dropdown.remove()
+      }
+    })
+
+    // Close on outside click
+    const closeWeightDropdown = (ev: MouseEvent) => {
+      if (!dropdown.contains(ev.target as Node)) {
+        dropdown.remove()
+        document.removeEventListener('click', closeWeightDropdown)
+      }
+    }
+    requestAnimationFrame(() => document.addEventListener('click', closeWeightDropdown))
+  }
+
+  /**
+   * Modify layout properties directly in the source line
+   * Removes existing layout modes and adds the new one
+   */
+  private modifyLayoutInLine(nodeId: string, newLayout: string): ModificationResult | null {
+    const nodeMapping = this.codeModifier.getSourceMap().getNodeById(nodeId)
+    if (!nodeMapping) return null
+
+    const source = this.codeModifier.getSource()
+    const lines = source.split('\n')
+    const lineIndex = nodeMapping.position.line - 1
+    let line = lines[lineIndex]
+    if (!line) return null
+
+    // All layout keywords to remove (full and short forms) - only mutually exclusive modes
+    const layoutKeywords = [
+      '\\bhorizontal\\b', '\\bhor\\b',
+      '\\bvertical\\b', '\\bver\\b',
+      '\\bstacked\\b', '\\bgrid\\b'
+    ]
+
+    // Remove existing layout keywords
+    for (const keyword of layoutKeywords) {
+      line = line.replace(new RegExp(`,?\\s*${keyword}\\s*,?`, 'g'), (match) => {
+        if (match.startsWith(',') && match.endsWith(',')) {
+          return ', '
+        }
+        return ''
+      })
+    }
+
+    // Clean up commas
+    line = line.replace(/,\s*,/g, ',')
+    line = line.replace(/,\s*$/g, '')
+    line = line.replace(/,\s*(\n|$)/g, '$1')
+
+    // Don't add 'vertical' if it's the default (no layout keyword means vertical)
+    if (newLayout !== 'vertical') {
+      line = line.trimEnd() + ', ' + newLayout
+    }
+
+    lines[lineIndex] = line
+    const newSource = lines.join('\n')
+
+    // Calculate character offsets
+    let fromOffset = 0
+    for (let i = 0; i < lineIndex; i++) {
+      fromOffset += source.split('\n')[i].length + 1
+    }
+    const toOffset = fromOffset + source.split('\n')[lineIndex].length
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: fromOffset,
+        to: toOffset,
+        insert: line
+      }
+    }
+  }
+
+  /**
+   * Modify alignment properties directly in the source line
+   * This handles all alignment changes atomically to avoid position corruption
+   */
+  private modifyAlignmentInLine(nodeId: string, newProps: string[]): ModificationResult | null {
+    const nodeMapping = this.codeModifier.getSourceMap().getNodeById(nodeId)
+    if (!nodeMapping) return null
+
+    const source = this.codeModifier.getSource()
+    const lines = source.split('\n')
+    const lineIndex = nodeMapping.position.line - 1
+    let line = lines[lineIndex]
+    if (!line) return null
+
+    // All alignment keywords to remove
+    const alignKeywords = ['\\btop\\b', '\\bbottom\\b', '\\bver-center\\b', '\\bleft\\b', '\\bright\\b', '\\bhor-center\\b', '\\bcenter\\b']
+
+    // Remove existing alignment keywords (with surrounding comma/space cleanup)
+    for (const keyword of alignKeywords) {
+      // Match keyword with optional leading comma/space and trailing comma/space
+      line = line.replace(new RegExp(`,?\\s*${keyword}\\s*,?`, 'g'), (match, offset, str) => {
+        // If we're in the middle (had commas on both sides), keep one comma
+        if (match.startsWith(',') && match.endsWith(',')) {
+          return ', '
+        }
+        // Otherwise just remove
+        return ''
+      })
+    }
+
+    // Clean up any double commas or trailing commas before newline
+    line = line.replace(/,\s*,/g, ',')
+    line = line.replace(/,\s*$/g, '')
+    line = line.replace(/,\s*(\n|$)/g, '$1')
+
+    // Find where to insert the new properties (after last existing property, before children)
+    // Look for the end of the component line (before any text content or end of line)
+    const insertProps = newProps.join(', ')
+
+    // If line has content, add comma and properties
+    // Check if line ends with properties (not just component name)
+    if (line.includes(',') || line.match(/\w+\s+\d+/) || line.match(/\w+\s+\w+/)) {
+      // Has properties, add comma before new ones
+      line = line.trimEnd() + ', ' + insertProps
+    } else {
+      // Just component name, add properties with comma
+      line = line.trimEnd() + ', ' + insertProps
+    }
+
+    lines[lineIndex] = line
+    const newSource = lines.join('\n')
+
+    // Calculate the character offset for the line
+    let fromOffset = 0
+    for (let i = 0; i < lineIndex; i++) {
+      fromOffset += source.split('\n')[i].length + 1 // +1 for newline
+    }
+    const toOffset = fromOffset + source.split('\n')[lineIndex].length
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: fromOffset,
+        to: toOffset,
+        insert: line
+      }
+    }
+  }
+
+  /**
+   * Handle text input changes
+   */
+  private handleInputChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    const propName = input.dataset.prop
+    if (!propName || !this.currentElement) return
+
+    // Debounce
+    this.debounce(propName, () => {
+      this.updateProperty(propName, input.value)
+    })
+  }
+
+  /**
+   * Handle color picker changes
+   */
+  private handleColorChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    const propName = input.dataset.prop
+    if (!propName || !this.currentElement) return
+
+    // Update the text input as well
+    const textInput = this.container.querySelector(`input[type="text"][data-prop="${propName}"]`) as HTMLInputElement
+    if (textInput) {
+      textInput.value = input.value
+      textInput.classList.remove('token')
+    }
+
+    // No debounce for color picker
+    this.updateProperty(propName, input.value)
+  }
+
+  /**
+   * Handle "Define as Component" button click
+   *
+   * Extracts inline properties to a component definition in components.mirror
+   */
+  private handleDefineAsComponent(): void {
+    if (!this.currentElement || !this.options.filesAccess) {
+      console.warn('PropertyPanel: Cannot define as component - missing element or filesAccess')
+      return
+    }
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    const result = this.codeModifier.extractToComponentFile(
+      nodeId,
+      this.options.filesAccess
+    )
+
+    if (result.success) {
+      // 1. Save the components.mirror file
+      this.options.filesAccess.setFile(
+        result.componentFileChange.path,
+        result.componentFileChange.content
+      )
+
+      // 2. Apply the change to the current file
+      this.onCodeChange({
+        success: true,
+        newSource: '', // Not used when change is provided
+        change: result.currentFileChange,
+      })
+
+      console.log(
+        'PropertyPanel: Component extracted to',
+        result.componentFileChange.path,
+        result.importAdded ? '(import added)' : ''
+      )
+    } else {
+      console.warn('PropertyPanel: Failed to extract component:', result.error)
+    }
+  }
+
+  /**
+   * Handle boolean button toggle
+   */
+  private handleBooleanToggle(e: Event): void {
+    const btn = e.target as HTMLElement
+    const button = btn.closest('[data-type="boolean"]') as HTMLElement
+    if (!button) return
+
+    const propName = button.dataset.prop
+    if (!propName || !this.currentElement) return
+
+    const isActive = button.classList.contains('active')
+    button.classList.toggle('active')
+
+    // Use template ID for template instances
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, propName)
+      this.onCodeChange(result)
+    } else {
+      // Add the property
+      this.updateProperty(propName, 'true')
+    }
+  }
+
+  /**
+   * Handle select changes
+   */
+  private handleSelectChange(e: Event): void {
+    const select = e.target as HTMLSelectElement
+    const propName = select.dataset.prop
+    if (!propName || !this.currentElement) return
+
+    this.updateProperty(propName, select.value)
+  }
+
+  /**
+   * Handle border width preset click
+   */
+  private handleBorderWidthPreset(e: Event): void {
+    const preset = (e.target as HTMLElement).closest('.pp-preset[data-border-width]') as HTMLElement
+    if (!preset || !this.currentElement) return
+
+    const width = preset.dataset.borderWidth
+    if (width === undefined) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (width === '0') {
+      // Remove border
+      const result = this.codeModifier.removeProperty(nodeId, 'bor')
+      this.onCodeChange(result)
+    } else {
+      // Get current style and color
+      const colorInput = this.container.querySelector('.pp-color-input[data-prop="border-color"]') as HTMLInputElement
+      const color = colorInput?.value || '#333'
+
+      // Find active style
+      const activeStyle = this.container.querySelector('.pp-toggle[data-border-style].active, .pp-toggle-btn[data-border-style].active, .pp-layout-toggle[data-border-style].active') as HTMLElement
+      const style = activeStyle?.dataset.borderStyle || 'solid'
+
+      // Build border value
+      const borderValue = style === 'solid' ? `${width} ${color}` : `${width} ${style} ${color}`
+
+      const result = this.codeModifier.updateProperty(nodeId, 'bor', borderValue)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle border style toggle click
+   */
+  private handleBorderStyleToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-toggle[data-border-style], .pp-toggle-btn[data-border-style], .pp-layout-toggle[data-border-style]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const style = toggle.dataset.borderStyle
+    if (!style) return
+
+    // Get current border value to preserve width and color
+    const widthInput = this.container.querySelector('.pp-input[data-prop="border-width"]') as HTMLInputElement
+    const colorInput = this.container.querySelector('.pp-color-input[data-prop="border-color"]') as HTMLInputElement
+
+    const width = widthInput?.value || '1'
+    const color = colorInput?.value || '#333'
+
+    // Build new border value
+    const borderValue = style === 'solid' ? `${width} ${color}` : `${width} ${style} ${color}`
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'bor', borderValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle border color change (individual sides)
+   */
+  private handleBorderColorChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    const dir = input.dataset.borderColorDir
+    if (!dir || !this.currentElement) return
+
+    const color = input.value
+
+    // Sync color swatch and text input
+    const row = input.closest('.pp-color-row')
+    if (row) {
+      const swatch = row.querySelector('.pp-color-swatch') as HTMLInputElement
+      const textInput = row.querySelector('.pp-color-input') as HTMLInputElement
+      if (swatch && swatch !== input) swatch.value = color.startsWith('#') ? color : '#333333'
+      if (textInput && textInput !== input) textInput.value = color
+    }
+
+    // Get width and style from this row
+    const line = input.closest('.pp-pad-line')
+    const widthInput = line?.querySelector('.pp-pad-input[data-border-dir]') as HTMLInputElement
+    const activeStyle = line?.querySelector('.pp-layout-toggle.active[data-border-style], .pp-toggle-btn.active[data-border-style]') as HTMLElement
+
+    const width = widthInput?.value || '1'
+    const style = activeStyle?.dataset.borderStyle || 'solid'
+
+    // Build border value
+    const borderValue = style === 'solid' ? `${width} ${color}` : `${width} ${style} ${color}`
+
+    // Determine property name based on direction
+    const propMap: Record<string, string> = {
+      't': 'bor-t',
+      'r': 'bor-r',
+      'b': 'bor-b',
+      'l': 'bor-l'
+    }
+    const propName = propMap[dir] || 'bor'
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, propName, borderValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle radius preset click
+   */
+  private handleRadiusPreset(e: Event): void {
+    const preset = (e.target as HTMLElement).closest('.pp-preset[data-radius]') as HTMLElement
+    if (!preset || !this.currentElement) return
+
+    const radius = preset.dataset.radius
+    if (!radius) return
+
+    // Value is already converted in the preset (full → 9999)
+    const radiusValue = radius
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (radiusValue === '0') {
+      // Remove radius property when set to 0
+      const result = this.codeModifier.removeProperty(nodeId, 'rad')
+      this.onCodeChange(result)
+    } else {
+      const result = this.codeModifier.updateProperty(nodeId, 'rad', radiusValue)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle font size preset click - reuses pp-pad-token
+   */
+  private handleFontSizePreset(e: Event): void {
+    const preset = (e.target as HTMLElement).closest('.pp-pad-token[data-font-size], .pp-token-btn[data-font-size], .token-btn[data-font-size]') as HTMLElement
+    if (!preset || !this.currentElement) return
+
+    const size = preset.dataset.fontSize
+    if (!size) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'font-size', size)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle weight preset click - reuses pp-pad-token
+   */
+  private handleWeightPreset(e: Event): void {
+    const preset = (e.target as HTMLElement).closest('.pp-pad-token[data-weight]') as HTMLElement
+    if (!preset || !this.currentElement) return
+
+    const weight = preset.dataset.weight
+    if (!weight) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'weight', weight)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle text align toggle click - reuses pp-pad-token
+   */
+  private handleTextAlignToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-pad-token[data-text-align], .pp-toggle-btn[data-text-align], .toggle-btn[data-text-align]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const align = toggle.dataset.textAlign
+    if (!align) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'text-align', align)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle text style toggle click (italic, underline, etc.) - supports prototype
+   */
+  private handleTextStyleToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-pad-token[data-text-style], .pp-toggle-btn[data-text-style], .toggle-btn[data-text-style]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const style = toggle.dataset.textStyle
+    if (!style) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, style)
+      this.onCodeChange(result)
+    } else {
+      // Add the property
+      const result = this.codeModifier.updateProperty(nodeId, style, 'true')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle v2 select change (font, weight dropdowns)
+   */
+  private handleV2SelectChange(e: Event): void {
+    const select = e.target as HTMLSelectElement
+    if (!select || !this.currentElement) return
+
+    const prop = select.dataset.prop
+    const value = select.value
+    if (!prop) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (value === '') {
+      // Remove property if empty option selected
+      const result = this.codeModifier.removeProperty(nodeId, prop)
+      this.onCodeChange(result)
+    } else {
+      const result = this.codeModifier.updateProperty(nodeId, prop, value)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle v2 input change (font-size, etc.)
+   */
+  private handleV2InputChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const prop = input.dataset.prop
+    const value = input.value.trim()
+    if (!prop) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (value === '') {
+      // Remove property if empty
+      const result = this.codeModifier.removeProperty(nodeId, prop)
+      this.onCodeChange(result)
+    } else {
+      const result = this.codeModifier.updateProperty(nodeId, prop, value)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle hover color button click (v2)
+   */
+  private handleHoverColorBtnClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-color-btn[data-hover-prop]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const prop = btn.dataset.hoverProp
+    const color = btn.dataset.color
+    if (!prop || !color) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, prop, color)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle hover opacity token click (v2)
+   */
+  private handleHoverOpacityTokenClick(e: Event): void {
+    const token = (e.target as HTMLElement).closest('.pp-token-btn[data-hover-prop]') as HTMLElement
+    if (!token || !this.currentElement) return
+
+    const value = token.dataset.value
+    if (!value) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'hover-opacity', value)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle hover border width toggle click (v2)
+   */
+  private handleHoverBorderWidthClick(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-toggle-btn[data-hover-bor-width]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const width = toggle.dataset.hoverBorWidth
+    if (width === undefined) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (width === '0') {
+      // Remove hover-border property
+      const result = this.codeModifier.removeProperty(nodeId, 'hover-bor')
+      this.onCodeChange(result)
+    } else {
+      // Get current border color if any, or default to #333
+      const row = toggle.closest('.pp-prop-row')
+      const activeColorBtn = row?.querySelector('.pp-color-btn.active[data-hover-prop="hover-boc"]') as HTMLElement
+      const color = activeColorBtn?.dataset.color || '#333'
+      const result = this.codeModifier.updateProperty(nodeId, 'hover-bor', `${width} ${color}`)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle hover input change (v2)
+   */
+  private handleHoverInputChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const prop = input.dataset.hoverProp
+    const value = input.value.trim()
+    if (!prop) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (value === '') {
+      // Remove property if empty
+      const result = this.codeModifier.removeProperty(nodeId, prop)
+      this.onCodeChange(result)
+    } else {
+      const result = this.codeModifier.updateProperty(nodeId, prop, value)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle shadow toggle click
+   */
+  private handleShadowToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-shadow-toggle') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const shadow = toggle.dataset.shadow
+    if (!shadow) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (shadow === 'none') {
+      // Remove shadow property
+      const result = this.codeModifier.removeProperty(nodeId, 'shadow')
+      this.onCodeChange(result)
+    } else {
+      // Set shadow value
+      const result = this.codeModifier.updateProperty(nodeId, 'shadow', shadow)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle opacity preset click
+   */
+  private handleOpacityPreset(e: Event): void {
+    const preset = (e.target as HTMLElement).closest('.pp-opacity-preset') as HTMLElement
+    if (!preset || !this.currentElement) return
+
+    const opacity = preset.dataset.opacity
+    if (!opacity) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'opacity', opacity)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle visibility toggle click (hidden, visible, disabled)
+   */
+  private handleVisibilityToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('.pp-visibility-toggle') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const visibility = toggle.dataset.visibility
+    if (!visibility) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, visibility)
+      this.onCodeChange(result)
+    } else {
+      // Add the property
+      const result = this.codeModifier.updateProperty(nodeId, visibility, 'true')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle color swatch click (legacy)
+   * Uses token name ($primary.bg) when available, falls back to hex value
+   */
+  private handleColorSwatchClick(e: Event): void {
+    const swatch = (e.target as HTMLElement).closest('.pp-color-swatch, .color-swatch') as HTMLElement
+    if (!swatch || !this.currentElement) return
+
+    // Prefer token name over resolved color value
+    const tokenName = swatch.dataset.token
+    const color = tokenName || swatch.dataset.color
+    if (!color) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Check for prototype structure (data-color-prop)
+    const colorProp = swatch.dataset.colorProp
+    if (colorProp) {
+      const result = this.codeModifier.updateProperty(nodeId, colorProp, color)
+      this.onCodeChange(result)
+      return
+    }
+
+    // Fall back to legacy structure (finding .pp-color-row parent)
+    const row = swatch.closest('.pp-color-row')
+    const picker = row?.querySelector('.pp-color-picker') as HTMLInputElement
+    const prop = picker?.dataset.prop
+
+    if (prop) {
+      const result = this.codeModifier.updateProperty(nodeId, prop, color)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle color button click (v2)
+   * Uses token name ($primary.bg) when available, falls back to hex value
+   */
+  private handleColorBtnClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-color-btn') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    // Prefer token name over resolved color value
+    const tokenName = btn.dataset.token
+    const color = tokenName || btn.dataset.color
+    const prop = btn.dataset.colorProp // 'bg' or 'color'
+    if (!color || !prop) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, prop, color)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle color picker change
+   */
+  private handleColorPickerChange(e: Event): void {
+    const picker = e.target as HTMLInputElement
+    if (!picker || !this.currentElement) return
+
+    const color = picker.value
+    const prop = picker.dataset.prop
+    if (!prop) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, prop, color)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Update a property value
+   */
+  private updateProperty(propName: string, value: string): void {
+    if (!this.currentElement) return
+
+    // Use template ID for template instances (changes apply to template, not instance)
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    const result = this.codeModifier.updateProperty(
+      nodeId,
+      propName,
+      value
+    )
+
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Debounce a function call
+   */
+  private debounce(key: string, fn: () => void): void {
+    const existing = this.debounceTimers.get(key)
+    if (existing) {
+      window.clearTimeout(existing)
+    }
+
+    const timer = window.setTimeout(() => {
+      this.debounceTimers.delete(key)
+      fn()
+    }, this.options.debounceTime)
+
+    this.debounceTimers.set(key, timer)
+  }
+
+  /**
+   * Clear all debounce timers
+   */
+  private clearDebounceTimers(): void {
+    for (const timer of this.debounceTimers.values()) {
+      window.clearTimeout(timer)
+    }
+    this.debounceTimers.clear()
+  }
+
+  /**
+   * Get display label for property
+   */
+  private getDisplayLabel(name: string): string {
+    const labels: Record<string, string> = {
+      // Layout
+      horizontal: 'Horizontal',
+      hor: 'Horizontal',
+      vertical: 'Vertical',
+      ver: 'Vertical',
+      center: 'Center',
+      cen: 'Center',
+      gap: 'Gap',
+      g: 'Gap',
+      spread: 'Spread',
+      wrap: 'Wrap',
+      stacked: 'Stacked',
+      grid: 'Grid',
+
+      // Alignment
+      left: 'Left',
+      right: 'Right',
+      'hor-center': 'H-Center',
+      top: 'Top',
+      bottom: 'Bottom',
+      'ver-center': 'V-Center',
+
+      // Size
+      width: 'Width',
+      w: 'Width',
+      height: 'Height',
+      h: 'Height',
+      size: 'Size',
+      'min-width': 'Min W',
+      minw: 'Min W',
+      'max-width': 'Max W',
+      maxw: 'Max W',
+      'min-height': 'Min H',
+      minh: 'Min H',
+      'max-height': 'Max H',
+      maxh: 'Max H',
+
+      // Spacing
+      padding: 'Padding',
+      pad: 'Padding',
+      p: 'Padding',
+      margin: 'Margin',
+      m: 'Margin',
+
+      // Colors
+      color: 'Color',
+      col: 'Color',
+      c: 'Color',
+      background: 'Background',
+      bg: 'Background',
+      'border-color': 'Border Color',
+      boc: 'Border Color',
+
+      // Border
+      border: 'Border',
+      bor: 'Border',
+      radius: 'Radius',
+      rad: 'Radius',
+
+      // Typography
+      'font-size': 'Font Size',
+      fs: 'Font Size',
+      weight: 'Weight',
+      line: 'Line Height',
+      font: 'Font',
+      'text-align': 'Text Align',
+      italic: 'Italic',
+      underline: 'Underline',
+      truncate: 'Truncate',
+      uppercase: 'Uppercase',
+      lowercase: 'Lowercase',
+
+      // Icon
+      'icon-size': 'Icon Size',
+      is: 'Icon Size',
+      'icon-weight': 'Icon Weight',
+      iw: 'Icon Weight',
+      'icon-color': 'Icon Color',
+      ic: 'Icon Color',
+      fill: 'Fill',
+
+      // Visual
+      opacity: 'Opacity',
+      o: 'Opacity',
+      shadow: 'Shadow',
+      cursor: 'Cursor',
+      z: 'Z-Index',
+      hidden: 'Hidden',
+      visible: 'Visible',
+      disabled: 'Disabled',
+      rotate: 'Rotate',
+      rot: 'Rotate',
+      translate: 'Translate',
+
+      // Scroll
+      scroll: 'Scroll',
+      'scroll-ver': 'Scroll Y',
+      'scroll-hor': 'Scroll X',
+      'scroll-both': 'Scroll Both',
+      clip: 'Clip',
+
+      // Hover
+      'hover-background': 'Hover BG',
+      'hover-bg': 'Hover BG',
+      'hover-color': 'Hover Color',
+      'hover-col': 'Hover Color',
+      'hover-opacity': 'Hover Opacity',
+      'hover-opa': 'Hover Opacity',
+      'hover-scale': 'Hover Scale',
+      'hover-border': 'Hover Border',
+      'hover-bor': 'Hover Border',
+      'hover-border-color': 'Hover Border Color',
+      'hover-boc': 'Hover Border Color',
+      'hover-radius': 'Hover Radius',
+      'hover-rad': 'Hover Radius',
+
+      // Content
+      content: 'Content',
+      placeholder: 'Placeholder',
+      src: 'Source',
+      href: 'Link',
+      value: 'Value',
+    }
+    return labels[name] || name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ')
+  }
+
+  /**
+   * Get select options for a property
+   */
+  private getSelectOptions(name: string): string[] {
+    const options: Record<string, string[]> = {
+      cursor: ['default', 'pointer', 'text', 'move', 'not-allowed', 'grab', 'grabbing'],
+      shadow: ['none', 'sm', 'md', 'lg'],
+      'text-align': ['left', 'center', 'right', 'justify'],
+    }
+    return options[name] || []
+  }
+
+  /**
+   * Escape HTML
+   */
+  private escapeHtml(str: string): string {
+    const div = document.createElement('div')
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  /**
+   * Refresh the panel (after external changes)
+   * Preserves focus on active input to avoid disrupting user editing
+   */
+  refresh(): void {
+    // Capture focus state before re-render
+    const activeElement = document.activeElement as HTMLInputElement | null
+    const isOurInput = activeElement && this.container.contains(activeElement)
+    const focusedProp = isOurInput ? activeElement?.dataset?.prop : null
+    const focusedPadDir = isOurInput ? activeElement?.dataset?.padDir : null
+    const cursorPosition = isOurInput ? activeElement?.selectionStart : null
+
+    const nodeId = this.selectionManager.getSelection()
+    this.updatePanel(nodeId)
+
+    // Restore focus after re-render
+    if (focusedProp || focusedPadDir) {
+      requestAnimationFrame(() => {
+        let inputToFocus: HTMLInputElement | null = null
+
+        if (focusedPadDir) {
+          inputToFocus = this.container.querySelector(
+            `input[data-pad-dir="${focusedPadDir}"]`
+          ) as HTMLInputElement
+        } else if (focusedProp) {
+          inputToFocus = this.container.querySelector(
+            `input[data-prop="${focusedProp}"]`
+          ) as HTMLInputElement
+        }
+
+        if (inputToFocus) {
+          inputToFocus.focus()
+          // Restore cursor position
+          if (cursorPosition !== null && cursorPosition !== undefined) {
+            inputToFocus.setSelectionRange(cursorPosition, cursorPosition)
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * Update dependencies
+   */
+  updateDependencies(
+    propertyExtractor: PropertyExtractor,
+    codeModifier: CodeModifier
+  ): void {
+    this.propertyExtractor = propertyExtractor
+    this.codeModifier = codeModifier
+    this.refresh()
+  }
+
+  /**
+   * Dispose the panel
+   */
+  dispose(): void {
+    this.detach()
+    this.container.innerHTML = ''
+  }
+}
+
+/**
+ * Create a PropertyPanel
+ */
+export function createPropertyPanel(
+  container: HTMLElement,
+  selectionManager: SelectionManager,
+  propertyExtractor: PropertyExtractor,
+  codeModifier: CodeModifier,
+  onCodeChange: OnCodeChangeCallback,
+  options?: PropertyPanelOptions
+): PropertyPanel {
+  return new PropertyPanel(
+    container,
+    selectionManager,
+    propertyExtractor,
+    codeModifier,
+    onCodeChange,
+    options
+  )
+}
