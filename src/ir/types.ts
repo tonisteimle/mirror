@@ -25,6 +25,7 @@ export interface PropertySourceMap {
 export interface IR {
   nodes: IRNode[]
   tokens: IRToken[]
+  animations: IRAnimation[]
 }
 
 export interface IREach {
@@ -97,4 +98,29 @@ export interface IRToken {
   name: string
   type?: 'color' | 'size' | 'font' | 'icon'
   value: string | number
+}
+
+/**
+ * Animation definition in IR form
+ *
+ * Ready for code generation with normalized keyframes and timing.
+ */
+export interface IRAnimation {
+  name: string                  // Animation name (e.g., 'FadeUp')
+  easing: string                // Default easing (e.g., 'ease-out')
+  duration?: number             // Duration in ms (optional, can be set at runtime)
+  roles?: string[]              // Named roles for choreography
+  keyframes: IRAnimationKeyframe[]
+}
+
+export interface IRAnimationKeyframe {
+  time: number                  // Normalized time (0-1) or absolute ms
+  properties: IRAnimationProperty[]
+}
+
+export interface IRAnimationProperty {
+  target?: string               // Role name for choreography ('item1', 'all')
+  property: string              // CSS property name (e.g., 'opacity', 'transform')
+  value: string                 // CSS value
+  easing?: string               // Per-property easing override
 }

@@ -42,6 +42,7 @@ export type TokenType =
   | 'THEN'
   | 'SELECTION'
   | 'ROUTE'
+  | 'ANIMATION'    // animation keyword for animation definitions
   | 'SLASH'
   | 'NEWLINE'
   | 'INDENT'
@@ -356,6 +357,7 @@ export class Lexer {
       'then': 'THEN',
       'selection': 'SELECTION',
       'route': 'ROUTE',
+      'animation': 'ANIMATION',
     }
 
     const type = keywords[value] || 'IDENTIFIER'

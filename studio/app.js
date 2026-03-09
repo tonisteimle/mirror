@@ -1,6 +1,6 @@
-import { EditorState, RangeSetBuilder, Prec, Annotation } from '@codemirror/state'
+import { EditorState, RangeSetBuilder, Prec, Annotation, Transaction } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, Decoration, ViewPlugin } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
+import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, undoDepth, redoDepth } from '@codemirror/commands'
 import { autocompletion, completionKeymap, startCompletion, closeCompletion } from '@codemirror/autocomplete'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -478,6 +478,14 @@ async function loadDemoProject() {
   // Load stored file types
   loadFileTypes()
 
+  // Detect file types for files that don't have a stored type
+  for (const filename of Object.keys(files)) {
+    if (!fileTypes[filename]) {
+      fileTypes[filename] = detectFileType(files[filename])
+    }
+  }
+  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
+
   currentFile = 'index.mirror'
   renderFileList()
   if (typeof editor !== 'undefined') {
@@ -509,6 +517,12 @@ async function loadStarterTemplate() {
     localStorage.setItem(STORAGE_PREFIX + name, content)
   }
 
+  // Detect file types for all files
+  for (const filename of Object.keys(files)) {
+    fileTypes[filename] = detectFileType(files[filename])
+  }
+  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
+
   document.getElementById('header-project-name').textContent = 'Starter Template'
   document.getElementById('sidebar-project-name').textContent = 'Starter Template'
 
@@ -531,7 +545,10 @@ const collapsedFolders = new Set()
 // Render a single file item
 function renderFileItem(item, fileCount) {
   const filePath = item.path
-  const displayName = item.filename.replace('.mirror', '')
+  const baseName = item.filename.replace('.mirror', '')
+  const type = getFileType(filePath)
+  const ext = FILE_TYPES[type]?.extension || '.mir'
+  const displayName = baseName + ext
   const canDelete = fileCount > 1
   const fileIcon = getFileIcon(filePath)
 
@@ -619,7 +636,10 @@ function renderFileList() {
     const fileCount = Object.keys(files).length
 
     itemsHtml = Object.keys(files).map(filename => {
-      const displayName = filename.replace(/\.mirror$/, '')
+      const baseName = filename.replace(/\.mirror$/, '')
+      const type = getFileType(filename)
+      const ext = FILE_TYPES[type]?.extension || '.mir'
+      const displayName = baseName + ext
       const canDelete = fileCount > 1
       const fileIcon = getFileIcon(filename)
       return `
@@ -767,6 +787,187 @@ document.addEventListener('click', (e) => {
   }
 })
 
+// Mode tabs (MIRROR / REACT)
+let currentMode = 'mirror'
+const reactFiles = {} // Cache for converted React files: { 'index.tsx': '...', ... }
+
+// Helper to update status bar
+function setModeStatus(message, type = 'ok') {
+  const statusEl = document.getElementById('status')
+  if (statusEl) {
+    statusEl.textContent = message
+    statusEl.className = type === 'error' ? 'status error' : 'status ok'
+  }
+}
+
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.dataset.mode === currentMode) return
+
+    const newMode = tab.dataset.mode
+
+    // Switch from Mirror to React
+    if (currentMode === 'mirror' && newMode === 'react') {
+      try {
+        // Save current editor content to files
+        const currentContent = window.editor.state.doc.toString()
+        files[currentFile] = currentContent
+
+        // SET MODE FIRST to prevent compiler from running on React code
+        currentMode = 'react'
+
+        // Convert ALL mirror files to React
+        Object.keys(reactFiles).forEach(k => delete reactFiles[k]) // Clear cache
+
+        for (const [filePath, content] of Object.entries(files)) {
+          if (!filePath.endsWith('.mirror')) continue
+          try {
+            const ast = Mirror.parse(content)
+            const reactCode = Mirror.generateReact(ast)
+            const reactPath = filePath.replace('.mirror', '.tsx')
+            reactFiles[reactPath] = reactCode
+          } catch (e) {
+            console.warn(`Error converting ${filePath}:`, e)
+            const reactPath = filePath.replace('.mirror', '.tsx')
+            reactFiles[reactPath] = `// Conversion error for ${filePath}\n// ${e.message}`
+          }
+        }
+
+        // Switch current file to .tsx equivalent
+        const reactCurrentFile = currentFile.replace('.mirror', '.tsx')
+        currentFile = reactCurrentFile
+
+        // Update editor with current React file
+        window.editor.dispatch({
+          changes: { from: 0, to: window.editor.state.doc.length, insert: reactFiles[reactCurrentFile] || '' }
+        })
+
+        // Re-render file list with .tsx files
+        renderFileListForMode('react')
+
+        setModeStatus('React mode - ' + Object.keys(reactFiles).length + ' files')
+
+        // Update tab UI
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'))
+        tab.classList.add('active')
+        return // Early return since we already set everything
+      } catch (e) {
+        console.error('Error switching to React mode:', e)
+        currentMode = 'mirror' // Revert on error
+        setModeStatus('Conversion error: ' + e.message, 'error')
+        return
+      }
+    }
+
+    // Switch from React to Mirror
+    if (currentMode === 'react' && newMode === 'mirror') {
+      try {
+        // Save current React editor content
+        const currentContent = window.editor.state.doc.toString()
+        reactFiles[currentFile] = currentContent
+
+        // SET MODE FIRST
+        currentMode = 'mirror'
+
+        // Convert ALL React files back to Mirror
+        for (const [filePath, content] of Object.entries(reactFiles)) {
+          if (!filePath.endsWith('.tsx')) continue
+          try {
+            const mirrorCode = Mirror.convertToMirrorCode(content)
+            const mirrorPath = filePath.replace('.tsx', '.mirror')
+            files[mirrorPath] = mirrorCode
+          } catch (e) {
+            console.warn(`Error converting ${filePath} back to Mirror:`, e)
+            // Keep original mirror file if conversion fails
+          }
+        }
+
+        // Switch current file to .mirror equivalent
+        const mirrorCurrentFile = currentFile.replace('.tsx', '.mirror')
+        currentFile = mirrorCurrentFile
+
+        // Update editor with current Mirror file
+        window.editor.dispatch({
+          changes: { from: 0, to: window.editor.state.doc.length, insert: files[mirrorCurrentFile] || '' }
+        })
+
+        // Re-render file list with .mirror files
+        renderFileList()
+
+        // Trigger recompile
+        compile(files[currentFile] || '')
+
+        setModeStatus('Mirror mode')
+
+        // Update tab UI
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'))
+        tab.classList.add('active')
+        return
+      } catch (e) {
+        console.error('Error switching to Mirror mode:', e)
+        currentMode = 'react' // Revert on error
+        setModeStatus('Conversion error: ' + e.message, 'error')
+        return
+      }
+    }
+  })
+})
+
+// Render file list for React mode (shows .tsx files)
+function renderFileListForMode(mode) {
+  if (mode === 'mirror') {
+    renderFileList()
+    return
+  }
+
+  // React mode - render .tsx files
+  const container = document.getElementById('file-list')
+  const fileCount = Object.keys(reactFiles).length
+
+  const itemsHtml = Object.keys(reactFiles).map(filePath => {
+    const displayName = filePath.split('/').pop()  // Keep .tsx extension
+    const isActive = filePath === currentFile
+
+    return `
+      <div class="file ${isActive ? 'active' : ''}" data-file="${filePath}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" width="16" height="16">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <span class="file-name" data-filename="${filePath}">${displayName}</span>
+      </div>
+    `
+  }).join('')
+
+  container.innerHTML = itemsHtml
+
+  // File click handlers for React mode
+  container.querySelectorAll('.file').forEach(el => {
+    el.addEventListener('click', (e) => {
+      switchFileReactMode(el.dataset.file)
+    })
+  })
+}
+
+// Switch file in React mode
+function switchFileReactMode(filename) {
+  if (typeof editor === 'undefined') return
+
+  // Save current React file
+  const currentContent = editor.state.doc.toString()
+  reactFiles[currentFile] = currentContent
+
+  // Switch to new file
+  currentFile = filename
+  editor.dispatch({
+    changes: { from: 0, to: editor.state.doc.length, insert: reactFiles[filename] || '' }
+  })
+
+  // Update active state in UI
+  document.querySelectorAll('.file').forEach(f => f.classList.remove('active'))
+  document.querySelector(`[data-file="${filename}"]`)?.classList.add('active')
+}
+
 // File rename functions
 function startRenameFile(filePath) {
   const fileEl = document.querySelector(`.file[data-file="${filePath}"]`)
@@ -858,6 +1059,7 @@ const FILE_TYPES = {
     label: 'Layout',
     placeholder: 'home',
     color: '#3B82F6',
+    extension: '.mir',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="18" height="18" rx="2"/>
       <path d="M3 9h18"/>
@@ -879,6 +1081,7 @@ Box pad 24, gap 16, bg #0a0a0f
     label: 'Components',
     placeholder: 'buttons',
     color: '#8B5CF6',
+    extension: '.com',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="7" height="7" rx="1"/>
       <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -915,6 +1118,7 @@ Card: pad 16, bg #1a1a23, rad 8
     label: 'Tokens',
     placeholder: 'theme',
     color: '#F59E0B',
+    extension: '.tok',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="7" r="4"/>
       <circle cx="7" cy="15" r="4"/>
@@ -1016,35 +1220,6 @@ end
     detect: (lines, content) => {
       return content.includes('javascript') && content.includes('end')
     }
-  },
-  theme: {
-    label: 'Theme',
-    placeholder: 'theme',
-    color: '#F59E0B',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="5"/>
-      <line x1="12" y1="1" x2="12" y2="3"/>
-      <line x1="12" y1="21" x2="12" y2="23"/>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-      <line x1="1" y1="12" x2="3" y2="12"/>
-      <line x1="21" y1="12" x2="23" y2="12"/>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-    </svg>`,
-    template: () => '',
-    detect: () => false
-  },
-  css: {
-    label: 'CSS',
-    placeholder: 'styles',
-    color: '#38BDF8',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M4 3h16l-1.5 15-6.5 3-6.5-3z"/>
-      <path d="M8 8h8l-.5 5-3.5 1.5-3.5-1.5"/>
-    </svg>`,
-    template: () => '',
-    detect: () => false
   }
 }
 
@@ -1848,6 +2023,15 @@ const mirrorProperties = [
   { label: 'focusable', detail: 'keyboard focusable', type: 'property' },
 ]
 
+// Priority properties - shown first in autocomplete when nothing typed
+const priorityProperties = new Set([
+  'bg', 'background', 'col', 'color', 'pad', 'padding', 'gap', 'g',
+  'rad', 'radius', 'bor', 'border', 'width', 'w', 'height', 'h',
+  'hor', 'horizontal', 'ver', 'vertical', 'center', 'cen',
+  'font-size', 'fs', 'weight', 'opacity', 'o', 'shadow',
+  'hover-bg', 'hover-col', 'cursor', 'hidden', 'visible'
+])
+
 const mirrorKeywords = [
   // Primitives
   { label: 'frame', detail: 'div container', type: 'keyword' },
@@ -2159,13 +2343,24 @@ function mirrorCompletions(context) {
       const label = c.label.toLowerCase()
       return label.startsWith(typed) || label.includes(typed)
     })
-    // Prioritize prefix matches
+    // Prioritize: 1) prefix matches, 2) alphabetically
     options.sort((a, b) => {
       const aStarts = a.label.toLowerCase().startsWith(typed)
       const bStarts = b.label.toLowerCase().startsWith(typed)
       if (aStarts && !bStarts) return -1
       if (!aStarts && bStarts) return 1
-      return 0
+      // Both same prefix status - sort alphabetically
+      return a.label.localeCompare(b.label)
+    })
+  } else {
+    // Nothing typed: priority properties first, then alphabetically
+    options = [...allCompletions].sort((a, b) => {
+      const aPriority = priorityProperties.has(a.label)
+      const bPriority = priorityProperties.has(b.label)
+      if (aPriority && !bPriority) return -1
+      if (!aPriority && bPriority) return 1
+      // Both same priority - sort alphabetically
+      return a.label.localeCompare(b.label)
     })
   }
 
@@ -2176,7 +2371,7 @@ function mirrorCompletions(context) {
 
   return {
     from,
-    options: options.slice(0, 25),
+    options: options.slice(0, 50),
     validFor: /^[\w-]*$/
   }
 }
@@ -2202,21 +2397,84 @@ const OPEN_COLORS = [
   { name: 'orange', shades: ['#fff4e6', '#ffe8cc', '#ffd8a8', '#ffc078', '#ffa94d', '#ff922b', '#fd7e14', '#f76707', '#e8590c', '#d9480f'] },
 ]
 
+// Tailwind CSS v3 Colors
+const TAILWIND_COLORS = [
+  { name: 'slate', shades: ['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b', '#475569', '#334155', '#1e293b', '#0f172a'] },
+  { name: 'gray', shades: ['#f9fafb', '#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827'] },
+  { name: 'zinc', shades: ['#fafafa', '#f4f4f5', '#e4e4e7', '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#27272a', '#18181b'] },
+  { name: 'red', shades: ['#fef2f2', '#fee2e2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d'] },
+  { name: 'orange', shades: ['#fff7ed', '#ffedd5', '#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c', '#9a3412', '#7c2d12'] },
+  { name: 'amber', shades: ['#fffbeb', '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f'] },
+  { name: 'yellow', shades: ['#fefce8', '#fef9c3', '#fef08a', '#fde047', '#facc15', '#eab308', '#ca8a04', '#a16207', '#854d0e', '#713f12'] },
+  { name: 'lime', shades: ['#f7fee7', '#ecfccb', '#d9f99d', '#bef264', '#a3e635', '#84cc16', '#65a30d', '#4d7c0f', '#3f6212', '#365314'] },
+  { name: 'green', shades: ['#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d', '#166534', '#14532d'] },
+  { name: 'emerald', shades: ['#ecfdf5', '#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857', '#065f46', '#064e3b'] },
+  { name: 'teal', shades: ['#f0fdfa', '#ccfbf1', '#99f6e4', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#115e59', '#134e4a'] },
+  { name: 'cyan', shades: ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'] },
+  { name: 'sky', shades: ['#f0f9ff', '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985', '#0c4a6e'] },
+  { name: 'blue', shades: ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'] },
+  { name: 'indigo', shades: ['#eef2ff', '#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81'] },
+  { name: 'violet', shades: ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95'] },
+  { name: 'purple', shades: ['#faf5ff', '#f3e8ff', '#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8', '#581c87'] },
+  { name: 'fuchsia', shades: ['#fdf4ff', '#fae8ff', '#f5d0fe', '#f0abfc', '#e879f9', '#d946ef', '#c026d3', '#a21caf', '#86198f', '#701a75'] },
+  { name: 'pink', shades: ['#fdf2f8', '#fce7f3', '#fbcfe8', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d', '#9d174d', '#831843'] },
+  { name: 'rose', shades: ['#fff1f2', '#ffe4e6', '#fecdd3', '#fda4af', '#fb7185', '#f43f5e', '#e11d48', '#be123c', '#9f1239', '#881337'] },
+]
+
+// Material Design Colors
+const MATERIAL_COLORS = [
+  { name: 'red', shades: ['#ffebee', '#ffcdd2', '#ef9a9a', '#e57373', '#ef5350', '#f44336', '#e53935', '#d32f2f', '#c62828', '#b71c1c'] },
+  { name: 'pink', shades: ['#fce4ec', '#f8bbd0', '#f48fb1', '#f06292', '#ec407a', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#880e4f'] },
+  { name: 'purple', shades: ['#f3e5f5', '#e1bee7', '#ce93d8', '#ba68c8', '#ab47bc', '#9c27b0', '#8e24aa', '#7b1fa2', '#6a1b9a', '#4a148c'] },
+  { name: 'deepPurple', shades: ['#ede7f6', '#d1c4e9', '#b39ddb', '#9575cd', '#7e57c2', '#673ab7', '#5e35b1', '#512da8', '#4527a0', '#311b92'] },
+  { name: 'indigo', shades: ['#e8eaf6', '#c5cae9', '#9fa8da', '#7986cb', '#5c6bc0', '#3f51b5', '#3949ab', '#303f9f', '#283593', '#1a237e'] },
+  { name: 'blue', shades: ['#e3f2fd', '#bbdefb', '#90caf9', '#64b5f6', '#42a5f5', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1'] },
+  { name: 'lightBlue', shades: ['#e1f5fe', '#b3e5fc', '#81d4fa', '#4fc3f7', '#29b6f6', '#03a9f4', '#039be5', '#0288d1', '#0277bd', '#01579b'] },
+  { name: 'cyan', shades: ['#e0f7fa', '#b2ebf2', '#80deea', '#4dd0e1', '#26c6da', '#00bcd4', '#00acc1', '#0097a7', '#00838f', '#006064'] },
+  { name: 'teal', shades: ['#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00897b', '#00796b', '#00695c', '#004d40'] },
+  { name: 'green', shades: ['#e8f5e9', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20'] },
+  { name: 'lightGreen', shades: ['#f1f8e9', '#dcedc8', '#c5e1a5', '#aed581', '#9ccc65', '#8bc34a', '#7cb342', '#689f38', '#558b2f', '#33691e'] },
+  { name: 'lime', shades: ['#f9fbe7', '#f0f4c3', '#e6ee9c', '#dce775', '#d4e157', '#cddc39', '#c0ca33', '#afb42b', '#9e9d24', '#827717'] },
+  { name: 'yellow', shades: ['#fffde7', '#fff9c4', '#fff59d', '#fff176', '#ffee58', '#ffeb3b', '#fdd835', '#fbc02d', '#f9a825', '#f57f17'] },
+  { name: 'amber', shades: ['#fff8e1', '#ffecb3', '#ffe082', '#ffd54f', '#ffca28', '#ffc107', '#ffb300', '#ffa000', '#ff8f00', '#ff6f00'] },
+  { name: 'orange', shades: ['#fff3e0', '#ffe0b2', '#ffcc80', '#ffb74d', '#ffa726', '#ff9800', '#fb8c00', '#f57c00', '#ef6c00', '#e65100'] },
+  { name: 'deepOrange', shades: ['#fbe9e7', '#ffccbc', '#ffab91', '#ff8a65', '#ff7043', '#ff5722', '#f4511e', '#e64a19', '#d84315', '#bf360c'] },
+  { name: 'brown', shades: ['#efebe9', '#d7ccc8', '#bcaaa4', '#a1887f', '#8d6e63', '#795548', '#6d4c41', '#5d4037', '#4e342e', '#3e2723'] },
+  { name: 'grey', shades: ['#fafafa', '#f5f5f5', '#eeeeee', '#e0e0e0', '#bdbdbd', '#9e9e9e', '#757575', '#616161', '#424242', '#212121'] },
+  { name: 'blueGrey', shades: ['#eceff1', '#cfd8dc', '#b0bec5', '#90a4ae', '#78909c', '#607d8b', '#546e7a', '#455a64', '#37474f', '#263238'] },
+]
+
 const colorPicker = document.getElementById('color-picker')
 const colorPickerGrid = document.getElementById('color-picker-grid')
+const colorPickerTailwindGrid = document.getElementById('color-picker-tailwind-grid')
+const colorPickerMaterialGrid = document.getElementById('color-picker-material-grid')
+const colorPickerTokenGrid = document.getElementById('color-picker-token-grid')
 const colorPreview = document.getElementById('color-preview')
 const colorHex = document.getElementById('color-hex')
 let colorPickerVisible = false
 let colorPickerInsertPos = null
 let colorPickerReplaceRange = null // { from, to } for replacing existing colors
+let colorPickerProperty = null // Current property type (bg, col, etc.)
+let colorPickerCallback = null // Callback for property panel mode
 
 // Hash trigger state (for typing # to open color picker)
 let hashTriggerActive = false
 let hashTriggerStartPos = null
 let selectedSwatchIndex = 0
 let colorSwatchElements = []
-const SWATCH_COLUMNS = 13  // Number of color columns in grid
+const SWATCH_COLUMNS = 13  // Number of color columns in grid (Open Color)
 const SWATCH_ROWS = 10    // Number of shades per color
+
+// Color picker tab state
+let currentColorTab = 'custom' // 'custom', 'tailwind', 'open', 'material'
+
+// Custom color picker state (HSV)
+let customColorState = {
+  h: 220,  // Hue (0-360)
+  s: 100,  // Saturation (0-100)
+  v: 100,  // Value/Brightness (0-100)
+  a: 1     // Alpha (0-1)
+}
 
 // Build the color grid
 function buildColorGrid() {
@@ -2255,18 +2513,538 @@ function buildColorGrid() {
 }
 buildColorGrid()
 
-function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = null, isHashTrigger = false, hashStartPos = null) {
+// Build Tailwind color grid
+function buildTailwindColorGrid() {
+  colorPickerTailwindGrid.innerHTML = ''
+  TAILWIND_COLORS.forEach((scale) => {
+    const col = document.createElement('div')
+    col.className = 'color-picker-column'
+    scale.shades.forEach((hex) => {
+      const btn = document.createElement('button')
+      btn.className = 'color-swatch'
+      btn.style.backgroundColor = hex
+      btn.dataset.color = hex
+      btn.addEventListener('mouseenter', () => {
+        colorPreview.style.backgroundColor = hex
+        colorHex.textContent = hex.toUpperCase()
+      })
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        selectColor(hex.toUpperCase())
+      })
+      col.appendChild(btn)
+    })
+    colorPickerTailwindGrid.appendChild(col)
+  })
+}
+buildTailwindColorGrid()
+
+// Build Material color grid
+function buildMaterialColorGrid() {
+  colorPickerMaterialGrid.innerHTML = ''
+  MATERIAL_COLORS.forEach((scale) => {
+    const col = document.createElement('div')
+    col.className = 'color-picker-column'
+    scale.shades.forEach((hex) => {
+      const btn = document.createElement('button')
+      btn.className = 'color-swatch'
+      btn.style.backgroundColor = hex
+      btn.dataset.color = hex
+      btn.addEventListener('mouseenter', () => {
+        colorPreview.style.backgroundColor = hex
+        colorHex.textContent = hex.toUpperCase()
+      })
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        selectColor(hex.toUpperCase())
+      })
+      col.appendChild(btn)
+    })
+    colorPickerMaterialGrid.appendChild(col)
+  })
+}
+buildMaterialColorGrid()
+
+// Tab switching
+function initColorPickerTabs() {
+  const tabs = colorPicker.querySelectorAll('.color-picker-tab')
+  const contents = colorPicker.querySelectorAll('.color-picker-content')
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab
+      currentColorTab = tabName
+
+      // Update tab active state
+      tabs.forEach(t => t.classList.remove('active'))
+      tab.classList.add('active')
+
+      // Update content visibility
+      contents.forEach(c => c.classList.remove('active'))
+      const content = document.getElementById(`color-picker-${tabName}`)
+      if (content) content.classList.add('active')
+
+      // Initialize custom picker canvas if needed
+      if (tabName === 'custom') {
+        drawColorArea()
+        updateHueSlider()
+        updateAlphaSlider()
+      }
+    })
+  })
+}
+initColorPickerTabs()
+
+// ==========================================
+// Custom Color Picker (Figma-style)
+// ==========================================
+
+const colorPickerArea = document.getElementById('color-picker-area')
+const colorPickerHue = document.getElementById('color-picker-hue')
+const colorPickerHueThumb = document.getElementById('color-picker-hue-thumb')
+const colorPickerAlpha = document.getElementById('color-picker-alpha')
+const colorPickerAlphaThumb = document.getElementById('color-picker-alpha-thumb')
+const colorPickerHexInput = document.getElementById('color-picker-hex-input')
+const colorPickerOpacityInput = document.getElementById('color-picker-opacity-input')
+const colorPickerEyedropper = document.getElementById('color-picker-eyedropper')
+
+let colorAreaDragging = false
+let hueDragging = false
+let alphaDragging = false
+
+// HSV to RGB conversion
+function hsvToRgb(h, s, v) {
+  s /= 100
+  v /= 100
+  const c = v * s
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+  const m = v - c
+  let r, g, b
+  if (h < 60) { r = c; g = x; b = 0 }
+  else if (h < 120) { r = x; g = c; b = 0 }
+  else if (h < 180) { r = 0; g = c; b = x }
+  else if (h < 240) { r = 0; g = x; b = c }
+  else if (h < 300) { r = x; g = 0; b = c }
+  else { r = c; g = 0; b = x }
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255)
+  }
+}
+
+// RGB to Hex
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
+// Hex to RGB
+function hexToRgb(hex) {
+  hex = hex.replace('#', '')
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('')
+  }
+  return {
+    r: parseInt(hex.slice(0, 2), 16),
+    g: parseInt(hex.slice(2, 4), 16),
+    b: parseInt(hex.slice(4, 6), 16)
+  }
+}
+
+// RGB to HSV
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const d = max - min
+  let h = 0
+  const s = max === 0 ? 0 : d / max
+  const v = max
+  if (max !== min) {
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break
+      case g: h = ((b - r) / d + 2) / 6; break
+      case b: h = ((r - g) / d + 4) / 6; break
+    }
+  }
+  return { h: h * 360, s: s * 100, v: v * 100 }
+}
+
+// Get current color as hex
+function getCurrentColorHex() {
+  const rgb = hsvToRgb(customColorState.h, customColorState.s, customColorState.v)
+  return rgbToHex(rgb.r, rgb.g, rgb.b)
+}
+
+// Draw the color area (saturation/brightness)
+function drawColorArea() {
+  if (!colorPickerArea) return
+  const ctx = colorPickerArea.getContext('2d')
+  const width = colorPickerArea.width
+  const height = colorPickerArea.height
+
+  // Clear
+  ctx.clearRect(0, 0, width, height)
+
+  // Base hue color
+  const hueRgb = hsvToRgb(customColorState.h, 100, 100)
+  ctx.fillStyle = `rgb(${hueRgb.r}, ${hueRgb.g}, ${hueRgb.b})`
+  ctx.fillRect(0, 0, width, height)
+
+  // White gradient (left to right)
+  const whiteGrad = ctx.createLinearGradient(0, 0, width, 0)
+  whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 1)')
+  whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  ctx.fillStyle = whiteGrad
+  ctx.fillRect(0, 0, width, height)
+
+  // Black gradient (top to bottom)
+  const blackGrad = ctx.createLinearGradient(0, 0, 0, height)
+  blackGrad.addColorStop(0, 'rgba(0, 0, 0, 0)')
+  blackGrad.addColorStop(1, 'rgba(0, 0, 0, 1)')
+  ctx.fillStyle = blackGrad
+  ctx.fillRect(0, 0, width, height)
+
+  // Draw cursor
+  const cursorX = (customColorState.s / 100) * width
+  const cursorY = (1 - customColorState.v / 100) * height
+  ctx.beginPath()
+  ctx.arc(cursorX, cursorY, 6, 0, Math.PI * 2)
+  ctx.strokeStyle = 'white'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(cursorX, cursorY, 7, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+}
+
+// Update hue slider thumb position
+function updateHueSlider() {
+  if (!colorPickerHueThumb) return
+  const percent = customColorState.h / 360 * 100
+  colorPickerHueThumb.style.left = `${percent}%`
+}
+
+// Update alpha slider
+function updateAlphaSlider() {
+  if (!colorPickerAlpha || !colorPickerAlphaThumb) return
+  const hex = getCurrentColorHex()
+  colorPickerAlpha.style.backgroundImage = `
+    linear-gradient(to right, transparent, ${hex}),
+    repeating-conic-gradient(#404040 0% 25%, #606060 0% 50%)
+  `
+  colorPickerAlphaThumb.style.left = `${customColorState.a * 100}%`
+}
+
+// Update all color displays
+function updateColorDisplays() {
+  const hex = getCurrentColorHex()
+  colorPreview.style.backgroundColor = hex
+  colorHex.textContent = hex
+  if (colorPickerHexInput) {
+    colorPickerHexInput.value = hex.replace('#', '')
+  }
+  if (colorPickerOpacityInput) {
+    colorPickerOpacityInput.value = Math.round(customColorState.a * 100) + '%'
+  }
+  updateAlphaSlider()
+}
+
+// Color area mouse events
+if (colorPickerArea) {
+  colorPickerArea.addEventListener('mousedown', (e) => {
+    colorAreaDragging = true
+    handleColorAreaMove(e)
+  })
+}
+
+function handleColorAreaMove(e) {
+  if (!colorPickerArea) return
+  const rect = colorPickerArea.getBoundingClientRect()
+  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+  const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height))
+  customColorState.s = (x / rect.width) * 100
+  customColorState.v = (1 - y / rect.height) * 100
+  drawColorArea()
+  updateColorDisplays()
+}
+
+// Hue slider mouse events
+if (colorPickerHue) {
+  colorPickerHue.addEventListener('mousedown', (e) => {
+    hueDragging = true
+    handleHueMove(e)
+  })
+}
+
+function handleHueMove(e) {
+  if (!colorPickerHue) return
+  const rect = colorPickerHue.getBoundingClientRect()
+  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+  customColorState.h = (x / rect.width) * 360
+  updateHueSlider()
+  drawColorArea()
+  updateColorDisplays()
+}
+
+// Alpha slider mouse events
+if (colorPickerAlpha) {
+  colorPickerAlpha.addEventListener('mousedown', (e) => {
+    alphaDragging = true
+    handleAlphaMove(e)
+  })
+}
+
+function handleAlphaMove(e) {
+  if (!colorPickerAlpha) return
+  const rect = colorPickerAlpha.getBoundingClientRect()
+  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+  customColorState.a = x / rect.width
+  updateAlphaSlider()
+  updateColorDisplays()
+}
+
+// Global mouse move/up for sliders
+document.addEventListener('mousemove', (e) => {
+  if (colorAreaDragging) handleColorAreaMove(e)
+  if (hueDragging) handleHueMove(e)
+  if (alphaDragging) handleAlphaMove(e)
+})
+
+document.addEventListener('mouseup', () => {
+  colorAreaDragging = false
+  hueDragging = false
+  alphaDragging = false
+})
+
+// Hex input
+if (colorPickerHexInput) {
+  colorPickerHexInput.addEventListener('input', (e) => {
+    let hex = e.target.value.replace('#', '')
+    if (hex.length === 6 && /^[0-9A-Fa-f]+$/.test(hex)) {
+      const rgb = hexToRgb(hex)
+      const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
+      customColorState.h = hsv.h
+      customColorState.s = hsv.s
+      customColorState.v = hsv.v
+      drawColorArea()
+      updateHueSlider()
+      updateColorDisplays()
+    }
+  })
+
+  colorPickerHexInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const hex = '#' + colorPickerHexInput.value.toUpperCase()
+      selectColor(hex)
+    }
+  })
+}
+
+// Opacity input
+if (colorPickerOpacityInput) {
+  colorPickerOpacityInput.addEventListener('input', (e) => {
+    let val = parseInt(e.target.value.replace('%', ''))
+    if (!isNaN(val)) {
+      customColorState.a = Math.max(0, Math.min(100, val)) / 100
+      updateAlphaSlider()
+    }
+  })
+}
+
+// Eyedropper (if supported)
+if (colorPickerEyedropper && 'EyeDropper' in window) {
+  colorPickerEyedropper.addEventListener('click', async () => {
+    try {
+      const eyeDropper = new EyeDropper()
+      const result = await eyeDropper.open()
+      const rgb = hexToRgb(result.sRGBHex)
+      const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
+      customColorState.h = hsv.h
+      customColorState.s = hsv.s
+      customColorState.v = hsv.v
+      drawColorArea()
+      updateHueSlider()
+      updateColorDisplays()
+    } catch (e) {
+      // User cancelled or error
+    }
+  })
+} else if (colorPickerEyedropper) {
+  colorPickerEyedropper.style.display = 'none'
+}
+
+// Set color from hex (used when opening picker with existing color)
+function setCustomColorFromHex(hex) {
+  if (!hex) return
+  const rgb = hexToRgb(hex)
+  const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
+  customColorState.h = hsv.h
+  customColorState.s = hsv.s
+  customColorState.v = hsv.v
+  drawColorArea()
+  updateHueSlider()
+  updateColorDisplays()
+}
+
+// ==========================================
+// Token Colors for Color Picker
+// ==========================================
+
+// Property → token suffix mapping for filtering
+const COLOR_PROPERTY_SUFFIXES = {
+  bg: '.bg',
+  background: '.bg',
+  col: '.col',
+  color: '.col',
+  boc: '.boc',
+  'border-color': '.boc',
+  'hover-bg': '.bg',
+  'hover-col': '.col',
+  'hover-boc': '.boc',
+  ic: '.col',
+  'icon-color': '.col',
+}
+
+// Extract color tokens from files
+function extractColorTokens() {
+  const tokens = []
+
+  // Iterate through all files
+  for (const [filename, content] of Object.entries(files)) {
+    if (!content) continue
+
+    // Match token definitions: $name: #hex or name: #hex
+    const lines = content.split('\n')
+    for (const line of lines) {
+      // Match patterns like: $primary.bg: #3B82F6 or primary: #3B82F6
+      const tokenMatch = line.match(/^\s*\$?([\w.-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*(?:\/\/.*)?$/)
+      if (tokenMatch) {
+        const name = tokenMatch[1]
+        const value = tokenMatch[2]
+        tokens.push({ name: '$' + name, value: value.toUpperCase() })
+      }
+    }
+  }
+
+  return tokens
+}
+
+// Build token colors section based on property type
+function buildTokenColors(property) {
+  if (!colorPickerTokenGrid) return
+
+  colorPickerTokenGrid.innerHTML = ''
+
+  // Get the suffix for this property
+  const suffix = property ? COLOR_PROPERTY_SUFFIXES[property] : null
+
+  // Extract all color tokens
+  const allTokens = extractColorTokens()
+
+  // Filter tokens based on suffix
+  let filteredTokens = allTokens
+  if (suffix) {
+    filteredTokens = allTokens.filter(t => t.name.endsWith(suffix))
+  }
+
+  // If no matching tokens, show all color tokens
+  if (filteredTokens.length === 0) {
+    filteredTokens = allTokens.filter(t => /^#[0-9A-Fa-f]{6}$/i.test(t.value))
+  }
+
+  // Limit to first 14 tokens (2 rows of 7)
+  filteredTokens = filteredTokens.slice(0, 14)
+
+  // Update label
+  const label = colorPicker.querySelector('.color-picker-label')
+  if (label) {
+    if (suffix) {
+      label.textContent = `Tokens (${suffix})`
+    } else {
+      label.textContent = 'Tokens'
+    }
+  }
+
+  // Create swatches
+  filteredTokens.forEach(token => {
+    const btn = document.createElement('button')
+    btn.className = 'token-swatch'
+    btn.style.backgroundColor = token.value
+    btn.dataset.token = token.name
+    btn.dataset.color = token.value
+    btn.title = token.name
+
+    btn.addEventListener('mouseenter', () => {
+      colorPreview.style.backgroundColor = token.value
+      colorHex.textContent = token.name
+    })
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault()
+      // Insert token name instead of hex value
+      selectColor(token.name)
+    })
+
+    colorPickerTokenGrid.appendChild(btn)
+  })
+
+  // Hide section if no tokens
+  const section = document.getElementById('color-picker-tokens')
+  if (section) {
+    section.style.display = filteredTokens.length > 0 ? 'block' : 'none'
+  }
+}
+
+function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = null, isHashTrigger = false, hashStartPos = null, property = null, callback = null) {
   colorPickerInsertPos = insertPos
   colorPickerReplaceRange = replaceRange
   hashTriggerActive = isHashTrigger
   hashTriggerStartPos = hashStartPos
-  colorPicker.style.left = x + 'px'
-  colorPicker.style.top = y + 'px'
+  colorPickerProperty = property
+  colorPickerCallback = callback || null
+
+  // Smart positioning: check if picker fits below, otherwise show above
+  const pickerHeight = 400 // Approximate height of color picker
+  const pickerWidth = 260 // Approximate width of color picker
+  const viewportHeight = window.innerHeight
+  const viewportWidth = window.innerWidth
+  const margin = 8
+
+  // Calculate final position
+  let finalX = x
+  let finalY = y
+
+  // Check vertical: if not enough space below, position above
+  if (y + pickerHeight > viewportHeight - margin) {
+    // Position above the trigger (subtract picker height and some offset for the trigger element)
+    finalY = Math.max(margin, y - pickerHeight - 36)
+  }
+
+  // Check horizontal: if not enough space to the right, position to the left of the trigger
+  if (x + pickerWidth > viewportWidth - margin) {
+    // Position picker to the left of the trigger point
+    finalX = Math.max(margin, x - pickerWidth - 8)
+  }
+
+  colorPicker.style.left = finalX + 'px'
+  colorPicker.style.top = finalY + 'px'
   colorPicker.classList.add('visible')
   colorPickerVisible = true
   const displayColor = initialColor || '#3b82f6'
   colorPreview.style.backgroundColor = displayColor
   colorHex.textContent = displayColor.toUpperCase()
+
+  // Initialize custom color picker with current color
+  if (displayColor) {
+    setCustomColorFromHex(displayColor)
+  }
+
+  // Build token colors for this property
+  buildTokenColors(property)
 
   // Reset and show selection for hash trigger mode
   if (isHashTrigger) {
@@ -2277,6 +3055,13 @@ function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = nu
     // Clear selection for non-hash mode
     colorSwatchElements.forEach(el => el.classList.remove('selected'))
   }
+
+  // Initialize custom tab canvas if active
+  if (currentColorTab === 'custom') {
+    drawColorArea()
+    updateHueSlider()
+    updateAlphaSlider()
+  }
 }
 
 function hideColorPicker() {
@@ -2284,6 +3069,7 @@ function hideColorPicker() {
   colorPickerVisible = false
   colorPickerInsertPos = null
   colorPickerReplaceRange = null
+  colorPickerCallback = null
   hashTriggerActive = false
   hashTriggerStartPos = null
   colorSwatchElements.forEach(el => el.classList.remove('selected'))
@@ -2331,6 +3117,15 @@ function navigateSwatches(direction) {
 }
 
 function selectColor(hex) {
+  // Property panel callback mode
+  if (colorPickerCallback) {
+    const callback = colorPickerCallback
+    hideColorPicker()
+    callback(hex)
+    return
+  }
+
+  // Editor mode
   if (window.editor) {
     if (hashTriggerActive && hashTriggerStartPos !== null) {
       // Hash trigger mode: replace from # position to current cursor
@@ -2338,21 +3133,24 @@ function selectColor(hex) {
       const newCursorPos = hashTriggerStartPos + hex.length
       window.editor.dispatch({
         changes: { from: hashTriggerStartPos, to: cursorPos, insert: hex },
-        selection: { anchor: newCursorPos }
+        selection: { anchor: newCursorPos },
+        annotations: Transaction.userEvent.of('input.color')
       })
     } else if (colorPickerReplaceRange) {
       // Replace existing color
       const newCursorPos = colorPickerReplaceRange.from + hex.length
       window.editor.dispatch({
         changes: { from: colorPickerReplaceRange.from, to: colorPickerReplaceRange.to, insert: hex },
-        selection: { anchor: newCursorPos }
+        selection: { anchor: newCursorPos },
+        annotations: Transaction.userEvent.of('input.color')
       })
     } else if (colorPickerInsertPos !== null) {
       // Insert new color
       const newCursorPos = colorPickerInsertPos + hex.length
       window.editor.dispatch({
         changes: { from: colorPickerInsertPos, to: colorPickerInsertPos, insert: hex },
-        selection: { anchor: newCursorPos }
+        selection: { anchor: newCursorPos },
+        annotations: Transaction.userEvent.of('input.color')
       })
     }
     window.editor.focus()
@@ -2375,6 +3173,11 @@ document.addEventListener('mousedown', (e) => {
   }
 })
 
+// Global API for property panel to use color picker
+window.showColorPickerForProperty = function(x, y, property, currentValue, callback) {
+  showColorPicker(x, y, null, null, currentValue, false, null, property, callback)
+}
+
 // ==========================================
 // Token Panel Setup
 // ==========================================
@@ -2391,6 +3194,8 @@ let tokenPanelProperty = null
 let selectedTokenIndex = 0
 let currentTokens = []
 let dollarTriggerActive = false  // True when triggered by $ (token already has $ prefix typed)
+let allTokensForFilter = []  // All tokens before filtering (for live filtering as user types)
+let dollarStartPos = null  // Position where $ was typed (for calculating filter text)
 
 // Property → suffix mapping
 const PROPERTY_SUFFIXES = {
@@ -2638,6 +3443,7 @@ function showTokenPanel(x, y, insertPos, property, isDollarTrigger = false) {
   tokenPanelProperty = property
   dollarTriggerActive = isDollarTrigger
   selectedTokenIndex = 0
+  dollarStartPos = isDollarTrigger ? insertPos : null  // Track where $ was typed for live filtering
 
   // Get tokens from document
   const allTokens = extractTokensFromDoc(window.editor.state.doc)
@@ -2657,6 +3463,9 @@ function showTokenPanel(x, y, insertPos, property, isDollarTrigger = false) {
     // No property context (e.g., $name: $) - show all tokens
     filteredTokens = allTokens
   }
+
+  // Store for live filtering
+  allTokensForFilter = filteredTokens
 
   renderTokenList(filteredTokens)
 
@@ -2694,10 +3503,17 @@ function selectTokenValue(value) {
     if (dollarTriggerActive && value.startsWith('$')) {
       insertValue = value.slice(1)  // Remove $ prefix since user already typed it
     }
-    const newCursorPos = tokenPanelInsertPos + insertValue.length
+
+    // Get current cursor position to replace any typed filter text
+    const currentPos = window.editor.state.selection.main.head
+    const replaceFrom = tokenPanelInsertPos
+    const replaceTo = currentPos
+
+    const newCursorPos = replaceFrom + insertValue.length
     window.editor.dispatch({
-      changes: { from: tokenPanelInsertPos, to: tokenPanelInsertPos, insert: insertValue },
-      selection: { anchor: newCursorPos }
+      changes: { from: replaceFrom, to: replaceTo, insert: insertValue },
+      selection: { anchor: newCursorPos },
+      annotations: Transaction.userEvent.of('input.token')
     })
     window.editor.focus()
   }
@@ -2765,8 +3581,57 @@ const tokenPanelTriggerExtension = EditorView.updateListener.of(update => {
   update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
     const insertedText = inserted.toString()
 
-    // Close panel if typing (not navigation keys, not $ which we handle)
-    if (tokenPanelVisible && insertedText.length > 0 && insertedText !== ' ' && insertedText !== '$') {
+    // Live filter tokens as user types after $ (including backspace)
+    if (tokenPanelVisible && dollarTriggerActive) {
+      // Handle character insertion
+      if (insertedText.length > 0 && insertedText !== ' ' && insertedText !== '$') {
+        // Get the text typed after $ for filtering
+        const line = update.view.state.doc.lineAt(toB)
+        const textAfterDollar = line.text.slice(dollarStartPos - line.from, toB - line.from)
+
+        // Filter tokens by the typed prefix
+        const filtered = allTokensForFilter.filter(token =>
+          token.name.toLowerCase().startsWith(textAfterDollar.toLowerCase())
+        )
+
+        if (filtered.length > 0) {
+          selectedTokenIndex = 0
+          renderTokenList(filtered)
+          // Update insert position to replace everything after $
+          tokenPanelInsertPos = dollarStartPos
+        } else {
+          // No matches - close panel
+          hideTokenPanel()
+        }
+        return
+      }
+
+      // Handle backspace/deletion
+      if (insertedText.length === 0 && fromA !== toA) {
+        // Check if we deleted back to or before the $ position
+        if (toB <= dollarStartPos) {
+          hideTokenPanel()
+          return
+        }
+
+        // Recalculate filter text
+        const line = update.view.state.doc.lineAt(toB)
+        const textAfterDollar = line.text.slice(dollarStartPos - line.from, toB - line.from)
+
+        // Filter tokens by the remaining prefix
+        const filtered = allTokensForFilter.filter(token =>
+          token.name.toLowerCase().startsWith(textAfterDollar.toLowerCase())
+        )
+
+        selectedTokenIndex = 0
+        renderTokenList(filtered)
+        tokenPanelInsertPos = dollarStartPos
+        return
+      }
+    }
+
+    // Close panel if typing in non-dollar mode
+    if (tokenPanelVisible && !dollarTriggerActive && insertedText.length > 0 && insertedText !== ' ' && insertedText !== '$') {
       hideTokenPanel()
       return
     }
@@ -2789,8 +3654,8 @@ const tokenPanelTriggerExtension = EditorView.updateListener.of(update => {
 
     // Trigger 2: $ after property (includes color properties)
     if (insertedText === '$') {
-      // Match any property that accepts tokens
-      const propertyMatch = textBefore.match(/\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s+$/)
+      // Match any property that accepts tokens (with or without space before $)
+      const propertyMatch = textBefore.match(/\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s*$/)
 
       // Match token definition: $name: $
       const tokenDefMatch = textBefore.match(/\$[\w.-]+:\s*$/)
@@ -3170,7 +4035,8 @@ function selectIcon(name) {
   const insertText = `"${name}"`
   window.editor.dispatch({
     changes: { from: iconPickerStartPos, to: cursorPos, insert: insertText },
-    selection: { anchor: iconPickerStartPos + insertText.length }
+    selection: { anchor: iconPickerStartPos + insertText.length },
+    annotations: Transaction.userEvent.of('input.icon')
   })
 
   hideIconPicker()
@@ -3340,10 +4206,10 @@ const editor = new EditorView({
           }
         }
         // Cursor sync: only when selection changed WITHOUT doc change (no typing)
-        // This is critical for performance - no sync during typing
-        else if (update.selectionSet && studioEditorSyncManager) {
-          const line = update.state.doc.lineAt(update.state.selection.main.head).number
-          studioEditorSyncManager.onCursorMove(line)
+        // Only sync if editor has focus (not when user selected something in preview)
+        else if (update.selectionSet && editorHasFocus) {
+          // Sync property panel directly to cursor position
+          syncPropertyPanelToEditorCursor()
         }
       }),
       tokenPanelTriggerExtension,
@@ -3362,13 +4228,17 @@ const editor = new EditorView({
   parent: editorContainer,
 })
 
-// Debounce helper
+// Debounce helper with cancel support
 function debounce(fn, ms) {
   let timeout
-  return (...args) => {
+  const debounced = (...args) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => fn(...args), ms)
   }
+  debounced.cancel = () => {
+    clearTimeout(timeout)
+  }
+  return debounced
 }
 
 // Save current file (debounced) - uses API or localStorage based on auth state
@@ -3379,10 +4249,54 @@ const debouncedSave = debounce((code) => {
 }, 500)
 
 const debouncedCompile = debounce(() => {
+  // Skip compilation in React mode
+  if (currentMode === 'react') {
+    // Still save the React code
+    const code = editor.state.doc.toString()
+    reactFiles[currentFile] = code
+    return
+  }
   const code = editor.state.doc.toString()
   compile(code)
   debouncedSave(code)
 }, 300)
+
+// Undo/Redo buttons
+const undoBtn = document.getElementById('undo-btn')
+const redoBtn = document.getElementById('redo-btn')
+
+undoBtn?.addEventListener('click', () => {
+  if (editor) {
+    undo(editor)
+    editor.focus()
+  }
+})
+
+redoBtn?.addEventListener('click', () => {
+  if (editor) {
+    redo(editor)
+    editor.focus()
+  }
+})
+
+// Update undo/redo button states based on history
+function updateUndoRedoButtons() {
+  if (!editor || !undoBtn || !redoBtn) return
+
+  // Use undoDepth/redoDepth to check history availability
+  undoBtn.disabled = undoDepth(editor.state) === 0
+  redoBtn.disabled = redoDepth(editor.state) === 0
+}
+
+// Call on editor transactions
+const originalDispatch = editor.dispatch.bind(editor)
+editor.dispatch = (...args) => {
+  originalDispatch(...args)
+  updateUndoRedoButtons()
+}
+
+// Initial state
+updateUndoRedoButtons()
 
 // Folder toggle
 document.querySelectorAll('.folder-header').forEach(header => {
@@ -3491,6 +4405,48 @@ function autoCreateReferencedFiles(code) {
   }
 }
 
+// Get all token and component files as prelude code
+// This ensures tokens and components are available when compiling layouts
+function getPreludeCode(excludeFile) {
+  const sections = []
+
+  // Collect files by type in the correct order: tokens first, then components
+  const tokenFiles = []
+  const componentFiles = []
+
+  for (const filename of Object.keys(files)) {
+    // Skip the current file being compiled
+    if (filename === excludeFile) continue
+
+    const fileType = getFileType(filename)
+    if (fileType === 'tokens') {
+      tokenFiles.push(filename)
+    } else if (fileType === 'component') {
+      componentFiles.push(filename)
+    }
+  }
+
+  // Add tokens first (sorted alphabetically for consistency)
+  tokenFiles.sort()
+  for (const filename of tokenFiles) {
+    const content = files[filename]
+    if (content && content.trim()) {
+      sections.push(`// === ${filename} ===\n${content}`)
+    }
+  }
+
+  // Then components
+  componentFiles.sort()
+  for (const filename of componentFiles) {
+    const content = files[filename]
+    if (content && content.trim()) {
+      sections.push(`// === ${filename} ===\n${content}`)
+    }
+  }
+
+  return sections.join('\n\n')
+}
+
 // Compile and render
 function compile(code) {
   if (!code.trim()) {
@@ -3521,10 +4477,19 @@ function compile(code) {
     // Auto-create any missing referenced files
     autoCreateReferencedFiles(code)
 
-    // Resolve imports first (if function exists)
-    const resolvedCode = typeof Mirror.resolveImports === 'function'
-      ? Mirror.resolveImports(code, readFile)
-      : code
+    // For layout files, prepend all tokens and components
+    // This ensures they are available when rendering
+    let resolvedCode = code
+    currentPreludeOffset = 0  // Reset prelude offset
+    if (fileType === 'layout') {
+      const prelude = getPreludeCode(currentFile)
+      if (prelude) {
+        const separator = '\n\n// === ' + currentFile + ' ===\n'
+        resolvedCode = prelude + separator + code
+        // Track the character offset so we can adjust CodeModifier changes for the editor
+        currentPreludeOffset = prelude.length + separator.length
+      }
+    }
 
     // Parse
     const ast = Mirror.parse(resolvedCode)
@@ -3542,8 +4507,8 @@ function compile(code) {
       componentPrimitives.set(comp.name, primitive)
     }
 
-    // Update component palette with user-defined components
-    updateUserComponentsPalette(ast)
+    // Update component palette with user-defined components from ALL files
+    updateUserComponentsPalette()
 
     // Build IR with source map for bidirectional editing
     const irResult = Mirror.toIR(ast, true)
@@ -3561,9 +4526,13 @@ function compile(code) {
     if (fileType === 'tokens') {
       preview.className = 'tokens-preview'
       renderTokensPreview(ast)
+      // Update studio module with AST and source map for tokens too
+      updateStudio(ast, sourceMap, resolvedCode)
     } else if (fileType === 'component') {
       preview.className = 'components-preview'
       renderComponentsPreview(ast)
+      // Update studio module with AST and source map for component definitions
+      updateStudio(ast, sourceMap, resolvedCode)
     } else {
       // Layout or other: render UI
       const hasAutoInit = jsCode.includes('// Auto-initialization')
@@ -3967,6 +4936,31 @@ let studioCodeModifier = null
 let studioDragDropManager = null
 let studioEditorSyncManager = null  // Syncs editor cursor ↔ preview selection
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
+let editorHasFocus = true  // Track if editor or preview has focus
+let currentPreludeOffset = 0  // Character offset of prelude in merged source (for adjusting change positions)
+
+/**
+ * Ensure codeModifier is in sync with the current editor content.
+ * This prevents RangeErrors when the editor has uncommitted changes.
+ * Returns true if a recompile was needed (callers should bail out as state changed).
+ */
+function ensureCodeModifierInSync() {
+  if (!studioCodeModifier || !editor) return false
+
+  const currentCode = editor.state.doc.toString()
+  const modifierCode = studioCodeModifier.getSource()
+
+  if (currentCode !== modifierCode) {
+    // Out of sync - cancel debounce and compile immediately
+    debouncedCompile.cancel()
+    compile(currentCode)
+    return true // Recompiled - caller should bail out
+  }
+  return false // Already in sync
+}
+
+// Expose sync function globally for property panel to use
+window.ensureCodeModifierInSync = ensureCodeModifierInSync
 
 // File type processing order: data -> tokens -> components -> layouts
 const FILE_TYPE_ORDER = ['data', 'tokens', 'component', 'layout']
@@ -4000,6 +4994,39 @@ function getAllProjectSource() {
 }
 
 /**
+ * Calculate the line offset for the current file in the combined source
+ * Returns the number of lines that come before the current file
+ */
+function getCurrentFileLineOffset() {
+  const filesByType = {}
+
+  // Group files by type
+  for (const filename of Object.keys(files)) {
+    const type = getFileType(filename)
+    if (!filesByType[type]) {
+      filesByType[type] = []
+    }
+    filesByType[type].push({ filename, content: files[filename] })
+  }
+
+  // Count lines before current file
+  let lineOffset = 0
+  for (const type of FILE_TYPE_ORDER) {
+    const typeFiles = filesByType[type] || []
+    for (const file of typeFiles) {
+      if (file.filename === currentFile) {
+        return lineOffset
+      }
+      // Count lines in this file (+1 for the trailing newline added during combination)
+      const lineCount = (file.content.match(/\n/g) || []).length + 1
+      lineOffset += lineCount
+    }
+  }
+
+  return lineOffset
+}
+
+/**
  * Scroll editor to a specific line and optionally highlight it
  */
 function scrollEditorToLine(line) {
@@ -4014,6 +5041,172 @@ function scrollEditorToLine(line) {
   } catch (e) {
     // Line might be out of bounds after edit
     console.warn('Studio: Could not scroll to line', line, e)
+  }
+}
+
+/**
+ * Find component name from a definition line
+ * Handles "Name:" or "Name as Parent:" syntax
+ * Returns the component name (not nodeId) for lookup in SourceMap
+ */
+function findComponentNameFromDefinitionLine(lineContent) {
+  // Match component definition patterns:
+  // "Button:" or "Button: props" or "Button as Parent:" etc.
+  const match = lineContent.match(/^\s*(\w+)\s*(as\s+\w+)?:/)
+  if (!match) return null
+
+  return match[1]
+}
+
+/**
+ * Extract component name from a line of Mirror code
+ * Returns null for empty lines, comments, tokens, section headers
+ * Returns { name: string, isDefinition: boolean } for valid component lines
+ */
+function extractComponentFromLine(line) {
+  const trimmed = line.trim()
+
+  // Skip empty lines
+  if (!trimmed) {
+    return null
+  }
+
+  // Skip comments (single-line and inline)
+  if (trimmed.startsWith('//')) {
+    return null
+  }
+
+  // Skip token definitions ($name: value)
+  if (trimmed.startsWith('$')) {
+    return null
+  }
+
+  // Skip section headers (--- Section ---)
+  if (trimmed.startsWith('---')) {
+    return null
+  }
+
+  // Skip state/event keywords that start a block
+  if (/^(state|hover|focus|active|disabled|onclick|onhover|onchange|oninput|onkeydown|onkeyup|keys|each|if|else)\b/.test(trimmed)) {
+    return null
+  }
+
+  // Skip primitive keywords used inline
+  if (/^(show|hide|animate|data)\b/.test(trimmed)) {
+    return null
+  }
+
+  // Match component name at start: "ComponentName ..." or "ComponentName: ..."
+  // Must start with uppercase letter (Mirror convention)
+  const match = trimmed.match(/^([A-Z][a-zA-Z0-9]*)(\s*:|[\s,]|$)/)
+  if (!match) {
+    return null
+  }
+
+  const name = match[1]
+  const isDefinition = match[2].includes(':')
+
+  return { name, isDefinition }
+}
+
+/**
+ * Sync property panel to editor cursor position
+ * Called after compile when editor has focus
+ *
+ * Strategy:
+ * 1. For definitions (ComponentName:) -> show definition properties
+ * 2. For instances -> find the instance closest to cursor line
+ * 3. Keep previous selection if on empty/non-component line
+ */
+function syncPropertyPanelToEditorCursor() {
+  if (!editor || !studioSelectionManager) {
+    return
+  }
+
+  try {
+    const cursorPos = editor.state.selection.main.head
+    const editorLine = editor.state.doc.lineAt(cursorPos).number
+    const lineInfo = editor.state.doc.line(editorLine)
+    const lineContent = lineInfo.text
+
+    // Extract component info from the line
+    const componentInfo = extractComponentFromLine(lineContent)
+
+    // If not a component line, keep the current selection
+    // This avoids flicker when navigating through empty lines or comments
+    if (!componentInfo) {
+      return
+    }
+
+    const { name: componentName, isDefinition } = componentInfo
+
+    // Handle definitions: show component definition properties
+    if (isDefinition && studioPropertyPanel) {
+      const success = studioPropertyPanel.showComponentDefinition(componentName)
+      if (success) {
+        studioSelectionManager.clearSelection()
+        // Update breadcrumb to show we're in a definition
+        studioSelectionManager.setBreadcrumb([{
+          nodeId: `def-${componentName}`,
+          label: `${componentName} (Definition)`,
+          componentName: componentName
+        }])
+        return
+      }
+    }
+
+    // Handle instances: find the instance that matches the line content
+    if (currentSourceMap && studioPropertyExtractor) {
+      const instances = currentSourceMap.getNodesByComponent(componentName)
+      if (instances && instances.length > 0) {
+        // For single instances, just select it
+        if (instances.length === 1) {
+          studioSelectionManager.select(instances[0].nodeId)
+          return
+        }
+
+        // For multiple instances, use position order to determine which one to select
+        // Count how many component lines of this type are BEFORE the cursor line
+        let componentLineIndex = 0
+        for (let lineNum = 1; lineNum < editorLine; lineNum++) {
+          try {
+            const prevLine = editor.state.doc.line(lineNum).text
+            const prevInfo = extractComponentFromLine(prevLine)
+            if (prevInfo && prevInfo.name === componentName && !prevInfo.isDefinition) {
+              componentLineIndex++
+            }
+          } catch (e) {
+            // Line doesn't exist
+          }
+        }
+
+        // Sort instances by their source position line number
+        const sortedInstances = [...instances].sort((a, b) =>
+          (a.position?.line || 0) - (b.position?.line || 0)
+        )
+
+        // Select the instance at the corresponding index
+        const selectedInstance = sortedInstances[componentLineIndex] || sortedInstances[0]
+
+        studioSelectionManager.select(selectedInstance.nodeId)
+        return
+      }
+    }
+
+    // Fallback: try to show definition if component exists but no instances rendered
+    if (studioPropertyPanel) {
+      const success = studioPropertyPanel.showComponentDefinition(componentName)
+      if (success) {
+        studioSelectionManager.clearSelection()
+        studioSelectionManager.setBreadcrumb([{
+          nodeId: `def-${componentName}`,
+          label: `${componentName} (Definition)`,
+          componentName: componentName
+        }])
+      }
+    }
+  } catch (e) {
+    console.warn('Studio: Could not sync to cursor', e)
   }
 }
 
@@ -4045,6 +5238,29 @@ function initStudio() {
 
   // Create PreviewInteraction (will attach to preview after each compile)
   // We'll create it fresh after each compile since the preview DOM changes
+
+  // Focus tracking: Editor vs Preview
+  // When editor has focus, property panel follows cursor
+  // When preview has focus, property panel follows clicked element
+
+  // Use mousedown to detect editor interaction (more reliable than focusin)
+  editorContainer.addEventListener('mousedown', () => {
+    editorHasFocus = true
+    // Sync after a short delay to let cursor position update
+    setTimeout(syncPropertyPanelToEditorCursor, 50)
+  })
+
+  // Also handle keyboard navigation into editor
+  editorContainer.addEventListener('focusin', () => {
+    if (!editorHasFocus) {
+      editorHasFocus = true
+      syncPropertyPanelToEditorCursor()
+    }
+  })
+
+  previewContainer.addEventListener('mousedown', () => {
+    editorHasFocus = false
+  })
 
   console.log('Studio: Initialized')
 }
@@ -4152,6 +5368,11 @@ function updateStudio(ast, sourceMap, source) {
 
   // Make preview elements draggable for canvas-internal movement
   makePreviewElementsDraggable()
+
+  // Sync property panel to editor cursor after compile (if editor has focus)
+  if (editorHasFocus) {
+    syncPropertyPanelToEditorCursor()
+  }
 }
 
 /**
@@ -4197,10 +5418,37 @@ function handleStudioCodeChange(result) {
     return
   }
 
-  // Apply the change to CodeMirror
+  // Adjust change positions for prelude offset
+  // The CodeModifier operates on the merged source (prelude + current file),
+  // but the editor only contains the current file
+  const adjustedChange = {
+    from: result.change.from - currentPreludeOffset,
+    to: result.change.to - currentPreludeOffset,
+    insert: result.change.insert
+  }
+
+  // Validate adjusted change range before applying (prevents RangeError crashes)
+  const docLength = editor.state.doc.length
+  if (adjustedChange.from < 0 || adjustedChange.to > docLength || adjustedChange.from > adjustedChange.to) {
+    console.warn('Studio: Invalid change range after adjustment', {
+      original: result.change,
+      adjusted: adjustedChange,
+      preludeOffset: currentPreludeOffset,
+      docLength
+    })
+    // Force recompile to fix the state mismatch
+    debouncedCompile.cancel()
+    compile(editor.state.doc.toString())
+    return
+  }
+
+  // Apply the adjusted change to CodeMirror (with history integration for Cmd+Z)
   editor.dispatch({
-    changes: result.change,
-    annotations: [propertyPanelChangeAnnotation.of(true)]
+    changes: adjustedChange,
+    annotations: [
+      propertyPanelChangeAnnotation.of(true),
+      Transaction.userEvent.of('input.property')
+    ]
   })
 
   // Compile immediately (no debounce for property panel changes)
@@ -4219,13 +5467,77 @@ function handleStudioDrop(result) {
     return
   }
 
-  // Apply the change to CodeMirror
+  // Apply the change to CodeMirror (with history integration for Cmd+Z)
   editor.dispatch({
-    changes: result.modification.change
+    changes: result.modification.change,
+    annotations: Transaction.userEvent.of('input.drop')
   })
 
   console.log('Studio: Component dropped', result.dropZone?.targetId, result.dropZone?.placement)
 }
+
+// Handle element deletion from canvas
+function handleElementDelete() {
+  if (!studioSelectionManager || !studioCodeModifier) return false
+
+  const selection = studioSelectionManager.getSelection()
+  if (!selection) return false
+
+  // Get the node to delete (use templateId for template instances)
+  const nodeId = selection.templateId || selection.nodeId
+  if (!nodeId) return false
+
+  // Remove the node
+  const result = studioCodeModifier.removeNode(nodeId)
+  if (!result.success) {
+    console.warn('Studio: Failed to delete element:', result.error)
+    return false
+  }
+
+  // Adjust change positions for prelude offset
+  const adjustedChange = {
+    from: result.change.from - currentPreludeOffset,
+    to: result.change.to - currentPreludeOffset,
+    insert: result.change.insert
+  }
+
+  // Validate range
+  const docLength = editor.state.doc.length
+  if (adjustedChange.from < 0 || adjustedChange.to > docLength) {
+    console.warn('Studio: Invalid delete range')
+    return false
+  }
+
+  // Apply the change with history integration for Cmd+Z
+  editor.dispatch({
+    changes: adjustedChange,
+    annotations: Transaction.userEvent.of('delete.element')
+  })
+
+  // Clear selection and recompile
+  studioSelectionManager.clearSelection()
+  const code = editor.state.doc.toString()
+  compile(code)
+  debouncedSave(code)
+
+  console.log('Studio: Element deleted', nodeId)
+  return true
+}
+
+// Keyboard listener for Delete/Backspace on selected elements
+document.addEventListener('keydown', (e) => {
+  // Only handle Delete/Backspace when preview has focus (not editor)
+  if (editorHasFocus) return
+
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    // Don't interfere with input fields
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+    if (handleElementDelete()) {
+      e.preventDefault()
+    }
+  }
+})
 
 // Built-in primitive components
 const PRIMITIVE_COMPONENTS = [
@@ -4241,12 +5553,11 @@ const PRIMITIVE_COMPONENTS = [
 const USER_COMPONENT_ICON = '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>'
 
 // Render a component palette item
-function renderPaletteItem(comp, isUserComponent = false) {
+function renderPaletteItem(comp) {
   const props = comp.properties ? ` data-properties="${comp.properties.replace(/"/g, '&quot;')}"` : ''
   const text = comp.text ? ` data-text="${comp.text}"` : ''
-  const userClass = isUserComponent ? ' user-component' : ''
   return `
-    <div class="component-palette-item${userClass}" data-component="${comp.name}"${props}${text} draggable="true">
+    <div class="component-palette-item" data-component="${comp.name}"${props}${text} draggable="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         ${comp.icon || USER_COMPONENT_ICON}
       </svg>
@@ -4282,55 +5593,113 @@ function attachPaletteDragHandlers(container) {
   })
 }
 
-// Initialize component palette with primitives
+// Initialize component palette
 function initComponentPalette() {
-  const primitivesContainer = document.getElementById('primitives-palette')
-  if (!primitivesContainer) return
-
-  // Render primitives
-  primitivesContainer.innerHTML = PRIMITIVE_COMPONENTS.map(comp => renderPaletteItem(comp)).join('')
-  attachPaletteDragHandlers(primitivesContainer)
-
+  updateComponentPalette()
   console.log('Studio: Component palette initialized with', PRIMITIVE_COMPONENTS.length, 'primitives')
 }
 
-// Update user components from AST
-function updateUserComponentsPalette(ast) {
-  const userSection = document.getElementById('user-components-section')
-  const userContainer = document.getElementById('user-components-palette')
-  if (!userSection || !userContainer) return
+// Update component palette with primitives + user components
+function updateComponentPalette() {
+  const container = document.getElementById('components-palette')
+  if (!container) return
 
-  // Extract user-defined components (all components except primitives)
-  // ast.components already contains only definitions, not instances
-  const userComponents = ast.components
-    .filter(comp => !PRIMITIVE_COMPONENTS.some(p => p.name === comp.name))
-    .map(comp => ({
-      name: comp.name,
-      // No default properties for user components - they use their definition
-    }))
+  // Collect user components from ALL files
+  const userComponents = []
+  for (const filename of Object.keys(files)) {
+    const type = getFileType(filename)
+    // Skip token files - they don't contain components
+    if (type === 'tokens' || type === 'data') continue
+
+    try {
+      const content = files[filename]
+      if (!content || !content.trim()) continue
+
+      const ast = Mirror.parse(content)
+      if (ast.components) {
+        for (const comp of ast.components) {
+          // Skip primitives
+          if (PRIMITIVE_COMPONENTS.some(p => p.name === comp.name)) continue
+          // Skip token definitions (names starting with $)
+          if (comp.name.startsWith('$')) continue
+
+          userComponents.push({
+            name: comp.name,
+            sourceFile: filename
+          })
+        }
+      }
+    } catch (e) {
+      // Skip files that fail to parse
+      console.debug('Failed to parse', filename, 'for components:', e.message)
+    }
+  }
 
   // Remove duplicates (keep first occurrence)
-  const uniqueComponents = []
+  const uniqueUserComponents = []
   const seen = new Set()
   for (const comp of userComponents) {
     if (!seen.has(comp.name)) {
       seen.add(comp.name)
-      uniqueComponents.push(comp)
+      uniqueUserComponents.push(comp)
     }
   }
 
-  if (uniqueComponents.length > 0) {
-    userSection.style.display = 'block'
-    userContainer.innerHTML = uniqueComponents.map(comp => renderPaletteItem(comp, true)).join('')
-    attachPaletteDragHandlers(userContainer)
-  } else {
-    userSection.style.display = 'none'
-    userContainer.innerHTML = ''
+  // Combine all components and sort alphabetically
+  const allComponents = [
+    ...PRIMITIVE_COMPONENTS,
+    ...uniqueUserComponents
+  ].sort((a, b) => a.name.localeCompare(b.name))
+
+  // Store for filtering
+  window.allPaletteComponents = allComponents
+
+  // Render all components
+  renderFilteredComponents(allComponents)
+}
+
+// Render filtered components to the palette
+function renderFilteredComponents(components) {
+  const container = document.getElementById('components-palette')
+  if (!container) return
+
+  container.innerHTML = components.map(comp => renderPaletteItem(comp)).join('')
+  attachPaletteDragHandlers(container)
+}
+
+// Filter components by search query
+function filterComponents(query) {
+  const allComponents = window.allPaletteComponents || []
+  if (!query.trim()) {
+    renderFilteredComponents(allComponents)
+    return
   }
+
+  const lowerQuery = query.toLowerCase()
+  const filtered = allComponents.filter(comp =>
+    comp.name.toLowerCase().includes(lowerQuery)
+  )
+  renderFilteredComponents(filtered)
+}
+
+// Initialize component search
+function initComponentSearch() {
+  const searchInput = document.getElementById('component-search')
+  if (!searchInput) return
+
+  searchInput.addEventListener('input', (e) => {
+    filterComponents(e.target.value)
+  })
+}
+
+// Alias for backwards compatibility
+function updateUserComponentsPalette() {
+  updateComponentPalette()
 }
 
 // Initialize studio
 initStudio()
+initComponentSearch()
 
 // Initial compile
 compile(initialCode)
@@ -4629,7 +5998,8 @@ function insertImageUrl(url) {
 
   window.editor.dispatch({
     changes: { from: pos, to: pos, insert: insertText },
-    selection: { anchor: pos + insertText.length }
+    selection: { anchor: pos + insertText.length },
+    annotations: Transaction.userEvent.of('input.image')
   })
 
   window.editor.focus()
@@ -5579,7 +6949,8 @@ async function generateFromPrompt() {
       if (!hasContent) {
         // Empty editor - replace everything
         window.editor.dispatch({
-          changes: { from: 0, to: state.doc.length, insert: mirrorCode }
+          changes: { from: 0, to: state.doc.length, insert: mirrorCode },
+          annotations: Transaction.userEvent.of('input.ai')
         })
       } else {
         // Has content - insert at cursor
@@ -5593,7 +6964,8 @@ async function generateFromPrompt() {
 
         window.editor.dispatch({
           changes: { from: cursorPos, insert: insertText },
-          selection: { anchor: cursorPos + insertText.length }
+          selection: { anchor: cursorPos + insertText.length },
+          annotations: Transaction.userEvent.of('input.ai')
         })
       }
 

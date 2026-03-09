@@ -16,8 +16,11 @@ import type {
   Slot,
   Text,
   ChildOverride,
+  AnimationDefinition,
+  AnimationKeyframe,
+  AnimationKeyframeProperty,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from '../studio/source-map'
 
 export type { IR } from './types'
@@ -135,7 +138,80 @@ class IRTransformer {
     // Transform instances to IR nodes
     const nodes = this.ast.instances.map(inst => this.transformInstance(inst))
 
-    return { nodes, tokens }
+    // Transform animations
+    const animations = this.ast.animations.map(anim => this.transformAnimation(anim))
+
+    return { nodes, tokens, animations }
+  }
+
+  /**
+   * Transform an animation definition from AST to IR
+   */
+  private transformAnimation(anim: AnimationDefinition): IRAnimation {
+    return {
+      name: anim.name,
+      easing: anim.easing || 'ease',
+      duration: anim.duration,
+      roles: anim.roles,
+      keyframes: anim.keyframes.map(kf => this.transformAnimationKeyframe(kf)),
+    }
+  }
+
+  /**
+   * Transform an animation keyframe from AST to IR
+   */
+  private transformAnimationKeyframe(kf: AnimationKeyframe): IRAnimationKeyframe {
+    return {
+      time: kf.time,
+      properties: kf.properties.map(prop => this.transformAnimationProperty(prop)),
+    }
+  }
+
+  /**
+   * Transform an animation property from AST to IR
+   *
+   * Maps Mirror property names to CSS properties and formats values.
+   */
+  private transformAnimationProperty(prop: AnimationKeyframeProperty): IRAnimationProperty {
+    // Map Mirror property names to CSS properties
+    const propertyMap: Record<string, string> = {
+      'opacity': 'opacity',
+      'y-offset': 'transform',
+      'x-offset': 'transform',
+      'scale': 'transform',
+      'rotate': 'transform',
+      'background': 'background',
+      'bg': 'background',
+      'color': 'color',
+      'col': 'color',
+      'width': 'width',
+      'height': 'height',
+      'border-radius': 'border-radius',
+      'rad': 'border-radius',
+    }
+
+    const cssProperty = propertyMap[prop.name] || prop.name
+    let cssValue = String(prop.value)
+
+    // Format transform values
+    if (prop.name === 'y-offset') {
+      cssValue = `translateY(${prop.value}px)`
+    } else if (prop.name === 'x-offset') {
+      cssValue = `translateX(${prop.value}px)`
+    } else if (prop.name === 'scale') {
+      cssValue = `scale(${prop.value})`
+    } else if (prop.name === 'rotate') {
+      cssValue = `rotate(${prop.value}deg)`
+    } else if (['width', 'height', 'border-radius', 'rad'].includes(prop.name) && typeof prop.value === 'number') {
+      cssValue = `${prop.value}px`
+    }
+
+    return {
+      target: prop.target,
+      property: cssProperty,
+      value: cssValue,
+      easing: prop.easing,
+    }
   }
 
   private generateId(): string {
@@ -688,7 +764,7 @@ class IRTransformer {
       h6: 'h6',
     }
 
-    return mapping[primitive] || 'div'
+    return mapping[primitive.toLowerCase()] || 'div'
   }
 
   /**
@@ -750,7 +826,7 @@ class IRTransformer {
 
       // Gap
       if ((name === 'gap' || name === 'g') && !isBoolean) {
-        layoutContext.gap = this.formatCSSValue(name, this.resolveValue(prop.values))
+        layoutContext.gap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
         continue
       }
 
@@ -1005,8 +1081,8 @@ class IRTransformer {
    * Convert Mirror property to CSS
    */
   private propertyToCSS(prop: Property, primitive: string = 'frame'): IRStyle[] {
-    const value = this.resolveValue(prop.values)
     const name = prop.name
+    const value = this.resolveValue(prop.values, name)
     const values = prop.values
 
     // Handle boolean properties (value is true OR empty values array)
@@ -1491,15 +1567,38 @@ class IRTransformer {
   }
 
   /**
-   * Resolve property values to string
+   * Map from property name to token suffix for auto-completion
+   * e.g., pad $md -> $md.pad if $md.pad exists
    */
-  private resolveValue(values: any[]): string {
+  private static PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
+    // Spacing
+    'pad': '.pad', 'padding': '.pad', 'p': '.pad',
+    'margin': '.margin', 'm': '.margin',
+    'gap': '.gap', 'g': '.gap',
+    // Sizing
+    'rad': '.rad', 'radius': '.rad',
+    // Colors
+    'bg': '.bg', 'background': '.bg',
+    'col': '.col', 'color': '.col', 'c': '.col',
+    'boc': '.boc', 'border-color': '.boc',
+    // Typography
+    'fs': '.font.size', 'font-size': '.font.size',
+  }
+
+  /**
+   * Resolve property values to string
+   * @param values The property values to resolve
+   * @param propertyName Optional property name for context-aware token resolution
+   */
+  private resolveValue(values: any[], propertyName?: string): string {
     return values
       .map(v => {
         // Explicit token reference object
         if (typeof v === 'object' && v.kind === 'token') {
+          const tokenName = v.name
+          const resolvedName = this.resolveTokenWithContext(tokenName, propertyName)
           // Convert dots to hyphens for valid CSS variable name
-          const cssVarName = v.name.replace(/\./g, '-')
+          const cssVarName = resolvedName.replace(/\./g, '-')
           return `var(--${cssVarName})`
         }
         // String that matches a token name
@@ -1511,6 +1610,31 @@ class IRTransformer {
         return String(v)
       })
       .join(' ')
+  }
+
+  /**
+   * Try to resolve a short token name using property context
+   * e.g., 'md' with property 'pad' -> 'md.pad' if '$md.pad' exists in tokens
+   */
+  private resolveTokenWithContext(tokenName: string, propertyName?: string): string {
+    // If token already exists as-is, use it
+    if (this.tokenSet.has('$' + tokenName)) {
+      return tokenName
+    }
+
+    // Try to add property-specific suffix
+    if (propertyName) {
+      const suffix = IRTransformer.PROPERTY_TO_TOKEN_SUFFIX[propertyName]
+      if (suffix) {
+        const extendedName = tokenName + suffix
+        if (this.tokenSet.has('$' + extendedName)) {
+          return extendedName
+        }
+      }
+    }
+
+    // Fall back to original name
+    return tokenName
   }
 
   /**
@@ -1584,6 +1708,8 @@ class IRTransformer {
       onblur: 'blur',
       onkeydown: 'keydown',
       onkeyup: 'keyup',
+      onenter: 'enter',   // Viewport enter (IntersectionObserver)
+      onexit: 'exit',     // Viewport exit (IntersectionObserver)
     }
     return mapping[name] || name.replace(/^on/, '')
   }

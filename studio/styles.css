@@ -31,13 +31,31 @@
     }
 
     .sidebar-header {
-      padding: 10px 12px;
+      display: flex;
+      gap: 0;
+      padding: 8px 12px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .mode-tab {
+      padding: 6px 12px;
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      color: #52525b;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .mode-tab:hover {
       color: #71717a;
-      border-bottom: 1px solid #27272a;
+    }
+
+    .mode-tab.active {
+      color: #e4e4e7;
     }
 
     .file-tree {
@@ -375,6 +393,71 @@
       min-height: 0; /* Important for flex scroll */
     }
 
+    /* Editor Header */
+    .editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      flex-shrink: 0;
+    }
+
+    .editor-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #71717a;
+    }
+
+    .editor-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .editor-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      color: #71717a;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .editor-action-btn:hover:not(:disabled) {
+      background: #27272a;
+      color: #a1a1aa;
+    }
+
+    .editor-action-btn:active:not(:disabled) {
+      background: #3f3f46;
+    }
+
+    .editor-action-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .editor-action-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .editor-action-divider {
+      width: 1px;
+      height: 16px;
+      background: #3f3f46;
+      margin: 0 4px;
+    }
+
     /* Sidebar Content (File Tree) */
     .sidebar-content {
       flex: 1;
@@ -445,12 +528,27 @@
       padding: 0 8px;
     }
 
-    .component-palette-item.user-component svg {
-      color: #3B82F6;
+    .component-search {
+      padding: 8px;
     }
 
-    .component-palette-item.user-component:hover svg {
-      color: #60a5fa;
+    .component-search input {
+      width: 100%;
+      padding: 6px 10px;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #e4e4e7;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .component-search input:focus {
+      border-color: #3B82F6;
+    }
+
+    .component-search input::placeholder {
+      color: #71717a;
     }
 
     /* Standalone Components Panel (between Editor and Preview) */
@@ -967,6 +1065,207 @@
       font-family: 'SF Mono', monospace;
       font-size: 11px;
       color: #888;
+    }
+
+    /* Color Picker - Token Section */
+    .color-picker-section {
+      margin-bottom: 8px;
+    }
+
+    .color-picker-section:empty {
+      display: none;
+    }
+
+    .color-picker-label {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .color-picker-token-grid {
+      display: flex;
+      gap: 1px;
+      flex-wrap: wrap;
+    }
+
+    .color-picker-token-grid:empty {
+      display: none;
+    }
+
+    .color-picker-token-grid + .color-picker-label {
+      margin-top: 8px;
+    }
+
+    .token-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s;
+    }
+
+    .token-swatch:hover {
+      transform: scale(1.3);
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Color Picker - Tabs */
+    .color-picker-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+    }
+
+    .color-picker-tab {
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #666;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .color-picker-tab.active {
+      background: #333;
+      color: #fff;
+    }
+
+    .color-picker-tab:hover:not(.active) {
+      color: #999;
+    }
+
+    /* Color Picker - Content */
+    .color-picker-content {
+      display: none;
+    }
+
+    .color-picker-content.active {
+      display: block;
+    }
+
+    /* Color Picker - Custom Tab */
+    .color-picker-area {
+      width: 100%;
+      height: 140px;
+      border-radius: 4px;
+      cursor: crosshair;
+      margin-bottom: 8px;
+    }
+
+    .color-picker-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .color-picker-hue-slider {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right,
+        hsl(0, 100%, 50%),
+        hsl(60, 100%, 50%),
+        hsl(120, 100%, 50%),
+        hsl(180, 100%, 50%),
+        hsl(240, 100%, 50%),
+        hsl(300, 100%, 50%),
+        hsl(360, 100%, 50%)
+      );
+      position: relative;
+      cursor: pointer;
+    }
+
+    .color-picker-alpha-slider {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      position: relative;
+      cursor: pointer;
+      background-image:
+        linear-gradient(to right, transparent, #3b82f6),
+        repeating-conic-gradient(#404040 0% 25%, #606060 0% 50%);
+      background-size: 100% 100%, 6px 6px;
+    }
+
+    .color-picker-slider-thumb {
+      width: 14px;
+      height: 14px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+
+    .color-picker-eyedropper {
+      width: 16px;
+      height: 16px;
+      color: #666;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .color-picker-eyedropper:hover {
+      color: #fff;
+    }
+
+    .color-picker-inputs {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .color-picker-format {
+      background: #252530;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 4px 6px;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .color-picker-hex-input {
+      flex: 1;
+      background: #252530;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 4px 6px;
+      color: #888;
+      font-size: 11px;
+      font-family: 'SF Mono', monospace;
+    }
+
+    .color-picker-hex-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .color-picker-opacity-input {
+      width: 44px;
+      background: #252530;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 4px 6px;
+      color: #888;
+      font-size: 11px;
+      text-align: right;
+      font-family: 'SF Mono', monospace;
+    }
+
+    .color-picker-opacity-input:focus {
+      outline: none;
+      border-color: #3b82f6;
     }
 
     /* Token Picker Panel */
@@ -2262,6 +2561,11 @@
       color: #666;
     }
 
+    /* Override styling - property set on instance, not inherited from component */
+    .pp-content .prop-row.override .prop-label {
+      color: #f97316;
+    }
+
     .pp-content .prop-content,
     .pp-content .pp-prop-content {
       flex: 1;
@@ -2467,22 +2771,27 @@
     .pp-content .color-group,
     .pp-content .pp-color-group {
       display: flex;
-      flex-wrap: wrap;
-      gap: var(--gap);
+      flex-wrap: nowrap;
+      gap: 2px;
       background: #1a1a1e;
       border-radius: 5px;
-      padding: 2px;
+      padding: 3px;
+      height: 28px;
+      box-sizing: border-box;
+      align-items: center;
     }
 
     .pp-content .color-swatch,
     .pp-content .pp-color-btn {
       width: var(--unit);
-      height: 24px;
+      height: 22px;
+      min-height: 22px;
       border-radius: 4px;
       border: none;
       cursor: pointer;
       transition: all 0.12s;
       position: relative;
+      flex-shrink: 0;
     }
 
     .pp-content .color-swatch:hover,
@@ -2498,6 +2807,111 @@
       border: 1px solid rgba(59, 130, 246, 0.5);
       border-radius: 6px;
       box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+    }
+
+    /* ============================================
+       COLOR INPUT WITH PREVIEW
+       ============================================ */
+    .pp-content .color-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .pp-content .color-preview {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      border-radius: 4px;
+      border: none;
+      flex-shrink: 0;
+    }
+
+    .pp-content .color-input-wrapper .prop-input {
+      flex: 1;
+      width: auto;
+    }
+
+    /* ============================================
+       COLOR PROPERTY ROW (2-line layout)
+       ============================================ */
+    .pp-content .color-prop-row .prop-content {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+    }
+
+    /* Token swatches row */
+    .pp-content .color-tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .pp-content .color-swatch-sm {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s;
+      position: relative;
+    }
+
+    .pp-content .color-swatch-sm:hover {
+      transform: scale(1.2);
+      z-index: 1;
+    }
+
+    .pp-content .color-swatch-sm.active {
+      outline: 2px solid #3B82F6;
+      outline-offset: 1px;
+    }
+
+    /* Selection row */
+    .pp-content .color-selection {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pp-content .color-selection .color-preview {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .pp-content .color-selection .prop-input {
+      flex: 1;
+      width: auto;
+    }
+
+    .pp-content .color-picker {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .pp-content .color-picker::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .pp-content .color-picker::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+
+    .pp-content .color-picker::-moz-color-swatch {
+      border: none;
+      border-radius: 4px;
     }
 
     /* ============================================
@@ -3353,6 +3767,73 @@
 
     .pp-color-input.token {
       color: #F59E0B;
+    }
+
+    /* Color Trigger - clickable swatch that opens color picker */
+    .pp-color-trigger {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 6px;
+      height: 28px;
+      box-sizing: border-box;
+      background: #1a1a1e;
+      border-radius: 5px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+      transition: background 0.1s;
+    }
+
+    .pp-color-trigger:hover {
+      background: #252528;
+    }
+
+    .pp-color-trigger .pp-color-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .pp-color-trigger .pp-color-swatch.empty {
+      background: repeating-linear-gradient(
+        45deg,
+        #333,
+        #333 4px,
+        #444 4px,
+        #444 8px
+      ) !important;
+    }
+
+    .pp-color-trigger .pp-color-value {
+      font-size: 10px;
+      color: #888;
+      font-family: 'SF Mono', Monaco, monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pp-color-trigger .pp-color-value.token {
+      color: #F59E0B;
+    }
+
+    /* Compact color trigger (for inline use, e.g., border colors) */
+    .pp-color-trigger.pp-color-trigger-compact {
+      padding: 2px;
+      background: transparent;
+      flex: 0;
+    }
+
+    .pp-color-trigger.pp-color-trigger-compact:hover {
+      background: #333;
+    }
+
+    .pp-color-trigger.pp-color-trigger-compact .pp-color-swatch {
+      width: 20px;
+      height: 20px;
     }
 
     /* Border Section */

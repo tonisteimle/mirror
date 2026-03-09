@@ -124,6 +124,13 @@ export class SourceMap {
   }
 
   /**
+   * Get all nodes (for debugging)
+   */
+  getAllNodes(): NodeMapping[] {
+    return Array.from(this.nodes.values())
+  }
+
+  /**
    * Find the node that contains a specific line (for editor cursor sync)
    * Returns the most specific (deepest/smallest range) node at that line
    * Skips definition nodes to prefer instances

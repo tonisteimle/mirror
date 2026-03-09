@@ -350,6 +350,56 @@ export class PropertyExtractor {
   }
 
   /**
+   * Get properties for a component definition by name
+   * Used when clicking on a component definition line in the editor
+   */
+  getPropertiesForComponentDefinition(componentName: string): ExtractedElement | null {
+    const componentDef = this.componentMap.get(componentName)
+    if (!componentDef) {
+      return null
+    }
+
+    // Extract properties from the component definition
+    const allProperties: ExtractedProperty[] = []
+
+    // Component's own properties
+    for (const prop of componentDef.properties) {
+      allProperties.push(this.extractProperty(prop, 'component'))
+    }
+
+    // Inherited properties
+    const inheritedProps = this.getInheritedProperties(componentDef)
+    for (const prop of inheritedProps) {
+      // Skip if already defined in component
+      if (!allProperties.some(p => p.name === prop.name)) {
+        allProperties.push(prop)
+      }
+    }
+
+    // Add all available properties from schema (if enabled)
+    if (this.showAllProperties) {
+      this.addAvailableProperties(allProperties)
+    }
+
+    // Group into categories
+    const categories = this.showAllProperties
+      ? this.categorizeAllProperties(allProperties)
+      : this.categorizeProperties(allProperties)
+
+    return {
+      nodeId: componentDef.nodeId || `def-${componentName}`,
+      componentName: componentName,
+      instanceName: undefined,
+      isDefinition: true,
+      isTemplateInstance: false,
+      templateId: undefined,
+      categories,
+      allProperties,
+      showAllProperties: this.showAllProperties,
+    }
+  }
+
+  /**
    * Add all available properties from schema (not already set)
    */
   private addAvailableProperties(existingProps: ExtractedProperty[]): void {

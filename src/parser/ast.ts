@@ -16,11 +16,13 @@ export type NodeType =
   | 'Slot'
   | 'Text'
   | 'JavaScript'
+  | 'Animation'
 
 export interface BaseNode {
   type: NodeType
   line: number
   column: number
+  nodeId?: string  // Unique identifier for studio selection
 }
 
 export interface ParseError {
@@ -34,6 +36,7 @@ export interface Program extends BaseNode {
   type: 'Program'
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
+  animations: AnimationDefinition[]  // Animation definitions
   instances: Instance[]
   javascript?: JavaScriptBlock  // JavaScript code at end of file
   errors: ParseError[]
@@ -127,9 +130,47 @@ export interface EventModifier {
 
 export interface Action extends BaseNode {
   type: 'Action'
-  name: string                // 'toggle', 'select', 'show', 'hide', 'call', etc.
+  name: string                // 'toggle', 'select', 'show', 'hide', 'call', 'animate', etc.
   target?: string             // target element or 'next', 'prev', etc.
   args?: string[]
+}
+
+/**
+ * Animation definition
+ *
+ * Syntax:
+ * FadeUp as animation: ease-out
+ *   0.00 opacity 0, y-offset 20
+ *   0.30 opacity 1, y-offset 0
+ *   1.00 // end
+ *
+ * Choreography with roles:
+ * StaggeredFade as animation: ease-out
+ *   roles: item1, item2, item3
+ *   0.00 item1 opacity 0
+ *   0.10 item2 opacity 0
+ *   0.20 item3 opacity 0
+ *   1.00 all opacity 1
+ */
+export interface AnimationDefinition extends BaseNode {
+  type: 'Animation'
+  name: string                  // Animation name (e.g., 'FadeUp')
+  easing?: string               // Default easing function (e.g., 'ease-out', 'ease-in-out')
+  duration?: number             // Duration in ms (calculated from last keyframe time)
+  roles?: string[]              // Named roles for choreography
+  keyframes: AnimationKeyframe[]
+}
+
+export interface AnimationKeyframe {
+  time: number                  // Time in normalized form (0.00 - 1.00)
+  properties: AnimationKeyframeProperty[]
+}
+
+export interface AnimationKeyframeProperty {
+  target?: string               // Role name for choreography (e.g., 'item1', 'all')
+  name: string                  // Property name (e.g., 'opacity', 'y-offset')
+  value: string | number        // Property value
+  easing?: string               // Per-property easing override
 }
 
 export interface Each extends BaseNode {
@@ -161,6 +202,7 @@ export type Node =
   | Program
   | TokenDefinition
   | ComponentDefinition
+  | AnimationDefinition
   | Instance
   | Property
   | State

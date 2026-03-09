@@ -5,7 +5,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty } from './ast'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -15,10 +15,15 @@ export class Parser {
   private pos: number = 0
   private errors: ParseError[] = []
   private source: string
+  private nodeIdCounter: number = 0
 
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
+  }
+
+  private generateNodeId(): string {
+    return `def-${++this.nodeIdCounter}`
   }
 
   parse(): AST {
@@ -28,6 +33,7 @@ export class Parser {
       column: 1,
       tokens: [],
       components: [],
+      animations: [],
       instances: [],
       errors: [],
     }
@@ -83,12 +89,14 @@ export class Parser {
         break  // JavaScript consumes rest of file
       }
 
-      // Component or Instance
+      // Component, Animation, or Instance
       if (this.check('IDENTIFIER')) {
         const node = this.parseComponentOrInstance()
         if (node) {
           if (node.type === 'Component') {
             program.components.push(node as ComponentDefinition)
+          } else if (node.type === 'Animation') {
+            program.animations.push(node as AnimationDefinition)
           } else {
             program.instances.push(node as Instance)
           }
@@ -219,11 +227,16 @@ export class Parser {
     return undefined
   }
 
-  private parseComponentOrInstance(): ComponentDefinition | Instance | null {
+  private parseComponentOrInstance(): ComponentDefinition | Instance | AnimationDefinition | null {
     const name = this.advance()
 
     // Component definition: Name as primitive:
+    // Animation definition: Name as animation:
     if (this.check('AS')) {
+      // Peek to see if this is an animation definition
+      if (this.checkNext('ANIMATION')) {
+        return this.parseAnimationDefinition(name)
+      }
       return this.parseComponentDefinition(name)
     }
 
@@ -264,6 +277,7 @@ export class Parser {
       children: [],
       line: name.line,
       column: name.column,
+      nodeId: this.generateNodeId(),
     }
 
     // Parse inline properties
@@ -303,6 +317,7 @@ export class Parser {
       children: [],
       line: name.line,
       column: name.column,
+      nodeId: this.generateNodeId(),
     }
 
     this.parseInlineProperties(component.properties)
@@ -316,6 +331,205 @@ export class Parser {
     }
 
     return component
+  }
+
+  /**
+   * Parse animation definition
+   *
+   * Syntax:
+   * FadeUp as animation: ease-out
+   *   0.00 opacity 0, y-offset 20
+   *   0.30 opacity 1, y-offset 0
+   *   1.00 // end marker (optional)
+   *
+   * With roles:
+   * StaggeredFade as animation: ease-out
+   *   roles item1, item2, item3
+   *   0.00 item1 opacity 0
+   *   0.10 item2 opacity 0
+   *   1.00 all opacity 1
+   */
+  private parseAnimationDefinition(name: Token): AnimationDefinition | null {
+    this.advance() // as
+    this.advance() // animation
+
+    if (!this.expect('COLON')) {
+      this.errors[this.errors.length - 1].hint = 'Add a colon after "animation"'
+      this.recoverToNextDefinition()
+      return null
+    }
+
+    const animation: AnimationDefinition = {
+      type: 'Animation',
+      name: name.value,
+      keyframes: [],
+      line: name.line,
+      column: name.column,
+    }
+
+    // Parse optional easing on the same line: FadeUp as animation: ease-out
+    if (this.check('IDENTIFIER') && !this.check('NEWLINE')) {
+      animation.easing = this.advance().value
+    }
+
+    // Skip to indented block
+    this.skipNewlines()
+
+    if (!this.check('INDENT')) {
+      this.addError('Animation definition must have an indented body with keyframes')
+      return animation
+    }
+
+    this.advance() // consume INDENT
+
+    // Parse animation body
+    while (!this.check('DEDENT') && !this.isAtEnd()) {
+      this.skipNewlines()
+      if (this.check('DEDENT') || this.isAtEnd()) break
+
+      // Skip commas
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // Parse roles: item1, item2, item3
+      if (this.check('IDENTIFIER') && this.current().value === 'roles') {
+        this.advance() // consume 'roles'
+        animation.roles = []
+        while (!this.check('NEWLINE') && !this.isAtEnd()) {
+          if (this.check('COMMA')) {
+            this.advance()
+            continue
+          }
+          if (this.check('IDENTIFIER')) {
+            animation.roles.push(this.advance().value)
+          } else {
+            break
+          }
+        }
+        continue
+      }
+
+      // Parse keyframe: 0.00 property value, property value
+      // Keyframes start with a number (time)
+      if (this.check('NUMBER')) {
+        const keyframe = this.parseAnimationKeyframe()
+        if (keyframe) {
+          animation.keyframes.push(keyframe)
+        }
+        continue
+      }
+
+      // Skip unknown tokens
+      this.advance()
+    }
+
+    if (this.check('DEDENT')) this.advance()
+
+    // Calculate duration from last keyframe (if time is > 1.0, treat as ms)
+    if (animation.keyframes.length > 0) {
+      const lastKeyframe = animation.keyframes[animation.keyframes.length - 1]
+      if (lastKeyframe.time > 1.0) {
+        // Time is in milliseconds
+        animation.duration = lastKeyframe.time
+      }
+    }
+
+    return animation
+  }
+
+  /**
+   * Parse a single keyframe line
+   *
+   * Syntax:
+   * 0.00 opacity 0, y-offset 20
+   * 0.30 item1 opacity 1
+   * 1.00 all opacity 1, y-offset 0
+   */
+  private parseAnimationKeyframe(): AnimationKeyframe | null {
+    // Time value (e.g., 0.00, 0.30, 1.00, or 300 for ms)
+    const timeToken = this.advance()
+    const time = parseFloat(timeToken.value)
+
+    const keyframe: AnimationKeyframe = {
+      time,
+      properties: [],
+    }
+
+    // Parse properties on this line
+    while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      if (this.check('IDENTIFIER')) {
+        const prop = this.parseAnimationKeyframeProperty()
+        if (prop) {
+          keyframe.properties.push(prop)
+        }
+      } else {
+        break
+      }
+    }
+
+    return keyframe
+  }
+
+  /**
+   * Parse a keyframe property
+   *
+   * Syntax:
+   * opacity 0
+   * y-offset 20
+   * item1 opacity 0  (with role target)
+   * all scale 1.2    (with 'all' target)
+   */
+  private parseAnimationKeyframeProperty(): AnimationKeyframeProperty | null {
+    if (!this.check('IDENTIFIER')) return null
+
+    const firstToken = this.advance()
+    let target: string | undefined
+    let propName: string
+    let propValue: string | number
+
+    // Check if this is a role target followed by property name
+    // e.g., "item1 opacity 0" or "all scale 1.2"
+    if (this.check('IDENTIFIER')) {
+      // First token is the target, second is the property name
+      target = firstToken.value
+      propName = this.advance().value
+
+      // Get value
+      if (this.check('NUMBER')) {
+        propValue = parseFloat(this.advance().value)
+      } else if (this.check('STRING')) {
+        propValue = this.advance().value
+      } else if (this.check('IDENTIFIER')) {
+        propValue = this.advance().value
+      } else {
+        return null
+      }
+    } else if (this.check('NUMBER') || this.check('STRING')) {
+      // First token is the property name, directly followed by value
+      propName = firstToken.value
+
+      if (this.check('NUMBER')) {
+        propValue = parseFloat(this.advance().value)
+      } else {
+        propValue = this.advance().value
+      }
+    } else {
+      // No value found
+      return null
+    }
+
+    return {
+      target,
+      name: propName,
+      value: propValue,
+    }
   }
 
   // Parse component definition without explicit primitive: Name:
@@ -334,6 +548,7 @@ export class Parser {
       children: [],
       line: name.line,
       column: name.column,
+      nodeId: this.generateNodeId(),
     }
 
     // Parse inline properties
@@ -1252,6 +1467,31 @@ export class Parser {
     // Check for target
     if (this.check('IDENTIFIER') && !this.checkNext('COLON')) {
       action.target = this.advance().value
+    }
+
+    // For animate action, parse additional arguments (multiple targets, stagger, etc.)
+    if (actionToken.value === 'animate') {
+      action.args = []
+      while (this.check('IDENTIFIER') || this.check('NUMBER')) {
+        if (this.check('IDENTIFIER')) {
+          const arg = this.advance().value
+          // Handle stagger keyword: stagger 100
+          if (arg === 'stagger' && this.check('NUMBER')) {
+            action.args.push(`stagger${this.advance().value}`)
+          } else {
+            action.args.push(arg)
+          }
+        } else if (this.check('NUMBER')) {
+          action.args.push(this.advance().value)
+        }
+
+        // Skip comma between arguments
+        if (this.check('COMMA')) {
+          this.advance()
+        } else {
+          break
+        }
+      }
     }
 
     return action

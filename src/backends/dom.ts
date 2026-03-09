@@ -7,7 +7,7 @@
 
 import type { AST, JavaScriptBlock } from '../parser/ast'
 import { toIR } from '../ir'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 
 /**
@@ -47,6 +47,7 @@ class DOMGenerator {
     this.emitTokens()
     this.emitCreateUI()
     this.emitRuntime()
+    this.emitAnimations()
 
     // If there's JavaScript, emit initialization with named instance exposure
     if (this.javascript) {
@@ -54,6 +55,49 @@ class DOMGenerator {
     }
 
     return this.lines.join('\n')
+  }
+
+  private emitAnimations(): void {
+    if (this.ir.animations.length === 0) return
+
+    this.emit('// Register animations')
+    for (const animation of this.ir.animations) {
+      this.emitAnimationRegistration(animation)
+    }
+    this.emit('')
+  }
+
+  private emitAnimationRegistration(animation: IRAnimation): void {
+    this.emit(`_runtime.registerAnimation({`)
+    this.indent++
+    this.emit(`name: "${animation.name}",`)
+    this.emit(`easing: "${animation.easing}",`)
+    if (animation.duration) {
+      this.emit(`duration: ${animation.duration},`)
+    }
+    if (animation.roles && animation.roles.length > 0) {
+      this.emit(`roles: ${JSON.stringify(animation.roles)},`)
+    }
+    this.emit(`keyframes: [`)
+    this.indent++
+    for (const keyframe of animation.keyframes) {
+      this.emit(`{`)
+      this.indent++
+      this.emit(`time: ${keyframe.time},`)
+      this.emit(`properties: [`)
+      this.indent++
+      for (const prop of keyframe.properties) {
+        this.emit(`{ property: "${prop.property}", value: "${prop.value}"${prop.target ? `, target: "${prop.target}"` : ''} },`)
+      }
+      this.indent--
+      this.emit(`],`)
+      this.indent--
+      this.emit(`},`)
+    }
+    this.indent--
+    this.emit(`],`)
+    this.indent--
+    this.emit(`})`)
   }
 
   private emit(line: string): void {
@@ -99,11 +143,21 @@ class DOMGenerator {
       this.emit(':root {')
       this.indent++
       for (const token of this.ir.tokens) {
-        const value = token.value
+        let value = token.value
         // Strip $ prefix and convert dots to hyphens for valid CSS variable name
         // e.g., $primary.bg -> primary-bg
         const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
           .replace(/\./g, '-')
+
+        // Add px unit for numeric spacing/sizing tokens
+        // These are tokens with names ending in .pad, .gap, .rad, .margin, .size
+        const needsPx = /\.(pad|gap|rad|radius|margin|size)$/.test(token.name)
+        if (needsPx && typeof value === 'number') {
+          value = `${value}px`
+        } else if (needsPx && typeof value === 'string' && /^\d+$/.test(value)) {
+          value = `${value}px`
+        }
+
         this.emit(`--${cssVarName}: ${value};`)
       }
       this.indent--
@@ -631,6 +685,12 @@ class DOMGenerator {
   private emitEventListener(varName: string, event: IREvent): void {
     const eventName = event.name
 
+    // Handle enter/exit events with IntersectionObserver
+    if (eventName === 'enter' || eventName === 'exit') {
+      this.emitEnterExitObserver(varName, event, eventName === 'enter')
+      return
+    }
+
     // Handle hover event specially - needs both mouseenter and mouseleave
     if (eventName === 'mouseenter') {
       const hasHighlight = event.actions.some(a => a.type === 'highlight')
@@ -695,6 +755,35 @@ class DOMGenerator {
     }
   }
 
+  private emitEnterExitObserver(varName: string, event: IREvent, isEnter: boolean): void {
+    // Generate a unique callback function for this observer
+    const callbackName = `${varName}_${isEnter ? 'enter' : 'exit'}`
+
+    this.emit(`// ${isEnter ? 'Enter' : 'Exit'} viewport observer`)
+    this.emit(`const ${callbackName}Callback = () => {`)
+    this.indent++
+    for (const action of event.actions) {
+      this.emitAction(action, varName)
+    }
+    this.indent--
+    this.emit(`}`)
+
+    if (isEnter) {
+      // Store enter callback for observer setup
+      this.emit(`${varName}._enterCallback = ${callbackName}Callback`)
+    } else {
+      // Store exit callback for observer setup
+      this.emit(`${varName}._exitCallback = ${callbackName}Callback`)
+    }
+
+    // Set up observer (only once when we have at least one callback)
+    this.emit(`if (!${varName}._enterExitObserver) {`)
+    this.indent++
+    this.emit(`_runtime.setupEnterExitObserver(${varName}, ${varName}._enterCallback, ${varName}._exitCallback)`)
+    this.indent--
+    this.emit(`}`)
+  }
+
   private emitAction(action: IRAction, currentVar: string): void {
     const target = action.target || 'self'
 
@@ -703,7 +792,8 @@ class DOMGenerator {
       'toggle', 'show', 'hide', 'select', 'deselect', 'highlight',
       'activate', 'deactivate', 'call', 'assign', 'page', 'open', 'close',
       'filter', 'validate', 'reset', 'focus', 'alert', 'clear-selection',
-      'deactivate-siblings', 'toggle-state', 'set-state', 'change', 'navigate'
+      'deactivate-siblings', 'toggle-state', 'set-state', 'change', 'navigate',
+      'animate'
     ])
 
     switch (action.type) {
@@ -772,6 +862,26 @@ class DOMGenerator {
           this.emit(`_runtime.navigateToPage('${target}', ${currentVar})`)
         } else {
           this.emit(`_runtime.navigate('${target}', ${currentVar})`)
+        }
+        break
+      case 'animate':
+        // Animate action: animate AnimationName or animate AnimationName target1, target2
+        const animationName = action.target || ''
+        if (action.args && action.args.length > 0) {
+          // Multiple targets specified
+          const targets = action.args.map(t => `_elements['${t}']`).join(', ')
+          // Check for stagger option
+          const staggerMatch = action.args.find(a => a.startsWith('stagger'))
+          if (staggerMatch) {
+            const staggerValue = staggerMatch.replace('stagger', '').trim() || '100'
+            const elemTargets = action.args.filter(a => !a.startsWith('stagger')).map(t => `_elements['${t}']`).join(', ')
+            this.emit(`_runtime.animate('${animationName}', [${elemTargets}], { stagger: ${staggerValue} })`)
+          } else {
+            this.emit(`_runtime.animate('${animationName}', [${targets}])`)
+          }
+        } else {
+          // Animate self
+          this.emit(`_runtime.animate('${animationName}', ${currentVar})`)
         }
         break
       default:

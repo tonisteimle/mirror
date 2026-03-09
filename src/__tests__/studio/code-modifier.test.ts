@@ -461,6 +461,261 @@ describe('CodeModifier', () => {
       expect(result.success).toBe(false)
       expect(result.error).toContain('descendant')
     })
+
+    it('moves last sibling before middle sibling with correct formatting', () => {
+      // Exact user scenario: move green box before yellow box
+      const source = `App pad 32, ver, gap 16
+  Box w 50, h 50, bg #CC5DE8
+  Box w 50, h 50, bg #FAB005
+  Box w 50, h 50, bg #099268`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 4 },
+          { id: 'node-2', componentName: 'Box', line: 2, endLine: 2, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Box', line: 3, endLine: 3, parentId: 'node-1' },
+          { id: 'node-4', componentName: 'Box', line: 4, endLine: 4, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move last box (green) before middle box (yellow)
+      const result = modifier.moveNode('node-4', 'node-3', 'before')
+
+      expect(result.success).toBe(true)
+
+      // Check exact output format - each component should be on its own line
+      const expectedSource = `App pad 32, ver, gap 16
+  Box w 50, h 50, bg #CC5DE8
+  Box w 50, h 50, bg #099268
+  Box w 50, h 50, bg #FAB005`
+
+      expect(result.newSource).toBe(expectedSource)
+
+      // Also verify line count is preserved
+      const originalLines = source.split('\n').length
+      const newLines = result.newSource.split('\n').length
+      expect(newLines).toBe(originalLines)
+    })
+
+    it('moves last sibling before first child with correct formatting', () => {
+      // Edge case: move to very first position
+      const source = `App pad 32, ver, gap 16
+  Box w 50, h 50, bg #CC5DE8
+  Box w 50, h 50, bg #FAB005
+  Box w 50, h 50, bg #099268`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 4 },
+          { id: 'node-2', componentName: 'Box', line: 2, endLine: 2, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Box', line: 3, endLine: 3, parentId: 'node-1' },
+          { id: 'node-4', componentName: 'Box', line: 4, endLine: 4, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move last box (green) before first box (purple)
+      const result = modifier.moveNode('node-4', 'node-2', 'before')
+
+      expect(result.success).toBe(true)
+
+      // Check exact output format
+      const expectedSource = `App pad 32, ver, gap 16
+  Box w 50, h 50, bg #099268
+  Box w 50, h 50, bg #CC5DE8
+  Box w 50, h 50, bg #FAB005`
+
+      expect(result.newSource).toBe(expectedSource)
+
+      // Verify line count is preserved
+      const originalLines = source.split('\n').length
+      const newLines = result.newSource.split('\n').length
+      expect(newLines).toBe(originalLines)
+    })
+
+    it('moves first sibling after last sibling', () => {
+      // Edge case: move first child to the end
+      const source = `App pad 32
+  Box1
+  Box2
+  Box3`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 4 },
+          { id: 'node-2', componentName: 'Box1', line: 2, endLine: 2, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Box2', line: 3, endLine: 3, parentId: 'node-1' },
+          { id: 'node-4', componentName: 'Box3', line: 4, endLine: 4, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move first child (Box1) after last child (Box3)
+      const result = modifier.moveNode('node-2', 'node-4', 'after')
+
+      expect(result.success).toBe(true)
+
+      const expectedSource = `App pad 32
+  Box2
+  Box3
+  Box1`
+
+      expect(result.newSource).toBe(expectedSource)
+    })
+
+    it('moves multi-line block (container with children) correctly', () => {
+      // Critical test: move a container that has children
+      const source = `App
+  Card
+    Title "Hello"
+    Button "Click"
+  Footer`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 5 },
+          { id: 'node-2', componentName: 'Card', line: 2, endLine: 4, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Title', line: 3, endLine: 3, parentId: 'node-2' },
+          { id: 'node-4', componentName: 'Button', line: 4, endLine: 4, parentId: 'node-2' },
+          { id: 'node-5', componentName: 'Footer', line: 5, endLine: 5, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move Card (with its children) after Footer
+      const result = modifier.moveNode('node-2', 'node-5', 'after')
+
+      expect(result.success).toBe(true)
+
+      const expectedSource = `App
+  Footer
+  Card
+    Title "Hello"
+    Button "Click"`
+
+      expect(result.newSource).toBe(expectedSource)
+
+      // Verify all content is preserved
+      expect(result.newSource).toContain('Card')
+      expect(result.newSource).toContain('Title "Hello"')
+      expect(result.newSource).toContain('Button "Click"')
+      expect(result.newSource).toContain('Footer')
+    })
+
+    it('moves element inside empty container', () => {
+      // Edge case: target container has no children
+      const source = `App
+  Box1
+  Container`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 3 },
+          { id: 'node-2', componentName: 'Box1', line: 2, endLine: 2, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Container', line: 3, endLine: 3, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move Box1 inside empty Container
+      const result = modifier.moveNode('node-2', 'node-3', 'inside')
+
+      expect(result.success).toBe(true)
+
+      const expectedSource = `App
+  Container
+    Box1`
+
+      expect(result.newSource).toBe(expectedSource)
+    })
+
+    it('moves element inside container with existing children', () => {
+      // Move element inside container that already has children
+      const source = `App
+  Box1
+  Container
+    Child1`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'App', line: 1, endLine: 4 },
+          { id: 'node-2', componentName: 'Box1', line: 2, endLine: 2, parentId: 'node-1' },
+          { id: 'node-3', componentName: 'Container', line: 3, endLine: 4, parentId: 'node-1' },
+          { id: 'node-4', componentName: 'Child1', line: 4, endLine: 4, parentId: 'node-3' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Move Box1 inside Container (should go after Child1)
+      const result = modifier.moveNode('node-2', 'node-3', 'inside')
+
+      expect(result.success).toBe(true)
+
+      const expectedSource = `App
+  Container
+    Child1
+    Box1`
+
+      expect(result.newSource).toBe(expectedSource)
+    })
+  })
+
+  describe('updateProperty', () => {
+    it('updates property on lowercase component name', () => {
+      const source = `rect w 100, h 200, bg #FCC419`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'rect', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.updateProperty('node-1', 'bg', '$primary.bg')
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe(`rect w 100, h 200, bg $primary.bg`)
+    })
+
+    it('updates property with alias on lowercase component', () => {
+      const source = `box pad 16, background #333`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'box', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      // Using alias 'bg' to update 'background'
+      const result = modifier.updateProperty('node-1', 'bg', '#fff')
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe(`box pad 16, background #fff`)
+    })
+
+    it('adds new property to lowercase component when not exists', () => {
+      const source = `rect w 100, h 200`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'rect', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.updateProperty('node-1', 'bg', '#333')
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe(`rect w 100, h 200, bg #333`)
+    })
+
+    it('updates property on uppercase component name', () => {
+      const source = `Button pad 12, bg #3B82F6, "Click me"`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.updateProperty('node-1', 'bg', '#EF4444')
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe(`Button pad 12, bg #EF4444, "Click me"`)
+    })
   })
 
   describe('CodeChange integration', () => {

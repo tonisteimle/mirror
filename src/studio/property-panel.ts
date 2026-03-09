@@ -164,6 +164,21 @@ export class PropertyPanel {
   }
 
   /**
+   * Show properties for a component definition
+   * Used when clicking on a component definition line in the editor
+   */
+  showComponentDefinition(componentName: string): boolean {
+    const element = this.propertyExtractor.getPropertiesForComponentDefinition(componentName)
+    if (!element) {
+      return false
+    }
+
+    this.currentElement = element
+    this.render(element)
+    return true
+  }
+
+  /**
    * Render empty state (no selection)
    */
   private renderEmpty(): void {
@@ -1079,58 +1094,42 @@ export class PropertyPanel {
     const bgValue = bgProp?.value || ''
     const colValue = colProp?.value || ''
 
-    // Get color tokens from source
-    const allColorTokens = this.getColorTokens()
+    // Check if properties are instance overrides
+    const bgIsOverride = bgProp?.source === 'instance'
+    const colIsOverride = colProp?.source === 'instance'
 
-    // Filter tokens by suffix for bg and col
-    const bgTokens = allColorTokens.filter(t => t.name.endsWith('.bg'))
-    const colTokens = allColorTokens.filter(t => t.name.endsWith('.col'))
+    // Format display values (show token name or hex)
+    const bgDisplay = bgValue.startsWith('$') ? bgValue : (bgValue || 'none')
+    const colDisplay = colValue.startsWith('$') ? colValue : (colValue || 'none')
 
-    // Use defaults if no tokens found
-    const bgTokensToUse = bgTokens.length > 0 ? bgTokens : this.DEFAULT_BG_TOKENS
-    const colTokensToUse = colTokens.length > 0 ? colTokens : this.DEFAULT_COL_TOKENS
+    // Check if value is a token for styling
+    const bgIsToken = bgValue.startsWith('$')
+    const colIsToken = colValue.startsWith('$')
 
-    // Check if current value is a token color
-    const bgTokenValues = bgTokensToUse.map(t => t.value.toLowerCase())
-    const bgHasCustom = bgValue && !bgTokenValues.includes(bgValue.toLowerCase())
-
-    const colTokenValues = colTokensToUse.map(t => t.value.toLowerCase())
-    const colHasCustom = colValue && !colTokenValues.includes(colValue.toLowerCase())
-
-    // Render bg swatches - include token name for code generation
-    const bgSwatches = bgTokensToUse.map(token => {
-      const isActive = bgValue.toLowerCase() === token.value.toLowerCase()
-      return `<button class="color-swatch ${isActive ? 'active' : ''}" style="background: ${token.value}" data-color-prop="bg" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`
-    }).join('')
-
-    // Render col swatches - include token name for code generation
-    const colSwatches = colTokensToUse.map(token => {
-      const isActive = colValue.toLowerCase() === token.value.toLowerCase()
-      return `<button class="color-swatch ${isActive ? 'active' : ''}" style="background: ${token.value}" data-color-prop="color" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`
-    }).join('')
+    // Get resolved color for swatch display (resolve tokens to actual color)
+    const bgSwatchColor = bgIsToken ? this.resolveTokenValue(bgValue) : bgValue
+    const colSwatchColor = colIsToken ? this.resolveTokenValue(colValue) : colValue
 
     return `
       <div class="section">
         <div class="section-label">Color</div>
         <div class="section-content">
-          <div class="prop-row">
+          <div class="prop-row${bgIsOverride ? ' override' : ''}">
             <span class="prop-label">Background</span>
             <div class="prop-content">
-              <div class="color-group">
-                ${bgHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(bgValue)}" data-color-prop="bg" data-color="${this.escapeHtml(bgValue)}" title="Current"></button>` : ''}
-                ${bgSwatches}
+              <div class="pp-color-trigger" data-color-prop="bg" data-current-value="${this.escapeHtml(bgValue)}">
+                <div class="pp-color-swatch${bgValue ? '' : ' empty'}" style="${bgSwatchColor ? `background: ${this.escapeHtml(bgSwatchColor)}` : ''}"></div>
+                <span class="pp-color-value${bgIsToken ? ' token' : ''}">${this.escapeHtml(bgDisplay)}</span>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(bgValue)}" data-prop="bg" placeholder="#hex">
             </div>
           </div>
-          <div class="prop-row">
+          <div class="prop-row${colIsOverride ? ' override' : ''}">
             <span class="prop-label">Text</span>
             <div class="prop-content">
-              <div class="color-group">
-                ${colHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(colValue)}" data-color-prop="color" data-color="${this.escapeHtml(colValue)}" title="Current"></button>` : ''}
-                ${colSwatches}
+              <div class="pp-color-trigger" data-color-prop="color" data-current-value="${this.escapeHtml(colValue)}">
+                <div class="pp-color-swatch${colValue ? '' : ' empty'}" style="${colSwatchColor ? `background: ${this.escapeHtml(colSwatchColor)}` : ''}"></div>
+                <span class="pp-color-value${colIsToken ? ' token' : ''}">${this.escapeHtml(colDisplay)}</span>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(colValue)}" data-prop="color" placeholder="#hex">
             </div>
           </div>
         </div>
@@ -1209,6 +1208,7 @@ export class PropertyPanel {
     // Find padding values
     const padProp = props.find(p => p.name === 'padding' || p.name === 'pad' || p.name === 'p')
     const padValue = padProp?.value || ''
+    const padIsOverride = padProp?.source === 'instance'
 
     // Parse padding value to get T, R, B, L
     const padParts = padValue.split(/\s+/).filter(Boolean)
@@ -1252,7 +1252,7 @@ export class PropertyPanel {
       <div class="section">
         <div class="section-label">Spacing</div>
         <div class="section-content" data-expand-container="spacing">
-          <div class="prop-row collapsed-row" data-expand-group="spacing">
+          <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
             <span class="prop-label">Padding H</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1266,7 +1266,7 @@ export class PropertyPanel {
               </button>
             </div>
           </div>
-          <div class="prop-row collapsed-row" data-expand-group="spacing">
+          <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
             <span class="prop-label">Padding V</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1330,12 +1330,21 @@ export class PropertyPanel {
     // Get radius value
     const radiusProp = props.find(p => p.name === 'radius' || p.name === 'rad')
     const radiusValue = radiusProp?.value || ''
+    const radiusIsOverride = radiusProp?.source === 'instance'
 
-    // Get border value
+    // Get border value and extract width and color
     const borderProp = props.find(p => p.name === 'border' || p.name === 'bor')
     const borderValue = borderProp?.value || ''
     const borderParts = borderValue.split(/\s+/).filter(Boolean)
     const borderWidth = borderParts[0] || '0'
+    // Color is the second part (or look for # or $)
+    const borderColor = borderParts.find(p => p.startsWith('#') || p.startsWith('$')) || ''
+    const borderIsOverride = borderProp?.source === 'instance'
+
+    // Border color display
+    const borderColorIsToken = borderColor.startsWith('$')
+    const borderColorDisplay = borderColor || 'none'
+    const borderColorSwatch = borderColorIsToken ? this.resolveTokenValue(borderColor) : borderColor
 
     // Get dynamic radius tokens, fall back to hardcoded if none defined
     const dynamicRadiusTokens = this.getRadiusTokens()
@@ -1366,11 +1375,18 @@ export class PropertyPanel {
       return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
     }).join('')
 
+    // Color trigger for border (stores current width for compound update)
+    const borderColorTrigger = `
+      <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+        <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ''}"></div>
+      </div>
+    `
+
     return `
       <div class="section">
         <div class="section-label">Border</div>
         <div class="section-content">
-          <div class="prop-row">
+          <div class="prop-row${radiusIsOverride ? ' override' : ''}">
             <span class="prop-label">Radius</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1425,16 +1441,13 @@ export class PropertyPanel {
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
             </div>
           </div>
-          <div class="prop-row">
+          <div class="prop-row${borderIsOverride ? ' override' : ''}">
             <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333" title="$border.col"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6" title="$primary.col"></button>
-              </div>
+              ${borderColorTrigger}
               <button class="toggle-btn expand-btn" data-expand="border" title="Expand">
                 <svg class="icon" viewBox="0 0 14 14">
                   <path d="M4 6l3 3 3-3"/>
@@ -1448,9 +1461,8 @@ export class PropertyPanel {
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-t" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ''}"></div>
               </div>
             </div>
           </div>
@@ -1460,9 +1472,8 @@ export class PropertyPanel {
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-r" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ''}"></div>
               </div>
             </div>
           </div>
@@ -1472,9 +1483,8 @@ export class PropertyPanel {
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-b" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ''}"></div>
               </div>
             </div>
           </div>
@@ -1484,9 +1494,8 @@ export class PropertyPanel {
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-l" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ''}"></div>
               </div>
             </div>
           </div>
@@ -1802,17 +1811,17 @@ export class PropertyPanel {
     const hoverBorValue = hoverBorProp?.value || ''
     const hoverBocValue = hoverBocProp?.value || ''
 
-    // Hover BG swatches (v2)
-    const bgSwatches = this.COLOR_V2_SWATCHES.bg.map(swatch => {
-      const isActive = hoverBgValue === swatch.value
-      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-bg" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
-    }).join('')
+    // Format display values for hover colors
+    const hoverBgDisplay = hoverBgValue.startsWith('$') ? hoverBgValue : (hoverBgValue || 'none')
+    const hoverColDisplay = hoverColValue.startsWith('$') ? hoverColValue : (hoverColValue || 'none')
 
-    // Hover Color swatches (v2)
-    const colSwatches = this.COLOR_V2_SWATCHES.text.map(swatch => {
-      const isActive = hoverColValue === swatch.value
-      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-col" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
-    }).join('')
+    // Check if values are tokens for styling
+    const hoverBgIsToken = hoverBgValue.startsWith('$')
+    const hoverColIsToken = hoverColValue.startsWith('$')
+
+    // Get resolved colors for swatch display
+    const hoverBgSwatchColor = hoverBgIsToken ? this.resolveTokenValue(hoverBgValue) : hoverBgValue
+    const hoverColSwatchColor = hoverColIsToken ? this.resolveTokenValue(hoverColValue) : hoverColValue
 
     // Opacity tokens (v2)
     const opacityTokens = this.HOVER_OPACITY_PRESETS.map(val => {
@@ -1830,15 +1839,10 @@ export class PropertyPanel {
       return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-hover-bor-width="${width}" title="${width}px">${width}</button>`
     }).join('')
 
-    // Border color swatches (v2)
-    const borderColors = [
-      { label: 'Border', value: '#333' },
-      { label: 'Primary', value: '#3B82F6' },
-    ]
-    const borderColorSwatches = borderColors.map(swatch => {
-      const isActive = hoverBocValue === swatch.value || hoverBorValue.includes(swatch.value)
-      return `<button class="pp-color-btn ${isActive ? 'active' : ''}" data-hover-prop="hover-boc" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`
-    }).join('')
+    // Extract border color from hover-bor or hover-boc
+    const hoverBorderColor = hoverBocValue || hoverBorValue.split(' ').find(p => p.startsWith('#') || p.startsWith('$')) || ''
+    const hoverBorderColorIsToken = hoverBorderColor.startsWith('$')
+    const hoverBorderColorSwatch = hoverBorderColorIsToken ? this.resolveTokenValue(hoverBorderColor) : hoverBorderColor
 
     return `
       <div class="pp-section">
@@ -1846,19 +1850,19 @@ export class PropertyPanel {
         <div class="pp-prop-row">
           <span class="pp-prop-label">BG</span>
           <div class="pp-prop-content">
-            <div class="pp-color-group">
-              ${bgSwatches}
+            <div class="pp-color-trigger" data-color-prop="hover-bg" data-current-value="${this.escapeHtml(hoverBgValue)}">
+              <div class="pp-color-swatch${hoverBgValue ? '' : ' empty'}" style="${hoverBgSwatchColor ? `background: ${this.escapeHtml(hoverBgSwatchColor)}` : ''}"></div>
+              <span class="pp-color-value${hoverBgIsToken ? ' token' : ''}">${this.escapeHtml(hoverBgDisplay)}</span>
             </div>
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverBgValue)}" data-hover-prop="hover-bg" placeholder="#color">
           </div>
         </div>
         <div class="pp-prop-row">
           <span class="pp-prop-label">Color</span>
           <div class="pp-prop-content">
-            <div class="pp-color-group">
-              ${colSwatches}
+            <div class="pp-color-trigger" data-color-prop="hover-col" data-current-value="${this.escapeHtml(hoverColValue)}">
+              <div class="pp-color-swatch${hoverColValue ? '' : ' empty'}" style="${hoverColSwatchColor ? `background: ${this.escapeHtml(hoverColSwatchColor)}` : ''}"></div>
+              <span class="pp-color-value${hoverColIsToken ? ' token' : ''}">${this.escapeHtml(hoverColDisplay)}</span>
             </div>
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverColValue)}" data-hover-prop="hover-col" placeholder="#color">
           </div>
         </div>
         <div class="pp-prop-row">
@@ -1882,8 +1886,8 @@ export class PropertyPanel {
             <div class="pp-toggle-group">
               ${borderToggles}
             </div>
-            <div class="pp-color-group">
-              ${borderColorSwatches}
+            <div class="pp-color-trigger pp-color-trigger-compact" data-color-prop="hover-boc" data-hover-bor-width="${currentBorderWidth}" data-current-value="${this.escapeHtml(hoverBorderColor)}">
+              <div class="pp-color-swatch${hoverBorderColor ? '' : ' empty'}" style="${hoverBorderColorSwatch ? `background: ${this.escapeHtml(hoverBorderColorSwatch)}` : ''}"></div>
             </div>
           </div>
         </div>
@@ -2414,6 +2418,12 @@ export class PropertyPanel {
     const colorPickers = this.container.querySelectorAll('.pp-color-picker')
     colorPickers.forEach(picker => {
       picker.addEventListener('input', (e) => this.handleColorPickerChange(e))
+    })
+
+    // Color triggers (click to open enhanced color picker)
+    const colorTriggers = this.container.querySelectorAll('.pp-color-trigger')
+    colorTriggers.forEach(trigger => {
+      trigger.addEventListener('click', (e) => this.handleColorTriggerClick(e))
     })
 
     // Cursor select
@@ -3832,6 +3842,68 @@ export class PropertyPanel {
     const nodeId = this.currentElement.templateId || this.currentElement.nodeId
     const result = this.codeModifier.updateProperty(nodeId, prop, color)
     this.onCodeChange(result)
+  }
+
+  /**
+   * Handle color trigger click - opens enhanced color picker
+   */
+  private handleColorTriggerClick(e: Event): void {
+    const trigger = (e.target as HTMLElement).closest('.pp-color-trigger') as HTMLElement
+    if (!trigger || !this.currentElement) return
+
+    const colorProp = trigger.dataset.colorProp
+    const borderColorProp = trigger.dataset.borderColorProp
+    const currentValue = trigger.dataset.currentValue || ''
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const rect = trigger.getBoundingClientRect()
+
+    // Check if showColorPickerForProperty exists on window
+    const showColorPicker = (window as { showColorPickerForProperty?: (x: number, y: number, property: string, currentValue: string, callback: (color: string) => void) => void }).showColorPickerForProperty
+    if (!showColorPicker) {
+      console.warn('Color picker not available')
+      return
+    }
+
+    // Determine the property name for color picker context
+    const property = colorProp || borderColorProp || 'bg'
+
+    showColorPicker(
+      rect.left,
+      rect.bottom + 4,
+      property,
+      currentValue,
+      (selectedColor: string) => {
+        // Handle border color specially (compound property)
+        if (borderColorProp) {
+          const borderWidth = trigger.dataset.borderWidth || '1'
+          const result = this.codeModifier.updateProperty(nodeId, borderColorProp, `${borderWidth} ${selectedColor}`)
+          this.onCodeChange(result)
+          return
+        }
+
+        // Handle hover border color specially
+        if (colorProp === 'hover-boc') {
+          const borderWidth = trigger.dataset.hoverBorWidth || '1'
+          // If border width is 0, just set the color without updating hover-bor
+          if (borderWidth !== '0') {
+            const result = this.codeModifier.updateProperty(nodeId, 'hover-bor', `${borderWidth} ${selectedColor}`)
+            this.onCodeChange(result)
+          } else {
+            // Set just the border color property
+            const result = this.codeModifier.updateProperty(nodeId, 'hover-boc', selectedColor)
+            this.onCodeChange(result)
+          }
+          return
+        }
+
+        // Regular color property
+        if (colorProp) {
+          const result = this.codeModifier.updateProperty(nodeId, colorProp, selectedColor)
+          this.onCodeChange(result)
+        }
+      }
+    )
   }
 
   /**

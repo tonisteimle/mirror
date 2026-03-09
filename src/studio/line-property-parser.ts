@@ -139,7 +139,8 @@ export function parseLine(line: string): ParsedLine {
 
   // Find component part (everything before first property or comma)
   // Component names are: Word, Word:, Word as Parent:, etc.
-  const componentMatch = content.match(/^([A-Z][a-zA-Z0-9]*(?:\s+as\s+[A-Z][a-zA-Z0-9]*)?:?)/)
+  // Also handles lowercase component names (primitives like rect, box, text)
+  const componentMatch = content.match(/^([a-zA-Z][a-zA-Z0-9]*(?:\s+as\s+[a-zA-Z][a-zA-Z0-9]*)?:?)/)
   if (!componentMatch) return result
 
   result.componentPart = componentMatch[1]

@@ -1890,7 +1890,7 @@ var Mirror = (() => {
     "vertical",
     "ver"
   ]);
-  var IRTransformer = class {
+  var IRTransformer = class _IRTransformer {
     ast;
     componentMap = /* @__PURE__ */ new Map();
     tokenSet = /* @__PURE__ */ new Set();
@@ -2342,7 +2342,7 @@ var Mirror = (() => {
         h5: "h5",
         h6: "h6"
       };
-      return mapping[primitive] || "div";
+      return mapping[primitive.toLowerCase()] || "div";
     }
     /**
      * Transform Mirror properties to CSS styles
@@ -2390,7 +2390,7 @@ var Mirror = (() => {
           continue;
         }
         if ((name === "gap" || name === "g") && !isBoolean) {
-          layoutContext.gap = this.formatCSSValue(name, this.resolveValue(prop.values));
+          layoutContext.gap = this.formatCSSValue(name, this.resolveValue(prop.values, name));
           continue;
         }
         if (name === "grid") {
@@ -2590,8 +2590,8 @@ var Mirror = (() => {
      * Convert Mirror property to CSS
      */
     propertyToCSS(prop, primitive = "frame") {
-      const value = this.resolveValue(prop.values);
       const name = prop.name;
+      const value = this.resolveValue(prop.values, name);
       const values = prop.values;
       if (prop.values.length === 1 && prop.values[0] === true || prop.values.length === 0) {
         return this.booleanPropertyToCSS(name);
@@ -3014,12 +3014,44 @@ var Mirror = (() => {
       return parts.join(" ");
     }
     /**
-     * Resolve property values to string
+     * Map from property name to token suffix for auto-completion
+     * e.g., pad $md -> $md.pad if $md.pad exists
      */
-    resolveValue(values) {
+    static PROPERTY_TO_TOKEN_SUFFIX = {
+      // Spacing
+      "pad": ".pad",
+      "padding": ".pad",
+      "p": ".pad",
+      "margin": ".margin",
+      "m": ".margin",
+      "gap": ".gap",
+      "g": ".gap",
+      // Sizing
+      "rad": ".rad",
+      "radius": ".rad",
+      // Colors
+      "bg": ".bg",
+      "background": ".bg",
+      "col": ".col",
+      "color": ".col",
+      "c": ".col",
+      "boc": ".boc",
+      "border-color": ".boc",
+      // Typography
+      "fs": ".font.size",
+      "font-size": ".font.size"
+    };
+    /**
+     * Resolve property values to string
+     * @param values The property values to resolve
+     * @param propertyName Optional property name for context-aware token resolution
+     */
+    resolveValue(values, propertyName) {
       return values.map((v) => {
         if (typeof v === "object" && v.kind === "token") {
-          const cssVarName = v.name.replace(/\./g, "-");
+          const tokenName = v.name;
+          const resolvedName = this.resolveTokenWithContext(tokenName, propertyName);
+          const cssVarName = resolvedName.replace(/\./g, "-");
           return `var(--${cssVarName})`;
         }
         if (typeof v === "string" && this.tokenSet.has(v)) {
@@ -3028,6 +3060,25 @@ var Mirror = (() => {
         }
         return String(v);
       }).join(" ");
+    }
+    /**
+     * Try to resolve a short token name using property context
+     * e.g., 'md' with property 'pad' -> 'md.pad' if '$md.pad' exists in tokens
+     */
+    resolveTokenWithContext(tokenName, propertyName) {
+      if (this.tokenSet.has("$" + tokenName)) {
+        return tokenName;
+      }
+      if (propertyName) {
+        const suffix = _IRTransformer.PROPERTY_TO_TOKEN_SUFFIX[propertyName];
+        if (suffix) {
+          const extendedName = tokenName + suffix;
+          if (this.tokenSet.has("$" + extendedName)) {
+            return extendedName;
+          }
+        }
+      }
+      return tokenName;
     }
     /**
      * Extract HTML properties (non-CSS)
@@ -3202,6 +3253,469 @@ var Mirror = (() => {
     }
   };
 
+  // src/runtime/dom-runtime-string.ts
+  var DOM_RUNTIME_CODE = `
+// Mirror DOM Runtime
+const _runtime = {
+  // Property mapping
+  _propMap: {
+    'bg': 'background',
+    'col': 'color',
+    'pad': 'padding',
+    'rad': 'borderRadius',
+    'gap': 'gap',
+    'w': 'width',
+    'h': 'height',
+    'opacity': 'opacity',
+  },
+
+  // Alignment helpers
+  _alignToCSS(el, prop, value) {
+    const dir = el.style.flexDirection || 'column'
+    const isRow = dir === 'row'
+    const alignMap = { 'left': 'flex-start', 'right': 'flex-end', 'center': 'center', 'top': 'flex-start', 'bottom': 'flex-end' }
+    const cssVal = alignMap[value] || value
+
+    if (prop === 'align' || prop === 'hor-align') {
+      if (isRow) { el.style.justifyContent = cssVal }
+      else { el.style.alignItems = cssVal }
+    } else if (prop === 'ver-align') {
+      if (isRow) { el.style.alignItems = cssVal }
+      else { el.style.justifyContent = cssVal }
+    }
+  },
+
+  _getAlign(el, prop) {
+    const dir = el.style.flexDirection || 'column'
+    const isRow = dir === 'row'
+    const reverseMap = { 'flex-start': 'left', 'flex-end': 'right', 'center': 'center' }
+
+    if (prop === 'align' || prop === 'hor-align') {
+      const val = isRow ? el.style.justifyContent : el.style.alignItems
+      return reverseMap[val] || val
+    } else if (prop === 'ver-align') {
+      const val = isRow ? el.style.alignItems : el.style.justifyContent
+      const vertMap = { 'flex-start': 'top', 'flex-end': 'bottom', 'center': 'center' }
+      return vertMap[val] || val
+    }
+  },
+
+  // Element wrapper
+  wrap(el) {
+    if (!el) return null
+    const self = this
+    return {
+      _el: el,
+      get text() { return el.textContent },
+      set text(v) { el.textContent = v },
+      get value() { return el.value },
+      set value(v) { el.value = v },
+      get visible() { return el.style.display !== 'none' },
+      set visible(v) { el.style.display = v ? '' : 'none' },
+      get hidden() { return el.hidden },
+      set hidden(v) { el.hidden = v; el.style.display = v ? 'none' : '' },
+      get align() { return self._getAlign(el, 'align') },
+      set align(v) { self._alignToCSS(el, 'align', v) },
+      get verAlign() { return self._getAlign(el, 'ver-align') },
+      set verAlign(v) { self._alignToCSS(el, 'ver-align', v) },
+      get bg() { return el.style.background },
+      set bg(v) { el.style.background = v },
+      get col() { return el.style.color },
+      set col(v) { el.style.color = v },
+      get pad() { return el.style.padding },
+      set pad(v) { el.style.padding = typeof v === 'number' ? v + 'px' : v },
+      get gap() { return el.style.gap },
+      set gap(v) { el.style.gap = typeof v === 'number' ? v + 'px' : v },
+      get rad() { return el.style.borderRadius },
+      set rad(v) { el.style.borderRadius = typeof v === 'number' ? v + 'px' : v },
+      get w() { return el.style.width },
+      set w(v) { el.style.width = typeof v === 'number' ? v + 'px' : v },
+      get h() { return el.style.height },
+      set h(v) { el.style.height = typeof v === 'number' ? v + 'px' : v },
+      get opacity() { return el.style.opacity },
+      set opacity(v) { el.style.opacity = v },
+      get state() { return el.dataset.state || 'default' },
+      set state(v) { self.setState(el, v) },
+      set onclick(fn) { el.addEventListener('click', fn) },
+      set onchange(fn) { el.addEventListener('change', fn) },
+      addClass(c) { el.classList.add(c) },
+      removeClass(c) { el.classList.remove(c) },
+      toggleClass(c) { el.classList.toggle(c) },
+      setStyle(prop, val) { el.style[prop] = val },
+      getStyle(prop) { return el.style[prop] },
+    }
+  },
+
+  // Visibility
+  toggle(el) {
+    if (!el) return
+    const currentState = el.dataset.state || el._initialState
+    if (currentState === 'closed' || currentState === 'open') {
+      const newState = currentState === 'closed' ? 'open' : 'closed'
+      this.setState(el, newState)
+    } else if (currentState === 'collapsed' || currentState === 'expanded') {
+      const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed'
+      this.setState(el, newState)
+    } else {
+      el.hidden = !el.hidden
+      this.applyState(el, el.hidden ? 'off' : 'on')
+    }
+  },
+
+  show(el) {
+    if (!el) return
+    el.hidden = false
+    el.style.display = ''
+  },
+
+  hide(el) {
+    if (!el) return
+    el.hidden = true
+    el.style.display = 'none'
+  },
+
+  close(el) {
+    if (!el) return
+    const initialState = el._initialState
+    if (initialState === 'closed' || initialState === 'open' || el.dataset.state === 'open' || el.dataset.state === 'closed') {
+      this.setState(el, 'closed')
+    } else if (initialState === 'expanded' || initialState === 'collapsed' || el.dataset.state === 'expanded' || el.dataset.state === 'collapsed') {
+      this.setState(el, 'collapsed')
+    } else {
+      this.hide(el)
+    }
+  },
+
+  // Selection
+  select(el) {
+    if (!el) return
+    if (el.parentElement) {
+      Array.from(el.parentElement.children).forEach(sibling => {
+        if (sibling !== el && sibling.dataset.selected) {
+          this.deselect(sibling)
+        }
+      })
+    }
+    el.dataset.selected = 'true'
+    this.applyState(el, 'selected')
+    this.updateSelectionBinding(el)
+  },
+
+  deselect(el) {
+    if (!el) return
+    delete el.dataset.selected
+    this.removeState(el, 'selected')
+  },
+
+  // Highlighting
+  highlight(el) {
+    if (!el) return
+    if (el.parentElement) {
+      Array.from(el.parentElement.children).forEach(sibling => {
+        if (sibling !== el && sibling.dataset.highlighted) {
+          this.unhighlight(sibling)
+        }
+      })
+    }
+    el.dataset.highlighted = 'true'
+    this.applyState(el, 'highlighted')
+  },
+
+  unhighlight(el) {
+    if (!el) return
+    delete el.dataset.highlighted
+    this.removeState(el, 'highlighted')
+  },
+
+  highlightNext(container) {
+    if (!container) return
+    const items = this.getHighlightableItems(container)
+    if (!items.length) return
+    const current = items.findIndex(el => el.dataset.highlighted === 'true')
+    const next = current === -1 ? 0 : Math.min(current + 1, items.length - 1)
+    this.highlight(items[next])
+  },
+
+  highlightPrev(container) {
+    if (!container) return
+    const items = this.getHighlightableItems(container)
+    if (!items.length) return
+    const current = items.findIndex(el => el.dataset.highlighted === 'true')
+    const prev = current === -1 ? items.length - 1 : Math.max(current - 1, 0)
+    this.highlight(items[prev])
+  },
+
+  highlightFirst(container) {
+    if (!container) return
+    const items = this.getHighlightableItems(container)
+    if (items.length) this.highlight(items[0])
+  },
+
+  highlightLast(container) {
+    if (!container) return
+    const items = this.getHighlightableItems(container)
+    if (items.length) this.highlight(items[items.length - 1])
+  },
+
+  getHighlightableItems(container) {
+    const findItems = (el, requireHighlightState) => {
+      const items = []
+      for (const child of el.children) {
+        if (child._stateStyles?.highlighted) {
+          items.push(child)
+        } else if (!requireHighlightState && child.style.cursor === 'pointer') {
+          items.push(child)
+        } else {
+          items.push(...findItems(child, requireHighlightState))
+        }
+      }
+      return items
+    }
+    let items = findItems(container, true)
+    if (!items.length) items = findItems(container, false)
+    return items
+  },
+
+  selectHighlighted(container) {
+    if (!container) return
+    const items = this.getHighlightableItems(container)
+    const highlighted = items.find(el => el.dataset.highlighted === 'true')
+    if (highlighted) this.select(highlighted)
+  },
+
+  // Activation
+  activate(el) {
+    if (!el) return
+    el.dataset.active = 'true'
+    this.applyState(el, 'active')
+  },
+
+  deactivate(el) {
+    if (!el) return
+    delete el.dataset.active
+    this.removeState(el, 'active')
+  },
+
+  // State management
+  applyState(el, state) {
+    if (!el?._stateStyles || !el._stateStyles[state]) return
+    Object.assign(el.style, el._stateStyles[state])
+  },
+
+  removeState(el, state) {
+    if (!el?._baseStyles) return
+    Object.assign(el.style, el._baseStyles)
+  },
+
+  setState(el, stateName) {
+    if (!el) return
+    if (!el._baseStyles && el._stateStyles) {
+      el._baseStyles = {}
+      const stateProps = new Set()
+      for (const state of Object.values(el._stateStyles)) {
+        for (const prop of Object.keys(state)) stateProps.add(prop)
+      }
+      for (const prop of stateProps) {
+        el._baseStyles[prop] = el.style[prop] || ''
+      }
+    }
+    if (el._baseStyles) Object.assign(el.style, el._baseStyles)
+    el.dataset.state = stateName
+    if (stateName !== 'default' && el._stateStyles && el._stateStyles[stateName]) {
+      Object.assign(el.style, el._stateStyles[stateName])
+    }
+    this.updateVisibility(el)
+  },
+
+  toggleState(el, state1, state2) {
+    if (!el) return
+    state2 = state2 || 'default'
+    const current = el.dataset.state || state2
+    const next = current === state1 ? state2 : state1
+    this.setState(el, next)
+  },
+
+  updateVisibility(el) {
+    if (!el) return
+    const state = el.dataset.state
+    const children = el.querySelectorAll('[data-mirror-id]')
+    children.forEach(child => {
+      if (child._visibleWhen) {
+        const condition = child._visibleWhen
+        let visible = false
+        if (condition.includes('&&') || condition.includes('||')) {
+          try {
+            const open = state === 'open'
+            const closed = state === 'closed'
+            const expanded = state === 'expanded'
+            const collapsed = state === 'collapsed'
+            visible = eval(condition)
+          } catch (e) { visible = false }
+        } else {
+          visible = state === condition
+        }
+        child.style.display = visible ? '' : 'none'
+      }
+    })
+  },
+
+  // Navigation
+  navigate(targetName, clickedElement) {
+    if (!targetName) return
+    const target = document.querySelector(\`[data-component="\${targetName}"]\`)
+    if (!target) return
+    if (target.parentElement) {
+      Array.from(target.parentElement.children).forEach(sibling => {
+        if (sibling.dataset && sibling.dataset.component) {
+          sibling.style.display = sibling === target ? '' : 'none'
+        }
+      })
+    }
+    this.updateNavSelection(clickedElement)
+  },
+
+  updateNavSelection(clickedElement) {
+    if (!clickedElement) return
+    const nav = clickedElement.closest('nav')
+    if (!nav) return
+    const navItems = nav.querySelectorAll('[data-route]')
+    navItems.forEach(item => {
+      if (item === clickedElement) {
+        item.dataset.selected = 'true'
+        this.applyState(item, 'selected')
+      } else {
+        delete item.dataset.selected
+        this.removeState(item, 'selected')
+      }
+    })
+  },
+
+  navigateToPage(pageName, clickedElement) {
+    if (!pageName) return
+    const filename = pageName.endsWith('.mirror') ? pageName : pageName + '.mirror'
+    const readFile = this._readFile || window._mirrorReadFile
+    if (!readFile) {
+      console.warn('No readFile callback available for page navigation')
+      return
+    }
+    const content = readFile(filename)
+    if (!content) {
+      console.warn(\`Page not found: \${filename}\`)
+      return
+    }
+    if (typeof Mirror === 'undefined' || !Mirror.compile) {
+      console.warn('Mirror compiler not available for dynamic page loading')
+      return
+    }
+    try {
+      const pageCode = Mirror.compile(content, { readFile })
+      const container = this.getPageContainer()
+      if (!container) {
+        console.warn('No page container found for rendering')
+        return
+      }
+      container.innerHTML = ''
+      const execCode = pageCode.replace('export function createUI', 'function createUI')
+      const fn = new Function(execCode + '\\nreturn createUI();')
+      const ui = fn()
+      if (ui && ui.root) {
+        while (ui.root.firstChild) {
+          container.appendChild(ui.root.firstChild)
+        }
+      }
+    } catch (err) {
+      console.error(\`Failed to load page \${filename}:\`, err)
+    }
+    this.updateNavSelection(clickedElement)
+  },
+
+  getPageContainer() {
+    let container = document.querySelector('[data-page-container]')
+    if (container) return container
+    container = document.querySelector('[data-instance-name="PageContent"]')
+    if (container) return container
+    container = document.querySelector('[data-instance-name="Content"]')
+    if (container) return container
+    const nav = document.querySelector('nav')
+    if (nav && nav.parentElement) {
+      for (const sibling of nav.parentElement.children) {
+        if (sibling !== nav && sibling.tagName !== 'NAV') {
+          return sibling
+        }
+      }
+    }
+    return null
+  },
+
+  // Selection binding
+  updateSelectionBinding(el) {
+    if (!el) return
+    let parent = el.parentElement
+    while (parent) {
+      if (parent._selectionBinding) {
+        const value = el.textContent?.trim() || ''
+        const varName = parent._selectionBinding
+        window._mirrorState = window._mirrorState || {}
+        window._mirrorState[varName] = value
+        this.updateBoundElements(varName, value)
+        return
+      }
+      parent = parent.parentElement
+    }
+  },
+
+  updateBoundElements(varName, value) {
+    document.querySelectorAll('[data-mirror-id]').forEach(el => {
+      if (el._textBinding === varName) {
+        el.textContent = value || el._textPlaceholder || ''
+      }
+    })
+  },
+
+  // Cleanup
+  destroy(el) {
+    if (!el) return
+    if (el._clickOutsideHandler) {
+      document.removeEventListener('click', el._clickOutsideHandler)
+      delete el._clickOutsideHandler
+    }
+    if (el.children) {
+      Array.from(el.children).forEach(child => this.destroy(child))
+    }
+  },
+
+  // Icon loading
+  async loadIcon(el, iconName) {
+    if (!el || !iconName) return
+    const size = el.dataset.iconSize || '24'
+    const color = el.dataset.iconColor || 'currentColor'
+    const strokeWidth = el.dataset.iconWeight || '2'
+    try {
+      const url = \`https://unpkg.com/lucide-static/icons/\${iconName}.svg\`
+      const res = await fetch(url)
+      if (!res.ok) {
+        console.warn(\`Icon "\${iconName}" not found\`)
+        el.textContent = iconName
+        return
+      }
+      const svgText = await res.text()
+      el.innerHTML = svgText
+      const svg = el.querySelector('svg')
+      if (svg) {
+        svg.style.width = size + 'px'
+        svg.style.height = size + 'px'
+        svg.style.color = color
+        svg.setAttribute('stroke-width', strokeWidth)
+        svg.style.display = 'block'
+      }
+    } catch (err) {
+      console.warn(\`Failed to load icon "\${iconName}":\`, err)
+      el.textContent = iconName
+    }
+  },
+}
+`;
+
   // src/backends/dom.ts
   function generateDOM(ast) {
     const ir = toIR(ast);
@@ -3261,8 +3775,14 @@ var Mirror = (() => {
         this.emit(":root {");
         this.indent++;
         for (const token of this.ir.tokens) {
-          const value = token.value;
+          let value = token.value;
           const cssVarName = (token.name.startsWith("$") ? token.name.slice(1) : token.name).replace(/\./g, "-");
+          const needsPx = /\.(pad|gap|rad|radius|margin|size)$/.test(token.name);
+          if (needsPx && typeof value === "number") {
+            value = `${value}px`;
+          } else if (needsPx && typeof value === "string" && /^\d+$/.test(value)) {
+            value = `${value}px`;
+          }
           this.emit(`--${cssVarName}: ${value};`);
         }
         this.indent--;
@@ -3902,728 +4422,7 @@ var Mirror = (() => {
       this.emit("return api");
     }
     emitRuntime() {
-      this.emit("// Runtime helpers");
-      this.emit("const _runtime = {");
-      this.indent++;
-      this.emit("// Mirror property to CSS mapping");
-      this.emit("_propMap: {");
-      this.indent++;
-      this.emit("'bg': 'background',");
-      this.emit("'col': 'color',");
-      this.emit("'pad': 'padding',");
-      this.emit("'rad': 'borderRadius',");
-      this.emit("'gap': 'gap',");
-      this.emit("'w': 'width',");
-      this.emit("'h': 'height',");
-      this.emit("'opacity': 'opacity',");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("// Convert alignment value to CSS");
-      this.emit("_alignToCSS(el, prop, value) {");
-      this.indent++;
-      this.emit("const dir = el.style.flexDirection || 'column'");
-      this.emit("const isRow = dir === 'row'");
-      this.emit("");
-      this.emit("const alignMap = { 'left': 'flex-start', 'right': 'flex-end', 'center': 'center', 'top': 'flex-start', 'bottom': 'flex-end' }");
-      this.emit("const cssVal = alignMap[value] || value");
-      this.emit("");
-      this.emit("if (prop === 'align' || prop === 'hor-align') {");
-      this.indent++;
-      this.emit("// Horizontal alignment");
-      this.emit("if (isRow) { el.style.justifyContent = cssVal }");
-      this.emit("else { el.style.alignItems = cssVal }");
-      this.indent--;
-      this.emit("} else if (prop === 'ver-align') {");
-      this.indent++;
-      this.emit("// Vertical alignment");
-      this.emit("if (isRow) { el.style.alignItems = cssVal }");
-      this.emit("else { el.style.justifyContent = cssVal }");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("_getAlign(el, prop) {");
-      this.indent++;
-      this.emit("const dir = el.style.flexDirection || 'column'");
-      this.emit("const isRow = dir === 'row'");
-      this.emit("const reverseMap = { 'flex-start': 'left', 'flex-end': 'right', 'center': 'center' }");
-      this.emit("");
-      this.emit("if (prop === 'align' || prop === 'hor-align') {");
-      this.indent++;
-      this.emit("const val = isRow ? el.style.justifyContent : el.style.alignItems");
-      this.emit("return reverseMap[val] || val");
-      this.indent--;
-      this.emit("} else if (prop === 'ver-align') {");
-      this.indent++;
-      this.emit("const val = isRow ? el.style.alignItems : el.style.justifyContent");
-      this.emit("const vertMap = { 'flex-start': 'top', 'flex-end': 'bottom', 'center': 'center' }");
-      this.emit("return vertMap[val] || val");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("wrap(el) {");
-      this.indent++;
-      this.emit("if (!el) return null");
-      this.emit("const self = this");
-      this.emit("return {");
-      this.indent++;
-      this.emit("_el: el,");
-      this.emit("");
-      this.emit("// Text & Value");
-      this.emit("get text() { return el.textContent },");
-      this.emit("set text(v) { el.textContent = v },");
-      this.emit("get value() { return el.value },");
-      this.emit("set value(v) { el.value = v },");
-      this.emit("");
-      this.emit("// Visibility");
-      this.emit('get visible() { return el.style.display !== "none" },');
-      this.emit('set visible(v) { el.style.display = v ? "" : "none" },');
-      this.emit("get hidden() { return el.hidden },");
-      this.emit('set hidden(v) { el.hidden = v; el.style.display = v ? "none" : "" },');
-      this.emit("");
-      this.emit("// Alignment (smart based on flex-direction)");
-      this.emit("get align() { return self._getAlign(el, 'align') },");
-      this.emit("set align(v) { self._alignToCSS(el, 'align', v) },");
-      this.emit("get verAlign() { return self._getAlign(el, 'ver-align') },");
-      this.emit("set verAlign(v) { self._alignToCSS(el, 'ver-align', v) },");
-      this.emit("");
-      this.emit("// Common style properties");
-      this.emit("get bg() { return el.style.background },");
-      this.emit("set bg(v) { el.style.background = v },");
-      this.emit("get col() { return el.style.color },");
-      this.emit("set col(v) { el.style.color = v },");
-      this.emit("get pad() { return el.style.padding },");
-      this.emit("set pad(v) { el.style.padding = typeof v === 'number' ? v + 'px' : v },");
-      this.emit("get gap() { return el.style.gap },");
-      this.emit("set gap(v) { el.style.gap = typeof v === 'number' ? v + 'px' : v },");
-      this.emit("get rad() { return el.style.borderRadius },");
-      this.emit("set rad(v) { el.style.borderRadius = typeof v === 'number' ? v + 'px' : v },");
-      this.emit("get w() { return el.style.width },");
-      this.emit("set w(v) { el.style.width = typeof v === 'number' ? v + 'px' : v },");
-      this.emit("get h() { return el.style.height },");
-      this.emit("set h(v) { el.style.height = typeof v === 'number' ? v + 'px' : v },");
-      this.emit("get opacity() { return el.style.opacity },");
-      this.emit("set opacity(v) { el.style.opacity = v },");
-      this.emit("");
-      this.emit("// State");
-      this.emit("get state() { return el.dataset.state || 'default' },");
-      this.emit("set state(v) { self.setState(el, v) },");
-      this.emit("");
-      this.emit("// Events");
-      this.emit('set onclick(fn) { el.addEventListener("click", fn) },');
-      this.emit('set onchange(fn) { el.addEventListener("change", fn) },');
-      this.emit("");
-      this.emit("// Methods");
-      this.emit("addClass(c) { el.classList.add(c) },");
-      this.emit("removeClass(c) { el.classList.remove(c) },");
-      this.emit("toggleClass(c) { el.classList.toggle(c) },");
-      this.emit("setStyle(prop, val) { el.style[prop] = val },");
-      this.emit("getStyle(prop) { return el.style[prop] },");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("toggle(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// Handle dropdown-style open/closed states");
-      this.emit("const currentState = el.dataset.state || el._initialState");
-      this.emit('if (currentState === "closed" || currentState === "open") {');
-      this.indent++;
-      this.emit('const newState = currentState === "closed" ? "open" : "closed"');
-      this.emit("this.setState(el, newState)");
-      this.indent--;
-      this.emit('} else if (currentState === "collapsed" || currentState === "expanded") {');
-      this.indent++;
-      this.emit('const newState = currentState === "collapsed" ? "expanded" : "collapsed"');
-      this.emit("this.setState(el, newState)");
-      this.indent--;
-      this.emit("} else {");
-      this.indent++;
-      this.emit("// Fallback to hidden toggle");
-      this.emit("el.hidden = !el.hidden");
-      this.emit('this.applyState(el, el.hidden ? "off" : "on")');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("show(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("el.hidden = false");
-      this.emit('el.style.display = ""');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("hide(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("el.hidden = true");
-      this.emit('el.style.display = "none"');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("close(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// If element has toggle state (open/closed), set to closed");
-      this.emit("const initialState = el._initialState");
-      this.emit('if (initialState === "closed" || initialState === "open" || el.dataset.state === "open" || el.dataset.state === "closed") {');
-      this.indent++;
-      this.emit('this.setState(el, "closed")');
-      this.indent--;
-      this.emit('} else if (initialState === "expanded" || initialState === "collapsed" || el.dataset.state === "expanded" || el.dataset.state === "collapsed") {');
-      this.indent++;
-      this.emit('this.setState(el, "collapsed")');
-      this.indent--;
-      this.emit("} else {");
-      this.indent++;
-      this.emit("// Fallback to hide");
-      this.emit("this.hide(el)");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("select(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// Clear previous selection from siblings");
-      this.emit("if (el.parentElement) {");
-      this.indent++;
-      this.emit("Array.from(el.parentElement.children).forEach(sibling => {");
-      this.indent++;
-      this.emit("if (sibling !== el && sibling.dataset.selected) {");
-      this.indent++;
-      this.emit("this.deselect(sibling)");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("}");
-      this.emit('el.dataset.selected = "true"');
-      this.emit('this.applyState(el, "selected")');
-      this.emit("// Update selection binding if present");
-      this.emit("this.updateSelectionBinding(el)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("deselect(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("delete el.dataset.selected");
-      this.emit('this.removeState(el, "selected")');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("highlight(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// Clear highlight from siblings first");
-      this.emit("if (el.parentElement) {");
-      this.indent++;
-      this.emit("Array.from(el.parentElement.children).forEach(sibling => {");
-      this.indent++;
-      this.emit("if (sibling !== el && sibling.dataset.highlighted) {");
-      this.indent++;
-      this.emit("this.unhighlight(sibling)");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("}");
-      this.emit('el.dataset.highlighted = "true"');
-      this.emit('this.applyState(el, "highlighted")');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("unhighlight(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("delete el.dataset.highlighted");
-      this.emit('this.removeState(el, "highlighted")');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("highlightNext(container) {");
-      this.indent++;
-      this.emit("if (!container) return");
-      this.emit("// Find the menu/list container with items");
-      this.emit("const items = this.getHighlightableItems(container)");
-      this.emit("if (!items.length) return");
-      this.emit('const current = items.findIndex(el => el.dataset.highlighted === "true")');
-      this.emit("const next = current === -1 ? 0 : Math.min(current + 1, items.length - 1)");
-      this.emit("this.highlight(items[next])");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("highlightPrev(container) {");
-      this.indent++;
-      this.emit("if (!container) return");
-      this.emit("const items = this.getHighlightableItems(container)");
-      this.emit("if (!items.length) return");
-      this.emit('const current = items.findIndex(el => el.dataset.highlighted === "true")');
-      this.emit("const prev = current === -1 ? items.length - 1 : Math.max(current - 1, 0)");
-      this.emit("this.highlight(items[prev])");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("highlightFirst(container) {");
-      this.indent++;
-      this.emit("if (!container) return");
-      this.emit("const items = this.getHighlightableItems(container)");
-      this.emit("if (items.length) this.highlight(items[0])");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("highlightLast(container) {");
-      this.indent++;
-      this.emit("if (!container) return");
-      this.emit("const items = this.getHighlightableItems(container)");
-      this.emit("if (items.length) this.highlight(items[items.length - 1])");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("getHighlightableItems(container) {");
-      this.indent++;
-      this.emit("// Find all children that have _stateStyles.highlighted (proper highlight targets)");
-      this.emit("// Falls back to cursor: pointer only if no highlighted items found");
-      this.emit("const findItems = (el, requireHighlightState) => {");
-      this.indent++;
-      this.emit("const items = []");
-      this.emit("for (const child of el.children) {");
-      this.indent++;
-      this.emit("if (child._stateStyles?.highlighted) {");
-      this.indent++;
-      this.emit("items.push(child)");
-      this.indent--;
-      this.emit('} else if (!requireHighlightState && child.style.cursor === "pointer") {');
-      this.indent++;
-      this.emit("items.push(child)");
-      this.indent--;
-      this.emit("} else {");
-      this.indent++;
-      this.emit("// Recurse into child containers");
-      this.emit("items.push(...findItems(child, requireHighlightState))");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("}");
-      this.emit("return items");
-      this.indent--;
-      this.emit("}");
-      this.emit("// First try to find items with _stateStyles.highlighted");
-      this.emit("let items = findItems(container, true)");
-      this.emit("// Fall back to cursor: pointer if no highlighted items found");
-      this.emit("if (!items.length) items = findItems(container, false)");
-      this.emit("return items");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("selectHighlighted(container) {");
-      this.indent++;
-      this.emit("if (!container) return");
-      this.emit("const items = this.getHighlightableItems(container)");
-      this.emit('const highlighted = items.find(el => el.dataset.highlighted === "true")');
-      this.emit("if (highlighted) this.select(highlighted)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("activate(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit('el.dataset.active = "true"');
-      this.emit('this.applyState(el, "active")');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("deactivate(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("delete el.dataset.active");
-      this.emit('this.removeState(el, "active")');
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("applyState(el, state) {");
-      this.indent++;
-      this.emit("if (!el._stateStyles || !el._stateStyles[state]) return");
-      this.emit("Object.assign(el.style, el._stateStyles[state])");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("removeState(el, state) {");
-      this.indent++;
-      this.emit("if (!el._baseStyles) return");
-      this.emit("Object.assign(el.style, el._baseStyles)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("setState(el, stateName) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("");
-      this.emit("// Store base styles on first state change");
-      this.emit("if (!el._baseStyles && el._stateStyles) {");
-      this.indent++;
-      this.emit("el._baseStyles = {}");
-      this.emit("const stateProps = new Set()");
-      this.emit("for (const state of Object.values(el._stateStyles)) {");
-      this.indent++;
-      this.emit("for (const prop of Object.keys(state)) stateProps.add(prop)");
-      this.indent--;
-      this.emit("}");
-      this.emit("for (const prop of stateProps) {");
-      this.indent++;
-      this.emit('el._baseStyles[prop] = el.style[prop] || ""');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Restore base styles first");
-      this.emit("if (el._baseStyles) Object.assign(el.style, el._baseStyles)");
-      this.emit("");
-      this.emit("// Apply new state");
-      this.emit("el.dataset.state = stateName");
-      this.emit("if (stateName !== 'default' && el._stateStyles && el._stateStyles[stateName]) {");
-      this.indent++;
-      this.emit("Object.assign(el.style, el._stateStyles[stateName])");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Update visibility of children based on new state");
-      this.emit("this.updateVisibility(el)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("toggleState(el, state1, state2) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("state2 = state2 || 'default'");
-      this.emit("const current = el.dataset.state || state2");
-      this.emit("const next = current === state1 ? state2 : state1");
-      this.emit("this.setState(el, next)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("updateVisibility(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("const state = el.dataset.state");
-      this.emit("// Find children with _visibleWhen");
-      this.emit('const children = el.querySelectorAll("[data-mirror-id]")');
-      this.emit("children.forEach(child => {");
-      this.indent++;
-      this.emit("if (child._visibleWhen) {");
-      this.indent++;
-      this.emit("// Simple state match or evaluate condition");
-      this.emit("const condition = child._visibleWhen");
-      this.emit("let visible = false");
-      this.emit('if (condition.includes("&&") || condition.includes("||")) {');
-      this.indent++;
-      this.emit("// Complex condition - evaluate with state as context");
-      this.emit("try {");
-      this.indent++;
-      this.emit('const open = state === "open"');
-      this.emit('const closed = state === "closed"');
-      this.emit('const expanded = state === "expanded"');
-      this.emit('const collapsed = state === "collapsed"');
-      this.emit("visible = eval(condition)");
-      this.indent--;
-      this.emit("} catch (e) { visible = false }");
-      this.indent--;
-      this.emit("} else {");
-      this.indent++;
-      this.emit("// Simple state name match");
-      this.emit("visible = state === condition");
-      this.indent--;
-      this.emit("}");
-      this.emit('child.style.display = visible ? "" : "none"');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("navigate(targetName, clickedElement) {");
-      this.indent++;
-      this.emit("if (!targetName) return");
-      this.emit("");
-      this.emit("// Find the target component by name");
-      this.emit('const target = document.querySelector(`[data-component="${targetName}"]`)');
-      this.emit("if (!target) return");
-      this.emit("");
-      this.emit("// Show target, hide siblings");
-      this.emit("if (target.parentElement) {");
-      this.indent++;
-      this.emit("Array.from(target.parentElement.children).forEach(sibling => {");
-      this.indent++;
-      this.emit("if (sibling.dataset && sibling.dataset.component) {");
-      this.indent++;
-      this.emit('sibling.style.display = sibling === target ? "" : "none"');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Update selected state in Nav container");
-      this.emit("this.updateNavSelection(clickedElement)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("updateNavSelection(clickedElement) {");
-      this.indent++;
-      this.emit("if (!clickedElement) return");
-      this.emit("");
-      this.emit("// Find the Nav container");
-      this.emit('const nav = clickedElement.closest("nav")');
-      this.emit("if (!nav) return");
-      this.emit("");
-      this.emit("// Find all elements with route in this nav");
-      this.emit('const navItems = nav.querySelectorAll("[data-route]")');
-      this.emit("navItems.forEach(item => {");
-      this.indent++;
-      this.emit("if (item === clickedElement) {");
-      this.indent++;
-      this.emit('item.dataset.selected = "true"');
-      this.emit('this.applyState(item, "selected")');
-      this.indent--;
-      this.emit("} else {");
-      this.indent++;
-      this.emit("delete item.dataset.selected");
-      this.emit('this.removeState(item, "selected")');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("// Navigate to page (load .mirror file)");
-      this.emit("navigateToPage(pageName, clickedElement) {");
-      this.indent++;
-      this.emit("if (!pageName) return");
-      this.emit("");
-      this.emit("// Construct filename (support paths like admin/users)");
-      this.emit('const filename = pageName.endsWith(".mirror") ? pageName : pageName + ".mirror"');
-      this.emit("");
-      this.emit("// Get readFile from options or window");
-      this.emit("const readFile = this._readFile || window._mirrorReadFile");
-      this.emit("if (!readFile) {");
-      this.indent++;
-      this.emit('console.warn("No readFile callback available for page navigation")');
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Load file content");
-      this.emit("const content = readFile(filename)");
-      this.emit("if (!content) {");
-      this.indent++;
-      this.emit("console.warn(`Page not found: ${filename}`)");
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Compile the page (Mirror must be available globally)");
-      this.emit('if (typeof Mirror === "undefined" || !Mirror.compile) {');
-      this.indent++;
-      this.emit('console.warn("Mirror compiler not available for dynamic page loading")');
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("try {");
-      this.indent++;
-      this.emit("const pageCode = Mirror.compile(content, { readFile })");
-      this.emit("");
-      this.emit("// Find page container");
-      this.emit("const container = this.getPageContainer()");
-      this.emit("if (!container) {");
-      this.indent++;
-      this.emit('console.warn("No page container found for rendering")');
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Clear and render new page");
-      this.emit('container.innerHTML = ""');
-      this.emit('const execCode = pageCode.replace("export function createUI", "function createUI")');
-      this.emit('const fn = new Function(execCode + "\\nreturn createUI();")');
-      this.emit("const ui = fn()");
-      this.emit("if (ui && ui.root) {");
-      this.indent++;
-      this.emit("// Append children of root, not root itself");
-      this.emit("while (ui.root.firstChild) {");
-      this.indent++;
-      this.emit("container.appendChild(ui.root.firstChild)");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("} catch (err) {");
-      this.indent++;
-      this.emit("console.error(`Failed to load page ${filename}:`, err)");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("// Update selected state");
-      this.emit("this.updateNavSelection(clickedElement)");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("// Get container for page content");
-      this.emit("getPageContainer() {");
-      this.indent++;
-      this.emit("// First try named page container");
-      this.emit('let container = document.querySelector("[data-page-container]")');
-      this.emit("if (container) return container");
-      this.emit("");
-      this.emit('// Then try named instance "PageContent" or "Content"');
-      this.emit('container = document.querySelector("[data-instance-name=\\"PageContent\\"]")');
-      this.emit("if (container) return container");
-      this.emit('container = document.querySelector("[data-instance-name=\\"Content\\"]")');
-      this.emit("if (container) return container");
-      this.emit("");
-      this.emit("// Fallback: first sibling of nav that is not nav");
-      this.emit('const nav = document.querySelector("nav")');
-      this.emit("if (nav && nav.parentElement) {");
-      this.indent++;
-      this.emit("for (const sibling of nav.parentElement.children) {");
-      this.indent++;
-      this.emit('if (sibling !== nav && sibling.tagName !== "NAV") {');
-      this.indent++;
-      this.emit("return sibling");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("}");
-      this.emit("");
-      this.emit("return null");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("updateSelectionBinding(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// Find parent with _selectionBinding");
-      this.emit("let parent = el.parentElement");
-      this.emit("while (parent) {");
-      this.indent++;
-      this.emit("if (parent._selectionBinding) {");
-      this.indent++;
-      this.emit("// Get the text content of the selected element");
-      this.emit('const value = el.textContent?.trim() || ""');
-      this.emit("// Store in global state");
-      this.emit("const varName = parent._selectionBinding");
-      this.emit("window._mirrorState = window._mirrorState || {}");
-      this.emit("window._mirrorState[varName] = value");
-      this.emit("// Update all bound elements");
-      this.emit("this.updateBoundElements(varName, value)");
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("parent = parent.parentElement");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("updateBoundElements(varName, value) {");
-      this.indent++;
-      this.emit("// Find all elements with _textBinding");
-      this.emit('document.querySelectorAll("[data-mirror-id]").forEach(el => {');
-      this.indent++;
-      this.emit("if (el._textBinding === varName) {");
-      this.indent++;
-      this.emit("// Simple update - just set the text");
-      this.emit('el.textContent = value || el._textPlaceholder || ""');
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("})");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("destroy(el) {");
-      this.indent++;
-      this.emit("if (!el) return");
-      this.emit("// Remove click-outside handler");
-      this.emit("if (el._clickOutsideHandler) {");
-      this.indent++;
-      this.emit("document.removeEventListener('click', el._clickOutsideHandler)");
-      this.emit("delete el._clickOutsideHandler");
-      this.indent--;
-      this.emit("}");
-      this.emit("// Recursively destroy children");
-      this.emit("if (el.children) {");
-      this.indent++;
-      this.emit("Array.from(el.children).forEach(child => this.destroy(child))");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.emit("");
-      this.emit("// Load Lucide icon from CDN");
-      this.emit("async loadIcon(el, iconName) {");
-      this.indent++;
-      this.emit("if (!el || !iconName) return");
-      this.emit("");
-      this.emit("// Get icon properties from data attributes");
-      this.emit("const size = el.dataset.iconSize || '24'");
-      this.emit('const color = el.dataset.iconColor || "currentColor"');
-      this.emit("const strokeWidth = el.dataset.iconWeight || '2'");
-      this.emit("");
-      this.emit("try {");
-      this.indent++;
-      this.emit("const url = `https://unpkg.com/lucide-static/icons/${iconName}.svg`");
-      this.emit("const res = await fetch(url)");
-      this.emit("if (!res.ok) {");
-      this.indent++;
-      this.emit('console.warn(`Icon "${iconName}" not found`)');
-      this.emit("el.textContent = iconName");
-      this.emit("return");
-      this.indent--;
-      this.emit("}");
-      this.emit("const svgText = await res.text()");
-      this.emit("el.innerHTML = svgText");
-      this.emit("");
-      this.emit("const svg = el.querySelector('svg')");
-      this.emit("if (svg) {");
-      this.indent++;
-      this.emit("svg.style.width = size + 'px'");
-      this.emit("svg.style.height = size + 'px'");
-      this.emit("svg.style.color = color");
-      this.emit("svg.setAttribute('stroke-width', strokeWidth)");
-      this.emit("svg.style.display = 'block'");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("} catch (err) {");
-      this.indent++;
-      this.emit('console.warn(`Failed to load icon "${iconName}":`, err)');
-      this.emit("el.textContent = iconName");
-      this.indent--;
-      this.emit("}");
-      this.indent--;
-      this.emit("},");
-      this.indent--;
-      this.emit("}");
+      this.emitRaw(DOM_RUNTIME_CODE);
       this.emit("");
     }
     sanitizeVarName(id) {
@@ -5099,7 +4898,8 @@ ${this.currentIndent()}]`;
     const program = ast;
     const lines = [];
     const { includeTokens = true } = options;
-    lines.push(`import React from 'react'`);
+    const allStates = collectAllStates(program);
+    lines.push(`import React, { useState } from 'react'`);
     lines.push(``);
     if (includeTokens && program.tokens && program.tokens.length > 0) {
       lines.push(`// Design Tokens`);
@@ -5117,11 +4917,36 @@ ${this.currentIndent()}]`;
         componentMap.set(comp.name, comp);
       }
     }
+    if (program.components && program.components.length > 0) {
+      lines.push(`// Mirror Component Definitions`);
+      for (const comp of program.components) {
+        const compCode = generateComponentDefinition(comp, componentMap, program.tokens || []);
+        lines.push(compCode);
+        lines.push(``);
+      }
+    }
+    lines.push(`// App`);
     lines.push(`export default function App() {`);
+    if (allStates.size > 0) {
+      lines.push(`  // State`);
+      for (const stateName of allStates) {
+        const camelName = stateName.replace(/^\$/, "");
+        lines.push(`  const [${camelName}, set${capitalize(camelName)}] = useState(null)`);
+      }
+      lines.push(``);
+    }
     lines.push(`  return (`);
     if (program.instances && program.instances.length > 0) {
-      for (const instance of program.instances) {
-        const jsx = generateJSX(instance, componentMap, program.tokens || [], "    ");
+      const context = { componentMap, tokens: program.tokens || [], allStates };
+      if (program.instances.length > 1) {
+        lines.push(`    <>`);
+        for (const instance of program.instances) {
+          const jsx = generateJSX(instance, context, "      ");
+          lines.push(jsx);
+        }
+        lines.push(`    </>`);
+      } else {
+        const jsx = generateJSX(program.instances[0], context, "    ");
         lines.push(jsx);
       }
     } else {
@@ -5132,31 +4957,351 @@ ${this.currentIndent()}]`;
     lines.push(``);
     return lines.join("\n");
   }
-  function generateJSX(instance, components, tokens, indent) {
-    const compDef = components.get(instance.component);
-    const allProps = [...compDef?.properties || [], ...instance.properties];
-    const style = generateStyles(allProps, tokens);
-    const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : "";
-    const tag = getHtmlTag(instance.component, compDef);
-    const textContent = getTextContent(instance, allProps);
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function collectAllStates(program) {
+    const states = /* @__PURE__ */ new Set();
+    for (const comp of program.components || []) {
+      for (const event of comp.events || []) {
+        for (const action of event.actions || []) {
+          if (action.target?.startsWith("$")) {
+            states.add(action.target);
+          }
+        }
+      }
+    }
+    return states;
+  }
+  function generateComponentDefinition(comp, components, tokens) {
+    const lines = [];
+    const tag = getHtmlTag(comp.name, comp);
+    const hasStates = comp.states && comp.states.some((s) => s.name !== "hover");
+    const baseStyle = generateStyles(comp.properties, tokens);
+    const hasHoverInlineProps = comp.properties.some((p) => p.name.startsWith("hover-") || p.name.startsWith("hover_"));
+    const hoverStateBlock = comp.states?.find((s) => s.name === "hover");
+    const needsHoverState = hasHoverInlineProps || hoverStateBlock;
+    if (hasStates || needsHoverState) {
+      lines.push(`const ${comp.name} = ({ children, style, isSelected, isHighlighted, onSelect, onHover, ...props }) => {`);
+      if (needsHoverState) {
+        lines.push(`  const [isHovered, setIsHovered] = useState(false)`);
+      }
+      lines.push(`  const dynamicStyle = {`);
+      lines.push(`    ${formatStyleEntries(baseStyle)},`);
+      if (hasHoverInlineProps) {
+        const hoverProps = comp.properties.filter((p) => p.name.startsWith("hover-") || p.name.startsWith("hover_"));
+        const hoverStyle = generateHoverStyles(hoverProps, tokens);
+        if (Object.keys(hoverStyle).length > 0) {
+          lines.push(`    ...(isHovered ? { ${formatStyleEntries(hoverStyle)} } : {}),`);
+        }
+      }
+      if (hoverStateBlock) {
+        const hoverStyle = generateStyles(hoverStateBlock.properties, tokens);
+        if (Object.keys(hoverStyle).length > 0) {
+          lines.push(`    ...(isHovered ? { ${formatStyleEntries(hoverStyle)} } : {}),`);
+        }
+      }
+      for (const state of comp.states || []) {
+        if (state.name === "hover") continue;
+        const stateStyle = generateStyles(state.properties, tokens);
+        const varName = `is${capitalize(state.name)}`;
+        lines.push(`    ...(${varName} ? { ${formatStyleEntries(stateStyle)} } : {}),`);
+      }
+      lines.push(`    ...style`);
+      lines.push(`  }`);
+      lines.push(``);
+      const hoverHandlers = needsHoverState ? ` onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}` : "";
+      lines.push(`  return (`);
+      lines.push(`    <${tag} style={dynamicStyle}${hoverHandlers} {...props}>`);
+      lines.push(`      {children}`);
+      lines.push(`    </${tag}>`);
+      lines.push(`  )`);
+      lines.push(`}`);
+    } else {
+      const styleStr = formatStyleObject(baseStyle);
+      lines.push(`const ${comp.name} = ({ children, style, ...props }) => (`);
+      lines.push(`  <${tag} style={{ ${styleStr}, ...style }} {...props}>`);
+      lines.push(`    {children}`);
+      lines.push(`  </${tag}>`);
+      lines.push(`)`);
+    }
+    return lines.join("\n");
+  }
+  function generateJSX(instance, context, indent) {
+    const { componentMap, tokens } = context;
+    const compDef = componentMap.get(instance.component);
+    const tag = compDef ? instance.component : getHtmlTag(instance.component, compDef);
+    const overrideStyle = generateStyles(instance.properties, tokens);
+    const hasOverrides = Object.keys(overrideStyle).length > 0;
+    const events = generateEventHandlers(instance, compDef);
+    const textContent = getTextContent(instance, instance.properties);
     const hasChildren = instance.children.length > 0 || textContent;
+    let propsStr = "";
+    if (hasOverrides) {
+      propsStr += ` style={{ ${formatStyleObject(overrideStyle)} }}`;
+    }
+    propsStr += events;
     if (!hasChildren) {
-      return `${indent}<${tag}${styleStr} />`;
+      return `${indent}<${tag}${propsStr} />`;
     }
     const lines = [];
-    lines.push(`${indent}<${tag}${styleStr}>`);
+    lines.push(`${indent}<${tag}${propsStr}>`);
     if (textContent) {
-      lines.push(`${indent}  ${JSON.stringify(textContent)}`);
+      lines.push(`${indent}  {${JSON.stringify(textContent)}}`);
     }
     for (const child of instance.children) {
       if (child.type === "Instance") {
-        lines.push(generateJSX(child, components, tokens, indent + "  "));
+        lines.push(generateJSX(child, context, indent + "  "));
       } else if (child.type === "Text") {
-        lines.push(`${indent}  ${JSON.stringify(child.content)}`);
+        lines.push(`${indent}  {${JSON.stringify(child.content)}}`);
+      } else if (child.type === "Each") {
+        lines.push(generateEachLoop(child, context, indent + "  "));
       }
     }
     lines.push(`${indent}</${tag}>`);
     return lines.join("\n");
+  }
+  function generateEachLoop(each, context, indent) {
+    const lines = [];
+    const itemVar = each.item || "item";
+    const collection = each.collection || "items";
+    lines.push(`${indent}{${collection}.map((${itemVar}, index) => (`);
+    for (const child of each.children || []) {
+      if (child.type === "Instance") {
+        lines.push(generateJSX(child, context, indent + "  "));
+      }
+    }
+    lines.push(`${indent}))}`);
+    return lines.join("\n");
+  }
+  function generateEventHandlers(instance, compDef) {
+    const handlers = [];
+    const events = compDef?.events || [];
+    for (const event of events) {
+      const reactEvent = mapMirrorEventToReact(event.name);
+      if (!reactEvent) continue;
+      const actions = event.actions.map((a) => mapActionToJs(a)).join("; ");
+      handlers.push(`${reactEvent}={() => { ${actions} }}`);
+    }
+    return handlers.length > 0 ? " " + handlers.join(" ") : "";
+  }
+  function mapMirrorEventToReact(eventName) {
+    const mapping = {
+      "onclick": "onClick",
+      "onhover": "onMouseEnter",
+      "onfocus": "onFocus",
+      "onblur": "onBlur",
+      "onchange": "onChange",
+      "oninput": "onInput",
+      "onkeydown": "onKeyDown",
+      "onkeyup": "onKeyUp"
+    };
+    return mapping[eventName] || null;
+  }
+  function mapActionToJs(action) {
+    const { name, target } = action;
+    switch (name) {
+      case "select":
+        return target === "self" ? "onSelect?.()" : `setSelected('${target}')`;
+      case "toggle":
+        if (target?.startsWith("$")) {
+          const varName = target.slice(1);
+          return `set${capitalize(varName)}(prev => !prev)`;
+        }
+        return `toggle('${target}')`;
+      case "show":
+        return `set${capitalize(target || "visible")}(true)`;
+      case "hide":
+        return `set${capitalize(target || "visible")}(false)`;
+      case "highlight":
+        return target === "self" ? "onHover?.()" : `setHighlighted('${target}')`;
+      default:
+        return `// ${name}(${target})`;
+    }
+  }
+  function generateStyles(properties2, tokens) {
+    const style = {};
+    const tokenMap = buildTokenMap(tokens);
+    const resolve = (value) => {
+      if (typeof value === "object" && value !== null && "name" in value) {
+        const tokenName = value.name;
+        const cleanName = tokenName.startsWith("$") ? tokenName.slice(1) : tokenName;
+        return tokenMap.get(cleanName) ?? tokenMap.get("$" + cleanName) ?? `$${cleanName}`;
+      }
+      if (typeof value === "string" && value.startsWith("$")) {
+        const cleanName = value.slice(1);
+        return tokenMap.get(cleanName) ?? tokenMap.get(value) ?? value;
+      }
+      if (typeof value === "boolean") return value ? 1 : 0;
+      return value;
+    };
+    for (const prop of properties2) {
+      if (prop.name.startsWith("hover")) continue;
+      if (prop.values.length === 0) {
+        applyFlagProperty(prop.name, style);
+        continue;
+      }
+      const value = resolve(prop.values[0]);
+      applyValueProperty(prop.name, value, style);
+    }
+    return style;
+  }
+  function generateHoverStyles(properties2, tokens) {
+    const style = {};
+    const tokenMap = buildTokenMap(tokens);
+    const resolve = (value) => {
+      if (typeof value === "string" && value.startsWith("$")) {
+        return tokenMap.get(value.slice(1)) ?? value;
+      }
+      return value;
+    };
+    for (const prop of properties2) {
+      if (!prop.name.startsWith("hover")) continue;
+      if (prop.values.length === 0) continue;
+      const value = resolve(prop.values[0]);
+      const baseName = prop.name.replace(/^hover[-_]?/, "");
+      switch (baseName) {
+        case "bg":
+        case "background":
+          style.backgroundColor = String(value);
+          break;
+        case "col":
+        case "color":
+          style.color = String(value);
+          break;
+        case "opacity":
+          style.opacity = value;
+          break;
+        case "scale":
+          style.transform = `scale(${value})`;
+          break;
+      }
+    }
+    return style;
+  }
+  function buildTokenMap(tokens) {
+    const tokenMap = /* @__PURE__ */ new Map();
+    for (const token of tokens) {
+      const nameWithoutPrefix = token.name.startsWith("$") ? token.name.slice(1) : token.name;
+      const nameWithPrefix = "$" + nameWithoutPrefix;
+      let resolvedValue = token.value;
+      if (typeof resolvedValue === "string" && resolvedValue.startsWith("$")) {
+        const refName = resolvedValue.slice(1);
+        const found = tokens.find((t) => {
+          const n = t.name.startsWith("$") ? t.name.slice(1) : t.name;
+          return n === refName;
+        });
+        if (found) resolvedValue = found.value;
+      }
+      tokenMap.set(nameWithoutPrefix, resolvedValue);
+      tokenMap.set(nameWithPrefix, resolvedValue);
+    }
+    return tokenMap;
+  }
+  function applyFlagProperty(name, style) {
+    switch (name) {
+      case "hor":
+      case "horizontal":
+        style.display = "flex";
+        style.flexDirection = "row";
+        break;
+      case "ver":
+      case "vertical":
+        style.display = "flex";
+        style.flexDirection = "column";
+        break;
+      case "center":
+      case "cen":
+        style.display = "flex";
+        style.justifyContent = "center";
+        style.alignItems = "center";
+        break;
+      case "spread":
+        style.justifyContent = "space-between";
+        break;
+      case "wrap":
+        style.flexWrap = "wrap";
+        break;
+      case "scroll":
+        style.overflowY = "auto";
+        break;
+      case "hidden":
+        style.display = "none";
+        break;
+    }
+  }
+  function applyValueProperty(name, value, style) {
+    switch (name) {
+      case "hor":
+      case "horizontal":
+        style.display = "flex";
+        style.flexDirection = "row";
+        break;
+      case "ver":
+      case "vertical":
+        style.display = "flex";
+        style.flexDirection = "column";
+        break;
+      case "gap":
+      case "g":
+        style.gap = typeof value === "number" ? `${value}px` : value;
+        break;
+      case "pad":
+      case "padding":
+      case "p":
+        if (typeof value === "number") {
+          style.padding = `${value}px`;
+        } else if (typeof value === "string" && !value.includes("px")) {
+          const num = parseFloat(value);
+          style.padding = isNaN(num) ? value : `${num}px`;
+        } else {
+          style.padding = value;
+        }
+        break;
+      case "margin":
+      case "m":
+        style.margin = typeof value === "number" ? `${value}px` : value;
+        break;
+      case "w":
+      case "width":
+        style.width = value === "full" ? "100%" : value === "hug" ? "fit-content" : typeof value === "number" ? `${value}px` : value;
+        break;
+      case "h":
+      case "height":
+        style.height = value === "full" ? "100%" : value === "hug" ? "fit-content" : typeof value === "number" ? `${value}px` : value;
+        break;
+      case "col":
+      case "color":
+      case "c":
+        style.color = String(value);
+        break;
+      case "bg":
+      case "background":
+        style.backgroundColor = String(value);
+        break;
+      case "rad":
+      case "radius":
+        style.borderRadius = typeof value === "number" ? `${value}px` : value;
+        break;
+      case "bor":
+      case "border":
+        style.border = typeof value === "number" ? `${value}px solid` : String(value);
+        break;
+      case "font-size":
+      case "fs":
+        style.fontSize = typeof value === "number" ? `${value}px` : value;
+        break;
+      case "weight":
+        style.fontWeight = value;
+        break;
+      case "cursor":
+        style.cursor = String(value);
+        break;
+      case "opacity":
+      case "o":
+        style.opacity = value;
+        break;
+    }
   }
   function getHtmlTag(componentName, compDef) {
     const primitive = compDef?.primitive?.toLowerCase();
@@ -5169,14 +5314,12 @@ ${this.currentIndent()}]`;
     const name = componentName.toLowerCase();
     if (name.includes("button") || name === "btn") return "button";
     if (name.includes("input") || name.includes("field")) return "input";
-    if (name.includes("link")) return "a";
     if (name.includes("heading") || name.includes("title")) return "h2";
-    if (name.includes("text") || name.includes("label") || name.includes("body")) return "span";
+    if (name.includes("text") || name.includes("label") || name.includes("body") || name.includes("muted")) return "span";
     if (name.includes("nav")) return "nav";
     if (name.includes("header")) return "header";
     if (name.includes("footer")) return "footer";
     if (name.includes("main")) return "main";
-    if (name.includes("section")) return "section";
     if (name.includes("aside") || name.includes("sidebar")) return "aside";
     return "div";
   }
@@ -5194,196 +5337,21 @@ ${this.currentIndent()}]`;
     }
     return null;
   }
-  function generateStyles(properties2, tokens) {
-    const style = {};
-    const tokenMap = /* @__PURE__ */ new Map();
-    for (const token of tokens) {
-      const nameWithoutPrefix = token.name.startsWith("$") ? token.name.slice(1) : token.name;
-      const nameWithPrefix = "$" + nameWithoutPrefix;
-      let resolvedValue = token.value;
-      if (typeof resolvedValue === "string" && resolvedValue.startsWith("$")) {
-        const refName = resolvedValue.slice(1);
-        const found = tokens.find((t) => {
-          const n = t.name.startsWith("$") ? t.name.slice(1) : t.name;
-          return n === refName;
-        });
-        if (found) resolvedValue = found.value;
-      }
-      tokenMap.set(nameWithoutPrefix, resolvedValue);
-      tokenMap.set(nameWithPrefix, resolvedValue);
-    }
-    const resolve = (value) => {
-      if (typeof value === "object" && value !== null && "name" in value) {
-        const tokenName = value.name;
-        const cleanName = tokenName.startsWith("$") ? tokenName.slice(1) : tokenName;
-        return tokenMap.get(cleanName) ?? tokenMap.get("$" + cleanName) ?? `$${cleanName}`;
-      }
-      if (typeof value === "string" && value.startsWith("$")) {
-        const cleanName = value.slice(1);
-        return tokenMap.get(cleanName) ?? tokenMap.get(value) ?? value;
-      }
-      if (typeof value === "boolean") return value ? 1 : 0;
-      return value;
-    };
-    for (const prop of properties2) {
-      if (prop.values.length === 0) continue;
-      const rawValue = prop.values[0];
-      const value = resolve(rawValue);
-      switch (prop.name) {
-        // Layout
-        case "hor":
-        case "horizontal":
-          style.display = "flex";
-          style.flexDirection = "row";
-          break;
-        case "ver":
-        case "vertical":
-          style.display = "flex";
-          style.flexDirection = "column";
-          break;
-        case "wrap":
-          style.flexWrap = "wrap";
-          break;
-        case "spread":
-          style.justifyContent = "space-between";
-          break;
-        case "center":
-        case "cen":
-          style.display = "flex";
-          style.justifyContent = "center";
-          style.alignItems = "center";
-          break;
-        // Alignment
-        case "left":
-          style.justifyContent = "flex-start";
-          break;
-        case "right":
-          style.justifyContent = "flex-end";
-          break;
-        case "top":
-          style.alignItems = "flex-start";
-          break;
-        case "bottom":
-          style.alignItems = "flex-end";
-          break;
-        // Spacing
-        case "gap":
-        case "g":
-          style.gap = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "pad":
-        case "padding":
-        case "p":
-          style.padding = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "margin":
-        case "m":
-          style.margin = typeof value === "number" ? `${value}px` : value;
-          break;
-        // Size
-        case "w":
-        case "width":
-          if (value === "full") {
-            style.width = "100%";
-          } else if (value === "hug") {
-            style.width = "fit-content";
-          } else {
-            style.width = typeof value === "number" ? `${value}px` : value;
-          }
-          break;
-        case "h":
-        case "height":
-          if (value === "full") {
-            style.height = "100%";
-          } else if (value === "hug") {
-            style.height = "fit-content";
-          } else {
-            style.height = typeof value === "number" ? `${value}px` : value;
-          }
-          break;
-        case "minw":
-        case "min-width":
-          style.minWidth = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "maxw":
-        case "max-width":
-          style.maxWidth = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "minh":
-        case "min-height":
-          style.minHeight = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "maxh":
-        case "max-height":
-          style.maxHeight = typeof value === "number" ? `${value}px` : value;
-          break;
-        // Colors
-        case "col":
-        case "color":
-        case "c":
-          style.color = String(value);
-          break;
-        case "bg":
-        case "background":
-          style.backgroundColor = String(value);
-          break;
-        // Border
-        case "bor":
-        case "border":
-          style.border = typeof value === "number" ? `${value}px solid` : String(value);
-          break;
-        case "boc":
-        case "border-color":
-          style.borderColor = String(value);
-          break;
-        case "rad":
-        case "radius":
-          style.borderRadius = typeof value === "number" ? `${value}px` : value;
-          break;
-        // Typography
-        case "font-size":
-        case "fs":
-          style.fontSize = typeof value === "number" ? `${value}px` : value;
-          break;
-        case "weight":
-          style.fontWeight = value;
-          break;
-        case "font":
-          style.fontFamily = String(value);
-          break;
-        case "line":
-        case "line-height":
-          style.lineHeight = value;
-          break;
-        // Visual
-        case "opacity":
-        case "o":
-          style.opacity = value;
-          break;
-        case "cursor":
-          style.cursor = String(value);
-          break;
-        case "overflow":
-          style.overflow = String(value);
-          break;
-        case "scroll":
-          style.overflowY = "auto";
-          break;
-        case "hidden":
-          style.display = "none";
-          break;
-      }
-    }
-    return style;
-  }
   function formatStyleObject(style) {
     const entries = Object.entries(style);
-    if (entries.length === 0) return "{}";
-    const parts = entries.map(([key, value]) => {
+    if (entries.length === 0) return "";
+    return entries.map(([key, value]) => {
       const formattedValue = typeof value === "string" ? `'${value}'` : value;
       return `${key}: ${formattedValue}`;
-    });
-    return `{ ${parts.join(", ")} }`;
+    }).join(", ");
+  }
+  function formatStyleEntries(style) {
+    const entries = Object.entries(style);
+    if (entries.length === 0) return "";
+    return entries.map(([key, value]) => {
+      const formattedValue = typeof value === "string" ? `'${value}'` : value;
+      return `${key}: ${formattedValue}`;
+    }).join(", ");
   }
 
   // src/backends/static.ts
@@ -5862,6 +5830,18 @@ ${this.currentIndent()}]`;
       this.currentHoverElement = null;
       if (selectedId) {
         this.updateSelectionVisual(selectedId, null);
+        const element = this.findElementByNodeId(selectedId);
+        if (element) {
+          const chain = this.getAncestorChain(element).map((item) => ({
+            nodeId: item.id,
+            name: item.name
+          }));
+          this.selectionManager.setBreadcrumb(chain);
+        } else {
+          this.selectionManager.setBreadcrumb([]);
+        }
+      } else {
+        this.selectionManager.setBreadcrumb([]);
       }
       if (hoveredId && hoveredId !== selectedId) {
         this.updateHoverVisual(hoveredId, null);
@@ -7444,8 +7424,13 @@ ${componentLine}`;
       const removeStart = this.getCharacterOffset(startLine, 1);
       const endLineContent = this.lines[endLine - 1];
       let removeEnd = this.getCharacterOffset(endLine, endLineContent.length + 1);
-      if (endLine < this.lines.length) {
+      const hasNewlineAfter = endLine < this.lines.length;
+      let adjustedRemoveStart;
+      if (hasNewlineAfter) {
         removeEnd += 1;
+        adjustedRemoveStart = removeStart;
+      } else {
+        adjustedRemoveStart = removeStart > 0 ? removeStart - 1 : removeStart;
       }
       let insertPosition;
       let insertText;
@@ -7468,8 +7453,8 @@ ${reindentedBlock}`;
       } else if (placement === "before") {
         insertPosition = this.getCharacterOffset(targetMapping.position.line, 1) - 1;
         if (insertPosition < 0) insertPosition = 0;
-        insertText = `${reindentedBlock}
-`;
+        insertText = `
+${reindentedBlock}`;
       } else {
         const targetEndLine = targetMapping.position.endLine;
         const targetEndContent = this.lines[targetEndLine - 1];
@@ -7478,19 +7463,18 @@ ${reindentedBlock}`;
 ${reindentedBlock}`;
       }
       if (insertPosition > removeStart) {
-        const removalLength = removeEnd - (removeStart > 0 ? removeStart - 1 : removeStart);
+        const removalLength = removeEnd - adjustedRemoveStart;
         insertPosition -= removalLength;
       }
-      const adjustedRemoveStart = removeStart > 0 ? removeStart - 1 : removeStart;
       let newSource = this.source.substring(0, adjustedRemoveStart) + this.source.substring(removeEnd);
       newSource = newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition);
       return {
         success: true,
         newSource,
         change: {
-          from: Math.min(adjustedRemoveStart, insertPosition),
-          to: Math.max(removeEnd, insertPosition),
-          insert: insertText
+          from: 0,
+          to: this.source.length,
+          insert: newSource
         }
       };
     }
@@ -8882,6 +8866,8 @@ ${reindentedBlock}`;
       const colProp = props?.allProperties.find((p) => p.name === "color" || p.name === "col" || p.name === "c");
       const bgValue = bgProp?.value || "";
       const colValue = colProp?.value || "";
+      const bgIsOverride = bgProp?.source === "instance";
+      const colIsOverride = colProp?.source === "instance";
       const allColorTokens = this.getColorTokens();
       const bgTokens = allColorTokens.filter((t) => t.name.endsWith(".bg"));
       const colTokens = allColorTokens.filter((t) => t.name.endsWith(".col"));
@@ -8903,7 +8889,7 @@ ${reindentedBlock}`;
       <div class="section">
         <div class="section-label">Color</div>
         <div class="section-content">
-          <div class="prop-row">
+          <div class="prop-row${bgIsOverride ? " override" : ""}">
             <span class="prop-label">Background</span>
             <div class="prop-content">
               <div class="color-group">
@@ -8913,7 +8899,7 @@ ${reindentedBlock}`;
               <input type="text" class="prop-input" value="${this.escapeHtml(bgValue)}" data-prop="bg" placeholder="#hex">
             </div>
           </div>
-          <div class="prop-row">
+          <div class="prop-row${colIsOverride ? " override" : ""}">
             <span class="prop-label">Text</span>
             <div class="prop-content">
               <div class="color-group">
@@ -8974,6 +8960,7 @@ ${reindentedBlock}`;
       const props = category.properties;
       const padProp = props.find((p) => p.name === "padding" || p.name === "pad" || p.name === "p");
       const padValue = padProp?.value || "";
+      const padIsOverride = padProp?.source === "instance";
       const padParts = padValue.split(/\s+/).filter(Boolean);
       let tPad = "", rPad = "", bPad = "", lPad = "";
       if (padParts.length === 1) {
@@ -9002,7 +8989,7 @@ ${reindentedBlock}`;
       <div class="section">
         <div class="section-label">Spacing</div>
         <div class="section-content" data-expand-container="spacing">
-          <div class="prop-row collapsed-row" data-expand-group="spacing">
+          <div class="prop-row collapsed-row${padIsOverride ? " override" : ""}" data-expand-group="spacing">
             <span class="prop-label">Padding H</span>
             <div class="prop-content">
               <div class="token-group">
@@ -9016,7 +9003,7 @@ ${reindentedBlock}`;
               </button>
             </div>
           </div>
-          <div class="prop-row collapsed-row" data-expand-group="spacing">
+          <div class="prop-row collapsed-row${padIsOverride ? " override" : ""}" data-expand-group="spacing">
             <span class="prop-label">Padding V</span>
             <div class="prop-content">
               <div class="token-group">
@@ -9077,10 +9064,12 @@ ${reindentedBlock}`;
       const props = category.properties;
       const radiusProp = props.find((p) => p.name === "radius" || p.name === "rad");
       const radiusValue = radiusProp?.value || "";
+      const radiusIsOverride = radiusProp?.source === "instance";
       const borderProp = props.find((p) => p.name === "border" || p.name === "bor");
       const borderValue = borderProp?.value || "";
       const borderParts = borderValue.split(/\s+/).filter(Boolean);
       const borderWidth = borderParts[0] || "0";
+      const borderIsOverride = borderProp?.source === "instance";
       const dynamicRadiusTokens = this.getRadiusTokens();
       const radiusTokens = dynamicRadiusTokens.length > 0 ? [{ label: "0", value: "0", tokenRef: "" }, ...dynamicRadiusTokens.map((t) => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))] : [
         { label: "0", value: "0", tokenRef: "" },
@@ -9103,7 +9092,7 @@ ${reindentedBlock}`;
       <div class="section">
         <div class="section-label">Border</div>
         <div class="section-content">
-          <div class="prop-row">
+          <div class="prop-row${radiusIsOverride ? " override" : ""}">
             <span class="prop-label">Radius</span>
             <div class="prop-content">
               <div class="token-group">
@@ -9158,7 +9147,7 @@ ${reindentedBlock}`;
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
             </div>
           </div>
-          <div class="prop-row">
+          <div class="prop-row${borderIsOverride ? " override" : ""}">
             <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">

@@ -495,8 +495,19 @@ export class CodeModifier {
     const removeStart = this.getCharacterOffset(startLine, 1)
     const endLineContent = this.lines[endLine - 1]
     let removeEnd = this.getCharacterOffset(endLine, endLineContent.length + 1)
-    if (endLine < this.lines.length) {
-      removeEnd += 1 // Include newline
+
+    // Determine how to handle newlines around the removed block
+    // We need to remove exactly ONE newline - either before or after, not both
+    const hasNewlineAfter = endLine < this.lines.length
+    let adjustedRemoveStart: number
+
+    if (hasNewlineAfter) {
+      // Remove the trailing newline (after the block)
+      removeEnd += 1
+      adjustedRemoveStart = removeStart
+    } else {
+      // No newline after - remove the leading newline (before the block) if it exists
+      adjustedRemoveStart = removeStart > 0 ? removeStart - 1 : removeStart
     }
 
     // Calculate insertion position before removal
@@ -523,9 +534,10 @@ export class CodeModifier {
       insertText = `\n${reindentedBlock}`
     } else if (placement === 'before') {
       // Insert before target line
+      // Position points to newline at end of previous line, so we need newline at start of insertText
       insertPosition = this.getCharacterOffset(targetMapping.position.line, 1) - 1
       if (insertPosition < 0) insertPosition = 0
-      insertText = `${reindentedBlock}\n`
+      insertText = `\n${reindentedBlock}`
     } else {
       // After target
       const targetEndLine = targetMapping.position.endLine
@@ -536,24 +548,24 @@ export class CodeModifier {
 
     // Adjust insertion position if it's after the removal position
     if (insertPosition > removeStart) {
-      const removalLength = removeEnd - (removeStart > 0 ? removeStart - 1 : removeStart)
+      const removalLength = removeEnd - adjustedRemoveStart
       insertPosition -= removalLength
     }
 
     // First, remove the source block
-    const adjustedRemoveStart = removeStart > 0 ? removeStart - 1 : removeStart
     let newSource = this.source.substring(0, adjustedRemoveStart) + this.source.substring(removeEnd)
 
     // Then insert at the new position
     newSource = newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
 
+    // For move operations, replace the entire document since we have both remove and insert
     return {
       success: true,
       newSource,
       change: {
-        from: Math.min(adjustedRemoveStart, insertPosition),
-        to: Math.max(removeEnd, insertPosition),
-        insert: insertText,
+        from: 0,
+        to: this.source.length,
+        insert: newSource,
       },
     }
   }
@@ -1023,6 +1035,224 @@ export class CodeModifier {
       componentFileChange: { path: '', content: '' },
       importAdded: false,
       error,
+    }
+  }
+
+  // ============================================================================
+  // ANIMATION METHODS
+  // ============================================================================
+
+  /**
+   * Update or create an animation definition
+   *
+   * @param animationName - Name of the animation
+   * @param animationData - Animation data to write
+   */
+  updateAnimation(
+    animationName: string,
+    animationData: {
+      easing: string
+      duration?: number
+      tracks: {
+        property: string
+        startTime: number
+        endTime: number
+        fromValue: string | number
+        toValue: string | number
+      }[]
+    }
+  ): ModificationResult {
+    // Find existing animation definition
+    const animationPattern = new RegExp(`^(\\s*)${animationName}\\s+as\\s+animation:`, 'm')
+    const match = this.source.match(animationPattern)
+
+    // Generate animation DSL
+    const dsl = this.generateAnimationDSL(animationName, animationData)
+
+    if (match && match.index !== undefined) {
+      // Update existing animation
+      const startLine = this.source.substring(0, match.index).split('\n').length
+      let endLine = startLine
+
+      // Find end of animation block (next definition or end of indented block)
+      const lines = this.source.split('\n')
+      const baseIndent = match[1].length
+
+      for (let i = startLine; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.trim() === '') continue
+
+        const currentIndent = line.match(/^(\s*)/)?.[1].length || 0
+        if (currentIndent <= baseIndent && i > startLine - 1) {
+          break
+        }
+        endLine = i + 1
+      }
+
+      const from = this.getCharacterOffset(startLine, 1)
+      const toOffset = this.getCharacterOffset(endLine, lines[endLine - 1].length + 1)
+
+      const newSource = this.source.substring(0, from) + dsl + this.source.substring(toOffset)
+
+      return {
+        success: true,
+        newSource,
+        change: { from, to: toOffset, insert: dsl },
+      }
+    } else {
+      // Create new animation - insert at top of file after tokens
+      const insertPosition = this.findAnimationInsertPosition()
+      const newSource = this.source.substring(0, insertPosition) + dsl + '\n\n' + this.source.substring(insertPosition)
+
+      return {
+        success: true,
+        newSource,
+        change: { from: insertPosition, to: insertPosition, insert: dsl + '\n\n' },
+      }
+    }
+  }
+
+  /**
+   * Generate animation DSL code from data
+   */
+  private generateAnimationDSL(
+    name: string,
+    data: {
+      easing: string
+      tracks: {
+        property: string
+        startTime: number
+        endTime: number
+        fromValue: string | number
+        toValue: string | number
+      }[]
+    }
+  ): string {
+    const lines: string[] = []
+    lines.push(`${name} as animation: ${data.easing}`)
+
+    // Group all unique times
+    const times = new Set<number>()
+    for (const track of data.tracks) {
+      times.add(track.startTime)
+      times.add(track.endTime)
+    }
+
+    const sortedTimes = Array.from(times).sort((a, b) => a - b)
+
+    for (const time of sortedTimes) {
+      const props: string[] = []
+
+      for (const track of data.tracks) {
+        if (track.startTime === time) {
+          props.push(`${track.property} ${track.fromValue}`)
+        } else if (track.endTime === time) {
+          props.push(`${track.property} ${track.toValue}`)
+        }
+      }
+
+      if (props.length > 0) {
+        lines.push(`  ${time.toFixed(2)} ${props.join(', ')}`)
+      }
+    }
+
+    return lines.join('\n')
+  }
+
+  /**
+   * Find position to insert new animation (after tokens, before components)
+   */
+  private findAnimationInsertPosition(): number {
+    const lines = this.source.split('\n')
+    let position = 0
+    let lastTokenLine = -1
+    let firstComponentLine = -1
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+
+      // Token definition: $name: value
+      if (line.startsWith('$')) {
+        lastTokenLine = i
+      }
+
+      // Component/animation definition: Name: or Name as
+      if (/^[A-Z][a-zA-Z0-9]*\s*(:|as\s)/.test(line) && firstComponentLine === -1) {
+        firstComponentLine = i
+      }
+    }
+
+    // Insert after tokens, before components
+    if (lastTokenLine >= 0) {
+      // After tokens
+      const targetLine = lastTokenLine + 1
+      position = this.getCharacterOffset(targetLine + 1, 1)
+    } else if (firstComponentLine >= 0) {
+      // Before first component
+      position = this.getCharacterOffset(firstComponentLine + 1, 1)
+    }
+
+    return position
+  }
+
+  /**
+   * Add animation keyframe
+   */
+  addAnimationKeyframe(
+    animationName: string,
+    time: number,
+    properties: { property: string; value: string | number }[]
+  ): ModificationResult {
+    // Find the animation definition
+    const animationPattern = new RegExp(`^(\\s*)${animationName}\\s+as\\s+animation:`, 'm')
+    const match = this.source.match(animationPattern)
+
+    if (!match || match.index === undefined) {
+      return this.errorResult(`Animation not found: ${animationName}`)
+    }
+
+    const startLine = this.source.substring(0, match.index).split('\n').length
+    const lines = this.source.split('\n')
+    const baseIndent = match[1].length
+    const keyframeIndent = '  '.repeat(baseIndent / 2 + 1)
+
+    // Find position to insert (sorted by time)
+    let insertLine = startLine
+
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i]
+      if (line.trim() === '') continue
+
+      const currentIndent = line.match(/^(\s*)/)?.[1].length || 0
+      if (currentIndent <= baseIndent && i > startLine - 1) {
+        break
+      }
+
+      // Check if this line is a keyframe
+      const keyframeMatch = line.match(/^\s*([\d.]+)\s+/)
+      if (keyframeMatch) {
+        const lineTime = parseFloat(keyframeMatch[1])
+        if (lineTime < time) {
+          insertLine = i + 1
+        }
+      }
+
+      if (i >= startLine - 1) {
+        insertLine = i + 1
+      }
+    }
+
+    // Build the new keyframe line
+    const propsStr = properties.map(p => `${p.property} ${p.value}`).join(', ')
+    const newLine = `${keyframeIndent}${time.toFixed(2)} ${propsStr}`
+
+    const insertPosition = this.getCharacterOffset(insertLine + 1, 1)
+    const newSource = this.source.substring(0, insertPosition) + newLine + '\n' + this.source.substring(insertPosition)
+
+    return {
+      success: true,
+      newSource,
+      change: { from: insertPosition, to: insertPosition, insert: newLine + '\n' },
     }
   }
 
