@@ -2,6 +2,43 @@
 
 > Mirror is a DSL for rapid UI prototyping. Auto-generated from src/dsl/properties.ts.
 
+## Development
+
+### Repository
+- **GitHub**: https://github.com/tonisteimle/mirror
+- **Live Demo**: https://ux-strategy.ch/mirror/studio/
+
+### Project Structure
+```
+Mirror/
+├── src/                    # Core compiler source
+│   ├── parser/            # Lexer & Parser
+│   ├── ir/                # Intermediate Representation
+│   ├── backends/          # DOM & React code generators
+│   ├── studio/            # Property Panel & Code Modifier
+│   └── runtime/           # DOM runtime
+├── studio/                # Studio UI (deployed)
+│   ├── app.js            # Main application
+│   ├── mirror.js         # Mirror integration
+│   ├── index.html        # Entry point
+│   └── styles.css        # Styling
+├── features/              # Feature modules (development)
+└── dist/                  # Build output
+```
+
+### Key Commands
+```bash
+npm run build      # Build compiler
+npm test           # Run tests
+./deploy.sh        # Deploy to production
+```
+
+### Recent Features (März 2026)
+- **Smart Color Picker**: Intelligent positioning (opens above/left when needed)
+- **Editor-Preview Sync**: Click code line → select element in preview
+- **Property Panel Sync**: Click element → show properties in panel
+- **Animation Support**: IR transformation for animations
+
 ## Grundlagen
 
 Basis-Syntax und Kommentare
