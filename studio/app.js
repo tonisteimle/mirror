@@ -3256,29 +3256,53 @@ const PROPERTY_PANELS = {
   radius: 'spacing',
 }
 
-// Extract tokens from document
-function extractTokensFromDoc(doc) {
-  const text = doc.toString()
+// Extract tokens from a text string
+function extractTokensFromText(text) {
   const tokens = []
   const lines = text.split('\n')
 
   for (const line of lines) {
-    // Match: name: value (token definition)
-    // Examples: primary: #3B82F6, sm.pad: 4, surface.bg: #1a1a23
-    const match = line.match(/^\s*([a-zA-Z][a-zA-Z0-9.-]*):\s*(#[0-9A-Fa-f]{3,8}|\d+)/)
+    // Match: $name: value or name: value (token definition)
+    // Values can be: #hex, number, or $token-reference
+    // Examples: $primary.bg: #3B82F6, $sm.pad: 4, $surface.bg: $grey-900
+    const match = line.match(/^\s*\$?([a-zA-Z][a-zA-Z0-9.-]*):\s*(#[0-9A-Fa-f]{3,8}|\d+|\$[\w-]+)/)
     if (match) {
       const name = match[1]
       const value = match[2]
-      const isColor = value.startsWith('#')
-      tokens.push({
-        name,
-        value,
-        type: isColor ? 'color' : 'spacing'
-      })
+      // Determine type from token name suffix (not value)
+      let type = 'spacing'
+      if (name.endsWith('.bg') || name.endsWith('.col') || name.endsWith('.boc')) {
+        type = 'color'
+      }
+      tokens.push({ name, value, type })
     }
   }
 
   return tokens
+}
+
+// Extract tokens from current document only
+function extractTokensFromDoc(doc) {
+  return extractTokensFromText(doc.toString())
+}
+
+// Extract tokens from ALL project files
+function extractAllTokens() {
+  const allTokens = []
+  const seen = new Set()
+
+  for (const [filename, content] of Object.entries(files)) {
+    if (!content) continue
+    const tokens = extractTokensFromText(content)
+    for (const token of tokens) {
+      if (!seen.has(token.name)) {
+        seen.add(token.name)
+        allTokens.push(token)
+      }
+    }
+  }
+
+  return allTokens
 }
 
 // Extract component definitions and their slots from document
@@ -3467,7 +3491,7 @@ function showTokenPanel(x, y, insertPos, property, isDollarTrigger = false) {
   dollarStartPos = isDollarTrigger ? insertPos : null  // Track where $ was typed for live filtering
 
   // Get tokens from document
-  const allTokens = extractTokensFromDoc(window.editor.state.doc)
+  const allTokens = extractAllTokens()
 
   let filteredTokens
   if (property) {
@@ -3488,12 +3512,19 @@ function showTokenPanel(x, y, insertPos, property, isDollarTrigger = false) {
   // Store for live filtering
   allTokensForFilter = filteredTokens
 
-  renderTokenList(filteredTokens)
-
   // Show/hide color picker section based on property type
   const panelType = PROPERTY_PANELS[property]
-  if (panelType === 'color' && !isDollarTrigger) {
-    // Only show color picker for space trigger, not $ trigger
+  // For $ trigger: hide picker if we have tokens, show picker if no tokens (fallback)
+  const showPicker = panelType === 'color' && (!isDollarTrigger || filteredTokens.length === 0)
+
+  // Don't show panel if no tokens and no picker
+  if (filteredTokens.length === 0 && !showPicker) {
+    return
+  }
+
+  renderTokenList(filteredTokens)
+
+  if (showPicker) {
     tokenPanelPicker.style.display = 'block'
   } else {
     tokenPanelPicker.style.display = 'none'
@@ -3675,18 +3706,28 @@ const tokenPanelTriggerExtension = EditorView.updateListener.of(update => {
 
     // Trigger 2: $ after property (includes color properties)
     if (insertedText === '$') {
+      // Check if $ is at line start (new token definition) - NO autocomplete
+      const isLineStart = /^\s*$/.test(textBefore)
+      if (isLineStart) {
+        // User is defining a new token, don't show autocomplete
+        return
+      }
+
       // Match any property that accepts tokens (with or without space before $)
       const propertyMatch = textBefore.match(/\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s*$/)
 
-      // Match token definition: $name: $
-      const tokenDefMatch = textBefore.match(/\$[\w.-]+:\s*$/)
+      // Match token definition: $name.suffix: $ (extract suffix to determine type)
+      const tokenDefMatch = textBefore.match(/\$([\w-]+)\.(bg|col|boc|pad|gap|margin|rad):\s*$/)
 
       if (propertyMatch || tokenDefMatch) {
         // Close color picker if open
         if (colorPickerVisible) {
           hideColorPicker()
         }
-        const property = propertyMatch ? propertyMatch[1] : null
+        // Get property from either match
+        // propertyMatch[1] = "bg", "pad", etc.
+        // tokenDefMatch[2] = "bg", "col", "pad", etc. (the suffix)
+        const property = propertyMatch ? propertyMatch[1] : (tokenDefMatch ? tokenDefMatch[2] : null)
         const coords = update.view.coordsAtPos(fromB)
         if (coords) {
           // Insert position is after the $
@@ -5654,54 +5695,114 @@ function renderTokensPreview(ast) {
     return
   }
 
-  // Group tokens by category
-  const colorTokens = tokens.filter(t => isColorValue(t.value))
-  const spacingTokens = tokens.filter(t => t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin'))
-  const radiusTokens = tokens.filter(t => t.name.includes('.rad'))
-  const otherTokens = tokens.filter(t =>
-    !isColorValue(t.value) &&
-    !t.name.includes('.pad') &&
-    !t.name.includes('.gap') &&
-    !t.name.includes('.margin') &&
-    !t.name.includes('.rad')
-  )
+  // Build token lookup map for resolution
+  const tokenMap = new Map()
+  for (const t of tokens) {
+    tokenMap.set(t.name, t.value)
+  }
+
+  // Helper to check if a token is a color (by name or resolved value)
+  const isColorToken = (t) => {
+    // Check by name suffix
+    if (t.name.includes('.bg') || t.name.includes('.col') || t.name.includes('.color')) {
+      return true
+    }
+    // Check by value
+    const resolved = resolveTokenValueWithMap(t.value, tokenMap)
+    return isDirectColorValue(resolved)
+  }
+
+  // Helper to infer token display type
+  const inferTokenType = (t) => {
+    if (isColorToken(t)) return 'color'
+    if (t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin') || t.name.includes('.rad')) return 'spacing'
+    return 'other'
+  }
 
   let html = ''
 
-  if (colorTokens.length > 0) {
-    html += renderTokenSection('Farben', colorTokens, 'color')
-  }
-  if (spacingTokens.length > 0) {
-    html += renderTokenSection('Abstände', spacingTokens, 'spacing')
-  }
-  if (radiusTokens.length > 0) {
-    html += renderTokenSection('Radien', radiusTokens, 'spacing')
-  }
-  if (otherTokens.length > 0) {
-    html += renderTokenSection('Weitere', otherTokens, 'other')
+  // Check if any tokens have sections defined
+  const hasSections = tokens.some(t => t.section)
+
+  if (hasSections) {
+    // Group by sections (preserve order from source)
+    const sections = new Map()
+    const noSection = []
+
+    for (const t of tokens) {
+      if (t.section) {
+        if (!sections.has(t.section)) {
+          sections.set(t.section, [])
+        }
+        sections.get(t.section).push(t)
+      } else {
+        noSection.push(t)
+      }
+    }
+
+    // Render sections in order
+    for (const [sectionName, sectionTokens] of sections) {
+      html += renderTokenSection(sectionName, sectionTokens, 'mixed', tokenMap, inferTokenType)
+    }
+
+    // Render unsectioned tokens at the end
+    if (noSection.length > 0) {
+      html += renderTokenSection('Weitere', noSection, 'mixed', tokenMap, inferTokenType)
+    }
+  } else {
+    // Fallback: group by automatic categories
+    const colorTokens = tokens.filter(t => isColorToken(t))
+    const spacingTokens = tokens.filter(t => t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin'))
+    const radiusTokens = tokens.filter(t => t.name.includes('.rad'))
+    const otherTokens = tokens.filter(t =>
+      !isColorToken(t) &&
+      !t.name.includes('.pad') &&
+      !t.name.includes('.gap') &&
+      !t.name.includes('.margin') &&
+      !t.name.includes('.rad')
+    )
+
+    if (colorTokens.length > 0) {
+      html += renderTokenSection('Farben', colorTokens, 'color', tokenMap)
+    }
+    if (spacingTokens.length > 0) {
+      html += renderTokenSection('Abstände', spacingTokens, 'spacing', tokenMap)
+    }
+    if (radiusTokens.length > 0) {
+      html += renderTokenSection('Radien', radiusTokens, 'spacing', tokenMap)
+    }
+    if (otherTokens.length > 0) {
+      html += renderTokenSection('Weitere', otherTokens, 'other', tokenMap)
+    }
   }
 
   preview.innerHTML = html
 }
 
-function renderTokenSection(title, tokens, type) {
+function renderTokenSection(title, tokens, type, tokenMap, inferTokenType = null) {
   let rows = ''
   for (const token of tokens) {
-    const resolvedValue = resolveTokenValue(token.value)
+    const resolvedValue = resolveTokenValueWithMap(token.value, tokenMap)
     let visualCell = ''
 
-    if (type === 'color') {
+    // For mixed sections, infer type per token
+    const tokenType = (type === 'mixed' && inferTokenType) ? inferTokenType(token) : type
+
+    if (tokenType === 'color') {
       visualCell = `<div class="tokens-preview-swatch" style="background: ${resolvedValue}"></div>`
-    } else if (type === 'spacing') {
+    } else if (tokenType === 'spacing') {
       const size = parseInt(resolvedValue) || 8
       visualCell = `<div class="tokens-preview-spacing" style="width: ${Math.min(size, 48)}px; height: ${Math.min(size, 24)}px;"></div>`
     }
+
+    // Determine value type class for syntax highlighting
+    const valueTypeClass = getValueTypeClass(token.value)
 
     rows += `
       <tr class="tokens-preview-row">
         <td class="tokens-preview-cell" style="width: 48px;">${visualCell}</td>
         <td class="tokens-preview-cell"><span class="tokens-preview-name">${token.name}</span></td>
-        <td class="tokens-preview-cell"><span class="tokens-preview-value">${token.value}</span></td>
+        <td class="tokens-preview-cell"><span class="tokens-preview-value ${valueTypeClass}">${token.value}</span></td>
       </tr>
     `
   }
@@ -5719,13 +5820,49 @@ function isColorValue(value) {
   return value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl') || value.startsWith('$')
 }
 
+// Check if value is a direct color (hex, rgb, hsl) - not a token reference
+function isDirectColorValue(value) {
+  if (typeof value !== 'string') return false
+  return value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl')
+}
+
+// Determine CSS class for value type (matches editor syntax highlighting)
+function getValueTypeClass(value) {
+  if (typeof value !== 'string') return ''
+  if (value.startsWith('#')) return 'hex'
+  if (value.startsWith('$')) return 'token-ref'
+  if (/^\d/.test(value)) return 'number'
+  return ''
+}
+
+// Resolve token value using the token map (recursive, with cycle detection)
+function resolveTokenValueWithMap(value, tokenMap, visited = new Set()) {
+  if (typeof value !== 'string') return value
+  if (!value.startsWith('$')) return value
+
+  // Cycle detection
+  if (visited.has(value)) return value
+  visited.add(value)
+
+  // Look up in token map
+  const resolved = tokenMap.get(value)
+  if (resolved) {
+    return resolveTokenValueWithMap(resolved, tokenMap, visited)
+  }
+
+  // Fallback: try regex on source
+  return resolveTokenValue(value)
+}
+
 function resolveTokenValue(value) {
   if (typeof value !== 'string') return value
   if (!value.startsWith('$')) return value
   // Simple token resolution - look up in all files
   const allSource = getAllProjectSource()
   const tokenName = value
-  const regex = new RegExp(`\\${tokenName}:\\s*([^\\n]+)`)
+  // Escape special regex characters in token name
+  const escapedName = tokenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`^${escapedName}:\\s*([^\\n]+)`, 'm')
   const match = allSource.match(regex)
   if (match) {
     return resolveTokenValue(match[1].trim())
@@ -5908,35 +6045,59 @@ function getTokensSource() {
   return tokensSource
 }
 
-// Inject component preview CSS variables once
-let componentPreviewStylesInjected = false
+// Inject component preview CSS variables (refreshes when tokens change)
+let lastTokensHash = ''
 
-function injectComponentPreviewStyles() {
-  if (componentPreviewStylesInjected) return
-
+function injectComponentPreviewStyles(force = false) {
   // Get tokens and create CSS variables
   const tokensSource = getTokensSource()
+
+  // Calculate simple hash to detect changes
+  const tokensHash = tokensSource.length + ':' + tokensSource.slice(0, 100)
+
+  // Skip if unchanged (unless forced)
+  if (!force && tokensHash === lastTokensHash) return
+  lastTokensHash = tokensHash
+
   if (!tokensSource.trim()) return
 
   try {
     const ast = Mirror.parse(tokensSource)
     if (!ast.tokens || ast.tokens.length === 0) return
 
+    // Build token map for resolving references
+    const tokenMap = new Map()
+    for (const t of ast.tokens) {
+      tokenMap.set(t.name, t.value)
+    }
+
+    // Resolve token references (e.g., $surface.bg: $grey-800)
+    const resolveValue = (value) => {
+      if (typeof value === 'string' && value.startsWith('$')) {
+        const resolved = tokenMap.get(value)
+        if (resolved) return resolveValue(resolved)
+      }
+      return value
+    }
+
     let cssVars = ':root {\n'
     for (const token of ast.tokens) {
       // Strip $ prefix and convert dots to hyphens
       const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
         .replace(/\./g, '-')
-      cssVars += `  --${cssVarName}: ${token.value};\n`
+      const resolvedValue = resolveValue(token.value)
+      cssVars += `  --${cssVarName}: ${resolvedValue};\n`
     }
     cssVars += '}\n'
+
+    // Remove old style element if exists
+    const oldStyle = document.getElementById('component-preview-tokens')
+    if (oldStyle) oldStyle.remove()
 
     const style = document.createElement('style')
     style.id = 'component-preview-tokens'
     style.textContent = cssVars
     document.head.appendChild(style)
-
-    componentPreviewStylesInjected = true
   } catch (e) {
     console.warn('Failed to inject component preview styles:', e)
   }
@@ -6093,16 +6254,28 @@ function getCurrentFileLineOffset() {
 
 /**
  * Scroll editor to a specific line and optionally highlight it
+ * Only sets selection if editor is NOT focused (to avoid interrupting typing)
  */
 function scrollEditorToLine(line) {
   if (!editor) return
 
+  // Don't move cursor while user is typing in editor
+  const editorHasFocus = editor.hasFocus
+
   try {
     const lineInfo = editor.state.doc.line(line)
-    editor.dispatch({
-      effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' }),
-      selection: { anchor: lineInfo.from }
-    })
+    if (editorHasFocus) {
+      // Only scroll, don't change selection
+      editor.dispatch({
+        effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' })
+      })
+    } else {
+      // Scroll and select (user clicked in preview)
+      editor.dispatch({
+        effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' }),
+        selection: { anchor: lineInfo.from }
+      })
+    }
   } catch (e) {
     // Line might be out of bounds after edit
     console.warn('Studio: Could not scroll to line', line, e)
@@ -6175,6 +6348,41 @@ function extractComponentFromLine(line) {
 }
 
 /**
+ * Find the parent component definition for a nested line.
+ * Scans upward from the current line to find a line with less indentation
+ * that is a component definition (ends with :)
+ */
+function findParentComponentDefinition(editorLineNum) {
+  if (!editor) return null
+
+  const currentLine = editor.state.doc.line(editorLineNum)
+  const currentIndent = currentLine.text.match(/^(\s*)/)[1].length
+
+  // If no indent, this is a top-level line
+  if (currentIndent === 0) return null
+
+  // Scan upward to find parent definition
+  for (let lineNum = editorLineNum - 1; lineNum >= 1; lineNum--) {
+    const line = editor.state.doc.line(lineNum)
+    const lineText = line.text
+    const lineIndent = lineText.match(/^(\s*)/)[1].length
+
+    // Found a line with less indentation
+    if (lineIndent < currentIndent) {
+      // Check if it's a component definition
+      const match = lineText.trim().match(/^([A-Z][a-zA-Z0-9]*)\s*(as\s+[a-zA-Z0-9]+\s*)?:/)
+      if (match) {
+        return { name: match[1], line: lineNum }
+      }
+      // Not a definition, but less indent - stop searching
+      return null
+    }
+  }
+
+  return null
+}
+
+/**
  * Sync property panel to editor cursor position
  * Called after compile when editor has focus
  *
@@ -6185,6 +6393,7 @@ function extractComponentFromLine(line) {
  */
 function syncPropertyPanelToEditorCursor() {
   if (!editor || !studioSelectionManager) {
+    console.log('[Sync] No editor or selectionManager')
     return
   }
 
@@ -6194,20 +6403,56 @@ function syncPropertyPanelToEditorCursor() {
     const lineInfo = editor.state.doc.line(editorLine)
     const lineContent = lineInfo.text
 
+    console.log('[Sync] Line', editorLine, ':', lineContent)
+
     // Extract component info from the line
     const componentInfo = extractComponentFromLine(lineContent)
 
-    // If not a component line, keep the current selection
-    // This avoids flicker when navigating through empty lines or comments
+    console.log('[Sync] componentInfo:', componentInfo)
+
+    // If not a component line, check if we're inside a component definition block
+    // (e.g., on a state line, event line, or child line)
     if (!componentInfo) {
+      console.log('[Sync] Not a component line, checking for parent definition...')
+      const parent = findParentComponentDefinition(editorLine)
+      console.log('[Sync] Parent found:', parent)
+      if (parent && parent.name && studioPropertyPanel) {
+        const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
+        console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
+        if (parentSuccess) {
+          studioSelectionManager.clearSelection()
+          // Determine what kind of nested line this is (state, event, etc.)
+          const trimmedLine = lineContent.trim()
+          let childLabel = 'nested'
+          if (trimmedLine.startsWith('state ')) {
+            const stateMatch = trimmedLine.match(/^state\s+(\w+)/)
+            childLabel = stateMatch ? `state: ${stateMatch[1]}` : 'state'
+          } else if (trimmedLine.startsWith('on')) {
+            const eventMatch = trimmedLine.match(/^(on\w+)/)
+            childLabel = eventMatch ? eventMatch[1] : 'event'
+          }
+          studioSelectionManager.setBreadcrumb([{
+            nodeId: `def-${parent.name}`,
+            label: `${parent.name} (Definition)`,
+            componentName: parent.name
+          }, {
+            nodeId: `child-${childLabel}`,
+            label: childLabel,
+            componentName: parent.name
+          }])
+        }
+      }
       return
     }
 
     const { name: componentName, isDefinition } = componentInfo
 
+    console.log('[Sync] Component:', componentName, 'isDefinition:', isDefinition, 'hasPropertyPanel:', !!studioPropertyPanel)
+
     // Handle definitions: show component definition properties
     if (isDefinition && studioPropertyPanel) {
       const success = studioPropertyPanel.showComponentDefinition(componentName)
+      console.log('[Sync] showComponentDefinition result:', success)
       if (success) {
         studioSelectionManager.clearSelection()
         // Update breadcrumb to show we're in a definition
@@ -6259,8 +6504,10 @@ function syncPropertyPanelToEditorCursor() {
     }
 
     // Fallback: try to show definition if component exists but no instances rendered
+    console.log('[Sync] Fallback: trying showComponentDefinition for', componentName)
     if (studioPropertyPanel) {
       const success = studioPropertyPanel.showComponentDefinition(componentName)
+      console.log('[Sync] Fallback showComponentDefinition result:', success)
       if (success) {
         studioSelectionManager.clearSelection()
         studioSelectionManager.setBreadcrumb([{
@@ -6268,6 +6515,29 @@ function syncPropertyPanelToEditorCursor() {
           label: `${componentName} (Definition)`,
           componentName: componentName
         }])
+        return
+      }
+
+      // Component not found - check if we're on a nested line (child slot)
+      // Find the parent component definition and show that instead
+      console.log('[Sync] Component not found, looking for parent...')
+      const parent = findParentComponentDefinition(editorLine)
+      console.log('[Sync] Parent found:', parent)
+      if (parent && parent.name) {
+        const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
+        console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
+        if (parentSuccess) {
+          studioSelectionManager.clearSelection()
+          studioSelectionManager.setBreadcrumb([{
+            nodeId: `def-${parent.name}`,
+            label: `${parent.name} (Definition)`,
+            componentName: parent.name
+          }, {
+            nodeId: `child-${componentName}`,
+            label: componentName,
+            componentName: componentName
+          }])
+        }
       }
     }
   } catch (e) {

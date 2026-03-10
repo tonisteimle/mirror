@@ -38,14 +38,18 @@ export class Parser {
       errors: [],
     }
 
+    // Track current section for tokens
+    let currentSection: string | undefined = undefined
+
     while (!this.isAtEnd()) {
       this.skipNewlines()
 
       if (this.isAtEnd()) break
 
-      // Section headers
+      // Section headers - track for token grouping
       if (this.check('SECTION')) {
-        this.advance() // Skip section for now
+        const sectionToken = this.advance()
+        currentSection = sectionToken.value as string
         continue
       }
 
@@ -53,7 +57,19 @@ export class Parser {
       // e.g., primary: #3B82F6 or spacing: 16 or font: "Inter"
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING'))) {
-        const token = this.parseTokenDefinition()
+        const token = this.parseTokenDefinition(currentSection)
+        if (token) program.tokens.push(token)
+        continue
+      }
+
+      // Token reference: $name: $other (token referencing another token)
+      // e.g., $primary.bg: $primary or $surface.bg: $grey-800
+      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
+          this.checkAt(2, 'IDENTIFIER') &&
+          this.peekAt(0)?.value.startsWith('$') &&
+          this.peekAt(2)?.value.startsWith('$') &&
+          (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))) {
+        const token = this.parseTokenReference(currentSection)
         if (token) program.tokens.push(token)
         continue
       }
@@ -61,7 +77,7 @@ export class Parser {
       // Legacy token definition: name: type = value (still supported)
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           this.checkAt(2, 'IDENTIFIER') && this.checkAt(3, 'EQUALS')) {
-        const token = this.parseLegacyTokenDefinition()
+        const token = this.parseLegacyTokenDefinition(currentSection)
         if (token) program.tokens.push(token)
         continue
       }
@@ -152,7 +168,7 @@ export class Parser {
   }
 
   // New simplified syntax: name: value
-  private parseTokenDefinition(): TokenDefinition | null {
+  private parseTokenDefinition(section?: string): TokenDefinition | null {
     const name = this.advance() // identifier
     this.advance() // :
     const value = this.advance() // value (NUMBER or STRING)
@@ -165,13 +181,41 @@ export class Parser {
       name: name.value,
       tokenType,
       value: value.value,
+      section,
+      line: name.line,
+      column: name.column,
+    }
+  }
+
+  // Token reference: $name: $other (token referencing another token)
+  private parseTokenReference(section?: string): TokenDefinition | null {
+    const name = this.advance() // identifier (e.g., $primary.bg)
+    this.advance() // :
+    const value = this.advance() // identifier (e.g., $primary)
+
+    // Infer type from token name suffix
+    let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
+    if (name.value.includes('.pad') || name.value.includes('.gap') || name.value.includes('.margin')) {
+      tokenType = 'size'
+    } else if (name.value.includes('.rad')) {
+      tokenType = 'size'
+    } else if (name.value.includes('.font')) {
+      tokenType = 'font'
+    }
+
+    return {
+      type: 'Token',
+      name: name.value,
+      tokenType,
+      value: value.value,
+      section,
       line: name.line,
       column: name.column,
     }
   }
 
   // Legacy syntax: name: type = value (backwards compatible)
-  private parseLegacyTokenDefinition(): TokenDefinition | null {
+  private parseLegacyTokenDefinition(section?: string): TokenDefinition | null {
     const name = this.advance() // identifier
     this.advance() // :
     const tokenType = this.advance() // type
@@ -183,6 +227,7 @@ export class Parser {
       name: name.value,
       tokenType: tokenType.value as 'color' | 'size' | 'font' | 'icon',
       value: value.value,
+      section,
       line: name.line,
       column: name.column,
     }

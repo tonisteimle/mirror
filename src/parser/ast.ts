@@ -52,6 +52,7 @@ export interface TokenDefinition extends BaseNode {
   name: string
   tokenType?: 'color' | 'size' | 'font' | 'icon'  // Optional, inferred from value
   value: string | number
+  section?: string  // Section header this token belongs to (--- Title ---)
 }
 
 export interface ComponentDefinition extends BaseNode {

@@ -1,3 +1,7 @@
+    :root {
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -764,15 +768,28 @@
     }
 
     .tokens-preview-value {
-      font-family: 'SF Mono', Monaco, monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: #a1a1aa;
     }
 
+    /* Value type colors matching editor syntax highlighting */
+    .tokens-preview-value.hex {
+      color: #f9a8d4;
+    }
+
+    .tokens-preview-value.number {
+      color: #fdba74;
+    }
+
+    .tokens-preview-value.token-ref {
+      color: #c9a87c;
+    }
+
     .tokens-preview-name {
-      font-family: 'SF Mono', Monaco, monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
-      color: #f59e0b;
+      color: #c9a87c;
     }
 
     /* Components Preview Styles */
@@ -855,7 +872,7 @@
     /* CodeMirror Theme */
     .cm-editor {
       height: 100%;
-      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace !important;
+      font-family: var(--font-mono) !important;
       font-size: 11px;
       background: #0a0a0f;
     }
@@ -895,19 +912,21 @@
       caret-color: #fafafa;
     }
 
-    /* Syntax Highlighting Classes */
-    .mir-comment { color: #525260 !important; font-style: italic; }
-    .mir-string { color: #a5d6ff !important; }
-    .mir-hex { color: #f9a8d4 !important; }
-    .mir-number { color: #fdba74 !important; }
-    .mir-keyword { color: #00ADFF !important; }
-    .mir-state { color: #a78bfa !important; }
-    .mir-event { color: #00ADFF !important; }
-    .mir-property { color: #7ee787 !important; }
-    .mir-action { color: #a78bfa !important; }
-    .mir-component { color: #00ADFF !important; font-weight: 500; }
-    .mir-binding { color: #fdba74 !important; }
-    .mir-punctuation { color: #71717a !important; }
+    /* Syntax Highlighting Classes
+       Very muted palette - Nord/Solarized inspired
+       Subtle color hints, easy on the eyes */
+    .mir-comment { color: #5c6370 !important; font-style: italic; }
+    .mir-string { color: #98b38a !important; }
+    .mir-hex { color: #a88fb0 !important; }
+    .mir-number { color: #c9a87c !important; }
+    .mir-keyword { color: #7a9ec2 !important; }
+    .mir-state { color: #a88fb0 !important; }
+    .mir-event { color: #7a9ec2 !important; }
+    .mir-property { color: #7fb3a8 !important; }
+    .mir-action { color: #a88fb0 !important; }
+    .mir-component { color: #8aabbd !important; font-weight: 500; }
+    .mir-binding { color: #c9a87c !important; }
+    .mir-punctuation { color: #5c6370 !important; }
 
     /* Autocomplete */
     .cm-tooltip-autocomplete {
@@ -983,7 +1002,7 @@
 
     #generated-code {
       padding: 16px;
-      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-family: var(--font-mono);
       font-size: 12px;
       line-height: 1.5;
       white-space: pre-wrap;
@@ -1008,7 +1027,7 @@
     .error-box pre {
       color: #fca5a5;
       font-size: 12px;
-      font-family: monospace;
+      font-family: var(--font-mono);
     }
 
     /* Color Picker */
@@ -1076,7 +1095,7 @@
     }
 
     .color-hex {
-      font-family: 'SF Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: #888;
     }
@@ -1257,7 +1276,7 @@
       padding: 4px 6px;
       color: #888;
       font-size: 11px;
-      font-family: 'SF Mono', monospace;
+      font-family: var(--font-mono);
     }
 
     .color-picker-hex-input:focus {
@@ -1274,7 +1293,7 @@
       color: #888;
       font-size: 11px;
       text-align: right;
-      font-family: 'SF Mono', monospace;
+      font-family: var(--font-mono);
     }
 
     .color-picker-opacity-input:focus {
@@ -1341,7 +1360,7 @@
 
     .token-name {
       flex: 1;
-      font-family: 'SF Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 12px;
       color: #e4e4e7;
     }
@@ -1351,7 +1370,7 @@
     }
 
     .token-value {
-      font-family: 'SF Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: #888;
     }
@@ -1647,7 +1666,7 @@
       padding: 10px 12px;
       color: #e4e4e7;
       font-size: 13px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: var(--font-mono);
     }
 
     .settings-input:focus {
@@ -2765,7 +2784,7 @@
       margin: 0;
       color: #888;
       font-size: 10px;
-      font-family: 'SF Mono', Monaco, monospace;
+      font-family: var(--font-mono);
       text-align: center;
       line-height: 30px;
     }
@@ -3834,7 +3853,7 @@
     .pp-color-trigger .pp-color-value {
       font-size: 10px;
       color: #888;
-      font-family: 'SF Mono', Monaco, monospace;
+      font-family: var(--font-mono);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

@@ -1074,10 +1074,10 @@ export class PropertyPanel {
 
   private renderColorSection(): string {
     // Get current bg and color values
-    const nodeId = this.currentElement?.templateId || this.currentElement?.nodeId || ''
-    const props = this.propertyExtractor?.getProperties(nodeId)
-    const bgProp = props?.allProperties.find((p: {name: string}) => p.name === 'background' || p.name === 'bg')
-    const colProp = props?.allProperties.find((p: {name: string}) => p.name === 'color' || p.name === 'col' || p.name === 'c')
+    // Use currentElement.allProperties which is already populated for both instances and definitions
+    const allProps = this.currentElement?.allProperties || []
+    const bgProp = allProps.find((p: {name: string}) => p.name === 'background' || p.name === 'bg')
+    const colProp = allProps.find((p: {name: string}) => p.name === 'color' || p.name === 'col' || p.name === 'c')
     const bgValue = bgProp?.value || ''
     const colValue = colProp?.value || ''
 
