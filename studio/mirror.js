@@ -342,7 +342,8 @@ var Mirror = (() => {
         "not": "NOT",
         "then": "THEN",
         "selection": "SELECTION",
-        "route": "ROUTE"
+        "route": "ROUTE",
+        "animation": "ANIMATION"
       };
       const type = keywords[value] || "IDENTIFIER";
       this.addToken(type, value);
@@ -415,9 +416,13 @@ var Mirror = (() => {
     pos = 0;
     errors = [];
     source;
+    nodeIdCounter = 0;
     constructor(tokens, source = "") {
       this.tokens = tokens;
       this.source = source;
+    }
+    generateNodeId() {
+      return `def-${++this.nodeIdCounter}`;
     }
     parse() {
       const program = {
@@ -426,6 +431,7 @@ var Mirror = (() => {
         column: 1,
         tokens: [],
         components: [],
+        animations: [],
         instances: [],
         errors: []
       };
@@ -468,6 +474,8 @@ var Mirror = (() => {
           if (node) {
             if (node.type === "Component") {
               program.components.push(node);
+            } else if (node.type === "Animation") {
+              program.animations.push(node);
             } else {
               program.instances.push(node);
             }
@@ -565,6 +573,9 @@ var Mirror = (() => {
     parseComponentOrInstance() {
       const name = this.advance();
       if (this.check("AS")) {
+        if (this.checkNext("ANIMATION")) {
+          return this.parseAnimationDefinition(name);
+        }
         return this.parseComponentDefinition(name);
       }
       if (this.check("EXTENDS")) {
@@ -593,7 +604,8 @@ var Mirror = (() => {
         events: [],
         children: [],
         line: name.line,
-        column: name.column
+        column: name.column,
+        nodeId: this.generateNodeId()
       };
       this.parseInlineProperties(component.properties);
       this.skipNewlines();
@@ -621,7 +633,8 @@ var Mirror = (() => {
         events: [],
         children: [],
         line: name.line,
-        column: name.column
+        column: name.column,
+        nodeId: this.generateNodeId()
       };
       this.parseInlineProperties(component.properties);
       this.skipNewlines();
@@ -630,6 +643,161 @@ var Mirror = (() => {
         this.parseComponentBody(component);
       }
       return component;
+    }
+    /**
+     * Parse animation definition
+     *
+     * Syntax:
+     * FadeUp as animation: ease-out
+     *   0.00 opacity 0, y-offset 20
+     *   0.30 opacity 1, y-offset 0
+     *   1.00 // end marker (optional)
+     *
+     * With roles:
+     * StaggeredFade as animation: ease-out
+     *   roles item1, item2, item3
+     *   0.00 item1 opacity 0
+     *   0.10 item2 opacity 0
+     *   1.00 all opacity 1
+     */
+    parseAnimationDefinition(name) {
+      this.advance();
+      this.advance();
+      if (!this.expect("COLON")) {
+        this.errors[this.errors.length - 1].hint = 'Add a colon after "animation"';
+        this.recoverToNextDefinition();
+        return null;
+      }
+      const animation = {
+        type: "Animation",
+        name: name.value,
+        keyframes: [],
+        line: name.line,
+        column: name.column
+      };
+      if (this.check("IDENTIFIER") && !this.check("NEWLINE")) {
+        animation.easing = this.advance().value;
+      }
+      this.skipNewlines();
+      if (!this.check("INDENT")) {
+        this.addError("Animation definition must have an indented body with keyframes");
+        return animation;
+      }
+      this.advance();
+      while (!this.check("DEDENT") && !this.isAtEnd()) {
+        this.skipNewlines();
+        if (this.check("DEDENT") || this.isAtEnd()) break;
+        if (this.check("COMMA")) {
+          this.advance();
+          continue;
+        }
+        if (this.check("IDENTIFIER") && this.current().value === "roles") {
+          this.advance();
+          animation.roles = [];
+          while (!this.check("NEWLINE") && !this.isAtEnd()) {
+            if (this.check("COMMA")) {
+              this.advance();
+              continue;
+            }
+            if (this.check("IDENTIFIER")) {
+              animation.roles.push(this.advance().value);
+            } else {
+              break;
+            }
+          }
+          continue;
+        }
+        if (this.check("NUMBER")) {
+          const keyframe = this.parseAnimationKeyframe();
+          if (keyframe) {
+            animation.keyframes.push(keyframe);
+          }
+          continue;
+        }
+        this.advance();
+      }
+      if (this.check("DEDENT")) this.advance();
+      if (animation.keyframes.length > 0) {
+        const lastKeyframe = animation.keyframes[animation.keyframes.length - 1];
+        if (lastKeyframe.time > 1) {
+          animation.duration = lastKeyframe.time;
+        }
+      }
+      return animation;
+    }
+    /**
+     * Parse a single keyframe line
+     *
+     * Syntax:
+     * 0.00 opacity 0, y-offset 20
+     * 0.30 item1 opacity 1
+     * 1.00 all opacity 1, y-offset 0
+     */
+    parseAnimationKeyframe() {
+      const timeToken = this.advance();
+      const time = parseFloat(timeToken.value);
+      const keyframe = {
+        time,
+        properties: []
+      };
+      while (!this.check("NEWLINE") && !this.check("DEDENT") && !this.isAtEnd()) {
+        if (this.check("COMMA")) {
+          this.advance();
+          continue;
+        }
+        if (this.check("IDENTIFIER")) {
+          const prop = this.parseAnimationKeyframeProperty();
+          if (prop) {
+            keyframe.properties.push(prop);
+          }
+        } else {
+          break;
+        }
+      }
+      return keyframe;
+    }
+    /**
+     * Parse a keyframe property
+     *
+     * Syntax:
+     * opacity 0
+     * y-offset 20
+     * item1 opacity 0  (with role target)
+     * all scale 1.2    (with 'all' target)
+     */
+    parseAnimationKeyframeProperty() {
+      if (!this.check("IDENTIFIER")) return null;
+      const firstToken = this.advance();
+      let target;
+      let propName;
+      let propValue;
+      if (this.check("IDENTIFIER")) {
+        target = firstToken.value;
+        propName = this.advance().value;
+        if (this.check("NUMBER")) {
+          propValue = parseFloat(this.advance().value);
+        } else if (this.check("STRING")) {
+          propValue = this.advance().value;
+        } else if (this.check("IDENTIFIER")) {
+          propValue = this.advance().value;
+        } else {
+          return null;
+        }
+      } else if (this.check("NUMBER") || this.check("STRING")) {
+        propName = firstToken.value;
+        if (this.check("NUMBER")) {
+          propValue = parseFloat(this.advance().value);
+        } else {
+          propValue = this.advance().value;
+        }
+      } else {
+        return null;
+      }
+      return {
+        target,
+        name: propName,
+        value: propValue
+      };
     }
     // Parse component definition without explicit primitive: Name:
     // Defaults to Frame as the base primitive
@@ -646,7 +814,8 @@ var Mirror = (() => {
         events: [],
         children: [],
         line: name.line,
-        column: name.column
+        column: name.column,
+        nodeId: this.generateNodeId()
       };
       this.parseInlineProperties(component.properties);
       this.skipNewlines();
@@ -1355,6 +1524,26 @@ var Mirror = (() => {
       if (this.check("IDENTIFIER") && !this.checkNext("COLON")) {
         action.target = this.advance().value;
       }
+      if (actionToken.value === "animate") {
+        action.args = [];
+        while (this.check("IDENTIFIER") || this.check("NUMBER")) {
+          if (this.check("IDENTIFIER")) {
+            const arg = this.advance().value;
+            if (arg === "stagger" && this.check("NUMBER")) {
+              action.args.push(`stagger${this.advance().value}`);
+            } else {
+              action.args.push(arg);
+            }
+          } else if (this.check("NUMBER")) {
+            action.args.push(this.advance().value);
+          }
+          if (this.check("COMMA")) {
+            this.advance();
+          } else {
+            break;
+          }
+        }
+      }
       return action;
     }
     parseKeysBlock(events) {
@@ -1740,6 +1929,12 @@ var Mirror = (() => {
       return Array.from(this.nodes.values()).filter((n) => n.parentId === parentId);
     }
     /**
+     * Get all nodes (for debugging)
+     */
+    getAllNodes() {
+      return Array.from(this.nodes.values());
+    }
+    /**
      * Find the node that contains a specific line (for editor cursor sync)
      * Returns the most specific (deepest/smallest range) node at that line
      * Skips definition nodes to prefer instances
@@ -1932,7 +2127,70 @@ var Mirror = (() => {
         value: t.value
       }));
       const nodes = this.ast.instances.map((inst) => this.transformInstance(inst));
-      return { nodes, tokens };
+      const animations = this.ast.animations.map((anim) => this.transformAnimation(anim));
+      return { nodes, tokens, animations };
+    }
+    /**
+     * Transform an animation definition from AST to IR
+     */
+    transformAnimation(anim) {
+      return {
+        name: anim.name,
+        easing: anim.easing || "ease",
+        duration: anim.duration,
+        roles: anim.roles,
+        keyframes: anim.keyframes.map((kf) => this.transformAnimationKeyframe(kf))
+      };
+    }
+    /**
+     * Transform an animation keyframe from AST to IR
+     */
+    transformAnimationKeyframe(kf) {
+      return {
+        time: kf.time,
+        properties: kf.properties.map((prop) => this.transformAnimationProperty(prop))
+      };
+    }
+    /**
+     * Transform an animation property from AST to IR
+     *
+     * Maps Mirror property names to CSS properties and formats values.
+     */
+    transformAnimationProperty(prop) {
+      const propertyMap = {
+        "opacity": "opacity",
+        "y-offset": "transform",
+        "x-offset": "transform",
+        "scale": "transform",
+        "rotate": "transform",
+        "background": "background",
+        "bg": "background",
+        "color": "color",
+        "col": "color",
+        "width": "width",
+        "height": "height",
+        "border-radius": "border-radius",
+        "rad": "border-radius"
+      };
+      const cssProperty = propertyMap[prop.name] || prop.name;
+      let cssValue = String(prop.value);
+      if (prop.name === "y-offset") {
+        cssValue = `translateY(${prop.value}px)`;
+      } else if (prop.name === "x-offset") {
+        cssValue = `translateX(${prop.value}px)`;
+      } else if (prop.name === "scale") {
+        cssValue = `scale(${prop.value})`;
+      } else if (prop.name === "rotate") {
+        cssValue = `rotate(${prop.value}deg)`;
+      } else if (["width", "height", "border-radius", "rad"].includes(prop.name) && typeof prop.value === "number") {
+        cssValue = `${prop.value}px`;
+      }
+      return {
+        target: prop.target,
+        property: cssProperty,
+        value: cssValue,
+        easing: prop.easing
+      };
     }
     generateId() {
       return `node-${++this.nodeIdCounter}`;
@@ -3145,7 +3403,11 @@ var Mirror = (() => {
         onfocus: "focus",
         onblur: "blur",
         onkeydown: "keydown",
-        onkeyup: "keyup"
+        onkeyup: "keyup",
+        onenter: "enter",
+        // Viewport enter (IntersectionObserver)
+        onexit: "exit"
+        // Viewport exit (IntersectionObserver)
       };
       return mapping[name] || name.replace(/^on/, "");
     }
@@ -3713,6 +3975,167 @@ const _runtime = {
       el.textContent = iconName
     }
   },
+
+  // Animation registry
+  _animations: new Map(),
+
+  registerAnimation(animation) {
+    if (!animation || !animation.name) return
+    this._animations.set(animation.name, animation)
+  },
+
+  getAnimation(name) {
+    return this._animations.get(name)
+  },
+
+  animate(animationName, elements, options = {}) {
+    const animation = this._animations.get(animationName)
+    if (!animation) {
+      console.warn(\`Animation "\${animationName}" not found\`)
+      return null
+    }
+
+    // Normalize elements to array
+    let targets = []
+    if (!elements) {
+      return null
+    } else if (Array.isArray(elements)) {
+      targets = elements.map(e => e._el || e)
+    } else {
+      targets = [elements._el || elements]
+    }
+
+    const { delay = 0, stagger = 0, loop = false, reverse = false } = options
+    const results = []
+
+    // Easing curves
+    const easingMap = {
+      'linear': 'linear',
+      'ease': 'ease',
+      'ease-in': 'ease-in',
+      'ease-out': 'ease-out',
+      'ease-in-out': 'ease-in-out',
+    }
+
+    targets.forEach((el, index) => {
+      if (!el) return
+
+      const elementDelay = delay + (index * stagger)
+
+      // Build keyframes from animation definition
+      const keyframes = []
+      const propertyTimelines = new Map()
+
+      // Group properties by name to build proper keyframe sequence
+      animation.keyframes.forEach(kf => {
+        kf.properties.forEach(prop => {
+          if (!propertyTimelines.has(prop.name)) {
+            propertyTimelines.set(prop.name, [])
+          }
+          propertyTimelines.get(prop.name).push({
+            time: kf.time,
+            value: prop.value,
+            easing: prop.easing || animation.easing || 'ease-out'
+          })
+        })
+      })
+
+      // Convert to Web Animations API format
+      const duration = animation.duration * 1000
+      const allTimes = [...new Set(animation.keyframes.map(kf => kf.time))].sort((a, b) => a - b)
+
+      allTimes.forEach(time => {
+        const kf = { offset: time / animation.duration }
+        propertyTimelines.forEach((timeline, propName) => {
+          const point = timeline.find(p => p.time === time)
+          if (point) {
+            // Map Mirror property names to CSS
+            const cssName = this._animPropMap(propName)
+            kf[cssName] = this._animValueMap(propName, point.value)
+          }
+        })
+        keyframes.push(kf)
+      })
+
+      if (reverse) {
+        keyframes.reverse()
+        keyframes.forEach((kf, i) => {
+          kf.offset = i / (keyframes.length - 1)
+        })
+      }
+
+      const timing = {
+        duration,
+        delay: elementDelay,
+        easing: easingMap[animation.easing] || 'ease-out',
+        iterations: loop === true ? Infinity : (typeof loop === 'number' ? loop : 1),
+        fill: 'forwards'
+      }
+
+      try {
+        const anim = el.animate(keyframes, timing)
+        results.push(anim)
+      } catch (err) {
+        console.warn('Animation error:', err)
+      }
+    })
+
+    return results
+  },
+
+  _animPropMap(name) {
+    const map = {
+      'opacity': 'opacity',
+      'x-offset': 'translateX',
+      'y-offset': 'translateY',
+      'scale': 'scale',
+      'scale-x': 'scaleX',
+      'scale-y': 'scaleY',
+      'rotate': 'rotate',
+      'background': 'backgroundColor',
+      'bg': 'backgroundColor',
+      'color': 'color',
+      'col': 'color',
+      'width': 'width',
+      'height': 'height',
+      'padding': 'padding',
+      'pad': 'padding',
+      'radius': 'borderRadius',
+      'rad': 'borderRadius',
+    }
+    return map[name] || name
+  },
+
+  _animValueMap(propName, value) {
+    if (propName === 'x-offset' || propName === 'y-offset') {
+      return typeof value === 'number' ? value + 'px' : value
+    }
+    if (propName === 'rotate') {
+      return typeof value === 'number' ? value + 'deg' : value
+    }
+    if (propName === 'width' || propName === 'height' || propName === 'padding' || propName === 'pad' || propName === 'radius' || propName === 'rad') {
+      return typeof value === 'number' ? value + 'px' : value
+    }
+    return value
+  },
+
+  setupEnterExitObserver(el, onEnter, onExit) {
+    if (!el) return null
+    const element = el._el || el
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (onEnter) onEnter()
+        } else {
+          if (onExit) onExit()
+        }
+      })
+    }, { threshold: 0.1 })
+
+    observer.observe(element)
+    return observer
+  },
 }
 `;
 
@@ -3736,10 +4159,51 @@ const _runtime = {
       this.emitTokens();
       this.emitCreateUI();
       this.emitRuntime();
+      this.emitAnimations();
       if (this.javascript) {
         this.emitInitialization();
       }
       return this.lines.join("\n");
+    }
+    emitAnimations() {
+      if (this.ir.animations.length === 0) return;
+      this.emit("// Register animations");
+      for (const animation of this.ir.animations) {
+        this.emitAnimationRegistration(animation);
+      }
+      this.emit("");
+    }
+    emitAnimationRegistration(animation) {
+      this.emit(`_runtime.registerAnimation({`);
+      this.indent++;
+      this.emit(`name: "${animation.name}",`);
+      this.emit(`easing: "${animation.easing}",`);
+      if (animation.duration) {
+        this.emit(`duration: ${animation.duration},`);
+      }
+      if (animation.roles && animation.roles.length > 0) {
+        this.emit(`roles: ${JSON.stringify(animation.roles)},`);
+      }
+      this.emit(`keyframes: [`);
+      this.indent++;
+      for (const keyframe of animation.keyframes) {
+        this.emit(`{`);
+        this.indent++;
+        this.emit(`time: ${keyframe.time},`);
+        this.emit(`properties: [`);
+        this.indent++;
+        for (const prop of keyframe.properties) {
+          this.emit(`{ property: "${prop.property}", value: "${prop.value}"${prop.target ? `, target: "${prop.target}"` : ""} },`);
+        }
+        this.indent--;
+        this.emit(`],`);
+        this.indent--;
+        this.emit(`},`);
+      }
+      this.indent--;
+      this.emit(`],`);
+      this.indent--;
+      this.emit(`})`);
     }
     emit(line) {
       const indentation = "  ".repeat(this.indent);
@@ -4190,6 +4654,10 @@ const _runtime = {
     }
     emitEventListener(varName, event) {
       const eventName = event.name;
+      if (eventName === "enter" || eventName === "exit") {
+        this.emitEnterExitObserver(varName, event, eventName === "enter");
+        return;
+      }
       if (eventName === "mouseenter") {
         const hasHighlight = event.actions.some((a) => a.type === "highlight");
         if (hasHighlight) {
@@ -4247,6 +4715,27 @@ const _runtime = {
         this.emit("})");
       }
     }
+    emitEnterExitObserver(varName, event, isEnter) {
+      const callbackName = `${varName}_${isEnter ? "enter" : "exit"}`;
+      this.emit(`// ${isEnter ? "Enter" : "Exit"} viewport observer`);
+      this.emit(`const ${callbackName}Callback = () => {`);
+      this.indent++;
+      for (const action of event.actions) {
+        this.emitAction(action, varName);
+      }
+      this.indent--;
+      this.emit(`}`);
+      if (isEnter) {
+        this.emit(`${varName}._enterCallback = ${callbackName}Callback`);
+      } else {
+        this.emit(`${varName}._exitCallback = ${callbackName}Callback`);
+      }
+      this.emit(`if (!${varName}._enterExitObserver) {`);
+      this.indent++;
+      this.emit(`_runtime.setupEnterExitObserver(${varName}, ${varName}._enterCallback, ${varName}._exitCallback)`);
+      this.indent--;
+      this.emit(`}`);
+    }
     emitAction(action, currentVar) {
       const target = action.target || "self";
       const builtinActions = /* @__PURE__ */ new Set([
@@ -4273,7 +4762,8 @@ const _runtime = {
         "toggle-state",
         "set-state",
         "change",
-        "navigate"
+        "navigate",
+        "animate"
       ]);
       switch (action.type) {
         case "toggle":
@@ -4336,6 +4826,22 @@ const _runtime = {
             this.emit(`_runtime.navigateToPage('${target}', ${currentVar})`);
           } else {
             this.emit(`_runtime.navigate('${target}', ${currentVar})`);
+          }
+          break;
+        case "animate":
+          const animationName = action.target || "";
+          if (action.args && action.args.length > 0) {
+            const targets = action.args.map((t) => `_elements['${t}']`).join(", ");
+            const staggerMatch = action.args.find((a) => a.startsWith("stagger"));
+            if (staggerMatch) {
+              const staggerValue = staggerMatch.replace("stagger", "").trim() || "100";
+              const elemTargets = action.args.filter((a) => !a.startsWith("stagger")).map((t) => `_elements['${t}']`).join(", ");
+              this.emit(`_runtime.animate('${animationName}', [${elemTargets}], { stagger: ${staggerValue} })`);
+            } else {
+              this.emit(`_runtime.animate('${animationName}', [${targets}])`);
+            }
+          } else {
+            this.emit(`_runtime.animate('${animationName}', ${currentVar})`);
           }
           break;
         default:
@@ -4898,8 +5404,7 @@ ${this.currentIndent()}]`;
     const program = ast;
     const lines = [];
     const { includeTokens = true } = options;
-    const allStates = collectAllStates(program);
-    lines.push(`import React, { useState } from 'react'`);
+    lines.push(`import React from 'react'`);
     lines.push(``);
     if (includeTokens && program.tokens && program.tokens.length > 0) {
       lines.push(`// Design Tokens`);
@@ -4917,36 +5422,11 @@ ${this.currentIndent()}]`;
         componentMap.set(comp.name, comp);
       }
     }
-    if (program.components && program.components.length > 0) {
-      lines.push(`// Mirror Component Definitions`);
-      for (const comp of program.components) {
-        const compCode = generateComponentDefinition(comp, componentMap, program.tokens || []);
-        lines.push(compCode);
-        lines.push(``);
-      }
-    }
-    lines.push(`// App`);
     lines.push(`export default function App() {`);
-    if (allStates.size > 0) {
-      lines.push(`  // State`);
-      for (const stateName of allStates) {
-        const camelName = stateName.replace(/^\$/, "");
-        lines.push(`  const [${camelName}, set${capitalize(camelName)}] = useState(null)`);
-      }
-      lines.push(``);
-    }
     lines.push(`  return (`);
     if (program.instances && program.instances.length > 0) {
-      const context = { componentMap, tokens: program.tokens || [], allStates };
-      if (program.instances.length > 1) {
-        lines.push(`    <>`);
-        for (const instance of program.instances) {
-          const jsx = generateJSX(instance, context, "      ");
-          lines.push(jsx);
-        }
-        lines.push(`    </>`);
-      } else {
-        const jsx = generateJSX(program.instances[0], context, "    ");
+      for (const instance of program.instances) {
+        const jsx = generateJSX(instance, componentMap, program.tokens || [], "    ");
         lines.push(jsx);
       }
     } else {
@@ -4957,351 +5437,31 @@ ${this.currentIndent()}]`;
     lines.push(``);
     return lines.join("\n");
   }
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-  function collectAllStates(program) {
-    const states = /* @__PURE__ */ new Set();
-    for (const comp of program.components || []) {
-      for (const event of comp.events || []) {
-        for (const action of event.actions || []) {
-          if (action.target?.startsWith("$")) {
-            states.add(action.target);
-          }
-        }
-      }
-    }
-    return states;
-  }
-  function generateComponentDefinition(comp, components, tokens) {
-    const lines = [];
-    const tag = getHtmlTag(comp.name, comp);
-    const hasStates = comp.states && comp.states.some((s) => s.name !== "hover");
-    const baseStyle = generateStyles(comp.properties, tokens);
-    const hasHoverInlineProps = comp.properties.some((p) => p.name.startsWith("hover-") || p.name.startsWith("hover_"));
-    const hoverStateBlock = comp.states?.find((s) => s.name === "hover");
-    const needsHoverState = hasHoverInlineProps || hoverStateBlock;
-    if (hasStates || needsHoverState) {
-      lines.push(`const ${comp.name} = ({ children, style, isSelected, isHighlighted, onSelect, onHover, ...props }) => {`);
-      if (needsHoverState) {
-        lines.push(`  const [isHovered, setIsHovered] = useState(false)`);
-      }
-      lines.push(`  const dynamicStyle = {`);
-      lines.push(`    ${formatStyleEntries(baseStyle)},`);
-      if (hasHoverInlineProps) {
-        const hoverProps = comp.properties.filter((p) => p.name.startsWith("hover-") || p.name.startsWith("hover_"));
-        const hoverStyle = generateHoverStyles(hoverProps, tokens);
-        if (Object.keys(hoverStyle).length > 0) {
-          lines.push(`    ...(isHovered ? { ${formatStyleEntries(hoverStyle)} } : {}),`);
-        }
-      }
-      if (hoverStateBlock) {
-        const hoverStyle = generateStyles(hoverStateBlock.properties, tokens);
-        if (Object.keys(hoverStyle).length > 0) {
-          lines.push(`    ...(isHovered ? { ${formatStyleEntries(hoverStyle)} } : {}),`);
-        }
-      }
-      for (const state of comp.states || []) {
-        if (state.name === "hover") continue;
-        const stateStyle = generateStyles(state.properties, tokens);
-        const varName = `is${capitalize(state.name)}`;
-        lines.push(`    ...(${varName} ? { ${formatStyleEntries(stateStyle)} } : {}),`);
-      }
-      lines.push(`    ...style`);
-      lines.push(`  }`);
-      lines.push(``);
-      const hoverHandlers = needsHoverState ? ` onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}` : "";
-      lines.push(`  return (`);
-      lines.push(`    <${tag} style={dynamicStyle}${hoverHandlers} {...props}>`);
-      lines.push(`      {children}`);
-      lines.push(`    </${tag}>`);
-      lines.push(`  )`);
-      lines.push(`}`);
-    } else {
-      const styleStr = formatStyleObject(baseStyle);
-      lines.push(`const ${comp.name} = ({ children, style, ...props }) => (`);
-      lines.push(`  <${tag} style={{ ${styleStr}, ...style }} {...props}>`);
-      lines.push(`    {children}`);
-      lines.push(`  </${tag}>`);
-      lines.push(`)`);
-    }
-    return lines.join("\n");
-  }
-  function generateJSX(instance, context, indent) {
-    const { componentMap, tokens } = context;
-    const compDef = componentMap.get(instance.component);
-    const tag = compDef ? instance.component : getHtmlTag(instance.component, compDef);
-    const overrideStyle = generateStyles(instance.properties, tokens);
-    const hasOverrides = Object.keys(overrideStyle).length > 0;
-    const events = generateEventHandlers(instance, compDef);
-    const textContent = getTextContent(instance, instance.properties);
+  function generateJSX(instance, components, tokens, indent) {
+    const compDef = components.get(instance.component);
+    const allProps = [...compDef?.properties || [], ...instance.properties];
+    const style = generateStyles(allProps, tokens);
+    const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : "";
+    const tag = getHtmlTag(instance.component, compDef);
+    const textContent = getTextContent(instance, allProps);
     const hasChildren = instance.children.length > 0 || textContent;
-    let propsStr = "";
-    if (hasOverrides) {
-      propsStr += ` style={{ ${formatStyleObject(overrideStyle)} }}`;
-    }
-    propsStr += events;
     if (!hasChildren) {
-      return `${indent}<${tag}${propsStr} />`;
+      return `${indent}<${tag}${styleStr} />`;
     }
     const lines = [];
-    lines.push(`${indent}<${tag}${propsStr}>`);
+    lines.push(`${indent}<${tag}${styleStr}>`);
     if (textContent) {
       lines.push(`${indent}  {${JSON.stringify(textContent)}}`);
     }
     for (const child of instance.children) {
       if (child.type === "Instance") {
-        lines.push(generateJSX(child, context, indent + "  "));
+        lines.push(generateJSX(child, components, tokens, indent + "  "));
       } else if (child.type === "Text") {
         lines.push(`${indent}  {${JSON.stringify(child.content)}}`);
-      } else if (child.type === "Each") {
-        lines.push(generateEachLoop(child, context, indent + "  "));
       }
     }
     lines.push(`${indent}</${tag}>`);
     return lines.join("\n");
-  }
-  function generateEachLoop(each, context, indent) {
-    const lines = [];
-    const itemVar = each.item || "item";
-    const collection = each.collection || "items";
-    lines.push(`${indent}{${collection}.map((${itemVar}, index) => (`);
-    for (const child of each.children || []) {
-      if (child.type === "Instance") {
-        lines.push(generateJSX(child, context, indent + "  "));
-      }
-    }
-    lines.push(`${indent}))}`);
-    return lines.join("\n");
-  }
-  function generateEventHandlers(instance, compDef) {
-    const handlers = [];
-    const events = compDef?.events || [];
-    for (const event of events) {
-      const reactEvent = mapMirrorEventToReact(event.name);
-      if (!reactEvent) continue;
-      const actions = event.actions.map((a) => mapActionToJs(a)).join("; ");
-      handlers.push(`${reactEvent}={() => { ${actions} }}`);
-    }
-    return handlers.length > 0 ? " " + handlers.join(" ") : "";
-  }
-  function mapMirrorEventToReact(eventName) {
-    const mapping = {
-      "onclick": "onClick",
-      "onhover": "onMouseEnter",
-      "onfocus": "onFocus",
-      "onblur": "onBlur",
-      "onchange": "onChange",
-      "oninput": "onInput",
-      "onkeydown": "onKeyDown",
-      "onkeyup": "onKeyUp"
-    };
-    return mapping[eventName] || null;
-  }
-  function mapActionToJs(action) {
-    const { name, target } = action;
-    switch (name) {
-      case "select":
-        return target === "self" ? "onSelect?.()" : `setSelected('${target}')`;
-      case "toggle":
-        if (target?.startsWith("$")) {
-          const varName = target.slice(1);
-          return `set${capitalize(varName)}(prev => !prev)`;
-        }
-        return `toggle('${target}')`;
-      case "show":
-        return `set${capitalize(target || "visible")}(true)`;
-      case "hide":
-        return `set${capitalize(target || "visible")}(false)`;
-      case "highlight":
-        return target === "self" ? "onHover?.()" : `setHighlighted('${target}')`;
-      default:
-        return `// ${name}(${target})`;
-    }
-  }
-  function generateStyles(properties2, tokens) {
-    const style = {};
-    const tokenMap = buildTokenMap(tokens);
-    const resolve = (value) => {
-      if (typeof value === "object" && value !== null && "name" in value) {
-        const tokenName = value.name;
-        const cleanName = tokenName.startsWith("$") ? tokenName.slice(1) : tokenName;
-        return tokenMap.get(cleanName) ?? tokenMap.get("$" + cleanName) ?? `$${cleanName}`;
-      }
-      if (typeof value === "string" && value.startsWith("$")) {
-        const cleanName = value.slice(1);
-        return tokenMap.get(cleanName) ?? tokenMap.get(value) ?? value;
-      }
-      if (typeof value === "boolean") return value ? 1 : 0;
-      return value;
-    };
-    for (const prop of properties2) {
-      if (prop.name.startsWith("hover")) continue;
-      if (prop.values.length === 0) {
-        applyFlagProperty(prop.name, style);
-        continue;
-      }
-      const value = resolve(prop.values[0]);
-      applyValueProperty(prop.name, value, style);
-    }
-    return style;
-  }
-  function generateHoverStyles(properties2, tokens) {
-    const style = {};
-    const tokenMap = buildTokenMap(tokens);
-    const resolve = (value) => {
-      if (typeof value === "string" && value.startsWith("$")) {
-        return tokenMap.get(value.slice(1)) ?? value;
-      }
-      return value;
-    };
-    for (const prop of properties2) {
-      if (!prop.name.startsWith("hover")) continue;
-      if (prop.values.length === 0) continue;
-      const value = resolve(prop.values[0]);
-      const baseName = prop.name.replace(/^hover[-_]?/, "");
-      switch (baseName) {
-        case "bg":
-        case "background":
-          style.backgroundColor = String(value);
-          break;
-        case "col":
-        case "color":
-          style.color = String(value);
-          break;
-        case "opacity":
-          style.opacity = value;
-          break;
-        case "scale":
-          style.transform = `scale(${value})`;
-          break;
-      }
-    }
-    return style;
-  }
-  function buildTokenMap(tokens) {
-    const tokenMap = /* @__PURE__ */ new Map();
-    for (const token of tokens) {
-      const nameWithoutPrefix = token.name.startsWith("$") ? token.name.slice(1) : token.name;
-      const nameWithPrefix = "$" + nameWithoutPrefix;
-      let resolvedValue = token.value;
-      if (typeof resolvedValue === "string" && resolvedValue.startsWith("$")) {
-        const refName = resolvedValue.slice(1);
-        const found = tokens.find((t) => {
-          const n = t.name.startsWith("$") ? t.name.slice(1) : t.name;
-          return n === refName;
-        });
-        if (found) resolvedValue = found.value;
-      }
-      tokenMap.set(nameWithoutPrefix, resolvedValue);
-      tokenMap.set(nameWithPrefix, resolvedValue);
-    }
-    return tokenMap;
-  }
-  function applyFlagProperty(name, style) {
-    switch (name) {
-      case "hor":
-      case "horizontal":
-        style.display = "flex";
-        style.flexDirection = "row";
-        break;
-      case "ver":
-      case "vertical":
-        style.display = "flex";
-        style.flexDirection = "column";
-        break;
-      case "center":
-      case "cen":
-        style.display = "flex";
-        style.justifyContent = "center";
-        style.alignItems = "center";
-        break;
-      case "spread":
-        style.justifyContent = "space-between";
-        break;
-      case "wrap":
-        style.flexWrap = "wrap";
-        break;
-      case "scroll":
-        style.overflowY = "auto";
-        break;
-      case "hidden":
-        style.display = "none";
-        break;
-    }
-  }
-  function applyValueProperty(name, value, style) {
-    switch (name) {
-      case "hor":
-      case "horizontal":
-        style.display = "flex";
-        style.flexDirection = "row";
-        break;
-      case "ver":
-      case "vertical":
-        style.display = "flex";
-        style.flexDirection = "column";
-        break;
-      case "gap":
-      case "g":
-        style.gap = typeof value === "number" ? `${value}px` : value;
-        break;
-      case "pad":
-      case "padding":
-      case "p":
-        if (typeof value === "number") {
-          style.padding = `${value}px`;
-        } else if (typeof value === "string" && !value.includes("px")) {
-          const num = parseFloat(value);
-          style.padding = isNaN(num) ? value : `${num}px`;
-        } else {
-          style.padding = value;
-        }
-        break;
-      case "margin":
-      case "m":
-        style.margin = typeof value === "number" ? `${value}px` : value;
-        break;
-      case "w":
-      case "width":
-        style.width = value === "full" ? "100%" : value === "hug" ? "fit-content" : typeof value === "number" ? `${value}px` : value;
-        break;
-      case "h":
-      case "height":
-        style.height = value === "full" ? "100%" : value === "hug" ? "fit-content" : typeof value === "number" ? `${value}px` : value;
-        break;
-      case "col":
-      case "color":
-      case "c":
-        style.color = String(value);
-        break;
-      case "bg":
-      case "background":
-        style.backgroundColor = String(value);
-        break;
-      case "rad":
-      case "radius":
-        style.borderRadius = typeof value === "number" ? `${value}px` : value;
-        break;
-      case "bor":
-      case "border":
-        style.border = typeof value === "number" ? `${value}px solid` : String(value);
-        break;
-      case "font-size":
-      case "fs":
-        style.fontSize = typeof value === "number" ? `${value}px` : value;
-        break;
-      case "weight":
-        style.fontWeight = value;
-        break;
-      case "cursor":
-        style.cursor = String(value);
-        break;
-      case "opacity":
-      case "o":
-        style.opacity = value;
-        break;
-    }
   }
   function getHtmlTag(componentName, compDef) {
     const primitive = compDef?.primitive?.toLowerCase();
@@ -5314,12 +5474,14 @@ ${this.currentIndent()}]`;
     const name = componentName.toLowerCase();
     if (name.includes("button") || name === "btn") return "button";
     if (name.includes("input") || name.includes("field")) return "input";
+    if (name.includes("link")) return "a";
     if (name.includes("heading") || name.includes("title")) return "h2";
-    if (name.includes("text") || name.includes("label") || name.includes("body") || name.includes("muted")) return "span";
+    if (name.includes("text") || name.includes("label") || name.includes("body")) return "span";
     if (name.includes("nav")) return "nav";
     if (name.includes("header")) return "header";
     if (name.includes("footer")) return "footer";
     if (name.includes("main")) return "main";
+    if (name.includes("section")) return "section";
     if (name.includes("aside") || name.includes("sidebar")) return "aside";
     return "div";
   }
@@ -5337,21 +5499,228 @@ ${this.currentIndent()}]`;
     }
     return null;
   }
+  function generateStyles(properties2, tokens) {
+    const style = {};
+    const tokenMap = /* @__PURE__ */ new Map();
+    for (const token of tokens) {
+      const nameWithoutPrefix = token.name.startsWith("$") ? token.name.slice(1) : token.name;
+      const nameWithPrefix = "$" + nameWithoutPrefix;
+      let resolvedValue = token.value;
+      if (typeof resolvedValue === "string" && resolvedValue.startsWith("$")) {
+        const refName = resolvedValue.slice(1);
+        const found = tokens.find((t) => {
+          const n = t.name.startsWith("$") ? t.name.slice(1) : t.name;
+          return n === refName;
+        });
+        if (found) resolvedValue = found.value;
+      }
+      tokenMap.set(nameWithoutPrefix, resolvedValue);
+      tokenMap.set(nameWithPrefix, resolvedValue);
+    }
+    const resolve = (value) => {
+      if (typeof value === "object" && value !== null && "name" in value) {
+        const tokenName = value.name;
+        const cleanName = tokenName.startsWith("$") ? tokenName.slice(1) : tokenName;
+        return tokenMap.get(cleanName) ?? tokenMap.get("$" + cleanName) ?? `$${cleanName}`;
+      }
+      if (typeof value === "string" && value.startsWith("$")) {
+        const cleanName = value.slice(1);
+        return tokenMap.get(cleanName) ?? tokenMap.get(value) ?? value;
+      }
+      if (typeof value === "boolean") return value ? 1 : 0;
+      return value;
+    };
+    for (const prop of properties2) {
+      if (prop.values.length === 0) {
+        switch (prop.name) {
+          case "hor":
+          case "horizontal":
+            style.display = "flex";
+            style.flexDirection = "row";
+            break;
+          case "ver":
+          case "vertical":
+            style.display = "flex";
+            style.flexDirection = "column";
+            break;
+          case "center":
+          case "cen":
+            style.display = "flex";
+            style.justifyContent = "center";
+            style.alignItems = "center";
+            break;
+          case "spread":
+            style.justifyContent = "space-between";
+            break;
+          case "wrap":
+            style.flexWrap = "wrap";
+            break;
+          case "scroll":
+            style.overflowY = "auto";
+            break;
+          case "hidden":
+            style.display = "none";
+            break;
+        }
+        continue;
+      }
+      const rawValue = prop.values[0];
+      const value = resolve(rawValue);
+      switch (prop.name) {
+        // Layout (with values - less common)
+        case "hor":
+        case "horizontal":
+          style.display = "flex";
+          style.flexDirection = "row";
+          break;
+        case "ver":
+        case "vertical":
+          style.display = "flex";
+          style.flexDirection = "column";
+          break;
+        case "wrap":
+          style.flexWrap = "wrap";
+          break;
+        case "spread":
+          style.justifyContent = "space-between";
+          break;
+        case "center":
+        case "cen":
+          style.display = "flex";
+          style.justifyContent = "center";
+          style.alignItems = "center";
+          break;
+        // Alignment
+        case "left":
+          style.justifyContent = "flex-start";
+          break;
+        case "right":
+          style.justifyContent = "flex-end";
+          break;
+        case "top":
+          style.alignItems = "flex-start";
+          break;
+        case "bottom":
+          style.alignItems = "flex-end";
+          break;
+        // Spacing
+        case "gap":
+        case "g":
+          style.gap = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "pad":
+        case "padding":
+        case "p":
+          style.padding = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "margin":
+        case "m":
+          style.margin = typeof value === "number" ? `${value}px` : value;
+          break;
+        // Size
+        case "w":
+        case "width":
+          if (value === "full") {
+            style.width = "100%";
+          } else if (value === "hug") {
+            style.width = "fit-content";
+          } else {
+            style.width = typeof value === "number" ? `${value}px` : value;
+          }
+          break;
+        case "h":
+        case "height":
+          if (value === "full") {
+            style.height = "100%";
+          } else if (value === "hug") {
+            style.height = "fit-content";
+          } else {
+            style.height = typeof value === "number" ? `${value}px` : value;
+          }
+          break;
+        case "minw":
+        case "min-width":
+          style.minWidth = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "maxw":
+        case "max-width":
+          style.maxWidth = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "minh":
+        case "min-height":
+          style.minHeight = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "maxh":
+        case "max-height":
+          style.maxHeight = typeof value === "number" ? `${value}px` : value;
+          break;
+        // Colors
+        case "col":
+        case "color":
+        case "c":
+          style.color = String(value);
+          break;
+        case "bg":
+        case "background":
+          style.backgroundColor = String(value);
+          break;
+        // Border
+        case "bor":
+        case "border":
+          style.border = typeof value === "number" ? `${value}px solid` : String(value);
+          break;
+        case "boc":
+        case "border-color":
+          style.borderColor = String(value);
+          break;
+        case "rad":
+        case "radius":
+          style.borderRadius = typeof value === "number" ? `${value}px` : value;
+          break;
+        // Typography
+        case "font-size":
+        case "fs":
+          style.fontSize = typeof value === "number" ? `${value}px` : value;
+          break;
+        case "weight":
+          style.fontWeight = value;
+          break;
+        case "font":
+          style.fontFamily = String(value);
+          break;
+        case "line":
+        case "line-height":
+          style.lineHeight = value;
+          break;
+        // Visual
+        case "opacity":
+        case "o":
+          style.opacity = value;
+          break;
+        case "cursor":
+          style.cursor = String(value);
+          break;
+        case "overflow":
+          style.overflow = String(value);
+          break;
+        case "scroll":
+          style.overflowY = "auto";
+          break;
+        case "hidden":
+          style.display = "none";
+          break;
+      }
+    }
+    return style;
+  }
   function formatStyleObject(style) {
     const entries = Object.entries(style);
-    if (entries.length === 0) return "";
-    return entries.map(([key, value]) => {
+    if (entries.length === 0) return "{}";
+    const parts = entries.map(([key, value]) => {
       const formattedValue = typeof value === "string" ? `'${value}'` : value;
       return `${key}: ${formattedValue}`;
-    }).join(", ");
-  }
-  function formatStyleEntries(style) {
-    const entries = Object.entries(style);
-    if (entries.length === 0) return "";
-    return entries.map(([key, value]) => {
-      const formattedValue = typeof value === "string" ? `'${value}'` : value;
-      return `${key}: ${formattedValue}`;
-    }).join(", ");
+    });
+    return `{ ${parts.join(", ")} }`;
   }
 
   // src/backends/static.ts
@@ -6657,6 +7026,41 @@ ${this.currentIndent()}]`;
       };
     }
     /**
+     * Get properties for a component definition by name
+     * Used when clicking on a component definition line in the editor
+     */
+    getPropertiesForComponentDefinition(componentName) {
+      const componentDef = this.componentMap.get(componentName);
+      if (!componentDef) {
+        return null;
+      }
+      const allProperties = [];
+      for (const prop of componentDef.properties) {
+        allProperties.push(this.extractProperty(prop, "component"));
+      }
+      const inheritedProps = this.getInheritedProperties(componentDef);
+      for (const prop of inheritedProps) {
+        if (!allProperties.some((p) => p.name === prop.name)) {
+          allProperties.push(prop);
+        }
+      }
+      if (this.showAllProperties) {
+        this.addAvailableProperties(allProperties);
+      }
+      const categories = this.showAllProperties ? this.categorizeAllProperties(allProperties) : this.categorizeProperties(allProperties);
+      return {
+        nodeId: componentDef.nodeId || `def-${componentName}`,
+        componentName,
+        instanceName: void 0,
+        isDefinition: true,
+        isTemplateInstance: false,
+        templateId: void 0,
+        categories,
+        allProperties,
+        showAllProperties: this.showAllProperties
+      };
+    }
+    /**
      * Add all available properties from schema (not already set)
      */
     addAvailableProperties(existingProps) {
@@ -6968,7 +7372,7 @@ ${this.currentIndent()}]`;
     result.indent = indentMatch ? indentMatch[1] : "";
     const content = line.substring(result.indent.length);
     if (!content) return result;
-    const componentMatch = content.match(/^([A-Z][a-zA-Z0-9]*(?:\s+as\s+[A-Z][a-zA-Z0-9]*)?:?)/);
+    const componentMatch = content.match(/^([a-zA-Z][a-zA-Z0-9]*(?:\s+as\s+[a-zA-Z][a-zA-Z0-9]*)?:?)/);
     if (!componentMatch) return result;
     result.componentPart = componentMatch[1];
     let remaining = content.substring(componentMatch[0].length);
@@ -7812,6 +8216,145 @@ ${reindentedBlock}`;
         error
       };
     }
+    // ============================================================================
+    // ANIMATION METHODS
+    // ============================================================================
+    /**
+     * Update or create an animation definition
+     *
+     * @param animationName - Name of the animation
+     * @param animationData - Animation data to write
+     */
+    updateAnimation(animationName, animationData) {
+      const animationPattern = new RegExp(`^(\\s*)${animationName}\\s+as\\s+animation:`, "m");
+      const match = this.source.match(animationPattern);
+      const dsl = this.generateAnimationDSL(animationName, animationData);
+      if (match && match.index !== void 0) {
+        const startLine = this.source.substring(0, match.index).split("\n").length;
+        let endLine = startLine;
+        const lines = this.source.split("\n");
+        const baseIndent = match[1].length;
+        for (let i = startLine; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.trim() === "") continue;
+          const currentIndent = line.match(/^(\s*)/)?.[1].length || 0;
+          if (currentIndent <= baseIndent && i > startLine - 1) {
+            break;
+          }
+          endLine = i + 1;
+        }
+        const from = this.getCharacterOffset(startLine, 1);
+        const toOffset = this.getCharacterOffset(endLine, lines[endLine - 1].length + 1);
+        const newSource = this.source.substring(0, from) + dsl + this.source.substring(toOffset);
+        return {
+          success: true,
+          newSource,
+          change: { from, to: toOffset, insert: dsl }
+        };
+      } else {
+        const insertPosition = this.findAnimationInsertPosition();
+        const newSource = this.source.substring(0, insertPosition) + dsl + "\n\n" + this.source.substring(insertPosition);
+        return {
+          success: true,
+          newSource,
+          change: { from: insertPosition, to: insertPosition, insert: dsl + "\n\n" }
+        };
+      }
+    }
+    /**
+     * Generate animation DSL code from data
+     */
+    generateAnimationDSL(name, data) {
+      const lines = [];
+      lines.push(`${name} as animation: ${data.easing}`);
+      const times = /* @__PURE__ */ new Set();
+      for (const track of data.tracks) {
+        times.add(track.startTime);
+        times.add(track.endTime);
+      }
+      const sortedTimes = Array.from(times).sort((a, b) => a - b);
+      for (const time of sortedTimes) {
+        const props = [];
+        for (const track of data.tracks) {
+          if (track.startTime === time) {
+            props.push(`${track.property} ${track.fromValue}`);
+          } else if (track.endTime === time) {
+            props.push(`${track.property} ${track.toValue}`);
+          }
+        }
+        if (props.length > 0) {
+          lines.push(`  ${time.toFixed(2)} ${props.join(", ")}`);
+        }
+      }
+      return lines.join("\n");
+    }
+    /**
+     * Find position to insert new animation (after tokens, before components)
+     */
+    findAnimationInsertPosition() {
+      const lines = this.source.split("\n");
+      let position = 0;
+      let lastTokenLine = -1;
+      let firstComponentLine = -1;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("$")) {
+          lastTokenLine = i;
+        }
+        if (/^[A-Z][a-zA-Z0-9]*\s*(:|as\s)/.test(line) && firstComponentLine === -1) {
+          firstComponentLine = i;
+        }
+      }
+      if (lastTokenLine >= 0) {
+        const targetLine = lastTokenLine + 1;
+        position = this.getCharacterOffset(targetLine + 1, 1);
+      } else if (firstComponentLine >= 0) {
+        position = this.getCharacterOffset(firstComponentLine + 1, 1);
+      }
+      return position;
+    }
+    /**
+     * Add animation keyframe
+     */
+    addAnimationKeyframe(animationName, time, properties2) {
+      const animationPattern = new RegExp(`^(\\s*)${animationName}\\s+as\\s+animation:`, "m");
+      const match = this.source.match(animationPattern);
+      if (!match || match.index === void 0) {
+        return this.errorResult(`Animation not found: ${animationName}`);
+      }
+      const startLine = this.source.substring(0, match.index).split("\n").length;
+      const lines = this.source.split("\n");
+      const baseIndent = match[1].length;
+      const keyframeIndent = "  ".repeat(baseIndent / 2 + 1);
+      let insertLine = startLine;
+      for (let i = startLine; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === "") continue;
+        const currentIndent = line.match(/^(\s*)/)?.[1].length || 0;
+        if (currentIndent <= baseIndent && i > startLine - 1) {
+          break;
+        }
+        const keyframeMatch = line.match(/^\s*([\d.]+)\s+/);
+        if (keyframeMatch) {
+          const lineTime = parseFloat(keyframeMatch[1]);
+          if (lineTime < time) {
+            insertLine = i + 1;
+          }
+        }
+        if (i >= startLine - 1) {
+          insertLine = i + 1;
+        }
+      }
+      const propsStr = properties2.map((p) => `${p.property} ${p.value}`).join(", ");
+      const newLine = `${keyframeIndent}${time.toFixed(2)} ${propsStr}`;
+      const insertPosition = this.getCharacterOffset(insertLine + 1, 1);
+      const newSource = this.source.substring(0, insertPosition) + newLine + "\n" + this.source.substring(insertPosition);
+      return {
+        success: true,
+        newSource,
+        change: { from: insertPosition, to: insertPosition, insert: newLine + "\n" }
+      };
+    }
     /**
      * Create an error result
      */
@@ -8125,6 +8668,19 @@ ${reindentedBlock}`;
       this.render(element);
     }
     /**
+     * Show properties for a component definition
+     * Used when clicking on a component definition line in the editor
+     */
+    showComponentDefinition(componentName) {
+      const element = this.propertyExtractor.getPropertiesForComponentDefinition(componentName);
+      if (!element) {
+        return false;
+      }
+      this.currentElement = element;
+      this.render(element);
+      return true;
+    }
+    /**
      * Render empty state (no selection)
      */
     renderEmpty() {
@@ -8170,27 +8726,6 @@ ${reindentedBlock}`;
       const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess;
       this.container.innerHTML = `
       ${this.renderBreadcrumb()}
-      <div class="pp-header">
-        <span class="pp-title">${this.escapeHtml(title)}</span>
-        ${badge ? `<span class="pp-badge">${badge}</span>` : ""}
-        <div class="pp-header-actions">
-          ${showDefineBtn ? `
-            <button class="pp-define-btn" title="Als Komponente definieren">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-            </button>
-          ` : ""}
-          <button class="pp-close" title="Clear selection">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
       ${element.isTemplateInstance ? `
         <div class="pp-template-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -8221,7 +8756,15 @@ ${reindentedBlock}`;
         ${!isLast ? '<span class="pp-crumb-sep">\u203A</span>' : ""}
       `;
       }).join("");
-      return `<div class="pp-breadcrumb">${crumbs}</div>`;
+      return `<div class="pp-breadcrumb">
+      <div class="pp-breadcrumb-crumbs">${crumbs}</div>
+      <button class="pp-close" title="Clear selection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>`;
     }
     /**
      * Render property categories
@@ -8868,23 +9411,12 @@ ${reindentedBlock}`;
       const colValue = colProp?.value || "";
       const bgIsOverride = bgProp?.source === "instance";
       const colIsOverride = colProp?.source === "instance";
-      const allColorTokens = this.getColorTokens();
-      const bgTokens = allColorTokens.filter((t) => t.name.endsWith(".bg"));
-      const colTokens = allColorTokens.filter((t) => t.name.endsWith(".col"));
-      const bgTokensToUse = bgTokens.length > 0 ? bgTokens : this.DEFAULT_BG_TOKENS;
-      const colTokensToUse = colTokens.length > 0 ? colTokens : this.DEFAULT_COL_TOKENS;
-      const bgTokenValues = bgTokensToUse.map((t) => t.value.toLowerCase());
-      const bgHasCustom = bgValue && !bgTokenValues.includes(bgValue.toLowerCase());
-      const colTokenValues = colTokensToUse.map((t) => t.value.toLowerCase());
-      const colHasCustom = colValue && !colTokenValues.includes(colValue.toLowerCase());
-      const bgSwatches = bgTokensToUse.map((token) => {
-        const isActive = bgValue.toLowerCase() === token.value.toLowerCase();
-        return `<button class="color-swatch ${isActive ? "active" : ""}" style="background: ${token.value}" data-color-prop="bg" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`;
-      }).join("");
-      const colSwatches = colTokensToUse.map((token) => {
-        const isActive = colValue.toLowerCase() === token.value.toLowerCase();
-        return `<button class="color-swatch ${isActive ? "active" : ""}" style="background: ${token.value}" data-color-prop="color" data-color="${token.value}" data-token="$${token.name}" title="$${token.name}"></button>`;
-      }).join("");
+      const bgDisplay = bgValue.startsWith("$") ? bgValue : bgValue || "none";
+      const colDisplay = colValue.startsWith("$") ? colValue : colValue || "none";
+      const bgIsToken = bgValue.startsWith("$");
+      const colIsToken = colValue.startsWith("$");
+      const bgSwatchColor = bgIsToken ? this.resolveTokenValue(bgValue) : bgValue;
+      const colSwatchColor = colIsToken ? this.resolveTokenValue(colValue) : colValue;
       return `
       <div class="section">
         <div class="section-label">Color</div>
@@ -8892,21 +9424,19 @@ ${reindentedBlock}`;
           <div class="prop-row${bgIsOverride ? " override" : ""}">
             <span class="prop-label">Background</span>
             <div class="prop-content">
-              <div class="color-group">
-                ${bgHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(bgValue)}" data-color-prop="bg" data-color="${this.escapeHtml(bgValue)}" title="Current"></button>` : ""}
-                ${bgSwatches}
+              <div class="pp-color-trigger" data-color-prop="bg" data-current-value="${this.escapeHtml(bgValue)}">
+                <div class="pp-color-swatch${bgValue ? "" : " empty"}" style="${bgSwatchColor ? `background: ${this.escapeHtml(bgSwatchColor)}` : ""}"></div>
+                <span class="pp-color-value${bgIsToken ? " token" : ""}">${this.escapeHtml(bgDisplay)}</span>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(bgValue)}" data-prop="bg" placeholder="#hex">
             </div>
           </div>
           <div class="prop-row${colIsOverride ? " override" : ""}">
             <span class="prop-label">Text</span>
             <div class="prop-content">
-              <div class="color-group">
-                ${colHasCustom ? `<button class="color-swatch active" style="background: ${this.escapeHtml(colValue)}" data-color-prop="color" data-color="${this.escapeHtml(colValue)}" title="Current"></button>` : ""}
-                ${colSwatches}
+              <div class="pp-color-trigger" data-color-prop="color" data-current-value="${this.escapeHtml(colValue)}">
+                <div class="pp-color-swatch${colValue ? "" : " empty"}" style="${colSwatchColor ? `background: ${this.escapeHtml(colSwatchColor)}` : ""}"></div>
+                <span class="pp-color-value${colIsToken ? " token" : ""}">${this.escapeHtml(colDisplay)}</span>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(colValue)}" data-prop="color" placeholder="#hex">
             </div>
           </div>
         </div>
@@ -9069,7 +9599,11 @@ ${reindentedBlock}`;
       const borderValue = borderProp?.value || "";
       const borderParts = borderValue.split(/\s+/).filter(Boolean);
       const borderWidth = borderParts[0] || "0";
+      const borderColor = borderParts.find((p) => p.startsWith("#") || p.startsWith("$")) || "";
       const borderIsOverride = borderProp?.source === "instance";
+      const borderColorIsToken = borderColor.startsWith("$");
+      const borderColorDisplay = borderColor || "none";
+      const borderColorSwatch = borderColorIsToken ? this.resolveTokenValue(borderColor) : borderColor;
       const dynamicRadiusTokens = this.getRadiusTokens();
       const radiusTokens = dynamicRadiusTokens.length > 0 ? [{ label: "0", value: "0", tokenRef: "" }, ...dynamicRadiusTokens.map((t) => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))] : [
         { label: "0", value: "0", tokenRef: "" },
@@ -9088,6 +9622,11 @@ ${reindentedBlock}`;
         const isActive = borderWidth === w;
         return `<button class="toggle-btn ${isActive ? "active" : ""}" data-border-width="${w}" title="${w}px">${w}</button>`;
       }).join("");
+      const borderColorTrigger = `
+      <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+        <div class="pp-color-swatch${borderColor ? "" : " empty"}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ""}"></div>
+      </div>
+    `;
       return `
       <div class="section">
         <div class="section-label">Border</div>
@@ -9153,10 +9692,7 @@ ${reindentedBlock}`;
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333" title="$border.col"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6" title="$primary.col"></button>
-              </div>
+              ${borderColorTrigger}
               <button class="toggle-btn expand-btn" data-expand="border" title="Expand">
                 <svg class="icon" viewBox="0 0 14 14">
                   <path d="M4 6l3 3 3-3"/>
@@ -9170,9 +9706,8 @@ ${reindentedBlock}`;
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-t" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? "" : " empty"}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ""}"></div>
               </div>
             </div>
           </div>
@@ -9182,9 +9717,8 @@ ${reindentedBlock}`;
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-r" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? "" : " empty"}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ""}"></div>
               </div>
             </div>
           </div>
@@ -9194,9 +9728,8 @@ ${reindentedBlock}`;
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-b" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? "" : " empty"}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ""}"></div>
               </div>
             </div>
           </div>
@@ -9206,9 +9739,8 @@ ${reindentedBlock}`;
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
-              <div class="color-group">
-                <button class="color-swatch" style="background: #333" data-border-color="#333"></button>
-                <button class="color-swatch" style="background: #3B82F6" data-border-color="#3B82F6"></button>
+              <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-l" data-border-width="${borderWidth}" data-current-value="${this.escapeHtml(borderColor)}">
+                <div class="pp-color-swatch${borderColor ? "" : " empty"}" style="${borderColorSwatch ? `background: ${this.escapeHtml(borderColorSwatch)}` : ""}"></div>
               </div>
             </div>
           </div>
@@ -9481,14 +10013,12 @@ ${reindentedBlock}`;
       const hoverScaleValue = hoverScaleProp?.value || "";
       const hoverBorValue = hoverBorProp?.value || "";
       const hoverBocValue = hoverBocProp?.value || "";
-      const bgSwatches = this.COLOR_V2_SWATCHES.bg.map((swatch) => {
-        const isActive = hoverBgValue === swatch.value;
-        return `<button class="pp-color-btn ${isActive ? "active" : ""}" data-hover-prop="hover-bg" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`;
-      }).join("");
-      const colSwatches = this.COLOR_V2_SWATCHES.text.map((swatch) => {
-        const isActive = hoverColValue === swatch.value;
-        return `<button class="pp-color-btn ${isActive ? "active" : ""}" data-hover-prop="hover-col" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`;
-      }).join("");
+      const hoverBgDisplay = hoverBgValue.startsWith("$") ? hoverBgValue : hoverBgValue || "none";
+      const hoverColDisplay = hoverColValue.startsWith("$") ? hoverColValue : hoverColValue || "none";
+      const hoverBgIsToken = hoverBgValue.startsWith("$");
+      const hoverColIsToken = hoverColValue.startsWith("$");
+      const hoverBgSwatchColor = hoverBgIsToken ? this.resolveTokenValue(hoverBgValue) : hoverBgValue;
+      const hoverColSwatchColor = hoverColIsToken ? this.resolveTokenValue(hoverColValue) : hoverColValue;
       const opacityTokens = this.HOVER_OPACITY_PRESETS.map((val) => {
         const isActive = hoverOpaValue === val;
         const label = val === "1" ? "1" : val.replace("0.", ".");
@@ -9500,33 +10030,28 @@ ${reindentedBlock}`;
         const isActive = currentBorderWidth === width;
         return `<button class="pp-toggle-btn ${isActive ? "active" : ""}" data-hover-bor-width="${width}" title="${width}px">${width}</button>`;
       }).join("");
-      const borderColors = [
-        { label: "Border", value: "#333" },
-        { label: "Primary", value: "#3B82F6" }
-      ];
-      const borderColorSwatches = borderColors.map((swatch) => {
-        const isActive = hoverBocValue === swatch.value || hoverBorValue.includes(swatch.value);
-        return `<button class="pp-color-btn ${isActive ? "active" : ""}" data-hover-prop="hover-boc" data-color="${this.escapeHtml(swatch.value)}" title="${swatch.label}" style="background: ${this.escapeHtml(swatch.value)}"></button>`;
-      }).join("");
+      const hoverBorderColor = hoverBocValue || hoverBorValue.split(" ").find((p) => p.startsWith("#") || p.startsWith("$")) || "";
+      const hoverBorderColorIsToken = hoverBorderColor.startsWith("$");
+      const hoverBorderColorSwatch = hoverBorderColorIsToken ? this.resolveTokenValue(hoverBorderColor) : hoverBorderColor;
       return `
       <div class="pp-section">
         <div class="pp-label">Hover</div>
         <div class="pp-prop-row">
           <span class="pp-prop-label">BG</span>
           <div class="pp-prop-content">
-            <div class="pp-color-group">
-              ${bgSwatches}
+            <div class="pp-color-trigger" data-color-prop="hover-bg" data-current-value="${this.escapeHtml(hoverBgValue)}">
+              <div class="pp-color-swatch${hoverBgValue ? "" : " empty"}" style="${hoverBgSwatchColor ? `background: ${this.escapeHtml(hoverBgSwatchColor)}` : ""}"></div>
+              <span class="pp-color-value${hoverBgIsToken ? " token" : ""}">${this.escapeHtml(hoverBgDisplay)}</span>
             </div>
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverBgValue)}" data-hover-prop="hover-bg" placeholder="#color">
           </div>
         </div>
         <div class="pp-prop-row">
           <span class="pp-prop-label">Color</span>
           <div class="pp-prop-content">
-            <div class="pp-color-group">
-              ${colSwatches}
+            <div class="pp-color-trigger" data-color-prop="hover-col" data-current-value="${this.escapeHtml(hoverColValue)}">
+              <div class="pp-color-swatch${hoverColValue ? "" : " empty"}" style="${hoverColSwatchColor ? `background: ${this.escapeHtml(hoverColSwatchColor)}` : ""}"></div>
+              <span class="pp-color-value${hoverColIsToken ? " token" : ""}">${this.escapeHtml(hoverColDisplay)}</span>
             </div>
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverColValue)}" data-hover-prop="hover-col" placeholder="#color">
           </div>
         </div>
         <div class="pp-prop-row">
@@ -9550,8 +10075,8 @@ ${reindentedBlock}`;
             <div class="pp-toggle-group">
               ${borderToggles}
             </div>
-            <div class="pp-color-group">
-              ${borderColorSwatches}
+            <div class="pp-color-trigger pp-color-trigger-compact" data-color-prop="hover-boc" data-hover-bor-width="${currentBorderWidth}" data-current-value="${this.escapeHtml(hoverBorderColor)}">
+              <div class="pp-color-swatch${hoverBorderColor ? "" : " empty"}" style="${hoverBorderColorSwatch ? `background: ${this.escapeHtml(hoverBorderColorSwatch)}` : ""}"></div>
             </div>
           </div>
         </div>
@@ -9947,6 +10472,10 @@ ${reindentedBlock}`;
       const colorPickers = this.container.querySelectorAll(".pp-color-picker");
       colorPickers.forEach((picker) => {
         picker.addEventListener("input", (e) => this.handleColorPickerChange(e));
+      });
+      const colorTriggers = this.container.querySelectorAll(".pp-color-trigger");
+      colorTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", (e) => this.handleColorTriggerClick(e));
       });
       const cursorSelect = this.container.querySelector(".pp-cursor-select");
       if (cursorSelect) {
@@ -11018,6 +11547,53 @@ ${reindentedBlock}`;
       const nodeId = this.currentElement.templateId || this.currentElement.nodeId;
       const result = this.codeModifier.updateProperty(nodeId, prop, color);
       this.onCodeChange(result);
+    }
+    /**
+     * Handle color trigger click - opens enhanced color picker
+     */
+    handleColorTriggerClick(e) {
+      const trigger = e.target.closest(".pp-color-trigger");
+      if (!trigger || !this.currentElement) return;
+      const colorProp = trigger.dataset.colorProp;
+      const borderColorProp = trigger.dataset.borderColorProp;
+      const currentValue = trigger.dataset.currentValue || "";
+      const nodeId = this.currentElement.templateId || this.currentElement.nodeId;
+      const rect = trigger.getBoundingClientRect();
+      const showColorPicker = window.showColorPickerForProperty;
+      if (!showColorPicker) {
+        console.warn("Color picker not available");
+        return;
+      }
+      const property = colorProp || borderColorProp || "bg";
+      showColorPicker(
+        rect.left,
+        rect.bottom + 4,
+        property,
+        currentValue,
+        (selectedColor) => {
+          if (borderColorProp) {
+            const borderWidth = trigger.dataset.borderWidth || "1";
+            const result = this.codeModifier.updateProperty(nodeId, borderColorProp, `${borderWidth} ${selectedColor}`);
+            this.onCodeChange(result);
+            return;
+          }
+          if (colorProp === "hover-boc") {
+            const borderWidth = trigger.dataset.hoverBorWidth || "1";
+            if (borderWidth !== "0") {
+              const result = this.codeModifier.updateProperty(nodeId, "hover-bor", `${borderWidth} ${selectedColor}`);
+              this.onCodeChange(result);
+            } else {
+              const result = this.codeModifier.updateProperty(nodeId, "hover-boc", selectedColor);
+              this.onCodeChange(result);
+            }
+            return;
+          }
+          if (colorProp) {
+            const result = this.codeModifier.updateProperty(nodeId, colorProp, selectedColor);
+            this.onCodeChange(result);
+          }
+        }
+      );
     }
     /**
      * Update a property value

@@ -546,16 +546,13 @@ const collapsedFolders = new Set()
 function renderFileItem(item, fileCount) {
   const filePath = item.path
   const baseName = item.filename.replace('.mirror', '')
-  const type = getFileType(filePath)
-  const ext = FILE_TYPES[type]?.extension || '.mir'
-  const displayName = baseName + ext
   const canDelete = fileCount > 1
   const fileIcon = getFileIcon(filePath)
 
   return `
     <div class="file ${filePath === currentFile ? 'active' : ''}" data-file="${filePath}">
       ${fileIcon}
-      <span class="file-name" data-filename="${filePath}">${displayName}</span>
+      <span class="file-name" data-filename="${filePath}">${baseName}</span>
       <button class="file-rename" data-file="${filePath}" title="Umbenennen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -637,15 +634,12 @@ function renderFileList() {
 
     itemsHtml = Object.keys(files).map(filename => {
       const baseName = filename.replace(/\.mirror$/, '')
-      const type = getFileType(filename)
-      const ext = FILE_TYPES[type]?.extension || '.mir'
-      const displayName = baseName + ext
       const canDelete = fileCount > 1
       const fileIcon = getFileIcon(filename)
       return `
         <div class="file ${filename === currentFile ? 'active' : ''}" data-file="${filename}">
           ${fileIcon}
-          <span class="file-name" data-filename="${filename}">${displayName}</span>
+          <span class="file-name" data-filename="${filename}">${baseName}</span>
           <button class="file-rename" data-file="${filename}" title="Umbenennen">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -1247,7 +1241,7 @@ function detectFileType(content) {
 // Get icon SVG for file (with color)
 function getFileIcon(filename, withColor = true) {
   const type = getFileType(filename)
-  const fileType = FILE_TYPES[type]
+  const fileType = FILE_TYPES[type] || FILE_TYPES.layout
   if (withColor) {
     return fileType.icon.replace('stroke="currentColor"', `stroke="${fileType.color}"`)
   }
@@ -1257,7 +1251,7 @@ function getFileIcon(filename, withColor = true) {
 // Get file type color
 function getFileTypeColor(filename) {
   const type = getFileType(filename)
-  return FILE_TYPES[type].color
+  return (FILE_TYPES[type] || FILE_TYPES.layout).color
 }
 
 // Create new file
@@ -3161,9 +3155,36 @@ function selectColor(hex) {
 // Close on escape or click outside
 // Note: Hash trigger mode handles Escape in hashColorKeyboardExtension (removes # char)
 document.addEventListener('keydown', (e) => {
-  if (colorPickerVisible && e.key === 'Escape' && !hashTriggerActive) {
-    hideColorPicker()
-    if (window.editor) window.editor.focus()
+  if (colorPickerVisible && !hashTriggerActive) {
+    switch (e.key) {
+      case 'Escape':
+        hideColorPicker()
+        if (window.editor) window.editor.focus()
+        break
+      case 'Enter':
+        e.preventDefault()
+        const selected = colorSwatchElements[selectedSwatchIndex]
+        if (selected) {
+          selectColor(selected.dataset.color.toUpperCase())
+        }
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        navigateSwatches('left')
+        break
+      case 'ArrowRight':
+        e.preventDefault()
+        navigateSwatches('right')
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        navigateSwatches('up')
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        navigateSwatches('down')
+        break
+    }
   }
 })
 
@@ -4172,6 +4193,1048 @@ document.addEventListener('mousedown', (e) => {
 // Load icons on startup
 loadIconList()
 
+// ==========================================
+// ANIMATION PICKER (Vanilla JS)
+// ==========================================
+
+const EASING_PRESETS = [
+  { name: 'linear', value: 'linear' },
+  { name: 'ease', value: 'ease' },
+  { name: 'ease-in', value: 'ease-in' },
+  { name: 'ease-out', value: 'ease-out' },
+  { name: 'ease-in-out', value: 'ease-in-out' },
+]
+
+const EASING_CURVES = {
+  'linear': 'M 0 36 L 36 0',
+  'ease': 'M 0 36 C 9 36, 25 0, 36 0',
+  'ease-in': 'M 0 36 C 16 36, 30 12, 36 0',
+  'ease-out': 'M 0 36 C 0 24, 25 0, 36 0',
+  'ease-in-out': 'M 0 36 C 16 36, 20 0, 36 0',
+}
+
+const animationPickerContainer = document.getElementById('animation-picker-container')
+let animationPickerDialog = null
+let animationPickerVisible = false
+let animationPickerLineStart = null
+let animationPickerData = null
+let animationPickerSelectedTrack = 0
+let animationPickerIsPlaying = false
+let animationPickerCurrentTime = 0
+let animationPickerAnimationFrame = null
+
+function createAnimationPickerDialog() {
+  const dialog = document.createElement('div')
+  dialog.className = 'animation-picker-dialog'
+  dialog.innerHTML = `
+    <div class="ap-header">
+      <div class="ap-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <input type="text" class="ap-name-input" value="">
+        <span class="ap-subtitle">as animation</span>
+      </div>
+      <div class="ap-actions">
+        <button class="ap-btn ap-btn-secondary" data-action="cancel">Cancel</button>
+        <button class="ap-btn ap-btn-primary" data-action="done">Done</button>
+      </div>
+    </div>
+    <div class="ap-body">
+      <div class="ap-playback">
+        <button class="ap-play-btn" data-action="play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>
+        </button>
+        <div class="ap-scrubber">
+          <div class="ap-scrubber-progress"></div>
+          <div class="ap-scrubber-handle"></div>
+        </div>
+        <div class="ap-time-display">
+          <span class="ap-current-time">0.00</span>s
+        </div>
+      </div>
+      <div class="ap-timeline">
+        <div class="ap-timeline-ruler">
+          <div class="ap-ruler-marks"></div>
+        </div>
+        <div class="ap-timeline-tracks">
+          <div class="ap-playhead"></div>
+        </div>
+        <button class="ap-add-track" data-action="add-track">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Add property
+        </button>
+      </div>
+      <div class="ap-section">
+        <div class="ap-section-label">Easing <span class="ap-selected-track"></span></div>
+        <div class="ap-easing-row">
+          <div class="ap-easing-presets"></div>
+          <div class="ap-curve-preview">
+            <svg viewBox="0 0 36 36"><path d=""/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="ap-section">
+        <div class="ap-section-label">Values <span class="ap-selected-track"></span></div>
+        <div class="ap-values-grid">
+          <span class="ap-value-label">From</span>
+          <input type="text" class="ap-value-input" data-field="from" value="">
+          <span class="ap-value-label">To</span>
+          <input type="text" class="ap-value-input" data-field="to" value="">
+        </div>
+      </div>
+      <div class="ap-options-row">
+        <div class="ap-option-group">
+          <span class="ap-option-label">Delay</span>
+          <input type="text" class="ap-option-input" data-field="delay" value="0">
+          <span class="ap-option-label">s</span>
+        </div>
+        <label class="ap-option-checkbox">
+          <input type="checkbox" data-field="loop">
+          Loop
+        </label>
+        <label class="ap-option-checkbox">
+          <input type="checkbox" data-field="reverse">
+          Reverse
+        </label>
+      </div>
+    </div>
+  `
+  injectAnimationPickerStyles()
+  return dialog
+}
+
+function showAnimationPicker(animationData, lineStart) {
+  if (!animationPickerContainer) return
+
+  animationPickerLineStart = lineStart
+  animationPickerData = animationData || {
+    name: 'FadeUp',
+    easing: 'ease-out',
+    duration: 0.3,
+    tracks: [
+      { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
+    ],
+  }
+
+  // Create dialog if not exists
+  if (!animationPickerDialog) {
+    animationPickerDialog = createAnimationPickerDialog()
+    animationPickerContainer.appendChild(animationPickerDialog)
+    setupAnimationPickerEvents()
+  }
+
+  // Update UI with data
+  updateAnimationPickerUI()
+  animationPickerDialog.style.display = 'block'
+  animationPickerVisible = true
+}
+
+function hideAnimationPicker() {
+  pauseAnimationPicker()
+  if (animationPickerDialog) {
+    animationPickerDialog.style.display = 'none'
+  }
+  animationPickerVisible = false
+  animationPickerLineStart = null
+  if (window.editor) window.editor.focus()
+}
+
+function updateAnimationPickerUI() {
+  if (!animationPickerDialog || !animationPickerData) return
+
+  // Update name
+  const nameInput = animationPickerDialog.querySelector('.ap-name-input')
+  if (nameInput) nameInput.value = animationPickerData.name
+
+  // Update easing presets
+  const presetsContainer = animationPickerDialog.querySelector('.ap-easing-presets')
+  if (presetsContainer) {
+    presetsContainer.innerHTML = EASING_PRESETS.map(e => `
+      <button class="ap-easing-btn ${e.value === animationPickerData.easing ? 'active' : ''}" data-easing="${e.value}">${e.name}</button>
+    `).join('')
+  }
+
+  // Update curve preview
+  const curvePath = animationPickerDialog.querySelector('.ap-curve-preview path')
+  if (curvePath) {
+    curvePath.setAttribute('d', EASING_CURVES[animationPickerData.easing] || EASING_CURVES['ease-out'])
+  }
+
+  // Update tracks
+  renderAnimationTracks()
+
+  // Update ruler
+  updateAnimationRuler()
+
+  // Update values
+  updateAnimationValues()
+
+  // Update options
+  const delayInput = animationPickerDialog.querySelector('.ap-option-input[data-field="delay"]')
+  if (delayInput) delayInput.value = animationPickerData.delay || 0
+
+  const loopCheckbox = animationPickerDialog.querySelector('input[data-field="loop"]')
+  if (loopCheckbox) loopCheckbox.checked = animationPickerData.loop || false
+
+  const reverseCheckbox = animationPickerDialog.querySelector('input[data-field="reverse"]')
+  if (reverseCheckbox) reverseCheckbox.checked = animationPickerData.reverse || false
+}
+
+function renderAnimationTracks() {
+  const tracksContainer = animationPickerDialog.querySelector('.ap-timeline-tracks')
+  if (!tracksContainer) return
+
+  // Keep playhead, remove old tracks
+  const playhead = tracksContainer.querySelector('.ap-playhead')
+  tracksContainer.innerHTML = ''
+  if (playhead) tracksContainer.appendChild(playhead)
+
+  // Add tracks
+  animationPickerData.tracks.forEach((track, index) => {
+    const startPercent = (track.startTime / animationPickerData.duration) * 100
+    const widthPercent = ((track.endTime - track.startTime) / animationPickerData.duration) * 100
+
+    const trackEl = document.createElement('div')
+    trackEl.className = 'ap-timeline-track'
+    trackEl.dataset.trackIndex = index
+    trackEl.innerHTML = `
+      <div class="ap-track-label">${track.property}</div>
+      <div class="ap-track-content">
+        <div class="ap-keyframe-bar ${index === animationPickerSelectedTrack ? 'selected' : ''}"
+             style="left: ${startPercent}%; width: ${widthPercent}%;"
+             data-track-index="${index}">
+          <div class="ap-keyframe-handle start"></div>
+          <div class="ap-keyframe-handle end"></div>
+        </div>
+      </div>
+    `
+    tracksContainer.appendChild(trackEl)
+  })
+}
+
+function updateAnimationRuler() {
+  const rulerMarks = animationPickerDialog.querySelector('.ap-ruler-marks')
+  if (!rulerMarks) return
+
+  const marks = []
+  const steps = 4
+  for (let i = 0; i <= steps; i++) {
+    const time = (i / steps) * animationPickerData.duration
+    const percent = (i / steps) * 100
+    marks.push(`<div class="ap-ruler-mark" style="left: ${percent}%"><span>${time.toFixed(2)}</span></div>`)
+  }
+  rulerMarks.innerHTML = marks.join('')
+}
+
+function updateAnimationValues() {
+  const track = animationPickerData.tracks[animationPickerSelectedTrack]
+  if (!track) return
+
+  const fromInput = animationPickerDialog.querySelector('.ap-value-input[data-field="from"]')
+  const toInput = animationPickerDialog.querySelector('.ap-value-input[data-field="to"]')
+
+  if (fromInput) fromInput.value = track.fromValue
+  if (toInput) toInput.value = track.toValue
+
+  // Update selected track labels
+  animationPickerDialog.querySelectorAll('.ap-selected-track').forEach(el => {
+    el.textContent = `(${track.property})`
+  })
+}
+
+function selectAnimationTrack(index) {
+  animationPickerSelectedTrack = index
+
+  // Update bar selection
+  animationPickerDialog.querySelectorAll('.ap-keyframe-bar').forEach((bar, i) => {
+    bar.classList.toggle('selected', i === index)
+  })
+
+  updateAnimationValues()
+}
+
+function setupAnimationPickerEvents() {
+  if (!animationPickerDialog) return
+
+  // Button actions
+  animationPickerDialog.addEventListener('click', (e) => {
+    const target = e.target
+    const action = target.closest('[data-action]')?.dataset.action
+
+    switch (action) {
+      case 'play':
+        toggleAnimationPlay()
+        break
+      case 'cancel':
+        hideAnimationPicker()
+        break
+      case 'done':
+        updateAnimationInCode(animationPickerData)
+        hideAnimationPicker()
+        break
+      case 'add-track':
+        addAnimationTrack()
+        break
+    }
+
+    // Easing button
+    const easingBtn = target.closest('.ap-easing-btn')
+    if (easingBtn) {
+      animationPickerData.easing = easingBtn.dataset.easing
+      updateAnimationPickerUI()
+    }
+
+    // Track selection
+    const keyframeBar = target.closest('.ap-keyframe-bar')
+    if (keyframeBar) {
+      e.stopPropagation()
+      selectAnimationTrack(parseInt(keyframeBar.dataset.trackIndex))
+    }
+  })
+
+  // Scrubber
+  const scrubber = animationPickerDialog.querySelector('.ap-scrubber')
+  if (scrubber) {
+    scrubber.addEventListener('mousedown', (e) => {
+      pauseAnimationPicker()
+      handleAnimationScrub(e, scrubber)
+    })
+  }
+
+  // Value inputs
+  animationPickerDialog.querySelectorAll('.ap-value-input').forEach(input => {
+    input.addEventListener('change', () => {
+      const field = input.dataset.field
+      const track = animationPickerData.tracks[animationPickerSelectedTrack]
+      if (track) {
+        const val = parseFloat(input.value)
+        if (field === 'from') track.fromValue = isNaN(val) ? input.value : val
+        if (field === 'to') track.toValue = isNaN(val) ? input.value : val
+      }
+    })
+  })
+
+  // Option inputs
+  animationPickerDialog.querySelector('.ap-option-input[data-field="delay"]')?.addEventListener('change', (e) => {
+    animationPickerData.delay = parseFloat(e.target.value) || 0
+  })
+
+  animationPickerDialog.querySelector('input[data-field="loop"]')?.addEventListener('change', (e) => {
+    animationPickerData.loop = e.target.checked
+  })
+
+  animationPickerDialog.querySelector('input[data-field="reverse"]')?.addEventListener('change', (e) => {
+    animationPickerData.reverse = e.target.checked
+  })
+
+  // Name input
+  animationPickerDialog.querySelector('.ap-name-input')?.addEventListener('change', (e) => {
+    animationPickerData.name = e.target.value
+  })
+}
+
+function handleAnimationScrub(e, scrubber) {
+  const rect = scrubber.getBoundingClientRect()
+
+  const updateScrub = (e) => {
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    animationPickerCurrentTime = x
+    updateAnimationPlayhead(x)
+  }
+
+  updateScrub(e)
+
+  const onMove = (e) => updateScrub(e)
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+  }
+
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('mouseup', onUp)
+}
+
+function toggleAnimationPlay() {
+  if (animationPickerIsPlaying) {
+    pauseAnimationPicker()
+  } else {
+    playAnimationPicker()
+  }
+}
+
+function playAnimationPicker() {
+  if (animationPickerIsPlaying) return
+  animationPickerIsPlaying = true
+
+  const playBtn = animationPickerDialog.querySelector('.ap-play-btn')
+  if (playBtn) {
+    playBtn.innerHTML = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/></svg>'
+  }
+
+  const startTime = performance.now() - (animationPickerCurrentTime * animationPickerData.duration * 1000)
+
+  const animate = (now) => {
+    if (!animationPickerIsPlaying) return
+
+    animationPickerCurrentTime = ((now - startTime) / 1000) / animationPickerData.duration
+
+    if (animationPickerCurrentTime >= 1) {
+      if (animationPickerData.loop) {
+        animationPickerCurrentTime = 0
+      } else {
+        animationPickerCurrentTime = 1
+        pauseAnimationPicker()
+        return
+      }
+    }
+
+    updateAnimationPlayhead(animationPickerCurrentTime)
+    animationPickerAnimationFrame = requestAnimationFrame(animate)
+  }
+
+  animationPickerAnimationFrame = requestAnimationFrame(animate)
+}
+
+function pauseAnimationPicker() {
+  animationPickerIsPlaying = false
+
+  const playBtn = animationPickerDialog?.querySelector('.ap-play-btn')
+  if (playBtn) {
+    playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>'
+  }
+
+  if (animationPickerAnimationFrame) {
+    cancelAnimationFrame(animationPickerAnimationFrame)
+    animationPickerAnimationFrame = null
+  }
+}
+
+function updateAnimationPlayhead(progress) {
+  const percent = progress * 100
+
+  const scrubberProgress = animationPickerDialog?.querySelector('.ap-scrubber-progress')
+  const scrubberHandle = animationPickerDialog?.querySelector('.ap-scrubber-handle')
+  if (scrubberProgress) scrubberProgress.style.width = `${percent}%`
+  if (scrubberHandle) scrubberHandle.style.left = `${percent}%`
+
+  const playhead = animationPickerDialog?.querySelector('.ap-playhead')
+  const trackContent = animationPickerDialog?.querySelector('.ap-track-content')
+  if (playhead && trackContent) {
+    const trackWidth = trackContent.offsetWidth
+    playhead.style.left = `${72 + (percent / 100) * trackWidth}px`
+  }
+
+  const currentTimeEl = animationPickerDialog?.querySelector('.ap-current-time')
+  if (currentTimeEl) {
+    currentTimeEl.textContent = (progress * animationPickerData.duration).toFixed(2)
+  }
+}
+
+function addAnimationTrack() {
+  const newTrack = {
+    property: 'scale',
+    startTime: 0,
+    endTime: animationPickerData.duration,
+    fromValue: 1,
+    toValue: 1.1,
+  }
+  animationPickerData.tracks.push(newTrack)
+  renderAnimationTracks()
+}
+
+function injectAnimationPickerStyles() {
+  if (document.getElementById('animation-picker-styles')) return
+
+  const style = document.createElement('style')
+  style.id = 'animation-picker-styles'
+  style.textContent = `
+    .animation-picker-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1f;
+      border: 1px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      width: 520px;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e4e4e7;
+      font-size: 12px;
+      display: none;
+    }
+    .ap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #222228;
+      border-bottom: 1px solid #333;
+      border-radius: 8px 8px 0 0;
+    }
+    .ap-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .ap-name-input {
+      background: transparent;
+      border: none;
+      color: #e4e4e7;
+      font-size: 12px;
+      font-weight: 600;
+      width: 120px;
+      padding: 2px 4px;
+    }
+    .ap-name-input:focus {
+      outline: none;
+      background: #27272a;
+      border-radius: 3px;
+    }
+    .ap-subtitle { color: #555; font-weight: 400; }
+    .ap-actions { display: flex; gap: 6px; }
+    .ap-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ap-btn-secondary { background: #333; color: #999; }
+    .ap-btn-secondary:hover { background: #444; color: #fff; }
+    .ap-btn-primary { background: #3B82F6; color: #fff; }
+    .ap-btn-primary:hover { background: #2563EB; }
+    .ap-body { padding: 12px; }
+    .ap-playback {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ap-play-btn {
+      width: 28px;
+      height: 28px;
+      background: #3B82F6;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .ap-play-btn:hover { background: #2563EB; }
+    .ap-play-btn svg { width: 14px; height: 14px; }
+    .ap-scrubber {
+      flex: 1;
+      height: 6px;
+      background: #27272a;
+      border-radius: 3px;
+      position: relative;
+      cursor: pointer;
+    }
+    .ap-scrubber-progress {
+      height: 100%;
+      background: #3B82F6;
+      border-radius: 3px;
+      width: 0%;
+    }
+    .ap-scrubber-handle {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      cursor: grab;
+      left: 0%;
+    }
+    .ap-time-display {
+      font-size: 11px;
+      font-family: 'SF Mono', monospace;
+      color: #666;
+      min-width: 50px;
+      text-align: right;
+    }
+    .ap-timeline {
+      background: #111115;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .ap-timeline-ruler {
+      height: 20px;
+      background: #1a1a1f;
+      border-bottom: 1px solid #27272a;
+      position: relative;
+      display: flex;
+      padding-left: 72px;
+    }
+    .ap-ruler-marks { flex: 1; position: relative; }
+    .ap-ruler-mark {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translateX(-50%);
+    }
+    .ap-ruler-mark span { font-size: 9px; color: #555; margin-top: 3px; }
+    .ap-ruler-mark::after {
+      content: '';
+      width: 1px;
+      flex: 1;
+      background: #333;
+    }
+    .ap-timeline-tracks { position: relative; }
+    .ap-timeline-track {
+      display: flex;
+      height: 28px;
+      border-bottom: 1px solid #1f1f24;
+    }
+    .ap-timeline-track:last-child { border-bottom: none; }
+    .ap-track-label {
+      width: 72px;
+      padding: 0 8px;
+      font-size: 11px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      background: #1a1a1f;
+      border-right: 1px solid #27272a;
+      flex-shrink: 0;
+    }
+    .ap-track-content {
+      flex: 1;
+      position: relative;
+      background: #111115;
+    }
+    .ap-keyframe-bar {
+      position: absolute;
+      top: 5px;
+      height: 18px;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      min-width: 16px;
+    }
+    .ap-keyframe-bar:hover { filter: brightness(1.1); }
+    .ap-keyframe-bar.selected { box-shadow: 0 0 0 2px #fff; }
+    .ap-keyframe-handle {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 2px;
+      cursor: ew-resize;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .ap-keyframe-bar:hover .ap-keyframe-handle,
+    .ap-keyframe-bar.selected .ap-keyframe-handle { opacity: 1; }
+    .ap-keyframe-handle.start { left: -4px; }
+    .ap-keyframe-handle.end { right: -4px; }
+    .ap-playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #ef4444;
+      z-index: 10;
+      pointer-events: none;
+      left: 72px;
+    }
+    .ap-playhead::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #ef4444;
+    }
+    .ap-add-track {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #555;
+      background: transparent;
+      border: none;
+      border-top: 1px solid #27272a;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.15s;
+    }
+    .ap-add-track:hover { color: #888; background: rgba(255,255,255,0.02); }
+    .ap-add-track svg { width: 12px; height: 12px; }
+    .ap-section { margin-bottom: 12px; }
+    .ap-section:last-child { margin-bottom: 0; }
+    .ap-section-label {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .ap-selected-track { font-weight: normal; text-transform: none; }
+    .ap-easing-row { display: flex; align-items: center; gap: 8px; }
+    .ap-easing-presets { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
+    .ap-easing-btn {
+      padding: 4px 8px;
+      font-size: 10px;
+      color: #888;
+      background: #27272a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ap-easing-btn:hover { color: #fff; border-color: #444; }
+    .ap-easing-btn.active { background: #3B82F6; border-color: #3B82F6; color: #fff; }
+    .ap-curve-preview {
+      width: 48px;
+      height: 48px;
+      background: #27272a;
+      border-radius: 4px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ap-curve-preview svg {
+      position: absolute;
+      inset: 6px;
+      width: calc(100% - 12px);
+      height: calc(100% - 12px);
+    }
+    .ap-curve-preview path { fill: none; stroke: #3B82F6; stroke-width: 2; }
+    .ap-values-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr;
+      gap: 6px 8px;
+      align-items: center;
+    }
+    .ap-value-label { font-size: 10px; color: #555; }
+    .ap-value-input {
+      padding: 4px 6px;
+      font-size: 11px;
+      font-family: 'SF Mono', monospace;
+      background: #27272a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e4e4e7;
+      width: 100%;
+    }
+    .ap-value-input:focus { outline: none; border-color: #3B82F6; }
+    .ap-options-row {
+      display: flex;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #27272a;
+    }
+    .ap-option-group { display: flex; align-items: center; gap: 6px; }
+    .ap-option-label { font-size: 10px; color: #555; }
+    .ap-option-input {
+      width: 50px;
+      padding: 4px 6px;
+      font-size: 11px;
+      font-family: 'SF Mono', monospace;
+      background: #27272a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e4e4e7;
+    }
+    .ap-option-input:focus { outline: none; border-color: #3B82F6; }
+    .ap-option-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #666;
+      cursor: pointer;
+    }
+    .ap-option-checkbox input { accent-color: #3B82F6; }
+  `
+  document.head.appendChild(style)
+}
+
+function updateAnimationInCode(data) {
+  if (!window.editor || animationPickerLineStart === null) return
+
+  const doc = window.editor.state.doc
+  const dsl = generateAnimationDSL(data)
+
+  // Find the animation block boundaries
+  const startLine = animationPickerLineStart
+  let endLine = startLine
+
+  // Find where the animation block ends (next non-indented line or end of file)
+  const totalLines = doc.lines
+  for (let i = startLine + 1; i <= totalLines; i++) {
+    const line = doc.line(i)
+    const text = line.text
+    // Stop at empty line, non-indented content, or section header
+    if (text.trim() === '' || (!text.startsWith(' ') && !text.startsWith('\t') && text.trim() !== '')) {
+      endLine = i - 1
+      break
+    }
+    endLine = i
+  }
+
+  // Calculate the range to replace
+  const from = doc.line(startLine).from
+  const to = doc.line(endLine).to
+
+  // Replace the animation block
+  window.editor.dispatch({
+    changes: { from, to, insert: dsl },
+    annotations: Transaction.userEvent.of('input.animation')
+  })
+}
+
+function generateAnimationDSL(data) {
+  const lines = []
+  lines.push(`${data.name} as animation: ${data.easing}`)
+
+  // Group all unique times from tracks
+  const times = new Set()
+  for (const track of data.tracks) {
+    times.add(track.startTime)
+    times.add(track.endTime)
+  }
+
+  const sortedTimes = Array.from(times).sort((a, b) => a - b)
+
+  for (const time of sortedTimes) {
+    const props = []
+
+    for (const track of data.tracks) {
+      if (track.startTime === time) {
+        props.push(`${track.property} ${track.fromValue}`)
+      } else if (track.endTime === time) {
+        props.push(`${track.property} ${track.toValue}`)
+      }
+    }
+
+    if (props.length > 0) {
+      lines.push(`  ${time.toFixed(2)} ${props.join(', ')}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+function parseAnimationKeyframes(doc, startLine) {
+  const tracks = []
+  const propertyData = {}
+
+  // Parse keyframe lines after the animation definition
+  for (let i = startLine + 1; i <= doc.lines; i++) {
+    const line = doc.line(i)
+    const text = line.text
+
+    // Stop at non-indented line
+    if (!text.startsWith(' ') && !text.startsWith('\t')) break
+    if (text.trim() === '') break
+
+    // Parse keyframe: "  0.00 opacity 0, y-offset 20"
+    const match = text.trim().match(/^([\d.]+)\s+(.+)/)
+    if (match) {
+      const time = parseFloat(match[1])
+      const propsStr = match[2]
+
+      // Parse properties
+      const propParts = propsStr.split(',').map(p => p.trim())
+      for (const prop of propParts) {
+        const propMatch = prop.match(/^([\w-]+)\s+(.+)/)
+        if (propMatch) {
+          const propName = propMatch[1]
+          const value = propMatch[2]
+
+          if (!propertyData[propName]) {
+            propertyData[propName] = []
+          }
+          propertyData[propName].push({ time, value })
+        }
+      }
+    }
+  }
+
+  // Convert to tracks
+  for (const [property, keyframes] of Object.entries(propertyData)) {
+    if (keyframes.length >= 1) {
+      const sorted = keyframes.sort((a, b) => a.time - b.time)
+      const fromValue = parseFloat(sorted[0].value) || sorted[0].value
+      const toValue = sorted.length > 1
+        ? (parseFloat(sorted[sorted.length - 1].value) || sorted[sorted.length - 1].value)
+        : fromValue
+
+      tracks.push({
+        property,
+        startTime: sorted[0].time,
+        endTime: sorted.length > 1 ? sorted[sorted.length - 1].time : sorted[0].time + 0.3,
+        fromValue,
+        toValue
+      })
+    }
+  }
+
+  return tracks
+}
+
+// Animation picker trigger extension for CodeMirror
+// Triggers when user types space after "as animation:"
+const animationPickerTriggerExtension = EditorView.updateListener.of(update => {
+  if (!update.docChanged) return
+  if (animationPickerVisible) return
+
+  // Check what was typed
+  update.transactions.forEach(tr => {
+    tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+      const insertedText = inserted.toString()
+
+      // Trigger on space after "as animation:"
+      if (insertedText === ' ') {
+        const line = update.state.doc.lineAt(fromB)
+        const textBefore = line.text.slice(0, fromB - line.from)
+
+        // Check if we just typed space after "as animation:"
+        if (textBefore.match(/\w+\s+as\s+animation:$/)) {
+          // Extract name from the line
+          const nameMatch = textBefore.match(/^(\w+)\s+as\s+animation:$/)
+          const name = nameMatch ? nameMatch[1] : 'Animation'
+          const lineNum = line.number
+
+          // Small delay to let the space be inserted
+          setTimeout(() => {
+            showAnimationPicker({
+              name: name,
+              easing: 'ease-out',
+              duration: 0.3,
+              tracks: [
+                { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
+              ]
+            }, lineNum)
+          }, 10)
+        }
+      }
+    })
+  })
+})
+
+// Double-click on "animation" keyword to open picker
+const animationDoubleClickExtension = EditorView.domEventHandlers({
+  dblclick: (event, view) => {
+    if (animationPickerVisible) return false
+
+    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+    if (pos === null) return false
+
+    const line = view.state.doc.lineAt(pos)
+    const text = line.text
+
+    // Check if this line has "as animation:"
+    const animationMatch = text.match(/(\w+)\s+as\s+animation:/)
+    if (!animationMatch) return false
+
+    // Find the position of "animation" in the line
+    const animationIndex = text.indexOf('animation')
+    if (animationIndex === -1) return false
+
+    const animationStart = line.from + animationIndex
+    const animationEnd = animationStart + 'animation'.length
+
+    // Check if double-click was on the word "animation"
+    if (pos >= animationStart && pos <= animationEnd) {
+      event.preventDefault()
+
+      const name = animationMatch[1]
+      const lineNum = line.number
+
+      // Parse existing keyframes if any
+      const tracks = parseAnimationKeyframes(view.state.doc, lineNum)
+
+      showAnimationPicker({
+        name: name,
+        easing: 'ease-out',
+        duration: tracks.length > 0 ? Math.max(...tracks.map(t => t.endTime)) : 0.3,
+        tracks: tracks.length > 0 ? tracks : [
+          { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
+        ]
+      }, lineNum)
+
+      return true
+    }
+
+    return false
+  }
+})
+
+// Keyboard shortcut: Cmd+Shift+A to open animation picker
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'a') {
+    e.preventDefault()
+
+    if (animationPickerVisible) {
+      hideAnimationPicker()
+    } else if (window.editor) {
+      const pos = window.editor.state.selection.main.head
+      const line = window.editor.state.doc.lineAt(pos)
+      const text = line.text
+
+      // Check if on animation line
+      const animationMatch = text.match(/(\w+)\s+as\s+animation:/)
+      if (animationMatch) {
+        const name = animationMatch[1]
+        const lineNum = line.number
+        const tracks = parseAnimationKeyframes(window.editor.state.doc, lineNum)
+
+        showAnimationPicker({
+          name: name,
+          easing: 'ease-out',
+          duration: tracks.length > 0 ? Math.max(...tracks.map(t => t.endTime)) : 0.3,
+          tracks: tracks.length > 0 ? tracks : [
+            { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
+          ]
+        }, lineNum)
+      }
+    }
+  }
+})
+
+// Close animation picker on Escape
+document.addEventListener('keydown', (e) => {
+  if (animationPickerVisible && e.key === 'Escape') {
+    hideAnimationPicker()
+    if (window.editor) window.editor.focus()
+  }
+})
+
+// Close animation picker on click outside
+document.addEventListener('mousedown', (e) => {
+  if (animationPickerVisible && animationPickerContainer && !animationPickerContainer.contains(e.target)) {
+    hideAnimationPicker()
+  }
+})
+
 // Create editor
 const editorContainer = document.getElementById('editor-container')
 
@@ -4219,6 +5282,8 @@ const editor = new EditorView({
       Prec.highest(hashColorKeyboardExtension),
       iconTriggerExtension,
       Prec.highest(iconKeyboardExtension),
+      animationPickerTriggerExtension,
+      animationDoubleClickExtension,
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
@@ -5467,9 +6532,24 @@ function handleStudioDrop(result) {
     return
   }
 
+  // Adjust change positions for prelude offset (merged source vs single file)
+  const change = result.modification.change
+  const adjustedChange = {
+    from: change.from - currentPreludeOffset,
+    to: change.to - currentPreludeOffset,
+    insert: change.insert
+  }
+
+  // Validate range
+  const docLength = editor.state.doc.length
+  if (adjustedChange.from < 0 || adjustedChange.to > docLength || adjustedChange.from > adjustedChange.to) {
+    console.warn('Studio: Invalid drop range after offset adjustment')
+    return
+  }
+
   // Apply the change to CodeMirror (with history integration for Cmd+Z)
   editor.dispatch({
-    changes: result.modification.change,
+    changes: adjustedChange,
     annotations: Transaction.userEvent.of('input.drop')
   })
 
@@ -6088,6 +7168,13 @@ editorPanel.addEventListener('dragleave', (e) => {
 editorPanel.addEventListener('drop', async (e) => {
   dragCounter = 0
   dropOverlay.classList.remove('visible')
+
+  // Block component drops on editor (they should go to preview)
+  if (e.dataTransfer.types.includes('application/mirror-component')) {
+    e.preventDefault()
+    e.stopPropagation()
+    return
+  }
 
   const files = getImageFiles(e.dataTransfer)
   if (files.length === 0) return

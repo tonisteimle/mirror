@@ -764,6 +764,132 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
 }
 
 // ============================================
+// ANIMATIONS
+// ============================================
+
+/**
+ * Animation registry
+ */
+const _animations: Map<string, {
+  name: string
+  easing: string
+  duration?: number
+  roles?: string[]
+  keyframes: { time: number; properties: { property: string; value: string; target?: string }[] }[]
+}> = new Map()
+
+/**
+ * Register an animation definition
+ */
+export function registerAnimation(animation: {
+  name: string
+  easing: string
+  duration?: number
+  roles?: string[]
+  keyframes: { time: number; properties: { property: string; value: string; target?: string }[] }[]
+}): void {
+  _animations.set(animation.name, animation)
+}
+
+/**
+ * Get a registered animation
+ */
+export function getAnimation(name: string) {
+  return _animations.get(name)
+}
+
+/**
+ * Convert Mirror keyframes to Web Animations API format
+ */
+function convertKeyframes(keyframes: { time: number; properties: { property: string; value: string }[] }[], duration: number): Keyframe[] {
+  const result: Keyframe[] = []
+
+  for (const kf of keyframes) {
+    const frame: Keyframe = { offset: kf.time / duration }
+
+    for (const prop of kf.properties) {
+      // Map Mirror properties to CSS
+      if (prop.property === 'opacity') {
+        frame.opacity = prop.value
+      } else if (prop.property === 'y-offset') {
+        frame.transform = `translateY(${prop.value}px)`
+      } else if (prop.property === 'x-offset') {
+        frame.transform = `translateX(${prop.value}px)`
+      } else if (prop.property === 'scale') {
+        frame.transform = `scale(${prop.value})`
+      } else if (prop.property === 'rotate') {
+        frame.transform = `rotate(${prop.value}deg)`
+      }
+    }
+
+    result.push(frame)
+  }
+
+  return result
+}
+
+/**
+ * Run an animation on elements
+ */
+export function animate(
+  animationName: string,
+  elements: MirrorElement | MirrorElement[] | null,
+  options: { duration?: number; delay?: number; stagger?: number; loop?: boolean; reverse?: boolean; fill?: FillMode } = {}
+): Animation[] | null {
+  if (!elements) return null
+
+  const animation = _animations.get(animationName)
+  if (!animation) {
+    console.warn(`Animation "${animationName}" not found`)
+    return null
+  }
+
+  const els = Array.isArray(elements) ? elements : [elements]
+  const duration = (options.duration || animation.duration || 0.3) * 1000
+  const animations: Animation[] = []
+
+  els.forEach((el, index) => {
+    const keyframes = convertKeyframes(animation.keyframes, animation.duration || 0.3)
+    const delay = (options.delay || 0) * 1000 + (options.stagger || 0) * 1000 * index
+
+    const anim = el.animate(keyframes, {
+      duration,
+      delay,
+      easing: animation.easing,
+      fill: options.fill || 'forwards',
+      iterations: options.loop ? Infinity : 1,
+      direction: options.reverse ? 'reverse' : 'normal'
+    })
+
+    animations.push(anim)
+  })
+
+  return animations
+}
+
+/**
+ * Setup IntersectionObserver for onenter/onexit events
+ */
+export function setupEnterExitObserver(
+  el: MirrorElement,
+  onEnter?: () => void,
+  onExit?: () => void
+): IntersectionObserver {
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        onEnter?.()
+      } else {
+        onExit?.()
+      }
+    }
+  }, { threshold: 0.1 })
+
+  observer.observe(el)
+  return observer
+}
+
+// ============================================
 // RUNTIME OBJECT (for compatibility)
 // ============================================
 
@@ -806,6 +932,10 @@ export const runtime = {
   destroy,
   loadIcon,
   setReadFileCallback,
+  registerAnimation,
+  getAnimation,
+  animate,
+  setupEnterExitObserver,
 }
 
 export default runtime

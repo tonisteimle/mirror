@@ -464,6 +464,167 @@ const _runtime = {
       el.textContent = iconName
     }
   },
+
+  // Animation registry
+  _animations: new Map(),
+
+  registerAnimation(animation) {
+    if (!animation || !animation.name) return
+    this._animations.set(animation.name, animation)
+  },
+
+  getAnimation(name) {
+    return this._animations.get(name)
+  },
+
+  animate(animationName, elements, options = {}) {
+    const animation = this._animations.get(animationName)
+    if (!animation) {
+      console.warn(\`Animation "\${animationName}" not found\`)
+      return null
+    }
+
+    // Normalize elements to array
+    let targets = []
+    if (!elements) {
+      return null
+    } else if (Array.isArray(elements)) {
+      targets = elements.map(e => e._el || e)
+    } else {
+      targets = [elements._el || elements]
+    }
+
+    const { delay = 0, stagger = 0, loop = false, reverse = false } = options
+    const results = []
+
+    // Easing curves
+    const easingMap = {
+      'linear': 'linear',
+      'ease': 'ease',
+      'ease-in': 'ease-in',
+      'ease-out': 'ease-out',
+      'ease-in-out': 'ease-in-out',
+    }
+
+    targets.forEach((el, index) => {
+      if (!el) return
+
+      const elementDelay = delay + (index * stagger)
+
+      // Build keyframes from animation definition
+      const keyframes = []
+      const propertyTimelines = new Map()
+
+      // Group properties by name to build proper keyframe sequence
+      animation.keyframes.forEach(kf => {
+        kf.properties.forEach(prop => {
+          if (!propertyTimelines.has(prop.name)) {
+            propertyTimelines.set(prop.name, [])
+          }
+          propertyTimelines.get(prop.name).push({
+            time: kf.time,
+            value: prop.value,
+            easing: prop.easing || animation.easing || 'ease-out'
+          })
+        })
+      })
+
+      // Convert to Web Animations API format
+      const duration = animation.duration * 1000
+      const allTimes = [...new Set(animation.keyframes.map(kf => kf.time))].sort((a, b) => a - b)
+
+      allTimes.forEach(time => {
+        const kf = { offset: time / animation.duration }
+        propertyTimelines.forEach((timeline, propName) => {
+          const point = timeline.find(p => p.time === time)
+          if (point) {
+            // Map Mirror property names to CSS
+            const cssName = this._animPropMap(propName)
+            kf[cssName] = this._animValueMap(propName, point.value)
+          }
+        })
+        keyframes.push(kf)
+      })
+
+      if (reverse) {
+        keyframes.reverse()
+        keyframes.forEach((kf, i) => {
+          kf.offset = i / (keyframes.length - 1)
+        })
+      }
+
+      const timing = {
+        duration,
+        delay: elementDelay,
+        easing: easingMap[animation.easing] || 'ease-out',
+        iterations: loop === true ? Infinity : (typeof loop === 'number' ? loop : 1),
+        fill: 'forwards'
+      }
+
+      try {
+        const anim = el.animate(keyframes, timing)
+        results.push(anim)
+      } catch (err) {
+        console.warn('Animation error:', err)
+      }
+    })
+
+    return results
+  },
+
+  _animPropMap(name) {
+    const map = {
+      'opacity': 'opacity',
+      'x-offset': 'translateX',
+      'y-offset': 'translateY',
+      'scale': 'scale',
+      'scale-x': 'scaleX',
+      'scale-y': 'scaleY',
+      'rotate': 'rotate',
+      'background': 'backgroundColor',
+      'bg': 'backgroundColor',
+      'color': 'color',
+      'col': 'color',
+      'width': 'width',
+      'height': 'height',
+      'padding': 'padding',
+      'pad': 'padding',
+      'radius': 'borderRadius',
+      'rad': 'borderRadius',
+    }
+    return map[name] || name
+  },
+
+  _animValueMap(propName, value) {
+    if (propName === 'x-offset' || propName === 'y-offset') {
+      return typeof value === 'number' ? value + 'px' : value
+    }
+    if (propName === 'rotate') {
+      return typeof value === 'number' ? value + 'deg' : value
+    }
+    if (propName === 'width' || propName === 'height' || propName === 'padding' || propName === 'pad' || propName === 'radius' || propName === 'rad') {
+      return typeof value === 'number' ? value + 'px' : value
+    }
+    return value
+  },
+
+  setupEnterExitObserver(el, onEnter, onExit) {
+    if (!el) return null
+    const element = el._el || el
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (onEnter) onEnter()
+        } else {
+          if (onExit) onExit()
+        }
+      })
+    }, { threshold: 0.1 })
+
+    observer.observe(element)
+    return observer
+  },
 }
 `
 

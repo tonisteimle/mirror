@@ -232,27 +232,6 @@ export class PropertyPanel {
 
     this.container.innerHTML = `
       ${this.renderBreadcrumb()}
-      <div class="pp-header">
-        <span class="pp-title">${this.escapeHtml(title)}</span>
-        ${badge ? `<span class="pp-badge">${badge}</span>` : ''}
-        <div class="pp-header-actions">
-          ${showDefineBtn ? `
-            <button class="pp-define-btn" title="Als Komponente definieren">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-            </button>
-          ` : ''}
-          <button class="pp-close" title="Clear selection">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
       ${element.isTemplateInstance ? `
         <div class="pp-template-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -288,7 +267,15 @@ export class PropertyPanel {
       `
     }).join('')
 
-    return `<div class="pp-breadcrumb">${crumbs}</div>`
+    return `<div class="pp-breadcrumb">
+      <div class="pp-breadcrumb-crumbs">${crumbs}</div>
+      <button class="pp-close" title="Clear selection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>`
   }
 
   /**
@@ -3855,7 +3842,6 @@ export class PropertyPanel {
     const borderColorProp = trigger.dataset.borderColorProp
     const currentValue = trigger.dataset.currentValue || ''
 
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
     const rect = trigger.getBoundingClientRect()
 
     // Check if showColorPickerForProperty exists on window
@@ -3874,6 +3860,14 @@ export class PropertyPanel {
       property,
       currentValue,
       (selectedColor: string) => {
+        // Get current nodeId at callback time (not capture time)
+        // This ensures we use the correct node even if a recompile happened
+        if (!this.currentElement) {
+          console.warn('Color picker: No element selected')
+          return
+        }
+        const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
         // Handle border color specially (compound property)
         if (borderColorProp) {
           const borderWidth = trigger.dataset.borderWidth || '1'
