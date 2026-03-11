@@ -3,6 +3,10 @@
  *
  * Manages the currently selected element in the preview and notifies
  * all subscribers when selection changes.
+ *
+ * @deprecated Use StateSelectionAdapter from studio/core/selection-adapter.ts instead.
+ * This class is kept for backwards compatibility with legacy code in studio/app.js.
+ * It will be removed in a future version.
  */
 
 export type SelectionListener = (nodeId: string | null, previousNodeId: string | null) => void
@@ -126,7 +130,7 @@ export class SelectionManager {
 
   /**
    * Set the current breadcrumb chain
-   * Called by PreviewInteraction when selection changes
+   * Called by PreviewController when selection changes
    */
   setBreadcrumb(chain: BreadcrumbItem[]): void {
     this.currentBreadcrumb = chain

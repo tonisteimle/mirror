@@ -4,12 +4,14 @@
  * Provides bidirectional editing support for Mirror Studio:
  * - SourceMap: Maps IR nodes to source positions
  * - SelectionManager: Manages element selection state
- * - PreviewInteraction: Handles preview click/hover
  * - PropertyExtractor: Extracts properties from AST
  * - CodeModifier: Modifies source code
  * - PropertyPanel: Dynamic property panel UI
  * - DropZoneCalculator: Calculates drop zones for drag-and-drop
  * - DragDropManager: Coordinates drag-and-drop operations
+ *
+ * Note: PreviewInteraction and EditorSyncManager have been replaced by
+ * studio/preview/PreviewController and studio/sync/SyncCoordinator
  */
 
 export {
@@ -20,6 +22,10 @@ export {
   type NodeMapping,
 } from './source-map'
 
+/**
+ * @deprecated Use StateSelectionAdapter from studio/core instead.
+ * These exports are kept for backwards compatibility.
+ */
 export {
   SelectionManager,
   getSelectionManager,
@@ -28,12 +34,6 @@ export {
   type BreadcrumbItem,
   type BreadcrumbListener,
 } from './selection-manager'
-
-export {
-  PreviewInteraction,
-  createPreviewInteraction,
-  type PreviewInteractionOptions,
-} from './preview-interaction'
 
 export {
   PropertyExtractor,
@@ -56,12 +56,13 @@ export {
   type ExtractToComponentResult,
 } from './code-modifier'
 
+// PropertyPanel re-exported from new location (studio/panels/)
 export {
   PropertyPanel,
   createPropertyPanel,
   type OnCodeChangeCallback,
   type PropertyPanelOptions,
-} from './property-panel'
+} from '../../studio/panels/property-panel'
 
 export { PROPERTY_ICON_PATHS } from './icons'
 
@@ -104,13 +105,6 @@ export {
   type GenerationResult,
   type LLMConfig,
 } from './llm-integration'
-
-export {
-  EditorSyncManager,
-  createEditorSyncManager,
-  type SyncOrigin,
-  type EditorSyncManagerOptions,
-} from './editor-sync-manager'
 
 export {
   parseLine,

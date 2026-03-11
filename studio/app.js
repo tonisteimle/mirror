@@ -3,6 +3,20 @@ import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightAc
 import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, undoDepth, redoDepth } from '@codemirror/commands'
 import { autocompletion, completionKeymap, startCompletion, closeCompletion } from '@codemirror/autocomplete'
 
+// New architecture imports
+import {
+  initializeStudio as initNewStudio,
+  updateStudioState,
+  studio,
+  handleSelectionChange as newHandleSelectionChange,
+  events,
+  executor,
+  RecordedChangeCommand,
+  actions as studioActions,
+  mirrorCompletions,
+  getStateSelectionAdapter,
+} from './dist/index.js?v=41'
+
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
 
@@ -19,6 +33,7 @@ const AUTH_KEY = 'mirror-auth-state'
 // App State
 // DEV MODE: Always logged in for testing
 const DEV_MODE = true
+const DEBUG_SYNC = false  // Enable verbose sync logging
 let authState = {
   isLoggedIn: DEV_MODE,
   userId: DEV_MODE ? 'dev_user' : null,
@@ -1900,476 +1915,9 @@ const mirrorHighlight = ViewPlugin.fromClass(class {
   decorations: v => v.decorations
 })
 
-// Autocomplete - All Mirror properties
-const mirrorProperties = [
-  // Layout
-  { label: 'hor', detail: 'horizontal layout', type: 'property' },
-  { label: 'horizontal', detail: 'horizontal layout', type: 'property' },
-  { label: 'ver', detail: 'vertical layout', type: 'property' },
-  { label: 'vertical', detail: 'vertical layout', type: 'property' },
-  { label: 'center', detail: 'center both axes', type: 'property' },
-  { label: 'cen', detail: 'center both axes', type: 'property' },
-  { label: 'spread', detail: 'space-between', type: 'property' },
-  { label: 'wrap', detail: 'allow wrapping', type: 'property' },
-  { label: 'stacked', detail: 'z-layers', type: 'property' },
-  { label: 'grid', detail: 'grid layout', type: 'property' },
-  // Alignment
-  { label: 'left', detail: 'align left', type: 'property' },
-  { label: 'right', detail: 'align right', type: 'property' },
-  { label: 'top', detail: 'align top', type: 'property' },
-  { label: 'bottom', detail: 'align bottom', type: 'property' },
-  { label: 'hor-center', detail: 'center horizontal', type: 'property' },
-  { label: 'ver-center', detail: 'center vertical', type: 'property' },
-  // Spacing
-  { label: 'pad', detail: 'padding', type: 'property' },
-  { label: 'padding', detail: 'padding', type: 'property' },
-  { label: 'p', detail: 'padding', type: 'property' },
-  { label: 'margin', detail: 'margin', type: 'property' },
-  { label: 'm', detail: 'margin', type: 'property' },
-  { label: 'gap', detail: 'gap between children', type: 'property' },
-  { label: 'g', detail: 'gap between children', type: 'property' },
-  // Sizing
-  { label: 'width', detail: 'width (hug/full/px)', type: 'property' },
-  { label: 'w', detail: 'width (hug/full/px)', type: 'property' },
-  { label: 'height', detail: 'height (hug/full/px)', type: 'property' },
-  { label: 'h', detail: 'height (hug/full/px)', type: 'property' },
-  { label: 'size', detail: 'width + height', type: 'property' },
-  { label: 'min-width', detail: 'minimum width', type: 'property' },
-  { label: 'minw', detail: 'minimum width', type: 'property' },
-  { label: 'max-width', detail: 'maximum width', type: 'property' },
-  { label: 'maxw', detail: 'maximum width', type: 'property' },
-  { label: 'min-height', detail: 'minimum height', type: 'property' },
-  { label: 'minh', detail: 'minimum height', type: 'property' },
-  { label: 'max-height', detail: 'maximum height', type: 'property' },
-  { label: 'maxh', detail: 'maximum height', type: 'property' },
-  { label: 'hug', detail: 'fit content', type: 'property' },
-  { label: 'full', detail: '100% + flex-grow', type: 'property' },
-  // Colors
-  { label: 'bg', detail: 'background color', type: 'property' },
-  { label: 'background', detail: 'background color', type: 'property' },
-  { label: 'col', detail: 'text color', type: 'property' },
-  { label: 'color', detail: 'text color', type: 'property' },
-  { label: 'c', detail: 'text color', type: 'property' },
-  { label: 'boc', detail: 'border color', type: 'property' },
-  { label: 'border-color', detail: 'border color', type: 'property' },
-  // Border & Radius
-  { label: 'bor', detail: 'border', type: 'property' },
-  { label: 'border', detail: 'border', type: 'property' },
-  { label: 'rad', detail: 'border radius', type: 'property' },
-  { label: 'radius', detail: 'border radius', type: 'property' },
-  // Typography
-  { label: 'font-size', detail: 'font size', type: 'property' },
-  { label: 'fs', detail: 'font size', type: 'property' },
-  { label: 'weight', detail: 'font weight', type: 'property' },
-  { label: 'line', detail: 'line height', type: 'property' },
-  { label: 'font', detail: 'font family', type: 'property' },
-  { label: 'align', detail: 'text alignment', type: 'property' },
-  { label: 'italic', detail: 'italic text', type: 'property' },
-  { label: 'underline', detail: 'underlined text', type: 'property' },
-  { label: 'truncate', detail: 'truncate with ellipsis', type: 'property' },
-  { label: 'uppercase', detail: 'uppercase text', type: 'property' },
-  { label: 'lowercase', detail: 'lowercase text', type: 'property' },
-  // Icons
-  { label: 'icon-size', detail: 'icon size', type: 'property' },
-  { label: 'is', detail: 'icon size', type: 'property' },
-  { label: 'icon-weight', detail: 'icon stroke weight', type: 'property' },
-  { label: 'iw', detail: 'icon stroke weight', type: 'property' },
-  { label: 'icon-color', detail: 'icon color', type: 'property' },
-  { label: 'ic', detail: 'icon color', type: 'property' },
-  { label: 'fill', detail: 'filled icon', type: 'property' },
-  // Visuals
-  { label: 'opacity', detail: 'opacity 0-1', type: 'property' },
-  { label: 'o', detail: 'opacity 0-1', type: 'property' },
-  { label: 'shadow', detail: 'box shadow', type: 'property' },
-  { label: 'cursor', detail: 'cursor style', type: 'property' },
-  { label: 'z', detail: 'z-index', type: 'property' },
-  { label: 'hidden', detail: 'start hidden', type: 'property' },
-  { label: 'visible', detail: 'visibility', type: 'property' },
-  { label: 'disabled', detail: 'disabled state', type: 'property' },
-  { label: 'rotate', detail: 'rotation', type: 'property' },
-  { label: 'rot', detail: 'rotation', type: 'property' },
-  { label: 'translate', detail: 'translate X Y', type: 'property' },
-  // Scroll
-  { label: 'scroll', detail: 'vertical scroll', type: 'property' },
-  { label: 'scroll-ver', detail: 'vertical scroll', type: 'property' },
-  { label: 'scroll-hor', detail: 'horizontal scroll', type: 'property' },
-  { label: 'scroll-both', detail: 'both directions', type: 'property' },
-  { label: 'clip', detail: 'overflow hidden', type: 'property' },
-  // Hover
-  { label: 'hover-bg', detail: 'hover background', type: 'property' },
-  { label: 'hover-background', detail: 'hover background', type: 'property' },
-  { label: 'hover-col', detail: 'hover color', type: 'property' },
-  { label: 'hover-color', detail: 'hover color', type: 'property' },
-  { label: 'hover-opacity', detail: 'hover opacity', type: 'property' },
-  { label: 'hover-opa', detail: 'hover opacity', type: 'property' },
-  { label: 'hover-scale', detail: 'hover scale', type: 'property' },
-  { label: 'hover-bor', detail: 'hover border', type: 'property' },
-  { label: 'hover-border', detail: 'hover border', type: 'property' },
-  { label: 'hover-boc', detail: 'hover border color', type: 'property' },
-  { label: 'hover-border-color', detail: 'hover border color', type: 'property' },
-  { label: 'hover-rad', detail: 'hover radius', type: 'property' },
-  { label: 'hover-radius', detail: 'hover radius', type: 'property' },
-  // Animation
-  { label: 'show', detail: 'show animation', type: 'property' },
-  { label: 'hide', detail: 'hide animation', type: 'property' },
-  { label: 'animate', detail: 'continuous animation', type: 'property' },
-  // Special
-  { label: 'focusable', detail: 'keyboard focusable', type: 'property' },
-]
 
-// Priority properties - shown first in autocomplete when nothing typed
-const priorityProperties = new Set([
-  'bg', 'background', 'col', 'color', 'pad', 'padding', 'gap', 'g',
-  'rad', 'radius', 'bor', 'border', 'width', 'w', 'height', 'h',
-  'hor', 'horizontal', 'ver', 'vertical', 'center', 'cen',
-  'font-size', 'fs', 'weight', 'opacity', 'o', 'shadow',
-  'hover-bg', 'hover-col', 'cursor', 'hidden', 'visible'
-])
-
-const mirrorKeywords = [
-  // Primitives
-  { label: 'frame', detail: 'div container', type: 'keyword' },
-  { label: 'box', detail: 'div container', type: 'keyword' },
-  { label: 'text', detail: 'span element', type: 'keyword' },
-  { label: 'button', detail: 'button element', type: 'keyword' },
-  { label: 'input', detail: 'input element', type: 'keyword' },
-  { label: 'textarea', detail: 'textarea element', type: 'keyword' },
-  { label: 'image', detail: 'img element', type: 'keyword' },
-  { label: 'link', detail: 'anchor element', type: 'keyword' },
-  { label: 'icon', detail: 'icon element', type: 'keyword' },
-  { label: 'material', detail: 'material icon type', type: 'keyword' },
-  // Structure
-  { label: 'as', detail: 'inherit from', type: 'keyword' },
-  { label: 'extends', detail: 'inherit from', type: 'keyword' },
-  { label: 'named', detail: 'named instance', type: 'keyword' },
-  { label: 'import', detail: 'import file', type: 'keyword' },
-  // Conditionals
-  { label: 'if', detail: 'condition', type: 'keyword' },
-  { label: 'else', detail: 'else branch', type: 'keyword' },
-  { label: 'then', detail: 'then value', type: 'keyword' },
-  // Data
-  { label: 'each', detail: 'iterate', type: 'keyword' },
-  { label: 'in', detail: 'in collection', type: 'keyword' },
-  { label: 'where', detail: 'filter', type: 'keyword' },
-  { label: 'data', detail: 'data binding', type: 'keyword' },
-  { label: 'selection', detail: 'selection binding', type: 'keyword' },
-  // States
-  { label: 'hover', detail: 'hover state', type: 'keyword' },
-  { label: 'focus', detail: 'focus state', type: 'keyword' },
-  { label: 'active', detail: 'active state', type: 'keyword' },
-  { label: 'disabled', detail: 'disabled state', type: 'keyword' },
-  { label: 'filled', detail: 'input has value', type: 'keyword' },
-  { label: 'state', detail: 'custom state', type: 'keyword' },
-  { label: 'selected', detail: 'selected state', type: 'keyword' },
-  { label: 'highlighted', detail: 'highlighted state', type: 'keyword' },
-  { label: 'expanded', detail: 'expanded state', type: 'keyword' },
-  { label: 'collapsed', detail: 'collapsed state', type: 'keyword' },
-  { label: 'valid', detail: 'valid state', type: 'keyword' },
-  { label: 'invalid', detail: 'invalid state', type: 'keyword' },
-  { label: 'default', detail: 'default state', type: 'keyword' },
-  { label: 'inactive', detail: 'inactive state', type: 'keyword' },
-  { label: 'on', detail: 'toggle on', type: 'keyword' },
-  { label: 'off', detail: 'toggle off', type: 'keyword' },
-  { label: 'closed', detail: 'initial closed', type: 'keyword' },
-  { label: 'open', detail: 'initial open', type: 'keyword' },
-  // Events
-  { label: 'onclick', detail: 'click event', type: 'keyword' },
-  { label: 'onclick-outside', detail: 'click outside event', type: 'keyword' },
-  { label: 'onhover', detail: 'hover event', type: 'keyword' },
-  { label: 'onfocus', detail: 'focus event', type: 'keyword' },
-  { label: 'onblur', detail: 'blur event', type: 'keyword' },
-  { label: 'onchange', detail: 'change event', type: 'keyword' },
-  { label: 'oninput', detail: 'input event', type: 'keyword' },
-  { label: 'onload', detail: 'load event', type: 'keyword' },
-  { label: 'onkeydown', detail: 'keydown event', type: 'keyword' },
-  { label: 'onkeyup', detail: 'keyup event', type: 'keyword' },
-  { label: 'keys', detail: 'keyboard shortcuts', type: 'keyword' },
-  // Timing
-  { label: 'debounce', detail: 'delay until idle', type: 'keyword' },
-  { label: 'delay', detail: 'delay action', type: 'keyword' },
-  // Actions
-  { label: 'toggle', detail: 'toggle visibility', type: 'keyword' },
-  { label: 'show', detail: 'show element', type: 'keyword' },
-  { label: 'hide', detail: 'hide element', type: 'keyword' },
-  { label: 'open', detail: 'open overlay', type: 'keyword' },
-  { label: 'close', detail: 'close overlay', type: 'keyword' },
-  { label: 'page', detail: 'navigate to page', type: 'keyword' },
-  { label: 'select', detail: 'select item', type: 'keyword' },
-  { label: 'deselect', detail: 'deselect item', type: 'keyword' },
-  { label: 'clear-selection', detail: 'clear all selections', type: 'keyword' },
-  { label: 'highlight', detail: 'highlight item', type: 'keyword' },
-  { label: 'filter', detail: 'filter list', type: 'keyword' },
-  { label: 'change', detail: 'change state', type: 'keyword' },
-  { label: 'activate', detail: 'activate element', type: 'keyword' },
-  { label: 'deactivate', detail: 'deactivate element', type: 'keyword' },
-  { label: 'deactivate-siblings', detail: 'deactivate siblings', type: 'keyword' },
-  { label: 'toggle-state', detail: 'toggle state', type: 'keyword' },
-  { label: 'assign', detail: 'assign variable', type: 'keyword' },
-  { label: 'validate', detail: 'validate form', type: 'keyword' },
-  { label: 'reset', detail: 'reset form', type: 'keyword' },
-  { label: 'focus', detail: 'focus element', type: 'keyword' },
-  { label: 'alert', detail: 'show alert', type: 'keyword' },
-  { label: 'call', detail: 'call JS function', type: 'keyword' },
-  // Targets
-  { label: 'self', detail: 'current element', type: 'keyword' },
-  { label: 'next', detail: 'next element', type: 'keyword' },
-  { label: 'prev', detail: 'previous element', type: 'keyword' },
-  { label: 'first', detail: 'first element', type: 'keyword' },
-  { label: 'last', detail: 'last element', type: 'keyword' },
-  { label: 'first-empty', detail: 'first empty element', type: 'keyword' },
-  { label: 'highlighted', detail: 'highlighted element', type: 'keyword' },
-  { label: 'selected', detail: 'selected element', type: 'keyword' },
-  { label: 'self-and-before', detail: 'self and all before', type: 'keyword' },
-  { label: 'all', detail: 'all elements', type: 'keyword' },
-  { label: 'none', detail: 'no element', type: 'keyword' },
-  // Animation keywords
-  { label: 'fade', detail: 'fade animation', type: 'keyword' },
-  { label: 'scale', detail: 'scale animation', type: 'keyword' },
-  { label: 'slide-up', detail: 'slide up', type: 'keyword' },
-  { label: 'slide-down', detail: 'slide down', type: 'keyword' },
-  { label: 'slide-left', detail: 'slide left', type: 'keyword' },
-  { label: 'slide-right', detail: 'slide right', type: 'keyword' },
-  { label: 'spin', detail: 'spin animation', type: 'keyword' },
-  { label: 'pulse', detail: 'pulse animation', type: 'keyword' },
-  { label: 'bounce', detail: 'bounce animation', type: 'keyword' },
-  // Overlay positions
-  { label: 'below', detail: 'position below', type: 'keyword' },
-  { label: 'above', detail: 'position above', type: 'keyword' },
-]
-
-const allCompletions = [...mirrorProperties, ...mirrorKeywords]
-
-// Property values - suggestions for specific properties
-const propertyValues = {
-  // Sizing
-  'width': [
-    { label: 'hug', detail: 'fit-content' },
-    { label: 'full', detail: '100% + flex-grow' },
-  ],
-  'w': [
-    { label: 'hug', detail: 'fit-content' },
-    { label: 'full', detail: '100% + flex-grow' },
-  ],
-  'height': [
-    { label: 'hug', detail: 'fit-content' },
-    { label: 'full', detail: '100% + flex-grow' },
-  ],
-  'h': [
-    { label: 'hug', detail: 'fit-content' },
-    { label: 'full', detail: '100% + flex-grow' },
-  ],
-  'size': [
-    { label: 'hug', detail: 'fit-content' },
-    { label: 'full', detail: '100% + flex-grow' },
-  ],
-  // Text alignment
-  'text-align': [
-    { label: 'left', detail: 'align left' },
-    { label: 'center', detail: 'align center' },
-    { label: 'right', detail: 'align right' },
-  ],
-  // Flex alignment
-  'align': [
-    { label: 'top', detail: 'align top' },
-    { label: 'bottom', detail: 'align bottom' },
-    { label: 'left', detail: 'align left' },
-    { label: 'right', detail: 'align right' },
-    { label: 'center', detail: 'align center' },
-    { label: 'ver-center', detail: 'vertical center' },
-    { label: 'hor-center', detail: 'horizontal center' },
-  ],
-  // Shadow
-  'shadow': [
-    { label: 'sm', detail: 'small shadow' },
-    { label: 'md', detail: 'medium shadow' },
-    { label: 'lg', detail: 'large shadow' },
-  ],
-  // Cursor
-  'cursor': [
-    { label: 'pointer', detail: 'hand cursor' },
-    { label: 'default', detail: 'default cursor' },
-    { label: 'text', detail: 'text cursor' },
-    { label: 'move', detail: 'move cursor' },
-    { label: 'not-allowed', detail: 'not allowed' },
-    { label: 'grab', detail: 'grab cursor' },
-    { label: 'grabbing', detail: 'grabbing cursor' },
-  ],
-  // Weight
-  'weight': [
-    { label: '400', detail: 'normal' },
-    { label: '500', detail: 'medium' },
-    { label: '600', detail: 'semi-bold' },
-    { label: '700', detail: 'bold' },
-    { label: 'bold', detail: 'bold' },
-  ],
-  // Font
-  'font': [
-    { label: 'monospace', detail: 'monospace font' },
-    { label: 'sans-serif', detail: 'sans-serif font' },
-    { label: 'serif', detail: 'serif font' },
-  ],
-  // Border style
-  'bor': [
-    { label: 'solid', detail: 'solid line' },
-    { label: 'dashed', detail: 'dashed line' },
-    { label: 'dotted', detail: 'dotted line' },
-  ],
-  'border': [
-    { label: 'solid', detail: 'solid line' },
-    { label: 'dashed', detail: 'dashed line' },
-    { label: 'dotted', detail: 'dotted line' },
-  ],
-}
-
-function mirrorCompletions(context) {
-  const word = context.matchBefore(/[\w-]*/)
-  const from = word ? word.from : context.pos
-  const typed = word ? word.text.toLowerCase() : ''
-
-  // Get text before the current word
-  const line = context.state.doc.lineAt(context.pos)
-  const textBefore = line.text.slice(0, from - line.from)
-
-  // Check if we're after "state " - show state names
-  const stateMatch = textBefore.match(/\bstate\s+$/)
-  if (stateMatch) {
-    const stateNames = [
-      { label: 'hover', info: 'Mouse over element' },
-      { label: 'focus', info: 'Element has focus' },
-      { label: 'active', info: 'Element is active/pressed' },
-      { label: 'disabled', info: 'Element is disabled' },
-      { label: 'filled', info: 'Input has value' },
-      { label: 'highlighted', info: 'Element is highlighted' },
-      { label: 'selected', info: 'Element is selected' },
-      { label: 'expanded', info: 'Element is expanded' },
-      { label: 'collapsed', info: 'Element is collapsed' },
-      { label: 'valid', info: 'Input is valid' },
-      { label: 'invalid', info: 'Input is invalid' },
-      { label: 'on', info: 'Toggle is on' },
-      { label: 'off', info: 'Toggle is off' },
-      { label: 'default', info: 'Default state' },
-      { label: 'inactive', info: 'Element is inactive' },
-    ]
-    let options = stateNames.map(s => ({ ...s, type: 'keyword' }))
-    if (typed) {
-      options = options.filter(s => s.label.startsWith(typed))
-    }
-    return {
-      from,
-      options,
-      validFor: /^[\w-]*$/
-    }
-  }
-
-  // Check if we're typing a slot name (indented, starts with capital letter)
-  // Example: under "Card" instance, typing "Ti" should suggest "Title" slot
-  const slotMatch = textBefore.match(/^\s+$/) && typed.match(/^[A-Z]/)
-  if (slotMatch) {
-    const parentComponent = findParentComponent(context.state.doc, context.pos)
-    if (parentComponent) {
-      const componentSlots = extractComponentSlots(context.state.doc)
-      const slots = componentSlots[parentComponent] || []
-      if (slots.length > 0) {
-        let options = slots.map(s => ({
-          label: s,
-          type: 'class',
-          info: `Slot of ${parentComponent}`
-        }))
-        if (typed) {
-          options = options.filter(s => s.label.toLowerCase().startsWith(typed.toLowerCase()))
-        }
-        if (options.length > 0) {
-          return {
-            from,
-            options,
-            validFor: /^[A-Za-z0-9]*$/
-          }
-        }
-      }
-    }
-  }
-
-  // Check if we're in a value context (after a property name)
-  const valueMatch = textBefore.match(/\b([\w-]+)\s+$/)
-  if (valueMatch) {
-    const propName = valueMatch[1].toLowerCase()
-    const values = propertyValues[propName]
-    if (values) {
-      let options = values.map(v => ({ ...v, type: 'constant' }))
-      if (typed) {
-        options = options.filter(v => v.label.toLowerCase().startsWith(typed))
-      }
-      if (options.length > 0) {
-        return {
-          from,
-          options,
-          validFor: /^[\w-]*$/
-        }
-      }
-    }
-  }
-
-  // Smart triggering: only complete in property context
-  // Property autocomplete ONLY after:
-  // - Comma (with optional space): "bg #fff, " → new property
-  // - Component name (first property): "Box " → first property
-  // - Colon (definition start): "Button: " → first property in definition
-  // - Indented line start: "  " → nested property
-  // NOT after "property space" - that's value context!
-  const isAfterComma = textBefore.match(/,\s*$/)
-  const isAfterColon = textBefore.match(/:\s*$/)
-  const isIndentedStart = textBefore.match(/^\s+$/)
-  const isAfterComponentName = textBefore.match(/^[A-Z]\w*\s+$/) || textBefore.match(/^\s+[A-Z]\w*\s+$/)
-
-  const isPropertyContext = isAfterComma || isAfterColon || isIndentedStart || isAfterComponentName
-
-  // If not in property context, don't show property completions
-  // (unless explicitly triggered with Ctrl+Space)
-  if (!isPropertyContext && !context.explicit) {
-    return null
-  }
-
-  // Filter completions based on what's typed
-  let options = allCompletions
-  if (typed) {
-    // Match prefix or fuzzy match for longer typed strings
-    options = allCompletions.filter(c => {
-      const label = c.label.toLowerCase()
-      return label.startsWith(typed) || label.includes(typed)
-    })
-    // Prioritize: 1) prefix matches, 2) alphabetically
-    options.sort((a, b) => {
-      const aStarts = a.label.toLowerCase().startsWith(typed)
-      const bStarts = b.label.toLowerCase().startsWith(typed)
-      if (aStarts && !bStarts) return -1
-      if (!aStarts && bStarts) return 1
-      // Both same prefix status - sort alphabetically
-      return a.label.localeCompare(b.label)
-    })
-  } else {
-    // Nothing typed: priority properties first, then alphabetically
-    options = [...allCompletions].sort((a, b) => {
-      const aPriority = priorityProperties.has(a.label)
-      const bPriority = priorityProperties.has(b.label)
-      if (aPriority && !bPriority) return -1
-      if (!aPriority && bPriority) return 1
-      // Both same priority - sort alphabetically
-      return a.label.localeCompare(b.label)
-    })
-  }
-
-  // Don't show empty completion list
-  if (options.length === 0) {
-    return null
-  }
-
-  return {
-    from,
-    options: options.slice(0, 50),
-    validFor: /^[\w-]*$/
-  }
-}
-
+// Autocomplete - using modular engine from studio/autocomplete/
+// mirrorCompletions is imported from ./dist/index.js
 // ==========================================
 // Color Picker Setup (before editor)
 // ==========================================
@@ -3163,9 +2711,14 @@ document.addEventListener('keydown', (e) => {
         break
       case 'Enter':
         e.preventDefault()
-        const selected = colorSwatchElements[selectedSwatchIndex]
-        if (selected) {
-          selectColor(selected.dataset.color.toUpperCase())
+        // Use custom color if on custom tab, otherwise use selected swatch
+        if (currentColorTab === 'custom') {
+          selectColor(getCurrentColorHex())
+        } else {
+          const selected = colorSwatchElements[selectedSwatchIndex]
+          if (selected) {
+            selectColor(selected.dataset.color.toUpperCase())
+          }
         }
         break
       case 'ArrowLeft':
@@ -3876,9 +3429,14 @@ const hashColorKeyboardExtension = EditorView.domEventHandlers({
         return true
       case 'Enter':
         event.preventDefault()
-        const selected = colorSwatchElements[selectedSwatchIndex]
-        if (selected) {
-          selectColor(selected.dataset.color.toUpperCase())
+        // Use custom color if on custom tab, otherwise use selected swatch
+        if (currentColorTab === 'custom') {
+          selectColor(getCurrentColorHex())
+        } else {
+          const selected = colorSwatchElements[selectedSwatchIndex]
+          if (selected) {
+            selectColor(selected.dataset.color.toUpperCase())
+          }
         }
         return true
       case 'Escape':
@@ -5311,7 +4869,7 @@ const editor = new EditorView({
         }
         // Cursor sync: only when selection changed WITHOUT doc change (no typing)
         // Only sync if editor has focus (not when user selected something in preview)
-        else if (update.selectionSet && editorHasFocus) {
+        else if (update.selectionSet && getEditorHasFocus()) {
           // Sync property panel directly to cursor position
           syncPropertyPanelToEditorCursor()
         }
@@ -6155,14 +5713,16 @@ function renderComponentState(comp, stateName, ast) {
 let currentAST = null
 let currentSourceMap = null
 let studioSelectionManager = null
-let studioPreviewInteraction = null
 let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
 let studioDragDropManager = null
-let studioEditorSyncManager = null  // Syncs editor cursor ↔ preview selection
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
-let editorHasFocus = true  // Track if editor or preview has focus
+// editorHasFocus is now managed by studio state (studioState.get().editorHasFocus)
+// This getter provides backwards compatibility for existing code
+function getEditorHasFocus() {
+  return studioState ? studioState.get().editorHasFocus : true
+}
 let currentPreludeOffset = 0  // Character offset of prelude in merged source (for adjusting change positions)
 
 /**
@@ -6393,7 +5953,7 @@ function findParentComponentDefinition(editorLineNum) {
  */
 function syncPropertyPanelToEditorCursor() {
   if (!editor || !studioSelectionManager) {
-    console.log('[Sync] No editor or selectionManager')
+    DEBUG_SYNC && console.log('[Sync] No editor or selectionManager')
     return
   }
 
@@ -6403,22 +5963,22 @@ function syncPropertyPanelToEditorCursor() {
     const lineInfo = editor.state.doc.line(editorLine)
     const lineContent = lineInfo.text
 
-    console.log('[Sync] Line', editorLine, ':', lineContent)
+    DEBUG_SYNC && console.log('[Sync] Line', editorLine, ':', lineContent)
 
     // Extract component info from the line
     const componentInfo = extractComponentFromLine(lineContent)
 
-    console.log('[Sync] componentInfo:', componentInfo)
+    DEBUG_SYNC && console.log('[Sync] componentInfo:', componentInfo)
 
     // If not a component line, check if we're inside a component definition block
     // (e.g., on a state line, event line, or child line)
     if (!componentInfo) {
-      console.log('[Sync] Not a component line, checking for parent definition...')
+      DEBUG_SYNC && console.log('[Sync] Not a component line, checking for parent definition...')
       const parent = findParentComponentDefinition(editorLine)
-      console.log('[Sync] Parent found:', parent)
+      DEBUG_SYNC && console.log('[Sync] Parent found:', parent)
       if (parent && parent.name && studioPropertyPanel) {
         const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
-        console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
+        DEBUG_SYNC && console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
         if (parentSuccess) {
           studioSelectionManager.clearSelection()
           // Determine what kind of nested line this is (state, event, etc.)
@@ -6447,12 +6007,12 @@ function syncPropertyPanelToEditorCursor() {
 
     const { name: componentName, isDefinition } = componentInfo
 
-    console.log('[Sync] Component:', componentName, 'isDefinition:', isDefinition, 'hasPropertyPanel:', !!studioPropertyPanel)
+    DEBUG_SYNC && console.log('[Sync] Component:', componentName, 'isDefinition:', isDefinition, 'hasPropertyPanel:', !!studioPropertyPanel)
 
     // Handle definitions: show component definition properties
     if (isDefinition && studioPropertyPanel) {
       const success = studioPropertyPanel.showComponentDefinition(componentName)
-      console.log('[Sync] showComponentDefinition result:', success)
+      DEBUG_SYNC && console.log('[Sync] showComponentDefinition result:', success)
       if (success) {
         studioSelectionManager.clearSelection()
         // Update breadcrumb to show we're in a definition
@@ -6504,10 +6064,10 @@ function syncPropertyPanelToEditorCursor() {
     }
 
     // Fallback: try to show definition if component exists but no instances rendered
-    console.log('[Sync] Fallback: trying showComponentDefinition for', componentName)
+    DEBUG_SYNC && console.log('[Sync] Fallback: trying showComponentDefinition for', componentName)
     if (studioPropertyPanel) {
       const success = studioPropertyPanel.showComponentDefinition(componentName)
-      console.log('[Sync] Fallback showComponentDefinition result:', success)
+      DEBUG_SYNC && console.log('[Sync] Fallback showComponentDefinition result:', success)
       if (success) {
         studioSelectionManager.clearSelection()
         studioSelectionManager.setBreadcrumb([{
@@ -6520,12 +6080,12 @@ function syncPropertyPanelToEditorCursor() {
 
       // Component not found - check if we're on a nested line (child slot)
       // Find the parent component definition and show that instead
-      console.log('[Sync] Component not found, looking for parent...')
+      DEBUG_SYNC && console.log('[Sync] Component not found, looking for parent...')
       const parent = findParentComponentDefinition(editorLine)
-      console.log('[Sync] Parent found:', parent)
+      DEBUG_SYNC && console.log('[Sync] Parent found:', parent)
       if (parent && parent.name) {
         const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
-        console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
+        DEBUG_SYNC && console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
         if (parentSuccess) {
           studioSelectionManager.clearSelection()
           studioSelectionManager.setBreadcrumb([{
@@ -6555,47 +6115,30 @@ function initStudio() {
     return
   }
 
-  // Create SelectionManager
-  studioSelectionManager = new Mirror.SelectionManager()
+  // ============================================
+  // NEW ARCHITECTURE: Initialize new studio
+  // ============================================
+  try {
+    initNewStudio({
+      editor: editor,
+      previewContainer: previewContainer,
+      propertyPanelContainer: propertyPanelContainer,
+      initialSource: files[currentFile] || '',
+      currentFile: currentFile,
+    })
+    console.log('Studio: New architecture initialized')
+  } catch (e) {
+    console.warn('Studio: New architecture failed to initialize:', e)
+  }
 
-  // Create EditorSyncManager (will get sourceMap after first compile)
-  // Note: We pass a dummy sourceMap initially, it will be updated after compile
-  const dummySourceMap = new Mirror.SourceMap()
-  studioEditorSyncManager = new Mirror.EditorSyncManager(
-    dummySourceMap,
-    studioSelectionManager,
-    {
-      debounceMs: 150,
-      useIdleCallback: true,
-      scrollToLine: scrollEditorToLine
-    }
-  )
+  // ============================================
+  // SELECTION ADAPTER: Bridge between new state and legacy PropertyPanel
+  // Uses StateSelectionAdapter which automatically syncs with core state
+  // ============================================
+  studioSelectionManager = getStateSelectionAdapter()
 
-  // Create PreviewInteraction (will attach to preview after each compile)
-  // We'll create it fresh after each compile since the preview DOM changes
-
-  // Focus tracking: Editor vs Preview
-  // When editor has focus, property panel follows cursor
-  // When preview has focus, property panel follows clicked element
-
-  // Use mousedown to detect editor interaction (more reliable than focusin)
-  editorContainer.addEventListener('mousedown', () => {
-    editorHasFocus = true
-    // Sync after a short delay to let cursor position update
-    setTimeout(syncPropertyPanelToEditorCursor, 50)
-  })
-
-  // Also handle keyboard navigation into editor
-  editorContainer.addEventListener('focusin', () => {
-    if (!editorHasFocus) {
-      editorHasFocus = true
-      syncPropertyPanelToEditorCursor()
-    }
-  })
-
-  previewContainer.addEventListener('mousedown', () => {
-    editorHasFocus = false
-  })
+  // Focus tracking is now handled by EditorController and PreviewController
+  // The state.editorHasFocus is updated automatically by the new architecture
 
   console.log('Studio: Initialized')
 }
@@ -6607,30 +6150,24 @@ function updateStudio(ast, sourceMap, source) {
   currentAST = ast
   currentSourceMap = sourceMap
 
-  // Update EditorSyncManager with new sourceMap
-  if (studioEditorSyncManager) {
-    studioEditorSyncManager.updateSourceMap(sourceMap)
+  // ============================================
+  // NEW ARCHITECTURE: Update state
+  // ============================================
+  try {
+    updateStudioState(ast, null, sourceMap, source)
+  } catch (e) {
+    console.warn('Studio: New architecture update failed:', e)
   }
+
+  // SourceMap sync handled by new architecture via updateStudioState()
 
   const propertyPanelContainer = document.getElementById('property-panel')
   const previewContainer = document.getElementById('preview')
 
-  // Clean up old interaction handler
-  if (studioPreviewInteraction) {
-    studioPreviewInteraction.dispose()
+  // Refresh preview controller after DOM update
+  if (studio.preview) {
+    studio.preview.refresh()
   }
-
-  // Create new PreviewInteraction for the fresh preview DOM
-  studioPreviewInteraction = new Mirror.PreviewInteraction(
-    previewContainer,
-    studioSelectionManager,
-    {
-      selectedClass: 'studio-selected',
-      hoverClass: 'studio-hover'
-    }
-  )
-  // Re-apply selection visual to new DOM elements
-  studioPreviewInteraction.refresh()
 
   // Update or create PropertyExtractor
   if (studioPropertyExtractor) {
@@ -6705,7 +6242,7 @@ function updateStudio(ast, sourceMap, source) {
   makePreviewElementsDraggable()
 
   // Sync property panel to editor cursor after compile (if editor has focus)
-  if (editorHasFocus) {
+  if (getEditorHasFocus()) {
     syncPropertyPanelToEditorCursor()
   }
 }
@@ -6777,13 +6314,36 @@ function handleStudioCodeChange(result) {
     return
   }
 
-  // Apply the adjusted change to CodeMirror (with history integration for Cmd+Z)
+  // Calculate inverse change for undo
+  const currentSource = editor.state.doc.toString()
+  const inverseChange = {
+    from: adjustedChange.from,
+    to: adjustedChange.from + adjustedChange.insert.length,
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+  }
+
+  // Apply the adjusted change to CodeMirror
   editor.dispatch({
     changes: adjustedChange,
     annotations: [
       propertyPanelChangeAnnotation.of(true),
       Transaction.userEvent.of('input.property')
     ]
+  })
+
+  // Record the change in CommandExecutor for undo/redo
+  const command = new RecordedChangeCommand({
+    change: adjustedChange,
+    inverseChange: inverseChange,
+    description: 'Property change'
+  })
+  executor.execute(command)
+
+  // Emit event for tracking
+  events.emit('source:changed', {
+    source: editor.state.doc.toString(),
+    origin: 'panel',
+    change: adjustedChange
   })
 
   // Compile immediately (no debounce for property panel changes)
@@ -6817,10 +6377,33 @@ function handleStudioDrop(result) {
     return
   }
 
-  // Apply the change to CodeMirror (with history integration for Cmd+Z)
+  // Calculate inverse change for undo
+  const currentSource = editor.state.doc.toString()
+  const inverseChange = {
+    from: adjustedChange.from,
+    to: adjustedChange.from + adjustedChange.insert.length,
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+  }
+
+  // Apply the change to CodeMirror
   editor.dispatch({
     changes: adjustedChange,
     annotations: Transaction.userEvent.of('input.drop')
+  })
+
+  // Record the change in CommandExecutor for undo/redo
+  const command = new RecordedChangeCommand({
+    change: adjustedChange,
+    inverseChange: inverseChange,
+    description: 'Drop component'
+  })
+  executor.execute(command)
+
+  // Emit event for tracking
+  events.emit('source:changed', {
+    source: editor.state.doc.toString(),
+    origin: 'drag-drop',
+    change: adjustedChange
   })
 
   console.log('Studio: Component dropped', result.dropZone?.targetId, result.dropZone?.placement)
@@ -6858,14 +6441,38 @@ function handleElementDelete() {
     return false
   }
 
-  // Apply the change with history integration for Cmd+Z
+  // Calculate inverse change for undo (the deleted content)
+  const currentSource = editor.state.doc.toString()
+  const inverseChange = {
+    from: adjustedChange.from,
+    to: adjustedChange.from + adjustedChange.insert.length,
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+  }
+
+  // Apply the change to CodeMirror
   editor.dispatch({
     changes: adjustedChange,
     annotations: Transaction.userEvent.of('delete.element')
   })
 
+  // Record the change in CommandExecutor for undo/redo
+  const command = new RecordedChangeCommand({
+    change: adjustedChange,
+    inverseChange: inverseChange,
+    description: `Delete ${nodeId}`
+  })
+  executor.execute(command)
+
+  // Emit event for tracking
+  events.emit('source:changed', {
+    source: editor.state.doc.toString(),
+    origin: 'keyboard',
+    change: adjustedChange
+  })
+
   // Clear selection and recompile
   studioSelectionManager.clearSelection()
+  newHandleSelectionChange(null, 'keyboard')
   const code = editor.state.doc.toString()
   compile(code)
   debouncedSave(code)
@@ -6877,7 +6484,7 @@ function handleElementDelete() {
 // Keyboard listener for Delete/Backspace on selected elements
 document.addEventListener('keydown', (e) => {
   // Only handle Delete/Backspace when preview has focus (not editor)
-  if (editorHasFocus) return
+  if (getEditorHasFocus()) return
 
   if (e.key === 'Delete' || e.key === 'Backspace') {
     // Don't interfere with input fields
@@ -6885,6 +6492,52 @@ document.addEventListener('keydown', (e) => {
 
     if (handleElementDelete()) {
       e.preventDefault()
+    }
+  }
+})
+
+// Global undo/redo via CommandExecutor (when preview has focus)
+document.addEventListener('keydown', (e) => {
+  // Don't interfere with editor's own undo/redo
+  if (getEditorHasFocus()) return
+  // Don't interfere with input fields
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const modifier = isMac ? e.metaKey : e.ctrlKey
+
+  if (modifier && e.key === 'z') {
+    if (e.shiftKey) {
+      // Redo
+      if (executor.canRedo()) {
+        e.preventDefault()
+        const result = executor.redo()
+        if (result.success) {
+          compile(editor.state.doc.toString())
+          console.log('Studio: Redo via CommandExecutor')
+        }
+      }
+    } else {
+      // Undo
+      if (executor.canUndo()) {
+        e.preventDefault()
+        const result = executor.undo()
+        if (result.success) {
+          compile(editor.state.doc.toString())
+          console.log('Studio: Undo via CommandExecutor')
+        }
+      }
+    }
+  }
+  // Also support Ctrl+Y for redo on Windows
+  if (!isMac && e.ctrlKey && e.key === 'y') {
+    if (executor.canRedo()) {
+      e.preventDefault()
+      const result = executor.redo()
+      if (result.success) {
+        compile(editor.state.doc.toString())
+        console.log('Studio: Redo via CommandExecutor')
+      }
     }
   }
 })
@@ -7059,6 +6712,7 @@ window.editor = editor
 window.studioSelectionManager = studioSelectionManager
 window.startCompletion = startCompletion
 window.files = files
+window.studio = studio  // New architecture
 window.resetCode = async () => {
   // Reset all files to defaults
   for (const [name, content] of Object.entries(defaultFiles)) {

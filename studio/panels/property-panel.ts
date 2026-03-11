@@ -5,10 +5,21 @@
  * to update the source code.
  */
 
-import type { SelectionManager, BreadcrumbItem } from '../../src/studio/selection-manager'
+import type { BreadcrumbItem } from '../../src/studio/selection-manager'
 import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
 import type { CodeModifier, ModificationResult, FilesAccess } from '../../src/studio/code-modifier'
 import { PROPERTY_ICON_PATHS } from '../../src/studio/icons'
+
+/**
+ * Interface for selection providers (both SelectionManager and StateSelectionAdapter implement this)
+ */
+export interface SelectionProvider {
+  subscribe(listener: (nodeId: string | null, previousNodeId: string | null) => void): () => void
+  subscribeBreadcrumb(listener: (chain: BreadcrumbItem[]) => void): () => void
+  getSelection(): string | null
+  clearSelection(): void
+  select(nodeId: string | null): void
+}
 
 /**
  * Token info extracted from source
@@ -51,7 +62,7 @@ export interface PropertyPanelOptions {
  */
 export class PropertyPanel {
   private container: HTMLElement
-  private selectionManager: SelectionManager
+  private selectionManager: SelectionProvider
   private propertyExtractor: PropertyExtractor
   private codeModifier: CodeModifier
   private onCodeChange: OnCodeChangeCallback
@@ -73,7 +84,7 @@ export class PropertyPanel {
 
   constructor(
     container: HTMLElement,
-    selectionManager: SelectionManager,
+    selectionManager: SelectionProvider,
     propertyExtractor: PropertyExtractor,
     codeModifier: CodeModifier,
     onCodeChange: OnCodeChangeCallback,
@@ -4164,7 +4175,7 @@ export class PropertyPanel {
  */
 export function createPropertyPanel(
   container: HTMLElement,
-  selectionManager: SelectionManager,
+  selectionManager: SelectionProvider,
   propertyExtractor: PropertyExtractor,
   codeModifier: CodeModifier,
   onCodeChange: OnCodeChangeCallback,
