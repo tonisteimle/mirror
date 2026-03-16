@@ -52,7 +52,6 @@ const SWATCH_ROWS = 10
  */
 class GlobalColorPickerWrapper {
   private isHashTrigger: boolean
-  private onSelectCallback: ((value: string) => void) | null = null
 
   constructor(isHashTrigger: boolean) {
     this.isHashTrigger = isHashTrigger
@@ -80,6 +79,7 @@ class GlobalColorPickerWrapper {
     const property = context.property || 'bg'
 
     // Call the global showColorPicker from app.js
+    // Pass null for callback so the Editor-mode logic in selectColor() handles insertion
     const showColorPicker = (window as any).showColorPicker
     if (typeof showColorPicker === 'function') {
       showColorPicker(
@@ -91,12 +91,7 @@ class GlobalColorPickerWrapper {
         this.isHashTrigger,
         hashStartPos,
         property,
-        (color: string) => {
-          // Callback when color is selected
-          if (this.onSelectCallback) {
-            this.onSelectCallback(color)
-          }
-        }
+        null // No callback - let selectColor() handle editor insertion directly
       )
       colorState.isOpen = true
     } else {
@@ -127,13 +122,6 @@ class GlobalColorPickerWrapper {
    */
   getElement(): HTMLElement | null {
     return document.querySelector('.color-picker-popup') as HTMLElement
-  }
-
-  /**
-   * Set the onSelect callback (called by TriggerManager)
-   */
-  setOnSelect(callback: (value: string) => void): void {
-    this.onSelectCallback = callback
   }
 
   /**
