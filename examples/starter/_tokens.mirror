@@ -1,0 +1,124 @@
+// ============================================
+// Design Tokens - Starter Template
+// ============================================
+// Zurückhaltendes, flächiges Design-System
+// Keine Schatten, subtile Farben, klare Flächen
+
+// --------------------------------------------
+// Basis-Palette
+// --------------------------------------------
+
+// Graustufen (Zinc-basiert)
+$grey-50: #fafafa
+$grey-100: #f4f4f5
+$grey-200: #e4e4e7
+$grey-300: #d4d4d8
+$grey-400: #a1a1aa
+$grey-500: #71717a
+$grey-600: #52525b
+$grey-700: #3f3f46
+$grey-800: #27272a
+$grey-900: #18181b
+$grey-950: #09090b
+
+// Akzentfarben (zurückhaltend)
+$blue-500: #3b82f6
+$blue-600: #2563eb
+$green-500: #22c55e
+$green-600: #16a34a
+$red-500: #ef4444
+$red-600: #dc2626
+$yellow-500: #eab308
+$orange-500: #f97316
+
+// --------------------------------------------
+// Semantische Tokens - Hintergründe
+// --------------------------------------------
+
+$app.bg: $grey-950
+$surface.bg: $grey-900
+$elevated.bg: $grey-800
+$overlay.bg: $grey-800
+
+$control.bg: $grey-800
+$control.hover.bg: $grey-700
+$control.active.bg: $grey-600
+
+$primary.bg: $blue-500
+$primary.hover.bg: $blue-600
+
+$success.bg: $green-500
+$danger.bg: $red-500
+$warning.bg: $yellow-500
+
+// --------------------------------------------
+// Semantische Tokens - Text/Foreground
+// --------------------------------------------
+
+$text.col: $grey-100
+$text.muted.col: $grey-400
+$text.subtle.col: $grey-500
+$heading.col: #ffffff
+
+$on-primary.col: #ffffff
+$on-surface.col: $grey-100
+
+$link.col: $blue-500
+$link.hover.col: $blue-600
+
+$success.col: $green-500
+$danger.col: $red-500
+$warning.col: $yellow-500
+
+// --------------------------------------------
+// Semantische Tokens - Borders
+// --------------------------------------------
+
+$border.col: $grey-700
+$border.subtle.col: $grey-800
+$border.focus.col: $blue-500
+
+// --------------------------------------------
+// Spacing
+// --------------------------------------------
+
+$xs.pad: 4
+$sm.pad: 8
+$md.pad: 12
+$lg.pad: 16
+$xl.pad: 24
+$xxl.pad: 32
+
+$xs.gap: 4
+$sm.gap: 8
+$md.gap: 12
+$lg.gap: 16
+$xl.gap: 24
+
+// --------------------------------------------
+// Radius
+// --------------------------------------------
+
+$xs.rad: 4
+$sm.rad: 6
+$md.rad: 8
+$lg.rad: 12
+$xl.rad: 16
+$full.rad: 9999
+
+// --------------------------------------------
+// Typography
+// --------------------------------------------
+
+$xs.font.size: 11
+$sm.font.size: 12
+$base.font.size: 14
+$lg.font.size: 16
+$xl.font.size: 20
+$xxl.font.size: 24
+$xxxl.font.size: 32
+
+// Icon sizes
+$sm.icon: 16
+$md.icon: 20
+$lg.icon: 24

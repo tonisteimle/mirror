@@ -118,7 +118,7 @@ submitBtn.onclick = () => {
     // Check structure order
     const tokensIndex = code.indexOf('Design Tokens')
     const createUIIndex = code.indexOf('export function createUI')
-    const runtimeIndex = code.indexOf('Runtime helpers')
+    const runtimeIndex = code.indexOf('Mirror DOM Runtime')
     const initIndex = code.indexOf('Auto-initialization')
     const jsIndex = code.indexOf('let submitted = false')
 

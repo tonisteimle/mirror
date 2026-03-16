@@ -3,9 +3,29 @@
  */
 
 import { BasePicker, KeyboardNav, type PickerConfig, type PickerCallbacks } from '../base'
-import { parseTokens, getTokenTypesForProperty, type TokenDefinition, type TokenContext, type TokenType } from './types'
+import {
+  parseTokens,
+  parseTokensFromFiles,
+  getTokenTypesForProperty,
+  filterTokensBySuffix,
+  filterTokensByType,
+  filterTokensBySearch,
+  type TokenDefinition,
+  type TokenContext,
+  type TokenType,
+} from './types'
 
-export { parseTokens, getTokenTypesForProperty, type TokenDefinition, type TokenContext, type TokenType }
+export {
+  parseTokens,
+  parseTokensFromFiles,
+  getTokenTypesForProperty,
+  filterTokensBySuffix,
+  filterTokensByType,
+  filterTokensBySearch,
+  type TokenDefinition,
+  type TokenContext,
+  type TokenType,
+}
 
 export interface TokenPickerConfig extends Partial<PickerConfig> {
   tokens: TokenDefinition[]
@@ -105,6 +125,84 @@ export class TokenPicker extends BasePicker {
     this.context = null
     this.filteredTokens = this.filterTokens()
     this.refreshList()
+  }
+
+  /**
+   * Filter tokens by text (alias for search, used by TriggerManager)
+   */
+  filter(text: string): void {
+    this.search(text)
+  }
+
+  /**
+   * Navigate to a specific direction (for keyboard navigation)
+   */
+  navigate(direction: 'up' | 'down' | 'left' | 'right'): void {
+    if (!this.keyboardNav) return
+
+    switch (direction) {
+      case 'up':
+        this.keyboardNav.moveUp()
+        break
+      case 'down':
+        this.keyboardNav.moveDown()
+        break
+      case 'left':
+        this.keyboardNav.moveLeft()
+        break
+      case 'right':
+        this.keyboardNav.moveRight()
+        break
+    }
+  }
+
+  /**
+   * Get the currently selected index
+   */
+  getSelectedIndex(): number {
+    return this.keyboardNav?.getSelectedIndex() ?? 0
+  }
+
+  /**
+   * Get the selected token
+   */
+  getSelectedToken(): TokenDefinition | null {
+    const index = this.getSelectedIndex()
+    return this.filteredTokens[index] ?? null
+  }
+
+  /**
+   * Get the selected value
+   */
+  getSelectedValue(): string | undefined {
+    const token = this.getSelectedToken()
+    return token?.name
+  }
+
+  /**
+   * Show the picker at a specific position
+   */
+  showAt(x: number, y: number): void {
+    // Create a temporary anchor element
+    const anchor = document.createElement('div')
+    anchor.style.position = 'fixed'
+    anchor.style.left = `${x}px`
+    anchor.style.top = `${y}px`
+    anchor.style.width = '0'
+    anchor.style.height = '0'
+    document.body.appendChild(anchor)
+
+    // Show using the base class method
+    this.show(anchor)
+
+    // Remove the anchor
+    anchor.remove()
+
+    // Override the position to be exact
+    if (this.element) {
+      this.element.style.left = `${x}px`
+      this.element.style.top = `${y}px`
+    }
   }
 
   private filterTokens(): TokenDefinition[] {

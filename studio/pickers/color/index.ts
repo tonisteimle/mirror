@@ -3,9 +3,39 @@
  */
 
 import { BasePicker, KeyboardNav, type PickerConfig, type PickerCallbacks } from '../base'
-import { DEFAULT_PALETTES, GRAYS, QUICK_COLORS, parseColor, isLightColor, type ColorPalette } from './palette'
+import {
+  DEFAULT_PALETTES,
+  ALL_PALETTES,
+  GRAYS,
+  QUICK_COLORS,
+  COLORS,
+  OPEN_COLORS,
+  TAILWIND_COLORS,
+  OPEN_COLOR_PALETTE,
+  TAILWIND_PALETTE,
+  MATERIAL_PALETTE,
+  parseColor,
+  isLightColor,
+  type ColorPalette,
+} from './palette'
 
-export { parseColor, isLightColor, hexToHSL, hslToHex, generateShades } from './palette'
+export {
+  parseColor,
+  isLightColor,
+  hexToHSL,
+  hslToHex,
+  generateShades,
+  DEFAULT_PALETTES,
+  ALL_PALETTES,
+  GRAYS,
+  QUICK_COLORS,
+  COLORS,
+  OPEN_COLORS,
+  TAILWIND_COLORS,
+  OPEN_COLOR_PALETTE,
+  TAILWIND_PALETTE,
+  MATERIAL_PALETTE,
+} from './palette'
 export type { ColorPalette }
 
 export interface ColorPickerConfig extends Partial<PickerConfig> {
@@ -127,6 +157,81 @@ export class ColorPicker extends BasePicker {
       normalized,
       ...this.recentColors.filter(c => c !== normalized),
     ].slice(0, this.maxRecentColors)
+  }
+
+  /**
+   * Show the picker at a specific position (for TriggerManager)
+   */
+  showAt(x: number, y: number): void {
+    // Create a temporary anchor element
+    const anchor = document.createElement('div')
+    anchor.style.position = 'fixed'
+    anchor.style.left = `${x}px`
+    anchor.style.top = `${y}px`
+    anchor.style.width = '0'
+    anchor.style.height = '0'
+    document.body.appendChild(anchor)
+
+    // Show using the base class method
+    this.show(anchor)
+
+    // Remove the anchor
+    anchor.remove()
+
+    // Override the position to be exact
+    if (this.element) {
+      this.element.style.left = `${x}px`
+      this.element.style.top = `${y}px`
+    }
+  }
+
+  /**
+   * Navigate to a specific direction (for TriggerManager)
+   */
+  navigate(direction: 'up' | 'down' | 'left' | 'right'): void {
+    if (!this.keyboardNav) return
+
+    switch (direction) {
+      case 'up':
+        this.keyboardNav.moveUp()
+        break
+      case 'down':
+        this.keyboardNav.moveDown()
+        break
+      case 'left':
+        this.keyboardNav.moveLeft()
+        break
+      case 'right':
+        this.keyboardNav.moveRight()
+        break
+    }
+  }
+
+  /**
+   * Get the selected swatch index
+   */
+  getSelectedIndex(): number {
+    return this.keyboardNav?.getSelectedIndex() ?? 0
+  }
+
+  /**
+   * Get the selected color value
+   */
+  getSelectedValue(): string {
+    if (this.currentTab === 'custom') {
+      return this.currentColor
+    }
+
+    const index = this.getSelectedIndex()
+    const swatch = this.swatchElements[index]
+    return swatch?.getAttribute('data-color') ?? this.currentColor
+  }
+
+  /**
+   * Filter method (not applicable to color picker, but needed for interface)
+   */
+  filter(text: string): void {
+    // Color picker doesn't support filtering
   }
 
   private renderTabs(): HTMLElement {
@@ -383,4 +488,93 @@ export function createColorPicker(
   callbacks: ColorPickerCallbacks
 ): ColorPicker {
   return new ColorPicker(config, callbacks)
+}
+
+// ============================================
+// Global Color Picker API for Property Panel
+// ============================================
+
+let globalColorPicker: ColorPicker | null = null
+let globalClickOutsideHandler: ((e: MouseEvent) => void) | null = null
+
+/**
+ * Show color picker for property panel
+ * This is a convenience function that creates and positions a color picker
+ * @param x - X coordinate for positioning
+ * @param y - Y coordinate for positioning
+ * @param property - Property name (bg, col, boc, etc.) for context
+ * @param currentValue - Current color value to preselect
+ * @param callback - Called when a color is selected
+ */
+export function showColorPickerForProperty(
+  x: number,
+  y: number,
+  property: string,
+  currentValue: string,
+  callback: (color: string) => void
+): void {
+  // Close any existing picker
+  hideGlobalColorPicker()
+
+  // Create new picker
+  globalColorPicker = new ColorPicker(
+    {
+      initialColor: currentValue || '#3b82f6',
+      showCustomTab: true,
+      showRecentColors: true,
+    },
+    {
+      onSelect: (color: string) => {
+        callback(color)
+        hideGlobalColorPicker()
+      },
+      onClose: () => {
+        hideGlobalColorPicker()
+      },
+    }
+  )
+
+  // Show at position
+  globalColorPicker.showAt(x, y)
+
+  // Setup click outside to close
+  globalClickOutsideHandler = (e: MouseEvent) => {
+    const pickerEl = globalColorPicker?.getElement()
+    if (pickerEl && !pickerEl.contains(e.target as Node)) {
+      hideGlobalColorPicker()
+    }
+  }
+  setTimeout(() => {
+    document.addEventListener('mousedown', globalClickOutsideHandler!)
+  }, 0)
+}
+
+/**
+ * Hide the global color picker
+ */
+export function hideGlobalColorPicker(): void {
+  if (globalColorPicker) {
+    globalColorPicker.hide()
+    globalColorPicker = null
+  }
+  if (globalClickOutsideHandler) {
+    document.removeEventListener('mousedown', globalClickOutsideHandler)
+    globalClickOutsideHandler = null
+  }
+}
+
+/**
+ * Check if global color picker is visible
+ */
+export function isGlobalColorPickerVisible(): boolean {
+  return globalColorPicker !== null && globalColorPicker.isVisible()
+}
+
+/**
+ * Initialize global color picker API on window
+ * Call this during app initialization
+ */
+export function initColorPickerGlobalAPI(): void {
+  ;(window as any).showColorPickerForProperty = showColorPickerForProperty
+  ;(window as any).hideGlobalColorPicker = hideGlobalColorPicker
 }

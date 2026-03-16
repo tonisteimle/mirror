@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Minimal Two-Color Icons - Sharp</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #09090b;
+      color: #e4e4e7;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 24px;
+      margin: 0;
+    }
+    h1 { font-size: 16px; color: #a1a1aa; margin: 0 0 8px 0; }
+    .subtitle { font-size: 12px; color: #52525b; margin: 0 0 32px 0; }
+    h2 { font-size: 12px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin: 32px 0 12px 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    .icon-card {
+      background: #18181b;
+      border-radius: 8px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .icon-card:hover {
+      background: #27272a;
+    }
+    .icon-card svg {
+      width: 24px;
+      height: 24px;
+    }
+    .icon-card span {
+      font-size: 9px;
+      color: #52525b;
+      text-align: center;
+    }
+
+    /* Two-color system */
+    .stroke-base { stroke: #71717a; fill: none; }
+    .stroke-accent { stroke: #3B82F6; fill: none; }
+    .fill-accent { fill: #3B82F6; stroke: none; }
+    .fill-base { fill: #71717a; stroke: none; }
+
+    /* Panel preview */
+    .panel-preview {
+      margin-top: 48px;
+      padding: 16px;
+      background: #18181b;
+      border-radius: 12px;
+      width: 200px;
+    }
+    .panel-preview h3 {
+      font-size: 10px;
+      color: #52525b;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+    }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .panel-icon {
+      background: #27272a;
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .panel-icon:hover {
+      background: #3f3f46;
+    }
+    .panel-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Minimal Two-Color Icons - Sharp</h1>
+  <p class="subtitle">Keine Rundungen · Grau = Struktur · Blau = Aktiv</p>
+
+  <h2>Layout</h2>
+  <div class="grid">
+    <!-- VStack -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="3" width="16" height="5" class="stroke-accent"/>
+        <rect x="4" y="10" width="16" height="5" class="stroke-base"/>
+        <rect x="4" y="17" width="16" height="4" class="stroke-base"/>
+      </svg>
+      <span>vstack</span>
+    </div>
+
+    <!-- HStack -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="4" width="5" height="16" class="stroke-accent"/>
+        <rect x="10" y="4" width="5" height="16" class="stroke-base"/>
+        <rect x="17" y="4" width="4" height="16" class="stroke-base"/>
+      </svg>
+      <span>hstack</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="8" height="8" class="stroke-accent"/>
+        <rect x="13" y="3" width="8" height="8" class="stroke-base"/>
+        <rect x="3" y="13" width="8" height="8" class="stroke-base"/>
+        <rect x="13" y="13" width="8" height="8" class="stroke-base"/>
+      </svg>
+      <span>grid</span>
+    </div>
+
+    <!-- Container -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="6" y="6" width="12" height="12" class="stroke-accent"/>
+      </svg>
+      <span>container</span>
+    </div>
+
+    <!-- Sidebar Left -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="3" y="3" width="6" height="18" class="stroke-accent"/>
+      </svg>
+      <span>sidebar-l</span>
+    </div>
+
+    <!-- Sidebar Right -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="15" y="3" width="6" height="18" class="stroke-accent"/>
+      </svg>
+      <span>sidebar-r</span>
+    </div>
+
+    <!-- Header -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="3" y="3" width="18" height="6" class="stroke-accent"/>
+      </svg>
+      <span>header</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="3" y="15" width="18" height="6" class="stroke-accent"/>
+      </svg>
+      <span>footer</span>
+    </div>
+
+    <!-- Split -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="8" height="18" class="stroke-accent"/>
+        <rect x="13" y="3" width="8" height="18" class="stroke-base"/>
+      </svg>
+      <span>split</span>
+    </div>
+
+    <!-- Center -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="8" y="8" width="8" height="8" class="stroke-accent"/>
+      </svg>
+      <span>center</span>
+    </div>
+
+    <!-- Scroll -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <rect x="18" y="5" width="2" height="6" class="fill-accent"/>
+      </svg>
+      <span>scroll</span>
+    </div>
+
+    <!-- Stack/Layers -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="6" y="2" width="14" height="10" class="stroke-base"/>
+        <rect x="4" y="6" width="14" height="10" class="stroke-base"/>
+        <rect x="2" y="10" width="14" height="10" class="stroke-accent"/>
+      </svg>
+      <span>layers</span>
+    </div>
+
+    <!-- Wrap -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="5" height="5" class="stroke-accent"/>
+        <rect x="10" y="3" width="5" height="5" class="stroke-base"/>
+        <rect x="17" y="3" width="4" height="5" class="stroke-base"/>
+        <rect x="3" y="10" width="5" height="5" class="stroke-base"/>
+        <rect x="10" y="10" width="5" height="5" class="stroke-base"/>
+      </svg>
+      <span>wrap</span>
+    </div>
+
+    <!-- Spacer -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <line x1="3" y1="12" x2="8" y2="12" class="stroke-base"/>
+        <line x1="16" y1="12" x2="21" y2="12" class="stroke-base"/>
+        <rect x="9" y="6" width="6" height="12" class="stroke-accent" stroke-dasharray="2 2"/>
+      </svg>
+      <span>spacer</span>
+    </div>
+
+    <!-- Divider -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="7" class="stroke-base"/>
+        <line x1="3" y1="12" x2="21" y2="12" class="stroke-accent"/>
+        <rect x="3" y="14" width="18" height="7" class="stroke-base"/>
+      </svg>
+      <span>divider</span>
+    </div>
+
+    <!-- Aspect -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="5" width="18" height="14" class="stroke-accent"/>
+        <line x1="3" y1="5" x2="21" y2="19" class="stroke-base" opacity="0.5"/>
+      </svg>
+      <span>aspect</span>
+    </div>
+  </div>
+
+  <h2>Components</h2>
+  <div class="grid">
+    <!-- Tabs -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="7" width="18" height="14" class="stroke-base"/>
+        <rect x="4" y="3" width="6" height="5" class="stroke-accent"/>
+        <rect x="11" y="3" width="6" height="5" class="stroke-base"/>
+      </svg>
+      <span>tabs</span>
+    </div>
+
+    <!-- Dropdown -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="4" width="18" height="6" class="stroke-accent"/>
+        <line x1="15" y1="7" x2="18" y2="7" class="stroke-accent"/>
+        <rect x="3" y="12" width="18" height="4" class="stroke-base"/>
+        <rect x="3" y="17" width="18" height="4" class="stroke-base"/>
+      </svg>
+      <span>dropdown</span>
+    </div>
+
+    <!-- Card -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <line x1="7" y1="8" x2="17" y2="8" class="stroke-accent"/>
+        <line x1="7" y1="12" x2="14" y2="12" class="stroke-base"/>
+        <line x1="7" y1="16" x2="11" y2="16" class="stroke-base"/>
+      </svg>
+      <span>card</span>
+    </div>
+
+    <!-- Button -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="7" width="18" height="10" class="stroke-accent"/>
+        <line x1="8" y1="12" x2="16" y2="12" class="stroke-accent"/>
+      </svg>
+      <span>button</span>
+    </div>
+
+    <!-- Input -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="6" width="18" height="12" class="stroke-base"/>
+        <line x1="7" y1="9" x2="7" y2="15" class="stroke-accent"/>
+      </svg>
+      <span>input</span>
+    </div>
+
+    <!-- Modal -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="2" y="2" width="20" height="20" class="stroke-base" opacity="0.4"/>
+        <rect x="5" y="6" width="14" height="12" class="stroke-accent"/>
+      </svg>
+      <span>modal</span>
+    </div>
+
+    <!-- Navbar -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <line x1="3" y1="9" x2="21" y2="9" class="stroke-base"/>
+        <rect x="5" y="5" width="3" height="3" class="fill-accent"/>
+        <line x1="11" y1="6" x2="17" y2="6" class="stroke-base"/>
+      </svg>
+      <span>navbar</span>
+    </div>
+
+    <!-- Menu -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <line x1="4" y1="6" x2="20" y2="6" class="stroke-base"/>
+        <line x1="4" y1="12" x2="20" y2="12" class="stroke-accent"/>
+        <line x1="4" y1="18" x2="20" y2="18" class="stroke-base"/>
+      </svg>
+      <span>menu</span>
+    </div>
+
+    <!-- Accordion -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="5" class="stroke-accent"/>
+        <path d="M17 5l-2 2-2-2" class="stroke-accent" fill="none"/>
+        <rect x="3" y="10" width="18" height="4" class="stroke-base"/>
+        <rect x="3" y="16" width="18" height="4" class="stroke-base"/>
+      </svg>
+      <span>accordion</span>
+    </div>
+
+    <!-- List -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="5" width="3" height="3" class="fill-accent"/>
+        <line x1="10" y1="6" x2="20" y2="6" class="stroke-base"/>
+        <rect x="4" y="11" width="3" height="3" class="fill-base"/>
+        <line x1="10" y1="12" x2="20" y2="12" class="stroke-base"/>
+        <rect x="4" y="17" width="3" height="3" class="fill-base"/>
+        <line x1="10" y1="18" x2="20" y2="18" class="stroke-base"/>
+      </svg>
+      <span>list</span>
+    </div>
+
+    <!-- Toggle -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="8" width="18" height="8" class="stroke-accent"/>
+        <rect x="13" y="10" width="6" height="4" class="fill-accent"/>
+      </svg>
+      <span>toggle</span>
+    </div>
+
+    <!-- Checkbox -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="4" width="16" height="16" class="stroke-base"/>
+        <path d="M8 12l3 3 5-6" class="stroke-accent" fill="none"/>
+      </svg>
+      <span>checkbox</span>
+    </div>
+
+    <!-- Radio -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="4" width="16" height="16" class="stroke-base"/>
+        <rect x="8" y="8" width="8" height="8" class="fill-accent"/>
+      </svg>
+      <span>radio</span>
+    </div>
+
+    <!-- Table -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+        <line x1="3" y1="9" x2="21" y2="9" class="stroke-accent"/>
+        <line x1="3" y1="15" x2="21" y2="15" class="stroke-base"/>
+        <line x1="9" y1="3" x2="9" y2="21" class="stroke-base"/>
+        <line x1="15" y1="3" x2="15" y2="21" class="stroke-base"/>
+      </svg>
+      <span>table</span>
+    </div>
+
+    <!-- Avatar -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="4" width="16" height="16" class="stroke-base"/>
+        <rect x="9" y="7" width="6" height="5" class="fill-accent"/>
+        <rect x="7" y="14" width="10" height="4" class="fill-accent"/>
+      </svg>
+      <span>avatar</span>
+    </div>
+
+    <!-- Badge -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24" stroke-width="2">
+        <rect x="4" y="8" width="16" height="8" class="stroke-base"/>
+        <rect x="14" y="5" width="6" height="4" class="fill-accent"/>
+      </svg>
+      <span>badge</span>
+    </div>
+  </div>
+
+  <h2>Im Panel (200px)</h2>
+  <div class="panel-preview">
+    <h3>Layout</h3>
+    <div class="panel-grid">
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="4" y="3" width="16" height="5" class="stroke-accent"/>
+          <rect x="4" y="10" width="16" height="5" class="stroke-base"/>
+          <rect x="4" y="17" width="16" height="4" class="stroke-base"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="4" width="5" height="16" class="stroke-accent"/>
+          <rect x="10" y="4" width="5" height="16" class="stroke-base"/>
+          <rect x="17" y="4" width="4" height="16" class="stroke-base"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="8" height="8" class="stroke-accent"/>
+          <rect x="13" y="3" width="8" height="8" class="stroke-base"/>
+          <rect x="3" y="13" width="8" height="8" class="stroke-base"/>
+          <rect x="13" y="13" width="8" height="8" class="stroke-base"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+          <rect x="6" y="6" width="12" height="12" class="stroke-accent"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+          <rect x="3" y="3" width="6" height="18" class="stroke-accent"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+          <rect x="3" y="3" width="18" height="6" class="stroke-accent"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="8" height="18" class="stroke-accent"/>
+          <rect x="13" y="3" width="8" height="18" class="stroke-base"/>
+        </svg>
+      </div>
+      <div class="panel-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" class="stroke-base"/>
+          <rect x="8" y="8" width="8" height="8" class="stroke-accent"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

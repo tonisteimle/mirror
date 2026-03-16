@@ -4,7 +4,7 @@
  * Displays AST as a navigable tree structure.
  */
 
-import type { AST, Instance, ComponentDefinition } from '../../../src/parser/ast'
+import type { AST, Instance, ComponentDefinition, Slot } from '../../../src/parser/ast'
 
 export interface TreeNode {
   id: string
@@ -121,7 +121,11 @@ export class TreePanel {
     // Root instances
     if (ast.instances) {
       for (const inst of ast.instances) {
-        nodes.push(this.buildInstanceNode(inst, 0))
+        if (inst.type === 'Slot') {
+          nodes.push(this.buildSlotNode(inst, 0))
+        } else {
+          nodes.push(this.buildInstanceNode(inst, 0))
+        }
       }
     }
 
@@ -173,6 +177,19 @@ export class TreePanel {
       type: inst.component,
       children,
       isExpanded: this.expandedNodes.has(nodeId),
+      isSelected: this.selectedNodeId === nodeId,
+      depth,
+    }
+  }
+
+  private buildSlotNode(slot: Slot, depth: number): TreeNode {
+    const nodeId = slot.nodeId || `slot_${slot.name}_${depth}`
+    return {
+      id: nodeId,
+      name: `Slot "${slot.name}"`,
+      type: 'Slot',
+      children: [],
+      isExpanded: false,
       isSelected: this.selectedNodeId === nodeId,
       depth,
     }

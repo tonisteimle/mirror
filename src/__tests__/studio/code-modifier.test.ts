@@ -740,4 +740,266 @@ describe('CodeModifier', () => {
       expect(applied).toBe(result.newSource)
     })
   })
+
+  describe('insertWithWrapper (Semantic Zones - Direct Container Layout)', () => {
+    it('applies layout directly to empty container for top-left zone', () => {
+      const source = `Container w full, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'top-left', {
+        textContent: 'Click'
+      })
+
+      expect(result.success).toBe(true)
+      // Layout should be applied to Container, not a wrapper Box
+      expect(result.newSource).toContain('Container w full, h full, ver')
+      expect(result.newSource).toContain('Button "Click"')
+      // No wrapper Box should be created
+      expect(result.newSource).not.toContain('Box ver')
+    })
+
+    it('applies layout directly to empty container for mid-center zone', () => {
+      const source = `Container w full, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Icon', 'mid-center', {
+        properties: 'check'
+      })
+
+      expect(result.success).toBe(true)
+      // Layout should be applied to Container
+      expect(result.newSource).toContain('Container w full, h full, center')
+      expect(result.newSource).toContain('Icon check')
+    })
+
+    it('inserts WITHOUT layout changes for mid-left zone (default position)', () => {
+      const source = `Container w full, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Text', 'mid-left', {
+        textContent: 'Hello'
+      })
+
+      expect(result.success).toBe(true)
+      // mid-left uses default layout, no props added
+      expect(result.newSource).toContain('Container w full, h full')
+      expect(result.newSource).toContain('Text "Hello"')
+    })
+
+    it('applies layout directly to empty container for bot-right zone', () => {
+      const source = `Container w full, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'bot-right')
+
+      expect(result.success).toBe(true)
+      // Layout should include ver, spread, hor
+      expect(result.newSource).toContain('ver')
+      expect(result.newSource).toContain('spread')
+      expect(result.newSource).toContain('hor')
+      expect(result.newSource).toContain('Button')
+    })
+
+    it('does NOT apply layout to container that already has children', () => {
+      const source = `Container w full, h full
+  ExistingChild`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 2 },
+          { id: 'node-2', componentName: 'ExistingChild', line: 2, endLine: 2, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'top-center')
+
+      expect(result.success).toBe(true)
+      // Container should NOT have layout added (already has children)
+      expect(result.newSource).toContain('Container w full, h full')
+      expect(result.newSource).not.toContain('Container w full, h full, ver')
+      expect(result.newSource).toContain('Button')
+    })
+
+    it('does NOT apply layout to container that already has layout props', () => {
+      const source = `Container w full, h full, hor`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'mid-center')
+
+      expect(result.success).toBe(true)
+      // Container already has 'hor', should not add 'center'
+      expect(result.newSource).toContain('Container w full, h full, hor')
+      expect(result.newSource).not.toContain('center')
+      expect(result.newSource).toContain('Button')
+    })
+
+    it('returns error for non-existent parent', () => {
+      const source = `Container w full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.insertWithWrapper('node-999', 'Button', 'top-center')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('not found')
+    })
+
+    it('getLayoutForZone returns correct layout properties', () => {
+      const source = `Container`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+
+      // mid-left has empty layout (default)
+      expect(modifier.getLayoutForZone('mid-left')).toBe('')
+
+      // Corners have layout
+      expect(modifier.getLayoutForZone('top-left')).toBe('ver')
+      expect(modifier.getLayoutForZone('top-center')).toBe('ver, center')
+      expect(modifier.getLayoutForZone('top-right')).toBe('ver, hor')
+      expect(modifier.getLayoutForZone('mid-center')).toBe('center')
+      expect(modifier.getLayoutForZone('mid-right')).toBe('hor, spread')
+      expect(modifier.getLayoutForZone('bot-left')).toBe('ver, spread')
+      expect(modifier.getLayoutForZone('bot-center')).toBe('ver, spread, center')
+      expect(modifier.getLayoutForZone('bot-right')).toBe('ver, spread, hor')
+    })
+
+    it('siblings automatically share same alignment after first drop', () => {
+      // This is the key behavior: subsequent children inherit container layout
+      const source = `Container w full, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+
+      // First drop: applies layout to container
+      const result1 = modifier.insertWithWrapper('node-1', 'Button', 'mid-center', {
+        textContent: 'First'
+      })
+
+      expect(result1.success).toBe(true)
+      expect(result1.newSource).toContain('Container w full, h full, center')
+      expect(result1.newSource).toContain('Button "First"')
+
+      // Update modifier state
+      modifier.updateSource(result1.newSource)
+
+      // Note: We can't easily test the second drop here because we'd need
+      // to rebuild the sourceMap. The key assertion is that the container
+      // now has the layout, so any children added will inherit it.
+    })
+  })
+
+  describe('replaceSlot', () => {
+    it('replaces a Slot with a component', () => {
+      const source = `Container
+  Slot "Main Content"`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 2 },
+          { id: 'node-2', componentName: 'Slot', line: 2, endLine: 2, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.replaceSlot('node-2', 'Button', { textContent: 'Click me' })
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toContain('Button "Click me"')
+      expect(result.newSource).not.toContain('Slot')
+    })
+
+    it('transfers Slot layout properties to new component', () => {
+      const source = `Container
+  Slot "Sidebar", w 300, h full`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 2 },
+          { id: 'node-2', componentName: 'Slot', line: 2, endLine: 2, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.replaceSlot('node-2', 'Navigation')
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toContain('Navigation')
+      expect(result.newSource).toContain('w 300')
+      expect(result.newSource).toContain('h full')
+    })
+
+    it('preserves new component properties while transferring Slot properties', () => {
+      const source = `Container
+  Slot "Content", w full, h 200`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 2 },
+          { id: 'node-2', componentName: 'Slot', line: 2, endLine: 2, parentId: 'node-1' },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.replaceSlot('node-2', 'Card', {
+        properties: 'bg #27272a, rad 8',
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.newSource).toContain('Card')
+      expect(result.newSource).toContain('bg #27272a')
+      expect(result.newSource).toContain('rad 8')
+      expect(result.newSource).toContain('w full')
+      expect(result.newSource).toContain('h 200')
+    })
+
+    it('returns error for non-existent slot', () => {
+      const source = `Container`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.replaceSlot('node-999', 'Button')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('not found')
+    })
+  })
 })

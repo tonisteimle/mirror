@@ -198,8 +198,8 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
     addClass(c: string) { el.classList.add(c) },
     removeClass(c: string) { el.classList.remove(c) },
     toggleClass(c: string) { el.classList.toggle(c) },
-    setStyle(prop: string, val: string) { (el.style as Record<string, string>)[prop] = val },
-    getStyle(prop: string) { return (el.style as Record<string, string>)[prop] },
+    setStyle(prop: string, val: string) { (el.style as unknown as Record<string, string>)[prop] = val },
+    getStyle(prop: string) { return (el.style as unknown as Record<string, string>)[prop] },
   }
 }
 
@@ -466,7 +466,7 @@ export function setState(el: MirrorElement | null, stateName: string): void {
     }
 
     for (const prop of stateProps) {
-      el._baseStyles[prop] = (el.style as Record<string, string>)[prop] || ''
+      el._baseStyles[prop] = (el.style as unknown as Record<string, string>)[prop] || ''
     }
   }
 

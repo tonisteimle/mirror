@@ -37,7 +37,7 @@ export interface Program extends BaseNode {
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
   animations: AnimationDefinition[]  // Animation definitions
-  instances: Instance[]
+  instances: (Instance | Slot)[]
   javascript?: JavaScriptBlock  // JavaScript code at end of file
   errors: ParseError[]
 }
@@ -75,7 +75,7 @@ export interface Instance extends BaseNode {
   component: string
   name: string | null         // named instance
   properties: Property[]
-  children: (Instance | Text)[]
+  children: (Instance | Slot | Text)[]
   childOverrides?: ChildOverride[]  // inline child overrides: NavItem Icon "home"; Label "Home"
   visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"
   initialState?: string       // initial state: "closed" → initialState: "closed"
@@ -179,12 +179,14 @@ export interface Each extends BaseNode {
   item: string
   collection: string
   filter?: Expression
-  children: Instance[]
+  children: (Instance | Slot)[]
 }
 
 export interface Slot extends BaseNode {
   type: 'Slot'
   name: string
+  /** Optional properties for the slot (w, h, etc.) */
+  properties?: Property[]
 }
 
 export interface Text extends BaseNode {

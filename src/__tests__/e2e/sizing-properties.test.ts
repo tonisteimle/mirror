@@ -87,7 +87,7 @@ Tag
 })
 
 describe('E2E: Width - Full (100%)', () => {
-  it('width full generates 100% and flex-grow', () => {
+  it('width full generates flex shorthand for proper flex behavior', () => {
     const input = `
 Container as frame:
   width full
@@ -95,8 +95,9 @@ Container as frame:
 Container
 `
     const output = compile(input)
-    expect(output).toContain("'width': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    // Uses flex shorthand for proper flex-fill behavior
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-width': '0'")
   })
 
   it('w full shorthand', () => {
@@ -107,8 +108,8 @@ Content as frame:
 Content
 `
     const output = compile(input)
-    expect(output).toContain("'width': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-width': '0'")
   })
 })
 
@@ -154,7 +155,7 @@ Card
 })
 
 describe('E2E: Height - Full (100%)', () => {
-  it('height full generates 100% and flex-grow', () => {
+  it('height full generates flex shorthand for proper flex behavior', () => {
     const input = `
 Sidebar as frame:
   height full
@@ -162,8 +163,9 @@ Sidebar as frame:
 Sidebar
 `
     const output = compile(input)
-    expect(output).toContain("'height': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    // Uses flex shorthand for proper flex-fill behavior
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-height': '0'")
   })
 })
 
@@ -367,8 +369,9 @@ Sidebar
 `
     const output = compile(input)
     expect(output).toContain("'width': '250px'")
-    expect(output).toContain("'height': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    // h full uses flex shorthand for proper flex behavior
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-height': '0'")
   })
 })
 
@@ -401,7 +404,8 @@ Container as frame:
 Container
 `
     const output = compile(input)
-    expect(output).toContain("'width': '100%'")
+    // w full uses flex shorthand
+    expect(output).toContain("'flex': '1 1 0%'")
     expect(output).toContain("'max-width': '1200px'")
   })
 

@@ -8,9 +8,16 @@
  * - Notifies listeners when drop completes
  */
 
-import { DropZoneCalculator, DropZone, createDropZoneCalculator } from './drop-zone-calculator'
+import { DropZoneCalculator, DropZone, SemanticZone, createDropZoneCalculator } from './drop-zone-calculator'
 import { CodeModifier, ModificationResult } from './code-modifier'
 import { SourceMap } from './source-map'
+import { SmartSizingService, createSmartSizingService } from './services/smart-sizing'
+
+/**
+ * Timeout for auto-clearing stale drag source (in milliseconds)
+ * This prevents drag state from getting stuck if dragend is not fired
+ */
+const DRAG_SOURCE_CLEANUP_TIMEOUT_MS = 10000
 
 /**
  * Data transferred during drag operation
@@ -57,6 +64,8 @@ export interface DragDropManagerOptions {
   onDragLeave?: () => void
   /** Callback during drag (with current drop zone) */
   onDragOver?: (dropZone: DropZone | null) => void
+  /** Enable smart sizing for new elements (default: true) */
+  enableSmartSizing?: boolean
 }
 
 /**
@@ -65,10 +74,25 @@ export interface DragDropManagerOptions {
 export class DragDropManager {
   private container: HTMLElement
   private dropZoneCalculator: DropZoneCalculator
-  private options: Required<DragDropManagerOptions>
+  private smartSizing: SmartSizingService | null = null
+  private options: Required<DragDropManagerOptions> & { enableSmartSizing: boolean }
 
   private codeModifier: CodeModifier | null = null
+  private sourceMap: SourceMap | null = null
   private isDragging = false
+
+  /**
+   * Current drag source node ID for move operations.
+   *
+   * IMPORTANT: This is a workaround for browser security restrictions.
+   * During 'dragover' events, dataTransfer.getData() is blocked for security.
+   * We store the source node ID here when drag starts, so we can access it
+   * during dragover to prevent self-drop and descendant-drop.
+   *
+   * Set by makeCanvasElementDraggable() on dragstart, cleared on dragend.
+   */
+  private currentDragSourceId: string | undefined
+  private dragSourceCleanupTimer: ReturnType<typeof setTimeout> | null = null
 
   private boundHandleDragOver: (e: DragEvent) => void
   private boundHandleDragEnter: (e: DragEvent) => void
@@ -83,9 +107,17 @@ export class DragDropManager {
       onDragEnter: options.onDragEnter || (() => {}),
       onDragLeave: options.onDragLeave || (() => {}),
       onDragOver: options.onDragOver || (() => {}),
+      enableSmartSizing: options.enableSmartSizing ?? true,
     }
 
-    this.dropZoneCalculator = createDropZoneCalculator(container)
+    this.dropZoneCalculator = createDropZoneCalculator(container, {
+      enableSemanticZones: true,
+    })
+
+    // Initialize smart sizing if enabled
+    if (this.options.enableSmartSizing) {
+      this.smartSizing = createSmartSizingService()
+    }
 
     // Bind event handlers
     this.boundHandleDragOver = this.handleDragOver.bind(this)
@@ -101,6 +133,124 @@ export class DragDropManager {
    */
   setCodeModifier(source: string, sourceMap: SourceMap): void {
     this.codeModifier = new CodeModifier(source, sourceMap)
+    this.sourceMap = sourceMap
+  }
+
+  /**
+   * Validate that the SourceMap is consistent with the DOM.
+   * Returns true if validation passes, false if SourceMap is stale.
+   *
+   * Checks:
+   * - SourceMap exists
+   * - SourceMap has a main root node
+   * - Main root node exists in DOM
+   */
+  private validateSourceMap(): boolean {
+    if (!this.sourceMap) {
+      return false
+    }
+
+    // Check if main root exists in SourceMap
+    const mainRoot = this.sourceMap.getMainRoot()
+    if (!mainRoot) {
+      console.warn('[DragDropManager] SourceMap has no main root')
+      return false
+    }
+
+    // Check if main root still exists in DOM
+    const rootElement = this.container.querySelector(`[data-mirror-id="${mainRoot.nodeId}"]`)
+    if (!rootElement) {
+      console.warn('[DragDropManager] SourceMap is stale - root node not found in DOM:', mainRoot.nodeId)
+      return false
+    }
+
+    return true
+  }
+
+  /**
+   * Validate that a specific node exists in the DOM.
+   * Used to check drop targets before modification.
+   */
+  private validateNodeInDom(nodeId: string): boolean {
+    const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`)
+    if (!element) {
+      console.warn('[DragDropManager] Node not found in DOM:', nodeId)
+      return false
+    }
+    return true
+  }
+
+  /**
+   * Add sizing properties (w, h) to component properties if not already specified.
+   * Used by SmartSizing to set initial dimensions for new elements.
+   */
+  private addSizingProperties(
+    properties: string | undefined,
+    sizing: { width: string | number; height: string | number }
+  ): string {
+    // Use regex to match standalone 'w' or 'h' property (not 'maxw', 'minw', etc.)
+    // Match: start of string or comma/space followed by w/h followed by space
+    const widthPattern = /(^|,\s*)w\s/
+    const heightPattern = /(^|,\s*)h\s/
+
+    const hasWidth = properties ? widthPattern.test(properties) : false
+    const hasHeight = properties ? heightPattern.test(properties) : false
+
+    if (properties) {
+      let result = properties
+      if (!hasWidth) {
+        result = `${result}, w ${sizing.width}`
+      }
+      if (!hasHeight) {
+        result = `${result}, h ${sizing.height}`
+      }
+      return result
+    } else {
+      return `w ${sizing.width}, h ${sizing.height}`
+    }
+  }
+
+  /**
+   * Convert 9-zone alignment values to a SemanticZone.
+   *
+   * Maps main axis (start/center/end) and cross axis alignment to one of:
+   * 'top-left', 'top-center', 'top-right',
+   * 'mid-left', 'mid-center', 'mid-right',
+   * 'bot-left', 'bot-center', 'bot-right'
+   *
+   * For vertical containers (column layout):
+   * - Main axis = vertical position (top/mid/bot)
+   * - Cross axis = horizontal position (left/center/right)
+   *
+   * For horizontal containers (row layout):
+   * - Main axis = horizontal position (left/center/right)
+   * - Cross axis = vertical position (top/mid/bot)
+   */
+  private alignmentToSemanticZone(
+    parentDirection: 'horizontal' | 'vertical',
+    mainAlignment: 'start' | 'center' | 'end',
+    crossAlignment: 'start' | 'center' | 'end'
+  ): SemanticZone | null {
+    // Map alignment to zone parts
+    const mainMap = { start: 'top', center: 'mid', end: 'bot' } as const
+    const crossMap = { start: 'left', center: 'center', end: 'right' } as const
+
+    let verticalPart: 'top' | 'mid' | 'bot'
+    let horizontalPart: 'left' | 'center' | 'right'
+
+    if (parentDirection === 'vertical') {
+      // Vertical container: main = vertical, cross = horizontal
+      verticalPart = mainMap[mainAlignment]
+      horizontalPart = crossMap[crossAlignment]
+    } else {
+      // Horizontal container: main = horizontal, cross = vertical
+      horizontalPart = crossMap[mainAlignment]
+      verticalPart = mainMap[crossAlignment]
+    }
+
+    // Build zone name
+    const zoneName = `${verticalPart}-${horizontalPart}` as SemanticZone
+    return zoneName
   }
 
   /**
@@ -136,14 +286,21 @@ export class DragDropManager {
 
     e.preventDefault()
 
-    // Determine if this is a move or copy operation
-    const isMove = this.isMoveDrag(e)
-    e.dataTransfer!.dropEffect = isMove ? 'move' : 'copy'
+    try {
+      // Determine if this is a move or copy operation
+      const isMove = this.isMoveDrag(e)
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = isMove ? 'move' : 'copy'
+      }
 
-    // Update drop zone indicators, passing source node for self-drop prevention
-    const sourceNodeId = this.getSourceNodeId(e)
-    const dropZone = this.dropZoneCalculator.updateDropZone(e.clientX, e.clientY, sourceNodeId)
-    this.options.onDragOver(dropZone)
+      // Update drop zone indicators, passing source node for self-drop prevention
+      const sourceNodeId = this.getSourceNodeId(e)
+      const dropZone = this.dropZoneCalculator.updateDropZone(e.clientX, e.clientY, sourceNodeId)
+      this.options.onDragOver(dropZone)
+    } catch (error) {
+      console.error('[DragDropManager] dragover error:', error)
+      this.dropZoneCalculator.clear()
+    }
   }
 
   /**
@@ -184,48 +341,87 @@ export class DragDropManager {
     const dropZone = this.dropZoneCalculator.getCurrentDropZone()
     this.dropZoneCalculator.clear()
 
-    if (!dropZone) {
-      this.options.onDrop({
-        success: false,
-        dropZone: null,
-        modification: null,
-        error: 'No valid drop zone',
-      })
-      return
-    }
+    try {
+      // Get drag data first (needed for both normal and fallback paths)
+      const dragData = this.getDragData(e)
+      if (!dragData) {
+        this.options.onDrop({
+          success: false,
+          dropZone: null,
+          modification: null,
+          error: 'No valid drag data',
+        })
+        return
+      }
 
-    // Get drag data
-    const dragData = this.getDragData(e)
-    if (!dragData) {
+      // Check if CodeModifier is available
+      if (!this.codeModifier) {
+        this.options.onDrop({
+          success: false,
+          dropZone: null,
+          modification: null,
+          error: 'CodeModifier not initialized. Call setCodeModifier first.',
+        })
+        return
+      }
+
+      // Handle empty canvas case - no drop zone but we have drag data
+      if (!dropZone) {
+        // Try to find root element to insert into
+        if (this.sourceMap) {
+          const rootNode = this.sourceMap.getMainRoot()
+          if (rootNode) {
+            // Find the root element in DOM (if it exists)
+            const rootElement = this.container.querySelector(`[data-mirror-id="${rootNode.nodeId}"]`) as HTMLElement | null
+
+            // Create a synthetic drop zone for the root
+            const syntheticDropZone: DropZone = {
+              targetId: rootNode.nodeId,
+              placement: 'inside',
+              parentId: rootNode.nodeId,
+              element: rootElement || this.container,
+            }
+
+            const modification = this.insertComponent(syntheticDropZone, dragData)
+
+            this.options.onDrop({
+              success: modification.success,
+              dropZone: syntheticDropZone,
+              modification,
+              error: modification.error,
+            })
+            return
+          }
+        }
+
+        // No root found - fail gracefully
+        this.options.onDrop({
+          success: false,
+          dropZone: null,
+          modification: null,
+          error: 'No valid drop zone and no root element found',
+        })
+        return
+      }
+
+      // Normal case - we have a drop zone
+      const modification = this.insertComponent(dropZone, dragData)
+
+      this.options.onDrop({
+        success: modification.success,
+        dropZone,
+        modification,
+        error: modification.error,
+      })
+    } catch (error) {
+      console.error('[DragDropManager] drop error:', error)
       this.options.onDrop({
         success: false,
         dropZone,
         modification: null,
-        error: 'No valid drag data',
+        error: error instanceof Error ? error.message : 'Unknown drop error',
       })
-      return
     }
-
-    // Check if CodeModifier is available
-    if (!this.codeModifier) {
-      this.options.onDrop({
-        success: false,
-        dropZone,
-        modification: null,
-        error: 'CodeModifier not initialized. Call setCodeModifier first.',
-      })
-      return
-    }
-
-    // Perform the code modification
-    const modification = this.insertComponent(dropZone, dragData)
-
-    this.options.onDrop({
-      success: modification.success,
-      dropZone,
-      modification,
-      error: modification.error,
-    })
   }
 
   /**
@@ -241,17 +437,200 @@ export class DragDropManager {
       }
     }
 
-    const { componentName, properties, textContent, sourceNodeId, isMove } = dragData
-    const { placement, targetId } = dropZone
+    // Validate SourceMap consistency
+    if (!this.validateSourceMap()) {
+      return {
+        success: false,
+        newSource: '',
+        change: { from: 0, to: 0, insert: '' },
+        error: 'SourceMap is stale - please refresh the preview',
+      }
+    }
+
+    // Validate target node exists in DOM
+    if (!this.validateNodeInDom(dropZone.targetId)) {
+      return {
+        success: false,
+        newSource: '',
+        change: { from: 0, to: 0, insert: '' },
+        error: `Target node '${dropZone.targetId}' not found in DOM`,
+      }
+    }
+
+    const { componentName, textContent, sourceNodeId, isMove } = dragData
+    let { properties } = dragData
+    const { placement, targetId, semanticZone, parentId, absolutePosition, isAbsoluteContainer } = dropZone
 
     // Handle move operation
     if (isMove && sourceNodeId) {
+      // Validate source node exists in DOM
+      if (!this.validateNodeInDom(sourceNodeId)) {
+        return {
+          success: false,
+          newSource: '',
+          change: { from: 0, to: 0, insert: '' },
+          error: `Source node '${sourceNodeId}' not found in DOM`,
+        }
+      }
+
+      // For absolute containers, update x/y position instead of reordering
+      if (isAbsoluteContainer && absolutePosition) {
+        // Check if position actually changed (prevent no-op moves)
+        const sourceElement = this.container.querySelector(`[data-mirror-id="${sourceNodeId}"]`) as HTMLElement | null
+        if (sourceElement) {
+          const currentX = parseInt(sourceElement.style.left || '0', 10)
+          const currentY = parseInt(sourceElement.style.top || '0', 10)
+          const MOVE_THRESHOLD = 2 // pixels
+
+          // Skip if position change is negligible
+          if (Math.abs(absolutePosition.x - currentX) < MOVE_THRESHOLD &&
+              Math.abs(absolutePosition.y - currentY) < MOVE_THRESHOLD) {
+            return {
+              success: true,
+              newSource: this.codeModifier.getSource(),
+              change: { from: 0, to: 0, insert: '' },
+              // No error - this is intentionally a no-op
+            }
+          }
+        }
+
+        // Update x property
+        const xResult = this.codeModifier.updateProperty(sourceNodeId, 'x', String(absolutePosition.x))
+        if (!xResult.success) {
+          return xResult
+        }
+
+        // sourceMap is guaranteed to exist here (validated by validateSourceMap above)
+        if (!this.sourceMap) {
+          return {
+            success: false,
+            newSource: '',
+            change: { from: 0, to: 0, insert: '' },
+            error: 'SourceMap not available',
+          }
+        }
+
+        // Create a new CodeModifier with the updated source for y update
+        const updatedModifier = new CodeModifier(xResult.newSource, this.sourceMap)
+        const yResult = updatedModifier.updateProperty(sourceNodeId, 'y', String(absolutePosition.y))
+
+        return yResult
+      }
       return this.codeModifier.moveNode(sourceNodeId, targetId, placement)
+    }
+
+    // Only layout containers should get smart sizing - everything else stays "hug"
+    // This includes user-defined components, which default to hug for safety
+    const LAYOUT_CONTAINERS = ['Box', 'Slot', 'VStack', 'HStack', 'ZStack', 'Grid', 'Sidebar', 'Header/Footer']
+    const isLayoutContainer = LAYOUT_CONTAINERS.includes(componentName)
+
+    // Handle absolute positioning - add x/y properties
+    if (isAbsoluteContainer && absolutePosition) {
+      const absProps = `x ${absolutePosition.x}, y ${absolutePosition.y}`
+      if (properties) {
+        properties = `${absProps}, ${properties}`
+      } else {
+        properties = absProps
+      }
+
+      // Apply smart sizing only for layout containers in abs containers
+      if (this.smartSizing && this.sourceMap && isLayoutContainer) {
+        try {
+          const sizing = this.smartSizing.calculateInitialSize(
+            targetId,
+            this.sourceMap,
+            this.container
+          )
+          properties = this.addSizingProperties(properties, sizing)
+        } catch (error) {
+          console.warn('[DragDropManager] SmartSizing failed for abs container:', error)
+          // Continue without smart sizing - element will use default sizes
+        }
+      }
+
+      // Insert as child of the abs container (no semantic zones for abs layout)
+      return this.codeModifier.addChild(targetId, componentName, {
+        position: 'last',
+        properties,
+        textContent,
+      })
+    }
+
+    // Apply smart sizing only for layout containers (not content primitives or user components)
+    if (this.smartSizing && this.sourceMap && !isMove && isLayoutContainer) {
+      try {
+        // Determine parent for sizing calculation
+        const sizingParentId = placement === 'inside' ? targetId : parentId
+        const sizing = this.smartSizing.calculateInitialSize(
+          sizingParentId,
+          this.sourceMap,
+          this.container
+        )
+        properties = this.addSizingProperties(properties, sizing)
+      } catch (error) {
+        console.warn('[DragDropManager] SmartSizing failed:', error)
+        // Continue without smart sizing - element will use default sizes
+      }
+    }
+
+    // Check if target is a Slot - replace instead of insert
+    const targetElement = this.container.querySelector(`[data-mirror-id="${targetId}"]`)
+    const isSlot = targetElement?.getAttribute('data-mirror-slot') === 'true'
+
+    if (isSlot) {
+      // Replace the Slot with the new component, transferring Slot's properties
+      return this.codeModifier.replaceSlot(targetId, componentName, {
+        properties,
+        textContent,
+      })
     }
 
     // Handle copy/insert operation
     if (placement === 'inside') {
-      // Insert as child of target
+      // Check for semantic zone - generates wrapper if needed
+      if (semanticZone) {
+        return this.codeModifier.insertWithWrapper(targetId, componentName, semanticZone, {
+          position: 'last',
+          properties,
+          textContent,
+        })
+      }
+
+      // For empty containers: convert 9-zone alignment to SemanticZone
+      // This sets the CONTAINER alignment, so all siblings share the same alignment
+      let suggestedAlignment = dropZone.suggestedAlignment
+      let suggestedCrossAlignment = dropZone.suggestedCrossAlignment
+      const parentDirection = dropZone.parentDirection
+
+      // Fallback: if no alignment was calculated but the container is empty, use top-left
+      // This handles edge cases where dragover didn't properly detect the empty container
+      if (!suggestedAlignment && !suggestedCrossAlignment) {
+        const targetElement = dropZone.element
+        const hasChildren = this.hasChildrenWithNodeId(targetElement)
+        if (!hasChildren) {
+          // Empty container: default to top-left (start, start)
+          suggestedAlignment = 'start'
+          suggestedCrossAlignment = 'start'
+        }
+      }
+
+      if (suggestedAlignment || suggestedCrossAlignment) {
+        const derivedZone = this.alignmentToSemanticZone(
+          parentDirection || 'vertical',
+          suggestedAlignment || 'start',
+          suggestedCrossAlignment || 'start'
+        )
+
+        if (derivedZone) {
+          return this.codeModifier.insertWithWrapper(targetId, componentName, derivedZone, {
+            position: 'last',
+            properties,
+            textContent,
+          })
+        }
+      }
+
+      // Insert as child of target (no semantic zone or alignment)
       return this.codeModifier.addChild(targetId, componentName, {
         position: 'last',
         properties,
@@ -289,13 +668,37 @@ export class DragDropManager {
   }
 
   /**
-   * Set the current drag source (called from makeCanvasElementDraggable)
+   * Set the current drag source for move operations.
+   *
+   * Called by makeCanvasElementDraggable() on dragstart/dragend.
+   * This enables self-drop prevention during dragover when dataTransfer
+   * is not accessible due to browser security restrictions.
+   *
+   * Includes auto-cleanup after 10 seconds to prevent stale state if dragend
+   * is not fired (e.g., browser bug, ESC pressed in some browsers).
+   *
+   * @param nodeId - The node ID being dragged, or undefined to clear
    */
   setDragSource(nodeId: string | undefined): void {
-    this.currentDragSourceId = nodeId
-  }
+    // Clear any existing cleanup timer
+    if (this.dragSourceCleanupTimer) {
+      clearTimeout(this.dragSourceCleanupTimer)
+      this.dragSourceCleanupTimer = null
+    }
 
-  private currentDragSourceId: string | undefined
+    this.currentDragSourceId = nodeId
+
+    // Set auto-cleanup timer when setting a drag source
+    if (nodeId) {
+      this.dragSourceCleanupTimer = setTimeout(() => {
+        if (this.currentDragSourceId === nodeId) {
+          console.warn('[DragDropManager] Auto-clearing stale drag source:', nodeId)
+          this.currentDragSourceId = undefined
+        }
+        this.dragSourceCleanupTimer = null
+      }, DRAG_SOURCE_CLEANUP_TIMEOUT_MS)
+    }
+  }
 
   /**
    * Check if the drag event is valid for this manager
@@ -309,7 +712,7 @@ export class DragDropManager {
   }
 
   /**
-   * Extract drag data from event
+   * Extract and validate drag data from event
    */
   private getDragData(e: DragEvent): DragData | null {
     if (!e.dataTransfer) return null
@@ -327,15 +730,41 @@ export class DragDropManager {
     try {
       // Try parsing as JSON
       const data = JSON.parse(dataStr)
-      if (data.componentName) {
-        return data as DragData
+
+      // Validate required field
+      if (typeof data.componentName !== 'string' || !data.componentName.trim()) {
+        console.warn('[DragDropManager] Invalid drag data: missing componentName')
+        return null
+      }
+
+      // Return validated data with safe defaults
+      return {
+        componentName: data.componentName.trim(),
+        properties: typeof data.properties === 'string' ? data.properties : undefined,
+        textContent: typeof data.textContent === 'string' ? data.textContent : undefined,
+        sourceNodeId: typeof data.sourceNodeId === 'string' ? data.sourceNodeId : undefined,
+        isMove: data.isMove === true,
       }
     } catch {
-      // If not JSON, treat as component name
-      return { componentName: dataStr }
+      // If not JSON, treat as component name (must be non-empty string)
+      const trimmed = dataStr.trim()
+      if (trimmed) {
+        return { componentName: trimmed }
+      }
+      return null
     }
+  }
 
-    return null
+  /**
+   * Check if an element has any children with data-mirror-id attribute
+   */
+  private hasChildrenWithNodeId(element: HTMLElement): boolean {
+    for (const child of Array.from(element.children)) {
+      if ((child as HTMLElement).hasAttribute?.('data-mirror-id')) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -357,6 +786,13 @@ export class DragDropManager {
    * Dispose the manager
    */
   dispose(): void {
+    // Clear drag source cleanup timer
+    if (this.dragSourceCleanupTimer) {
+      clearTimeout(this.dragSourceCleanupTimer)
+      this.dragSourceCleanupTimer = null
+    }
+    this.currentDragSourceId = undefined
+
     this.detach()
     this.dropZoneCalculator.dispose()
     this.codeModifier = null

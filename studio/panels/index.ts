@@ -31,3 +31,18 @@ export {
   type FilePanelConfig,
   type FilePanelCallbacks,
 } from './files'
+
+// Component Panel
+export {
+  ComponentPanel,
+  createComponentPanel,
+  getComponentIcon,
+  LAYOUT_PRESETS,
+  BASIC_COMPONENTS,
+  type ComponentItem,
+  type ComponentSection,
+  type ComponentPanelConfig,
+  type ComponentPanelCallbacks,
+  type ComponentDragData,
+  type ComponentIcon,
+} from './components'

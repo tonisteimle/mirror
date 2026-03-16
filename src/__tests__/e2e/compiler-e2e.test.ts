@@ -350,8 +350,8 @@ Dropdown
   it('toggle runtime handles open/closed states', () => {
     const output = compile(input)
     // The runtime toggle method should handle open/closed
-    expect(output).toContain('currentState === "closed"')
-    expect(output).toContain('currentState === "open"')
+    expect(output).toContain("currentState === 'closed'")
+    expect(output).toContain("currentState === 'open'")
     expect(output).toContain('setState(el, newState)')
   })
 })
@@ -459,8 +459,8 @@ Dropdown named dropdown1
 
   it('generates token for selection variable', () => {
     const output = compile(input)
-    // Token $selected is stored with $ prefix
-    expect(output).toContain('--$selected')
+    // Token $selected is stored as CSS custom property (without $ prefix)
+    expect(output).toContain('--selected')
     expect(output).toContain('"Select..."')
   })
 })

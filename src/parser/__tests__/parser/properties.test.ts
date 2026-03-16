@@ -206,8 +206,8 @@ describe('Parser: Flag Properties', () => {
   it('parses flag property', () => {
     const ast = parse('Card as frame: hidden')
     expect(ast.components[0].properties[0].name).toBe('hidden')
-    // Flag has no values (or empty values array)
-    expect(ast.components[0].properties[0].values.length).toBe(0)
+    // Boolean properties have values: [true] to indicate the flag is set
+    expect(ast.components[0].properties[0].values).toEqual([true])
   })
 
   it('parses flag with other properties', () => {

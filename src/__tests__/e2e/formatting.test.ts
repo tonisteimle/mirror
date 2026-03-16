@@ -340,8 +340,8 @@ describe('Formatting: Sizing', () => {
 
   it('width full', () => {
     const output = compile(`Box as frame:\n  width full\nBox`)
-    expect(output).toContain("'width': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-width': '0'")
   })
 
   it('width hug', () => {
@@ -361,8 +361,8 @@ describe('Formatting: Sizing', () => {
 
   it('height full', () => {
     const output = compile(`Box as frame:\n  height full\nBox`)
-    expect(output).toContain("'height': '100%'")
-    expect(output).toContain("'flex-grow': '1'")
+    expect(output).toContain("'flex': '1 1 0%'")
+    expect(output).toContain("'min-height': '0'")
   })
 
   it('height hug', () => {

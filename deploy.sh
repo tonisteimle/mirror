@@ -55,21 +55,30 @@ set ftp:passive-mode false
 set net:timeout 10
 set net:max-retries 2
 open -u $FTP_USER,$FTP_PASS $FTP_HOST
-mkdir -f mirror/studio
+mkdir -f mirror
 mkdir -f mirror/dist
-mkdir -f mirror/dist/browser
+mkdir -f dist
+mkdir -f dist/browser
 
-# Upload studio files
-cd mirror/studio
+# Upload studio files directly to /mirror/
+cd mirror
 lcd $STUDIO_DIR
 put index.html
 put app.js
 put styles.css
-put mirror.js
 put logo.png
 
-# Upload compiled JS (the compiler) - one level up to match local dev structure
-cd ../dist/browser
+# Upload studio/dist (new architecture modules)
+mkdir -f dist
+cd dist
+lcd $STUDIO_DIR/dist
+put index.js
+
+# Upload compiled JS (the compiler) to /dist/browser/ (root level for ../dist/browser/ path)
+cd /
+mkdir -f dist
+mkdir -f dist/browser
+cd dist/browser
 lcd $DIST_DIR/browser
 put index.global.js
 
@@ -91,12 +100,12 @@ set net:max-retries 2
 open -u $FTP_USER,$FTP_PASS $FTP_HOST
 
 # Create directories
-mkdir -f mirror/studio/api
-mkdir -f mirror/studio/data
-mkdir -f mirror/studio/data/projects
+mkdir -f mirror/api
+mkdir -f mirror/data
+mkdir -f mirror/data/projects
 
 # Upload API files
-cd mirror/studio/api
+cd mirror/api
 lcd $PROJECT_DIR/api
 put index.php
 put auth.php
@@ -122,7 +131,7 @@ create_htaccess() {
     echo ""
     echo "📝 Creating .htaccess for routing..."
 
-    # Create main .htaccess for the studio directory
+    # Create main .htaccess for the mirror directory
     cat > /tmp/mirror-htaccess <<'HTACCESS'
 # Mirror Studio - Apache Configuration
 DirectoryIndex index.html
@@ -138,7 +147,7 @@ HTACCESS
 set ftp:ssl-allow no
 set ftp:passive-mode false
 open -u $FTP_USER,$FTP_PASS $FTP_HOST
-cd mirror/studio
+cd mirror
 lcd /tmp
 put mirror-htaccess -o .htaccess
 quit
@@ -181,6 +190,6 @@ esac
 
 echo ""
 echo "═══════════════════════════════════"
-echo "🌐 Mirror Studio: http://ux-strategy.ch/mirror/studio/"
+echo "🌐 Mirror Studio: http://ux-strategy.ch/mirror/"
 echo "═══════════════════════════════════"
 echo ""

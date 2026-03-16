@@ -15,10 +15,19 @@ import {
   actions as studioActions,
   mirrorCompletions,
   getStateSelectionAdapter,
-} from './dist/index.js?v=41'
+  // New Unified Trigger System
+  getTriggerManager,
+  registerAllTriggers,
+  createTriggerExtensions,
+  setIconTriggerPrimitives,
+  getIconTriggerPrimitives,
+} from './dist/index.js?v=82'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
+
+// Annotation to mark file switch transactions (bypass App lock filter)
+const fileSwitchAnnotation = Annotation.define()
 
 // ============================================
 // API Client & Auth State
@@ -29,6 +38,8 @@ const STORAGE_PREFIX = 'mirror-file-'
 const FILE_TYPES_KEY = 'mirror-file-types'
 const PROJECT_KEY = 'mirror-current-project'
 const AUTH_KEY = 'mirror-auth-state'
+const STORAGE_VERSION_KEY = 'mirror-storage-version'
+const STORAGE_VERSION = 3  // Increment this when defaultFiles or storage format changes
 
 // App State
 // DEV MODE: Always logged in for testing
@@ -47,18 +58,7 @@ let currentFile = 'index.mirror'
 
 // Default files for demo mode
 const defaultFiles = {
-  'index.mirror': `// Design Tokens (inline for demo)
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 16
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
-
-App
+  'index.mirror': `App bg #18181b, pad 20
   rect w 100, h 200, bg #FCC419`,
   'tokens.mirror': `// Design Tokens
 // Farben, Abstände und Typografie
@@ -468,14 +468,46 @@ async function deleteProjectWithConfirm(projectId) {
   }
 }
 
+/**
+ * Check storage version and clear if outdated
+ * This ensures localStorage data is compatible with current code
+ */
+function checkAndMigrateStorage() {
+  const storedVersion = parseInt(localStorage.getItem(STORAGE_VERSION_KEY) || '0', 10)
+
+  if (storedVersion < STORAGE_VERSION) {
+    console.log(`[Storage] Version mismatch: stored=${storedVersion}, current=${STORAGE_VERSION}. Resetting to defaults.`)
+
+    // Clear all mirror-related localStorage entries
+    const keysToRemove = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('mirror-')) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+
+    // Set new version
+    localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION))
+
+    return true // Storage was reset
+  }
+
+  return false // Storage is current
+}
+
 // Demo Mode (localStorage-based)
 async function loadDemoProject() {
   document.getElementById('header-project-name').textContent = 'Demo Project'
   document.getElementById('sidebar-project-name').textContent = 'Demo Project'
   Object.keys(files).forEach(k => delete files[k])
 
+  // Check storage version first - resets to defaults if outdated
+  const wasReset = checkAndMigrateStorage()
+
   for (const [name, content] of Object.entries(defaultFiles)) {
-    const saved = localStorage.getItem(STORAGE_PREFIX + name)
+    const saved = wasReset ? null : localStorage.getItem(STORAGE_PREFIX + name)
     files[name] = saved !== null ? saved : content
   }
 
@@ -831,8 +863,8 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
         for (const [filePath, content] of Object.entries(files)) {
           if (!filePath.endsWith('.mirror')) continue
           try {
-            const ast = Mirror.parse(content)
-            const reactCode = Mirror.generateReact(ast)
+            const ast = MirrorLang.parse(content)
+            const reactCode = MirrorLang.generateReact(ast)
             const reactPath = filePath.replace('.mirror', '.tsx')
             reactFiles[reactPath] = reactCode
           } catch (e) {
@@ -882,7 +914,7 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
         for (const [filePath, content] of Object.entries(reactFiles)) {
           if (!filePath.endsWith('.tsx')) continue
           try {
-            const mirrorCode = Mirror.convertToMirrorCode(content)
+            const mirrorCode = MirrorLang.convertToMirrorCode(content)
             const mirrorPath = filePath.replace('.tsx', '.mirror')
             files[mirrorPath] = mirrorCode
           } catch (e) {
@@ -1593,14 +1625,26 @@ function getFileType(filename) {
 function switchFile(filename) {
   if (typeof editor === 'undefined') return
 
-  // Save current file
+  // IMPORTANT: Cancel any pending debounced operations to prevent race conditions
+  // where old content gets saved to the new file
+  if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
+    debouncedCompile.cancel()
+  }
+  if (typeof debouncedSave !== 'undefined' && debouncedSave.cancel) {
+    debouncedSave.cancel()
+  }
+
+  // Save current file immediately (sync save to files object, async to storage)
   const currentContent = editor.state.doc.toString()
   saveFile(currentFile, currentContent)
 
   // Switch to new file
   currentFile = filename
+
+  // Dispatch with fileSwitchAnnotation to bypass the App lock filter
   editor.dispatch({
-    changes: { from: 0, to: editor.state.doc.length, insert: files[filename] || '' }
+    changes: { from: 0, to: editor.state.doc.length, insert: files[filename] || '' },
+    annotations: fileSwitchAnnotation.of(true)
   })
 
   // Update active state in UI
@@ -1918,6 +1962,7 @@ const mirrorHighlight = ViewPlugin.fromClass(class {
 
 // Autocomplete - using modular engine from studio/autocomplete/
 // mirrorCompletions is imported from ./dist/index.js
+
 // ==========================================
 // Color Picker Setup (before editor)
 // ==========================================
@@ -2703,41 +2748,9 @@ function selectColor(hex) {
 // Close on escape or click outside
 // Note: Hash trigger mode handles Escape in hashColorKeyboardExtension (removes # char)
 document.addEventListener('keydown', (e) => {
-  if (colorPickerVisible && !hashTriggerActive) {
-    switch (e.key) {
-      case 'Escape':
-        hideColorPicker()
-        if (window.editor) window.editor.focus()
-        break
-      case 'Enter':
-        e.preventDefault()
-        // Use custom color if on custom tab, otherwise use selected swatch
-        if (currentColorTab === 'custom') {
-          selectColor(getCurrentColorHex())
-        } else {
-          const selected = colorSwatchElements[selectedSwatchIndex]
-          if (selected) {
-            selectColor(selected.dataset.color.toUpperCase())
-          }
-        }
-        break
-      case 'ArrowLeft':
-        e.preventDefault()
-        navigateSwatches('left')
-        break
-      case 'ArrowRight':
-        e.preventDefault()
-        navigateSwatches('right')
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        navigateSwatches('up')
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        navigateSwatches('down')
-        break
-    }
+  if (colorPickerVisible && e.key === 'Escape' && !hashTriggerActive) {
+    hideColorPicker()
+    if (window.editor) window.editor.focus()
   }
 })
 
@@ -2752,1045 +2765,19 @@ window.showColorPickerForProperty = function(x, y, property, currentValue, callb
   showColorPicker(x, y, null, null, currentValue, false, null, property, callback)
 }
 
-// ==========================================
-// Token Panel Setup
-// ==========================================
-
-const tokenPanel = document.getElementById('token-panel')
-const tokenPanelTokens = document.getElementById('token-panel-tokens')
-const tokenPanelPicker = document.getElementById('token-panel-picker')
-const tokenList = document.getElementById('token-list')
-const tokenColorGrid = document.getElementById('token-color-grid')
-
-let tokenPanelVisible = false
-let tokenPanelInsertPos = null
-let tokenPanelProperty = null
-let selectedTokenIndex = 0
-let currentTokens = []
-let dollarTriggerActive = false  // True when triggered by $ (token already has $ prefix typed)
-let allTokensForFilter = []  // All tokens before filtering (for live filtering as user types)
-let dollarStartPos = null  // Position where $ was typed (for calculating filter text)
-
-// Property → suffix mapping
-const PROPERTY_SUFFIXES = {
-  bg: '.bg',
-  background: '.bg',
-  col: '.col',
-  color: '.col',
-  boc: '.boc',
-  'border-color': '.boc',
-  'hover-bg': '.bg',
-  'hover-col': '.col',
-  'hover-boc': '.boc',
-  pad: '.pad',
-  padding: '.pad',
-  gap: '.gap',
-  margin: '.margin',
-  rad: '.rad',
-  radius: '.rad',
-}
-
-// Property → panel type mapping
-const PROPERTY_PANELS = {
-  bg: 'color',
-  background: 'color',
-  col: 'color',
-  color: 'color',
-  boc: 'color',
-  'border-color': 'color',
-  'hover-bg': 'color',
-  'hover-col': 'color',
-  'hover-boc': 'color',
-  pad: 'spacing',
-  padding: 'spacing',
-  gap: 'spacing',
-  margin: 'spacing',
-  rad: 'spacing',
-  radius: 'spacing',
-}
-
-// Extract tokens from a text string
-function extractTokensFromText(text) {
-  const tokens = []
-  const lines = text.split('\n')
-
-  for (const line of lines) {
-    // Match: $name: value or name: value (token definition)
-    // Values can be: #hex, number, or $token-reference
-    // Examples: $primary.bg: #3B82F6, $sm.pad: 4, $surface.bg: $grey-900
-    const match = line.match(/^\s*\$?([a-zA-Z][a-zA-Z0-9.-]*):\s*(#[0-9A-Fa-f]{3,8}|\d+|\$[\w-]+)/)
-    if (match) {
-      const name = match[1]
-      const value = match[2]
-      // Determine type from token name suffix (not value)
-      let type = 'spacing'
-      if (name.endsWith('.bg') || name.endsWith('.col') || name.endsWith('.boc')) {
-        type = 'color'
-      }
-      tokens.push({ name, value, type })
-    }
-  }
-
-  return tokens
-}
-
-// Extract tokens from current document only
-function extractTokensFromDoc(doc) {
-  return extractTokensFromText(doc.toString())
-}
-
-// Extract tokens from ALL project files
-function extractAllTokens() {
-  const allTokens = []
-  const seen = new Set()
-
-  for (const [filename, content] of Object.entries(files)) {
-    if (!content) continue
-    const tokens = extractTokensFromText(content)
-    for (const token of tokens) {
-      if (!seen.has(token.name)) {
-        seen.add(token.name)
-        allTokens.push(token)
-      }
-    }
-  }
-
-  return allTokens
-}
-
-// Extract component definitions and their slots from document
-// Returns: { ComponentName: ['Slot1', 'Slot2'], ... }
-function extractComponentSlots(doc) {
-  const text = doc.toString()
-  const lines = text.split('\n')
-  const components = {}
-  let currentComponent = null
-  let currentIndent = 0
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    // Component definition: "Name:" or "Name: props" at start of line
-    const defMatch = line.match(/^([A-Z][a-zA-Z0-9]*)\s*:/)
-    if (defMatch) {
-      currentComponent = defMatch[1]
-      currentIndent = 0
-      if (!components[currentComponent]) {
-        components[currentComponent] = []
-      }
-      continue
-    }
-
-    // Slot definition: indented "SlotName:" under a component
-    if (currentComponent) {
-      const slotMatch = line.match(/^(\s+)([A-Z][a-zA-Z0-9]*)\s*:/)
-      if (slotMatch) {
-        const indent = slotMatch[1].length
-        const slotName = slotMatch[2]
-        // Only add direct children (same or lower indent level resets)
-        if (indent > 0) {
-          if (!components[currentComponent].includes(slotName)) {
-            components[currentComponent].push(slotName)
-          }
-        }
-      }
-      // Reset component context if we hit a non-indented line
-      if (line.match(/^\S/) && !defMatch) {
-        currentComponent = null
-      }
-    }
-  }
-
-  return components
-}
-
-// Find parent component for current cursor position
-function findParentComponent(doc, pos) {
-  const lines = doc.toString().split('\n')
-  const lineInfo = doc.lineAt(pos)
-  const currentLineNum = lineInfo.number - 1  // 0-indexed
-  const currentLine = lineInfo.text
-
-  // Get current indentation
-  const currentIndent = currentLine.match(/^(\s*)/)[1].length
-
-  // If not indented, no parent
-  if (currentIndent === 0) return null
-
-  // Search backwards for parent component instance
-  for (let i = currentLineNum - 1; i >= 0; i--) {
-    const line = lines[i]
-    const lineIndent = line.match(/^(\s*)/)[1].length
-
-    // Found a less indented line - check if it's a component instance
-    if (lineIndent < currentIndent) {
-      // Component instance: "ComponentName" or "ComponentName props"
-      const instanceMatch = line.match(/^\s*([A-Z][a-zA-Z0-9]*)(?:\s|$)/)
-      if (instanceMatch) {
-        return instanceMatch[1]
-      }
-      // If it's a definition (has :), keep searching
-      if (!line.includes(':')) {
-        return null
-      }
-    }
-  }
-
-  return null
-}
-
-// Filter tokens by suffix
-function filterTokensBySuffix(tokens, suffix) {
-  if (!suffix) return tokens
-  return tokens.filter(t => t.name.endsWith(suffix))
-}
-
-// Filter tokens by type
-function filterTokensByType(tokens, type) {
-  return tokens.filter(t => t.type === type)
-}
-
-// Build token color grid
-function buildTokenColorGrid() {
-  tokenColorGrid.innerHTML = ''
-  OPEN_COLORS.forEach(scale => {
-    const col = document.createElement('div')
-    col.className = 'color-picker-column'
-    scale.shades.forEach(hex => {
-      const btn = document.createElement('button')
-      btn.className = 'color-swatch'
-      btn.style.backgroundColor = hex
-      btn.dataset.color = hex
-      btn.addEventListener('click', (e) => {
-        e.preventDefault()
-        selectTokenValue(hex.toUpperCase())
-      })
-      col.appendChild(btn)
-    })
-    tokenColorGrid.appendChild(col)
-  })
-}
-buildTokenColorGrid()
-
-// Render token list
-function renderTokenList(tokens) {
-  currentTokens = tokens
-  tokenList.innerHTML = ''
-
-  if (tokens.length === 0) {
-    tokenPanelTokens.style.display = 'none'
-    return
-  }
-
-  tokenPanelTokens.style.display = 'block'
-
-  tokens.forEach((token, index) => {
-    const item = document.createElement('div')
-    item.className = 'token-item'
-    if (index === selectedTokenIndex) item.classList.add('selected')
-    item.dataset.index = index
-
-    // Color swatch for color tokens
-    if (token.type === 'color') {
-      const swatch = document.createElement('div')
-      swatch.className = 'token-swatch'
-      swatch.style.backgroundColor = token.value
-      item.appendChild(swatch)
-    }
-
-    const name = document.createElement('span')
-    name.className = 'token-name'
-    name.textContent = '$' + token.name
-    item.appendChild(name)
-
-    const value = document.createElement('span')
-    value.className = 'token-value'
-    value.textContent = token.value
-    item.appendChild(value)
-
-    item.addEventListener('click', () => {
-      selectTokenValue('$' + token.name)
-    })
-
-    item.addEventListener('mouseenter', () => {
-      selectedTokenIndex = index
-      updateSelectedToken()
-    })
-
-    tokenList.appendChild(item)
-  })
-}
-
-// Update selected token highlight
-function updateSelectedToken() {
-  const items = tokenList.querySelectorAll('.token-item')
-  items.forEach((item, i) => {
-    item.classList.toggle('selected', i === selectedTokenIndex)
-  })
-
-  const selected = items[selectedTokenIndex]
-  if (selected) {
-    selected.scrollIntoView({ block: 'nearest' })
-  }
-}
-
-// Show token panel
-// isDollarTrigger: true when user typed $ (so we insert token name without $ prefix)
-function showTokenPanel(x, y, insertPos, property, isDollarTrigger = false) {
-  tokenPanelInsertPos = insertPos
-  tokenPanelProperty = property
-  dollarTriggerActive = isDollarTrigger
-  selectedTokenIndex = 0
-  dollarStartPos = isDollarTrigger ? insertPos : null  // Track where $ was typed for live filtering
-
-  // Get tokens from document
-  const allTokens = extractAllTokens()
-
-  let filteredTokens
-  if (property) {
-    // Filter by suffix first
-    const suffix = PROPERTY_SUFFIXES[property]
-    filteredTokens = filterTokensBySuffix(allTokens, suffix)
-
-    // If no suffix matches, filter by type
-    if (filteredTokens.length === 0) {
-      const panelType = PROPERTY_PANELS[property]
-      filteredTokens = filterTokensByType(allTokens, panelType)
-    }
-  } else {
-    // No property context (e.g., $name: $) - show all tokens
-    filteredTokens = allTokens
-  }
-
-  // Store for live filtering
-  allTokensForFilter = filteredTokens
-
-  // Show/hide color picker section based on property type
-  const panelType = PROPERTY_PANELS[property]
-  // For $ trigger: hide picker if we have tokens, show picker if no tokens (fallback)
-  const showPicker = panelType === 'color' && (!isDollarTrigger || filteredTokens.length === 0)
-
-  // Don't show panel if no tokens and no picker
-  if (filteredTokens.length === 0 && !showPicker) {
-    return
-  }
-
-  renderTokenList(filteredTokens)
-
-  if (showPicker) {
-    tokenPanelPicker.style.display = 'block'
-  } else {
-    tokenPanelPicker.style.display = 'none'
-  }
-
-  // Position and show panel
-  tokenPanel.style.left = x + 'px'
-  tokenPanel.style.top = y + 'px'
-  tokenPanel.classList.add('visible')
-  tokenPanelVisible = true
-}
-
-// Hide token panel
-function hideTokenPanel() {
-  tokenPanel.classList.remove('visible')
-  tokenPanelVisible = false
-  tokenPanelInsertPos = null
-  tokenPanelProperty = null
-  dollarTriggerActive = false
-}
-
-// Select a token or color value
-function selectTokenValue(value) {
-  if (window.editor && tokenPanelInsertPos !== null) {
-    // If dollar trigger is active, value already starts with $
-    // and user has already typed $, so we insert without the $ prefix
-    let insertValue = value
-    if (dollarTriggerActive && value.startsWith('$')) {
-      insertValue = value.slice(1)  // Remove $ prefix since user already typed it
-    }
-
-    // Get current cursor position to replace any typed filter text
-    const currentPos = window.editor.state.selection.main.head
-    const replaceFrom = tokenPanelInsertPos
-    const replaceTo = currentPos
-
-    const newCursorPos = replaceFrom + insertValue.length
-    window.editor.dispatch({
-      changes: { from: replaceFrom, to: replaceTo, insert: insertValue },
-      selection: { anchor: newCursorPos },
-      annotations: Transaction.userEvent.of('input.token')
-    })
-    window.editor.focus()
-  }
-  hideTokenPanel()
-}
-
-// Keyboard navigation for token panel
-const tokenPanelKeyboardExtension = EditorView.domEventHandlers({
-  keydown: (event, view) => {
-    if (!tokenPanelVisible) return false
-
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault()
-        if (currentTokens.length > 0) {
-          selectedTokenIndex = Math.min(selectedTokenIndex + 1, currentTokens.length - 1)
-          updateSelectedToken()
-        }
-        return true
-      case 'ArrowUp':
-        event.preventDefault()
-        if (currentTokens.length > 0) {
-          selectedTokenIndex = Math.max(selectedTokenIndex - 1, 0)
-          updateSelectedToken()
-        }
-        return true
-      case 'Enter':
-        event.preventDefault()
-        if (currentTokens[selectedTokenIndex]) {
-          selectTokenValue('$' + currentTokens[selectedTokenIndex].name)
-        }
-        return true
-      case 'Escape':
-        event.preventDefault()
-        hideTokenPanel()
-        return true
-    }
-    return false
-  }
-})
-
-// Close token panel on click outside
-document.addEventListener('mousedown', (e) => {
-  if (tokenPanelVisible && !tokenPanel.contains(e.target)) {
-    hideTokenPanel()
-  }
-})
-
-// Close token panel on escape
-document.addEventListener('keydown', (e) => {
-  if (tokenPanelVisible && e.key === 'Escape') {
-    hideTokenPanel()
-    if (window.editor) window.editor.focus()
-  }
-})
-
-// Token panel trigger extension
-// Triggers on:
-// 1. Space after spacing properties (pad, gap, etc.) - shows token panel
-// 2. $ after any property (bg, col, pad, etc.) - shows token panel with $ prefix
-// 3. $ after token definition ($name: $) - shows all tokens
-const tokenPanelTriggerExtension = EditorView.updateListener.of(update => {
-  if (!update.docChanged) return
-
-  update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-    const insertedText = inserted.toString()
-
-    // Live filter tokens as user types after $ (including backspace)
-    if (tokenPanelVisible && dollarTriggerActive) {
-      // Handle character insertion
-      if (insertedText.length > 0 && insertedText !== ' ' && insertedText !== '$') {
-        // Get the text typed after $ for filtering
-        const line = update.view.state.doc.lineAt(toB)
-        const textAfterDollar = line.text.slice(dollarStartPos - line.from, toB - line.from)
-
-        // Filter tokens by the typed prefix
-        const filtered = allTokensForFilter.filter(token =>
-          token.name.toLowerCase().startsWith(textAfterDollar.toLowerCase())
-        )
-
-        if (filtered.length > 0) {
-          selectedTokenIndex = 0
-          renderTokenList(filtered)
-          // Update insert position to replace everything after $
-          tokenPanelInsertPos = dollarStartPos
-        } else {
-          // No matches - close panel
-          hideTokenPanel()
-        }
-        return
-      }
-
-      // Handle backspace/deletion
-      if (insertedText.length === 0 && fromA !== toA) {
-        // Check if we deleted back to or before the $ position
-        if (toB <= dollarStartPos) {
-          hideTokenPanel()
-          return
-        }
-
-        // Recalculate filter text
-        const line = update.view.state.doc.lineAt(toB)
-        const textAfterDollar = line.text.slice(dollarStartPos - line.from, toB - line.from)
-
-        // Filter tokens by the remaining prefix
-        const filtered = allTokensForFilter.filter(token =>
-          token.name.toLowerCase().startsWith(textAfterDollar.toLowerCase())
-        )
-
-        selectedTokenIndex = 0
-        renderTokenList(filtered)
-        tokenPanelInsertPos = dollarStartPos
-        return
-      }
-    }
-
-    // Close panel if typing in non-dollar mode
-    if (tokenPanelVisible && !dollarTriggerActive && insertedText.length > 0 && insertedText !== ' ' && insertedText !== '$') {
-      hideTokenPanel()
-      return
-    }
-
-    const line = update.view.state.doc.lineAt(fromB)
-    const textBefore = line.text.slice(0, fromB - line.from)
-
-    // Trigger 1: Space after spacing properties
-    if (insertedText === ' ') {
-      // Match ONLY spacing properties (color properties use # trigger)
-      const propertyMatch = textBefore.match(/\b(pad|padding|gap|margin|rad|radius)$/)
-      if (propertyMatch) {
-        const property = propertyMatch[1]
-        const coords = update.view.coordsAtPos(fromB)
-        if (coords) {
-          showTokenPanel(coords.left, coords.bottom + 4, fromB + 1, property)
-        }
-      }
-    }
-
-    // Trigger 2: $ after property (includes color properties)
-    if (insertedText === '$') {
-      // Check if $ is at line start (new token definition) - NO autocomplete
-      const isLineStart = /^\s*$/.test(textBefore)
-      if (isLineStart) {
-        // User is defining a new token, don't show autocomplete
-        return
-      }
-
-      // Match any property that accepts tokens (with or without space before $)
-      const propertyMatch = textBefore.match(/\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s*$/)
-
-      // Match token definition: $name.suffix: $ (extract suffix to determine type)
-      const tokenDefMatch = textBefore.match(/\$([\w-]+)\.(bg|col|boc|pad|gap|margin|rad):\s*$/)
-
-      if (propertyMatch || tokenDefMatch) {
-        // Close color picker if open
-        if (colorPickerVisible) {
-          hideColorPicker()
-        }
-        // Get property from either match
-        // propertyMatch[1] = "bg", "pad", etc.
-        // tokenDefMatch[2] = "bg", "col", "pad", etc. (the suffix)
-        const property = propertyMatch ? propertyMatch[1] : (tokenDefMatch ? tokenDefMatch[2] : null)
-        const coords = update.view.coordsAtPos(fromB)
-        if (coords) {
-          // Insert position is after the $
-          showTokenPanel(coords.left, coords.bottom + 4, fromB, property, true)
-        }
-      }
-    }
-  })
-})
-
-// Double-click on color extension (standalone color picker for editing existing colors)
-const colorDoubleClickExtension = EditorView.domEventHandlers({
-  dblclick: (event, view) => {
-    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
-    if (pos === null) return false
-
-    const line = view.state.doc.lineAt(pos)
-    const lineText = line.text
-
-    // Find all hex colors in the line
-    const hexRegex = /#[0-9A-Fa-f]{3,8}\b/g
-    let match
-    while ((match = hexRegex.exec(lineText)) !== null) {
-      const colorStart = line.from + match.index
-      const colorEnd = colorStart + match[0].length
-
-      // Check if click position is within this color
-      if (pos >= colorStart && pos <= colorEnd) {
-        const coords = view.coordsAtPos(colorStart)
-        if (coords) {
-          event.preventDefault()
-          showColorPicker(
-            coords.left,
-            coords.bottom + 4,
-            null,
-            { from: colorStart, to: colorEnd },
-            match[0]
-          )
-          return true
-        }
-      }
-    }
-    return false
-  }
-})
-
-// Hash trigger extension: show color picker when typing # after color properties
-const hashColorTriggerExtension = EditorView.updateListener.of(update => {
-  if (!update.docChanged) return
-
-  // Check if hash trigger mode should be closed due to # being deleted
-  if (hashTriggerActive && colorPickerVisible && hashTriggerStartPos !== null) {
-    const doc = update.state.doc
-    const cursorPos = update.state.selection.main.head
-
-    // Check if cursor moved before # position (user deleted it)
-    if (cursorPos < hashTriggerStartPos) {
-      hideColorPicker()
-      return
-    }
-
-    // Check if # character still exists at hashTriggerStartPos
-    if (hashTriggerStartPos < doc.length) {
-      const charAtStart = doc.sliceString(hashTriggerStartPos, hashTriggerStartPos + 1)
-      if (charAtStart !== '#') {
-        hideColorPicker()
-        return
-      }
-    } else {
-      // Document is shorter than hashTriggerStartPos, # was deleted
-      hideColorPicker()
-      return
-    }
-  }
-
-  update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-    const insertedText = inserted.toString()
-
-    // Close color picker if typing space or non-hex characters while in hash trigger mode
-    if (hashTriggerActive && insertedText.length > 0) {
-      // Close on space, letters (except hex a-f), or other non-hex characters
-      if (!/^[0-9A-Fa-f]$/.test(insertedText)) {
-        hideColorPicker()
-        return
-      }
-    }
-
-    // Detect # typed after color properties or token definitions
-    if (insertedText === '#') {
-      const line = update.view.state.doc.lineAt(fromB)
-      const textBefore = line.text.slice(0, fromB - line.from)
-
-      // Match color contexts:
-      // 1. Color property + space: "bg ", "col ", "color ", etc.
-      // 2. Token definition with color suffix: "$name.bg: ", "$name.col: "
-      // 3. Simple token definition: "$name: " (any token could be a color)
-      const colorPropertyMatch = textBefore.match(/\b(bg|col|color|background|boc|border-color|hover-bg|hover-col|hover-boc)\s+$/)
-      const tokenColorMatch = textBefore.match(/\$[\w.-]+\.(bg|col|color|boc):\s*$/)
-      const simpleTokenMatch = textBefore.match(/\$[\w.-]+:\s*$/)
-
-      if (colorPropertyMatch || tokenColorMatch || simpleTokenMatch) {
-        // Close token panel if open (since we're showing color picker instead)
-        if (tokenPanelVisible) {
-          hideTokenPanel()
-        }
-        const coords = update.view.coordsAtPos(fromB)
-        if (coords) {
-          // Show color picker in hash trigger mode
-          showColorPicker(
-            coords.left,
-            coords.bottom + 4,
-            null,   // insertPos not used for hash trigger
-            null,   // replaceRange not used for hash trigger
-            null,   // initialColor
-            true,   // isHashTrigger
-            fromB   // hashStartPos (position of #)
-          )
-        }
-      }
-      // If no match, do NOT show color picker
-    }
-  })
-})
-
-// Keyboard extension for color picker navigation in hash trigger mode
-const hashColorKeyboardExtension = EditorView.domEventHandlers({
-  keydown: (event, view) => {
-    if (!hashTriggerActive || !colorPickerVisible) return false
-
-    switch (event.key) {
-      case 'ArrowLeft':
-        event.preventDefault()
-        navigateSwatches('left')
-        return true
-      case 'ArrowRight':
-        event.preventDefault()
-        navigateSwatches('right')
-        return true
-      case 'ArrowUp':
-        event.preventDefault()
-        navigateSwatches('up')
-        return true
-      case 'ArrowDown':
-        event.preventDefault()
-        navigateSwatches('down')
-        return true
-      case 'Enter':
-        event.preventDefault()
-        // Use custom color if on custom tab, otherwise use selected swatch
-        if (currentColorTab === 'custom') {
-          selectColor(getCurrentColorHex())
-        } else {
-          const selected = colorSwatchElements[selectedSwatchIndex]
-          if (selected) {
-            selectColor(selected.dataset.color.toUpperCase())
-          }
-        }
-        return true
-      case 'Escape':
-        event.preventDefault()
-        // Remove the # character when escaping
-        if (hashTriggerStartPos !== null) {
-          const cursorPos = view.state.selection.main.head
-          view.dispatch({
-            changes: { from: hashTriggerStartPos, to: cursorPos, insert: '' },
-            selection: { anchor: hashTriggerStartPos }
-          })
-        }
-        hideColorPicker()
-        return true
-    }
-    return false
-  }
-})
+// Global API for editor trigger to use color picker
+window.showColorPicker = showColorPicker
+window.hideColorPicker = hideColorPicker
 
 // ==========================================
-// Icon Picker Setup
+// Icon Picker Setup (using new TriggerManager)
 // ==========================================
 
-const iconPicker = document.getElementById('icon-picker')
-const iconPickerGrid = document.getElementById('icon-picker-grid')
-const iconPickerRecentSection = document.getElementById('icon-picker-recent')
-const iconPickerRecentGrid = document.getElementById('icon-picker-recent-grid')
+// componentPrimitives is managed by the new trigger system
+// Expose for debugging
+window.componentPrimitives = getIconTriggerPrimitives()
 
-let iconPickerVisible = false
-let iconPickerStartPos = null  // Position where icon name starts
-let allIcons = []              // All icon names
-let filteredIcons = []         // Currently filtered icons
-let selectedIconIndex = 0      // Currently selected icon
-let iconSvgCache = new Map()   // Cache for loaded SVGs
-let componentPrimitives = new Map()  // Map: componentName -> primitive
-window.componentPrimitives = componentPrimitives  // Expose for debugging
-
-const ICON_STORAGE_KEY = 'mirror-recent-icons'
-const MAX_RECENT_ICONS = 12
-
-// Load recent icons from localStorage
-function getRecentIcons() {
-  try {
-    const stored = localStorage.getItem(ICON_STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
-  } catch {
-    return []
-  }
-}
-
-// Save recent icons to localStorage
-function saveRecentIcons(icons) {
-  localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(icons.slice(0, MAX_RECENT_ICONS)))
-}
-
-// Add icon to recent list
-function addToRecentIcons(iconName) {
-  const recent = getRecentIcons().filter(i => i !== iconName)
-  recent.unshift(iconName)
-  saveRecentIcons(recent)
-}
-
-// Load icon list from CDN
-async function loadIconList() {
-  try {
-    const res = await fetch('https://unpkg.com/@iconify-json/lucide/icons.json')
-    const data = await res.json()
-    allIcons = Object.keys(data.icons).sort()
-    console.log(`Loaded ${allIcons.length} Lucide icons`)
-    return allIcons
-  } catch (err) {
-    console.error('Failed to load icon list:', err)
-    iconPickerGrid.innerHTML = '<div class="icon-picker-empty">Icons konnten nicht geladen werden</div>'
-    return []
-  }
-}
-
-// Load single icon SVG
-async function loadIconSvg(name) {
-  if (iconSvgCache.has(name)) {
-    return iconSvgCache.get(name)
-  }
-  try {
-    const res = await fetch(`https://unpkg.com/lucide-static/icons/${name}.svg`)
-    if (!res.ok) return null
-    const svg = await res.text()
-    iconSvgCache.set(name, svg)
-    return svg
-  } catch {
-    return null
-  }
-}
-
-// Create icon button element
-function createIconButton(name, index, isRecent = false) {
-  const btn = document.createElement('button')
-  btn.className = 'icon-item'
-  btn.dataset.icon = name
-  btn.dataset.index = index
-  btn.title = name
-
-  // Load SVG async
-  loadIconSvg(name).then(svg => {
-    if (svg) {
-      btn.innerHTML = svg
-    } else {
-      btn.textContent = '?'
-    }
-  })
-
-  btn.addEventListener('click', (e) => {
-    e.preventDefault()
-    selectIcon(name)
-  })
-
-  btn.addEventListener('mouseenter', () => {
-    if (!isRecent) {
-      selectedIconIndex = index
-      updateSelectedIcon()
-    }
-  })
-
-  return btn
-}
-
-// Render icon grid
-function renderIconGrid(icons, filter = '') {
-  filteredIcons = filter
-    ? icons.filter(name => name.includes(filter.toLowerCase()))
-    : icons
-
-  iconPickerGrid.innerHTML = ''
-
-  if (filteredIcons.length === 0) {
-    iconPickerGrid.innerHTML = '<div class="icon-picker-empty">Keine Icons gefunden</div>'
-    return
-  }
-
-  // Limit to first 144 icons (12x12) for performance
-  const displayIcons = filteredIcons.slice(0, 144)
-
-  displayIcons.forEach((name, index) => {
-    iconPickerGrid.appendChild(createIconButton(name, index))
-  })
-
-  selectedIconIndex = 0
-  updateSelectedIcon()
-}
-
-// Render recent icons
-function renderRecentIcons() {
-  const recent = getRecentIcons()
-
-  if (recent.length === 0) {
-    iconPickerRecentSection.style.display = 'none'
-    return
-  }
-
-  iconPickerRecentSection.style.display = 'block'
-  iconPickerRecentGrid.innerHTML = ''
-
-  recent.forEach((name, index) => {
-    iconPickerRecentGrid.appendChild(createIconButton(name, index, true))
-  })
-}
-
-// Update selected icon highlight
-function updateSelectedIcon() {
-  const items = iconPickerGrid.querySelectorAll('.icon-item')
-  items.forEach((item, i) => {
-    item.classList.toggle('selected', i === selectedIconIndex)
-  })
-
-  // Scroll into view if needed
-  const selected = items[selectedIconIndex]
-  if (selected) {
-    selected.scrollIntoView({ block: 'nearest' })
-  }
-}
-
-// Show icon picker
-function showIconPicker(x, y, startPos) {
-  // Close CodeMirror autocomplete if open
-  if (window.editor) {
-    closeCompletion(window.editor)
-  }
-
-  iconPickerStartPos = startPos
-  iconPicker.style.left = x + 'px'
-  iconPicker.style.top = y + 'px'
-  iconPicker.classList.add('visible')
-  iconPickerVisible = true
-
-  renderRecentIcons()
-  renderIconGrid(allIcons)
-}
-
-// Hide icon picker
-function hideIconPicker() {
-  iconPicker.classList.remove('visible')
-  iconPickerVisible = false
-  iconPickerStartPos = null
-}
-
-// Select an icon and insert it
-function selectIcon(name) {
-  if (!window.editor || iconPickerStartPos === null) return
-
-  addToRecentIcons(name)
-
-  // Get current position to find typed text
-  const cursorPos = window.editor.state.selection.main.head
-  const typedLength = cursorPos - iconPickerStartPos
-
-  // Replace typed text with quoted icon name
-  const insertText = `"${name}"`
-  window.editor.dispatch({
-    changes: { from: iconPickerStartPos, to: cursorPos, insert: insertText },
-    selection: { anchor: iconPickerStartPos + insertText.length },
-    annotations: Transaction.userEvent.of('input.icon')
-  })
-
-  hideIconPicker()
-  window.editor.focus()
-}
-
-// Filter icons based on current input
-function filterIcons(text) {
-  renderIconGrid(allIcons, text)
-}
-
-// Navigate icon selection
-function navigateIcons(direction) {
-  const cols = 12
-  const total = Math.min(filteredIcons.length, 144)
-
-  if (direction === 'down') {
-    selectedIconIndex = Math.min(selectedIconIndex + cols, total - 1)
-  } else if (direction === 'up') {
-    selectedIconIndex = Math.max(selectedIconIndex - cols, 0)
-  } else if (direction === 'right') {
-    selectedIconIndex = Math.min(selectedIconIndex + 1, total - 1)
-  } else if (direction === 'left') {
-    selectedIconIndex = Math.max(selectedIconIndex - 1, 0)
-  }
-
-  updateSelectedIcon()
-}
-
-// Icon trigger extension (space after icon component)
-const iconTriggerExtension = EditorView.updateListener.of(update => {
-  if (!update.docChanged) return
-
-  update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-    const insertedText = inserted.toString()
-
-    // Check for space after component name
-    if (insertedText === ' ' && !iconPickerVisible) {
-      const line = update.view.state.doc.lineAt(fromB)
-      const textBefore = line.text.slice(0, fromB - line.from)
-
-      // Match component name at end of line (allowing trailing spaces)
-      const match = textBefore.match(/\b([A-Z][a-zA-Z0-9]*)\s*$/)
-      if (match) {
-        const componentName = match[1]
-        const primitive = componentPrimitives.get(componentName)
-
-        if (primitive === 'icon') {
-          const coords = update.view.coordsAtPos(fromB)
-          if (coords) {
-            showIconPicker(coords.left, coords.bottom + 4, fromB + 1)
-            return  // Don't process further - picker is now open
-          }
-        }
-      }
-    }
-
-    // Filter icons while typing
-    if (iconPickerVisible && iconPickerStartPos !== null) {
-      const cursorPos = fromB + insertedText.length
-      const typedText = update.view.state.doc.sliceString(iconPickerStartPos, cursorPos)
-
-      // Close on space (user doesn't want to pick)
-      if (insertedText === ' ') {
-        hideIconPicker()
-        return
-      }
-
-      filterIcons(typedText)
-    }
-  })
-})
-
-// Keyboard handler for icon picker
-const iconKeyboardExtension = EditorView.domEventHandlers({
-  keydown: (event, view) => {
-    if (!iconPickerVisible) return false
-
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault()
-        navigateIcons('down')
-        return true
-      case 'ArrowUp':
-        event.preventDefault()
-        navigateIcons('up')
-        return true
-      case 'ArrowRight':
-        event.preventDefault()
-        navigateIcons('right')
-        return true
-      case 'ArrowLeft':
-        event.preventDefault()
-        navigateIcons('left')
-        return true
-      case 'Enter':
-        event.preventDefault()
-        if (filteredIcons[selectedIconIndex]) {
-          selectIcon(filteredIcons[selectedIconIndex])
-        }
-        return true
-      case 'Escape':
-        event.preventDefault()
-        // Remove typed text
-        if (iconPickerStartPos !== null) {
-          const cursorPos = view.state.selection.main.head
-          view.dispatch({
-            changes: { from: iconPickerStartPos, to: cursorPos, insert: '' },
-            selection: { anchor: iconPickerStartPos }
-          })
-        }
-        hideIconPicker()
-        return true
-      case 'Backspace':
-        // Check if we should close (backspace past start)
-        const cursorPos = view.state.selection.main.head
-        if (cursorPos <= iconPickerStartPos) {
-          hideIconPicker()
-        }
-        return false  // Let editor handle it
-    }
-    return false
-  }
-})
-
-// Close icon picker on click outside
-document.addEventListener('mousedown', (e) => {
-  if (iconPickerVisible && !iconPicker.contains(e.target)) {
-    hideIconPicker()
-  }
-})
-
-// Load icons on startup
-loadIconList()
+// Note: Click outside handling is now managed by TriggerManager
 
 // ==========================================
 // ANIMATION PICKER (Vanilla JS)
@@ -4699,95 +3686,10 @@ function parseAnimationKeyframes(doc, startLine) {
   return tracks
 }
 
-// Animation picker trigger extension for CodeMirror
-// Triggers when user types space after "as animation:"
-const animationPickerTriggerExtension = EditorView.updateListener.of(update => {
-  if (!update.docChanged) return
-  if (animationPickerVisible) return
+// NOTE: Animation picker triggers are now handled by TriggerManager
+// See: studio/editor/triggers/animation-trigger.ts
 
-  // Check what was typed
-  update.transactions.forEach(tr => {
-    tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-      const insertedText = inserted.toString()
-
-      // Trigger on space after "as animation:"
-      if (insertedText === ' ') {
-        const line = update.state.doc.lineAt(fromB)
-        const textBefore = line.text.slice(0, fromB - line.from)
-
-        // Check if we just typed space after "as animation:"
-        if (textBefore.match(/\w+\s+as\s+animation:$/)) {
-          // Extract name from the line
-          const nameMatch = textBefore.match(/^(\w+)\s+as\s+animation:$/)
-          const name = nameMatch ? nameMatch[1] : 'Animation'
-          const lineNum = line.number
-
-          // Small delay to let the space be inserted
-          setTimeout(() => {
-            showAnimationPicker({
-              name: name,
-              easing: 'ease-out',
-              duration: 0.3,
-              tracks: [
-                { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-              ]
-            }, lineNum)
-          }, 10)
-        }
-      }
-    })
-  })
-})
-
-// Double-click on "animation" keyword to open picker
-const animationDoubleClickExtension = EditorView.domEventHandlers({
-  dblclick: (event, view) => {
-    if (animationPickerVisible) return false
-
-    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
-    if (pos === null) return false
-
-    const line = view.state.doc.lineAt(pos)
-    const text = line.text
-
-    // Check if this line has "as animation:"
-    const animationMatch = text.match(/(\w+)\s+as\s+animation:/)
-    if (!animationMatch) return false
-
-    // Find the position of "animation" in the line
-    const animationIndex = text.indexOf('animation')
-    if (animationIndex === -1) return false
-
-    const animationStart = line.from + animationIndex
-    const animationEnd = animationStart + 'animation'.length
-
-    // Check if double-click was on the word "animation"
-    if (pos >= animationStart && pos <= animationEnd) {
-      event.preventDefault()
-
-      const name = animationMatch[1]
-      const lineNum = line.number
-
-      // Parse existing keyframes if any
-      const tracks = parseAnimationKeyframes(view.state.doc, lineNum)
-
-      showAnimationPicker({
-        name: name,
-        easing: 'ease-out',
-        duration: tracks.length > 0 ? Math.max(...tracks.map(t => t.endTime)) : 0.3,
-        tracks: tracks.length > 0 ? tracks : [
-          { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-        ]
-      }, lineNum)
-
-      return true
-    }
-
-    return false
-  }
-})
-
-// Keyboard shortcut: Cmd+Shift+A to open animation picker
+// Keyboard shortcut: Cmd+Shift+A to open animation picker (legacy, kept for convenience)
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'a') {
     e.preventDefault()
@@ -4834,8 +3736,244 @@ document.addEventListener('mousedown', (e) => {
   }
 })
 
+// ============================================
+// Inline Token Definition Handler
+// ============================================
+
+// Regex: $tokenName: value (at end of property)
+// Examples: bg $surface: #333, rad $m: 4, pad $spacing.md: 8
+const INLINE_TOKEN_REGEX = /\$([a-zA-Z][a-zA-Z0-9._-]*):\s*(.+)$/
+
+/**
+ * Extract inline token definition from a line of code
+ */
+function extractInlineToken(lineText) {
+  const match = lineText.match(INLINE_TOKEN_REGEX)
+  if (!match) return null
+
+  const tokenName = match[1]
+  const tokenValue = match[2].trim()
+
+  // Validate token name and value
+  if (!/^[a-zA-Z]/.test(tokenName)) return null
+  if (!tokenValue) return null
+
+  return {
+    tokenName,
+    tokenValue,
+    fullMatch: match[0],  // "$surface: #333"
+    replacement: `$${tokenName}`,  // "$surface"
+  }
+}
+
+/**
+ * Escape special regex characters
+ */
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Ensure tokens file exists, create if not
+ */
+function ensureTokensFile() {
+  const tokensFilename = 'tokens.mirror'
+  if (!files[tokensFilename]) {
+    files[tokensFilename] = '// Design Tokens\n'
+    // Add to file list UI
+    const fileList = document.getElementById('file-list')
+    if (fileList) {
+      const newFileEl = document.createElement('div')
+      newFileEl.className = 'file'
+      newFileEl.dataset.file = tokensFilename
+      newFileEl.innerHTML = `
+        <span class="file-icon">🎨</span>
+        <span class="file-name">${tokensFilename}</span>
+      `
+      newFileEl.addEventListener('click', () => switchFile(tokensFilename))
+      fileList.appendChild(newFileEl)
+    }
+    saveFile(tokensFilename, files[tokensFilename])
+  }
+}
+
+/**
+ * Add or update a token in the tokens file
+ */
+function addTokenToFile(tokenName, tokenValue) {
+  ensureTokensFile()
+  const tokensFilename = 'tokens.mirror'
+  let content = files[tokensFilename] || '// Design Tokens\n'
+
+  const tokenLine = `$${tokenName}: ${tokenValue}`
+  // Regex to match existing token definition
+  const tokenRegex = new RegExp(`^\\$${escapeRegex(tokenName)}:\\s*.+$`, 'm')
+
+  if (tokenRegex.test(content)) {
+    // Token exists - update it
+    content = content.replace(tokenRegex, tokenLine)
+  } else {
+    // Token doesn't exist - add at end
+    content = content.trimEnd() + `\n${tokenLine}\n`
+  }
+
+  files[tokensFilename] = content
+  saveFile(tokensFilename, content)
+}
+
+/**
+ * Show feedback when token is created
+ */
+function showTokenCreatedFeedback(tokenName) {
+  const status = document.getElementById('status')
+  if (status) {
+    status.textContent = `Token '$${tokenName}' created`
+    status.className = 'status ok'
+    setTimeout(() => {
+      status.textContent = 'Ready'
+    }, 2000)
+  }
+}
+
+/**
+ * Extension: App Lock - Makes "App" on line 1 undeletable
+ * and auto-indents all other lines with 2 spaces
+ */
+const APP_PREFIX = 'App'
+const CHILD_INDENT = '  ' // 2 spaces
+
+const appLockExtension = EditorState.transactionFilter.of(tr => {
+  if (!tr.docChanged) return tr
+
+  // Allow file switch transactions through (they may load non-App files like tokens)
+  if (tr.annotation(fileSwitchAnnotation)) {
+    return tr
+  }
+
+  // Simulate what the document would look like after this transaction
+  const newDoc = tr.newDoc
+  const newFirstLine = newDoc.line(1).text
+
+  // Block if line 1 wouldn't start with "App" anymore
+  if (!newFirstLine.startsWith(APP_PREFIX)) {
+    return []
+  }
+
+  return tr
+})
+
+/**
+ * Extension: Auto-indent new lines with 2 spaces (children of App)
+ */
+const autoIndentExtension = EditorView.domEventHandlers({
+  keydown: (event, view) => {
+    if (event.key !== 'Enter') return false
+
+    // Don't intercept if picker is open
+    if (getTriggerManager().isOpen()) return false
+
+    const cursorPos = view.state.selection.main.head
+    const line = view.state.doc.lineAt(cursorPos)
+
+    // If we're on line 1, insert newline + indent
+    if (line.number === 1) {
+      view.dispatch({
+        changes: { from: cursorPos, insert: '\n' + CHILD_INDENT },
+        selection: { anchor: cursorPos + 1 + CHILD_INDENT.length }
+      })
+      event.preventDefault()
+      return true
+    }
+
+    // For other lines, preserve or ensure indent
+    const currentIndent = line.text.match(/^(\s*)/)?.[1] || ''
+    const indent = currentIndent.length < 2 ? CHILD_INDENT : currentIndent
+
+    view.dispatch({
+      changes: { from: cursorPos, insert: '\n' + indent },
+      selection: { anchor: cursorPos + 1 + indent.length }
+    })
+    event.preventDefault()
+    return true
+  }
+})
+
+/**
+ * Extension: Style "App" as locked/readonly appearance
+ */
+const appLockDecoration = Decoration.mark({ class: 'cm-app-locked' })
+const appLockDecorationPlugin = ViewPlugin.fromClass(class {
+  decorations
+  constructor(view) {
+    this.decorations = this.buildDecorations(view)
+  }
+  update(update) {
+    if (update.docChanged || update.viewportChanged) {
+      this.decorations = this.buildDecorations(update.view)
+    }
+  }
+  buildDecorations(view) {
+    const builder = new RangeSetBuilder()
+    const firstLine = view.state.doc.line(1)
+    if (firstLine.text.startsWith(APP_PREFIX)) {
+      builder.add(firstLine.from, firstLine.from + APP_PREFIX.length, appLockDecoration)
+    }
+    return builder.finish()
+  }
+}, { decorations: v => v.decorations })
+
+/**
+ * Extension: Handle Enter key for inline token definitions
+ * When user types "Card bg $surface: #333" and presses Enter:
+ * 1. Token "$surface: #333" is added to tokens file
+ * 2. Line becomes "Card bg $surface" (just the reference)
+ */
+const inlineTokenExtension = EditorView.domEventHandlers({
+  keydown: (event, view) => {
+    if (event.key !== 'Enter') return false
+
+    // Don't intercept Enter when any picker is visible (use unified TriggerManager)
+    if (getTriggerManager().isOpen()) {
+      return false
+    }
+
+    // Get current line
+    const cursorPos = view.state.selection.main.head
+    const line = view.state.doc.lineAt(cursorPos)
+    const lineText = line.text
+
+    // Check for inline token pattern
+    const match = extractInlineToken(lineText)
+    if (!match) return false  // No match → normal Enter behavior
+
+    // Add token to tokens file
+    addTokenToFile(match.tokenName, match.tokenValue)
+
+    // Replace the inline definition with just the reference
+    const newLineText = lineText.replace(match.fullMatch, match.replacement)
+    view.dispatch({
+      changes: { from: line.from, to: line.to, insert: newLineText + '\n' },
+      selection: { anchor: line.from + newLineText.length + 1 }
+    })
+
+    // Show feedback
+    showTokenCreatedFeedback(match.tokenName)
+
+    event.preventDefault()
+    return true
+  }
+})
+
 // Create editor
 const editorContainer = document.getElementById('editor-container')
+
+// Register all triggers with the new unified TriggerManager
+registerAllTriggers({
+  getFiles: () => files,
+  componentPrimitives: getIconTriggerPrimitives(),
+})
+
+// Initialize modular color picker API for property panel
 
 const editor = new EditorView({
   state: EditorState.create({
@@ -4867,22 +4005,25 @@ const editor = new EditorView({
             debouncedCompile()
           }
         }
-        // Cursor sync: only when selection changed WITHOUT doc change (no typing)
-        // Only sync if editor has focus (not when user selected something in preview)
-        else if (update.selectionSet && getEditorHasFocus()) {
-          // Sync property panel directly to cursor position
-          syncPropertyPanelToEditorCursor()
+        // Track cursor/selection changes for Editor → Preview sync
+        const prevPos = update.startState.selection.main.head
+        const newPos = update.state.selection.main.head
+        if (prevPos !== newPos && studio.editor) {
+          const line = update.state.doc.lineAt(newPos)
+          studio.editor.notifyCursorMove({
+            line: line.number,
+            column: newPos - line.from + 1,
+            offset: newPos
+          })
         }
       }),
-      tokenPanelTriggerExtension,
-      Prec.highest(tokenPanelKeyboardExtension),
-      colorDoubleClickExtension,
-      hashColorTriggerExtension,
-      Prec.highest(hashColorKeyboardExtension),
-      iconTriggerExtension,
-      Prec.highest(iconKeyboardExtension),
-      animationPickerTriggerExtension,
-      animationDoubleClickExtension,
+      // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)
+      ...createTriggerExtensions(),
+      Prec.high(inlineTokenExtension),
+      // App Lock: "App" is undeletable, auto-indent children
+      Prec.highest(appLockExtension),
+      Prec.high(autoIndentExtension),
+      appLockDecorationPlugin,
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
@@ -5113,6 +4254,9 @@ function getPreludeCode(excludeFile) {
 
 // Compile and render
 function compile(code) {
+  // Update files with current code so renderComponentState can access it
+  files[currentFile] = code
+
   if (!code.trim()) {
     preview.innerHTML = ''
     preview.className = ''
@@ -5133,6 +4277,9 @@ function compile(code) {
     }
     return
   }
+
+  // Mark compilation as in progress
+  studioActions.setCompiling(true)
 
   // Determine file type for preview mode
   const fileType = getFileType(currentFile)
@@ -5155,8 +4302,13 @@ function compile(code) {
       }
     }
 
+    // Update state with resolved source and prelude offset for Commands
+    if (studio?.state) {
+      studio.state.set({ resolvedSource: resolvedCode, preludeOffset: currentPreludeOffset })
+    }
+
     // Parse
-    const ast = Mirror.parse(resolvedCode)
+    const ast = MirrorLang.parse(resolvedCode)
 
     // Check for errors
     if (ast.errors && ast.errors.length > 0) {
@@ -5164,22 +4316,26 @@ function compile(code) {
       throw new Error(errorMsg)
     }
 
-    // Update component primitives map for icon picker
+    // Update component primitives map for icon picker trigger
+    const componentPrimitives = getIconTriggerPrimitives()
     componentPrimitives.clear()
     for (const comp of ast.components) {
       const primitive = comp.primitive || comp.name.toLowerCase()
       componentPrimitives.set(comp.name, primitive)
     }
+    // Also update TriggerManager's primitives
+    setIconTriggerPrimitives(componentPrimitives)
+    window.componentPrimitives = componentPrimitives  // Update window reference
 
     // Update component palette with user-defined components from ALL files
     updateUserComponentsPalette()
 
     // Build IR with source map for bidirectional editing
-    const irResult = Mirror.toIR(ast, true)
-    const sourceMap = irResult.sourceMap
+    const irResult = MirrorLang.toIR(ast, true)
+    let sourceMap = irResult.sourceMap
 
     // Generate DOM code
-    const jsCode = Mirror.generateDOM(ast)
+    const jsCode = MirrorLang.generateDOM(ast)
     if (generatedCode) generatedCode.textContent = jsCode
 
     // Clear preview and set appropriate class
@@ -5190,39 +4346,72 @@ function compile(code) {
     if (fileType === 'tokens') {
       preview.className = 'tokens-preview'
       renderTokensPreview(ast)
-      // Update studio module with AST and source map for tokens too
-      updateStudio(ast, sourceMap, resolvedCode)
+      // Update studio module with AST, IR and source map for tokens too
+      updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else if (fileType === 'component') {
       preview.className = 'components-preview'
       renderComponentsPreview(ast)
-      // Update studio module with AST and source map for component definitions
-      updateStudio(ast, sourceMap, resolvedCode)
+      // Update studio module with AST, IR and source map for component definitions
+      updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else {
       // Layout or other: render UI
-      const hasAutoInit = jsCode.includes('// Auto-initialization')
+      // Also render local component definitions (not from prelude)
+      let codeToCompile = resolvedCode
+      let finalJsCode = jsCode
+
+      // Find components defined in the current file (not prelude)
+      const localAst = MirrorLang.parse(code)
+      const localComponentNames = (localAst.components || []).map(c => c.name)
+
+      // Check which local components are NOT already instanced
+      const instancedNames = new Set((ast.instances || []).map(i => i.component))
+      const uninstancedComponents = localComponentNames.filter(name => !instancedNames.has(name))
+
+      // Add implicit instances for uninstanced local components
+      if (uninstancedComponents.length > 0) {
+        const implicitInstances = uninstancedComponents.join('\n')
+        codeToCompile = resolvedCode + '\n\n// Auto-preview local components\n' + implicitInstances
+
+        // Re-parse and re-generate with implicit instances
+        const augmentedAst = MirrorLang.parse(codeToCompile)
+        finalJsCode = MirrorLang.generateDOM(augmentedAst)
+
+        // IMPORTANT: Regenerate IR and sourceMap from augmented AST
+        // This ensures slot node IDs match between preview and sourceMap
+        const augmentedIrResult = MirrorLang.toIR(augmentedAst, true)
+        irResult.ir = augmentedIrResult.ir
+        irResult.sourceMap = augmentedIrResult.sourceMap
+        sourceMap = augmentedIrResult.sourceMap
+      }
+
+      const hasAutoInit = finalJsCode.includes('// Auto-initialization')
 
       let ui
       if (hasAutoInit) {
-        const execCode = jsCode
+        const execCode = finalJsCode
           .replace('export function createUI', 'function createUI')
           .replace('document.body.appendChild(_ui.root)', '')
 
         const fn = new Function(execCode + '\nreturn _ui;')
         ui = fn()
       } else {
-        const execCode = jsCode
+        const execCode = finalJsCode
           .replace('export function createUI', 'function createUI')
 
         const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
         ui = fn()
       }
 
+      // IMPORTANT: Update studio BEFORE DOM update so SourceMap is ready for clicks
+      updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
+
       if (ui && ui.root) {
         preview.appendChild(ui.root)
+        // Refresh preview selection after DOM update
+        if (studio.preview) {
+          studio.preview.refresh()
+        }
       }
-
-      // Update studio module with new AST and source map
-      updateStudio(ast, sourceMap, resolvedCode)
     }
 
     if (status) {
@@ -5231,6 +4420,9 @@ function compile(code) {
     }
 
   } catch (err) {
+    // Reset compile status on error
+    studioActions.setCompiling(false)
+
     if (status) {
       status.textContent = 'Error'
       status.className = 'status error'
@@ -5464,7 +4656,18 @@ function renderComponentsPreview(ast) {
     `
   }
 
+  // Set HTML first, then render components
   preview.innerHTML = html
+
+  // Now render all components (DOM elements exist now)
+  for (const section of sections) {
+    for (const comp of section.components) {
+      const states = getComponentStates(comp)
+      for (const stateName of states) {
+        renderComponentState(comp, stateName, ast)
+      }
+    }
+  }
 }
 
 function extractComponentSections(ast, components) {
@@ -5581,13 +4784,6 @@ function renderComponentWithStates(comp, ast) {
     `
   }
 
-  // Schedule rendering after DOM update
-  setTimeout(() => {
-    for (const stateName of states) {
-      renderComponentState(comp, stateName, ast)
-    }
-  }, 0)
-
   return `<div class="components-preview-component">${rows}</div>`
 }
 
@@ -5620,7 +4816,7 @@ function injectComponentPreviewStyles(force = false) {
   if (!tokensSource.trim()) return
 
   try {
-    const ast = Mirror.parse(tokensSource)
+    const ast = MirrorLang.parse(tokensSource)
     if (!ast.tokens || ast.tokens.length === 0) return
 
     // Build token map for resolving references
@@ -5665,6 +4861,9 @@ function renderComponentState(comp, stateName, ast) {
   const container = document.getElementById(`comp-render-${comp.name}-${stateName}`)
   if (!container) return
 
+  // Clear previous content
+  container.innerHTML = ''
+
   // Ensure CSS variables are injected
   injectComponentPreviewStyles()
 
@@ -5678,8 +4877,8 @@ function renderComponentState(comp, stateName, ast) {
     // Build code: tokens + component file + instance
     let code = tokensSource + '\n' + currentFileSource + '\n' + comp.name
 
-    const miniAst = Mirror.parse(code)
-    const jsCode = Mirror.generateDOM(miniAst)
+    const miniAst = MirrorLang.parse(code)
+    const jsCode = MirrorLang.generateDOM(miniAst)
       .replace('export function createUI', 'function createUI')
 
     const fn = new Function(jsCode + '\nreturn createUI ? createUI() : null;')
@@ -5697,7 +4896,11 @@ function renderComponentState(comp, stateName, ast) {
           targetElement.setAttribute('data-state', stateName)
         }
 
-        container.appendChild(targetElement.cloneNode(true))
+        // Wrap in artificial parent for w full / h full support
+        const wrapper = document.createElement('div')
+        wrapper.className = 'components-preview-wrapper'
+        wrapper.appendChild(targetElement.cloneNode(true))
+        container.appendChild(wrapper)
       }
     }
   } catch (e) {
@@ -5710,18 +4913,18 @@ function renderComponentState(comp, stateName, ast) {
 // ============================================
 
 // State for studio module
-let currentAST = null
-let currentSourceMap = null
+// NOTE: AST and SourceMap are now managed by studio/core/state.ts
+// Access via: studio.state.get().ast, studio.state.get().sourceMap
 let studioSelectionManager = null
 let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
 let studioDragDropManager = null
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
-// editorHasFocus is now managed by studio state (studioState.get().editorHasFocus)
+// editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
 function getEditorHasFocus() {
-  return studioState ? studioState.get().editorHasFocus : true
+  return studio?.state ? studio.state.get().editorHasFocus : true
 }
 let currentPreludeOffset = 0  // Character offset of prelude in merged source (for adjusting change positions)
 
@@ -5782,328 +4985,42 @@ function getAllProjectSource() {
 /**
  * Calculate the line offset for the current file in the combined source
  * Returns the number of lines that come before the current file
+ *
+ * Must match the structure created by getPreludeCode() + separator in compile():
+ * prelude + '\n\n// === currentFile ===\n' + code
  */
 function getCurrentFileLineOffset() {
-  const filesByType = {}
+  const fileType = getFileType(currentFile)
 
-  // Group files by type
-  for (const filename of Object.keys(files)) {
-    const type = getFileType(filename)
-    if (!filesByType[type]) {
-      filesByType[type] = []
-    }
-    filesByType[type].push({ filename, content: files[filename] })
+  // Only layout files have prelude
+  if (fileType !== 'layout') {
+    return 0
   }
 
-  // Count lines before current file
-  let lineOffset = 0
-  for (const type of FILE_TYPE_ORDER) {
-    const typeFiles = filesByType[type] || []
-    for (const file of typeFiles) {
-      if (file.filename === currentFile) {
-        return lineOffset
-      }
-      // Count lines in this file (+1 for the trailing newline added during combination)
-      const lineCount = (file.content.match(/\n/g) || []).length + 1
-      lineOffset += lineCount
-    }
+  // Get the actual prelude and count its lines
+  const prelude = getPreludeCode(currentFile)
+  if (!prelude) {
+    return 0
   }
 
-  return lineOffset
+  // Count lines in prelude
+  const preludeLines = (prelude.match(/\n/g) || []).length + 1
+
+  // The separator adds: '\n\n// === currentFile ===\n'
+  // That's: 2 newlines + 1 comment line + 1 newline = 3 additional lines
+  // Actually: the line count is prelude lines + 2 (blank line) + 1 (comment line)
+  // The current file content starts on the line AFTER the comment
+  const separatorLines = 3  // \n\n (blank line after prelude) + comment line + \n
+
+  return preludeLines + separatorLines - 1  // -1 because editor line 1 should map to first content line
 }
 
-/**
- * Scroll editor to a specific line and optionally highlight it
- * Only sets selection if editor is NOT focused (to avoid interrupting typing)
- */
-function scrollEditorToLine(line) {
-  if (!editor) return
-
-  // Don't move cursor while user is typing in editor
-  const editorHasFocus = editor.hasFocus
-
-  try {
-    const lineInfo = editor.state.doc.line(line)
-    if (editorHasFocus) {
-      // Only scroll, don't change selection
-      editor.dispatch({
-        effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' })
-      })
-    } else {
-      // Scroll and select (user clicked in preview)
-      editor.dispatch({
-        effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' }),
-        selection: { anchor: lineInfo.from }
-      })
-    }
-  } catch (e) {
-    // Line might be out of bounds after edit
-    console.warn('Studio: Could not scroll to line', line, e)
-  }
-}
-
-/**
- * Find component name from a definition line
- * Handles "Name:" or "Name as Parent:" syntax
- * Returns the component name (not nodeId) for lookup in SourceMap
- */
-function findComponentNameFromDefinitionLine(lineContent) {
-  // Match component definition patterns:
-  // "Button:" or "Button: props" or "Button as Parent:" etc.
-  const match = lineContent.match(/^\s*(\w+)\s*(as\s+\w+)?:/)
-  if (!match) return null
-
-  return match[1]
-}
-
-/**
- * Extract component name from a line of Mirror code
- * Returns null for empty lines, comments, tokens, section headers
- * Returns { name: string, isDefinition: boolean } for valid component lines
- */
-function extractComponentFromLine(line) {
-  const trimmed = line.trim()
-
-  // Skip empty lines
-  if (!trimmed) {
-    return null
-  }
-
-  // Skip comments (single-line and inline)
-  if (trimmed.startsWith('//')) {
-    return null
-  }
-
-  // Skip token definitions ($name: value)
-  if (trimmed.startsWith('$')) {
-    return null
-  }
-
-  // Skip section headers (--- Section ---)
-  if (trimmed.startsWith('---')) {
-    return null
-  }
-
-  // Skip state/event keywords that start a block
-  if (/^(state|hover|focus|active|disabled|onclick|onhover|onchange|oninput|onkeydown|onkeyup|keys|each|if|else)\b/.test(trimmed)) {
-    return null
-  }
-
-  // Skip primitive keywords used inline
-  if (/^(show|hide|animate|data)\b/.test(trimmed)) {
-    return null
-  }
-
-  // Match component name at start: "ComponentName ..." or "ComponentName: ..."
-  // Must start with uppercase letter (Mirror convention)
-  const match = trimmed.match(/^([A-Z][a-zA-Z0-9]*)(\s*:|[\s,]|$)/)
-  if (!match) {
-    return null
-  }
-
-  const name = match[1]
-  const isDefinition = match[2].includes(':')
-
-  return { name, isDefinition }
-}
-
-/**
- * Find the parent component definition for a nested line.
- * Scans upward from the current line to find a line with less indentation
- * that is a component definition (ends with :)
- */
-function findParentComponentDefinition(editorLineNum) {
-  if (!editor) return null
-
-  const currentLine = editor.state.doc.line(editorLineNum)
-  const currentIndent = currentLine.text.match(/^(\s*)/)[1].length
-
-  // If no indent, this is a top-level line
-  if (currentIndent === 0) return null
-
-  // Scan upward to find parent definition
-  for (let lineNum = editorLineNum - 1; lineNum >= 1; lineNum--) {
-    const line = editor.state.doc.line(lineNum)
-    const lineText = line.text
-    const lineIndent = lineText.match(/^(\s*)/)[1].length
-
-    // Found a line with less indentation
-    if (lineIndent < currentIndent) {
-      // Check if it's a component definition
-      const match = lineText.trim().match(/^([A-Z][a-zA-Z0-9]*)\s*(as\s+[a-zA-Z0-9]+\s*)?:/)
-      if (match) {
-        return { name: match[1], line: lineNum }
-      }
-      // Not a definition, but less indent - stop searching
-      return null
-    }
-  }
-
-  return null
-}
-
-/**
- * Sync property panel to editor cursor position
- * Called after compile when editor has focus
- *
- * Strategy:
- * 1. For definitions (ComponentName:) -> show definition properties
- * 2. For instances -> find the instance closest to cursor line
- * 3. Keep previous selection if on empty/non-component line
- */
-function syncPropertyPanelToEditorCursor() {
-  if (!editor || !studioSelectionManager) {
-    DEBUG_SYNC && console.log('[Sync] No editor or selectionManager')
-    return
-  }
-
-  try {
-    const cursorPos = editor.state.selection.main.head
-    const editorLine = editor.state.doc.lineAt(cursorPos).number
-    const lineInfo = editor.state.doc.line(editorLine)
-    const lineContent = lineInfo.text
-
-    DEBUG_SYNC && console.log('[Sync] Line', editorLine, ':', lineContent)
-
-    // Extract component info from the line
-    const componentInfo = extractComponentFromLine(lineContent)
-
-    DEBUG_SYNC && console.log('[Sync] componentInfo:', componentInfo)
-
-    // If not a component line, check if we're inside a component definition block
-    // (e.g., on a state line, event line, or child line)
-    if (!componentInfo) {
-      DEBUG_SYNC && console.log('[Sync] Not a component line, checking for parent definition...')
-      const parent = findParentComponentDefinition(editorLine)
-      DEBUG_SYNC && console.log('[Sync] Parent found:', parent)
-      if (parent && parent.name && studioPropertyPanel) {
-        const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
-        DEBUG_SYNC && console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
-        if (parentSuccess) {
-          studioSelectionManager.clearSelection()
-          // Determine what kind of nested line this is (state, event, etc.)
-          const trimmedLine = lineContent.trim()
-          let childLabel = 'nested'
-          if (trimmedLine.startsWith('state ')) {
-            const stateMatch = trimmedLine.match(/^state\s+(\w+)/)
-            childLabel = stateMatch ? `state: ${stateMatch[1]}` : 'state'
-          } else if (trimmedLine.startsWith('on')) {
-            const eventMatch = trimmedLine.match(/^(on\w+)/)
-            childLabel = eventMatch ? eventMatch[1] : 'event'
-          }
-          studioSelectionManager.setBreadcrumb([{
-            nodeId: `def-${parent.name}`,
-            label: `${parent.name} (Definition)`,
-            componentName: parent.name
-          }, {
-            nodeId: `child-${childLabel}`,
-            label: childLabel,
-            componentName: parent.name
-          }])
-        }
-      }
-      return
-    }
-
-    const { name: componentName, isDefinition } = componentInfo
-
-    DEBUG_SYNC && console.log('[Sync] Component:', componentName, 'isDefinition:', isDefinition, 'hasPropertyPanel:', !!studioPropertyPanel)
-
-    // Handle definitions: show component definition properties
-    if (isDefinition && studioPropertyPanel) {
-      const success = studioPropertyPanel.showComponentDefinition(componentName)
-      DEBUG_SYNC && console.log('[Sync] showComponentDefinition result:', success)
-      if (success) {
-        studioSelectionManager.clearSelection()
-        // Update breadcrumb to show we're in a definition
-        studioSelectionManager.setBreadcrumb([{
-          nodeId: `def-${componentName}`,
-          label: `${componentName} (Definition)`,
-          componentName: componentName
-        }])
-        return
-      }
-    }
-
-    // Handle instances: find the instance that matches the line content
-    if (currentSourceMap && studioPropertyExtractor) {
-      const instances = currentSourceMap.getNodesByComponent(componentName)
-      if (instances && instances.length > 0) {
-        // For single instances, just select it
-        if (instances.length === 1) {
-          studioSelectionManager.select(instances[0].nodeId)
-          return
-        }
-
-        // For multiple instances, use position order to determine which one to select
-        // Count how many component lines of this type are BEFORE the cursor line
-        let componentLineIndex = 0
-        for (let lineNum = 1; lineNum < editorLine; lineNum++) {
-          try {
-            const prevLine = editor.state.doc.line(lineNum).text
-            const prevInfo = extractComponentFromLine(prevLine)
-            if (prevInfo && prevInfo.name === componentName && !prevInfo.isDefinition) {
-              componentLineIndex++
-            }
-          } catch (e) {
-            // Line doesn't exist
-          }
-        }
-
-        // Sort instances by their source position line number
-        const sortedInstances = [...instances].sort((a, b) =>
-          (a.position?.line || 0) - (b.position?.line || 0)
-        )
-
-        // Select the instance at the corresponding index
-        const selectedInstance = sortedInstances[componentLineIndex] || sortedInstances[0]
-
-        studioSelectionManager.select(selectedInstance.nodeId)
-        return
-      }
-    }
-
-    // Fallback: try to show definition if component exists but no instances rendered
-    DEBUG_SYNC && console.log('[Sync] Fallback: trying showComponentDefinition for', componentName)
-    if (studioPropertyPanel) {
-      const success = studioPropertyPanel.showComponentDefinition(componentName)
-      DEBUG_SYNC && console.log('[Sync] Fallback showComponentDefinition result:', success)
-      if (success) {
-        studioSelectionManager.clearSelection()
-        studioSelectionManager.setBreadcrumb([{
-          nodeId: `def-${componentName}`,
-          label: `${componentName} (Definition)`,
-          componentName: componentName
-        }])
-        return
-      }
-
-      // Component not found - check if we're on a nested line (child slot)
-      // Find the parent component definition and show that instead
-      DEBUG_SYNC && console.log('[Sync] Component not found, looking for parent...')
-      const parent = findParentComponentDefinition(editorLine)
-      DEBUG_SYNC && console.log('[Sync] Parent found:', parent)
-      if (parent && parent.name) {
-        const parentSuccess = studioPropertyPanel.showComponentDefinition(parent.name)
-        DEBUG_SYNC && console.log('[Sync] Parent showComponentDefinition result:', parentSuccess)
-        if (parentSuccess) {
-          studioSelectionManager.clearSelection()
-          studioSelectionManager.setBreadcrumb([{
-            nodeId: `def-${parent.name}`,
-            label: `${parent.name} (Definition)`,
-            componentName: parent.name
-          }, {
-            nodeId: `child-${componentName}`,
-            label: componentName,
-            componentName: componentName
-          }])
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('Studio: Could not sync to cursor', e)
-  }
-}
+// ============================================
+// LEGACY SYNC FUNCTIONS REMOVED
+// All sync logic is now in SyncCoordinator (studio/sync/sync-coordinator.ts)
+// Line offset handling is in LineOffsetService (studio/sync/line-offset-service.ts)
+// Component line parsing is in component-line-parser.ts (studio/sync/component-line-parser.ts)
+// ============================================
 
 // Initialize studio module
 function initStudio() {
@@ -6125,7 +5042,10 @@ function initStudio() {
       propertyPanelContainer: propertyPanelContainer,
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
+      getAllSource: getAllProjectSource,
     })
+    // Line offset handling is now done in SyncCoordinator via LineOffsetService
+    // Offset is set in updateStudio() after each compile
     console.log('Studio: New architecture initialized')
   } catch (e) {
     console.warn('Studio: New architecture failed to initialize:', e)
@@ -6141,40 +5061,177 @@ function initStudio() {
   // The state.editorHasFocus is updated automatically by the new architecture
 
   console.log('Studio: Initialized')
+  // Preview click handling is done by PreviewController (new architecture)
+  // Editor sync is done by SyncCoordinator via previewController.onSelect() callback
+
+  // Set up notification handlers for user feedback
+  setupNotificationHandlers()
+
+  // Initialize preview zoom controls
+  initPreviewZoom()
+}
+
+// ============================================
+// Preview Zoom Controls
+// ============================================
+
+const ZOOM_LEVELS = [25, 50, 75, 100, 125, 150, 200]
+let currentZoomIndex = 3 // 100%
+
+function initPreviewZoom() {
+  const preview = document.getElementById('preview')
+  const zoomIn = document.getElementById('zoom-in')
+  const zoomOut = document.getElementById('zoom-out')
+  const zoomReset = document.getElementById('zoom-reset')
+  const zoomLevel = document.getElementById('zoom-level')
+
+  if (!preview || !zoomIn || !zoomOut || !zoomReset || !zoomLevel) {
+    console.warn('Preview zoom: Missing elements')
+    return
+  }
+
+  function applyZoom(level) {
+    const scale = level / 100
+    const mirrorRoot = preview.querySelector('.mirror-root')
+    if (mirrorRoot) {
+      mirrorRoot.style.transform = `scale(${scale})`
+      mirrorRoot.style.transformOrigin = 'top left'
+      // Adjust container to show scaled content properly
+      if (scale !== 1) {
+        mirrorRoot.style.width = `${100 / scale}%`
+        mirrorRoot.style.height = `${100 / scale}%`
+      } else {
+        mirrorRoot.style.width = ''
+        mirrorRoot.style.height = ''
+      }
+    }
+    zoomLevel.textContent = `${level}%`
+  }
+
+  zoomIn.addEventListener('click', () => {
+    if (currentZoomIndex < ZOOM_LEVELS.length - 1) {
+      currentZoomIndex++
+      applyZoom(ZOOM_LEVELS[currentZoomIndex])
+    }
+  })
+
+  zoomOut.addEventListener('click', () => {
+    if (currentZoomIndex > 0) {
+      currentZoomIndex--
+      applyZoom(ZOOM_LEVELS[currentZoomIndex])
+    }
+  })
+
+  zoomReset.addEventListener('click', () => {
+    currentZoomIndex = 3 // 100%
+    applyZoom(100)
+  })
+
+  // Re-apply zoom after recompile (when .mirror-root is recreated)
+  if (studio?.events) {
+    studio.events.on('compile:completed', () => {
+      // Use setTimeout to let DOM update first
+      setTimeout(() => {
+        applyZoom(ZOOM_LEVELS[currentZoomIndex])
+      }, 0)
+    })
+    // Note: pendingSelection is now handled automatically by SyncCoordinator
+    // which subscribes to selection:changed events
+  }
+
+  console.log('Preview zoom: Initialized')
+}
+
+/**
+ * Setup notification event handlers for user feedback
+ * Displays messages in the status bar
+ */
+function setupNotificationHandlers() {
+  if (!studio?.events) return
+
+  const statusEl = document.getElementById('status')
+  if (!statusEl) return
+
+  // Store original status for restoring after notification
+  let originalStatus = statusEl.textContent
+  let originalClass = statusEl.className
+  let notificationTimeout = null
+
+  const showNotification = (message, type, duration = 3000) => {
+    // Clear any existing timeout
+    if (notificationTimeout) {
+      clearTimeout(notificationTimeout)
+    }
+
+    // Save current status if not already in notification mode
+    if (!statusEl.dataset.notifying) {
+      originalStatus = statusEl.textContent
+      originalClass = statusEl.className
+      statusEl.dataset.notifying = 'true'
+    }
+
+    // Show notification
+    statusEl.textContent = message
+    statusEl.className = `status ${type}`
+
+    // Restore original status after duration
+    notificationTimeout = setTimeout(() => {
+      statusEl.textContent = originalStatus
+      statusEl.className = originalClass
+      delete statusEl.dataset.notifying
+      notificationTimeout = null
+    }, duration)
+  }
+
+  studio.events.on('notification:info', ({ message, duration }) => {
+    showNotification(message, 'info', duration ?? 3000)
+  })
+
+  studio.events.on('notification:success', ({ message, duration }) => {
+    showNotification(message, 'ok', duration ?? 3000)
+  })
+
+  studio.events.on('notification:warning', ({ message, duration }) => {
+    showNotification(message, 'warning', duration ?? 4000)
+  })
+
+  studio.events.on('notification:error', ({ message, duration }) => {
+    showNotification(message, 'error', duration ?? 5000)
+  })
 }
 
 // Update studio after compile
-function updateStudio(ast, sourceMap, source) {
+function updateStudio(ast, ir, sourceMap, source) {
   if (!studioSelectionManager) return
 
-  currentAST = ast
-  currentSourceMap = sourceMap
-
   // ============================================
-  // NEW ARCHITECTURE: Update state
+  // NEW ARCHITECTURE: Update state atomically
+  // Selection validation is now handled by setCompileResult() in state.ts
   // ============================================
   try {
-    updateStudioState(ast, null, sourceMap, source)
+    updateStudioState(ast, ir, sourceMap, source)
+
+    // Set line offset for SourceMap ↔ Editor line translation
+    if (studio.sync?.lineOffset) {
+      const offset = getCurrentFileLineOffset()
+      studio.sync.lineOffset.setOffset(offset)
+    }
   } catch (e) {
     console.warn('Studio: New architecture update failed:', e)
   }
 
   // SourceMap sync handled by new architecture via updateStudioState()
+  // NOTE: preview.refresh() is called in compile() AFTER DOM update
 
   const propertyPanelContainer = document.getElementById('property-panel')
   const previewContainer = document.getElementById('preview')
-
-  // Refresh preview controller after DOM update
-  if (studio.preview) {
-    studio.preview.refresh()
-  }
 
   // Update or create PropertyExtractor
   if (studioPropertyExtractor) {
     studioPropertyExtractor.updateAST(ast)
     studioPropertyExtractor.updateSourceMap(sourceMap)
   } else {
-    studioPropertyExtractor = new Mirror.PropertyExtractor(ast, sourceMap)
+    studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
   }
 
   // Update or create CodeModifier
@@ -6182,19 +5239,11 @@ function updateStudio(ast, sourceMap, source) {
     studioCodeModifier.updateSource(source)
     studioCodeModifier.updateSourceMap(sourceMap)
   } else {
-    studioCodeModifier = new Mirror.CodeModifier(source, sourceMap)
+    studioCodeModifier = new MirrorLang.CodeModifier(source, sourceMap)
   }
 
-  // Validate current selection - clear if element no longer exists
-  const currentSelection = studioSelectionManager.getSelection()
-  if (currentSelection) {
-    const selectionStillValid = studioPropertyExtractor.getProperties(currentSelection)
-    if (!selectionStillValid) {
-      console.log('Studio: Selection invalidated after compile, clearing:', currentSelection)
-      studioSelectionManager.clearSelection()
-      studioSelectionManager.setBreadcrumb([])
-    }
-  }
+  // NOTE: Selection validation is now handled atomically by state.ts setCompileResult()
+  // The state emits 'selection:invalidated' event which PropertyPanel listens to
 
   // Update or create PropertyPanel
   if (studioPropertyPanel) {
@@ -6204,7 +5253,7 @@ function updateStudio(ast, sourceMap, source) {
     }
     studioPropertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
   } else {
-    studioPropertyPanel = new Mirror.PropertyPanel(
+    studioPropertyPanel = new MirrorLang.PropertyPanel(
       propertyPanelContainer,
       studioSelectionManager,
       studioPropertyExtractor,
@@ -6229,10 +5278,34 @@ function updateStudio(ast, sourceMap, source) {
   if (studioDragDropManager) {
     studioDragDropManager.setCodeModifier(source, sourceMap)
   } else {
-    studioDragDropManager = new Mirror.DragDropManager(previewContainer, {
+    studioDragDropManager = new MirrorLang.DragDropManager(previewContainer, {
       onDrop: handleStudioDrop,
-      onDragEnter: () => previewContainer.style.outline = '2px dashed #3B82F6',
-      onDragLeave: () => previewContainer.style.outline = '',
+      onDragEnter: () => {
+        // Drop target highlighting handled by .studio-drop-target class
+      },
+      onDragLeave: () => {
+        // Hide drop zone visualization
+        studio.preview?.hideDropZone()
+        // Remove drop target highlight from all elements
+        previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
+          el.classList.remove('studio-drop-target')
+        })
+      },
+      onDragOver: (dropZone) => {
+        // Remove previous drop target highlight
+        previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
+          el.classList.remove('studio-drop-target')
+        })
+
+        // The DropZoneCalculator already shows the insertion line via showIndicator()
+        // We only need to add the drop target highlight class here
+        if (dropZone) {
+          const element = dropZone.element
+          // Add drop target highlight to current target
+          element.classList.add('studio-drop-target')
+        }
+        // Note: hideDropZone() removed - DropZoneCalculator handles its own clear()
+      },
     })
     studioDragDropManager.setCodeModifier(source, sourceMap)
     initComponentPalette()
@@ -6242,9 +5315,20 @@ function updateStudio(ast, sourceMap, source) {
   makePreviewElementsDraggable()
 
   // Sync property panel to editor cursor after compile (if editor has focus)
-  if (getEditorHasFocus()) {
-    syncPropertyPanelToEditorCursor()
+  // Use new architecture: trigger SyncCoordinator via EditorController
+  if (getEditorHasFocus() && studio.editor && editor) {
+    const pos = editor.state.selection.main.head
+    const line = editor.state.doc.lineAt(pos)
+    studio.editor.notifyCursorMove({
+      line: line.number,
+      column: pos - line.from + 1,
+      offset: pos
+    })
   }
+
+  // Ensure visual overlay is in DOM after preview update
+  // (preview.innerHTML clears it, this re-appends it)
+  studio.preview?.refresh()
 }
 
 /**
@@ -6270,11 +5354,13 @@ function makePreviewElementsDraggable() {
     const nodeId = el.getAttribute('data-mirror-id')
     if (!nodeId) return
 
-    // Don't make root-level elements draggable (direct children of preview)
-    if (el.parentElement === previewContainer) return
+    // Skip the actual root element (main component) - it cannot be moved
+    // But allow its children to be dragged even if they're direct children of preview
+    const isMainRoot = el.dataset.mirrorRoot === 'true'
+    if (isMainRoot) return
 
     // Make element draggable and store cleanup function
-    const cleanup = Mirror.makeCanvasElementDraggable(
+    const cleanup = MirrorLang.makeCanvasElementDraggable(
       el,
       nodeId,
       studioDragDropManager
@@ -6355,7 +5441,14 @@ function handleStudioCodeChange(result) {
 // Handle drag-drop from component palette
 function handleStudioDrop(result) {
   const previewContainer = document.getElementById('preview')
-  previewContainer.style.outline = ''
+
+  // Hide drop zone visualization
+  studio.preview?.hideDropZone()
+
+  // Remove drop target highlight
+  previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
+    el.classList.remove('studio-drop-target')
+  })
 
   if (!result.success) {
     console.warn('Studio: Drop failed:', result.error)
@@ -6405,6 +5498,29 @@ function handleStudioDrop(result) {
     origin: 'drag-drop',
     change: adjustedChange
   })
+
+  // Set pending selection BEFORE compile
+  // This ensures the selection will be resolved after SourceMap is ready
+  const insertLine = editor.state.doc.lineAt(adjustedChange.from)
+  if (insertLine) {
+    // Extract component name from inserted code (first word)
+    const insertedCode = adjustedChange.insert.trim()
+    const componentMatch = insertedCode.match(/^(\w+)/)
+    const componentName = componentMatch ? componentMatch[1] : 'Unknown'
+
+    // Set pending selection - will be resolved after compile
+    studioActions.setPendingSelection({
+      line: insertLine.number,
+      componentName: componentName,
+      origin: 'drag-drop'
+    })
+    console.log('Studio: Pending selection set for line', insertLine.number, componentName)
+  }
+
+  // Compile and save (like handleElementDelete and other edit operations)
+  const code = editor.state.doc.toString()
+  compile(code)
+  debouncedSave(code)
 
   console.log('Studio: Component dropped', result.dropZone?.targetId, result.dropZone?.placement)
 }
@@ -6542,14 +5658,37 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
+// Layout preset icons
+const LAYOUT_ICONS = {
+  absolute: '<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 2"></rect><circle cx="8" cy="8" r="2" fill="currentColor"></circle><circle cx="16" cy="14" r="2" fill="currentColor"></circle>',
+  vbox: '<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M21 9H3"></path><path d="M21 15H3"></path>',
+  hbox: '<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="M15 3v18"></path>',
+  zstack: '<rect x="3" y="3" width="14" height="14" rx="2"></rect><rect x="7" y="7" width="14" height="14" rx="2"></rect>',
+  grid: '<rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="8" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect><rect x="13" y="13" width="8" height="8" rx="1"></rect>',
+  sidebar: '<rect x="3" y="3" width="18" height="18" rx="1"></rect><rect x="4" y="4" width="4" height="16"></rect>',
+  headerfooter: '<rect x="3" y="3" width="18" height="18" rx="1"></rect><rect x="4" y="4" width="16" height="3"></rect>',
+}
+
+// Layout presets
+const LAYOUT_PRESETS = [
+  { name: 'Absolute', category: 'layout', properties: 'w full, h full, absolute', icon: LAYOUT_ICONS.absolute },
+  { name: 'V-Box', category: 'layout', properties: 'ver, gap 8', icon: LAYOUT_ICONS.vbox },
+  { name: 'H-Box', category: 'layout', properties: 'hor, gap 8', icon: LAYOUT_ICONS.hbox },
+  { name: 'ZStack', category: 'layout', properties: 'stacked', icon: LAYOUT_ICONS.zstack },
+  { name: 'Grid', category: 'layout', properties: 'grid 2, gap 8', icon: LAYOUT_ICONS.grid },
+  { name: 'Sidebar', category: 'layout', properties: 'hor, w full, h full', icon: LAYOUT_ICONS.sidebar },
+  { name: 'Header/Footer', category: 'layout', properties: 'ver, w full, h full', icon: LAYOUT_ICONS.headerfooter },
+]
+
 // Built-in primitive components
 const PRIMITIVE_COMPONENTS = [
-  { name: 'Box', properties: 'pad 16, bg #27272a, rad 8', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
-  { name: 'Button', properties: 'pad 10 20, bg #3B82F6, rad 6', text: 'Button', icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
-  { name: 'Text', text: 'Text', icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
-  { name: 'Input', properties: 'pad 10, bg #27272a, rad 6', text: 'placeholder...', icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
-  { name: 'Icon', properties: '"star"', icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
-  { name: 'Image', properties: '"https://picsum.photos/200"', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>' },
+  { name: 'Box', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
+  { name: 'Button', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
+  { name: 'Text', properties: 'w hug, h hug', text: 'Text', icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
+  { name: 'Input', properties: 'w 200, h hug, pad 10, bg #27272a, rad 6, bor 0', text: 'placeholder...', icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
+  { name: 'Icon', properties: 'w 24, h 24, "star"', icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
+  { name: 'Image', properties: 'w 200, h 200, "https://picsum.photos/200"', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>' },
+  { name: 'Slot', properties: 'w hug, h hug', text: 'Content', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="4 2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>' },
 ]
 
 // User component icon (cube/component symbol)
@@ -6618,7 +5757,7 @@ function updateComponentPalette() {
       const content = files[filename]
       if (!content || !content.trim()) continue
 
-      const ast = Mirror.parse(content)
+      const ast = MirrorLang.parse(content)
       if (ast.components) {
         for (const comp of ast.components) {
           // Skip primitives
@@ -6648,11 +5787,16 @@ function updateComponentPalette() {
     }
   }
 
-  // Combine all components and sort alphabetically
-  const allComponents = [
+  // Combine all components: layouts first, then primitives + user (sorted)
+  const componentsToSort = [
     ...PRIMITIVE_COMPONENTS,
     ...uniqueUserComponents
   ].sort((a, b) => a.name.localeCompare(b.name))
+
+  const allComponents = [
+    ...LAYOUT_PRESETS,  // Layouts stay at top, unsorted
+    ...componentsToSort
+  ]
 
   // Store for filtering
   window.allPaletteComponents = allComponents
@@ -6661,12 +5805,36 @@ function updateComponentPalette() {
   renderFilteredComponents(allComponents)
 }
 
-// Render filtered components to the palette
+// Render filtered components to the palette with sections
 function renderFilteredComponents(components) {
   const container = document.getElementById('components-palette')
   if (!container) return
 
-  container.innerHTML = components.map(comp => renderPaletteItem(comp)).join('')
+  // Group by category
+  const layouts = components.filter(c => c.category === 'layout')
+  const others = components.filter(c => c.category !== 'layout')
+
+  let html = ''
+
+  // Layouts section
+  if (layouts.length > 0) {
+    html += '<div class="component-palette-section">'
+    html += '<div class="component-palette-section-title">Layouts</div>'
+    html += '<div class="component-palette-items">'
+    html += layouts.map(comp => renderPaletteItem(comp)).join('')
+    html += '</div></div>'
+  }
+
+  // Components section
+  if (others.length > 0) {
+    html += '<div class="component-palette-section">'
+    html += '<div class="component-palette-section-title">Components</div>'
+    html += '<div class="component-palette-items">'
+    html += others.map(comp => renderPaletteItem(comp)).join('')
+    html += '</div></div>'
+  }
+
+  container.innerHTML = html
   attachPaletteDragHandlers(container)
 }
 

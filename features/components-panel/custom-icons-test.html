@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Icons - Lucide Style</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #09090b;
+      color: #e4e4e7;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 24px;
+      margin: 0;
+    }
+    h1 { font-size: 16px; color: #a1a1aa; margin: 0 0 24px 0; }
+    h2 { font-size: 12px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 12px 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .icon-card {
+      background: #18181b;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .icon-card:hover {
+      background: #27272a;
+    }
+    .icon-card svg {
+      width: 24px;
+      height: 24px;
+      stroke: #e4e4e7;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    .icon-card span {
+      font-size: 10px;
+      color: #71717a;
+      text-align: center;
+    }
+    .comparison {
+      display: flex;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    .comparison-col h3 {
+      font-size: 11px;
+      color: #52525b;
+      margin: 0 0 12px 0;
+    }
+    .sizes {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-top: 24px;
+      padding: 16px;
+      background: #18181b;
+      border-radius: 8px;
+    }
+    .sizes svg {
+      stroke: #e4e4e7;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    .sizes span {
+      font-size: 10px;
+      color: #52525b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Custom Icons im Lucide-Stil</h1>
+
+  <h2>UI Components</h2>
+  <div class="grid">
+    <!-- Tabs -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="8" width="18" height="13" rx="2"/>
+        <path d="M3 10h18"/>
+        <path d="M7 3h4a1 1 0 0 1 1 1v4H6V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span>tabs</span>
+    </div>
+
+    <!-- Tabs Horizontal -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="6" width="18" height="15" rx="2"/>
+        <path d="M3 10h18"/>
+        <rect x="5" y="6" width="5" height="4" rx="1" fill="none"/>
+        <rect x="10" y="6" width="5" height="4" rx="1" fill="none"/>
+      </svg>
+      <span>tabs-horizontal</span>
+    </div>
+
+    <!-- Dropdown -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="6" rx="2"/>
+        <path d="m15 8 -3 0"/>
+        <path d="m9 8 -2 0"/>
+        <path d="M3 14h18"/>
+        <path d="M3 18h18"/>
+        <path d="m17 7 2 2 -2 2"/>
+      </svg>
+      <span>dropdown</span>
+    </div>
+
+    <!-- Select / Dropdown Simple -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="6" width="18" height="12" rx="2"/>
+        <path d="m8 12 4 4 4-4"/>
+      </svg>
+      <span>select</span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18"/>
+        <circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+        <path d="M11 6h6"/>
+      </svg>
+      <span>navbar</span>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <circle cx="4" cy="12" r="2"/>
+        <path d="m8 12 2-2"/>
+        <path d="m8 12 2 2"/>
+        <circle cx="14" cy="12" r="2"/>
+        <path d="m18 12 2-2"/>
+        <path d="m18 12 2 2"/>
+      </svg>
+      <span>breadcrumb</span>
+    </div>
+
+    <!-- Menu / Hamburger (Lucide has this, for comparison) -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 6h16"/>
+        <path d="M4 12h16"/>
+        <path d="M4 18h16"/>
+      </svg>
+      <span>menu (lucide)</span>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M9 3v18"/>
+        <path d="M12 8h5"/>
+        <path d="M12 12h5"/>
+        <path d="M12 16h3"/>
+      </svg>
+      <span>sidebar-menu</span>
+    </div>
+
+    <!-- Accordion -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="5" rx="1"/>
+        <path d="m17 5.5-2 1.5-2-1.5"/>
+        <rect x="3" y="10" width="18" height="5" rx="1"/>
+        <rect x="3" y="17" width="18" height="4" rx="1"/>
+      </svg>
+      <span>accordion</span>
+    </div>
+
+    <!-- Modal / Dialog -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M2 8h20"/>
+        <path d="m18 6-2 2"/>
+        <path d="m16 6 2 2"/>
+      </svg>
+      <span>modal</span>
+    </div>
+
+    <!-- Card -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18"/>
+        <path d="M7 14h10"/>
+        <path d="M7 17h6"/>
+      </svg>
+      <span>card</span>
+    </div>
+
+    <!-- Button -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="8" width="18" height="8" rx="2"/>
+        <path d="M8 12h8"/>
+      </svg>
+      <span>button</span>
+    </div>
+
+    <!-- Input Field -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="6" width="18" height="12" rx="2"/>
+        <path d="M7 12h.01"/>
+        <path d="M7 12v-2"/>
+        <path d="M7 12v2"/>
+      </svg>
+      <span>input</span>
+    </div>
+
+    <!-- Checkbox -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="2"/>
+        <path d="m8 12 3 3 5-6"/>
+      </svg>
+      <span>checkbox</span>
+    </div>
+
+    <!-- Radio -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>
+      </svg>
+      <span>radio</span>
+    </div>
+
+    <!-- Toggle / Switch -->
+    <div class="icon-card">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="10" rx="5"/>
+        <circle cx="16" cy="12" r="3"/>
+      </svg>
+      <span>toggle</span>
+    </div>
+  </div>
+
+  <h2>Vergleich: Custom vs Lucide Original</h2>
+  <div class="comparison">
+    <div class="comparison-col">
+      <h3>Custom (oben) vs Lucide ähnlich</h3>
+      <div class="grid">
+        <div class="icon-card">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18"/>
+          </svg>
+          <span>panel-left (lucide)</span>
+        </div>
+        <div class="icon-card">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="M12 8h5"/>
+            <path d="M12 12h5"/>
+            <path d="M12 16h3"/>
+          </svg>
+          <span>sidebar-menu (custom)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Verschiedene Größen</h2>
+  <div class="sizes">
+    <div style="text-align: center">
+      <svg viewBox="0 0 24 24" width="16" height="16">
+        <rect x="3" y="8" width="18" height="13" rx="2"/>
+        <path d="M3 10h18"/>
+        <path d="M7 3h4a1 1 0 0 1 1 1v4H6V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span style="display: block">16px</span>
+    </div>
+    <div style="text-align: center">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <rect x="3" y="8" width="18" height="13" rx="2"/>
+        <path d="M3 10h18"/>
+        <path d="M7 3h4a1 1 0 0 1 1 1v4H6V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span style="display: block">24px</span>
+    </div>
+    <div style="text-align: center">
+      <svg viewBox="0 0 24 24" width="32" height="32">
+        <rect x="3" y="8" width="18" height="13" rx="2"/>
+        <path d="M3 10h18"/>
+        <path d="M7 3h4a1 1 0 0 1 1 1v4H6V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span style="display: block">32px</span>
+    </div>
+    <div style="text-align: center">
+      <svg viewBox="0 0 24 24" width="48" height="48">
+        <rect x="3" y="8" width="18" height="13" rx="2"/>
+        <path d="M3 10h18"/>
+        <path d="M7 3h4a1 1 0 0 1 1 1v4H6V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span style="display: block">48px</span>
+    </div>
+  </div>
+
+</body>
+</html>

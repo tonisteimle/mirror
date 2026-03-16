@@ -11,7 +11,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 // Read tutorial.md
-const tutorialPath = path.resolve(__dirname, '../../../../../../docs/tutorial.md')
+const tutorialPath = path.resolve(__dirname, '../../../../docs/tutorial.md')
 const tutorialContent = fs.readFileSync(tutorialPath, 'utf-8')
 
 // Extract code blocks from markdown

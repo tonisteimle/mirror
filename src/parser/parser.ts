@@ -5,10 +5,97 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty } from './ast'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
+
+// Known property names that START a new property - used for automatic separation
+// When parsing "Box h 300 bg #333", the parser recognizes "bg" as a property name
+// and separates it into two properties: h: [300] and bg: [#333]
+//
+// NOTE: Boolean properties (hor, ver, center, wrap, etc.) are NOT included here
+// because they are handled separately in component body parsing BEFORE parseProperty()
+// is called. Including them would break "align top left" where top/left are values.
+const PROPERTY_STARTERS = new Set([
+  // Sizing (take numeric or special values like 'full', 'hug')
+  'width', 'w', 'height', 'h',
+  'min-width', 'minw', 'max-width', 'maxw',
+  'min-height', 'minh', 'max-height', 'maxh',
+  'size',
+
+  // Spacing (take numeric values)
+  'padding', 'pad', 'p', 'margin', 'm', 'gap', 'g',
+
+  // Colors (take color values)
+  'background', 'bg', 'color', 'col', 'c', 'border-color', 'boc',
+
+  // Border (takes multiple values)
+  'border', 'bor', 'radius', 'rad',
+
+  // Typography (take specific values)
+  'font-size', 'fs', 'font', 'weight', 'line', 'text-align',
+
+  // Visual (take numeric/specific values)
+  'opacity', 'o', 'opa', 'shadow', 'cursor', 'z',
+
+  // Scroll (these are usually boolean-like but can have values)
+  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
+
+  // Icon properties
+  'icon-size', 'is', 'icon-color', 'ic', 'icon-weight', 'iw',
+
+  // Content/HTML attributes
+  'content', 'href', 'src', 'placeholder',
+
+  // Animation/Transform
+  'animation', 'anim', 'rotate', 'rot', 'scale', 'translate',
+  'x-offset', 'y-offset',
+
+  // Hover variants
+  'hover-bg', 'hover-col', 'hover-opacity', 'hover-opa',
+  'hover-scale', 'hover-bor', 'hover-border', 'hover-boc',
+  'hover-border-color', 'hover-rad', 'hover-radius',
+
+  // Grid (takes numeric value)
+  'grid',
+
+  // align takes values like 'top left', 'center', etc - but those values
+  // (top, left, center) should NOT be in this set as they are values for align
+  'align',
+])
+
+// Boolean properties (no value needed) - moved to module level for reuse
+const BOOLEAN_PROPERTIES = new Set([
+  'horizontal', 'hor', 'vertical', 'ver', 'center', 'cen',
+  'spread', 'wrap', 'stacked', 'abs', 'hidden', 'visible', 'disabled',
+  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
+  'truncate', 'italic', 'underline', 'uppercase', 'lowercase',
+  'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
+  'focusable',  // Makes element focusable for keyboard events
+  'grow', 'shrink',  // Flex grow/shrink
+  'readonly',  // Input readonly attribute
+  'absolute', 'fixed', 'relative',  // Position shortcuts
+])
+
+// Layout boolean properties that should trigger property separation
+// These are layout modifiers that commonly appear after value-taking properties
+// Position booleans (left, right, top, bottom) are NOT included
+// because they're commonly used as values for "align"
+// Note: center/cen IS included because it's more often a layout boolean
+// than an align value (align usually uses "align center center" or "align top left")
+const LAYOUT_BOOLEANS = new Set([
+  'horizontal', 'hor', 'vertical', 'ver',
+  'center', 'cen',  // Common layout boolean
+  'spread', 'wrap', 'stacked', 'abs',
+  'hidden', 'visible', 'disabled',
+  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
+  'truncate', 'italic', 'underline', 'uppercase', 'lowercase',
+  'focusable',
+  'grow', 'shrink',  // Flex grow/shrink
+  'readonly',  // Input readonly
+  'absolute', 'fixed', 'relative',  // Position shortcuts
+])
 
 export class Parser {
   private tokens: Token[]
@@ -272,7 +359,7 @@ export class Parser {
     return undefined
   }
 
-  private parseComponentOrInstance(): ComponentDefinition | Instance | AnimationDefinition | null {
+  private parseComponentOrInstance(): ComponentDefinition | Instance | Slot | AnimationDefinition | null {
     const name = this.advance()
 
     // Component definition: Name as primitive:
@@ -611,7 +698,14 @@ export class Parser {
     return component
   }
 
-  private parseInstance(name: Token): Instance {
+  private parseInstance(name: Token): Instance | Slot {
+    // Special handling for Slot primitive
+    // Syntax: Slot "Name", w full, h 100
+    // The first string is the slot name, NOT text content
+    if (name.value === 'Slot') {
+      return this.parseSlotPrimitive(name)
+    }
+
     const instance: Instance = {
       type: 'Instance',
       component: name.value,
@@ -655,6 +749,35 @@ export class Parser {
     }
 
     return instance
+  }
+
+  /**
+   * Parse Slot primitive
+   * Syntax: Slot "Name", w full, h 100
+   *
+   * The first string after "Slot" is the slot name/label, NOT text content.
+   * This is different from regular components where strings are text content.
+   */
+  private parseSlotPrimitive(slotToken: Token): Slot {
+    // Expect a string for the slot name
+    let slotName = 'default'
+    if (this.check('STRING')) {
+      slotName = this.advance().value
+    }
+
+    // Parse any additional properties (w, h, etc.)
+    const properties: Property[] = []
+    this.parseInlineProperties(properties)
+
+    const slot: Slot = {
+      type: 'Slot',
+      name: slotName,
+      line: slotToken.line,
+      column: slotToken.column,
+      properties: properties.length > 0 ? properties : undefined,
+    }
+
+    return slot
   }
 
   /**
@@ -771,15 +894,8 @@ export class Parser {
       // Initial state: closed, open (sets initialState)
       const initialStates = new Set(['closed', 'open', 'collapsed', 'expanded'])
 
-      // Boolean properties (no value needed)
-      const booleanProperties = new Set([
-        'horizontal', 'hor', 'vertical', 'ver', 'center', 'cen',
-        'spread', 'wrap', 'stacked', 'hidden', 'visible', 'disabled',
-        'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
-        'truncate', 'italic', 'underline', 'uppercase', 'lowercase',
-        'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
-        'focusable',  // Makes element focusable for keyboard events
-      ])
+      // Boolean properties (use module-level constant)
+      const booleanProperties = BOOLEAN_PROPERTIES
 
       // System states without colon (hover, focus, active, disabled)
       // These are recognized when followed by NEWLINE + INDENT
@@ -1278,8 +1394,21 @@ export class Parser {
         continue
       }
 
-      // Property: name value
+      // Property: name value (or boolean property)
       if (this.check('IDENTIFIER')) {
+        const identName = this.current().value
+        // Check for boolean properties first - they don't take values
+        if (BOOLEAN_PROPERTIES.has(identName)) {
+          const token = this.advance()
+          properties.push({
+            type: 'Property',
+            name: token.value,
+            values: [true],
+            line: token.line,
+            column: token.column,
+          })
+          continue
+        }
         const prop = this.parseProperty()
         if (prop) properties.push(prop)
         continue
@@ -1404,6 +1533,22 @@ export class Parser {
       } else if (this.check('STRING')) {
         collectedTokens.push({ type: 'STRING', value: `"${this.advance().value}"` })
       } else if (this.check('IDENTIFIER')) {
+        const identValue = this.current().value
+        // Check if this identifier is a property starter (non-boolean property name)
+        // If so, it's the start of a new property - stop collecting here
+        // This allows "Box h 300 bg #333" to be parsed as two properties without commas
+        if (PROPERTY_STARTERS.has(identValue)) {
+          break
+        }
+        // Also check for LAYOUT boolean properties (hor, ver, wrap, spread, etc.)
+        // These should start a new property when encountered after values
+        // Position booleans (left, right, top, bottom, center) are NOT checked here
+        // because they're commonly used as values for "align"
+        // We only break if we've already collected at least one value
+        // This allows "gap 16 hor" to separate but "align center" to stay together
+        if (LAYOUT_BOOLEANS.has(identValue) && collectedTokens.length > 0) {
+          break
+        }
         collectedTokens.push({ type: 'IDENTIFIER', value: this.advance().value })
       } else {
         break
@@ -1667,8 +1812,8 @@ export class Parser {
     const conditional = {
       type: 'Conditional',
       condition,
-      then: [] as Instance[],
-      else: [] as Instance[],
+      then: [] as (Instance | Slot)[],
+      else: [] as (Instance | Slot)[],
       line: ifToken.line,
       column: ifToken.column,
     }

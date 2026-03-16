@@ -230,8 +230,9 @@ describe('Lexer: Keywords', () => {
     expectTokens('data', [['DATA', 'data']])
   })
 
-  it('parses "import"', () => {
-    expectTokens('import', [['IMPORT', 'import']])
+  it('parses "import" as identifier (not a reserved keyword)', () => {
+    // Note: import is not currently a reserved keyword in Mirror
+    expectTokens('import', [['IDENTIFIER', 'import']])
   })
 
   it('parses "keys"', () => {

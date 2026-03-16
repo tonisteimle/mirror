@@ -27,13 +27,13 @@ Dropdown
 
   it('generates toggle that changes closed to open', () => {
     const output = compile(input)
-    expect(output).toContain('currentState === "closed"')
-    expect(output).toContain('"open" : "closed"')
+    expect(output).toContain("currentState === 'closed'")
+    expect(output).toContain("'open' : 'closed'")
   })
 
   it('generates toggle that changes open to closed', () => {
     const output = compile(input)
-    expect(output).toContain('currentState === "open"')
+    expect(output).toContain("currentState === 'open'")
   })
 
   it('handles collapsed/expanded toggle cycle', () => {
@@ -45,9 +45,9 @@ Accordion as frame:
 Accordion
 `
     const output = compile(accordionInput)
-    expect(output).toContain('currentState === "collapsed"')
-    expect(output).toContain('currentState === "expanded"')
-    expect(output).toContain('"expanded" : "collapsed"')
+    expect(output).toContain("currentState === 'collapsed'")
+    expect(output).toContain("currentState === 'expanded'")
+    expect(output).toContain("'expanded' : 'collapsed'")
   })
 })
 
@@ -114,13 +114,13 @@ describe('State Machine: Visibility Updates', () => {
 
   it('updateVisibility handles complex conditions', () => {
     const output = compile(`Card as frame:`)
-    expect(output).toContain('condition.includes("&&")')
-    expect(output).toContain('condition.includes("||")')
+    expect(output).toContain("condition.includes('&&')")
+    expect(output).toContain("condition.includes('||')")
   })
 
   it('updateVisibility sets display based on visibility', () => {
     const output = compile(`Card as frame:`)
-    expect(output).toContain('child.style.display = visible ? "" : "none"')
+    expect(output).toContain("child.style.display = visible ? '' : 'none'")
   })
 })
 

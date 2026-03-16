@@ -300,6 +300,14 @@ export class Lexer {
       value += this.advance()
     }
 
+    // Include fraction notation for aspect ratios (e.g., 16/9, 4/3)
+    if (this.peek() === '/' && this.isDigit(this.peekNext())) {
+      value += this.advance() // /
+      while (this.isDigit(this.peek())) {
+        value += this.advance()
+      }
+    }
+
     this.addToken('NUMBER', value)
   }
 

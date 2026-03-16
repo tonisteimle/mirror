@@ -1,8 +1,9 @@
 /**
- * Command Executor with undo/redo support
+ * Command Executor with undo/redo support and dependency injection
  */
 
-import type { Command, CommandResult } from './commands'
+import type { Command, CommandResult, CommandContext } from './commands'
+import { getCommandContext } from './commands'
 import { events } from './events'
 
 interface HistoryEntry {
@@ -13,6 +14,8 @@ interface HistoryEntry {
 export interface CommandExecutorOptions {
   maxHistory?: number
   emitEvents?: boolean
+  /** Injected context - if not provided, falls back to legacy global context */
+  context?: CommandContext
 }
 
 export class CommandExecutor {
@@ -21,10 +24,24 @@ export class CommandExecutor {
   private maxHistory: number
   private emitEvents: boolean
   private executing = false
+  private injectedContext: CommandContext | null
 
   constructor(options: CommandExecutorOptions = {}) {
     this.maxHistory = options.maxHistory ?? 100
     this.emitEvents = options.emitEvents ?? true
+    this.injectedContext = options.context ?? null
+  }
+
+  /** Get the command context (injected or legacy global) */
+  private getContext(): CommandContext {
+    if (this.injectedContext) return this.injectedContext
+    // Fallback to legacy global context for backward compatibility
+    return getCommandContext()
+  }
+
+  /** Update the injected context (useful when context changes after construction) */
+  setContext(context: CommandContext): void {
+    this.injectedContext = context
   }
 
   execute(command: Command): CommandResult {
@@ -34,7 +51,8 @@ export class CommandExecutor {
 
     this.executing = true
     try {
-      const result = command.execute()
+      const ctx = this.getContext()
+      const result = command.execute(ctx)
       if (result.success) {
         this.undoStack.push({ command, timestamp: Date.now() })
         if (this.undoStack.length > this.maxHistory) this.undoStack.shift()
@@ -57,7 +75,8 @@ export class CommandExecutor {
 
     this.executing = true
     try {
-      const result = entry.command.undo()
+      const ctx = this.getContext()
+      const result = entry.command.undo(ctx)
       if (result.success) {
         this.redoStack.push(entry)
         if (this.emitEvents) events.emit('command:undone', { command: entry.command })
@@ -80,7 +99,8 @@ export class CommandExecutor {
 
     this.executing = true
     try {
-      const result = entry.command.execute()
+      const ctx = this.getContext()
+      const result = entry.command.execute(ctx)
       if (result.success) {
         this.undoStack.push(entry)
         if (this.emitEvents) events.emit('command:redone', { command: entry.command })
@@ -107,16 +127,20 @@ export class CommandExecutor {
   }
 }
 
+// Global executor instance (uses legacy context by default)
 export const executor = new CommandExecutor()
 
+/** @deprecated Use executor.execute() directly with injected context */
 export function execute(command: Command): CommandResult {
   return executor.execute(command)
 }
 
+/** @deprecated Use executor.undo() directly */
 export function undo(): CommandResult {
   return executor.undo()
 }
 
+/** @deprecated Use executor.redo() directly */
 export function redo(): CommandResult {
   return executor.redo()
 }

@@ -9,8 +9,8 @@ import { CodeModifier, type CodeChange, type AddChildOptions } from '../../src/s
 export interface Command {
   readonly type: string
   readonly description: string
-  execute(): CommandResult
-  undo(): CommandResult
+  execute(ctx: CommandContext): CommandResult
+  undo(ctx: CommandContext): CommandResult
 }
 
 export interface CommandResult {
@@ -21,22 +21,60 @@ export interface CommandResult {
 
 export interface CommandContext {
   getSourceMap(): SourceMap | null
+  /** Get editor source (current file only, without prelude) */
   getSource(): string
+  /** Get resolved source (with prelude) for CodeModifier - matches SourceMap positions */
+  getResolvedSource(): string
+  /** Get prelude character offset (to adjust CodeModifier changes for editor) */
+  getPreludeOffset(): number
   applyChange(change: CodeChange): void
   compile(): void
+  /** Clear selection through SyncCoordinator (optional, falls back to direct action) */
+  clearSelection?: (origin: 'keyboard') => void
 }
 
-let commandContext: CommandContext | null = null
+// Legacy: Global command context for backward compatibility
+// Will be removed in future version - use CommandExecutor with injected context instead
+let legacyCommandContext: CommandContext | null = null
 
+/** @deprecated Use CommandExecutor with injected context instead */
 export function setCommandContext(context: CommandContext): void {
-  commandContext = context
+  legacyCommandContext = context
 }
 
+/** @deprecated Commands now receive context as parameter */
 export function getCommandContext(): CommandContext {
-  if (!commandContext) {
-    throw new Error('Command context not initialized')
+  if (!legacyCommandContext) {
+    throw new Error('Command context not initialized. Use CommandExecutor with injected context.')
   }
-  return commandContext
+  return legacyCommandContext
+}
+
+/**
+ * Adjust a CodeModifier change for the editor.
+ * CodeModifier operates on resolved source (with prelude), but editor only has current file.
+ * This subtracts the prelude offset from change positions.
+ */
+function adjustChangeForEditor(change: CodeChange, ctx: CommandContext): CodeChange {
+  const offset = ctx.getPreludeOffset()
+  if (offset === 0) return change
+  return {
+    from: change.from - offset,
+    to: change.to - offset,
+    insert: change.insert,
+  }
+}
+
+/**
+ * Get source and modifier for commands.
+ * Returns resolved source (with prelude) for CodeModifier to match SourceMap positions.
+ */
+function getSourceForModifier(ctx: CommandContext): { source: string; sourceMap: SourceMap } | null {
+  const sourceMap = ctx.getSourceMap()
+  if (!sourceMap) return null
+  // Use resolved source so CodeModifier positions match SourceMap
+  const source = ctx.getResolvedSource()
+  return { source, sourceMap }
 }
 
 export class SetPropertyCommand implements Command {
@@ -55,34 +93,32 @@ export class SetPropertyCommand implements Command {
     this.description = `Set ${params.property} to ${params.value}`
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    const modifier = new CodeModifier(source, sourceMap)
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.updateProperty(this.nodeId, this.property, this.newValue)
     if (!result.success) return { success: false, error: result.error }
 
     this.change = result.change
-    this.oldValue = source.substring(result.change.from, result.change.to)
-    ctx.applyChange(result.change)
-    return { success: true, change: result.change }
+    this.oldValue = data.source.substring(result.change.from, result.change.to)
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.change || this.oldValue === null) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    const modifier = new CodeModifier(source, sourceMap)
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.updateProperty(this.nodeId, this.property, this.oldValue)
     if (!result.success) return { success: false, error: result.error }
-    ctx.applyChange(result.change)
-    return { success: true, change: result.change }
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
   }
 }
 
@@ -100,31 +136,30 @@ export class RemovePropertyCommand implements Command {
     this.description = `Remove ${params.property}`
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    const node = sourceMap.getNodeById(this.nodeId)
+    const node = data.sourceMap.getNodeById(this.nodeId)
     if (!node) return { success: false, error: `Node not found: ${this.nodeId}` }
-    this.oldLine = source.split('\n')[node.position.line - 1]
+    this.oldLine = data.source.split('\n')[node.position.line - 1]
 
-    const modifier = new CodeModifier(source, sourceMap)
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.removeProperty(this.nodeId, this.property)
     if (!result.success) return { success: false, error: result.error }
 
     this.change = result.change
-    ctx.applyChange(result.change)
-    return { success: true, change: result.change }
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.change || !this.oldLine) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
+    const offset = ctx.getPreludeOffset()
     const undoChange: CodeChange = {
-      from: this.change.from,
-      to: this.change.from + this.change.insert.length,
+      from: this.change.from - offset,
+      to: this.change.from - offset + this.change.insert.length,
       insert: this.oldLine,
     }
     ctx.applyChange(undoChange)
@@ -147,27 +182,26 @@ export class InsertComponentCommand implements Command {
     this.description = `Insert ${params.component}`
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    const modifier = new CodeModifier(source, sourceMap)
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.addChild(this.parentId, this.component, this.options)
     if (!result.success) return { success: false, error: result.error }
 
     this.change = result.change
-    ctx.applyChange(result.change)
-    return { success: true, change: result.change }
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.change) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
+    const offset = ctx.getPreludeOffset()
     const undoChange: CodeChange = {
-      from: this.change.from,
-      to: this.change.from + this.change.insert.length,
+      from: this.change.from - offset,
+      to: this.change.from - offset + this.change.insert.length,
       insert: '',
     }
     ctx.applyChange(undoChange)
@@ -181,37 +215,54 @@ export class DeleteNodeCommand implements Command {
   private nodeId: string
   private deletedContent: string | null = null
   private change: CodeChange | null = null
+  private parentId: string | null = null
 
   constructor(params: { nodeId: string }) {
     this.nodeId = params.nodeId
     this.description = `Delete node ${params.nodeId}`
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    const modifier = new CodeModifier(source, sourceMap)
+    // Store parent for selection recovery
+    const node = data.sourceMap.getNodeById(this.nodeId)
+    this.parentId = node?.parentId || null
+
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.removeNode(this.nodeId)
     if (!result.success) return { success: false, error: result.error }
 
-    this.deletedContent = source.substring(result.change.from, result.change.to)
+    this.deletedContent = data.source.substring(result.change.from, result.change.to)
     this.change = result.change
-    ctx.applyChange(result.change)
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
 
+    // Selection recovery: select parent instead of clearing
     if (state.get().selection.nodeId === this.nodeId) {
-      actions.setSelection(null, 'keyboard')
+      if (this.parentId) {
+        // Select parent node for context preservation
+        actions.setSelection(this.parentId, 'keyboard')
+      } else if (ctx.clearSelection) {
+        ctx.clearSelection('keyboard')
+      } else {
+        actions.setSelection(null, 'keyboard')
+      }
     }
-    return { success: true, change: result.change }
+    return { success: true, change: editorChange }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.change || !this.deletedContent) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
-    const undoChange: CodeChange = { from: this.change.from, to: this.change.from, insert: this.deletedContent }
+    const offset = ctx.getPreludeOffset()
+    const undoChange: CodeChange = { from: this.change.from - offset, to: this.change.from - offset, insert: this.deletedContent }
     ctx.applyChange(undoChange)
+
+    // Re-select the restored node after undo
+    // Note: nodeId might not be valid until after recompile, but we set it optimistically
+    actions.setSelection(this.nodeId, 'keyboard')
+
     return { success: true, change: undoChange }
   }
 }
@@ -232,27 +283,158 @@ export class MoveNodeCommand implements Command {
     this.description = `Move node ${params.nodeId} ${params.position} ${params.targetId}`
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
-    const sourceMap = ctx.getSourceMap()
-    const source = ctx.getSource()
-    if (!sourceMap) return { success: false, error: 'No source map' }
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
 
-    this.originalSource = source
-    const modifier = new CodeModifier(source, sourceMap)
+    // Store original editor source for undo (without prelude)
+    this.originalSource = ctx.getSource()
+    const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.moveNode(this.nodeId, this.targetId, this.placement)
     if (!result.success) return { success: false, error: result.error }
 
     this.change = result.change
-    ctx.applyChange(result.change)
-    return { success: true, change: result.change }
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.originalSource) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
     const currentSource = ctx.getSource()
     const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+/**
+ * MoveNodeWithLayoutCommand - Move with layout transition support
+ *
+ * Handles moves between different layout types:
+ * - Flex → Absolute: Add x, y properties
+ * - Absolute → Flex: Remove x, y properties
+ * - Absolute → Absolute: Update x, y properties
+ */
+export class MoveNodeWithLayoutCommand implements Command {
+  readonly type = 'MOVE_NODE_WITH_LAYOUT'
+  readonly description: string
+  private nodeId: string
+  private targetId: string
+  private placement: 'before' | 'after' | 'inside'
+  private layoutTransition?: {
+    from: 'flex' | 'absolute'
+    to: 'flex' | 'absolute'
+    absolutePosition?: { x: number; y: number }
+  }
+  private originalSource: string | null = null
+
+  constructor(params: {
+    nodeId: string
+    targetId: string
+    position: 'before' | 'after' | 'inside'
+    layoutTransition?: {
+      from: 'flex' | 'absolute'
+      to: 'flex' | 'absolute'
+      absolutePosition?: { x: number; y: number }
+    }
+  }) {
+    this.nodeId = params.nodeId
+    this.targetId = params.targetId
+    this.placement = params.position
+    this.layoutTransition = params.layoutTransition
+    this.description = this.buildDescription()
+  }
+
+  private buildDescription(): string {
+    let desc = `Move node ${this.nodeId} ${this.placement} ${this.targetId}`
+    if (this.layoutTransition) {
+      const { from, to } = this.layoutTransition
+      if (from !== to) {
+        desc += ` (${from} → ${to})`
+      } else if (to === 'absolute' && this.layoutTransition.absolutePosition) {
+        const { x, y } = this.layoutTransition.absolutePosition
+        desc += ` (x: ${x}, y: ${y})`
+      }
+    }
+    return desc
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store original editor source for undo
+    this.originalSource = ctx.getSource()
+
+    let source = data.source
+    const modifier = new CodeModifier(source, data.sourceMap)
+
+    // Step 1: Move the node to the new location
+    const moveResult = modifier.moveNode(this.nodeId, this.targetId, this.placement)
+    if (!moveResult.success) return { success: false, error: moveResult.error }
+    source = moveResult.newSource
+
+    // Step 2: Handle layout transitions (if any)
+    if (this.layoutTransition) {
+      const { from, to, absolutePosition } = this.layoutTransition
+
+      // Create a new modifier with updated source
+      // Note: We need to recompile to get accurate SourceMap for property changes
+      // For now, we'll chain changes on the same source, which works for property operations
+      const postMoveModifier = new CodeModifier(source, data.sourceMap)
+
+      if (from === 'flex' && to === 'absolute' && absolutePosition) {
+        // Flex → Absolute: Add x, y properties
+        const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(absolutePosition.x))
+        if (xResult.success) {
+          source = xResult.newSource
+          const yModifier = new CodeModifier(source, data.sourceMap)
+          const yResult = yModifier.updateProperty(this.nodeId, 'y', String(absolutePosition.y))
+          if (yResult.success) source = yResult.newSource
+        }
+      } else if (from === 'absolute' && to === 'flex') {
+        // Absolute → Flex: Remove x, y properties
+        const xResult = postMoveModifier.removeProperty(this.nodeId, 'x')
+        if (xResult.success) {
+          source = xResult.newSource
+          const yModifier = new CodeModifier(source, data.sourceMap)
+          const yResult = yModifier.removeProperty(this.nodeId, 'y')
+          if (yResult.success) source = yResult.newSource
+        }
+      } else if (from === 'absolute' && to === 'absolute' && absolutePosition) {
+        // Absolute → Absolute: Update x, y properties
+        const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(absolutePosition.x))
+        if (xResult.success) {
+          source = xResult.newSource
+          const yModifier = new CodeModifier(source, data.sourceMap)
+          const yResult = yModifier.updateProperty(this.nodeId, 'y', String(absolutePosition.y))
+          if (yResult.success) source = yResult.newSource
+        }
+      }
+    }
+
+    // Apply full document change
+    const preludeOffset = ctx.getPreludeOffset()
+    const newEditorContent = preludeOffset > 0 ? source.substring(preludeOffset) : source
+    const editorChange: CodeChange = {
+      from: 0,
+      to: this.originalSource.length,
+      insert: newEditorContent,
+    }
+
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) return { success: false, error: 'Cannot undo' }
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
     ctx.applyChange(undoChange)
     return { success: true, change: undoChange }
   }
@@ -268,8 +450,7 @@ export class UpdateSourceCommand implements Command {
     this.change = params
   }
 
-  execute(): CommandResult {
-    const ctx = getCommandContext()
+  execute(ctx: CommandContext): CommandResult {
     const source = ctx.getSource()
     this.inverseChange = {
       from: this.change.from,
@@ -280,9 +461,8 @@ export class UpdateSourceCommand implements Command {
     return { success: true, change: this.change }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     if (!this.inverseChange) return { success: false, error: 'Cannot undo' }
-    const ctx = getCommandContext()
     ctx.applyChange(this.inverseChange)
     return { success: true, change: this.inverseChange }
   }
@@ -308,22 +488,104 @@ export class RecordedChangeCommand implements Command {
     this.description = params.description || 'Recorded change'
   }
 
-  execute(): CommandResult {
+  execute(ctx: CommandContext): CommandResult {
     // First execution is a no-op (change already applied)
     // Subsequent executions (redo) apply the change
     if (this.isFirstExecution) {
       this.isFirstExecution = false
       return { success: true, change: this.change }
     }
-    const ctx = getCommandContext()
     ctx.applyChange(this.change)
     return { success: true, change: this.change }
   }
 
-  undo(): CommandResult {
-    const ctx = getCommandContext()
+  undo(ctx: CommandContext): CommandResult {
     ctx.applyChange(this.inverseChange)
     return { success: true, change: this.inverseChange }
+  }
+}
+
+export class WrapNodesCommand implements Command {
+  readonly type = 'WRAP_NODES'
+  readonly description: string
+  private nodeIds: string[]
+  private wrapperName: string
+  private wrapperProps?: string
+  private originalSource: string | null = null
+  private change: CodeChange | null = null
+
+  constructor(params: { nodeIds: string[]; wrapperName?: string; wrapperProps?: string }) {
+    this.nodeIds = params.nodeIds
+    this.wrapperName = params.wrapperName || 'Box'
+    this.wrapperProps = params.wrapperProps
+    this.description = `Wrap ${params.nodeIds.length} nodes in ${this.wrapperName}`
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store editor source for undo (without prelude)
+    this.originalSource = ctx.getSource()
+    const modifier = new CodeModifier(data.source, data.sourceMap)
+    const result = modifier.wrapNodes(this.nodeIds, this.wrapperName, this.wrapperProps)
+    if (!result.success) return { success: false, error: result.error }
+
+    this.change = result.change
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) return { success: false, error: 'Cannot undo' }
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+export class UnwrapNodeCommand implements Command {
+  readonly type = 'UNWRAP_NODE'
+  readonly description: string
+  private nodeId: string
+  private originalSource: string | null = null
+  private change: CodeChange | null = null
+
+  constructor(params: { nodeId: string }) {
+    this.nodeId = params.nodeId
+    this.description = `Unwrap node ${params.nodeId}`
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store editor source for undo (without prelude)
+    this.originalSource = ctx.getSource()
+    const modifier = new CodeModifier(data.source, data.sourceMap)
+    const result = modifier.unwrapNode(this.nodeId)
+    if (!result.success) return { success: false, error: result.error }
+
+    this.change = result.change
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+
+    // Clear selection since the unwrapped node no longer exists
+    if (state.get().selection.nodeId === this.nodeId) {
+      actions.setSelection(null, 'keyboard')
+    }
+
+    return { success: true, change: editorChange }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) return { success: false, error: 'Cannot undo' }
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
   }
 }
 
@@ -338,12 +600,12 @@ export class BatchCommand implements Command {
     this.description = params.description || `Batch of ${params.commands.length} commands`
   }
 
-  execute(): CommandResult {
+  execute(ctx: CommandContext): CommandResult {
     this.executedCommands = []
     for (const command of this.commands) {
-      const result = command.execute()
+      const result = command.execute(ctx)
       if (!result.success) {
-        for (const executed of this.executedCommands.reverse()) executed.undo()
+        for (const executed of this.executedCommands.reverse()) executed.undo(ctx)
         return { success: false, error: `Batch failed at ${command.type}: ${result.error}` }
       }
       this.executedCommands.push(command)
@@ -351,9 +613,9 @@ export class BatchCommand implements Command {
     return { success: true }
   }
 
-  undo(): CommandResult {
+  undo(ctx: CommandContext): CommandResult {
     for (const command of [...this.executedCommands].reverse()) {
-      const result = command.undo()
+      const result = command.undo(ctx)
       if (!result.success) return { success: false, error: `Batch undo failed at ${command.type}: ${result.error}` }
     }
     this.executedCommands = []
@@ -361,7 +623,104 @@ export class BatchCommand implements Command {
   }
 }
 
-export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'UPDATE_SOURCE' | 'BATCH'
+/**
+ * ResizeCommand - Set width and/or height properties on a node
+ *
+ * Supports sizing modes:
+ * - 'full' → w full / h full
+ * - 'hug' → w hug / h hug
+ * - number → w <px> / h <px>
+ */
+export class ResizeCommand implements Command {
+  readonly type = 'RESIZE'
+  readonly description: string
+  private nodeId: string
+  private width?: 'full' | 'hug' | number
+  private height?: 'full' | 'hug' | number
+  private originalSource: string | null = null
+
+  constructor(params: {
+    nodeId: string
+    width?: 'full' | 'hug' | number
+    height?: 'full' | 'hug' | number
+  }) {
+    this.nodeId = params.nodeId
+    this.width = params.width
+    this.height = params.height
+
+    const wStr = this.width === undefined ? '' : ` w=${this.formatSizing(this.width)}`
+    const hStr = this.height === undefined ? '' : ` h=${this.formatSizing(this.height)}`
+    this.description = `Resize${wStr}${hStr}`
+  }
+
+  private formatSizing(value: 'full' | 'hug' | number): string {
+    if (typeof value === 'number') return `${value}`
+    return value
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store editor source for undo (without prelude)
+    this.originalSource = ctx.getSource()
+    let source = data.source
+    const preludeOffset = ctx.getPreludeOffset()
+
+    // Apply width change
+    if (this.width !== undefined) {
+      const modifier = new CodeModifier(source, data.sourceMap)
+      const result = modifier.updateProperty(this.nodeId, 'w', this.formatSizing(this.width))
+      if (!result.success) {
+        return { success: false, error: result.error }
+      }
+      source = result.newSource
+    }
+
+    // Apply height change (on updated source)
+    if (this.height !== undefined) {
+      // Note: We reuse the same sourceMap here. This works because updateProperty
+      // only uses line numbers which don't change when we modify the same line.
+      const modifier = new CodeModifier(source, data.sourceMap)
+      const result = modifier.updateProperty(this.nodeId, 'h', this.formatSizing(this.height))
+      if (!result.success) {
+        return { success: false, error: result.error }
+      }
+      source = result.newSource
+    }
+
+    // Extract the part after prelude (the editor content)
+    const newEditorContent = preludeOffset > 0 ? source.substring(preludeOffset) : source
+
+    // Apply full document change to editor
+    const change: CodeChange = {
+      from: 0,
+      to: this.originalSource.length,
+      insert: newEditorContent,
+    }
+
+    ctx.applyChange(change)
+    return { success: true, change }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) {
+      return { success: false, error: 'Cannot undo' }
+    }
+
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
+
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE'
 
 export function createCommand(type: CommandType, params: Record<string, any>): Command {
   switch (type) {
@@ -370,8 +729,12 @@ export function createCommand(type: CommandType, params: Record<string, any>): C
     case 'INSERT_COMPONENT': return new InsertComponentCommand(params as any)
     case 'DELETE_NODE': return new DeleteNodeCommand(params as any)
     case 'MOVE_NODE': return new MoveNodeCommand(params as any)
+    case 'MOVE_NODE_WITH_LAYOUT': return new MoveNodeWithLayoutCommand(params as any)
     case 'UPDATE_SOURCE': return new UpdateSourceCommand(params as any)
+    case 'WRAP_NODES': return new WrapNodesCommand(params as any)
+    case 'UNWRAP_NODE': return new UnwrapNodeCommand(params as any)
     case 'BATCH': return new BatchCommand(params as any)
+    case 'RESIZE': return new ResizeCommand(params as any)
     default: throw new Error(`Unknown command type: ${type}`)
   }
 }

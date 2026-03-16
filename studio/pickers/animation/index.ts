@@ -104,7 +104,92 @@ export class AnimationPicker extends BasePicker {
   }
 
   getSelectedPreset(): AnimationPreset | null {
-    return null
+    if (!this.isOpen || !this.keyboardNav) return null
+    const index = this.getSelectedIndex()
+    return this.filteredPresets[index] ?? null
+  }
+
+  /**
+   * Show the picker at a specific position (for TriggerManager)
+   */
+  showAt(x: number, y: number): void {
+    // Create a temporary anchor element
+    const anchor = document.createElement('div')
+    anchor.style.position = 'fixed'
+    anchor.style.left = `${x}px`
+    anchor.style.top = `${y}px`
+    anchor.style.width = '0'
+    anchor.style.height = '0'
+    document.body.appendChild(anchor)
+
+    // Show using the base class method
+    this.show(anchor)
+
+    // Remove the anchor
+    anchor.remove()
+
+    // Override the position to be exact
+    if (this.element) {
+      this.element.style.left = `${x}px`
+      this.element.style.top = `${y}px`
+    }
+  }
+
+  /**
+   * Navigate to a specific direction (for TriggerManager)
+   */
+  navigate(direction: 'up' | 'down' | 'left' | 'right'): void {
+    if (!this.keyboardNav) return
+
+    switch (direction) {
+      case 'up':
+        this.keyboardNav.moveUp()
+        break
+      case 'down':
+        this.keyboardNav.moveDown()
+        break
+      case 'left':
+        this.keyboardNav.moveLeft()
+        break
+      case 'right':
+        this.keyboardNav.moveRight()
+        break
+    }
+  }
+
+  /**
+   * Get the selected preset index
+   */
+  getSelectedIndex(): number {
+    return this.keyboardNav?.getSelectedIndex() ?? 0
+  }
+
+  /**
+   * Get the selected value (preset name)
+   */
+  getSelectedValue(): string | undefined {
+    const preset = this.getSelectedPreset()
+    return preset?.name
+  }
+
+  /**
+   * Filter presets by text (for TriggerManager)
+   */
+  filter(text: string): void {
+    const lowerText = text.toLowerCase()
+    this.filteredPresets = this.presets.filter(p =>
+      p.name.toLowerCase().includes(lowerText) ||
+      p.label.toLowerCase().includes(lowerText) ||
+      p.category.toLowerCase().includes(lowerText)
+    )
+    this.refreshList()
+  }
+
+  /**
+   * Search presets
+   */
+  search(query: string): void {
+    this.filter(query)
   }
 
   setCategory(category: string | null): void {

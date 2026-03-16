@@ -68,7 +68,8 @@ describe('IconPicker', () => {
 
   describe('render()', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      // Use built-in Material icons for testing (not Lucide)
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should render picker container', () => {
@@ -99,7 +100,7 @@ describe('IconPicker', () => {
     })
 
     it('should render without search when disabled', () => {
-      picker = new IconPicker({ searchable: false, animate: false }, { onSelect })
+      picker = new IconPicker({ searchable: false, animate: false, useLucide: false, showRecent: false }, { onSelect })
       picker.show(anchor)
 
       expect(document.querySelector('.icon-picker-search-input')).toBeFalsy()
@@ -108,7 +109,7 @@ describe('IconPicker', () => {
 
   describe('Icon items', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should render SVG icons', () => {
@@ -138,7 +139,7 @@ describe('IconPicker', () => {
 
   describe('Icon selection', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should call onSelect on icon click', () => {
@@ -161,7 +162,7 @@ describe('IconPicker', () => {
 
   describe('Search', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should filter icons by name', () => {
@@ -211,7 +212,7 @@ describe('IconPicker', () => {
 
   describe('Category filtering', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should filter by category', () => {
@@ -280,7 +281,7 @@ describe('IconPicker', () => {
 
   describe('setIcons', () => {
     it('should update icons list', () => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
       picker.show(anchor)
 
       const newIcons: IconDefinition[] = [
@@ -295,7 +296,7 @@ describe('IconPicker', () => {
 
   describe('Icon size and columns', () => {
     it('should set custom icon size', () => {
-      picker = new IconPicker({ iconSize: 48, animate: false }, { onSelect })
+      picker = new IconPicker({ iconSize: 48, animate: false, useLucide: false, showRecent: false }, { onSelect })
       picker.show(anchor)
 
       const svg = document.querySelector('.icon-picker-item svg')
@@ -304,7 +305,7 @@ describe('IconPicker', () => {
     })
 
     it('should set custom columns', () => {
-      picker = new IconPicker({ columns: 4, animate: false }, { onSelect })
+      picker = new IconPicker({ columns: 4, animate: false, useLucide: false, showRecent: false }, { onSelect })
       picker.show(anchor)
 
       const grid = document.querySelector('.icon-picker-grid') as HTMLElement
@@ -314,7 +315,7 @@ describe('IconPicker', () => {
 
   describe('Keyboard navigation', () => {
     beforeEach(() => {
-      picker = new IconPicker({ animate: false }, { onSelect })
+      picker = new IconPicker({ animate: false, useLucide: false, showRecent: false }, { onSelect })
     })
 
     it('should navigate with ArrowDown from search', () => {

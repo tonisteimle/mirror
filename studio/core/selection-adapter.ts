@@ -3,12 +3,21 @@
  *
  * This adapter provides the same public API as SelectionManager using the
  * studio core state and events, enabling PropertyPanelV2 integration.
+ *
+ * IMPORTANT: Selection changes go through SyncCoordinator to ensure
+ * consistent side-effects (preview highlight, property panel update).
  */
 
 import { state, actions, events, type BreadcrumbItem } from './index'
 
 export type SelectionListener = (nodeId: string | null, previousNodeId: string | null) => void
 export type BreadcrumbListener = (chain: BreadcrumbItem[]) => void
+
+/** Interface for sync handler injection (avoids circular dependency) */
+export interface SelectionSyncHandler {
+  handleSelectionChange(nodeId: string | null, origin: 'panel'): void
+  clearSelection(origin: 'panel'): void
+}
 
 /**
  * Adapter that provides SelectionManager-compatible API using studio core state
@@ -18,6 +27,7 @@ export class StateSelectionAdapter {
   private breadcrumbListeners: Set<BreadcrumbListener> = new Set()
   private unsubscribeSelection: (() => void) | null = null
   private unsubscribeBreadcrumb: (() => void) | null = null
+  private syncHandler: SelectionSyncHandler | null = null
 
   constructor() {
     // Listen to selection changes from core state
@@ -32,10 +42,27 @@ export class StateSelectionAdapter {
   }
 
   /**
+   * Set the sync handler (injected from bootstrap to avoid circular deps)
+   */
+  setSyncHandler(handler: SelectionSyncHandler): void {
+    this.syncHandler = handler
+  }
+
+  /**
    * Select a node by ID
+   * Goes through SyncCoordinator if available for consistent side-effects
    */
   select(nodeId: string | null): void {
-    actions.setSelection(nodeId, 'panel')
+    if (this.syncHandler) {
+      if (nodeId) {
+        this.syncHandler.handleSelectionChange(nodeId, 'panel')
+      } else {
+        this.syncHandler.clearSelection('panel')
+      }
+    } else {
+      // Fallback to direct state update (before SyncCoordinator is initialized)
+      actions.setSelection(nodeId, 'panel')
+    }
   }
 
   /**

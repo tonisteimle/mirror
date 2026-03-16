@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layout Inference v3 - Container Mode</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .instructions {
+      font-size: 13px;
+      color: #71717a;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .instructions kbd {
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 12px;
+    }
+
+    .workspace {
+      display: flex;
+      gap: 40px;
+    }
+
+    .canvas {
+      width: 600px;
+      height: 450px;
+      background: #18181b;
+      border-radius: 12px;
+      border: 1px solid #27272a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Elements */
+    .element {
+      position: absolute;
+      background: #27272a;
+      border: 2px solid #3f3f46;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      cursor: grab;
+      user-select: none;
+      transition: border-color 0.1s ease, background 0.1s ease, transform 0.1s ease;
+      z-index: 10;
+    }
+
+    .element:hover {
+      border-color: #52525b;
+    }
+
+    .element.dragging {
+      cursor: grabbing;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      z-index: 1000;
+      border-color: #3b82f6;
+      transform: scale(1.02);
+    }
+
+    .element.snap-target {
+      border-color: #3b82f6;
+      background: #1e3a5f;
+    }
+
+    .element.in-group {
+      border-color: #22c55e;
+    }
+
+    /* Container Preview */
+    .container-preview {
+      position: absolute;
+      border: 2px dashed #3b82f6;
+      border-radius: 10px;
+      background: rgba(59, 130, 246, 0.06);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease, left 0.1s ease, top 0.1s ease, width 0.1s ease, height 0.1s ease;
+      z-index: 5;
+    }
+
+    .container-preview.visible {
+      opacity: 1;
+    }
+
+    .container-preview.spread {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.06);
+    }
+
+    .container-preview .label {
+      position: absolute;
+      top: -28px;
+      left: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #3b82f6;
+      background: #18181b;
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      border: 1px solid #3b82f6;
+    }
+
+    .container-preview.spread .label {
+      color: #a855f7;
+      border-color: #a855f7;
+    }
+
+    /* Spread Edge Indicator */
+    .spread-edge {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #a855f7;
+      border-radius: 0 10px 10px 0;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .container-preview.spread .spread-edge {
+      opacity: 1;
+    }
+
+    /* Gap Indicator */
+    .gap-indicator {
+      position: absolute;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+    }
+
+    .gap-indicator.visible {
+      opacity: 1;
+    }
+
+    .gap-indicator .value {
+      background: #3b82f6;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Snap Guide Lines */
+    .snap-guide {
+      position: absolute;
+      background: #3b82f6;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 50;
+    }
+
+    .snap-guide.horizontal {
+      height: 1px;
+      left: 0;
+      right: 0;
+    }
+
+    .snap-guide.vertical {
+      width: 1px;
+      top: 0;
+      bottom: 0;
+    }
+
+    .snap-guide.visible {
+      opacity: 0.5;
+    }
+
+    /* Ghost Element (shows where element will land) */
+    .ghost {
+      position: absolute;
+      border: 2px dashed #3b82f6;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.1);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s ease, left 0.08s ease, top 0.08s ease;
+      z-index: 15;
+    }
+
+    .ghost.visible {
+      opacity: 1;
+    }
+
+    /* Structure Panel */
+    .panel {
+      width: 300px;
+    }
+
+    .panel h2 {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: #a1a1aa;
+    }
+
+    .structure-code {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre;
+      color: #e4e4e7;
+      min-height: 200px;
+      overflow: auto;
+    }
+
+    .structure-code .keyword { color: #f472b6; }
+    .structure-code .property { color: #60a5fa; }
+    .structure-code .string { color: #4ade80; }
+    .structure-code .number { color: #fbbf24; }
+
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #e4e4e7;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s ease;
+    }
+
+    .btn:hover {
+      background: #3f3f46;
+    }
+
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      background: #27272a;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-label {
+      color: #71717a;
+    }
+
+    .status-value {
+      color: #e4e4e7;
+      font-weight: 500;
+    }
+
+    .status-value.active {
+      color: #3b82f6;
+    }
+
+    .status-value.spread {
+      color: #a855f7;
+    }
+  </style>
+</head>
+<body>
+  <h1>Layout Inference v3 - Container Mode</h1>
+  <p class="instructions">
+    Ziehe Elemente zueinander um Layouts zu erstellen.<br>
+    <kbd>Scroll</kbd> Gap ändern &nbsp;
+    <kbd>→</kbd> Spread &nbsp;
+    <kbd>Shift</kbd> Gruppe-Snap
+  </p>
+
+  <div class="workspace">
+    <div class="canvas" id="canvas">
+      <!-- Elements -->
+      <div class="element" data-id="avatar" style="left: 24px; top: 24px;">Avatar</div>
+      <div class="element" data-id="title" style="left: 24px; top: 90px;">Title</div>
+      <div class="element" data-id="subtitle" style="left: 24px; top: 156px;">Subtitle</div>
+      <div class="element" data-id="button" style="left: 24px; top: 222px;">Button</div>
+      <div class="element" data-id="icon" style="left: 24px; top: 288px;">Icon</div>
+
+      <!-- Visual Helpers -->
+      <div class="container-preview" id="containerPreview">
+        <span class="label" id="containerLabel">Box hor gap 16</span>
+        <div class="spread-edge"></div>
+      </div>
+      <div class="ghost" id="ghost"></div>
+      <div class="gap-indicator" id="gapIndicator">
+        <span class="value" id="gapValue">16</span>
+      </div>
+      <div class="snap-guide horizontal" id="guideH"></div>
+      <div class="snap-guide vertical" id="guideV"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Erkannte Struktur</h2>
+      <div class="structure-code" id="structureCode"></div>
+
+      <div class="controls">
+        <button class="btn" onclick="resetPositions()">Reset</button>
+        <button class="btn" onclick="addElement()">+ Element</button>
+      </div>
+
+      <div class="status" id="status">
+        <div class="status-row">
+          <span class="status-label">Modus</span>
+          <span class="status-value" id="statusMode">Bereit</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Snap</span>
+          <span class="status-value" id="statusSnap">-</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Gap</span>
+          <span class="status-value" id="statusGap">16</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Layout</span>
+          <span class="status-value" id="statusLayout">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const CONFIG = {
+      SNAP_DISTANCE: 40,
+      SPREAD_THRESHOLD: 60,
+      GAP_VALUES: [0, 4, 8, 12, 16, 20, 24, 32, 48],
+      DEFAULT_GAP: 16,
+      PADDING: 24,
+      GROUP_SNAP_DISTANCE: 60,
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let elements = []
+    let groups = []  // Hierarchical structure
+    let dragState = null
+    let currentGap = CONFIG.DEFAULT_GAP
+
+    // DOM References
+    const canvas = document.getElementById('canvas')
+    const containerPreview = document.getElementById('containerPreview')
+    const containerLabel = document.getElementById('containerLabel')
+    const ghost = document.getElementById('ghost')
+    const gapIndicator = document.getElementById('gapIndicator')
+    const gapValue = document.getElementById('gapValue')
+    const guideH = document.getElementById('guideH')
+    const guideV = document.getElementById('guideV')
+    const structureCode = document.getElementById('structureCode')
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+    function init() {
+      document.querySelectorAll('.element').forEach(el => {
+        const data = {
+          id: el.dataset.id,
+          el: el,
+          x: parseInt(el.style.left),
+          y: parseInt(el.style.top),
+          w: el.offsetWidth,
+          h: el.offsetHeight,
+          group: null
+        }
+        elements.push(data)
+        el.addEventListener('mousedown', startDrag)
+      })
+
+      canvas.addEventListener('wheel', onWheel, { passive: false })
+      document.addEventListener('mousemove', onDrag)
+      document.addEventListener('mouseup', endDrag)
+      document.addEventListener('keydown', onKeyDown)
+
+      updateStructure()
+    }
+
+    // ============================================================
+    // DRAG HANDLING
+    // ============================================================
+    function startDrag(e) {
+      const el = e.target.closest('.element')
+      if (!el) return
+
+      const data = elements.find(d => d.id === el.dataset.id)
+      if (!data) return
+
+      const rect = el.getBoundingClientRect()
+      const canvasRect = canvas.getBoundingClientRect()
+
+      dragState = {
+        element: data,
+        startX: data.x,
+        startY: data.y,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        snap: null,
+        phase: 'seeking',  // seeking → snapped → positioning
+        containerBounds: null,
+        isSpread: false,
+        shiftKey: e.shiftKey
+      }
+
+      data.el.classList.add('dragging')
+      currentGap = CONFIG.DEFAULT_GAP
+      setStatus('mode', 'Ziehen...')
+      e.preventDefault()
+    }
+
+    function onDrag(e) {
+      if (!dragState) return
+
+      const canvasRect = canvas.getBoundingClientRect()
+      let x = e.clientX - canvasRect.left - dragState.offsetX
+      let y = e.clientY - canvasRect.top - dragState.offsetY
+
+      // Constrain to canvas
+      x = Math.max(CONFIG.PADDING, Math.min(x, canvas.offsetWidth - dragState.element.w - CONFIG.PADDING))
+      y = Math.max(CONFIG.PADDING, Math.min(y, canvas.offsetHeight - dragState.element.h - CONFIG.PADDING))
+
+      dragState.shiftKey = e.shiftKey
+
+      // Find snap target
+      const snap = findSnap(x, y, dragState.element, e.shiftKey)
+
+      if (snap) {
+        dragState.snap = snap
+        dragState.phase = 'snapped'
+
+        // Calculate container bounds
+        const bounds = calculateContainerBounds(snap, dragState.element, x)
+        dragState.containerBounds = bounds
+
+        // Check if element is at spread position (right edge)
+        const elementRight = x + dragState.element.w
+        const isSpread = elementRight > bounds.right - CONFIG.SPREAD_THRESHOLD
+        dragState.isSpread = isSpread
+
+        // Show container preview
+        showContainerPreview(bounds, snap.direction, isSpread)
+
+        // Show ghost at snap position or current position within container
+        let ghostX = snap.x
+        let ghostY = snap.y
+
+        // If spread, position at right edge
+        if (isSpread && snap.direction === 'horizontal') {
+          ghostX = bounds.right - dragState.element.w - 8
+        }
+
+        showGhost(ghostX, ghostY, dragState.element.w, dragState.element.h)
+
+        // Show gap indicator
+        if (!isSpread) {
+          showGapIndicator(snap, dragState.element)
+        } else {
+          hideGapIndicator()
+        }
+
+        // Highlight snap target
+        highlightSnapTarget(snap.target)
+
+        // Update status
+        setStatus('snap', `${snap.direction} ${snap.side}`)
+        setStatus('layout', isSpread ? 'spread' : `gap ${currentGap}`)
+        setStatus('mode', isSpread ? 'Spread' : 'Container')
+
+      } else {
+        dragState.snap = null
+        dragState.phase = 'seeking'
+        dragState.isSpread = false
+
+        hideContainerPreview()
+        hideGhost()
+        hideGapIndicator()
+        clearHighlights()
+
+        setStatus('snap', '-')
+        setStatus('layout', '-')
+        setStatus('mode', 'Ziehen...')
+      }
+
+      // Update element position
+      dragState.element.x = x
+      dragState.element.y = y
+      dragState.element.el.style.left = x + 'px'
+      dragState.element.el.style.top = y + 'px'
+    }
+
+    function endDrag() {
+      if (!dragState) return
+
+      const { element, snap, isSpread } = dragState
+
+      if (snap) {
+        // Apply final position
+        let finalX = snap.x
+        let finalY = snap.y
+
+        if (isSpread && snap.direction === 'horizontal') {
+          finalX = dragState.containerBounds.right - element.w - 8
+        }
+
+        element.x = finalX
+        element.y = finalY
+        element.el.style.left = finalX + 'px'
+        element.el.style.top = finalY + 'px'
+
+        // Create/update group structure
+        updateGroups(element, snap, isSpread)
+      }
+
+      // Cleanup
+      element.el.classList.remove('dragging')
+      hideContainerPreview()
+      hideGhost()
+      hideGapIndicator()
+      hideGuides()
+      clearHighlights()
+
+      dragState = null
+      setStatus('mode', 'Bereit')
+      setStatus('snap', '-')
+
+      updateStructure()
+    }
+
+    // ============================================================
+    // SNAP DETECTION
+    // ============================================================
+    function findSnap(x, y, dragged, shiftKey) {
+      const candidates = []
+      const others = elements.filter(el => el.id !== dragged.id)
+
+      for (const other of others) {
+        // Right of other
+        const rightX = other.x + other.w + currentGap
+        const rightY = other.y
+        if (distance(x, y, rightX, rightY) < CONFIG.SNAP_DISTANCE) {
+          candidates.push({
+            target: other,
+            direction: 'horizontal',
+            side: 'right',
+            x: rightX,
+            y: rightY,
+            dist: distance(x, y, rightX, rightY)
+          })
+        }
+
+        // Left of other
+        const leftX = other.x - dragged.w - currentGap
+        const leftY = other.y
+        if (distance(x, y, leftX, leftY) < CONFIG.SNAP_DISTANCE) {
+          candidates.push({
+            target: other,
+            direction: 'horizontal',
+            side: 'left',
+            x: leftX,
+            y: leftY,
+            dist: distance(x, y, leftX, leftY)
+          })
+        }
+
+        // Below other
+        const belowX = other.x
+        const belowY = other.y + other.h + currentGap
+        if (distance(x, y, belowX, belowY) < CONFIG.SNAP_DISTANCE) {
+          candidates.push({
+            target: other,
+            direction: 'vertical',
+            side: 'below',
+            x: belowX,
+            y: belowY,
+            dist: distance(x, y, belowX, belowY)
+          })
+        }
+
+        // Above other
+        const aboveX = other.x
+        const aboveY = other.y - dragged.h - currentGap
+        if (distance(x, y, aboveX, aboveY) < CONFIG.SNAP_DISTANCE) {
+          candidates.push({
+            target: other,
+            direction: 'vertical',
+            side: 'above',
+            x: aboveX,
+            y: aboveY,
+            dist: distance(x, y, aboveX, aboveY)
+          })
+        }
+      }
+
+      if (candidates.length === 0) return null
+
+      // Sort by distance and return closest
+      candidates.sort((a, b) => a.dist - b.dist)
+      return candidates[0]
+    }
+
+    function distance(x1, y1, x2, y2) {
+      return Math.hypot(x2 - x1, y2 - y1)
+    }
+
+    // ============================================================
+    // CONTAINER BOUNDS
+    // ============================================================
+    function calculateContainerBounds(snap, dragged, currentX) {
+      const target = snap.target
+      const padding = 12
+
+      if (snap.direction === 'horizontal') {
+        // Horizontal container
+        const allInRow = [target, { ...dragged, x: snap.x }]
+
+        // Find other elements on same row
+        elements.forEach(el => {
+          if (el.id !== target.id && el.id !== dragged.id) {
+            if (Math.abs(el.y - target.y) < 20) {
+              allInRow.push(el)
+            }
+          }
+        })
+
+        const minX = Math.min(...allInRow.map(e => e.x)) - padding
+        const maxX = Math.max(...allInRow.map(e => e.x + e.w)) + padding
+        const minY = Math.min(...allInRow.map(e => e.y)) - padding
+        const maxY = Math.max(...allInRow.map(e => e.y + e.h)) + padding
+
+        // Extend to canvas edge for spread detection
+        const extendedMaxX = canvas.offsetWidth - CONFIG.PADDING
+
+        return {
+          left: minX,
+          top: minY,
+          right: extendedMaxX,
+          bottom: maxY,
+          width: extendedMaxX - minX,
+          height: maxY - minY
+        }
+      } else {
+        // Vertical container
+        const allInCol = [target, { ...dragged, y: snap.y }]
+
+        const minX = Math.min(...allInCol.map(e => e.x)) - padding
+        const maxX = Math.max(...allInCol.map(e => e.x + e.w)) + padding
+        const minY = Math.min(...allInCol.map(e => e.y)) - padding
+        const maxY = Math.max(...allInCol.map(e => e.y + e.h)) + padding
+
+        return {
+          left: minX,
+          top: minY,
+          right: maxX,
+          bottom: maxY,
+          width: maxX - minX,
+          height: maxY - minY
+        }
+      }
+    }
+
+    // ============================================================
+    // VISUAL FEEDBACK
+    // ============================================================
+    function showContainerPreview(bounds, direction, isSpread) {
+      containerPreview.style.left = bounds.left + 'px'
+      containerPreview.style.top = bounds.top + 'px'
+      containerPreview.style.width = bounds.width + 'px'
+      containerPreview.style.height = bounds.height + 'px'
+
+      const label = isSpread
+        ? `Box ${direction === 'horizontal' ? 'hor' : 'ver'} spread`
+        : `Box ${direction === 'horizontal' ? 'hor' : 'ver'} gap ${currentGap}`
+
+      containerLabel.textContent = label
+      containerPreview.classList.toggle('spread', isSpread)
+      containerPreview.classList.add('visible')
+    }
+
+    function hideContainerPreview() {
+      containerPreview.classList.remove('visible', 'spread')
+    }
+
+    function showGhost(x, y, w, h) {
+      ghost.style.left = x + 'px'
+      ghost.style.top = y + 'px'
+      ghost.style.width = w + 'px'
+      ghost.style.height = h + 'px'
+      ghost.classList.add('visible')
+    }
+
+    function hideGhost() {
+      ghost.classList.remove('visible')
+    }
+
+    function showGapIndicator(snap, dragged) {
+      const target = snap.target
+
+      if (snap.direction === 'horizontal') {
+        let indicatorX, indicatorY
+
+        if (snap.side === 'right') {
+          indicatorX = target.x + target.w + currentGap / 2 - 12
+          indicatorY = target.y + target.h / 2 - 10
+        } else {
+          indicatorX = target.x - currentGap / 2 - 12
+          indicatorY = target.y + target.h / 2 - 10
+        }
+
+        gapIndicator.style.left = indicatorX + 'px'
+        gapIndicator.style.top = indicatorY + 'px'
+      } else {
+        let indicatorX, indicatorY
+
+        if (snap.side === 'below') {
+          indicatorX = target.x + target.w / 2 - 12
+          indicatorY = target.y + target.h + currentGap / 2 - 10
+        } else {
+          indicatorX = target.x + target.w / 2 - 12
+          indicatorY = target.y - currentGap / 2 - 10
+        }
+
+        gapIndicator.style.left = indicatorX + 'px'
+        gapIndicator.style.top = indicatorY + 'px'
+      }
+
+      gapValue.textContent = currentGap
+      gapIndicator.classList.add('visible')
+    }
+
+    function hideGapIndicator() {
+      gapIndicator.classList.remove('visible')
+    }
+
+    function showGuides(snap) {
+      if (snap.direction === 'horizontal') {
+        guideH.style.top = (snap.y + dragState.element.h / 2) + 'px'
+        guideH.classList.add('visible')
+        guideV.classList.remove('visible')
+      } else {
+        guideV.style.left = (snap.x + dragState.element.w / 2) + 'px'
+        guideV.classList.add('visible')
+        guideH.classList.remove('visible')
+      }
+    }
+
+    function hideGuides() {
+      guideH.classList.remove('visible')
+      guideV.classList.remove('visible')
+    }
+
+    function highlightSnapTarget(target) {
+      clearHighlights()
+      target.el.classList.add('snap-target')
+    }
+
+    function clearHighlights() {
+      elements.forEach(el => {
+        el.el.classList.remove('snap-target', 'in-group')
+      })
+    }
+
+    // ============================================================
+    // GAP CONTROL (SCROLL)
+    // ============================================================
+    function onWheel(e) {
+      if (!dragState || !dragState.snap) return
+
+      e.preventDefault()
+
+      const direction = e.deltaY > 0 ? -1 : 1
+      const currentIndex = CONFIG.GAP_VALUES.indexOf(currentGap)
+      const newIndex = Math.max(0, Math.min(CONFIG.GAP_VALUES.length - 1, currentIndex + direction))
+
+      currentGap = CONFIG.GAP_VALUES[newIndex]
+      setStatus('gap', currentGap)
+
+      // Re-calculate snap position with new gap
+      if (dragState.snap) {
+        const snap = dragState.snap
+        if (snap.side === 'right') {
+          snap.x = snap.target.x + snap.target.w + currentGap
+        } else if (snap.side === 'left') {
+          snap.x = snap.target.x - dragState.element.w - currentGap
+        } else if (snap.side === 'below') {
+          snap.y = snap.target.y + snap.target.h + currentGap
+        } else if (snap.side === 'above') {
+          snap.y = snap.target.y - dragState.element.h - currentGap
+        }
+
+        // Update visuals
+        showGhost(snap.x, snap.y, dragState.element.w, dragState.element.h)
+        showGapIndicator(snap, dragState.element)
+
+        const bounds = calculateContainerBounds(snap, dragState.element, snap.x)
+        showContainerPreview(bounds, snap.direction, dragState.isSpread)
+      }
+    }
+
+    // ============================================================
+    // KEYBOARD
+    // ============================================================
+    function onKeyDown(e) {
+      if (!dragState || !dragState.snap) return
+
+      if (e.key === 'ArrowRight' && dragState.snap.direction === 'horizontal') {
+        dragState.isSpread = true
+        const bounds = dragState.containerBounds
+        const finalX = bounds.right - dragState.element.w - 8
+        showGhost(finalX, dragState.snap.y, dragState.element.w, dragState.element.h)
+        showContainerPreview(bounds, 'horizontal', true)
+        hideGapIndicator()
+        setStatus('layout', 'spread')
+        setStatus('mode', 'Spread')
+      }
+
+      if (e.key === 'ArrowLeft' && dragState.isSpread) {
+        dragState.isSpread = false
+        showGhost(dragState.snap.x, dragState.snap.y, dragState.element.w, dragState.element.h)
+        const bounds = dragState.containerBounds
+        showContainerPreview(bounds, 'horizontal', false)
+        showGapIndicator(dragState.snap, dragState.element)
+        setStatus('layout', `gap ${currentGap}`)
+        setStatus('mode', 'Container')
+      }
+    }
+
+    // ============================================================
+    // GROUP MANAGEMENT
+    // ============================================================
+    function updateGroups(element, snap, isSpread) {
+      // Simple group tracking for structure display
+      element.groupedWith = snap.target.id
+      element.groupDirection = snap.direction
+      element.groupSide = snap.side
+      element.isSpread = isSpread
+      element.gap = currentGap
+    }
+
+    // ============================================================
+    // STRUCTURE INFERENCE
+    // ============================================================
+    function updateStructure() {
+      const structure = inferStructure()
+      const code = renderStructure(structure)
+      structureCode.innerHTML = syntaxHighlight(code)
+    }
+
+    function inferStructure() {
+      // Group elements by row (same Y)
+      const tolerance = 20
+      const sorted = [...elements].sort((a, b) => a.y - b.y || a.x - b.x)
+
+      const rows = []
+      let currentRow = [sorted[0]]
+
+      for (let i = 1; i < sorted.length; i++) {
+        const el = sorted[i]
+        const rowY = currentRow[0].y
+
+        if (Math.abs(el.y - rowY) < tolerance) {
+          currentRow.push(el)
+        } else {
+          rows.push(currentRow.sort((a, b) => a.x - b.x))
+          currentRow = [el]
+        }
+      }
+      rows.push(currentRow.sort((a, b) => a.x - b.x))
+
+      // Build structure
+      const children = rows.map(row => {
+        if (row.length === 1) {
+          return { type: 'element', id: row[0].id }
+        }
+
+        // Check for spread
+        const first = row[0]
+        const last = row[row.length - 1]
+        const totalWidth = row.reduce((sum, el) => sum + el.w, 0)
+        const containerWidth = (last.x + last.w) - first.x
+        const isSpread = last.isSpread || (containerWidth - totalWidth > 100)
+
+        // Calculate gap
+        let gap = CONFIG.DEFAULT_GAP
+        if (row.length >= 2 && !isSpread) {
+          gap = row[1].x - (row[0].x + row[0].w)
+          gap = CONFIG.GAP_VALUES.reduce((prev, curr) =>
+            Math.abs(curr - gap) < Math.abs(prev - gap) ? curr : prev
+          )
+        }
+
+        return {
+          type: 'box',
+          dir: 'hor',
+          gap: isSpread ? null : gap,
+          spread: isSpread,
+          children: row.map(el => ({ type: 'element', id: el.id }))
+        }
+      })
+
+      // Calculate vertical gap
+      let vGap = CONFIG.DEFAULT_GAP
+      if (rows.length >= 2) {
+        const firstRowBottom = Math.max(...rows[0].map(e => e.y + e.h))
+        const secondRowTop = Math.min(...rows[1].map(e => e.y))
+        vGap = secondRowTop - firstRowBottom
+        vGap = CONFIG.GAP_VALUES.reduce((prev, curr) =>
+          Math.abs(curr - vGap) < Math.abs(prev - vGap) ? curr : prev
+        )
+      }
+
+      if (rows.length === 1 && children[0].type === 'box') {
+        return children[0]
+      }
+
+      return {
+        type: 'box',
+        dir: 'ver',
+        gap: vGap,
+        children
+      }
+    }
+
+    function renderStructure(node, indent = 0) {
+      const pad = '  '.repeat(indent)
+
+      if (node.type === 'element') {
+        return `${pad}Text "${node.id}"`
+      }
+
+      if (node.type === 'box') {
+        let props = node.dir
+        if (node.spread) {
+          props += ' spread'
+        } else if (node.gap !== null && node.gap !== undefined) {
+          props += ` gap ${node.gap}`
+        }
+
+        const header = `${pad}Box ${props}`
+
+        if (!node.children || node.children.length === 0) {
+          return header
+        }
+
+        const childrenStr = node.children
+          .map(child => renderStructure(child, indent + 1))
+          .join('\n')
+
+        return `${header}\n${childrenStr}`
+      }
+
+      return ''
+    }
+
+    function syntaxHighlight(code) {
+      return code
+        .replace(/\b(Box|Text)\b/g, '<span class="keyword">$1</span>')
+        .replace(/\b(ver|hor|gap|spread)\b/g, '<span class="property">$1</span>')
+        .replace(/"([^"]+)"/g, '<span class="string">"$1"</span>')
+        .replace(/\b(\d+)\b/g, '<span class="number">$1</span>')
+    }
+
+    // ============================================================
+    // STATUS
+    // ============================================================
+    function setStatus(key, value) {
+      const el = document.getElementById('status' + key.charAt(0).toUpperCase() + key.slice(1))
+      if (el) {
+        el.textContent = value
+        el.classList.toggle('active', value !== '-' && value !== 'Bereit')
+        el.classList.toggle('spread', value === 'spread' || value === 'Spread')
+      }
+    }
+
+    // ============================================================
+    // CONTROLS
+    // ============================================================
+    function resetPositions() {
+      const positions = [
+        { id: 'avatar', x: 24, y: 24 },
+        { id: 'title', x: 24, y: 90 },
+        { id: 'subtitle', x: 24, y: 156 },
+        { id: 'button', x: 24, y: 222 },
+        { id: 'icon', x: 24, y: 288 },
+      ]
+
+      elements.forEach(el => {
+        const pos = positions.find(p => p.id === el.id)
+        if (pos) {
+          el.x = pos.x
+          el.y = pos.y
+          el.el.style.left = pos.x + 'px'
+          el.el.style.top = pos.y + 'px'
+          el.groupedWith = null
+          el.isSpread = false
+        }
+      })
+
+      updateStructure()
+    }
+
+    let elementCounter = 0
+    function addElement() {
+      elementCounter++
+      const el = document.createElement('div')
+      el.className = 'element'
+      el.dataset.id = 'new' + elementCounter
+      el.textContent = 'New ' + elementCounter
+      el.style.left = '24px'
+      el.style.top = (24 + elements.length * 66) + 'px'
+      canvas.appendChild(el)
+
+      const data = {
+        id: el.dataset.id,
+        el: el,
+        x: 24,
+        y: 24 + elements.length * 66,
+        w: el.offsetWidth,
+        h: el.offsetHeight,
+        group: null
+      }
+      elements.push(data)
+      el.addEventListener('mousedown', startDrag)
+
+      // Measure after adding
+      setTimeout(() => {
+        data.w = el.offsetWidth
+        data.h = el.offsetHeight
+        updateStructure()
+      }, 0)
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    init()
+  </script>
+</body>
+</html>

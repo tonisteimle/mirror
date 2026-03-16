@@ -22,6 +22,7 @@ import type {
 } from '../parser/ast'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from '../studio/source-map'
+import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 
 export type { IR } from './types'
 export { SourceMap, SourceMapBuilder } from '../studio/source-map'
@@ -116,9 +117,32 @@ class IRTransformer {
 
   /**
    * Recursively register a component and all its nested component definitions
+   * If a component with the same name already exists, merge the definitions
    */
   private registerComponent(comp: ComponentDefinition): void {
-    this.componentMap.set(comp.name, comp)
+    const existing = this.componentMap.get(comp.name)
+    if (existing) {
+      // Merge: combine properties, states, events, children from both definitions
+      // Later definition's non-empty values take precedence
+      const merged: ComponentDefinition = {
+        ...existing,
+        // Merge properties: new properties override, but keep existing ones not in new
+        properties: this.mergeProperties(existing.properties, comp.properties),
+        // Merge states
+        states: [...existing.states, ...comp.states],
+        // Merge events
+        events: [...existing.events, ...comp.events],
+        // Use children from whichever has them (prefer non-empty)
+        children: comp.children.length > 0 ? comp.children : existing.children,
+        // Keep primitive from first definition if second doesn't specify
+        primitive: comp.primitive || existing.primitive,
+        // Keep extends from first definition if second doesn't specify
+        extends: comp.extends || existing.extends,
+      }
+      this.componentMap.set(comp.name, merged)
+    } else {
+      this.componentMap.set(comp.name, comp)
+    }
     // Recursively register nested component definitions
     for (const child of comp.children) {
       if ((child as any).type === 'Component') {
@@ -135,8 +159,13 @@ class IRTransformer {
       value: t.value,
     }))
 
-    // Transform instances to IR nodes
-    const nodes = this.ast.instances.map(inst => this.transformInstance(inst))
+    // Transform instances to IR nodes (handle both Instance and Slot)
+    const nodes = this.ast.instances.map(inst => {
+      if (inst.type === 'Slot') {
+        return this.transformSlotPrimitive(inst as Slot)
+      }
+      return this.transformInstance(inst as Instance)
+    })
 
     // Transform animations
     const animations = this.ast.animations.map(anim => this.transformAnimation(anim))
@@ -218,6 +247,51 @@ class IRTransformer {
     return `node-${++this.nodeIdCounter}`
   }
 
+  /**
+   * Transform a Slot AST node into an IR node (visual placeholder)
+   */
+  private transformSlotPrimitive(slot: Slot, parentId?: string): IRNode {
+    const nodeId = slot.nodeId || this.generateId()
+
+    // Transform slot properties (w, h, etc.) to styles
+    const styles: IRNode['styles'] = []
+    if (slot.properties) {
+      const baseStyles = this.transformProperties(slot.properties, 'slot')
+      styles.push(...baseStyles)
+    }
+
+    // Source position for SourceMap
+    const sourcePosition = slot.line !== undefined && slot.column !== undefined
+      ? { line: slot.line, column: slot.column, endLine: slot.line, endColumn: slot.column }
+      : undefined
+
+    // Add to source map builder (required for replaceSlot to work)
+    if (this.includeSourceMap && sourcePosition) {
+      this.sourceMapBuilder.addNode(
+        nodeId,
+        'Slot',
+        sourcePosition,
+        {
+          isDefinition: false,
+          parentId,
+        }
+      )
+    }
+
+    return {
+      id: nodeId,
+      tag: 'div',
+      primitive: 'slot',
+      properties: [
+        { name: 'textContent', value: slot.name }
+      ],
+      styles,
+      events: [],
+      children: [],
+      sourcePosition,
+    }
+  }
+
   private transformInstance(
     instance: Instance | Each | any,
     parentId?: string,
@@ -238,20 +312,38 @@ class IRTransformer {
     const component = this.componentMap.get(instance.component)
     const resolvedComponent = component ? this.resolveComponent(component) : null
 
+    // Determine primitive for defaults and layout context
+    const primitive = resolvedComponent?.primitive || instance.component.toLowerCase()
+
+    // Get primitive defaults and convert to Property format
+    const primitiveDefaults = this.convertDefaultsToProperties(getPrimitiveDefaults(primitive))
+
     // Determine HTML tag
     const tag = this.getTag(instance.component, resolvedComponent)
 
-    // Merge properties (component defaults + instance overrides)
+    // Merge properties: Primitive Defaults < Component Defaults < Instance Properties
     const properties = this.mergeProperties(
-      resolvedComponent?.properties || [],
-      instance.properties
+      primitiveDefaults,
+      this.mergeProperties(
+        resolvedComponent?.properties || [],
+        instance.properties
+      )
     )
-
-    // Determine primitive for layout context
-    const primitive = resolvedComponent?.primitive || instance.component.toLowerCase()
 
     // Transform to styles (with intelligent layout merging)
     const styles = this.transformProperties(properties, primitive)
+
+    // Apply implicit full sizing for root "App" element
+    if (instance.component === 'App' && !parentId) {
+      const hasWidth = styles.some(s => s.property === 'width')
+      const hasHeight = styles.some(s => s.property === 'height')
+      if (!hasWidth) {
+        styles.push({ property: 'width', value: '100%' })
+      }
+      if (!hasHeight) {
+        styles.push({ property: 'height', value: '100%' })
+      }
+    }
 
     // Add state styles from component definition
     const stateStyles = resolvedComponent?.states
@@ -345,7 +437,7 @@ class IRTransformer {
       primitive,
       name: instance.component,
       instanceName: instance.name || undefined,
-      properties: this.extractHTMLProperties(properties),
+      properties: this.extractHTMLProperties(properties, primitive),
       styles: [...styles, ...stateStyles, ...inlineStateStyles],
       events: [...events, ...inlineEvents],
       children,
@@ -438,8 +530,14 @@ class IRTransformer {
    */
   private resolveChildren(
     componentChildren: (Instance | Slot)[],
-    instanceChildren: (Instance | Text)[]
+    instanceChildren: (Instance | Text | Slot)[]
   ): IRNode[] {
+    // If no component children (no slot definitions), just transform instance children directly
+    // This preserves the original order for simple containers like Box with mixed children
+    if (componentChildren.length === 0) {
+      return instanceChildren.map(child => this.transformChild(child))
+    }
+
     // Build map of instance children by component name (slot fillers)
     const slotFillers = new Map<string, (Instance | Text)[]>()
     const nonSlotChildren: (Instance | Text)[] = []
@@ -458,7 +556,7 @@ class IRTransformer {
         continue
       } else {
         // Text or other non-slot children
-        nonSlotChildren.push(child)
+        nonSlotChildren.push(child as Instance | Text)
       }
     }
 
@@ -545,8 +643,10 @@ class IRTransformer {
               result.push(this.transformChild(filler))
             }
             slotFillers.delete(slotObj.name)
+          } else {
+            // No filler - render slot as visual placeholder
+            result.push(this.transformSlotPrimitive(slotObj))
           }
-          // If no filler, slot placeholder is not rendered (empty slot)
         }
       }
     }
@@ -585,7 +685,10 @@ class IRTransformer {
     }))
   }
 
-  private transformChild(child: Instance | Text): IRNode {
+  private transformChild(child: Instance | Text | Slot): IRNode {
+    if (child.type === 'Slot') {
+      return this.transformSlotPrimitive(child as Slot)
+    }
     if (child.type === 'Text' || (child as any).content !== undefined) {
       const text = child as Text
       return {
@@ -686,13 +789,30 @@ class IRTransformer {
 
   /**
    * Resolve component inheritance chain
+   *
+   * Supports two syntaxes:
+   * - `Extended extends Base:` → component.extends = 'Base'
+   * - `Extended as Base:` → component.primitive = 'Base' (if Base is a component)
    */
   private resolveComponent(component: ComponentDefinition): ComponentDefinition {
-    if (!component.extends) {
+    // Determine the parent - either from explicit extends or from primitive if it's a component name
+    let parentName = component.extends
+    let inheritFromPrimitive = false
+
+    // If no explicit extends, check if primitive is actually a component name
+    if (!parentName && component.primitive) {
+      const primitiveAsComponent = this.componentMap.get(component.primitive)
+      if (primitiveAsComponent) {
+        parentName = component.primitive
+        inheritFromPrimitive = true
+      }
+    }
+
+    if (!parentName) {
       return component
     }
 
-    const parent = this.componentMap.get(component.extends)
+    const parent = this.componentMap.get(parentName)
     if (!parent) {
       return component
     }
@@ -702,12 +822,27 @@ class IRTransformer {
     // Merge parent + child (child overrides)
     return {
       ...component,
-      primitive: component.primitive || resolvedParent.primitive,
+      // If we inherited via primitive name, use the parent's actual primitive
+      primitive: inheritFromPrimitive ? resolvedParent.primitive : (component.primitive || resolvedParent.primitive),
       properties: this.mergeProperties(resolvedParent.properties, component.properties),
       states: [...resolvedParent.states, ...component.states],
       events: [...resolvedParent.events, ...component.events],
       children: [...resolvedParent.children, ...component.children],
     }
+  }
+
+  /**
+   * Convert DefaultProperty[] from primitives.ts to Property[] for merging.
+   * Defaults have no source position since they're not from user code.
+   */
+  private convertDefaultsToProperties(defaults: DefaultProperty[]): Property[] {
+    return defaults.map(def => ({
+      type: 'Property' as const,
+      name: def.name,
+      values: def.values,
+      line: 0,
+      column: 0,
+    }))
   }
 
   /**
@@ -740,11 +875,19 @@ class IRTransformer {
       button: 'button',
       input: 'input',
       textarea: 'textarea',
+      checkbox: 'input',
+      radio: 'input',
+      select: 'select',
+      option: 'option',
+      label: 'label',
 
       // Media
       image: 'img',
       link: 'a',
       icon: 'span',
+
+      // Slot (placeholder for drag & drop)
+      slot: 'div',
 
       // Semantic structure
       header: 'header',
@@ -772,6 +915,7 @@ class IRTransformer {
    *
    * This method uses intelligent layout merging to handle flexbox properties correctly.
    * It collects all layout-related properties first, then generates consistent CSS.
+   * It also collects transform properties to combine them into a single transform value.
    */
   private transformProperties(properties: Property[], primitive: string = 'frame'): IRStyle[] {
     const styles: IRStyle[] = []
@@ -784,6 +928,12 @@ class IRTransformer {
       isGrid: false,
       gridColumns: null,
     }
+
+    // Transform context to combine multiple transforms
+    const transformContext: { transforms: string[] } = { transforms: [] }
+
+    // Collect alignment values to process together (for context-aware center)
+    const alignmentValues: string[] = []
 
     // First pass: collect layout properties into context
     for (const prop of properties) {
@@ -801,9 +951,9 @@ class IRTransformer {
         continue
       }
 
-      // Alignment properties (handle based on direction later)
+      // Alignment properties - collect for context-aware processing
       if (ALIGNMENT_PROPERTIES.has(name) && isBoolean) {
-        this.applyAlignmentToContext(name, layoutContext)
+        alignmentValues.push(name)
         continue
       }
 
@@ -812,7 +962,7 @@ class IRTransformer {
         for (const val of prop.values) {
           const alignValue = String(val).toLowerCase()
           if (ALIGNMENT_PROPERTIES.has(alignValue)) {
-            this.applyAlignmentToContext(alignValue, layoutContext)
+            alignmentValues.push(alignValue)
           }
         }
         continue
@@ -836,11 +986,39 @@ class IRTransformer {
         layoutContext.gridColumns = this.resolveGridColumns(prop)
         continue
       }
+
+      // Collect transform properties (rotate, scale, translate)
+      if (name === 'rotate' || name === 'rot') {
+        const deg = String(prop.values[0])
+        transformContext.transforms.push(`rotate(${deg}deg)`)
+        continue
+      }
+      if (name === 'scale') {
+        const val = String(prop.values[0])
+        transformContext.transforms.push(`scale(${val})`)
+        continue
+      }
+      if (name === 'translate') {
+        const x = String(prop.values[0])
+        const y = prop.values.length >= 2 ? String(prop.values[1]) : '0'
+        const xPx = /^-?\d+$/.test(x) ? `${x}px` : x
+        const yPx = /^-?\d+$/.test(y) ? `${y}px` : y
+        transformContext.transforms.push(`translate(${xPx}, ${yPx})`)
+        continue
+      }
     }
+
+    // Apply collected alignments with context-awareness
+    this.applyAlignmentsToContext(alignmentValues, layoutContext)
 
     // Generate layout styles from context
     const layoutStyles = this.generateLayoutStyles(layoutContext, primitive)
     styles.push(...layoutStyles)
+
+    // Generate combined transform if any transforms were collected
+    if (transformContext.transforms.length > 0) {
+      styles.push({ property: 'transform', value: transformContext.transforms.join(' ') })
+    }
 
     // Second pass: process non-layout properties
     for (const prop of properties) {
@@ -855,7 +1033,12 @@ class IRTransformer {
       if ((name === 'gap' || name === 'g') && !isBoolean) continue
       if (name === 'grid') continue
 
-      const cssStyles = this.propertyToCSS(prop, primitive)
+      // Skip transform properties (already handled in first pass)
+      if (name === 'rotate' || name === 'rot') continue
+      if (name === 'scale') continue
+      if (name === 'translate') continue
+
+      const cssStyles = this.propertyToCSS(prop, primitive, transformContext)
       styles.push(...cssStyles)
     }
 
@@ -863,40 +1046,58 @@ class IRTransformer {
   }
 
   /**
-   * Apply alignment property to layout context
+   * Apply alignment values to layout context with context-awareness
+   *
+   * Key insight: `center` meaning depends on context:
+   * - `top center` → center means horizontal center
+   * - `left center` → center means vertical center
+   * - `center` alone → center both axes
    */
-  private applyAlignmentToContext(name: string, ctx: LayoutContext): void {
-    switch (name) {
-      case 'center':
-      case 'cen':
-        ctx.justifyContent = 'center'
-        ctx.alignItems = 'center'
-        break
-      case 'spread':
-        ctx.justifyContent = 'space-between'
-        break
-      case 'left':
-        // Horizontal alignment - affects cross-axis in column, main-axis in row
-        ctx.alignItems = ctx.alignItems || 'flex-start' // will be remapped based on direction
-        // Mark as horizontal alignment
-        ;(ctx as any)._hAlign = 'start'
-        break
-      case 'right':
-        ;(ctx as any)._hAlign = 'end'
-        break
-      case 'hor-center':
-        ;(ctx as any)._hAlign = 'center'
-        break
-      case 'top':
-        // Vertical alignment
-        ;(ctx as any)._vAlign = 'start'
-        break
-      case 'bottom':
-        ;(ctx as any)._vAlign = 'end'
-        break
-      case 'ver-center':
-        ;(ctx as any)._vAlign = 'center'
-        break
+  private applyAlignmentsToContext(values: string[], ctx: LayoutContext): void {
+    if (values.length === 0) return
+
+    // Check which dimensions are explicitly set
+    const hasVertical = values.some(v => ['top', 'bottom', 'ver-center'].includes(v))
+    const hasHorizontal = values.some(v => ['left', 'right', 'hor-center'].includes(v))
+
+    for (const name of values) {
+      switch (name) {
+        case 'center':
+        case 'cen':
+          if (hasVertical && !hasHorizontal) {
+            // With top/bottom → center means horizontal center
+            ;(ctx as any)._hAlign = 'center'
+          } else if (hasHorizontal && !hasVertical) {
+            // With left/right → center means vertical center
+            ;(ctx as any)._vAlign = 'center'
+          } else {
+            // Alone or with both → center both
+            ctx.justifyContent = 'center'
+            ctx.alignItems = 'center'
+          }
+          break
+        case 'spread':
+          ctx.justifyContent = 'space-between'
+          break
+        case 'left':
+          ;(ctx as any)._hAlign = 'start'
+          break
+        case 'right':
+          ;(ctx as any)._hAlign = 'end'
+          break
+        case 'hor-center':
+          ;(ctx as any)._hAlign = 'center'
+          break
+        case 'top':
+          ;(ctx as any)._vAlign = 'start'
+          break
+        case 'bottom':
+          ;(ctx as any)._vAlign = 'end'
+          break
+        case 'ver-center':
+          ;(ctx as any)._vAlign = 'center'
+          break
+      }
     }
   }
 
@@ -923,13 +1124,14 @@ class IRTransformer {
     }
 
     // Determine final direction
-    const direction = ctx.direction || (primitive === 'frame' ? 'column' : null)
+    const primitiveLower = primitive?.toLowerCase() || ''
+    const direction = ctx.direction || (primitiveLower === 'frame' ? 'column' : null)
 
     // If no layout properties were set and not a frame, skip flex styles
     const hasLayoutProps = direction || ctx.justifyContent || ctx.alignItems ||
                           (ctx as any)._hAlign || (ctx as any)._vAlign || ctx.flexWrap
 
-    if (!hasLayoutProps && primitive !== 'frame') {
+    if (!hasLayoutProps && primitiveLower !== 'frame') {
       if (ctx.gap) {
         // Gap without flex context - just return gap
         styles.push({ property: 'gap', value: ctx.gap })
@@ -1080,7 +1282,7 @@ class IRTransformer {
   /**
    * Convert Mirror property to CSS
    */
-  private propertyToCSS(prop: Property, primitive: string = 'frame'): IRStyle[] {
+  private propertyToCSS(prop: Property, primitive: string = 'frame', transformContext?: { transforms: string[] }): IRStyle[] {
     const name = prop.name
     const value = this.resolveValue(prop.values, name)
     const values = prop.values
@@ -1201,19 +1403,66 @@ class IRTransformer {
       }
     }
 
-    // Handle rotate: rotate 45
+    // Absolute positioning: x → left
+    if (name === 'x') {
+      const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
+      const px = /^\d+$/.test(val) ? `${val}px` : val
+      return [
+        { property: 'position', value: 'absolute' },
+        { property: 'left', value: px },
+      ]
+    }
+
+    // Absolute positioning: y → top
+    if (name === 'y') {
+      const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
+      const px = /^\d+$/.test(val) ? `${val}px` : val
+      return [
+        { property: 'position', value: 'absolute' },
+        { property: 'top', value: px },
+      ]
+    }
+
+    // Handle rotate: rotate 45 (fallback for states)
     if (name === 'rotate' || name === 'rot') {
       const deg = String(values[0])
       return [{ property: 'transform', value: `rotate(${deg}deg)` }]
     }
 
-    // Handle translate: translate 10 20
+    // Handle scale: scale 1.2 (fallback for states)
+    if (name === 'scale') {
+      const val = String(values[0])
+      return [{ property: 'transform', value: `scale(${val})` }]
+    }
+
+    // Handle translate: translate 10 20 (fallback for states)
     if (name === 'translate') {
       const x = String(values[0])
       const y = values.length >= 2 ? String(values[1]) : '0'
       const xPx = /^-?\d+$/.test(x) ? `${x}px` : x
       const yPx = /^-?\d+$/.test(y) ? `${y}px` : y
       return [{ property: 'transform', value: `translate(${xPx}, ${yPx})` }]
+    }
+
+    // Handle aspect ratio: aspect 16/9, aspect 1, aspect 4/3
+    if (name === 'aspect') {
+      const val = String(values[0])
+      // Support fraction notation (16/9) or decimal (1.777)
+      return [{ property: 'aspect-ratio', value: val }]
+    }
+
+    // Handle backdrop-blur: backdrop-blur 10
+    if (name === 'backdrop-blur' || name === 'blur-bg') {
+      const val = String(values[0])
+      const px = /^\d+$/.test(val) ? `${val}px` : val
+      return [{ property: 'backdrop-filter', value: `blur(${px})` }]
+    }
+
+    // Handle filter blur: blur 5
+    if (name === 'blur') {
+      const val = String(values[0])
+      const px = /^\d+$/.test(val) ? `${val}px` : val
+      return [{ property: 'filter', value: `blur(${px})` }]
     }
 
     // Handle inline hover properties: hover-bg, hover-col, etc.
@@ -1417,10 +1666,16 @@ class IRTransformer {
     }
 
     // Handle width/height special values
+    // 'full' means fill remaining space in flex container
     if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
+      const isWidth = name === 'width' || name === 'w'
       return [
-        { property: name === 'width' || name === 'w' ? 'width' : 'height', value: '100%' },
-        { property: 'flex-grow', value: '1' },
+        // Use flex: 1 1 0% pattern for proper flex fill behavior
+        { property: 'flex', value: '1 1 0%' },
+        // min-width/height: 0 allows shrinking below content size
+        { property: isWidth ? 'min-width' : 'min-height', value: '0' },
+        // Also set explicit 100% for cross-axis fill in column/row containers
+        { property: isWidth ? 'width' : 'height', value: '100%' },
       ]
     }
 
@@ -1640,8 +1895,15 @@ class IRTransformer {
   /**
    * Extract HTML properties (non-CSS)
    */
-  private extractHTMLProperties(properties: Property[]): IRProperty[] {
+  private extractHTMLProperties(properties: Property[], primitive?: string): IRProperty[] {
     const htmlProps: IRProperty[] = []
+
+    // Auto-set type for checkbox/radio primitives
+    if (primitive === 'checkbox') {
+      htmlProps.push({ name: 'type', value: 'checkbox' })
+    } else if (primitive === 'radio') {
+      htmlProps.push({ name: 'type', value: 'radio' })
+    }
 
     for (const prop of properties) {
       if (prop.name === 'content') {
@@ -1658,6 +1920,21 @@ class IRTransformer {
       }
       if (prop.name === 'disabled') {
         htmlProps.push({ name: 'disabled', value: true })
+      }
+      if (prop.name === 'readonly') {
+        htmlProps.push({ name: 'readonly', value: true })
+      }
+      if (prop.name === 'type') {
+        htmlProps.push({ name: 'type', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'name') {
+        htmlProps.push({ name: 'name', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'value') {
+        htmlProps.push({ name: 'value', value: this.resolveValue(prop.values) })
+      }
+      if (prop.name === 'checked') {
+        htmlProps.push({ name: 'checked', value: true })
       }
       if (prop.name === 'hidden') {
         htmlProps.push({ name: 'hidden', value: true })
@@ -1758,6 +2035,18 @@ class IRTransformer {
         return [{ property: 'flex-wrap', value: 'wrap' }]
       case 'stacked':
         return [{ property: 'position', value: 'relative' }]
+      case 'abs':
+        return [{ property: 'position', value: 'relative' }]
+      case 'absolute':
+        return [{ property: 'position', value: 'absolute' }]
+      case 'fixed':
+        return [{ property: 'position', value: 'fixed' }]
+      case 'relative':
+        return [{ property: 'position', value: 'relative' }]
+      case 'grow':
+        return [{ property: 'flex-grow', value: '1' }]
+      case 'shrink':
+        return [{ property: 'flex-shrink', value: '1' }]
       case 'hidden':
         return [{ property: 'display', value: 'none' }]
       case 'visible':
@@ -1789,28 +2078,41 @@ class IRTransformer {
         return [{ property: 'text-transform', value: 'lowercase' }]
       // Alignment: Using column layout defaults (frame default)
       // In column: left/right → align-items, top/bottom → justify-content
+      // IMPORTANT: Must also set display: flex and flex-direction: column for alignment to work
       case 'left':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'align-items', value: 'flex-start' },
         ]
       case 'right':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'align-items', value: 'flex-end' },
         ]
       case 'top':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'justify-content', value: 'flex-start' },
         ]
       case 'bottom':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'justify-content', value: 'flex-end' },
         ]
       case 'hor-center':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'align-items', value: 'center' },
         ]
       case 'ver-center':
         return [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
           { property: 'justify-content', value: 'center' },
         ]
       default:

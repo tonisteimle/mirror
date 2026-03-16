@@ -16,6 +16,7 @@
 
 import type { SourceMap, NodeMapping } from './source-map'
 import type { SourcePosition } from '../ir/types'
+import type { SemanticZone } from './drop-zone-calculator'
 import {
   parseLine,
   updatePropertyInLine,
@@ -403,36 +404,123 @@ export class CodeModifier {
 
     // Calculate character offsets for the entire block
     const startOffset = this.getCharacterOffset(startLine, 1)
-    // Include the newline at the end of the block
     const endLineContent = this.lines[endLine - 1]
     let endOffset = this.getCharacterOffset(endLine, endLineContent.length + 1)
 
-    // If there's a line after, include the newline character
-    if (endLine < this.lines.length) {
-      endOffset += 1 // Include the \n
+    // Determine what to remove:
+    // We need to remove exactly ONE newline (either before or after the block)
+    // to avoid merging adjacent lines or leaving double newlines
+
+    let adjustedStartOffset = startOffset
+    let adjustedEndOffset = endOffset
+
+    if (startLine === 1 && endLine === this.lines.length) {
+      // Removing everything - no newline adjustment needed
+    } else if (endLine < this.lines.length) {
+      // There's a line after - remove the newline AFTER the block
+      adjustedEndOffset = endOffset + 1
+    } else if (startLine > 1) {
+      // No line after, but there's a line before - remove the newline BEFORE the block
+      adjustedStartOffset = startOffset - 1
     }
 
-    // Build the new source by removing the block
-    let newSource: string
-    if (startLine === 1 && endLine === this.lines.length) {
-      // Removing everything
-      newSource = ''
-    } else if (startLine === 1) {
-      // Removing from start
-      newSource = this.source.substring(endOffset)
-    } else {
-      // Removing from middle or end - also remove the preceding newline
-      const adjustedStartOffset = startOffset > 0 ? startOffset - 1 : startOffset
-      newSource = this.source.substring(0, adjustedStartOffset) + this.source.substring(endOffset)
-    }
+    // Build the new source
+    const newSource = this.source.substring(0, adjustedStartOffset) +
+                      this.source.substring(adjustedEndOffset)
 
     return {
       success: true,
       newSource,
       change: {
-        from: startOffset > 0 ? startOffset - 1 : startOffset,
-        to: endOffset,
+        from: adjustedStartOffset,
+        to: adjustedEndOffset,
         insert: '',
+      },
+    }
+  }
+
+  /**
+   * Replace a Slot with a component, transferring Slot's properties
+   *
+   * When dropping onto a Slot, the Slot is replaced by the new component.
+   * The Slot's layout properties (w, h, etc.) are transferred to the new component.
+   *
+   * @param slotNodeId - The node ID of the Slot to replace
+   * @param componentName - The name of the component to insert
+   * @param options - Properties and text content for the new component
+   */
+  replaceSlot(
+    slotNodeId: string,
+    componentName: string,
+    options: AddChildOptions = {}
+  ): ModificationResult {
+    const slotMapping = this.sourceMap.getNodeById(slotNodeId)
+    if (!slotMapping) {
+      return this.errorResult(`Slot not found: ${slotNodeId}`)
+    }
+
+    // Get the slot's line content to extract properties
+    const slotLine = this.lines[slotMapping.position.line - 1]
+    const slotIndent = slotLine.match(/^(\s*)/)?.[1] || ''
+
+    // Extract properties from the slot line (everything after "Slot "Label"")
+    // Pattern: Slot "Label", w full, h 100 → properties: "w full, h 100"
+    const slotMatch = slotLine.match(/^\s*Slot\s+"[^"]*"(?:,?\s*(.+))?$/)
+    const slotProperties = slotMatch?.[1]?.trim() || ''
+
+    // Merge slot properties with new component properties
+    let mergedProperties = options.properties || ''
+    if (slotProperties) {
+      // Slot properties that should be transferred (layout properties)
+      const transferProps = ['w', 'h', 'minw', 'maxw', 'minh', 'maxh', 'pad', 'margin']
+
+      // Parse slot properties
+      const slotPropParts = slotProperties.split(',').map(p => p.trim()).filter(Boolean)
+
+      // Only transfer layout properties that aren't already in the new component
+      for (const prop of slotPropParts) {
+        const propName = prop.split(/\s+/)[0]
+        if (transferProps.some(tp => propName.startsWith(tp))) {
+          // Check if this property is not already in merged
+          if (!mergedProperties.includes(propName)) {
+            mergedProperties = mergedProperties ? `${mergedProperties}, ${prop}` : prop
+          }
+        }
+      }
+    }
+
+    // Build the new component line
+    let newLine = `${slotIndent}${componentName}`
+    if (options.textContent) {
+      newLine += ` "${options.textContent}"`
+    }
+    if (mergedProperties) {
+      newLine += `, ${mergedProperties}`
+    }
+
+    // Calculate the replacement range
+    const startOffset = this.getCharacterOffset(slotMapping.position.line, 1)
+    const endLineContent = this.lines[slotMapping.position.line - 1]
+    let endOffset = this.getCharacterOffset(slotMapping.position.line, endLineContent.length + 1)
+
+    // Include the newline if replacing mid-file
+    if (slotMapping.position.line < this.lines.length) {
+      endOffset += 1
+    }
+
+    // Build new source
+    const newSource =
+      this.source.substring(0, startOffset) +
+      newLine + '\n' +
+      this.source.substring(endOffset)
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: startOffset,
+        to: endOffset,
+        insert: newLine + '\n',
       },
     }
   }
@@ -1256,10 +1344,380 @@ export class CodeModifier {
     }
   }
 
+  // ===========================================
+  // SEMANTIC ZONE / DIRECT CONTAINER LAYOUT
+  // ===========================================
+
+  /**
+   * Layout properties to apply to container based on semantic zone
+   *
+   * Instead of creating wrappers, we apply layout directly to the container.
+   * This ensures all siblings share the same alignment automatically.
+   *
+   * Uses alignment properties:
+   * - Horizontal: left, hor-center, right
+   * - Vertical: top, ver-center, bottom
+   *
+   * These are converted by the IR to:
+   * - Column container: horizontal → align-items, vertical → justify-content
+   * - Row container: horizontal → justify-content, vertical → align-items
+   */
+  private static readonly ZONE_CONTAINER_LAYOUT: Record<SemanticZone, string> = {
+    'top-left':     'left, top',
+    'top-center':   'hor-center, top',
+    'top-right':    'right, top',
+    'mid-left':     'left, ver-center',
+    'mid-center':   'center',
+    'mid-right':    'right, ver-center',
+    'bot-left':     'left, bottom',
+    'bot-center':   'hor-center, bottom',
+    'bot-right':    'right, bottom',
+  }
+
+  /**
+   * Get layout properties for a semantic zone
+   */
+  getLayoutForZone(zone: SemanticZone): string {
+    return CodeModifier.ZONE_CONTAINER_LAYOUT[zone]
+  }
+
+  /**
+   * Check if container already has layout/alignment properties
+   */
+  private containerHasLayoutDirection(containerLine: string): boolean {
+    const layoutProps = [
+      'ver', 'hor', 'center', 'spread', 'grid',
+      'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center'
+    ]
+    const parsedLine = parseLine(containerLine)
+    return parsedLine.properties.some(p => layoutProps.includes(p.name))
+  }
+
+  /**
+   * Apply layout properties to a container based on semantic zone
+   *
+   * Returns a modified source with layout properties added to the container line.
+   */
+  applyLayoutToContainer(
+    containerId: string,
+    semanticZone: SemanticZone
+  ): ModificationResult {
+    const layoutProps = this.getLayoutForZone(semanticZone)
+
+    // No layout needed for mid-left (default)
+    if (!layoutProps) {
+      return {
+        success: true,
+        newSource: this.source,
+        change: { from: 0, to: 0, insert: '' },
+      }
+    }
+
+    const containerMapping = this.sourceMap.getNodeById(containerId)
+    if (!containerMapping) {
+      return this.errorResult(`Container not found: ${containerId}`)
+    }
+
+    // Get container's line
+    const containerLine = this.lines[containerMapping.position.line - 1]
+
+    // Check if container already has layout - skip if it does
+    if (this.containerHasLayoutDirection(containerLine)) {
+      return {
+        success: true,
+        newSource: this.source,
+        change: { from: 0, to: 0, insert: '' },
+      }
+    }
+
+    // Parse the line and add layout properties
+    const parsedLine = parseLine(containerLine)
+
+    // Add each layout property
+    let newLine = containerLine
+    const propsToAdd = layoutProps.split(',').map(p => p.trim()).filter(Boolean)
+
+    for (const prop of propsToAdd) {
+      // Handle boolean props (ver, hor, center, spread) vs value props
+      const parts = prop.split(/\s+/)
+      const propName = parts[0]
+      const propValue = parts.slice(1).join(' ') || 'true'
+
+      // Check if property already exists
+      const existingProp = findPropertyInLine(parseLine(newLine), propName)
+      if (!existingProp) {
+        // Add the property
+        const parsed = parseLine(newLine)
+        if (propValue === 'true') {
+          newLine = addPropertyToLine(parsed, propName, '')
+        } else {
+          newLine = addPropertyToLine(parsed, propName, propValue)
+        }
+      }
+    }
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(containerMapping.position.line, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + containerLine.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[containerMapping.position.line - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+    }
+  }
+
+  /**
+   * Insert a component with layout applied to container based on semantic zone
+   *
+   * Instead of creating wrapper elements, this method:
+   * 1. Applies layout properties directly to the container (if empty)
+   * 2. Inserts the child component directly
+   *
+   * This ensures "Weitere Geschwister haben dann automatisch das gleiche Align Attribut"
+   * (subsequent siblings automatically share the same alignment)
+   */
+  insertWithWrapper(
+    parentId: string,
+    componentName: string,
+    semanticZone: SemanticZone,
+    options: AddChildOptions = {}
+  ): ModificationResult {
+    // Get parent node mapping
+    const parentMapping = this.sourceMap.getNodeById(parentId)
+    if (!parentMapping) {
+      return this.errorResult(`Parent node not found: ${parentId}`)
+    }
+
+    // Check if container already has children
+    const children = this.sourceMap.getChildren(parentId)
+
+    let layoutChange: { from: number; to: number; insert: string } | null = null
+    let layoutLengthDelta = 0
+
+    if (children.length === 0) {
+      // Empty container: apply layout properties based on zone
+      const layoutResult = this.applyLayoutToContainer(parentId, semanticZone)
+
+      if (!layoutResult.success) {
+        return layoutResult
+      }
+
+      // If layout was applied, update our internal state and track the change
+      if (layoutResult.change.insert) {
+        layoutChange = layoutResult.change
+        // Calculate how much the layout change shifted positions
+        layoutLengthDelta = layoutResult.change.insert.length - (layoutResult.change.to - layoutResult.change.from)
+        this.source = layoutResult.newSource
+        this.lines = this.source.split('\n')
+      }
+    }
+
+    // Insert child directly (no wrapper)
+    const childResult = this.addChild(parentId, componentName, options)
+
+    if (!childResult.success) {
+      return childResult
+    }
+
+    // If we had a layout change, we need to combine the changes
+    // The child change offsets are relative to the source AFTER layout was applied
+    // We need to return a combined change relative to the ORIGINAL source
+    if (layoutChange) {
+      // The child insert position needs to be adjusted back to original source coordinates
+      // by subtracting the length delta from the layout change
+      const adjustedChildFrom = childResult.change.from - layoutLengthDelta
+      const adjustedChildTo = childResult.change.to - layoutLengthDelta
+
+      // Combine into a single change that replaces from layoutChange.from to adjustedChildTo
+      // with the layout insert + child insert
+      const combinedInsert = layoutChange.insert + childResult.change.insert
+
+      return {
+        success: true,
+        newSource: childResult.newSource,
+        change: {
+          from: layoutChange.from,
+          to: layoutChange.to,
+          insert: combinedInsert,
+        },
+      }
+    }
+
+    return childResult
+  }
+
+  // ===========================================
+  // MULTI-SELECT / WRAP NODES
+  // ===========================================
+
+  /**
+   * Wrap multiple sibling nodes in a new container
+   *
+   * Takes 2+ nodes that share the same parent and wraps them in a Box.
+   * Used for grouping selected elements via Cmd/Ctrl+G.
+   */
+  wrapNodes(
+    nodeIds: string[],
+    wrapperName: string = 'Box',
+    wrapperProps?: string
+  ): ModificationResult {
+    if (nodeIds.length < 2) {
+      return this.errorResult('Need at least 2 nodes to wrap')
+    }
+
+    // Get all node mappings
+    const mappings = nodeIds.map(id => this.sourceMap.getNodeById(id))
+    if (mappings.some(m => !m)) {
+      return this.errorResult('Some nodes not found')
+    }
+
+    // Validate: all nodes must have the same parent
+    const parents = mappings.map(m => m!.parentId)
+    if (new Set(parents).size !== 1) {
+      return this.errorResult('All nodes must have the same parent')
+    }
+
+    // Sort by line number
+    const sortedNodes = (mappings.filter(Boolean) as NodeMapping[])
+      .sort((a, b) => a.position.line - b.position.line)
+
+    const firstNode = sortedNodes[0]
+    const lastNode = sortedNodes[sortedNodes.length - 1]
+
+    // Get indentation of first node
+    const firstLine = this.lines[firstNode.position.line - 1]
+    const indent = this.getLineIndent(firstLine)
+
+    // Build wrapper line
+    const wrapperLine = wrapperProps
+      ? `${indent}${wrapperName} ${wrapperProps}`
+      : `${indent}${wrapperName}`
+
+    // Get all lines from first to last node (including children)
+    const startLine = firstNode.position.line
+    const endLine = lastNode.position.endLine
+    const nodeLines = this.lines.slice(startLine - 1, endLine)
+
+    // Re-indent all lines relative to their current indentation
+    // Each line gets 2 additional spaces, preserving nested structure
+    const reindentedLines = nodeLines.map(line => {
+      // Preserve empty lines
+      if (line.trim() === '') return line
+      // Add 2 spaces to existing indentation
+      return '  ' + line
+    })
+
+    // Build new content
+    const newContent = [wrapperLine, ...reindentedLines].join('\n')
+
+    // Calculate character offsets
+    const from = this.getCharacterOffset(startLine, 1)
+    const endLineContent = this.lines[endLine - 1]
+    const to = this.getCharacterOffset(endLine, endLineContent.length + 1)
+
+    // Apply the change
+    const newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newContent,
+      },
+    }
+  }
+
+  /**
+   * Unwrap a container node, moving its children up to the parent level
+   *
+   * Takes a container node and removes it, promoting all children
+   * to siblings of the (now removed) container.
+   * Used for ungrouping elements via Shift+Cmd/Ctrl+G.
+   *
+   * @param nodeId - The container node to unwrap
+   */
+  unwrapNode(nodeId: string): ModificationResult {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return this.errorResult(`Node not found: ${nodeId}`)
+    }
+
+    // Check that node has a parent (can't unwrap root)
+    if (!nodeMapping.parentId) {
+      return this.errorResult('Cannot unwrap root node')
+    }
+
+    // Get children of the node to unwrap
+    const children = this.sourceMap.getChildren(nodeId)
+    if (children.length === 0) {
+      return this.errorResult('Cannot unwrap node with no children')
+    }
+
+    // Get the container's line to determine its indentation
+    const containerLine = this.lines[nodeMapping.position.line - 1]
+    const containerIndent = this.getLineIndent(containerLine)
+
+    // Get the full block span
+    const startLine = nodeMapping.position.line
+    const endLine = nodeMapping.position.endLine
+
+    // Extract children's lines (everything after the container line)
+    const childrenLines = this.lines.slice(startLine, endLine)
+
+    // Calculate the indent difference (children are indented 2 spaces more than container)
+    // We need to remove those 2 spaces to bring them up to the container's level
+    const dedentedLines = childrenLines.map(line => {
+      // Remove exactly 2 spaces of indentation if present
+      if (line.startsWith(containerIndent + '  ')) {
+        return containerIndent + line.substring(containerIndent.length + 2)
+      }
+      // Handle lines that might have different indentation (nested children)
+      if (line.startsWith('  ')) {
+        return line.substring(2)
+      }
+      return line
+    })
+
+    // Build new content (just the dedented children, no wrapper)
+    const newContent = dedentedLines.join('\n')
+
+    // Calculate character offsets
+    const from = this.getCharacterOffset(startLine, 1)
+    const endLineContent = this.lines[endLine - 1]
+    const to = this.getCharacterOffset(endLine, endLineContent.length + 1)
+
+    // Apply the change
+    const newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newContent,
+      },
+    }
+  }
+
   /**
    * Create an error result
    */
   private errorResult(error: string): ModificationResult {
+    console.warn(`[CodeModifier] Operation failed: ${error}`)
     return {
       success: false,
       newSource: this.source,

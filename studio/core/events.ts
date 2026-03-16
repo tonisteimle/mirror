@@ -20,7 +20,9 @@ export interface CodeChange {
 export interface StudioEvents {
   'source:changed': { source: string; origin: 'editor' | 'command' | 'external' | 'panel' | 'drag-drop' | 'keyboard'; change?: CodeChange }
   'source:compiled': { success: boolean; errors: ParseError[] }
-  'selection:changed': { nodeId: string | null; origin: 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' }
+  'selection:changed': { nodeId: string | null; origin: 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop' }
+  /** Emitted when selection becomes invalid (e.g., selected node removed) */
+  'selection:invalidated': { nodeId: string }
   'command:executed': { command: Command }
   'command:undone': { command: Command }
   'command:redone': { command: Command }
@@ -39,15 +41,99 @@ export interface StudioEvents {
   'drag:started': { nodeId: string; source: 'preview' | 'library' }
   'drag:ended': { success: boolean }
   'drop:completed': { nodeId: string; targetId: string; position: 'before' | 'after' | 'inside' }
+  /** Element move (from ElementMover) */
+  'move:started': { nodeId: string }
+  'move:completed': {
+    nodeId: string
+    targetId: string
+    position: 'before' | 'after' | 'inside'
+    layoutTransition?: {
+      from: 'flex' | 'absolute'
+      to: 'flex' | 'absolute'
+      absolutePosition?: { x: number; y: number }
+    }
+  }
+  'move:cancelled': { nodeId: string }
+  /** Direct manipulation handle events */
+  'handle:drag-start': { nodeId: string; property: string; startValue: number }
+  'handle:drag-move': { nodeId: string; property: string; value: number }
+  'handle:drag-end': { nodeId: string; property: string; value: number }
+  /** Multi-selection events */
+  'multiselection:changed': { nodeIds: string[] }
+  /** Resize events (Visual Code System) */
+  'resize:start': { nodeId: string; handle: string; startWidth: number; startHeight: number }
+  'resize:move': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number }
+  'resize:end': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number; x?: number; y?: number }
+  /** Drag from palette events (Visual Code System) */
+  'drag:start': { type: 'component' | 'container' | 'layout'; component: string; defaultProps?: string }
+  'drop:component': { dragData: any; dropZone: any }
+  /** Emitted when compilation is requested */
   'compile:requested': Record<string, never>
-  'compile:completed': { ast: any; ir: any; sourceMap: any }
+  /** Emitted when compilation starts */
+  'compile:started': void
+  /** Emitted when compilation is idle (not in progress) */
+  'compile:idle': void
+  /** Emitted when compilation completes successfully */
+  'compile:completed': { ast: any; ir: any; sourceMap: any; version?: number; hasErrors?: boolean }
+  /** Emitted when compilation fails */
   'compile:failed': { error: string }
+  /** User-facing notification events */
+  'notification:info': { message: string; duration?: number }
+  'notification:success': { message: string; duration?: number }
+  'notification:warning': { message: string; duration?: number }
+  'notification:error': { message: string; duration?: number }
+  /** Component Panel events */
+  'component:drag-start': { item: ComponentPanelItem; event: DragEvent }
+  'component:drag-end': { item: ComponentPanelItem; event: DragEvent }
+  'component:insert-requested': { item: ComponentPanelItem }
+}
+
+/** Component Panel item (simplified for event typing) */
+export interface ComponentPanelItem {
+  id: string
+  name: string
+  template: string
+  properties?: string
+  textContent?: string
 }
 
 type EventHandler<T> = (payload: T) => void
 
+/**
+ * Event metadata added by middleware
+ */
+export interface EventMeta {
+  timestamp: number
+  eventType: string
+  blocked?: boolean
+}
+
+/**
+ * Middleware function type
+ * Can transform payload, add metadata, or block event by returning null
+ */
+export type EventMiddleware<K extends keyof StudioEvents = keyof StudioEvents> = (
+  event: K,
+  payload: StudioEvents[K],
+  meta: EventMeta
+) => { payload: StudioEvents[K]; meta: EventMeta } | null
+
 export class EventBus {
   private handlers: Map<string, Set<EventHandler<any>>> = new Map()
+  private middleware: EventMiddleware[] = []
+
+  /**
+   * Add middleware that runs before event handlers
+   * Middleware can transform events or block them (return null)
+   * Returns unsubscribe function
+   */
+  use(middleware: EventMiddleware): () => void {
+    this.middleware.push(middleware)
+    return () => {
+      const index = this.middleware.indexOf(middleware)
+      if (index >= 0) this.middleware.splice(index, 1)
+    }
+  }
 
   on<K extends keyof StudioEvents>(event: K, handler: EventHandler<StudioEvents[K]>): () => void {
     if (!this.handlers.has(event)) {
@@ -70,13 +156,97 @@ export class EventBus {
   }
 
   emit<K extends keyof StudioEvents>(event: K, payload: StudioEvents[K]): void {
+    // Run through middleware chain
+    let currentPayload: unknown = payload
+    let meta: EventMeta = { timestamp: Date.now(), eventType: event }
+
+    for (const mw of this.middleware) {
+      const result = mw(event, currentPayload as StudioEvents[K], meta)
+      if (result === null) {
+        // Event blocked by middleware
+        return
+      }
+      currentPayload = result.payload
+      meta = result.meta
+    }
+
+    // Dispatch to handlers
     this.handlers.get(event)?.forEach(handler => {
       try {
-        handler(payload)
+        handler(currentPayload)
       } catch (e) {
         console.error(`Error in event handler for ${event}:`, e)
       }
     })
+  }
+
+  /**
+   * Get count of handlers for an event (useful for debugging)
+   */
+  handlerCount(event: keyof StudioEvents): number {
+    return this.handlers.get(event)?.size ?? 0
+  }
+
+  /**
+   * Clear all handlers (useful for testing)
+   */
+  clearAll(): void {
+    this.handlers.clear()
+    this.middleware = []
+  }
+}
+
+/**
+ * Built-in middleware: Logger
+ * Logs all events to console (can be filtered by pattern)
+ */
+export function createLoggerMiddleware(options: {
+  filter?: RegExp | ((event: string) => boolean)
+  collapsed?: boolean
+} = {}): EventMiddleware {
+  const { filter, collapsed = true } = options
+
+  return (event, payload, meta) => {
+    const shouldLog = filter
+      ? (typeof filter === 'function' ? filter(event) : filter.test(event))
+      : true
+
+    if (shouldLog) {
+      const logFn = collapsed ? console.groupCollapsed : console.group
+      logFn(`[Event] ${event}`)
+      console.log('Payload:', payload)
+      console.log('Meta:', meta)
+      console.groupEnd()
+    }
+
+    return { payload, meta }
+  }
+}
+
+/**
+ * Built-in middleware: Analytics tracker
+ * Tracks event counts and can report statistics
+ */
+export function createAnalyticsMiddleware(): EventMiddleware & {
+  getStats: () => Record<string, number>
+  reset: () => void
+} {
+  const counts: Record<string, number> = {}
+
+  const middleware: EventMiddleware = (event, payload, meta) => {
+    counts[event] = (counts[event] || 0) + 1
+    return { payload, meta }
+  }
+
+  // Attach utility methods
+  (middleware as any).getStats = () => ({ ...counts });
+  (middleware as any).reset = () => {
+    for (const key of Object.keys(counts)) delete counts[key]
+  }
+
+  return middleware as EventMiddleware & {
+    getStats: () => Record<string, number>
+    reset: () => void
   }
 }
 

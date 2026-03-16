@@ -9,7 +9,11 @@ import {
   TokenPicker,
   createTokenPicker,
   parseTokens,
+  parseTokensFromFiles,
   getTokenTypesForProperty,
+  filterTokensBySuffix,
+  filterTokensByType,
+  filterTokensBySearch,
   type TokenDefinition,
   type TokenContext,
 } from '../index'
@@ -494,5 +498,166 @@ describe('getTokenTypesForProperty', () => {
   it('should return other for unknown properties', () => {
     const types = getTokenTypesForProperty('unknown')
     expect(types).toEqual(['other'])
+  })
+})
+
+describe('parseTokensFromFiles', () => {
+  it('should parse tokens from multiple files', () => {
+    const files = {
+      'theme.txt': '$primary.bg: #007bff\n$primary.col: #ffffff',
+      'spacing.txt': '$base.pad: 16\n$base.gap: 8',
+    }
+    const tokens = parseTokensFromFiles(files)
+
+    expect(tokens).toHaveLength(4)
+    expect(tokens.map(t => t.name)).toContain('$primary.bg')
+    expect(tokens.map(t => t.name)).toContain('$base.pad')
+  })
+
+  it('should deduplicate tokens by name', () => {
+    const files = {
+      'file1.txt': '$primary.bg: #007bff',
+      'file2.txt': '$primary.bg: #ff0000', // Same name, different value
+    }
+    const tokens = parseTokensFromFiles(files)
+
+    expect(tokens).toHaveLength(1)
+    expect(tokens[0].value).toBe('#007bff') // First one wins
+  })
+
+  it('should handle empty files', () => {
+    const files = {
+      'empty.txt': '',
+      'valid.txt': '$primary.bg: #007bff',
+    }
+    const tokens = parseTokensFromFiles(files)
+
+    expect(tokens).toHaveLength(1)
+  })
+
+  it('should skip null/undefined content', () => {
+    const files = {
+      'valid.txt': '$primary.bg: #007bff',
+      'null.txt': null as any,
+      'undefined.txt': undefined as any,
+    }
+    const tokens = parseTokensFromFiles(files)
+
+    expect(tokens).toHaveLength(1)
+  })
+})
+
+describe('filterTokensBySuffix', () => {
+  const tokens: TokenDefinition[] = [
+    { name: '$primary.bg', value: '#007bff', type: 'color' },
+    { name: '$primary.col', value: '#ffffff', type: 'color' },
+    { name: '$base.pad', value: '16', type: 'spacing' },
+  ]
+
+  it('should filter by suffix', () => {
+    const filtered = filterTokensBySuffix(tokens, '.bg')
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].name).toBe('$primary.bg')
+  })
+
+  it('should return all if no suffix', () => {
+    const filtered = filterTokensBySuffix(tokens, '')
+    expect(filtered).toHaveLength(3)
+  })
+})
+
+describe('filterTokensByType', () => {
+  const tokens: TokenDefinition[] = [
+    { name: '$primary.bg', value: '#007bff', type: 'color' },
+    { name: '$primary.col', value: '#ffffff', type: 'color' },
+    { name: '$base.pad', value: '16', type: 'spacing' },
+  ]
+
+  it('should filter by single type', () => {
+    const filtered = filterTokensByType(tokens, ['color'])
+    expect(filtered).toHaveLength(2)
+  })
+
+  it('should filter by multiple types', () => {
+    const filtered = filterTokensByType(tokens, ['color', 'spacing'])
+    expect(filtered).toHaveLength(3)
+  })
+
+  it('should return all if no types', () => {
+    const filtered = filterTokensByType(tokens, [])
+    expect(filtered).toHaveLength(3)
+  })
+})
+
+describe('filterTokensBySearch', () => {
+  const tokens: TokenDefinition[] = [
+    { name: '$primary.bg', value: '#007bff', type: 'color', category: 'theme' },
+    { name: '$secondary.bg', value: '#6c757d', type: 'color', category: 'theme' },
+    { name: '$base.pad', value: '16', type: 'spacing', category: 'layout' },
+  ]
+
+  it('should filter by name', () => {
+    const filtered = filterTokensBySearch(tokens, 'primary')
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].name).toBe('$primary.bg')
+  })
+
+  it('should filter by value', () => {
+    const filtered = filterTokensBySearch(tokens, '007bff')
+    expect(filtered).toHaveLength(1)
+  })
+
+  it('should filter by category', () => {
+    const filtered = filterTokensBySearch(tokens, 'theme')
+    expect(filtered).toHaveLength(2)
+  })
+
+  it('should be case insensitive', () => {
+    const filtered = filterTokensBySearch(tokens, 'PRIMARY')
+    expect(filtered).toHaveLength(1)
+  })
+
+  it('should return all if no query', () => {
+    const filtered = filterTokensBySearch(tokens, '')
+    expect(filtered).toHaveLength(3)
+  })
+})
+
+describe('parseTokens - enhanced', () => {
+  it('should parse simple token without suffix', () => {
+    const source = '$primary: #007bff'
+    const tokens = parseTokens(source)
+
+    expect(tokens).toHaveLength(1)
+    expect(tokens[0].name).toBe('$primary')
+    expect(tokens[0].type).toBe('color')
+  })
+
+  it('should strip inline comments', () => {
+    const source = '$primary.bg: #007bff // main background'
+    const tokens = parseTokens(source)
+
+    expect(tokens).toHaveLength(1)
+    expect(tokens[0].value).toBe('#007bff')
+  })
+
+  it('should skip comment lines', () => {
+    const source = `
+// This is a comment
+$primary.bg: #007bff
+# Another comment format
+$secondary.bg: #6c757d
+    `
+    const tokens = parseTokens(source)
+
+    expect(tokens).toHaveLength(2)
+  })
+
+  it('should handle token references as values', () => {
+    const source = '$primary: $grey-900'
+    const tokens = parseTokens(source)
+
+    expect(tokens).toHaveLength(1)
+    expect(tokens[0].value).toBe('$grey-900')
   })
 })

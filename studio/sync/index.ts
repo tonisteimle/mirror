@@ -2,7 +2,9 @@
  * Sync Module
  */
 
-export { SyncCoordinator, createSyncCoordinator, getSyncCoordinator, setSyncCoordinator, type SyncTargets, type SyncCoordinatorOptions } from './sync-coordinator'
+export { SyncCoordinator, createSyncCoordinator, type SyncTargets, type SyncCoordinatorOptions } from './sync-coordinator'
+
+export { LineOffsetService, createLineOffsetService } from './line-offset-service'
 
 export {
   extractComponentFromLine,

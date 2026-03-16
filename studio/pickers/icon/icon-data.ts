@@ -79,6 +79,38 @@ export const ICONS: IconDefinition[] = [
   { name: 'visibility-off', path: 'M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z', category: 'toggle', tags: ['hide', 'eye'] },
   { name: 'lock', path: 'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z', category: 'toggle', tags: ['security', 'locked', 'private'] },
   { name: 'lock-open', path: 'M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z', category: 'toggle', tags: ['security', 'unlocked'] },
+
+  // Layout - Lucide Icons (stroke-based)
+  // Direction
+  { name: 'rows-3', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/>', style: 'stroke', category: 'layout', tags: ['vertical', 'stack', 'column', 'vstack', 'rows'] },
+  { name: 'columns-3', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>', style: 'stroke', category: 'layout', tags: ['horizontal', 'stack', 'row', 'hstack', 'columns'] },
+  { name: 'grid-2x2', path: '', svg: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>', style: 'stroke', category: 'layout', tags: ['grid', '2x2', 'tiles', 'gallery'] },
+  { name: 'grid-3x3', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>', style: 'stroke', category: 'layout', tags: ['grid', '3x3', 'tiles', 'nine'] },
+  { name: 'wrap-text', path: '', svg: '<path d="M3 6h18"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><path d="m10 18 4-4-4-4"/><path d="M3 18h7"/>', style: 'stroke', category: 'layout', tags: ['wrap', 'flex', 'flow'] },
+
+  // Alignment
+  { name: 'align-center', path: '', svg: '<path d="M12 2v20"/><path d="M8 10H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h4"/><path d="M16 10h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4"/><path d="M8 20H7a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h1"/><path d="M16 14h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1"/>', style: 'stroke', category: 'layout', tags: ['center', 'middle', 'align'] },
+  { name: 'between-horizontal-start', path: '', svg: '<rect width="6" height="14" x="2" y="5" rx="2"/><rect width="6" height="10" x="16" y="7" rx="2"/><path d="M12 2v20"/>', style: 'stroke', category: 'layout', tags: ['spread', 'distribute', 'space', 'between'] },
+  { name: 'align-start-vertical', path: '', svg: '<rect width="14" height="6" x="2" y="16" rx="2"/><rect width="10" height="6" x="2" y="2" rx="2"/><rect width="6" height="6" x="2" y="9" rx="2"/>', style: 'stroke', category: 'layout', tags: ['start', 'left', 'align'] },
+  { name: 'align-end-vertical', path: '', svg: '<rect width="14" height="6" x="8" y="16" rx="2"/><rect width="10" height="6" x="12" y="2" rx="2"/><rect width="6" height="6" x="16" y="9" rx="2"/>', style: 'stroke', category: 'layout', tags: ['end', 'right', 'align'] },
+
+  // Overflow & Scroll
+  { name: 'scroll', path: '', svg: '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>', style: 'stroke', category: 'layout', tags: ['scroll', 'overflow', 'scrollable'] },
+  { name: 'layers', path: '', svg: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2 17.5"/>', style: 'stroke', category: 'layout', tags: ['stacked', 'layers', 'overlay', 'z-index'] },
+
+  // Page Patterns
+  { name: 'panel-left', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>', style: 'stroke', category: 'layout', tags: ['sidebar', 'aside', 'split', 'two-column', 'left'] },
+  { name: 'panel-right', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/>', style: 'stroke', category: 'layout', tags: ['sidebar', 'aside', 'split', 'two-column', 'right'] },
+  { name: 'panel-top', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/>', style: 'stroke', category: 'layout', tags: ['header', 'top', 'appbar', 'navbar'] },
+  { name: 'panel-bottom', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 15h18"/>', style: 'stroke', category: 'layout', tags: ['footer', 'bottom'] },
+  { name: 'layout-dashboard', path: '', svg: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>', style: 'stroke', category: 'layout', tags: ['dashboard', 'mosaic', 'bento'] },
+
+  // Components
+  { name: 'square', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/>', style: 'stroke', category: 'layout', tags: ['card', 'container', 'box'] },
+  { name: 'app-window', path: '', svg: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/>', style: 'stroke', category: 'layout', tags: ['modal', 'dialog', 'window', 'popup'] },
+  { name: 'gallery-horizontal', path: '', svg: '<path d="M2 3v18"/><rect width="12" height="18" x="6" y="3" rx="2"/><path d="M22 3v18"/>', style: 'stroke', category: 'layout', tags: ['carousel', 'slider', 'gallery'] },
+  { name: 'list', path: '', svg: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>', style: 'stroke', category: 'layout', tags: ['list', 'rows', 'items'] },
+  { name: 'text-cursor-input', path: '', svg: '<path d="M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1 3-3h1"/><path d="M13 20h-1a3 3 0 0 1-3-3 3 3 0 0 1-3 3H5"/><path d="M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1"/><path d="M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7"/><path d="M9 7v10"/>', style: 'stroke', category: 'layout', tags: ['form', 'input', 'field'] },
 ]
 
 /**

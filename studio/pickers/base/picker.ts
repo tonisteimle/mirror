@@ -100,6 +100,13 @@ export abstract class BasePicker {
     return this.isOpen
   }
 
+  /**
+   * Get the picker's DOM element (if rendered)
+   */
+  getElement(): HTMLElement | null {
+    return this.element
+  }
+
   protected calculatePosition(anchor: HTMLElement): { top: number; left: number } {
     const anchorRect = anchor.getBoundingClientRect()
     const { position, offsetX, offsetY } = this.config

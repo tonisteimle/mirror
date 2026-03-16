@@ -6,7 +6,7 @@
  */
 
 import { parse as babelParse } from '@babel/parser'
-import _traverse from '@babel/traverse'
+import _traverse, { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 
 // Handle ESM/CJS interop
@@ -415,14 +415,14 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
     // First pass: find function/arrow components
     traverse(ast, {
       // Handle function components
-      FunctionDeclaration(path) {
+      FunctionDeclaration(path: NodePath<t.FunctionDeclaration>) {
         const name = path.node.id?.name
         if (!name) return
         processedFunctions.add(name)
 
         // Find return statement with JSX
         path.traverse({
-          ReturnStatement(returnPath) {
+          ReturnStatement(returnPath: NodePath<t.ReturnStatement>) {
             const arg = returnPath.node.argument
             if (t.isJSXElement(arg)) {
               const node = parseJSXElement(arg, tokens)
@@ -442,7 +442,7 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
       },
 
       // Handle arrow function components
-      VariableDeclarator(path) {
+      VariableDeclarator(path: NodePath<t.VariableDeclarator>) {
         if (!t.isIdentifier(path.node.id)) return
         const name = path.node.id.name
 
@@ -458,7 +458,7 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
           instances.push(node)
         } else if (t.isBlockStatement(init.body)) {
           path.traverse({
-            ReturnStatement(returnPath) {
+            ReturnStatement(returnPath: NodePath<t.ReturnStatement>) {
               const arg = returnPath.node.argument
               if (t.isJSXElement(arg)) {
                 const node = parseJSXElement(arg, tokens)
@@ -474,7 +474,7 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
     // Only process standalone JSX if no functions found
     if (instances.length === 0) {
       traverse(ast, {
-        JSXElement(path) {
+        JSXElement(path: NodePath<t.JSXElement>) {
           // Only process root-level JSX (not nested)
           if (path.parentPath.isJSXElement()) return
 

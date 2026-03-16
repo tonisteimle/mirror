@@ -317,8 +317,26 @@ class FrameworkGenerator {
     const baseStyles = styles.filter(s => !s.state)
     const stateStyles = styles.filter(s => s.state)
 
+    // Check for flex: 1 1 0% pattern (used for w full / h full)
+    const hasFlexFull = baseStyles.some(s => s.property === 'flex' && (s.value === '1 1 0%' || s.value === '1'))
+    const hasMinWidth0 = baseStyles.some(s => s.property === 'min-width' && s.value === '0')
+    const hasMinHeight0 = baseStyles.some(s => s.property === 'min-height' && s.value === '0')
+
+    // Convert flex: 1 1 0% + min-width: 0 to w: 'full'
+    if (hasFlexFull && hasMinWidth0) {
+      props.w = 'full'
+    }
+    // Convert flex: 1 1 0% + min-height: 0 to h: 'full'
+    if (hasFlexFull && hasMinHeight0) {
+      props.h = 'full'
+    }
+
     // Convert base styles to props
     for (const style of baseStyles) {
+      // Skip flex and min-width/min-height that were handled above
+      if (hasFlexFull && hasMinWidth0 && (style.property === 'flex' || style.property === 'min-width')) continue
+      if (hasFlexFull && hasMinHeight0 && (style.property === 'flex' || style.property === 'min-height')) continue
+
       const mirrorProp = this.cssPropToMirrorProp(style.property, style.value)
       if (mirrorProp) {
         props[mirrorProp.name] = mirrorProp.value
@@ -421,6 +439,9 @@ class FrameworkGenerator {
       if (match) return { name: 'grid', value: parseInt(match[1]) }
       return { name: 'grid', value: value }
     }
+
+    // Flex shorthand - handled in stylesToProps for w full / h full detection
+    if (prop === 'flex') return null
 
     // Flex grow (often combined with width: 100%)
     if (prop === 'flex-grow') return null // Implicit with w full

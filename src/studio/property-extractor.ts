@@ -125,6 +125,8 @@ const PROPERTY_TYPES: Record<string, PropertyType> = {
   rad: 'number',
   border: 'number',
   bor: 'number',
+  x: 'number',
+  y: 'number',
 
   // Booleans
   horizontal: 'boolean',
@@ -137,6 +139,8 @@ const PROPERTY_TYPES: Record<string, PropertyType> = {
   wrap: 'boolean',
   stacked: 'boolean',
   grid: 'boolean',
+  abs: 'boolean',
+  absolute: 'boolean',
   hidden: 'boolean',
   visible: 'boolean',
   disabled: 'boolean',
@@ -174,6 +178,12 @@ const CATEGORY_MAP: Record<string, string> = {
   grid: 'layout',
   gap: 'layout',
   g: 'layout',
+
+  // Position (Absolute)
+  abs: 'position',
+  absolute: 'position',
+  x: 'position',
+  y: 'position',
 
   // Alignment
   center: 'alignment',
@@ -245,6 +255,7 @@ const CATEGORY_MAP: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   layout: 'Layout',
+  position: 'Position',
   alignment: 'Alignment',
   sizing: 'Size',
   spacing: 'Spacing',
@@ -254,6 +265,45 @@ const CATEGORY_LABELS: Record<string, string> = {
   visual: 'Visual',
   hover: 'Hover',
   other: 'Other',
+}
+
+/**
+ * Component-specific categories - which property categories are relevant for each primitive
+ */
+const COMPONENT_CATEGORIES: Record<string, string[]> = {
+  // Text: typography-focused, no layout properties
+  text: ['typography', 'color', 'spacing', 'sizing', 'visual', 'hover'],
+
+  // Icon: similar to text but with icon category
+  icon: ['icon', 'color', 'sizing', 'spacing', 'visual', 'hover'],
+
+  // Box/Frame: full layout capabilities
+  box: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'visual', 'scroll', 'hover'],
+  frame: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'visual', 'scroll', 'hover'],
+
+  // Slot: placeholder, sizing and spacing
+  slot: ['sizing', 'spacing', 'color', 'border', 'visual'],
+
+  // Input: form element
+  input: ['typography', 'color', 'sizing', 'spacing', 'border', 'visual', 'hover'],
+
+  // Button: like text but with more visual
+  button: ['typography', 'color', 'sizing', 'spacing', 'border', 'visual', 'hover'],
+
+  // Image: sizing focused
+  image: ['sizing', 'spacing', 'border', 'visual', 'hover'],
+  img: ['sizing', 'spacing', 'border', 'visual', 'hover'],
+
+  // Default: show all
+  default: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'icon', 'visual', 'scroll', 'hover'],
+}
+
+/**
+ * Get relevant categories for a component type
+ */
+function getComponentCategories(componentName: string): string[] {
+  const primitive = componentName.toLowerCase()
+  return COMPONENT_CATEGORIES[primitive] || COMPONENT_CATEGORIES['default']
 }
 
 /**
@@ -293,12 +343,14 @@ export class PropertyExtractor {
 
     const nodeMapping = this.sourceMap.getNodeById(nodeId)
     if (!nodeMapping) {
+      console.warn(`[PropertyExtractor] Node not found in SourceMap: ${nodeId}`)
       return null
     }
 
     // Find the AST node (instance or component definition)
     const astNode = this.findAstNode(nodeMapping)
     if (!astNode) {
+      console.warn(`[PropertyExtractor] AST node not found for: ${nodeId} at line ${nodeMapping.position.line}`)
       return null
     }
 
@@ -328,7 +380,7 @@ export class PropertyExtractor {
 
     // Add all available properties from schema (if enabled)
     if (this.showAllProperties) {
-      this.addAvailableProperties(allProperties)
+      this.addAvailableProperties(allProperties, nodeMapping.componentName)
     }
 
     // Group into categories
@@ -356,6 +408,7 @@ export class PropertyExtractor {
   getPropertiesForComponentDefinition(componentName: string): ExtractedElement | null {
     const componentDef = this.componentMap.get(componentName)
     if (!componentDef) {
+      console.warn(`[PropertyExtractor] Component definition not found: ${componentName}`)
       return null
     }
 
@@ -378,7 +431,7 @@ export class PropertyExtractor {
 
     // Add all available properties from schema (if enabled)
     if (this.showAllProperties) {
-      this.addAvailableProperties(allProperties)
+      this.addAvailableProperties(allProperties, componentName)
     }
 
     // Group into categories
@@ -401,9 +454,13 @@ export class PropertyExtractor {
 
   /**
    * Add all available properties from schema (not already set)
+   * Filters based on component type to show only relevant properties
    */
-  private addAvailableProperties(existingProps: ExtractedProperty[]): void {
+  private addAvailableProperties(existingProps: ExtractedProperty[], componentName: string): void {
     const existingNames = new Set(existingProps.map(p => p.name))
+
+    // Get relevant categories for this component type
+    const relevantCategories = getComponentCategories(componentName)
 
     // Also track aliases
     for (const prop of existingProps) {
@@ -419,6 +476,9 @@ export class PropertyExtractor {
     for (const propDef of allPropertyDefinitions) {
       // Skip if already exists (including aliases)
       if (existingNames.has(propDef.name)) continue
+
+      // Skip if category is not relevant for this component
+      if (!relevantCategories.includes(propDef.category)) continue
 
       // Create empty property placeholder
       existingProps.push({
@@ -673,7 +733,7 @@ export class PropertyExtractor {
 
     // Convert to array with labels (matches schema categoryOrder)
     const categories: PropertyCategory[] = []
-    const order = ['layout', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', 'other']
+    const order = ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', 'other']
 
     for (const name of order) {
       const props = categoryMap.get(name)

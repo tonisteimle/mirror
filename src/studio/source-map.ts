@@ -171,6 +171,28 @@ export class SourceMap {
   }
 
   /**
+   * Get root nodes (nodes without a parent)
+   * Returns non-definition nodes that have no parentId
+   */
+  getRootNodes(): NodeMapping[] {
+    return Array.from(this.nodes.values())
+      .filter(n => !n.parentId && !n.isDefinition)
+  }
+
+  /**
+   * Get the main root node (typically "App")
+   * Prefers nodes named "App", otherwise returns first root
+   */
+  getMainRoot(): NodeMapping | null {
+    const roots = this.getRootNodes()
+    if (roots.length === 0) return null
+
+    // Prefer "App" if it exists
+    const app = roots.find(n => n.instanceName === 'App' || n.componentName === 'App')
+    return app || roots[0]
+  }
+
+  /**
    * Clear all mappings
    */
   clear(): void {

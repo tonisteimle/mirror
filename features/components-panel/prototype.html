@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Components Panel - Prototype</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Components Panel */
+    .components-panel {
+      width: 280px;
+      background: #18181b;
+      border-right: 1px solid #27272a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #27272a;
+      font-weight: 600;
+      font-size: 13px;
+      color: #a1a1aa;
+    }
+
+    /* Search */
+    .search-box {
+      padding: 12px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #e4e4e7;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #3B82F6;
+    }
+
+    .search-input::placeholder {
+      color: #71717a;
+    }
+
+    /* Scrollable content */
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 8px 12px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #71717a;
+    }
+
+    .section-count {
+      font-size: 10px;
+      color: #52525b;
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .section-add {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: #3B82F6;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .section-add:hover {
+      background: #2563EB;
+    }
+
+    /* Grid */
+    .components-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .components-grid.layout-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .components-grid.basics-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .components-grid.user-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Component Item */
+    .component-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px;
+      background: #1f1f26;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: grab;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .component-item:hover {
+      border-color: #3B82F6;
+      background: #252530;
+    }
+
+    .component-item:active {
+      cursor: grabbing;
+      transform: scale(0.98);
+    }
+
+    .component-item.dragging {
+      opacity: 0.5;
+    }
+
+    .component-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 6px;
+      color: #71717a;
+      transition: color 0.15s;
+    }
+
+    .component-item:hover .component-icon {
+      color: #3B82F6;
+    }
+
+    .component-name {
+      font-size: 11px;
+      color: #a1a1aa;
+      text-align: center;
+    }
+
+    /* User component indicator */
+    .component-item.user-component {
+      position: relative;
+    }
+
+    .component-item.user-component::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 6px;
+      height: 6px;
+      background: #3B82F6;
+      border-radius: 50%;
+    }
+
+    /* Preview Area */
+    .preview-area {
+      flex: 1;
+      background: #0f0f14;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #27272a;
+      font-size: 13px;
+      color: #71717a;
+    }
+
+    .preview-canvas {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drop-zone {
+      width: 100%;
+      max-width: 400px;
+      min-height: 300px;
+      border: 2px dashed #3f3f46;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: all 0.2s;
+    }
+
+    .drop-zone.drag-over {
+      border-color: #3B82F6;
+      background: #3B82F610;
+    }
+
+    .drop-zone-icon {
+      width: 48px;
+      height: 48px;
+      color: #52525b;
+    }
+
+    .drop-zone-text {
+      color: #71717a;
+      font-size: 14px;
+    }
+
+    /* Dropped items */
+    .dropped-item {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 8px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .dropped-item.layout {
+      border-color: #3B82F6;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dropped-item.layout.horizontal {
+      flex-direction: row;
+    }
+
+    /* Code output */
+    .code-output {
+      padding: 16px;
+      border-top: 1px solid #27272a;
+      background: #1a1a1f;
+    }
+
+    .code-output pre {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      color: #a1a1aa;
+      white-space: pre-wrap;
+      margin: 0;
+    }
+
+    .code-keyword { color: #C586C0; }
+    .code-property { color: #9CDCFE; }
+    .code-value { color: #CE9178; }
+    .code-number { color: #B5CEA8; }
+  </style>
+</head>
+<body>
+
+  <!-- Components Panel -->
+  <div class="components-panel">
+    <div class="panel-header">Components</div>
+
+    <div class="search-box">
+      <input type="text" class="search-input" placeholder="Search components..." id="search">
+    </div>
+
+    <div class="panel-content">
+      <!-- Layout Section -->
+      <div class="section" id="layout-section">
+        <div class="section-header">
+          <span class="section-title">Layout</span>
+          <span class="section-count">6</span>
+        </div>
+        <div class="components-grid layout-grid" id="layout-grid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Basics Section -->
+      <div class="section" id="basics-section">
+        <div class="section-header">
+          <span class="section-title">Basics</span>
+          <span class="section-count">6</span>
+        </div>
+        <div class="components-grid basics-grid" id="basics-grid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- User Components Section -->
+      <div class="section" id="user-section">
+        <div class="section-header">
+          <span class="section-title">My Components</span>
+          <button class="section-add" title="Create component">+</button>
+        </div>
+        <div class="components-grid user-grid" id="user-grid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Area -->
+  <div class="preview-area">
+    <div class="preview-header">Drop components here to build UI</div>
+    <div class="preview-canvas">
+      <div class="drop-zone" id="drop-zone">
+        <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <div class="drop-zone-text">Drag components here</div>
+      </div>
+    </div>
+    <div class="code-output">
+      <pre id="code-output">// Generated DSL will appear here</pre>
+    </div>
+  </div>
+
+  <script>
+    // ===========================================
+    // COMPONENT DEFINITIONS
+    // ===========================================
+
+    const LAYOUT_COMPONENTS = [
+      {
+        name: 'Vertical',
+        template: 'Box ver, gap 8',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="4" y="2" width="16" height="5" rx="1"/>
+          <rect x="4" y="9" width="16" height="5" rx="1"/>
+          <rect x="4" y="16" width="16" height="5" rx="1"/>
+        </svg>`
+      },
+      {
+        name: 'Horizontal',
+        template: 'Box hor, gap 8',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="4" width="5" height="16" rx="1"/>
+          <rect x="9" y="4" width="5" height="16" rx="1"/>
+          <rect x="16" y="4" width="5" height="16" rx="1"/>
+        </svg>`
+      },
+      {
+        name: 'Grid',
+        template: 'Box grid 2, gap 8',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="8" height="8" rx="1"/>
+          <rect x="13" y="3" width="8" height="8" rx="1"/>
+          <rect x="3" y="13" width="8" height="8" rx="1"/>
+          <rect x="13" y="13" width="8" height="8" rx="1"/>
+        </svg>`
+      },
+      {
+        name: 'Stacked',
+        template: 'Box stacked',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="8" y="8" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.1"/>
+          <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.1"/>
+          <rect x="2" y="2" width="14" height="14" rx="2"/>
+        </svg>`
+      },
+      {
+        name: 'Scroll',
+        template: 'Box scroll, h 200',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="2" width="14" height="20" rx="2"/>
+          <rect x="19" y="4" width="2" height="16" rx="1"/>
+          <rect x="19" y="6" width="2" height="6" rx="1" fill="currentColor"/>
+        </svg>`
+      },
+      {
+        name: 'Wrap',
+        template: 'Box hor, wrap, gap 8',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="5" height="5" rx="1"/>
+          <rect x="9" y="3" width="5" height="5" rx="1"/>
+          <rect x="16" y="3" width="5" height="5" rx="1"/>
+          <rect x="2" y="10" width="5" height="5" rx="1"/>
+          <rect x="9" y="10" width="5" height="5" rx="1"/>
+          <path d="M16 12h5v7H2" stroke-dasharray="2 2"/>
+        </svg>`
+      }
+    ];
+
+    const BASIC_COMPONENTS = [
+      {
+        name: 'Text',
+        template: 'Text "Label"',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="4 7 4 4 20 4 20 7"/>
+          <line x1="9" y1="20" x2="15" y2="20"/>
+          <line x1="12" y1="4" x2="12" y2="20"/>
+        </svg>`
+      },
+      {
+        name: 'Button',
+        template: 'Button "Click me", pad 10 20, bg #3B82F6, rad 6',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="6" width="20" height="12" rx="4" fill="currentColor" fill-opacity="0.15"/>
+          <rect x="2" y="6" width="20" height="12" rx="4"/>
+        </svg>`
+      },
+      {
+        name: 'Input',
+        template: 'Input placeholder "Type here...", pad 10, bg #27272a, rad 6',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="6" width="20" height="12" rx="3"/>
+          <line x1="6" y1="12" x2="12" y2="12"/>
+          <line x1="6" y1="9" x2="6" y2="15" stroke-width="1" opacity="0.5"/>
+        </svg>`
+      },
+      {
+        name: 'Icon',
+        template: 'Icon "star", is 24',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>`
+      },
+      {
+        name: 'Image',
+        template: 'Image "https://picsum.photos/200", rad 8',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <circle cx="8" cy="10" r="2"/>
+          <path d="M22 16l-6-6-8 8"/>
+        </svg>`
+      },
+      {
+        name: 'Divider',
+        template: 'Box h 1, w full, bg #3f3f46',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/>
+        </svg>`
+      }
+    ];
+
+    const USER_COMPONENTS = [
+      {
+        name: 'Card',
+        template: 'Card',
+        definition: `Card:
+  Box pad 16, bg #27272a, rad 12
+    Image "hero.jpg", h 120, rad 8
+    Text "Title", font-size 16, weight bold
+    Text "Description text", col #a1a1aa
+    Button "Action"`,
+        preview: { hasImage: true, hasText: true, hasButton: true, layout: 'ver' }
+      },
+      {
+        name: 'NavBar',
+        template: 'NavBar',
+        definition: `NavBar:
+  Box hor, spread, pad 12 24, bg #1a1a23
+    Icon "menu", is 24
+    Text "Logo", weight bold
+    Box hor, gap 16
+      Text "Home"
+      Text "About"`,
+        preview: { hasIcon: true, hasText: true, layout: 'hor' }
+      },
+      {
+        name: 'Modal',
+        template: 'Modal',
+        definition: `Modal:
+  Box center, w full, h full, bg #00000080
+    Box pad 24, bg #27272a, rad 16, w 400
+      Box hor, spread
+        Text "Modal Title", font-size 18, weight bold
+        Icon "x", cursor pointer
+      Text "Modal content goes here", margin 16 0
+      Box hor, gap 8, right
+        Button "Cancel", bg #3f3f46
+        Button "Confirm", bg #3B82F6`,
+        preview: { hasText: true, hasButton: true, hasIcon: true, layout: 'ver' }
+      },
+      {
+        name: 'Form',
+        template: 'Form',
+        definition: `Form:
+  Box gap 16
+    Box gap 4
+      Text "Email", font-size 12, col #a1a1aa
+      Input placeholder "email@example.com"
+    Box gap 4
+      Text "Password", font-size 12, col #a1a1aa
+      Input type password
+    Button "Submit", w full`,
+        preview: { hasText: true, hasInput: true, hasButton: true, layout: 'ver' }
+      }
+    ];
+
+    // ===========================================
+    // MINI PREVIEW RENDERER
+    // ===========================================
+
+    function renderMiniPreview(preview) {
+      let elements = [];
+      let y = 4;
+
+      // Container
+      elements.push(`<rect x="4" y="4" width="32" height="32" rx="3" stroke="currentColor" fill="none" stroke-width="1"/>`);
+
+      // Image
+      if (preview.hasImage) {
+        elements.push(`<rect x="6" y="${y + 2}" width="28" height="10" rx="2" fill="currentColor" fill-opacity="0.2"/>`);
+        y += 12;
+      }
+
+      // Text
+      if (preview.hasText) {
+        elements.push(`<rect x="6" y="${y + 2}" width="16" height="3" rx="1" fill="currentColor" fill-opacity="0.3"/>`);
+        y += 6;
+        if (!preview.hasButton && !preview.hasInput) {
+          elements.push(`<rect x="6" y="${y + 2}" width="12" height="3" rx="1" fill="currentColor" fill-opacity="0.2"/>`);
+        }
+      }
+
+      // Input
+      if (preview.hasInput) {
+        elements.push(`<rect x="6" y="${y + 2}" width="28" height="6" rx="2" stroke="currentColor" stroke-width="0.5" fill="none"/>`);
+        y += 8;
+      }
+
+      // Button
+      if (preview.hasButton) {
+        elements.push(`<rect x="6" y="${y + 2}" width="14" height="5" rx="2" fill="currentColor" fill-opacity="0.4"/>`);
+      }
+
+      // Icon indicator
+      if (preview.hasIcon) {
+        elements.push(`<circle cx="32" cy="8" r="2" fill="currentColor" fill-opacity="0.3"/>`);
+      }
+
+      return `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1">${elements.join('')}</svg>`;
+    }
+
+    // ===========================================
+    // RENDER COMPONENTS
+    // ===========================================
+
+    function renderComponent(comp, isUser = false) {
+      const icon = isUser ? renderMiniPreview(comp.preview) : comp.icon;
+      return `
+        <div class="component-item ${isUser ? 'user-component' : ''}"
+             draggable="true"
+             data-template="${comp.template.replace(/"/g, '&quot;')}"
+             data-name="${comp.name}"
+             ${isUser && comp.definition ? `data-definition="${comp.definition.replace(/"/g, '&quot;')}"` : ''}>
+          <div class="component-icon">${icon}</div>
+          <span class="component-name">${comp.name}</span>
+        </div>
+      `;
+    }
+
+    function renderSection(containerId, components, isUser = false) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = components.map(c => renderComponent(c, isUser)).join('');
+    }
+
+    // ===========================================
+    // DRAG & DROP
+    // ===========================================
+
+    let droppedComponents = [];
+
+    function setupDragDrop() {
+      // Drag start
+      document.querySelectorAll('.component-item').forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            name: item.dataset.name,
+            template: item.dataset.template,
+            definition: item.dataset.definition
+          }));
+          item.classList.add('dragging');
+        });
+
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+        });
+      });
+
+      // Drop zone
+      const dropZone = document.getElementById('drop-zone');
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        droppedComponents.push(data);
+        updateCodeOutput();
+
+        // Visual feedback
+        if (droppedComponents.length === 1) {
+          dropZone.innerHTML = '';
+        }
+
+        const item = document.createElement('div');
+        item.className = 'dropped-item';
+        item.textContent = data.name;
+        if (data.template.includes('hor')) {
+          item.classList.add('layout', 'horizontal');
+        } else if (data.template.includes('ver') || data.template.includes('Box')) {
+          item.classList.add('layout');
+        }
+        dropZone.appendChild(item);
+      });
+    }
+
+    function updateCodeOutput() {
+      const output = document.getElementById('code-output');
+
+      if (droppedComponents.length === 0) {
+        output.textContent = '// Generated DSL will appear here';
+        return;
+      }
+
+      // Generate DSL
+      let dsl = '';
+
+      // Add definitions first
+      const definitions = droppedComponents
+        .filter(c => c.definition)
+        .map(c => c.definition);
+
+      if (definitions.length > 0) {
+        dsl += '// Component Definitions\n';
+        dsl += definitions.join('\n\n') + '\n\n';
+      }
+
+      // Add instances
+      dsl += '// Layout\n';
+      dsl += droppedComponents.map(c => c.template).join('\n  ');
+
+      // Syntax highlight
+      output.innerHTML = dsl
+        .replace(/(Box|Text|Button|Input|Icon|Image|Card|NavBar|Modal|Form)/g, '<span class="code-keyword">$1</span>')
+        .replace(/(pad|bg|rad|gap|hor|ver|grid|w|h|font-size|weight|col|margin|center|spread|placeholder|cursor)/g, '<span class="code-property">$1</span>')
+        .replace(/(#[0-9A-Fa-f]+)/g, '<span class="code-value">$1</span>')
+        .replace(/(\d+)/g, '<span class="code-number">$1</span>');
+    }
+
+    // ===========================================
+    // SEARCH
+    // ===========================================
+
+    function setupSearch() {
+      const searchInput = document.getElementById('search');
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+
+        document.querySelectorAll('.component-item').forEach(item => {
+          const name = item.dataset.name.toLowerCase();
+          item.style.display = name.includes(query) ? '' : 'none';
+        });
+
+        // Hide empty sections
+        document.querySelectorAll('.section').forEach(section => {
+          const visibleItems = section.querySelectorAll('.component-item:not([style*="display: none"])');
+          section.style.display = visibleItems.length > 0 ? '' : 'none';
+        });
+      });
+    }
+
+    // ===========================================
+    // INIT
+    // ===========================================
+
+    function init() {
+      renderSection('layout-grid', LAYOUT_COMPONENTS);
+      renderSection('basics-grid', BASIC_COMPONENTS);
+      renderSection('user-grid', USER_COMPONENTS, true);
+
+      setupDragDrop();
+      setupSearch();
+    }
+
+    init();
+  </script>
+</body>
+</html>

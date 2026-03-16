@@ -612,7 +612,7 @@ function applyStyles(el: HTMLElement, props: MirrorProps): void {
   Object.assign(el.style, css)
 }
 
-function propsToCSS(props: MirrorProps): Record<string, string> {
+function propsToCSS(props: Partial<MirrorProps>): Record<string, string> {
   const css: Record<string, string> = {}
   const px = (v: number | string) => typeof v === 'number' ? `${v}px` : v
 

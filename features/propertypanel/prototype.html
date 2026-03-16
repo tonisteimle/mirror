@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Property Panel v2 - Design Prototype</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+      font-size: 12px;
+      background: #0a0a0a;
+      color: #ccc;
+      padding: 40px;
+      display: flex;
+      gap: 40px;
+    }
+
+    h2 {
+      font-size: 11px;
+      font-weight: 500;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      width: 260px;
+      background: #141418;
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #2a2a2a;
+    }
+
+    /* ============================================
+       PROPERTY ROW - Grundbaustein
+       ============================================ */
+    .prop-row {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      gap: 8px;
+    }
+
+    .prop-label {
+      width: 54px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #888;
+      text-align: left;
+    }
+
+    .prop-content {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    /* ============================================
+       TOGGLE GROUP - Gleiche Breite
+       ============================================ */
+    .toggle-group {
+      display: flex;
+      flex: 1;
+      gap: 2px;
+      background: #1a1a1e;
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: #666;
+      font-size: 10px;
+      font-weight: 500;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-btn:hover {
+      color: #aaa;
+      background: #252528;
+    }
+
+    .toggle-btn.active {
+      background: #3B82F6;
+      color: white;
+    }
+
+    /* ============================================
+       INPUT FIELD
+       ============================================ */
+    .prop-input {
+      flex: 1;
+      height: 24px;
+      background: #1a1a1e;
+      border: 1px solid #2a2a2e;
+      border-radius: 4px;
+      padding: 0 8px;
+      color: #ccc;
+      font-size: 11px;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    .prop-input:focus {
+      outline: none;
+      border-color: #3B82F6;
+    }
+
+    .prop-input::placeholder {
+      color: #555;
+    }
+
+    .prop-input.small {
+      width: 50px;
+      flex: none;
+    }
+
+    /* ============================================
+       HYBRID: TOGGLE + INPUT
+       ============================================ */
+    .toggle-input-group {
+      display: flex;
+      flex: 1;
+      gap: 4px;
+    }
+
+    .toggle-input-group .toggle-group {
+      flex: none;
+      width: auto;
+    }
+
+    .toggle-input-group .toggle-btn {
+      flex: none;
+      width: 36px;
+    }
+
+    /* ============================================
+       COLOR ROW
+       ============================================ */
+    .color-swatches {
+      display: flex;
+      gap: 3px;
+    }
+
+    .color-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .color-swatch.active {
+      outline: 2px solid #3B82F6;
+      outline-offset: 1px;
+    }
+
+    /* ============================================
+       ICON TOGGLES
+       ============================================ */
+    .icon-toggle {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1e;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.15s;
+    }
+
+    .icon-toggle:hover {
+      background: #252528;
+      color: #aaa;
+    }
+
+    .icon-toggle.active {
+      background: #3B82F6;
+      color: white;
+    }
+
+    .icon-toggle svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ============================================
+       SECTIONS & DIVIDERS
+       ============================================ */
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      padding-left: 2px;
+    }
+
+    .section-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Option A: Keine Linien */
+    .no-lines .section-content {
+      gap: 2px;
+    }
+
+    /* Option B: Linien nach jeder Property */
+    .with-lines .prop-row {
+      border-bottom: 1px solid #222;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      height: 32px;
+    }
+
+    .with-lines .prop-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    /* Option C: Subtile Linien (empfohlen) */
+    .subtle-lines .prop-row {
+      border-bottom: 1px solid #1e1e22;
+    }
+
+    .subtle-lines .prop-row:last-child {
+      border-bottom: none;
+    }
+
+    /* Section Divider */
+    .section-divider {
+      height: 1px;
+      background: #2a2a2e;
+      margin: 8px 0;
+    }
+
+    /* ============================================
+       VARIANTS CONTAINER
+       ============================================ */
+    .variant-label {
+      font-size: 10px;
+      color: #3B82F6;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- OPTION A: Keine Linien -->
+  <div>
+    <h2>Option A: Keine Linien</h2>
+    <div class="panel no-lines">
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Direction</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn active">hor</button>
+                <button class="toggle-btn">ver</button>
+                <button class="toggle-btn">grid</button>
+                <button class="toggle-btn">stack</button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Gap</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="16" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Wrap</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">off</button>
+                <button class="toggle-btn active">on</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Size</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Width</span>
+            <div class="prop-content">
+              <div class="toggle-input-group">
+                <div class="toggle-group">
+                  <button class="toggle-btn active">hug</button>
+                  <button class="toggle-btn">full</button>
+                </div>
+                <input type="text" class="prop-input" placeholder="auto">
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Height</span>
+            <div class="prop-content">
+              <div class="toggle-input-group">
+                <div class="toggle-group">
+                  <button class="toggle-btn">hug</button>
+                  <button class="toggle-btn active">full</button>
+                </div>
+                <input type="text" class="prop-input" placeholder="auto">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B: Linien nach jeder Property -->
+  <div>
+    <h2>Option B: Linien (technisch)</h2>
+    <div class="panel with-lines">
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Direction</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn active">hor</button>
+                <button class="toggle-btn">ver</button>
+                <button class="toggle-btn">grid</button>
+                <button class="toggle-btn">stack</button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Gap</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="16" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Wrap</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">off</button>
+                <button class="toggle-btn active">on</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Color</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">BG</span>
+            <div class="prop-content">
+              <div class="color-swatches">
+                <div class="color-swatch active" style="background: #3B82F6"></div>
+                <div class="color-swatch" style="background: #22C55E"></div>
+                <div class="color-swatch" style="background: #EF4444"></div>
+                <div class="color-swatch" style="background: #F59E0B"></div>
+              </div>
+              <input type="text" class="prop-input" value="#3B82F6" placeholder="#color">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Text</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="#FFFFFF" placeholder="#color">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C: Subtile Linien (empfohlen) -->
+  <div>
+    <h2>Option C: Subtile Linien</h2>
+    <div class="panel subtle-lines">
+      <div class="section">
+        <div class="section-label">Layout</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Direction</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn active">hor</button>
+                <button class="toggle-btn">ver</button>
+                <button class="toggle-btn">grid</button>
+                <button class="toggle-btn">stack</button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Gap</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="$md.gap" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Wrap</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">off</button>
+                <button class="toggle-btn active">on</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Size</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Width</span>
+            <div class="prop-content">
+              <div class="toggle-input-group">
+                <div class="toggle-group">
+                  <button class="toggle-btn">hug</button>
+                  <button class="toggle-btn">full</button>
+                </div>
+                <input type="text" class="prop-input" value="320" placeholder="auto">
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Height</span>
+            <div class="prop-content">
+              <div class="toggle-input-group">
+                <div class="toggle-group">
+                  <button class="toggle-btn active">hug</button>
+                  <button class="toggle-btn">full</button>
+                </div>
+                <input type="text" class="prop-input" placeholder="auto">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Spacing</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Padding</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">2</button>
+                <button class="toggle-btn">4</button>
+                <button class="toggle-btn active">8</button>
+                <button class="toggle-btn">16</button>
+                <button class="toggle-btn">24</button>
+              </div>
+              <input type="text" class="prop-input small" value="8">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Color</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">BG</span>
+            <div class="prop-content">
+              <div class="color-swatches">
+                <div class="color-swatch" style="background: #3B82F6"></div>
+                <div class="color-swatch" style="background: #22C55E"></div>
+                <div class="color-swatch active" style="background: #1a1a23"></div>
+                <div class="color-swatch" style="background: #27272A"></div>
+              </div>
+              <input type="text" class="prop-input" value="$surface.bg">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Text</span>
+            <div class="prop-content">
+              <div class="color-swatches">
+                <div class="color-swatch active" style="background: #FFFFFF"></div>
+                <div class="color-swatch" style="background: #A1A1AA"></div>
+                <div class="color-swatch" style="background: #71717A"></div>
+              </div>
+              <input type="text" class="prop-input" value="#FFFFFF">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Border</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Radius</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">0</button>
+                <button class="toggle-btn">4</button>
+                <button class="toggle-btn active">8</button>
+                <button class="toggle-btn">16</button>
+                <button class="toggle-btn">99</button>
+              </div>
+              <input type="text" class="prop-input small" value="8">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Border</span>
+            <div class="prop-content">
+              <div class="toggle-group" style="width: 70px; flex: none;">
+                <button class="toggle-btn active">0</button>
+                <button class="toggle-btn">1</button>
+                <button class="toggle-btn">2</button>
+              </div>
+              <input type="text" class="prop-input" value="" placeholder="#color">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section">
+        <div class="section-label">Typography</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Font</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn active">Inter</button>
+                <button class="toggle-btn">System</button>
+                <button class="toggle-btn">Mono</button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Size</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">11</button>
+                <button class="toggle-btn">12</button>
+                <button class="toggle-btn active">14</button>
+                <button class="toggle-btn">16</button>
+                <button class="toggle-btn">18</button>
+              </div>
+              <input type="text" class="prop-input small" value="14">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Weight</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn">400</button>
+                <button class="toggle-btn active">500</button>
+                <button class="toggle-btn">600</button>
+                <button class="toggle-btn">700</button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Align</span>
+            <div class="prop-content">
+              <div class="toggle-group" style="width: 90px; flex: none;">
+                <button class="toggle-btn icon-toggle active">
+                  <svg viewBox="0 0 14 14"><path d="M1 3h12M1 7h8M1 11h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                </button>
+                <button class="toggle-btn icon-toggle">
+                  <svg viewBox="0 0 14 14"><path d="M1 3h12M3 7h8M2 11h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                </button>
+                <button class="toggle-btn icon-toggle">
+                  <svg viewBox="0 0 14 14"><path d="M1 3h12M5 7h8M3 11h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                </button>
+              </div>
+              <div class="toggle-group" style="width: 60px; flex: none;">
+                <button class="toggle-btn icon-toggle">I</button>
+                <button class="toggle-btn icon-toggle">U</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

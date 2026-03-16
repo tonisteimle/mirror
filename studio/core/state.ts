@@ -7,20 +7,55 @@ import type { IR } from '../../src/ir/types'
 import type { SourceMap } from '../../src/studio/source-map'
 import { events } from './events'
 
-export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard'
+export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
 
 export interface BreadcrumbItem {
   nodeId: string
   name: string
 }
 
+/**
+ * Compile result - atomically updated together
+ */
+export interface CompileResult {
+  ast: AST
+  ir: IR
+  sourceMap: SourceMap
+  errors: ParseError[]
+  version: number  // Incremented on each compile
+  timestamp: number
+}
+
+/**
+ * Pending selection - stored BEFORE compile, resolved AFTER compile
+ * Used for drag & drop to ensure selection happens after SourceMap is ready
+ */
+export interface PendingSelection {
+  /** Line number in the current file (1-based) where the element was inserted */
+  line: number
+  /** Component name that was inserted (e.g., "Frame", "Text") */
+  componentName: string
+  /** Origin of the selection request */
+  origin: SelectionOrigin
+}
+
 export interface StudioState {
   source: string
+  /** Resolved source = prelude + current file (used by CodeModifier to match SourceMap positions) */
+  resolvedSource: string
   ast: AST | null
   ir: IR | null
   sourceMap: SourceMap | null
   errors: ParseError[]
+  /** Compile version - use to detect stale SourceMap */
+  compileVersion: number
+  /** Timestamp of last successful compile */
+  compileTimestamp: number
+  /** True while compilation is in progress */
+  compiling: boolean
   selection: { nodeId: string | null; origin: SelectionOrigin }
+  /** Multi-selection for grouping operations (Shift+Click) */
+  multiSelection: string[]
   breadcrumb: BreadcrumbItem[]
   cursor: { line: number; column: number }
   editorHasFocus: boolean
@@ -29,7 +64,10 @@ export interface StudioState {
   fileTypes: Record<string, string>
   panels: { left: boolean; right: boolean }
   mode: 'mirror' | 'react'
+  /** Character offset where current file starts in resolvedSource */
   preludeOffset: number
+  /** Pending selection to be resolved after compile completes */
+  pendingSelection: PendingSelection | null
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -71,11 +109,16 @@ class Store<T extends object> {
 
 const initialState: StudioState = {
   source: '',
+  resolvedSource: '',
   ast: null,
   ir: null,
   sourceMap: null,
   errors: [],
+  compileVersion: 0,
+  compileTimestamp: 0,
+  compiling: false,
   selection: { nodeId: null, origin: 'editor' },
+  multiSelection: [],
   breadcrumb: [],
   cursor: { line: 1, column: 1 },
   editorHasFocus: true,
@@ -85,6 +128,7 @@ const initialState: StudioState = {
   panels: { left: true, right: true },
   mode: 'mirror',
   preludeOffset: 0,
+  pendingSelection: null,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -94,10 +138,106 @@ export const actions = {
     state.set({ source })
     events.emit('source:changed', { source, origin })
   },
+
+  /**
+   * Set compiling status - call before starting compilation
+   */
+  setCompiling(compiling: boolean): void {
+    state.set({ compiling })
+    events.emit(compiling ? 'compile:started' : 'compile:idle', undefined as any)
+  },
+
+  /**
+   * Atomically set compile result - AST, IR, SourceMap, and errors together
+   * This ensures all compile artifacts are consistent with each other
+   * Also resolves any pending selection after state update
+   */
+  setCompileResult(result: { ast: AST; ir: IR; sourceMap: SourceMap; errors: ParseError[] }): void {
+    const currentState = state.get()
+    const newVersion = currentState.compileVersion + 1
+    const hasPendingSelection = currentState.pendingSelection !== null
+
+    // Atomic update - all fields together
+    state.set({
+      ast: result.ast,
+      ir: result.ir,
+      sourceMap: result.sourceMap,
+      errors: result.errors,
+      compileVersion: newVersion,
+      compileTimestamp: Date.now(),
+      compiling: false,
+    })
+
+    events.emit('compile:completed', {
+      ast: result.ast,
+      ir: result.ir,
+      sourceMap: result.sourceMap,
+      version: newVersion,
+      hasErrors: result.errors.length > 0,
+    })
+
+    // Resolve pending selection AFTER compile (SourceMap is now ready)
+    if (hasPendingSelection) {
+      // Use setTimeout(0) to ensure state is fully settled before resolving
+      setTimeout(() => {
+        const resolvedNodeId = actions.resolvePendingSelection()
+        if (resolvedNodeId) {
+          console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
+        }
+      }, 0)
+      return // Skip selection validation when we have pending selection
+    }
+
+    // Validate current selection against new SourceMap
+    const currentSelection = currentState.selection.nodeId
+    if (currentSelection && result.sourceMap) {
+      const nodeExists = result.sourceMap.getNodeById(currentSelection) !== null
+      if (!nodeExists) {
+        console.warn(`[State] Selection ${currentSelection} no longer exists after compile, clearing`)
+        state.set({ selection: { nodeId: null, origin: currentState.selection.origin } })
+        events.emit('selection:invalidated', { nodeId: currentSelection })
+      }
+    }
+  },
+
+  /**
+   * Set selection with validation
+   * Only allows selecting nodes that exist in the current SourceMap
+   */
   setSelection(nodeId: string | null, origin: SelectionOrigin): void {
+    const currentState = state.get()
+
+    // Validate nodeId exists in SourceMap
+    if (nodeId !== null && currentState.sourceMap) {
+      const node = currentState.sourceMap.getNodeById(nodeId)
+      if (!node) {
+        console.warn(`[State] Cannot select non-existent node: ${nodeId}`)
+        // Try to clear invalid selection
+        if (currentState.selection.nodeId === nodeId) {
+          return // Already selected, don't emit again
+        }
+        // Don't set invalid selection
+        return
+      }
+    }
+
+    // Warn if selecting during compile (might become stale)
+    if (currentState.compiling && nodeId !== null) {
+      console.warn(`[State] Selection during compile may be stale: ${nodeId}`)
+    }
+
     state.set({ selection: { nodeId, origin } })
     events.emit('selection:changed', { nodeId, origin })
   },
+
+  /**
+   * Clear selection (convenience method)
+   */
+  clearSelection(origin: SelectionOrigin = 'editor'): void {
+    state.set({ selection: { nodeId: null, origin } })
+    events.emit('selection:changed', { nodeId: null, origin })
+  },
+
   setBreadcrumb(breadcrumb: BreadcrumbItem[]): void {
     state.set({ breadcrumb })
     events.emit('breadcrumb:changed', { breadcrumb })
@@ -110,10 +250,266 @@ export const actions = {
     state.set({ editorHasFocus: hasFocus })
     events.emit(hasFocus ? 'editor:focused' : 'editor:blurred', undefined as any)
   },
+
+  /**
+   * Toggle a node in multi-selection (for Shift+Click)
+   */
+  toggleMultiSelection(nodeId: string): void {
+    const current = state.get().multiSelection
+    const index = current.indexOf(nodeId)
+
+    if (index >= 0) {
+      state.set({ multiSelection: current.filter(id => id !== nodeId) })
+    } else {
+      state.set({ multiSelection: [...current, nodeId] })
+    }
+    events.emit('multiselection:changed', { nodeIds: state.get().multiSelection })
+  },
+
+  /**
+   * Set multi-selection to specific nodes
+   */
+  setMultiSelection(nodeIds: string[]): void {
+    state.set({ multiSelection: nodeIds })
+    events.emit('multiselection:changed', { nodeIds })
+  },
+
+  /**
+   * Clear multi-selection
+   */
+  clearMultiSelection(): void {
+    state.set({ multiSelection: [] })
+    events.emit('multiselection:changed', { nodeIds: [] })
+  },
+
+  /**
+   * Get current compile version - use to check if SourceMap is stale
+   */
+  getCompileVersion(): number {
+    return state.get().compileVersion
+  },
+
+  /**
+   * Check if currently compiling
+   */
+  isCompiling(): boolean {
+    return state.get().compiling
+  },
+
+  /**
+   * Set pending selection - call BEFORE compile to queue a selection
+   * The pending selection will be resolved after compile completes
+   */
+  setPendingSelection(pending: PendingSelection): void {
+    state.set({ pendingSelection: pending })
+    console.log('[State] Pending selection set:', pending)
+  },
+
+  /**
+   * Clear pending selection without resolving
+   */
+  clearPendingSelection(): void {
+    state.set({ pendingSelection: null })
+  },
+
+  /**
+   * Resolve pending selection using the current SourceMap
+   * Called automatically by setCompileResult after compile completes
+   *
+   * This calls actions.setSelection() which emits selection:changed.
+   * SyncCoordinator listens to this event and automatically syncs:
+   * - Editor scroll (if origin is not editor)
+   * - Preview highlight (if origin is not preview)
+   * - Property panel update
+   *
+   * Returns the nodeId if found, null otherwise
+   */
+  resolvePendingSelection(): string | null {
+    const currentState = state.get()
+    const pending = currentState.pendingSelection
+
+    if (!pending) {
+      return null
+    }
+
+    const sourceMap = currentState.sourceMap
+    if (!sourceMap) {
+      console.warn('[State] Cannot resolve pending selection: no SourceMap')
+      state.set({ pendingSelection: null })
+      return null
+    }
+
+    // Calculate the line number in resolved source (prelude offset + current file line)
+    const preludeLines = currentState.preludeOffset
+    const resolvedLine = preludeLines + pending.line
+
+    console.log('[State] Resolving pending selection:', {
+      originalLine: pending.line,
+      preludeOffset: preludeLines,
+      resolvedLine,
+      componentName: pending.componentName,
+    })
+
+    // Clear pending selection first
+    state.set({ pendingSelection: null })
+
+    // Find node at the resolved line
+    const node = sourceMap.getNodeAtLine(resolvedLine)
+
+    if (node && node.nodeId) {
+      console.log('[State] Resolved pending selection to:', node.nodeId)
+      // Set selection - SyncCoordinator will automatically handle sync via event
+      actions.setSelection(node.nodeId, pending.origin)
+      return node.nodeId
+    }
+
+    // Fallback: search by component name in nearby lines
+    console.log('[State] Node not found at exact line, searching nearby...')
+    for (let offset = -2; offset <= 2; offset++) {
+      const searchLine = resolvedLine + offset
+      const nearbyNode = sourceMap.getNodeAtLine(searchLine)
+      if (nearbyNode && nearbyNode.componentName === pending.componentName) {
+        console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
+        // Set selection - SyncCoordinator will automatically handle sync via event
+        actions.setSelection(nearbyNode.nodeId, pending.origin)
+        return nearbyNode.nodeId
+      }
+    }
+
+    console.warn('[State] Could not resolve pending selection')
+    return null
+  },
 }
 
+/**
+ * Simple selectors - direct state access
+ */
 export const selectors = {
   getSource: () => state.get().source,
   getSelection: () => state.get().selection,
   getCursor: () => state.get().cursor,
+  getCompileVersion: () => state.get().compileVersion,
+  isCompiling: () => state.get().compiling,
+  getSourceMap: () => state.get().sourceMap,
+  getAST: () => state.get().ast,
+}
+
+/**
+ * Memoized selector factory
+ * Caches result based on dependency values
+ */
+function createSelector<TDeps extends unknown[], TResult>(
+  getDeps: (s: StudioState) => TDeps,
+  compute: (...deps: TDeps) => TResult
+): () => TResult {
+  let cachedDeps: TDeps | null = null
+  let cachedResult: TResult
+
+  return () => {
+    const currentState = state.get()
+    const deps = getDeps(currentState)
+
+    // Check if dependencies changed (shallow comparison)
+    const depsChanged = cachedDeps === null || deps.some((dep, i) => dep !== cachedDeps![i])
+
+    if (depsChanged) {
+      cachedDeps = deps
+      cachedResult = compute(...deps)
+    }
+
+    return cachedResult
+  }
+}
+
+/**
+ * Computed selectors - memoized derived values
+ */
+export const computed = {
+  /**
+   * Get the currently selected node (memoized)
+   */
+  getSelectedNode: createSelector(
+    (s) => [s.selection.nodeId, s.sourceMap] as const,
+    (nodeId, sourceMap) => {
+      if (!nodeId || !sourceMap) return null
+      return sourceMap.getNodeById(nodeId)
+    }
+  ),
+
+  /**
+   * Get the parent of the selected node (memoized)
+   */
+  getSelectedNodeParent: createSelector(
+    (s) => [s.selection.nodeId, s.sourceMap] as const,
+    (nodeId, sourceMap) => {
+      if (!nodeId || !sourceMap) return null
+      const node = sourceMap.getNodeById(nodeId)
+      if (!node?.parentId) return null
+      return sourceMap.getNodeById(node.parentId)
+    }
+  ),
+
+  /**
+   * Get all nodes in multi-selection (memoized)
+   */
+  getMultiSelectedNodes: createSelector(
+    (s) => [s.multiSelection, s.sourceMap] as const,
+    (nodeIds, sourceMap) => {
+      if (!sourceMap || nodeIds.length === 0) return []
+      return nodeIds
+        .map(id => sourceMap.getNodeById(id))
+        .filter((n): n is NonNullable<typeof n> => n !== null)
+    }
+  ),
+
+  /**
+   * Check if multi-selection nodes are siblings (same parent)
+   */
+  isValidGroupSelection: createSelector(
+    (s) => [s.multiSelection, s.sourceMap] as const,
+    (nodeIds, sourceMap) => {
+      if (!sourceMap || nodeIds.length < 2) return false
+      const nodes = nodeIds
+        .map(id => sourceMap.getNodeById(id))
+        .filter((n): n is NonNullable<typeof n> => n !== null)
+      if (nodes.length !== nodeIds.length) return false
+
+      // All nodes must have the same parent
+      const firstParent = nodes[0].parentId
+      return nodes.every(n => n.parentId === firstParent)
+    }
+  ),
+
+  /**
+   * Get breadcrumb path from root to selected node (memoized)
+   */
+  getSelectionBreadcrumb: createSelector(
+    (s) => [s.selection.nodeId, s.sourceMap] as const,
+    (nodeId, sourceMap) => {
+      if (!nodeId || !sourceMap) return []
+
+      const path: BreadcrumbItem[] = []
+      let currentId: string | undefined = nodeId
+
+      while (currentId) {
+        const node = sourceMap.getNodeById(currentId)
+        if (!node) break
+        path.unshift({ nodeId: currentId, name: node.componentName })
+        currentId = node.parentId
+      }
+
+      return path
+    }
+  ),
+
+  /**
+   * Get children of the selected node (memoized)
+   */
+  getSelectedNodeChildren: createSelector(
+    (s) => [s.selection.nodeId, s.sourceMap] as const,
+    (nodeId, sourceMap) => {
+      if (!nodeId || !sourceMap) return []
+      return sourceMap.getChildren(nodeId)
+    }
+  ),
 }

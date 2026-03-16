@@ -6,6 +6,30 @@
 
 import { state, actions, events } from '../core'
 
+// Re-export legacy icon trigger (for backward compatibility)
+export {
+  iconTriggerExtension,
+  iconKeyboardExtension,
+  iconPickerExtensions,
+  showIconPicker,
+  hideIconPicker,
+  isIconPickerOpen,
+  setComponentPrimitives,
+  getComponentPrimitives,
+  setupIconPickerClickOutside,
+} from './icon-trigger'
+
+// Re-export new unified trigger manager
+export {
+  EditorTriggerManager,
+  getTriggerManager,
+  setTriggerManager,
+  createTriggerManager,
+} from './trigger-manager'
+
+// Re-export all triggers
+export * from './triggers'
+
 export interface EditorConfig {
   container: HTMLElement
 }

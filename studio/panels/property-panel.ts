@@ -9,6 +9,7 @@ import type { BreadcrumbItem } from '../../src/studio/selection-manager'
 import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
 import type { CodeModifier, ModificationResult, FilesAccess } from '../../src/studio/code-modifier'
 import { PROPERTY_ICON_PATHS } from '../../src/studio/icons'
+import { state, events } from '../core'
 
 /**
  * Interface for selection providers (both SelectionManager and StateSelectionAdapter implement this)
@@ -69,9 +70,7 @@ export class PropertyPanel {
 
   private options: Required<Omit<PropertyPanelOptions, 'getAllSource' | 'filesAccess'>> & Pick<PropertyPanelOptions, 'getAllSource' | 'filesAccess'>
   private unsubscribeSelection: (() => void) | null = null
-  private unsubscribeBreadcrumb: (() => void) | null = null
   private currentElement: ExtractedElement | null = null
-  private currentBreadcrumb: BreadcrumbItem[] = []
   private debounceTimers: Map<string, number> = new Map()
 
   // Token caching for performance
@@ -81,6 +80,13 @@ export class PropertyPanel {
 
   // AbortController for autocomplete event cleanup
   private autocompleteAbortController: AbortController | null = null
+
+  // Event subscription cleanup
+  private unsubscribeSelectionInvalidated: (() => void) | null = null
+  private unsubscribeCompileCompleted: (() => void) | null = null
+
+  // Pending update during compile
+  private pendingUpdateNodeId: string | null = null
 
   constructor(
     container: HTMLElement,
@@ -114,11 +120,20 @@ export class PropertyPanel {
       this.updatePanel(nodeId)
     })
 
-    this.unsubscribeBreadcrumb = this.selectionManager.subscribeBreadcrumb((chain) => {
-      this.currentBreadcrumb = chain
-      // Re-render if we have a current element
-      if (this.currentElement) {
-        this.render(this.currentElement)
+    // Listen for selection invalidation (node removed during compile)
+    this.unsubscribeSelectionInvalidated = events.on('selection:invalidated', ({ nodeId }) => {
+      if (this.currentElement?.nodeId === nodeId) {
+        this.renderNotFound(nodeId)
+        this.currentElement = null
+      }
+    })
+
+    // Listen for compile completion to process pending updates
+    this.unsubscribeCompileCompleted = events.on('compile:completed', () => {
+      if (this.pendingUpdateNodeId !== null) {
+        const nodeId = this.pendingUpdateNodeId
+        this.pendingUpdateNodeId = null
+        this.updatePanel(nodeId)
       }
     })
 
@@ -139,17 +154,38 @@ export class PropertyPanel {
       this.unsubscribeSelection()
       this.unsubscribeSelection = null
     }
-    if (this.unsubscribeBreadcrumb) {
-      this.unsubscribeBreadcrumb()
-      this.unsubscribeBreadcrumb = null
+    if (this.unsubscribeSelectionInvalidated) {
+      this.unsubscribeSelectionInvalidated()
+      this.unsubscribeSelectionInvalidated = null
+    }
+    if (this.unsubscribeCompileCompleted) {
+      this.unsubscribeCompileCompleted()
+      this.unsubscribeCompileCompleted = null
     }
     this.clearDebounceTimers()
+    this.invalidateTokenCache()
+    this.pendingUpdateNodeId = null
+  }
+
+  /**
+   * Clear token cache (memory management)
+   */
+  private invalidateTokenCache(): void {
+    this.cachedSpacingTokens.clear()
+    this.cachedColorTokens = null
+    this.cachedSourceHash = ''
   }
 
   /**
    * Update panel for a node
    */
   private updatePanel(nodeId: string | null): void {
+    // Defer update if compile is in progress to prevent showing stale data
+    if (state.get().compiling) {
+      this.pendingUpdateNodeId = nodeId
+      return
+    }
+
     // Clear debounce timers when selection changes to prevent stale updates
     const selectionChanged = nodeId !== this.currentElement?.nodeId
     if (selectionChanged) {
@@ -242,7 +278,6 @@ export class PropertyPanel {
     const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess
 
     this.container.innerHTML = `
-      ${this.renderBreadcrumb()}
       ${element.isTemplateInstance ? `
         <div class="pp-template-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -260,33 +295,6 @@ export class PropertyPanel {
 
     // Attach event listeners
     this.attachEventListeners()
-  }
-
-  /**
-   * Render breadcrumb navigation
-   */
-  private renderBreadcrumb(): string {
-    if (this.currentBreadcrumb.length === 0) {
-      return ''
-    }
-
-    const crumbs = this.currentBreadcrumb.map((item, index) => {
-      const isLast = index === this.currentBreadcrumb.length - 1
-      return `
-        <span class="pp-crumb${isLast ? ' active' : ''}" data-node-id="${this.escapeHtml(item.nodeId)}">${this.escapeHtml(item.name)}</span>
-        ${!isLast ? '<span class="pp-crumb-sep">›</span>' : ''}
-      `
-    }).join('')
-
-    return `<div class="pp-breadcrumb">
-      <div class="pp-breadcrumb-crumbs">${crumbs}</div>
-      <button class="pp-close" title="Clear selection">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>`
   }
 
   /**
@@ -635,15 +643,6 @@ export class PropertyPanel {
   }
 
   /**
-   * Invalidate token cache (call when source changes)
-   */
-  private invalidateTokenCache(): void {
-    this.cachedSpacingTokens.clear()
-    this.cachedColorTokens = null
-    this.cachedSourceHash = ''
-  }
-
-  /**
    * Get spacing tokens from source for a specific property type (cached)
    * Parses tokens like "$sm.pad: 4", "$md.rad: 8", "$lg.gap: 16" from the source code
    * Uses getAllSource callback if available to get tokens from all project files
@@ -739,9 +738,13 @@ export class PropertyPanel {
   /**
    * Get color tokens from source (cached)
    * Parses tokens with hex colors like "$primary.bg: #3B82F6"
+   * Uses getAllSource callback if available to get tokens from all project files
    */
   private getColorTokens(): Array<{ name: string; value: string }> {
-    const source = this.codeModifier.getSource()
+    // Use getAllSource callback if available, otherwise fall back to current file
+    const source = this.options.getAllSource
+      ? this.options.getAllSource()
+      : this.codeModifier.getSource()
     const hash = this.hashSource(source)
 
     // Return cached if source hasn't changed
@@ -749,19 +752,21 @@ export class PropertyPanel {
       return this.cachedColorTokens
     }
 
-    const tokens: Array<{ name: string; value: string }> = []
+    // Use Map to deduplicate tokens by name (later definitions override earlier ones)
+    const tokenMap = new Map<string, { name: string; value: string }>()
 
     // Match token definitions with hex colors
     const tokenRegex = /\$?([\w.-]+):\s*(#[0-9A-Fa-f]{3,8})/g
     let match
     while ((match = tokenRegex.exec(source)) !== null) {
-      tokens.push({
+      tokenMap.set(match[1], {
         name: match[1],
         value: match[2]
       })
     }
 
-    // Cache the result
+    // Convert to array and cache
+    const tokens = Array.from(tokenMap.values())
     this.cachedColorTokens = tokens
     this.cachedSourceHash = hash
     return tokens
@@ -795,10 +800,14 @@ export class PropertyPanel {
 
   /**
    * Get all tokens from source, optionally filtered by property suffix
+   * Uses getAllSource callback if available to get tokens from all project files
    * @param propertySuffix Optional suffix to filter (e.g., 'pad', 'bg', 'col')
    */
   private getAllTokens(propertySuffix?: string): Array<{ name: string; value: string }> {
-    const source = this.codeModifier.getSource()
+    // Use getAllSource callback if available, otherwise fall back to current file
+    const source = this.options.getAllSource
+      ? this.options.getAllSource()
+      : this.codeModifier.getSource()
     const tokens: Array<{ name: string; value: string }> = []
 
     // Match token definitions: $name.suffix: value or name.suffix: value
@@ -2099,18 +2108,6 @@ export class PropertyPanel {
         this.handleDefineAsComponent()
       })
     }
-
-    // Breadcrumb clicks
-    const breadcrumbs = this.container.querySelectorAll('.pp-crumb[data-node-id]')
-    breadcrumbs.forEach(crumb => {
-      crumb.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement
-        const nodeId = target.dataset.nodeId
-        if (nodeId && !target.classList.contains('active')) {
-          this.selectionManager.select(nodeId)
-        }
-      })
-    })
 
     // Text inputs with token autocomplete
     const textInputs = this.container.querySelectorAll('input[type="text"]')
@@ -3926,7 +3923,45 @@ export class PropertyPanel {
       value
     )
 
+    this.handleModificationResult(result, propName)
+  }
+
+  /**
+   * Handle modification result with error feedback
+   */
+  private handleModificationResult(result: ModificationResult, context?: string): void {
+    if (!result.success) {
+      this.showErrorFeedback(result.error || 'Unknown error', context)
+      return
+    }
     this.onCodeChange(result)
+  }
+
+  /**
+   * Show error feedback to the user
+   */
+  private showErrorFeedback(error: string, context?: string): void {
+    const message = context
+      ? `Failed to update ${context}: ${error}`
+      : `Property update failed: ${error}`
+
+    // Log for debugging
+    console.warn(`[PropertyPanel] ${message}`)
+
+    // Show visual feedback via status indicator
+    const status = document.getElementById('status')
+    if (status) {
+      const originalText = status.textContent
+      const originalClass = status.className
+      status.textContent = message
+      status.className = 'status error'
+
+      // Reset after 3 seconds
+      setTimeout(() => {
+        status.textContent = originalText || 'Ready'
+        status.className = originalClass || 'status ok'
+      }, 3000)
+    }
   }
 
   /**

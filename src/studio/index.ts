@@ -72,6 +72,7 @@ export {
   type DropZone,
   type DropPlacement,
   type DropZoneCalculatorOptions,
+  type SemanticZone,
 } from './drop-zone-calculator'
 
 export {
@@ -84,6 +85,13 @@ export {
   type DropCallback,
   type DragDropManagerOptions,
 } from './drag-drop-manager'
+
+export {
+  createSmartSizingService,
+  type SmartSizingService,
+  type SizingResult,
+  type ResidualSpace,
+} from './services/smart-sizing'
 
 export {
   findIconForComponent,
@@ -119,3 +127,26 @@ export {
   type ParsedProperty,
   type ParsedLine,
 } from './line-property-parser'
+
+// Drop Strategies (layout-specific drop behavior)
+export {
+  // Types
+  type LayoutType,
+  type DropContext,
+  type LayoutDropResult,
+  type FlexDropResult,
+  type AbsoluteDropResult,
+  type IndicatorConfig,
+  type LayoutDropStrategy,
+  type DropStrategyRegistry,
+  // Strategies
+  FlexDropStrategy,
+  createFlexDropStrategy,
+  AbsoluteDropStrategy,
+  createAbsoluteDropStrategy,
+  type AbsoluteStrategyOptions,
+  // Registry
+  createDefaultRegistry,
+  createRegistry,
+  getDefaultRegistry,
+} from './drop-strategies'

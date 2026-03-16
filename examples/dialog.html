@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Dialog - Mirror Dark Mode</title>
+  <link href="https://unpkg.com/lucide-static@0.344.0/font/lucide.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+    }
+
+    /* Backdrop */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    /* Dialog */
+    .dialog {
+      width: 480px;
+      background: #1a1a23;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.3s ease-out;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #2a2a33;
+    }
+
+    .dialog-title {
+      font-weight: 600;
+      font-size: 18px;
+      color: #f0f0f5;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: #2a2a33;
+      color: #aaa;
+    }
+
+    /* Content */
+    .dialog-content {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Setting Row */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #12121a;
+      border-radius: 12px;
+    }
+
+    .setting-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .setting-icon {
+      width: 40px;
+      height: 40px;
+      background: #2a2a33;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3B82F6;
+    }
+
+    .setting-text h4 {
+      color: #e0e0e5;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .setting-text p {
+      color: #666;
+      font-size: 12px;
+    }
+
+    /* Toggle */
+    .toggle {
+      width: 48px;
+      height: 28px;
+      background: #333;
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle.active {
+      background: #3B82F6;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 11px;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+
+    .toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    /* Select */
+    .select {
+      padding: 8px 12px;
+      background: #2a2a33;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #a0a0aa;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .select:focus {
+      border-color: #3B82F6;
+    }
+
+    /* Footer */
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 20px 24px;
+      border-top: 1px solid #2a2a33;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #888;
+    }
+
+    .btn-secondary:hover {
+      color: #aaa;
+    }
+
+    .btn-primary {
+      background: #3B82F6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563EB;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Trigger Button */
+    .trigger-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .trigger-btn {
+      padding: 14px 28px;
+      background: #3B82F6;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .trigger-btn:hover {
+      background: #2563EB;
+      transform: translateY(-1px);
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Trigger Button -->
+  <div class="trigger-container">
+    <button class="trigger-btn" onclick="showDialog()">
+      <i class="lucide-settings" style="font-size: 18px;"></i>
+      Open Settings
+    </button>
+  </div>
+
+  <!-- Dialog -->
+  <div class="backdrop hidden" id="dialogBackdrop" onclick="hideDialog(event)">
+    <div class="dialog" onclick="event.stopPropagation()">
+
+      <div class="dialog-header">
+        <span class="dialog-title">Settings</span>
+        <div class="close-btn" onclick="hideDialog()">
+          <i class="lucide-x" style="font-size: 18px;"></i>
+        </div>
+      </div>
+
+      <div class="dialog-content">
+
+        <!-- Notifications -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon">
+              <i class="lucide-bell" style="font-size: 20px;"></i>
+            </div>
+            <div class="setting-text">
+              <h4>Notifications</h4>
+              <p>Receive push notifications</p>
+            </div>
+          </div>
+          <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+        </div>
+
+        <!-- Dark Mode -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon" style="color: #A855F7;">
+              <i class="lucide-moon" style="font-size: 20px;"></i>
+            </div>
+            <div class="setting-text">
+              <h4>Dark Mode</h4>
+              <p>Use dark theme</p>
+            </div>
+          </div>
+          <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+        </div>
+
+        <!-- Language -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon" style="color: #22C55E;">
+              <i class="lucide-globe" style="font-size: 20px;"></i>
+            </div>
+            <div class="setting-text">
+              <h4>Language</h4>
+              <p>Select your language</p>
+            </div>
+          </div>
+          <select class="select">
+            <option>English</option>
+            <option>Deutsch</option>
+            <option>Français</option>
+          </select>
+        </div>
+
+        <!-- Auto-Save -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon" style="color: #F59E0B;">
+              <i class="lucide-save" style="font-size: 20px;"></i>
+            </div>
+            <div class="setting-text">
+              <h4>Auto-Save</h4>
+              <p>Save changes automatically</p>
+            </div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('active')"></div>
+        </div>
+
+      </div>
+
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" onclick="hideDialog()">Cancel</button>
+        <button class="btn btn-primary" onclick="hideDialog()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showDialog() {
+      document.getElementById('dialogBackdrop').classList.remove('hidden');
+    }
+
+    function hideDialog(event) {
+      if (!event || event.target.id === 'dialogBackdrop') {
+        document.getElementById('dialogBackdrop').classList.add('hidden');
+      }
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideDialog();
+    });
+  </script>
+
+</body>
+</html>

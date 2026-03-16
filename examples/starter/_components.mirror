@@ -1,0 +1,313 @@
+// ============================================
+// Basis-Komponenten - Starter Template
+// ============================================
+// Importiert Tokens automatisch
+
+import _tokens
+
+// --------------------------------------------
+// Layout
+// --------------------------------------------
+
+Container:
+  pad $lg.pad, gap $md.gap
+
+Row:
+  horizontal, gap $md.gap, ver-center
+
+Column:
+  vertical, gap $md.gap
+
+Stack:
+  stacked
+
+Spacer:
+  height full
+
+Divider:
+  height 1, bg $border.subtle.col, width full
+
+// --------------------------------------------
+// Typography
+// --------------------------------------------
+
+H1:
+  font-size $xxxl.font.size, weight 600, col $heading.col
+
+H2:
+  font-size $xxl.font.size, weight 600, col $heading.col
+
+H3:
+  font-size $xl.font.size, weight 600, col $heading.col
+
+H4:
+  font-size $lg.font.size, weight 600, col $heading.col
+
+Text:
+  font-size $base.font.size, col $text.col
+
+TextSmall:
+  font-size $sm.font.size, col $text.muted.col
+
+Label:
+  font-size $sm.font.size, weight 500, col $text.muted.col, uppercase
+
+// --------------------------------------------
+// Buttons
+// --------------------------------------------
+
+Button:
+  pad $sm.pad $md.pad, rad $sm.rad
+  bg $control.bg, col $text.col
+  font-size $sm.font.size, weight 500
+  cursor pointer
+  hover
+    bg $control.hover.bg
+
+PrimaryButton as Button:
+  bg $primary.bg, col $on-primary.col
+  hover
+    bg $primary.hover.bg
+
+GhostButton as Button:
+  bg transparent
+  hover
+    bg $control.bg
+
+DangerButton as Button:
+  bg $danger.bg, col $on-primary.col
+  hover
+    bg $red-600
+
+IconButton:
+  pad $sm.pad, rad $sm.rad
+  bg transparent, col $text.muted.col
+  cursor pointer
+  hover
+    bg $control.bg
+    col $text.col
+
+// --------------------------------------------
+// Cards & Surfaces
+// --------------------------------------------
+
+Card:
+  pad $lg.pad, gap $md.gap, rad $md.rad
+  bg $surface.bg
+
+CardElevated as Card:
+  bg $elevated.bg
+
+CardBordered as Card:
+  bg transparent, bor 1 $border.col
+
+// --------------------------------------------
+// Form Controls
+// --------------------------------------------
+
+Input:
+  pad $sm.pad $md.pad, rad $sm.rad
+  bg $control.bg, col $text.col
+  font-size $base.font.size
+  bor 1 transparent
+  state focus
+    bor 1 $border.focus.col
+  Placeholder col $text.subtle.col
+  Value col $text.col
+
+TextArea as Input:
+  min-height 100
+
+Select:
+  pad $sm.pad $md.pad, rad $sm.rad
+  bg $control.bg, col $text.col
+  font-size $base.font.size
+  bor 1 transparent, cursor pointer
+  hover
+    bg $control.hover.bg
+
+Checkbox:
+  size 18, rad $xs.rad
+  bg $control.bg, bor 1 $border.col
+  cursor pointer
+  state checked
+    bg $primary.bg
+    bor 1 $primary.bg
+
+Toggle:
+  width 40, height 22, rad $full.rad
+  bg $control.bg, pad 2
+  cursor pointer
+  Thumb:
+    size 18, rad $full.rad, bg $text.muted.col
+  state on
+    bg $primary.bg
+    Thumb bg white, translate 18 0
+
+// --------------------------------------------
+// Navigation
+// --------------------------------------------
+
+NavItem:
+  horizontal, gap $sm.gap, ver-center
+  pad $sm.pad $md.pad, rad $sm.rad
+  col $text.muted.col, cursor pointer
+  hover
+    bg $control.bg
+    col $text.col
+  state active
+    bg $control.bg
+    col $text.col
+
+NavSection:
+  gap $xs.gap
+
+NavHeader:
+  font-size $xs.font.size, weight 600
+  col $text.subtle.col, uppercase
+  pad $sm.pad $md.pad
+  letter-spacing 0.5
+
+// --------------------------------------------
+// Lists
+// --------------------------------------------
+
+ListItem:
+  horizontal, gap $md.gap, ver-center
+  pad $sm.pad $md.pad, rad $sm.rad
+  cursor pointer
+  hover
+    bg $control.bg
+
+ListDivider:
+  height 1, bg $border.subtle.col
+  margin $xs.pad 0
+
+// --------------------------------------------
+// Badges & Tags
+// --------------------------------------------
+
+Badge:
+  pad $xs.pad $sm.pad, rad $xs.rad
+  bg $control.bg, col $text.muted.col
+  font-size $xs.font.size, weight 500
+
+BadgePrimary as Badge:
+  bg $primary.bg, col $on-primary.col
+
+BadgeSuccess as Badge:
+  bg $success.bg, col $on-primary.col
+
+BadgeDanger as Badge:
+  bg $danger.bg, col $on-primary.col
+
+Tag:
+  pad $xs.pad $sm.pad, rad $full.rad
+  bg $control.bg, col $text.muted.col
+  font-size $xs.font.size
+
+// --------------------------------------------
+// Avatar
+// --------------------------------------------
+
+Avatar:
+  size 32, rad $full.rad
+  bg $control.bg, center
+  col $text.muted.col, font-size $sm.font.size, weight 500
+
+AvatarSmall as Avatar:
+  size 24, font-size $xs.font.size
+
+AvatarLarge as Avatar:
+  size 48, font-size $lg.font.size
+
+// --------------------------------------------
+// Icons
+// --------------------------------------------
+
+IconSmall:
+  icon-size $sm.icon, col $text.muted.col
+
+IconMedium:
+  icon-size $md.icon, col $text.col
+
+IconLarge:
+  icon-size $lg.icon, col $text.col
+
+// --------------------------------------------
+// Overlays
+// --------------------------------------------
+
+Modal:
+  pad $xl.pad, gap $lg.gap, rad $lg.rad
+  bg $elevated.bg
+  min-width 400, max-width 600
+
+ModalHeader:
+  horizontal, spread, ver-center
+
+ModalBody:
+  gap $md.gap
+
+ModalFooter:
+  horizontal, gap $sm.gap, right
+
+Tooltip:
+  pad $xs.pad $sm.pad, rad $xs.rad
+  bg $grey-700, col $text.col
+  font-size $xs.font.size
+
+// --------------------------------------------
+// Feedback
+// --------------------------------------------
+
+Alert:
+  horizontal, gap $md.gap, ver-center
+  pad $md.pad, rad $sm.rad
+  bg $control.bg, col $text.col
+
+AlertSuccess as Alert:
+  bg rgba(34, 197, 94, 0.15), col $success.col
+
+AlertDanger as Alert:
+  bg rgba(239, 68, 68, 0.15), col $danger.col
+
+AlertWarning as Alert:
+  bg rgba(234, 179, 8, 0.15), col $warning.col
+
+// --------------------------------------------
+// Progress
+// --------------------------------------------
+
+ProgressBar:
+  height 4, rad $full.rad, bg $control.bg, width full
+  Track:
+    height full, rad $full.rad, bg $primary.bg
+    width 60%
+
+Spinner:
+  size 20, bor 2 $control.bg
+  bor-top 2 $primary.bg, rad $full.rad
+  animate spin 800
+
+// --------------------------------------------
+// Empty States
+// --------------------------------------------
+
+EmptyState:
+  center, gap $md.gap, pad $xxl.pad
+  col $text.muted.col
+
+// --------------------------------------------
+// Skeleton
+// --------------------------------------------
+
+Skeleton:
+  bg $control.bg, rad $sm.rad
+  animate pulse 1500
+
+SkeletonText as Skeleton:
+  height 14, width 200
+
+SkeletonCircle as Skeleton:
+  size 32, rad $full.rad

@@ -65,6 +65,8 @@ export function generateReact(
   // Generate JSX for each root instance
   if (program.instances && program.instances.length > 0) {
     for (const instance of program.instances) {
+      // Skip Slot primitives in React output (they're only for visual editor)
+      if (instance.type === 'Slot') continue
       const jsx = generateJSX(instance, componentMap, program.tokens || [], '    ')
       lines.push(jsx)
     }

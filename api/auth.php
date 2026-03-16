@@ -1,0 +1,181 @@
+<?php
+/**
+ * Auth handlers for Mirror Studio
+ */
+
+/**
+ * Load users from JSON file
+ */
+function loadUsers(): array {
+    if (!file_exists(USERS_FILE)) {
+        return ['users' => []];
+    }
+    return json_decode(file_get_contents(USERS_FILE), true) ?? ['users' => []];
+}
+
+/**
+ * Save users to JSON file
+ */
+function saveUsers(array $data): void {
+    file_put_contents(USERS_FILE, json_encode($data, JSON_PRETTY_PRINT));
+}
+
+/**
+ * Generate unique ID
+ */
+function generateId(string $prefix = ''): string {
+    return $prefix . bin2hex(random_bytes(8));
+}
+
+/**
+ * Register a new user
+ *
+ * POST /api/auth/register
+ * Body: { email, password }
+ * Returns: { success, user_id } or { error }
+ */
+function authRegister(array $body): array {
+    $email = trim($body['email'] ?? '');
+    $password = $body['password'] ?? '';
+
+    // Validate
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        return ['error' => 'Valid email required'];
+    }
+
+    if (strlen($password) < 6) {
+        http_response_code(400);
+        return ['error' => 'Password must be at least 6 characters'];
+    }
+
+    // Load users
+    $data = loadUsers();
+
+    // Check if email exists
+    foreach ($data['users'] as $user) {
+        if (strtolower($user['email']) === strtolower($email)) {
+            http_response_code(409);
+            return ['error' => 'Email already registered'];
+        }
+    }
+
+    // Create user
+    $userId = generateId('u_');
+    $user = [
+        'id' => $userId,
+        'email' => strtolower($email),
+        'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+        'created_at' => date('c')
+    ];
+
+    $data['users'][] = $user;
+    saveUsers($data);
+
+    // Create user's project directory
+    $userDir = PROJECTS_DIR . '/' . $userId;
+    if (!file_exists($userDir)) {
+        mkdir($userDir, 0755, true);
+    }
+
+    // Auto-login after registration
+    $_SESSION['user_id'] = $userId;
+
+    return [
+        'success' => true,
+        'user_id' => $userId
+    ];
+}
+
+/**
+ * Login user
+ *
+ * POST /api/auth/login
+ * Body: { email, password }
+ * Returns: { success, user_id } or { error }
+ */
+function authLogin(array $body): array {
+    $email = trim($body['email'] ?? '');
+    $password = $body['password'] ?? '';
+
+    if (empty($email) || empty($password)) {
+        http_response_code(400);
+        return ['error' => 'Email and password required'];
+    }
+
+    // Load users
+    $data = loadUsers();
+
+    // Find user
+    foreach ($data['users'] as $user) {
+        if (strtolower($user['email']) === strtolower($email)) {
+            if (password_verify($password, $user['password_hash'])) {
+                $_SESSION['user_id'] = $user['id'];
+                return [
+                    'success' => true,
+                    'user_id' => $user['id']
+                ];
+            }
+            break;
+        }
+    }
+
+    http_response_code(401);
+    return ['error' => 'Invalid email or password'];
+}
+
+/**
+ * Logout user
+ *
+ * POST /api/auth/logout
+ * Returns: { success }
+ */
+function authLogout(): array {
+    session_destroy();
+    return ['success' => true];
+}
+
+/**
+ * Get current user
+ *
+ * GET /api/auth/me
+ * Returns: { user_id, email } or { error }
+ */
+function authMe(): array {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        return ['error' => 'Not authenticated'];
+    }
+
+    $data = loadUsers();
+    foreach ($data['users'] as $user) {
+        if ($user['id'] === $_SESSION['user_id']) {
+            return [
+                'user_id' => $user['id'],
+                'email' => $user['email']
+            ];
+        }
+    }
+
+    http_response_code(401);
+    return ['error' => 'User not found'];
+}
+
+/**
+ * Get current user ID or null
+ */
+function getCurrentUserId(): ?string {
+    return $_SESSION['user_id'] ?? null;
+}
+
+/**
+ * Require authentication (throws if not logged in)
+ */
+function requireAuth(): string {
+    $userId = getCurrentUserId();
+    if (!$userId) {
+        http_response_code(401);
+        throw new Exception('Authentication required');
+    }
+    return $userId;
+}

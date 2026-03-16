@@ -230,9 +230,11 @@ class DOMGenerator {
     // Inject CSS (variables + system state styles)
     this.emitStyles()
 
-    // Generate each node
+    // Generate each node (first node is the main root)
+    let isFirstNode = true
     for (const node of this.ir.nodes) {
-      this.emitNode(node, '_root')
+      this.emitNode(node, '_root', isFirstNode)
+      isFirstNode = false
     }
 
     this.emit('')
@@ -243,7 +245,7 @@ class DOMGenerator {
     this.emit('')
   }
 
-  private emitNode(node: IRNode, parentVar: string): void {
+  private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
     // Handle each loop nodes
     if (node.each) {
       this.emitEachLoop(node.each, parentVar)
@@ -262,6 +264,10 @@ class DOMGenerator {
     this.emit(`const ${varName} = document.createElement('${node.tag}')`)
     this.emit(`_elements['${node.id}'] = ${varName}`)
     this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    // Mark main root element (cannot be moved via drag-drop)
+    if (isMainRoot) {
+      this.emit(`${varName}.dataset.mirrorRoot = 'true'`)
+    }
     // Component name for breadcrumb navigation
     if (node.name) {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
@@ -272,8 +278,9 @@ class DOMGenerator {
       this.emit(`_elements['${node.instanceName}'] = ${varName}`)
     }
 
-    // Detect if this is an icon element (based on primitive type)
+    // Detect if this is an icon or slot element (based on primitive type)
     const isIcon = node.primitive === 'icon'
+    const isSlot = node.primitive === 'slot'
     let iconName: string | null = null
 
     // Set HTML properties
@@ -283,6 +290,8 @@ class DOMGenerator {
         // For icons, store the name for loading instead of setting textContent
         if (isIcon && typeof prop.value === 'string') {
           iconName = prop.value
+        } else if (isSlot) {
+          // Skip textContent for slots - we create a label element instead below
         } else {
           this.emit(`${varName}.textContent = ${value}`)
         }
@@ -300,6 +309,24 @@ class DOMGenerator {
       this.emit(`_runtime.loadIcon(${varName}, "${this.escapeString(iconName)}")`)
     }
 
+    // Handle Slot primitive - visual placeholder for drag & drop
+    if (isSlot) {
+      // Get slot label from textContent property
+      const labelProp = node.properties.find(p => p.name === 'textContent')
+      const slotLabel = labelProp ? String(labelProp.value) : 'Slot'
+
+      this.emit(`// Slot placeholder`)
+      this.emit(`${varName}.dataset.mirrorSlot = 'true'`)
+      this.emit(`${varName}.dataset.slotLabel = "${this.escapeString(slotLabel)}"`)
+      this.emit(`${varName}.classList.add('mirror-slot')`)
+
+      // Create label element
+      this.emit(`const ${varName}_label = document.createElement('span')`)
+      this.emit(`${varName}_label.className = 'mirror-slot-label'`)
+      this.emit(`${varName}_label.textContent = "${this.escapeString(slotLabel)}"`)
+      this.emit(`${varName}.appendChild(${varName}_label)`)
+    }
+
     // Apply base styles
     const baseStyles = node.styles.filter(s => !s.state)
     if (baseStyles.length > 0) {
@@ -310,6 +337,15 @@ class DOMGenerator {
       }
       this.indent--
       this.emit('})')
+    }
+
+    // Mark abs containers (elements with position: relative that act as absolute layout parents)
+    // We detect this by checking if the element has position: relative but NOT flex/grid display
+    // (flex containers also need position: relative for stacked layouts, so we need to be careful)
+    const hasPositionRelative = baseStyles.some(s => s.property === 'position' && s.value === 'relative')
+    const hasFlexDisplay = baseStyles.some(s => s.property === 'display' && (s.value === 'flex' || s.value === 'grid'))
+    if (hasPositionRelative && !hasFlexDisplay) {
+      this.emit(`${varName}.dataset.mirrorAbs = 'true'`)
     }
 
     // Store state styles for runtime (excluding CSS-handled system states)

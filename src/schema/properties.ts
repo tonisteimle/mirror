@@ -32,6 +32,7 @@ export interface PropertyDefinition {
 
 export type PropertyCategory =
   | 'layout'
+  | 'position'
   | 'alignment'
   | 'sizing'
   | 'spacing'
@@ -107,6 +108,33 @@ export const properties: PropertyDefinition[] = [
     type: 'boolean',
     category: 'layout',
     description: 'Grid layout',
+  },
+
+  // ============================================
+  // POSITION (Absolute Positioning)
+  // ============================================
+  {
+    name: 'abs',
+    aliases: ['absolute'],
+    type: 'boolean',
+    category: 'position',
+    description: 'Absolute container (position: relative)',
+  },
+  {
+    name: 'x',
+    aliases: [],
+    type: 'number',
+    category: 'position',
+    description: 'Horizontal position (left)',
+    unit: 'px',
+  },
+  {
+    name: 'y',
+    aliases: [],
+    type: 'number',
+    category: 'position',
+    description: 'Vertical position (top)',
+    unit: 'px',
   },
 
   // ============================================
@@ -635,6 +663,7 @@ export function findProperty(nameOrAlias: string): PropertyDefinition | undefine
  */
 export const categoryLabels: Record<PropertyCategory, string> = {
   layout: 'Layout',
+  position: 'Position',
   alignment: 'Alignment',
   sizing: 'Size',
   spacing: 'Spacing',
@@ -653,6 +682,7 @@ export const categoryLabels: Record<PropertyCategory, string> = {
  */
 export const categoryOrder: PropertyCategory[] = [
   'layout',
+  'position',
   'alignment',
   'sizing',
   'spacing',
