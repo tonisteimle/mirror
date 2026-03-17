@@ -8,7 +8,10 @@
 import type { BreadcrumbItem } from '../../src/studio/selection-manager'
 import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
 import type { CodeModifier, ModificationResult, FilesAccess } from '../../src/studio/code-modifier'
-import { PROPERTY_ICON_PATHS } from '../../src/studio/icons'
+import { PROPERTY_ICONS, LAYOUT_ICONS, getLayoutIcon } from '../icons'
+
+// Alias for backwards compatibility
+const PROPERTY_ICON_PATHS = PROPERTY_ICONS
 import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
 import { state, events } from '../core'
 import TomSelect from 'tom-select'
@@ -527,34 +530,19 @@ export class PropertyPanel {
             <div class="prop-content">
               <div class="toggle-group">
                 <button class="toggle-btn ${activeMode === 'horizontal' ? 'active' : ''}" data-layout="horizontal" title="Horizontal">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <path d="M2 7h10M9 4l3 3-3 3"/>
-                  </svg>
+                  ${getLayoutIcon('hbox', 'icon')}
                 </button>
                 <button class="toggle-btn ${activeMode === 'vertical' ? 'active' : ''}" data-layout="vertical" title="Vertical">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <path d="M7 2v10M4 9l3 3 3-3"/>
-                  </svg>
+                  ${getLayoutIcon('vbox', 'icon')}
                 </button>
                 <button class="toggle-btn ${activeMode === 'grid' ? 'active' : ''}" data-layout="grid" title="Grid">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <rect x="2" y="2" width="4" height="4" rx="1"/>
-                    <rect x="8" y="2" width="4" height="4" rx="1"/>
-                    <rect x="2" y="8" width="4" height="4" rx="1"/>
-                    <rect x="8" y="8" width="4" height="4" rx="1"/>
-                  </svg>
+                  ${getLayoutIcon('grid', 'icon')}
                 </button>
                 <button class="toggle-btn ${activeMode === 'stacked' ? 'active' : ''}" data-layout="stacked" title="Stacked">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <rect x="2" y="3" width="10" height="8" rx="1"/>
-                    <rect x="4" y="5" width="6" height="4" rx="0.5"/>
-                  </svg>
+                  ${getLayoutIcon('zstack', 'icon')}
                 </button>
                 <button class="toggle-btn ${activeMode === 'absolute' ? 'active' : ''}" data-layout="absolute" title="Absolute">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <rect x="2" y="2" width="10" height="10" rx="1" fill="none" stroke="currentColor"/>
-                    <circle cx="5" cy="5" r="1.5" fill="currentColor"/>
-                  </svg>
+                  ${getLayoutIcon('absolute', 'icon')}
                 </button>
               </div>
             </div>
@@ -563,7 +551,7 @@ export class PropertyPanel {
             <span class="prop-label">Gap</span>
             <div class="prop-content">
               ${gapTokens ? `<div class="token-group">${gapTokens}</div>` : ''}
-              <input type="text" class="prop-input" value="${this.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
             </div>
           </div>
           <div class="prop-row">
@@ -577,7 +565,7 @@ export class PropertyPanel {
                 </button>
                 <button class="toggle-btn ${wrapActive ? 'active' : ''}" data-wrap="on" title="Wrap">
                   <svg class="icon" viewBox="0 0 14 14">
-                    <path d="M2 4h10M2 10h6M10 7l-2 3"/>
+                    <rect x="1" y="2" width="3" height="3" rx="0.5"/><rect x="5.5" y="2" width="3" height="3" rx="0.5"/><rect x="10" y="2" width="3" height="3" rx="0.5"/><rect x="1" y="9" width="3" height="3" rx="0.5"/><rect x="5.5" y="9" width="3" height="3" rx="0.5"/>
                   </svg>
                 </button>
               </div>
@@ -626,8 +614,8 @@ export class PropertyPanel {
           <div class="prop-row">
             <span class="prop-label">Pos X/Y</span>
             <div class="prop-content dual-input">
-              <input type="text" class="prop-input" data-prop="x" value="${xValue}" placeholder="0">
-              <input type="text" class="prop-input" data-prop="y" value="${yValue}" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" data-prop="x" value="${xValue}" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" data-prop="y" value="${yValue}" placeholder="0">
             </div>
           </div>` : ''
 
@@ -650,7 +638,7 @@ export class PropertyPanel {
                   </svg>
                 </button>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(widthValue)}" data-prop="width" placeholder="auto">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(widthValue)}" data-prop="width" placeholder="auto">
             </div>
           </div>
           <div class="prop-row">
@@ -668,7 +656,7 @@ export class PropertyPanel {
                   </svg>
                 </button>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
             </div>
           </div>
         </div>
@@ -1268,7 +1256,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(hPad, 'h')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(hPad)}" data-pad-dir="h" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(hPad)}" data-pad-dir="h" placeholder="0">
             </div>
           </div>
           <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
@@ -1277,7 +1265,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(vPad, 'v')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(vPad)}" data-pad-dir="v" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(vPad)}" data-pad-dir="v" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
@@ -1286,7 +1274,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(tPad, 't')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(tPad)}" data-pad-dir="t" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(tPad)}" data-pad-dir="t" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
@@ -1295,7 +1283,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(rPad, 'r')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(rPad)}" data-pad-dir="r" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(rPad)}" data-pad-dir="r" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
@@ -1304,7 +1292,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(bPad, 'b')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(bPad)}" data-pad-dir="b" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(bPad)}" data-pad-dir="b" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
@@ -1313,7 +1301,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderPadTokens(lPad, 'l')}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(lPad)}" data-pad-dir="l" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(lPad)}" data-pad-dir="l" placeholder="0">
             </div>
           </div>
         </div>
@@ -1403,7 +1391,7 @@ export class PropertyPanel {
                   </svg>
                 </button>
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="border">
@@ -1412,7 +1400,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderRadTokens}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="border">
@@ -1421,7 +1409,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderRadTokens}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="border">
@@ -1430,7 +1418,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderRadTokens}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="border">
@@ -1439,7 +1427,7 @@ export class PropertyPanel {
               <div class="token-group">
                 ${renderRadTokens}
               </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
             </div>
           </div>
           <div class="prop-row collapsed-row${borderIsOverride ? ' override' : ''}" data-expand-group="border">
@@ -1593,11 +1581,11 @@ export class PropertyPanel {
       return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
     }).join('')
 
-    // Align icons - matching prototype exactly
+    // Align icons - filled rectangles with spacing
     const alignIcons = {
-      left: '<path d="M2 3h10M2 7h6M2 11h8"/>',
-      center: '<path d="M2 3h10M4 7h6M3 11h8"/>',
-      right: '<path d="M2 3h10M6 7h6M4 11h8"/>',
+      left: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="2" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="2" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
+      center: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="4" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="3" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
+      right: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="6" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="4" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
     }
     const alignToggles = this.TEXT_ALIGNS.map(align => {
       const isActive = textAlignValue === align
@@ -1637,7 +1625,7 @@ export class PropertyPanel {
             <span class="prop-label">Size</span>
             <div class="prop-content">
               ${sizeTokens ? `<div class="token-group">${sizeTokens}</div>` : ''}
-              <input type="text" class="pp-fontsize-input" value="${this.escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14">
+              <input type="text" class="pp-fontsize-input" value="${this.escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14" autocomplete="off">
             </div>
           </div>
           <div class="prop-row">
@@ -1737,7 +1725,7 @@ export class PropertyPanel {
           <div class="pp-opacity-group">
             ${opacityPresets}
           </div>
-          <input type="text" class="pp-opacity-input" value="${this.escapeHtml(opacityValue)}" data-prop="opacity" placeholder="1">
+          <input type="text" class="pp-opacity-input" value="${this.escapeHtml(opacityValue)}" data-prop="opacity" placeholder="1" autocomplete="off">
         </div>
         <div class="pp-visual-row">
           <span class="pp-visual-label">Cursor</span>
@@ -1748,7 +1736,7 @@ export class PropertyPanel {
         </div>
         <div class="pp-visual-row">
           <span class="pp-visual-label">Z-Index</span>
-          <input type="text" class="pp-zindex-input" value="${this.escapeHtml(zIndexValue)}" data-prop="z" placeholder="0">
+          <input type="text" class="pp-zindex-input" value="${this.escapeHtml(zIndexValue)}" data-prop="z" placeholder="0" autocomplete="off">
         </div>
         <div class="pp-visual-row">
           <div class="pp-visibility-group">
@@ -1850,13 +1838,13 @@ export class PropertyPanel {
             <div class="pp-token-group">
               ${opacityTokens}
             </div>
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverOpaValue)}" data-hover-prop="hover-opacity" placeholder="1">
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverOpaValue)}" data-hover-prop="hover-opacity" placeholder="1" autocomplete="off">
           </div>
         </div>
         <div class="pp-prop-row">
           <span class="pp-prop-label">Scale</span>
           <div class="pp-prop-content">
-            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverScaleValue)}" data-hover-prop="hover-scale" placeholder="1.05">
+            <input type="text" class="pp-v2-input" value="${this.escapeHtml(hoverScaleValue)}" data-hover-prop="hover-scale" placeholder="1.05" autocomplete="off">
           </div>
         </div>
         <div class="pp-prop-row">
@@ -2003,7 +1991,7 @@ export class PropertyPanel {
         <div class="pp-color-row">
           <span class="pp-color-label">${this.getDisplayLabel(prop.name)}</span>
           <input type="color" class="pp-color-swatch" value="${this.escapeHtml(colorValue)}" data-prop="${this.escapeHtml(prop.name)}">
-          <input type="text" class="pp-color-input ${prop.isToken ? 'token' : ''}" value="${this.escapeHtml(displayValue)}" data-prop="${this.escapeHtml(prop.name)}" placeholder="Color">
+          <input type="text" class="pp-color-input ${prop.isToken ? 'token' : ''}" value="${this.escapeHtml(displayValue)}" data-prop="${this.escapeHtml(prop.name)}" placeholder="Color" autocomplete="off">
         </div>
       </div>
     `

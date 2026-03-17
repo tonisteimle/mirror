@@ -5788,6 +5788,8 @@ document.addEventListener('keydown', (e) => {
 })
 
 // Layout preset icons
+// NOTE: These icons must stay in sync with studio/icons/index.ts (LAYOUT_ICONS)
+// This file cannot import TypeScript modules directly.
 const LAYOUT_ICONS = {
   absolute: '<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 2"></rect><circle cx="8" cy="8" r="2" fill="currentColor"></circle><circle cx="16" cy="14" r="2" fill="currentColor"></circle>',
   vbox: '<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M21 9H3"></path><path d="M21 15H3"></path>',
@@ -5810,6 +5812,7 @@ const LAYOUT_PRESETS = [
 ]
 
 // Built-in primitive components
+// NOTE: Icons must stay in sync with studio/icons/index.ts (COMPONENT_ICONS)
 const PRIMITIVE_COMPONENTS = [
   { name: 'Box', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
   { name: 'Button', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },

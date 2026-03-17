@@ -71,14 +71,6 @@ export class ChatPanel {
       <div class="chat-panel">
         <div class="chat-header">
           <span class="chat-title">AI Chat</span>
-          <div class="chat-actions">
-            <button class="chat-action" data-action="clear" title="Clear chat">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-              </svg>
-            </button>
-          </div>
         </div>
 
         <div class="chat-messages"></div>
@@ -93,8 +85,8 @@ export class ChatPanel {
             rows="1"
           ></textarea>
           <button class="chat-send" title="Send (Cmd+Enter)">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.894 2.553a1 1 0 0 0-1.788 0l-7 14a1 1 0 0 0 1.169 1.409l5-1.429A1 1 0 0 0 9 15.571V11a1 1 0 1 1 2 0v4.571a1 1 0 0 0 .725.962l5 1.428a1 1 0 0 0 1.17-1.408l-7-14z"/>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 2.5L14 8L2 13.5V9L10 8L2 7V2.5Z"/>
             </svg>
           </button>
         </div>
@@ -106,26 +98,11 @@ export class ChatPanel {
     this.inputElement = this.container.querySelector('.chat-input')!
     this.sendButton = this.container.querySelector('.chat-send')!
 
-    // Render welcome message
-    this.renderWelcome()
-  }
-
-  private renderWelcome(): void {
-    this.messagesContainer.innerHTML = `
-      <div class="chat-welcome">
-        <div class="welcome-icon">✨</div>
-        <div class="welcome-title">Mirror AI Assistant</div>
-        <div class="welcome-text">
-          I can help you create, modify, and improve your Mirror DSL code.
-          Try asking me to create components, fix issues, or explain code.
-        </div>
-      </div>
-    `
   }
 
   private renderMessages(): void {
     if (this.messages.length === 0) {
-      this.renderWelcome()
+      this.messagesContainer.innerHTML = ''
       return
     }
 
@@ -205,11 +182,6 @@ export class ChatPanel {
     this.inputElement.addEventListener('input', () => {
       this.inputElement.style.height = 'auto'
       this.inputElement.style.height = Math.min(this.inputElement.scrollHeight, 150) + 'px'
-    })
-
-    // Clear button
-    this.container.querySelector('[data-action="clear"]')?.addEventListener('click', () => {
-      this.clearChat()
     })
 
     // Suggestions
