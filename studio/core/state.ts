@@ -39,6 +39,18 @@ export interface PendingSelection {
   origin: SelectionOrigin
 }
 
+/**
+ * Panel visibility state for individual panels
+ */
+export interface PanelVisibility {
+  prompt: boolean
+  files: boolean
+  code: boolean
+  components: boolean
+  preview: boolean
+  property: boolean
+}
+
 export interface StudioState {
   source: string
   /** Resolved source = prelude + current file (used by CodeModifier to match SourceMap positions) */
@@ -63,6 +75,8 @@ export interface StudioState {
   files: Record<string, string>
   fileTypes: Record<string, string>
   panels: { left: boolean; right: boolean }
+  /** Individual panel visibility */
+  panelVisibility: PanelVisibility
   mode: 'mirror' | 'react'
   /** Character offset where current file starts in resolvedSource */
   preludeOffset: number
@@ -107,6 +121,83 @@ class Store<T extends object> {
   }
 }
 
+/**
+ * Default panel visibility
+ */
+const defaultPanelVisibility: PanelVisibility = {
+  prompt: true,
+  files: true,
+  code: true,
+  components: true,
+  preview: true,
+  property: true,
+}
+
+/**
+ * Load panel visibility from localStorage or return defaults
+ */
+function loadPanelVisibility(): PanelVisibility {
+  try {
+    const stored = localStorage.getItem('mirror:panelVisibility')
+    if (stored) {
+      return { ...defaultPanelVisibility, ...JSON.parse(stored) }
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+  return { ...defaultPanelVisibility }
+}
+
+/**
+ * Save settings to server (for logged-in users)
+ */
+async function saveSettingsToServer(settings: { panelVisibility?: PanelVisibility }): Promise<void> {
+  try {
+    const response = await fetch('/mirror/api/auth/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ settings }),
+    })
+    if (!response.ok) {
+      console.warn('[Settings] Failed to save to server:', response.status)
+    }
+  } catch (e) {
+    console.warn('[Settings] Failed to save to server:', e)
+  }
+}
+
+/**
+ * Load settings from server and merge with localStorage
+ * Call this after login
+ */
+export async function loadSettingsFromServer(): Promise<void> {
+  try {
+    const response = await fetch('/mirror/api/auth/settings', {
+      credentials: 'include',
+    })
+    if (!response.ok) return
+
+    const data = await response.json()
+    if (data.success && data.settings?.panelVisibility) {
+      const merged: PanelVisibility = {
+        ...defaultPanelVisibility,
+        ...data.settings.panelVisibility,
+      }
+      state.set({ panelVisibility: merged })
+
+      // Also update localStorage
+      localStorage.setItem('mirror:panelVisibility', JSON.stringify(merged))
+
+      // Emit event for UI update
+      events.emit('settings:loaded', { panelVisibility: merged })
+      console.log('[Settings] Loaded from server:', merged)
+    }
+  } catch (e) {
+    console.warn('[Settings] Failed to load from server:', e)
+  }
+}
+
 const initialState: StudioState = {
   source: '',
   resolvedSource: '',
@@ -126,6 +217,7 @@ const initialState: StudioState = {
   files: {},
   fileTypes: {},
   panels: { left: true, right: true },
+  panelVisibility: loadPanelVisibility(),
   mode: 'mirror',
   preludeOffset: 0,
   pendingSelection: null,
@@ -280,6 +372,56 @@ export const actions = {
   clearMultiSelection(): void {
     state.set({ multiSelection: [] })
     events.emit('multiselection:changed', { nodeIds: [] })
+  },
+
+  /**
+   * Toggle panel visibility and persist to localStorage + server
+   */
+  togglePanelVisibility(panel: keyof PanelVisibility): void {
+    const current = state.get().panelVisibility
+    const newVisibility: PanelVisibility = {
+      ...current,
+      [panel]: !current[panel],
+    }
+    state.set({ panelVisibility: newVisibility })
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem('mirror:panelVisibility', JSON.stringify(newVisibility))
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    // Persist to server (async, fire-and-forget)
+    saveSettingsToServer({ panelVisibility: newVisibility })
+
+    events.emit('panel:visibility-changed', { panel, visible: newVisibility[panel] })
+  },
+
+  /**
+   * Set panel visibility directly and persist to localStorage + server
+   */
+  setPanelVisibility(panel: keyof PanelVisibility, visible: boolean): void {
+    const current = state.get().panelVisibility
+    if (current[panel] === visible) return
+
+    const newVisibility: PanelVisibility = {
+      ...current,
+      [panel]: visible,
+    }
+    state.set({ panelVisibility: newVisibility })
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem('mirror:panelVisibility', JSON.stringify(newVisibility))
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    // Persist to server (async, fire-and-forget)
+    saveSettingsToServer({ panelVisibility: newVisibility })
+
+    events.emit('panel:visibility-changed', { panel, visible })
   },
 
   /**

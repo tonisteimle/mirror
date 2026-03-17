@@ -13,12 +13,15 @@
       "@codemirror/view": "https://esm.sh/@codemirror/view@6.39.12?deps=@codemirror/state@6.5.4",
       "@codemirror/language": "https://esm.sh/@codemirror/language@6.12.1?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12",
       "@codemirror/commands": "https://esm.sh/@codemirror/commands@6.10.2?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12,@codemirror/language@6.12.1",
-      "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete@6.20.0?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12,@codemirror/language@6.12.1"
+      "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete@6.20.0?deps=@codemirror/state@6.5.4,@codemirror/view@6.39.12,@codemirror/language@6.12.1",
+      "tom-select": "https://esm.sh/tom-select@2.4.3"
     }
   }
   </script>
 
-  <link rel="stylesheet" href="styles.css?v=52">
+  <!-- Tom Select CSS -->
+  <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
+  <link rel="stylesheet" href="styles.css?v=84">
 </head>
 <body>
   <div class="container">
@@ -58,6 +61,44 @@
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
         <div id="status" class="status">Ready</div>
+        <!-- View Menu -->
+        <div class="view-menu-container">
+          <button id="view-menu-button" class="view-menu-button" title="Ansicht">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <div id="view-menu" class="view-menu">
+            <div class="view-menu-title">Ansicht</div>
+            <label class="view-menu-item" data-panel="prompt">
+              <input type="checkbox" checked>
+              <span>Prompt</span>
+            </label>
+            <label class="view-menu-item" data-panel="files">
+              <input type="checkbox" checked>
+              <span>Files</span>
+            </label>
+            <label class="view-menu-item" data-panel="code">
+              <input type="checkbox" checked>
+              <span>Code</span>
+            </label>
+            <label class="view-menu-item" data-panel="components">
+              <input type="checkbox" checked>
+              <span>Components</span>
+            </label>
+            <label class="view-menu-item" data-panel="preview">
+              <input type="checkbox" checked>
+              <span>Preview</span>
+            </label>
+            <label class="view-menu-item" data-panel="property">
+              <input type="checkbox" checked>
+              <span>Property</span>
+            </label>
+          </div>
+        </div>
         <button id="settings-button" class="settings-button" title="Einstellungen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -93,6 +134,16 @@
         </div>
       </div>
     </header>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+
+    <!-- AI Chat Panel (left) -->
+    <aside id="chat-panel" class="chat-panel-left">
+      <div class="chat-panel-content" id="chat-panel-content">
+        <!-- Content rendered by JS -->
+      </div>
+    </aside>
 
     <div class="sidebar">
       <div class="sidebar-header">
@@ -161,17 +212,6 @@
         </div>
       </div>
       <div id="editor-container"></div>
-      <div class="prompt-bar">
-        <div class="prompt-input-wrapper">
-          <input type="text" id="prompt-input" class="prompt-input" placeholder="Describe UI... (e.g., 'Add a blue button with icon')">
-          <button id="generate-btn" class="btn-generate" title="Generate">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
-        </div>
-      </div>
       <div id="drop-overlay" class="drop-overlay">
         <div class="drop-message">
           <span class="drop-icon">photo</span>
@@ -185,9 +225,6 @@
     <!-- Components Panel -->
     <div class="components-panel" id="components-panel">
       <div class="components-panel-header">Components</div>
-      <div class="component-search">
-        <input type="text" id="component-search" placeholder="Search..." autocomplete="off">
-      </div>
       <div class="component-palette" id="component-palette">
         <div class="component-palette-items" id="components-palette"></div>
       </div>
@@ -228,6 +265,8 @@
 
     <!-- Property Panel -->
     <aside class="property-panel" id="property-panel"></aside>
+
+    </div><!-- /.main-content -->
   </div>
 
   <!-- Initial code template (outside grid container) -->
@@ -362,6 +401,18 @@ Card
         </div>
         <div id="imgbb-status" class="settings-status"></div>
       </div>
+      <div class="settings-section">
+        <label class="settings-label" for="openrouter-key">OpenRouter API Key</label>
+        <input type="password" id="openrouter-key" class="settings-input" placeholder="sk-or-v1-...">
+        <div class="settings-hint">
+          Für AI Assistant (Mirror AI).
+          <a href="https://openrouter.ai/settings/keys" target="_blank">Key holen</a>
+        </div>
+        <div id="openrouter-status" class="settings-status"></div>
+      </div>
+      <div class="settings-footer">
+        <button id="settings-save" class="settings-save-button">Speichern</button>
+      </div>
     </div>
   </div>
 
@@ -400,6 +451,6 @@ Card
   </div>
 
   <script src="../dist/browser/index.global.js?v=62"></script>
-  <script type="module" src="app.js?v=99"></script>
+  <script type="module" src="app.js?v=117"></script>
 </body>
 </html>
