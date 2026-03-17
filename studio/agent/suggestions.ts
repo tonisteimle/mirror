@@ -336,15 +336,6 @@ export class SuggestionEngine {
 
     // Always available quick actions
     actions.push({
-      id: 'qa-explain',
-      type: 'quick-action',
-      priority: 'low',
-      title: 'Explain code',
-      description: 'Get an explanation of the current code structure.',
-      action: { type: 'prompt', prompt: 'Explain this code' }
-    })
-
-    actions.push({
       id: 'qa-validate',
       type: 'quick-action',
       priority: 'low',
