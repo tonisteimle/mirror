@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror DSL Reference</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent-subtle: #388bfd26;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+    .stats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .stat {
+      background: var(--bg-secondary);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .stat-value { font-size: 1.5rem; font-weight: 600; color: var(--accent); }
+    .stat-label { font-size: 0.875rem; color: var(--text-muted); }
+    nav {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    nav a:hover { background: var(--accent-subtle); }
+    section { margin-bottom: 3rem; }
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 { font-size: 1.125rem; margin: 1.5rem 0 0.75rem; color: var(--text-muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--text-muted); font-weight: 500; }
+    tr:hover { background: var(--accent-subtle); }
+    code {
+      background: var(--bg-secondary);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 0.8125rem;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+      background: var(--accent-subtle);
+      color: var(--accent);
+    }
+    .category { text-transform: capitalize; }
+    .search-box {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    .search-box:focus { outline: none; border-color: var(--accent); }
+    .hidden { display: none; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mirror DSL Reference</h1>
+    <p class="subtitle">Auto-generated from <code>src/schema/dsl.ts</code></p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">30</div>
+        <div class="stat-label">Primitives</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">63</div>
+        <div class="stat-label">Properties</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Events</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">17</div>
+        <div class="stat-label">Actions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">17</div>
+        <div class="stat-label">States</div>
+      </div>
+    </div>
+
+    <input type="text" class="search-box" placeholder="Search properties, events, actions..." id="search">
+
+    <nav>
+      <a href="#primitives">Primitives</a>
+      <a href="#properties">Properties</a>
+      <a href="#events">Events</a>
+      <a href="#actions">Actions</a>
+      <a href="#states">States</a>
+      <a href="#keys">Keys</a>
+    </nav>
+
+    <section id="primitives">
+      <h2>Primitives</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>HTML Tag</th><th>Aliases</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="box ">
+            <td><strong>Box</strong></td>
+            <td><code>&lt;div&gt;</code></td>
+            <td>-</td>
+            <td>Generic container</td>
+          </tr>
+          <tr data-search="frame Box">
+            <td><strong>Frame</strong></td>
+            <td><code>&lt;div&gt;</code></td>
+            <td><code>Box</code></td>
+            <td>Alias for Box</td>
+          </tr>
+          <tr data-search="text ">
+            <td><strong>Text</strong></td>
+            <td><code>&lt;span&gt;</code></td>
+            <td>-</td>
+            <td>Text element</td>
+          </tr>
+          <tr data-search="button ">
+            <td><strong>Button</strong></td>
+            <td><code>&lt;button&gt;</code></td>
+            <td>-</td>
+            <td>Clickable button</td>
+          </tr>
+          <tr data-search="input ">
+            <td><strong>Input</strong></td>
+            <td><code>&lt;input&gt;</code></td>
+            <td>-</td>
+            <td>Text input field</td>
+          </tr>
+          <tr data-search="textarea ">
+            <td><strong>Textarea</strong></td>
+            <td><code>&lt;textarea&gt;</code></td>
+            <td>-</td>
+            <td>Multi-line text input</td>
+          </tr>
+          <tr data-search="label ">
+            <td><strong>Label</strong></td>
+            <td><code>&lt;label&gt;</code></td>
+            <td>-</td>
+            <td>Form label</td>
+          </tr>
+          <tr data-search="select ">
+            <td><strong>Select</strong></td>
+            <td><code>&lt;select&gt;</code></td>
+            <td>-</td>
+            <td>Dropdown select</td>
+          </tr>
+          <tr data-search="option ">
+            <td><strong>Option</strong></td>
+            <td><code>&lt;option&gt;</code></td>
+            <td>-</td>
+            <td>Select option</td>
+          </tr>
+          <tr data-search="checkbox ">
+            <td><strong>Checkbox</strong></td>
+            <td><code>&lt;input&gt;</code></td>
+            <td>-</td>
+            <td>Checkbox input (type=checkbox)</td>
+          </tr>
+          <tr data-search="radio ">
+            <td><strong>Radio</strong></td>
+            <td><code>&lt;input&gt;</code></td>
+            <td>-</td>
+            <td>Radio input (type=radio)</td>
+          </tr>
+          <tr data-search="image Img">
+            <td><strong>Image</strong></td>
+            <td><code>&lt;img&gt;</code></td>
+            <td><code>Img</code></td>
+            <td>Image element</td>
+          </tr>
+          <tr data-search="icon ">
+            <td><strong>Icon</strong></td>
+            <td><code>&lt;span&gt;</code></td>
+            <td>-</td>
+            <td>Icon element</td>
+          </tr>
+          <tr data-search="link ">
+            <td><strong>Link</strong></td>
+            <td><code>&lt;a&gt;</code></td>
+            <td>-</td>
+            <td>Anchor link</td>
+          </tr>
+          <tr data-search="slot ">
+            <td><strong>Slot</strong></td>
+            <td><code>&lt;div&gt;</code></td>
+            <td>-</td>
+            <td>Slot placeholder for composition</td>
+          </tr>
+          <tr data-search="divider ">
+            <td><strong>Divider</strong></td>
+            <td><code>&lt;hr&gt;</code></td>
+            <td>-</td>
+            <td>Horizontal divider line</td>
+          </tr>
+          <tr data-search="spacer ">
+            <td><strong>Spacer</strong></td>
+            <td><code>&lt;div&gt;</code></td>
+            <td>-</td>
+            <td>Flexible spacer element</td>
+          </tr>
+          <tr data-search="header ">
+            <td><strong>Header</strong></td>
+            <td><code>&lt;header&gt;</code></td>
+            <td>-</td>
+            <td>Page or section header</td>
+          </tr>
+          <tr data-search="nav ">
+            <td><strong>Nav</strong></td>
+            <td><code>&lt;nav&gt;</code></td>
+            <td>-</td>
+            <td>Navigation section</td>
+          </tr>
+          <tr data-search="main ">
+            <td><strong>Main</strong></td>
+            <td><code>&lt;main&gt;</code></td>
+            <td>-</td>
+            <td>Main content area</td>
+          </tr>
+          <tr data-search="section ">
+            <td><strong>Section</strong></td>
+            <td><code>&lt;section&gt;</code></td>
+            <td>-</td>
+            <td>Generic section</td>
+          </tr>
+          <tr data-search="article ">
+            <td><strong>Article</strong></td>
+            <td><code>&lt;article&gt;</code></td>
+            <td>-</td>
+            <td>Self-contained article</td>
+          </tr>
+          <tr data-search="aside ">
+            <td><strong>Aside</strong></td>
+            <td><code>&lt;aside&gt;</code></td>
+            <td>-</td>
+            <td>Sidebar content</td>
+          </tr>
+          <tr data-search="footer ">
+            <td><strong>Footer</strong></td>
+            <td><code>&lt;footer&gt;</code></td>
+            <td>-</td>
+            <td>Page or section footer</td>
+          </tr>
+          <tr data-search="h1 ">
+            <td><strong>H1</strong></td>
+            <td><code>&lt;h1&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 1</td>
+          </tr>
+          <tr data-search="h2 ">
+            <td><strong>H2</strong></td>
+            <td><code>&lt;h2&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 2</td>
+          </tr>
+          <tr data-search="h3 ">
+            <td><strong>H3</strong></td>
+            <td><code>&lt;h3&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 3</td>
+          </tr>
+          <tr data-search="h4 ">
+            <td><strong>H4</strong></td>
+            <td><code>&lt;h4&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 4</td>
+          </tr>
+          <tr data-search="h5 ">
+            <td><strong>H5</strong></td>
+            <td><code>&lt;h5&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 5</td>
+          </tr>
+          <tr data-search="h6 ">
+            <td><strong>H6</strong></td>
+            <td><code>&lt;h6&gt;</code></td>
+            <td>-</td>
+            <td>Heading level 6</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="properties">
+      <h2>Properties</h2>
+      <h3 class="category">sizing</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="width w sizing">
+            <td><strong>width</strong></td>
+            <td><code>w</code></td>
+            <td><code>full</code> <code>hug</code> <span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Element width</td>
+          </tr>
+          <tr data-search="height h sizing">
+            <td><strong>height</strong></td>
+            <td><code>h</code></td>
+            <td><code>full</code> <code>hug</code> <span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Element height</td>
+          </tr>
+          <tr data-search="size  sizing">
+            <td><strong>size</strong></td>
+            <td>-</td>
+            <td><code>full</code> <code>hug</code> <span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Width and height (square) or font-size for text</td>
+          </tr>
+          <tr data-search="min-width minw sizing">
+            <td><strong>min-width</strong></td>
+            <td><code>minw</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Minimum width</td>
+          </tr>
+          <tr data-search="max-width maxw sizing">
+            <td><strong>max-width</strong></td>
+            <td><code>maxw</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Maximum width</td>
+          </tr>
+          <tr data-search="min-height minh sizing">
+            <td><strong>min-height</strong></td>
+            <td><code>minh</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Minimum height</td>
+          </tr>
+          <tr data-search="max-height maxh sizing">
+            <td><strong>max-height</strong></td>
+            <td><code>maxh</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Maximum height</td>
+          </tr>
+          <tr data-search="aspect  sizing">
+            <td><strong>aspect</strong></td>
+            <td>-</td>
+            <td><code>square</code> <code>video</code> <span class="tag">number</span></td>
+            <td>Aspect ratio</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">layout</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="horizontal hor layout">
+            <td><strong>horizontal</strong></td>
+            <td><code>hor</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Horizontal layout (flex-direction: row)</td>
+          </tr>
+          <tr data-search="vertical ver layout">
+            <td><strong>vertical</strong></td>
+            <td><code>ver</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Vertical layout (flex-direction: column)</td>
+          </tr>
+          <tr data-search="gap g layout">
+            <td><strong>gap</strong></td>
+            <td><code>g</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Gap between children</td>
+          </tr>
+          <tr data-search="center cen layout">
+            <td><strong>center</strong></td>
+            <td><code>cen</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center children horizontally and vertically</td>
+          </tr>
+          <tr data-search="spread  layout">
+            <td><strong>spread</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Spread children with space between</td>
+          </tr>
+          <tr data-search="wrap  layout">
+            <td><strong>wrap</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Allow flex items to wrap</td>
+          </tr>
+          <tr data-search="stacked  layout">
+            <td><strong>stacked</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Stacked positioning context</td>
+          </tr>
+          <tr data-search="grid  layout">
+            <td><strong>grid</strong></td>
+            <td>-</td>
+            <td><code>auto</code> <span class="tag">number</span></td>
+            <td>CSS Grid layout</td>
+          </tr>
+          <tr data-search="grow  layout">
+            <td><strong>grow</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Flex grow</td>
+          </tr>
+          <tr data-search="shrink  layout">
+            <td><strong>shrink</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Flex shrink</td>
+          </tr>
+          <tr data-search="align  layout">
+            <td><strong>align</strong></td>
+            <td>-</td>
+            <td><code>top</code> <code>bottom</code> <code>left</code> <code>right</code> <code>center</code></td>
+            <td>Alignment of children</td>
+          </tr>
+          <tr data-search="left  layout">
+            <td><strong>left</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to left</td>
+          </tr>
+          <tr data-search="right  layout">
+            <td><strong>right</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to right</td>
+          </tr>
+          <tr data-search="top  layout">
+            <td><strong>top</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to top</td>
+          </tr>
+          <tr data-search="bottom  layout">
+            <td><strong>bottom</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to bottom</td>
+          </tr>
+          <tr data-search="hor-center  layout">
+            <td><strong>hor-center</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center children horizontally</td>
+          </tr>
+          <tr data-search="ver-center  layout">
+            <td><strong>ver-center</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center children vertically</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">spacing</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="padding pad p spacing">
+            <td><strong>padding</strong></td>
+            <td><code>pad</code>, <code>p</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Inner spacing</td>
+          </tr>
+          <tr data-search="margin m spacing">
+            <td><strong>margin</strong></td>
+            <td><code>m</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Outer spacing</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">color</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="background bg color">
+            <td><strong>background</strong></td>
+            <td><code>bg</code></td>
+            <td><span class="tag">color</span> <span class="tag">$token</span></td>
+            <td>Background color</td>
+          </tr>
+          <tr data-search="color col c color">
+            <td><strong>color</strong></td>
+            <td><code>col</code>, <code>c</code></td>
+            <td><span class="tag">color</span> <span class="tag">$token</span></td>
+            <td>Text color</td>
+          </tr>
+          <tr data-search="border-color boc color">
+            <td><strong>border-color</strong></td>
+            <td><code>boc</code></td>
+            <td><span class="tag">color</span> <span class="tag">$token</span></td>
+            <td>Border color</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">border</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="border bor border">
+            <td><strong>border</strong></td>
+            <td><code>bor</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Border (width, style, color)</td>
+          </tr>
+          <tr data-search="radius rad border">
+            <td><strong>radius</strong></td>
+            <td><code>rad</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Border radius</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">typography</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="font-size fs typography">
+            <td><strong>font-size</strong></td>
+            <td><code>fs</code></td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Font size</td>
+          </tr>
+          <tr data-search="weight  typography">
+            <td><strong>weight</strong></td>
+            <td>-</td>
+            <td><code>thin</code> <code>light</code> <code>normal</code> <code>medium</code> <code>semibold</code> <code>bold</code> <code>black</code> <span class="tag">number</span></td>
+            <td>Font weight</td>
+          </tr>
+          <tr data-search="line  typography">
+            <td><strong>line</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span> <span class="tag">$token</span></td>
+            <td>Line height</td>
+          </tr>
+          <tr data-search="font  typography">
+            <td><strong>font</strong></td>
+            <td>-</td>
+            <td><code>sans</code> <code>serif</code> <code>mono</code> <span class="tag">$token</span></td>
+            <td>Font family</td>
+          </tr>
+          <tr data-search="text-align  typography">
+            <td><strong>text-align</strong></td>
+            <td>-</td>
+            <td><code>left</code> <code>center</code> <code>right</code> <code>justify</code></td>
+            <td>Text alignment</td>
+          </tr>
+          <tr data-search="italic  typography">
+            <td><strong>italic</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Italic text</td>
+          </tr>
+          <tr data-search="underline  typography">
+            <td><strong>underline</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Underlined text</td>
+          </tr>
+          <tr data-search="uppercase  typography">
+            <td><strong>uppercase</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Uppercase text</td>
+          </tr>
+          <tr data-search="lowercase  typography">
+            <td><strong>lowercase</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Lowercase text</td>
+          </tr>
+          <tr data-search="truncate  typography">
+            <td><strong>truncate</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Truncate text with ellipsis</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">position</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="x  position">
+            <td><strong>x</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>X position (left) - sets position: absolute</td>
+          </tr>
+          <tr data-search="y  position">
+            <td><strong>y</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>Y position (top) - sets position: absolute</td>
+          </tr>
+          <tr data-search="z  position">
+            <td><strong>z</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>Z-index (stacking order)</td>
+          </tr>
+          <tr data-search="absolute abs position">
+            <td><strong>absolute</strong></td>
+            <td><code>abs</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Absolute positioning</td>
+          </tr>
+          <tr data-search="fixed  position">
+            <td><strong>fixed</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Fixed positioning</td>
+          </tr>
+          <tr data-search="relative  position">
+            <td><strong>relative</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Relative positioning</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">transform</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="rotate rot transform">
+            <td><strong>rotate</strong></td>
+            <td><code>rot</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Rotate element</td>
+          </tr>
+          <tr data-search="scale  transform">
+            <td><strong>scale</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>Scale element</td>
+          </tr>
+          <tr data-search="translate  transform">
+            <td><strong>translate</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>Translate element (x, y)</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 class="category">effect</h3>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Aliases</th><th>Values</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="opacity o opa effect">
+            <td><strong>opacity</strong></td>
+            <td><code>o</code>, <code>opa</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Element opacity</td>
+          </tr>
+          <tr data-search="shadow  effect">
+            <td><strong>shadow</strong></td>
+            <td>-</td>
+            <td><code>sm</code> <code>md</code> <code>lg</code></td>
+            <td>Box shadow</td>
+          </tr>
+          <tr data-search="cursor  effect">
+            <td><strong>cursor</strong></td>
+            <td>-</td>
+            <td><code>pointer</code> <code>grab</code> <code>move</code> <code>text</code> <code>wait</code> <code>not-allowed</code></td>
+            <td>Mouse cursor style</td>
+          </tr>
+          <tr data-search="blur  effect">
+            <td><strong>blur</strong></td>
+            <td>-</td>
+            <td><span class="tag">number</span></td>
+            <td>Blur filter</td>
+          </tr>
+          <tr data-search="backdrop-blur blur-bg effect">
+            <td><strong>backdrop-blur</strong></td>
+            <td><code>blur-bg</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Backdrop blur filter</td>
+          </tr>
+          <tr data-search="hidden  effect">
+            <td><strong>hidden</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Hide element</td>
+          </tr>
+          <tr data-search="visible  effect">
+            <td><strong>visible</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Show element</td>
+          </tr>
+          <tr data-search="disabled  effect">
+            <td><strong>disabled</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Disable element</td>
+          </tr>
+          <tr data-search="scroll scroll-ver effect">
+            <td><strong>scroll</strong></td>
+            <td><code>scroll-ver</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Enable vertical scrolling</td>
+          </tr>
+          <tr data-search="scroll-hor  effect">
+            <td><strong>scroll-hor</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Enable horizontal scrolling</td>
+          </tr>
+          <tr data-search="scroll-both  effect">
+            <td><strong>scroll-both</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Enable scrolling in both directions</td>
+          </tr>
+          <tr data-search="clip  effect">
+            <td><strong>clip</strong></td>
+            <td>-</td>
+            <td><span class="tag">standalone</span></td>
+            <td>Clip overflow content</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="events">
+      <h2>Events</h2>
+      <table>
+        <thead>
+          <tr><th>Event</th><th>DOM Event</th><th>Key Modifier</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="onclick click">
+            <td><strong>onclick</strong></td>
+            <td><code>click</code></td>
+            <td>-</td>
+            <td>Click event</td>
+          </tr>
+          <tr data-search="onhover mouseenter">
+            <td><strong>onhover</strong></td>
+            <td><code>mouseenter</code></td>
+            <td>-</td>
+            <td>Mouse enter event</td>
+          </tr>
+          <tr data-search="onfocus focus">
+            <td><strong>onfocus</strong></td>
+            <td><code>focus</code></td>
+            <td>-</td>
+            <td>Focus event</td>
+          </tr>
+          <tr data-search="onblur blur">
+            <td><strong>onblur</strong></td>
+            <td><code>blur</code></td>
+            <td>-</td>
+            <td>Blur event</td>
+          </tr>
+          <tr data-search="onchange change">
+            <td><strong>onchange</strong></td>
+            <td><code>change</code></td>
+            <td>-</td>
+            <td>Change event</td>
+          </tr>
+          <tr data-search="oninput input">
+            <td><strong>oninput</strong></td>
+            <td><code>input</code></td>
+            <td>-</td>
+            <td>Input event</td>
+          </tr>
+          <tr data-search="onkeydown keydown">
+            <td><strong>onkeydown</strong></td>
+            <td><code>keydown</code></td>
+            <td>✓</td>
+            <td>Keydown event</td>
+          </tr>
+          <tr data-search="onkeyup keyup">
+            <td><strong>onkeyup</strong></td>
+            <td><code>keyup</code></td>
+            <td>✓</td>
+            <td>Keyup event</td>
+          </tr>
+          <tr data-search="onclick-outside click-outside">
+            <td><strong>onclick-outside</strong></td>
+            <td><code>click-outside</code></td>
+            <td>-</td>
+            <td>Click outside element</td>
+          </tr>
+          <tr data-search="onload load">
+            <td><strong>onload</strong></td>
+            <td><code>load</code></td>
+            <td>-</td>
+            <td>Load event</td>
+          </tr>
+          <tr data-search="onenter enter">
+            <td><strong>onenter</strong></td>
+            <td><code>enter</code></td>
+            <td>-</td>
+            <td>Viewport enter (IntersectionObserver)</td>
+          </tr>
+          <tr data-search="onexit exit">
+            <td><strong>onexit</strong></td>
+            <td><code>exit</code></td>
+            <td>-</td>
+            <td>Viewport exit (IntersectionObserver)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="actions">
+      <h2>Actions</h2>
+      <table>
+        <thead>
+          <tr><th>Action</th><th>Targets</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="show">
+            <td><strong>show</strong></td>
+            <td>-</td>
+            <td>Show element</td>
+          </tr>
+          <tr data-search="hide">
+            <td><strong>hide</strong></td>
+            <td>-</td>
+            <td>Hide element</td>
+          </tr>
+          <tr data-search="toggle">
+            <td><strong>toggle</strong></td>
+            <td>-</td>
+            <td>Toggle visibility</td>
+          </tr>
+          <tr data-search="open">
+            <td><strong>open</strong></td>
+            <td>-</td>
+            <td>Open (modal, dropdown)</td>
+          </tr>
+          <tr data-search="close">
+            <td><strong>close</strong></td>
+            <td>-</td>
+            <td>Close</td>
+          </tr>
+          <tr data-search="select">
+            <td><strong>select</strong></td>
+            <td>-</td>
+            <td>Select item</td>
+          </tr>
+          <tr data-search="highlight">
+            <td><strong>highlight</strong></td>
+            <td><code>next</code>, <code>prev</code>, <code>first</code>, <code>last</code></td>
+            <td>Highlight item</td>
+          </tr>
+          <tr data-search="activate">
+            <td><strong>activate</strong></td>
+            <td>-</td>
+            <td>Activate element</td>
+          </tr>
+          <tr data-search="deactivate">
+            <td><strong>deactivate</strong></td>
+            <td>-</td>
+            <td>Deactivate element</td>
+          </tr>
+          <tr data-search="page">
+            <td><strong>page</strong></td>
+            <td>-</td>
+            <td>Navigate to page</td>
+          </tr>
+          <tr data-search="call">
+            <td><strong>call</strong></td>
+            <td>-</td>
+            <td>Call function</td>
+          </tr>
+          <tr data-search="assign">
+            <td><strong>assign</strong></td>
+            <td>-</td>
+            <td>Assign value</td>
+          </tr>
+          <tr data-search="focus">
+            <td><strong>focus</strong></td>
+            <td>-</td>
+            <td>Focus element</td>
+          </tr>
+          <tr data-search="blur">
+            <td><strong>blur</strong></td>
+            <td>-</td>
+            <td>Blur element</td>
+          </tr>
+          <tr data-search="submit">
+            <td><strong>submit</strong></td>
+            <td>-</td>
+            <td>Submit form</td>
+          </tr>
+          <tr data-search="reset">
+            <td><strong>reset</strong></td>
+            <td>-</td>
+            <td>Reset form</td>
+          </tr>
+          <tr data-search="navigate">
+            <td><strong>navigate</strong></td>
+            <td>-</td>
+            <td>Navigate to route</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="states">
+      <h2>States</h2>
+      <h3>System States (CSS pseudo-classes)</h3>
+      <table>
+        <thead>
+          <tr><th>State</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="hover">
+            <td><strong>hover</strong></td>
+            <td>Mouse hover state</td>
+          </tr>
+          <tr data-search="focus">
+            <td><strong>focus</strong></td>
+            <td>Focus state</td>
+          </tr>
+          <tr data-search="active">
+            <td><strong>active</strong></td>
+            <td>Active/pressed state</td>
+          </tr>
+          <tr data-search="disabled">
+            <td><strong>disabled</strong></td>
+            <td>Disabled state</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Custom States (data-state attribute)</h3>
+      <table>
+        <thead>
+          <tr><th>State</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr data-search="selected">
+            <td><strong>selected</strong></td>
+            <td>Selected state</td>
+          </tr>
+          <tr data-search="highlighted">
+            <td><strong>highlighted</strong></td>
+            <td>Highlighted state</td>
+          </tr>
+          <tr data-search="expanded">
+            <td><strong>expanded</strong></td>
+            <td>Expanded state</td>
+          </tr>
+          <tr data-search="collapsed">
+            <td><strong>collapsed</strong></td>
+            <td>Collapsed state</td>
+          </tr>
+          <tr data-search="on">
+            <td><strong>on</strong></td>
+            <td>On state (toggle)</td>
+          </tr>
+          <tr data-search="off">
+            <td><strong>off</strong></td>
+            <td>Off state (toggle)</td>
+          </tr>
+          <tr data-search="open">
+            <td><strong>open</strong></td>
+            <td>Open state</td>
+          </tr>
+          <tr data-search="closed">
+            <td><strong>closed</strong></td>
+            <td>Closed state</td>
+          </tr>
+          <tr data-search="filled">
+            <td><strong>filled</strong></td>
+            <td>Filled state (input has value)</td>
+          </tr>
+          <tr data-search="valid">
+            <td><strong>valid</strong></td>
+            <td>Valid state</td>
+          </tr>
+          <tr data-search="invalid">
+            <td><strong>invalid</strong></td>
+            <td>Invalid state</td>
+          </tr>
+          <tr data-search="loading">
+            <td><strong>loading</strong></td>
+            <td>Loading state</td>
+          </tr>
+          <tr data-search="error">
+            <td><strong>error</strong></td>
+            <td>Error state</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="keys">
+      <h2>Keyboard Keys</h2>
+      <p>Valid keys for <code>onkeydown</code> events:</p>
+      <p style="margin-top: 1rem;">
+<code>escape</code> <code>enter</code> <code>space</code> <code>tab</code> <code>backspace</code> <code>delete</code> <code>arrow-up</code> <code>arrow-down</code> <code>arrow-left</code> <code>arrow-right</code> <code>home</code> <code>end</code>
+      </p>
+    </section>
+
+    <footer>
+      Generated on 2026-03-16 &bull;
+      Schema version: 63 properties
+    </footer>
+  </div>
+
+  <script>
+    const search = document.getElementById('search');
+    const rows = document.querySelectorAll('tr[data-search]');
+
+    search.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      rows.forEach(row => {
+        const text = row.dataset.search || '';
+        row.classList.toggle('hidden', query && !text.includes(query));
+      });
+    });
+  </script>
+</body>
+</html>

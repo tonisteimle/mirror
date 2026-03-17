@@ -1,5 +1,8 @@
 /**
  * LLM Module - LLM Integration
+ *
+ * Bridge between LLM-generated commands and the command executor.
+ * Supports both real nodeIds and line-based selectors (line-N format).
  */
 
 import { state, executor, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, MoveNodeCommand, UpdateSourceCommand, BatchCommand, type Command } from '../core'
@@ -56,18 +59,58 @@ export class LLMBridge {
     }
   }
 
+  /**
+   * Resolve a nodeId that might be in line-N format to a real nodeId.
+   * Supports:
+   * - "line-3" -> nodeId at line 3
+   * - "node-5" -> unchanged (real nodeId)
+   */
+  private resolveNodeId(nodeId: string | undefined): string | null {
+    if (!nodeId) return null
+
+    // Check for line-N format
+    const lineMatch = nodeId.match(/^line-(\d+)$/)
+    if (lineMatch) {
+      const lineNumber = parseInt(lineMatch[1], 10)
+      const sourceMap = state.get().sourceMap
+      if (sourceMap) {
+        const node = sourceMap.getNodeAtLine(lineNumber)
+        if (node) {
+          return node.nodeId
+        }
+        console.warn(`[LLMBridge] No node found at line ${lineNumber}`)
+        return null
+      }
+      console.warn(`[LLMBridge] No sourceMap available for line resolution`)
+      return null
+    }
+
+    // Return as-is (assumed to be a real nodeId)
+    return nodeId
+  }
+
   private createCommand(payload: LLMCommandPayload): Command | null {
+    // Resolve line-based nodeIds to real nodeIds
+    const nodeId = this.resolveNodeId(payload.nodeId)
+    const parentId = this.resolveNodeId(payload.parentId)
+    const targetId = this.resolveNodeId(payload.targetId)
+
     switch (payload.type) {
       case 'SET_PROPERTY':
-        return new SetPropertyCommand({ nodeId: payload.nodeId!, property: payload.property!, value: String(payload.value) })
+        if (!nodeId) return null
+        return new SetPropertyCommand({ nodeId, property: payload.property!, value: String(payload.value) })
       case 'REMOVE_PROPERTY':
-        return new RemovePropertyCommand({ nodeId: payload.nodeId!, property: payload.property! })
+        if (!nodeId) return null
+        return new RemovePropertyCommand({ nodeId, property: payload.property! })
       case 'INSERT_COMPONENT':
-        return new InsertComponentCommand({ parentId: payload.parentId!, component: payload.component!, position: payload.position, properties: payload.properties })
+        if (!parentId) return null
+        return new InsertComponentCommand({ parentId, component: payload.component!, position: payload.position, properties: payload.properties })
       case 'DELETE_NODE':
-        return new DeleteNodeCommand({ nodeId: payload.nodeId! })
+        if (!nodeId) return null
+        return new DeleteNodeCommand({ nodeId })
       case 'MOVE_NODE':
-        return new MoveNodeCommand({ nodeId: payload.nodeId!, targetId: payload.targetId!, position: payload.placement || 'inside' })
+        if (!nodeId || !targetId) return null
+        return new MoveNodeCommand({ nodeId, targetId, position: payload.placement || 'inside' })
       case 'UPDATE_SOURCE':
         return new UpdateSourceCommand({ from: payload.from!, to: payload.to!, insert: payload.insert! })
       case 'BATCH':

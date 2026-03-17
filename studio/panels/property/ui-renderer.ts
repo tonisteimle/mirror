@@ -6,6 +6,7 @@
 
 import type { ExtractedProperty, ExtractedElement, PropertyCategory, PropertyInputConfig, ChildElement, CategoryName } from './types'
 import { CATEGORY_INFO } from './types'
+import { PositionSection } from '../../visual/position-controls'
 
 export interface UIRendererConfig {
   showIcons?: boolean
@@ -16,6 +17,7 @@ export interface UIRendererConfig {
 export class UIRenderer {
   private config: Required<UIRendererConfig>
   private collapsedCategories: Set<CategoryName> = new Set()
+  private positionSection: PositionSection | null = null
 
   constructor(config: UIRendererConfig = {}) {
     this.config = {
@@ -26,11 +28,23 @@ export class UIRenderer {
     }
   }
 
+  /**
+   * Dispose of any child components
+   */
+  dispose(): void {
+    this.positionSection?.dispose()
+    this.positionSection = null
+  }
+
   render(element: ExtractedElement, callbacks: {
     onPropertyChange: (property: string, value: string) => void
     onPropertyRemove: (property: string) => void
     onChildSelect?: (childId: string) => void
   }): HTMLElement {
+    // Clean up previous position section
+    this.positionSection?.dispose()
+    this.positionSection = null
+
     const container = document.createElement('div')
     container.className = 'property-panel-content'
 
@@ -40,18 +54,89 @@ export class UIRenderer {
     // Render categories from element.categories
     for (const category of element.categories) {
       if (category.properties.length > 0) {
-        container.appendChild(
-          this.renderCategory(
-            category.name as CategoryName,
-            category.properties,
-            element.nodeId,
-            callbacks
+        // Special handling for position category
+        if (category.name === 'position') {
+          const positionEl = this.renderPositionSection(category.properties, element.nodeId, callbacks)
+          if (positionEl) {
+            container.appendChild(positionEl)
+          }
+        } else {
+          container.appendChild(
+            this.renderCategory(
+              category.name as CategoryName,
+              category.properties,
+              element.nodeId,
+              callbacks
+            )
           )
-        )
+        }
       }
     }
 
     return container
+  }
+
+  /**
+   * Render specialized position section with NumericInput controls
+   */
+  private renderPositionSection(
+    properties: ExtractedProperty[],
+    nodeId: string,
+    callbacks: {
+      onPropertyChange: (property: string, value: string) => void
+      onPropertyRemove: (property: string) => void
+    }
+  ): HTMLElement | null {
+    // Check if we have x or y properties (element is in absolute container)
+    const xProp = properties.find(p => p.name === 'x')
+    const yProp = properties.find(p => p.name === 'y')
+
+    // If no x/y properties, render as regular category
+    if (!xProp && !yProp) {
+      return this.renderCategory('position', properties, nodeId, callbacks)
+    }
+
+    const section = document.createElement('div')
+    section.className = 'property-panel-category property-panel-position'
+    section.setAttribute('data-category', 'position')
+
+    // Create position section with numeric inputs
+    this.positionSection = new PositionSection()
+
+    const positionContainer = document.createElement('div')
+    this.positionSection.render({
+      container: positionContainer,
+      x: parseInt(xProp?.value || '0', 10),
+      y: parseInt(yProp?.value || '0', 10),
+      nodeId,
+      onChange: (axis, value) => {
+        callbacks.onPropertyChange(axis, String(value))
+      },
+    })
+
+    section.appendChild(positionContainer)
+
+    // Render remaining position properties (like 'abs', 'z') as regular properties
+    const otherProps = properties.filter(p => p.name !== 'x' && p.name !== 'y')
+    if (otherProps.length > 0) {
+      const otherList = document.createElement('div')
+      otherList.className = 'property-panel-properties'
+
+      for (const property of otherProps) {
+        otherList.appendChild(
+          this.renderProperty({
+            property,
+            nodeId,
+            onChange: (value) => callbacks.onPropertyChange(property.name, value),
+            onRemove: () => callbacks.onPropertyRemove(property.name),
+          })
+        )
+      }
+
+      section.appendChild(otherList)
+    }
+
+    return section
   }
 
   renderHeader(element: ExtractedElement): HTMLElement {

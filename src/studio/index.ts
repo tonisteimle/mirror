@@ -128,6 +128,24 @@ export {
   type ParsedLine,
 } from './line-property-parser'
 
+// Spatial indexing for performance
+export {
+  SpatialCache,
+  createSpatialCache,
+  type SpatialItem,
+} from './spatial-cache'
+
+// Drop indicator rendering
+export {
+  DropIndicatorRenderer,
+  createDropIndicatorRenderer,
+  type LineIndicatorConfig,
+  type CrosshairIndicatorConfig,
+  type HighlightConfig,
+  type ZoneIndicatorConfig,
+  type RendererIndicatorConfig,
+} from './drop-indicator-renderer'
+
 // Drop Strategies (layout-specific drop behavior)
 export {
   // Types

@@ -103,6 +103,13 @@ export const properties: PropertyDefinition[] = [
     description: 'Stack children (z-layers)',
   },
   {
+    name: 'pos',
+    aliases: ['positioned'],
+    type: 'boolean',
+    category: 'layout',
+    description: 'Positioned container - children can use x/y',
+  },
+  {
     name: 'grid',
     aliases: [],
     type: 'boolean',
@@ -114,11 +121,11 @@ export const properties: PropertyDefinition[] = [
   // POSITION (Absolute Positioning)
   // ============================================
   {
-    name: 'abs',
-    aliases: ['absolute'],
+    name: 'absolute',
+    aliases: ['abs'],
     type: 'boolean',
     category: 'position',
-    description: 'Absolute container (position: relative)',
+    description: 'Absolute positioning (position: absolute)',
   },
   {
     name: 'x',
@@ -135,6 +142,60 @@ export const properties: PropertyDefinition[] = [
     category: 'position',
     description: 'Vertical position (top)',
     unit: 'px',
+  },
+  // Constraint/Anchor Properties
+  {
+    name: 'pin-left',
+    aliases: ['pl'],
+    type: 'number',
+    category: 'position',
+    description: 'Pin to left edge with offset',
+    unit: 'px',
+  },
+  {
+    name: 'pin-right',
+    aliases: ['pr'],
+    type: 'number',
+    category: 'position',
+    description: 'Pin to right edge with offset',
+    unit: 'px',
+  },
+  {
+    name: 'pin-top',
+    aliases: ['pt'],
+    type: 'number',
+    category: 'position',
+    description: 'Pin to top edge with offset',
+    unit: 'px',
+  },
+  {
+    name: 'pin-bottom',
+    aliases: ['pb'],
+    type: 'number',
+    category: 'position',
+    description: 'Pin to bottom edge with offset',
+    unit: 'px',
+  },
+  {
+    name: 'pin-center-x',
+    aliases: ['pcx'],
+    type: 'boolean',
+    category: 'position',
+    description: 'Center horizontally within parent',
+  },
+  {
+    name: 'pin-center-y',
+    aliases: ['pcy'],
+    type: 'boolean',
+    category: 'position',
+    description: 'Center vertically within parent',
+  },
+  {
+    name: 'pin-center',
+    aliases: ['pc'],
+    type: 'boolean',
+    category: 'position',
+    description: 'Center both horizontally and vertically',
   },
 
   // ============================================

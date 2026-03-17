@@ -1363,15 +1363,15 @@ export class CodeModifier {
    * - Row container: horizontal → justify-content, vertical → align-items
    */
   private static readonly ZONE_CONTAINER_LAYOUT: Record<SemanticZone, string> = {
-    'top-left':     'left, top',
-    'top-center':   'hor-center, top',
-    'top-right':    'right, top',
-    'mid-left':     'left, ver-center',
+    'top-left':     'ver',
+    'top-center':   'ver, center',
+    'top-right':    'ver, hor',
+    'mid-left':     '',  // default, no layout needed
     'mid-center':   'center',
-    'mid-right':    'right, ver-center',
-    'bot-left':     'left, bottom',
-    'bot-center':   'hor-center, bottom',
-    'bot-right':    'right, bottom',
+    'mid-right':    'hor, spread',
+    'bot-left':     'ver, spread',
+    'bot-center':   'ver, spread, center',
+    'bot-right':    'ver, spread, hor',
   }
 
   /**

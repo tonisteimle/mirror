@@ -61,13 +61,19 @@ class GlobalColorPickerWrapper {
    * Show the picker at position - calls the global showColorPicker from app.js
    */
   showAt(x: number, y: number): void {
-    const context = colorState.currentContext
+    // Get context from the trigger manager's state (has correct startPos)
+    const manager = getTriggerManager()
+    const managerState = manager.getState()
+    const context = managerState.context || colorState.currentContext
     const view = colorState.currentView
 
     if (!context || !view) {
       console.warn('[ColorTrigger] No context or view available')
       return
     }
+
+    // Update colorState with correct context from manager
+    colorState.currentContext = context
 
     // Get initial color from existing value (for double-click on existing color)
     const initialColor = context.existingValue || null

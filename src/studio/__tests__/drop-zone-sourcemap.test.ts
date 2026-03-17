@@ -425,27 +425,35 @@ describe('DropZone SourceMap: Leaf Element Handling', () => {
   })
 
   it('does not allow inside placement for Text', () => {
+    // Create a parent Box to contain the Text leaf element
+    const parentBox = createNodeElement('parent-1', { name: 'Box', width: 200, height: 100, display: 'flex' })
     const textNode = createNodeElement('text-1', { name: 'Text' })
-    container.appendChild(textNode)
+    parentBox.appendChild(textNode)
+    container.appendChild(parentBox)
 
+    mockElementRect(parentBox, { x: 0, y: 0, width: 200, height: 100 })
     mockElementRect(textNode, { x: 10, y: 10, width: 100, height: 30 })
     setMockElementAtPoint(textNode)
 
     const result = calculator.calculateFromPoint(50, 25)
 
     expect(result).not.toBeNull()
-    // For leaf elements, placement should be before/after, not inside
-    // (or the calculator might return null for center region)
+    // For leaf elements, placement should target the parent, not the leaf itself
     if (result?.placement === 'inside') {
       // If inside, the target should be parent, not the leaf itself
       expect(result?.targetId).not.toBe('text-1')
+      expect(result?.targetId).toBe('parent-1')
     }
   })
 
   it('does not allow inside placement for Icon', () => {
+    // Create a parent Box to contain the Icon leaf element
+    const parentBox = createNodeElement('parent-1', { name: 'Box', width: 100, height: 100, display: 'flex' })
     const iconNode = createNodeElement('icon-1', { name: 'Icon' })
-    container.appendChild(iconNode)
+    parentBox.appendChild(iconNode)
+    container.appendChild(parentBox)
 
+    mockElementRect(parentBox, { x: 0, y: 0, width: 100, height: 100 })
     mockElementRect(iconNode, { x: 10, y: 10, width: 24, height: 24 })
     setMockElementAtPoint(iconNode)
 
@@ -454,6 +462,7 @@ describe('DropZone SourceMap: Leaf Element Handling', () => {
     expect(result).not.toBeNull()
     if (result?.placement === 'inside') {
       expect(result?.targetId).not.toBe('icon-1')
+      expect(result?.targetId).toBe('parent-1')
     }
   })
 

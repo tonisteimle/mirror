@@ -99,6 +99,29 @@ try {
         exit;
     }
 
+    // Session status (works for anonymous users too)
+    if (preg_match('#^/auth/status$#', $uri) && $method === 'GET') {
+        echo json_encode(authStatus());
+        exit;
+    }
+
+    // Reset test user (development only)
+    if (preg_match('#^/auth/reset-test$#', $uri) && $method === 'POST') {
+        echo json_encode(resetTestUser());
+        exit;
+    }
+
+    // User settings
+    if (preg_match('#^/auth/settings$#', $uri) && $method === 'GET') {
+        echo json_encode(authGetSettings());
+        exit;
+    }
+
+    if (preg_match('#^/auth/settings$#', $uri) && $method === 'PUT') {
+        echo json_encode(authSaveSettings($body));
+        exit;
+    }
+
     // Project routes
     if (preg_match('#^/projects$#', $uri) && $method === 'GET') {
         echo json_encode(getProjects());

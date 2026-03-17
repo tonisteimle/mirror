@@ -1,13 +1,14 @@
 /**
  * Mirror Primitive Definitions
  *
- * Central definition of all primitives with their default styles.
- * These defaults are applied in the IR transformation and can be
- * overridden by component definitions or instance properties.
+ * Default styles for primitives, applied in IR transformation.
+ * Primitive names and HTML tags come from the schema (src/schema/dsl.ts).
  *
  * Hierarchy (later overrides earlier):
  *   Primitive Defaults < Component Definition < Instance Properties
  */
+
+import { DSL, isPrimitive as schemaIsPrimitive, getPrimitiveDef } from './dsl'
 
 /**
  * A default property value for a primitive.
@@ -41,8 +42,8 @@ const COLORS = {
 const SIZES = {
   controlHeight: 36,    // Unified height for inputs, buttons
   radius: 6,            // Border radius
-  font: 15,             // Base font size
   iconSize: 20,         // Icon size
+  // Note: font size is inherited from App, not set per-primitive
 }
 
 /**
@@ -50,6 +51,18 @@ const SIZES = {
  * Keys are lowercase primitive names.
  */
 export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
+  // App container (root element)
+  app: {
+    tag: 'div',
+    defaults: [
+      { name: 'w', values: ['full'] },
+      { name: 'h', values: ['full'] },
+      { name: 'font', values: ['roboto'] },
+      { name: 'fs', values: [14] },
+    ],
+    description: 'Root application container, full width and height by default',
+  },
+
   // Container primitives
   box: {
     tag: 'div',
@@ -74,7 +87,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },
       { name: 'cursor', values: ['pointer'] },
-      { name: 'font', values: [SIZES.font] },
+      // font inherited from parent (App)
     ],
     description: 'Clickable button with default styling',
   },
@@ -89,7 +102,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },
       { name: 'w', values: [200] },
-      { name: 'font', values: [SIZES.font] },
+      // font inherited from parent (App)
     ],
     description: 'Text input field',
   },
@@ -104,7 +117,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
       { name: 'bor', values: [0] },
       { name: 'w', values: [200] },
       { name: 'h', values: [100] },
-      { name: 'font', values: [SIZES.font] },
+      // font inherited from parent (App)
     ],
     description: 'Multi-line text input',
   },
@@ -113,7 +126,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
   text: {
     tag: 'span',
     defaults: [
-      { name: 'font', values: [SIZES.font] },
+      // font inherited from parent (App)
     ],
     description: 'Text element',
   },
@@ -121,7 +134,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
   label: {
     tag: 'label',
     defaults: [
-      { name: 'font', values: [SIZES.font] },
+      // font inherited from parent (App)
     ],
     description: 'Form label element',
   },
@@ -195,9 +208,11 @@ export function getPrimitive(name: string): PrimitiveDefinition | undefined {
 
 /**
  * Check if a component name is a primitive.
+ * Delegates to the schema for the source of truth.
  */
 export function isPrimitive(name: string): boolean {
-  return name.toLowerCase() in PRIMITIVES
+  // Use schema as source of truth, but also check local PRIMITIVES for defaults
+  return schemaIsPrimitive(name) || name.toLowerCase() in PRIMITIVES
 }
 
 /**
@@ -210,8 +225,13 @@ export function getPrimitiveDefaults(name: string): DefaultProperty[] {
 
 /**
  * Get HTML tag for a primitive.
- * Returns 'div' as fallback for unknown primitives.
+ * Uses schema as source of truth, falls back to local definition or 'div'.
  */
 export function getPrimitiveTag(name: string): string {
+  // First check schema
+  const schemaDef = getPrimitiveDef(name)
+  if (schemaDef) return schemaDef.html
+
+  // Then check local definition
   return PRIMITIVES[name.toLowerCase()]?.tag || 'div'
 }

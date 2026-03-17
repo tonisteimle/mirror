@@ -149,7 +149,7 @@ function scanDirRecursive(string $dir, string $relativePath = ''): array {
  * Returns: [{ filename, path, type, updated_at?, children? }]
  */
 function getFiles(string $projectId): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate ownership
     if (!validateProjectOwnership($userId, $projectId)) {
@@ -169,7 +169,7 @@ function getFiles(string $projectId): array {
  * Returns: { content }
  */
 function getFile(string $projectId, string $filePath): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate path (supports both flat filenames and paths)
     if (!validateFilename($filePath) && !validatePath($filePath)) {
@@ -212,7 +212,7 @@ function getFile(string $projectId, string $filePath): array {
  * Returns: { success }
  */
 function putFile(string $projectId, string $filePath, array $body): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate path (supports both flat filenames and paths)
     if (!validateFilename($filePath) && !validatePath($filePath)) {
@@ -264,7 +264,7 @@ function putFile(string $projectId, string $filePath, array $body): array {
  * Returns: { success }
  */
 function deleteFile(string $projectId, string $filePath): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate path (supports both flat filenames and paths)
     if (!validateFilename($filePath) && !validatePath($filePath)) {
@@ -317,7 +317,7 @@ function deleteFile(string $projectId, string $filePath): array {
  * Returns: { success, path }
  */
 function createFolder(string $projectId, array $body): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     $name = $body['name'] ?? '';
     $parent = $body['parent'] ?? '';
@@ -375,7 +375,7 @@ function createFolder(string $projectId, array $body): array {
  * Returns: { success }
  */
 function deleteFolder(string $projectId, string $folderPath): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate path
     if (!validatePath($folderPath)) {

@@ -16,8 +16,8 @@ Das Property Panel ist die rechte Sidebar im Mirror Studio, die erscheint wenn e
 | **Spacing** | ✅ Funktioniert | Padding mit Token-Auswahl und Expand |
 | **Color** | ✅ Funktioniert | BG und Text mit Color Picker und Swatches |
 | **Border** | ✅ Funktioniert | Radius und Border Width/Color |
-| **Typography** | ❌ Broken | Return '' - wird nie gerendert |
-| **Visual** | ❌ Fehlt | Nie in Pipeline eingebunden |
+| **Typography** | ✅ Funktioniert | Font, Size, Weight, Align, Style |
+| **Visual** | ⚠️ Nicht aktiviert | Code vorhanden, bewusst nicht eingebunden |
 | **Hover** | ❌ Fehlt | Keine UI für hover-* Properties |
 
 ### Features
@@ -31,14 +31,16 @@ Das Property Panel ist die rechte Sidebar im Mirror Studio, die erscheint wenn e
 | Color Swatches | ✅ Funktioniert | Vordefinierte Farben anklicken |
 | Size Presets | ✅ Funktioniert | hug/full Buttons |
 | Gap Input | ✅ Funktioniert | Mit Token-Auswahl |
-| Font Dropdown | ❌ Broken | Element `.pp-font-input` existiert nicht |
-| Font Size Input | ❌ Broken | Element `.pp-fontsize-input` existiert nicht |
-| Weight Input | ❌ Broken | Element `.pp-weight-input` existiert nicht |
+| Font Dropdown | ✅ Funktioniert | Mit Presets (Inter, SF Pro, etc.) |
+| Font Size Input | ✅ Funktioniert | Mit Token-Presets (xs, s, m, l, xl) |
+| Weight Input | ✅ Funktioniert | Dropdown 100-900 |
+| Text Align | ✅ Funktioniert | Icon-Toggles (left, center, right) |
+| Text Style | ✅ Funktioniert | Italic, Underline Toggles |
 | Min/Max Constraints | ❌ Fehlt | Keine UI |
-| Shadow Presets | ❌ Dead Code | `renderVisualSection()` nie aufgerufen |
-| Opacity Input | ❌ Dead Code | In Visual Section |
-| Z-Index Input | ❌ Dead Code | In Visual Section |
-| Hidden Toggle | ❌ Dead Code | In Visual Section |
+| Shadow Presets | ⚠️ Nicht aktiviert | Code vorhanden in `renderVisualSection()` |
+| Opacity Input | ⚠️ Nicht aktiviert | In Visual Section |
+| Z-Index Input | ⚠️ Nicht aktiviert | In Visual Section |
+| Hidden Toggle | ⚠️ Nicht aktiviert | In Visual Section |
 
 ## Architektur
 
@@ -113,77 +115,28 @@ renderCategories(categories) {
 }
 ```
 
-## Kritische Bugs
+## Bekannte Probleme
 
-### Bug #1: Typography Section gibt '' zurück
+### ✅ GEFIXT: Font Input Selektoren falsch
 
-**Datei:** `property-panel.ts:1119-1185`
+**Datei:** `property-panel.ts:1657, 1668, 1674`
 
+**Problem:** CSS-Klassen im Rendering stimmten nicht mit Event-Handler-Selektoren überein.
+
+**Fix:** CSS-Klassen angepasst:
 ```typescript
-private renderTypographySection(category: PropertyCategory): string {
-  const props = category.properties
+// Vorher:
+<select class="prop-select" data-prop="font">
+<input class="prop-input" data-prop="font-size">
+<select class="prop-select" data-prop="weight">
 
-  // ... 60 Zeilen HTML-Aufbau ...
-
-  const fontRow = `<div class="pp-row-line">...</div>`
-  const sizeRow = `<div class="pp-row-line">...</div>`
-  const alignToggles = `<div class="pp-row">...</div>`
-
-  return ''  // ❌ KRITISCH: Gibt immer leer zurück!
-}
+// Nachher:
+<select class="pp-font-input" data-prop="font">
+<input class="pp-fontsize-input" data-prop="font-size">
+<select class="pp-weight-input" data-prop="weight">
 ```
 
-**Fix benötigt:**
-```typescript
-return `
-  <div class="pp-label">Typography</div>
-  ${fontRow}
-  ${sizeRow}
-  ${alignToggles}
-`
-```
-
-### Bug #2: Visual Section nicht in Pipeline
-
-**Datei:** `property-panel.ts:212-282`
-
-```typescript
-private renderCategories(categories: PropertyCategory[]): string {
-  const visualCat = categories.find(c => c.name === 'visual')  // Extrahiert
-
-  // ... rendering ...
-
-  // ❌ visualCat wird NIEMALS verwendet!
-  return result
-}
-```
-
-**Fix benötigt:**
-```typescript
-// Nach Typography Section hinzufügen:
-if (visualCat) {
-  result += `<div class="pp-section">`
-  result += this.renderVisualSection(visualCat)
-  result += `</div>`
-}
-```
-
-### Bug #3: Font Input Selektoren falsch
-
-**Datei:** `property-panel.ts:1986, 2052, 2112`
-
-```typescript
-// Diese Selektoren finden keine Elemente:
-showFontDropdown() {
-  const fontInput = this.container.querySelector('.pp-font-input')  // ❌
-}
-
-// Auch diese:
-const fontsizeInput = this.container.querySelector('.pp-fontsize-input')  // ❌
-const weightInput = this.container.querySelector('.pp-weight-input')      // ❌
-```
-
-**Problem:** Die Inputs werden in `renderTypographySection()` nie erstellt (weil return '').
+**Status:** ✅ Gefixt
 
 ## Performance-Probleme
 
@@ -232,25 +185,20 @@ Benötigte Properties laut CLAUDE.md:
 - Number Inputs für opacity, scale
 - Oder: Inline bei jeweiliger Property (BG → Hover BG)
 
-### 2. Typography Controls
+### 2. Visual Controls (bewusst nicht implementiert)
 
-Benötigt:
-- Font Family Dropdown (Inter, System, etc.)
-- Font Size Input mit Presets (12, 14, 16, 18, 24)
-- Font Weight Dropdown (400, 500, 600, 700, bold)
-- Text Align Toggles (left, center, right)
-- Style Toggles (italic, underline, truncate, uppercase)
+Die `renderVisualSection()` Methode existiert, wird aber bewusst nicht in `renderCategories()` aufgerufen.
 
-### 3. Visual Controls
-
-Benötigt:
+**Existierende Implementierung umfasst:**
 - Shadow Presets (none, sm, md, lg)
 - Opacity Slider (0-1)
 - Z-Index Input
 - Cursor Dropdown (pointer, default, etc.)
 - Hidden Toggle
 
-### 4. Constraints
+**Status:** Code vorhanden, aber nicht aktiviert.
+
+### 3. Constraints
 
 Benötigt:
 - Min Width / Max Width
@@ -280,12 +228,10 @@ Category Order ist doppelt definiert:
 - `property-panel.ts:226`
 - `property-extractor.ts:625`
 
-### Dead Code
+### Ungenutzter Code
 
-Folgende Methoden werden nie aufgerufen:
-- `renderVisualSection()` (78 Zeilen)
-- `renderTypographySection()` gibt immer '' zurück (66 Zeilen nutzlos)
-- `renderCategory()` - nur für alignment verwendet
+Folgende Methoden existieren aber werden nie aufgerufen:
+- `renderVisualSection()` (78 Zeilen) - bewusst nicht aktiviert
 
 ## CSS Organisation
 
@@ -295,22 +241,18 @@ Alle `.pp-*` Styles sind inline im HTML. Sollte extrahiert werden zu:
 - `property-panel.css` oder
 - In build integriert werden
 
-## Prioritäten für Fixes
+## Prioritäten für Verbesserungen
 
-### P0 - Kritisch
-1. `renderTypographySection()` - return Statement fixen
-2. Visual Section in `renderCategories()` einbauen
+### P0 - Hoch
+1. ✅ ~~Typography Input Selektoren fixen~~ (GEFIXT)
 
-### P1 - Hoch
-3. Typography Inputs erstellen und verbinden
-4. Hover Properties Section hinzufügen
+### P1 - Mittel
+2. Hover Properties Section hinzufügen
+3. Min/Max Width/Height Controls
+4. Token-Parsing cachen
 
-### P2 - Mittel
-5. Token-Parsing cachen
-6. Min/Max Width/Height Controls
-7. Dead Code entfernen
-
-### P3 - Niedrig
-8. Klasse aufteilen
-9. CSS extrahieren
-10. Performance optimieren (incremental updates)
+### P2 - Niedrig
+5. Visual Section aktivieren (optional)
+6. Klasse aufteilen (Refactoring)
+7. CSS extrahieren
+8. Performance optimieren (incremental updates)

@@ -8,9 +8,11 @@ import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, ty
 import { EditorController, createEditorController, setEditorController } from './editor'
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
+import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
 import { PropertyExtractor, CodeModifier } from '../src/studio'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
 import { ComponentPanel, createComponentPanel } from './panels/components'
+import { DrawManager, createDrawManager } from './visual/draw-manager'
 import type { AST } from '../src/parser/ast'
 import type { IR } from '../src/ir/types'
 import type { SourceMap } from '../src/studio/source-map'
@@ -21,10 +23,21 @@ export interface BootstrapConfig {
   previewContainer: HTMLElement
   propertyPanelContainer?: HTMLElement
   componentPanelContainer?: HTMLElement
+  chatPanelContainer?: HTMLElement
   initialSource?: string
   currentFile?: string
   /** Callback to get all project source (for token extraction from all files) */
   getAllSource?: () => string
+  /** Callback to get current file name */
+  getCurrentFile?: () => string
+  /** Callback to get all project files with types */
+  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'unknown'; code: string }[]
+  /** Callback to update file content */
+  updateFile?: (filename: string, content: string) => void
+  /** Callback to switch to file */
+  switchToFile?: (filename: string) => void
+  /** OpenRouter API key for AI agent */
+  agentApiKey?: string
 }
 
 export interface StudioInstance {
@@ -40,6 +53,8 @@ export interface StudioInstance {
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
   llm: LLMBridge
+  agent: AgentIntegration | null
+  drawManager: DrawManager | null
 }
 
 export const studio: StudioInstance = {
@@ -55,6 +70,8 @@ export const studio: StudioInstance = {
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
   llm: getLLMBridge(),
+  agent: null,
+  drawManager: null,
 }
 
 // Store property panel container for lazy initialization
@@ -62,6 +79,12 @@ let propertyPanelContainer: HTMLElement | null = null
 
 // Store component panel container for lazy initialization
 let componentPanelContainer: HTMLElement | null = null
+
+// Store chat panel container for lazy initialization
+let chatPanelContainer: HTMLElement | null = null
+
+// Store agent API key
+let agentApiKey: string | null = null
 
 // Store getAllSource callback for token extraction from all files
 let getAllSourceCallback: (() => string) | null = null
@@ -81,6 +104,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   if (config.propertyPanelContainer) propertyPanelContainer = config.propertyPanelContainer
   if (config.componentPanelContainer) componentPanelContainer = config.componentPanelContainer
+  if (config.chatPanelContainer) chatPanelContainer = config.chatPanelContainer
+  if (config.agentApiKey) agentApiKey = config.agentApiKey
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
 
   // Initialize Component Panel if container provided
@@ -95,11 +120,37 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           events.emit('component:drag-end', { item, event })
         },
         onClick: (item) => {
-          events.emit('component:insert-requested', { item })
+          // Enter draw mode if DrawManager is available
+          if (studio.drawManager) {
+            studio.drawManager.enterDrawMode(item)
+          } else {
+            // Fallback to event emission (legacy behavior)
+            events.emit('component:insert-requested', { item })
+          }
         },
       }
     )
     console.log('[Studio] ComponentPanel initialized')
+  }
+
+  // Initialize AI Agent if API key provided
+  if (agentApiKey && chatPanelContainer) {
+    studio.agent = initializeAgent({
+      apiKey: agentApiKey,
+      chatContainer: chatPanelContainer,
+      getCurrentFile: config.getCurrentFile,
+      getFiles: config.getFiles,
+      getAllCode: config.getAllSource,
+      updateFile: config.updateFile,
+      switchToFile: config.switchToFile,
+      onCommand: (command) => {
+        console.log('[Agent] Command executed:', command.type)
+      },
+      onError: (error) => {
+        console.error('[Agent] Error:', error)
+      }
+    })
+    console.log('[Studio] AI Agent initialized')
   }
 
   // Editor
@@ -206,8 +257,165 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     if (nodeId && studioContext?.sync) studioContext.sync.handlePreviewClick(nodeId)
   })
 
+  // Initialize DrawManager
+  const drawManager = createDrawManager({
+    container: config.previewContainer,
+    getCodeModifier: () => {
+      const source = state.get().source
+      const sourceMap = state.get().sourceMap
+      return new CodeModifier(source, sourceMap)
+    },
+    sourceMap: () => state.get().sourceMap,
+    gridSize: 8,  // 8px grid snapping
+    enableSmartGuides: true,  // Enable alignment guides
+    snapTolerance: 4,  // 4px snap threshold
+  })
+
+  drawManager.onDrawComplete = (result) => {
+    if (result.success && result.modificationResult) {
+      console.log('[DrawManager] Component created:', result.nodeId)
+
+      // Apply code change to editor (adjust for prelude offset)
+      const preludeOffset = state.get().preludeOffset
+      const change = result.modificationResult.change
+
+      const adjustedChange = {
+        from: change.from - preludeOffset,
+        to: change.to - preludeOffset,
+        insert: change.insert
+      }
+
+      // Validate adjusted change range
+      const docLength = editorController.getContent().length
+      if (adjustedChange.from >= 0 && adjustedChange.to <= docLength && adjustedChange.from <= adjustedChange.to) {
+        // Apply change to editor
+        config.editor.dispatch({
+          changes: adjustedChange
+        })
+
+        // Compile will be triggered automatically by editor change
+        console.log('[DrawManager] Editor updated')
+      } else {
+        console.warn('[DrawManager] Invalid change range, forcing recompile', {
+          original: change,
+          adjusted: adjustedChange,
+          preludeOffset,
+          docLength
+        })
+        // Force recompile
+        events.emit('compile:requested', {})
+      }
+    }
+  }
+
+  drawManager.onDrawCancel = () => {
+    console.log('[DrawManager] Drawing cancelled')
+  }
+
+  drawManager.onError = (error) => {
+    console.error('[DrawManager] Error:', error)
+  }
+
+  studio.drawManager = drawManager
+
+  // Initialize Panel Toolbar
+  initializePanelToolbar()
+
   console.log('[Studio] New architecture initialized')
   return studio
+}
+
+/**
+ * Initialize the View Menu for panel visibility
+ */
+function initializePanelToolbar(): void {
+  const menuButton = document.getElementById('view-menu-button')
+  const menu = document.getElementById('view-menu')
+  if (!menuButton || !menu) return
+
+  // Panel ID to DOM element mapping
+  const panelElements: Record<string, HTMLElement | null> = {
+    prompt: document.getElementById('chat-panel'),
+    files: document.querySelector('.sidebar'),
+    code: document.querySelector('.editor-panel'),
+    components: document.getElementById('components-panel'),
+    preview: document.querySelector('.preview-panel'),
+    property: document.getElementById('property-panel'),
+  }
+
+  // Apply initial state from localStorage
+  const visibility = state.get().panelVisibility
+  for (const [panelKey, panel] of Object.entries(panelElements)) {
+    const isVisible = visibility[panelKey as keyof typeof visibility]
+    const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
+
+    if (panel) {
+      panel.classList.toggle('panel-hidden', !isVisible)
+    }
+    if (checkbox) {
+      checkbox.checked = isVisible
+    }
+  }
+
+  // Toggle menu open/close
+  menuButton.addEventListener('click', (e) => {
+    e.stopPropagation()
+    menu.classList.toggle('open')
+    menuButton.classList.toggle('active', menu.classList.contains('open'))
+  })
+
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target as Node) && !menuButton.contains(e.target as Node)) {
+      menu.classList.remove('open')
+      menuButton.classList.remove('active')
+    }
+  })
+
+  // Handle checkbox changes
+  menu.addEventListener('change', (e) => {
+    const target = e.target as HTMLInputElement
+    if (target.type !== 'checkbox') return
+
+    const menuItem = target.closest('.view-menu-item') as HTMLElement | null
+    const panelKey = menuItem?.dataset.panel as keyof typeof visibility
+    if (!panelKey) return
+
+    actions.setPanelVisibility(panelKey, target.checked)
+  })
+
+  // Listen for visibility changes (from state)
+  events.on('panel:visibility-changed', ({ panel, visible }) => {
+    const panelEl = panelElements[panel]
+    const checkbox = menu.querySelector(`[data-panel="${panel}"] input`) as HTMLInputElement | null
+
+    if (panelEl) {
+      panelEl.classList.toggle('panel-hidden', !visible)
+    }
+    if (checkbox) {
+      checkbox.checked = visible
+    }
+
+    console.log(`[ViewMenu] ${panel} visibility: ${visible}`)
+  })
+
+  // Listen for settings loaded from server (after login)
+  events.on('settings:loaded', ({ panelVisibility }) => {
+    for (const [panelKey, isVisible] of Object.entries(panelVisibility)) {
+      const panelEl = panelElements[panelKey]
+      const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
+
+      if (panelEl) {
+        panelEl.classList.toggle('panel-hidden', !isVisible)
+      }
+      if (checkbox) {
+        checkbox.checked = isVisible as boolean
+      }
+    }
+    console.log('[ViewMenu] Settings loaded from server')
+  })
+
+  console.log('[Studio] View menu initialized')
 }
 
 /**

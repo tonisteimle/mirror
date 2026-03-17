@@ -140,8 +140,10 @@ export class SyncCoordinator {
     const currentSelection = state.get().selection
     const isReselection = currentSelection.nodeId === nodeId
 
-    // Skip if same selection from same origin (prevents unnecessary updates)
-    if (isReselection && currentSelection.origin === origin) return
+    // Skip if same node is already selected (prevents sync loops from origin changes)
+    // This ensures that re-selecting the same node from a different origin doesn't
+    // cause unnecessary sync operations
+    if (isReselection) return
 
     // Just set selection - sync will be triggered by selection:changed event
     actions.setSelection(nodeId, origin)

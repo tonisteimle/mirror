@@ -142,8 +142,10 @@ export class EditorTriggerManager {
     }
 
     // Create context
+    // Note: spread context first so explicit values can override it
     const line = view.state.doc.lineAt(startPos)
     const fullContext: TriggerContext = {
+      ...context,
       startPos,
       cursorPos: view.state.selection.main.head,
       line: {
@@ -154,7 +156,6 @@ export class EditorTriggerManager {
       },
       textBefore: line.text.slice(0, startPos - line.from),
       textAfter: line.text.slice(startPos - line.from),
-      ...context,
     }
 
     // Get or create picker

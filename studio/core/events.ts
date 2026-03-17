@@ -34,6 +34,7 @@ export interface StudioEvents {
   'panel:property-changed': { nodeId: string; property: string; value: string }
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
+  'panel:visibility-changed': { panel: 'prompt' | 'files' | 'code' | 'components' | 'preview' | 'property'; visible: boolean }
   'breadcrumb:changed': { breadcrumb: Array<{ nodeId: string; name: string }> }
   'breadcrumb:update-requested': { chain: Array<{ nodeId: string; name: string }> }
   'ui:panel-toggled': { panel: 'left' | 'right'; visible: boolean }
@@ -86,6 +87,14 @@ export interface StudioEvents {
   'component:drag-start': { item: ComponentPanelItem; event: DragEvent }
   'component:drag-end': { item: ComponentPanelItem; event: DragEvent }
   'component:insert-requested': { item: ComponentPanelItem }
+  /** Grid settings changed */
+  'grid:changed': { enabled: boolean; size: number; showVisual: boolean; color: string }
+  /** Smart guides settings changed */
+  'smartGuides:changed': { enabled: boolean; threshold: number; color: string; showDistances: boolean }
+  /** General settings changed */
+  'settings:changed': { moveStep: number; moveStepShift: number; showPositionLabels: boolean }
+  /** Settings loaded from server */
+  'settings:loaded': { panelVisibility: Record<string, boolean> }
 }
 
 /** Component Panel item (simplified for event typing) */

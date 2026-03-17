@@ -339,12 +339,18 @@ class DOMGenerator {
       this.emit('})')
     }
 
-    // Mark abs containers (elements with position: relative that act as absolute layout parents)
+    // Set data-layout for drop strategy detection
+    // This is the primary way to identify layout type in the DOM
+    if (node.layoutType) {
+      this.emit(`${varName}.dataset.layout = '${node.layoutType}'`)
+    }
+
+    // Mark abs containers (fallback for older IR or when layoutType not set)
     // We detect this by checking if the element has position: relative but NOT flex/grid display
     // (flex containers also need position: relative for stacked layouts, so we need to be careful)
     const hasPositionRelative = baseStyles.some(s => s.property === 'position' && s.value === 'relative')
     const hasFlexDisplay = baseStyles.some(s => s.property === 'display' && (s.value === 'flex' || s.value === 'grid'))
-    if (hasPositionRelative && !hasFlexDisplay) {
+    if (hasPositionRelative && !hasFlexDisplay && !node.layoutType) {
       this.emit(`${varName}.dataset.mirrorAbs = 'true'`)
     }
 
@@ -410,6 +416,20 @@ class DOMGenerator {
     // Recursively emit children
     for (const child of node.children) {
       this.emitNode(child, varName)
+    }
+
+    // Auto-set parent to relative if this element is absolute positioned
+    // Only if parent doesn't already have position/layout set
+    const hasPositionAbsolute = baseStyles.some(s => s.property === 'position' && s.value === 'absolute')
+    if (hasPositionAbsolute && parentVar !== '_root') {
+      this.emit(`// Auto-set parent to relative for absolute child`)
+      this.emit(`if (${parentVar}.style.position !== 'relative' && ${parentVar}.style.position !== 'absolute' && ${parentVar}.style.position !== 'fixed') {`)
+      this.indent++
+      this.emit(`${parentVar}.style.position = 'relative'`)
+      // Only set mirrorAbs if parent doesn't have explicit data-layout
+      this.emit(`if (!${parentVar}.dataset.layout) ${parentVar}.dataset.mirrorAbs = 'true'`)
+      this.indent--
+      this.emit(`}`)
     }
 
     // Append to parent

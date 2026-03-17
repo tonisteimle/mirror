@@ -2,7 +2,11 @@
  * Mirror Lexer
  *
  * Tokenizes .mirror source code.
+ *
+ * Keywords are imported from the DSL schema (src/schema/dsl.ts)
  */
+
+import { DSL } from '../schema/dsl'
 
 export type TokenType =
   | 'IDENTIFIER'
@@ -347,29 +351,23 @@ export class Lexer {
       value += this.advance()
     }
 
-    // Keywords
-    const keywords: Record<string, TokenType> = {
-      'as': 'AS',
-      'extends': 'EXTENDS',
-      'named': 'NAMED',
-      'each': 'EACH',
-      'in': 'IN',
-      'if': 'IF',
-      'else': 'ELSE',
-      'where': 'WHERE',
-      'data': 'DATA',
-      'keys': 'KEYS',
-      'and': 'AND',
-      'or': 'OR',
-      'not': 'NOT',
-      'then': 'THEN',
-      'selection': 'SELECTION',
-      'route': 'ROUTE',
-      'animation': 'ANIMATION',
-    }
-
-    const type = keywords[value] || 'IDENTIFIER'
+    // Keywords from schema - maps lowercase keyword to UPPERCASE TokenType
+    // Schema defines: ['as', 'extends', 'named', ...] → TokenTypes: AS, EXTENDS, NAMED, ...
+    const type = this.getKeywordTokenType(value) || 'IDENTIFIER'
     this.addToken(type, value)
+  }
+
+  /**
+   * Get TokenType for a keyword from the schema.
+   * Returns undefined if not a keyword.
+   */
+  private getKeywordTokenType(word: string): TokenType | undefined {
+    // Check if word is in schema's reserved keywords
+    if (DSL.keywords.reserved.includes(word as any)) {
+      // Convert to uppercase TokenType (e.g., 'as' → 'AS', 'each' → 'EACH')
+      return word.toUpperCase() as TokenType
+    }
+    return undefined
   }
 
   private scanSection(): void {

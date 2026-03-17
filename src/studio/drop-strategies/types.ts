@@ -28,6 +28,10 @@ export interface DropContext {
   children: Array<{ element: HTMLElement; nodeId: string }>
   /** Whether container uses horizontal layout (for flex) */
   isHorizontal?: boolean
+  /** Whether container uses RTL direction */
+  isRTL?: boolean
+  /** CSS transform scale factor (1 = no scaling) */
+  scale?: number
 }
 
 /**
@@ -111,6 +115,12 @@ export interface IndicatorConfig {
   label?: string
   /** Dots at line endpoints */
   showDots?: boolean
+  /** For 9-zone indicator: main axis alignment */
+  alignment?: 'start' | 'center' | 'end'
+  /** For 9-zone indicator: cross axis alignment */
+  crossAlignment?: 'start' | 'center' | 'end'
+  /** Layout direction for proper zone rendering */
+  direction?: 'horizontal' | 'vertical'
 }
 
 /**

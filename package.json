@@ -14,23 +14,33 @@
   "files": [
     "dist"
   ],
+  "bin": {
+    "mirror-validate": "./dist/validator/cli.js"
+  },
   "scripts": {
+    "validate": "npx tsx src/validator/cli.ts",
     "build": "tsup && npm run build:studio",
-    "build:studio": "tsup --config false studio/index.ts --format esm --outDir studio/dist --no-splitting",
+    "build:studio": "tsup --config false studio/index.ts --format esm --outDir studio/dist --no-splitting --external tom-select",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "dev:studio": "tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
     "studio": "npx serve . -p 5173",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "npx tsx scripts/generate-from-schema.ts"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.76",
+    "@anthropic-ai/sdk": "^0.78.0",
     "@codemirror/autocomplete": "^6.20.0",
     "@codemirror/commands": "^6.10.2",
     "@codemirror/language": "^6.12.1",
     "@codemirror/lint": "^6.9.3",
     "@codemirror/state": "^6.5.4",
     "@codemirror/view": "^6.39.12",
-    "@lezer/highlight": "^1.2.3"
+    "@lezer/highlight": "^1.2.3",
+    "@types/rbush": "^4.0.0",
+    "rbush": "^4.0.1",
+    "tom-select": "^2.5.2"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.0",

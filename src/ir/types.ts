@@ -43,6 +43,12 @@ export interface IRConditional {
   else?: IRNode[]               // Nodes to render if condition is false
 }
 
+/**
+ * Layout type hint for drop strategy detection
+ * Set when explicit layout properties are used (pos, stacked, hor, ver, grid)
+ */
+export type LayoutType = 'absolute' | 'flex' | 'grid'
+
 export interface IRNode {
   id: string
   tag: string                    // div, span, button, input, etc.
@@ -63,6 +69,7 @@ export interface IRNode {
   sourcePosition?: SourcePosition              // Source position for bidirectional editing
   propertySourceMaps?: PropertySourceMap[]     // Per-property source positions
   isDefinition?: boolean                       // True if this is a component definition (not instance)
+  layoutType?: LayoutType                      // Explicit layout type (for drop strategy detection)
 }
 
 export interface IRProperty {
@@ -98,6 +105,27 @@ export interface IRToken {
   name: string
   type?: 'color' | 'size' | 'font' | 'icon'
   value: string | number
+}
+
+/**
+ * Warning types for validation
+ */
+export type IRWarningType =
+  | 'unknown-property'
+  | 'unknown-primitive'
+  | 'unknown-event'
+  | 'unknown-action'
+  | 'unknown-state'
+  | 'unknown-token'
+
+/**
+ * Validation warning
+ */
+export interface IRWarning {
+  type: IRWarningType
+  message: string
+  property?: string
+  position?: SourcePosition
 }
 
 /**

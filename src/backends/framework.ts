@@ -408,7 +408,14 @@ class FrameworkGenerator {
 
     // Typography
     if (prop === 'font-size') return { name: 'font-size', value: this.parsePxValue(value) }
-    if (prop === 'font-weight') return { name: 'weight', value: value }
+    if (prop === 'font-weight') {
+      // Convert numeric weights back to keywords for readability
+      const weightKeywords: Record<string, string> = {
+        '100': 'thin', '300': 'light', '400': 'normal',
+        '500': 'medium', '600': 'semibold', '700': 'bold', '900': 'black'
+      }
+      return { name: 'weight', value: weightKeywords[value] || value }
+    }
     if (prop === 'line-height') return { name: 'line', value: value }
     if (prop === 'font-family') return { name: 'font', value: value }
     if (prop === 'text-align') return { name: 'text-align', value: value }

@@ -7,6 +7,7 @@
  * - Cmd/Ctrl+D: Duplicate selected element
  * - Delete/Backspace: Delete selected element(s)
  * - Escape: Clear multi-selection
+ * - Arrow keys: Move selected element (1px normal, 10px with Shift)
  */
 
 import { state, actions, events } from '../core'
@@ -16,18 +17,29 @@ import {
   executeDuplicate,
   executeDelete,
 } from './shared-actions'
+import { SetPositionCommand } from '../core/commands'
+import type { CommandContext } from '../core/commands'
+import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
 
 export interface KeyboardHandlerConfig {
   container: HTMLElement
+  /** Command context for executing position commands */
+  getCommandContext?: () => CommandContext | null
+  /** Node ID attribute for finding elements */
+  nodeIdAttribute?: string
 }
 
 export class KeyboardHandler {
   private container: HTMLElement
   private boundHandleKeyDown: (e: KeyboardEvent) => void
+  private getCommandContext: () => CommandContext | null
+  private nodeIdAttribute: string
 
   constructor(config: KeyboardHandlerConfig) {
     this.container = config.container
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
+    this.getCommandContext = config.getCommandContext || (() => null)
+    this.nodeIdAttribute = config.nodeIdAttribute || 'data-mirror-id'
   }
 
   attach(): void {
@@ -73,6 +85,16 @@ export class KeyboardHandler {
       return
     }
 
+    // Arrow keys = Move selected element (if in absolute container)
+    if (this.isArrowKey(e.key)) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId && this.isInAbsoluteContainer(nodeId)) {
+        e.preventDefault()
+        this.handleArrowMove(e, nodeId)
+        return
+      }
+    }
+
     // Escape = Clear multi-selection
     if (e.key === 'Escape') {
       const multiSelection = state.get().multiSelection
@@ -81,6 +103,111 @@ export class KeyboardHandler {
         actions.clearMultiSelection()
         return
       }
+    }
+  }
+
+  /**
+   * Check if a key is an arrow key
+   */
+  private isArrowKey(key: string): boolean {
+    return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)
+  }
+
+  /**
+   * Check if an element is in an absolute container (pos/stacked layout)
+   * Uses centralized layout detection for consistency.
+   */
+  private isInAbsoluteContainer(nodeId: string): boolean {
+    const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
+    if (!element) return false
+
+    const parent = element.parentElement
+    if (!parent) return false
+
+    // Use centralized layout detection
+    if (isAbsoluteLayoutContainer(parent)) {
+      return true
+    }
+
+    // Also check if element itself has absolute positioning
+    const style = window.getComputedStyle(element)
+    if (style.position === 'absolute') {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Get current position of an element
+   */
+  private getCurrentPosition(nodeId: string): { x: number; y: number } {
+    const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
+    if (!element) return { x: 0, y: 0 }
+
+    // Try to read from data attributes first (set by DSL)
+    const dataX = element.dataset.x
+    const dataY = element.dataset.y
+    if (dataX !== undefined && dataY !== undefined) {
+      return { x: parseInt(dataX, 10) || 0, y: parseInt(dataY, 10) || 0 }
+    }
+
+    // Fall back to computed style
+    const style = window.getComputedStyle(element)
+    return {
+      x: parseInt(style.left, 10) || 0,
+      y: parseInt(style.top, 10) || 0,
+    }
+  }
+
+  /**
+   * Handle arrow key movement
+   */
+  private handleArrowMove(e: KeyboardEvent, nodeId: string): void {
+    const step = e.shiftKey ? 10 : 1
+
+    let dx = 0
+    let dy = 0
+    switch (e.key) {
+      case 'ArrowUp':
+        dy = -step
+        break
+      case 'ArrowDown':
+        dy = step
+        break
+      case 'ArrowLeft':
+        dx = -step
+        break
+      case 'ArrowRight':
+        dx = step
+        break
+    }
+
+    const { x, y } = this.getCurrentPosition(nodeId)
+    const newX = x + dx
+    const newY = y + dy
+
+    // Execute position command
+    const ctx = this.getCommandContext()
+    if (!ctx) {
+      console.warn('[KeyboardHandler] No command context available for position update')
+      return
+    }
+
+    const command = new SetPositionCommand({
+      nodeId,
+      x: newX,
+      y: newY,
+      description: `Move ${e.key}`,
+    })
+
+    const result = command.execute(ctx)
+    if (result.success) {
+      // Trigger recompile
+      ctx.compile()
+      events.emit('notification:success', { message: `Moved to (${newX}, ${newY})` })
+    } else {
+      events.emit('notification:warning', { message: result.error || 'Failed to move element' })
     }
   }
 

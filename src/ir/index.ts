@@ -2,6 +2,7 @@
  * Mirror IR Generator
  *
  * Transforms AST to Intermediate Representation.
+ * Uses schema (src/schema/dsl.ts) for property-to-CSS conversion.
  */
 
 import type {
@@ -20,19 +21,35 @@ import type {
   AnimationKeyframe,
   AnimationKeyframeProperty,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from '../studio/source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
+import {
+  schemaPropertyToCSS,
+  simplePropertyToCSS,
+  PROPERTY_TO_CSS,
+  NON_CSS_PROPERTIES,
+  ALIGNMENT_PROPERTIES,
+  DIRECTION_PROPERTIES,
+  DIRECTION_MAP,
+  CORNER_MAP,
+  BORDER_DIRECTION_MAP,
+  hoverPropertyToCSS,
+  mapEventToDom,
+  getHtmlTag,
+} from '../schema/ir-helpers'
+import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 
-export type { IR } from './types'
+export type { IR, IRWarning } from './types'
 export { SourceMap, SourceMapBuilder } from '../studio/source-map'
 
 /**
- * Result of IR transformation including source map
+ * Result of IR transformation including source map and warnings
  */
 export interface IRResult {
   ir: IR
   sourceMap: SourceMap
+  warnings: IRWarning[]
 }
 
 /**
@@ -50,6 +67,7 @@ export function toIR(ast: AST, includeSourceMap?: boolean): IR | IRResult {
     return {
       ir,
       sourceMap: transformer.getSourceMap(),
+      warnings: transformer.getWarnings(),
     }
   }
 
@@ -69,22 +87,6 @@ interface LayoutContext {
   gridColumns: string | null
 }
 
-/**
- * Alignment property names
- */
-const ALIGNMENT_PROPERTIES = new Set([
-  'left', 'right', 'top', 'bottom',
-  'hor-center', 'ver-center', 'center', 'cen',
-  'spread',
-])
-
-/**
- * Direction property names
- */
-const DIRECTION_PROPERTIES = new Set([
-  'horizontal', 'hor', 'vertical', 'ver',
-])
-
 class IRTransformer {
   private ast: AST
   private componentMap: Map<string, ComponentDefinition> = new Map()
@@ -92,6 +94,7 @@ class IRTransformer {
   private nodeIdCounter = 0
   private includeSourceMap: boolean
   private sourceMapBuilder: SourceMapBuilder
+  private warnings: IRWarning[] = []
 
   constructor(ast: AST, includeSourceMap: boolean = false) {
     this.ast = ast
@@ -113,6 +116,86 @@ class IRTransformer {
    */
   getSourceMap(): SourceMap {
     return this.sourceMapBuilder.build()
+  }
+
+  /**
+   * Get validation warnings
+   */
+  getWarnings(): IRWarning[] {
+    return this.warnings
+  }
+
+  /**
+   * Add a validation warning
+   */
+  private addWarning(warning: IRWarning): void {
+    // Avoid duplicate warnings
+    const isDuplicate = this.warnings.some(w =>
+      w.type === warning.type &&
+      w.message === warning.message &&
+      w.property === warning.property
+    )
+    if (!isDuplicate) {
+      this.warnings.push(warning)
+    }
+  }
+
+  /**
+   * Validate a property name against the schema.
+   * Returns true if valid, false if unknown.
+   */
+  private validateProperty(propName: string, position?: SourcePosition): boolean {
+    // Check non-CSS properties (HTML attributes, animation props)
+    if (NON_CSS_PROPERTIES.has(propName)) {
+      return true
+    }
+
+    // Check hover- prefix properties
+    if (propName.startsWith('hover-')) {
+      const baseProp = propName.replace('hover-', '')
+      // Check if base property is valid (without emitting warning for base)
+      if (this.isKnownProperty(baseProp)) {
+        return true
+      }
+      // Emit warning with the full hover-* property name
+      this.addWarning({
+        type: 'unknown-property',
+        message: `Unknown property: '${propName}'`,
+        property: propName,
+        position,
+      })
+      return false
+    }
+
+    // Check schema
+    if (findProperty(propName)) {
+      return true
+    }
+
+    // Check PROPERTY_TO_CSS mapping (includes some aliases not in schema)
+    if (PROPERTY_TO_CSS[propName]) {
+      return true
+    }
+
+    // Unknown property - add warning
+    this.addWarning({
+      type: 'unknown-property',
+      message: `Unknown property: '${propName}'`,
+      property: propName,
+      position,
+    })
+
+    return false
+  }
+
+  /**
+   * Check if a property is known (without emitting warnings)
+   */
+  private isKnownProperty(propName: string): boolean {
+    if (NON_CSS_PROPERTIES.has(propName)) return true
+    if (findProperty(propName)) return true
+    if (PROPERTY_TO_CSS[propName]) return true
+    return false
   }
 
   /**
@@ -333,15 +416,25 @@ class IRTransformer {
     // Transform to styles (with intelligent layout merging)
     const styles = this.transformProperties(properties, primitive)
 
-    // Apply implicit full sizing for root "App" element
-    if (instance.component === 'App' && !parentId) {
-      const hasWidth = styles.some(s => s.property === 'width')
-      const hasHeight = styles.some(s => s.property === 'height')
-      if (!hasWidth) {
-        styles.push({ property: 'width', value: '100%' })
-      }
-      if (!hasHeight) {
-        styles.push({ property: 'height', value: '100%' })
+    // For root elements (no parent), convert flex-based "full" to explicit 100%
+    // This is needed because "w full, h full" becomes flex styles which don't work at root level
+    if (!parentId) {
+      const hasExplicitWidth = properties.some(p => p.name === 'w' || p.name === 'width')
+      const hasExplicitHeight = properties.some(p => p.name === 'h' || p.name === 'height')
+
+      if (hasExplicitWidth || hasExplicitHeight) {
+        // Remove flex-based styles and add explicit dimensions
+        const flexProps = ['flex', 'min-width', 'min-height', 'align-self']
+        const filteredStyles = styles.filter(s => !flexProps.includes(s.property))
+        styles.length = 0
+        styles.push(...filteredStyles)
+
+        if (hasExplicitWidth && !styles.some(s => s.property === 'width')) {
+          styles.push({ property: 'width', value: '100%' })
+        }
+        if (hasExplicitHeight && !styles.some(s => s.property === 'height')) {
+          styles.push({ property: 'height', value: '100%' })
+        }
       }
     }
 
@@ -362,11 +455,16 @@ class IRTransformer {
     // Convert childOverrides to instance children for slot filling
     const childOverrideInstances = this.childOverridesToInstances(instance.childOverrides || [])
 
+    // Generate node ID FIRST so we can pass it to children as their parentId
+    const nodeId = this.generateId()
+
     // Transform children with slot filling (excluding inline states/events)
     // Include both regular children and childOverrides as slot fillers
+    // Pass nodeId as parentId so children know their parent in the sourceMap
     const children = this.resolveChildren(
       resolvedComponent?.children || [],
-      [...remainingChildren, ...childOverrideInstances]
+      [...remainingChildren, ...childOverrideInstances],
+      nodeId
     )
 
     // Merge dropdown features from component definition and instance
@@ -375,9 +473,6 @@ class IRTransformer {
     const initialState = (instance as any).initialState || (resolvedComponent as any)?.initialState
     const selection = (instance as any).selection || (resolvedComponent as any)?.selection
     const route = (instance as any).route || (resolvedComponent as any)?.route
-
-    // Generate node ID first so we can reference it
-    const nodeId = this.generateId()
 
     // If this node has a route, add a click event with navigate action
     if (route) {
@@ -431,6 +526,21 @@ class IRTransformer {
       this.applyStateChildOverrides(children, resolvedComponent.states)
     }
 
+    // Auto-absolute: If parent has position: relative, all children get position: absolute
+    const isRelativeContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
+    if (isRelativeContainer) {
+      for (const child of children) {
+        // Only add if child doesn't already have position set
+        const hasPosition = child.styles.some(s => s.property === 'position')
+        if (!hasPosition) {
+          child.styles.push({ property: 'position', value: 'absolute' })
+        }
+      }
+    }
+
+    // Determine layout type for drop strategy detection
+    const layoutType = this.determineLayoutType(properties)
+
     return {
       id: nodeId,
       tag,
@@ -447,6 +557,7 @@ class IRTransformer {
       route,
       sourcePosition,
       propertySourceMaps,
+      layoutType,
     }
   }
 
@@ -530,12 +641,13 @@ class IRTransformer {
    */
   private resolveChildren(
     componentChildren: (Instance | Slot)[],
-    instanceChildren: (Instance | Text | Slot)[]
+    instanceChildren: (Instance | Text | Slot)[],
+    parentId?: string
   ): IRNode[] {
     // If no component children (no slot definitions), just transform instance children directly
     // This preserves the original order for simple containers like Box with mixed children
     if (componentChildren.length === 0) {
-      return instanceChildren.map(child => this.transformChild(child))
+      return instanceChildren.map(child => this.transformChild(child, parentId))
     }
 
     // Build map of instance children by component name (slot fillers)
@@ -599,7 +711,7 @@ class IRTransformer {
             // Use instance's content instead of slot default
             // But inherit visibility conditions from slot definition
             for (const filler of fillers) {
-              const node = this.transformChild(filler)
+              const node = this.transformChild(filler, parentId)
               // Transfer slot's visibleWhen to filler if slot has one
               if (slotVisibleWhen && !node.visibleWhen) {
                 node.visibleWhen = slotVisibleWhen
@@ -629,9 +741,9 @@ class IRTransformer {
               }
               ;(pseudoInstance as any).visibleWhen = slotVisibleWhen
               ;(pseudoInstance as any).initialState = slotInitialState
-              result.push(this.transformInstance(pseudoInstance))
+              result.push(this.transformInstance(pseudoInstance, parentId))
             } else {
-              result.push(this.transformInstance(slot as Instance))
+              result.push(this.transformInstance(slot as Instance, parentId))
             }
           }
         } else if (slot.type === 'Slot') {
@@ -640,12 +752,12 @@ class IRTransformer {
           const fillers = slotFillers.get(slotObj.name)
           if (fillers && fillers.length > 0) {
             for (const filler of fillers) {
-              result.push(this.transformChild(filler))
+              result.push(this.transformChild(filler, parentId))
             }
             slotFillers.delete(slotObj.name)
           } else {
             // No filler - render slot as visual placeholder
-            result.push(this.transformSlotPrimitive(slotObj))
+            result.push(this.transformSlotPrimitive(slotObj, parentId))
           }
         }
       }
@@ -655,13 +767,13 @@ class IRTransformer {
     // (these are additional children, not slot fillers)
     for (const [_name, fillers] of slotFillers) {
       for (const filler of fillers) {
-        result.push(this.transformChild(filler))
+        result.push(this.transformChild(filler, parentId))
       }
     }
 
     // Add non-slot children (text nodes)
     for (const child of nonSlotChildren) {
-      result.push(this.transformChild(child))
+      result.push(this.transformChild(child, parentId))
     }
 
     return result
@@ -685,9 +797,9 @@ class IRTransformer {
     }))
   }
 
-  private transformChild(child: Instance | Text | Slot): IRNode {
+  private transformChild(child: Instance | Text | Slot, parentId?: string): IRNode {
     if (child.type === 'Slot') {
-      return this.transformSlotPrimitive(child as Slot)
+      return this.transformSlotPrimitive(child as Slot, parentId)
     }
     if (child.type === 'Text' || (child as any).content !== undefined) {
       const text = child as Text
@@ -701,7 +813,7 @@ class IRTransformer {
         children: [],
       }
     }
-    return this.transformInstance(child as Instance)
+    return this.transformInstance(child as Instance, parentId)
   }
 
   /**
@@ -846,6 +958,44 @@ class IRTransformer {
   }
 
   /**
+   * Determine layoutType from properties.
+   * Used by drop strategies to determine whether to use absolute positioning.
+   *
+   * Priority: absolute > grid > flex (if multiple layout properties are present)
+   */
+  private determineLayoutType(properties: Property[]): LayoutType | undefined {
+    let hasAbsolute = false
+    let hasGrid = false
+    let hasFlex = false
+
+    for (const prop of properties) {
+      const name = prop.name.toLowerCase()
+
+      // Absolute layout properties
+      if (name === 'pos' || name === 'positioned' || name === 'stacked') {
+        hasAbsolute = true
+      }
+
+      // Grid layout
+      if (name === 'grid') {
+        hasGrid = true
+      }
+
+      // Flex layout properties
+      if (name === 'hor' || name === 'horizontal' || name === 'ver' || name === 'vertical') {
+        hasFlex = true
+      }
+    }
+
+    // Priority: absolute > grid > flex
+    if (hasAbsolute) return 'absolute'
+    if (hasGrid) return 'grid'
+    if (hasFlex) return 'flex'
+
+    return undefined
+  }
+
+  /**
    * Merge properties (later values override earlier)
    */
   private mergeProperties(base: Property[], overrides: Property[]): Property[] {
@@ -861,53 +1011,11 @@ class IRTransformer {
 
   /**
    * Get HTML tag for component
+   * Uses schema-based mapping from ir-helpers
    */
   private getTag(componentName: string, resolved: ComponentDefinition | null): string {
     const primitive = resolved?.primitive || componentName.toLowerCase()
-
-    const mapping: Record<string, string> = {
-      // Layout primitives
-      frame: 'div',
-      box: 'div',
-      text: 'span',
-
-      // Form elements
-      button: 'button',
-      input: 'input',
-      textarea: 'textarea',
-      checkbox: 'input',
-      radio: 'input',
-      select: 'select',
-      option: 'option',
-      label: 'label',
-
-      // Media
-      image: 'img',
-      link: 'a',
-      icon: 'span',
-
-      // Slot (placeholder for drag & drop)
-      slot: 'div',
-
-      // Semantic structure
-      header: 'header',
-      nav: 'nav',
-      main: 'main',
-      section: 'section',
-      article: 'article',
-      aside: 'aside',
-      footer: 'footer',
-
-      // Headings
-      h1: 'h1',
-      h2: 'h2',
-      h3: 'h3',
-      h4: 'h4',
-      h5: 'h5',
-      h6: 'h6',
-    }
-
-    return mapping[primitive.toLowerCase()] || 'div'
+    return getHtmlTag(primitive)
   }
 
   /**
@@ -1287,6 +1395,14 @@ class IRTransformer {
     const value = this.resolveValue(prop.values, name)
     const values = prop.values
 
+    // Validate property against schema
+    this.validateProperty(name, {
+      line: prop.line,
+      column: prop.column,
+      endLine: prop.line,
+      endColumn: prop.column,
+    })
+
     // Handle boolean properties (value is true OR empty values array)
     if ((prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0) {
       return this.booleanPropertyToCSS(name)
@@ -1313,10 +1429,14 @@ class IRTransformer {
           ]
         }
         if (val === 'full') {
+          // Use flex: 1 1 0% for proper flex fill - no explicit width/height
+          // as those would override flexbox behavior and ignore parent padding
+          // align-self: stretch ensures cross-axis fill even when parent has center alignment
           return [
-            { property: 'width', value: '100%' },
-            { property: 'height', value: '100%' },
-            { property: 'flex-grow', value: '1' },
+            { property: 'flex', value: '1 1 0%' },
+            { property: 'min-width', value: '0' },
+            { property: 'min-height', value: '0' },
+            { property: 'align-self', value: 'stretch' },
           ]
         }
         // Single value = square
@@ -1342,6 +1462,17 @@ class IRTransformer {
       if (directions.includes(String(values[0]))) {
         return this.parseDirectionalSpacing('padding', values)
       }
+      // Multi-value shorthand: pad 16 24 → padding: 16px 24px
+      // Check if all values are numeric (not directions)
+      const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))
+      if (allNumeric && values.length <= 4) {
+        const paddingValue = values.map(v => {
+          const str = String(v)
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        }).join(' ')
+        return [{ property: 'padding', value: paddingValue }]
+      }
     }
 
     // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
@@ -1350,39 +1481,44 @@ class IRTransformer {
       if (directions.includes(String(values[0]))) {
         return this.parseDirectionalSpacing('margin', values)
       }
+      // Multi-value shorthand: margin 16 24 → margin: 16px 24px
+      const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px|auto)?$/.test(String(v)))
+      if (allNumeric && values.length <= 4) {
+        const marginValue = values.map(v => {
+          const str = String(v)
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        }).join(' ')
+        return [{ property: 'margin', value: marginValue }]
+      }
     }
 
     // Handle directional border: bor t 1 #333, bor left right 1 #333, bor x 2 #666
+    // Uses BORDER_DIRECTION_MAP from schema/ir-helpers.ts
     if ((name === 'bor' || name === 'border') && values.length >= 2) {
-      const dirMap: Record<string, string[]> = {
-        't': ['border-top'], 'top': ['border-top'],
-        'b': ['border-bottom'], 'bottom': ['border-bottom'], 'down': ['border-bottom'],
-        'l': ['border-left'], 'left': ['border-left'],
-        'r': ['border-right'], 'right': ['border-right'],
-        'x': ['border-left', 'border-right'],
-        'y': ['border-top', 'border-bottom'],
-        'horizontal': ['border-left', 'border-right'], 'hor': ['border-left', 'border-right'],
-        'vertical': ['border-top', 'border-bottom'], 'ver': ['border-top', 'border-bottom'],
-      }
       const firstVal = String(values[0])
-      if (dirMap[firstVal]) {
+      if (BORDER_DIRECTION_MAP[firstVal]) {
         // Collect all direction tokens
-        const borderProps: string[] = []
+        const borderDirs: string[] = []
         let i = 0
-        while (i < values.length && dirMap[String(values[i])]) {
-          borderProps.push(...dirMap[String(values[i])])
+        while (i < values.length && BORDER_DIRECTION_MAP[String(values[i])]) {
+          borderDirs.push(...BORDER_DIRECTION_MAP[String(values[i])])
           i++
         }
         // Rest are the border values (width, style, color)
         const restValues = values.slice(i)
         const borderValue = this.formatBorderValue(restValues)
-        // Apply to all directions (deduplicated)
-        const uniqueProps = [...new Set(borderProps)]
-        return uniqueProps.map(prop => ({ property: prop, value: borderValue }))
+        // Apply to all directions (deduplicated), with 'border-' prefix
+        const uniqueDirs = [...new Set(borderDirs)]
+        return uniqueDirs.map(dir => ({ property: `border-${dir}`, value: borderValue }))
       }
+      // Non-directional multi-value border: bor 1 #333 → border: 1px solid #333
+      const borderValue = this.formatBorderValue(values)
+      return [{ property: 'border', value: borderValue }]
     }
 
     // Handle corner-specific radius: rad tl 8, rad t 8, rad 8 8 0 0
+    // Uses CORNER_MAP from schema/ir-helpers.ts
     if ((name === 'rad' || name === 'radius') && values.length >= 1) {
       const cornerMap: Record<string, string[]> = {
         'tl': ['border-top-left-radius'],
@@ -1400,6 +1536,15 @@ class IRTransformer {
         const val = String(values[1])
         const px = /^\d+$/.test(val) ? `${val}px` : val
         return props.map(p => ({ property: p, value: px }))
+      }
+      // Multi-value radius shorthand: rad 8 16 → border-radius: 8px 16px
+      if (values.length >= 2 && values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))) {
+        const radiusValue = values.map(v => {
+          const str = String(v)
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        }).join(' ')
+        return [{ property: 'border-radius', value: radiusValue }]
       }
     }
 
@@ -1466,107 +1611,21 @@ class IRTransformer {
     }
 
     // Handle inline hover properties: hover-bg, hover-col, etc.
+    // Uses hoverPropertyToCSS from schema/ir-helpers.ts
     if (name.startsWith('hover-')) {
+      const hoverResult = hoverPropertyToCSS(name, value)
+      if (hoverResult.handled) {
+        return hoverResult.styles
+      }
+      // Fallback for unknown hover properties
       const baseProp = name.replace('hover-', '')
-      const propMap: Record<string, string> = {
-        'bg': 'background',
-        'col': 'color',
-        'opacity': 'opacity',
-        'opa': 'opacity',
-        'scale': 'transform',
-        'bor': 'border',
-        'border': 'border',
-        'boc': 'border-color',
-        'border-color': 'border-color',
-        'rad': 'border-radius',
-        'radius': 'border-radius',
-      }
-      const cssProp = propMap[baseProp] || baseProp
-      let cssValue = value
-      if (baseProp === 'scale') {
-        cssValue = `scale(${value})`
-      } else if (['bg', 'col', 'bor', 'border', 'boc', 'border-color', 'rad', 'radius'].includes(baseProp)) {
-        cssValue = this.formatCSSValue(baseProp, value)
-      }
-      return [{ property: cssProp, value: cssValue, state: 'hover' }]
+      const cssValue = this.formatCSSValue(baseProp, value)
+      return [{ property: baseProp, value: cssValue, state: 'hover' }]
     }
 
-    // Property mapping
-    const mapping: Record<string, string | string[]> = {
-      // Layout
-      horizontal: ['display', 'flex-direction'],
-      hor: ['display', 'flex-direction'],
-      vertical: ['display', 'flex-direction'],
-      ver: ['display', 'flex-direction'],
-      center: ['justify-content', 'align-items'],
-      cen: ['justify-content', 'align-items'],
-      gap: 'gap',
-      g: 'gap',
-      spread: 'justify-content',
-      wrap: 'flex-wrap',
-      stacked: 'position',
-      grid: 'display',
-
-      // Sizing
-      width: 'width',
-      w: 'width',
-      height: 'height',
-      h: 'height',
-      'min-width': 'min-width',
-      minw: 'min-width',
-      'max-width': 'max-width',
-      maxw: 'max-width',
-      'min-height': 'min-height',
-      minh: 'min-height',
-      'max-height': 'max-height',
-      maxh: 'max-height',
-
-      // Spacing
-      padding: 'padding',
-      pad: 'padding',
-      p: 'padding',
-      margin: 'margin',
-      m: 'margin',
-
-      // Colors
-      color: 'color',
-      col: 'color',
-      c: 'color',
-      background: 'background',
-      bg: 'background',
-      'border-color': 'border-color',
-      boc: 'border-color',
-
-      // Border
-      border: 'border',
-      bor: 'border',
-      radius: 'border-radius',
-      rad: 'border-radius',
-
-      // Typography
-      'font-size': 'font-size',
-      fs: 'font-size',
-      weight: 'font-weight',
-      line: 'line-height',
-      font: 'font-family',
-      'text-align': 'text-align',
-
-      // Visual
-      opacity: 'opacity',
-      o: 'opacity',
-      shadow: 'box-shadow',
-      cursor: 'cursor',
-      z: 'z-index',
-
-      // Scroll
-      scroll: 'overflow-y',
-      'scroll-ver': 'overflow-y',
-      'scroll-hor': 'overflow-x',
-      'scroll-both': 'overflow',
-      clip: 'overflow',
-    }
-
-    const cssProperty = mapping[name]
+    // Use centralized property mapping from schema
+    // Note: Special cases (horizontal, center, etc.) are handled above
+    const cssProperty = PROPERTY_TO_CSS[name]
 
     if (!cssProperty) {
       // Skip non-CSS properties (content, data, etc.)
@@ -1607,7 +1666,7 @@ class IRTransformer {
       return [{ property: 'flex-wrap', value: 'wrap' }]
     }
 
-    if (name === 'stacked') {
+    if (name === 'pos' || name === 'positioned' || name === 'stacked') {
       return [{ property: 'position', value: 'relative' }]
     }
 
@@ -1669,13 +1728,15 @@ class IRTransformer {
     // 'full' means fill remaining space in flex container
     if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
       const isWidth = name === 'width' || name === 'w'
+      // Use flex: 1 1 0% for proper flex fill behavior
+      // Do NOT set explicit width/height: 100% as that would ignore parent padding
+      // align-self: stretch ensures cross-axis fill even when parent has center alignment
       return [
-        // Use flex: 1 1 0% pattern for proper flex fill behavior
         { property: 'flex', value: '1 1 0%' },
         // min-width/height: 0 allows shrinking below content size
         { property: isWidth ? 'min-width' : 'min-height', value: '0' },
-        // Also set explicit 100% for cross-axis fill in column/row containers
-        { property: isWidth ? 'width' : 'height', value: '100%' },
+        // Ensure cross-axis stretch even if parent has align-items: center
+        { property: 'align-self', value: 'stretch' },
       ]
     }
 
@@ -1683,19 +1744,29 @@ class IRTransformer {
       return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
     }
 
-    // Handle shadow presets
+    // Handle shadow presets - try schema first
     if (name === 'shadow') {
-      const shadows: Record<string, string> = {
-        sm: '0 1px 2px rgba(0,0,0,0.05)',
-        md: '0 4px 6px rgba(0,0,0,0.1)',
-        lg: '0 10px 15px rgba(0,0,0,0.1)',
+      const schemaResult = schemaPropertyToCSS(name, [value])
+      if (schemaResult.handled) {
+        return schemaResult.styles
       }
-      return [{ property: 'box-shadow', value: shadows[value] || value }]
+      // Fallback for custom shadow values
+      return [{ property: 'box-shadow', value: value }]
     }
 
-    // Default: direct mapping
-    const cssValue = this.formatCSSValue(name, value)
-    return [{ property: cssProperty as string, value: cssValue }]
+    // Try schema-based conversion for simple properties
+    const schemaResult = simplePropertyToCSS(name, value)
+    if (schemaResult.handled) {
+      return schemaResult.styles
+    }
+
+    // Fallback: direct mapping with formatting
+    if (cssProperty) {
+      const cssValue = this.formatCSSValue(name, value)
+      return [{ property: cssProperty as string, value: cssValue }]
+    }
+
+    return []
   }
 
   /**
@@ -1731,6 +1802,7 @@ class IRTransformer {
 
   /**
    * Parse directional spacing (padding/margin)
+   * Uses DIRECTION_MAP from schema/ir-helpers.ts
    * Supports:
    * - pad left 20                    → padding-left: 20px
    * - pad top 8 bottom 24            → padding-top: 8px, padding-bottom: 24px
@@ -1742,35 +1814,16 @@ class IRTransformer {
   private parseDirectionalSpacing(property: string, values: any[]): IRStyle[] {
     const styles: IRStyle[] = []
 
-    // Direction aliases and shortcuts
-    const directionMap: Record<string, string[]> = {
-      'left': ['left'],
-      'right': ['right'],
-      'top': ['top'],
-      'bottom': ['bottom'],
-      'down': ['bottom'],  // Alias
-      'l': ['left'],
-      'r': ['right'],
-      't': ['top'],
-      'b': ['bottom'],
-      'x': ['left', 'right'],      // Horizontal shortcut
-      'y': ['top', 'bottom'],      // Vertical shortcut
-      'horizontal': ['left', 'right'],
-      'vertical': ['top', 'bottom'],
-      'hor': ['left', 'right'],
-      'ver': ['top', 'bottom'],
-    }
-
     let i = 0
     while (i < values.length) {
       const val = String(values[i])
 
-      // Check if this is a direction
-      if (directionMap[val]) {
+      // Check if this is a direction (using centralized DIRECTION_MAP)
+      if (DIRECTION_MAP[val]) {
         // Collect all consecutive directions
         const directions: string[] = []
-        while (i < values.length && directionMap[String(values[i])]) {
-          directions.push(...directionMap[String(values[i])])
+        while (i < values.length && DIRECTION_MAP[String(values[i])]) {
+          directions.push(...DIRECTION_MAP[String(values[i])])
           i++
         }
 
@@ -1974,21 +2027,10 @@ class IRTransformer {
 
   /**
    * Map Mirror event names to DOM event names
+   * Uses schema-based mapping from ir-helpers
    */
   private mapEventName(name: string): string {
-    const mapping: Record<string, string> = {
-      onclick: 'click',
-      onhover: 'mouseenter',
-      onchange: 'change',
-      oninput: 'input',
-      onfocus: 'focus',
-      onblur: 'blur',
-      onkeydown: 'keydown',
-      onkeyup: 'keyup',
-      onenter: 'enter',   // Viewport enter (IntersectionObserver)
-      onexit: 'exit',     // Viewport exit (IntersectionObserver)
-    }
-    return mapping[name] || name.replace(/^on/, '')
+    return mapEventToDom(name)
   }
 
   /**
@@ -2004,78 +2046,17 @@ class IRTransformer {
 
   /**
    * Convert boolean property to CSS
+   * Uses schema as primary source, with fallback for special cases
    */
   private booleanPropertyToCSS(name: string): IRStyle[] {
+    // Try schema first
+    const schemaResult = schemaPropertyToCSS(name, [true])
+    if (schemaResult.handled && schemaResult.styles.length > 0) {
+      return schemaResult.styles
+    }
+
+    // Fallback for properties not fully in schema or with special handling
     switch (name) {
-      case 'horizontal':
-      case 'hor':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'row' },
-        ]
-      case 'vertical':
-      case 'ver':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-        ]
-      case 'center':
-      case 'cen':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'justify-content', value: 'center' },
-          { property: 'align-items', value: 'center' },
-        ]
-      case 'spread':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'justify-content', value: 'space-between' },
-        ]
-      case 'wrap':
-        return [{ property: 'flex-wrap', value: 'wrap' }]
-      case 'stacked':
-        return [{ property: 'position', value: 'relative' }]
-      case 'abs':
-        return [{ property: 'position', value: 'relative' }]
-      case 'absolute':
-        return [{ property: 'position', value: 'absolute' }]
-      case 'fixed':
-        return [{ property: 'position', value: 'fixed' }]
-      case 'relative':
-        return [{ property: 'position', value: 'relative' }]
-      case 'grow':
-        return [{ property: 'flex-grow', value: '1' }]
-      case 'shrink':
-        return [{ property: 'flex-shrink', value: '1' }]
-      case 'hidden':
-        return [{ property: 'display', value: 'none' }]
-      case 'visible':
-        return [{ property: 'visibility', value: 'visible' }]
-      case 'disabled':
-        return [{ property: 'pointer-events', value: 'none' }, { property: 'opacity', value: '0.5' }]
-      case 'scroll':
-      case 'scroll-ver':
-        return [{ property: 'overflow-y', value: 'auto' }]
-      case 'scroll-hor':
-        return [{ property: 'overflow-x', value: 'auto' }]
-      case 'scroll-both':
-        return [{ property: 'overflow', value: 'auto' }]
-      case 'clip':
-        return [{ property: 'overflow', value: 'hidden' }]
-      case 'truncate':
-        return [
-          { property: 'overflow', value: 'hidden' },
-          { property: 'text-overflow', value: 'ellipsis' },
-          { property: 'white-space', value: 'nowrap' },
-        ]
-      case 'italic':
-        return [{ property: 'font-style', value: 'italic' }]
-      case 'underline':
-        return [{ property: 'text-decoration', value: 'underline' }]
-      case 'uppercase':
-        return [{ property: 'text-transform', value: 'uppercase' }]
-      case 'lowercase':
-        return [{ property: 'text-transform', value: 'lowercase' }]
       // Alignment: Using column layout defaults (frame default)
       // In column: left/right → align-items, top/bottom → justify-content
       // IMPORTANT: Must also set display: flex and flex-direction: column for alignment to work

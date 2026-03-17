@@ -44,17 +44,22 @@ export interface ChildElement {
 }
 
 // Category name type
-export type CategoryName = 'layout' | 'size' | 'spacing' | 'appearance' | 'typography' | 'border' | 'state' | 'event' | 'other'
+export type CategoryName = 'layout' | 'position' | 'alignment' | 'size' | 'sizing' | 'spacing' | 'color' | 'appearance' | 'typography' | 'border' | 'visual' | 'state' | 'event' | 'other'
 
 // Property categories with display info
 export const CATEGORY_INFO: Record<CategoryName, { label: string; icon: string; order: number }> = {
   layout: { label: 'Layout', icon: 'layout', order: 1 },
-  size: { label: 'Size', icon: 'size', order: 2 },
-  spacing: { label: 'Spacing', icon: 'spacing', order: 3 },
-  appearance: { label: 'Appearance', icon: 'appearance', order: 4 },
-  typography: { label: 'Typography', icon: 'typography', order: 5 },
-  border: { label: 'Border', icon: 'border', order: 6 },
-  state: { label: 'States', icon: 'state', order: 7 },
-  event: { label: 'Events', icon: 'event', order: 8 },
-  other: { label: 'Other', icon: 'other', order: 9 },
+  position: { label: 'Position', icon: 'position', order: 2 },
+  alignment: { label: 'Alignment', icon: 'alignment', order: 3 },
+  size: { label: 'Size', icon: 'size', order: 4 },
+  sizing: { label: 'Size', icon: 'size', order: 4 },
+  spacing: { label: 'Spacing', icon: 'spacing', order: 5 },
+  color: { label: 'Color', icon: 'color', order: 6 },
+  appearance: { label: 'Appearance', icon: 'appearance', order: 6 },
+  typography: { label: 'Typography', icon: 'typography', order: 7 },
+  border: { label: 'Border', icon: 'border', order: 8 },
+  visual: { label: 'Visual', icon: 'visual', order: 9 },
+  state: { label: 'States', icon: 'state', order: 10 },
+  event: { label: 'Events', icon: 'event', order: 11 },
+  other: { label: 'Other', icon: 'other', order: 12 },
 }

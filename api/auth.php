@@ -3,14 +3,57 @@
  * Auth handlers for Mirror Studio
  */
 
+// Test account credentials (for development)
+define('TEST_USER_EMAIL', 'test@test.com');
+define('TEST_USER_PASSWORD', 'test123');
+define('TEST_USER_ID', 'u_test');
+
 /**
- * Load users from JSON file
+ * Ensure test user exists (for development)
  */
-function loadUsers(): array {
+function ensureTestUser(): void {
+    $data = loadUsersRaw();
+
+    // Check if test user already exists
+    foreach ($data['users'] as $user) {
+        if ($user['id'] === TEST_USER_ID) {
+            return; // Already exists
+        }
+    }
+
+    // Create test user
+    $data['users'][] = [
+        'id' => TEST_USER_ID,
+        'email' => TEST_USER_EMAIL,
+        'password_hash' => password_hash(TEST_USER_PASSWORD, PASSWORD_BCRYPT),
+        'created_at' => date('c')
+    ];
+
+    file_put_contents(USERS_FILE, json_encode($data, JSON_PRETTY_PRINT));
+
+    // Create test user's project directory
+    $userDir = PROJECTS_DIR . '/' . TEST_USER_ID;
+    if (!file_exists($userDir)) {
+        mkdir($userDir, 0755, true);
+    }
+}
+
+/**
+ * Load users from JSON file (raw, without ensuring test user)
+ */
+function loadUsersRaw(): array {
     if (!file_exists(USERS_FILE)) {
         return ['users' => []];
     }
     return json_decode(file_get_contents(USERS_FILE), true) ?? ['users' => []];
+}
+
+/**
+ * Load users from JSON file
+ */
+function loadUsers(): array {
+    ensureTestUser();
+    return loadUsersRaw();
 }
 
 /**
@@ -162,10 +205,72 @@ function authMe(): array {
 }
 
 /**
+ * Get session/auth status (works for anonymous and logged-in users)
+ *
+ * GET /api/auth/status
+ * Returns: { authenticated, anonymous, user_id?, email? }
+ */
+function authStatus(): array {
+    if (isset($_SESSION['user_id'])) {
+        // Logged in user
+        $data = loadUsers();
+        foreach ($data['users'] as $user) {
+            if ($user['id'] === $_SESSION['user_id']) {
+                return [
+                    'authenticated' => true,
+                    'anonymous' => false,
+                    'user_id' => $user['id'],
+                    'email' => $user['email']
+                ];
+            }
+        }
+    }
+
+    // Anonymous session user
+    $userId = getOrCreateSessionUser();
+    return [
+        'authenticated' => true,
+        'anonymous' => true,
+        'user_id' => $userId
+    ];
+}
+
+/**
  * Get current user ID or null
  */
 function getCurrentUserId(): ?string {
     return $_SESSION['user_id'] ?? null;
+}
+
+/**
+ * Check if current user is anonymous (session-based)
+ */
+function isAnonymousUser(): bool {
+    return !isset($_SESSION['user_id']) && isset($_SESSION['anon_id']);
+}
+
+/**
+ * Get or create session-based user ID
+ * Returns logged-in user ID or creates anonymous session user
+ */
+function getOrCreateSessionUser(): string {
+    // If logged in, use real user ID
+    if (isset($_SESSION['user_id'])) {
+        return $_SESSION['user_id'];
+    }
+
+    // Create or return anonymous session user
+    if (!isset($_SESSION['anon_id'])) {
+        $_SESSION['anon_id'] = 'anon_' . bin2hex(random_bytes(8));
+
+        // Create directory for anonymous user
+        $userDir = PROJECTS_DIR . '/' . $_SESSION['anon_id'];
+        if (!file_exists($userDir)) {
+            mkdir($userDir, 0755, true);
+        }
+    }
+
+    return $_SESSION['anon_id'];
 }
 
 /**
@@ -178,4 +283,93 @@ function requireAuth(): string {
         throw new Exception('Authentication required');
     }
     return $userId;
+}
+
+/**
+ * Get user settings
+ *
+ * GET /api/auth/settings
+ * Returns: { settings } or { error }
+ */
+function authGetSettings(): array {
+    $userId = getOrCreateSessionUser();
+
+    $data = loadUsersRaw();
+    foreach ($data['users'] as $user) {
+        if ($user['id'] === $userId) {
+            return [
+                'success' => true,
+                'settings' => $user['settings'] ?? []
+            ];
+        }
+    }
+
+    // Anonymous user - return empty settings (they use localStorage only)
+    return [
+        'success' => true,
+        'settings' => []
+    ];
+}
+
+/**
+ * Save user settings
+ *
+ * PUT /api/auth/settings
+ * Body: { settings: { panelVisibility, ... } }
+ * Returns: { success } or { error }
+ */
+function authSaveSettings(array $body): array {
+    $userId = getOrCreateSessionUser();
+    $settings = $body['settings'] ?? [];
+
+    // Anonymous users can't save to server
+    if (strpos($userId, 'anon_') === 0) {
+        return [
+            'success' => true,
+            'message' => 'Settings saved locally only (not logged in)'
+        ];
+    }
+
+    $data = loadUsersRaw();
+    $found = false;
+
+    foreach ($data['users'] as &$user) {
+        if ($user['id'] === $userId) {
+            // Merge settings (don't overwrite everything)
+            $user['settings'] = array_merge($user['settings'] ?? [], $settings);
+            $found = true;
+            break;
+        }
+    }
+
+    if (!$found) {
+        http_response_code(404);
+        return ['error' => 'User not found'];
+    }
+
+    saveUsers($data);
+
+    return ['success' => true];
+}
+
+/**
+ * Reset test user - deletes all projects and recreates fresh
+ * POST /api/auth/reset-test
+ */
+function resetTestUser(): array {
+    $userDir = PROJECTS_DIR . '/' . TEST_USER_ID;
+
+    // Delete all test user projects
+    if (is_dir($userDir)) {
+        $dirs = scandir($userDir);
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') continue;
+            $projectPath = $userDir . '/' . $dir;
+            if (is_dir($projectPath)) {
+                deleteDirectory($projectPath);
+            }
+        }
+    }
+
+    return ['success' => true, 'message' => 'Test user reset'];
 }

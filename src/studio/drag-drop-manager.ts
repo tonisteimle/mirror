@@ -81,6 +81,10 @@ export class DragDropManager {
   private sourceMap: SourceMap | null = null
   private isDragging = false
 
+  // RAF-throttling for dragover performance
+  private pendingDragOver: { x: number; y: number; sourceId?: string } | null = null
+  private rafId: number | null = null
+
   /**
    * Current drag source node ID for move operations.
    *
@@ -277,6 +281,10 @@ export class DragDropManager {
 
   /**
    * Handle dragover event
+   *
+   * Uses requestAnimationFrame throttling to prevent excessive updates
+   * during drag operations. This significantly improves performance
+   * especially with many elements on the canvas.
    */
   private handleDragOver(e: DragEvent): void {
     // Check if this is a valid drag
@@ -286,20 +294,34 @@ export class DragDropManager {
 
     e.preventDefault()
 
-    try {
-      // Determine if this is a move or copy operation
-      const isMove = this.isMoveDrag(e)
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = isMove ? 'move' : 'copy'
-      }
+    // Determine if this is a move or copy operation (lightweight check, always do)
+    const isMove = this.isMoveDrag(e)
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = isMove ? 'move' : 'copy'
+    }
 
-      // Update drop zone indicators, passing source node for self-drop prevention
-      const sourceNodeId = this.getSourceNodeId(e)
-      const dropZone = this.dropZoneCalculator.updateDropZone(e.clientX, e.clientY, sourceNodeId)
-      this.options.onDragOver(dropZone)
-    } catch (error) {
-      console.error('[DragDropManager] dragover error:', error)
-      this.dropZoneCalculator.clear()
+    // Store pending position for RAF processing
+    this.pendingDragOver = {
+      x: e.clientX,
+      y: e.clientY,
+      sourceId: this.getSourceNodeId(e),
+    }
+
+    // Schedule RAF update if not already pending
+    if (this.rafId === null) {
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null
+        if (this.pendingDragOver) {
+          try {
+            const { x, y, sourceId } = this.pendingDragOver
+            const dropZone = this.dropZoneCalculator.updateDropZone(x, y, sourceId)
+            this.options.onDragOver(dropZone)
+          } catch (error) {
+            console.error('[DragDropManager] dragover error:', error)
+            this.dropZoneCalculator.clear()
+          }
+        }
+      })
     }
   }
 
@@ -326,6 +348,7 @@ export class DragDropManager {
     // Only trigger leave if actually leaving the container
     if (!relatedTarget || !this.container.contains(relatedTarget)) {
       this.isDragging = false
+      this.pendingDragOver = null // Clear pending RAF state
       this.dropZoneCalculator.clear()
       this.options.onDragLeave()
     }
@@ -337,6 +360,7 @@ export class DragDropManager {
   private handleDrop(e: DragEvent): void {
     e.preventDefault()
     this.isDragging = false
+    this.pendingDragOver = null // Clear pending RAF state
 
     const dropZone = this.dropZoneCalculator.getCurrentDropZone()
     this.dropZoneCalculator.clear()
@@ -516,6 +540,84 @@ export class DragDropManager {
 
         return yResult
       }
+
+      // Handle move with 9-zone alignment for single-child containers
+      // When moving the only child within its parent, apply layout based on drop zone
+      console.log('[DragDropManager] Move operation:', {
+        placement,
+        targetId,
+        sourceNodeId,
+        semanticZone,
+        suggestedAlignment: dropZone.suggestedAlignment,
+        suggestedCrossAlignment: dropZone.suggestedCrossAlignment,
+        parentDirection: dropZone.parentDirection,
+      })
+
+      if (placement === 'inside' && this.sourceMap) {
+        const targetChildren = this.sourceMap.getChildren(targetId)
+        const sourceParent = this.sourceMap.getNodeById(sourceNodeId)?.parentId
+
+        console.log('[DragDropManager] Move inside check:', {
+          targetChildrenCount: targetChildren.length,
+          targetChildrenIds: targetChildren.map(c => c.nodeId),
+          sourceParent,
+        })
+
+        // Check if source is the only child of target (repositioning within same parent)
+        // OR if target is empty (moving into empty container)
+        const isOnlyChildOfTarget = targetChildren.length === 1 &&
+          targetChildren[0].nodeId === sourceNodeId
+        const isTargetEmpty = targetChildren.length === 0
+
+        console.log('[DragDropManager] Conditions:', {
+          isOnlyChildOfTarget,
+          isTargetEmpty,
+        })
+
+        if (isOnlyChildOfTarget || isTargetEmpty) {
+          // Derive semantic zone from alignment suggestions
+          let zoneToApply: SemanticZone | null = null
+
+          if (semanticZone) {
+            zoneToApply = semanticZone
+          } else if (dropZone.suggestedAlignment || dropZone.suggestedCrossAlignment) {
+            zoneToApply = this.alignmentToSemanticZone(
+              dropZone.parentDirection || 'vertical',
+              dropZone.suggestedAlignment || 'start',
+              dropZone.suggestedCrossAlignment || 'start'
+            )
+          }
+
+          console.log('[DragDropManager] Zone to apply:', zoneToApply)
+
+          if (zoneToApply) {
+            // Apply layout to container
+            const layoutResult = this.codeModifier.applyLayoutToContainer(targetId, zoneToApply)
+
+            console.log('[DragDropManager] Layout result:', {
+              success: layoutResult.success,
+              hasInsert: !!layoutResult.change.insert,
+              insert: layoutResult.change.insert,
+              error: layoutResult.error,
+            })
+
+            if (layoutResult.success && layoutResult.change.insert) {
+              // Layout was applied - if moving within same parent, we're done
+              if (isOnlyChildOfTarget && sourceParent === targetId) {
+                console.log('[DragDropManager] Returning layout result (same parent)')
+                return layoutResult
+              }
+
+              // Moving to different container - need to also move the node
+              console.log('[DragDropManager] Moving to different container')
+              const updatedModifier = new CodeModifier(layoutResult.newSource, this.sourceMap)
+              return updatedModifier.moveNode(sourceNodeId, targetId, placement)
+            }
+          }
+        }
+      }
+
+      console.log('[DragDropManager] Falling through to simple moveNode')
       return this.codeModifier.moveNode(sourceNodeId, targetId, placement)
     }
 
@@ -792,6 +894,13 @@ export class DragDropManager {
       this.dragSourceCleanupTimer = null
     }
     this.currentDragSourceId = undefined
+
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingDragOver = null
 
     this.detach()
     this.dropZoneCalculator.dispose()

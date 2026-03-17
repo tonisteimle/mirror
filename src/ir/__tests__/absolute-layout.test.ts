@@ -1,7 +1,10 @@
 /**
  * Absolute Layout Tests
  *
- * Tests for the `abs` layout mode with x/y positioning.
+ * Tests for absolute positioning with x/y and stacked containers.
+ * - `stacked` = creates stacking context (position: relative)
+ * - `abs`/`absolute` = absolutely positioned element (position: absolute)
+ * - `x`/`y` = implicitly sets position: absolute
  */
 
 import { describe, it, expect } from 'vitest'
@@ -9,9 +12,9 @@ import { parse } from '../../parser/parser'
 import { toIR } from '../index'
 
 describe('Absolute Layout', () => {
-  describe('abs container', () => {
-    it('abs sets position relative on container', () => {
-      const code = 'Box abs, w 400, h 300'
+  describe('stacked container', () => {
+    it('stacked sets position relative on container', () => {
+      const code = 'Box stacked, w 400, h 300'
       const ast = parse(code)
       const ir = toIR(ast)
 
@@ -22,8 +25,8 @@ describe('Absolute Layout', () => {
       expect(positionStyle?.value).toBe('relative')
     })
 
-    it('abs works with other layout properties', () => {
-      const code = 'Box abs, w 800, h 600, bg #1a1a1a'
+    it('stacked works with other layout properties', () => {
+      const code = 'Box stacked, w 800, h 600, bg #1a1a1a'
       const ast = parse(code)
       const ir = toIR(ast)
 
@@ -104,10 +107,10 @@ describe('Absolute Layout', () => {
     })
   })
 
-  describe('abs container with positioned children', () => {
-    it('children with x/y are positioned within abs container', () => {
+  describe('stacked container with positioned children', () => {
+    it('children with x/y are positioned within stacked container', () => {
       const code = `
-Canvas: abs, w 400, h 300
+Canvas: stacked, w 400, h 300
   Box x 50, y 30, w 100, h 80, bg #3B82F6
   Box x 120, y 80, w 100, h 80, bg #10B981
 
@@ -143,7 +146,7 @@ InputField: hor, gap 8
   Text "Label"
   Box w 200, h 32, bg #333
 
-Canvas: abs, w 800, h 600
+Canvas: stacked, w 800, h 600
   InputField x 100, y 50
 
 Canvas

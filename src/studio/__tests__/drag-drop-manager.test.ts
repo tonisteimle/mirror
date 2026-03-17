@@ -86,8 +86,17 @@ function createDragEvent(type: string, data?: { dataTransfer?: Partial<DataTrans
 describe('DragDropManager', () => {
   let container: HTMLElement
   let manager: DragDropManager
+  let originalRaf: typeof requestAnimationFrame
 
   beforeEach(() => {
+    // Mock requestAnimationFrame to execute synchronously for tests
+    originalRaf = global.requestAnimationFrame
+    global.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+      callback(0)
+      return 0
+    }
+    global.cancelAnimationFrame = vi.fn()
+
     setupElementFromPointMock()
     setMockElementAtPoint(null)
     container = createContainer()
@@ -95,6 +104,7 @@ describe('DragDropManager', () => {
   })
 
   afterEach(() => {
+    global.requestAnimationFrame = originalRaf
     manager.dispose()
     if (container.parentNode) {
       container.parentNode.removeChild(container)
@@ -612,14 +622,24 @@ describe('DropResult Interface', () => {
 describe('Integration Scenarios', () => {
   let container: HTMLElement
   let manager: DragDropManager
+  let originalRaf: typeof requestAnimationFrame
 
   beforeEach(() => {
+    // Mock requestAnimationFrame to execute synchronously for tests
+    originalRaf = global.requestAnimationFrame
+    global.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+      callback(0)
+      return 0
+    }
+    global.cancelAnimationFrame = vi.fn()
+
     setupElementFromPointMock()
     setMockElementAtPoint(null)
     container = createContainer()
   })
 
   afterEach(() => {
+    global.requestAnimationFrame = originalRaf
     if (manager) {
       manager.dispose()
     }
@@ -703,14 +723,24 @@ describe('Integration Scenarios', () => {
 describe('SourceMap Validation', () => {
   let container: HTMLElement
   let manager: DragDropManager
+  let originalRaf: typeof requestAnimationFrame
 
   beforeEach(() => {
+    // Mock requestAnimationFrame to execute synchronously for tests
+    originalRaf = global.requestAnimationFrame
+    global.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+      callback(0)
+      return 0
+    }
+    global.cancelAnimationFrame = vi.fn()
+
     setupElementFromPointMock()
     setMockElementAtPoint(null)
     container = createContainer()
   })
 
   afterEach(() => {
+    global.requestAnimationFrame = originalRaf
     if (manager) {
       manager.dispose()
     }
@@ -841,6 +871,7 @@ describe('SourceMap Validation', () => {
         nodeId: 'root-1',
         componentName: 'App',
       }),
+      getChildren: vi.fn().mockReturnValue([]),
     }
 
     manager.setCodeModifier('App\n  Box pad 10', mockSourceMap as any)

@@ -5,7 +5,7 @@
  * Elements are inserted as siblings (before/after) or as children (inside).
  */
 
-import type { DropZone, DropPlacement, DropSlot } from '../drop-zone-calculator'
+import type { DropZone, DropPlacement, DropSlot, SemanticZone } from '../drop-zone-calculator'
 import type {
   LayoutDropStrategy,
   DropContext,
@@ -13,6 +13,7 @@ import type {
   LayoutDropResult,
   IndicatorConfig,
 } from './types'
+import { detectLayout, isAbsoluteLayoutContainer } from '../utils/layout-detection'
 
 /**
  * Zone boundaries for 9-zone alignment model
@@ -30,28 +31,18 @@ export class FlexDropStrategy implements LayoutDropStrategy {
 
   /**
    * Check if element is a flex container
+   * Uses centralized layout detection for consistency.
+   * Matches flex and block layouts (not absolute or grid).
    */
   matches(element: HTMLElement): boolean {
-    const style = window.getComputedStyle(element)
-    const display = style.display
-
-    // Standard flex
-    if (display === 'flex' || display === 'inline-flex') {
-      return true
+    // Don't handle absolute containers
+    if (isAbsoluteLayoutContainer(element)) {
+      return false
     }
 
-    // Mirror-specific layouts that compile to flex
-    const layout = element.dataset.layout
-    if (layout === 'hor' || layout === 'ver' || layout === 'horizontal' || layout === 'vertical') {
-      return true
-    }
-
-    // Default block layout is treated as vertical flex
-    if (display === 'block' || display === 'inline-block') {
-      return true
-    }
-
-    return false
+    const layout = detectLayout(element)
+    // Handle flex and block layouts (block is treated as vertical flex)
+    return layout.type === 'flex' || layout.type === 'block'
   }
 
   /**
@@ -61,21 +52,28 @@ export class FlexDropStrategy implements LayoutDropStrategy {
     container: HTMLElement,
     context: DropContext
   ): FlexDropResult | null {
-    const { clientX, clientY, children, containerRect, sourceNodeId } = context
+    const { clientX, clientY, children, containerRect, sourceNodeId, isRTL = false } = context
     const isHorizontal = this.isHorizontalLayout(container)
 
-    // Empty container: use 9-zone model for alignment
-    if (children.length === 0) {
-      return this.calculateEmptyContainerZone(container, context, isHorizontal)
+    // Calculate effective children (excluding the element being dragged)
+    // This handles the case where the only child is being repositioned
+    const effectiveChildren = sourceNodeId
+      ? children.filter(c => c.nodeId !== sourceNodeId)
+      : children
+
+    // Empty container OR only child being moved: use 9-zone model for alignment
+    if (effectiveChildren.length === 0) {
+      return this.calculateEmptyContainerZone(container, context, isHorizontal, isRTL)
     }
 
-    // Container with children: calculate insertion slot
+    // Container with other children: calculate insertion slot
     const slot = this.calculateInsertionSlot(
       container,
       children,
       clientX,
       clientY,
       isHorizontal,
+      isRTL,
       sourceNodeId
     )
 
@@ -124,20 +122,24 @@ export class FlexDropStrategy implements LayoutDropStrategy {
 
   /**
    * Calculate drop zone for empty container using 9-zone model
+   * RTL-aware: flips horizontal alignment for RTL layouts
+   * Scale-aware: adjusts padding calculations for CSS transforms
    */
   private calculateEmptyContainerZone(
     container: HTMLElement,
     context: DropContext,
-    isHorizontal: boolean
+    isHorizontal: boolean,
+    isRTL: boolean
   ): FlexDropResult {
-    const { clientX, clientY, containerRect } = context
+    const { clientX, clientY, containerRect, scale = 1 } = context
     const containerId = container.getAttribute('data-mirror-id') || 'root'
 
     const style = window.getComputedStyle(container)
-    const paddingLeft = parseFloat(style.paddingLeft) || 0
-    const paddingTop = parseFloat(style.paddingTop) || 0
-    const paddingRight = parseFloat(style.paddingRight) || 0
-    const paddingBottom = parseFloat(style.paddingBottom) || 0
+    // Padding values are in CSS pixels - multiply by scale to get screen pixels
+    const paddingLeft = (parseFloat(style.paddingLeft) || 0) * scale
+    const paddingTop = (parseFloat(style.paddingTop) || 0) * scale
+    const paddingRight = (parseFloat(style.paddingRight) || 0) * scale
+    const paddingBottom = (parseFloat(style.paddingBottom) || 0) * scale
 
     const contentLeft = containerRect.left + paddingLeft
     const contentRight = containerRect.right - paddingRight
@@ -146,10 +148,13 @@ export class FlexDropStrategy implements LayoutDropStrategy {
     const contentWidth = contentRight - contentLeft
     const contentHeight = contentBottom - contentTop
 
-    const relativeX = (clientX - contentLeft) / contentWidth
+    // For RTL, flip the X coordinate calculation
+    const relativeX = isRTL
+      ? (contentRight - clientX) / contentWidth
+      : (clientX - contentLeft) / contentWidth
     const relativeY = (clientY - contentTop) / contentHeight
 
-    // Determine alignments
+    // Determine alignments (RTL already accounted for in relativeX)
     const horizontalAlignment: 'start' | 'center' | 'end' =
       relativeX < ZONE.THIRD_START ? 'start' :
       relativeX > ZONE.THIRD_END ? 'end' : 'center'
@@ -172,6 +177,7 @@ export class FlexDropStrategy implements LayoutDropStrategy {
 
   /**
    * Calculate insertion slot between children
+   * RTL-aware: for horizontal layouts with RTL, children are visually reversed
    */
   private calculateInsertionSlot(
     container: HTMLElement,
@@ -179,6 +185,7 @@ export class FlexDropStrategy implements LayoutDropStrategy {
     clientX: number,
     clientY: number,
     isHorizontal: boolean,
+    isRTL: boolean,
     excludeNodeId?: string
   ): DropSlot | null {
     const containerRect = container.getBoundingClientRect()
@@ -196,11 +203,17 @@ export class FlexDropStrategy implements LayoutDropStrategy {
     const GAP_OFFSET = 4
 
     // Get rects for children
-    const childRects = filteredChildren.map(({ element, nodeId }) => ({
+    let childRects = filteredChildren.map(({ element, nodeId }) => ({
       element,
       nodeId,
       rect: element.getBoundingClientRect(),
     }))
+
+    // For RTL horizontal layouts, sort children by X position (right to left)
+    // This ensures visual order matches DOM order for slot calculation
+    if (isHorizontal && isRTL) {
+      childRects = childRects.sort((a, b) => b.rect.left - a.rect.left)
+    }
 
     // Calculate slots
     const slots: Array<{
@@ -210,41 +223,71 @@ export class FlexDropStrategy implements LayoutDropStrategy {
       afterChild: typeof childRects[0] | null
     }> = []
 
-    // Slot before first child
+    // For RTL horizontal: "first" is rightmost, "last" is leftmost
     const firstChild = childRects[0]
-    slots.push({
-      position: isHorizontal
-        ? firstChild.rect.left - GAP_OFFSET
-        : firstChild.rect.top - GAP_OFFSET,
-      index: 0,
-      beforeChild: null,
-      afterChild: firstChild,
-    })
+    const lastChild = childRects[childRects.length - 1]
 
-    // Slots between children
-    for (let i = 0; i < childRects.length - 1; i++) {
-      const before = childRects[i]
-      const after = childRects[i + 1]
+    if (isHorizontal && isRTL) {
+      // RTL: Slot before first child (at right edge)
+      slots.push({
+        position: firstChild.rect.right + GAP_OFFSET,
+        index: 0,
+        beforeChild: null,
+        afterChild: firstChild,
+      })
+
+      // Slots between children (right to left)
+      for (let i = 0; i < childRects.length - 1; i++) {
+        const before = childRects[i]
+        const after = childRects[i + 1]
+        slots.push({
+          position: (before.rect.left + after.rect.right) / 2,
+          index: i + 1,
+          beforeChild: before,
+          afterChild: after,
+        })
+      }
+
+      // Slot after last child (at left edge)
+      slots.push({
+        position: lastChild.rect.left - GAP_OFFSET,
+        index: childRects.length,
+        beforeChild: lastChild,
+        afterChild: null,
+      })
+    } else {
+      // LTR or vertical: standard left-to-right / top-to-bottom
       slots.push({
         position: isHorizontal
-          ? (before.rect.right + after.rect.left) / 2
-          : (before.rect.bottom + after.rect.top) / 2,
-        index: i + 1,
-        beforeChild: before,
-        afterChild: after,
+          ? firstChild.rect.left - GAP_OFFSET
+          : firstChild.rect.top - GAP_OFFSET,
+        index: 0,
+        beforeChild: null,
+        afterChild: firstChild,
+      })
+
+      for (let i = 0; i < childRects.length - 1; i++) {
+        const before = childRects[i]
+        const after = childRects[i + 1]
+        slots.push({
+          position: isHorizontal
+            ? (before.rect.right + after.rect.left) / 2
+            : (before.rect.bottom + after.rect.top) / 2,
+          index: i + 1,
+          beforeChild: before,
+          afterChild: after,
+        })
+      }
+
+      slots.push({
+        position: isHorizontal
+          ? lastChild.rect.right + GAP_OFFSET
+          : lastChild.rect.bottom + GAP_OFFSET,
+        index: childRects.length,
+        beforeChild: lastChild,
+        afterChild: null,
       })
     }
-
-    // Slot after last child
-    const lastChild = childRects[childRects.length - 1]
-    slots.push({
-      position: isHorizontal
-        ? lastChild.rect.right + GAP_OFFSET
-        : lastChild.rect.bottom + GAP_OFFSET,
-      index: childRects.length,
-      beforeChild: lastChild,
-      afterChild: null,
-    })
 
     // Find nearest slot
     let nearestSlot = slots[0]
@@ -270,23 +313,10 @@ export class FlexDropStrategy implements LayoutDropStrategy {
 
   /**
    * Check if element has horizontal layout
+   * Uses centralized layout detection for consistency.
    */
   private isHorizontalLayout(element: HTMLElement): boolean {
-    const style = window.getComputedStyle(element)
-    const display = style.display
-    const flexDirection = style.flexDirection
-
-    if (display === 'flex' || display === 'inline-flex') {
-      return flexDirection === 'row' || flexDirection === 'row-reverse'
-    }
-
-    // Mirror-specific
-    const layout = element.dataset.layout
-    if (layout === 'hor' || layout === 'horizontal') {
-      return true
-    }
-
-    return false
+    return detectLayout(element).direction === 'horizontal'
   }
 
   /**
@@ -299,7 +329,7 @@ export class FlexDropStrategy implements LayoutDropStrategy {
     const flexResult = result as FlexDropResult
     const isHorizontal = flexResult.direction === 'horizontal'
 
-    // For empty containers, show zone indicator
+    // For empty containers, show zone indicator with alignment info
     if (result.placement === 'inside' && flexResult.suggestedAlignment) {
       return {
         type: 'zone',
@@ -307,6 +337,10 @@ export class FlexDropStrategy implements LayoutDropStrategy {
         y: containerRect.top + containerRect.height / 2,
         width: containerRect.width,
         height: containerRect.height,
+        alignment: flexResult.suggestedAlignment,
+        crossAlignment: flexResult.suggestedCrossAlignment,
+        direction: flexResult.direction,
+        showDots: true,
       }
     }
 
@@ -334,6 +368,13 @@ export class FlexDropStrategy implements LayoutDropStrategy {
   toDropZone(result: LayoutDropResult, element: HTMLElement): DropZone {
     const flexResult = result as FlexDropResult
 
+    // Derive semanticZone from alignment suggestions
+    const semanticZone = this.deriveSemanticZone(
+      flexResult.suggestedAlignment,
+      flexResult.suggestedCrossAlignment,
+      flexResult.direction
+    )
+
     return {
       targetId: result.targetId,
       placement: result.placement,
@@ -344,7 +385,37 @@ export class FlexDropStrategy implements LayoutDropStrategy {
       parentDirection: flexResult.direction,
       suggestedAlignment: flexResult.suggestedAlignment,
       suggestedCrossAlignment: flexResult.suggestedCrossAlignment,
+      semanticZone,
+      isAbsoluteContainer: false,
     }
+  }
+
+  /**
+   * Derive semantic zone from alignment suggestions
+   * Maps alignment (start/center/end) to zone names (top/mid/bot, left/center/right)
+   */
+  private deriveSemanticZone(
+    mainAlignment?: 'start' | 'center' | 'end',
+    crossAlignment?: 'start' | 'center' | 'end',
+    direction?: 'horizontal' | 'vertical'
+  ): SemanticZone | undefined {
+    if (!mainAlignment || !crossAlignment) {
+      return undefined
+    }
+
+    // For horizontal layouts: main = horizontal, cross = vertical
+    // For vertical layouts: main = vertical, cross = horizontal
+    const isHorizontal = direction === 'horizontal'
+    const horizontalAlign = isHorizontal ? mainAlignment : crossAlignment
+    const verticalAlign = isHorizontal ? crossAlignment : mainAlignment
+
+    const verticalMap = { start: 'top', center: 'mid', end: 'bot' } as const
+    const horizontalMap = { start: 'left', center: 'center', end: 'right' } as const
+
+    const v = verticalMap[verticalAlign]
+    const h = horizontalMap[horizontalAlign]
+
+    return `${v}-${h}` as SemanticZone
   }
 }
 

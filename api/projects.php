@@ -45,13 +45,13 @@ function validateProjectOwnership(string $userId, string $projectId): bool {
 }
 
 /**
- * List all projects for current user
+ * List all projects for current user (or anonymous session user)
  *
  * GET /api/projects
  * Returns: [{ id, name, created_at }]
  */
 function getProjects(): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
     $userDir = getUserProjectsDir($userId);
 
     if (!is_dir($userDir)) {
@@ -88,14 +88,14 @@ function getProjects(): array {
 }
 
 /**
- * Create a new project
+ * Create a new project (works for logged-in and anonymous users)
  *
  * POST /api/projects
  * Body: { name }
  * Returns: { id, name, created_at }
  */
 function createProject(array $body): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
     $name = trim($body['name'] ?? 'Untitled Project');
 
     if (empty($name)) {
@@ -120,11 +120,8 @@ function createProject(array $body): array {
 
     // Create default files
     $defaultIndex = <<<'MIRROR'
-// Welcome to Mirror Studio!
-// Start building your UI here.
-
-Box pad 24, bg #18181b, rad 8
-  Text "Hello, Mirror!" col #e4e4e7
+App bg #18181b, pad 20
+  rect w 100, h 200, bg #FCC419
 MIRROR;
 
     $defaultTokens = <<<'MIRROR'
@@ -154,14 +151,14 @@ MIRROR;
 }
 
 /**
- * Update project metadata
+ * Update project metadata (works for logged-in and anonymous users)
  *
  * PUT /api/projects/{id}
  * Body: { name }
  * Returns: { success }
  */
 function updateProject(string $projectId, array $body): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate ownership
     if (!validateProjectOwnership($userId, $projectId)) {
@@ -187,13 +184,13 @@ function updateProject(string $projectId, array $body): array {
 }
 
 /**
- * Delete a project
+ * Delete a project (works for logged-in and anonymous users)
  *
  * DELETE /api/projects/{id}
  * Returns: { success }
  */
 function deleteProject(string $projectId): array {
-    $userId = requireAuth();
+    $userId = getOrCreateSessionUser();
 
     // Validate ownership
     if (!validateProjectOwnership($userId, $projectId)) {

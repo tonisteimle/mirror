@@ -9,7 +9,9 @@ import type { BreadcrumbItem } from '../../src/studio/selection-manager'
 import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
 import type { CodeModifier, ModificationResult, FilesAccess } from '../../src/studio/code-modifier'
 import { PROPERTY_ICON_PATHS } from '../../src/studio/icons'
+import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
 import { state, events } from '../core'
+import TomSelect from 'tom-select'
 
 /**
  * Interface for selection providers (both SelectionManager and StateSelectionAdapter implement this)
@@ -80,6 +82,9 @@ export class PropertyPanel {
 
   // AbortController for autocomplete event cleanup
   private autocompleteAbortController: AbortController | null = null
+
+  // Tom Select instances for dropdowns
+  private tomSelectInstances: TomSelect[] = []
 
   // Event subscription cleanup
   private unsubscribeSelectionInvalidated: (() => void) | null = null
@@ -264,6 +269,24 @@ export class PropertyPanel {
   }
 
   /**
+   * Check if the current element is inside a positioned container (pos/stacked)
+   * This determines whether x/y position inputs should be shown
+   */
+  private isInPositionedContainer(): boolean {
+    if (!this.currentElement) return false
+
+    const nodeId = this.currentElement.nodeId
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`)
+    if (!element) return false
+
+    const parent = element.parentElement
+    if (!parent) return false
+
+    // Check if parent is a positioned container
+    return isAbsoluteLayoutContainer(parent)
+  }
+
+  /**
    * Render the property panel
    */
   private render(element: ExtractedElement): void {
@@ -278,6 +301,9 @@ export class PropertyPanel {
     const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess
 
     this.container.innerHTML = `
+      <div class="pp-header">
+        <span class="pp-title">Properties</span>
+      </div>
       ${element.isTemplateInstance ? `
         <div class="pp-template-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -308,24 +334,25 @@ export class PropertyPanel {
     // Find special categories for custom rendering
     const layoutCat = categories.find(c => c.name === 'layout')
     const alignmentCat = categories.find(c => c.name === 'alignment')
+    const positionCat = categories.find(c => c.name === 'position')
     const sizingCat = categories.find(c => c.name === 'sizing')
     const spacingCat = categories.find(c => c.name === 'spacing')
     const borderCat = categories.find(c => c.name === 'border')
     const typographyCat = categories.find(c => c.name === 'typography')
 
-    const specialCats = ['layout', 'alignment', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover']
+    const specialCats = ['layout', 'alignment', 'position', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover']
     const otherCats = categories.filter(c => !specialCats.includes(c.name))
 
     let result = ''
 
-    // Render layout section (includes alignment)
+    // Render layout section (includes alignment and position/absolute)
     if (layoutCat) {
-      result += this.renderLayoutToggleGroup(layoutCat, alignmentCat)
+      result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
     }
 
-    // Render sizing section
+    // Render sizing section (includes x/y when absolute is active)
     if (sizingCat) {
-      result += this.renderSizingSection(sizingCat)
+      result += this.renderSizingSection(sizingCat, positionCat)
     }
 
     // Render spacing section
@@ -382,22 +409,12 @@ export class PropertyPanel {
   /**
    * Layout mode options (mutually exclusive)
    */
-  private readonly LAYOUT_MODES = ['vertical', 'horizontal', 'grid', 'stacked'] as const
+  private readonly LAYOUT_MODES = ['vertical', 'horizontal', 'grid', 'stacked', 'absolute'] as const
 
   /**
-   * Gap token presets
+   * Render layout as exclusive toggle group (includes alignment and position)
    */
-  private readonly GAP_TOKENS = [
-    { label: 'xs', value: '2' },
-    { label: 's', value: '4' },
-    { label: 'm', value: '8' },
-    { label: 'l', value: '16' },
-  ] as const
-
-  /**
-   * Render layout as exclusive toggle group (includes alignment)
-   */
-  private renderLayoutToggleGroup(category: PropertyCategory, alignmentCat?: PropertyCategory): string {
+  private renderLayoutToggleGroup(category: PropertyCategory, alignmentCat?: PropertyCategory, positionCat?: PropertyCategory): string {
     const props = category.properties
 
     // Find which layout mode is active
@@ -406,17 +423,26 @@ export class PropertyPanel {
       return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
     }
 
+    // Check if absolute is active from position category
+    const posProps = positionCat?.properties || []
+    const absProp = posProps.find(p => p.name === 'absolute' || p.name === 'abs')
+    const isAbsolute = absProp && absProp.source !== 'available'
+
     // Determine active mode (default to vertical if none set)
     let activeMode: string = 'vertical'
-    for (const mode of this.LAYOUT_MODES) {
-      if (isActive(mode)) {
-        activeMode = mode
-        break
+    if (isAbsolute) {
+      activeMode = 'absolute'
+    } else {
+      for (const mode of this.LAYOUT_MODES) {
+        if (mode !== 'absolute' && isActive(mode)) {
+          activeMode = mode
+          break
+        }
       }
+      // Also check short forms
+      if (isActive('hor')) activeMode = 'horizontal'
+      if (isActive('ver')) activeMode = 'vertical'
     }
-    // Also check short forms
-    if (isActive('hor')) activeMode = 'horizontal'
-    if (isActive('ver')) activeMode = 'vertical'
 
     // Find gap property
     const gapProp = props.find(p => p.name === 'gap' || p.name === 'g')
@@ -426,11 +452,9 @@ export class PropertyPanel {
     const wrapProp = props.find(p => p.name === 'wrap')
     const wrapActive = wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false))
 
-    // Get dynamic gap tokens, fall back to hardcoded if none defined
+    // Get dynamic gap tokens - NO FALLBACKS!
     const dynamicGapTokens = this.getGapTokens()
-    const gapTokensToUse = dynamicGapTokens.length > 0
-      ? dynamicGapTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
-      : this.GAP_TOKENS.map(t => ({ label: t.label, value: t.value, tokenRef: `$${t.label}.gap` }))
+    const gapTokensToUse = dynamicGapTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
 
     // Check if current gapValue is a token reference
     const isGapTokenRef = gapValue.startsWith('$')
@@ -499,7 +523,7 @@ export class PropertyPanel {
         <div class="section-label">Layout</div>
         <div class="section-content">
           <div class="prop-row">
-            <span class="prop-label">Direction</span>
+            <span class="prop-label">Mode</span>
             <div class="prop-content">
               <div class="toggle-group">
                 <button class="toggle-btn ${activeMode === 'horizontal' ? 'active' : ''}" data-layout="horizontal" title="Horizontal">
@@ -520,10 +544,16 @@ export class PropertyPanel {
                     <rect x="8" y="8" width="4" height="4" rx="1"/>
                   </svg>
                 </button>
-                <button class="toggle-btn ${activeMode === 'stacked' ? 'active' : ''}" data-layout="stacked" title="Stack">
+                <button class="toggle-btn ${activeMode === 'stacked' ? 'active' : ''}" data-layout="stacked" title="Stacked">
                   <svg class="icon" viewBox="0 0 14 14">
                     <rect x="2" y="3" width="10" height="8" rx="1"/>
                     <rect x="4" y="5" width="6" height="4" rx="0.5"/>
+                  </svg>
+                </button>
+                <button class="toggle-btn ${activeMode === 'absolute' ? 'active' : ''}" data-layout="absolute" title="Absolute">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <rect x="2" y="2" width="10" height="10" rx="1" fill="none" stroke="currentColor"/>
+                    <circle cx="5" cy="5" r="1.5" fill="currentColor"/>
                   </svg>
                 </button>
               </div>
@@ -532,9 +562,7 @@ export class PropertyPanel {
           <div class="prop-row">
             <span class="prop-label">Gap</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${gapTokens}
-              </div>
+              ${gapTokens ? `<div class="token-group">${gapTokens}</div>` : ''}
               <input type="text" class="prop-input" value="${this.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
             </div>
           </div>
@@ -561,9 +589,9 @@ export class PropertyPanel {
   }
 
   /**
-   * Render sizing section (1:1 from prototype-v2.html)
+   * Render sizing section (includes x/y when absolute is active)
    */
-  private renderSizingSection(category: PropertyCategory): string {
+  private renderSizingSection(category: PropertyCategory, positionCat?: PropertyCategory): string {
     const props = category.properties
 
     // Find width and height values
@@ -579,10 +607,34 @@ export class PropertyPanel {
     const heightIsHug = heightValue === 'hug'
     const heightIsFull = heightValue === 'full'
 
+    // Check if element should show x/y inputs:
+    // 1. Element has absolute/abs property itself, OR
+    // 2. Element is inside a positioned container (parent has pos/stacked)
+    const posProps = positionCat?.properties || []
+    const absProp = posProps.find(p => p.name === 'absolute' || p.name === 'abs')
+    const hasAbsoluteProperty = absProp && absProp.source !== 'available'
+    const inPositionedContainer = this.isInPositionedContainer()
+    const showXY = hasAbsoluteProperty || inPositionedContainer
+
+    const xProp = posProps.find(p => p.name === 'x')
+    const yProp = posProps.find(p => p.name === 'y')
+    const xValue = xProp?.value || ''
+    const yValue = yProp?.value || ''
+
+    // Build x/y inputs if in positioned context (on one line, before width/height)
+    const xyRow = showXY ? `
+          <div class="prop-row">
+            <span class="prop-label">Pos X/Y</span>
+            <div class="prop-content dual-input">
+              <input type="text" class="prop-input" data-prop="x" value="${xValue}" placeholder="0">
+              <input type="text" class="prop-input" data-prop="y" value="${yValue}" placeholder="0">
+            </div>
+          </div>` : ''
+
     return `
       <div class="section">
         <div class="section-label">Size</div>
-        <div class="section-content">
+        <div class="section-content">${xyRow}
           <div class="prop-row">
             <span class="prop-label">Width</span>
             <div class="prop-content">
@@ -718,6 +770,13 @@ export class PropertyPanel {
   }
 
   /**
+   * Get font-size tokens
+   */
+  private getFontSizeTokens(): SpacingToken[] {
+    return this.getSpacingTokens('fs')
+  }
+
+  /**
    * Resolve token value - get numeric value for a token reference
    * Token ref can be "sm.pad" or "$sm.pad" - we normalize it
    */
@@ -772,32 +831,6 @@ export class PropertyPanel {
     return tokens
   }
 
-  // Default tokens for autocomplete when none are defined in source
-  private readonly DEFAULT_TOKENS: Array<{ name: string; value: string }> = [
-    // Spacing
-    { name: 'xs.pad', value: '2' },
-    { name: 'sm.pad', value: '4' },
-    { name: 'md.pad', value: '8' },
-    { name: 'lg.pad', value: '16' },
-    { name: 'xl.pad', value: '24' },
-    { name: 'xs.gap', value: '2' },
-    { name: 'sm.gap', value: '4' },
-    { name: 'md.gap', value: '8' },
-    { name: 'lg.gap', value: '16' },
-    // Colors
-    { name: 'primary.bg', value: '#3B82F6' },
-    { name: 'secondary.bg', value: '#6B7280' },
-    { name: 'surface.bg', value: '#1a1a23' },
-    { name: 'elevated.bg', value: '#27272A' },
-    { name: 'primary.col', value: '#3B82F6' },
-    { name: 'muted.col', value: '#71717A' },
-    { name: 'text.col', value: '#E5E5E5' },
-    // Radius
-    { name: 'sm.rad', value: '4' },
-    { name: 'md.rad', value: '8' },
-    { name: 'lg.rad', value: '12' },
-  ]
-
   /**
    * Get all tokens from source, optionally filtered by property suffix
    * Uses getAllSource callback if available to get tokens from all project files
@@ -829,14 +862,6 @@ export class PropertyPanel {
       } else {
         tokens.push({ name, value })
       }
-    }
-
-    // If no tokens found in source, use defaults
-    if (tokens.length === 0) {
-      const defaults = propertySuffix
-        ? this.DEFAULT_TOKENS.filter(t => t.name.endsWith('.' + propertySuffix))
-        : this.DEFAULT_TOKENS
-      return defaults
     }
 
     return tokens
@@ -1073,25 +1098,8 @@ export class PropertyPanel {
   } as const
 
   /**
-   * Render color picker section (v2)
-   */
-  /**
    * Render color section (1:1 from prototype-v2.html)
    */
-  // Default color tokens when none defined in source
-  private readonly DEFAULT_BG_TOKENS = [
-    { name: 'primary.bg', value: '#3B82F6' },
-    { name: 'success.bg', value: '#22C55E' },
-    { name: 'surface.bg', value: '#1a1a23' },
-    { name: 'elevated.bg', value: '#27272A' },
-  ]
-
-  private readonly DEFAULT_COL_TOKENS = [
-    { name: 'text.col', value: '#FFFFFF' },
-    { name: 'muted.col', value: '#A1A1AA' },
-    { name: 'subtle.col', value: '#71717A' },
-  ]
-
   private renderColorSection(): string {
     // Get current bg and color values
     // Use currentElement.allProperties which is already populated for both instances and definitions
@@ -1194,19 +1202,6 @@ export class PropertyPanel {
   }
 
   /**
-   * Padding token presets for v2
-   */
-  private readonly PADDING_V2_TOKENS = [
-    { label: 'xs', value: '2' },
-    { label: 's', value: '4' },
-    { label: 'm', value: '8' },
-    { label: 'l', value: '16' },
-  ] as const
-
-  /**
-   * Render spacing section with V/H inputs and tokens (v2)
-   */
-  /**
    * Render spacing section (1:1 from prototype-v2.html)
    */
   private renderSpacingSection(category: PropertyCategory): string {
@@ -1234,11 +1229,9 @@ export class PropertyPanel {
 
     const vPad = tPad, hPad = rPad
 
-    // Get dynamic tokens from source, fall back to hardcoded if none defined
+    // Get dynamic tokens from source - NO FALLBACKS!
     const dynamicTokens = this.getPaddingTokens()
-    const tokensToUse = dynamicTokens.length > 0
-      ? dynamicTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
-      : this.PADDING_V2_TOKENS.map(t => ({ label: t.label, value: t.value, tokenRef: `$${t.label}.pad` }))
+    const tokensToUse = dynamicTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
 
     // Render token buttons for padding
     const renderPadTokens = (activeValue: string, direction: string) => {
@@ -1257,24 +1250,29 @@ export class PropertyPanel {
 
     return `
       <div class="section">
-        <div class="section-label">Spacing</div>
+        <div class="section-label">
+          <span>Padding</span>
+          <button class="section-expand-btn" data-expand="spacing" title="Toggle detail view">
+            <svg class="icon icon-collapsed" viewBox="0 0 14 14">
+              <path d="M4 6l3 3 3-3"/>
+            </svg>
+            <svg class="icon icon-expanded" viewBox="0 0 14 14">
+              <path d="M4 8l3-3 3 3"/>
+            </svg>
+          </button>
+        </div>
         <div class="section-content" data-expand-container="spacing">
           <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
-            <span class="prop-label">Padding H</span>
+            <span class="prop-label">Horizontal</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(hPad, 'h')}
               </div>
               <input type="text" class="prop-input" value="${this.escapeHtml(hPad)}" data-pad-dir="h" placeholder="0">
-              <button class="toggle-btn expand-btn" data-expand="spacing" title="Expand">
-                <svg class="icon" viewBox="0 0 14 14">
-                  <path d="M4 6l3 3 3-3"/>
-                </svg>
-              </button>
             </div>
           </div>
           <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
-            <span class="prop-label">Padding V</span>
+            <span class="prop-label">Vertical</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(vPad, 'v')}
@@ -1283,21 +1281,16 @@ export class PropertyPanel {
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
-            <span class="prop-label">Pad Top</span>
+            <span class="prop-label">Top</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(tPad, 't')}
               </div>
               <input type="text" class="prop-input" value="${this.escapeHtml(tPad)}" data-pad-dir="t" placeholder="0">
-              <button class="toggle-btn expand-btn" data-expand="spacing" title="Collapse">
-                <svg class="icon" viewBox="0 0 14 14">
-                  <path d="M4 8l3-3 3 3"/>
-                </svg>
-              </button>
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
-            <span class="prop-label">Pad Right</span>
+            <span class="prop-label">Right</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(rPad, 'r')}
@@ -1306,7 +1299,7 @@ export class PropertyPanel {
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
-            <span class="prop-label">Pad Bottom</span>
+            <span class="prop-label">Bottom</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(bPad, 'b')}
@@ -1315,7 +1308,7 @@ export class PropertyPanel {
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
-            <span class="prop-label">Pad Left</span>
+            <span class="prop-label">Left</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderPadTokens(lPad, 'l')}
@@ -1353,16 +1346,12 @@ export class PropertyPanel {
     const borderColorDisplay = borderColor || 'none'
     const borderColorSwatch = borderColorIsToken ? this.resolveTokenValue(borderColor) : borderColor
 
-    // Get dynamic radius tokens, fall back to hardcoded if none defined
+    // Get dynamic radius tokens - NO FALLBACKS!
     const dynamicRadiusTokens = this.getRadiusTokens()
-    const radiusTokens = dynamicRadiusTokens.length > 0
-      ? [{ label: '0', value: '0', tokenRef: '' }, ...dynamicRadiusTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))]
-      : [
-          { label: '0', value: '0', tokenRef: '' },
-          { label: 's', value: '4', tokenRef: '$s.rad' },
-          { label: 'm', value: '8', tokenRef: '$m.rad' },
-          { label: 'l', value: '16', tokenRef: '$l.rad' },
-        ]
+    const radiusTokens = [
+      { label: '0', value: '0', tokenRef: '' },
+      ...dynamicRadiusTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+    ]
 
     // Check if current radiusValue is a token reference
     const isRadiusTokenRef = radiusValue.startsWith('$')
@@ -1391,9 +1380,19 @@ export class PropertyPanel {
 
     return `
       <div class="section">
-        <div class="section-label">Border</div>
-        <div class="section-content">
-          <div class="prop-row${radiusIsOverride ? ' override' : ''}">
+        <div class="section-label">
+          <span>Border</span>
+          <button class="section-expand-btn" data-expand="border" title="Toggle detail view">
+            <svg class="icon icon-collapsed" viewBox="0 0 14 14">
+              <path d="M4 6l3 3 3-3"/>
+            </svg>
+            <svg class="icon icon-expanded" viewBox="0 0 14 14">
+              <path d="M4 8l3-3 3 3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content" data-expand-container="border">
+          <div class="prop-row collapsed-row${radiusIsOverride ? ' override' : ''}" data-expand-group="border">
             <span class="prop-label">Radius</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1405,14 +1404,9 @@ export class PropertyPanel {
                 </button>
               </div>
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
-              <button class="toggle-btn expand-btn" data-expand="radius" title="Expand">
-                <svg class="icon" viewBox="0 0 14 14">
-                  <path d="M4 6l3 3 3-3"/>
-                </svg>
-              </button>
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="radius">
+          <div class="prop-row expanded-row" data-expand-group="border">
             <span class="prop-label">Top Left</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1421,7 +1415,7 @@ export class PropertyPanel {
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="radius">
+          <div class="prop-row expanded-row" data-expand-group="border">
             <span class="prop-label">Top Right</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1430,7 +1424,7 @@ export class PropertyPanel {
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="radius">
+          <div class="prop-row expanded-row" data-expand-group="border">
             <span class="prop-label">Btm Right</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1439,7 +1433,7 @@ export class PropertyPanel {
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="radius">
+          <div class="prop-row expanded-row" data-expand-group="border">
             <span class="prop-label">Btm Left</span>
             <div class="prop-content">
               <div class="token-group">
@@ -1448,18 +1442,13 @@ export class PropertyPanel {
               <input type="text" class="prop-input" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
             </div>
           </div>
-          <div class="prop-row${borderIsOverride ? ' override' : ''}">
+          <div class="prop-row collapsed-row${borderIsOverride ? ' override' : ''}" data-expand-group="border">
             <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
               </div>
               ${borderColorTrigger}
-              <button class="toggle-btn expand-btn" data-expand="border" title="Expand">
-                <svg class="icon" viewBox="0 0 14 14">
-                  <path d="M4 6l3 3 3-3"/>
-                </svg>
-              </button>
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="border">
@@ -1538,11 +1527,6 @@ export class PropertyPanel {
   ] as const
 
   /**
-   * Font size presets
-   */
-  private readonly FONT_SIZE_PRESETS = ['11', '12', '14', '16', '18', '20', '24', '32'] as const
-
-  /**
    * Font weight options
    */
   private readonly FONT_WEIGHT_OPTIONS = [
@@ -1562,17 +1546,6 @@ export class PropertyPanel {
    * Text style toggles (booleans)
    */
   private readonly TEXT_STYLES = ['italic', 'underline', 'uppercase', 'lowercase', 'truncate'] as const
-
-  /**
-   * Font size tokens for v2
-   */
-  private readonly FONT_SIZE_V2_TOKENS = [
-    { label: 'xs', value: '11' },
-    { label: 's', value: '12' },
-    { label: 'm', value: '14' },
-    { label: 'l', value: '16' },
-    { label: 'xl', value: '20' },
-  ] as const
 
   /**
    * Render typography section (v2) - matches prototype-v2.html
@@ -1613,10 +1586,11 @@ export class PropertyPanel {
       `<option value="${w.value}" ${weightValue === w.value ? 'selected' : ''}>${w.label}</option>`
     ).join('')
 
-    // Font size tokens - matching prototype (xs, s, m, l, xl)
-    const sizeTokens = this.FONT_SIZE_V2_TOKENS.map(token => {
+    // Font size tokens - dynamic from source (e.g., $sm.fs: 12)
+    const dynamicFontSizeTokens = this.getFontSizeTokens()
+    const sizeTokens = dynamicFontSizeTokens.map(token => {
       const isActive = fontSizeValue === token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.label}</button>`
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
     }).join('')
 
     // Align icons - matching prototype exactly
@@ -1654,7 +1628,7 @@ export class PropertyPanel {
           <div class="prop-row">
             <span class="prop-label">Font</span>
             <div class="prop-content">
-              <select class="prop-select" data-prop="font">
+              <select class="pp-font-input" data-prop="font">
                 ${fontOptions}
               </select>
             </div>
@@ -1662,16 +1636,14 @@ export class PropertyPanel {
           <div class="prop-row">
             <span class="prop-label">Size</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${sizeTokens}
-              </div>
-              <input type="text" class="prop-input" value="${this.escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14">
+              ${sizeTokens ? `<div class="token-group">${sizeTokens}</div>` : ''}
+              <input type="text" class="pp-fontsize-input" value="${this.escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14">
             </div>
           </div>
           <div class="prop-row">
             <span class="prop-label">Weight</span>
             <div class="prop-content">
-              <select class="prop-select" data-prop="weight">
+              <select class="pp-weight-input" data-prop="weight">
                 ${weightOptions}
               </select>
             </div>
@@ -2233,8 +2205,8 @@ export class PropertyPanel {
       token.addEventListener('click', (e) => this.handlePadTokenBtnClick(e))
     })
 
-    // Expand/collapse buttons (prototype uses .expand-btn[data-expand])
-    const prototypeExpandBtns = this.container.querySelectorAll('.expand-btn[data-expand]')
+    // Expand/collapse buttons (prototype uses .expand-btn[data-expand] and .section-expand-btn)
+    const prototypeExpandBtns = this.container.querySelectorAll('.expand-btn[data-expand], .section-expand-btn[data-expand]')
     prototypeExpandBtns.forEach(btn => {
       btn.addEventListener('click', (e) => this.handleExpandBtnClick(e))
     })
@@ -2426,6 +2398,48 @@ export class PropertyPanel {
     if (cursorSelect) {
       cursorSelect.addEventListener('change', (e) => this.handleSelectChange(e))
     }
+
+    // Initialize Tom Select for dropdowns
+    this.initializeTomSelect()
+  }
+
+  /**
+   * Initialize Tom Select for select dropdowns
+   */
+  private initializeTomSelect(): void {
+    // Destroy existing instances
+    this.tomSelectInstances.forEach(instance => {
+      instance.destroy()
+    })
+    this.tomSelectInstances = []
+
+    // Find all select elements
+    const selects = this.container.querySelectorAll<HTMLSelectElement>('.pp-font-input, .pp-weight-input')
+
+    selects.forEach(select => {
+      const settings: any = {
+        controlInput: null, // No search input
+        hideSelected: false,
+        closeAfterSelect: true,
+        dropdownParent: 'body',
+        render: {
+          option: (data: any, escape: (str: string) => string) => {
+            return `<div class="tom-select-option">${escape(data.text)}</div>`
+          },
+          item: (data: any, escape: (str: string) => string) => {
+            return `<div class="tom-select-item">${escape(data.text)}</div>`
+          }
+        },
+        onChange: (value: string) => {
+          // Trigger change event for existing handler
+          const event = new Event('change', { bubbles: true })
+          select.dispatchEvent(event)
+        }
+      }
+
+      const instance = new TomSelect(select, settings)
+      this.tomSelectInstances.push(instance)
+    })
   }
 
   /**
@@ -2523,7 +2537,7 @@ export class PropertyPanel {
    * Handle expand button click (prototype)
    */
   private handleExpandBtnClick(e: Event): void {
-    const btn = (e.target as HTMLElement).closest('.expand-btn[data-expand]') as HTMLElement
+    const btn = (e.target as HTMLElement).closest('.expand-btn[data-expand], .section-expand-btn[data-expand]') as HTMLElement
     if (!btn) return
 
     const expandGroup = btn.dataset.expand
@@ -2533,6 +2547,12 @@ export class PropertyPanel {
     const container = this.container.querySelector(`[data-expand-container="${expandGroup}"]`)
     if (container) {
       container.classList.toggle('expanded')
+
+      // Also toggle on parent .section for CSS purposes
+      const section = container.closest('.section')
+      if (section) {
+        section.classList.toggle('expanded')
+      }
     }
   }
 
@@ -3159,7 +3179,13 @@ export class PropertyPanel {
     const layoutKeywords = [
       '\\bhorizontal\\b', '\\bhor\\b',
       '\\bvertical\\b', '\\bver\\b',
-      '\\bstacked\\b', '\\bgrid\\b'
+      '\\bstacked\\b', '\\bgrid\\b',
+      '\\babsolute\\b', '\\babs\\b'
+    ]
+
+    // Also remove x and y when switching away from absolute
+    const positionKeywords = [
+      'x\\s+\\d+', 'y\\s+\\d+'
     ]
 
     // Remove existing layout keywords
@@ -3172,6 +3198,18 @@ export class PropertyPanel {
       })
     }
 
+    // Remove x/y position properties when switching away from absolute
+    if (newLayout !== 'absolute') {
+      for (const keyword of positionKeywords) {
+        line = line.replace(new RegExp(`,?\\s*${keyword}\\s*,?`, 'g'), (match) => {
+          if (match.startsWith(',') && match.endsWith(',')) {
+            return ', '
+          }
+          return ''
+        })
+      }
+    }
+
     // Clean up commas
     line = line.replace(/,\s*,/g, ',')
     line = line.replace(/,\s*$/g, '')
@@ -3179,7 +3217,9 @@ export class PropertyPanel {
 
     // Don't add 'vertical' if it's the default (no layout keyword means vertical)
     if (newLayout !== 'vertical') {
-      line = line.trimEnd() + ', ' + newLayout
+      // Use 'abs' as short form for absolute
+      const layoutToAdd = newLayout === 'absolute' ? 'abs' : newLayout
+      line = line.trimEnd() + ', ' + layoutToAdd
     }
 
     lines[lineIndex] = line

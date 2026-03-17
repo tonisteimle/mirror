@@ -720,7 +720,84 @@ export class ResizeCommand implements Command {
   }
 }
 
-export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE'
+/**
+ * SetPositionCommand - Update x and y position properties atomically
+ *
+ * Used for keyboard navigation (arrow keys) and position panel updates.
+ * Handles both adding new x/y properties and updating existing ones.
+ */
+export class SetPositionCommand implements Command {
+  readonly type = 'SET_POSITION'
+  readonly description: string
+  private nodeId: string
+  private x: number
+  private y: number
+  private originalSource: string | null = null
+
+  constructor(params: { nodeId: string; x: number; y: number; description?: string }) {
+    this.nodeId = params.nodeId
+    this.x = params.x
+    this.y = params.y
+    this.description = params.description || `Set position (${params.x}, ${params.y})`
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store editor source for undo (without prelude)
+    this.originalSource = ctx.getSource()
+    let source = data.source
+    const preludeOffset = ctx.getPreludeOffset()
+
+    // Update x property
+    const xModifier = new CodeModifier(source, data.sourceMap)
+    const xResult = xModifier.updateProperty(this.nodeId, 'x', String(this.x))
+    if (!xResult.success) {
+      return { success: false, error: xResult.error }
+    }
+    source = xResult.newSource
+
+    // Update y property (on updated source)
+    const yModifier = new CodeModifier(source, data.sourceMap)
+    const yResult = yModifier.updateProperty(this.nodeId, 'y', String(this.y))
+    if (!yResult.success) {
+      return { success: false, error: yResult.error }
+    }
+    source = yResult.newSource
+
+    // Extract the part after prelude (the editor content)
+    const newEditorContent = preludeOffset > 0 ? source.substring(preludeOffset) : source
+
+    // Apply full document change to editor
+    const change: CodeChange = {
+      from: 0,
+      to: this.originalSource.length,
+      insert: newEditorContent,
+    }
+
+    ctx.applyChange(change)
+    return { success: true, change }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) {
+      return { success: false, error: 'Cannot undo' }
+    }
+
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
+
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE' | 'SET_POSITION'
 
 export function createCommand(type: CommandType, params: Record<string, any>): Command {
   switch (type) {
@@ -735,6 +812,7 @@ export function createCommand(type: CommandType, params: Record<string, any>): C
     case 'UNWRAP_NODE': return new UnwrapNodeCommand(params as any)
     case 'BATCH': return new BatchCommand(params as any)
     case 'RESIZE': return new ResizeCommand(params as any)
+    case 'SET_POSITION': return new SetPositionCommand(params as any)
     default: throw new Error(`Unknown command type: ${type}`)
   }
 }

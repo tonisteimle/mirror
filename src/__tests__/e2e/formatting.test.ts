@@ -96,12 +96,14 @@ describe('Formatting: Colors', () => {
 describe('Formatting: Border', () => {
   it('border with width only', () => {
     const output = compile(`Box as frame:\n  bor 1\nBox`)
-    expect(output).toContain("'border': '1px'")
+    // Border shorthand includes style (solid) and default color
+    expect(output).toContain("'border': '1px solid currentColor'")
   })
 
   it('border with width and color', () => {
     const output = compile(`Box as frame:\n  bor 2 #333\nBox`)
-    expect(output).toContain("'border': '2px #333'")
+    // Border shorthand includes style (solid)
+    expect(output).toContain("'border': '2px solid #333'")
   })
 
   it('border-color', () => {
@@ -151,7 +153,8 @@ describe('Formatting: Typography', () => {
 
   it('weight with keyword', () => {
     const output = compile(`Text as text:\n  weight bold\nText "Hi"`)
-    expect(output).toContain("'font-weight': 'bold'")
+    // Schema converts 'bold' keyword to '700' for CSS
+    expect(output).toContain("'font-weight': '700'")
   })
 
   it('line-height', () => {

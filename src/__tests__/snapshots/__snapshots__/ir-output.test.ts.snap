@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`IR Output Snapshots > basic frame IR 1`] = `undefined`;
+
+exports[`IR Output Snapshots > event handler IR 1`] = `undefined`;
+
+exports[`IR Output Snapshots > nested components IR 1`] = `undefined`;
+
+exports[`IR Output Snapshots > state IR 1`] = `undefined`;
+
+exports[`IR Output Snapshots > styled component IR 1`] = `undefined`;

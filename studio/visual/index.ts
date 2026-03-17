@@ -53,3 +53,39 @@ export {
   createDropIndicator,
   type DropIndicatorConfig,
 } from './drop-indicator'
+
+// Position Controls
+export {
+  NumericInput,
+  PositionSection,
+  createPositionSection,
+  type NumericInputConfig,
+  type PositionSectionConfig,
+  type PositionValue,
+} from './position-controls'
+
+// Smart Guides
+export {
+  GuideCalculator,
+  createGuideCalculator,
+  GuideRenderer,
+  createGuideRenderer,
+  type EdgeType,
+  type AlignmentEdge,
+  type Guide,
+  type SnapResult,
+  type ElementRect,
+  type SmartGuidesConfig,
+} from './smart-guides'
+
+// Constraints
+export {
+  ConstraintPanel,
+  createConstraintPanel,
+  type PinEdge,
+  type PinCenter,
+  type ConstraintValue,
+  type ConstraintState,
+  type ConstraintPanelConfig,
+  type ConstraintChangeEvent,
+} from './constraints'

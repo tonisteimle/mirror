@@ -11,6 +11,9 @@
 import { DropZone, DropZoneCalculator } from '../../src/studio/drop-zone-calculator'
 import type { DropIndicator } from './drop-indicator'
 import type { SourceMap } from '../../src/studio/source-map'
+import { gridSettings } from '../core/settings'
+import { GuideCalculator, GuideRenderer } from './smart-guides'
+import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
 
 export interface ElementMoverConfig {
   container: HTMLElement
@@ -61,6 +64,10 @@ export class ElementMover {
   private boundHandleMouseUp: (e: MouseEvent) => void
   private boundHandleKeyDown: (e: KeyboardEvent) => void
 
+  // Smart guides
+  private guideCalculator: GuideCalculator
+  private guideRenderer: GuideRenderer
+
   constructor(config: ElementMoverConfig) {
     this.config = {
       container: config.container,
@@ -76,6 +83,10 @@ export class ElementMover {
     this.boundHandleMouseMove = this.handleMouseMove.bind(this)
     this.boundHandleMouseUp = this.handleMouseUp.bind(this)
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
+
+    // Initialize smart guides
+    this.guideCalculator = new GuideCalculator()
+    this.guideRenderer = new GuideRenderer(config.container)
   }
 
   /**
@@ -320,19 +331,47 @@ export class ElementMover {
     if (dropZone.isAbsoluteContainer && dropZone.absolutePosition) {
       // Absolute container: show crosshair + coordinates
       const containerRect = dropZone.element.getBoundingClientRect()
-      const snappedPos = this.snapToGrid(dropZone.absolutePosition.x, dropZone.absolutePosition.y)
+      const grid = gridSettings.get()
 
-      indicator.showCrosshair(
-        snappedPos.x,
-        snappedPos.y,
-        containerRect
-      )
-      indicator.showPositionLabel(snappedPos.x, snappedPos.y)
+      let finalX = dropZone.absolutePosition.x
+      let finalY = dropZone.absolutePosition.y
+
+      // Use smart guides if grid snap is disabled
+      if (!grid.enabled && this.state) {
+        const siblings = this.getSiblingRects(dropZone.element, this.state.nodeId)
+        const movingRect = this.state.ghost?.getBoundingClientRect() || this.state.element.getBoundingClientRect()
+
+        const snapResult = this.guideCalculator.calculate(movingRect, siblings, containerRect)
+
+        // Show smart guides
+        if (snapResult.guides.length > 0) {
+          this.guideRenderer.render(snapResult.guides)
+        } else {
+          this.guideRenderer.clear()
+        }
+
+        // Use snapped position if guides were found
+        if (snapResult.snappedX || snapResult.snappedY) {
+          finalX = snapResult.snappedX ? snapResult.x : finalX
+          finalY = snapResult.snappedY ? snapResult.y : finalY
+        }
+      } else {
+        // Grid snap is enabled, clear any smart guides
+        this.guideRenderer.clear()
+        const snapped = this.snapToGrid(finalX, finalY)
+        finalX = snapped.x
+        finalY = snapped.y
+      }
+
+      indicator.showCrosshair(finalX, finalY, containerRect)
+      indicator.showPositionLabel(finalX, finalY)
     } else if (dropZone.placement === 'inside') {
       // Container highlight for reparenting
+      this.guideRenderer.clear()
       indicator.showContainerHighlight(dropZone.element)
     } else {
       // Flex container: show insertion line between siblings
+      this.guideRenderer.clear()
       const isHorizontal = this.isHorizontalLayout(dropZone.element.parentElement)
       indicator.showInsertionLine(
         dropZone.element.getBoundingClientRect(),
@@ -340,6 +379,23 @@ export class ElementMover {
         isHorizontal ? 'vertical' : 'horizontal'
       )
     }
+  }
+
+  /**
+   * Get bounding rects of sibling elements
+   */
+  private getSiblingRects(container: HTMLElement, excludeNodeId: string): Map<string, DOMRect> {
+    const siblings = new Map<string, DOMRect>()
+    const children = container.querySelectorAll(`[${this.config.nodeIdAttribute}]`)
+
+    for (const child of children) {
+      const nodeId = child.getAttribute(this.config.nodeIdAttribute)
+      if (nodeId && nodeId !== excludeNodeId) {
+        siblings.set(nodeId, (child as HTMLElement).getBoundingClientRect())
+      }
+    }
+
+    return siblings
   }
 
   private completeMove(dropZone: DropZone): void {
@@ -391,9 +447,10 @@ export class ElementMover {
   }
 
   private cleanup(): void {
-    // Always clear drop indicators (even if no active drag state)
+    // Always clear drop indicators and smart guides (even if no active drag state)
     this.config.dropZoneCalculator.clear()
     this.config.dropIndicator.hideAll()
+    this.guideRenderer.clear()
 
     // Always remove global listeners (safe to call even if not attached)
     document.removeEventListener('mousemove', this.boundHandleMouseMove)
@@ -428,7 +485,16 @@ export class ElementMover {
   }
 
   private snapToGrid(x: number, y: number): { x: number; y: number } {
-    const gridSize = this.config.gridSnapSize
+    // Use grid settings, fall back to config if not enabled
+    const grid = gridSettings.get()
+
+    // If grid snap is disabled, return unmodified position
+    if (!grid.enabled) {
+      return { x, y }
+    }
+
+    // Use settings grid size, or fall back to config
+    const gridSize = grid.size || this.config.gridSnapSize
     return {
       x: Math.round(x / gridSize) * gridSize,
       y: Math.round(y / gridSize) * gridSize,
@@ -440,12 +506,12 @@ export class ElementMover {
     const parent = element.parentElement
     if (!parent) return 'flex'
 
-    // Check for absolute container markers
-    if (parent.dataset.mirrorAbs === 'true' || parent.dataset.layout === 'abs') {
+    // Use centralized layout detection for consistency
+    if (isAbsoluteLayoutContainer(parent)) {
       return 'absolute'
     }
 
-    // Check computed styles
+    // Also check if element itself has absolute positioning
     const style = window.getComputedStyle(element)
     if (style.position === 'absolute') {
       return 'absolute'
@@ -482,6 +548,7 @@ export class ElementMover {
     this.detach()
     this.moveCallbacks.clear()
     this.cancelCallbacks.clear()
+    this.guideRenderer.dispose()
   }
 }
 

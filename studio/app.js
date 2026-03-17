@@ -15,13 +15,14 @@ import {
   actions as studioActions,
   mirrorCompletions,
   getStateSelectionAdapter,
+  loadSettingsFromServer,
   // New Unified Trigger System
   getTriggerManager,
   registerAllTriggers,
   createTriggerExtensions,
   setIconTriggerPrimitives,
   getIconTriggerPrimitives,
-} from './dist/index.js?v=82'
+} from './dist/index.js?v=88'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -42,13 +43,12 @@ const STORAGE_VERSION_KEY = 'mirror-storage-version'
 const STORAGE_VERSION = 3  // Increment this when defaultFiles or storage format changes
 
 // App State
-// DEV MODE: Always logged in for testing
-const DEV_MODE = true
 const DEBUG_SYNC = false  // Enable verbose sync logging
 let authState = {
-  isLoggedIn: DEV_MODE,
-  userId: DEV_MODE ? 'dev_user' : null,
-  email: DEV_MODE ? 'dev@test.local' : null
+  isLoggedIn: false,
+  isAnonymous: true,
+  userId: null,
+  email: null
 }
 let currentProject = null
 let projects = []
@@ -129,19 +129,52 @@ async function api(endpoint, options = {}) {
 }
 
 // Auth Functions
+// Auto-login credentials for development
+const DEV_AUTO_LOGIN = true
+const DEV_USER_EMAIL = 'test@test.com'
+const DEV_USER_PASSWORD = 'test123'
+
 async function checkAuth() {
-  // DEV MODE: Skip API call, use mock auth
-  if (DEV_MODE) {
-    updateAuthUI()
-    return true
-  }
   try {
-    const data = await api('/auth/me')
-    authState = { isLoggedIn: true, userId: data.user_id, email: data.email }
+    // Use new status endpoint that works for anonymous users too
+    const data = await api('/auth/status')
+    authState = {
+      isLoggedIn: !data.anonymous,
+      isAnonymous: data.anonymous,
+      userId: data.user_id,
+      email: data.email || null
+    }
+
+    // Load settings for logged-in users
+    if (!data.anonymous) {
+      loadSettingsFromServer()
+    }
+
+    // Auto-login for development if anonymous
+    if (DEV_AUTO_LOGIN && data.anonymous) {
+      try {
+        const loginData = await api('/auth/login', {
+          method: 'POST',
+          body: { email: DEV_USER_EMAIL, password: DEV_USER_PASSWORD }
+        })
+        authState = {
+          isLoggedIn: true,
+          isAnonymous: false,
+          userId: loginData.user_id,
+          email: DEV_USER_EMAIL
+        }
+        console.log('Auto-logged in as test user')
+        loadSettingsFromServer()
+      } catch (e) {
+        console.warn('Auto-login failed:', e.message)
+      }
+    }
+
     updateAuthUI()
     return true
-  } catch {
-    authState = { isLoggedIn: false, userId: null, email: null }
+  } catch (e) {
+    console.error('Auth check failed:', e)
+    authState = { isLoggedIn: false, isAnonymous: true, userId: null, email: null }
     updateAuthUI()
     return false
   }
@@ -152,9 +185,11 @@ async function login(email, password) {
     method: 'POST',
     body: { email, password }
   })
-  authState = { isLoggedIn: true, userId: data.user_id, email }
+  authState = { isLoggedIn: true, isAnonymous: false, userId: data.user_id, email }
   updateAuthUI()
   await loadProjects()
+  // Load user settings from server
+  loadSettingsFromServer()
 }
 
 async function register(email, password) {
@@ -162,20 +197,24 @@ async function register(email, password) {
     method: 'POST',
     body: { email, password }
   })
-  authState = { isLoggedIn: true, userId: data.user_id, email }
+  authState = { isLoggedIn: true, isAnonymous: false, userId: data.user_id, email }
   updateAuthUI()
   await loadProjects()
+  // Load user settings from server
+  loadSettingsFromServer()
 }
 
 async function logout() {
   try {
     await api('/auth/logout', { method: 'POST' })
   } catch {}
-  authState = { isLoggedIn: false, userId: null, email: null }
+  authState = { isLoggedIn: false, isAnonymous: true, userId: null, email: null }
   currentProject = null
   projects = []
   updateAuthUI()
-  await loadDemoProject()
+  // Re-check auth to get new anonymous session
+  await checkAuth()
+  await loadProjects()
 }
 
 function updateAuthUI() {
@@ -184,41 +223,36 @@ function updateAuthUI() {
   const logoutBtn = document.getElementById('user-logout-btn')
   const headerProject = document.getElementById('header-project')
 
-  if (authState.isLoggedIn) {
+  if (authState.isLoggedIn && !authState.isAnonymous) {
+    // Logged in user
     userLabel.textContent = authState.email.split('@')[0]
     loginBtn.style.display = 'none'
     logoutBtn.style.display = 'flex'
     headerProject.style.cursor = 'pointer'
     headerProject.style.opacity = '1'
   } else {
+    // Anonymous user
     userLabel.textContent = 'Demo'
     loginBtn.style.display = 'flex'
     logoutBtn.style.display = 'none'
-    headerProject.style.cursor = 'default'
-    headerProject.style.opacity = '0.5'
+    headerProject.style.cursor = 'pointer'
+    headerProject.style.opacity = '1'
   }
 }
 
 // Project Functions
 async function loadProjects() {
-  if (!authState.isLoggedIn) return
-
-  // DEV MODE: Use localStorage like demo mode
-  if (DEV_MODE) {
-    await loadDemoProject()
-    return
-  }
-
   try {
     projects = await api('/projects')
     renderProjectList()
-    // Auto-select first project or create one
+    // Auto-select first project or create demo project
     if (projects.length > 0) {
       const savedProjectId = localStorage.getItem(PROJECT_KEY)
       const project = projects.find(p => p.id === savedProjectId) || projects[0]
       await selectProject(project.id)
     } else {
-      await createProject('Projekt')
+      // Create initial demo project for new users
+      await createProject(authState.isAnonymous ? 'Demo Project' : 'Mein Projekt')
     }
   } catch (e) {
     console.error('Failed to load projects:', e)
@@ -226,7 +260,6 @@ async function loadProjects() {
 }
 
 async function createProject(name) {
-  if (!authState.isLoggedIn) return
   const project = await api('/projects', {
     method: 'POST',
     body: { name }
@@ -252,7 +285,6 @@ function flattenFileTree(items, result = []) {
 }
 
 async function selectProject(projectId) {
-  if (!authState.isLoggedIn) return
   currentProject = projects.find(p => p.id === projectId)
   if (!currentProject) return
 
@@ -280,7 +312,8 @@ async function selectProject(projectId) {
   renderFileList()
   if (typeof editor !== 'undefined') {
     editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] }
+      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] },
+      annotations: fileSwitchAnnotation.of(true)
     })
     compile(files[currentFile])
   }
@@ -468,122 +501,37 @@ async function deleteProjectWithConfirm(projectId) {
   }
 }
 
-/**
- * Check storage version and clear if outdated
- * This ensures localStorage data is compatible with current code
- */
+// Legacy storage migration - no longer needed with server-based storage
 function checkAndMigrateStorage() {
-  const storedVersion = parseInt(localStorage.getItem(STORAGE_VERSION_KEY) || '0', 10)
-
-  if (storedVersion < STORAGE_VERSION) {
-    console.log(`[Storage] Version mismatch: stored=${storedVersion}, current=${STORAGE_VERSION}. Resetting to defaults.`)
-
-    // Clear all mirror-related localStorage entries
-    const keysToRemove = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && key.startsWith('mirror-')) {
-        keysToRemove.push(key)
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key))
-
-    // Set new version
-    localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION))
-
-    return true // Storage was reset
-  }
-
-  return false // Storage is current
+  return false
 }
 
-// Demo Mode (localStorage-based)
+// Demo Mode - now uses API like everything else
+// This function is kept for backwards compatibility but just delegates to loadProjects
 async function loadDemoProject() {
-  document.getElementById('header-project-name').textContent = 'Demo Project'
-  document.getElementById('sidebar-project-name').textContent = 'Demo Project'
-  Object.keys(files).forEach(k => delete files[k])
-
-  // Check storage version first - resets to defaults if outdated
-  const wasReset = checkAndMigrateStorage()
-
-  for (const [name, content] of Object.entries(defaultFiles)) {
-    const saved = wasReset ? null : localStorage.getItem(STORAGE_PREFIX + name)
-    files[name] = saved !== null ? saved : content
-  }
-
-  // Also load any other files from localStorage
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key.startsWith(STORAGE_PREFIX)) {
-      const filename = key.replace(STORAGE_PREFIX, '')
-      if (!files[filename]) {
-        files[filename] = localStorage.getItem(key)
-      }
-    }
-  }
-
-  // Load stored file types
-  loadFileTypes()
-
-  // Detect file types for files that don't have a stored type
-  for (const filename of Object.keys(files)) {
-    if (!fileTypes[filename]) {
-      fileTypes[filename] = detectFileType(files[filename])
-    }
-  }
-  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
-
-  currentFile = 'index.mirror'
-  renderFileList()
-  if (typeof editor !== 'undefined') {
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] }
-    })
-    compile(files[currentFile])
-  }
+  await loadProjects()
 }
 
-// Load Starter Template (fresh, ignoring localStorage)
+// Load Starter Template - creates a new project with default files
 async function loadStarterTemplate() {
-  // Clear localStorage for demo files
-  for (const name of Object.keys(defaultFiles)) {
-    localStorage.removeItem(STORAGE_PREFIX + name)
-  }
-
-  // Clear current files and file types
-  Object.keys(files).forEach(k => {
-    localStorage.removeItem(STORAGE_PREFIX + k)
-    delete files[k]
-  })
-  Object.keys(fileTypes).forEach(k => delete fileTypes[k])
-  localStorage.removeItem(FILE_TYPES_KEY)
-
-  // Load fresh from defaultFiles
-  for (const [name, content] of Object.entries(defaultFiles)) {
-    files[name] = content
-    localStorage.setItem(STORAGE_PREFIX + name, content)
-  }
-
-  // Detect file types for all files
-  for (const filename of Object.keys(files)) {
-    fileTypes[filename] = detectFileType(files[filename])
-  }
-  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
-
-  document.getElementById('header-project-name').textContent = 'Starter Template'
-  document.getElementById('sidebar-project-name').textContent = 'Starter Template'
-
-  currentFile = 'index.mirror'
-  renderFileList()
-  if (typeof editor !== 'undefined') {
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] }
+  try {
+    // Create new project via API
+    const project = await api('/projects', {
+      method: 'POST',
+      body: { name: 'Starter Template' }
     })
-    compile(files[currentFile])
-  }
 
-  // Close dropdown
-  document.getElementById('project-dropdown').classList.remove('show')
+    // The API creates default files automatically
+    // Now select the project
+    projects.unshift(project)
+    renderProjectList()
+    await selectProject(project.id)
+
+    // Close dropdown
+    document.getElementById('project-dropdown').classList.remove('show')
+  } catch (e) {
+    console.error('Failed to create starter template:', e)
+  }
 }
 
 // Track collapsed folders
@@ -1062,8 +1010,8 @@ async function renameFile(oldPath, newPath) {
   // Save new file
   await saveFile(newPath, content)
 
-  // Delete old file
-  if (authState.isLoggedIn && currentProject) {
+  // Delete old file (always via API)
+  if (currentProject) {
     try {
       await api(`/projects/${currentProject.id}/files/${encodeURIComponent(oldPath)}`, { method: 'DELETE' })
       // Reload file tree
@@ -1071,8 +1019,6 @@ async function renameFile(oldPath, newPath) {
     } catch (e) {
       console.error('Failed to delete old file:', e)
     }
-  } else {
-    localStorage.removeItem(STORAGE_PREFIX + oldPath)
   }
 
   delete files[oldPath]
@@ -1265,10 +1211,26 @@ end
 }
 
 // Detect file type from content
-function detectFileType(content) {
-  if (!content || !content.trim()) return 'layout'
+function detectFileType(nameOrContent, content) {
+  // Support both old (content only) and new (name, content) signatures
+  let filename = ''
+  let code = nameOrContent
 
-  const lines = content.split('\n')
+  if (content !== undefined) {
+    filename = nameOrContent
+    code = content
+  }
+
+  // Check filename patterns first
+  if (filename) {
+    const lower = filename.toLowerCase()
+    if (lower.includes('token')) return 'tokens'
+    if (lower.includes('component')) return 'components'
+  }
+
+  if (!code || !code.trim()) return 'layout'
+
+  const lines = code.split('\n')
     .map(l => l.trim())
     .filter(l => l && !l.startsWith('//') && !l.startsWith('import'))
 
@@ -1277,8 +1239,9 @@ function detectFileType(content) {
   // Check each type's detect function (order matters: more specific first)
   const checkOrder = ['javascript', 'data', 'tokens', 'component']
   for (const type of checkOrder) {
-    if (FILE_TYPES[type].detect(lines, content)) {
-      return type
+    if (FILE_TYPES[type].detect(lines, code)) {
+      // Map 'component' to 'components' for new architecture
+      return type === 'component' ? 'components' : type
     }
   }
 
@@ -1496,15 +1459,15 @@ function createNewFolder() {
   })
 }
 
-// Delete file
+// Delete file (always via API)
 async function deleteFile(filePath) {
   if (Object.keys(files).length <= 1) {
     alert('Mindestens eine Datei muss existieren')
     return
   }
 
-  // Delete from storage
-  if (authState.isLoggedIn && currentProject) {
+  // Delete from server
+  if (currentProject) {
     try {
       await api(`/projects/${currentProject.id}/files/${encodeURIComponent(filePath)}`, {
         method: 'DELETE'
@@ -1514,8 +1477,6 @@ async function deleteFile(filePath) {
     } catch (e) {
       console.error('Failed to delete from server:', e)
     }
-  } else {
-    localStorage.removeItem(STORAGE_PREFIX + filePath)
   }
 
   // Remove from files object and file types
@@ -1534,9 +1495,9 @@ async function deleteFile(filePath) {
   renderFileList()
 }
 
-// Delete folder
+// Delete folder (always via API)
 async function deleteFolder(folderPath) {
-  if (!authState.isLoggedIn || !currentProject) return
+  if (!currentProject) return
 
   try {
     await api(`/projects/${currentProject.id}/folders/${encodeURIComponent(folderPath)}?force=true`, {
@@ -1568,10 +1529,10 @@ async function deleteFolder(folderPath) {
   }
 }
 
-// Save file (to localStorage or server)
+// Save file (always to server via API)
 async function saveFile(filePath, content) {
   files[filePath] = content
-  if (authState.isLoggedIn && currentProject) {
+  if (currentProject) {
     try {
       await api(`/projects/${currentProject.id}/files/${encodeURIComponent(filePath)}`, {
         method: 'PUT',
@@ -1580,8 +1541,6 @@ async function saveFile(filePath, content) {
     } catch (e) {
       console.error('Failed to save to server:', e)
     }
-  } else {
-    localStorage.setItem(STORAGE_PREFIX + filePath, content)
   }
 }
 
@@ -1866,14 +1825,10 @@ document.addEventListener('click', (e) => {
   }
 })
 
-// Initialize: Check auth status
+// Initialize: Check auth status and load projects
 async function initApp() {
-  const loggedIn = await checkAuth()
-  if (loggedIn) {
-    await loadProjects()
-  } else {
-    await loadDemoProject()
-  }
+  await checkAuth()  // Sets up session (logged in or anonymous)
+  await loadProjects()  // Loads or creates projects
 }
 
 // Start initialization (will complete after editor is set up)
@@ -2425,7 +2380,8 @@ if (colorPickerHexInput) {
   colorPickerHexInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      const hex = '#' + colorPickerHexInput.value.toUpperCase()
+      // Use current color from state (not input value) to ensure sync
+      const hex = getCurrentColorHex()
       selectColor(hex)
     }
   })
@@ -2703,8 +2659,27 @@ function navigateSwatches(direction) {
   updateSelectedSwatch()
 }
 
+/**
+ * Validate and clamp position to document bounds
+ * @param {number} pos - Position to validate
+ * @param {number} docLength - Document length
+ * @param {string} context - Context for error message
+ * @returns {number} Safe position
+ */
+function validatePosition(pos, docLength, context) {
+  if (pos < 0 || pos > docLength) {
+    console.warn(`[ColorPicker] ${context}: Position ${pos} out of bounds [0, ${docLength}], clamping`)
+    return Math.max(0, Math.min(pos, docLength))
+  }
+  return pos
+}
+
+/**
+ * Insert color into editor with robust position handling
+ * Uses position tracking + defensive validation for maximum reliability
+ */
 function selectColor(hex) {
-  // Property panel callback mode
+  // Property panel callback mode - direct callback, no editor modification
   if (colorPickerCallback) {
     const callback = colorPickerCallback
     hideColorPicker()
@@ -2712,37 +2687,68 @@ function selectColor(hex) {
     return
   }
 
-  // Editor mode
+  // Editor mode - insert color with validated positions
   if (window.editor) {
+    const docLength = window.editor.state.doc.length
+    const cursorPos = window.editor.state.selection.main.head
+
     if (hashTriggerActive && hashTriggerStartPos !== null) {
-      // Hash trigger mode: replace from # position to current cursor
-      const cursorPos = window.editor.state.selection.main.head
-      const newCursorPos = hashTriggerStartPos + hex.length
-      window.editor.dispatch({
-        changes: { from: hashTriggerStartPos, to: cursorPos, insert: hex },
-        selection: { anchor: newCursorPos },
-        annotations: Transaction.userEvent.of('input.color')
-      })
+      // Hash trigger mode: Replace from # to cursor
+      // Position tracking keeps hashTriggerStartPos updated via mapPos()
+      const safeFrom = validatePosition(hashTriggerStartPos, docLength, 'Hash trigger from')
+      const safeTo = validatePosition(cursorPos, docLength, 'Hash trigger to')
+
+      // Verify # still exists at expected position (catches edge cases)
+      const charBeforeFrom = safeFrom > 0 ? window.editor.state.doc.sliceString(safeFrom - 1, safeFrom) : ''
+      if (charBeforeFrom !== '#' && safeFrom > 0) {
+        console.warn(`[ColorPicker] Hash trigger: Expected # at position ${safeFrom - 1}, found '${charBeforeFrom}'. Inserting at cursor instead.`)
+        insertColorAtPosition(window.editor, cursorPos, cursorPos, hex)
+      } else {
+        insertColorAtPosition(window.editor, safeFrom, safeTo, hex)
+      }
     } else if (colorPickerReplaceRange) {
-      // Replace existing color
-      const newCursorPos = colorPickerReplaceRange.from + hex.length
-      window.editor.dispatch({
-        changes: { from: colorPickerReplaceRange.from, to: colorPickerReplaceRange.to, insert: hex },
-        selection: { anchor: newCursorPos },
-        annotations: Transaction.userEvent.of('input.color')
-      })
+      // Replace mode: Replace existing color
+      // Position tracking keeps range updated via mapPos()
+      let safeFrom = validatePosition(colorPickerReplaceRange.from, docLength, 'Replace from')
+      let safeTo = validatePosition(colorPickerReplaceRange.to, docLength, 'Replace to')
+
+      // Sanity check: Range shouldn't be larger than typical color value
+      const rangeSize = safeTo - safeFrom
+      if (rangeSize > 20 || rangeSize < 0) {
+        console.warn(`[ColorPicker] Replace mode: Invalid range size ${rangeSize} (${safeFrom}-${safeTo}). Using cursor position.`)
+        safeFrom = cursorPos
+        safeTo = cursorPos
+      }
+
+      insertColorAtPosition(window.editor, safeFrom, safeTo, hex)
     } else if (colorPickerInsertPos !== null) {
-      // Insert new color
-      const newCursorPos = colorPickerInsertPos + hex.length
-      window.editor.dispatch({
-        changes: { from: colorPickerInsertPos, to: colorPickerInsertPos, insert: hex },
-        selection: { anchor: newCursorPos },
-        annotations: Transaction.userEvent.of('input.color')
-      })
+      // Insert mode: Insert new color
+      // Position tracking keeps insertPos updated via mapPos()
+      let safePos = validatePosition(colorPickerInsertPos, docLength, 'Insert')
+
+      // Drift detection: If position drifted far from cursor, use cursor
+      const drift = Math.abs(safePos - cursorPos)
+      if (drift > 100) {
+        console.warn(`[ColorPicker] Insert mode: Position drifted ${drift} chars from cursor (${safePos} vs ${cursorPos}). Using cursor.`)
+        safePos = cursorPos
+      }
+
+      insertColorAtPosition(window.editor, safePos, safePos, hex)
     }
     window.editor.focus()
   }
   hideColorPicker()
+}
+
+/**
+ * Helper: Insert color at validated positions
+ */
+function insertColorAtPosition(editor, from, to, hex) {
+  editor.dispatch({
+    changes: { from, to, insert: hex },
+    selection: { anchor: from + hex.length },
+    annotations: Transaction.userEvent.of('input.color')
+  })
 }
 
 // Close on escape or click outside
@@ -4004,6 +4010,37 @@ const editor = new EditorView({
           if (!isFromPropertyPanel) {
             debouncedCompile()
           }
+
+          // Position Tracking: Keep color picker positions synchronized with document changes
+          // When user edits while picker is open, positions shift - mapPos() handles this
+          // Example: If user types "test " before a color, position 100 becomes 105
+          if (colorPickerVisible) {
+            if (colorPickerInsertPos !== null) {
+              const oldPos = colorPickerInsertPos
+              colorPickerInsertPos = update.changes.mapPos(colorPickerInsertPos)
+              if (oldPos !== colorPickerInsertPos) {
+                console.debug(`[ColorPicker] Insert pos tracked: ${oldPos} → ${colorPickerInsertPos}`)
+              }
+            }
+            if (colorPickerReplaceRange) {
+              const oldFrom = colorPickerReplaceRange.from
+              const oldTo = colorPickerReplaceRange.to
+              colorPickerReplaceRange = {
+                from: update.changes.mapPos(colorPickerReplaceRange.from),
+                to: update.changes.mapPos(colorPickerReplaceRange.to)
+              }
+              if (oldFrom !== colorPickerReplaceRange.from || oldTo !== colorPickerReplaceRange.to) {
+                console.debug(`[ColorPicker] Replace range tracked: [${oldFrom}, ${oldTo}] → [${colorPickerReplaceRange.from}, ${colorPickerReplaceRange.to}]`)
+              }
+            }
+            if (hashTriggerStartPos !== null) {
+              const oldPos = hashTriggerStartPos
+              hashTriggerStartPos = update.changes.mapPos(hashTriggerStartPos)
+              if (oldPos !== hashTriggerStartPos) {
+                console.debug(`[ColorPicker] Hash pos tracked: ${oldPos} → ${hashTriggerStartPos}`)
+              }
+            }
+          }
         }
         // Track cursor/selection changes for Editor → Preview sync
         const prevPos = update.startState.selection.main.head
@@ -4407,6 +4444,8 @@ function compile(code) {
 
       if (ui && ui.root) {
         preview.appendChild(ui.root)
+        // Make preview elements draggable AFTER DOM update
+        makePreviewElementsDraggable()
         // Refresh preview selection after DOM update
         if (studio.preview) {
           studio.preview.refresh()
@@ -4921,6 +4960,7 @@ let studioPropertyExtractor = null
 let studioCodeModifier = null
 let studioDragDropManager = null
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
+const initializedDraggables = new WeakSet()  // Track elements with drag handlers to prevent duplicates
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
 function getEditorHasFocus() {
@@ -5036,17 +5076,55 @@ function initStudio() {
   // NEW ARCHITECTURE: Initialize new studio
   // ============================================
   try {
+    // Get chat panel container (content area) and API key
+    const chatPanelContainer = document.getElementById('chat-panel-content')
+    // API Key from localStorage (can be set via settings modal)
+    const agentApiKey = getOpenrouterKey()
+
     initNewStudio({
       editor: editor,
       previewContainer: previewContainer,
       propertyPanelContainer: propertyPanelContainer,
+      chatPanelContainer: chatPanelContainer,
+      agentApiKey: agentApiKey,
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
       getAllSource: getAllProjectSource,
+      // Project context for AI Agent
+      getCurrentFile: () => currentFile,
+      getFiles: () => {
+        return Object.entries(files).map(([name, code]) => ({
+          name,
+          type: detectFileType(name, code),
+          code
+        }))
+      },
+      updateFile: (filename, content) => {
+        files[filename] = content
+        // If it's the current file, update editor
+        if (filename === currentFile) {
+          editor.dispatch({
+            changes: { from: 0, to: editor.state.doc.length, insert: content }
+          })
+        }
+        // Save to storage
+        saveFile(filename, content)
+      },
+      switchToFile: (filename) => {
+        if (files[filename]) {
+          switchFile(filename)
+        }
+      },
     })
     // Line offset handling is now done in SyncCoordinator via LineOffsetService
     // Offset is set in updateStudio() after each compile
     console.log('Studio: New architecture initialized')
+
+    // Show setup message only if no agent was initialized
+    // Agent initialization happens in bootstrap.ts if agentApiKey is provided
+    if (!agentApiKey) {
+      initChatPanel()
+    }
   } catch (e) {
     console.warn('Studio: New architecture failed to initialize:', e)
   }
@@ -5200,6 +5278,50 @@ function setupNotificationHandlers() {
   })
 }
 
+// ============================================
+// Chat Panel (permanent left panel)
+// ============================================
+
+/**
+ * Show setup message in chat panel when no API key is configured
+ * Only called when agentApiKey is not set at startup
+ */
+function initChatPanel() {
+  const chatContent = document.getElementById('chat-panel-content')
+
+  if (!chatContent) {
+    console.warn('[ChatPanel] Missing content element')
+    return
+  }
+
+  // Show setup message (this function is only called when no API key exists)
+  chatContent.innerHTML = `
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span class="chat-title">AI Chat</span>
+      </div>
+      <div class="chat-setup">
+        <div class="chat-setup-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="chat-setup-text">
+          Für den AI-Assistenten wird ein OpenRouter API Key benötigt.
+        </div>
+        <button class="chat-setup-btn" id="chat-setup-btn">
+          API Key einrichten
+        </button>
+      </div>
+    </div>
+  `
+
+  // Open settings when button is clicked
+  document.getElementById('chat-setup-btn')?.addEventListener('click', () => {
+    settingsButton?.click()
+  })
+}
+
 // Update studio after compile
 function updateStudio(ast, ir, sourceMap, source) {
   if (!studioSelectionManager) return
@@ -5333,9 +5455,12 @@ function updateStudio(ast, ir, sourceMap, source) {
 
 /**
  * Makes all preview elements draggable for canvas-internal movement
+ *
+ * Uses WeakSet to track initialized elements and prevent duplicate event listeners.
+ * Cleanup functions are stored for elements that need reinitialization.
  */
 function makePreviewElementsDraggable() {
-  // Cleanup previous bindings
+  // Cleanup previous bindings for elements that may have been removed
   canvasDragCleanups.forEach(cleanup => cleanup())
   canvasDragCleanups = []
 
@@ -5354,6 +5479,9 @@ function makePreviewElementsDraggable() {
     const nodeId = el.getAttribute('data-mirror-id')
     if (!nodeId) return
 
+    // Skip already initialized elements (prevents duplicate listeners)
+    if (initializedDraggables.has(el)) return
+
     // Skip the actual root element (main component) - it cannot be moved
     // But allow its children to be dragged even if they're direct children of preview
     const isMainRoot = el.dataset.mirrorRoot === 'true'
@@ -5366,6 +5494,7 @@ function makePreviewElementsDraggable() {
       studioDragDropManager
     )
     canvasDragCleanups.push(cleanup)
+    initializedDraggables.add(el)
   })
 }
 
@@ -5882,16 +6011,10 @@ window.startCompletion = startCompletion
 window.files = files
 window.studio = studio  // New architecture
 window.resetCode = async () => {
-  // Reset all files to defaults
+  // Reset all files to defaults (via API)
   for (const [name, content] of Object.entries(defaultFiles)) {
     files[name] = content
-    if (authState.isLoggedIn && currentProject) {
-      // On server, overwrite files
-      await saveFile(name, content)
-    } else {
-      // In demo mode, clear localStorage
-      localStorage.removeItem(STORAGE_PREFIX + name)
-    }
+    await saveFile(name, content)
   }
   // Reload current file
   editor.dispatch({
@@ -5944,6 +6067,9 @@ function saveLayout() {
   }
 }
 
+// DISABLED: Panel resizing - using fixed CSS grid layout
+// Fixed sizes: Chat 320, Files 200, Editor 420, Components 200, Preview flex, Property 320
+/*
 let layout = loadLayout()
 let activeDivider = null
 let rafPending = false
@@ -6018,31 +6144,41 @@ document.addEventListener('mouseup', () => {
 // Initialize layout
 updateLayout()
 window.addEventListener('resize', updateLayout)
+*/
 
 // ==========================================
 // Settings
 // ==========================================
 
-const SETTINGS_KEY = 'mirror-settings'
+// Get settings key - global for now (TODO: make user-specific after auth refactor)
+function getSettingsKey() {
+  return 'mirror-settings'
+}
 const settingsButton = document.getElementById('settings-button')
 const settingsOverlay = document.getElementById('settings-overlay')
 const settingsClose = document.getElementById('settings-close')
+const settingsSaveButton = document.getElementById('settings-save')
 const imgbbKeyInput = document.getElementById('imgbb-key')
 const imgbbStatus = document.getElementById('imgbb-status')
+const openrouterKeyInput = document.getElementById('openrouter-key')
+const openrouterStatus = document.getElementById('openrouter-status')
 
 // Load settings from localStorage
 function loadSettings() {
   try {
-    const stored = localStorage.getItem(SETTINGS_KEY)
+    const key = getSettingsKey()
+    const stored = localStorage.getItem(key)
     return stored ? JSON.parse(stored) : {}
-  } catch {
+  } catch (e) {
+    console.error('[Settings] Failed to load:', e)
     return {}
   }
 }
 
 // Save settings to localStorage
 function saveSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+  const key = getSettingsKey()
+  localStorage.setItem(key, JSON.stringify(settings))
 }
 
 // Get imgbb API key
@@ -6063,11 +6199,31 @@ function updateImgbbStatus() {
   }
 }
 
+// Get OpenRouter API key
+function getOpenrouterKey() {
+  const settings = loadSettings()
+  return settings.openrouterKey || ''
+}
+
+// Update OpenRouter status indicator
+function updateOpenrouterStatus() {
+  const key = getOpenrouterKey()
+  if (key) {
+    openrouterStatus.className = 'settings-status success'
+    openrouterStatus.innerHTML = '✓ API Key gespeichert'
+  } else {
+    openrouterStatus.className = 'settings-status missing'
+    openrouterStatus.innerHTML = '⚠ Kein API Key - AI Assistant deaktiviert'
+  }
+}
+
 // Open settings
 settingsButton.addEventListener('click', () => {
   const settings = loadSettings()
   imgbbKeyInput.value = settings.imgbbKey || ''
+  openrouterKeyInput.value = settings.openrouterKey || ''
   updateImgbbStatus()
+  updateOpenrouterStatus()
   settingsOverlay.classList.add('visible')
 })
 
@@ -6086,12 +6242,36 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-// Save API key on input
-imgbbKeyInput.addEventListener('input', () => {
+// Save settings when Save button is clicked
+settingsSaveButton.addEventListener('click', () => {
   const settings = loadSettings()
+  const oldOpenrouterKey = settings.openrouterKey || ''
+  const newOpenrouterKey = openrouterKeyInput.value.trim()
+  const keyChanged = oldOpenrouterKey !== newOpenrouterKey
+
   settings.imgbbKey = imgbbKeyInput.value.trim()
+  settings.openrouterKey = newOpenrouterKey
   saveSettings(settings)
   updateImgbbStatus()
+  updateOpenrouterStatus()
+
+  // Visual feedback
+  settingsSaveButton.textContent = 'Gespeichert!'
+  settingsSaveButton.classList.add('saved')
+
+  // If OpenRouter key changed, reload page to properly initialize agent
+  if (keyChanged) {
+    setTimeout(() => {
+      window.location.reload()
+    }, 800)
+  } else {
+    // Just close settings if nothing important changed
+    setTimeout(() => {
+      settingsSaveButton.textContent = 'Speichern'
+      settingsSaveButton.classList.remove('saved')
+      closeSettings()
+    }, 1500)
+  }
 })
 
 // ==========================================
@@ -6308,17 +6488,19 @@ document.addEventListener('paste', async (e) => {
 // =========================================================================
 
 function getApiKey() {
-  return localStorage.getItem('openrouter_api_key')
+  return getOpenrouterKey()
 }
 
 function promptForApiKey() {
   const key = prompt(
     'OpenRouter API Key eingeben:\n\n' +
     'Hol dir einen Key bei https://openrouter.ai/keys\n\n' +
-    'Der Key wird lokal im Browser gespeichert.'
+    'Der Key wird in den Einstellungen gespeichert.'
   )
   if (key && key.trim()) {
-    localStorage.setItem('openrouter_api_key', key.trim())
+    const settings = loadSettings()
+    settings.openrouterKey = key.trim()
+    saveSettings(settings)
     return key.trim()
   }
   return null
@@ -6723,469 +6905,3 @@ STYLE GUIDELINES:
 
   return prompt
 }
-
-// ==========================================================================
-// Direct Mirror Generation (Alternative Approach)
-// ==========================================================================
-
-// Extract context from editor with selection info
-function extractContextFromEditor() {
-  if (!window.editor) return { tokens: [], components: [], source: '', editor: {} }
-
-  const source = window.editor.state.doc.toString()
-  const lines = source.split('\n')
-  const cursorPos = window.editor.state.selection.main.head
-  const cursorLine = window.editor.state.doc.lineAt(cursorPos).number - 1
-
-  const tokens = []
-  const components = []
-  let inTokenBlock = false
-  let tokenBlockPrefix = ''
-  let currentComponent = null
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const trimmed = line.trim()
-    const indent = line.length - line.trimStart().length
-
-    if (!trimmed || trimmed.startsWith('//')) continue
-
-    const tokenMatch = trimmed.match(/^\$?([a-zA-Z0-9._-]+)\s*:\s*(#[a-fA-F0-9]{3,8}|\d+)$/)
-    if (tokenMatch && indent === 0) {
-      tokens.push({ name: tokenMatch[1], value: tokenMatch[2] })
-      continue
-    }
-
-    const tokenBlockMatch = trimmed.match(/^\$([a-zA-Z0-9._-]+)\s*:\s*$/)
-    if (tokenBlockMatch) {
-      inTokenBlock = true
-      tokenBlockPrefix = tokenBlockMatch[1]
-      continue
-    }
-
-    if (inTokenBlock && indent > 0) {
-      const blockTokenMatch = trimmed.match(/^([a-zA-Z0-9._-]+)\s+(.+)$/)
-      if (blockTokenMatch) {
-        tokens.push({ name: `${tokenBlockPrefix}.${blockTokenMatch[1]}`, value: blockTokenMatch[2] })
-      }
-      continue
-    } else if (indent === 0) {
-      inTokenBlock = false
-    }
-
-    const compMatch = trimmed.match(/^([A-Z][a-zA-Z0-9]*)\s+as\s+(\w+)\s*:/)
-    if (compMatch) {
-      if (currentComponent) components.push(currentComponent)
-      currentComponent = { name: compMatch[1], base: compMatch[2], properties: [] }
-      continue
-    }
-
-    if (currentComponent && indent > 0) {
-      const props = trimmed.split(',').map(p => p.trim().split(' ')[0])
-      currentComponent.properties.push(...props.filter(p => p && !p.startsWith('//')))
-    }
-
-    if (currentComponent && indent === 0 && !trimmed.match(/^[A-Z]/)) {
-      components.push(currentComponent)
-      currentComponent = null
-    }
-  }
-  if (currentComponent) components.push(currentComponent)
-
-  // Get selection from SelectionManager if available
-  let selectedNodeId = null
-  let selectedNodeName = null
-  let ancestors = []
-
-  if (window.selectionManager) {
-    selectedNodeId = window.selectionManager.getSelected()
-    const breadcrumb = window.selectionManager.getBreadcrumb?.() || []
-    if (breadcrumb.length > 0) {
-      ancestors = breadcrumb.slice(0, -1).map(b => b.name)
-      selectedNodeName = breadcrumb[breadcrumb.length - 1]?.name
-    }
-  }
-
-  // Find which component cursor is inside
-  let insideComponent = null
-  for (let i = cursorLine; i >= 0; i--) {
-    const line = lines[i]
-    const indent = line.length - line.trimStart().length
-    if (indent === 0 && line.trim()) {
-      const match = line.trim().match(/^([A-Z][a-zA-Z0-9]*)/)
-      if (match) { insideComponent = match[1]; break }
-    }
-  }
-
-  // Surrounding code
-  const contextLines = 5
-  const beforeLines = lines.slice(Math.max(0, cursorLine - contextLines), cursorLine)
-  const afterLines = lines.slice(cursorLine + 1, cursorLine + 1 + contextLines)
-
-  return {
-    tokens, components, source,
-    editor: {
-      cursorLine,
-      selectedNodeId,
-      selectedNodeName,
-      ancestors,
-      insideComponent,
-      surroundingCode: { before: beforeLines.join('\n'), after: afterLines.join('\n') }
-    }
-  }
-}
-
-// Golden Example for empty apps
-const GOLDEN_EXAMPLE = `// Tokens - Palette
-$grey-950: #09090B
-$grey-900: #18181B
-$grey-800: #27272A
-$grey-700: #3F3F46
-$grey-500: #71717A
-$grey-300: #D4D4D8
-$grey-100: #F4F4F5
-
-$blue-500: #3B82F6
-$blue-600: #2563EB
-
-// Tokens - Semantic
-$app.bg: $grey-950
-$surface.bg: $grey-900
-$card.bg: $grey-800
-$hover.bg: $grey-700
-
-$heading.col: $grey-100
-$text.col: $grey-300
-$muted.col: $grey-500
-
-$primary.bg: $blue-500
-$primary.hover.bg: $blue-600
-
-$sm.pad: 8
-$md.pad: 12
-$lg.pad: 16
-
-$sm.gap: 8
-$md.gap: 12
-
-$sm.rad: 4
-$md.rad: 6
-
-// Components
-Heading: col $heading.col, weight bold, font-size 18
-Body: col $text.col, font-size 13
-Muted: col $muted.col, font-size 12
-
-Button: pad $sm.pad $md.pad, bg $primary.bg, col white, rad $sm.rad, cursor pointer
-  hover bg $primary.hover.bg
-
-Card: pad $lg.pad, bg $card.bg, rad $md.rad, gap $md.gap
-
-NavItem: hor, gap $sm.gap, pad $sm.pad $md.pad, rad $sm.rad, cursor pointer
-  Icon: is 18, col $muted.col
-  Label: col $text.col
-  hover bg $hover.bg
-
-// App
-App hor, w full, h full, bg $app.bg
-
-  Sidebar w 220, h full, bg $surface.bg, pad $md.pad, gap $md.gap
-    Heading "App Name", font-size 15
-    Nav gap 4
-      NavItem Icon "home"; Label "Home"
-      NavItem Icon "settings"; Label "Settings"
-
-  Main w full, pad $lg.pad, gap $lg.pad
-    Heading "Welcome"
-    Card
-      Body "Your content here."`
-
-// Mirror DSL System Prompt
-const MIRROR_SYSTEM_PROMPT = `Du schreibst UI-Code in Mirror DSL. Antworte NUR mit validem Mirror-Code.
-
-## Syntax-Kurzreferenz
-
-// Komponente definieren (mit Doppelpunkt)
-Button: pad 12, bg #3B82F6, rad 4
-
-// Komponente verwenden (ohne Doppelpunkt)
-Button "Click me"
-
-// Vererbung
-DangerButton as Button: bg #EF4444
-
-// Kinder (eingerückt)
-Card
-  Title "Hello"
-  Body "Content"
-
-// Child-Overrides (Semicolon)
-NavItem Icon "home"; Label "Dashboard"
-
-// States
-Button: bg #3B82F6
-  hover bg #2563EB
-  state disabled bg #666
-
-// Events
-Button onclick toggle Modal
-Input oninput filter Results
-
-// Conditionals
-if isActive
-  ActiveView
-else
-  InactiveView
-
-// Iteration
-each item in items
-  Card item.title
-
-## Properties
-
-Layout: hor, ver, center, spread, gap N, wrap, grid N
-Size: w N/full/hug, h N/full/hug, minw, maxw, minh, maxh
-Spacing: pad N, pad N N, pad left N, margin N
-Color: bg, col, bor [width] [color], boc
-Radius: rad N, rad tl N br N
-Type: font-size, weight, italic, underline, truncate
-Icon: is (size), iw (weight), ic (color), fill
-Visual: opacity, shadow sm/md/lg, cursor, hidden, z
-Scroll: scroll, scroll-hor, clip
-
-## Primitives
-
-Box, Text, Button, Input, Textarea, Image, Icon, Link
-
-## Icons (Lucide)
-
-home, settings, user, search, x, check, plus, edit, trash, bell, mail,
-star, heart, arrow-left, chevron-down, eye, lock, filter, download, upload
-
-## Regeln
-
-1. Tokens oben definieren, dann referenzieren ($name)
-2. Komponenten vor Instanzen definieren
-3. Semantische Token-Namen ($primary.bg nicht $blue)
-4. Existierende Patterns im Code folgen
-5. Keine Magic Numbers - Tokens verwenden`
-
-// Build Mirror generation system prompt
-function buildMirrorSystemPrompt(context) {
-  let prompt = MIRROR_SYSTEM_PROMPT
-
-  // Check if code is empty - inject golden example
-  const hasContent = context.source && context.source.trim().length > 0
-
-  if (!hasContent) {
-    prompt += `\n\n## Vorlage für neue App
-
-Strukturiere deinen Code wie dieses Beispiel:
-
-\`\`\`mirror
-${GOLDEN_EXAMPLE}
-\`\`\`
-
-Passe das Beispiel an die Anfrage an.`
-  } else {
-    // Add existing tokens
-    if (context.tokens.length > 0) {
-      prompt += '\n\n## Verfügbare Tokens (verwende diese, erfinde keine neuen)\n\n'
-      for (const token of context.tokens.slice(0, 30)) {
-        prompt += `$${token.name}: ${token.value}\n`
-      }
-    }
-
-    // Add existing components for style consistency
-    if (context.components.length > 0) {
-      prompt += '\n\n## Existierende Komponenten (folge diesem Stil)\n\n'
-      for (const comp of context.components.slice(0, 10)) {
-        prompt += `${comp.name}: ${comp.properties.slice(0, 8).join(', ')}\n`
-      }
-    }
-  }
-
-  // Add editor context
-  if (context.editor) {
-    const ctx = context.editor
-    if (ctx.selectedNodeName || ctx.insideComponent) {
-      prompt += '\n\n## Editor-Kontext\n'
-      if (ctx.selectedNodeName) {
-        prompt += `Selektiert: "${ctx.selectedNodeName}"\n`
-        if (ctx.ancestors && ctx.ancestors.length > 0) {
-          prompt += `Position: ${ctx.ancestors.join(' → ')} → ${ctx.selectedNodeName}\n`
-        }
-      }
-      if (ctx.insideComponent) {
-        prompt += `Cursor in: "${ctx.insideComponent}"\n`
-      }
-    }
-    if (ctx.surroundingCode && (ctx.surroundingCode.before || ctx.surroundingCode.after)) {
-      prompt += `\nUmgebender Code:\n${ctx.surroundingCode.before}\n--- CURSOR ---\n${ctx.surroundingCode.after}\n`
-    }
-    prompt += '\nWenn User "hier", "das", "hinzufügen" sagt, bezieht es sich auf die aktuelle Position.'
-  }
-
-  prompt += '\n\nAntworte NUR mit Mirror-Code. Keine Erklärungen.'
-
-  return prompt
-}
-
-async function generateFromPrompt() {
-  const promptInput = document.getElementById('prompt-input')
-  const userPrompt = promptInput.value.trim()
-  if (!userPrompt) return
-
-  let apiKey = getApiKey()
-  if (!apiKey) {
-    apiKey = promptForApiKey()
-    if (!apiKey) return
-  }
-
-  const btn = document.getElementById('generate-btn')
-  const originalContent = btn.innerHTML
-
-  // Loading state
-  const ESTIMATED_TIME = 30
-  let elapsed = 0
-
-  btn.innerHTML = `
-    <svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 2v4m0 12v4m-8-10h4m12 0h4m-4.93-5.07l-2.83 2.83m-6.48 6.48l-2.83 2.83m0-12.14l2.83 2.83m6.48 6.48l2.83 2.83"/>
-    </svg>
-    <span>Generating</span>
-    <span class="generation-timer">0s</span>
-    <div class="generation-progress"><div class="generation-progress-bar"></div></div>
-  `
-  btn.disabled = true
-  btn.style.opacity = '0.7'
-  promptInput.disabled = true
-
-  const timerEl = btn.querySelector('.generation-timer')
-  const progressBar = btn.querySelector('.generation-progress-bar')
-  const timerInterval = setInterval(() => {
-    elapsed++
-    timerEl.textContent = `${elapsed}s`
-    progressBar.style.width = `${Math.min((elapsed / ESTIMATED_TIME) * 100, 95)}%`
-  }, 1000)
-
-  try {
-    // Step 1: Extract context
-    const context = extractContextFromEditor()
-    const systemPrompt = buildMirrorSystemPrompt(context)
-
-    console.log('🚀 Generating with prompt:', userPrompt)
-    console.log('📋 Context:', context)
-
-    // Step 2: Call LLM for Mirror code directly
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin || 'https://mirror-studio.local',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-sonnet-4.6',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000
-      })
-    })
-
-    const data = await response.json()
-    console.log('📨 LLM Response:', data)
-
-    if (data.error) throw new Error(data.error.message || 'API Error')
-
-    let mirrorCode = data.choices[0].message.content
-
-    // Extract code from markdown if wrapped
-    const codeBlockMatch = mirrorCode.match(/```(?:mirror)?\s*\n?([\s\S]*?)```/)
-    if (codeBlockMatch) {
-      mirrorCode = codeBlockMatch[1].trim()
-    } else {
-      // Clean up any leading/trailing explanation text
-      mirrorCode = mirrorCode.trim()
-    }
-
-    console.log('🪞 Mirror code:', mirrorCode)
-
-    if (!mirrorCode) {
-      throw new Error('LLM returned empty result')
-    }
-
-    // Step 3: Insert into editor
-    if (window.editor) {
-      const state = window.editor.state
-      const cursorPos = state.selection.main.head
-      const hasContent = context.source && context.source.trim().length > 0
-
-      let insertText
-      if (!hasContent) {
-        // Empty editor - replace everything
-        window.editor.dispatch({
-          changes: { from: 0, to: state.doc.length, insert: mirrorCode },
-          annotations: Transaction.userEvent.of('input.ai')
-        })
-      } else {
-        // Has content - insert at cursor
-        insertText = '\n\n' + mirrorCode
-        if (context.editor.insideComponent) {
-          // Add proper indentation for nested insertion
-          const lines = mirrorCode.split('\n')
-          const indentedLines = lines.map(line => line.trim() ? '  ' + line : line)
-          insertText = '\n' + indentedLines.join('\n')
-        }
-
-        window.editor.dispatch({
-          changes: { from: cursorPos, insert: insertText },
-          selection: { anchor: cursorPos + insertText.length },
-          annotations: Transaction.userEvent.of('input.ai')
-        })
-      }
-
-      window.editor.focus()
-    }
-
-    promptInput.value = ''
-    console.log('✅ Generation complete!')
-
-  } catch (err) {
-    console.error('❌ Generation error:', err)
-    alert(`Generierung fehlgeschlagen: ${err.message}`)
-  } finally {
-    clearInterval(timerInterval)
-    btn.innerHTML = originalContent
-    btn.disabled = false
-    btn.style.opacity = ''
-    promptInput.disabled = false
-    promptInput.focus()
-  }
-}
-
-// Make function globally accessible (module scope workaround)
-window.generateFromPrompt = generateFromPrompt
-
-// Setup event listeners after DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  const promptInput = document.getElementById('prompt-input')
-  const generateBtn = document.getElementById('generate-btn')
-
-  if (promptInput) {
-    promptInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        generateFromPrompt()
-      }
-    })
-  }
-
-  if (generateBtn) {
-    generateBtn.addEventListener('click', generateFromPrompt)
-  }
-})
-
