@@ -9,9 +9,8 @@
  * - Change coalescing for rapid updates
  */
 
-import { CodeModifier, ModificationResult, CodeChange } from './code-modifier'
-import { parseLine, findPropertyInLine, getCanonicalName } from './line-property-parser'
-import type { SourceMap } from './source-map'
+import { CodeModifier, CodeChange } from './code-modifier'
+import { parseLine, findPropertyInLine } from './line-property-parser'
 
 /**
  * Batch update specification
@@ -91,6 +90,10 @@ export class RobustModifier {
     const warnings: string[] = []
 
     // Track the first change's original offsets (valid for editor's source)
+    // NOTE: This works because all updates target the same nodeId (same line).
+    // CodeModifier.updateProperty replaces the entire line, so:
+    // - first change has from/to for the ORIGINAL line
+    // - last change has insert containing ALL updates
     let firstChangeFrom = -1
     let firstChangeTo = -1
     let accumulatedInsert = ''
