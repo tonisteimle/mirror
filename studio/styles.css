@@ -77,13 +77,6 @@
       --bg-hover: #27272a;          /* Hover state */
       --bg-active: #3f3f46;         /* Active/pressed state */
 
-      /* Legacy aliases (für Kompatibilität) */
-      --bg-content: var(--bg-panel);
-      --bg-deep: var(--bg-panel);
-      --bg-surface: var(--bg-panel);
-      --bg-overlay: var(--bg-panel);
-      --bg-elevated: var(--bg-panel);
-
       /* Text Colors - Consolidated */
       --text-primary: #e4e4e7;      /* Main text */
       --text-secondary: #a1a1aa;    /* Secondary text */
@@ -567,7 +560,7 @@
     header {
       flex-shrink: 0;
       padding: 8px 16px;
-      background: var(--bg-surface);
+      background: var(--bg-panel);
       border-bottom: 1px solid var(--border-default);
       display: flex;
       justify-content: space-between;
@@ -624,7 +617,7 @@
       align-items: center;
       justify-content: flex-end;
       padding: 6px 12px;
-      background: var(--bg-surface);
+      background: var(--bg-panel);
       border-bottom: 1px solid var(--border-default);
       flex-shrink: 0;
       height: 30px;
@@ -785,7 +778,7 @@
 
     /* Standalone Components Panel (between Editor and Preview) */
     .components-panel {
-      background: var(--bg-surface);
+      background: var(--bg-panel);
       border-left: 1px solid var(--border-default);
       border-right: 1px solid var(--border-default);
       display: flex;
@@ -818,7 +811,7 @@
     /* Prompt Bar */
     .prompt-bar {
       padding: 8px 12px;
-      background: var(--bg-surface);
+      background: var(--bg-panel);
       border-top: 1px solid var(--border-default);
     }
 
@@ -962,7 +955,7 @@
     }
 
     .tokens-preview-row:hover {
-      background: var(--bg-surface);
+      background: var(--bg-panel);
     }
 
     .tokens-preview-cell {
@@ -1214,7 +1207,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 12px;
-      background: var(--bg-surface);
+      background: var(--bg-panel);
       border-bottom: 1px solid var(--border-default);
       font-size: var(--font-base);
       height: 30px;
@@ -1364,7 +1357,7 @@
     /* Color Picker */
     .color-picker {
       position: fixed;
-      background: var(--bg-overlay);
+      background: var(--bg-panel);
       border: 1px solid var(--border-default);
       border-radius: 8px;
       padding: 12px;
@@ -1645,7 +1638,7 @@
     /* Token Picker Panel */
     .token-panel {
       position: fixed;
-      background: var(--bg-overlay);
+      background: var(--bg-panel);
       border: 1px solid var(--border-default);
       border-radius: 8px;
       box-shadow: var(--shadow-lg);
@@ -1738,7 +1731,7 @@
     /* Icon Picker */
     .icon-picker {
       position: fixed;
-      background: var(--bg-overlay);
+      background: var(--bg-panel);
       border: 1px solid var(--border-default);
       border-radius: 8px;
       padding: 12px;
@@ -5420,7 +5413,7 @@
   top: 100%;
   right: 0;
   margin-top: 4px;
-  background: var(--bg-elevated);
+  background: var(--bg-panel);
   border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 8px 0;
@@ -5703,7 +5696,7 @@
 }
 
 .message-content pre {
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   padding: 10px 12px;
   border-radius: 6px;
   overflow-x: auto;
@@ -5794,7 +5787,7 @@
 .tool-details pre {
   margin-top: 6px;
   padding: 8px;
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   border-radius: 4px;
   font-size: var(--font-xs);
   max-height: 150px;
@@ -6156,7 +6149,7 @@ select.tomselected,
 }
 
 .ts-dropdown {
-  background: var(--bg-overlay) !important;
+  background: var(--bg-panel) !important;
   border: 1px solid var(--border-default) !important;
   border-radius: 6px !important;
   box-shadow: 0 8px 24px var(--black-40) !important;
