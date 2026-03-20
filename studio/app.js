@@ -22,7 +22,7 @@ import {
   createTriggerExtensions,
   setIconTriggerPrimitives,
   getIconTriggerPrimitives,
-} from './dist/index.js?v=88'
+} from './dist/index.js?v=89'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1599,6 +1599,12 @@ function switchFile(filename) {
 
   // Switch to new file
   currentFile = filename
+
+  // Clear selection and reset sync for new file
+  if (studio.sync) {
+    studio.sync.clearSelection('editor')
+    studio.sync.resetInitialSync()
+  }
 
   // Dispatch with fileSwitchAnnotation to bypass the App lock filter
   editor.dispatch({
@@ -4450,6 +4456,10 @@ function compile(code) {
         if (studio.preview) {
           studio.preview.refresh()
         }
+        // Trigger initial sync after first compile (selects root element)
+        if (studio.sync) {
+          studio.sync.triggerInitialSync()
+        }
       }
     }
 
@@ -5331,13 +5341,14 @@ function updateStudio(ast, ir, sourceMap, source) {
   // Selection validation is now handled by setCompileResult() in state.ts
   // ============================================
   try {
-    updateStudioState(ast, ir, sourceMap, source)
-
-    // Set line offset for SourceMap ↔ Editor line translation
+    // Set line offset FIRST (before setSourceMap triggers initial sync)
     if (studio.sync?.lineOffset) {
       const offset = getCurrentFileLineOffset()
       studio.sync.lineOffset.setOffset(offset)
     }
+
+    // Now update state (this calls setSourceMap which may trigger initial sync)
+    updateStudioState(ast, ir, sourceMap, source)
   } catch (e) {
     console.warn('Studio: New architecture update failed:', e)
   }

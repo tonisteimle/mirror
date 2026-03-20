@@ -62,6 +62,45 @@ display: grid;
 > * { grid-area: 1 / 1; }
 ```
 
+### 1.5 Position Container (Absolute Positionierung)
+```mirror
+Container position
+```
+oder
+```mirror
+Container pos
+```
+```css
+position: relative;
+/* Kinder bekommen automatisch position: absolute */
+```
+
+#### Wichtig: `full` in Position-Containern
+In absoluten Layouts funktioniert `flex: 1 1 0%` NICHT, da es keinen Flex-Kontext gibt!
+
+```mirror
+Container position
+  Box w full, h full    # ← NICHT flex-basiert!
+```
+
+```css
+/* Container */
+.container { position: relative; }
+
+/* Kind - KORREKT für absolute Positionierung */
+.box {
+  position: absolute;
+  width: 100%;    /* ← Hier IST 100% korrekt! */
+  height: 100%;
+}
+```
+
+**Unterschied zu Flexbox:**
+| Layout | `w full` CSS | Grund |
+|--------|-------------|-------|
+| `hor` / `ver` | `flex: 1 1 0%` | Respektiert Padding, teilt Platz mit Geschwistern |
+| `position` | `width: 100%` | Kein Flex-Kontext, 100% relativ zum Containing Block |
+
 ---
 
 ## 2. Kind-Größen
@@ -331,11 +370,43 @@ das die `align-items: center` des Parents überschreibt.
 { property: 'flex-shrink', value: '0' }  // Verhindert Schrumpfen
 ```
 
+### Regel 5: `position` Container → Kinder werden absolute
+```typescript
+// Parent hat position: relative
+// Kinder bekommen automatisch:
+{ property: 'position', value: 'absolute' }
+```
+
+### Regel 6: `full` in Position-Container → 100% statt flex
+```typescript
+// Wenn Kind in position Container UND w/h full:
+// NICHT flex: 1 1 0%, sondern:
+{ property: 'width', value: '100%' }   // bei w full
+{ property: 'height', value: '100%' }  // bei h full
+
+// Implementierung: Nach dem Setzen von position: absolute,
+// flex-basierte Styles entfernen und durch 100% ersetzen
+```
+
+### Regel 7: `full` in Grid-Container → Styles entfernen
+```typescript
+// Wenn Kind in grid Container UND w/h full:
+// flex: 1 1 0% entfernen - Grid füllt automatisch
+// Keine width/height nötig - Grid-Zellen füllen ihren Bereich
+
+// Implementierung: Flex-basierte Styles erkennen und entfernen
+const hasFlex = child.styles.some(s => s.property === 'flex')
+if (hasFlex) {
+  // Entferne flex, align-self, min-width, min-height
+  // Füge NICHTS hinzu - Grid regelt das automatisch
+}
+```
+
 ---
 
 ## 8. Test-Checkliste
 
-### 8.1 `full` Tests
+### 8.1 `full` Tests (Flexbox)
 - [x] `w full` in `hor` Container mit `pad` → Respektiert Padding ✅
 - [x] `h full` in `ver` Container mit `pad` → Respektiert Padding ✅
 - [x] `w full` in `ver` Container → Streckt auf volle Breite (Kreuzachse) ✅
@@ -346,7 +417,21 @@ das die `align-items: center` des Parents überschreibt.
 - [x] Nested full-Container → Korrekte Propagierung ✅
 - [x] `size full` → Beide Achsen korrekt ✅
 
-### 8.2 `hug` Tests
+### 8.2 `full` Tests (Position/Absolute)
+- [x] `w full` in `position` Container → Generiert `width: 100%` (NICHT flex) ✅
+- [x] `h full` in `position` Container → Generiert `height: 100%` (NICHT flex) ✅
+- [x] `w full, h full` in `position` → Beide 100% ✅
+- [x] Kind in `position` bekommt `position: absolute` ✅
+- [x] Nested `position` Container → Inneres Kind auch absolute ✅
+- [x] `w full` nur (ohne h full) in `position` → Nur width: 100%, height bleibt ungesetzt ✅
+
+### 8.3 `full` Tests (Grid)
+- [x] `w full` in `grid` Container → Keine flex-Styles (Grid füllt automatisch) ✅
+- [x] `h full` in `grid` Container → Keine flex-Styles ✅
+- [x] `w full, h full` in `grid` → Keine flex-Styles ✅
+- [x] Grid-Zellen füllen ihren Bereich automatisch ✅
+
+### 8.4 `hug` Tests
 - [x] `w hug` → Generiert `width: fit-content` ✅
 - [x] `h hug` → Generiert `height: fit-content` ✅
 - [x] `w hug` in `ver, center` → Bleibt hug, kein Stretching ✅

@@ -93,6 +93,14 @@ export {
   type ResidualSpace,
 } from './services/smart-sizing'
 
+// Drop preview utilities
+export {
+  calculateNewComponentSize,
+  getDefaultSize,
+  type DragContext,
+  type Size as PreviewSize,
+} from './drop-preview'
+
 export {
   findIconForComponent,
   findIconsForComponents,
@@ -168,3 +176,22 @@ export {
   createRegistry,
   getDefaultRegistry,
 } from './drop-strategies'
+
+// Coordinate transformation (centralized coordinate handling)
+export {
+  CoordinateTransformer,
+  createCoordinateTransformer,
+  type Point,
+  type Size,
+  type Bounds,
+  type TransformResult,
+  type TransformOptions,
+} from './coordinate-transformer'
+
+// Z-Index management for absolute containers
+export {
+  ZIndexManager,
+  createZIndexManager,
+  type ZIndexResult,
+  type ElementZInfo,
+} from './z-index-manager'

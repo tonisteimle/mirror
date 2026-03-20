@@ -4,12 +4,11 @@
  * Handles drop behavior for absolute/free-form containers.
  * Elements are positioned with x/y coordinates relative to container.
  *
- * Future enhancements:
- * - Snap to grid
- * - Snap to guides
- * - Snap to other elements (edges, centers)
- * - Magnetic guides
- * - Alignment helpers
+ * Uses CoordinateTransformer for consistent coordinate handling:
+ * - Scale factor (CSS transform)
+ * - RTL support
+ * - Grid snapping (delegated to DragDropManager to avoid double-snapping)
+ * - Bounds clamping
  */
 
 import type { DropZone } from '../drop-zone-calculator'
@@ -26,8 +25,6 @@ import { isAbsoluteLayoutContainer } from '../utils/layout-detection'
  * Configuration for absolute positioning behavior
  */
 export interface AbsoluteStrategyOptions {
-  /** Snap to pixel grid (e.g., 8 for 8px grid) */
-  snapToGrid?: number
   /** Show position label during drag */
   showPositionLabel?: boolean
   /** Padding from container edges */
@@ -35,7 +32,6 @@ export interface AbsoluteStrategyOptions {
 }
 
 const DEFAULT_OPTIONS: Required<AbsoluteStrategyOptions> = {
-  snapToGrid: 0, // No snapping by default
   showPositionLabel: true,
   edgePadding: 0,
 }
@@ -61,7 +57,10 @@ export class AbsoluteDropStrategy implements LayoutDropStrategy {
 
   /**
    * Calculate drop zone with x/y position
-   * Handles CSS transform scale and RTL direction
+   *
+   * NOTE: Grid snapping is NOT applied here - it's handled centrally
+   * by DragDropManager using CoordinateTransformer to avoid double-snapping.
+   * This method returns raw (unsnapped) coordinates.
    */
   calculateDropZone(
     container: HTMLElement,
@@ -72,22 +71,16 @@ export class AbsoluteDropStrategy implements LayoutDropStrategy {
 
     // Calculate position relative to container, accounting for scale
     // When container is scaled, we need to divide by scale to get correct position
-    let x = Math.round((clientX - containerRect.left) / scale)
-    let y = Math.round((clientY - containerRect.top) / scale)
+    let x = (clientX - containerRect.left) / scale
+    let y = (clientY - containerRect.top) / scale
 
     // For RTL layouts, x is measured from right edge
     if (isRTL) {
       const containerWidth = containerRect.width / scale
-      x = Math.round(containerWidth - x)
+      x = containerWidth - x
     }
 
-    // Apply grid snapping if configured
-    if (this.options.snapToGrid > 0) {
-      x = this.snapToGrid(x, this.options.snapToGrid)
-      y = this.snapToGrid(y, this.options.snapToGrid)
-    }
-
-    // Apply edge padding
+    // Apply edge padding (ensures minimum distance from edges)
     if (this.options.edgePadding > 0) {
       x = Math.max(this.options.edgePadding, x)
       y = Math.max(this.options.edgePadding, y)
@@ -97,6 +90,10 @@ export class AbsoluteDropStrategy implements LayoutDropStrategy {
     x = Math.max(0, x)
     y = Math.max(0, y)
 
+    // Round to integers for clean pixel values
+    x = Math.round(x)
+    y = Math.round(y)
+
     return {
       layoutType: 'absolute',
       placement: 'inside',
@@ -105,13 +102,6 @@ export class AbsoluteDropStrategy implements LayoutDropStrategy {
       x,
       y,
     }
-  }
-
-  /**
-   * Snap value to grid
-   */
-  private snapToGrid(value: number, gridSize: number): number {
-    return Math.round(value / gridSize) * gridSize
   }
 
   /**
@@ -164,7 +154,7 @@ export class AbsoluteDropStrategy implements LayoutDropStrategy {
   }
 
   /**
-   * Update options (e.g., change grid size)
+   * Update options (e.g., change edge padding)
    */
   setOptions(options: Partial<AbsoluteStrategyOptions>): void {
     this.options = { ...this.options, ...options }

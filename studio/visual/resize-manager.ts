@@ -374,15 +374,23 @@ export class ResizeManager {
   // ============================================================================
 
   private detectSizingMode(newSize: number, available: number, childMin: number): SizingMode {
-    const SNAP_THRESHOLD = 10
+    // Use both absolute and percentage-based thresholds for better detection
+    const SNAP_THRESHOLD_PX = 20  // Absolute threshold in pixels
+    const SNAP_THRESHOLD_PCT = 0.05  // 5% of available space
+
+    // Calculate effective threshold (use larger of the two)
+    const fillThreshold = Math.max(SNAP_THRESHOLD_PX, available * SNAP_THRESHOLD_PCT)
+    const hugThreshold = Math.max(SNAP_THRESHOLD_PX, childMin * SNAP_THRESHOLD_PCT)
 
     // Wenn nahe am verfügbaren Platz → fill
-    if (newSize >= available - SNAP_THRESHOLD) {
+    // Also trigger fill if size exceeds available (dragged beyond parent)
+    if (newSize >= available - fillThreshold) {
       return 'fill'
     }
 
     // Wenn nahe am Minimum der Kinder → hug
-    if (newSize <= childMin + SNAP_THRESHOLD) {
+    // Also trigger hug if size is less than children minimum
+    if (childMin > 40 && newSize <= childMin + hugThreshold) {
       return 'hug'
     }
 

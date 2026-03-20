@@ -44,6 +44,8 @@ export interface ModificationResult {
   newSource: string
   change: CodeChange
   error?: string
+  /** True if the operation succeeded but made no changes (e.g., position unchanged) */
+  noChange?: boolean
 }
 
 /**
@@ -1387,7 +1389,9 @@ export class CodeModifier {
   private containerHasLayoutDirection(containerLine: string): boolean {
     const layoutProps = [
       'ver', 'hor', 'center', 'spread', 'grid',
-      'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center'
+      'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
+      // Absolute layout properties - don't add flex layout to these containers
+      'pos', 'positioned', 'stacked'
     ]
     const parsedLine = parseLine(containerLine)
     return parsedLine.properties.some(p => layoutProps.includes(p.name))

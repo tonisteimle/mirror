@@ -535,6 +535,50 @@ class IRTransformer {
         if (!hasPosition) {
           child.styles.push({ property: 'position', value: 'absolute' })
         }
+
+        // Convert flex-based "full" to percentage-based sizing for absolute elements
+        // flex: 1 1 0% doesn't work for absolute positioned elements
+        const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
+        if (hasFlex) {
+          // Detect which dimension had "full" by checking min-width/min-height: 0
+          const hasMinWidth0 = child.styles.some(s => s.property === 'min-width' && s.value === '0')
+          const hasMinHeight0 = child.styles.some(s => s.property === 'min-height' && s.value === '0')
+
+          // Remove flex-related styles
+          const filteredStyles = child.styles.filter(s =>
+            s.property !== 'flex' &&
+            s.property !== 'align-self' &&
+            s.property !== 'min-width' &&
+            s.property !== 'min-height'
+          )
+          child.styles.length = 0
+          child.styles.push(...filteredStyles)
+
+          // Add percentage-based sizing
+          if (hasMinWidth0) child.styles.push({ property: 'width', value: '100%' })
+          if (hasMinHeight0) child.styles.push({ property: 'height', value: '100%' })
+        }
+      }
+    }
+
+    // Grid container: Remove flex-based styles from children
+    // In grid, flex: 1 1 0% has no effect - grid cells fill automatically
+    const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
+    if (isGridContainer) {
+      for (const child of children) {
+        const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
+        if (hasFlex) {
+          // Remove flex-related styles (they don't work in grid context)
+          const filteredStyles = child.styles.filter(s =>
+            s.property !== 'flex' &&
+            s.property !== 'align-self' &&
+            s.property !== 'min-width' &&
+            s.property !== 'min-height'
+          )
+          child.styles.length = 0
+          child.styles.push(...filteredStyles)
+          // No need to add width/height - grid cells fill their area automatically
+        }
       }
     }
 
@@ -1623,16 +1667,8 @@ class IRTransformer {
       return [{ property: baseProp, value: cssValue, state: 'hover' }]
     }
 
-    // Use centralized property mapping from schema
-    // Note: Special cases (horizontal, center, etc.) are handled above
-    const cssProperty = PROPERTY_TO_CSS[name]
-
-    if (!cssProperty) {
-      // Skip non-CSS properties (content, data, etc.)
-      return []
-    }
-
-    // Handle special cases
+    // Handle special cases FIRST (before the early return check)
+    // These are layout/positioning properties that need special CSS mapping
     if (name === 'horizontal' || name === 'hor') {
       return [
         { property: 'display', value: 'flex' },
@@ -1666,7 +1702,7 @@ class IRTransformer {
       return [{ property: 'flex-wrap', value: 'wrap' }]
     }
 
-    if (name === 'pos' || name === 'positioned' || name === 'stacked') {
+    if (name === 'pos' || name === 'position' || name === 'positioned' || name === 'stacked') {
       return [{ property: 'position', value: 'relative' }]
     }
 
@@ -1680,6 +1716,14 @@ class IRTransformer {
 
     if (name === 'scroll-both') {
       return [{ property: 'overflow', value: 'auto' }]
+    }
+
+    // Use centralized property mapping from schema
+    const cssProperty = PROPERTY_TO_CSS[name]
+
+    if (!cssProperty) {
+      // Skip non-CSS properties (content, data, etc.)
+      return []
     }
 
     if (name === 'clip') {
@@ -2096,6 +2140,12 @@ class IRTransformer {
           { property: 'flex-direction', value: 'column' },
           { property: 'justify-content', value: 'center' },
         ]
+      // Position container (absolute layout)
+      case 'pos':
+      case 'position':
+      case 'positioned':
+      case 'stacked':
+        return [{ property: 'position', value: 'relative' }]
       default:
         return []
     }

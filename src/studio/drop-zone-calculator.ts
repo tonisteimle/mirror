@@ -215,7 +215,8 @@ export class DropZoneCalculator {
     }
 
     // Determine container element for drop calculation
-    const containerElement = this.determineContainerElement(targetElement, nodeId)
+    // Pass sourceNodeId to enable move-specific logic
+    const containerElement = this.determineContainerElement(targetElement, nodeId, sourceNodeId)
     if (!containerElement) {
       return null
     }
@@ -258,28 +259,45 @@ export class DropZoneCalculator {
    */
   private determineContainerElement(
     targetElement: HTMLElement,
-    nodeId: string
+    nodeId: string,
+    sourceNodeId?: string
   ): HTMLElement | null {
     // Check if target is an absolute layout container
     if (this.isAbsoluteLayoutContainer(targetElement)) {
       return targetElement
     }
 
+    // Find parent early - we need it for multiple checks
+    const parentElement = this.findParentNodeElement(targetElement)
+
+    // For MOVE operations: If parent is absolute container AND source is sibling,
+    // use absolute parent for x/y positioning
+    if (sourceNodeId && parentElement && this.isAbsoluteLayoutContainer(parentElement)) {
+      // Check if source element is also a child of this absolute container
+      const sourceElement = this.container.querySelector(
+        `[${this.options.nodeIdAttribute}="${sourceNodeId}"]`
+      ) as HTMLElement | null
+
+      if (sourceElement) {
+        const sourceParent = this.findParentNodeElement(sourceElement)
+        // If source and target share the same absolute parent, use absolute positioning
+        if (sourceParent === parentElement) {
+          return parentElement
+        }
+      }
+    }
+
     // Check if target is a valid non-leaf container
-    // If so, use it directly (even if parent is absolute)
     const componentName = targetElement.dataset.mirrorName || ''
     const isLeaf = this.options.leafElements.includes(componentName)
 
     if (!isLeaf && this.options.allowInside) {
-      // Target is a valid container (e.g., flex container inside absolute)
-      // Use target's layout, not parent's absolute positioning
+      // Target is a valid container - use its layout
       return targetElement
     }
 
-    // Target is a leaf element - find parent
-    const parentElement = this.findParentNodeElement(targetElement)
-
-    // If parent is absolute, use absolute positioning for this leaf
+    // Target is a leaf element
+    // If parent is absolute, use absolute positioning
     if (parentElement && this.isAbsoluteLayoutContainer(parentElement)) {
       return parentElement
     }
@@ -349,16 +367,6 @@ export class DropZoneCalculator {
       return null
     }
 
-    // DEBUG: Log for analysis
-    const containerId = containerElement.getAttribute(this.options.nodeIdAttribute)
-    console.log('[DropZoneCalc] Strategy result:', {
-      containerId,
-      childrenCount: children.length,
-      placement: result.placement,
-      suggestedAlignment: (result as any).suggestedAlignment,
-      suggestedCrossAlignment: (result as any).suggestedCrossAlignment,
-    })
-
     // Convert to standard DropZone
     const dropZone = strategy.toDropZone(result, containerElement)
 
@@ -405,32 +413,25 @@ export class DropZoneCalculator {
 
   /**
    * Show visual indicator for drop zone
+   *
+   * NOTE: For absolute containers, we only show container highlight.
+   * The crosshair/preview is handled by DragDropManager using the unified
+   * visual system (DropPreviewRenderer). This prevents duplicate indicators
+   * and ensures consistent coordinate handling via CoordinateTransformer.
    */
   private showIndicator(dropZone: DropZone): void {
     const { element, absolutePosition, isAbsoluteContainer, _indicatorConfig } = dropZone
 
-    // Handle absolute positioning indicator (crosshair)
+    // Handle absolute positioning: only highlight container
+    // The preview/crosshair is shown by DragDropManager.handleDragOver()
     if (isAbsoluteContainer && absolutePosition) {
-      const rect = element.getBoundingClientRect()
-      const containerRect = this.container.getBoundingClientRect()
-
-      this.renderer.show({
-        type: 'crosshair',
-        x: absolutePosition.x,
-        y: absolutePosition.y,
-        containerLeft: rect.left - containerRect.left,
-        containerTop: rect.top - containerRect.top,
-        containerWidth: rect.width,
-        containerHeight: rect.height,
-        label: `x: ${absolutePosition.x}, y: ${absolutePosition.y}`,
-      })
-
-      // Also highlight the container
+      // Only highlight the container - no crosshair here
+      // DragDropManager shows the unified preview with correct coordinates
       this.renderer.show({ type: 'highlight', element })
       return
     }
 
-    // Use indicator config from strategy
+    // Use indicator config from strategy (for flex/grid containers)
     if (_indicatorConfig) {
       const containerRect = element.getBoundingClientRect()
       this.renderer.showFromStrategyConfig(_indicatorConfig, containerRect)

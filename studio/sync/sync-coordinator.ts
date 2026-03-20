@@ -36,9 +36,11 @@ export class SyncCoordinator {
   private targets: SyncTargets = {}
   private options: Required<Omit<SyncCoordinatorOptions, 'lineOffset'>>
   private syncInProgress = false
+  private pendingSync: { nodeId: string | null; origin: SelectionOrigin } | null = null
   private pendingCursorSync: ReturnType<typeof setTimeout> | null = null
   private lastCursorLine = -1
   private unsubscribe: (() => void) | null = null
+  private initialSyncDone = false
 
   /** Line offset service for editor ↔ SourceMap translation */
   readonly lineOffset: LineOffsetService
@@ -90,8 +92,53 @@ export class SyncCoordinator {
     this.sourceMap = sourceMap
   }
 
+  /**
+   * Trigger initial sync after first compile and preview render
+   * Call this after preview DOM has been updated
+   */
+  triggerInitialSync(): void {
+    if (this.initialSyncDone) return
+    if (!this.sourceMap) return
+
+    this.initialSyncDone = true
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      // Check if there's already a selection
+      const currentSelection = state.get().selection.nodeId
+      if (currentSelection) {
+        // Re-sync existing selection (might have been set before SourceMap was available)
+        if (this.options.debug) {
+          console.log('[SyncCoordinator] Initial sync with existing selection', { nodeId: currentSelection })
+        }
+        this.doSync(currentSelection, 'editor')
+        return
+      }
+
+      // Find root element in preview
+      const rootElement = document.querySelector('#preview [data-mirror-id]')
+      if (rootElement) {
+        const rootId = rootElement.getAttribute('data-mirror-id')
+        if (rootId) {
+          if (this.options.debug) {
+            console.log('[SyncCoordinator] Initial sync - selecting root element', { nodeId: rootId })
+          }
+          // Set selection without triggering editor scroll (use 'preview' origin)
+          actions.setSelection(rootId, 'preview')
+        }
+      }
+    })
+  }
+
   setTargets(targets: SyncTargets): void {
     this.targets = { ...this.targets, ...targets }
+  }
+
+  /**
+   * Reset initial sync flag (call when switching files)
+   */
+  resetInitialSync(): void {
+    this.initialSyncDone = false
   }
 
   /**
@@ -161,7 +208,14 @@ export class SyncCoordinator {
    * Called when selection:changed event is received
    */
   private doSync(nodeId: string | null, origin: SelectionOrigin): void {
-    if (this.syncInProgress) return
+    // Queue sync if one is already in progress (don't drop it)
+    if (this.syncInProgress) {
+      if (this.options.debug) {
+        console.log('[SyncCoordinator] Queuing sync (already in progress)', { nodeId, origin })
+      }
+      this.pendingSync = { nodeId, origin }
+      return
+    }
 
     this.syncInProgress = true
     try {
@@ -194,6 +248,16 @@ export class SyncCoordinator {
       actions.setBreadcrumb(breadcrumb)
     } finally {
       this.syncInProgress = false
+
+      // Process queued sync if any
+      if (this.pendingSync) {
+        const pending = this.pendingSync
+        this.pendingSync = null
+        if (this.options.debug) {
+          console.log('[SyncCoordinator] Processing queued sync', pending)
+        }
+        this.doSync(pending.nodeId, pending.origin)
+      }
     }
   }
 
