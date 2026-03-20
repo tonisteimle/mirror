@@ -3527,6 +3527,34 @@
       color: var(--text-muted);
     }
 
+    /* Corner radius grid (2x2 layout for TL, TR, BL, BR) */
+    .pp-content .corner-radius-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 100%;
+      padding: 4px 0;
+    }
+
+    .pp-content .corner-input {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pp-content .corner-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 18px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .pp-content .corner-input .prop-input {
+      flex: 1;
+      min-width: 0;
+    }
+
     /* ============================================
        ICON (from prototype)
        ============================================ */
