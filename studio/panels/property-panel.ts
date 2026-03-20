@@ -368,7 +368,7 @@ export class PropertyPanel {
 
     // Render border section
     if (borderCat) {
-      result += this.renderBorderSection(borderCat)
+      result += this.renderRadiusAndBorderSections(borderCat)
     }
 
     // Render color section
@@ -1302,7 +1302,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   /**
    * Render border section (1:1 from prototype-v2.html)
    */
-  private renderBorderSection(category: PropertyCategory): string {
+  private renderRadiusAndBorderSections(category: PropertyCategory): string {
     const props = category.properties
 
     // Get radius value
@@ -1357,10 +1357,11 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     `
 
     return `
+      <!-- Radius Section -->
       <div class="section">
         <div class="section-label">
-          <span>Border</span>
-          <button class="section-expand-btn" data-expand="border" title="Toggle detail view">
+          <span>Radius</span>
+          <button class="section-expand-btn" data-expand="radius" title="Toggle corner details">
             <svg class="icon icon-collapsed" viewBox="0 0 14 14">
               <path d="M4 6l3 3 3-3"/>
             </svg>
@@ -1369,10 +1370,10 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
             </svg>
           </button>
         </div>
-        <div class="section-content" data-expand-container="border">
+        <div class="section-content" data-expand-container="radius">
           <!-- Collapsed: Global Radius -->
-          <div class="prop-row collapsed-row${radiusIsOverride ? ' override' : ''}" data-expand-group="border">
-            <span class="prop-label">Radius</span>
+          <div class="prop-row collapsed-row${radiusIsOverride ? ' override' : ''}" data-expand-group="radius">
+            <span class="prop-label">All</span>
             <div class="prop-content">
               <div class="token-group">
                 ${renderRadTokens}
@@ -1385,22 +1386,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
             </div>
           </div>
-          <!-- Collapsed: Global Border -->
-          <div class="prop-row collapsed-row${borderIsOverride ? ' override' : ''}" data-expand-group="border">
-            <span class="prop-label">Border</span>
-            <div class="prop-content">
-              <div class="toggle-group">
-                ${borderWidthToggles}
-              </div>
-              ${borderColorTrigger}
-            </div>
-          </div>
 
-          <!-- Expanded: Corner Radii (4 corners, each once) -->
-          <div class="prop-row expanded-row side-header" data-expand-group="border">
-            <span class="prop-label">Corners</span>
-          </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
+          <!-- Expanded: Corner Radii (4 corners) -->
+          <div class="prop-row expanded-row" data-expand-group="radius">
             <div class="corner-radius-grid">
               <div class="corner-input">
                 <span class="corner-label" title="Top Left">TL</span>
@@ -1420,11 +1408,35 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Expanded: Side Borders (4 sides) -->
-          <div class="prop-row expanded-row side-header" data-expand-group="border">
-            <span class="prop-label">Borders</span>
+      <!-- Border Section -->
+      <div class="section">
+        <div class="section-label">
+          <span>Border</span>
+          <button class="section-expand-btn" data-expand="border" title="Toggle side details">
+            <svg class="icon icon-collapsed" viewBox="0 0 14 14">
+              <path d="M4 6l3 3 3-3"/>
+            </svg>
+            <svg class="icon icon-expanded" viewBox="0 0 14 14">
+              <path d="M4 8l3-3 3 3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content" data-expand-container="border">
+          <!-- Collapsed: Global Border -->
+          <div class="prop-row collapsed-row${borderIsOverride ? ' override' : ''}" data-expand-group="border">
+            <span class="prop-label">All</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${borderWidthToggles}
+              </div>
+              ${borderColorTrigger}
+            </div>
           </div>
+
+          <!-- Expanded: Side Borders -->
           <div class="prop-row expanded-row side-detail" data-expand-group="border">
             <span class="prop-label">Top</span>
             <div class="prop-content">
