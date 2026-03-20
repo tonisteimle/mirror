@@ -166,6 +166,10 @@ export class CodeModifier {
     newLines[nodeLine - 1] = newLine
     const newSource = newLines.join('\n')
 
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newLines
+
     return {
       success: true,
       newSource,
@@ -213,6 +217,10 @@ export class CodeModifier {
     const newLines = [...this.lines]
     newLines[nodeLine - 1] = newLine
     const newSource = newLines.join('\n')
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newLines
 
     return {
       success: true,
@@ -263,6 +271,10 @@ export class CodeModifier {
     const newLines = [...this.lines]
     newLines[nodeLine - 1] = newLine
     const newSource = newLines.join('\n')
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newLines
 
     return {
       success: true,

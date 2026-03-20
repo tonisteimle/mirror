@@ -11,6 +11,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { DragDropService, createDragDropService, type DropResultInfo } from '../services/drag-drop-service'
+import { DragController, createDragController } from '../controllers/drag-controller'
+import { createCodeModifier } from '../../../src/studio/code-modifier'
+import { parse } from '../../../src/parser'
+import { toIR, type IRResult } from '../../../src/ir'
 
 // ============================================================================
 // Minimales Setup
@@ -250,20 +254,221 @@ describe('Problem 2: Bestehende Elemente müssen verschiebbar sein', () => {
 })
 
 // ============================================================================
-// Debug: Was kommt tatsächlich raus?
+// Problem 3: Ghost-Größe muss Element-Größe entsprechen
 // ============================================================================
 
-describe('Debug: Aktuelle Ausgaben verstehen', () => {
-  it('Zeigt alle Felder von DropResultInfo', () => {
+describe('Problem 3: Ghost-Größe = Element-Größe', () => {
+  it('Element-Drag: Ghost hat gleiche Größe wie Original-Element', () => {
     const { container, posContainer } = setupTestDOM()
 
-    let dropResult: DropResultInfo | null = null
+    // Element mit spezifischer Größe: 120x60
+    const button = createButton('btn-1', 50, 50, 120, 60)
+    posContainer.appendChild(button)
+
+    const controller = createDragController(container, { threshold: 3 })
+
+    // Start drag
+    controller.startElementDrag(button, new MouseEvent('mousedown', {
+      clientX: 100, clientY: 80, bubbles: true
+    }))
+
+    // Move past threshold
+    document.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: 110, clientY: 90, bubbles: true
+    }))
+
+    // Get snapshot
+    const snapshot = controller.getSnapshot()
+    console.log('Element size:', { width: 120, height: 60 })
+    console.log('Source rect:', snapshot.source?.type === 'element' ? snapshot.source.rect : null)
+
+    // ERWARTUNG: Source rect hat Element-Größe
+    expect(snapshot.source).not.toBeNull()
+    expect(snapshot.source?.type).toBe('element')
+    if (snapshot.source?.type === 'element') {
+      expect(snapshot.source.rect.width).toBe(120)
+      expect(snapshot.source.rect.height).toBe(60)
+    }
+
+    controller.dispose()
+    container.remove()
+  })
+
+  it('Palette-Drag: Ghost hat defaultSize', () => {
+    const { container } = setupTestDOM()
+
+    const controller = createDragController(container, { threshold: 3 })
+
+    // Start palette drag mit defaultSize 80x30
+    controller.startPaletteDrag('Button', new MouseEvent('mousedown', {
+      clientX: 10, clientY: 10, bubbles: true
+    }), { defaultSize: { width: 80, height: 30 } })
+
+    // Move past threshold
+    document.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: 20, clientY: 20, bubbles: true
+    }))
+
+    const snapshot = controller.getSnapshot()
+    console.log('Default size:', { width: 80, height: 30 })
+    console.log('Source:', snapshot.source)
+
+    // ERWARTUNG: Source hat defaultSize
+    expect(snapshot.source).not.toBeNull()
+    expect(snapshot.source?.type).toBe('palette')
+    if (snapshot.source?.type === 'palette') {
+      expect(snapshot.source.defaultSize?.width).toBe(80)
+      expect(snapshot.source.defaultSize?.height).toBe(30)
+    }
+
+    controller.dispose()
+    container.remove()
+  })
+
+  it('Palette-Drag ohne defaultSize: Fallback 100x40', () => {
+    const { container } = setupTestDOM()
+
+    const controller = createDragController(container, { threshold: 3 })
+
+    // Start palette drag OHNE defaultSize
+    controller.startPaletteDrag('Button', new MouseEvent('mousedown', {
+      clientX: 10, clientY: 10, bubbles: true
+    }))
+
+    // Move past threshold
+    document.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: 20, clientY: 20, bubbles: true
+    }))
+
+    const snapshot = controller.getSnapshot()
+    console.log('Source (no defaultSize):', snapshot.source)
+
+    // Das DragState Model verwendet Fallback { width: 100, height: 40 }
+    // wenn keine defaultSize angegeben ist (siehe calculateGhostRect)
+    expect(snapshot.source).not.toBeNull()
+    expect(snapshot.source?.type).toBe('palette')
+
+    controller.dispose()
+    container.remove()
+  })
+})
+
+// ============================================================================
+// KRITISCH: End-to-End Test - Komponente wird wirklich verschoben
+// ============================================================================
+
+describe('End-to-End: Komponente wird wirklich verschoben', () => {
+  it('Nach Drag hat der Code neue x/y Werte', () => {
+    // 1. SETUP: Code mit Button bei x 50, y 50
+    const originalCode = `App = Box pos, w 400, h 300
+  Button x 50, y 50, "Click me"`
+
+    const ast = parse(originalCode)
+    const irResult = toIR(ast, true) as IRResult
+    const sourceMap = irResult.sourceMap
+
+    const codeModifier = createCodeModifier(originalCode, sourceMap)
+
+    // Finde die Button node ID
+    let buttonNodeId: string | null = null
+    for (const node of sourceMap.getAllNodes()) {
+      if (node.componentName === 'Button') {
+        buttonNodeId = node.nodeId
+        break
+      }
+    }
+
+    console.log('Button node ID:', buttonNodeId)
+    console.log('Original code:\n', originalCode)
+
+    expect(buttonNodeId).not.toBeNull()
+
+    // 2. SIMULIERE DROP: Neue Position (150, 130)
+    const newX = 150
+    const newY = 130
+
+    // Ändere x Property
+    const resultX = codeModifier.updateProperty(buttonNodeId!, 'x', String(newX))
+    console.log('resultX:', resultX)
+    expect(resultX.success).toBe(true)
+
+    // Ändere y Property
+    const resultY = codeModifier.updateProperty(buttonNodeId!, 'y', String(newY))
+    console.log('resultY:', resultY)
+    expect(resultY.success).toBe(true)
+
+    // 3. PRÜFE: Code hat neue Werte
+    const newCode = codeModifier.getSource()
+    console.log('New code:\n', newCode)
+
+    // Der Code sollte jetzt x 150, y 130 enthalten
+    expect(newCode).toContain('x 150')
+    expect(newCode).toContain('y 130')
+
+    // Der Code sollte NICHT mehr x 50, y 50 enthalten
+    expect(newCode).not.toContain('x 50')
+    expect(newCode).not.toContain('y 50')
+  })
+
+  it('Kompletter Flow: Drag → onDrop → CodeModifier → neue Position', () => {
+    // 1. SETUP
+    const { container, posContainer } = setupTestDOM()
+
+    const originalCode = `App = Box pos, w 400, h 300
+  Button x 50, y 50, "Click me"`
+
+    const ast = parse(originalCode)
+    const irResult = toIR(ast, true) as IRResult
+    const sourceMap = irResult.sourceMap
+
+    const codeModifier = createCodeModifier(originalCode, sourceMap)
+
+    // Finde Button node ID
+    let buttonNodeId: string | null = null
+    for (const node of sourceMap.getAllNodes()) {
+      if (node.componentName === 'Button') {
+        buttonNodeId = node.nodeId
+        break
+      }
+    }
+
+    // Erstelle DOM Element für Button
+    const button = createButton(buttonNodeId!, 50, 50, 100, 40)
+    posContainer.appendChild(button)
+
+    // 2. SETUP SERVICE mit echtem onDrop Handler (wie in app.js)
+    let finalCode = originalCode
+
     const service = createDragDropService(container, {}, {
-      onDrop: (r) => { dropResult = r }
+      onDrop: (result: DropResultInfo) => {
+        console.log('onDrop called:', result)
+
+        if (result.source.type === 'element' && result.placement === 'absolute' && result.absolutePosition) {
+          const nodeId = result.source.nodeId
+          const newX = Math.round(result.absolutePosition.x)
+          const newY = Math.round(result.absolutePosition.y)
+
+          // Wie in app.js: CodeModifier aufrufen
+          const resultX = codeModifier.updateProperty(nodeId, 'x', String(newX))
+          if (resultX.success) {
+            const resultY = codeModifier.updateProperty(nodeId, 'y', String(newY))
+            if (resultY.success) {
+              finalCode = codeModifier.getSource()
+            }
+          }
+        }
+      }
     })
 
-    service.startPaletteDrag('Button', new MouseEvent('mousedown', {
-      clientX: 10, clientY: 10, bubbles: true
+    // 3. DRAG: Von (100, 70) nach (200, 150)
+    // Element bei (50, 50), Größe 100x40
+    // Greifpunkt (100, 70) = Mitte des Buttons
+    // Ziel (200, 150)
+    // Delta = (100, 80)
+    // Neue Position = (50 + 100, 50 + 80) = (150, 130)
+
+    service.startElementDrag(button, new MouseEvent('mousedown', {
+      clientX: 100, clientY: 70, bubbles: true
     }))
 
     document.dispatchEvent(new MouseEvent('mousemove', {
@@ -274,19 +479,13 @@ describe('Debug: Aktuelle Ausgaben verstehen', () => {
       clientX: 200, clientY: 150, bubbles: true
     }))
 
-    console.log('\n=== DROP RESULT ===')
-    console.log('source:', dropResult?.source)
-    console.log('targetNodeId:', dropResult?.targetNodeId)
-    console.log('placement:', dropResult?.placement)
-    console.log('insertionIndex:', dropResult?.insertionIndex)
-    console.log('absolutePosition:', dropResult?.absolutePosition)
-    console.log('alignment:', dropResult?.alignment)
-    console.log('isDuplicate:', dropResult?.isDuplicate)
-    console.log('delta:', dropResult?.delta)
-    console.log('===================\n')
+    // 4. PRÜFE: Code wurde geändert
+    console.log('Final code:\n', finalCode)
 
-    // Kein Assert - nur Debug Output
-    expect(true).toBe(true)
+    expect(finalCode).toContain('x 150')
+    expect(finalCode).toContain('y 130')
+    expect(finalCode).not.toContain('x 50')
+    expect(finalCode).not.toContain('y 50')
 
     cleanup(container, service)
   })

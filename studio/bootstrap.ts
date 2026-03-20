@@ -199,7 +199,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   // Sync - LineOffsetService handles editor ↔ SourceMap line translation
   const lineOffset = createLineOffsetService()
-  const syncCoordinator = createSyncCoordinator({ cursorDebounce: 150, debug: false, lineOffset })
+  const syncCoordinator = createSyncCoordinator({ cursorDebounce: 150, debug: true, lineOffset })
   syncCoordinator.setTargets({
     scrollEditorToLine: (editorLine) => {
       // editorLine is already converted from SourceMap line by SyncCoordinator

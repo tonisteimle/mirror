@@ -219,13 +219,42 @@ export class SyncCoordinator {
 
     this.syncInProgress = true
     try {
+      if (this.options.debug) {
+        console.log('[SyncCoordinator] doSync', {
+          nodeId,
+          origin,
+          hasSourceMap: !!this.sourceMap,
+          hasScrollTarget: !!this.targets.scrollEditorToLine
+        })
+      }
+
       if (nodeId && this.sourceMap) {
         const node = this.sourceMap.getNodeById(nodeId)
 
+        if (this.options.debug) {
+          console.log('[SyncCoordinator] node lookup', {
+            found: !!node,
+            position: node?.position,
+            offset: this.lineOffset.getOffset()
+          })
+        }
+
         // Scroll editor when selection comes from non-editor origin
-        if (node && origin !== 'editor') {
-          const editorLine = this.lineOffset.sourceMapToEditor(node.position.line)
-          if (this.lineOffset.isInCurrentFile(node.position.line)) {
+        if (node?.position && origin !== 'editor') {
+          const sourceMapLine = node.position.line
+          const editorLine = this.lineOffset.sourceMapToEditor(sourceMapLine)
+          const isInFile = this.lineOffset.isInCurrentFile(sourceMapLine)
+
+          if (this.options.debug) {
+            console.log('[SyncCoordinator] scroll check', {
+              sourceMapLine,
+              editorLine,
+              isInFile,
+              willScroll: isInFile && !!this.targets.scrollEditorToLine
+            })
+          }
+
+          if (isInFile) {
             this.targets.scrollEditorToLine?.(editorLine)
           }
         }
@@ -238,7 +267,10 @@ export class SyncCoordinator {
         // Always update property panel
         this.targets.updatePropertyPanel?.(nodeId)
       } else {
-        // Selection cleared
+        // Selection cleared or no SourceMap
+        if (this.options.debug && nodeId && !this.sourceMap) {
+          console.warn('[SyncCoordinator] No SourceMap available for sync')
+        }
         this.targets.highlightPreviewElement?.(null)
         this.targets.updatePropertyPanel?.(null)
       }
