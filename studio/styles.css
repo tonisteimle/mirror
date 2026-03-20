@@ -6037,16 +6037,25 @@
 .ts-wrapper {
   font-size: var(--font-sm);
   flex: 1;
+  /* Reset tom-select CSS variables */
+  --ts-pr-min: 0 !important;
+  --ts-pr-clear-button: 0 !important;
+  --ts-pr-caret: 0 !important;
 }
 
 .ts-wrapper .ts-control,
-.ts-wrapper.single .ts-control {
+.ts-wrapper.single .ts-control,
+.ts-control {
   display: flex !important;
   align-items: center !important;
   background: var(--bg-input) !important;
   border: none !important;
   border-radius: 5px !important;
-  padding: 0 8px !important;
+  padding: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
   min-height: 30px !important;
   height: 30px !important;
   color: var(--text-primary) !important;
@@ -6060,8 +6069,8 @@
 .ts-control > *,
 .ts-wrapper .ts-control > *,
 .ts-wrapper.single .ts-control > * {
-  padding-left: 0 !important;
-  margin-left: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Hide any default caret/prefix from tom-select */
@@ -6070,6 +6079,7 @@
 .ts-wrapper.single .ts-control::before {
   display: none !important;
   content: none !important;
+  width: 0 !important;
 }
 
 .ts-control:hover {
