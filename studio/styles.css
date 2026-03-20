@@ -3223,6 +3223,22 @@
       color: var(--text-primary);
     }
 
+    /* Invalid input state */
+    .pp-content .prop-input.invalid,
+    .pp-content .pp-v2-input.invalid,
+    .pp-content input[type="text"].invalid {
+      border: 1px solid var(--color-error);
+      background: var(--error-10);
+      color: var(--color-error-light);
+    }
+
+    .pp-content .prop-input.invalid:focus,
+    .pp-content .pp-v2-input.invalid:focus,
+    .pp-content input[type="text"].invalid:focus {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 1px var(--color-error), 0 0 4px var(--error-10);
+    }
+
     /* ============================================
        COLOR SWATCH (from prototype)
        ============================================ */

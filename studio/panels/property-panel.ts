@@ -96,6 +96,70 @@ export class PropertyPanel {
   // Pending update during compile
   private pendingUpdateNodeId: string | null = null
 
+  // Validation patterns for different property types
+  private static readonly VALIDATION_RULES: Record<string, {
+    pattern: RegExp
+    allowEmpty: boolean
+    message: string
+  }> = {
+    // Numeric properties (gap, padding, margin, radius, border width, x, y, z, etc.)
+    numeric: {
+      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|)$/,
+      allowEmpty: true,
+      message: 'Nur Zahlen oder $token erlaubt'
+    },
+    // Size properties (width, height) - can also be "full", "hug"
+    size: {
+      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|full|hug|auto|)$/i,
+      allowEmpty: true,
+      message: 'Nur Zahlen, full, hug oder $token erlaubt'
+    },
+    // Color properties - hex colors or tokens
+    color: {
+      pattern: /^(\$[\w.-]+|#[0-9A-Fa-f]{3,8}|transparent|)$/,
+      allowEmpty: true,
+      message: 'Nur #hex oder $token erlaubt'
+    },
+    // Opacity (0-1 or 0-100)
+    opacity: {
+      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|)$/,
+      allowEmpty: true,
+      message: 'Nur 0-1 oder 0-100 erlaubt'
+    }
+  }
+
+  // Map property names to validation types
+  private static readonly PROPERTY_VALIDATION_TYPE: Record<string, string> = {
+    // Numeric
+    gap: 'numeric', g: 'numeric',
+    x: 'numeric', y: 'numeric', z: 'numeric',
+    rotate: 'numeric', rot: 'numeric',
+    scale: 'numeric',
+    'font-size': 'numeric', fs: 'numeric',
+    line: 'numeric',
+    blur: 'numeric',
+    'backdrop-blur': 'numeric', 'blur-bg': 'numeric',
+    // Size
+    width: 'numeric', w: 'numeric',
+    height: 'numeric', h: 'numeric',
+    'min-width': 'numeric', minw: 'numeric',
+    'max-width': 'numeric', maxw: 'numeric',
+    'min-height': 'numeric', minh: 'numeric',
+    'max-height': 'numeric', maxh: 'numeric',
+    // Padding/margin - handled by pad handler
+    padding: 'numeric', pad: 'numeric', p: 'numeric',
+    margin: 'numeric', m: 'numeric',
+    // Border/radius
+    radius: 'numeric', rad: 'numeric',
+    border: 'numeric', bor: 'numeric',
+    // Colors
+    background: 'color', bg: 'color',
+    color: 'color', col: 'color', c: 'color',
+    'border-color': 'color', boc: 'color',
+    // Opacity
+    opacity: 'opacity', o: 'opacity', opa: 'opacity'
+  }
+
   constructor(
     container: HTMLElement,
     selectionManager: SelectionProvider,
@@ -2271,6 +2335,12 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       token.addEventListener('click', (e) => this.handleRadiusTokenClick(e))
     })
 
+    // Radius corner inputs (prototype - individual corners)
+    const radiusCornerInputs = this.container.querySelectorAll('.prop-input[data-radius-corner]')
+    radiusCornerInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleRadiusCornerInput(e))
+    })
+
     // Border width toggle buttons (prototype)
     const borderWidthToggles = this.container.querySelectorAll('.toggle-btn[data-border-width]')
     borderWidthToggles.forEach(toggle => {
@@ -2613,6 +2683,32 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
+   * Handle radius corner input change (prototype - individual corners)
+   */
+  private handleRadiusCornerInput(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const corner = input.dataset.radiusCorner
+    if (!corner) return
+
+    const value = input.value.trim()
+
+    // Validate numeric input
+    if (!this.validatePropertyValue('radius', value, input)) {
+      return
+    }
+
+    // For now, individual corners update the single radius value
+    // TODO: Support per-corner radius syntax if DSL supports it
+    this.debounce('radius', () => {
+      const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
+      const result = this.codeModifier.updateProperty(nodeId, 'rad', value)
+      this.onCodeChange(result)
+    })
+  }
+
+  /**
    * Handle border width toggle click (prototype)
    */
   private handleBorderWidthToggle(e: Event): void {
@@ -2792,6 +2888,14 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
     const dir = input.dataset.padDir
     if (!dir) return
+
+    const value = input.value.trim()
+
+    // Validate numeric input
+    if (!this.validatePropertyValue('padding', value, input)) {
+      // Invalid - don't update, just show visual feedback
+      return
+    }
 
     this.debounce('padding', () => {
       this.updatePaddingFromInputs()
@@ -3300,6 +3404,44 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
+   * Validate a property value
+   * Returns true if valid, false otherwise
+   */
+  private validatePropertyValue(propName: string, value: string, input?: HTMLInputElement): boolean {
+    const validationType = PropertyPanel.PROPERTY_VALIDATION_TYPE[propName]
+    if (!validationType) {
+      // No validation defined, allow anything
+      return true
+    }
+
+    const rule = PropertyPanel.VALIDATION_RULES[validationType]
+    if (!rule) return true
+
+    // Allow empty if permitted
+    if (value === '' && rule.allowEmpty) {
+      if (input) {
+        input.classList.remove('invalid')
+        input.title = ''
+      }
+      return true
+    }
+
+    const isValid = rule.pattern.test(value.trim())
+
+    if (input) {
+      if (isValid) {
+        input.classList.remove('invalid')
+        input.title = ''
+      } else {
+        input.classList.add('invalid')
+        input.title = rule.message
+      }
+    }
+
+    return isValid
+  }
+
+  /**
    * Handle text input changes
    */
   private handleInputChange(e: Event): void {
@@ -3307,9 +3449,17 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const propName = input.dataset.prop
     if (!propName || !this.currentElement) return
 
+    const value = input.value.trim()
+
+    // Validate input
+    if (!this.validatePropertyValue(propName, value, input)) {
+      // Invalid - don't update, just show visual feedback
+      return
+    }
+
     // Debounce
     this.debounce(propName, () => {
-      this.updateProperty(propName, input.value)
+      this.updateProperty(propName, value)
     })
   }
 
