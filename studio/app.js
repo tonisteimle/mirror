@@ -4968,6 +4968,7 @@ let studioSelectionManager = null
 let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
+let studioRobustModifier = null  // Robust wrapper for atomic updates
 let studioDragDropService = null
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
 const initializedDraggables = new WeakSet()  // Track elements with drag handlers to prevent duplicates
@@ -5375,6 +5376,11 @@ function updateStudio(ast, ir, sourceMap, source) {
     studioCodeModifier = new MirrorLang.CodeModifier(source, sourceMap)
   }
 
+  // Create/update RobustModifier wrapper for atomic updates
+  if (MirrorLang.createRobustModifier) {
+    studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
+  }
+
   // NOTE: Selection validation is now handled atomically by state.ts setCompileResult()
   // The state emits 'selection:invalidated' event which PropertyPanel listens to
 
@@ -5595,30 +5601,28 @@ function handleStudioDrop(result) {
     }
 
     if (placement === 'absolute' && absolutePosition) {
-      // Update x/y properties for positioned container
-      // CodeModifier persists changes internally, so we call both updates
-      // The first change has correct from/to for original source
-      // The second change has the final insert text
-      const resultX = studioCodeModifier.updateProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
-      if (resultX.success) {
-        const resultY = studioCodeModifier.updateProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
-        if (resultY.success) {
-          // Combine: use from/to from first change (valid for editor's original source)
-          // but insert from second change (has both x and y updated)
-          modResult = {
+      // Update x/y atomically using RobustModifier
+      // This ensures both properties are updated in a single operation
+      // with proper offset handling and validation
+      if (studioRobustModifier) {
+        modResult = studioRobustModifier.updatePosition(
+          source.nodeId,
+          absolutePosition.x,
+          absolutePosition.y
+        )
+      } else {
+        // Fallback to sequential updates (less robust)
+        const resultX = studioCodeModifier.updateProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
+        if (resultX.success) {
+          const resultY = studioCodeModifier.updateProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
+          modResult = resultY.success ? {
             success: true,
             newSource: resultY.newSource,
-            change: {
-              from: resultX.change.from,
-              to: resultX.change.to,
-              insert: resultY.change.insert
-            }
-          }
+            change: { from: resultX.change.from, to: resultX.change.to, insert: resultY.change.insert }
+          } : resultY
         } else {
-          modResult = resultY
+          modResult = resultX
         }
-      } else {
-        modResult = resultX
       }
     } else {
       // Move to new parent/position

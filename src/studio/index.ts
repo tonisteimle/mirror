@@ -207,3 +207,14 @@ export {
   type ZIndexResult,
   type ElementZInfo,
 } from './z-index-manager'
+
+// Robust modification layer (atomic updates, validation, rollback)
+export {
+  RobustModifier,
+  createRobustModifier,
+  DebouncedModifier,
+  createDebouncedModifier,
+  type PropertyUpdate,
+  type RobustResult,
+  type RobustOptions,
+} from './robust-modifier'
