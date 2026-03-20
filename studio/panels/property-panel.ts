@@ -554,23 +554,17 @@ export class PropertyPanel {
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
             </div>
           </div>
+${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
           <div class="prop-row">
             <span class="prop-label">Wrap</span>
             <div class="prop-content">
-              <div class="toggle-group">
-                <button class="toggle-btn ${!wrapActive ? 'active' : ''}" data-wrap="off" title="No Wrap">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <path d="M2 7h10"/>
-                  </svg>
-                </button>
-                <button class="toggle-btn ${wrapActive ? 'active' : ''}" data-wrap="on" title="Wrap">
-                  <svg class="icon" viewBox="0 0 14 14">
-                    <rect x="1" y="2" width="3" height="3" rx="0.5"/><rect x="5.5" y="2" width="3" height="3" rx="0.5"/><rect x="10" y="2" width="3" height="3" rx="0.5"/><rect x="1" y="9" width="3" height="3" rx="0.5"/><rect x="5.5" y="9" width="3" height="3" rx="0.5"/>
-                  </svg>
-                </button>
-              </div>
+              <button class="toggle-btn single ${wrapActive ? 'active' : ''}" data-wrap="${wrapActive ? 'off' : 'on'}" title="${wrapActive ? 'Disable wrap' : 'Enable wrap'}">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <rect x="1" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5.5" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="10" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="1" y="9" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5.5" y="9" width="3" height="3" rx="0.5" fill="currentColor"/>
+                </svg>
+              </button>
             </div>
-          </div>${alignmentRow}
+          </div>` : ''}${alignmentRow}
         </div>
       </div>
     `

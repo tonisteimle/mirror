@@ -3073,6 +3073,18 @@
       stroke-width: 1.5;
     }
 
+    /* Single toggle button (not in a group) */
+    .pp-content .toggle-btn.single {
+      background: var(--bg-input);
+      border-radius: 5px;
+      padding: 0 var(--pp-group-pad);
+    }
+
+    .pp-content .toggle-btn.single.active {
+      box-shadow: var(--focus-ring);
+      color: var(--color-primary);
+    }
+
     /* ============================================
        TOKEN GROUP (from prototype)
        ============================================ */
