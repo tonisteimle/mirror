@@ -279,7 +279,10 @@ export class PropertyPanel {
     if (!this.currentElement) return false
 
     const nodeId = this.currentElement.nodeId
-    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`)
+
+    // Search in the preview container, not the whole document
+    const previewContainer = document.getElementById('preview')
+    const element = previewContainer?.querySelector(`[data-mirror-id="${nodeId}"]`)
     if (!element) return false
 
     const parent = element.parentElement
