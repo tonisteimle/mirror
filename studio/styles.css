@@ -3131,7 +3131,8 @@
     /* ============================================
        ALIGNMENT GRID (integrated in Layout)
        ============================================ */
-    .pp-content .prop-row:has(.align-grid) {
+    .pp-content .prop-row:has(.align-grid),
+    .pp-content .prop-row:has(.corner-radius-grid) {
       height: auto;
       align-items: flex-start;
       padding: 4px 0;
