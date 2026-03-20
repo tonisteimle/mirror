@@ -331,6 +331,10 @@ export class CodeModifier {
       insertText +
       this.source.substring(insertPosition)
 
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
     return {
       success: true,
       newSource,
@@ -391,6 +395,10 @@ export class CodeModifier {
       this.source.substring(0, insertPosition) +
       insertText +
       this.source.substring(insertPosition)
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newSource.split('\n')
 
     return {
       success: true,
