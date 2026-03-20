@@ -68,6 +68,12 @@ export class DragDropService {
 
   private currentMoveState: DragMoveState | null = null
 
+  // Space+Drag support
+  private spacePressed: boolean = false
+  private boundKeyDown: (e: KeyboardEvent) => void
+  private boundKeyUp: (e: KeyboardEvent) => void
+  private boundSpaceMouseDown: (e: MouseEvent) => void
+
   constructor(
     container: HTMLElement,
     config: DragDropServiceConfig = {},
@@ -95,6 +101,15 @@ export class DragDropService {
         onDragCancel: this.handleDragCancel.bind(this),
       }
     )
+
+    // Setup Space+Drag mode
+    this.boundKeyDown = this.handleKeyDown.bind(this)
+    this.boundKeyUp = this.handleKeyUp.bind(this)
+    this.boundSpaceMouseDown = this.handleSpaceMouseDown.bind(this)
+
+    document.addEventListener('keydown', this.boundKeyDown)
+    document.addEventListener('keyup', this.boundKeyUp)
+    this.container.addEventListener('mousedown', this.boundSpaceMouseDown, true)
   }
 
   // --------------------------------------------------------------------------
@@ -190,8 +205,52 @@ export class DragDropService {
    * Dispose service
    */
   dispose(): void {
+    document.removeEventListener('keydown', this.boundKeyDown)
+    document.removeEventListener('keyup', this.boundKeyUp)
+    this.container.removeEventListener('mousedown', this.boundSpaceMouseDown, true)
+
     this.controller.dispose()
     this.renderer.dispose()
+  }
+
+  // --------------------------------------------------------------------------
+  // Space+Drag Mode (like Figma)
+  // --------------------------------------------------------------------------
+
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.code === 'Space' && !e.repeat) {
+      this.spacePressed = true
+      // Change cursor to indicate move mode
+      this.container.style.cursor = 'grab'
+    }
+  }
+
+  private handleKeyUp(e: KeyboardEvent): void {
+    if (e.code === 'Space') {
+      this.spacePressed = false
+      this.container.style.cursor = ''
+    }
+  }
+
+  private handleSpaceMouseDown(e: MouseEvent): void {
+    // Only activate when Space is held
+    if (!this.spacePressed) return
+    if (e.button !== 0) return
+
+    // Find the element under cursor with data-mirror-id
+    const target = e.target as HTMLElement
+    const element = target.closest('[data-mirror-id]') as HTMLElement
+    if (!element) return
+
+    // Prevent default behavior (text selection, etc.)
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Change cursor to grabbing
+    this.container.style.cursor = 'grabbing'
+
+    // Start dragging
+    this.startElementDrag(element, e)
   }
 
   // --------------------------------------------------------------------------
@@ -222,6 +281,9 @@ export class DragDropService {
     // Clear visuals
     this.renderer.clear()
 
+    // Reset cursor (in case Space+Drag was used)
+    this.container.style.cursor = this.spacePressed ? 'grab' : ''
+
     // Build drop result
     if (result.target) {
       const dropResult: DropResultInfo = {
@@ -244,6 +306,8 @@ export class DragDropService {
 
   private handleDragCancel(): void {
     this.renderer.clear()
+    // Reset cursor
+    this.container.style.cursor = this.spacePressed ? 'grab' : ''
     this.currentMoveState = null
     this.callbacks.onDragEnd?.()
   }
