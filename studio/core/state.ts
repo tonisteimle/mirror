@@ -80,8 +80,10 @@ export interface StudioState {
   mode: 'mirror' | 'react'
   /** Character offset where current file starts in resolvedSource */
   preludeOffset: number
-  /** Pending selection to be resolved after compile completes */
+  /** Pending selection to be resolved after compile completes (line-based) */
   pendingSelection: PendingSelection | null
+  /** Queued selection when SourceMap not yet available (nodeId-based) */
+  queuedSelection: { nodeId: string; origin: SelectionOrigin } | null
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -221,6 +223,7 @@ const initialState: StudioState = {
   mode: 'mirror',
   preludeOffset: 0,
   pendingSelection: null,
+  queuedSelection: null,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -248,6 +251,13 @@ export const actions = {
     const currentState = state.get()
     const newVersion = currentState.compileVersion + 1
     const hasPendingSelection = currentState.pendingSelection !== null
+    const hasQueuedSelection = currentState.queuedSelection !== null
+
+    // Validate multi-selection against new SourceMap
+    const validMultiSelection = currentState.multiSelection.filter(
+      id => result.sourceMap.getNodeById(id) !== null
+    )
+    const multiSelectionChanged = validMultiSelection.length !== currentState.multiSelection.length
 
     // Atomic update - all fields together
     state.set({
@@ -258,6 +268,8 @@ export const actions = {
       compileVersion: newVersion,
       compileTimestamp: Date.now(),
       compiling: false,
+      // Clean up invalid multi-selections
+      ...(multiSelectionChanged ? { multiSelection: validMultiSelection } : {}),
     })
 
     events.emit('compile:completed', {
@@ -268,7 +280,21 @@ export const actions = {
       hasErrors: result.errors.length > 0,
     })
 
-    // Resolve pending selection AFTER compile (SourceMap is now ready)
+    // Resolve queued selection first (direct nodeId-based)
+    if (hasQueuedSelection) {
+      const queued = currentState.queuedSelection!
+      state.set({ queuedSelection: null })
+      // Validate that node still exists
+      if (result.sourceMap.getNodeById(queued.nodeId)) {
+        console.log('[State] Resolving queued selection:', queued.nodeId)
+        actions.setSelection(queued.nodeId, queued.origin)
+      } else {
+        console.warn('[State] Queued selection no longer exists:', queued.nodeId)
+      }
+      return
+    }
+
+    // Resolve pending selection (line-based)
     if (hasPendingSelection) {
       // Use setTimeout(0) to ensure state is fully settled before resolving
       setTimeout(() => {
@@ -296,6 +322,7 @@ export const actions = {
    * Set selection with validation
    * Only allows selecting nodes that exist in the current SourceMap
    * Deduplicates: won't emit if same nodeId is already selected
+   * Queues selection if SourceMap not yet available (during compile)
    */
   setSelection(nodeId: string | null, origin: SelectionOrigin): void {
     const currentState = state.get()
@@ -306,19 +333,26 @@ export const actions = {
       return
     }
 
+    // Handle missing SourceMap during compile - queue for later
+    if (nodeId !== null && !currentState.sourceMap) {
+      if (currentState.compiling) {
+        // Queue selection to be resolved after compile
+        console.log(`[State] Queuing selection during compile: ${nodeId}`)
+        state.set({ queuedSelection: { nodeId, origin } })
+        return
+      }
+      // No SourceMap and not compiling - this is unexpected
+      console.warn(`[State] No SourceMap available for selection: ${nodeId}`)
+      return
+    }
+
     // Validate nodeId exists in SourceMap
     if (nodeId !== null && currentState.sourceMap) {
       const node = currentState.sourceMap.getNodeById(nodeId)
       if (!node) {
         console.warn(`[State] Cannot select non-existent node: ${nodeId}`)
-        // Don't set invalid selection
         return
       }
-    }
-
-    // Warn if selecting during compile (might become stale)
-    if (currentState.compiling && nodeId !== null) {
-      console.warn(`[State] Selection during compile may be stale: ${nodeId}`)
     }
 
     state.set({ selection: { nodeId, origin } })
