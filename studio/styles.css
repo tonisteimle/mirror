@@ -2743,10 +2743,28 @@
        - radius: 3px
        ========================================= */
 
-    /* Property Panel v2 - Modular Grid System (from prototype) */
+    /* Property Panel v2 - Modular Grid System
+       =========================================
+       Alle UI-Bausteine basieren auf --pp-unit.
+       Eine Toggle-Gruppe mit 2 Buttons = --pp-group-2
+       Input-Felder haben dieselbe Breite wie --pp-group-2
+       ========================================= */
     :root {
-      --unit: 28px;
-      --gap: 2px;
+      /* Basis-Einheiten */
+      --pp-unit: 28px;              /* Breite eines Toggle-Buttons */
+      --pp-gap: 4px;                /* Abstand zwischen Toggles in Gruppe */
+      --pp-group-pad: 3px;          /* Padding innerhalb Toggle-Gruppen */
+      --pp-row-gap: 2px;            /* Abstand zwischen Rows */
+
+      /* Berechnete Größen (Konsistenz!) */
+      --pp-group-2: calc(var(--pp-unit) * 2 + var(--pp-gap) + var(--pp-group-pad) * 2);
+      --pp-group-3: calc(var(--pp-unit) * 3 + var(--pp-gap) * 2 + var(--pp-group-pad) * 2);
+      --pp-group-4: calc(var(--pp-unit) * 4 + var(--pp-gap) * 3 + var(--pp-group-pad) * 2);
+      --pp-input-width: var(--pp-group-2);  /* Input = 2 Toggles breit */
+
+      /* Legacy (für Kompatibilität) */
+      --unit: var(--pp-unit);
+      --gap: var(--pp-row-gap);
       --label-width: 64px;
     }
 
@@ -3002,7 +3020,7 @@
     .pp-content .pp-prop-content {
       flex: 1;
       display: flex;
-      gap: var(--gap);
+      gap: var(--pp-row-gap);
       align-items: center;
     }
 
@@ -3012,15 +3030,15 @@
     .pp-content .toggle-group,
     .pp-content .pp-toggle-group {
       display: flex;
-      gap: 4px;
+      gap: var(--pp-gap);
       background: var(--bg-input);
       border-radius: 5px;
-      padding: 3px;
+      padding: var(--pp-group-pad);
     }
 
     .pp-content .toggle-btn,
     .pp-content .pp-toggle-btn {
-      width: var(--unit);
+      width: var(--pp-unit);
       height: 24px;
       border: none;
       background: transparent;
@@ -3061,15 +3079,15 @@
     .pp-content .token-group,
     .pp-content .pp-token-group {
       display: flex;
-      gap: var(--gap);
+      gap: var(--pp-gap);
       background: var(--bg-input);
       border-radius: 5px;
-      padding: 2px;
+      padding: var(--pp-group-pad);
     }
 
     .pp-content .token-btn,
     .pp-content .pp-token-btn {
-      width: var(--unit);
+      width: var(--pp-unit);
       height: 24px;
       border: none;
       background: transparent;
@@ -3161,7 +3179,7 @@
     .pp-content input.prop-input,
     .pp-content input.pp-v2-input,
     .pp-content input[type="text"] {
-      width: calc(var(--unit) * 2 + var(--gap));
+      width: var(--pp-input-width);
       height: 30px !important;
       min-height: 30px !important;
       max-height: 30px !important;
@@ -3215,7 +3233,7 @@
 
     .pp-content .color-swatch,
     .pp-content .pp-color-btn {
-      width: var(--unit);
+      width: var(--pp-unit);
       height: 22px;
       min-height: 22px;
       border-radius: 4px;
@@ -3423,7 +3441,7 @@
        EXPAND BUTTON (from prototype)
        ============================================ */
     .pp-content .expand-btn {
-      width: var(--unit);
+      width: var(--pp-unit);
       height: 24px;
       background: transparent;
       border: none;

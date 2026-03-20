@@ -359,7 +359,23 @@ export class DragController {
 
     // Find drop zone
     const candidates = this.buildDropCandidates()
-    const dropZone = findDropZone(cursorPosition, candidates)
+    let dropZone = findDropZone(cursorPosition, candidates)
+
+    // CRITICAL FIX: For absolute placement, use ghost position instead of cursor position
+    // The ghost position already accounts for grab offset, so the element lands where the ghost is shown
+    if (dropZone?.placement === 'absolute') {
+      const container = this.containerInfo.find(c => c.nodeId === dropZone!.nodeId)
+      if (container) {
+        // Ghost position relative to container = where element should be placed
+        dropZone = {
+          ...dropZone,
+          absolutePosition: {
+            x: ghostRect.x - container.rect.x,
+            y: ghostRect.y - container.rect.y,
+          },
+        }
+      }
+    }
 
     // Check for alignment zone (empty flex container)
     let alignmentZone: AlignmentZoneResult | null = null
