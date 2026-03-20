@@ -1579,17 +1579,17 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
     }).join('')
 
-    // Align icons - filled rectangles with spacing
+    // Align icons - thin lines using paths
     const alignIcons = {
-      left: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="2" y="6" width="6" height="2" fill="currentColor"/><rect x="2" y="10" width="8" height="2" fill="currentColor"/>',
-      center: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="4" y="6" width="6" height="2" fill="currentColor"/><rect x="3" y="10" width="8" height="2" fill="currentColor"/>',
-      right: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="6" y="6" width="6" height="2" fill="currentColor"/><rect x="4" y="10" width="8" height="2" fill="currentColor"/>',
+      left: '<path d="M2 3h10M2 7h6M2 11h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+      center: '<path d="M2 3h10M4 7h6M3 11h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+      right: '<path d="M2 3h10M8 7h4M6 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
     }
     const alignToggles = this.TEXT_ALIGNS.map(align => {
       const isActive = textAlignValue === align
       const iconPath = alignIcons[align as keyof typeof alignIcons] || ''
       return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-text-align="${align}" title="${align.charAt(0).toUpperCase() + align.slice(1)}">
-        <svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>
+        <svg class="icon" viewBox="0 0 14 14" fill="none">${iconPath}</svg>
       </button>`
     }).join('')
 
