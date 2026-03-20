@@ -6039,13 +6039,16 @@
   flex: 1;
 }
 
-.ts-control {
+.ts-wrapper .ts-control,
+.ts-wrapper.single .ts-control {
   display: flex !important;
   align-items: center !important;
   background: var(--bg-input) !important;
   border: none !important;
   border-radius: 5px !important;
-  padding: 0 6px 0 8px !important;
+  padding: 0 8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
   min-height: 30px !important;
   height: 30px !important;
   color: var(--text-primary) !important;
@@ -6064,12 +6067,17 @@
   box-shadow: 0 0 0 1px var(--color-primary) !important;
 }
 
-.ts-control input {
+.ts-control input,
+.ts-wrapper .ts-control input,
+.ts-wrapper.single .ts-control input {
   color: var(--text-primary) !important;
   padding: 0 !important;
+  padding-left: 0 !important;
   margin: 0 !important;
+  margin-left: 0 !important;
   flex: 1 !important;
   min-width: 0 !important;
+  width: 0 !important;
 }
 
 .ts-control input::placeholder {
@@ -6110,14 +6118,25 @@
 }
 
 /* Selected item styling */
-.ts-control .item {
+.ts-control .item,
+.ts-wrapper .ts-control .item,
+.ts-wrapper.single .ts-control .item,
+.ts-wrapper.single .ts-control > .item {
   background: transparent !important;
   border: none !important;
   color: var(--text-primary) !important;
-  border-radius: 3px !important;
+  border-radius: 0 !important;
   padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   margin: 0 !important;
-  line-height: var(--leading-normal) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  line-height: 30px !important;
+  max-width: calc(100% - 18px) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* Caret/arrow - SVG chevron like section expand buttons */
