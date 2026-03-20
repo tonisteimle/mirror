@@ -13,12 +13,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { JSDOM } from 'jsdom'
 import {
-  DragDropManager,
-  createDragDropManager,
+  StudioDragDropService,
+  createStudioDragDropService,
   makeCanvasElementDraggable,
   SourceMapBuilder,
   CodeModifier,
-  DropZone,
 } from '../index'
 
 /**
@@ -83,7 +82,7 @@ describe('Element Move E2E', () => {
     return event
   }
   let container: HTMLElement
-  let manager: DragDropManager
+  let manager: StudioDragDropService
   let sourceMap: ReturnType<typeof SourceMapBuilder.prototype.build>
   let codeModifier: CodeModifier
 
@@ -157,7 +156,7 @@ describe('Element Move E2E', () => {
     codeModifier = new CodeModifier(testSource, sourceMap)
 
     // Create drag drop manager
-    manager = createDragDropManager(container)
+    manager = createStudioDragDropService(container)
     manager.setCodeModifier(testSource, sourceMap)
   })
 
@@ -267,7 +266,7 @@ describe('Element Move E2E', () => {
 
       // Create manager with drop callback
       manager.dispose()
-      manager = createDragDropManager(container, {
+      manager = createStudioDragDropService(container, {}, {
         onDrop: (result) => {
           dropResult = result
         },

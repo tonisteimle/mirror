@@ -89,3 +89,44 @@ export {
   type ConstraintPanelConfig,
   type ConstraintChangeEvent,
 } from './constraints'
+
+// Pure Models (testable)
+export * from './models'
+
+// Controllers
+export {
+  DragController,
+  createDragController,
+  type DragControllerConfig,
+  type DragCallbacks,
+  type DragMoveState,
+  type ContainerInfo,
+} from './controllers/drag-controller'
+
+// Renderers
+export {
+  DragRenderer,
+  createDragRenderer,
+  type RenderState,
+  type DragRendererConfig,
+} from './renderers/drag-renderer'
+
+// Services
+export {
+  DragDropService,
+  createDragDropService,
+  type DragDropServiceConfig,
+  type DragDropCallbacks,
+  type DropResultInfo,
+} from './services/drag-drop-service'
+
+export {
+  StudioDragDropService,
+  createStudioDragDropService,
+  makePaletteDraggable,
+  makeCanvasElementDraggable,
+  type StudioDragDropConfig,
+  type StudioDragDropCallbacks,
+  type StudioDropResult,
+  type DragOverState,
+} from './services/studio-drag-drop-service'

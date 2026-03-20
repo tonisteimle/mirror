@@ -8,7 +8,7 @@
  * - CodeModifier: Modifies source code
  * - PropertyPanel: Dynamic property panel UI
  * - DropZoneCalculator: Calculates drop zones for drag-and-drop
- * - DragDropManager: Coordinates drag-and-drop operations
+ * - StudioDragDropService: Coordinates drag-and-drop operations (testable)
  *
  * Note: PreviewInteraction and EditorSyncManager have been replaced by
  * studio/preview/PreviewController and studio/sync/SyncCoordinator
@@ -75,16 +75,18 @@ export {
   type SemanticZone,
 } from './drop-zone-calculator'
 
+// New testable drag-drop system (replaces legacy DragDropManager)
 export {
-  DragDropManager,
-  createDragDropManager,
-  makeDraggable,
+  StudioDragDropService,
+  createStudioDragDropService,
+  makePaletteDraggable,
   makeCanvasElementDraggable,
-  type DragData,
-  type DropResult,
-  type DropCallback,
-  type DragDropManagerOptions,
-} from './drag-drop-manager'
+  makeCanvasElementDraggable as makeCanvasElementDraggableV2,
+  type StudioDragDropConfig,
+  type StudioDragDropCallbacks,
+  type StudioDropResult,
+  type DragOverState,
+} from '../../studio/visual/services/studio-drag-drop-service'
 
 export {
   createSmartSizingService,

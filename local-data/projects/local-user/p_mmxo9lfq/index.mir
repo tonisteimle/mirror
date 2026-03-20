@@ -1,0 +1,5 @@
+App bg #18181b, pad 20
+  Box w 100, h 200, bg #FCC419
+  Text "PERSISTENCE_TEST_OK"
+
+    Text "Hello"

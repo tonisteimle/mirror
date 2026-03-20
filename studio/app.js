@@ -4968,7 +4968,7 @@ let studioSelectionManager = null
 let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
-let studioDragDropManager = null
+let studioDragDropService = null
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
 const initializedDraggables = new WeakSet()  // Track elements with drag handlers to prevent duplicates
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
@@ -5407,11 +5407,17 @@ function updateStudio(ast, ir, sourceMap, source) {
     )
   }
 
-  // Update or create DragDropManager
-  if (studioDragDropManager) {
-    studioDragDropManager.setCodeModifier(source, sourceMap)
+  // Update or create DragDropService (new testable architecture)
+  if (studioDragDropService) {
+    studioDragDropService.setCodeModifier(source, sourceMap)
   } else {
-    studioDragDropManager = new MirrorLang.DragDropManager(previewContainer, {
+    studioDragDropService = new MirrorLang.StudioDragDropService(previewContainer, {
+      // Config
+      gridSize: 0,
+      enableGuides: true,
+      enableAlignmentZones: true,
+    }, {
+      // Callbacks
       onDrop: handleStudioDrop,
       onDragEnter: () => {
         // Drop target highlighting handled by .studio-drop-target class
@@ -5424,23 +5430,19 @@ function updateStudio(ast, ir, sourceMap, source) {
           el.classList.remove('studio-drop-target')
         })
       },
-      onDragOver: (dropZone) => {
+      onDragOver: (state) => {
         // Remove previous drop target highlight
         previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
           el.classList.remove('studio-drop-target')
         })
 
-        // The DropZoneCalculator already shows the insertion line via showIndicator()
-        // We only need to add the drop target highlight class here
-        if (dropZone) {
-          const element = dropZone.element
-          // Add drop target highlight to current target
-          element.classList.add('studio-drop-target')
+        // Add drop target highlight to current target
+        if (state?.element) {
+          state.element.classList.add('studio-drop-target')
         }
-        // Note: hideDropZone() removed - DropZoneCalculator handles its own clear()
       },
     })
-    studioDragDropManager.setCodeModifier(source, sourceMap)
+    studioDragDropService.setCodeModifier(source, sourceMap)
     initComponentPalette()
   }
 
@@ -5475,13 +5477,13 @@ function makePreviewElementsDraggable() {
   canvasDragCleanups.forEach(cleanup => cleanup())
   canvasDragCleanups = []
 
-  if (!studioDragDropManager) return
+  if (!studioDragDropService) return
 
   const previewContainer = document.getElementById('preview')
   if (!previewContainer) return
 
   // Ensure drop indicators exist (they may have been removed by preview innerHTML update)
-  studioDragDropManager.ensureIndicators()
+  studioDragDropService.ensureIndicators()
 
   // Find all elements with data-mirror-id
   const elements = previewContainer.querySelectorAll('[data-mirror-id]')
@@ -5499,10 +5501,10 @@ function makePreviewElementsDraggable() {
     if (isMainRoot) return
 
     // Make element draggable and store cleanup function
-    const cleanup = MirrorLang.makeCanvasElementDraggable(
+    const cleanup = MirrorLang.makeCanvasElementDraggableV2(
       el,
       nodeId,
-      studioDragDropManager
+      studioDragDropService
     )
     canvasDragCleanups.push(cleanup)
     initializedDraggables.add(el)
