@@ -23,6 +23,42 @@ DIST_DIR="$PROJECT_DIR/dist"
 # Funktionen
 #######################################
 
+push_to_github() {
+    echo ""
+    echo "📦 Pushing to GitHub..."
+
+    cd "$PROJECT_DIR"
+
+    # Check for uncommitted changes
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        echo "⚠️  Uncommitted changes detected."
+        read -p "Commit and push? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            read -p "Commit message: " commit_msg
+            git add -A
+            git commit -m "$commit_msg
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+        else
+            echo "⏭️  Skipping commit, pushing existing commits only..."
+        fi
+    fi
+
+    # Push to origin
+    git push origin main
+    if [ $? -ne 0 ]; then
+        echo "❌ Git push failed!"
+        read -p "Continue with deploy anyway? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    else
+        echo "✅ Pushed to GitHub"
+    fi
+}
+
 check_lftp() {
     if ! command -v lftp &> /dev/null; then
         echo "❌ lftp ist nicht installiert."
@@ -166,6 +202,9 @@ echo "╔═══════════════════════�
 echo "║     Mirror Studio Deployment      ║"
 echo "╚═══════════════════════════════════╝"
 echo ""
+
+# Push to GitHub first
+push_to_github
 
 check_lftp
 
