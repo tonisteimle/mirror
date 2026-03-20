@@ -286,10 +286,11 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 
 <!-- GENERATED:DSL-PROPERTIES:END -->
 
-## Feature-Docs
+## Feature-Tests
 
-Detaillierte Dokumentation in `features/`:
-- `token-picker/` - $ Trigger, Kontext-Erkennung
-- `colorpicker/` - Smart Positioning, Keyboard Nav
+Implementierte Features mit Tests in `features/`:
 - `autocomplete/` - Property Completions
-- `propertypanel/` - Element Selection, Property Editing
+- `dropdown/` - Select/Dropdown Komponente
+- `iconpicker/` - Icon Auswahl
+- `import/` - Component Imports
+- `navigation/` - Page Navigation

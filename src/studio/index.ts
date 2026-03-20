@@ -76,6 +76,16 @@ export {
 } from './drop-zone-calculator'
 
 // New testable drag-drop system (replaces legacy DragDropManager)
+// DragDropService uses mouse events and the testable models
+export {
+  DragDropService,
+  createDragDropService,
+  type DragDropServiceConfig,
+  type DragDropCallbacks,
+  type DropResultInfo,
+} from '../../studio/visual/services/drag-drop-service'
+
+// Legacy HTML5 drag API service (kept for backwards compatibility)
 export {
   StudioDragDropService,
   createStudioDragDropService,

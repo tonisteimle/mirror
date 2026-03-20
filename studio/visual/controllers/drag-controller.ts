@@ -188,12 +188,13 @@ export class DragController {
   startPaletteDrag(
     componentName: string,
     mouseEvent: MouseEvent,
-    options: { properties?: string; defaultSize?: { width: number; height: number } } = {}
+    options: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number } } = {}
   ): void {
     const source: DragSource = {
       type: 'palette',
       componentName,
       properties: options.properties,
+      textContent: options.textContent,
       defaultSize: options.defaultSize,
     }
 

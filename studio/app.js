@@ -5407,11 +5407,9 @@ function updateStudio(ast, ir, sourceMap, source) {
     )
   }
 
-  // Update or create DragDropService (new testable architecture)
-  if (studioDragDropService) {
-    studioDragDropService.setCodeModifier(source, sourceMap)
-  } else {
-    studioDragDropService = new MirrorLang.StudioDragDropService(previewContainer, {
+  // Update or create DragDropService (new testable architecture with mouse events)
+  if (!studioDragDropService) {
+    studioDragDropService = new MirrorLang.DragDropService(previewContainer, {
       // Config
       gridSize: 0,
       enableGuides: true,
@@ -5419,10 +5417,10 @@ function updateStudio(ast, ir, sourceMap, source) {
     }, {
       // Callbacks
       onDrop: handleStudioDrop,
-      onDragEnter: () => {
-        // Drop target highlighting handled by .studio-drop-target class
+      onDragStart: () => {
+        // Drag started - could add visual feedback here
       },
-      onDragLeave: () => {
+      onDragEnd: () => {
         // Hide drop zone visualization
         studio.preview?.hideDropZone()
         // Remove drop target highlight from all elements
@@ -5430,19 +5428,7 @@ function updateStudio(ast, ir, sourceMap, source) {
           el.classList.remove('studio-drop-target')
         })
       },
-      onDragOver: (state) => {
-        // Remove previous drop target highlight
-        previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
-          el.classList.remove('studio-drop-target')
-        })
-
-        // Add drop target highlight to current target
-        if (state?.element) {
-          state.element.classList.add('studio-drop-target')
-        }
-      },
     })
-    studioDragDropService.setCodeModifier(source, sourceMap)
     initComponentPalette()
   }
 
@@ -5482,9 +5468,6 @@ function makePreviewElementsDraggable() {
   const previewContainer = document.getElementById('preview')
   if (!previewContainer) return
 
-  // Ensure drop indicators exist (they may have been removed by preview innerHTML update)
-  studioDragDropService.ensureIndicators()
-
   // Find all elements with data-mirror-id
   const elements = previewContainer.querySelectorAll('[data-mirror-id]')
 
@@ -5500,12 +5483,8 @@ function makePreviewElementsDraggable() {
     const isMainRoot = el.dataset.mirrorRoot === 'true'
     if (isMainRoot) return
 
-    // Make element draggable and store cleanup function
-    const cleanup = MirrorLang.makeCanvasElementDraggableV2(
-      el,
-      nodeId,
-      studioDragDropService
-    )
+    // Make element draggable using DragDropService (mouse events, not HTML5 drag)
+    const cleanup = studioDragDropService.makeElementDraggable(el)
     canvasDragCleanups.push(cleanup)
     initializedDraggables.add(el)
   })
@@ -5580,7 +5559,7 @@ function handleStudioCodeChange(result) {
   debouncedSave(code)
 }
 
-// Handle drag-drop from component palette
+// Handle drag-drop from DragDropService (uses DropResultInfo format)
 function handleStudioDrop(result) {
   const previewContainer = document.getElementById('preview')
 
@@ -5592,13 +5571,84 @@ function handleStudioDrop(result) {
     el.classList.remove('studio-drop-target')
   })
 
-  if (!result.success) {
-    console.warn('Studio: Drop failed:', result.error)
+  // Ensure we have CodeModifier
+  if (!studioCodeModifier) {
+    console.warn('Studio: CodeModifier not available')
     return
   }
 
+  // DropResultInfo format:
+  // { source, targetNodeId, placement, insertionIndex?, absolutePosition?, alignment?, isDuplicate, delta }
+  const { source, targetNodeId, placement, insertionIndex, absolutePosition, alignment, isDuplicate } = result
+
+  let modResult = null
+  let componentName = ''
+
+  if (source.type === 'element') {
+    // Moving/duplicating an existing element
+    componentName = 'Element'
+
+    if (isDuplicate) {
+      // TODO: Implement duplicate (copy node then move copy)
+      console.warn('Studio: Duplicate not yet implemented')
+      return
+    }
+
+    if (placement === 'absolute' && absolutePosition) {
+      // Update x/y properties for positioned container
+      modResult = studioCodeModifier.modifyProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
+      if (modResult.success) {
+        // Apply first change, then modify y
+        applyDropChange(modResult)
+        modResult = studioCodeModifier.modifyProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
+      }
+    } else {
+      // Move to new parent/position
+      modResult = studioCodeModifier.moveNode(source.nodeId, targetNodeId, placement, insertionIndex)
+    }
+  } else if (source.type === 'palette') {
+    // Adding new component from palette
+    componentName = source.componentName || 'Component'
+
+    // Build properties string
+    let properties = source.properties || ''
+
+    // Add x/y for absolute positioning
+    if (placement === 'absolute' && absolutePosition) {
+      const posProps = `x ${Math.round(absolutePosition.x)}, y ${Math.round(absolutePosition.y)}`
+      properties = properties ? `${properties}, ${posProps}` : posProps
+    }
+
+    // Add child to target
+    modResult = studioCodeModifier.addChild(targetNodeId, componentName, {
+      position: insertionIndex !== undefined ? insertionIndex : 'last',
+      properties: properties || undefined,
+      textContent: source.textContent || undefined,
+    })
+
+    // Handle alignment for empty containers (set align on parent)
+    if (modResult.success && alignment) {
+      // TODO: Set align property on parent based on alignment.zone
+      // alignment.zone is one of: 'top-left', 'top-center', 'top-right', etc.
+      console.log('Studio: Alignment zone:', alignment.zone)
+    }
+  }
+
+  if (!modResult || !modResult.success) {
+    console.warn('Studio: Drop modification failed:', modResult?.error)
+    return
+  }
+
+  applyDropChange(modResult, componentName)
+
+  console.log('Studio: Component dropped', targetNodeId, placement, insertionIndex)
+}
+
+// Helper to apply a code change from drop operation
+function applyDropChange(modResult, componentName = 'Component') {
+  const change = modResult.change
+
   // Adjust change positions for prelude offset (merged source vs single file)
-  const change = result.modification.change
   const adjustedChange = {
     from: change.from - currentPreludeOffset,
     to: change.to - currentPreludeOffset,
@@ -5642,29 +5692,19 @@ function handleStudioDrop(result) {
   })
 
   // Set pending selection BEFORE compile
-  // This ensures the selection will be resolved after SourceMap is ready
   const insertLine = editor.state.doc.lineAt(adjustedChange.from)
   if (insertLine) {
-    // Extract component name from inserted code (first word)
-    const insertedCode = adjustedChange.insert.trim()
-    const componentMatch = insertedCode.match(/^(\w+)/)
-    const componentName = componentMatch ? componentMatch[1] : 'Unknown'
-
-    // Set pending selection - will be resolved after compile
     studioActions.setPendingSelection({
       line: insertLine.number,
       componentName: componentName,
       origin: 'drag-drop'
     })
-    console.log('Studio: Pending selection set for line', insertLine.number, componentName)
   }
 
-  // Compile and save (like handleElementDelete and other edit operations)
+  // Compile and save
   const code = editor.state.doc.toString()
   compile(code)
   debouncedSave(code)
-
-  console.log('Studio: Component dropped', result.dropZone?.targetId, result.dropZone?.placement)
 }
 
 // Handle element deletion from canvas
@@ -5844,7 +5884,7 @@ function renderPaletteItem(comp) {
   const props = comp.properties ? ` data-properties="${comp.properties.replace(/"/g, '&quot;')}"` : ''
   const text = comp.text ? ` data-text="${comp.text}"` : ''
   return `
-    <div class="component-palette-item" data-component="${comp.name}"${props}${text} draggable="true">
+    <div class="component-palette-item" data-component="${comp.name}"${props}${text}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         ${comp.icon || USER_COMPONENT_ICON}
       </svg>
@@ -5853,30 +5893,28 @@ function renderPaletteItem(comp) {
   `
 }
 
-// Attach drag handlers to palette items
+// Cleanup functions for palette drag handlers
+let paletteDragCleanups = []
+
+// Attach drag handlers to palette items (using mousedown, not HTML5 drag)
 function attachPaletteDragHandlers(container) {
+  // Cleanup previous handlers
+  paletteDragCleanups.forEach(cleanup => cleanup())
+  paletteDragCleanups = []
+
+  if (!studioDragDropService) return
+
   container.querySelectorAll('.component-palette-item').forEach(item => {
-    item.addEventListener('dragstart', (e) => {
-      const componentName = item.dataset.component
-      const properties = item.dataset.properties || ''
-      const textContent = item.dataset.text || ''
+    const componentName = item.dataset.component
+    const properties = item.dataset.properties || ''
+    const textContent = item.dataset.text || ''
 
-      const dragData = {
-        componentName,
-        properties: properties || undefined,
-        textContent: textContent || undefined
-      }
-
-      e.dataTransfer.setData('application/mirror-component', JSON.stringify(dragData))
-      e.dataTransfer.setData('text/plain', JSON.stringify(dragData))
-      e.dataTransfer.effectAllowed = 'copy'
-
-      item.classList.add('dragging')
+    // Use DragDropService's makePaletteItemDraggable (mouse events)
+    const cleanup = studioDragDropService.makePaletteItemDraggable(item, componentName, {
+      properties: properties || undefined,
+      textContent: textContent || undefined,
     })
-
-    item.addEventListener('dragend', () => {
-      item.classList.remove('dragging')
-    })
+    paletteDragCleanups.push(cleanup)
   })
 }
 
