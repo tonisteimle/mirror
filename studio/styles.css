@@ -6047,15 +6047,29 @@
   border: none !important;
   border-radius: 5px !important;
   padding: 0 8px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
   min-height: 30px !important;
   height: 30px !important;
   color: var(--text-primary) !important;
   box-shadow: none !important;
   line-height: 30px !important;
   font-size: var(--font-sm) !important;
-  gap: 4px !important;
+  gap: 0 !important;
+}
+
+/* Reset ALL children of ts-control */
+.ts-control > *,
+.ts-wrapper .ts-control > *,
+.ts-wrapper.single .ts-control > * {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Hide any default caret/prefix from tom-select */
+.ts-control::before,
+.ts-wrapper .ts-control::before,
+.ts-wrapper.single .ts-control::before {
+  display: none !important;
+  content: none !important;
 }
 
 .ts-control:hover {
