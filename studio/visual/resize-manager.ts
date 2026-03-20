@@ -8,6 +8,9 @@
 import { OverlayManager } from './overlay-manager'
 import { events } from '../core'
 
+/** Minimum element size in pixels - small enough for design flexibility, large enough to stay selectable */
+const MIN_ELEMENT_SIZE = 8
+
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
 export type SizingMode = 'fill' | 'hug' | number
@@ -230,15 +233,14 @@ export class ResizeManager {
       newTop = startTop + dy
     }
 
-    // Minimum 8px - just enough to remain selectable
-    const MIN_SIZE = 8
-    if (newWidth < MIN_SIZE) {
-      if (handle.includes('w')) newLeft = startLeft + (startWidth - MIN_SIZE)
-      newWidth = MIN_SIZE
+    // Clamp to minimum size
+    if (newWidth < MIN_ELEMENT_SIZE) {
+      if (handle.includes('w')) newLeft = startLeft + (startWidth - MIN_ELEMENT_SIZE)
+      newWidth = MIN_ELEMENT_SIZE
     }
-    if (newHeight < MIN_SIZE) {
-      if (handle.includes('n')) newTop = startTop + (startHeight - MIN_SIZE)
-      newHeight = MIN_SIZE
+    if (newHeight < MIN_ELEMENT_SIZE) {
+      if (handle.includes('n')) newTop = startTop + (startHeight - MIN_ELEMENT_SIZE)
+      newHeight = MIN_ELEMENT_SIZE
     }
 
     // LIVE VISUAL FEEDBACK: Apply size directly to the element
@@ -391,7 +393,7 @@ export class ResizeManager {
 
     // Wenn nahe am Minimum der Kinder → hug
     // Also trigger hug if size is less than children minimum
-    if (childMin > 40 && newSize <= childMin + hugThreshold) {
+    if (childMin > MIN_ELEMENT_SIZE && newSize <= childMin + hugThreshold) {
       return 'hug'
     }
 
@@ -433,17 +435,17 @@ export class ResizeManager {
     })
 
     return {
-      width: Math.max(40, availableWidth),
-      height: Math.max(40, availableHeight),
+      width: Math.max(MIN_ELEMENT_SIZE, availableWidth),
+      height: Math.max(MIN_ELEMENT_SIZE, availableHeight),
     }
   }
 
   private getChildrenMinSize(nodeId: string): { width: number; height: number } {
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-    if (!element) return { width: 40, height: 40 }
+    if (!element) return { width: MIN_ELEMENT_SIZE, height: MIN_ELEMENT_SIZE }
 
-    let minWidth = 40
-    let minHeight = 40
+    let minWidth = MIN_ELEMENT_SIZE
+    let minHeight = MIN_ELEMENT_SIZE
 
     const children = element.querySelectorAll(':scope > [data-mirror-id]')
     children.forEach(child => {
