@@ -560,7 +560,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
             <div class="prop-content">
               <button class="toggle-btn single ${wrapActive ? 'active' : ''}" data-wrap="${wrapActive ? 'off' : 'on'}" title="${wrapActive ? 'Disable wrap' : 'Enable wrap'}">
                 <svg class="icon" viewBox="0 0 14 14">
-                  <rect x="1" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5.5" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="10" y="2" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="1" y="9" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5.5" y="9" width="3" height="3" rx="0.5" fill="currentColor"/>
+                  <rect x="2" y="3" width="2" height="2" fill="currentColor"/><rect x="6" y="3" width="2" height="2" fill="currentColor"/><rect x="10" y="3" width="2" height="2" fill="currentColor"/><rect x="2" y="9" width="2" height="2" fill="currentColor"/><rect x="6" y="9" width="2" height="2" fill="currentColor"/>
                 </svg>
               </button>
             </div>
@@ -1577,9 +1577,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
     // Align icons - filled rectangles with spacing
     const alignIcons = {
-      left: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="2" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="2" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
-      center: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="4" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="3" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
-      right: '<rect x="2" y="2" width="10" height="2" rx="0.5" fill="currentColor"/><rect x="6" y="6" width="6" height="2" rx="0.5" fill="currentColor"/><rect x="4" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>',
+      left: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="2" y="6" width="6" height="2" fill="currentColor"/><rect x="2" y="10" width="8" height="2" fill="currentColor"/>',
+      center: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="4" y="6" width="6" height="2" fill="currentColor"/><rect x="3" y="10" width="8" height="2" fill="currentColor"/>',
+      right: '<rect x="2" y="2" width="10" height="2" fill="currentColor"/><rect x="6" y="6" width="6" height="2" fill="currentColor"/><rect x="4" y="10" width="8" height="2" fill="currentColor"/>',
     }
     const alignToggles = this.TEXT_ALIGNS.map(align => {
       const isActive = textAlignValue === align
