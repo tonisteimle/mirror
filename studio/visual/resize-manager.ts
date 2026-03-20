@@ -230,14 +230,15 @@ export class ResizeManager {
       newTop = startTop + dy
     }
 
-    // Minimum 40px - adjust position if clamped
-    if (newWidth < 40) {
-      if (handle.includes('w')) newLeft = startLeft + (startWidth - 40)
-      newWidth = 40
+    // Minimum 8px - just enough to remain selectable
+    const MIN_SIZE = 8
+    if (newWidth < MIN_SIZE) {
+      if (handle.includes('w')) newLeft = startLeft + (startWidth - MIN_SIZE)
+      newWidth = MIN_SIZE
     }
-    if (newHeight < 40) {
-      if (handle.includes('n')) newTop = startTop + (startHeight - 40)
-      newHeight = 40
+    if (newHeight < MIN_SIZE) {
+      if (handle.includes('n')) newTop = startTop + (startHeight - MIN_SIZE)
+      newHeight = MIN_SIZE
     }
 
     // LIVE VISUAL FEEDBACK: Apply size directly to the element
