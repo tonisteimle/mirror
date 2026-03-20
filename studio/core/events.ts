@@ -31,6 +31,7 @@ export interface StudioEvents {
   'editor:blurred': void
   'preview:element-clicked': { nodeId: string; element: HTMLElement }
   'preview:element-hovered': { nodeId: string | null; element: HTMLElement | null }
+  'preview:element-dblclicked': { nodeId: string; element: HTMLElement }
   'panel:property-changed': { nodeId: string; property: string; value: string }
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
@@ -95,6 +96,10 @@ export interface StudioEvents {
   'settings:changed': { moveStep: number; moveStepShift: number; showPositionLabels: boolean }
   /** Settings loaded from server */
   'settings:loaded': { panelVisibility: Record<string, boolean> }
+  /** Inline text editing started */
+  'inline-edit:started': { nodeId: string; element: HTMLElement }
+  /** Inline text editing ended */
+  'inline-edit:ended': { nodeId: string; originalText: string; newText: string; saved: boolean }
 }
 
 /** Component Panel item (simplified for event typing) */

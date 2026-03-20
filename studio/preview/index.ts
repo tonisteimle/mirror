@@ -113,6 +113,7 @@ export class PreviewController {
   private selectionCallbacks: Set<SelectionCallback> = new Set()
   private hoverCallbacks: Set<HoverCallback> = new Set()
   private boundHandleClick: (e: MouseEvent) => void
+  private boundHandleDoubleClick: (e: MouseEvent) => void
   private boundHandleMouseOver: (e: MouseEvent) => void
   private boundHandleMouseOut: (e: MouseEvent) => void
   private handleManager: HandleManager | null = null
@@ -141,6 +142,7 @@ export class PreviewController {
       enableVisualCode: config.enableVisualCode ?? false,
     }
     this.boundHandleClick = this.handleClick.bind(this)
+    this.boundHandleDoubleClick = this.handleDoubleClick.bind(this)
     this.boundHandleMouseOver = this.handleMouseOver.bind(this)
     this.boundHandleMouseOut = this.handleMouseOut.bind(this)
 
@@ -213,6 +215,8 @@ export class PreviewController {
   attach(): void {
     if (this.config.enableSelection) {
       this.container.addEventListener('click', this.boundHandleClick)
+      // Double-click for inline text editing
+      this.container.addEventListener('dblclick', this.boundHandleDoubleClick)
     }
     if (this.config.enableHover) {
       this.container.addEventListener('mouseover', this.boundHandleMouseOver)
@@ -226,6 +230,7 @@ export class PreviewController {
 
   detach(): void {
     this.container.removeEventListener('click', this.boundHandleClick)
+    this.container.removeEventListener('dblclick', this.boundHandleDoubleClick)
     this.container.removeEventListener('mouseover', this.boundHandleMouseOver)
     this.container.removeEventListener('mouseout', this.boundHandleMouseOut)
     // Stop observing slot visibility
@@ -446,6 +451,11 @@ export class PreviewController {
   }
 
   private handleClick(e: MouseEvent): void {
+    // Suppress selection changes during inline editing
+    if (state.get().inlineEditActive) {
+      return
+    }
+
     const target = e.target as HTMLElement
     const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
     if (nodeElement) {
@@ -465,6 +475,21 @@ export class PreviewController {
         }
       }
     }
+  }
+
+  /**
+   * Handle double-click for inline text editing
+   */
+  private handleDoubleClick(e: MouseEvent): void {
+    const target = e.target as HTMLElement
+    const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
+    if (!nodeElement) return
+
+    const nodeId = nodeElement.getAttribute(this.config.nodeIdAttribute)
+    if (!nodeId) return
+
+    // Emit event for InlineEditController to handle
+    events.emit('preview:element-dblclicked', { nodeId, element: nodeElement })
   }
 
   /**

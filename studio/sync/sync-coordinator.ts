@@ -22,7 +22,8 @@ import { LineOffsetService } from './line-offset-service'
 export interface SyncTargets {
   scrollEditorToLine?: (line: number) => void
   highlightPreviewElement?: (nodeId: string | null) => void
-  updatePropertyPanel?: (nodeId: string | null) => void
+  // Note: PropertyPanel updates are handled by StateSelectionAdapter
+  // which subscribes directly to selection:changed events
 }
 
 export interface SyncCoordinatorOptions {
@@ -263,16 +264,13 @@ export class SyncCoordinator {
         if (origin !== 'preview') {
           this.targets.highlightPreviewElement?.(nodeId)
         }
-
-        // Always update property panel
-        this.targets.updatePropertyPanel?.(nodeId)
+        // Note: PropertyPanel is updated via StateSelectionAdapter (subscribes to selection:changed)
       } else {
         // Selection cleared or no SourceMap
         if (this.options.debug && nodeId && !this.sourceMap) {
           console.warn('[SyncCoordinator] No SourceMap available for sync')
         }
         this.targets.highlightPreviewElement?.(null)
-        this.targets.updatePropertyPanel?.(null)
       }
 
       // Update breadcrumb using DOM hierarchy

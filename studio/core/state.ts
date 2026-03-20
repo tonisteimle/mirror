@@ -84,6 +84,10 @@ export interface StudioState {
   pendingSelection: PendingSelection | null
   /** Queued selection when SourceMap not yet available (nodeId-based) */
   queuedSelection: { nodeId: string; origin: SelectionOrigin } | null
+  /** Inline text editing state */
+  inlineEditActive: boolean
+  /** Node ID currently being inline edited */
+  inlineEditNodeId: string | null
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -224,6 +228,8 @@ const initialState: StudioState = {
   preludeOffset: 0,
   pendingSelection: null,
   queuedSelection: null,
+  inlineEditActive: false,
+  inlineEditNodeId: null,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -562,6 +568,20 @@ export const actions = {
 
     console.warn('[State] Could not resolve pending selection')
     return null
+  },
+
+  /**
+   * Set inline edit state
+   */
+  setInlineEditActive(active: boolean, nodeId: string | null): void {
+    state.set({ inlineEditActive: active, inlineEditNodeId: nodeId })
+  },
+
+  /**
+   * Check if inline editing is active
+   */
+  isInlineEditing(): boolean {
+    return state.get().inlineEditActive
   },
 }
 

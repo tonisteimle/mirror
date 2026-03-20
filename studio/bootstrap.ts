@@ -2,7 +2,7 @@
  * Studio Bootstrap - Integration with app.js
  */
 
-import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
+import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, SetTextContentCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
 import { createSyncCoordinator, createLineOffsetService, type SyncCoordinator } from './sync'
 import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
 import { EditorController, createEditorController, setEditorController } from './editor'
@@ -13,6 +13,7 @@ import { PropertyExtractor, CodeModifier } from '../src/studio'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
 import { ComponentPanel, createComponentPanel } from './panels/components'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
+import { InlineEditController, createInlineEditController } from './inline-edit'
 import type { AST } from '../src/parser/ast'
 import type { IR } from '../src/ir/types'
 import type { SourceMap } from '../src/studio/source-map'
@@ -55,6 +56,7 @@ export interface StudioInstance {
   llm: LLMBridge
   agent: AgentIntegration | null
   drawManager: DrawManager | null
+  inlineEdit: InlineEditController | null
 }
 
 export const studio: StudioInstance = {
@@ -72,6 +74,7 @@ export const studio: StudioInstance = {
   llm: getLLMBridge(),
   agent: null,
   drawManager: null,
+  inlineEdit: null,
 }
 
 // Store property panel container for lazy initialization
@@ -208,7 +211,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       editorController.scrollToLineAndSelect(editorLine)
     },
     highlightPreviewElement: (nodeId) => nodeId ? previewController.select(nodeId) : previewController.clearSelection(),
-    updatePropertyPanel: (nodeId) => nodeId && events.emit('panel:update-requested', { nodeId }),
+    // Note: PropertyPanel receives updates directly via StateSelectionAdapter
+    // which subscribes to selection:changed events. No callback needed here.
   })
 
   // Subscribe to selection:changed events for automatic sync
@@ -255,6 +259,29 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   })
   previewController.onSelect((nodeId) => {
     if (nodeId && studioContext?.sync) studioContext.sync.handlePreviewClick(nodeId)
+  })
+
+  // Initialize InlineEditController for Figma-style text editing
+  const inlineEditController = createInlineEditController({
+    container: config.previewContainer,
+    onEditEnd: (nodeId, newText, saved) => {
+      if (saved && newText) {
+        // Execute SetTextContentCommand for undo/redo support
+        executor.execute(new SetTextContentCommand({ nodeId, text: newText }))
+      }
+    },
+  })
+  inlineEditController.attach()
+  studio.inlineEdit = inlineEditController
+
+  // Listen for double-click events from PreviewController
+  events.on('preview:element-dblclicked', ({ nodeId }) => {
+    inlineEditController.startEdit(nodeId)
+  })
+
+  // Update InlineEditController's sourceMap after compile
+  events.on('compile:completed', () => {
+    inlineEditController.setSourceMap(state.get().sourceMap)
   })
 
   // Initialize DrawManager

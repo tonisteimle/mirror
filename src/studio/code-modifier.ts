@@ -25,6 +25,7 @@ import {
   findPropertyInLine,
   getCanonicalName,
   isSameProperty,
+  type ParsedLine,
 } from './line-property-parser'
 
 /**
@@ -1735,6 +1736,127 @@ export class CodeModifier {
         insert: newContent,
       },
     }
+  }
+
+  // ===========================================
+  // TEXT CONTENT MODIFICATION
+  // ===========================================
+
+  /**
+   * Update text content of a text element
+   *
+   * Handles:
+   * - Button "Old" → Button "New"
+   * - Text "Hello" → Text "World"
+   * - H1 "Title" → H1 "New Title"
+   *
+   * Preserves all properties on the same line.
+   *
+   * @returns ModificationResult with oldText for undo support
+   */
+  updateTextContent(
+    nodeId: string,
+    newText: string
+  ): ModificationResult & { oldText?: string } {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return { ...this.errorResult(`Node not found: ${nodeId}`), oldText: undefined }
+    }
+
+    // Get the node's line
+    const nodeLine = nodeMapping.position.line
+    const line = this.lines[nodeLine - 1]
+    if (!line) {
+      return { ...this.errorResult(`Line not found: ${nodeLine}`), oldText: undefined }
+    }
+
+    // Parse the line
+    const parsedLine = parseLine(line)
+
+    // Get old text content
+    const oldText = parsedLine.textContent
+      ? parsedLine.textContent.replace(/^["']|["']$/g, '') // Remove quotes
+      : ''
+
+    // Escape quotes in new text
+    const escapedNewText = newText.replace(/"/g, '\\"')
+
+    // Build the new line
+    let newLine: string
+
+    if (parsedLine.textContent) {
+      // Replace existing text content
+      // Find the text content position in the line
+      const textStart = line.lastIndexOf(parsedLine.textContent)
+      if (textStart !== -1) {
+        newLine = line.substring(0, textStart) + `"${escapedNewText}"` + line.substring(textStart + parsedLine.textContent.length)
+      } else {
+        // Fallback: rebuild line
+        newLine = this.rebuildLineWithText(parsedLine, escapedNewText)
+      }
+    } else {
+      // Add text content after component name
+      // Insert before first property or at end
+      if (parsedLine.properties.length > 0) {
+        // Insert text content before first property
+        const firstProp = parsedLine.properties[0]
+        const beforeProps = line.substring(0, firstProp.startIndex)
+        const afterProps = line.substring(firstProp.startIndex)
+        // Check if there's a comma separator or not
+        const needsComma = afterProps.trim().startsWith(',') ? '' : ','
+        newLine = `${beforeProps.trimEnd()} "${escapedNewText}"${needsComma} ${afterProps.trimStart()}`
+      } else {
+        // No properties, just append text content
+        newLine = `${line.trimEnd()} "${escapedNewText}"`
+      }
+    }
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + line.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[nodeLine - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newLines
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+      oldText,
+    }
+  }
+
+  /**
+   * Rebuild a line with new text content
+   */
+  private rebuildLineWithText(parsedLine: ParsedLine, newText: string): string {
+    let line = parsedLine.indent + parsedLine.componentPart
+
+    // Add text content
+    if (newText) {
+      line += ` "${newText}"`
+    }
+
+    // Add properties
+    if (parsedLine.properties.length > 0) {
+      const propsStr = parsedLine.properties
+        .map(p => p.isBoolean ? p.name : `${p.name} ${p.value}`)
+        .join(', ')
+      line += `, ${propsStr}`
+    }
+
+    return line
   }
 
   /**

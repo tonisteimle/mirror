@@ -2928,7 +2928,7 @@
       color: var(--text-primary);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
-      margin-bottom: 6px;
+      margin-bottom: 10px;
       padding: 0;
     }
 
@@ -6245,4 +6245,40 @@ select.tomselected,
 
 .ts-wrapper.dropdown-active .ts-control::after {
   transform: rotate(180deg) !important;
+}
+
+/* ============================================
+   INLINE TEXT EDITING
+   Figma-style inline editing in preview
+   ============================================ */
+
+/* Element being edited */
+.inline-editing {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px;
+  border-radius: 2px;
+  cursor: text !important;
+  min-width: 20px;
+  white-space: pre-wrap;
+}
+
+/* Visual feedback during editing */
+.inline-editing:focus {
+  outline-color: var(--color-primary-light) !important;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Mark as modified */
+.inline-editing-modified {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+/* Disable hover effects on editing element */
+.inline-editing.studio-hover {
+  outline-color: var(--color-primary) !important;
+}
+
+/* Suppress selection highlight while editing */
+.inline-editing.studio-selected {
+  box-shadow: none !important;
 }

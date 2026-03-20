@@ -797,7 +797,61 @@ export class SetPositionCommand implements Command {
   }
 }
 
-export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE' | 'SET_POSITION'
+/**
+ * SetTextContentCommand - Update text content of a text element
+ *
+ * Used for inline text editing (double-click to edit in preview).
+ * Updates the quoted text content in the source code.
+ */
+export class SetTextContentCommand implements Command {
+  readonly type = 'SET_TEXT_CONTENT'
+  readonly description: string
+  private nodeId: string
+  private newText: string
+  private oldText: string | null = null
+  private originalSource: string | null = null
+
+  constructor(params: { nodeId: string; text: string; description?: string }) {
+    this.nodeId = params.nodeId
+    this.newText = params.text
+    this.description = params.description || `Set text to "${params.text.substring(0, 20)}${params.text.length > 20 ? '...' : ''}"`
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    // Store original source for undo
+    this.originalSource = ctx.getSource()
+
+    const modifier = new CodeModifier(data.source, data.sourceMap)
+    const result = modifier.updateTextContent(this.nodeId, this.newText)
+    if (!result.success) return { success: false, error: result.error }
+
+    this.oldText = result.oldText || null
+
+    // Apply the change (adjusted for prelude offset)
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    if (!this.originalSource) return { success: false, error: 'Cannot undo' }
+
+    const currentSource = ctx.getSource()
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
+
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE' | 'SET_POSITION' | 'SET_TEXT_CONTENT'
 
 export function createCommand(type: CommandType, params: Record<string, any>): Command {
   switch (type) {
@@ -813,6 +867,7 @@ export function createCommand(type: CommandType, params: Record<string, any>): C
     case 'BATCH': return new BatchCommand(params as any)
     case 'RESIZE': return new ResizeCommand(params as any)
     case 'SET_POSITION': return new SetPositionCommand(params as any)
+    case 'SET_TEXT_CONTENT': return new SetTextContentCommand(params as any)
     default: throw new Error(`Unknown command type: ${type}`)
   }
 }
