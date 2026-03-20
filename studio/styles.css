@@ -73,7 +73,7 @@
       /* Background Colors - Consolidated */
       --bg-base: #0a0a0f;           /* App background (darkest) */
       --bg-panel: #141418;          /* All panel backgrounds */
-      --bg-input: #2e2e36;          /* Inputs, toggles, interactive elements */
+      --bg-input: #1c1c22;          /* Inputs, toggles, interactive elements */
       --bg-hover: #27272a;          /* Hover state */
       --bg-active: #3f3f46;         /* Active/pressed state */
 
@@ -6074,10 +6074,15 @@ select.tomselected,
   pointer-events: none !important;
 }
 
-.ts-wrapper {
+.ts-wrapper,
+.pp-content .ts-wrapper,
+.pp-content .ts-wrapper.single,
+.pp-content .ts-wrapper.single.full {
   font-size: var(--font-sm);
   flex: 1;
   padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   /* Reset tom-select CSS variables */
   --ts-pr-min: 0 !important;
   --ts-pr-clear-button: 0 !important;
