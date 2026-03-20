@@ -5596,11 +5596,29 @@ function handleStudioDrop(result) {
 
     if (placement === 'absolute' && absolutePosition) {
       // Update x/y properties for positioned container
-      modResult = studioCodeModifier.modifyProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
-      if (modResult.success) {
-        // Apply first change, then modify y
-        applyDropChange(modResult)
-        modResult = studioCodeModifier.modifyProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
+      // CodeModifier persists changes internally, so we call both updates
+      // The first change has correct from/to for original source
+      // The second change has the final insert text
+      const resultX = studioCodeModifier.updateProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
+      if (resultX.success) {
+        const resultY = studioCodeModifier.updateProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
+        if (resultY.success) {
+          // Combine: use from/to from first change (valid for editor's original source)
+          // but insert from second change (has both x and y updated)
+          modResult = {
+            success: true,
+            newSource: resultY.newSource,
+            change: {
+              from: resultX.change.from,
+              to: resultX.change.to,
+              insert: resultY.change.insert
+            }
+          }
+        } else {
+          modResult = resultY
+        }
+      } else {
+        modResult = resultX
       }
     } else {
       // Move to new parent/position
