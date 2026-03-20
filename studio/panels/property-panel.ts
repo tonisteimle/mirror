@@ -1215,11 +1215,13 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const dynamicTokens = this.getPaddingTokens()
     const tokensToUse = dynamicTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
 
-    // Render token buttons for padding
+    // Render token buttons for padding (returns empty string if no tokens)
+    const hasTokens = tokensToUse.length > 0
     const renderPadTokens = (activeValue: string, direction: string) => {
+      if (!hasTokens) return ''
+
       // Check if activeValue is a token reference
       const isTokenRef = activeValue.startsWith('$')
-      const resolvedValue = isTokenRef ? this.resolveTokenValue(activeValue) : null
 
       return tokensToUse.map(token => {
         // Match by token ref or by resolved value
@@ -1229,6 +1231,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${token.tokenRef}" data-pad-dir="${direction}" title="${token.tokenRef}: ${token.value}">${token.label}</button>`
       }).join('')
     }
+
+    // Helper to render token group only if tokens exist
+    const tokenGroup = (content: string) => hasTokens ? `<div class="token-group">${content}</div>` : ''
 
     return `
       <div class="section">
@@ -1247,54 +1252,42 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
           <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
             <span class="prop-label">Horizontal</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(hPad, 'h')}
-              </div>
+              ${tokenGroup(renderPadTokens(hPad, 'h'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(hPad)}" data-pad-dir="h" placeholder="0">
             </div>
           </div>
           <div class="prop-row collapsed-row${padIsOverride ? ' override' : ''}" data-expand-group="spacing">
             <span class="prop-label">Vertical</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(vPad, 'v')}
-              </div>
+              ${tokenGroup(renderPadTokens(vPad, 'v'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(vPad)}" data-pad-dir="v" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
             <span class="prop-label">Top</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(tPad, 't')}
-              </div>
+              ${tokenGroup(renderPadTokens(tPad, 't'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(tPad)}" data-pad-dir="t" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
             <span class="prop-label">Right</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(rPad, 'r')}
-              </div>
+              ${tokenGroup(renderPadTokens(rPad, 'r'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(rPad)}" data-pad-dir="r" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
             <span class="prop-label">Bottom</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(bPad, 'b')}
-              </div>
+              ${tokenGroup(renderPadTokens(bPad, 'b'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(bPad)}" data-pad-dir="b" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="spacing">
             <span class="prop-label">Left</span>
             <div class="prop-content">
-              <div class="token-group">
-                ${renderPadTokens(lPad, 'l')}
-              </div>
+              ${tokenGroup(renderPadTokens(lPad, 'l'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(lPad)}" data-pad-dir="l" placeholder="0">
             </div>
           </div>
