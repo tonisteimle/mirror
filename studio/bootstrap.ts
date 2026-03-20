@@ -203,9 +203,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   syncCoordinator.setTargets({
     scrollEditorToLine: (editorLine) => {
       // editorLine is already converted from SourceMap line by SyncCoordinator
-      // Always scroll only (don't set cursor) to avoid triggering another sync cycle
-      // The selection state is already managed by SyncCoordinator
-      editorController.scrollToLine(editorLine, true)
+      // Set cursor AND scroll to make the selection visible
+      // The debouncing in handleCursorMove prevents sync loops
+      editorController.scrollToLineAndSelect(editorLine)
     },
     highlightPreviewElement: (nodeId) => nodeId ? previewController.select(nodeId) : previewController.clearSelection(),
     updatePropertyPanel: (nodeId) => nodeId && events.emit('panel:update-requested', { nodeId }),

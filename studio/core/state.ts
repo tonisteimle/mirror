@@ -295,19 +295,22 @@ export const actions = {
   /**
    * Set selection with validation
    * Only allows selecting nodes that exist in the current SourceMap
+   * Deduplicates: won't emit if same nodeId is already selected
    */
   setSelection(nodeId: string | null, origin: SelectionOrigin): void {
     const currentState = state.get()
+
+    // Deduplicate: don't emit if same nodeId already selected
+    // This prevents sync loops when cursor is set after preview click
+    if (currentState.selection.nodeId === nodeId) {
+      return
+    }
 
     // Validate nodeId exists in SourceMap
     if (nodeId !== null && currentState.sourceMap) {
       const node = currentState.sourceMap.getNodeById(nodeId)
       if (!node) {
         console.warn(`[State] Cannot select non-existent node: ${nodeId}`)
-        // Try to clear invalid selection
-        if (currentState.selection.nodeId === nodeId) {
-          return // Already selected, don't emit again
-        }
         // Don't set invalid selection
         return
       }
@@ -324,8 +327,13 @@ export const actions = {
 
   /**
    * Clear selection (convenience method)
+   * Deduplicates: won't emit if already cleared
    */
   clearSelection(origin: SelectionOrigin = 'editor'): void {
+    const currentState = state.get()
+    if (currentState.selection.nodeId === null) {
+      return // Already cleared
+    }
     state.set({ selection: { nodeId: null, origin } })
     events.emit('selection:changed', { nodeId: null, origin })
   },
