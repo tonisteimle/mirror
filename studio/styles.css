@@ -3502,6 +3502,31 @@
       display: flex;
     }
 
+    /* Border section side grouping */
+    .pp-content .side-header {
+      margin-top: 8px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pp-content .side-header:first-of-type {
+      margin-top: 0;
+    }
+
+    .pp-content .side-header .prop-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .pp-content .side-detail {
+      padding-left: 8px;
+    }
+
+    .pp-content .side-detail .prop-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     /* ============================================
        ICON (from prototype)
        ============================================ */
@@ -6020,13 +6045,14 @@
   background: var(--bg-input) !important;
   border: none !important;
   border-radius: 5px !important;
-  padding: 0 8px !important;
+  padding: 0 6px 0 8px !important;
   min-height: 30px !important;
   height: 30px !important;
   color: var(--text-primary) !important;
   box-shadow: none !important;
   line-height: 30px !important;
   font-size: var(--font-sm) !important;
+  gap: 4px !important;
 }
 
 .ts-control:hover {
@@ -6040,6 +6066,10 @@
 
 .ts-control input {
   color: var(--text-primary) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
 .ts-control input::placeholder {
@@ -6106,6 +6136,7 @@
   position: static !important;
   transform: none !important;
   transition: transform 0.15s ease !important;
+  pointer-events: none !important;
 }
 
 .ts-wrapper.dropdown-active .ts-control::after {

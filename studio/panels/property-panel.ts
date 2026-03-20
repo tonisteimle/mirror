@@ -1370,6 +1370,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
           </button>
         </div>
         <div class="section-content" data-expand-container="border">
+          <!-- Collapsed: Global Radius -->
           <div class="prop-row collapsed-row${radiusIsOverride ? ' override' : ''}" data-expand-group="border">
             <span class="prop-label">Radius</span>
             <div class="prop-content">
@@ -1384,42 +1385,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
-            <span class="prop-label">Top Left</span>
-            <div class="prop-content">
-              <div class="token-group">
-                ${renderRadTokens}
-              </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
-            </div>
-          </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
-            <span class="prop-label">Top Right</span>
-            <div class="prop-content">
-              <div class="token-group">
-                ${renderRadTokens}
-              </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
-            </div>
-          </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
-            <span class="prop-label">Btm Right</span>
-            <div class="prop-content">
-              <div class="token-group">
-                ${renderRadTokens}
-              </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
-            </div>
-          </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
-            <span class="prop-label">Btm Left</span>
-            <div class="prop-content">
-              <div class="token-group">
-                ${renderRadTokens}
-              </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
-            </div>
-          </div>
+          <!-- Collapsed: Global Border -->
           <div class="prop-row collapsed-row${borderIsOverride ? ' override' : ''}" data-expand-group="border">
             <span class="prop-label">Border</span>
             <div class="prop-content">
@@ -1429,8 +1395,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               ${borderColorTrigger}
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
+
+          <!-- Expanded: Top (radius corners + border) -->
+          <div class="prop-row expanded-row side-header" data-expand-group="border">
             <span class="prop-label">Top</span>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius TL</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius TR</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
@@ -1440,8 +1423,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               </div>
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
+
+          <!-- Expanded: Right (radius corners + border) -->
+          <div class="prop-row expanded-row side-header" data-expand-group="border">
             <span class="prop-label">Right</span>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius TR</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius BR</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
@@ -1451,8 +1451,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               </div>
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
+
+          <!-- Expanded: Bottom (radius corners + border) -->
+          <div class="prop-row expanded-row side-header" data-expand-group="border">
             <span class="prop-label">Bottom</span>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius BR</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius BL</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
@@ -1462,8 +1479,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
               </div>
             </div>
           </div>
-          <div class="prop-row expanded-row" data-expand-group="border">
+
+          <!-- Expanded: Left (radius corners + border) -->
+          <div class="prop-row expanded-row side-header" data-expand-group="border">
             <span class="prop-label">Left</span>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius TL</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Radius BL</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row side-detail" data-expand-group="border">
+            <span class="prop-label">Border</span>
             <div class="prop-content">
               <div class="toggle-group">
                 ${borderWidthToggles}
