@@ -560,7 +560,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
             <div class="prop-content">
               <button class="toggle-btn single ${wrapActive ? 'active' : ''}" data-wrap="${wrapActive ? 'off' : 'on'}" title="${wrapActive ? 'Disable wrap' : 'Enable wrap'}">
                 <svg class="icon" viewBox="0 0 14 14">
-                  <rect x="2" y="3" width="2" height="2" fill="currentColor"/><rect x="6" y="3" width="2" height="2" fill="currentColor"/><rect x="10" y="3" width="2" height="2" fill="currentColor"/><rect x="2" y="9" width="2" height="2" fill="currentColor"/><rect x="6" y="9" width="2" height="2" fill="currentColor"/>
+                  <rect x="1" y="3" width="2" height="2" fill="currentColor"/><rect x="6" y="3" width="2" height="2" fill="currentColor"/><rect x="11" y="3" width="2" height="2" fill="currentColor"/><rect x="1" y="9" width="2" height="2" fill="currentColor"/><rect x="6" y="9" width="2" height="2" fill="currentColor"/>
                 </svg>
               </button>
             </div>
