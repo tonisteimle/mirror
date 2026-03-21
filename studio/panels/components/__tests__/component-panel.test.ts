@@ -273,7 +273,7 @@ describe('ComponentPanel', () => {
       expect(dataTransfer.dragImage).not.toBeNull()
     })
 
-    it('should clone source element as drag image', () => {
+    it('should create drag image with icon and name', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
@@ -284,13 +284,12 @@ describe('ComponentPanel', () => {
       expect(dataTransfer.dragImage).not.toBeNull()
       const dragImage = dataTransfer.dragImage!.element as HTMLElement
 
-      // Drag image should be a clone with same class and structure
-      expect(dragImage.className).toContain('component-panel-item')
-      expect(dragImage.querySelector('.component-panel-item-icon')).not.toBeNull()
-      expect(dragImage.querySelector('.component-panel-item-name')).not.toBeNull()
+      // Drag image should have icon (svg) and name text
+      expect(dragImage.querySelector('svg')).not.toBeNull()
+      expect(dragImage.textContent).toBeTruthy()
     })
 
-    it('should preserve source element content in drag image', () => {
+    it('should match source element name in drag image', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
@@ -300,13 +299,12 @@ describe('ComponentPanel', () => {
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
       const dragImage = dataTransfer.dragImage!.element as HTMLElement
-      const clonedName = dragImage.querySelector('.component-panel-item-name')?.textContent
 
-      // Cloned element should have same content
-      expect(clonedName).toBe(originalName)
+      // Drag image text should contain the component name
+      expect(dragImage.textContent).toContain(originalName)
     })
 
-    it('should create unique drag images for different elements', () => {
+    it('should create different drag images for different elements', () => {
       panel = createComponentPanel({ container })
 
       const items = container.querySelectorAll('.component-panel-item') as NodeListOf<HTMLElement>
@@ -323,12 +321,12 @@ describe('ComponentPanel', () => {
       const dragImage1 = dataTransfer1.dragImage!.element as HTMLElement
       const dragImage2 = dataTransfer2.dragImage!.element as HTMLElement
 
-      const name1 = dragImage1.querySelector('.component-panel-item-name')?.textContent
-      const name2 = dragImage2.querySelector('.component-panel-item-name')?.textContent
+      const name1 = items[0].querySelector('.component-panel-item-name')?.textContent
+      const name2 = items[1].querySelector('.component-panel-item-name')?.textContent
 
-      // Each drag image should match its source element's content
-      expect(name1).toBe(items[0].querySelector('.component-panel-item-name')?.textContent)
-      expect(name2).toBe(items[1].querySelector('.component-panel-item-name')?.textContent)
+      // Each drag image should contain its component's name
+      expect(dragImage1.textContent).toContain(name1)
+      expect(dragImage2.textContent).toContain(name2)
       expect(name1).not.toBe(name2)
     })
 
