@@ -115,6 +115,8 @@ export interface StudioState {
   inlineEditActive: boolean
   /** Node ID currently being inline edited */
   inlineEditNodeId: string | null
+  /** Preview zoom level (100 = 100%) */
+  previewZoom: number
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -264,6 +266,7 @@ const initialState: StudioState = {
   deferredSelection: null,
   inlineEditActive: false,
   inlineEditNodeId: null,
+  previewZoom: 100,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -835,6 +838,22 @@ export const actions = {
 
     return null
   },
+
+  /**
+   * Set preview zoom level
+   * @param zoom - Zoom percentage (e.g., 100 = 100%)
+   */
+  setPreviewZoom(zoom: number): void {
+    state.set({ previewZoom: zoom })
+    events.emit('preview:zoom', { zoom, scale: zoom / 100 })
+  },
+
+  /**
+   * Get current preview zoom scale (0-1 range)
+   */
+  getPreviewScale(): number {
+    return state.get().previewZoom / 100
+  },
 }
 
 /**
@@ -848,6 +867,7 @@ export const selectors = {
   isCompiling: () => state.get().compiling,
   getSourceMap: () => state.get().sourceMap,
   getAST: () => state.get().ast,
+  getPreviewZoom: () => state.get().previewZoom,
 }
 
 /**

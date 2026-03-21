@@ -5187,6 +5187,8 @@ function initPreviewZoom() {
     const mirrorRoot = preview.querySelector('.mirror-root')
     if (mirrorRoot) {
       mirrorRoot.style.transform = `scale(${scale})`
+      // Update state for coordinate calculations
+      studioActions.setPreviewZoom(level)
       mirrorRoot.style.transformOrigin = 'top left'
       // Adjust container to show scaled content properly
       if (scale !== 1) {

@@ -124,6 +124,7 @@ export class InteractionCoordinator {
         gridSize: this.config.gridSize,
         enableGuides: this.config.enableGuides,
         enableAlignmentZones: this.config.enableAlignmentZones,
+        getScale: () => actions.getPreviewScale(),
       },
       controllerCallbacks
     )

@@ -65,6 +65,8 @@ export interface DragControllerConfig {
   enableGuides?: boolean
   /** Enable 9-zone alignment for empty containers */
   enableAlignmentZones?: boolean
+  /** Callback to get current preview scale (for zoom support) */
+  getScale?: () => number
 }
 
 export interface DragCallbacks {
@@ -477,9 +479,10 @@ export class DragController {
 
   private updateCoordinateContext(): void {
     const containerRect = this.container.getBoundingClientRect()
+    const scale = this.config.getScale?.() ?? 1
     this.coordinateContext = createCoordinateContext(
       { x: containerRect.left, y: containerRect.top },
-      1, // TODO: Get actual scale from zoom
+      scale,
       { x: this.container.scrollLeft, y: this.container.scrollTop }
     )
   }
