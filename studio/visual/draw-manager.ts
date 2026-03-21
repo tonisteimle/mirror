@@ -12,6 +12,7 @@ import { detectLayout } from '../../src/studio/utils/layout-detection'
 import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'
 import { GuideRenderer } from './smart-guides/guide-renderer'
+import { events } from '../core/events'
 
 const MIN_SIZE = 10 // Minimum width/height in pixels
 
@@ -576,7 +577,8 @@ export class DrawManager {
    */
   private showError(message: string): void {
     console.warn('[DrawManager]', message)
-    // TODO: Show toast notification
+    // Emit error event for centralized notification handling
+    events.emit('draw:error', { message })
   }
 
   /**

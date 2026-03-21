@@ -6557,10 +6557,12 @@ editorPanel.addEventListener('drop', async (e) => {
 
   // Set cursor at drop position if possible
   if (window.editor) {
-    const editorRect = document.querySelector('.cm-editor').getBoundingClientRect()
-    const pos = window.editor.posAtCoords({ x: e.clientX, y: e.clientY })
-    if (pos !== null) {
-      window.editor.dispatch({ selection: { anchor: pos } })
+    const cmEditor = document.querySelector('.cm-editor')
+    if (cmEditor) {
+      const pos = window.editor.posAtCoords({ x: e.clientX, y: e.clientY })
+      if (pos !== null) {
+        window.editor.dispatch({ selection: { anchor: pos } })
+      }
     }
   }
 

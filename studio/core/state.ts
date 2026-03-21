@@ -148,7 +148,13 @@ class Store<T extends object> {
       try {
         subscriber(this.state, prevState)
       } catch (e) {
-        console.error('Error in state subscriber:', e)
+        const error = e instanceof Error ? e : new Error(String(e))
+        console.error('[State] Subscriber error:', error.message, error.stack)
+        // Emit error event for centralized error handling
+        events.emit('state:error', {
+          error,
+          context: 'subscriber notification',
+        })
       }
     }
   }
@@ -331,6 +337,12 @@ export const actions = {
         if (fallbackId) {
           console.log('[State] Using fallback for queued selection:', fallbackId)
           actions.setSelection(fallbackId, queued.origin)
+          // Notify that fallback was used
+          events.emit('selection:fallback', {
+            requestedId: queued.nodeId,
+            resolvedId: fallbackId,
+            reason: 'node_deleted',
+          })
         }
       }
       // Continue to check pendingSelection (don't return early)
@@ -338,7 +350,16 @@ export const actions = {
 
     // Resolve deferred selection (unified API - preferred)
     if (hasDeferredSelection) {
+      // Capture version to prevent race condition with rapid compiles
+      const capturedVersion = newVersion
       Promise.resolve().then(() => {
+        // Only resolve if no newer compile has happened
+        if (state.get().compileVersion !== capturedVersion) {
+          console.log('[State] Skipping deferred selection - newer compile available')
+          // Clear stale deferred selection
+          state.set({ deferredSelection: null })
+          return
+        }
         const resolvedNodeId = actions.resolveDeferredSelection()
         if (resolvedNodeId) {
           console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)

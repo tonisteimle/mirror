@@ -78,6 +78,12 @@ export class InteractionCoordinator {
   private ensureInitialized(): void {
     if (this.isInitialized) return
 
+    // Validate container before initialization
+    if (!this.container) {
+      console.error('[InteractionCoordinator] Cannot initialize: container is not available')
+      return
+    }
+
     // Create DragController with callbacks
     const controllerCallbacks: DragCallbacks = {
       onDragStart: (source) => {
@@ -134,7 +140,11 @@ export class InteractionCoordinator {
    */
   startDrag(element: HTMLElement, event: MouseEvent): void {
     this.ensureInitialized()
-    this.dragController?.startElementDrag(element, event)
+    if (!this.dragController) {
+      console.warn('[InteractionCoordinator] startDrag failed: controller not initialized')
+      return
+    }
+    this.dragController.startElementDrag(element, event)
   }
 
   /**
@@ -146,7 +156,11 @@ export class InteractionCoordinator {
     options?: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number } }
   ): void {
     this.ensureInitialized()
-    this.dragController?.startPaletteDrag(componentName, event, options)
+    if (!this.dragController) {
+      console.warn('[InteractionCoordinator] startPaletteDrag failed: controller not initialized')
+      return
+    }
+    this.dragController.startPaletteDrag(componentName, event, options)
   }
 
   /**

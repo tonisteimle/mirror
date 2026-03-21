@@ -102,7 +102,15 @@ export interface ContainerInfo {
   isPositioned: boolean
   hasChildren: boolean
   childRects: Array<{ nodeId: string; rect: Rect }>
+  componentName: string
 }
+
+// Components that don't accept children (void elements, text-only, etc.)
+const NON_CONTAINER_COMPONENTS = new Set([
+  'Text', 'Input', 'Textarea', 'Option', 'Checkbox', 'Radio',
+  'Image', 'Img', 'Icon', 'Divider', 'Spacer',
+  'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+])
 
 // ============================================================================
 // DragController
@@ -456,7 +464,7 @@ export class DragController {
       .map(info => ({
         nodeId: info.nodeId,
         rect: info.rect,
-        acceptsChildren: true, // TODO: Check component type
+        acceptsChildren: !NON_CONTAINER_COMPONENTS.has(info.componentName),
         isPositioned: info.isPositioned,
         direction: info.direction === 'horizontal' ? 'horizontal' : 'vertical',
         childRects: info.childRects,
@@ -486,6 +494,9 @@ export class DragController {
       const element = el as HTMLElement
       const nodeId = element.dataset.mirrorId
       if (!nodeId) return
+
+      // Get component name from data-mirror-name attribute
+      const componentName = element.dataset.mirrorName || element.tagName
 
       const domRect = element.getBoundingClientRect()
       const rect: Rect = {
@@ -527,6 +538,7 @@ export class DragController {
         isPositioned,
         hasChildren: childRects.length > 0,
         childRects,
+        componentName,
       })
     })
   }
