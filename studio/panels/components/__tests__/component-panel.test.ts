@@ -15,6 +15,7 @@ import type { ComponentDragData } from '../types'
 class MockDataTransfer {
   private data: Map<string, string> = new Map()
   effectAllowed: string = 'none'
+  dragImage: { element: Element; x: number; y: number } | null = null
 
   setData(type: string, value: string) {
     this.data.set(type, value)
@@ -22,6 +23,10 @@ class MockDataTransfer {
 
   getData(type: string): string {
     return this.data.get(type) || ''
+  }
+
+  setDragImage(element: Element, x: number, y: number) {
+    this.dragImage = { element, x, y }
   }
 }
 
@@ -255,6 +260,121 @@ describe('ComponentPanel', () => {
       item.dispatchEvent(createDragEvent('dragend'))
 
       expect(onDragEnd).toHaveBeenCalled()
+    })
+
+    it('should set custom drag image', () => {
+      panel = createComponentPanel({ container })
+
+      const item = container.querySelector('.component-panel-item') as HTMLElement
+      const dataTransfer = new MockDataTransfer()
+
+      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
+
+      expect(dataTransfer.dragImage).not.toBeNull()
+    })
+
+    it('should create drag image with same dimensions as source element', () => {
+      panel = createComponentPanel({ container })
+
+      const item = container.querySelector('.component-panel-item') as HTMLElement
+
+      // Mock getBoundingClientRect to return specific dimensions
+      const mockRect = { width: 120, height: 32, x: 0, y: 0, top: 0, left: 0, right: 120, bottom: 32, toJSON: () => ({}) }
+      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      const dataTransfer = new MockDataTransfer()
+      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
+
+      expect(dataTransfer.dragImage).not.toBeNull()
+      const dragImage = dataTransfer.dragImage!.element as HTMLElement
+
+      // Drag image should match source element dimensions
+      expect(dragImage.style.width).toBe('120px')
+      expect(dragImage.style.height).toBe('32px')
+    })
+
+    it('should use border-box sizing so padding does not increase size', () => {
+      panel = createComponentPanel({ container })
+
+      const item = container.querySelector('.component-panel-item') as HTMLElement
+
+      const mockRect = { width: 100, height: 30, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 30, toJSON: () => ({}) }
+      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      const dataTransfer = new MockDataTransfer()
+      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
+
+      const dragImage = dataTransfer.dragImage!.element as HTMLElement
+
+      // Must use border-box so padding is included in width/height
+      expect(dragImage.style.boxSizing).toBe('border-box')
+    })
+
+    it('should create different sized drag images for different elements', () => {
+      panel = createComponentPanel({ container })
+
+      const items = container.querySelectorAll('.component-panel-item') as NodeListOf<HTMLElement>
+      expect(items.length).toBeGreaterThan(1)
+
+      // Mock different sizes for first two items
+      const mockRect1 = { width: 100, height: 30, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 30, toJSON: () => ({}) }
+      const mockRect2 = { width: 150, height: 40, x: 0, y: 0, top: 0, left: 0, right: 150, bottom: 40, toJSON: () => ({}) }
+      vi.spyOn(items[0], 'getBoundingClientRect').mockReturnValue(mockRect1 as DOMRect)
+      vi.spyOn(items[1], 'getBoundingClientRect').mockReturnValue(mockRect2 as DOMRect)
+
+      const dataTransfer1 = new MockDataTransfer()
+      const dataTransfer2 = new MockDataTransfer()
+
+      items[0].dispatchEvent(createDragEvent('dragstart', dataTransfer1))
+      items[0].dispatchEvent(createDragEvent('dragend'))
+
+      items[1].dispatchEvent(createDragEvent('dragstart', dataTransfer2))
+
+      const dragImage1 = dataTransfer1.dragImage!.element as HTMLElement
+      const dragImage2 = dataTransfer2.dragImage!.element as HTMLElement
+
+      // Each drag image should have different dimensions matching its source
+      expect(dragImage1.style.width).toBe('100px')
+      expect(dragImage1.style.height).toBe('30px')
+      expect(dragImage2.style.width).toBe('150px')
+      expect(dragImage2.style.height).toBe('40px')
+    })
+
+    it('should position drag image cursor at center of element', () => {
+      panel = createComponentPanel({ container })
+
+      const item = container.querySelector('.component-panel-item') as HTMLElement
+
+      // Mock getBoundingClientRect
+      const mockRect = { width: 100, height: 40, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 40, toJSON: () => ({}) }
+      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+
+      const dataTransfer = new MockDataTransfer()
+      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
+
+      expect(dataTransfer.dragImage).not.toBeNull()
+      // Cursor should be at center (50, 20)
+      expect(dataTransfer.dragImage!.x).toBe(50)
+      expect(dataTransfer.dragImage!.y).toBe(20)
+    })
+
+    it('should remove drag image from DOM after dragstart', async () => {
+      panel = createComponentPanel({ container })
+
+      const item = container.querySelector('.component-panel-item') as HTMLElement
+      const dataTransfer = new MockDataTransfer()
+
+      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
+
+      // Drag image is temporarily added to body
+      expect(dataTransfer.dragImage).not.toBeNull()
+
+      // Wait for requestAnimationFrame cleanup
+      await new Promise(resolve => requestAnimationFrame(resolve))
+
+      // Drag image should be removed from DOM
+      const dragImages = document.querySelectorAll('.component-panel-drag-image')
+      expect(dragImages.length).toBe(0)
     })
   })
 

@@ -284,6 +284,7 @@ export class ComponentPanel {
       top: '-9999px',
       width: `${rect.width}px`,
       height: `${rect.height}px`,
+      boxSizing: 'border-box', // Ensure padding is included in width/height
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
