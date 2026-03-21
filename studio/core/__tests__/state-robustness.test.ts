@@ -14,15 +14,22 @@ import type { SourceMap } from '../../../src/studio/source-map'
 import type { AST } from '../../../src/parser/ast'
 import type { IR } from '../../../src/ir/types'
 
-// Mock SourceMap
+// Mock SourceMap with hierarchy support
+interface MockNodeConfig {
+  nodeId: string
+  parentId?: string
+  line?: number
+}
+
 function createMockSourceMap(nodeIds: string[]): SourceMap {
   const nodes = new Map()
-  nodeIds.forEach(id => {
+  nodeIds.forEach((id, index) => {
     nodes.set(id, {
       nodeId: id,
       componentName: 'Box',
-      position: { line: 1, column: 0, endLine: 1, endColumn: 10 },
+      position: { line: index + 1, column: 0, endLine: index + 1, endColumn: 10 },
       properties: new Map(),
+      isDefinition: false,
     })
   })
 
@@ -31,6 +38,82 @@ function createMockSourceMap(nodeIds: string[]): SourceMap {
     getAllNodeIds: () => Array.from(nodes.keys()),
     getNodeAtLine: () => null,
     getChildren: () => [],
+    getRootNodes: () => Array.from(nodes.values()).filter(n => !n.parentId),
+    getSiblings: () => [],
+    getNextSibling: () => null,
+    getPreviousSibling: () => null,
+    getParent: () => null,
+    isTemplateInstance: () => false,
+    getTemplateId: () => null,
+  } as unknown as SourceMap
+}
+
+// Mock SourceMap with full hierarchy
+function createHierarchicalMockSourceMap(configs: MockNodeConfig[]): SourceMap {
+  const nodes = new Map()
+  configs.forEach((config, index) => {
+    nodes.set(config.nodeId, {
+      nodeId: config.nodeId,
+      parentId: config.parentId,
+      componentName: 'Box',
+      position: { line: config.line ?? index + 1, column: 0, endLine: (config.line ?? index + 1), endColumn: 10 },
+      properties: new Map(),
+      isDefinition: false,
+    })
+  })
+
+  return {
+    getNodeById: (id: string) => nodes.get(id) || null,
+    getAllNodeIds: () => Array.from(nodes.keys()),
+    getNodeAtLine: () => null,
+    getChildren: (parentId: string) => {
+      return Array.from(nodes.values())
+        .filter(n => n.parentId === parentId)
+        .sort((a, b) => a.position.line - b.position.line)
+    },
+    getRootNodes: () => {
+      return Array.from(nodes.values())
+        .filter(n => !n.parentId)
+        .sort((a, b) => a.position.line - b.position.line)
+    },
+    getSiblings: (nodeId: string) => {
+      const node = nodes.get(nodeId)
+      if (!node) return []
+      const parentId = node.parentId
+      const siblings = parentId
+        ? Array.from(nodes.values()).filter(n => n.parentId === parentId)
+        : Array.from(nodes.values()).filter(n => !n.parentId)
+      return siblings
+        .filter(n => n.nodeId !== nodeId)
+        .sort((a, b) => a.position.line - b.position.line)
+    },
+    getNextSibling: (nodeId: string) => {
+      const node = nodes.get(nodeId)
+      if (!node) return null
+      const parentId = node.parentId
+      const siblings = parentId
+        ? Array.from(nodes.values()).filter(n => n.parentId === parentId)
+        : Array.from(nodes.values()).filter(n => !n.parentId)
+      const sorted = siblings.sort((a, b) => a.position.line - b.position.line)
+      return sorted.find(s => s.position.line > node.position.line) || null
+    },
+    getPreviousSibling: (nodeId: string) => {
+      const node = nodes.get(nodeId)
+      if (!node) return null
+      const parentId = node.parentId
+      const siblings = parentId
+        ? Array.from(nodes.values()).filter(n => n.parentId === parentId)
+        : Array.from(nodes.values()).filter(n => !n.parentId)
+      const before = siblings
+        .filter(s => s.position.line < node.position.line)
+        .sort((a, b) => a.position.line - b.position.line)
+      return before.length > 0 ? before[before.length - 1] : null
+    },
+    getParent: (nodeId: string) => {
+      const node = nodes.get(nodeId)
+      if (!node || !node.parentId) return null
+      return nodes.get(node.parentId) || null
+    },
     isTemplateInstance: () => false,
     getTemplateId: () => null,
   } as unknown as SourceMap
@@ -240,7 +323,8 @@ describe('Atomic Compile Result Updates', () => {
       errors: [],
     })
 
-    expect(state.get().selection.nodeId).toBeNull()
+    // Selection should fall back to first root (node-2), not null
+    expect(state.get().selection.nodeId).toBe('node-2')
     expect(invalidatedHandler).toHaveBeenCalledWith({ nodeId: 'node-1' })
   })
 
@@ -327,17 +411,21 @@ describe('Selection Validation', () => {
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('warns when selecting during compile', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  it('queues selection during compile when SourceMap missing', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
+    // Clear sourceMap to simulate pre-compile state
+    state.set({ sourceMap: null })
     actions.setCompiling(true)
-    actions.setSelection('node-1', 'editor')
+    actions.setSelection('new-node', 'editor')
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Selection during compile may be stale')
+    // Selection should be queued, not applied immediately
+    expect(state.get().queuedSelection).toEqual({ nodeId: 'new-node', origin: 'editor' })
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Queuing selection during compile')
     )
 
-    warnSpy.mockRestore()
+    logSpy.mockRestore()
   })
 
   it('clearSelection convenience method works', () => {
@@ -435,12 +523,259 @@ describe('Race Condition Prevention', () => {
       errors: [],
     })
 
-    // Selection should be cleared
-    expect(state.get().selection.nodeId).toBeNull()
+    // Selection should fall back to first root (node-2)
+    expect(state.get().selection.nodeId).toBe('node-2')
 
-    // Trying to select node-1 now should fail
+    // Trying to select node-1 now should fail (doesn't exist in new SourceMap)
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     actions.setSelection('node-1', 'editor')
-    expect(state.get().selection.nodeId).toBeNull()
+    // Selection should stay on fallback since node-1 doesn't exist
+    expect(state.get().selection.nodeId).toBe('node-2')
+  })
+})
+
+describe('Fallback Selection', () => {
+  beforeEach(() => {
+    state.set({
+      selection: { nodeId: null, origin: 'editor' },
+      multiSelection: [],
+      sourceMap: null,
+      compiling: false,
+      queuedSelection: null,
+    })
+  })
+
+  it('findFallbackSelection returns first root when available', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'root-1', line: 1 },
+      { nodeId: 'root-2', line: 5 },
+    ])
+
+    const fallback = actions.findFallbackSelection('deleted-node', sourceMap)
+    expect(fallback).toBe('root-1')
+  })
+
+  it('findFallbackSelection returns null for empty sourceMap', () => {
+    const sourceMap = createMockSourceMap([])
+    const fallback = actions.findFallbackSelection('deleted-node', sourceMap)
+    expect(fallback).toBeNull()
+  })
+
+  it('findFallbackWithInfo prefers next sibling', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+      { nodeId: 'child-2', parentId: 'parent', line: 3 },
+      { nodeId: 'child-3', parentId: 'parent', line: 4 },
+    ])
+
+    const fallback = actions.findFallbackWithInfo(
+      { nextSiblingId: 'child-3', prevSiblingId: 'child-1', parentId: 'parent' },
+      sourceMap
+    )
+    expect(fallback).toBe('child-3')
+  })
+
+  it('findFallbackWithInfo falls back to previous sibling', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+    ])
+
+    const fallback = actions.findFallbackWithInfo(
+      { nextSiblingId: 'deleted', prevSiblingId: 'child-1', parentId: 'parent' },
+      sourceMap
+    )
+    expect(fallback).toBe('child-1')
+  })
+
+  it('findFallbackWithInfo falls back to parent', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+    ])
+
+    const fallback = actions.findFallbackWithInfo(
+      { nextSiblingId: 'deleted', prevSiblingId: 'also-deleted', parentId: 'parent' },
+      sourceMap
+    )
+    expect(fallback).toBe('parent')
+  })
+
+  it('findFallbackWithInfo falls back to first root', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'root-1', line: 1 },
+      { nodeId: 'root-2', line: 5 },
+    ])
+
+    const fallback = actions.findFallbackWithInfo(
+      { nextSiblingId: 'deleted', prevSiblingId: 'also-deleted', parentId: 'also-gone' },
+      sourceMap
+    )
+    expect(fallback).toBe('root-1')
+  })
+
+  it('setCompileResult uses fallback when selection invalidated', () => {
+    // Set up initial state with selection
+    const sourceMap1 = createHierarchicalMockSourceMap([
+      { nodeId: 'root', line: 1 },
+      { nodeId: 'child-1', parentId: 'root', line: 2 },
+      { nodeId: 'child-2', parentId: 'root', line: 3 },
+    ])
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap: sourceMap1,
+      errors: [],
+    })
+    actions.setSelection('child-1', 'editor')
+    expect(state.get().selection.nodeId).toBe('child-1')
+
+    // Now compile with child-1 removed - should fallback to root
+    const sourceMap2 = createHierarchicalMockSourceMap([
+      { nodeId: 'root', line: 1 },
+      { nodeId: 'child-2', parentId: 'root', line: 3 },
+    ])
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap: sourceMap2,
+      errors: [],
+    })
+
+    // Should select first root as fallback
+    expect(state.get().selection.nodeId).toBe('root')
+  })
+
+  it('queued selection resolves after compile', () => {
+    // Queue a selection during compile
+    state.set({ sourceMap: null, compiling: true })
+    actions.setSelection('node-1', 'keyboard')
+
+    expect(state.get().queuedSelection).toEqual({ nodeId: 'node-1', origin: 'keyboard' })
+
+    // Now complete compile with the node present
+    const sourceMap = createMockSourceMap(['node-1', 'node-2'])
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap,
+      errors: [],
+    })
+
+    expect(state.get().selection.nodeId).toBe('node-1')
+    expect(state.get().queuedSelection).toBeNull()
+  })
+
+  it('queued selection falls back when node not found', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    // Queue a selection during compile
+    state.set({ sourceMap: null, compiling: true })
+    actions.setSelection('deleted-node', 'keyboard')
+
+    expect(state.get().queuedSelection).toEqual({ nodeId: 'deleted-node', origin: 'keyboard' })
+
+    // Now complete compile WITHOUT the queued node
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'root', line: 1 },
+      { nodeId: 'other', line: 2 },
+    ])
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap,
+      errors: [],
+    })
+
+    // Should fallback to first root
+    expect(state.get().selection.nodeId).toBe('root')
+    expect(state.get().queuedSelection).toBeNull()
+  })
+})
+
+describe('Hierarchy Navigation Helpers', () => {
+  it('hierarchical mock sourceMap returns correct children', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+      { nodeId: 'child-2', parentId: 'parent', line: 3 },
+      { nodeId: 'other', line: 10 },
+    ])
+
+    const children = sourceMap.getChildren('parent')
+    expect(children.length).toBe(2)
+    expect(children[0].nodeId).toBe('child-1')
+    expect(children[1].nodeId).toBe('child-2')
+  })
+
+  it('hierarchical mock sourceMap returns correct siblings', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+      { nodeId: 'child-2', parentId: 'parent', line: 3 },
+      { nodeId: 'child-3', parentId: 'parent', line: 4 },
+    ])
+
+    const siblings = sourceMap.getSiblings('child-2')
+    expect(siblings.length).toBe(2)
+    expect(siblings.map(s => s.nodeId)).toContain('child-1')
+    expect(siblings.map(s => s.nodeId)).toContain('child-3')
+  })
+
+  it('hierarchical mock sourceMap returns next sibling', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+      { nodeId: 'child-2', parentId: 'parent', line: 3 },
+      { nodeId: 'child-3', parentId: 'parent', line: 4 },
+    ])
+
+    const next = sourceMap.getNextSibling('child-1')
+    expect(next?.nodeId).toBe('child-2')
+
+    const nextOfLast = sourceMap.getNextSibling('child-3')
+    expect(nextOfLast).toBeNull()
+  })
+
+  it('hierarchical mock sourceMap returns previous sibling', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+      { nodeId: 'child-2', parentId: 'parent', line: 3 },
+      { nodeId: 'child-3', parentId: 'parent', line: 4 },
+    ])
+
+    const prev = sourceMap.getPreviousSibling('child-3')
+    expect(prev?.nodeId).toBe('child-2')
+
+    const prevOfFirst = sourceMap.getPreviousSibling('child-1')
+    expect(prevOfFirst).toBeNull()
+  })
+
+  it('hierarchical mock sourceMap returns parent', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'parent', line: 1 },
+      { nodeId: 'child-1', parentId: 'parent', line: 2 },
+    ])
+
+    const parent = sourceMap.getParent('child-1')
+    expect(parent?.nodeId).toBe('parent')
+
+    const rootParent = sourceMap.getParent('parent')
+    expect(rootParent).toBeNull()
+  })
+
+  it('hierarchical mock sourceMap returns root nodes', () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'root-1', line: 1 },
+      { nodeId: 'child', parentId: 'root-1', line: 2 },
+      { nodeId: 'root-2', line: 5 },
+    ])
+
+    const roots = sourceMap.getRootNodes()
+    expect(roots.length).toBe(2)
+    expect(roots[0].nodeId).toBe('root-1')
+    expect(roots[1].nodeId).toBe('root-2')
   })
 })

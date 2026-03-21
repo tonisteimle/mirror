@@ -380,6 +380,24 @@ export class MoveNodeWithLayoutCommand implements Command {
     return desc
   }
 
+  /**
+   * Validate a coordinate value
+   * Returns null if invalid (undefined, NaN, Infinity)
+   * Returns rounded integer if valid
+   */
+  private validateCoordinate(value: number | undefined): number | null {
+    if (value === undefined || value === null) {
+      console.warn('[MoveNodeWithLayoutCommand] Coordinate is undefined')
+      return null
+    }
+    if (!Number.isFinite(value)) {
+      console.warn('[MoveNodeWithLayoutCommand] Coordinate is not finite:', value)
+      return null
+    }
+    // Round to integer to avoid floating point issues
+    return Math.round(value)
+  }
+
   execute(ctx: CommandContext): CommandResult {
     const data = getSourceForModifier(ctx)
     if (!data) return { success: false, error: 'No source map' }
@@ -399,37 +417,51 @@ export class MoveNodeWithLayoutCommand implements Command {
     if (this.layoutTransition) {
       const { from, to, absolutePosition } = this.layoutTransition
 
-      // Create a new modifier with updated source
-      // Note: We need to recompile to get accurate SourceMap for property changes
-      // For now, we'll chain changes on the same source, which works for property operations
+      // Create a single modifier and reuse it for all property changes
+      // This is critical: CodeModifier persists changes internally,
+      // so we must use the same instance for sequential updates
       const postMoveModifier = new CodeModifier(source, data.sourceMap)
 
       if (from === 'flex' && to === 'absolute' && absolutePosition) {
-        // Flex → Absolute: Add x, y properties
-        const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(absolutePosition.x))
-        if (xResult.success) {
-          source = xResult.newSource
-          const yModifier = new CodeModifier(source, data.sourceMap)
-          const yResult = yModifier.updateProperty(this.nodeId, 'y', String(absolutePosition.y))
-          if (yResult.success) source = yResult.newSource
+        // Validate coordinates before applying
+        const x = this.validateCoordinate(absolutePosition.x)
+        const y = this.validateCoordinate(absolutePosition.y)
+
+        if (x !== null && y !== null) {
+          // Flex → Absolute: Add x, y properties
+          // Use the SAME modifier instance for both updates
+          const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(x))
+          if (xResult.success) {
+            source = xResult.newSource
+            // Reuse same modifier - it has updated internal state
+            const yResult = postMoveModifier.updateProperty(this.nodeId, 'y', String(y))
+            if (yResult.success) source = yResult.newSource
+          }
         }
       } else if (from === 'absolute' && to === 'flex') {
         // Absolute → Flex: Remove x, y properties
         const xResult = postMoveModifier.removeProperty(this.nodeId, 'x')
         if (xResult.success) {
           source = xResult.newSource
-          const yModifier = new CodeModifier(source, data.sourceMap)
-          const yResult = yModifier.removeProperty(this.nodeId, 'y')
+          // Reuse same modifier
+          const yResult = postMoveModifier.removeProperty(this.nodeId, 'y')
           if (yResult.success) source = yResult.newSource
         }
       } else if (from === 'absolute' && to === 'absolute' && absolutePosition) {
-        // Absolute → Absolute: Update x, y properties
-        const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(absolutePosition.x))
-        if (xResult.success) {
-          source = xResult.newSource
-          const yModifier = new CodeModifier(source, data.sourceMap)
-          const yResult = yModifier.updateProperty(this.nodeId, 'y', String(absolutePosition.y))
-          if (yResult.success) source = yResult.newSource
+        // Validate coordinates before applying
+        const x = this.validateCoordinate(absolutePosition.x)
+        const y = this.validateCoordinate(absolutePosition.y)
+
+        if (x !== null && y !== null) {
+          // Absolute → Absolute: Update x, y properties
+          // Use the SAME modifier instance for both updates
+          const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(x))
+          if (xResult.success) {
+            source = xResult.newSource
+            // Reuse same modifier
+            const yResult = postMoveModifier.updateProperty(this.nodeId, 'y', String(y))
+            if (yResult.success) source = yResult.newSource
+          }
         }
       }
     }

@@ -6,7 +6,8 @@
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
  * - Delete/Backspace: Delete selected element(s)
- * - Escape: Clear multi-selection
+ * - Escape: Clear multi-selection, or navigate to parent element
+ * - Enter: Navigate to first child element
  * - Arrow keys: Move selected element (1px normal, 10px with Shift)
  */
 
@@ -95,14 +96,71 @@ export class KeyboardHandler {
       }
     }
 
-    // Escape = Clear multi-selection
+    // Enter = Navigate to first child element
+    if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+      const currentSelection = state.get().selection?.nodeId
+      if (currentSelection) {
+        e.preventDefault()
+        this.selectFirstChild(currentSelection)
+        return
+      }
+    }
+
+    // Escape = Clear multi-selection OR navigate to parent
     if (e.key === 'Escape') {
       const multiSelection = state.get().multiSelection
       if (multiSelection.length > 0) {
+        // First: clear multi-selection
         e.preventDefault()
         actions.clearMultiSelection()
         return
       }
+
+      // Second: navigate to parent element
+      const currentSelection = state.get().selection?.nodeId
+      if (currentSelection) {
+        e.preventDefault()
+        this.selectParent(currentSelection)
+        return
+      }
+    }
+  }
+
+  /**
+   * Select the parent of the current element
+   * If no parent exists, clears selection
+   */
+  private selectParent(nodeId: string): void {
+    const sourceMap = state.get().sourceMap
+    if (!sourceMap) return
+
+    const node = sourceMap.getNodeById(nodeId)
+    if (!node) return
+
+    if (node.parentId) {
+      // Navigate to parent
+      actions.setSelection(node.parentId, 'keyboard')
+      events.emit('notification:info', { message: 'Selected parent element', duration: 1500 })
+    } else {
+      // No parent - at root level, clear selection
+      actions.setSelection(null, 'keyboard')
+    }
+  }
+
+  /**
+   * Select the first child of the current element
+   * If no children exist, does nothing
+   */
+  private selectFirstChild(nodeId: string): void {
+    const sourceMap = state.get().sourceMap
+    if (!sourceMap) return
+
+    const children = sourceMap.getChildren(nodeId)
+    if (children.length > 0) {
+      // Sort by line number and select first
+      const sorted = children.sort((a, b) => a.position.line - b.position.line)
+      actions.setSelection(sorted[0].nodeId, 'keyboard')
+      events.emit('notification:info', { message: 'Selected child element', duration: 1500 })
     }
   }
 

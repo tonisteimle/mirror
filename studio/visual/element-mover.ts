@@ -485,16 +485,23 @@ export class ElementMover {
   }
 
   private snapToGrid(x: number, y: number): { x: number; y: number } {
+    // Validate input coordinates
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      console.warn('[ElementMover] Invalid coordinates for snapToGrid:', { x, y })
+      return { x: 0, y: 0 }
+    }
+
     // Use grid settings, fall back to config if not enabled
     const grid = gridSettings.get()
 
-    // If grid snap is disabled, return unmodified position
+    // If grid snap is disabled, return rounded position
     if (!grid.enabled) {
-      return { x, y }
+      return { x: Math.round(x), y: Math.round(y) }
     }
 
     // Use settings grid size, or fall back to config
-    const gridSize = grid.size || this.config.gridSnapSize
+    // Ensure grid size is at least 1 to prevent division by zero
+    const gridSize = Math.max(1, grid.size || this.config.gridSnapSize || 8)
     return {
       x: Math.round(x / gridSize) * gridSize,
       y: Math.round(y / gridSize) * gridSize,

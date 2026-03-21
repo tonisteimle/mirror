@@ -98,12 +98,20 @@ export function calculatePlacement(
 ): DropZone {
   // For positioned containers, return absolute placement
   if (target.isPositioned) {
+    // Calculate and validate absolute position
+    const absX = cursor.x - target.rect.x
+    const absY = cursor.y - target.rect.y
+
+    // Ensure valid numbers, default to 0 if invalid
+    const safeX = Number.isFinite(absX) ? Math.max(0, Math.round(absX)) : 0
+    const safeY = Number.isFinite(absY) ? Math.max(0, Math.round(absY)) : 0
+
     return {
       nodeId: target.nodeId,
       placement: 'absolute',
       absolutePosition: {
-        x: cursor.x - target.rect.x,
-        y: cursor.y - target.rect.y,
+        x: safeX,
+        y: safeY,
       },
     }
   }
