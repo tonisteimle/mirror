@@ -142,7 +142,10 @@ export class EditorController {
       const lineInfo = this.editorView.state.doc.line(lineNumber)
       const effect = this.editorView.constructor.scrollIntoView(lineInfo.from, { y: center ? 'center' : 'start' })
       this.editorView.dispatch({ effects: effect })
-    } catch {}
+    } catch (e) {
+      // Line number may be out of bounds after code changes
+      console.warn('[EditorController] scrollToLine failed:', lineNumber, e)
+    }
   }
 
   scrollToLineAndSelect(lineNumber: number): void {
@@ -151,7 +154,10 @@ export class EditorController {
       const lineInfo = this.editorView.state.doc.line(lineNumber)
       const effect = this.editorView.constructor.scrollIntoView(lineInfo.from, { y: 'center' })
       this.editorView.dispatch({ effects: effect, selection: { anchor: lineInfo.from } })
-    } catch {}
+    } catch (e) {
+      // Line number may be out of bounds after code changes
+      console.warn('[EditorController] scrollToLineAndSelect failed:', lineNumber, e)
+    }
   }
 
   onContentChange(callback: ChangeCallback): () => void {

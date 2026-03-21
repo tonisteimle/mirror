@@ -58,7 +58,12 @@ export interface StudioInstance {
   agent: AgentIntegration | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
+  /** Cleanup all event subscriptions and resources */
+  dispose: () => void
 }
+
+// Track event subscriptions for cleanup
+const eventUnsubscribes: Array<() => void> = []
 
 export const studio: StudioInstance = {
   state,
@@ -76,6 +81,32 @@ export const studio: StudioInstance = {
   agent: null,
   drawManager: null,
   inlineEdit: null,
+  dispose: () => {
+    // Unsubscribe all event listeners
+    for (const unsubscribe of eventUnsubscribes) {
+      unsubscribe()
+    }
+    eventUnsubscribes.length = 0
+
+    // Dispose components
+    studio.sync?.dispose()
+    studio.propertyPanel?.detach()
+    studio.componentPanel?.dispose()
+    studio.drawManager?.dispose()
+    studio.inlineEdit?.dispose()
+    studio.preview?.dispose()
+
+    // Clear references
+    studio.editor = null
+    studio.preview = null
+    studio.sync = null
+    studio.propertyPanel = null
+    studio.componentPanel = null
+    studio.breadcrumb = null
+    studio.drawManager = null
+    studio.inlineEdit = null
+    studio.agent = null
+  },
 }
 
 // Store property panel container for lazy initialization
@@ -199,10 +230,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   }
 
   // Wire handle drag events to code modification
-  events.on('handle:drag-end', ({ nodeId, property, value }) => {
-    // Use executor to apply property change (supports undo/redo)
-    executor.execute(new SetPropertyCommand({ nodeId, property, value: String(value) }))
-  })
+  eventUnsubscribes.push(
+    events.on('handle:drag-end', ({ nodeId, property, value }) => {
+      // Use executor to apply property change (supports undo/redo)
+      executor.execute(new SetPropertyCommand({ nodeId, property, value: String(value) }))
+    })
+  )
 
   // Sync - LineOffsetService handles editor ↔ SourceMap line translation
   const lineOffset = createLineOffsetService()
@@ -279,29 +312,37 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studio.inlineEdit = inlineEditController
 
   // Listen for double-click events from PreviewController
-  events.on('preview:element-dblclicked', ({ nodeId }) => {
-    inlineEditController.startEdit(nodeId)
-  })
+  eventUnsubscribes.push(
+    events.on('preview:element-dblclicked', ({ nodeId }) => {
+      inlineEditController.startEdit(nodeId)
+    })
+  )
 
   // Hide resize handles during inline editing
-  events.on('inline-edit:started', () => {
-    previewController.getResizeManager()?.hideHandles()
-    previewController.getHandleManager()?.hideHandles()
-  })
+  eventUnsubscribes.push(
+    events.on('inline-edit:started', () => {
+      previewController.getResizeManager()?.hideHandles()
+      previewController.getHandleManager()?.hideHandles()
+    })
+  )
 
   // Restore resize handles after inline editing ends
-  events.on('inline-edit:ended', () => {
-    const selectedNodeId = state.get().selection.nodeId
-    if (selectedNodeId) {
-      previewController.getResizeManager()?.showHandles(selectedNodeId)
-      previewController.getHandleManager()?.showHandles(selectedNodeId)
-    }
-  })
+  eventUnsubscribes.push(
+    events.on('inline-edit:ended', () => {
+      const selectedNodeId = state.get().selection.nodeId
+      if (selectedNodeId) {
+        previewController.getResizeManager()?.showHandles(selectedNodeId)
+        previewController.getHandleManager()?.showHandles(selectedNodeId)
+      }
+    })
+  )
 
   // Update InlineEditController's sourceMap after compile
-  events.on('compile:completed', () => {
-    inlineEditController.setSourceMap(state.get().sourceMap)
-  })
+  eventUnsubscribes.push(
+    events.on('compile:completed', () => {
+      inlineEditController.setSourceMap(state.get().sourceMap)
+    })
+  )
 
   // Initialize DrawManager
   const drawManager = createDrawManager({
@@ -431,35 +472,39 @@ function initializePanelToolbar(): void {
   })
 
   // Listen for visibility changes (from state)
-  events.on('panel:visibility-changed', ({ panel, visible }) => {
-    const panelEl = panelElements[panel]
-    const checkbox = menu.querySelector(`[data-panel="${panel}"] input`) as HTMLInputElement | null
-
-    if (panelEl) {
-      panelEl.classList.toggle('panel-hidden', !visible)
-    }
-    if (checkbox) {
-      checkbox.checked = visible
-    }
-
-    console.log(`[ViewMenu] ${panel} visibility: ${visible}`)
-  })
-
-  // Listen for settings loaded from server (after login)
-  events.on('settings:loaded', ({ panelVisibility }) => {
-    for (const [panelKey, isVisible] of Object.entries(panelVisibility)) {
-      const panelEl = panelElements[panelKey]
-      const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
+  eventUnsubscribes.push(
+    events.on('panel:visibility-changed', ({ panel, visible }) => {
+      const panelEl = panelElements[panel]
+      const checkbox = menu.querySelector(`[data-panel="${panel}"] input`) as HTMLInputElement | null
 
       if (panelEl) {
-        panelEl.classList.toggle('panel-hidden', !isVisible)
+        panelEl.classList.toggle('panel-hidden', !visible)
       }
       if (checkbox) {
-        checkbox.checked = isVisible as boolean
+        checkbox.checked = visible
       }
-    }
-    console.log('[ViewMenu] Settings loaded from server')
-  })
+
+      console.log(`[ViewMenu] ${panel} visibility: ${visible}`)
+    })
+  )
+
+  // Listen for settings loaded from server (after login)
+  eventUnsubscribes.push(
+    events.on('settings:loaded', ({ panelVisibility }) => {
+      for (const [panelKey, isVisible] of Object.entries(panelVisibility)) {
+        const panelEl = panelElements[panelKey]
+        const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
+
+        if (panelEl) {
+          panelEl.classList.toggle('panel-hidden', !isVisible)
+        }
+        if (checkbox) {
+          checkbox.checked = isVisible as boolean
+        }
+      }
+      console.log('[ViewMenu] Settings loaded from server')
+    })
+  )
 
   console.log('[Studio] View menu initialized')
 }
