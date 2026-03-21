@@ -399,6 +399,17 @@ export class ChatPanel {
   private generateId(): string {
     return Math.random().toString(36).substring(2, 9)
   }
+
+  /**
+   * Dispose the chat panel and clean up resources
+   */
+  dispose(): void {
+    // Clear messages
+    this.messages = []
+
+    // Clear container (removes event listeners attached to child elements)
+    this.container.innerHTML = ''
+  }
 }
 
 // ============================================
