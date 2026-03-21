@@ -34,6 +34,7 @@ export interface SyncCoordinatorOptions {
 
 export class SyncCoordinator {
   private sourceMap: SourceMap | null = null
+  private sourceMapVersion = 0
   private targets: SyncTargets = {}
   private options: Required<Omit<SyncCoordinatorOptions, 'lineOffset'>>
   private syncInProgress = false
@@ -85,11 +86,15 @@ export class SyncCoordinator {
   }
 
   setSourceMap(sourceMap: SourceMap | null): void {
+    // Increment version to invalidate any in-progress syncs
+    this.sourceMapVersion++
     // Clear pending cursor sync to prevent stale sync with old SourceMap
     if (this.pendingCursorSync) {
       clearTimeout(this.pendingCursorSync)
       this.pendingCursorSync = null
     }
+    // Clear pending sync as it references old sourceMap
+    this.pendingSync = null
     this.sourceMap = sourceMap
   }
 
@@ -218,6 +223,9 @@ export class SyncCoordinator {
       return
     }
 
+    // Capture version to detect sourceMap changes during sync
+    const capturedVersion = this.sourceMapVersion
+
     this.syncInProgress = true
     try {
       if (this.options.debug) {
@@ -227,6 +235,14 @@ export class SyncCoordinator {
           hasSourceMap: !!this.sourceMap,
           hasScrollTarget: !!this.targets.scrollEditorToLine
         })
+      }
+
+      // Abort if sourceMap changed during sync setup
+      if (this.sourceMapVersion !== capturedVersion) {
+        if (this.options.debug) {
+          console.log('[SyncCoordinator] Aborting sync - sourceMap changed')
+        }
+        return
       }
 
       if (nodeId && this.sourceMap) {

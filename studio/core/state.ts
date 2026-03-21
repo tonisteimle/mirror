@@ -367,6 +367,9 @@ export const actions = {
         if (resolvedNodeId) {
           console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)
         }
+      }).catch(error => {
+        console.error('[State] Error resolving deferred selection:', error)
+        events.emit('state:error', { error, context: 'deferred selection resolution' })
       })
       return // Skip selection validation when we have deferred selection
     }
@@ -380,6 +383,9 @@ export const actions = {
         if (resolvedNodeId) {
           console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
         }
+      }).catch(error => {
+        console.error('[State] Error resolving pending selection:', error)
+        events.emit('state:error', { error, context: 'pending selection resolution' })
       })
       return // Skip selection validation when we have pending selection
     }

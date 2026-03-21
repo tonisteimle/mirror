@@ -175,11 +175,15 @@ export class InlineEditSession {
     // Add to DOM
     document.body.appendChild(this.inputElement)
 
+    // Capture reference before RAF to prevent race condition
+    const inputRef = this.inputElement
+
     // Focus and select all (after a small delay to ensure rendering)
     requestAnimationFrame(() => {
-      if (this.inputElement) {
-        this.inputElement.focus()
-        this.inputElement.select()
+      // Use captured reference and verify still in DOM
+      if (inputRef && inputRef.isConnected) {
+        inputRef.focus()
+        inputRef.select()
       }
     })
   }

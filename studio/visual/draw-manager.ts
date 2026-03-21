@@ -86,6 +86,7 @@ export class DrawManager {
   private snapIntegration: SnapIntegration
   private guideRenderer: GuideRenderer
   private rafId: number | null = null
+  private isDisposed: boolean = false
 
   // Event handlers (bound)
   private boundHandleMouseDown: (e: MouseEvent) => void
@@ -174,6 +175,7 @@ export class DrawManager {
    * Dispose manager
    */
   dispose(): void {
+    this.isDisposed = true
     this.cancel()
     this.renderer.dispose()
     this.guideRenderer.dispose()
@@ -296,12 +298,17 @@ export class DrawManager {
    * Handle mousemove (update drawing)
    */
   private handleMouseMove(e: MouseEvent): void {
-    if (this.mode !== 'drawing' || !this.drawState) return
+    if (this.mode !== 'drawing' || !this.drawState || this.isDisposed) return
 
     // RAF throttle
     if (this.rafId !== null) return
 
     this.rafId = requestAnimationFrame(() => {
+      // Guard against disposal during RAF queue
+      if (this.isDisposed || !this.drawState) {
+        this.rafId = null
+        return
+      }
       this.updateDrawing(e.clientX, e.clientY, e.shiftKey, e.altKey, e.metaKey || e.ctrlKey)
       this.rafId = null
     })

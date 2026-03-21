@@ -42,6 +42,7 @@ export class EditorTriggerManager {
   private state: TriggerState = createDefaultState()
   private componentPrimitives: ComponentPrimitivesMap = new Map()
   private clickOutsideHandler: ((e: MouseEvent) => void) | null = null
+  private clickOutsideTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   /**
    * Register a trigger configuration
@@ -254,12 +255,16 @@ export class EditorTriggerManager {
       }
     }
 
-    if (selectedValue !== undefined) {
-      config.onSelect(selectedValue, this.state.context, view)
+    try {
+      if (selectedValue !== undefined) {
+        config.onSelect(selectedValue, this.state.context, view)
+      }
+    } catch (error) {
+      console.error('[TriggerManager] Error in onSelect callback:', error)
+    } finally {
+      this.hidePicker()
+      view.focus()
     }
-
-    this.hidePicker()
-    view.focus()
   }
 
   /**
@@ -680,12 +685,20 @@ export class EditorTriggerManager {
     }
 
     // Delay to prevent immediate close
-    setTimeout(() => {
-      document.addEventListener('mousedown', this.clickOutsideHandler!)
+    this.clickOutsideTimeoutId = setTimeout(() => {
+      this.clickOutsideTimeoutId = null
+      if (this.clickOutsideHandler) {
+        document.addEventListener('mousedown', this.clickOutsideHandler)
+      }
     }, 0)
   }
 
   private teardownClickOutside(): void {
+    // Cancel pending timeout to prevent orphaned listeners
+    if (this.clickOutsideTimeoutId !== null) {
+      clearTimeout(this.clickOutsideTimeoutId)
+      this.clickOutsideTimeoutId = null
+    }
     if (this.clickOutsideHandler) {
       document.removeEventListener('mousedown', this.clickOutsideHandler)
       this.clickOutsideHandler = null
