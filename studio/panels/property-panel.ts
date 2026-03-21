@@ -96,6 +96,9 @@ export class PropertyPanel {
   // Pending update during compile
   private pendingUpdateNodeId: string | null = null
 
+  // Active dropdown close handlers for cleanup
+  private activeDropdownCloseHandlers: Set<(e: MouseEvent) => void> = new Set()
+
   // Validation patterns for different property types
   private static readonly VALIDATION_RULES: Record<string, {
     pattern: RegExp
@@ -237,6 +240,23 @@ export class PropertyPanel {
     this.clearDebounceTimers()
     this.invalidateTokenCache()
     this.pendingUpdateNodeId = null
+
+    // Clean up any active dropdown close handlers to prevent memory leaks
+    this.cleanupDropdownHandlers()
+  }
+
+  /**
+   * Clean up all active dropdown close handlers
+   */
+  private cleanupDropdownHandlers(): void {
+    for (const handler of this.activeDropdownCloseHandlers) {
+      document.removeEventListener('click', handler)
+    }
+    this.activeDropdownCloseHandlers.clear()
+
+    // Also remove any open dropdowns
+    const dropdowns = this.container.querySelectorAll('.pp-pad-dropdown-menu')
+    dropdowns.forEach(d => d.remove())
   }
 
   /**
@@ -3064,13 +3084,15 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       }
     })
 
-    // Close on outside click
+    // Close on outside click (with cleanup tracking)
     const closeDropdown = (ev: MouseEvent) => {
       if (!dropdown.contains(ev.target as Node)) {
         dropdown.remove()
         document.removeEventListener('click', closeDropdown)
+        this.activeDropdownCloseHandlers.delete(closeDropdown)
       }
     }
+    this.activeDropdownCloseHandlers.add(closeDropdown)
     requestAnimationFrame(() => document.addEventListener('click', closeDropdown))
   }
 
@@ -3121,13 +3143,15 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       }
     })
 
-    // Close on outside click
+    // Close on outside click (with cleanup tracking)
     const closeFontDropdown = (ev: MouseEvent) => {
       if (!dropdown.contains(ev.target as Node)) {
         dropdown.remove()
         document.removeEventListener('click', closeFontDropdown)
+        this.activeDropdownCloseHandlers.delete(closeFontDropdown)
       }
     }
+    this.activeDropdownCloseHandlers.add(closeFontDropdown)
     requestAnimationFrame(() => document.addEventListener('click', closeFontDropdown))
   }
 
@@ -3181,13 +3205,15 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       }
     })
 
-    // Close on outside click
+    // Close on outside click (with cleanup tracking)
     const closeFontsizeDropdown = (ev: MouseEvent) => {
       if (!dropdown.contains(ev.target as Node)) {
         dropdown.remove()
         document.removeEventListener('click', closeFontsizeDropdown)
+        this.activeDropdownCloseHandlers.delete(closeFontsizeDropdown)
       }
     }
+    this.activeDropdownCloseHandlers.add(closeFontsizeDropdown)
     requestAnimationFrame(() => document.addEventListener('click', closeFontsizeDropdown))
   }
 
@@ -3241,13 +3267,15 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       }
     })
 
-    // Close on outside click
+    // Close on outside click (with cleanup tracking)
     const closeWeightDropdown = (ev: MouseEvent) => {
       if (!dropdown.contains(ev.target as Node)) {
         dropdown.remove()
         document.removeEventListener('click', closeWeightDropdown)
+        this.activeDropdownCloseHandlers.delete(closeWeightDropdown)
       }
     }
+    this.activeDropdownCloseHandlers.add(closeWeightDropdown)
     requestAnimationFrame(() => document.addEventListener('click', closeWeightDropdown))
   }
 

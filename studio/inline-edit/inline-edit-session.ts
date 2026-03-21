@@ -31,6 +31,12 @@ export class InlineEditSession {
   private inputElement: HTMLInputElement | null = null
   private overlay: HTMLDivElement | null = null
 
+  // Bound event handlers for proper cleanup
+  private boundHandleKeyDown: ((e: KeyboardEvent) => void) | null = null
+  private boundHandleInput: (() => void) | null = null
+  private boundHandleBlur: ((e: FocusEvent) => void) | null = null
+  private boundHandleOverlayClick: ((e: MouseEvent) => void) | null = null
+
   constructor(config: InlineEditSessionConfig) {
     this.element = config.element
     this.nodeId = config.nodeId
@@ -123,7 +129,8 @@ export class InlineEditSession {
       z-index: 9998;
       cursor: default;
     `
-    this.overlay.addEventListener('mousedown', this.handleOverlayClick.bind(this))
+    this.boundHandleOverlayClick = this.handleOverlayClick.bind(this)
+    this.overlay.addEventListener('mousedown', this.boundHandleOverlayClick)
     document.body.appendChild(this.overlay)
 
     // Create input element
@@ -157,10 +164,13 @@ export class InlineEditSession {
       box-sizing: border-box;
     `
 
-    // Add event listeners
-    this.inputElement.addEventListener('keydown', this.handleKeyDown.bind(this))
-    this.inputElement.addEventListener('input', this.handleInput.bind(this))
-    this.inputElement.addEventListener('blur', this.handleBlur.bind(this))
+    // Add event listeners with bound handlers for proper cleanup
+    this.boundHandleKeyDown = this.handleKeyDown.bind(this)
+    this.boundHandleInput = this.handleInput.bind(this)
+    this.boundHandleBlur = this.handleBlur.bind(this)
+    this.inputElement.addEventListener('keydown', this.boundHandleKeyDown)
+    this.inputElement.addEventListener('input', this.boundHandleInput)
+    this.inputElement.addEventListener('blur', this.boundHandleBlur)
 
     // Add to DOM
     document.body.appendChild(this.inputElement)
@@ -175,17 +185,36 @@ export class InlineEditSession {
   }
 
   /**
-   * Remove the floating input field
+   * Remove the floating input field and clean up event listeners
    */
   private removeFloatingInput(): void {
+    // Remove event listeners before removing elements to prevent memory leaks
     if (this.inputElement) {
+      if (this.boundHandleKeyDown) {
+        this.inputElement.removeEventListener('keydown', this.boundHandleKeyDown)
+      }
+      if (this.boundHandleInput) {
+        this.inputElement.removeEventListener('input', this.boundHandleInput)
+      }
+      if (this.boundHandleBlur) {
+        this.inputElement.removeEventListener('blur', this.boundHandleBlur)
+      }
       this.inputElement.remove()
       this.inputElement = null
     }
     if (this.overlay) {
+      if (this.boundHandleOverlayClick) {
+        this.overlay.removeEventListener('mousedown', this.boundHandleOverlayClick)
+      }
       this.overlay.remove()
       this.overlay = null
     }
+
+    // Clear bound handler references
+    this.boundHandleKeyDown = null
+    this.boundHandleInput = null
+    this.boundHandleBlur = null
+    this.boundHandleOverlayClick = null
   }
 
   /**

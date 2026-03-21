@@ -291,10 +291,17 @@ export class DragController {
 
     // If we just started dragging, notify once
     if (this.state.isDragging() && !this.dragStartNotified) {
-      this.dragStartNotified = true
       const source = this.state.getSource()
       if (source) {
-        this.callbacks.onDragStart?.(source)
+        // Set flag before callback to prevent re-entry
+        this.dragStartNotified = true
+        try {
+          this.callbacks.onDragStart?.(source)
+        } catch (e) {
+          // Callback error should not interrupt drag operation
+          console.error('[DragController] onDragStart callback error:', e)
+          this.callbacks.onError?.(`onDragStart callback failed: ${e}`)
+        }
       }
     }
 
