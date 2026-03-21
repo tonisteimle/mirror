@@ -295,7 +295,13 @@ export const actions = {
         console.log('[State] Resolving queued selection:', queued.nodeId)
         actions.setSelection(queued.nodeId, queued.origin)
       } else {
+        // Node no longer exists - find a fallback
         console.warn('[State] Queued selection no longer exists:', queued.nodeId)
+        const fallbackId = actions.findFallbackSelection(queued.nodeId, result.sourceMap)
+        if (fallbackId) {
+          console.log('[State] Using fallback for queued selection:', fallbackId)
+          actions.setSelection(fallbackId, queued.origin)
+        }
       }
       return
     }

@@ -144,7 +144,7 @@ export class InlineEditSession {
       margin: 0;
       border: 2px solid var(--color-primary, #3B82F6);
       border-radius: 3px;
-      background: var(--color-surface, #1a1a1a);
+      background: transparent;
       color: ${computed.color};
       font-family: ${computed.fontFamily};
       font-size: ${computed.fontSize};

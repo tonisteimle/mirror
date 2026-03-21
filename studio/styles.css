@@ -6252,9 +6252,9 @@ select.tomselected,
    Figma-style inline editing with floating input
    ============================================ */
 
-/* Element being edited - make slightly transparent so input is visible */
+/* Element being edited - hide text since input overlays it */
 .inline-editing {
-  opacity: 0.3 !important;
+  color: transparent !important;
 }
 
 /* Floating input field */

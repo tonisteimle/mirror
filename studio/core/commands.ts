@@ -215,7 +215,12 @@ export class DeleteNodeCommand implements Command {
   private nodeId: string
   private deletedContent: string | null = null
   private change: CodeChange | null = null
-  private parentId: string | null = null
+  // Store fallback info BEFORE deletion for robust selection recovery
+  private fallbackInfo: {
+    parentId?: string
+    nextSiblingId?: string
+    prevSiblingId?: string
+  } = {}
 
   constructor(params: { nodeId: string }) {
     this.nodeId = params.nodeId
@@ -226,9 +231,16 @@ export class DeleteNodeCommand implements Command {
     const data = getSourceForModifier(ctx)
     if (!data) return { success: false, error: 'No source map' }
 
-    // Store parent for selection recovery
+    // Store fallback info BEFORE deletion for robust selection recovery
+    // Priority: next sibling → previous sibling → parent
     const node = data.sourceMap.getNodeById(this.nodeId)
-    this.parentId = node?.parentId || null
+    if (node) {
+      this.fallbackInfo.parentId = node.parentId
+      const nextSibling = data.sourceMap.getNextSibling(this.nodeId)
+      const prevSibling = data.sourceMap.getPreviousSibling(this.nodeId)
+      this.fallbackInfo.nextSiblingId = nextSibling?.nodeId
+      this.fallbackInfo.prevSiblingId = prevSibling?.nodeId
+    }
 
     const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.removeNode(this.nodeId)
@@ -239,11 +251,19 @@ export class DeleteNodeCommand implements Command {
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
 
-    // Selection recovery: select parent instead of clearing
+    // Selection recovery: use pre-computed fallback info
+    // The actual selection will be set after compile via setCompileResult
+    // But we queue a selection hint so the system knows what to select
     if (state.get().selection.nodeId === this.nodeId) {
-      if (this.parentId) {
-        // Select parent node for context preservation
-        actions.setSelection(this.parentId, 'keyboard')
+      // Queue the fallback selection - will be resolved after compile
+      // Priority: next sibling → previous sibling → parent
+      const fallbackId = this.fallbackInfo.nextSiblingId
+        || this.fallbackInfo.prevSiblingId
+        || this.fallbackInfo.parentId
+
+      if (fallbackId) {
+        // Queue selection to be resolved after compile
+        state.set({ queuedSelection: { nodeId: fallbackId, origin: 'keyboard' } })
       } else if (ctx.clearSelection) {
         ctx.clearSelection('keyboard')
       } else {
@@ -260,8 +280,8 @@ export class DeleteNodeCommand implements Command {
     ctx.applyChange(undoChange)
 
     // Re-select the restored node after undo
-    // Note: nodeId might not be valid until after recompile, but we set it optimistically
-    actions.setSelection(this.nodeId, 'keyboard')
+    // Queue selection to be resolved after compile
+    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
 
     return { success: true, change: undoChange }
   }
