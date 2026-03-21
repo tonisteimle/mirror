@@ -56,13 +56,12 @@ export class InlineEditController {
    * Start editing a specific node by ID
    */
   startEdit(nodeId: string): boolean {
-    // Don't start if already editing
+    // Don't start if already editing same element
     if (this.currentSession?.isEditing()) {
-      // If clicking on same element, ignore
       if (state.get().inlineEditNodeId === nodeId) {
         return false
       }
-      // End current session first
+      // End current session first (save it)
       this.endEdit(true)
     }
 
@@ -78,14 +77,22 @@ export class InlineEditController {
 
     // Check if element type is editable
     if (!this.isElementEditable(nodeId)) {
+      console.log('[InlineEdit] Element not editable:', nodeId)
       return false
     }
+
+    // Hide resize handles during editing
+    events.emit('inline-edit:started', { nodeId, element })
 
     // Create and start session
     this.currentSession = createInlineEditSession({
       element,
       nodeId,
       onEnd: this.handleSessionEnd.bind(this),
+      onInput: () => {
+        // Emit event for potential resize handle updates
+        events.emit('inline-edit:input', { nodeId, element })
+      },
     })
 
     this.currentSession.start()
@@ -93,12 +100,10 @@ export class InlineEditController {
     // Update state
     actions.setInlineEditActive(true, nodeId)
 
-    // Emit event
-    events.emit('inline-edit:started', { nodeId, element })
-
     // Callback
     this.onEditStart?.(nodeId, element)
 
+    console.log('[InlineEdit] Started editing:', nodeId)
     return true
   }
 
@@ -160,18 +165,28 @@ export class InlineEditController {
   private isElementEditable(nodeId: string): boolean {
     // Get component type from SourceMap
     const sourceMap = this.sourceMap || state.get().sourceMap
-    if (!sourceMap) return false
+    if (!sourceMap) {
+      console.warn('[InlineEdit] No SourceMap available')
+      return false
+    }
 
     const node = sourceMap.getNodeById(nodeId)
-    if (!node) return false
+    if (!node) {
+      console.warn('[InlineEdit] Node not found in SourceMap:', nodeId)
+      return false
+    }
 
-    return isEditableType(node.componentName)
+    const editable = isEditableType(node.componentName)
+    console.log('[InlineEdit] Component type:', node.componentName, 'editable:', editable)
+    return editable
   }
 
   /**
    * Handle session end
    */
   private handleSessionEnd(result: InlineEditResult): void {
+    console.log('[InlineEdit] Session ended:', result)
+
     // Clear session
     this.currentSession = null
 

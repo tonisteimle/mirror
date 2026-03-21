@@ -279,6 +279,21 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     inlineEditController.startEdit(nodeId)
   })
 
+  // Hide resize handles during inline editing
+  events.on('inline-edit:started', () => {
+    previewController.getResizeManager()?.hideHandles()
+    previewController.getHandleManager()?.hideHandles()
+  })
+
+  // Restore resize handles after inline editing ends
+  events.on('inline-edit:ended', () => {
+    const selectedNodeId = state.get().selection.nodeId
+    if (selectedNodeId) {
+      previewController.getResizeManager()?.showHandles(selectedNodeId)
+      previewController.getHandleManager()?.showHandles(selectedNodeId)
+    }
+  })
+
   // Update InlineEditController's sourceMap after compile
   events.on('compile:completed', () => {
     inlineEditController.setSourceMap(state.get().sourceMap)

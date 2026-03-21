@@ -5,7 +5,7 @@
  * - Setting contentEditable on the element
  * - Focusing and selecting text
  * - Keyboard events (Enter to save, Escape to cancel)
- * - Blur to save
+ * - Click outside to save
  */
 
 import type { InlineEditResult } from './types'
@@ -17,6 +17,8 @@ export interface InlineEditSessionConfig {
   nodeId: string
   /** Callback when session ends */
   onEnd: (result: InlineEditResult) => void
+  /** Callback when text changes (for live updates) */
+  onInput?: (text: string) => void
 }
 
 export class InlineEditSession {
@@ -24,23 +26,28 @@ export class InlineEditSession {
   private nodeId: string
   private originalText: string
   private onEnd: (result: InlineEditResult) => void
+  private onInput?: (text: string) => void
   private isActive: boolean = false
+  private isEnding: boolean = false // Prevent double-end
 
   // Bound handlers for cleanup
   private boundHandleKeyDown: (e: KeyboardEvent) => void
-  private boundHandleBlur: (e: FocusEvent) => void
   private boundHandleInput: () => void
+  private boundHandleClickOutside: (e: MouseEvent) => void
+  private boundHandlePaste: (e: ClipboardEvent) => void
 
   constructor(config: InlineEditSessionConfig) {
     this.element = config.element
     this.nodeId = config.nodeId
     this.originalText = ''
     this.onEnd = config.onEnd
+    this.onInput = config.onInput
 
     // Bind handlers
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
-    this.boundHandleBlur = this.handleBlur.bind(this)
     this.boundHandleInput = this.handleInput.bind(this)
+    this.boundHandleClickOutside = this.handleClickOutside.bind(this)
+    this.boundHandlePaste = this.handlePaste.bind(this)
   }
 
   /**
@@ -50,52 +57,71 @@ export class InlineEditSession {
     if (this.isActive) return
 
     this.isActive = true
+    this.isEnding = false
 
-    // Store original text content
-    this.originalText = this.element.textContent || ''
+    // Store original text content (trimmed)
+    this.originalText = this.element.textContent?.trim() || ''
 
     // Make element editable
     this.element.contentEditable = 'true'
     this.element.classList.add('inline-editing')
 
+    // Prevent line breaks in single-line elements
+    this.element.style.whiteSpace = 'pre'
+
     // Disable spellcheck for cleaner editing
     this.element.spellcheck = false
 
-    // Focus and select all text
-    this.element.focus()
-    this.selectAllText()
-
-    // Add event listeners
-    this.element.addEventListener('keydown', this.boundHandleKeyDown)
-    this.element.addEventListener('blur', this.boundHandleBlur)
+    // Add event listeners on element
+    this.element.addEventListener('keydown', this.boundHandleKeyDown, { capture: true })
     this.element.addEventListener('input', this.boundHandleInput)
+    this.element.addEventListener('paste', this.boundHandlePaste)
 
     // Prevent click events from propagating during edit
-    this.element.addEventListener('click', this.stopPropagation)
-    this.element.addEventListener('mousedown', this.stopPropagation)
+    this.element.addEventListener('click', this.stopPropagation, { capture: true })
+    this.element.addEventListener('mousedown', this.stopPropagation, { capture: true })
+
+    // Click outside listener (on document, delayed to avoid immediate trigger)
+    setTimeout(() => {
+      if (this.isActive) {
+        document.addEventListener('mousedown', this.boundHandleClickOutside, { capture: true })
+      }
+    }, 100)
+
+    // Focus and select all text (use setTimeout to ensure DOM is ready)
+    setTimeout(() => {
+      if (this.isActive) {
+        this.element.focus()
+        this.selectAllText()
+      }
+    }, 0)
   }
 
   /**
    * End the edit session
    */
   end(save: boolean): void {
-    if (!this.isActive) return
+    if (!this.isActive || this.isEnding) return
 
+    this.isEnding = true
     this.isActive = false
 
-    const newText = this.element.textContent || ''
+    const newText = this.element.textContent?.trim() || ''
+
+    // Remove event listeners first
+    this.element.removeEventListener('keydown', this.boundHandleKeyDown, { capture: true })
+    this.element.removeEventListener('input', this.boundHandleInput)
+    this.element.removeEventListener('paste', this.boundHandlePaste)
+    this.element.removeEventListener('click', this.stopPropagation, { capture: true })
+    this.element.removeEventListener('mousedown', this.stopPropagation, { capture: true })
+    document.removeEventListener('mousedown', this.boundHandleClickOutside, { capture: true })
 
     // Restore element state
     this.element.contentEditable = 'false'
     this.element.classList.remove('inline-editing')
+    this.element.classList.remove('inline-editing-modified')
+    this.element.style.whiteSpace = ''
     this.element.spellcheck = true
-
-    // Remove event listeners
-    this.element.removeEventListener('keydown', this.boundHandleKeyDown)
-    this.element.removeEventListener('blur', this.boundHandleBlur)
-    this.element.removeEventListener('input', this.boundHandleInput)
-    this.element.removeEventListener('click', this.stopPropagation)
-    this.element.removeEventListener('mousedown', this.stopPropagation)
 
     // Restore original text if cancelled
     if (!save) {
@@ -104,6 +130,9 @@ export class InlineEditSession {
 
     // Clear selection
     window.getSelection()?.removeAllRanges()
+
+    // Blur the element
+    this.element.blur()
 
     // Notify completion
     this.onEnd({
@@ -125,7 +154,7 @@ export class InlineEditSession {
    * Get the current text
    */
   getCurrentText(): string {
-    return this.element.textContent || ''
+    return this.element.textContent?.trim() || ''
   }
 
   /**
@@ -153,38 +182,52 @@ export class InlineEditSession {
     // Prevent event from bubbling to parent handlers
     e.stopPropagation()
 
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Enter (without shift) = Save and exit
+    if (e.key === 'Enter') {
+      // Enter = Save and exit (no multiline support for now)
       e.preventDefault()
       this.end(true)
     } else if (e.key === 'Escape') {
       // Escape = Cancel and restore original
       e.preventDefault()
       this.end(false)
+    } else if (e.key === 'Tab') {
+      // Tab = Save and exit (move to next element)
+      e.preventDefault()
+      this.end(true)
     }
-    // Shift+Enter = Allow new line (default behavior, do nothing)
   }
 
   /**
-   * Handle blur (focus lost)
+   * Handle click outside the element
    */
-  private handleBlur(e: FocusEvent): void {
-    // Small delay to allow for click-to-save scenarios
-    // If the user clicks elsewhere, we want to save
-    setTimeout(() => {
-      if (this.isActive) {
-        this.end(true)
-      }
-    }, 50)
+  private handleClickOutside(e: MouseEvent): void {
+    const target = e.target as HTMLElement
+
+    // Check if click is outside the editing element
+    if (!this.element.contains(target) && this.isActive) {
+      // Save on click outside
+      this.end(true)
+    }
   }
 
   /**
-   * Handle input changes (for potential live preview)
+   * Handle paste - strip formatting
+   */
+  private handlePaste(e: ClipboardEvent): void {
+    e.preventDefault()
+    const text = e.clipboardData?.getData('text/plain') || ''
+    // Insert plain text only, remove newlines
+    const cleanText = text.replace(/[\r\n]+/g, ' ')
+    document.execCommand('insertText', false, cleanText)
+  }
+
+  /**
+   * Handle input changes
    */
   private handleInput(): void {
-    // Currently just marks element as modified
-    // Could emit events for live preview in the future
     this.element.classList.add('inline-editing-modified')
+    // Notify of text change for live updates (e.g., resize handles)
+    this.onInput?.(this.getCurrentText())
   }
 
   /**

@@ -98,6 +98,8 @@ export interface StudioEvents {
   'settings:loaded': { panelVisibility: Record<string, boolean> }
   /** Inline text editing started */
   'inline-edit:started': { nodeId: string; element: HTMLElement }
+  /** Inline text editing input changed */
+  'inline-edit:input': { nodeId: string; element: HTMLElement }
   /** Inline text editing ended */
   'inline-edit:ended': { nodeId: string; originalText: string; newText: string; saved: boolean }
 }
