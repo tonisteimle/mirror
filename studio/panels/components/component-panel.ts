@@ -253,8 +253,65 @@ export class ComponentPanel {
     const target = event.target as HTMLElement
     target.classList.add('dragging')
 
+    // Create custom drag image with correct size
+    const dragImage = this.createDragImage(item, target)
+    document.body.appendChild(dragImage)
+
+    // Position drag image at cursor center
+    const rect = target.getBoundingClientRect()
+    event.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2)
+
+    // Remove drag image after a frame (browser has copied it)
+    requestAnimationFrame(() => {
+      dragImage.remove()
+    })
+
     // Notify callback
     this.callbacks.onDragStart?.(item, event)
+  }
+
+  /**
+   * Create a drag image element that matches the panel item size
+   */
+  private createDragImage(item: ComponentItem, sourceElement: HTMLElement): HTMLElement {
+    const rect = sourceElement.getBoundingClientRect()
+
+    const dragImage = document.createElement('div')
+    dragImage.className = 'component-panel-drag-image'
+    Object.assign(dragImage.style, {
+      position: 'fixed',
+      left: '-9999px',
+      top: '-9999px',
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '6px 10px',
+      backgroundColor: '#2563eb',
+      color: 'white',
+      borderRadius: '6px',
+      fontSize: '12px',
+      fontFamily: 'system-ui, sans-serif',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      pointerEvents: 'none',
+      zIndex: '99999',
+    })
+
+    // Add icon
+    const iconEl = document.createElement('span')
+    iconEl.innerHTML = getComponentIcon(item.icon)
+    iconEl.style.display = 'flex'
+    iconEl.style.alignItems = 'center'
+    dragImage.appendChild(iconEl)
+
+    // Add name
+    const nameEl = document.createElement('span')
+    nameEl.textContent = item.name
+    nameEl.style.fontWeight = '500'
+    dragImage.appendChild(nameEl)
+
+    return dragImage
   }
 
   /**

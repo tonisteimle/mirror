@@ -50,6 +50,11 @@ interface DragState {
   isDragging: boolean
   ghost: HTMLElement | null
   sourceLayoutType: 'flex' | 'absolute'
+  /** Element's original position in its container (for absolute layouts) */
+  elementStartX: number
+  elementStartY: number
+  /** Container element reference (for position calculations) */
+  containerElement: HTMLElement | null
 }
 
 export class ElementMover {
@@ -252,6 +257,22 @@ export class ElementMover {
     // Determine source layout type
     const sourceLayoutType = this.getElementLayoutType(element)
 
+    // Calculate element's original position in its container (for absolute layouts)
+    let elementStartX = 0
+    let elementStartY = 0
+    let containerElement: HTMLElement | null = null
+
+    if (sourceLayoutType === 'absolute') {
+      containerElement = element.parentElement
+      if (containerElement) {
+        const elementRect = element.getBoundingClientRect()
+        const containerRect = containerElement.getBoundingClientRect()
+        // Element position relative to container
+        elementStartX = elementRect.left - containerRect.left
+        elementStartY = elementRect.top - containerRect.top
+      }
+    }
+
     this.state = {
       nodeId,
       element,
@@ -262,6 +283,9 @@ export class ElementMover {
       isDragging: false,
       ghost: null,
       sourceLayoutType,
+      elementStartX,
+      elementStartY,
+      containerElement,
     }
   }
 
@@ -328,16 +352,36 @@ export class ElementMover {
     // Determine target layout type
     const targetLayoutType = dropZone.isAbsoluteContainer ? 'absolute' : 'flex'
 
-    if (dropZone.isAbsoluteContainer && dropZone.absolutePosition) {
+    if (dropZone.isAbsoluteContainer && this.state) {
       // Absolute container: show crosshair + coordinates
       const containerRect = dropZone.element.getBoundingClientRect()
       const grid = gridSettings.get()
 
-      let finalX = dropZone.absolutePosition.x
-      let finalY = dropZone.absolutePosition.y
+      let finalX: number
+      let finalY: number
+
+      // For absolute→absolute moves, calculate position from delta
+      if (this.state.sourceLayoutType === 'absolute') {
+        const deltaX = clientX - this.state.startX
+        const deltaY = clientY - this.state.startY
+        finalX = this.state.elementStartX + deltaX
+        finalY = this.state.elementStartY + deltaY
+      } else if (dropZone.absolutePosition) {
+        // For flex→absolute, use drop zone position
+        finalX = dropZone.absolutePosition.x
+        finalY = dropZone.absolutePosition.y
+      } else {
+        // Fallback: calculate from cursor
+        finalX = clientX - containerRect.left
+        finalY = clientY - containerRect.top
+      }
+
+      // Clamp to non-negative
+      finalX = Math.max(0, finalX)
+      finalY = Math.max(0, finalY)
 
       // Use smart guides if grid snap is disabled
-      if (!grid.enabled && this.state) {
+      if (!grid.enabled) {
         const siblings = this.getSiblingRects(dropZone.element, this.state.nodeId)
         const movingRect = this.state.ghost?.getBoundingClientRect() || this.state.element.getBoundingClientRect()
 
@@ -413,20 +457,44 @@ export class ElementMover {
       }
 
       if (targetLayoutType === 'absolute' && dropZone.absolutePosition) {
-        layoutTransition.absolutePosition = this.snapToGrid(
+        // For flex→absolute transitions, use the drop zone position
+        const validated = this.validateAndClampCoordinates(
           dropZone.absolutePosition.x,
           dropZone.absolutePosition.y
         )
+
+        if (!validated.valid) {
+          console.warn('[ElementMover] Invalid drop position, canceling move')
+          this.notifyCancel()
+          return
+        }
+
+        layoutTransition.absolutePosition = this.snapToGrid(validated.x, validated.y)
       }
-    } else if (targetLayoutType === 'absolute' && dropZone.absolutePosition) {
+    } else if (targetLayoutType === 'absolute') {
+      // Absolute → Absolute: Calculate position based on movement delta
+      // This preserves the grab point and moves the element naturally
+      const deltaX = this.state.currentX - this.state.startX
+      const deltaY = this.state.currentY - this.state.startY
+
+      // New position = original position + movement delta
+      const newX = this.state.elementStartX + deltaX
+      const newY = this.state.elementStartY + deltaY
+
+      // Validate and clamp
+      const validated = this.validateAndClampCoordinates(newX, newY)
+
+      if (!validated.valid) {
+        console.warn('[ElementMover] Invalid calculated position, canceling move')
+        this.notifyCancel()
+        return
+      }
+
       // Same layout type but updating position
       layoutTransition = {
         from: 'absolute',
         to: 'absolute',
-        absolutePosition: this.snapToGrid(
-          dropZone.absolutePosition.x,
-          dropZone.absolutePosition.y
-        )
+        absolutePosition: this.snapToGrid(validated.x, validated.y),
       }
     }
 
@@ -484,27 +552,52 @@ export class ElementMover {
     }
   }
 
-  private snapToGrid(x: number, y: number): { x: number; y: number } {
-    // Validate input coordinates
+  /**
+   * Validate and clamp coordinates to ensure they are valid non-negative integers
+   */
+  private validateAndClampCoordinates(x: number, y: number): { x: number; y: number; valid: boolean } {
+    // Check for invalid values (NaN, Infinity, undefined)
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      console.warn('[ElementMover] Invalid coordinates for snapToGrid:', { x, y })
+      console.warn('[ElementMover] Invalid coordinates:', { x, y })
+      // Return null indicator - caller should handle this
+      return { x: 0, y: 0, valid: false }
+    }
+
+    // Clamp negative values to 0
+    return {
+      x: Math.max(0, Math.round(x)),
+      y: Math.max(0, Math.round(y)),
+      valid: true,
+    }
+  }
+
+  private snapToGrid(x: number, y: number): { x: number; y: number } {
+    // First validate and clamp
+    const validated = this.validateAndClampCoordinates(x, y)
+    if (!validated.valid) {
+      // For invalid input, we cannot produce meaningful output
+      // This should be handled earlier in the pipeline
       return { x: 0, y: 0 }
     }
+
+    // Use validated coordinates
+    x = validated.x
+    y = validated.y
 
     // Use grid settings, fall back to config if not enabled
     const grid = gridSettings.get()
 
-    // If grid snap is disabled, return rounded position
+    // If grid snap is disabled, return clamped position
     if (!grid.enabled) {
-      return { x: Math.round(x), y: Math.round(y) }
+      return { x, y }
     }
 
     // Use settings grid size, or fall back to config
     // Ensure grid size is at least 1 to prevent division by zero
     const gridSize = Math.max(1, grid.size || this.config.gridSnapSize || 8)
     return {
-      x: Math.round(x / gridSize) * gridSize,
-      y: Math.round(y / gridSize) * gridSize,
+      x: Math.max(0, Math.round(x / gridSize) * gridSize),
+      y: Math.max(0, Math.round(y / gridSize) * gridSize),
     }
   }
 

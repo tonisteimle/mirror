@@ -383,7 +383,7 @@ export class MoveNodeWithLayoutCommand implements Command {
   /**
    * Validate a coordinate value
    * Returns null if invalid (undefined, NaN, Infinity)
-   * Returns rounded integer if valid
+   * Returns clamped, rounded integer if valid (minimum 0)
    */
   private validateCoordinate(value: number | undefined): number | null {
     if (value === undefined || value === null) {
@@ -394,8 +394,8 @@ export class MoveNodeWithLayoutCommand implements Command {
       console.warn('[MoveNodeWithLayoutCommand] Coordinate is not finite:', value)
       return null
     }
-    // Round to integer to avoid floating point issues
-    return Math.round(value)
+    // Round to integer and clamp to minimum of 0
+    return Math.max(0, Math.round(value))
   }
 
   execute(ctx: CommandContext): CommandResult {
