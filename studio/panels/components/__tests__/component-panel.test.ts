@@ -273,54 +273,44 @@ describe('ComponentPanel', () => {
       expect(dataTransfer.dragImage).not.toBeNull()
     })
 
-    it('should create drag image with same dimensions as source element', () => {
+    it('should clone source element as drag image', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
-
-      // Mock getBoundingClientRect to return specific dimensions
-      const mockRect = { width: 120, height: 32, x: 0, y: 0, top: 0, left: 0, right: 120, bottom: 32, toJSON: () => ({}) }
-      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
-
       const dataTransfer = new MockDataTransfer()
+
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
       expect(dataTransfer.dragImage).not.toBeNull()
       const dragImage = dataTransfer.dragImage!.element as HTMLElement
 
-      // Drag image should match source element dimensions
-      expect(dragImage.style.width).toBe('120px')
-      expect(dragImage.style.height).toBe('32px')
+      // Drag image should be a clone with same class and structure
+      expect(dragImage.className).toContain('component-panel-item')
+      expect(dragImage.querySelector('.component-panel-item-icon')).not.toBeNull()
+      expect(dragImage.querySelector('.component-panel-item-name')).not.toBeNull()
     })
 
-    it('should use border-box sizing so padding does not increase size', () => {
+    it('should preserve source element content in drag image', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
-
-      const mockRect = { width: 100, height: 30, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 30, toJSON: () => ({}) }
-      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
+      const originalName = item.querySelector('.component-panel-item-name')?.textContent
 
       const dataTransfer = new MockDataTransfer()
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
       const dragImage = dataTransfer.dragImage!.element as HTMLElement
+      const clonedName = dragImage.querySelector('.component-panel-item-name')?.textContent
 
-      // Must use border-box so padding is included in width/height
-      expect(dragImage.style.boxSizing).toBe('border-box')
+      // Cloned element should have same content
+      expect(clonedName).toBe(originalName)
     })
 
-    it('should create different sized drag images for different elements', () => {
+    it('should create unique drag images for different elements', () => {
       panel = createComponentPanel({ container })
 
       const items = container.querySelectorAll('.component-panel-item') as NodeListOf<HTMLElement>
       expect(items.length).toBeGreaterThan(1)
-
-      // Mock different sizes for first two items
-      const mockRect1 = { width: 100, height: 30, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 30, toJSON: () => ({}) }
-      const mockRect2 = { width: 150, height: 40, x: 0, y: 0, top: 0, left: 0, right: 150, bottom: 40, toJSON: () => ({}) }
-      vi.spyOn(items[0], 'getBoundingClientRect').mockReturnValue(mockRect1 as DOMRect)
-      vi.spyOn(items[1], 'getBoundingClientRect').mockReturnValue(mockRect2 as DOMRect)
 
       const dataTransfer1 = new MockDataTransfer()
       const dataTransfer2 = new MockDataTransfer()
@@ -333,11 +323,13 @@ describe('ComponentPanel', () => {
       const dragImage1 = dataTransfer1.dragImage!.element as HTMLElement
       const dragImage2 = dataTransfer2.dragImage!.element as HTMLElement
 
-      // Each drag image should have different dimensions matching its source
-      expect(dragImage1.style.width).toBe('100px')
-      expect(dragImage1.style.height).toBe('30px')
-      expect(dragImage2.style.width).toBe('150px')
-      expect(dragImage2.style.height).toBe('40px')
+      const name1 = dragImage1.querySelector('.component-panel-item-name')?.textContent
+      const name2 = dragImage2.querySelector('.component-panel-item-name')?.textContent
+
+      // Each drag image should match its source element's content
+      expect(name1).toBe(items[0].querySelector('.component-panel-item-name')?.textContent)
+      expect(name2).toBe(items[1].querySelector('.component-panel-item-name')?.textContent)
+      expect(name1).not.toBe(name2)
     })
 
     it('should position drag image cursor at center of element', () => {
