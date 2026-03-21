@@ -27,8 +27,33 @@ export interface CompileResult {
 }
 
 /**
- * Pending selection - stored BEFORE compile, resolved AFTER compile
- * Used for drag & drop to ensure selection happens after SourceMap is ready
+ * Deferred selection - resolved after compile completes
+ *
+ * Two modes:
+ * - 'nodeId': When the nodeId is known but SourceMap isn't ready (e.g., undo/redo during compile)
+ * - 'line': When only the line number is known (e.g., drag-drop insert)
+ */
+export type DeferredSelection =
+  | {
+      type: 'nodeId'
+      /** The nodeId to select once SourceMap is available */
+      nodeId: string
+      /** Origin of the selection request */
+      origin: SelectionOrigin
+    }
+  | {
+      type: 'line'
+      /** Line number in the current file (1-based) where the element was inserted */
+      line: number
+      /** Component name that was inserted (e.g., "Frame", "Text") */
+      componentName: string
+      /** Origin of the selection request */
+      origin: SelectionOrigin
+    }
+
+/**
+ * @deprecated Use DeferredSelection with type: 'line' instead
+ * Kept for backward compatibility
  */
 export interface PendingSelection {
   /** Line number in the current file (1-based) where the element was inserted */
@@ -84,6 +109,8 @@ export interface StudioState {
   pendingSelection: PendingSelection | null
   /** Queued selection when SourceMap not yet available (nodeId-based) */
   queuedSelection: { nodeId: string; origin: SelectionOrigin } | null
+  /** Unified deferred selection - replaces pendingSelection and queuedSelection */
+  deferredSelection: DeferredSelection | null
   /** Inline text editing state */
   inlineEditActive: boolean
   /** Node ID currently being inline edited */
@@ -228,6 +255,7 @@ const initialState: StudioState = {
   preludeOffset: 0,
   pendingSelection: null,
   queuedSelection: null,
+  deferredSelection: null,
   inlineEditActive: false,
   inlineEditNodeId: null,
 }
@@ -258,6 +286,7 @@ export const actions = {
     const newVersion = currentState.compileVersion + 1
     const hasPendingSelection = currentState.pendingSelection !== null
     const hasQueuedSelection = currentState.queuedSelection !== null
+    const hasDeferredSelection = currentState.deferredSelection !== null
 
     // Validate multi-selection against new SourceMap
     const validMultiSelection = currentState.multiSelection.filter(
@@ -287,6 +316,7 @@ export const actions = {
     })
 
     // Resolve queued selection first (direct nodeId-based)
+    // This takes priority over pending selection but doesn't skip validation
     if (hasQueuedSelection) {
       const queued = currentState.queuedSelection!
       state.set({ queuedSelection: null })
@@ -303,18 +333,30 @@ export const actions = {
           actions.setSelection(fallbackId, queued.origin)
         }
       }
-      return
+      // Continue to check pendingSelection (don't return early)
     }
 
-    // Resolve pending selection (line-based)
-    if (hasPendingSelection) {
-      // Use setTimeout(0) to ensure state is fully settled before resolving
-      setTimeout(() => {
+    // Resolve deferred selection (unified API - preferred)
+    if (hasDeferredSelection) {
+      Promise.resolve().then(() => {
+        const resolvedNodeId = actions.resolveDeferredSelection()
+        if (resolvedNodeId) {
+          console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)
+        }
+      })
+      return // Skip selection validation when we have deferred selection
+    }
+
+    // Resolve pending selection (line-based) - legacy API
+    if (hasPendingSelection && !hasQueuedSelection) {
+      // Use Promise.resolve().then() for more predictable microtask scheduling
+      // This is more deterministic than setTimeout(0) which uses macrotask queue
+      Promise.resolve().then(() => {
         const resolvedNodeId = actions.resolvePendingSelection()
         if (resolvedNodeId) {
           console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
         }
-      }, 0)
+      })
       return // Skip selection validation when we have pending selection
     }
 
@@ -350,18 +392,22 @@ export const actions = {
   setSelection(nodeId: string | null, origin: SelectionOrigin): void {
     const currentState = state.get()
 
-    // Deduplicate: don't emit if same nodeId already selected
+    // Deduplicate: don't emit if same nodeId AND origin already selected
     // This prevents sync loops when cursor is set after preview click
-    if (currentState.selection.nodeId === nodeId) {
+    if (currentState.selection.nodeId === nodeId && currentState.selection.origin === origin) {
       return
     }
 
-    // Handle missing SourceMap during compile - queue for later
+    // Handle missing SourceMap during compile - defer for later
     if (nodeId !== null && !currentState.sourceMap) {
       if (currentState.compiling) {
-        // Queue selection to be resolved after compile
-        console.log(`[State] Queuing selection during compile: ${nodeId}`)
-        state.set({ queuedSelection: { nodeId, origin } })
+        // Use unified deferred selection mechanism
+        console.log(`[State] Deferring selection during compile: ${nodeId}`)
+        state.set({
+          deferredSelection: { type: 'nodeId', nodeId, origin },
+          // Also set legacy queuedSelection for backward compatibility
+          queuedSelection: { nodeId, origin },
+        })
         return
       }
       // No SourceMap and not compiling - allow selection (for tests/initial state)
@@ -586,6 +632,107 @@ export const actions = {
     }
 
     console.warn('[State] Could not resolve pending selection')
+    return null
+  },
+
+  // ==========================================================================
+  // Unified Deferred Selection (new API - preferred over pending/queued)
+  // ==========================================================================
+
+  /**
+   * Set a deferred selection to be resolved after compile completes
+   *
+   * This is the unified API that replaces both setPendingSelection and queuedSelection.
+   *
+   * @param deferred - Either { type: 'nodeId', nodeId, origin } or { type: 'line', line, componentName, origin }
+   */
+  setDeferredSelection(deferred: DeferredSelection): void {
+    state.set({ deferredSelection: deferred })
+    console.log('[State] Deferred selection set:', deferred)
+  },
+
+  /**
+   * Clear deferred selection without resolving
+   */
+  clearDeferredSelection(): void {
+    state.set({ deferredSelection: null })
+  },
+
+  /**
+   * Resolve deferred selection using the current SourceMap
+   * Called automatically by setCompileResult after compile completes
+   *
+   * Returns the nodeId if found, null otherwise
+   */
+  resolveDeferredSelection(): string | null {
+    const currentState = state.get()
+    const deferred = currentState.deferredSelection
+
+    if (!deferred) {
+      return null
+    }
+
+    const sourceMap = currentState.sourceMap
+    if (!sourceMap) {
+      console.warn('[State] Cannot resolve deferred selection: no SourceMap')
+      state.set({ deferredSelection: null })
+      return null
+    }
+
+    // Clear deferred selection first
+    state.set({ deferredSelection: null })
+
+    if (deferred.type === 'nodeId') {
+      // Direct nodeId selection - validate and select
+      if (sourceMap.getNodeById(deferred.nodeId)) {
+        console.log('[State] Resolved deferred nodeId selection:', deferred.nodeId)
+        actions.setSelection(deferred.nodeId, deferred.origin)
+        return deferred.nodeId
+      }
+
+      // Node doesn't exist - find fallback
+      console.warn('[State] Deferred nodeId no longer exists:', deferred.nodeId)
+      const fallbackId = actions.findFallbackSelection(deferred.nodeId, sourceMap)
+      if (fallbackId) {
+        console.log('[State] Using fallback for deferred selection:', fallbackId)
+        actions.setSelection(fallbackId, deferred.origin)
+        return fallbackId
+      }
+      return null
+    }
+
+    // Line-based selection - find node at line
+    const preludeLines = currentState.preludeOffset
+    const resolvedLine = preludeLines + deferred.line
+
+    console.log('[State] Resolving deferred line selection:', {
+      originalLine: deferred.line,
+      preludeOffset: preludeLines,
+      resolvedLine,
+      componentName: deferred.componentName,
+    })
+
+    // Find node at the resolved line
+    const node = sourceMap.getNodeAtLine(resolvedLine)
+
+    if (node && node.nodeId) {
+      console.log('[State] Resolved deferred selection to:', node.nodeId)
+      actions.setSelection(node.nodeId, deferred.origin)
+      return node.nodeId
+    }
+
+    // Fallback: search by component name in nearby lines
+    for (let offset = -2; offset <= 2; offset++) {
+      const searchLine = resolvedLine + offset
+      const nearbyNode = sourceMap.getNodeAtLine(searchLine)
+      if (nearbyNode && nearbyNode.componentName === deferred.componentName) {
+        console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
+        actions.setSelection(nearbyNode.nodeId, deferred.origin)
+        return nearbyNode.nodeId
+      }
+    }
+
+    console.warn('[State] Could not resolve deferred selection')
     return null
   },
 

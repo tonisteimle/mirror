@@ -461,21 +461,24 @@ describe('AbsoluteDropStrategy', () => {
       expect(result!.y).toBe(50)  // 100 - 50
     })
 
-    it('should snap to grid when configured', () => {
-      strategy = new AbsoluteDropStrategy({ snapToGrid: 10 })
+    it('should return raw coordinates (snapping handled by CoordinateTransformer)', () => {
+      // Note: Grid snapping is NOT applied by the strategy - it's handled centrally
+      // by DragDropManager using CoordinateTransformer to avoid double-snapping
+      strategy = new AbsoluteDropStrategy()
       container = createElement({ position: 'relative' }, { layout: 'abs' })
       container.dataset.mirrorId = 'canvas-1'
 
       const context = createContext({
-        clientX: 57, // Should snap to 60 (relative: 57 -> 60)
-        clientY: 43, // Should snap to 40 (relative: 43 -> 40)
+        clientX: 57, // Raw coordinate
+        clientY: 43, // Raw coordinate
         containerRect: new DOMRect(0, 0, 400, 400),
       })
 
       const result = strategy.calculateDropZone(container, context)
 
-      expect(result!.x).toBe(60)
-      expect(result!.y).toBe(40)
+      // Strategy returns raw (rounded) coordinates - snapping is done elsewhere
+      expect(result!.x).toBe(57)
+      expect(result!.y).toBe(43)
     })
 
     it('should apply edge padding', () => {

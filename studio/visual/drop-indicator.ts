@@ -9,6 +9,12 @@
  * Integrates with OverlayManager for consistent overlay handling.
  */
 
+import {
+  Z_INDEX_DROP_INDICATOR,
+  Z_INDEX_ACTIVE_INDICATOR,
+  Z_INDEX_DISTANCE_LABEL,
+} from './constants/z-index'
+
 export interface DropIndicatorConfig {
   container: HTMLElement
   /** Line color (default: #3B82F6 - blue) */
@@ -437,7 +443,7 @@ export class DropIndicator {
       position: 'absolute',
       backgroundColor: color,
       pointerEvents: 'none',
-      zIndex: '10000',
+      zIndex: String(Z_INDEX_DROP_INDICATOR),
       transition: 'all 60ms ease-out',
       borderRadius: '1px',
       display: 'none',
@@ -454,7 +460,7 @@ export class DropIndicator {
       backgroundColor: color,
       borderRadius: '50%',
       pointerEvents: 'none',
-      zIndex: '10001',
+      zIndex: String(Z_INDEX_ACTIVE_INDICATOR),
       transition: 'all 60ms ease-out',
       display: 'none',
     })
@@ -470,7 +476,7 @@ export class DropIndicator {
       backgroundColor: color,
       borderRadius: '50%',
       pointerEvents: 'none',
-      zIndex: '10001',
+      zIndex: String(Z_INDEX_ACTIVE_INDICATOR),
       transition: 'all 60ms ease-out',
       display: 'none',
     })
@@ -493,7 +499,7 @@ export class DropIndicator {
       Object.assign(this.crosshairHElement.style, {
         position: 'absolute',
         pointerEvents: 'none',
-        zIndex: '10000',
+        zIndex: String(Z_INDEX_DROP_INDICATOR),
         display: 'none',
       })
       this.container.appendChild(this.crosshairHElement)
@@ -505,7 +511,7 @@ export class DropIndicator {
       Object.assign(this.crosshairVElement.style, {
         position: 'absolute',
         pointerEvents: 'none',
-        zIndex: '10000',
+        zIndex: String(Z_INDEX_DROP_INDICATOR),
         display: 'none',
       })
       this.container.appendChild(this.crosshairVElement)
@@ -526,7 +532,7 @@ export class DropIndicator {
         fontWeight: '500',
         borderRadius: '3px',
         pointerEvents: 'none',
-        zIndex: '10002',
+        zIndex: String(Z_INDEX_DISTANCE_LABEL),
         whiteSpace: 'nowrap',
         display: 'none',
       })

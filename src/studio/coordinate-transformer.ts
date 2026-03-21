@@ -19,7 +19,25 @@
  */
 
 import { detectLayout, type LayoutInfo } from './utils/layout-detection'
-import { gridSettings } from '../../studio/core/settings'
+
+/**
+ * Grid settings interface for optional dependency injection
+ * This allows src/studio to be used independently of studio/core
+ */
+export interface GridSettingsProvider {
+  get: () => { enabled: boolean; size: number }
+}
+
+// Injectable grid settings - set by studio runtime on initialization
+let gridSettingsProvider: GridSettingsProvider | null = null
+
+/**
+ * Set the grid settings provider (called by studio runtime)
+ * This breaks the circular dependency between src/studio and studio/core
+ */
+export function setGridSettingsProvider(provider: GridSettingsProvider): void {
+  gridSettingsProvider = provider
+}
 
 /**
  * Point in 2D space
@@ -121,7 +139,7 @@ export class CoordinateTransformer {
     const rawPosition: Point = { x, y }
 
     // Step 3: Apply grid snapping (ONLY HERE - single point of snapping)
-    const grid = gridSettings.get()
+    const grid = gridSettingsProvider?.get() ?? { enabled: false, size: 8 }
     const shouldSnap = options.snapToGrid ?? grid.enabled
     const gridSize = options.gridSize ?? grid.size
     let snapped = false

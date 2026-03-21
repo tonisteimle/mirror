@@ -24,6 +24,8 @@ export interface DropZone {
   absolutePosition?: Point
   /** Visual indicator rect */
   indicatorRect?: Rect
+  /** Layout direction of the target container (for indicator orientation) */
+  direction?: 'horizontal' | 'vertical'
 }
 
 export interface DropCandidate {
@@ -96,6 +98,9 @@ export function calculatePlacement(
   target: DropCandidate,
   config: DropZoneConfig = DEFAULT_CONFIG
 ): DropZone {
+  // Store direction for indicator orientation
+  const direction = target.direction || 'vertical'
+
   // For positioned containers, return absolute placement
   if (target.isPositioned) {
     // Calculate and validate absolute position
@@ -113,6 +118,7 @@ export function calculatePlacement(
         x: safeX,
         y: safeY,
       },
+      direction,
     }
   }
 
@@ -124,6 +130,7 @@ export function calculatePlacement(
         nodeId: target.nodeId,
         placement: edgeInfo.placement,
         indicatorRect: createEdgeIndicator(target.rect, edgeInfo.placement, target.direction),
+        direction,
       }
     }
     // Default: insert after
@@ -131,17 +138,19 @@ export function calculatePlacement(
       nodeId: target.nodeId,
       placement: 'after',
       indicatorRect: createEdgeIndicator(target.rect, 'after', target.direction),
+      direction,
     }
   }
 
   // For containers with children, find insertion point
   if (target.childRects && target.childRects.length > 0) {
-    const insertion = findInsertionPoint(cursor, target.childRects, target.direction || 'vertical')
+    const insertion = findInsertionPoint(cursor, target.childRects, direction)
     return {
       nodeId: target.nodeId,
       placement: 'inside',
       insertionIndex: insertion.index,
       indicatorRect: insertion.indicatorRect,
+      direction,
     }
   }
 
@@ -151,6 +160,7 @@ export function calculatePlacement(
     placement: 'inside',
     insertionIndex: 0,
     indicatorRect: createInsideIndicator(target.rect),
+    direction,
   }
 }
 

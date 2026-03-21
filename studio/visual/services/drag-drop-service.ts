@@ -13,6 +13,7 @@ import { DragRenderer, createDragRenderer, type RenderState } from '../renderers
 import type { DragResult, DragSource, Point, Rect } from '../models/drag-state'
 import type { DropZone } from '../models/drop-zone'
 import type { AlignmentZoneResult } from '../models/alignment-zone'
+import { events } from '../../core/events'
 
 // ============================================================================
 // Types
@@ -264,7 +265,21 @@ export class DragDropService {
   private handleDragMove(state: DragMoveState): void {
     this.currentMoveState = state
 
-    // Build render state
+    // Find source element for clone ghost (element drags only)
+    let sourceElement: HTMLElement | undefined
+    let componentName: string | undefined
+
+    if (state.source.type === 'element') {
+      // Find the element by its node ID
+      sourceElement = this.container.querySelector(
+        `[data-mirror-id="${state.source.nodeId}"]`
+      ) as HTMLElement | undefined
+    } else {
+      // Palette drag - use component name for placeholder label
+      componentName = state.source.componentName
+    }
+
+    // Build render state with source information
     const renderState: RenderState = {
       ghostRect: state.ghostRect,
       indicatorRect: state.dropZone?.indicatorRect ?? null,
@@ -272,6 +287,8 @@ export class DragDropService {
       alignmentZone: state.alignmentZone,
       guides: state.guides,
       isActive: true,
+      sourceElement,
+      componentName,
     }
 
     this.renderer.render(renderState)
@@ -298,6 +315,23 @@ export class DragDropService {
       }
 
       this.callbacks.onDrop?.(dropResult)
+
+      // Emit move:completed event for element moves (not palette drags)
+      if (result.source.type === 'element') {
+        // Convert placement to move:completed format
+        const position = result.target.placement === 'absolute' ? 'inside' : result.target.placement
+
+        events.emit('move:completed', {
+          nodeId: result.source.nodeId,
+          targetId: result.target.nodeId,
+          position: position as 'before' | 'after' | 'inside',
+          layoutTransition: result.target.absolutePosition ? {
+            from: 'flex', // We assume flex → absolute for now (could be enhanced)
+            to: 'absolute',
+            absolutePosition: result.target.absolutePosition,
+          } : undefined,
+        })
+      }
     }
 
     this.currentMoveState = null
@@ -317,14 +351,17 @@ export class DragDropService {
   // --------------------------------------------------------------------------
 
   private getIndicatorDirection(state: DragMoveState): 'horizontal' | 'vertical' {
-    // For now, assume vertical unless we have more context
-    // This could be enhanced by checking the container direction
+    // Use direction from dropZone (set by calculatePlacement based on container layout)
+    // For before/after placement: indicator is perpendicular to container direction
+    // - horizontal container → vertical indicator line (between siblings)
+    // - vertical container → horizontal indicator line (between siblings)
     if (state.dropZone?.placement === 'before' || state.dropZone?.placement === 'after') {
-      // Check if parent is horizontal
-      // For now default to horizontal indicator (line across width)
-      return 'horizontal'
+      const containerDirection = state.dropZone.direction || 'vertical'
+      // Indicator is perpendicular to layout direction
+      return containerDirection === 'horizontal' ? 'vertical' : 'horizontal'
     }
-    return 'horizontal'
+    // For inside/absolute placement, use container direction directly
+    return state.dropZone?.direction || 'vertical'
   }
 }
 

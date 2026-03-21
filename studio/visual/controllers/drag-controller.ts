@@ -48,6 +48,10 @@ import {
   type CoordinateContext,
 } from '../models/coordinate'
 
+import {
+  calculateDropPosition,
+} from '../models/coordinate-calculator'
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -72,6 +76,8 @@ export interface DragCallbacks {
   onDragEnd?: (result: DragResult) => void
   /** Called when drag is cancelled */
   onDragCancel?: () => void
+  /** Called when drag fails to start (e.g., no data-mirror-id) */
+  onError?: (error: string) => void
 }
 
 export interface DragMoveState {
@@ -85,6 +91,8 @@ export interface DragMoveState {
   guides: SnapResult['guides']
   /** Whether snap is active */
   isSnapped: boolean
+  /** Source of the drag (for ghost rendering) */
+  source: DragSource
 }
 
 export interface ContainerInfo {
@@ -153,7 +161,9 @@ export class DragController {
   startElementDrag(element: HTMLElement, mouseEvent: MouseEvent): void {
     const nodeId = element.dataset.mirrorId
     if (!nodeId) {
-      console.warn('[DragController] Element has no data-mirror-id')
+      const error = 'Element has no data-mirror-id'
+      console.warn('[DragController]', error)
+      this.callbacks.onError?.(error)
       return
     }
 
@@ -347,13 +357,15 @@ export class DragController {
   private calculateMoveState(cursorPosition: Point): DragMoveState {
     // Get ghost rect from state
     const ghostRect = this.state.calculateGhostRect()
-    if (!ghostRect) {
+    const source = this.state.getSource()
+    if (!ghostRect || !source) {
       return {
         ghostRect: { x: 0, y: 0, width: 0, height: 0 },
         dropZone: null,
         alignmentZone: null,
         guides: [],
         isSnapped: false,
+        source: { type: 'palette', componentName: 'Box' },
       }
     }
 
@@ -366,16 +378,12 @@ export class DragController {
     if (dropZone?.placement === 'absolute') {
       const container = this.containerInfo.find(c => c.nodeId === dropZone!.nodeId)
       if (container) {
+        // Use centralized calculator for position calculation
         // Ghost position relative to container = where element should be placed
-        // Clamp to >= 0 to prevent negative positions when dragging beyond container bounds
-        const rawX = ghostRect.x - container.rect.x
-        const rawY = ghostRect.y - container.rect.y
+        const dropPos = calculateDropPosition(ghostRect, container.rect)
         dropZone = {
           ...dropZone,
-          absolutePosition: {
-            x: Math.max(0, Math.round(rawX)),
-            y: Math.max(0, Math.round(rawY)),
-          },
+          absolutePosition: dropPos,
         }
       }
     }
@@ -425,6 +433,7 @@ export class DragController {
       dropZone,
       alignmentZone,
       guides,
+      source: this.state.getSource()!,
       isSnapped,
     }
   }

@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { detectLayout, isAbsoluteLayoutContainer } from '../../../src/studio/utils/layout-detection'
+import { createDefaultRegistry } from '../../../src/studio/drop-strategies/registry'
 
 describe('pos property layout detection', () => {
   let container: HTMLElement
@@ -41,7 +42,6 @@ describe('pos property layout detection', () => {
   })
 
   it('should use AbsoluteDropStrategy for pos containers', () => {
-    const { createDefaultRegistry } = require('../../../src/studio/drop-strategies/registry')
     const registry = createDefaultRegistry()
 
     container.style.position = 'relative'

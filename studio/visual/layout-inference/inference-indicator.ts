@@ -6,6 +6,7 @@
  */
 
 import type { AlignmentGroup, InferenceIndicatorConfig, ElementBounds } from './types'
+import { Z_INDEX_INFERENCE, Z_INDEX_INFERENCE_TEXT } from '../constants/z-index'
 
 const DEFAULT_COLOR = '#10B981' // Emerald
 
@@ -34,7 +35,7 @@ export class InferenceIndicator {
       position: 'absolute',
       inset: '0',
       pointerEvents: 'none',
-      zIndex: '9500', // Below handles (10000) but above content
+      zIndex: String(Z_INDEX_INFERENCE), // Below handles but above content
     })
 
     // Ensure container has positioning
@@ -193,7 +194,7 @@ export class InferenceIndicator {
       transition: 'opacity 150ms',
       cursor: 'pointer',
       whiteSpace: 'nowrap',
-      zIndex: '9501',
+      zIndex: String(Z_INDEX_INFERENCE_TEXT),
     })
 
     // Click handler

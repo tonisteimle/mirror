@@ -6,6 +6,7 @@
 
 import type { Guide } from './types'
 import { smartGuidesSettings } from '../../core/settings'
+import { Z_INDEX_GUIDES } from '../constants/z-index'
 
 export class GuideRenderer {
   private container: HTMLElement
@@ -48,7 +49,7 @@ export class GuideRenderer {
         background: color,
         opacity: '0.8',
         pointerEvents: 'none',
-        zIndex: '9999',
+        zIndex: String(Z_INDEX_GUIDES),
       })
     } else {
       Object.assign(line.style, {
@@ -60,7 +61,7 @@ export class GuideRenderer {
         background: color,
         opacity: '0.8',
         pointerEvents: 'none',
-        zIndex: '9999',
+        zIndex: String(Z_INDEX_GUIDES),
       })
     }
 

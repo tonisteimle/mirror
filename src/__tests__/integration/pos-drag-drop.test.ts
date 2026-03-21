@@ -6,6 +6,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { parse, toIR, generateDOM } from '../../index'
+import { detectLayout, isAbsoluteLayoutContainer } from '../../studio/utils/layout-detection'
+import { createDefaultRegistry } from '../../studio/drop-strategies'
 
 describe('pos container drag & drop', () => {
   it('should generate data-layout="absolute" for pos containers', () => {
@@ -48,8 +50,6 @@ describe('pos container drag & drop', () => {
   })
 
   it('should be detected as absolute container by layout detection', () => {
-    const { detectLayout, isAbsoluteLayoutContainer } = require('../../studio/utils/layout-detection')
-
     const source = `Box pos w 400, h 300`
     const code = generateDOM(parse(source))
 
@@ -68,8 +68,6 @@ describe('pos container drag & drop', () => {
   })
 
   it('should use AbsoluteDropStrategy for pos containers', () => {
-    const { createDefaultRegistry } = require('../../studio/drop-strategies')
-
     const source = `Box pos w 400, h 300`
     const code = generateDOM(parse(source))
 

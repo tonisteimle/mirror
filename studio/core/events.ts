@@ -43,7 +43,7 @@ export interface StudioEvents {
   'drag:started': { nodeId: string; source: 'preview' | 'library' }
   'drag:ended': { success: boolean }
   'drop:completed': { nodeId: string; targetId: string; position: 'before' | 'after' | 'inside' }
-  /** Element move (from ElementMover) */
+  /** Element move started */
   'move:started': { nodeId: string }
   'move:completed': {
     nodeId: string

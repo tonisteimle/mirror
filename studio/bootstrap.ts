@@ -9,7 +9,8 @@ import { EditorController, createEditorController, setEditorController } from '.
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
-import { PropertyExtractor, CodeModifier } from '../src/studio'
+import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../src/studio'
+import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
 import { ComponentPanel, createComponentPanel } from './panels/components'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
@@ -97,6 +98,9 @@ let studioContext: StudioContext | null = null
 
 export function initializeStudio(config: BootstrapConfig): StudioInstance {
   console.log('[Studio] Initializing new architecture...')
+
+  // Initialize grid settings provider (breaks circular dependency)
+  setGridSettingsProvider(gridSettings)
 
   // Create studio context with initial state
   studioContext = createStudioContext({

@@ -75,8 +75,11 @@ export {
   type SemanticZone,
 } from './drop-zone-calculator'
 
-// New testable drag-drop system (replaces legacy DragDropManager)
-// DragDropService uses mouse events and the testable models
+/**
+ * @deprecated Import from 'studio/visual' instead:
+ *   import { DragDropService, createDragDropService } from '../studio/visual'
+ * These re-exports create circular dependencies and will be removed.
+ */
 export {
   DragDropService,
   createDragDropService,
@@ -85,7 +88,11 @@ export {
   type DropResultInfo,
 } from '../../studio/visual/services/drag-drop-service'
 
-// Legacy HTML5 drag API service (kept for backwards compatibility)
+/**
+ * @deprecated Import from 'studio/visual' instead:
+ *   import { StudioDragDropService } from '../studio/visual'
+ * These re-exports create circular dependencies and will be removed.
+ */
 export {
   StudioDragDropService,
   createStudioDragDropService,
@@ -193,11 +200,13 @@ export {
 export {
   CoordinateTransformer,
   createCoordinateTransformer,
+  setGridSettingsProvider,
   type Point,
   type Size,
   type Bounds,
   type TransformResult,
   type TransformOptions,
+  type GridSettingsProvider,
 } from './coordinate-transformer'
 
 // Z-Index management for absolute containers

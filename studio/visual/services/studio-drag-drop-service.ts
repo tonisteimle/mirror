@@ -219,9 +219,15 @@ export class StudioDragDropService {
     // Schedule RAF update if not already pending
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => {
+        // Capture pending position BEFORE clearing rafId
+        // This prevents race conditions where a new RAF is scheduled
+        // while processDragOver is still executing
+        const pending = this.pendingDragOver
+        this.pendingDragOver = null
         this.rafId = null
-        if (this.pendingDragOver) {
-          this.processDragOver(this.pendingDragOver.x, this.pendingDragOver.y)
+
+        if (pending) {
+          this.processDragOver(pending.x, pending.y)
         }
       })
     }

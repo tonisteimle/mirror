@@ -748,7 +748,6 @@ export function createUI(data = {}) {
     'border-radius': '6px',
     'border': '0px solid currentColor',
     'cursor': 'pointer',
-    'font-family': '15',
   })
   node_1.dataset.component = 'Button'
   _root.appendChild(node_1)
@@ -4332,7 +4331,6 @@ export function createUI(data = {}) {
   node_2.dataset.mirrorName = 'Title'
   node_2.textContent = "Hello"
   Object.assign(node_2.style, {
-    'font-family': '15',
     'font-weight': '600',
   })
   node_2.dataset.component = 'Title'

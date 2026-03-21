@@ -61,6 +61,8 @@ export interface ComponentItem {
   description?: string
   /** Child components for layout templates */
   children?: ComponentChild[]
+  /** Default size for drag preview ghost */
+  defaultSize?: { width: number; height: number }
 }
 
 /**
@@ -113,4 +115,6 @@ export interface ComponentDragData {
   fromComponentPanel: boolean
   /** Child components for layout templates */
   children?: ComponentChild[]
+  /** Default size for drag preview */
+  defaultSize?: { width: number; height: number }
 }

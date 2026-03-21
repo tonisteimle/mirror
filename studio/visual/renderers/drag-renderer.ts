@@ -2,17 +2,34 @@
  * DragRenderer - Renders visual feedback during drag operations
  *
  * Handles:
- * - Ghost element rendering
+ * - Ghost element rendering (via GhostFactory)
  * - Drop indicator (insertion line)
  * - Alignment zone indicator
  * - Smart guide lines
  *
  * Pure rendering - receives data, updates DOM.
+ *
+ * Ghost Types:
+ * - Clone ghost: Full visual copy of dragged element (for element drags)
+ * - Placeholder ghost: Styled box with size preview (for palette drags)
  */
 
 import type { Rect, Point } from '../models/coordinate'
 import type { Guide } from '../models/snap'
 import type { AlignmentZoneResult } from '../models/alignment-zone'
+import {
+  GhostFactory,
+  createGhostFactory,
+  getDefaultSize,
+  type GhostSource,
+  type PlaceholderConfig,
+} from './ghost-factory'
+import {
+  Z_INDEX_DROP_INDICATOR,
+  Z_INDEX_ACTIVE_INDICATOR,
+  Z_INDEX_DISTANCE_LABEL,
+  Z_INDEX_GUIDES,
+} from '../constants/z-index'
 
 // ============================================================================
 // Types
@@ -31,6 +48,10 @@ export interface RenderState {
   guides: Guide[]
   /** Whether drag is active */
   isActive: boolean
+  /** Source element for clone ghost (optional) */
+  sourceElement?: HTMLElement
+  /** Component name for placeholder ghost (optional) */
+  componentName?: string
 }
 
 export interface DragRendererConfig {
@@ -52,20 +73,32 @@ export class DragRenderer {
   private container: HTMLElement
   private config: Required<DragRendererConfig>
 
+  // Ghost factory for unified ghost creation
+  private ghostFactory: GhostFactory
+
   // DOM elements
-  private ghostElement: HTMLElement | null = null
   private indicatorElement: HTMLElement | null = null
   private guideContainer: HTMLElement | null = null
   private alignmentIndicator: HTMLElement | null = null
 
+  // Track current ghost source for smart updates
+  private currentGhostSource: { type: 'element' | 'placeholder'; id?: string } | null = null
+
   constructor(container: HTMLElement, config: DragRendererConfig = {}) {
     this.container = container
     this.config = {
-      ghostOpacity: config.ghostOpacity ?? 0.5,
+      ghostOpacity: config.ghostOpacity ?? 0.7,
       indicatorColor: config.indicatorColor ?? '#3b82f6',
       guideColor: config.guideColor ?? '#ec4899',
-      zIndex: config.zIndex ?? 10000,
+      zIndex: config.zIndex ?? Z_INDEX_DROP_INDICATOR,
     }
+
+    // Initialize ghost factory with renderer config
+    this.ghostFactory = createGhostFactory({
+      opacity: this.config.ghostOpacity,
+      zIndex: this.config.zIndex,
+      borderColor: this.config.indicatorColor,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -81,7 +114,7 @@ export class DragRenderer {
       return
     }
 
-    this.renderGhost(state.ghostRect)
+    this.renderGhost(state)
     this.renderIndicator(state.indicatorRect, state.indicatorDirection)
     this.renderGuides(state.guides)
     this.renderAlignmentZone(state.alignmentZone)
@@ -91,7 +124,8 @@ export class DragRenderer {
    * Clear all visual elements
    */
   clear(): void {
-    this.removeGhost()
+    this.ghostFactory.dispose()
+    this.currentGhostSource = null
     this.removeIndicator()
     this.removeGuides()
     this.removeAlignmentIndicator()
@@ -104,50 +138,62 @@ export class DragRenderer {
     this.clear()
   }
 
+  /**
+   * Get the current ghost element (for external positioning updates)
+   */
+  getGhostElement(): HTMLElement | null {
+    return this.ghostFactory.getGhost()
+  }
+
   // --------------------------------------------------------------------------
   // Ghost Rendering
   // --------------------------------------------------------------------------
 
-  private renderGhost(rect: Rect | null): void {
-    if (!rect) {
-      this.removeGhost()
+  /**
+   * Render ghost element with smart source detection
+   *
+   * Supports two modes:
+   * 1. Element clone: When sourceElement is provided, creates a visual clone
+   * 2. Placeholder: When only rect is provided, creates a styled placeholder
+   */
+  private renderGhost(state: RenderState): void {
+    const { ghostRect, sourceElement, componentName } = state
+
+    if (!ghostRect) {
+      this.ghostFactory.dispose()
+      this.currentGhostSource = null
       return
     }
 
-    if (!this.ghostElement) {
-      this.ghostElement = this.createGhostElement()
+    // Determine ghost source type
+    const sourceType = sourceElement ? 'element' : 'placeholder'
+    const sourceId = sourceElement?.dataset.mirrorId
+
+    // Check if we need to recreate the ghost (source changed)
+    const needsRecreate =
+      !this.ghostFactory.hasGhost() ||
+      this.currentGhostSource?.type !== sourceType ||
+      (sourceType === 'element' && this.currentGhostSource?.id !== sourceId)
+
+    if (needsRecreate) {
+      if (sourceElement) {
+        // Create clone ghost from source element
+        this.ghostFactory.createFromElement(sourceElement)
+        this.currentGhostSource = { type: 'element', id: sourceId }
+      } else {
+        // Create placeholder ghost
+        const size = { width: ghostRect.width, height: ghostRect.height }
+        this.ghostFactory.createPlaceholder(size, {
+          componentName,
+          showLabel: !!componentName,
+          borderStyle: 'dashed',
+        })
+        this.currentGhostSource = { type: 'placeholder' }
+      }
     }
 
-    Object.assign(this.ghostElement.style, {
-      left: `${rect.x}px`,
-      top: `${rect.y}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-    })
-  }
-
-  private createGhostElement(): HTMLElement {
-    const el = document.createElement('div')
-    el.className = 'mirror-drag-ghost'
-    Object.assign(el.style, {
-      position: 'fixed',
-      pointerEvents: 'none',
-      opacity: String(this.config.ghostOpacity),
-      border: '2px dashed #3b82f6',
-      borderRadius: '4px',
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      zIndex: String(this.config.zIndex),
-      transition: 'none',
-    })
-    document.body.appendChild(el)
-    return el
-  }
-
-  private removeGhost(): void {
-    if (this.ghostElement) {
-      this.ghostElement.remove()
-      this.ghostElement = null
-    }
+    // Update ghost position and size
+    this.ghostFactory.setRect(ghostRect)
   }
 
   // --------------------------------------------------------------------------
@@ -183,7 +229,7 @@ export class DragRenderer {
       pointerEvents: 'none',
       backgroundColor: this.config.indicatorColor,
       borderRadius: '1px',
-      zIndex: String(this.config.zIndex + 1),
+      zIndex: String(Z_INDEX_ACTIVE_INDICATOR),
       boxShadow: `0 0 4px ${this.config.indicatorColor}`,
     })
     document.body.appendChild(el)
@@ -231,7 +277,7 @@ export class DragRenderer {
       width: '100%',
       height: '100%',
       pointerEvents: 'none',
-      zIndex: String(this.config.zIndex + 2),
+      zIndex: String(Z_INDEX_GUIDES),
     })
     document.body.appendChild(el)
     return el
@@ -307,7 +353,7 @@ export class DragRenderer {
       pointerEvents: 'none',
       backgroundColor: this.config.indicatorColor,
       borderRadius: '50%',
-      zIndex: String(this.config.zIndex + 1),
+      zIndex: String(Z_INDEX_ACTIVE_INDICATOR),
       boxShadow: `0 0 8px ${this.config.indicatorColor}`,
     })
     document.body.appendChild(el)

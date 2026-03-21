@@ -103,3 +103,19 @@ export {
   type ContainerDirection,
   type AlignmentZoneResult,
 } from './alignment-zone'
+
+// Coordinate Calculator (centralized position calculations)
+export {
+  calculateElementPosition,
+  calculateDragDelta,
+  calculateGhostPosition,
+  calculateDropPosition,
+  calculateAbsolutePosition,
+  calculateFlexToAbsolutePosition,
+  validateCoordinate,
+  validatePoint,
+  validateAndClampCoordinates,
+  snapPointToGrid as snapPointToGridCalc,
+  snapToGridSafe,
+  type ValidatedCoordinates,
+} from './coordinate-calculator'

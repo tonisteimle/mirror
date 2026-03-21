@@ -38,15 +38,6 @@ export {
   type DropHandlerOptions,
 } from './drop-handler'
 
-// Element Mover
-export {
-  ElementMover,
-  createElementMover,
-  type ElementMoverConfig,
-  type MoveResult,
-  type MoveCallback,
-} from './element-mover'
-
 // Drop Indicator
 export {
   DropIndicator,

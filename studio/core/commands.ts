@@ -414,13 +414,11 @@ export class MoveNodeWithLayoutCommand implements Command {
     source = moveResult.newSource
 
     // Step 2: Handle layout transitions (if any)
+    // CRITICAL: Reuse the SAME modifier instance that did the move operation.
+    // CodeModifier tracks line shifts internally, so using a new instance with
+    // the old SourceMap would cause it to look up stale line positions.
     if (this.layoutTransition) {
       const { from, to, absolutePosition } = this.layoutTransition
-
-      // Create a single modifier and reuse it for all property changes
-      // This is critical: CodeModifier persists changes internally,
-      // so we must use the same instance for sequential updates
-      const postMoveModifier = new CodeModifier(source, data.sourceMap)
 
       if (from === 'flex' && to === 'absolute' && absolutePosition) {
         // Validate coordinates before applying
@@ -429,22 +427,22 @@ export class MoveNodeWithLayoutCommand implements Command {
 
         if (x !== null && y !== null) {
           // Flex → Absolute: Add x, y properties
-          // Use the SAME modifier instance for both updates
-          const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(x))
+          // Use the SAME modifier instance that did the move
+          const xResult = modifier.updateProperty(this.nodeId, 'x', String(x))
           if (xResult.success) {
             source = xResult.newSource
             // Reuse same modifier - it has updated internal state
-            const yResult = postMoveModifier.updateProperty(this.nodeId, 'y', String(y))
+            const yResult = modifier.updateProperty(this.nodeId, 'y', String(y))
             if (yResult.success) source = yResult.newSource
           }
         }
       } else if (from === 'absolute' && to === 'flex') {
         // Absolute → Flex: Remove x, y properties
-        const xResult = postMoveModifier.removeProperty(this.nodeId, 'x')
+        const xResult = modifier.removeProperty(this.nodeId, 'x')
         if (xResult.success) {
           source = xResult.newSource
           // Reuse same modifier
-          const yResult = postMoveModifier.removeProperty(this.nodeId, 'y')
+          const yResult = modifier.removeProperty(this.nodeId, 'y')
           if (yResult.success) source = yResult.newSource
         }
       } else if (from === 'absolute' && to === 'absolute' && absolutePosition) {
@@ -454,12 +452,12 @@ export class MoveNodeWithLayoutCommand implements Command {
 
         if (x !== null && y !== null) {
           // Absolute → Absolute: Update x, y properties
-          // Use the SAME modifier instance for both updates
-          const xResult = postMoveModifier.updateProperty(this.nodeId, 'x', String(x))
+          // Use the SAME modifier instance that did the move
+          const xResult = modifier.updateProperty(this.nodeId, 'x', String(x))
           if (xResult.success) {
             source = xResult.newSource
             // Reuse same modifier
-            const yResult = postMoveModifier.updateProperty(this.nodeId, 'y', String(y))
+            const yResult = modifier.updateProperty(this.nodeId, 'y', String(y))
             if (yResult.success) source = yResult.newSource
           }
         }

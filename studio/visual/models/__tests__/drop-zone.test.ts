@@ -85,6 +85,52 @@ describe('calculatePlacement()', () => {
     })
   })
 
+  describe('direction propagation', () => {
+    it('includes direction in result for horizontal containers', () => {
+      const cursor: Point = { x: 50, y: 50 }
+      const target: DropCandidate = {
+        nodeId: 'hbox',
+        rect: { x: 0, y: 0, width: 200, height: 100 },
+        acceptsChildren: true,
+        isPositioned: false,
+        direction: 'horizontal',
+      }
+
+      const result = calculatePlacement(cursor, target, config)
+
+      expect(result.direction).toBe('horizontal')
+    })
+
+    it('includes direction in result for vertical containers', () => {
+      const cursor: Point = { x: 50, y: 50 }
+      const target: DropCandidate = {
+        nodeId: 'vbox',
+        rect: { x: 0, y: 0, width: 100, height: 200 },
+        acceptsChildren: true,
+        isPositioned: false,
+        direction: 'vertical',
+      }
+
+      const result = calculatePlacement(cursor, target, config)
+
+      expect(result.direction).toBe('vertical')
+    })
+
+    it('defaults to vertical when direction not specified', () => {
+      const cursor: Point = { x: 50, y: 50 }
+      const target: DropCandidate = {
+        nodeId: 'box',
+        rect: { x: 0, y: 0, width: 100, height: 100 },
+        acceptsChildren: true,
+        isPositioned: false,
+      }
+
+      const result = calculatePlacement(cursor, target, config)
+
+      expect(result.direction).toBe('vertical')
+    })
+  })
+
   describe('non-containers (leaf elements)', () => {
     it('returns before when near top edge', () => {
       const cursor: Point = { x: 50, y: 5 }

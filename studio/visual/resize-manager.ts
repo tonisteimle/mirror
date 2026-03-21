@@ -7,6 +7,7 @@
 
 import { OverlayManager } from './overlay-manager'
 import { events } from '../core'
+import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 
 /** Minimum element size in pixels - small enough for design flexibility, large enough to stay selectable */
 const MIN_ELEMENT_SIZE = 8
@@ -46,6 +47,9 @@ export class ResizeManager {
   private handles: HTMLElement[] = []
   private activeResize: ResizeState | null = null
   private currentNodeId: string | null = null
+
+  // Cached reference to prevent memory leaks on dispose
+  private handlesContainerRef: HTMLElement | null = null
 
   // Bound handlers
   private boundMouseDown: (e: MouseEvent) => void
@@ -116,7 +120,7 @@ export class ResizeManager {
         borderRadius: '50%',
         cursor: this.getCursor(pos),
         pointerEvents: 'auto',
-        zIndex: '1000',
+        zIndex: String(Z_INDEX_RESIZE_HANDLES),
         boxSizing: 'border-box',
       })
       handlesContainer.appendChild(handle)
@@ -146,15 +150,19 @@ export class ResizeManager {
   // ============================================================================
 
   private setupEventListeners(): void {
-    const handlesContainer = this.overlayManager.getResizeHandlesContainer()
-    handlesContainer.addEventListener('mousedown', this.boundMouseDown)
+    // Cache container reference to ensure we remove from same element on dispose
+    this.handlesContainerRef = this.overlayManager.getResizeHandlesContainer()
+    this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
     document.addEventListener('mousemove', this.boundMouseMove)
     document.addEventListener('mouseup', this.boundMouseUp)
   }
 
   private removeEventListeners(): void {
-    const handlesContainer = this.overlayManager.getResizeHandlesContainer()
-    handlesContainer.removeEventListener('mousedown', this.boundMouseDown)
+    // Use cached reference to avoid memory leak if overlay was recreated
+    if (this.handlesContainerRef) {
+      this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
+      this.handlesContainerRef = null
+    }
     document.removeEventListener('mousemove', this.boundMouseMove)
     document.removeEventListener('mouseup', this.boundMouseUp)
   }

@@ -19,6 +19,7 @@ interface MockNodeConfig {
   nodeId: string
   parentId?: string
   line?: number
+  componentName?: string
 }
 
 function createMockSourceMap(nodeIds: string[]): SourceMap {
@@ -36,7 +37,7 @@ function createMockSourceMap(nodeIds: string[]): SourceMap {
   return {
     getNodeById: (id: string) => nodes.get(id) || null,
     getAllNodeIds: () => Array.from(nodes.keys()),
-    getNodeAtLine: () => null,
+    getNodeAtLine: (line: number) => Array.from(nodes.values()).find(n => n.position.line === line) || null,
     getChildren: () => [],
     getRootNodes: () => Array.from(nodes.values()).filter(n => !n.parentId),
     getSiblings: () => [],
@@ -55,7 +56,7 @@ function createHierarchicalMockSourceMap(configs: MockNodeConfig[]): SourceMap {
     nodes.set(config.nodeId, {
       nodeId: config.nodeId,
       parentId: config.parentId,
-      componentName: 'Box',
+      componentName: config.componentName ?? 'Box',
       position: { line: config.line ?? index + 1, column: 0, endLine: (config.line ?? index + 1), endColumn: 10 },
       properties: new Map(),
       isDefinition: false,
@@ -65,7 +66,7 @@ function createHierarchicalMockSourceMap(configs: MockNodeConfig[]): SourceMap {
   return {
     getNodeById: (id: string) => nodes.get(id) || null,
     getAllNodeIds: () => Array.from(nodes.keys()),
-    getNodeAtLine: () => null,
+    getNodeAtLine: (line: number) => Array.from(nodes.values()).find(n => n.position.line === line) || null,
     getChildren: (parentId: string) => {
       return Array.from(nodes.values())
         .filter(n => n.parentId === parentId)
@@ -419,10 +420,12 @@ describe('Selection Validation', () => {
     actions.setCompiling(true)
     actions.setSelection('new-node', 'editor')
 
-    // Selection should be queued, not applied immediately
+    // Selection should be deferred, not applied immediately
+    expect(state.get().deferredSelection).toEqual({ type: 'nodeId', nodeId: 'new-node', origin: 'editor' })
+    // Also check legacy queuedSelection for backward compatibility
     expect(state.get().queuedSelection).toEqual({ nodeId: 'new-node', origin: 'editor' })
     expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Queuing selection during compile')
+      expect.stringContaining('Deferring selection during compile')
     )
 
     logSpy.mockRestore()
@@ -691,6 +694,132 @@ describe('Fallback Selection', () => {
     // Should fallback to first root
     expect(state.get().selection.nodeId).toBe('root')
     expect(state.get().queuedSelection).toBeNull()
+  })
+})
+
+describe('Deferred Selection (unified API)', () => {
+  beforeEach(() => {
+    state.set({
+      selection: { nodeId: null, origin: 'editor' },
+      sourceMap: null,
+      compiling: false,
+      deferredSelection: null,
+      queuedSelection: null,
+      pendingSelection: null,
+      preludeOffset: 0,
+    })
+  })
+
+  it('setDeferredSelection sets nodeId-based deferred selection', () => {
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: 'test-node', origin: 'preview' })
+
+    expect(state.get().deferredSelection).toEqual({
+      type: 'nodeId',
+      nodeId: 'test-node',
+      origin: 'preview',
+    })
+  })
+
+  it('setDeferredSelection sets line-based deferred selection', () => {
+    actions.setDeferredSelection({
+      type: 'line',
+      line: 5,
+      componentName: 'Button',
+      origin: 'drag-drop',
+    })
+
+    expect(state.get().deferredSelection).toEqual({
+      type: 'line',
+      line: 5,
+      componentName: 'Button',
+      origin: 'drag-drop',
+    })
+  })
+
+  it('resolveDeferredSelection resolves nodeId-based selection', async () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'target-node', componentName: 'Box', line: 1 },
+    ])
+    state.set({ sourceMap })
+
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: 'target-node', origin: 'preview' })
+
+    const resolvedId = actions.resolveDeferredSelection()
+
+    expect(resolvedId).toBe('target-node')
+    expect(state.get().selection.nodeId).toBe('target-node')
+    expect(state.get().selection.origin).toBe('preview')
+    expect(state.get().deferredSelection).toBeNull()
+  })
+
+  it('resolveDeferredSelection resolves line-based selection', async () => {
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'button-1', componentName: 'Button', line: 5 },
+    ])
+    state.set({ sourceMap, preludeOffset: 0 })
+
+    actions.setDeferredSelection({
+      type: 'line',
+      line: 5,
+      componentName: 'Button',
+      origin: 'drag-drop',
+    })
+
+    const resolvedId = actions.resolveDeferredSelection()
+
+    expect(resolvedId).toBe('button-1')
+    expect(state.get().selection.nodeId).toBe('button-1')
+    expect(state.get().deferredSelection).toBeNull()
+  })
+
+  it('setCompileResult resolves deferred selection', async () => {
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: 'new-node', origin: 'preview' })
+
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'new-node', componentName: 'Text', line: 1 },
+    ])
+
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap,
+      errors: [],
+    })
+
+    // Wait for microtask to resolve
+    await Promise.resolve()
+
+    expect(state.get().selection.nodeId).toBe('new-node')
+    expect(state.get().deferredSelection).toBeNull()
+  })
+
+  it('deferred selection with invalid nodeId falls back to root', async () => {
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: 'nonexistent', origin: 'preview' })
+
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'root', componentName: 'Box', line: 1 },
+    ])
+
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap,
+      errors: [],
+    })
+
+    // Wait for microtask to resolve
+    await Promise.resolve()
+
+    expect(state.get().selection.nodeId).toBe('root')
+    expect(state.get().deferredSelection).toBeNull()
+  })
+
+  it('clearDeferredSelection clears without resolving', () => {
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: 'test', origin: 'preview' })
+    expect(state.get().deferredSelection).not.toBeNull()
+
+    actions.clearDeferredSelection()
+    expect(state.get().deferredSelection).toBeNull()
   })
 })
 

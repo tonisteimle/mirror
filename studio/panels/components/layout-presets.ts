@@ -17,6 +17,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'w full, h full, absolute',
     icon: 'layers',
     description: 'Free positioning container',
+    defaultSize: { width: 200, height: 200 },
   },
 
   // Basic Stack Layouts
@@ -28,6 +29,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'ver, gap 8',
     icon: 'rows-3',
     description: 'Vertical box',
+    defaultSize: { width: 200, height: 150 },
   },
   {
     id: 'layout-hbox',
@@ -37,6 +39,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'hor, gap 8',
     icon: 'columns-3',
     description: 'Horizontal box',
+    defaultSize: { width: 200, height: 60 },
   },
   {
     id: 'layout-zstack',
@@ -46,6 +49,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'stacked',
     icon: 'stack',
     description: 'Layered stack (z-axis)',
+    defaultSize: { width: 150, height: 150 },
   },
   {
     id: 'layout-grid',
@@ -55,6 +59,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'grid 2, gap 8',
     icon: 'grid',
     description: 'Grid layout',
+    defaultSize: { width: 200, height: 150 },
   },
 
   // App Layouts
@@ -66,6 +71,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'hor, w full, h full',
     icon: 'horizontal',
     description: 'App with sidebar',
+    defaultSize: { width: 400, height: 300 },
     children: [
       { template: 'Box', properties: 'ver, w 240, h full, bg #1a1a23, pad 16', textContent: 'Sidebar' },
       { template: 'Box', properties: 'ver, w full, h full, pad 16', textContent: 'Content' },
@@ -79,6 +85,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'ver, w full, h full',
     icon: 'vertical',
     description: 'App with header and footer',
+    defaultSize: { width: 400, height: 300 },
     children: [
       { template: 'Box', properties: 'hor, w full, h 60, bg #1a1a23, pad 16, spread', textContent: 'Header' },
       { template: 'Box', properties: 'ver, w full, h full, pad 16', textContent: 'Content' },
@@ -93,6 +100,7 @@ export const LAYOUT_PRESETS: ComponentItem[] = [
     properties: 'ver, gap 4, w full',
     icon: 'vertical',
     description: 'Vertical list with items',
+    defaultSize: { width: 200, height: 150 },
     children: [
       { template: 'Box', properties: 'hor, pad 12, bg #f5f5f5, rad 4', textContent: 'Item 1' },
       { template: 'Box', properties: 'hor, pad 12, bg #f5f5f5, rad 4', textContent: 'Item 2' },
@@ -113,6 +121,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     textContent: 'Text',
     icon: 'text',
     description: 'Text element',
+    defaultSize: { width: 80, height: 24 },
   },
   {
     id: 'basic-button',
@@ -122,6 +131,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     textContent: 'Button',
     icon: 'button',
     description: 'Clickable button',
+    defaultSize: { width: 80, height: 36 },
   },
   {
     id: 'basic-input',
@@ -131,6 +141,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     properties: 'placeholder "Enter text..."',
     icon: 'input',
     description: 'Text input field',
+    defaultSize: { width: 200, height: 36 },
   },
   {
     id: 'basic-box',
@@ -139,6 +150,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     template: 'Box',
     icon: 'box',
     description: 'Generic container',
+    defaultSize: { width: 100, height: 100 },
   },
   {
     id: 'basic-image',
@@ -148,6 +160,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     properties: 'w 100, h 100, bg #e5e7eb',
     icon: 'image',
     description: 'Image placeholder',
+    defaultSize: { width: 100, height: 100 },
   },
   {
     id: 'basic-icon',
@@ -157,6 +170,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     properties: 'star',
     icon: 'icon',
     description: 'Icon element',
+    defaultSize: { width: 24, height: 24 },
   },
 ]
 

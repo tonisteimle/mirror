@@ -262,7 +262,7 @@ describe('ComponentPanel', () => {
       expect(onDragEnd).toHaveBeenCalled()
     })
 
-    it('should set custom drag image', () => {
+    it('should set drag data on dragstart', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
@@ -270,10 +270,12 @@ describe('ComponentPanel', () => {
 
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
-      expect(dataTransfer.dragImage).not.toBeNull()
+      // Drag data should be set
+      expect(dataTransfer.getData('application/mirror-component')).toBeTruthy()
+      expect(dataTransfer.getData('text/plain')).toBeTruthy()
     })
 
-    it('should create drag image with icon and name', () => {
+    it('should set component data in drag transfer', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
@@ -281,30 +283,28 @@ describe('ComponentPanel', () => {
 
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
-      expect(dataTransfer.dragImage).not.toBeNull()
-      const dragImage = dataTransfer.dragImage!.element as HTMLElement
+      const componentData = JSON.parse(dataTransfer.getData('application/mirror-component'))
 
-      // Drag image should have icon (svg) and name text
-      expect(dragImage.querySelector('svg')).not.toBeNull()
-      expect(dragImage.textContent).toBeTruthy()
+      // Component data should have required fields
+      expect(componentData.componentName).toBeTruthy()
+      expect(componentData.fromComponentPanel).toBe(true)
     })
 
-    it('should match source element name in drag image', () => {
+    it('should include component name in plain text drag data', () => {
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
-      const originalName = item.querySelector('.component-panel-item-name')?.textContent
-
       const dataTransfer = new MockDataTransfer()
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
-      const dragImage = dataTransfer.dragImage!.element as HTMLElement
+      const plainText = dataTransfer.getData('text/plain')
 
-      // Drag image text should contain the component name
-      expect(dragImage.textContent).toContain(originalName)
+      // Plain text should contain component template
+      expect(plainText).toBeTruthy()
+      expect(plainText.length).toBeGreaterThan(0)
     })
 
-    it('should create different drag images for different elements', () => {
+    it('should allow dragging different elements', () => {
       panel = createComponentPanel({ container })
 
       const items = container.querySelectorAll('.component-panel-item') as NodeListOf<HTMLElement>
@@ -318,53 +318,26 @@ describe('ComponentPanel', () => {
 
       items[1].dispatchEvent(createDragEvent('dragstart', dataTransfer2))
 
-      const dragImage1 = dataTransfer1.dragImage!.element as HTMLElement
-      const dragImage2 = dataTransfer2.dragImage!.element as HTMLElement
+      // Each item should set different drag data
+      const data1 = dataTransfer1.getData('application/mirror-component')
+      const data2 = dataTransfer2.getData('application/mirror-component')
 
-      const name1 = items[0].querySelector('.component-panel-item-name')?.textContent
-      const name2 = items[1].querySelector('.component-panel-item-name')?.textContent
-
-      // Each drag image should contain its component's name
-      expect(dragImage1.textContent).toContain(name1)
-      expect(dragImage2.textContent).toContain(name2)
-      expect(name1).not.toBe(name2)
+      expect(data1).toBeTruthy()
+      expect(data2).toBeTruthy()
+      expect(data1).not.toBe(data2)
     })
 
-    it('should position drag image cursor at center of element', () => {
-      panel = createComponentPanel({ container })
-
-      const item = container.querySelector('.component-panel-item') as HTMLElement
-
-      // Mock getBoundingClientRect
-      const mockRect = { width: 100, height: 40, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 40, toJSON: () => ({}) }
-      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(mockRect as DOMRect)
-
-      const dataTransfer = new MockDataTransfer()
-      item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
-
-      expect(dataTransfer.dragImage).not.toBeNull()
-      // Cursor should be at center (50, 20)
-      expect(dataTransfer.dragImage!.x).toBe(50)
-      expect(dataTransfer.dragImage!.y).toBe(20)
-    })
-
-    it('should remove drag image from DOM after dragstart', async () => {
+    it('should use browser default drag image', () => {
+      // Note: Custom drag image was removed in favor of browser default
+      // The browser automatically uses the dragged element as the drag image
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
       const dataTransfer = new MockDataTransfer()
-
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
-      // Drag image is temporarily added to body
-      expect(dataTransfer.dragImage).not.toBeNull()
-
-      // Wait for requestAnimationFrame cleanup
-      await new Promise(resolve => requestAnimationFrame(resolve))
-
-      // Drag image should be removed from DOM
-      const dragImages = document.querySelectorAll('.component-panel-drag-image')
-      expect(dragImages.length).toBe(0)
+      // No custom drag image is set - browser uses default
+      expect(dataTransfer.dragImage).toBeNull()
     })
   })
 
