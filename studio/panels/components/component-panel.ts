@@ -271,46 +271,20 @@ export class ComponentPanel {
   }
 
   /**
-   * Create a drag image element that matches the panel item size
+   * Create a drag image element that matches the panel item exactly
    */
-  private createDragImage(item: ComponentItem, sourceElement: HTMLElement): HTMLElement {
-    const rect = sourceElement.getBoundingClientRect()
+  private createDragImage(_item: ComponentItem, sourceElement: HTMLElement): HTMLElement {
+    // Clone the source element to get an exact copy
+    const dragImage = sourceElement.cloneNode(true) as HTMLElement
 
-    const dragImage = document.createElement('div')
-    dragImage.className = 'component-panel-drag-image'
+    // Position off-screen for the browser to capture
     Object.assign(dragImage.style, {
       position: 'fixed',
       left: '-9999px',
       top: '-9999px',
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      boxSizing: 'border-box', // Ensure padding is included in width/height
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '6px 10px',
-      backgroundColor: '#2563eb',
-      color: 'white',
-      borderRadius: '6px',
-      fontSize: '12px',
-      fontFamily: 'system-ui, sans-serif',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       pointerEvents: 'none',
       zIndex: '99999',
     })
-
-    // Add icon
-    const iconEl = document.createElement('span')
-    iconEl.innerHTML = getComponentIcon(item.icon)
-    iconEl.style.display = 'flex'
-    iconEl.style.alignItems = 'center'
-    dragImage.appendChild(iconEl)
-
-    // Add name
-    const nameEl = document.createElement('span')
-    nameEl.textContent = item.name
-    nameEl.style.fontWeight = '500'
-    dragImage.appendChild(nameEl)
 
     return dragImage
   }

@@ -367,11 +367,14 @@ export class DragController {
       const container = this.containerInfo.find(c => c.nodeId === dropZone!.nodeId)
       if (container) {
         // Ghost position relative to container = where element should be placed
+        // Clamp to >= 0 to prevent negative positions when dragging beyond container bounds
+        const rawX = ghostRect.x - container.rect.x
+        const rawY = ghostRect.y - container.rect.y
         dropZone = {
           ...dropZone,
           absolutePosition: {
-            x: ghostRect.x - container.rect.x,
-            y: ghostRect.y - container.rect.y,
+            x: Math.max(0, Math.round(rawX)),
+            y: Math.max(0, Math.round(rawY)),
           },
         }
       }
@@ -427,14 +430,21 @@ export class DragController {
   }
 
   private buildDropCandidates(): DropCandidate[] {
-    return this.containerInfo.map(info => ({
-      nodeId: info.nodeId,
-      rect: info.rect,
-      acceptsChildren: true, // TODO: Check component type
-      isPositioned: info.isPositioned,
-      direction: info.direction === 'horizontal' ? 'horizontal' : 'vertical',
-      childRects: info.childRects,
-    }))
+    // Get the drag source node ID to exclude it from candidates
+    // (an element cannot be dropped onto itself)
+    const source = this.state.getSource()
+    const sourceNodeId = source?.type === 'element' ? source.nodeId : undefined
+
+    return this.containerInfo
+      .filter(info => info.nodeId !== sourceNodeId) // Exclude drag source
+      .map(info => ({
+        nodeId: info.nodeId,
+        rect: info.rect,
+        acceptsChildren: true, // TODO: Check component type
+        isPositioned: info.isPositioned,
+        direction: info.direction === 'horizontal' ? 'horizontal' : 'vertical',
+        childRects: info.childRects,
+      }))
   }
 
   // --------------------------------------------------------------------------
