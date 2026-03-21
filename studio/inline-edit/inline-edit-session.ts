@@ -1,11 +1,11 @@
 /**
  * InlineEditSession - Manages a single inline text editing session
  *
- * Handles:
- * - Setting contentEditable on the element
- * - Focusing and selecting text
- * - Keyboard events (Enter to save, Escape to cancel)
- * - Click outside to save
+ * Uses a floating input field positioned over the element.
+ * This approach is more robust than contentEditable:
+ * - Standard input behavior
+ * - Isolated from other event handlers
+ * - Reliable Enter/Escape handling
  */
 
 import type { InlineEditResult } from './types'
@@ -28,13 +28,8 @@ export class InlineEditSession {
   private onEnd: (result: InlineEditResult) => void
   private onInput?: (text: string) => void
   private isActive: boolean = false
-  private isEnding: boolean = false // Prevent double-end
-
-  // Bound handlers for cleanup
-  private boundHandleKeyDown: (e: KeyboardEvent) => void
-  private boundHandleInput: () => void
-  private boundHandleClickOutside: (e: MouseEvent) => void
-  private boundHandlePaste: (e: ClipboardEvent) => void
+  private inputElement: HTMLInputElement | null = null
+  private overlay: HTMLDivElement | null = null
 
   constructor(config: InlineEditSessionConfig) {
     this.element = config.element
@@ -42,12 +37,6 @@ export class InlineEditSession {
     this.originalText = ''
     this.onEnd = config.onEnd
     this.onInput = config.onInput
-
-    // Bind handlers
-    this.boundHandleKeyDown = this.handleKeyDown.bind(this)
-    this.boundHandleInput = this.handleInput.bind(this)
-    this.boundHandleClickOutside = this.handleClickOutside.bind(this)
-    this.boundHandlePaste = this.handlePaste.bind(this)
   }
 
   /**
@@ -57,82 +46,32 @@ export class InlineEditSession {
     if (this.isActive) return
 
     this.isActive = true
-    this.isEnding = false
 
-    // Store original text content (trimmed)
+    // Store original text content
     this.originalText = this.element.textContent?.trim() || ''
 
-    // Make element editable
-    this.element.contentEditable = 'true'
+    // Create floating input
+    this.createFloatingInput()
+
+    // Mark element as being edited
     this.element.classList.add('inline-editing')
-
-    // Prevent line breaks in single-line elements
-    this.element.style.whiteSpace = 'pre'
-
-    // Disable spellcheck for cleaner editing
-    this.element.spellcheck = false
-
-    // Add event listeners on element
-    this.element.addEventListener('keydown', this.boundHandleKeyDown, { capture: true })
-    this.element.addEventListener('input', this.boundHandleInput)
-    this.element.addEventListener('paste', this.boundHandlePaste)
-
-    // Prevent click events from propagating during edit
-    this.element.addEventListener('click', this.stopPropagation, { capture: true })
-    this.element.addEventListener('mousedown', this.stopPropagation, { capture: true })
-
-    // Click outside listener (on document, delayed to avoid immediate trigger)
-    setTimeout(() => {
-      if (this.isActive) {
-        document.addEventListener('mousedown', this.boundHandleClickOutside, { capture: true })
-      }
-    }, 100)
-
-    // Focus and select all text (use setTimeout to ensure DOM is ready)
-    setTimeout(() => {
-      if (this.isActive) {
-        this.element.focus()
-        this.selectAllText()
-      }
-    }, 0)
   }
 
   /**
    * End the edit session
    */
   end(save: boolean): void {
-    if (!this.isActive || this.isEnding) return
+    if (!this.isActive) return
 
-    this.isEnding = true
     this.isActive = false
 
-    const newText = this.element.textContent?.trim() || ''
+    const newText = this.inputElement?.value.trim() || ''
 
-    // Remove event listeners first
-    this.element.removeEventListener('keydown', this.boundHandleKeyDown, { capture: true })
-    this.element.removeEventListener('input', this.boundHandleInput)
-    this.element.removeEventListener('paste', this.boundHandlePaste)
-    this.element.removeEventListener('click', this.stopPropagation, { capture: true })
-    this.element.removeEventListener('mousedown', this.stopPropagation, { capture: true })
-    document.removeEventListener('mousedown', this.boundHandleClickOutside, { capture: true })
+    // Remove floating input
+    this.removeFloatingInput()
 
-    // Restore element state
-    this.element.contentEditable = 'false'
+    // Remove editing class
     this.element.classList.remove('inline-editing')
-    this.element.classList.remove('inline-editing-modified')
-    this.element.style.whiteSpace = ''
-    this.element.spellcheck = true
-
-    // Restore original text if cancelled
-    if (!save) {
-      this.element.textContent = this.originalText
-    }
-
-    // Clear selection
-    window.getSelection()?.removeAllRanges()
-
-    // Blur the element
-    this.element.blur()
 
     // Notify completion
     this.onEnd({
@@ -154,7 +93,7 @@ export class InlineEditSession {
    * Get the current text
    */
   getCurrentText(): string {
-    return this.element.textContent?.trim() || ''
+    return this.inputElement?.value.trim() || this.originalText
   }
 
   /**
@@ -165,76 +104,157 @@ export class InlineEditSession {
   }
 
   /**
-   * Select all text in the element
+   * Create the floating input field
    */
-  private selectAllText(): void {
-    const range = document.createRange()
-    range.selectNodeContents(this.element)
-    const selection = window.getSelection()
-    selection?.removeAllRanges()
-    selection?.addRange(range)
+  private createFloatingInput(): void {
+    // Get element's computed styles
+    const computed = window.getComputedStyle(this.element)
+    const rect = this.element.getBoundingClientRect()
+
+    // Create overlay to capture clicks outside
+    this.overlay = document.createElement('div')
+    this.overlay.className = 'inline-edit-overlay'
+    this.overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9998;
+      cursor: default;
+    `
+    this.overlay.addEventListener('mousedown', this.handleOverlayClick.bind(this))
+    document.body.appendChild(this.overlay)
+
+    // Create input element
+    this.inputElement = document.createElement('input')
+    this.inputElement.type = 'text'
+    this.inputElement.value = this.originalText
+    this.inputElement.className = 'inline-edit-input'
+
+    // Match the element's typography
+    this.inputElement.style.cssText = `
+      position: fixed;
+      left: ${rect.left}px;
+      top: ${rect.top}px;
+      width: ${Math.max(rect.width + 20, 60)}px;
+      height: ${rect.height}px;
+      min-width: 60px;
+      padding: 0 4px;
+      margin: 0;
+      border: 2px solid var(--color-primary, #3B82F6);
+      border-radius: 3px;
+      background: var(--color-surface, #1a1a1a);
+      color: ${computed.color};
+      font-family: ${computed.fontFamily};
+      font-size: ${computed.fontSize};
+      font-weight: ${computed.fontWeight};
+      line-height: ${rect.height}px;
+      text-align: ${computed.textAlign};
+      outline: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 9999;
+      box-sizing: border-box;
+    `
+
+    // Add event listeners
+    this.inputElement.addEventListener('keydown', this.handleKeyDown.bind(this))
+    this.inputElement.addEventListener('input', this.handleInput.bind(this))
+    this.inputElement.addEventListener('blur', this.handleBlur.bind(this))
+
+    // Add to DOM
+    document.body.appendChild(this.inputElement)
+
+    // Focus and select all (after a small delay to ensure rendering)
+    requestAnimationFrame(() => {
+      if (this.inputElement) {
+        this.inputElement.focus()
+        this.inputElement.select()
+      }
+    })
+  }
+
+  /**
+   * Remove the floating input field
+   */
+  private removeFloatingInput(): void {
+    if (this.inputElement) {
+      this.inputElement.remove()
+      this.inputElement = null
+    }
+    if (this.overlay) {
+      this.overlay.remove()
+      this.overlay = null
+    }
   }
 
   /**
    * Handle keyboard events
    */
   private handleKeyDown(e: KeyboardEvent): void {
-    // Prevent event from bubbling to parent handlers
+    // Stop propagation to prevent other handlers
     e.stopPropagation()
 
     if (e.key === 'Enter') {
-      // Enter = Save and exit (no multiline support for now)
       e.preventDefault()
       this.end(true)
     } else if (e.key === 'Escape') {
-      // Escape = Cancel and restore original
       e.preventDefault()
       this.end(false)
     } else if (e.key === 'Tab') {
-      // Tab = Save and exit (move to next element)
       e.preventDefault()
       this.end(true)
     }
-  }
-
-  /**
-   * Handle click outside the element
-   */
-  private handleClickOutside(e: MouseEvent): void {
-    const target = e.target as HTMLElement
-
-    // Check if click is outside the editing element
-    if (!this.element.contains(target) && this.isActive) {
-      // Save on click outside
-      this.end(true)
-    }
-  }
-
-  /**
-   * Handle paste - strip formatting
-   */
-  private handlePaste(e: ClipboardEvent): void {
-    e.preventDefault()
-    const text = e.clipboardData?.getData('text/plain') || ''
-    // Insert plain text only, remove newlines
-    const cleanText = text.replace(/[\r\n]+/g, ' ')
-    document.execCommand('insertText', false, cleanText)
   }
 
   /**
    * Handle input changes
    */
   private handleInput(): void {
-    this.element.classList.add('inline-editing-modified')
-    // Notify of text change for live updates (e.g., resize handles)
-    this.onInput?.(this.getCurrentText())
+    const text = this.inputElement?.value || ''
+    this.onInput?.(text)
+
+    // Auto-resize input width
+    if (this.inputElement) {
+      const textWidth = this.measureTextWidth(text)
+      this.inputElement.style.width = `${Math.max(textWidth + 30, 60)}px`
+    }
   }
 
   /**
-   * Stop event propagation
+   * Handle blur (focus lost)
    */
-  private stopPropagation(e: Event): void {
+  private handleBlur(e: FocusEvent): void {
+    // Small delay to allow click handlers to fire first
+    setTimeout(() => {
+      if (this.isActive) {
+        this.end(true)
+      }
+    }, 50)
+  }
+
+  /**
+   * Handle click on overlay (outside input)
+   */
+  private handleOverlayClick(e: MouseEvent): void {
+    e.preventDefault()
     e.stopPropagation()
+    this.end(true)
+  }
+
+  /**
+   * Measure text width for auto-resize
+   */
+  private measureTextWidth(text: string): number {
+    if (!this.inputElement) return 100
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return 100
+
+    const computed = window.getComputedStyle(this.inputElement)
+    ctx.font = `${computed.fontWeight} ${computed.fontSize} ${computed.fontFamily}`
+    return ctx.measureText(text || 'M').width
   }
 }
 

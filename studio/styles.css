@@ -6249,36 +6249,25 @@ select.tomselected,
 
 /* ============================================
    INLINE TEXT EDITING
-   Figma-style inline editing in preview
+   Figma-style inline editing with floating input
    ============================================ */
 
-/* Element being edited */
+/* Element being edited - make slightly transparent so input is visible */
 .inline-editing {
-  outline: 2px solid var(--color-primary) !important;
-  outline-offset: 2px;
-  border-radius: 2px;
-  cursor: text !important;
-  min-width: 20px;
-  white-space: pre-wrap;
+  opacity: 0.3 !important;
 }
 
-/* Visual feedback during editing */
-.inline-editing:focus {
-  outline-color: var(--color-primary-light) !important;
-  background-color: rgba(255, 255, 255, 0.05);
+/* Floating input field */
+.inline-edit-input {
+  font-family: inherit;
+  caret-color: var(--color-primary, #3B82F6);
 }
 
-/* Mark as modified */
-.inline-editing-modified {
-  background-color: rgba(59, 130, 246, 0.08);
+.inline-edit-input::selection {
+  background: var(--color-primary-selection, rgba(59, 130, 246, 0.3));
 }
 
-/* Disable hover effects on editing element */
-.inline-editing.studio-hover {
-  outline-color: var(--color-primary) !important;
-}
-
-/* Suppress selection highlight while editing */
-.inline-editing.studio-selected {
-  box-shadow: none !important;
+/* Overlay captures clicks outside */
+.inline-edit-overlay {
+  background: transparent;
 }

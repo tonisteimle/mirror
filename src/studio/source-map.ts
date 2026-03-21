@@ -124,6 +124,60 @@ export class SourceMap {
   }
 
   /**
+   * Get siblings of a node (other children of same parent)
+   * Returns siblings sorted by source position (line number)
+   */
+  getSiblings(nodeId: string): NodeMapping[] {
+    const node = this.getNodeById(nodeId)
+    if (!node) return []
+
+    const parentId = node.parentId
+    // If no parent, siblings are other root nodes
+    const siblings = parentId
+      ? this.getChildren(parentId)
+      : this.getRootNodes()
+
+    // Exclude self and sort by line number
+    return siblings
+      .filter(n => n.nodeId !== nodeId)
+      .sort((a, b) => a.position.line - b.position.line)
+  }
+
+  /**
+   * Find the next sibling after this node
+   */
+  getNextSibling(nodeId: string): NodeMapping | null {
+    const node = this.getNodeById(nodeId)
+    if (!node) return null
+
+    const siblings = this.getSiblings(nodeId)
+    // Find first sibling that comes after this node
+    return siblings.find(s => s.position.line > node.position.line) || null
+  }
+
+  /**
+   * Find the previous sibling before this node
+   */
+  getPreviousSibling(nodeId: string): NodeMapping | null {
+    const node = this.getNodeById(nodeId)
+    if (!node) return null
+
+    const siblings = this.getSiblings(nodeId)
+    // Find last sibling that comes before this node
+    const before = siblings.filter(s => s.position.line < node.position.line)
+    return before.length > 0 ? before[before.length - 1] : null
+  }
+
+  /**
+   * Get the parent node
+   */
+  getParent(nodeId: string): NodeMapping | null {
+    const node = this.getNodeById(nodeId)
+    if (!node || !node.parentId) return null
+    return this.getNodeById(node.parentId)
+  }
+
+  /**
    * Get all nodes (for debugging)
    */
   getAllNodes(): NodeMapping[] {

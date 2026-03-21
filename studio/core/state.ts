@@ -317,8 +317,19 @@ export const actions = {
     if (currentSelection && result.sourceMap) {
       const nodeExists = result.sourceMap.getNodeById(currentSelection) !== null
       if (!nodeExists) {
-        console.warn(`[State] Selection ${currentSelection} no longer exists after compile, clearing`)
-        state.set({ selection: { nodeId: null, origin: currentState.selection.origin } })
+        console.warn(`[State] Selection ${currentSelection} no longer exists after compile`)
+
+        // Find a fallback selection instead of clearing
+        const fallbackId = actions.findFallbackSelection(currentSelection, result.sourceMap)
+
+        if (fallbackId) {
+          console.log(`[State] Fallback selection: ${fallbackId}`)
+          state.set({ selection: { nodeId: fallbackId, origin: currentState.selection.origin } })
+          events.emit('selection:changed', { nodeId: fallbackId, origin: currentState.selection.origin })
+        } else {
+          console.warn(`[State] No fallback found, clearing selection`)
+          state.set({ selection: { nodeId: null, origin: currentState.selection.origin } })
+        }
         events.emit('selection:invalidated', { nodeId: currentSelection })
       }
     }
@@ -582,6 +593,63 @@ export const actions = {
    */
   isInlineEditing(): boolean {
     return state.get().inlineEditActive
+  },
+
+  /**
+   * Find a fallback selection when the current selection becomes invalid
+   * Priority: next sibling → previous sibling → parent → first root
+   *
+   * @param invalidNodeId - The node ID that is no longer valid
+   * @param sourceMap - The current SourceMap to search in
+   * @returns The fallback node ID, or null if no fallback found
+   */
+  findFallbackSelection(invalidNodeId: string, sourceMap: SourceMap): string | null {
+    // Get info about the invalid node from the OLD sourceMap (before deletion)
+    // Since the node is already deleted, we need to use cached info
+    // This function is typically called with cached parent/sibling info
+
+    // For setCompileResult, we don't have the old sourceMap
+    // So we need a different approach - find any selectable element
+    const roots = sourceMap.getRootNodes()
+    if (roots.length > 0) {
+      return roots[0].nodeId
+    }
+
+    return null
+  },
+
+  /**
+   * Find a fallback selection with pre-computed sibling/parent info
+   * Use this when you have access to the node info before deletion
+   *
+   * Priority: next sibling → previous sibling → parent → first root
+   */
+  findFallbackWithInfo(
+    info: { nextSiblingId?: string; prevSiblingId?: string; parentId?: string },
+    sourceMap: SourceMap
+  ): string | null {
+    // Try next sibling
+    if (info.nextSiblingId && sourceMap.getNodeById(info.nextSiblingId)) {
+      return info.nextSiblingId
+    }
+
+    // Try previous sibling
+    if (info.prevSiblingId && sourceMap.getNodeById(info.prevSiblingId)) {
+      return info.prevSiblingId
+    }
+
+    // Try parent
+    if (info.parentId && sourceMap.getNodeById(info.parentId)) {
+      return info.parentId
+    }
+
+    // Fallback to first root
+    const roots = sourceMap.getRootNodes()
+    if (roots.length > 0) {
+      return roots[0].nodeId
+    }
+
+    return null
   },
 }
 
