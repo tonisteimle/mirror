@@ -29,6 +29,9 @@ export * from './editor'
 // Preview
 export * from './preview'
 
+// Visual (drag-drop system)
+export * from './visual'
+
 // LLM
 export * from './llm'
 

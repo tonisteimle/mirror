@@ -24,7 +24,9 @@ import {
   getIconTriggerPrimitives,
   // Ghost Renderer for palette drag previews
   getGhostRenderer,
-} from './dist/index.js?v=91'
+  // DragDropService - must use studio bundle to share GhostRenderer instance
+  DragDropService,
+} from './dist/index.js?v=92'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -5444,8 +5446,9 @@ function updateStudio(ast, ir, sourceMap, source) {
   }
 
   // Update or create DragDropService (new testable architecture with mouse events)
+  // IMPORTANT: Use studio bundle's DragDropService to share GhostRenderer cache
   if (!studioDragDropService) {
-    studioDragDropService = new MirrorLang.DragDropService(previewContainer, {
+    studioDragDropService = new DragDropService(previewContainer, {
       // Config
       gridSize: 0,
       enableGuides: true,
