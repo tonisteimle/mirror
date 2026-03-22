@@ -88,7 +88,6 @@ export class GhostRenderer {
   async render(item: ComponentItem): Promise<RenderedGhost> {
     // Check cache first
     const cacheKey = this.getCacheKey(item)
-    console.log('[GhostRenderer] render cacheKey:', cacheKey)
     const cached = this.cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       // Clone the cached element
@@ -188,8 +187,6 @@ export class GhostRenderer {
   renderSync(item: ComponentItem): RenderedGhost | null {
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
-    console.log('[GhostRenderer] renderSync cacheKey:', cacheKey)
-    console.log('[GhostRenderer] cache size:', this.cache.size, 'keys:', [...this.cache.keys()])
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       const clone = cached.element.cloneNode(true) as HTMLElement

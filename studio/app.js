@@ -26,7 +26,7 @@ import {
   getGhostRenderer,
   // DragDropService - must use studio bundle to share GhostRenderer instance
   DragDropService,
-} from './dist/index.js?v=92'
+} from './dist/index.js?v=93'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
