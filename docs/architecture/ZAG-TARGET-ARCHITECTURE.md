@@ -242,7 +242,131 @@ Mirror Source
 └──────────┘    └──────────┘    └──────────┘
 ```
 
-## Komponenten-Mapping
+## Komponenten-Syntax
+
+Alle Zag-Komponenten folgen konsistenten Syntax-Patterns.
+
+> **Vollständige Referenz:** [features/zag-components/syntax-overview.md](../../features/zag-components/syntax-overview.md)
+
+### Übersicht
+
+| Komponente | Pattern | Slots | Keywords |
+|------------|---------|-------|----------|
+| **Select** | Trigger + Content | Trigger, Content, Item, Icon, Pill | `multiple`, `searchable` |
+| **Dialog** | Trigger + Content | Trigger, Backdrop, Content, Title, Close | `modal` |
+| **Menu** | Trigger + Content | Trigger, Content, Item, Separator | - |
+| **Tabs** | List + Item | TabList, Tab, TabPanel | `orientation` |
+| **Accordion** | List + Item | AccordionItem, Trigger, Content | `collapsible`, `multiple` |
+| **Tooltip** | Trigger + Content | Content, Arrow | `position`, `delay` |
+| **Slider** | Track + Thumb | Track, Range, Thumb | `range` |
+| **Checkbox** | Control + Indicator | Control, Indicator, Label | `indeterminate` |
+| **RadioGroup** | List + Item | Radio, Control, Indicator | - |
+| **Switch** | Track + Thumb | Track, Thumb, Label | - |
+| **DatePicker** | Trigger + Content | Trigger, Content, Day, Header | `mode "range"` |
+| **NumberInput** | Control | Input, DecrementButton, IncrementButton | `formatOptions` |
+| **Popover** | Trigger + Content | Trigger, Content, Arrow | `position` |
+
+### Design-Prinzipien
+
+```
+1. Slots mit Doppelpunkt       →  Trigger:, Content:, Item:
+2. Behavior als Keywords       →  searchable, multiple, modal
+3. States mit Doppelpunkt      →  hover:, selected:, open:
+4. Definition vs. Verwendung   →  Komplexität in Definition
+```
+
+### Gemeinsame Patterns
+
+```
+Trigger + Content     →  Dialog, Menu, Popover, Tooltip, Select
+List + Item           →  Select, Menu, Tabs, Accordion, RadioGroup
+Control + Indicator   →  Checkbox, Radio, Switch
+Track + Thumb         →  Slider, Switch
+```
+
+### Konsistente States
+
+| State | Beschreibung | Data Attribute |
+|-------|--------------|----------------|
+| `hover:` | Mouse over | `[data-highlighted]` |
+| `focus:` | Keyboard focus | `[data-focus]` |
+| `selected:` | Item ausgewählt | `[data-state="checked"]` |
+| `checked:` | Checkbox/Radio/Switch an | `[data-state="checked"]` |
+| `highlighted:` | Keyboard navigation | `[data-highlighted]` |
+| `expanded:` | Accordion offen | `[data-state="open"]` |
+| `open:` | Dropdown/Dialog offen | `[data-state="open"]` |
+| `disabled:` | Deaktiviert | `[data-disabled]` |
+
+### Beispiele
+
+#### Select
+
+```mirror
+Select placeholder "Wähle..."
+  Trigger: pad 12, bg surface, rad 8
+  Content: bg surface, shadow lg
+  Item: hover: bg hover, selected: bg primary
+
+  Item "Option A"
+  Item "Option B"
+```
+
+#### Dialog
+
+```mirror
+Dialog modal, closeOnEscape
+  Trigger: Button "Öffnen"
+  Backdrop: bg #00000080
+  Content: w 400, pad 24, bg surface, rad 12
+  Title: fs 18, weight semibold
+  Close: absolute, top 16, right 16
+
+  Content
+    Title "Bestätigung"
+    Text "Möchtest du fortfahren?"
+    Actions hor, gap 8
+      Button "Abbrechen" onclick close
+      Button "OK" onclick confirm
+```
+
+#### Tabs
+
+```mirror
+Tabs defaultValue "tab1"
+  TabList: hor, gap 4, bg surface, pad 4, rad 8
+  Tab: pad 8 16, rad 6, selected: bg primary, col white
+  TabPanel: pad 16
+
+  TabList
+    Tab value "tab1", "Übersicht"
+    Tab value "tab2", "Details"
+
+  TabPanel value "tab1"
+    Text "Übersicht Content"
+  TabPanel value "tab2"
+    Text "Details Content"
+```
+
+#### Checkbox
+
+```mirror
+Checkbox label "Newsletter abonnieren"
+  Control: size 20, rad 4, bor 2 #555, checked: bg primary
+  Indicator: Icon "check", col white
+```
+
+#### Slider
+
+```mirror
+Slider min 0, max 100, defaultValue 50
+  Track: h 4, bg #333, rad 2
+  Range: bg primary
+  Thumb: size 20, rad full, bg white, shadow md
+```
+
+---
+
+## Komponenten-Mapping (Zag API)
 
 ### Select
 
@@ -261,6 +385,118 @@ Select                    →     select.machine()
 
   Item "Apple"            →     collection.items[]
   Item value "x" label "Y"→     { value: "x", label: "Y" }
+```
+
+### Dialog
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Dialog                    →     dialog.machine()
+  modal                   →     { modal: true }
+  closeOnEscape           →     { closeOnEscapeKeyDown: true }
+  closeOnOutsideClick     →     { closeOnInteractOutside: true }
+
+  Trigger:                →     getTriggerProps()
+  Backdrop:               →     getBackdropProps()
+  Content:                →     getContentProps()
+  Title:                  →     getTitleProps()
+  Description:            →     getDescriptionProps()
+  Close:                  →     getCloseTriggerProps()
+```
+
+### Menu
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Menu                      →     menu.machine()
+  trigger "contextmenu"   →     { contextMenu: true }
+
+  Trigger:                →     getTriggerProps()
+  Content:                →     getContentProps()
+  Item:                   →     getItemProps({ value })
+  Separator:              →     getSeparatorProps()
+  ItemGroup:              →     getItemGroupProps()
+  ItemGroupLabel:         →     getItemGroupLabelProps()
+```
+
+### Tabs
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Tabs                      →     tabs.machine()
+  defaultValue "x"        →     { defaultValue: "x" }
+  orientation "vertical"  →     { orientation: "vertical" }
+
+  TabList:                →     getListProps()
+  Tab:                    →     getTriggerProps({ value })
+  TabPanel:               →     getContentProps({ value })
+  TabIndicator:           →     getIndicatorProps()
+```
+
+### Accordion
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Accordion                 →     accordion.machine()
+  collapsible             →     { collapsible: true }
+  multiple                →     { multiple: true }
+
+  AccordionItem:          →     getItemProps({ value })
+  Trigger:                →     getItemTriggerProps({ value })
+  Content:                →     getItemContentProps({ value })
+  TriggerIcon:            →     getItemIndicatorProps({ value })
+```
+
+### Checkbox
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Checkbox                  →     checkbox.machine()
+  checked                 →     { checked: true }
+  indeterminate           →     { checked: "indeterminate" }
+  disabled                →     { disabled: true }
+
+  Control:                →     getControlProps()
+  Indicator:              →     getIndicatorProps()
+  Label:                  →     getLabelProps()
+```
+
+### Slider
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+Slider                    →     slider.machine()
+  min 0, max 100          →     { min: 0, max: 100 }
+  step 5                  →     { step: 5 }
+  defaultValue 50         →     { defaultValue: [50] }
+  range                   →     (uses two thumbs)
+
+  Track:                  →     getTrackProps()
+  Range:                  →     getRangeProps()
+  Thumb:                  →     getThumbProps({ index })
+```
+
+### DatePicker
+
+```
+Mirror                          Zag
+──────────────────────────────────────────────────────
+DatePicker                →     datepicker.machine()
+  mode "range"            →     { selectionMode: "range" }
+  locale "de-DE"          →     { locale: "de-DE" }
+  min 2024-01-01          →     { min: parseDate("2024-01-01") }
+
+  Trigger:                →     getTriggerProps()
+  Content:                →     getContentProps()
+  Day:                    →     getDayTableCellProps({ value })
+  Header:                 →     (custom)
+  NavButton:              →     getPrevTriggerProps() / getNextTriggerProps()
 ```
 
 ### Slot Binding

@@ -24,7 +24,7 @@ import {
   getIconTriggerPrimitives,
   // Ghost Renderer for palette drag previews
   getGhostRenderer,
-} from './dist/index.js?v=89'
+} from './dist/index.js?v=90'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
