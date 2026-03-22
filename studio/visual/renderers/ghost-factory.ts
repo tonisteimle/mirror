@@ -96,9 +96,15 @@ export class GhostFactory {
 
   /**
    * Create a clone ghost from an existing element
+   * @param element The element to clone
+   * @param size Optional explicit size (required if element is not in DOM)
    */
-  createFromElement(element: HTMLElement): HTMLElement {
-    return this.create({ type: 'element', element })
+  createFromElement(element: HTMLElement, size?: { width: number; height: number }): HTMLElement {
+    // Clean up any existing ghost
+    this.dispose()
+    this.activeGhost = this.createCloneGhost(element, size)
+    document.body.appendChild(this.activeGhost)
+    return this.activeGhost
   }
 
   /**
@@ -161,10 +167,17 @@ export class GhostFactory {
 
   /**
    * Create a clone of an existing element as ghost
+   * @param element The element to clone
+   * @param explicitSize Optional explicit size (used when element is not in DOM)
    */
-  private createCloneGhost(element: HTMLElement): HTMLElement {
+  private createCloneGhost(element: HTMLElement, explicitSize?: { width: number; height: number }): HTMLElement {
     const ghost = element.cloneNode(true) as HTMLElement
     const rect = element.getBoundingClientRect()
+
+    // Use explicit size if provided, otherwise use getBoundingClientRect
+    // (explicit size is needed when element is not attached to DOM)
+    const width = explicitSize?.width ?? rect.width
+    const height = explicitSize?.height ?? rect.height
 
     // Remove any selection-related classes
     ghost.classList.remove(
@@ -182,13 +195,14 @@ export class GhostFactory {
       position: 'fixed',
       left: '0px',
       top: '0px',
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
+      width: `${width}px`,
+      height: `${height}px`,
       margin: '0',
       pointerEvents: 'none',
       opacity: String(this.config.opacity),
       zIndex: String(this.config.zIndex),
-      transform: `translate(${rect.left}px, ${rect.top}px)`,
+      // Use rect position only if element was in DOM (non-zero), otherwise center at 0,0
+      transform: `translate(${rect.left >= 0 ? rect.left : 0}px, ${rect.top >= 0 ? rect.top : 0}px)`,
       borderRadius: `${this.config.borderRadius}px`,
       boxSizing: 'border-box',
       // Prevent any transitions during drag

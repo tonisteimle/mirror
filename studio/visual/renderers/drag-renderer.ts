@@ -245,9 +245,9 @@ export class DragRenderer {
     console.log('[DragRenderer] Cache result:', cached ? 'HIT' : 'MISS')
 
     if (cached) {
-      // Use the cached rendered element
-      console.log('[DragRenderer] Using cached element:', cached.element.outerHTML.slice(0, 100))
-      this.ghostFactory.createFromElement(cached.element)
+      // Use the cached rendered element with explicit size
+      console.log('[DragRenderer] Using cached element:', cached.element.outerHTML.slice(0, 100), 'size:', cached.size)
+      this.ghostFactory.createFromElement(cached.element, cached.size)
       this.currentGhostSource = { type: 'rendered', componentName }
       return
     }
@@ -267,12 +267,35 @@ export class DragRenderer {
       console.log('[DragRenderer] Async render complete:', rendered.element.outerHTML.slice(0, 100), 'size:', rendered.size)
       // Only update if we're still dragging the same component
       if (this.currentGhostSource?.componentName === componentName) {
-        this.ghostFactory.createFromElement(rendered.element)
+        // Get current ghost position before replacing
+        const currentGhost = this.ghostFactory.getGhost()
+        let currentCenter = { x: 0, y: 0 }
+        if (currentGhost) {
+          const transform = currentGhost.style.transform
+          const match = transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/)
+          if (match) {
+            const x = parseFloat(match[1])
+            const y = parseFloat(match[2])
+            const oldWidth = parseFloat(currentGhost.style.width) || 100
+            const oldHeight = parseFloat(currentGhost.style.height) || 40
+            currentCenter = { x: x + oldWidth / 2, y: y + oldHeight / 2 }
+          }
+        }
+
+        // Create ghost from rendered element with explicit size
+        this.ghostFactory.createFromElement(rendered.element, rendered.size)
         this.currentGhostSource = { type: 'rendered', componentName }
-        // Re-apply position using current ghostRect (note: this uses closure value)
+
+        // Re-apply position centered on the old center
         if (this.ghostFactory.hasGhost()) {
-          console.log('[DragRenderer] Re-applying position (closure value):', ghostRect)
-          this.ghostFactory.setRect(ghostRect)
+          const newRect = {
+            x: currentCenter.x - rendered.size.width / 2,
+            y: currentCenter.y - rendered.size.height / 2,
+            width: rendered.size.width,
+            height: rendered.size.height,
+          }
+          console.log('[DragRenderer] Updating to measured size:', newRect)
+          this.ghostFactory.setRect(newRect)
         }
       }
     }).catch((err) => {
