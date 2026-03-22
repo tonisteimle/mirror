@@ -7,6 +7,9 @@ import type { IR } from '../../src/ir/types'
 import type { SourceMap } from '../../src/studio/source-map'
 import { events } from './events'
 
+// Debug flag - set to true to enable verbose state logging
+const DEBUG_STATE = false
+
 export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
 
 export interface BreadcrumbItem {
@@ -232,7 +235,7 @@ export async function loadSettingsFromServer(): Promise<void> {
 
       // Emit event for UI update
       events.emit('settings:loaded', { panelVisibility: merged })
-      console.log('[Settings] Loaded from server:', merged)
+      DEBUG_STATE && console.log('[Settings] Loaded from server:', merged)
     }
   } catch (e) {
     console.warn('[Settings] Failed to load from server:', e)
@@ -331,14 +334,14 @@ export const actions = {
       state.set({ queuedSelection: null })
       // Validate that node still exists
       if (result.sourceMap.getNodeById(queued.nodeId)) {
-        console.log('[State] Resolving queued selection:', queued.nodeId)
+        DEBUG_STATE && console.log('[State] Resolving queued selection:', queued.nodeId)
         actions.setSelection(queued.nodeId, queued.origin)
       } else {
         // Node no longer exists - find a fallback
         console.warn('[State] Queued selection no longer exists:', queued.nodeId)
         const fallbackId = actions.findFallbackSelection(queued.nodeId, result.sourceMap)
         if (fallbackId) {
-          console.log('[State] Using fallback for queued selection:', fallbackId)
+          DEBUG_STATE && console.log('[State] Using fallback for queued selection:', fallbackId)
           actions.setSelection(fallbackId, queued.origin)
           // Notify that fallback was used
           events.emit('selection:fallback', {
@@ -358,14 +361,14 @@ export const actions = {
       Promise.resolve().then(() => {
         // Only resolve if no newer compile has happened
         if (state.get().compileVersion !== capturedVersion) {
-          console.log('[State] Skipping deferred selection - newer compile available')
+          DEBUG_STATE && console.log('[State] Skipping deferred selection - newer compile available')
           // Clear stale deferred selection
           state.set({ deferredSelection: null })
           return
         }
         const resolvedNodeId = actions.resolveDeferredSelection()
         if (resolvedNodeId) {
-          console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)
+          DEBUG_STATE && console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)
         }
       }).catch(error => {
         console.error('[State] Error resolving deferred selection:', error)
@@ -381,7 +384,7 @@ export const actions = {
       Promise.resolve().then(() => {
         const resolvedNodeId = actions.resolvePendingSelection()
         if (resolvedNodeId) {
-          console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
+          DEBUG_STATE && console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
         }
       }).catch(error => {
         console.error('[State] Error resolving pending selection:', error)
@@ -587,7 +590,7 @@ export const actions = {
    */
   setPendingSelection(pending: PendingSelection): void {
     state.set({ pendingSelection: pending })
-    console.log('[State] Pending selection set:', pending)
+    DEBUG_STATE && console.log('[State] Pending selection set:', pending)
   },
 
   /**
@@ -628,7 +631,7 @@ export const actions = {
     const preludeLines = currentState.preludeOffset
     const resolvedLine = preludeLines + pending.line
 
-    console.log('[State] Resolving pending selection:', {
+    DEBUG_STATE && console.log('[State] Resolving pending selection:', {
       originalLine: pending.line,
       preludeOffset: preludeLines,
       resolvedLine,
@@ -642,19 +645,19 @@ export const actions = {
     const node = sourceMap.getNodeAtLine(resolvedLine)
 
     if (node && node.nodeId) {
-      console.log('[State] Resolved pending selection to:', node.nodeId)
+      DEBUG_STATE && console.log('[State] Resolved pending selection to:', node.nodeId)
       // Set selection - SyncCoordinator will automatically handle sync via event
       actions.setSelection(node.nodeId, pending.origin)
       return node.nodeId
     }
 
     // Fallback: search by component name in nearby lines
-    console.log('[State] Node not found at exact line, searching nearby...')
+    DEBUG_STATE && console.log('[State] Node not found at exact line, searching nearby...')
     for (let offset = -2; offset <= 2; offset++) {
       const searchLine = resolvedLine + offset
       const nearbyNode = sourceMap.getNodeAtLine(searchLine)
       if (nearbyNode && nearbyNode.componentName === pending.componentName) {
-        console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
+        DEBUG_STATE && console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
         // Set selection - SyncCoordinator will automatically handle sync via event
         actions.setSelection(nearbyNode.nodeId, pending.origin)
         return nearbyNode.nodeId
@@ -678,7 +681,7 @@ export const actions = {
    */
   setDeferredSelection(deferred: DeferredSelection): void {
     state.set({ deferredSelection: deferred })
-    console.log('[State] Deferred selection set:', deferred)
+    DEBUG_STATE && console.log('[State] Deferred selection set:', deferred)
   },
 
   /**
@@ -715,7 +718,7 @@ export const actions = {
     if (deferred.type === 'nodeId') {
       // Direct nodeId selection - validate and select
       if (sourceMap.getNodeById(deferred.nodeId)) {
-        console.log('[State] Resolved deferred nodeId selection:', deferred.nodeId)
+        DEBUG_STATE && console.log('[State] Resolved deferred nodeId selection:', deferred.nodeId)
         actions.setSelection(deferred.nodeId, deferred.origin)
         return deferred.nodeId
       }
@@ -724,7 +727,7 @@ export const actions = {
       console.warn('[State] Deferred nodeId no longer exists:', deferred.nodeId)
       const fallbackId = actions.findFallbackSelection(deferred.nodeId, sourceMap)
       if (fallbackId) {
-        console.log('[State] Using fallback for deferred selection:', fallbackId)
+        DEBUG_STATE && console.log('[State] Using fallback for deferred selection:', fallbackId)
         actions.setSelection(fallbackId, deferred.origin)
         return fallbackId
       }
@@ -735,7 +738,7 @@ export const actions = {
     const preludeLines = currentState.preludeOffset
     const resolvedLine = preludeLines + deferred.line
 
-    console.log('[State] Resolving deferred line selection:', {
+    DEBUG_STATE && console.log('[State] Resolving deferred line selection:', {
       originalLine: deferred.line,
       preludeOffset: preludeLines,
       resolvedLine,
@@ -746,7 +749,7 @@ export const actions = {
     const node = sourceMap.getNodeAtLine(resolvedLine)
 
     if (node && node.nodeId) {
-      console.log('[State] Resolved deferred selection to:', node.nodeId)
+      DEBUG_STATE && console.log('[State] Resolved deferred selection to:', node.nodeId)
       actions.setSelection(node.nodeId, deferred.origin)
       return node.nodeId
     }
@@ -756,7 +759,7 @@ export const actions = {
       const searchLine = resolvedLine + offset
       const nearbyNode = sourceMap.getNodeAtLine(searchLine)
       if (nearbyNode && nearbyNode.componentName === deferred.componentName) {
-        console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
+        DEBUG_STATE && console.log('[State] Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
         actions.setSelection(nearbyNode.nodeId, deferred.origin)
         return nearbyNode.nodeId
       }

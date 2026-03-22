@@ -8,9 +8,10 @@
 import { OverlayManager } from './overlay-manager'
 import { events } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
+import { MIN_RESIZE_SIZE, DEFAULT_CONTAINER_SIZE } from './constants/sizing'
 
-/** Minimum element size in pixels - small enough for design flexibility, large enough to stay selectable */
-const MIN_ELEMENT_SIZE = 8
+/** @deprecated Use MIN_RESIZE_SIZE from constants/sizing.ts */
+const MIN_ELEMENT_SIZE = MIN_RESIZE_SIZE
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
@@ -411,7 +412,7 @@ export class ResizeManager {
 
   private getAvailableSpace(parentId: string, excludeId: string): { width: number; height: number } {
     const parent = this.container.querySelector(`[data-mirror-id="${parentId}"]`) as HTMLElement
-    if (!parent) return { width: 400, height: 400 }
+    if (!parent) return { width: DEFAULT_CONTAINER_SIZE, height: DEFAULT_CONTAINER_SIZE }
 
     const parentRect = parent.getBoundingClientRect()
     const style = window.getComputedStyle(parent)

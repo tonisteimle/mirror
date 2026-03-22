@@ -14,6 +14,7 @@
  */
 
 import { state, events } from '../core'
+import { HANDLE_SIZE, HANDLE_SIZE_SMALL, SMALL_ELEMENT_THRESHOLD } from '../visual/constants/sizing'
 
 export type HandleType = 'padding' | 'gap' | 'radius'
 export type HandleDirection = 'n' | 's' | 'e' | 'w' | 'ne'
@@ -31,9 +32,9 @@ export interface HandleManagerConfig {
 }
 
 const LAYOUT = {
-  HANDLE_SIZE: 12,
-  HANDLE_SIZE_SMALL: 8,  // For small elements
-  MIN_ELEMENT_SIZE: 40,  // Below this, use small handles
+  HANDLE_SIZE,
+  HANDLE_SIZE_SMALL,
+  MIN_ELEMENT_SIZE: SMALL_ELEMENT_THRESHOLD,  // Below this, use small handles
   Z_INDEX: 10000,
   Z_INDEX_INDICATOR: 10001,
 }

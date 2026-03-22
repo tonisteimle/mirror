@@ -142,6 +142,8 @@ export class PreviewController {
 
   // Event subscriptions
   private unsubscribeCompile: (() => void) | null = null
+  private unsubscribeMultiSelection: (() => void) | null = null
+  private unsubscribeResize: (() => void) | null = null
 
   constructor(config: PreviewConfig) {
     this.container = config.container
@@ -195,6 +197,12 @@ export class PreviewController {
       this.setSourceMap(state.get().sourceMap)
       this.refresh()
     })
+
+    // Subscribe to multiselection:changed for consistent highlight updates
+    // This ensures multi-selection UI stays in sync when changed via commands/undo
+    this.unsubscribeMultiSelection = events.on('multiselection:changed', () => {
+      this.updateMultiSelectionHighlight()
+    })
   }
 
   /** Initialize the Visual Code System (overlay + resize) */
@@ -208,7 +216,7 @@ export class PreviewController {
     // Note: DragDropVisualizer is now handled by the new DragSystem
 
     // Listen for resize:end events to execute commands
-    events.on('resize:end', (data: { nodeId: string; width: SizingMode; height: SizingMode; x?: number; y?: number }) => {
+    this.unsubscribeResize = events.on('resize:end', (data: { nodeId: string; width: SizingMode; height: SizingMode; x?: number; y?: number }) => {
       // Execute resize command for width/height
       const command = new ResizeCommand({
         nodeId: data.nodeId,
@@ -284,6 +292,10 @@ export class PreviewController {
     // Unsubscribe from events
     this.unsubscribeCompile?.()
     this.unsubscribeCompile = null
+    this.unsubscribeMultiSelection?.()
+    this.unsubscribeMultiSelection = null
+    this.unsubscribeResize?.()
+    this.unsubscribeResize = null
 
     this.detach()
     this.clearSelection()

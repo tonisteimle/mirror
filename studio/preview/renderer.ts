@@ -61,6 +61,10 @@ export class PreviewRenderer {
   }
 
   clear(): void {
+    // Clean up global createUI function from previous renders
+    if (typeof (window as any).createUI === 'function') {
+      delete (window as any).createUI
+    }
     this.container.innerHTML = ''
   }
 

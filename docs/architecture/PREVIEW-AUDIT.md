@@ -1,10 +1,10 @@
 # Preview System Audit Report
 
 **Datum:** 2026-03-22
-**Version:** 1.2
-**Status:** Größtenteils behoben
+**Version:** 1.4
+**Status:** Größtenteils behoben, einige Restarbeiten
 
-> **Update 2026-03-22:** P0, P1 und P2 Issues wurden behoben. Siehe Changelog.
+> **Update 2026-03-22 (v1.4):** PREV-020, PREV-016, PREV-017, PREV-018 behoben. Sizing-Konstanten zentralisiert. Verbleibende Issues: PREV-005, PREV-010, PREV-011, PREV-013, PREV-015 (teilweise).
 
 ---
 
@@ -403,6 +403,72 @@ attach(): void {
 
 ---
 
+### PREV-020: Memory Leak - resize:end Event nicht abgemeldet ✅ BEHOBEN
+
+| Attribut | Wert |
+|----------|------|
+| **Schweregrad** | Kritisch |
+| **Datei** | `studio/preview/index.ts` |
+| **Zeilen** | 218-242 |
+| **Typ** | Memory Leak |
+| **Status** | ✅ Behoben in v1.4 |
+
+#### Beschreibung
+
+In `initVisualCodeSystem()` wird ein `resize:end` Event-Listener registriert, aber der Unsubscribe-Handle wird nicht gespeichert. Bei `dispose()` bleibt der Listener aktiv.
+
+#### Betroffener Code
+
+```typescript
+// Zeile 218: Kein Unsubscribe gespeichert!
+events.on('resize:end', (data: { nodeId: string; width: SizingMode; ... }) => {
+  const command = new ResizeCommand({ ... })
+  executor.execute(command)
+  // ...
+})
+```
+
+#### Vergleich: Korrekte Implementierung
+
+```typescript
+// compile:completed und multiselection:changed werden korrekt abgemeldet:
+this.unsubscribeCompile = events.on('compile:completed', () => { ... })
+this.unsubscribeMultiSelection = events.on('multiselection:changed', () => { ... })
+
+// In dispose():
+this.unsubscribeCompile?.()
+this.unsubscribeMultiSelection?.()
+```
+
+#### Auswirkung
+
+- Bei jedem `dispose()` bleibt der alte Handler aktiv
+- Bei mehrfachen Controller-Instanzen: doppelte Command-Ausführung
+- Kann zu Ghost-Resizes führen
+
+#### Empfohlener Fix
+
+```typescript
+// Property hinzufügen
+private unsubscribeResize: (() => void) | null = null
+
+private initVisualCodeSystem(): void {
+  // ...
+  this.unsubscribeResize = events.on('resize:end', (data) => {
+    // ... existing handler ...
+  })
+}
+
+dispose(): void {
+  this.unsubscribeCompile?.()
+  this.unsubscribeMultiSelection?.()
+  this.unsubscribeResize?.()  // NEU
+  // ...
+}
+```
+
+---
+
 ## Hohe Priorität
 
 ### PREV-007: Fehlende Event-Integration für compile:completed
@@ -444,45 +510,27 @@ dispose(): void {
 
 ---
 
-### PREV-008: Multi-Selection nicht event-driven
+### PREV-008: Multi-Selection nicht event-driven ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
 | **Schweregrad** | Hoch |
 | **Datei** | `studio/preview/index.ts` |
-| **Zeilen** | 498-507 |
+| **Zeilen** | 200-204 |
 | **Typ** | Architektur |
+| **Status** | ✅ Behoben in v1.3 |
 
 #### Beschreibung
 
-`updateMultiSelectionHighlight()` wird nur bei direkten Clicks aufgerufen, nicht wenn der State von außen geändert wird (z.B. durch Command).
+`updateMultiSelectionHighlight()` wird jetzt event-driven aufgerufen via `multiselection:changed`.
 
-#### Betroffener Code
-
-```typescript
-private handleClick(e: MouseEvent): void {
-  if (e.shiftKey) {
-    actions.toggleMultiSelection(nodeId)
-    this.updateMultiSelectionHighlight()  // Nur hier!
-  }
-}
-```
-
-#### Auswirkung
-
-- Multi-Selection UI ist inkonsistent wenn State von Command geändert wird
-- Undo/Redo von Multi-Selection-Operationen zeigt falsche Highlights
-
-#### Empfohlener Fix
+#### Implementierter Fix
 
 ```typescript
-constructor(config: PreviewConfig) {
-  // ... existing code ...
-
-  events.on('multiselection:changed', () => {
-    this.updateMultiSelectionHighlight()
-  })
-}
+// Zeile 200-204: Event-basierte Multi-Selection Updates
+this.unsubscribeMultiSelection = events.on('multiselection:changed', () => {
+  this.updateMultiSelectionHighlight()
+})
 ```
 
 ---
@@ -604,37 +652,56 @@ private handleMutations = debounce((mutations: MutationRecord[]) => {
 
 ## Mittlere Priorität
 
-### PREV-011: Type Assertions ohne Guards
+### PREV-011: Type Assertions ohne Guards ⚠️ OFFEN
 
 | Attribut | Wert |
 |----------|------|
 | **Schweregrad** | Mittel |
 | **Dateien** | Mehrere |
 | **Typ** | Type Safety |
+| **Status** | ⚠️ Offen |
 
-#### Beispiele
+#### Verbleibende Probleme (Re-Audit v1.3)
 
 ```typescript
-// index.ts:183 - as any ist gefährlich
+// index.ts:213 - as any ist gefährlich
 getSourceMap: () => this.sourceMap as any
 
-// handle-manager.ts:79 - Casting ohne null-check
+// handle-manager.ts:80 - Casting ohne null-check
 const element = this.container.querySelector(...) as HTMLElement
 if (!element) return  // Guard kommt NACH dem Casting
 
-// resize-manager.ts:177 - Non-null assertion
+// resize-manager.ts:177-178 - Non-null assertions
 const nodeId = handle.dataset.nodeId!  // Könnte undefined sein!
 const position = handle.dataset.position as ResizeHandle
+```
+
+#### Warum `as any` problematisch ist
+
+```typescript
+// Der SourceMap-Typ wird umgangen - TypeScript kann keine Fehler erkennen
+getSourceMap: () => this.sourceMap as any
+
+// Sollte sein:
+getSourceMap: () => this.sourceMap  // Typ: SourceMap | null
+// Oder mit explizitem Interface:
+getSourceMap: () => SourceMap | null
 ```
 
 #### Empfohlener Fix
 
 ```typescript
-// Proper type narrowing
+// 1. as any entfernen
+// In ResizeManagerConfig anpassen:
+interface ResizeManagerConfig {
+  getSourceMap: () => SourceMap | null  // Statt () => any
+}
+
+// 2. Proper type narrowing
 const element = this.container.querySelector(...)
 if (!(element instanceof HTMLElement)) return
 
-// Defensive checks
+// 3. Defensive checks statt Non-null assertions
 const nodeId = handle.dataset.nodeId
 if (!nodeId) return
 const position = handle.dataset.position
@@ -733,44 +800,63 @@ private handleMutations(mutations: MutationRecord[]): void {
 
 ---
 
-### PREV-015: Magic Strings für Data-Attribute
+### PREV-015: Magic Strings für Data-Attribute ⚠️ TEILWEISE
 
 | Attribut | Wert |
 |----------|------|
 | **Schweregrad** | Mittel |
 | **Dateien** | Mehrere |
 | **Typ** | Wartbarkeit |
+| **Status** | ⚠️ Teilweise behoben |
 
 #### Beschreibung
 
-`'data-mirror-id'` ist an 4+ Stellen hardcodiert.
+`constants.ts` wurde erstellt mit `MIRROR_ID_ATTR` und `MIRROR_ID_SELECTOR`, aber viele Dateien verwenden noch hardcoded Strings.
 
-#### Betroffene Dateien
-
-- `handle-manager.ts:79`
-- `keyboard-handler.ts:179`
-- `context-menu.ts:60, 68`
-- `resize-manager.ts:79, 180`
-- `shared-actions.ts:54`
-
-#### Empfohlener Fix
+#### Implementiert
 
 ```typescript
-// constants.ts
+// studio/preview/constants.ts
 export const MIRROR_ID_ATTR = 'data-mirror-id'
 export const MIRROR_ID_SELECTOR = `[${MIRROR_ID_ATTR}]`
+export function mirrorIdSelector(nodeId: string): string {
+  return `[${MIRROR_ID_ATTR}="${nodeId}"]`
+}
+```
 
-// Verwendung
-import { MIRROR_ID_ATTR, MIRROR_ID_SELECTOR } from './constants'
+#### Verbleibende Hardcoded Verwendungen (Re-Audit v1.3)
 
-const element = this.container.querySelector(
-  `${MIRROR_ID_SELECTOR}="${nodeId}"`
-)
+**studio/preview/**
+- `handle-manager.ts:80` - hardcoded
+- `renderer.ts:29,43` - hardcoded
+- `shared-actions.ts:54` - hardcoded
+- `keyboard-handler.ts:43` - hardcoded
+- `index.ts:153` - als Config-Default
+
+**studio/visual/**
+- `resize-manager.ts:80,181,414,434,436,453` - 6 Vorkommen
+- `drag-controller.ts:174,494,520` - 3 Vorkommen
+- `drag-drop-service.ts:243,275` - 2 Vorkommen
+- `studio-drag-drop-service.ts:477,483` - 2 Vorkommen
+- `draw-manager.ts:541` - 1 Vorkommen
+- `alignment-detector.ts:19` - als Default
+
+#### Empfohlene Migration
+
+```typescript
+// Import aus constants.ts verwenden
+import { MIRROR_ID_ATTR, mirrorIdSelector } from '../preview/constants'
+
+// Statt:
+const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`)
+
+// Verwenden:
+const element = this.container.querySelector(mirrorIdSelector(nodeId))
 ```
 
 ---
 
-### PREV-016: Script-Akkumulation in PreviewRenderer
+### PREV-016: Script-Akkumulation in PreviewRenderer ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
@@ -778,6 +864,7 @@ const element = this.container.querySelector(
 | **Datei** | `studio/preview/renderer.ts` |
 | **Zeilen** | 209-210 |
 | **Typ** | Memory |
+| **Status** | ✅ Behoben in v1.4 |
 
 #### Beschreibung
 
@@ -804,7 +891,7 @@ private renderLayout(jsCode: string, runtime?: string): void {
 
 ## Niedrige Priorität
 
-### PREV-017: Hardcoded Fallback-Werte in ResizeManager
+### PREV-017: Hardcoded Fallback-Werte in ResizeManager ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
@@ -812,26 +899,50 @@ private renderLayout(jsCode: string, runtime?: string): void {
 | **Datei** | `studio/visual/resize-manager.ts` |
 | **Zeile** | 414 |
 | **Typ** | Code Quality |
+| **Status** | ✅ Behoben in v1.4 |
 
-#### Betroffener Code
+#### Betroffener Code (alt)
 
 ```typescript
 if (!parent) return { width: 400, height: 400 }  // Arbitrary values
 ```
 
+#### Implementierter Fix
+
+```typescript
+import { DEFAULT_CONTAINER_SIZE } from './constants/sizing'
+// ...
+if (!parent) return { width: DEFAULT_CONTAINER_SIZE, height: DEFAULT_CONTAINER_SIZE }
+```
+
 ---
 
-### PREV-018: MIN_ELEMENT_SIZE Inkonsistenz
+### PREV-018: MIN_ELEMENT_SIZE Inkonsistenz ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
 | **Schweregrad** | Niedrig |
 | **Dateien** | `handle-manager.ts`, `resize-manager.ts` |
 | **Typ** | Code Quality |
+| **Status** | ✅ Behoben in v1.4 |
 
-#### Beschreibung
+#### Beschreibung (alt)
 
-`MIN_ELEMENT_SIZE` ist in beiden Dateien separat definiert mit unterschiedlichen Werten.
+`MIN_ELEMENT_SIZE` war in beiden Dateien separat definiert mit unterschiedlichen Werten.
+
+#### Implementierter Fix
+
+Neue zentrale Konstanten-Datei erstellt: `studio/visual/constants/sizing.ts`
+
+```typescript
+export const MIN_RESIZE_SIZE = 8
+export const SMALL_ELEMENT_THRESHOLD = 40
+export const HANDLE_SIZE = 12
+export const HANDLE_SIZE_SMALL = 8
+export const DEFAULT_CONTAINER_SIZE = 400
+```
+
+Beide Dateien importieren jetzt aus dieser Quelle.
 
 ---
 
@@ -884,18 +995,32 @@ describe('Deferred Selection', () => {
 
 ## Prioritäts-Matrix
 
-| ID | Problem | Aufwand | Impact | Priorität |
-|----|---------|---------|--------|-----------|
-| PREV-001 | Value Indicator Leak | Klein | Hoch | **P0** |
-| PREV-002 | Handle Listener Leak | Mittel | Hoch | **P0** |
-| PREV-003 | Breadcrumb Listener Leak | Klein | Mittel | **P0** |
-| PREV-004 | Global Singleton Leak | Klein | Hoch | **P0** |
-| PREV-005 | Deferred Selection Race | Mittel | Hoch | **P1** |
-| PREV-006 | Context Menu Bind | Klein | Niedrig | **P2** |
-| PREV-007 | compile:completed Event | Klein | Hoch | **P1** |
-| PREV-008 | Multi-Selection Events | Klein | Mittel | **P1** |
-| PREV-009 | SourceMap Versioning | Mittel | Mittel | **P2** |
-| PREV-010 | MutationObserver Perf | Mittel | Mittel | **P2** |
+| ID | Problem | Aufwand | Impact | Priorität | Status |
+|----|---------|---------|--------|-----------|--------|
+| PREV-001 | Value Indicator Leak | Klein | Hoch | **P0** | ✅ |
+| PREV-002 | Handle Listener Leak | Mittel | Hoch | **P0** | ✅ |
+| PREV-003 | Breadcrumb Listener Leak | Klein | Mittel | **P0** | ✅ |
+| PREV-004 | Global Singleton Leak | Klein | Hoch | **P0** | ✅ |
+| PREV-005 | Deferred Selection Race | Mittel | Hoch | **P1** | 🔶 |
+| PREV-006 | Context Menu Bind | Klein | Niedrig | **P2** | ✅ |
+| PREV-007 | compile:completed Event | Klein | Hoch | **P1** | ✅ |
+| PREV-008 | Multi-Selection Events | Klein | Mittel | **P1** | ✅ |
+| PREV-009 | SourceMap Versioning | Mittel | Mittel | **P2** | ✅ |
+| PREV-010 | MutationObserver Perf | Mittel | Mittel | **P2** | ⚠️ |
+| PREV-016 | Script-Akkumulation | Klein | Mittel | **P2** | ✅ |
+| PREV-017 | Hardcoded Fallbacks | Klein | Niedrig | **P3** | ✅ |
+| PREV-018 | MIN_ELEMENT_SIZE | Klein | Niedrig | **P3** | ✅ |
+| PREV-020 | resize:end Event Leak | Klein | Hoch | **P0** | ✅ |
+
+### Verbleibende Prioritäten
+
+| Priorität | Issue | Aufwand |
+|-----------|-------|---------|
+| **P1** | PREV-005 (Deferred Selection Race) | Mittel |
+| **P2** | PREV-010 (MutationObserver Performance) | Mittel |
+| **P2** | PREV-011 (Type Assertions) | Mittel |
+| **P2** | PREV-013 (KeyboardHandler UX) | Klein |
+| **P3** | PREV-015 (Constants Migration) | Mittel |
 
 ---
 
@@ -940,6 +1065,8 @@ describe('Deferred Selection', () => {
 | 1.0 | 2026-03-22 | Initial Audit |
 | 1.1 | 2026-03-22 | P0/P1 Fixes: PREV-001 bis PREV-004, PREV-007, PREV-012 behoben |
 | 1.2 | 2026-03-22 | P2 Fixes: PREV-006, PREV-009, PREV-014, PREV-015 behoben |
+| 1.3 | 2026-03-22 | Re-Audit: PREV-008 behoben, PREV-020 neu identifiziert, PREV-015 als teilweise markiert |
+| 1.4 | 2026-03-22 | PREV-016, PREV-017, PREV-018, PREV-020 behoben. Sizing-Konstanten zentralisiert |
 
 ### Behobene Issues
 
@@ -954,4 +1081,19 @@ describe('Deferred Selection', () => {
 | PREV-006 | ContextMenu cached bound functions | bedac9e |
 | PREV-009 | PreviewController trackt sourceMapVersion | bedac9e |
 | PREV-014 | SlotVisibilityService Error-Handling | bedac9e |
-| PREV-015 | Constants für data-mirror-id | 438b178 |
+| PREV-015 | Constants für data-mirror-id (teilweise) | 438b178 |
+| PREV-008 | Multi-Selection event-driven via `multiselection:changed` | v1.3 |
+| PREV-016 | `clear()` entfernt globale `createUI` Funktion | v1.4 |
+| PREV-017 | Hardcoded 400 → `DEFAULT_CONTAINER_SIZE` Konstante | v1.4 |
+| PREV-018 | Zentrale Sizing-Konstanten in `constants/sizing.ts` | v1.4 |
+| PREV-020 | `unsubscribeResize` für `resize:end` Event | v1.4 |
+
+### Offene Issues (v1.4)
+
+| ID | Status | Beschreibung |
+|----|--------|--------------|
+| PREV-005 | ⚠️ OFFEN | Deferred Selection Race Condition |
+| PREV-010 | ⚠️ OFFEN | MutationObserver mit `subtree:true` Performance |
+| PREV-011 | ⚠️ OFFEN | Type Assertions ohne Guards (`as any`, Non-null assertions) |
+| PREV-013 | ⚠️ OFFEN | KeyboardHandler nur console.warn ohne User-Feedback |
+| PREV-015 | ⚠️ TEILWEISE | Constants erstellt, aber 15+ Dateien nutzen sie nicht |
