@@ -6,13 +6,14 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
   LAYOUT_BOOLEANS,
 } from '../schema/parser-helpers'
 import { isPrimitive } from '../schema/dsl'
+import { isZagPrimitive, getZagPrimitive, isZagSlot } from '../schema/zag-primitives'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -124,7 +125,7 @@ export class Parser {
         break  // JavaScript consumes rest of file
       }
 
-      // Component, Animation, or Instance
+      // Component, Animation, Instance, or ZagComponent
       if (this.check('IDENTIFIER')) {
         const node = this.parseComponentOrInstance()
         if (node) {
@@ -132,6 +133,9 @@ export class Parser {
             program.components.push(node as ComponentDefinition)
           } else if (node.type === 'Animation') {
             program.animations.push(node as AnimationDefinition)
+          } else if (node.type === 'ZagComponent') {
+            // ZagNode is treated as an instance for now
+            program.instances.push(node as any)
           } else {
             program.instances.push(node as Instance)
           }
@@ -291,7 +295,7 @@ export class Parser {
     return undefined
   }
 
-  private parseComponentOrInstance(): ComponentDefinition | Instance | Slot | AnimationDefinition | null {
+  private parseComponentOrInstance(): ComponentDefinition | Instance | Slot | AnimationDefinition | ZagNode | null {
     const name = this.advance()
 
     // Component definition: Name as primitive:
@@ -630,12 +634,17 @@ export class Parser {
     return component
   }
 
-  private parseInstance(name: Token): Instance | Slot {
+  private parseInstance(name: Token): Instance | Slot | ZagNode {
     // Special handling for Slot primitive (case-insensitive, using schema)
     // Syntax: Slot "Name", w full, h 100
     // The first string is the slot name, NOT text content
     if (isPrimitive(name.value) && name.value.toLowerCase() === 'slot') {
       return this.parseSlotPrimitive(name)
+    }
+
+    // Check if this is a Zag primitive (e.g., Select, Accordion)
+    if (isZagPrimitive(name.value)) {
+      return this.parseZagComponent(name)
     }
 
     const instance: Instance = {
@@ -710,6 +719,379 @@ export class Parser {
     }
 
     return slot
+  }
+
+  /**
+   * Parse a Zag component (Select, Accordion, etc.)
+   *
+   * Syntax:
+   *   Select placeholder "Choose..."
+   *     Trigger:
+   *       pad 12, bg #1e1e2e
+   *       hover:
+   *         bg #2a2a3e
+   *     Content:
+   *       bg #2a2a3e, rad 8
+   *     Item "Option A"
+   *     Item "Option B" disabled
+   */
+  private parseZagComponent(nameToken: Token): ZagNode {
+    const zagPrimitive = getZagPrimitive(nameToken.value)
+    const machineType = zagPrimitive?.machine ?? 'unknown'
+
+    const zagNode: ZagNode = {
+      type: 'ZagComponent',
+      machine: machineType,
+      name: nameToken.value,
+      properties: [],
+      slots: {},
+      items: [],
+      events: [],
+      line: nameToken.line,
+      column: nameToken.column,
+    }
+
+    // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
+    this.parseZagInlineProperties(zagNode)
+
+    // Skip newline before checking for indented body
+    this.skipNewlines()
+
+    // Parse indented body (slots and items)
+    if (this.check('INDENT')) {
+      this.advance()
+      this.parseZagComponentBody(zagNode)
+    }
+
+    return zagNode
+  }
+
+  /**
+   * Parse inline properties specific to Zag components
+   */
+  private parseZagInlineProperties(zagNode: ZagNode): void {
+    const zagPrimitive = getZagPrimitive(zagNode.name)
+    const validProps = new Set(zagPrimitive?.props ?? [])
+
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+      // Skip commas
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // Check for Zag-specific properties
+      if (this.check('IDENTIFIER')) {
+        const propName = this.current().value
+
+        // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled)
+        if (validProps.has(propName) && !this.checkNext('STRING') && !this.checkNext('NUMBER')) {
+          const token = this.advance()
+          zagNode.properties.push({
+            type: 'Property',
+            name: propName,
+            values: [true],
+            line: token.line,
+            column: token.column,
+          })
+          continue
+        }
+
+        // Zag property with value (e.g., placeholder "Choose...")
+        if (validProps.has(propName)) {
+          const token = this.advance()
+          const values: any[] = []
+
+          // Parse value(s)
+          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.isAtEnd()) {
+            if (this.check('STRING')) {
+              values.push(this.advance().value)
+            } else if (this.check('NUMBER')) {
+              values.push(parseFloat(this.advance().value))
+            } else if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
+              // Next property starting
+              break
+            } else {
+              values.push(this.advance().value)
+            }
+          }
+
+          zagNode.properties.push({
+            type: 'Property',
+            name: propName,
+            values,
+            line: token.line,
+            column: token.column,
+          })
+          continue
+        }
+      }
+
+      // Fall through to regular property parsing
+      const properties: Property[] = []
+      this.parseInlineProperties(properties)
+      zagNode.properties.push(...properties)
+      break
+    }
+  }
+
+  /**
+   * Parse the body of a Zag component (slots and items)
+   */
+  private parseZagComponentBody(zagNode: ZagNode): void {
+    while (!this.check('DEDENT') && !this.isAtEnd()) {
+      this.skipNewlines()
+      if (this.check('DEDENT') || this.isAtEnd()) break
+
+      // Check for slot definition: SlotName:
+      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+        const slotName = this.current().value
+
+        // Verify this is a valid slot for this Zag component
+        if (isZagSlot(zagNode.name, slotName)) {
+          this.advance() // slot name
+          this.advance() // colon
+          const slot = this.parseZagSlot(zagNode.name, slotName)
+          zagNode.slots[slotName] = slot
+          continue
+        }
+      }
+
+      // Check for Item definition: Item "Label" or Item value "val" label "Label"
+      if (this.check('IDENTIFIER') && this.current().value === 'Item') {
+        const item = this.parseZagItem(zagNode.name)
+        if (item) zagNode.items.push(item)
+        continue
+      }
+
+      // Check for events (onclick, onchange, etc.)
+      if (this.check('IDENTIFIER') && this.current().value.startsWith('on')) {
+        const event = this.parseEvent()
+        if (event) zagNode.events.push(event)
+        continue
+      }
+
+      // Skip unknown tokens
+      this.advance()
+    }
+
+    if (this.check('DEDENT')) this.advance()
+  }
+
+  /**
+   * Parse a Zag slot definition
+   *
+   * Syntax:
+   *   Trigger:
+   *     pad 12, bg #1e1e2e
+   *     hover:
+   *       bg #2a2a3e
+   */
+  private parseZagSlot(componentName: string, slotName: string): ZagSlotDef {
+    const startLine = this.previous()?.line ?? 1
+    const startColumn = this.previous()?.column ?? 1
+
+    const slot: ZagSlotDef = {
+      name: slotName,
+      properties: [],
+      states: [],
+      children: [],
+      sourcePosition: {
+        line: startLine,
+        column: startColumn,
+        endLine: startLine,
+        endColumn: startColumn,
+      },
+    }
+
+    // Parse inline properties after colon
+    this.parseInlineProperties(slot.properties)
+
+    // Skip newline before checking for indented body
+    this.skipNewlines()
+
+    // Parse indented body (properties, states, children)
+    if (this.check('INDENT')) {
+      this.advance()
+      this.parseZagSlotBody(slot)
+    }
+
+    return slot
+  }
+
+  /**
+   * Parse the body of a Zag slot
+   */
+  private parseZagSlotBody(slot: ZagSlotDef): void {
+    while (!this.check('DEDENT') && !this.isAtEnd()) {
+      this.skipNewlines()
+      if (this.check('DEDENT') || this.isAtEnd()) break
+
+      // State block: hover: or selected:
+      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+        const stateName = this.current().value
+        // Check if this looks like a state (common state names)
+        const stateNames = new Set(['hover', 'focus', 'active', 'disabled', 'selected', 'highlighted', 'open', 'closed'])
+        if (stateNames.has(stateName)) {
+          const stateToken = this.advance()
+          this.advance() // colon
+
+          const state: State = {
+            type: 'State',
+            name: stateToken.value,
+            properties: [],
+            childOverrides: [],
+            line: stateToken.line,
+            column: stateToken.column,
+          }
+
+          // Parse inline properties
+          this.parseInlineProperties(state.properties)
+
+          // Parse block properties
+          this.skipNewlines()
+          if (this.check('INDENT')) {
+            this.advance()
+            while (!this.check('DEDENT') && !this.isAtEnd()) {
+              this.skipNewlines()
+              if (this.check('DEDENT')) break
+
+              const properties: Property[] = []
+              this.parseInlineProperties(properties)
+              state.properties.push(...properties)
+            }
+            if (this.check('DEDENT')) this.advance()
+          }
+
+          slot.states.push(state)
+          continue
+        }
+      }
+
+      // Property line
+      if (this.check('IDENTIFIER') && PROPERTY_STARTERS.has(this.current().value)) {
+        const properties: Property[] = []
+        this.parseInlineProperties(properties)
+        slot.properties.push(...properties)
+        continue
+      }
+
+      // Child instance
+      if (this.check('IDENTIFIER')) {
+        const name = this.advance()
+        const child = this.parseInstance(name)
+        if (child.type !== 'ZagComponent') {
+          slot.children.push(child as Instance | Slot)
+        }
+        continue
+      }
+
+      this.advance()
+    }
+
+    if (this.check('DEDENT')) this.advance()
+  }
+
+  /**
+   * Parse a Zag Item
+   *
+   * Syntax:
+   *   Item "Option A"
+   *   Item value "opt-a" label "Option A"
+   *   Item "Option B" disabled
+   */
+  private parseZagItem(componentName: string): ZagItem | null {
+    const itemToken = this.advance() // 'Item'
+    const startLine = itemToken.line
+    const startColumn = itemToken.column
+
+    const item: ZagItem = {
+      sourcePosition: {
+        line: startLine,
+        column: startColumn,
+        endLine: startLine,
+        endColumn: startColumn,
+      },
+    }
+
+    // Parse item content
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+      // Skip commas
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // String as label (shorthand)
+      if (this.check('STRING') && !item.label) {
+        const str = this.advance()
+        item.label = str.value
+        // Use label as value if no explicit value
+        if (!item.value) item.value = str.value
+        continue
+      }
+
+      // Explicit value: value "val"
+      if (this.check('IDENTIFIER') && this.current().value === 'value') {
+        this.advance()
+        if (this.check('STRING')) {
+          item.value = this.advance().value
+        }
+        continue
+      }
+
+      // Explicit label: label "Label"
+      if (this.check('IDENTIFIER') && this.current().value === 'label') {
+        this.advance()
+        if (this.check('STRING')) {
+          item.label = this.advance().value
+        }
+        continue
+      }
+
+      // disabled flag
+      if (this.check('IDENTIFIER') && this.current().value === 'disabled') {
+        this.advance()
+        item.disabled = true
+        continue
+      }
+
+      // Unknown, stop parsing
+      break
+    }
+
+    // Skip newline
+    this.skipNewlines()
+
+    // Check for indented children (custom item content)
+    if (this.check('INDENT')) {
+      this.advance()
+      item.children = []
+      while (!this.check('DEDENT') && !this.isAtEnd()) {
+        this.skipNewlines()
+        if (this.check('DEDENT') || this.isAtEnd()) break
+
+        if (this.check('IDENTIFIER')) {
+          const name = this.advance()
+          const child = this.parseInstance(name)
+          if (child.type !== 'ZagComponent') {
+            item.children.push(child as Instance)
+          }
+        } else {
+          this.advance()
+        }
+      }
+      if (this.check('DEDENT')) this.advance()
+    }
+
+    // Update end position
+    const prevToken = this.previous()
+    if (prevToken) {
+      item.sourcePosition.endLine = prevToken.line
+      item.sourcePosition.endColumn = prevToken.column
+    }
+
+    return item
   }
 
   /**
@@ -1109,8 +1491,10 @@ export class Parser {
           if (this.check('IDENTIFIER')) {
             const name = this.advance()
             const child = this.parseInstance(name)
-            ;(child as any).visibleWhen = visibleWhen
-            component.children.push(child)
+            if (child.type !== 'ZagComponent') {
+              ;(child as any).visibleWhen = visibleWhen
+              component.children.push(child as Instance | Slot)
+            }
             continue
           }
 
@@ -1132,7 +1516,9 @@ export class Parser {
       if (this.check('IDENTIFIER')) {
         const name = this.advance()
         const child = this.parseInstance(name)
-        component.children.push(child)
+        if (child.type !== 'ZagComponent') {
+          component.children.push(child as Instance | Slot)
+        }
         continue
       }
 
@@ -1182,9 +1568,11 @@ export class Parser {
           if (this.check('IDENTIFIER')) {
             const name = this.advance()
             const child = this.parseInstance(name)
-            ;(child as any).visibleWhen = visibleWhen
-            if (!instance.children) instance.children = []
-            instance.children.push(child)
+            if (child.type !== 'ZagComponent') {
+              ;(child as any).visibleWhen = visibleWhen
+              if (!instance.children) instance.children = []
+              instance.children.push(child as Instance | Slot)
+            }
             continue
           }
 
@@ -1259,7 +1647,9 @@ export class Parser {
 
         // Child instance
         const child = this.parseInstance(this.advance())
-        instance.children.push(child)
+        if (child.type !== 'ZagComponent') {
+          instance.children.push(child as Instance | Slot)
+        }
         continue
       }
 
@@ -1722,7 +2112,9 @@ export class Parser {
 
         if (this.check('IDENTIFIER')) {
           const child = this.parseInstance(this.advance())
-          each.children.push(child)
+          if (child.type !== 'ZagComponent') {
+            each.children.push(child as Instance | Slot)
+          }
         } else if (this.check('EACH')) {
           const nestedEach = this.parseEach()
           if (nestedEach) each.children.push(nestedEach as any)
@@ -1768,7 +2160,9 @@ export class Parser {
 
         if (this.check('IDENTIFIER')) {
           const child = this.parseInstance(this.advance())
-          conditional.then.push(child)
+          if (child.type !== 'ZagComponent') {
+            conditional.then.push(child as Instance | Slot)
+          }
         } else if (this.check('EACH')) {
           const each = this.parseEach()
           if (each) conditional.then.push(each as any)
@@ -1795,7 +2189,9 @@ export class Parser {
 
           if (this.check('IDENTIFIER')) {
             const child = this.parseInstance(this.advance())
-            conditional.else.push(child)
+            if (child.type !== 'ZagComponent') {
+              conditional.else.push(child as Instance | Slot)
+            }
           } else if (this.check('EACH')) {
             const each = this.parseEach()
             if (each) conditional.else.push(each as any)
@@ -1939,6 +2335,11 @@ export class Parser {
 
   private advance(): Token {
     if (!this.isAtEnd()) this.pos++
+    return this.tokens[this.pos - 1]
+  }
+
+  private previous(): Token | null {
+    if (this.pos === 0) return null
     return this.tokens[this.pos - 1]
   }
 

@@ -357,8 +357,10 @@ export class DragRenderer {
       this.guideContainer = this.createGuideContainer()
     }
 
-    // Clear existing guides
-    this.guideContainer.innerHTML = ''
+    // Clear existing guides efficiently (faster than innerHTML = '')
+    while (this.guideContainer.firstChild) {
+      this.guideContainer.removeChild(this.guideContainer.firstChild)
+    }
 
     // Create guide lines
     guides.forEach(guide => {

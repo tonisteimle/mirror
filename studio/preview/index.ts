@@ -11,6 +11,7 @@ import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
 import { DragDropVisualizer, createDragDropVisualizer, type DropZoneInfo } from '../visual/drag-drop-visualizer'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
+import { ZagPreviewManager, createZagPreviewManager } from './zag-preview'
 
 // Re-export renderer
 export {
@@ -148,6 +149,9 @@ export class PreviewController {
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
 
+  // Zag Preview System
+  private zagPreviewManager: ZagPreviewManager | null = null
+
   // Event subscriptions
   private unsubscribeCompile: (() => void) | null = null
   private unsubscribeMultiSelection: (() => void) | null = null
@@ -196,6 +200,11 @@ export class PreviewController {
 
     // Initialize Slot Visibility Service (always enabled)
     this.slotVisibilityService = createSlotVisibilityService({
+      container: this.container,
+    })
+
+    // Initialize Zag Preview Manager
+    this.zagPreviewManager = createZagPreviewManager({
       container: this.container,
     })
 
@@ -268,6 +277,8 @@ export class PreviewController {
     // Do NOT add duplicate dragover/drop/dragleave handlers here
     // Start observing slot visibility
     this.slotVisibilityService?.attach()
+    // Attach Zag preview manager
+    this.zagPreviewManager?.attach()
   }
 
   detach(): void {
@@ -277,6 +288,8 @@ export class PreviewController {
     this.container.removeEventListener('mouseout', this.boundHandleMouseOut)
     // Stop observing slot visibility
     this.slotVisibilityService?.detach()
+    // Detach Zag preview manager
+    this.zagPreviewManager?.detach()
   }
 
   /** Re-apply visual selection after preview DOM refresh */
@@ -317,6 +330,8 @@ export class PreviewController {
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
+    // Zag Preview cleanup
+    this.zagPreviewManager?.dispose()
   }
 
   setSourceMap(sourceMap: SourceMap | null): void {
@@ -411,6 +426,11 @@ export class PreviewController {
     this.overlayManager?.dispose()
     this.resizeManager = null
     this.overlayManager = null
+  }
+
+  /** Get the Zag preview manager */
+  getZagPreviewManager(): ZagPreviewManager | null {
+    return this.zagPreviewManager
   }
 
   /**

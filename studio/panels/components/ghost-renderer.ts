@@ -28,6 +28,17 @@ interface CacheEntry {
   timestamp: number
 }
 
+/** Mirror compiler interface */
+interface MirrorCompiler {
+  parse(code: string): { errors?: Array<{ message: string }> }
+  generateDOM(ast: unknown): string
+}
+
+/** Mirror UI object returned by createUI() */
+interface MirrorUI {
+  root: HTMLElement
+}
+
 // ============================================================================
 // Utilities
 // ============================================================================
@@ -111,7 +122,7 @@ export class GhostRenderer {
     const code = this.buildCode(item)
 
     // Track UI for cleanup on error
-    let ui: any = null
+    let ui: MirrorUI | null = null
 
     try {
       // Get Mirror compiler from global scope
@@ -134,7 +145,7 @@ export class GhostRenderer {
         .replace(/document\.body\.appendChild\([^)]+\)/g, '')
 
       const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
-      ui = fn()
+      ui = fn() as MirrorUI | null
 
       if (!ui || !ui.root) {
         throw new Error('Component did not render')
@@ -169,22 +180,22 @@ export class GhostRenderer {
         size = { ...item.defaultSize }
       }
 
-      // Clone for return value
-      const clone = renderedElement.cloneNode(true) as HTMLElement
+      // Clone once for cache storage
+      const cacheElement = renderedElement.cloneNode(true) as HTMLElement
 
-      // Cache the result (clone again to keep cache independent)
+      // Store in cache
       this.cache.set(cacheKey, {
-        element: clone,
+        element: cacheElement,
         size: { ...size },
         timestamp: Date.now(),
       })
 
-      // Cleanup the rendered element
+      // Cleanup the rendered element from measure container
       ui.root.remove()
 
-      // Return a fresh clone from cache
+      // Return a fresh clone from the cached element
       return {
-        element: clone.cloneNode(true) as HTMLElement,
+        element: cacheElement.cloneNode(true) as HTMLElement,
         size,
         cleanup: () => {},
       }
@@ -192,6 +203,13 @@ export class GhostRenderer {
       // Clean up ui.root if it was appended to DOM
       if (ui?.root?.isConnected) {
         ui.root.remove()
+      }
+
+      // Clean up measure container to prevent orphaned elements
+      if (container) {
+        while (container.firstChild) {
+          container.removeChild(container.firstChild)
+        }
       }
 
       // Log with context
@@ -228,13 +246,28 @@ export class GhostRenderer {
     // Start cleanup interval when cache is being used
     this.startCleanup()
 
+    // Track failures for debugging
+    const failures: Array<{ name: string; error: string }> = []
+
     // Render items in batches to avoid blocking
     const batchSize = 5
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize)
-      await Promise.all(batch.map(item => this.render(item).catch(() => {})))
+      await Promise.all(batch.map(item =>
+        this.render(item).catch((error: unknown) => {
+          failures.push({
+            name: item.name,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
+      ))
       // Small delay between batches
       await new Promise(resolve => setTimeout(resolve, 10))
+    }
+
+    // Log summary if there were failures
+    if (failures.length > 0) {
+      console.warn(`[GhostRenderer] Cache warm-up: ${failures.length}/${items.length} items failed`)
     }
   }
 
@@ -287,13 +320,13 @@ export class GhostRenderer {
   // Private Methods
   // --------------------------------------------------------------------------
 
-  private getMirror(): any {
-    if (typeof window !== 'undefined' && (window as any).Mirror) {
-      return (window as any).Mirror
+  private getMirror(): MirrorCompiler | null {
+    if (typeof window !== 'undefined' && (window as Record<string, unknown>).Mirror) {
+      return (window as Record<string, unknown>).Mirror as MirrorCompiler
     }
     // Fallback to MirrorLang
-    if (typeof window !== 'undefined' && (window as any).MirrorLang) {
-      return (window as any).MirrorLang
+    if (typeof window !== 'undefined' && (window as Record<string, unknown>).MirrorLang) {
+      return (window as Record<string, unknown>).MirrorLang as MirrorCompiler
     }
     return null
   }

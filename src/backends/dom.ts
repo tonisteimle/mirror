@@ -7,7 +7,8 @@
 
 import type { AST, JavaScriptBlock } from '../parser/ast'
 import { toIR } from '../ir'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation } from '../ir/types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode } from '../ir/types'
+import { isIRZagNode } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 
 /**
@@ -246,6 +247,12 @@ class DOMGenerator {
   }
 
   private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
+    // Handle Zag components
+    if (isIRZagNode(node)) {
+      this.emitZagComponent(node, parentVar)
+      return
+    }
+
     // Handle each loop nodes
     if (node.each) {
       this.emitEachLoop(node.each, parentVar)
@@ -548,6 +555,97 @@ class DOMGenerator {
     this.emit('')
 
     this.emit(`${parentVar}.appendChild(${containerId}_container)`)
+    this.emit('')
+  }
+
+  private emitZagComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Zag Component: ${node.name} (${node.zagType})`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = '${node.zagType}'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: '${node.zagType}',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+
+    // Emit slot definitions
+    this.emit(`slots: {`)
+    this.indent++
+    for (const [slotName, slot] of Object.entries(node.slots)) {
+      this.emit(`'${slotName}': {`)
+      this.indent++
+      this.emit(`apiMethod: '${slot.apiMethod}',`)
+      this.emit(`element: '${slot.element}',`)
+      this.emit(`portal: ${slot.portal || false},`)
+      this.emit(`styles: ${JSON.stringify(slot.styles)},`)
+      this.indent--
+      this.emit(`},`)
+    }
+    this.indent--
+    this.emit(`},`)
+
+    // Emit items
+    this.emit(`items: ${JSON.stringify(node.items)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create slot elements
+    for (const [slotName, slot] of Object.entries(node.slots)) {
+      const slotVar = `${varName}_${slotName.toLowerCase()}`
+      this.emit(`// Slot: ${slotName}`)
+      this.emit(`const ${slotVar} = document.createElement('${slot.element}')`)
+      this.emit(`${slotVar}.dataset.slot = '${slotName}'`)
+      this.emit(`${slotVar}.dataset.mirrorSlot = '${node.id}-${slotName}'`)
+
+      // Apply base styles
+      if (slot.styles.length > 0) {
+        this.emit(`Object.assign(${slotVar}.style, {`)
+        this.indent++
+        for (const style of slot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Append to root (portaled elements handled by runtime)
+      if (!slot.portal) {
+        this.emit(`${varName}.appendChild(${slotVar})`)
+      }
+      this.emit('')
+    }
+
+    // Create item elements for Content slot
+    if (node.items.length > 0) {
+      const contentSlotVar = `${varName}_content`
+      this.emit(`// Items`)
+      for (let i = 0; i < node.items.length; i++) {
+        const item = node.items[i]
+        const itemVar = `${varName}_item${i}`
+        this.emit(`const ${itemVar} = document.createElement('div')`)
+        this.emit(`${itemVar}.dataset.mirrorItem = '${item.value}'`)
+        this.emit(`${itemVar}.textContent = '${this.escapeString(item.label)}'`)
+        if (item.disabled) {
+          this.emit(`${itemVar}.dataset.disabled = 'true'`)
+        }
+        this.emit(`${contentSlotVar}.appendChild(${itemVar})`)
+      }
+      this.emit('')
+    }
+
+    // Note: Zag machine initialization is handled by the Zag runtime
+    this.emit(`// Note: Zag machine is initialized at runtime via _runtime.initZagComponent(${varName})`)
+    this.emit(`${parentVar}.appendChild(${varName})`)
     this.emit('')
   }
 

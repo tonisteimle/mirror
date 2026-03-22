@@ -15,10 +15,15 @@ export { combineProjectFiles, combineFiles, DIRECTORY_ORDER } from './preprocess
 export type { ReadFileFn, ListFilesFn } from './preprocessor'
 
 export type { AST, Node } from './parser/ast'
-export type { IR, SourcePosition, PropertySourceMap } from './ir/types'
+export type { IR, SourcePosition, PropertySourceMap, IRZagNode, IRSlot, IRItem } from './ir/types'
 
 // Studio module exports for bidirectional editing
 export * from './studio'
+
+// Zag integration exports
+export * from './schema/zag-primitives'
+export * from './compiler/zag'
+export { ZagRuntime, createZagRuntime } from './runtime/zag'
 
 import { parse } from './parser'
 import { generateDOM } from './backends/dom'
