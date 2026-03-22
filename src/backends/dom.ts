@@ -643,9 +643,17 @@ class DOMGenerator {
       this.emit('')
     }
 
-    // Note: Zag machine initialization is handled by the Zag runtime
-    this.emit(`// Note: Zag machine is initialized at runtime via _runtime.initZagComponent(${varName})`)
+    // Append to parent
     this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Zag component via runtime
+    this.emit(`// Initialize Zag machine`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initZagComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initZagComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
     this.emit('')
   }
 

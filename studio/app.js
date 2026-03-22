@@ -28,6 +28,7 @@ import {
   DragDropService,
   // Layout presets from studio bundle (single source of truth)
   LAYOUT_PRESETS as STUDIO_LAYOUT_PRESETS,
+  BASIC_COMPONENTS as STUDIO_BASIC_COMPONENTS,
 } from './dist/index.js?v=100'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -5966,10 +5967,16 @@ function attachPaletteDragHandlers(container) {
     const properties = item.dataset.properties || ''
     const textContent = item.dataset.text || ''
 
+    // Find defaultSize from studio presets (layout presets or basic components)
+    const layoutPreset = STUDIO_LAYOUT_PRESETS.find(p => p.name === componentName)
+    const basicComponent = STUDIO_BASIC_COMPONENTS.find(p => p.name === componentName)
+    const defaultSize = layoutPreset?.defaultSize || basicComponent?.defaultSize
+
     // Use DragDropService's makePaletteItemDraggable (mouse events)
     const cleanup = studioDragDropService.makePaletteItemDraggable(item, componentName, {
       properties: properties || undefined,
       textContent: textContent || undefined,
+      defaultSize: defaultSize,
     })
     paletteDragCleanups.push(cleanup)
   })

@@ -39,6 +39,7 @@ import {
   getHtmlTag,
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
+import { isZagPrimitive } from '../schema/zag-primitives'
 
 export type { IR, IRWarning } from './types'
 export { SourceMap, SourceMapBuilder } from '../studio/source-map'
@@ -389,6 +390,15 @@ class IRTransformer {
     // Handle Conditionals
     if (instance.type === 'Conditional') {
       return this.transformConditional(instance)
+    }
+
+    // Handle Zag primitives (Select, Accordion, etc.)
+    // Note: Full Zag transformation requires parser support for slot syntax
+    // For now, we detect Zag primitives but transform them as regular components
+    // The DOM backend will handle them specially via isIRZagNode check
+    if (isZagPrimitive(instance.component)) {
+      // TODO: When parser supports Zag slot syntax, call transformZagNode here
+      // For now, fall through to regular transformation
     }
 
     // Resolve component definition
