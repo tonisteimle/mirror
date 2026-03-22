@@ -152,3 +152,72 @@ export interface IRAnimationProperty {
   value: string                 // CSS value
   easing?: string               // Per-property easing override
 }
+
+// ============================================================================
+// Zag Component IR Types
+// ============================================================================
+
+/**
+ * IR node for Zag-based behavior components
+ *
+ * Extends IRNode with Zag-specific data for runtime machine instantiation.
+ */
+export interface IRZagNode extends IRNode {
+  /** Indicates this is a Zag component */
+  isZagComponent: true
+  /** Zag machine type (e.g., 'select', 'accordion') */
+  zagType: string
+  /** Slot definitions with their rendering data */
+  slots: Record<string, IRSlot>
+  /** Items for list-based components */
+  items: IRItem[]
+  /** Machine configuration derived from properties */
+  machineConfig: Record<string, unknown>
+}
+
+/**
+ * IR representation of a Zag slot
+ *
+ * Contains all data needed to render a slot element and bind Zag props.
+ */
+export interface IRSlot {
+  /** Slot name (e.g., 'Trigger', 'Content') */
+  name: string
+  /** Zag API method to get props (e.g., 'getTriggerProps', 'getContentProps') */
+  apiMethod: string
+  /** HTML element to render (e.g., 'button', 'div') */
+  element: string
+  /** CSS styles for the slot */
+  styles: IRStyle[]
+  /** Children within the slot */
+  children: IRNode[]
+  /** Whether this slot should be portaled (rendered outside parent) */
+  portal?: boolean
+  /** Source position for bidirectional editing */
+  sourcePosition?: SourcePosition
+}
+
+/**
+ * IR representation of an item in a Zag list component
+ *
+ * Used for components like Select, Combobox, Accordion that have item lists.
+ */
+export interface IRItem {
+  /** Unique value for the item (for form submission and selection) */
+  value: string
+  /** Display label for the item */
+  label: string
+  /** Whether the item is disabled */
+  disabled?: boolean
+  /** Custom children for complex item rendering */
+  children?: IRNode[]
+  /** Source position for bidirectional editing */
+  sourcePosition?: SourcePosition
+}
+
+/**
+ * Type guard to check if an IRNode is a Zag component
+ */
+export function isIRZagNode(node: IRNode): node is IRZagNode {
+  return (node as IRZagNode).isZagComponent === true
+}

@@ -9,6 +9,7 @@
  * - Actions (show, hide, toggle, etc.)
  * - States (hover, focus, selected, etc.)
  * - Keys (keyboard keys for onkeydown)
+ * - Zag Primitives (behavior-driven components)
  *
  * Aus ihr werden generiert:
  * - Dokumentation (docs/generated/properties.md)
@@ -19,6 +20,36 @@
  * NICHT MANUELL EDITIEREN: Die generierten Dateien.
  * NUR HIER EDITIEREN: Diese Schema-Datei.
  */
+
+// Import Zag primitives
+import {
+  ZAG_PRIMITIVES,
+  SLOT_MAPPINGS,
+  STATE_MAPPINGS,
+  isZagPrimitive,
+  getZagPrimitive,
+  getSlotMappings,
+  getSlotDef,
+  isZagSlot,
+  getStateSelector,
+  type ZagPrimitiveDef,
+  type ZagSlotDef,
+} from './zag-primitives'
+
+// Re-export Zag primitives
+export {
+  ZAG_PRIMITIVES,
+  SLOT_MAPPINGS,
+  STATE_MAPPINGS,
+  isZagPrimitive,
+  getZagPrimitive,
+  getSlotMappings,
+  getSlotDef,
+  isZagSlot,
+  getStateSelector,
+  type ZagPrimitiveDef,
+  type ZagSlotDef,
+}
 
 // ============================================================================
 // Types
@@ -243,6 +274,11 @@ export const DSL = {
     'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
     'home', 'end',
   ] as const,
+
+  // ---------------------------------------------------------------------------
+  // Zag Primitives (behavior-driven components)
+  // ---------------------------------------------------------------------------
+  zagPrimitives: ZAG_PRIMITIVES,
 }
 
 // ============================================================================

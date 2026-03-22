@@ -39,6 +39,9 @@
     "@codemirror/view": "^6.39.12",
     "@lezer/highlight": "^1.2.3",
     "@types/rbush": "^4.0.0",
+    "@zag-js/core": "^1.37.0",
+    "@zag-js/dom-query": "^1.37.0",
+    "@zag-js/select": "^1.37.0",
     "rbush": "^4.0.1",
     "tom-select": "^2.5.2"
   },

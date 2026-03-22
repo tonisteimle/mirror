@@ -243,12 +243,14 @@ export class DragRenderer {
 
     if (cached) {
       // Use the cached rendered element with explicit size
+      console.debug('[DragRenderer] Cache HIT for', componentName, cached.size)
       this.ghostFactory.createFromElement(cached.element, cached.size)
       this.currentGhostSource = { type: 'rendered', componentName }
       return
     }
 
     // Show placeholder immediately
+    console.debug('[DragRenderer] Cache MISS for', componentName, '- showing placeholder')
     const size = { width: ghostRect.width, height: ghostRect.height }
     this.ghostFactory.createPlaceholder(size, {
       componentName,

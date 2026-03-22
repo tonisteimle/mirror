@@ -17,6 +17,7 @@ export type NodeType =
   | 'Text'
   | 'JavaScript'
   | 'Animation'
+  | 'ZagComponent'
 
 export interface BaseNode {
   type: NodeType
@@ -201,6 +202,88 @@ export interface TextFormat {
   style: 'bold' | 'italic' | 'underline' | string  // string for token names
 }
 
+// ============================================================================
+// Zag Component Types
+// ============================================================================
+
+/**
+ * Zag component node - behavior-driven components using Zag.js
+ *
+ * Example:
+ *   Select placeholder "Choose..."
+ *     Trigger:
+ *       pad 12, bg #1e1e2e
+ *     Item "Option A"
+ *     Item "Option B"
+ */
+export interface ZagNode extends BaseNode {
+  type: 'ZagComponent'
+  /** Zag machine type (e.g., 'select', 'accordion') */
+  machine: string
+  /** Component name (e.g., 'Select') */
+  name: string
+  /** Component-level properties (e.g., placeholder, multiple) */
+  properties: Property[]
+  /** Slot definitions (e.g., Trigger:, Content:) */
+  slots: Record<string, ZagSlotDef>
+  /** Items for list-based components (e.g., Item "Option A") */
+  items: ZagItem[]
+  /** Events (e.g., onchange) */
+  events: Event[]
+}
+
+/**
+ * Slot definition within a Zag component
+ *
+ * Example:
+ *   Trigger:
+ *     pad 12, bg #1e1e2e
+ *     hover:
+ *       bg #2a2a3e
+ */
+export interface ZagSlotDef {
+  /** Slot name (e.g., 'Trigger', 'Content') */
+  name: string
+  /** Slot properties */
+  properties: Property[]
+  /** State blocks within the slot */
+  states: State[]
+  /** Children within the slot */
+  children: (Instance | Slot | Text)[]
+  /** Source position for bidirectional editing */
+  sourcePosition: SourcePosition
+}
+
+/**
+ * Item in a Zag component (for list-based components)
+ *
+ * Example:
+ *   Item "Option A"
+ *   Item value "opt-a" label "Option A" disabled
+ */
+export interface ZagItem {
+  /** Item value (for form submission) */
+  value?: string
+  /** Item label (display text) */
+  label?: string
+  /** Whether the item is disabled */
+  disabled?: boolean
+  /** Custom children for complex items */
+  children?: (Instance | Text)[]
+  /** Source position for bidirectional editing */
+  sourcePosition: SourcePosition
+}
+
+/**
+ * Source position for bidirectional editing
+ */
+export interface SourcePosition {
+  line: number
+  column: number
+  endLine: number
+  endColumn: number
+}
+
 export type Node =
   | Program
   | TokenDefinition
@@ -215,5 +298,6 @@ export type Node =
   | Slot
   | Text
   | JavaScriptBlock
+  | ZagNode
 
 export type AST = Program

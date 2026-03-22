@@ -167,6 +167,7 @@ export class GhostRenderer {
       const clone = renderedElement.cloneNode(true) as HTMLElement
 
       // Cache the result (clone again to keep cache independent)
+      console.debug('[GhostRenderer] Caching:', cacheKey, size)
       this.cache.set(cacheKey, {
         element: clone,
         size: { ...size },
@@ -202,6 +203,9 @@ export class GhostRenderer {
   renderSync(item: ComponentItem): RenderedGhost | null {
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
+
+    // Debug: Log cache lookup
+    console.debug('[GhostRenderer] renderSync lookup:', cacheKey, 'found:', !!cached)
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       const clone = cached.element.cloneNode(true) as HTMLElement
