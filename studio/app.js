@@ -5926,13 +5926,13 @@ const LAYOUT_PRESETS = [
 // NOTE: Icons must stay in sync with studio/icons/index.ts (COMPONENT_ICONS)
 // NOTE: defaultSize should match the w/h in properties for accurate ghost rendering
 const PRIMITIVE_COMPONENTS = [
-  { name: 'Box', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', defaultSize: { width: 100, height: 100 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
+  { name: 'Box', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', defaultSize: { width: 32, height: 32 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
   { name: 'Button', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', defaultSize: { width: 80, height: 36 }, icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
   { name: 'Text', properties: 'w hug, h hug', text: 'Text', defaultSize: { width: 80, height: 24 }, icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
   { name: 'Input', properties: 'w 200, h hug, pad 10, bg #27272a, rad 6, bor 0', text: 'placeholder...', defaultSize: { width: 200, height: 36 }, icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
   { name: 'Icon', properties: 'w 24, h 24, "star"', defaultSize: { width: 24, height: 24 }, icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
   { name: 'Image', properties: 'w 200, h 200, "https://picsum.photos/200"', defaultSize: { width: 200, height: 200 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>' },
-  { name: 'Slot', properties: 'w hug, h hug', text: 'Content', defaultSize: { width: 100, height: 40 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="4 2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>' },
+  { name: 'Slot', properties: 'w hug, h hug', text: 'Content', defaultSize: { width: 56, height: 24 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="4 2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>' },
 ]
 
 // User component icon (cube/component symbol)

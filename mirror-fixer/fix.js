@@ -13,25 +13,33 @@ const claudeMd = readFileSync(
   'utf-8'
 );
 
-// Nur den DSL-Teil extrahieren (zwischen den Markern)
+// Nur den DSL-Teil extrahieren
 const dslMatch = claudeMd.match(/## DSL Kurzreferenz[\s\S]*?<!-- GENERATED:DSL-PROPERTIES:END -->/);
 const dslReference = dslMatch ? dslMatch[0] : '';
 
-const systemPrompt = `Du bist ein Mirror DSL Code-Fixer.
+// Pfad zur Komponentenbibliothek
+const componentsPath = join(__dirname, '../examples/starter/_components.mirror');
 
-Der User schreibt "ungefähren" Mirror-Code - so wie er denkt dass es funktioniert.
-Deine Aufgabe: Konvertiere es in korrekten, sauberen Mirror-Code.
+const systemPrompt = `Du bist ein Mirror DSL Code-Generator.
+
+Der User beschreibt was er bauen will - in natürlicher Sprache oder ungefährem Code.
+Deine Aufgabe: Generiere korrekten, sauberen Mirror-Code.
+
+WICHTIG - Zwei-Stufen-Prozess:
+1. RECHERCHE: Lies zuerst die Komponentenbibliothek um zu sehen welche fertigen Komponenten existieren
+2. GENERIERUNG: Nutze existierende Komponenten wenn passend, oder baue mit Primitives
+
+Komponentenbibliothek: ${componentsPath}
 
 Regeln:
-- Gib NUR den korrigierten Code zurück, keine Erklärungen
-- Behalte die Intention des Users bei
-- Nutze die korrekten Property-Namen und Werte aus der DSL-Referenz
-- Deutsche Begriffe → englische DSL Properties (z.B. "hintergrund" → "bg")
-- Ungefähre Werte → korrekte Werte (z.B. "blau" → "#0000ff" oder "$blue")
+- Gib NUR den Mirror-Code zurück, keine Erklärungen
+- Bevorzuge existierende Komponenten aus der Library (z.B. DangerButton statt Button bg red)
+- Deutsche Begriffe → englische DSL Properties
+- Halte den Code minimal und sauber
 
 ${dslReference}`;
 
-// User Input von Argumenten oder stdin
+// User Input
 let userInput = process.argv.slice(2).join(' ');
 
 if (!userInput) {
@@ -43,21 +51,24 @@ if (!userInput) {
 }
 
 if (!userInput) {
-  console.error('Usage: node fix.js "dein ungefährer mirror code"');
-  console.error('  oder: echo "code" | node fix.js');
+  console.error('Usage: node fix.js "beschreibe was du bauen willst"');
+  console.error('Beispiel: node fix.js "roter löschen button"');
   process.exit(1);
 }
 
-const prompt = `Korrigiere diesen Mirror-Code:\n\n${userInput}`;
+const prompt = `Generiere Mirror-Code für:\n\n${userInput}`;
 
 try {
   const result = spawnSync('claude', [
     '-p', prompt,
     '--append-system-prompt', systemPrompt,
+    '--allowedTools', 'Read,Glob',
+    '--max-turns', '3',
     '--output-format', 'json'
   ], {
     encoding: 'utf-8',
-    maxBuffer: 10 * 1024 * 1024
+    maxBuffer: 10 * 1024 * 1024,
+    cwd: join(__dirname, '..')  // Working directory = Mirror root
   });
 
   if (result.error) {

@@ -512,6 +512,141 @@ const _runtime = {
     }
   },
 
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -1228,6 +1363,141 @@ const _runtime = {
     }
   },
 
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -1936,6 +2206,141 @@ const _runtime = {
     if (el.children) {
       Array.from(el.children).forEach(child => this.destroy(child))
     }
+  },
+
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
   },
 
   // Icon loading
@@ -2647,6 +3052,141 @@ const _runtime = {
     if (el.children) {
       Array.from(el.children).forEach(child => this.destroy(child))
     }
+  },
+
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
   },
 
   // Icon loading
@@ -3368,6 +3908,141 @@ const _runtime = {
     if (el.children) {
       Array.from(el.children).forEach(child => this.destroy(child))
     }
+  },
+
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
   },
 
   // Icon loading
@@ -4095,6 +4770,141 @@ const _runtime = {
     }
   },
 
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -4814,6 +5624,141 @@ const _runtime = {
     }
   },
 
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -5530,6 +6475,141 @@ const _runtime = {
     if (el.children) {
       Array.from(el.children).forEach(child => this.destroy(child))
     }
+  },
+
+  // Zag component initialization
+  initZagComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // Set initial state
+    content.hidden = true
+    content.style.display = 'none'
+
+    // Track state
+    el._zagState = { open: false, value: [], highlightedIndex: -1 }
+
+    // Toggle dropdown on trigger click
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      el._zagState.open = !el._zagState.open
+      content.hidden = !el._zagState.open
+      content.style.display = el._zagState.open ? '' : 'none'
+      trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      if (el._zagState.open) {
+        // Highlight first item
+        const items = content.querySelectorAll('[data-mirror-item]')
+        if (items.length > 0) {
+          el._zagState.highlightedIndex = 0
+          this._updateZagHighlight(el, items)
+        }
+      }
+    })
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (el._zagState.open && !el.contains(e.target)) {
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+    })
+
+    // Item selection
+    const items = content.querySelectorAll('[data-mirror-item]')
+    items.forEach((item, index) => {
+      item.style.cursor = 'pointer'
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const value = item.dataset.mirrorItem
+        el._zagState.value = [value]
+
+        // Update trigger text
+        trigger.textContent = item.textContent
+
+        // Mark selected
+        items.forEach(i => i.removeAttribute('data-selected'))
+        item.setAttribute('data-selected', 'true')
+
+        // Close dropdown
+        el._zagState.open = false
+        content.hidden = true
+        content.style.display = 'none'
+        trigger.setAttribute('aria-expanded', 'false')
+      })
+
+      item.addEventListener('mouseenter', () => {
+        el._zagState.highlightedIndex = index
+        this._updateZagHighlight(el, items)
+      })
+    })
+
+    // Keyboard navigation
+    el.addEventListener('keydown', (e) => {
+      if (!el._zagState.open) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          trigger.click()
+        }
+        return
+      }
+
+      const items = content.querySelectorAll('[data-mirror-item]')
+      const count = items.length
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
+          this._updateZagHighlight(el, items)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          if (el._zagState.highlightedIndex >= 0) {
+            items[el._zagState.highlightedIndex].click()
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          el._zagState.open = false
+          content.hidden = true
+          content.style.display = 'none'
+          trigger.setAttribute('aria-expanded', 'false')
+          trigger.focus()
+          break
+      }
+    })
+
+    // Make trigger focusable
+    trigger.setAttribute('tabindex', '0')
+    trigger.setAttribute('role', 'combobox')
+    trigger.setAttribute('aria-haspopup', 'listbox')
+    trigger.setAttribute('aria-expanded', 'false')
+    content.setAttribute('role', 'listbox')
+  },
+
+  _updateZagHighlight(el, items) {
+    items.forEach((item, i) => {
+      if (i === el._zagState.highlightedIndex) {
+        item.setAttribute('data-highlighted', 'true')
+      } else {
+        item.removeAttribute('data-highlighted')
+      }
+    })
   },
 
   // Icon loading
