@@ -23,14 +23,34 @@ export class PreviewBreadcrumb {
   private onItemClick?: (nodeId: string) => void
   private items: BreadcrumbItem[] = []
   private unsubscribe: (() => void) | null = null
+  private boundHandleClick: (e: MouseEvent) => void
 
   constructor(config: BreadcrumbConfig) {
     this.container = config.container
     this.events = config.events
     this.onItemClick = config.onItemClick
 
+    // Event delegation: single listener for all breadcrumb clicks
+    // Prevents memory leaks from re-creating listeners on each render()
+    this.boundHandleClick = this.handleClick.bind(this)
+    this.container.addEventListener('click', this.boundHandleClick)
+
     this.render()
     this.subscribe()
+  }
+
+  /**
+   * Handle delegated click events
+   */
+  private handleClick(e: MouseEvent): void {
+    const target = e.target as HTMLElement
+    const item = target.closest('.breadcrumb-item')
+    if (item && !item.classList.contains('current')) {
+      const nodeId = (item as HTMLElement).dataset.nodeId
+      if (nodeId) {
+        this.onItemClick?.(nodeId)
+      }
+    }
   }
 
   /**
@@ -68,16 +88,11 @@ export class PreviewBreadcrumb {
       const isLast = index === this.items.length - 1
 
       // Create breadcrumb item
+      // Click handling is delegated to container (no individual listeners)
       const itemEl = document.createElement('span')
       itemEl.className = `breadcrumb-item${isLast ? ' current' : ''}`
       itemEl.textContent = item.name
       itemEl.dataset.nodeId = item.nodeId
-
-      if (!isLast) {
-        itemEl.addEventListener('click', () => {
-          this.onItemClick?.(item.nodeId)
-        })
-      }
 
       this.container.appendChild(itemEl)
 
@@ -105,6 +120,7 @@ export class PreviewBreadcrumb {
   dispose(): void {
     this.unsubscribe?.()
     this.unsubscribe = null
+    this.container.removeEventListener('click', this.boundHandleClick)
     this.container.innerHTML = ''
   }
 }

@@ -247,15 +247,8 @@ export class HandleManager {
       transition: 'transform 100ms ease-out',
     })
 
-    // Hover effect
-    el.addEventListener('mouseenter', () => {
-      el.style.transform = 'scale(1.2)'
-    })
-    el.addEventListener('mouseleave', () => {
-      if (this.activeHandle?.element !== el) {
-        el.style.transform = 'scale(1)'
-      }
-    })
+    // Hover effect is handled by CSS (.handle-element:hover)
+    // No JS listeners needed - prevents memory leaks on hideHandles()
 
     return el
   }
@@ -418,7 +411,8 @@ export class HandleManager {
 
   private hideValueIndicator(): void {
     if (this.valueIndicator) {
-      this.valueIndicator.style.display = 'none'
+      this.valueIndicator.remove()
+      this.valueIndicator = null
     }
   }
 

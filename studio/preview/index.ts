@@ -582,6 +582,10 @@ export function getPreviewController(): PreviewController | null {
 /**
  * @deprecated Use setStudioContext() with context.preview instead
  */
-export function setPreviewController(controller: PreviewController): void {
+export function setPreviewController(controller: PreviewController | null): void {
+  // Dispose old controller to prevent memory leaks
+  if (globalPreview && globalPreview !== controller) {
+    globalPreview.dispose()
+  }
   globalPreview = controller
 }

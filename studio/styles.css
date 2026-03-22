@@ -4874,6 +4874,15 @@
       background-color: var(--color-primary) !important;
     }
 
+    /* Padding/Gap/Radius Handles (handle-manager.ts) */
+    .handle-overlay .handle {
+      transition: transform 100ms ease-out;
+    }
+
+    .handle-overlay .handle:hover {
+      transform: scale(1.2);
+    }
+
     /* Drop Zone Highlight - hidden, we use zone rectangles instead */
     .visual-overlay .drop-zone-highlight {
       display: none;
