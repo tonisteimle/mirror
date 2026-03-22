@@ -28,7 +28,7 @@ import {
   DragDropService,
   // Layout presets from studio bundle (single source of truth)
   LAYOUT_PRESETS as STUDIO_LAYOUT_PRESETS,
-} from './dist/index.js?v=98'
+} from './dist/index.js?v=99'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()

@@ -96,6 +96,14 @@ export {
   type BreadcrumbConfig,
 } from './breadcrumb'
 
+// Re-export Zag preview manager
+export {
+  ZagPreviewManager,
+  createZagPreviewManager,
+  type ZagPreviewConfig,
+  type ZagSelectionContext,
+} from './zag-preview'
+
 export interface PreviewConfig {
   container: HTMLElement
   selectedClass?: string
