@@ -114,14 +114,38 @@ export const SLOT_MAPPINGS: Record<string, Record<string, ZagSlotDef>> = {
  * Zag's data attribute selectors for CSS styling
  */
 export const STATE_MAPPINGS: Record<string, string> = {
+  // Selection states
   'hover:': '[data-highlighted]',
   'selected:': '[data-state="checked"]',
   'highlighted:': '[data-highlighted]',
+  'checked:': '[data-state="checked"]',
+
+  // Interactive states
   'disabled:': '[data-disabled]',
+  'focus:': '[data-focus]',
+  'focus-visible:': '[data-focus-visible]',
+  'active:': '[data-active]',
+  'pressed:': '[data-pressed]',
+  'readonly:': '[data-readonly]',
+
+  // Open/close states
   'open:': '[data-state="open"]',
   'closed:': '[data-state="closed"]',
-  'focus:': '[data-focus]',
-  'active:': '[data-active]',
+  'expanded:': '[data-state="open"]',
+  'collapsed:': '[data-state="closed"]',
+
+  // Validity states
+  'valid:': '[data-valid]',
+  'invalid:': '[data-invalid]',
+
+  // Loading states
+  'loading:': '[data-loading]',
+
+  // Placement states (for positioned elements)
+  'top:': '[data-placement^="top"]',
+  'bottom:': '[data-placement^="bottom"]',
+  'left:': '[data-placement^="left"]',
+  'right:': '[data-placement^="right"]',
 }
 
 /**

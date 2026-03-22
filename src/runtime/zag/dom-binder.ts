@@ -39,18 +39,30 @@ export class DOMBinder {
    * @param id Unique ID for tracking
    */
   bind(element: HTMLElement, props: ZagProps, id: string): void {
+    // Validate props
+    if (!props || typeof props !== 'object') {
+      return
+    }
+
     // Clean up existing bindings for this ID
     this.unbind(id)
 
     const cleanups: Array<() => void> = []
 
+    // ARIA attributes that should use string "true"/"false" instead of presence/absence
+    const ariaStringAttrs = new Set([
+      'aria-expanded', 'aria-selected', 'aria-checked', 'aria-pressed',
+      'aria-hidden', 'aria-disabled', 'aria-readonly', 'aria-required',
+      'aria-invalid', 'aria-busy', 'aria-live', 'aria-atomic',
+    ])
+
     for (const [key, value] of Object.entries(props)) {
-      if (key.startsWith('on')) {
+      if (key.startsWith('on') && typeof value === 'function') {
         // Event listener
         const eventName = key.slice(2).toLowerCase()
         element.addEventListener(eventName, value)
         cleanups.push(() => element.removeEventListener(eventName, value))
-      } else if (key === 'style' && typeof value === 'object') {
+      } else if (key === 'style' && typeof value === 'object' && value !== null) {
         // Style object
         const originalStyles: Record<string, string> = {}
         for (const [styleProp, styleValue] of Object.entries(value as Record<string, string>)) {
@@ -63,13 +75,15 @@ export class DOMBinder {
           }
         })
       } else if (typeof value === 'boolean') {
-        // Boolean attribute
-        if (value) {
+        // Boolean attribute - ARIA attrs use string values
+        if (ariaStringAttrs.has(key)) {
+          element.setAttribute(key, String(value))
+          cleanups.push(() => element.removeAttribute(key))
+        } else if (value) {
           element.setAttribute(key, '')
-        } else {
-          element.removeAttribute(key)
+          cleanups.push(() => element.removeAttribute(key))
         }
-        cleanups.push(() => element.removeAttribute(key))
+        // For false non-ARIA booleans, don't set the attribute at all
       } else if (value != null) {
         // Regular attribute
         element.setAttribute(key, String(value))
@@ -156,6 +170,12 @@ export class DOMBinder {
   unmountPortal(element: HTMLElement): void {
     if (element.parentElement?.id === 'mirror-zag-portal') {
       element.remove()
+
+      // Clean up portal container if empty
+      if (this.portalContainer && this.portalContainer.children.length === 0) {
+        this.portalContainer.remove()
+        this.portalContainer = null
+      }
     }
   }
 

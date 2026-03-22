@@ -65,6 +65,8 @@ export interface ZagCompileContext {
   tokenSet: Set<string>
   /** Whether to include source maps */
   includeSourceMap: boolean
+  /** Optional callback to transform child nodes using main IR transformer */
+  transformChild?: (child: any) => IRNode | null
 }
 
 /**

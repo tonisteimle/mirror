@@ -98,11 +98,22 @@ export class ZagPreviewManager {
     const zagElement = target.closest('[data-zag-component]') as HTMLElement
     if (!zagElement) return null
 
+    // Verify it's actually a Zag component (not a regular component that happens to have this attribute)
+    const zagType = zagElement.getAttribute('data-zag-component')
+    if (!zagType) return null
+
     const nodeId = zagElement.getAttribute(MIRROR_ID_ATTR)
     if (!nodeId) return null
 
+    // Verify nodeId is tracked as a Zag component
     const node = this.mountedNodes.get(nodeId)
     if (!node) return null
+
+    // Additional verification: ensure node's zagType matches element's attribute
+    if (node.zagType !== zagType) {
+      console.warn(`Zag type mismatch: expected "${node.zagType}", got "${zagType}"`)
+      return null
+    }
 
     // Check if we clicked on a specific slot
     const slotElement = target.closest('[data-slot]') as HTMLElement

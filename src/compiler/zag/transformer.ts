@@ -78,6 +78,12 @@ function transformSlot(
   slot: ZagSlotDef,
   context: ZagCompileContext
 ): IRSlot {
+  // Validate slot name
+  const slotDef = getSlotDefinition(componentName, slotName)
+  if (!slotDef) {
+    console.warn(`Unknown slot "${slotName}" for component "${componentName}"`)
+  }
+
   const apiMethod = getSlotApiMethod(componentName, slotName) ?? `get${slotName}Props`
   const element = getSlotElement(componentName, slotName)
   const portal = isPortaledSlot(componentName, slotName)
@@ -155,10 +161,20 @@ function buildMachineConfig(properties: Property[], nodeId: string): ZagMachineC
         config.disabled = prop.values.length === 0 || prop.values[0] === true
         break
       case 'value':
-        config.value = prop.values.map(v => String(v))
+        // Single value for single-select, array for multiple
+        if (prop.values.length === 1) {
+          config.value = String(prop.values[0])
+        } else {
+          config.value = prop.values.map(v => String(v))
+        }
         break
       case 'defaultValue':
-        config.defaultValue = prop.values.map(v => String(v))
+        // Single value for single-select, array for multiple
+        if (prop.values.length === 1) {
+          config.defaultValue = String(prop.values[0])
+        } else {
+          config.defaultValue = prop.values.map(v => String(v))
+        }
         break
     }
   }
@@ -300,9 +316,40 @@ function mapEventName(name: string): string {
  * Transform children nodes
  */
 function transformChildren(children: (Instance | Text)[], context: ZagCompileContext): IRNode[] {
-  // This would normally call back into the main IR transformer
-  // For now, return empty - this will be integrated with main IR transform
-  return []
+  const result: IRNode[] = []
+
+  for (const child of children) {
+    if (child.type === 'Text') {
+      // Handle Text nodes directly
+      const text = child as Text
+      const textNode: IRNode = {
+        id: generateId(context),
+        tag: 'span',
+        primitive: 'text',
+        name: 'Text',
+        properties: [{ name: 'textContent', value: text.content }],
+        styles: [],
+        events: [],
+        children: [],
+        sourcePosition: {
+          line: text.line,
+          column: text.column,
+          endLine: text.line,
+          endColumn: text.column + (text.content?.length ?? 0),
+        },
+      }
+      result.push(textNode)
+    } else if (context.transformChild) {
+      // Use callback to transform Instance nodes via main IR transformer
+      const transformed = context.transformChild(child)
+      if (transformed) {
+        result.push(transformed)
+      }
+    }
+    // If no callback and not Text, skip the child (logged at compile time)
+  }
+
+  return result
 }
 
 /**
@@ -339,12 +386,17 @@ function generateItemValue(context: ZagCompileContext): string {
 
 /**
  * Create a compilation context
+ *
+ * @param transformChild Optional callback to transform child nodes
  */
-export function createZagCompileContext(): ZagCompileContext {
+export function createZagCompileContext(
+  transformChild?: (child: any) => IRNode | null
+): ZagCompileContext {
   return {
     idCounter: 0,
     componentMap: new Map(),
     tokenSet: new Set(),
     includeSourceMap: false,
+    transformChild,
   }
 }

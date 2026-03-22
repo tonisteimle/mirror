@@ -63,6 +63,11 @@ export class MachineRunner {
    * @returns The machine instance or null
    */
   create(type: MachineType, config: MachineConfig): MachineInstance | null {
+    // Clean up existing machine with same ID to prevent state leaks
+    if (this.instances.has(config.id)) {
+      this.stop(config.id)
+    }
+
     const machine = MACHINES[type]
     if (!machine) {
       console.warn(`Unknown machine type: ${type}`)
