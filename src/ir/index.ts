@@ -243,10 +243,13 @@ class IRTransformer {
       value: t.value,
     }))
 
-    // Transform instances to IR nodes (handle both Instance and Slot)
+    // Transform instances to IR nodes (handle Instance, Slot, and ZagComponent)
     const nodes = this.ast.instances.map(inst => {
       if (inst.type === 'Slot') {
         return this.transformSlotPrimitive(inst as Slot)
+      }
+      if ((inst as any).type === 'ZagComponent') {
+        return this.transformZagComponent(inst)
       }
       return this.transformInstance(inst as Instance)
     })
@@ -332,6 +335,28 @@ class IRTransformer {
   }
 
   /**
+   * Create an empty placeholder node for invalid instances
+   */
+  private createEmptyNode(instance: any): IRNode {
+    return {
+      id: this.generateId(),
+      tag: 'div',
+      primitive: 'box',
+      name: 'Unknown',
+      properties: [],
+      styles: [],
+      events: [],
+      children: [],
+      sourcePosition: instance?.line ? {
+        line: instance.line,
+        column: instance.column ?? 0,
+        endLine: instance.line,
+        endColumn: instance.column ?? 0,
+      } : undefined,
+    }
+  }
+
+  /**
    * Transform a Slot AST node into an IR node (visual placeholder)
    */
   private transformSlotPrimitive(slot: Slot, parentId?: string): IRNode {
@@ -376,6 +401,99 @@ class IRTransformer {
     }
   }
 
+  /**
+   * Transform a ZagComponent AST node into an IRZagNode
+   */
+  private transformZagComponent(zagNode: any): IRNode {
+    const nodeId = this.generateId()
+
+    // Build machine configuration from properties
+    const machineConfig: Record<string, unknown> = {
+      id: nodeId,
+    }
+
+    for (const prop of zagNode.properties || []) {
+      switch (prop.name) {
+        case 'placeholder':
+          machineConfig.placeholder = String(prop.values[0] ?? '')
+          break
+        case 'multiple':
+          machineConfig.multiple = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'searchable':
+          machineConfig.searchable = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'clearable':
+          machineConfig.clearable = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'disabled':
+          machineConfig.disabled = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'value':
+        case 'defaultValue':
+          if (prop.values.length === 1) {
+            machineConfig[prop.name] = String(prop.values[0])
+          } else {
+            machineConfig[prop.name] = prop.values.map((v: any) => String(v))
+          }
+          break
+      }
+    }
+
+    // Transform slots
+    const slots: Record<string, any> = {}
+    for (const [slotName, slotDef] of Object.entries(zagNode.slots || {})) {
+      const slot = slotDef as any
+      slots[slotName] = {
+        name: slotName,
+        apiMethod: `get${slotName}Props`,
+        element: slotName === 'Trigger' ? 'button' : 'div',
+        styles: this.transformProperties(slot.properties || [], 'box'),
+        children: [],
+        portal: slotName === 'Content',
+        sourcePosition: slot.sourcePosition,
+      }
+    }
+
+    // Transform items
+    const items = (zagNode.items || []).map((item: any) => ({
+      value: item.value ?? item.label ?? '',
+      label: item.label ?? item.value ?? '',
+      disabled: item.disabled,
+      sourcePosition: item.sourcePosition,
+    }))
+
+    // Source position
+    const sourcePosition = zagNode.line !== undefined
+      ? {
+          line: zagNode.line,
+          column: zagNode.column ?? 0,
+          endLine: zagNode.line,
+          endColumn: zagNode.column ?? 0,
+        }
+      : undefined
+
+    // Create IRZagNode
+    const irNode: any = {
+      id: nodeId,
+      tag: 'div',
+      primitive: zagNode.name?.toLowerCase() ?? 'select',
+      name: zagNode.name,
+      properties: [],
+      styles: [],
+      events: [],
+      children: [],
+      isZagComponent: true,
+      zagType: zagNode.machine ?? 'select',
+      slots,
+      items,
+      machineConfig,
+      sourcePosition,
+    }
+
+    return irNode
+  }
+
   private transformInstance(
     instance: Instance | Each | any,
     parentId?: string,
@@ -390,6 +508,12 @@ class IRTransformer {
     // Handle Conditionals
     if (instance.type === 'Conditional') {
       return this.transformConditional(instance)
+    }
+
+    // Guard against missing component name
+    if (!instance.component) {
+      console.warn('Instance missing component name:', instance)
+      return this.createEmptyNode(instance)
     }
 
     // Handle Zag primitives (Select, Accordion, etc.)
