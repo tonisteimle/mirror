@@ -227,8 +227,6 @@ export class DragRenderer {
     properties?: string,
     textContent?: string
   ): void {
-    console.log('[DragRenderer] renderPaletteGhost called:', { componentName, ghostRect, properties, textContent })
-
     // Create a ComponentItem-like object for the ghost renderer
     const item = {
       id: `palette-${componentName}-${properties || ''}-${textContent || ''}`,
@@ -242,11 +240,9 @@ export class DragRenderer {
 
     // Try sync render (from cache)
     const cached = this.ghostRenderer.renderSync(item)
-    console.log('[DragRenderer] Cache result:', cached ? 'HIT' : 'MISS')
 
     if (cached) {
       // Use the cached rendered element with explicit size
-      console.log('[DragRenderer] Using cached element:', cached.element.outerHTML.slice(0, 100), 'size:', cached.size)
       this.ghostFactory.createFromElement(cached.element, cached.size)
       this.currentGhostSource = { type: 'rendered', componentName }
       return
@@ -254,7 +250,6 @@ export class DragRenderer {
 
     // Show placeholder immediately
     const size = { width: ghostRect.width, height: ghostRect.height }
-    console.log('[DragRenderer] Creating placeholder with size:', size)
     this.ghostFactory.createPlaceholder(size, {
       componentName,
       showLabel: true,
@@ -264,7 +259,6 @@ export class DragRenderer {
 
     // Render async and update when ready
     this.pendingGhostRender = this.ghostRenderer.render(item).then(rendered => {
-      console.log('[DragRenderer] Async render complete:', rendered.element.outerHTML.slice(0, 100), 'size:', rendered.size)
       // Only update if we're still dragging the same component
       if (this.currentGhostSource?.componentName === componentName) {
         // Get current ghost position before replacing
@@ -294,12 +288,10 @@ export class DragRenderer {
             width: rendered.size.width,
             height: rendered.size.height,
           }
-          console.log('[DragRenderer] Updating to measured size:', newRect)
           this.ghostFactory.setRect(newRect)
         }
       }
-    }).catch((err) => {
-      console.error('[DragRenderer] Async render failed:', err)
+    }).catch(() => {
       // Keep placeholder on error
     })
   }

@@ -64,13 +64,10 @@ export class GhostRenderer {
    * Render a component off-screen and return the element
    */
   async render(item: ComponentItem): Promise<RenderedGhost> {
-    console.log('[GhostRenderer] render() called for:', item.template)
-
     // Check cache first
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      console.log('[GhostRenderer] Using cached element')
       // Clone the cached element
       const clone = cached.element.cloneNode(true) as HTMLElement
       return {
@@ -82,16 +79,13 @@ export class GhostRenderer {
 
     // Ensure measure container exists
     const container = this.getOrCreateMeasureContainer()
-    console.log('[GhostRenderer] Measure container:', container.id)
 
     // Build Mirror code for the component
     const code = this.buildCode(item)
-    console.log('[GhostRenderer] Built code:', code)
 
     try {
       // Get Mirror compiler from global scope
       const Mirror = this.getMirror()
-      console.log('[GhostRenderer] Mirror compiler:', Mirror ? 'found' : 'NOT FOUND')
       if (!Mirror) {
         throw new Error('Mirror compiler not loaded')
       }
@@ -99,13 +93,10 @@ export class GhostRenderer {
       // Parse and generate DOM code
       const ast = Mirror.parse(code)
       if (ast.errors && ast.errors.length > 0) {
-        console.error('[GhostRenderer] Parse errors:', ast.errors)
         throw new Error(ast.errors[0].message)
       }
-      console.log('[GhostRenderer] Parse successful')
 
       const jsCode = Mirror.generateDOM(ast)
-      console.log('[GhostRenderer] Generated JS code (first 200 chars):', jsCode.slice(0, 200))
 
       // Execute to get UI object
       const execCode = jsCode
@@ -114,7 +105,6 @@ export class GhostRenderer {
 
       const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
       const ui = fn()
-      console.log('[GhostRenderer] UI object:', ui ? 'created' : 'null')
 
       if (!ui || !ui.root) {
         throw new Error('Component did not render')
@@ -135,16 +125,13 @@ export class GhostRenderer {
       // Get the actual rendered element
       // ui.root is a wrapper div, the actual component is the first child
       const renderedElement = ui.root.firstElementChild as HTMLElement || ui.root
-      console.log('[GhostRenderer] Rendered element tag:', renderedElement.tagName)
 
       // Measure size
       const rect = renderedElement.getBoundingClientRect()
-      console.log('[GhostRenderer] Measured rect:', rect)
       const size = {
         width: Math.max(rect.width, 20), // Minimum 20px
         height: Math.max(rect.height, 20),
       }
-      console.log('[GhostRenderer] Final size:', size)
 
       // Clone for return value
       const clone = renderedElement.cloneNode(true) as HTMLElement
