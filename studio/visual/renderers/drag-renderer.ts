@@ -291,8 +291,9 @@ export class DragRenderer {
           this.ghostFactory.setRect(newRect)
         }
       }
-    }).catch(() => {
-      // Keep placeholder on error
+    }).catch((error) => {
+      // Keep placeholder on error, but log it
+      console.debug('[DragRenderer] Async ghost render failed:', error)
     })
   }
 

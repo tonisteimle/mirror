@@ -88,6 +88,9 @@ export class GhostRenderer {
    * Render a component off-screen and return the element
    */
   async render(item: ComponentItem): Promise<RenderedGhost> {
+    // Start cleanup interval on first render
+    this.startCleanup()
+
     // Check cache first
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
@@ -107,6 +110,9 @@ export class GhostRenderer {
     // Build Mirror code for the component
     const code = this.buildCode(item)
 
+    // Track UI for cleanup on error
+    let ui: any = null
+
     try {
       // Get Mirror compiler from global scope
       const Mirror = this.getMirror()
@@ -117,7 +123,7 @@ export class GhostRenderer {
       // Parse and generate DOM code
       const ast = Mirror.parse(code)
       if (ast.errors && ast.errors.length > 0) {
-        throw new Error(ast.errors[0].message)
+        throw new Error(`Parse error: ${ast.errors[0].message}`)
       }
 
       const jsCode = Mirror.generateDOM(ast)
@@ -128,7 +134,7 @@ export class GhostRenderer {
         .replace(/document\.body\.appendChild\([^)]+\)/g, '')
 
       const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
-      const ui = fn()
+      ui = fn()
 
       if (!ui || !ui.root) {
         throw new Error('Component did not render')
@@ -177,8 +183,15 @@ export class GhostRenderer {
         cleanup: () => {},
       }
     } catch (error) {
-      // Fallback: return a placeholder
-      console.warn('[GhostRenderer] Failed to render component:', error)
+      // Clean up ui.root if it was appended to DOM
+      if (ui?.root?.isConnected) {
+        ui.root.remove()
+      }
+
+      // Log with context
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      console.warn(`[GhostRenderer] Failed to render "${item.name}":`, errorMsg)
+
       return this.createFallback(item)
     }
   }
@@ -307,15 +320,10 @@ export class GhostRenderer {
   }
 
   private getCacheKey(item: ComponentItem): string {
-    // Include all relevant properties in the cache key
-    const parts = [
-      item.id,
-      item.template,
-      item.properties || '',
-      item.textContent || '',
-      JSON.stringify(item.children || []),
-    ]
-    return parts.join('|')
+    // Use item.id as the primary cache key
+    // The id is already unique: `palette-${componentName}-${properties}-${textContent}`
+    // Don't include children in key - they're baked into the rendered element
+    return item.id
   }
 
   private buildCode(item: ComponentItem): string {
