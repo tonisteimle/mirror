@@ -158,9 +158,15 @@ export class GhostRenderer {
 
       // Measure size
       const rect = renderedElement.getBoundingClientRect()
-      const size = {
+      let size = {
         width: Math.max(rect.width, 20), // Minimum 20px
         height: Math.max(rect.height, 20),
+      }
+
+      // If measured at minimum size and defaultSize is available, use defaultSize
+      // This handles layout presets and components with no intrinsic size
+      if (size.width <= 20 && size.height <= 20 && item.defaultSize) {
+        size = { ...item.defaultSize }
       }
 
       // Clone for return value
