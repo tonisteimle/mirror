@@ -108,6 +108,7 @@ export class PreviewController {
   private container: HTMLElement
   private config: Required<PreviewConfig>
   private sourceMap: SourceMap | null = null
+  private sourceMapVersion: number = 0
   private selectedNodeId: string | null = null
   private hoveredNodeId: string | null = null
   private selectionCallbacks: Set<SelectionCallback> = new Set()
@@ -287,7 +288,17 @@ export class PreviewController {
   }
 
   setSourceMap(sourceMap: SourceMap | null): void {
+    this.sourceMapVersion++
     this.sourceMap = sourceMap
+
+    // Invalidate caches - handles will be repositioned on next refresh
+    this.handleManager?.hideHandles()
+    this.resizeManager?.hideHandles()
+  }
+
+  /** Get current SourceMap version for staleness detection */
+  getSourceMapVersion(): number {
+    return this.sourceMapVersion
   }
 
   select(nodeId: string | null): void {

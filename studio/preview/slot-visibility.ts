@@ -71,28 +71,33 @@ export class SlotVisibilityService {
     const processedSlots = new Set<HTMLElement>()
 
     for (const mutation of mutations) {
-      if (mutation.type === 'childList') {
-        // Check if the mutation target is a slot
-        const target = mutation.target as HTMLElement
-        if (target.classList?.contains(this.slotClass)) {
-          if (!processedSlots.has(target)) {
-            this.updateSlotState(target)
-            processedSlots.add(target)
+      try {
+        if (mutation.type === 'childList') {
+          // Check if the mutation target is a slot
+          const target = mutation.target as HTMLElement
+          if (target.classList?.contains(this.slotClass)) {
+            if (!processedSlots.has(target)) {
+              this.updateSlotState(target)
+              processedSlots.add(target)
+            }
           }
-        }
 
-        // Check if any added/removed nodes affect a slot parent
-        const checkNodes = [...mutation.addedNodes, ...mutation.removedNodes]
-        for (const node of checkNodes) {
-          if (node instanceof HTMLElement) {
-            const parentSlot = node.closest(`.${this.slotClass}`) as HTMLElement | null
-            // Ensure parentSlot is within our container (not from outside)
-            if (parentSlot && this.container.contains(parentSlot) && !processedSlots.has(parentSlot)) {
-              this.updateSlotState(parentSlot)
-              processedSlots.add(parentSlot)
+          // Check if any added/removed nodes affect a slot parent
+          const checkNodes = [...mutation.addedNodes, ...mutation.removedNodes]
+          for (const node of checkNodes) {
+            if (node instanceof HTMLElement) {
+              const parentSlot = node.closest(`.${this.slotClass}`) as HTMLElement | null
+              // Ensure parentSlot is within our container (not from outside)
+              if (parentSlot && this.container.contains(parentSlot) && !processedSlots.has(parentSlot)) {
+                this.updateSlotState(parentSlot)
+                processedSlots.add(parentSlot)
+              }
             }
           }
         }
+      } catch (error) {
+        // Don't let errors in mutation handling disconnect the observer
+        console.warn('[SlotVisibility] Error processing mutation:', error)
       }
     }
   }

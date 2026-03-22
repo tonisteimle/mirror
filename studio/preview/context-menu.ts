@@ -36,14 +36,24 @@ export class ContextMenu {
   private contextMenuAbortController: AbortController | null = null
   private menuAbortController: AbortController | null = null
 
+  // Cached bound functions to avoid creating new functions on each attach/show
+  private boundHandleContextMenu: (e: MouseEvent) => void
+  private boundHandleClickOutside: (e: MouseEvent) => void
+  private boundHandleKeyDown: (e: KeyboardEvent) => void
+
   constructor(config: ContextMenuConfig) {
     this.container = config.container
+
+    // Cache bound functions once in constructor
+    this.boundHandleContextMenu = this.handleContextMenu.bind(this)
+    this.boundHandleClickOutside = this.handleClickOutside.bind(this)
+    this.boundHandleKeyDown = this.handleKeyDown.bind(this)
   }
 
   attach(): void {
     this.contextMenuAbortController?.abort()
     this.contextMenuAbortController = new AbortController()
-    this.container.addEventListener('contextmenu', this.handleContextMenu.bind(this), {
+    this.container.addEventListener('contextmenu', this.boundHandleContextMenu, {
       signal: this.contextMenuAbortController.signal,
     })
   }
@@ -157,10 +167,11 @@ export class ContextMenu {
     }
 
     // Add event listeners for closing (with AbortController for cleanup)
-    document.addEventListener('click', this.handleClickOutside.bind(this), {
+    // Uses cached bound functions from constructor
+    document.addEventListener('click', this.boundHandleClickOutside, {
       signal: this.menuAbortController?.signal,
     })
-    document.addEventListener('keydown', this.handleKeyDown.bind(this), {
+    document.addEventListener('keydown', this.boundHandleKeyDown, {
       signal: this.menuAbortController?.signal,
     })
   }
