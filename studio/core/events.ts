@@ -3,6 +3,11 @@
  */
 
 import type { Command } from './commands'
+import type { AST } from '../../src/parser/ast'
+import type { IR } from '../../src/ir/types'
+import type { SourceMap } from '../../src/studio/source-map'
+import type { ComponentDragData } from '../panels/components/types'
+import type { DropZone } from '../visual/models/drop-zone'
 
 export interface ParseError {
   message: string
@@ -68,7 +73,7 @@ export interface StudioEvents {
   'resize:end': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number; x?: number; y?: number }
   /** Drag from palette events (Visual Code System) */
   'drag:start': { type: 'component' | 'container' | 'layout'; component: string; defaultProps?: string }
-  'drop:component': { dragData: any; dropZone: any }
+  'drop:component': { dragData: ComponentDragData; dropZone: DropZone }
   /** Emitted when compilation is requested */
   'compile:requested': Record<string, never>
   /** Emitted when compilation starts */
@@ -76,7 +81,7 @@ export interface StudioEvents {
   /** Emitted when compilation is idle (not in progress) */
   'compile:idle': void
   /** Emitted when compilation completes successfully */
-  'compile:completed': { ast: any; ir: any; sourceMap: any; version?: number; hasErrors?: boolean }
+  'compile:completed': { ast: AST; ir: IR; sourceMap: SourceMap; version?: number; hasErrors?: boolean }
   /** Emitted when compilation fails */
   'compile:failed': { error: string }
   /** User-facing notification events */
