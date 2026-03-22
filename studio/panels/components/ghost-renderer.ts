@@ -33,6 +33,28 @@ interface CacheEntry {
 // ============================================================================
 
 /**
+ * Map layout preset display names to actual Mirror primitives
+ * Layout presets use names like "V-Box", "H-Box" for UI display,
+ * but they should render as "Box" with layout properties.
+ */
+const LAYOUT_NAME_TO_PRIMITIVE: Record<string, string> = {
+  'V-Box': 'Box',
+  'H-Box': 'Box',
+  'Absolute': 'Box',
+  'ZStack': 'Box',
+  'Grid': 'Box',
+  'Sidebar': 'Box',
+  'Header/Footer': 'Box',
+}
+
+/**
+ * Get the actual Mirror primitive template for a component
+ */
+function getActualTemplate(template: string): string {
+  return LAYOUT_NAME_TO_PRIMITIVE[template] || template
+}
+
+/**
  * Escape text content for use in Mirror DSL strings
  */
 function escapeTextContent(text: string): string {
@@ -260,7 +282,8 @@ export class GhostRenderer {
   }
 
   private buildCode(item: ComponentItem): string {
-    let code = item.template
+    // Map layout display names to actual Mirror primitives
+    let code = getActualTemplate(item.template)
 
     if (item.properties) {
       code += ` ${item.properties}`
@@ -280,7 +303,8 @@ export class GhostRenderer {
   }
 
   private buildChildCode(child: ComponentChild, indent: string): string {
-    let code = indent + child.template
+    // Map layout display names to actual Mirror primitives
+    let code = indent + getActualTemplate(child.template)
 
     if (child.properties) {
       code += ` ${child.properties}`

@@ -22,6 +22,8 @@ import {
   createTriggerExtensions,
   setIconTriggerPrimitives,
   getIconTriggerPrimitives,
+  // Ghost Renderer for palette drag previews
+  getGhostRenderer,
 } from './dist/index.js?v=89'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -5968,9 +5970,65 @@ function attachPaletteDragHandlers(container) {
   })
 }
 
+// Warm the ghost renderer cache with all palette items
+function warmPaletteGhostCache() {
+  const ghostRenderer = getGhostRenderer()
+
+  // Convert palette items to ComponentItem format
+  // IMPORTANT: IDs must match what DragRenderer.renderPaletteGhost() uses:
+  // `palette-${componentName}-${properties || ''}-${textContent || ''}`
+  const items = []
+
+  // Add layout presets (they use Box as template with layout properties)
+  for (const preset of LAYOUT_PRESETS) {
+    // Layout presets in the palette use the preset name as component name
+    // but actually render as Box with layout properties
+    const componentName = preset.name
+    const properties = preset.properties || ''
+    items.push({
+      id: `palette-${componentName}-${properties}-`,
+      name: preset.name,
+      category: 'Layouts',
+      template: componentName,
+      properties: properties,
+      icon: 'box',
+    })
+  }
+
+  // Add primitive components
+  for (const comp of PRIMITIVE_COMPONENTS) {
+    const componentName = comp.name
+    const properties = comp.properties || ''
+    const textContent = comp.text || ''
+    items.push({
+      id: `palette-${componentName}-${properties}-${textContent}`,
+      name: comp.name,
+      category: 'Components',
+      template: componentName,
+      properties: properties,
+      textContent: textContent,
+      icon: 'box',
+    })
+  }
+
+  // Warm cache in background (low priority)
+  const scheduleIdle = typeof requestIdleCallback !== 'undefined'
+    ? requestIdleCallback
+    : (cb) => setTimeout(cb, 100)
+
+  scheduleIdle(() => {
+    ghostRenderer.warmCache(items).then(() => {
+      console.log('Studio: Ghost cache warmed for', items.length, 'components')
+    }).catch(() => {
+      // Ignore errors - fallback will be used
+    })
+  })
+}
+
 // Initialize component palette
 function initComponentPalette() {
   updateComponentPalette()
+  warmPaletteGhostCache()  // Pre-render all components for instant ghost
   console.log('Studio: Component palette initialized with', PRIMITIVE_COMPONENTS.length, 'primitives')
 }
 
