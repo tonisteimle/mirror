@@ -127,6 +127,9 @@ export class PreviewController {
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
 
+  // Event subscriptions
+  private unsubscribeCompile: (() => void) | null = null
+
   constructor(config: PreviewConfig) {
     this.container = config.container
     this.config = {
@@ -172,6 +175,13 @@ export class PreviewController {
     this.slotVisibilityService = createSlotVisibilityService({
       container: this.container,
     })
+
+    // Subscribe to compile:completed for automatic refresh
+    // This ensures handles and highlights stay in sync with DOM changes
+    this.unsubscribeCompile = events.on('compile:completed', () => {
+      this.setSourceMap(state.get().sourceMap)
+      this.refresh()
+    })
   }
 
   /** Initialize the Visual Code System (overlay + resize) */
@@ -213,6 +223,9 @@ export class PreviewController {
   }
 
   attach(): void {
+    // Detach first to prevent duplicate listeners if attach() called multiple times
+    this.detach()
+
     if (this.config.enableSelection) {
       this.container.addEventListener('click', this.boundHandleClick)
       // Double-click for inline text editing
@@ -255,6 +268,10 @@ export class PreviewController {
 
   /** Dispose the controller */
   dispose(): void {
+    // Unsubscribe from events
+    this.unsubscribeCompile?.()
+    this.unsubscribeCompile = null
+
     this.detach()
     this.clearSelection()
     this.clearMultiSelectionHighlight()
