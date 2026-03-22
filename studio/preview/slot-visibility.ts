@@ -23,6 +23,10 @@ export class SlotVisibilityService {
   private labelClass: string
   private observer: MutationObserver | null = null
 
+  // Debouncing for performance (PREV-010)
+  private pendingUpdate: number | null = null
+  private pendingSlots: Set<HTMLElement> = new Set()
+
   constructor(config: SlotVisibilityConfig) {
     this.container = config.container
     this.slotClass = config.slotClass ?? 'mirror-slot'
@@ -66,20 +70,16 @@ export class SlotVisibilityService {
 
   /**
    * Handle mutations from MutationObserver
+   * Uses requestAnimationFrame debouncing for performance (PREV-010)
    */
   private handleMutations(mutations: MutationRecord[]): void {
-    const processedSlots = new Set<HTMLElement>()
-
     for (const mutation of mutations) {
       try {
         if (mutation.type === 'childList') {
           // Check if the mutation target is a slot
           const target = mutation.target as HTMLElement
           if (target.classList?.contains(this.slotClass)) {
-            if (!processedSlots.has(target)) {
-              this.updateSlotState(target)
-              processedSlots.add(target)
-            }
+            this.pendingSlots.add(target)
           }
 
           // Check if any added/removed nodes affect a slot parent
@@ -88,9 +88,8 @@ export class SlotVisibilityService {
             if (node instanceof HTMLElement) {
               const parentSlot = node.closest(`.${this.slotClass}`) as HTMLElement | null
               // Ensure parentSlot is within our container (not from outside)
-              if (parentSlot && this.container.contains(parentSlot) && !processedSlots.has(parentSlot)) {
-                this.updateSlotState(parentSlot)
-                processedSlots.add(parentSlot)
+              if (parentSlot && this.container.contains(parentSlot)) {
+                this.pendingSlots.add(parentSlot)
               }
             }
           }
@@ -100,6 +99,29 @@ export class SlotVisibilityService {
         console.warn('[SlotVisibility] Error processing mutation:', error)
       }
     }
+
+    // Debounce updates using requestAnimationFrame (~60fps)
+    this.scheduleUpdate()
+  }
+
+  /**
+   * Schedule a batched update for pending slots
+   */
+  private scheduleUpdate(): void {
+    if (this.pendingUpdate !== null) return
+
+    this.pendingUpdate = requestAnimationFrame(() => {
+      this.pendingUpdate = null
+      // Process all pending slots in one batch
+      for (const slot of this.pendingSlots) {
+        try {
+          this.updateSlotState(slot)
+        } catch (error) {
+          console.warn('[SlotVisibility] Error updating slot:', error)
+        }
+      }
+      this.pendingSlots.clear()
+    })
   }
 
   /**
@@ -137,6 +159,12 @@ export class SlotVisibilityService {
    * Dispose the service
    */
   dispose(): void {
+    // Cancel any pending animation frame
+    if (this.pendingUpdate !== null) {
+      cancelAnimationFrame(this.pendingUpdate)
+      this.pendingUpdate = null
+    }
+    this.pendingSlots.clear()
     this.detach()
   }
 }

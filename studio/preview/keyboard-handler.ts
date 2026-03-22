@@ -249,6 +249,11 @@ export class KeyboardHandler {
     const ctx = this.getCommandContext()
     if (!ctx) {
       console.warn('[KeyboardHandler] No command context available for position update')
+      // PREV-013: Provide user feedback instead of silent failure
+      events.emit('notification:warning', {
+        message: 'Aktion nicht verfügbar - bitte erneut versuchen',
+        duration: 2000,
+      })
       return
     }
 

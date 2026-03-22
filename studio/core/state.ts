@@ -355,41 +355,33 @@ export const actions = {
     }
 
     // Resolve deferred selection (unified API - preferred)
+    // IMPORTANT: Synchronous resolution to prevent race conditions with rapid compiles
+    // Previously used Promise.resolve().then() which could lose selections (PREV-005)
     if (hasDeferredSelection) {
-      // Capture version to prevent race condition with rapid compiles
-      const capturedVersion = newVersion
-      Promise.resolve().then(() => {
-        // Only resolve if no newer compile has happened
-        if (state.get().compileVersion !== capturedVersion) {
-          DEBUG_STATE && console.log('[State] Skipping deferred selection - newer compile available')
-          // Clear stale deferred selection
-          state.set({ deferredSelection: null })
-          return
-        }
+      try {
         const resolvedNodeId = actions.resolveDeferredSelection()
         if (resolvedNodeId) {
           DEBUG_STATE && console.log('[State] Deferred selection resolved after compile:', resolvedNodeId)
         }
-      }).catch(error => {
+      } catch (error) {
         console.error('[State] Error resolving deferred selection:', error)
         events.emit('state:error', { error, context: 'deferred selection resolution' })
-      })
+      }
       return // Skip selection validation when we have deferred selection
     }
 
     // Resolve pending selection (line-based) - legacy API
+    // IMPORTANT: Synchronous resolution to prevent race conditions (PREV-005)
     if (hasPendingSelection && !hasQueuedSelection) {
-      // Use Promise.resolve().then() for more predictable microtask scheduling
-      // This is more deterministic than setTimeout(0) which uses macrotask queue
-      Promise.resolve().then(() => {
+      try {
         const resolvedNodeId = actions.resolvePendingSelection()
         if (resolvedNodeId) {
           DEBUG_STATE && console.log('[State] Pending selection resolved after compile:', resolvedNodeId)
         }
-      }).catch(error => {
+      } catch (error) {
         console.error('[State] Error resolving pending selection:', error)
         events.emit('state:error', { error, context: 'pending selection resolution' })
-      })
+      }
       return // Skip selection validation when we have pending selection
     }
 

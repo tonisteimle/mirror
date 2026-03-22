@@ -1,10 +1,10 @@
 # Preview System Audit Report
 
 **Datum:** 2026-03-22
-**Version:** 1.4
-**Status:** Größtenteils behoben, einige Restarbeiten
+**Version:** 1.5
+**Status:** Fast vollständig behoben
 
-> **Update 2026-03-22 (v1.4):** PREV-020, PREV-016, PREV-017, PREV-018 behoben. Sizing-Konstanten zentralisiert. Verbleibende Issues: PREV-005, PREV-010, PREV-011, PREV-013, PREV-015 (teilweise).
+> **Update 2026-03-22 (v1.5):** PREV-005, PREV-010, PREV-013 behoben. Synchrone Selection-Auflösung, MutationObserver Debouncing, KeyboardHandler UX. Verbleibende Issues: PREV-011, PREV-015 (teilweise).
 
 ---
 
@@ -286,7 +286,7 @@ export function setPreviewController(controller: PreviewController | null): void
 
 ---
 
-### PREV-005: Race Condition - Deferred Selection
+### PREV-005: Race Condition - Deferred Selection ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
@@ -294,6 +294,7 @@ export function setPreviewController(controller: PreviewController | null): void
 | **Datei** | `studio/core/state.ts` |
 | **Zeilen** | 358-378 |
 | **Typ** | Race Condition |
+| **Status** | ✅ Behoben in v1.5 |
 
 #### Beschreibung
 
@@ -592,7 +593,7 @@ private invalidateCaches(): void {
 
 ---
 
-### PREV-010: SlotVisibilityService mit breitem MutationObserver
+### PREV-010: SlotVisibilityService mit breitem MutationObserver ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
@@ -600,6 +601,7 @@ private invalidateCaches(): void {
 | **Datei** | `studio/preview/slot-visibility.ts` |
 | **Zeilen** | 40-42 |
 | **Typ** | Performance |
+| **Status** | ✅ Behoben in v1.5 |
 
 #### Beschreibung
 
@@ -739,7 +741,7 @@ attach(): void {
 
 ---
 
-### PREV-013: Fehlendes Error-Handling in KeyboardHandler
+### PREV-013: Fehlendes Error-Handling in KeyboardHandler ✅ BEHOBEN
 
 | Attribut | Wert |
 |----------|------|
@@ -747,6 +749,7 @@ attach(): void {
 | **Datei** | `studio/preview/keyboard-handler.ts` |
 | **Zeile** | 250 |
 | **Typ** | UX |
+| **Status** | ✅ Behoben in v1.5 |
 
 #### Beschreibung
 
@@ -1001,12 +1004,13 @@ describe('Deferred Selection', () => {
 | PREV-002 | Handle Listener Leak | Mittel | Hoch | **P0** | ✅ |
 | PREV-003 | Breadcrumb Listener Leak | Klein | Mittel | **P0** | ✅ |
 | PREV-004 | Global Singleton Leak | Klein | Hoch | **P0** | ✅ |
-| PREV-005 | Deferred Selection Race | Mittel | Hoch | **P1** | 🔶 |
+| PREV-005 | Deferred Selection Race | Mittel | Hoch | **P1** | ✅ |
 | PREV-006 | Context Menu Bind | Klein | Niedrig | **P2** | ✅ |
 | PREV-007 | compile:completed Event | Klein | Hoch | **P1** | ✅ |
 | PREV-008 | Multi-Selection Events | Klein | Mittel | **P1** | ✅ |
 | PREV-009 | SourceMap Versioning | Mittel | Mittel | **P2** | ✅ |
-| PREV-010 | MutationObserver Perf | Mittel | Mittel | **P2** | ⚠️ |
+| PREV-010 | MutationObserver Perf | Mittel | Mittel | **P2** | ✅ |
+| PREV-013 | KeyboardHandler UX | Klein | Niedrig | **P2** | ✅ |
 | PREV-016 | Script-Akkumulation | Klein | Mittel | **P2** | ✅ |
 | PREV-017 | Hardcoded Fallbacks | Klein | Niedrig | **P3** | ✅ |
 | PREV-018 | MIN_ELEMENT_SIZE | Klein | Niedrig | **P3** | ✅ |
@@ -1016,10 +1020,7 @@ describe('Deferred Selection', () => {
 
 | Priorität | Issue | Aufwand |
 |-----------|-------|---------|
-| **P1** | PREV-005 (Deferred Selection Race) | Mittel |
-| **P2** | PREV-010 (MutationObserver Performance) | Mittel |
 | **P2** | PREV-011 (Type Assertions) | Mittel |
-| **P2** | PREV-013 (KeyboardHandler UX) | Klein |
 | **P3** | PREV-015 (Constants Migration) | Mittel |
 
 ---
@@ -1067,6 +1068,7 @@ describe('Deferred Selection', () => {
 | 1.2 | 2026-03-22 | P2 Fixes: PREV-006, PREV-009, PREV-014, PREV-015 behoben |
 | 1.3 | 2026-03-22 | Re-Audit: PREV-008 behoben, PREV-020 neu identifiziert, PREV-015 als teilweise markiert |
 | 1.4 | 2026-03-22 | PREV-016, PREV-017, PREV-018, PREV-020 behoben. Sizing-Konstanten zentralisiert |
+| 1.5 | 2026-03-22 | PREV-005, PREV-010, PREV-013 behoben. Synchrone Selection, RAF Debouncing, UX |
 
 ### Behobene Issues
 
@@ -1087,13 +1089,13 @@ describe('Deferred Selection', () => {
 | PREV-017 | Hardcoded 400 → `DEFAULT_CONTAINER_SIZE` Konstante | v1.4 |
 | PREV-018 | Zentrale Sizing-Konstanten in `constants/sizing.ts` | v1.4 |
 | PREV-020 | `unsubscribeResize` für `resize:end` Event | v1.4 |
+| PREV-005 | Synchrone Selection-Auflösung statt Promise.resolve() | v1.5 |
+| PREV-010 | requestAnimationFrame Debouncing für MutationObserver | v1.5 |
+| PREV-013 | `notification:warning` Event bei fehlendem CommandContext | v1.5 |
 
-### Offene Issues (v1.4)
+### Offene Issues (v1.5)
 
 | ID | Status | Beschreibung |
 |----|--------|--------------|
-| PREV-005 | ⚠️ OFFEN | Deferred Selection Race Condition |
-| PREV-010 | ⚠️ OFFEN | MutationObserver mit `subtree:true` Performance |
 | PREV-011 | ⚠️ OFFEN | Type Assertions ohne Guards (`as any`, Non-null assertions) |
-| PREV-013 | ⚠️ OFFEN | KeyboardHandler nur console.warn ohne User-Feedback |
 | PREV-015 | ⚠️ TEILWEISE | Constants erstellt, aber 15+ Dateien nutzen sie nicht |
