@@ -239,7 +239,9 @@ export class DragRenderer {
     }
 
     // Try sync render (from cache)
+    console.log('[DragRenderer] renderPaletteGhost item:', JSON.stringify(item))
     const cached = this.ghostRenderer.renderSync(item)
+    console.log('[DragRenderer] Cache result:', cached ? 'HIT' : 'MISS', cached?.size)
 
     if (cached) {
       // Use the cached rendered element with explicit size
