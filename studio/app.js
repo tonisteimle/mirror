@@ -26,7 +26,9 @@ import {
   getGhostRenderer,
   // DragDropService - must use studio bundle to share GhostRenderer instance
   DragDropService,
-} from './dist/index.js?v=93'
+  // Layout presets from studio bundle (single source of truth)
+  LAYOUT_PRESETS as STUDIO_LAYOUT_PRESETS,
+} from './dist/index.js?v=95'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -5982,18 +5984,28 @@ function warmPaletteGhostCache() {
   // `palette-${componentName}-${properties || ''}-${textContent || ''}`
   const items = []
 
+  // Create a lookup map for studio layout presets (for defaultSize and children)
+  const studioPresetMap = new Map()
+  for (const preset of STUDIO_LAYOUT_PRESETS) {
+    studioPresetMap.set(preset.name, preset)
+  }
+
   // Add layout presets (they use Box as template with layout properties)
   for (const preset of LAYOUT_PRESETS) {
     // Layout presets in the palette use the preset name as component name
     // but actually render as Box with layout properties
     const componentName = preset.name
     const properties = preset.properties || ''
+    // Get additional data from studio presets (defaultSize, children)
+    const studioPreset = studioPresetMap.get(preset.name)
     items.push({
       id: `palette-${componentName}-${properties}-`,
       name: preset.name,
       category: 'Layouts',
       template: componentName,
       properties: properties,
+      children: studioPreset?.children,
+      defaultSize: studioPreset?.defaultSize,
       icon: 'box',
     })
   }

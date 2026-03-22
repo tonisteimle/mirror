@@ -2,6 +2,33 @@
 
 Zielarchitektur für die Integration von Zag als Behavior-Engine in Mirror.
 
+## Inhaltsverzeichnis
+
+1. [Übersicht](#übersicht)
+2. [Schichten](#schichten)
+3. [Datenfluss](#datenfluss)
+4. [Komponenten-Syntax](#komponenten-syntax)
+5. [Komponenten-Mapping (Zag API)](#komponenten-mapping-zag-api)
+6. [Event-Integration](#event-integration)
+7. [Data Binding](#data-binding)
+8. [Animation & Transitions](#animation--transitions)
+9. [Dateistruktur](#dateistruktur-ziel)
+10. [Dependencies](#dependencies)
+11. [Implementierungs-Phasen](#implementierungs-phasen)
+12. [Koexistenz-Strategie](#koexistenz-strategie)
+13. [SourceMap für Slots](#sourcemap-für-slots)
+14. [PropertyPanel Integration](#propertypanel-integration)
+15. [Machine Lifecycle](#machine-lifecycle)
+16. [Code-Modifier Integration](#code-modifier-integration)
+17. [Portal-Handling](#portal-handling)
+18. [Fehlerbehandlung](#fehlerbehandlung)
+19. [Primitive-Ablösung](#primitive-ablösung)
+20. [Migration Path](#migration-path)
+21. [Testing-Strategie](#testing-strategie)
+22. [Risiken & Mitigations](#risiken--mitigations)
+
+---
+
 ## Übersicht
 
 ```
@@ -244,27 +271,94 @@ Mirror Source
 
 ## Komponenten-Syntax
 
-Alle Zag-Komponenten folgen konsistenten Syntax-Patterns.
+Alle 51 Zag-Komponenten folgen konsistenten Syntax-Patterns.
 
-> **Vollständige Referenz:** [features/zag-components/syntax-overview.md](../../features/zag-components/syntax-overview.md)
+> **Vollständige Referenz:** [features/zag-components/syntax-reference.md](../../features/zag-components/syntax-reference.md)
 
-### Übersicht
+### Übersicht nach Kategorien
 
-| Komponente | Pattern | Slots | Keywords |
-|------------|---------|-------|----------|
-| **Select** | Trigger + Content | Trigger, Content, Item, Icon, Pill | `multiple`, `searchable` |
-| **Dialog** | Trigger + Content | Trigger, Backdrop, Content, Title, Close | `modal` |
-| **Menu** | Trigger + Content | Trigger, Content, Item, Separator | - |
-| **Tabs** | List + Item | TabList, Tab, TabPanel | `orientation` |
-| **Accordion** | List + Item | AccordionItem, Trigger, Content | `collapsible`, `multiple` |
-| **Tooltip** | Trigger + Content | Content, Arrow | `position`, `delay` |
-| **Slider** | Track + Thumb | Track, Range, Thumb | `range` |
-| **Checkbox** | Control + Indicator | Control, Indicator, Label | `indeterminate` |
-| **RadioGroup** | List + Item | Radio, Control, Indicator | - |
-| **Switch** | Track + Thumb | Track, Thumb, Label | - |
-| **DatePicker** | Trigger + Content | Trigger, Content, Day, Header | `mode "range"` |
-| **NumberInput** | Control | Input, DecrementButton, IncrementButton | `formatOptions` |
-| **Popover** | Trigger + Content | Trigger, Content, Arrow | `position` |
+#### Selection (5 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Select | Trigger + Content | `multiple`, `searchable`, `clearable` |
+| Menu | Trigger + Content | `contextmenu` |
+| Combobox | Input + Content | `multiple`, `autocomplete` |
+| TreeView | Container + Branch/Item | `multiple` |
+| ListNavigation | List + Item | - |
+
+#### Form Controls (11 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Checkbox | Control + Indicator | `indeterminate`, `disabled` |
+| RadioGroup | Group + Radio | `orientation` |
+| Switch | Track + Thumb | `disabled` |
+| Slider | Track + Thumb | `range`, `orientation` |
+| NumberInput | Input + Buttons | `formatOptions`, `min`, `max` |
+| PinInput | Input + Field | `otp`, `mask` |
+| RatingGroup | Control + Item | `max`, `allowHalf`, `readonly` |
+| ToggleGroup | Group + Item | `multiple` |
+| SignaturePad | Control + Segment | `readonly`, `disabled` |
+| EditableText | Display + Input | `submitMode`, `startWithEditView` |
+| Clipboard | Trigger + Input | - |
+
+#### Overlays (5 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Dialog | Trigger + Backdrop + Content | `modal`, `closeOnEscape` |
+| Popover | Trigger + Content | `position`, `closeOnEscape` |
+| Tooltip | Trigger + Content | `position`, `delay` |
+| HoverCard | Trigger + Content | `delay` |
+| Toast | Container + Item | `placement`, `duration` |
+
+#### Navigation (4 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Tabs | List + Panel | `orientation`, `activationMode` |
+| Accordion | Item + Trigger + Content | `collapsible`, `multiple` |
+| Pagination | Container + Items | `count`, `pageSize` |
+| Steps | Container + Item | `orientation`, `linear` |
+
+#### Date & Time (3 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| DatePicker | Trigger + Content + Grid | `mode "range"`, `locale` |
+| TimePicker | Trigger + Content | `format`, `min`, `max` |
+| Timer | Display + Controls | `countdown`, `autoStart` |
+
+#### Media & Upload (6 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| FileUpload | Dropzone + Item | `multiple`, `accept`, `maxFiles` |
+| Avatar | Image + Fallback | `size` |
+| Carousel | Container + Item | `loop`, `autoplay` |
+| ColorPicker | Trigger + Content | `format` |
+| QRCode | Container | `value`, `size` |
+| Angle | Control + Thumb | - |
+
+#### Layout & Structure (8 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Collapsible | Trigger + Content | `disabled` |
+| Splitter | Panel + ResizeTrigger | `orientation` |
+| ProgressBar | Track + Indicator | `max`, `indeterminate` |
+| ProgressCircle | Circle + Indicator | `max`, `indeterminate` |
+| Segment | Container + Item | - |
+| TagsInput | Container + Tag + Input | `max`, `allowDuplicates` |
+| Highlight | Container | `query`, `matchAll` |
+| FloatingPanel | Trigger + Content | `position` |
+
+#### Utility (9 Komponenten)
+| Komponente | Pattern | Keywords |
+|------------|---------|----------|
+| Tour | Container + Step | `closeOnEscape` |
+| Presence | Container | `present`, `lazyMount` |
+| FocusTrap | Container | `disabled` |
+| ScrollArea | Container + Scrollbar | `orientation` |
+| Frame | Container | `src` |
+| Field | Label + Input + Error | `required`, `invalid` |
+| Fieldset | Legend + Fields | `disabled` |
+| Format | Container | `number`, `bytes`, `date` |
+| Locale | Provider | `locale` |
 
 ### Design-Prinzipien
 
@@ -296,6 +390,14 @@ Track + Thumb         →  Slider, Switch
 | `expanded:` | Accordion offen | `[data-state="open"]` |
 | `open:` | Dropdown/Dialog offen | `[data-state="open"]` |
 | `disabled:` | Deaktiviert | `[data-disabled]` |
+| `invalid:` | Validierungsfehler | `[data-invalid]` |
+| `valid:` | Validierung OK | `[data-valid]` |
+| `loading:` | Laden aktiv | `[data-loading]` |
+| `dragging:` | Drag aktiv | `[data-dragging]` |
+| `pressed:` | Button gedrückt | `[data-pressed]` |
+| `indeterminate:` | Teilweise ausgewählt | `[data-state="indeterminate"]` |
+| `readonly:` | Nur lesen | `[data-readonly]` |
+| `required:` | Pflichtfeld | `[data-required]` |
 
 ### Beispiele
 
@@ -546,7 +648,242 @@ selected:             →   [data-state="checked"]
 disabled:             →   [data-disabled]
 open:                 →   [data-state="open"]
 focus:                →   [data-focus]
+invalid:              →   [data-invalid]
+loading:              →   [data-loading]
+dragging:             →   [data-dragging]
 ```
+
+---
+
+## Event-Integration
+
+Zag-Events werden in Mirror-Events übersetzt.
+
+### Zag → Mirror Event Mapping
+
+```
+Zag Event                 Mirror Event
+──────────────────────────────────────────────────────
+onValueChange         →   onchange
+onOpenChange          →   onopen / onclose
+onFocusChange         →   onfocus / onblur
+onHighlightChange     →   onhighlight
+onInputValueChange    →   oninput
+onFileAccept          →   onaccept
+onFileReject          →   onreject
+```
+
+### Syntax
+
+```mirror
+Select placeholder "Wähle..."
+  onchange: assign $selected
+  onopen: call trackOpen
+  onclose: call trackClose
+
+  Item "Option A"
+  Item "Option B"
+```
+
+### Implementierung
+
+```typescript
+// Event-Handler werden an Machine-Callbacks gebunden
+const machineConfig = {
+  id: nodeId,
+  onValueChange: (details) => {
+    // Mirror Event auslösen
+    emitEvent(nodeId, 'change', details.value)
+
+    // Actions ausführen (assign, call, etc.)
+    executeActions(node.events.onchange, details)
+  },
+  onOpenChange: (details) => {
+    if (details.open) {
+      emitEvent(nodeId, 'open')
+      executeActions(node.events.onopen)
+    } else {
+      emitEvent(nodeId, 'close')
+      executeActions(node.events.onclose)
+    }
+  }
+}
+```
+
+### Event-Details
+
+Zag liefert strukturierte Event-Details:
+
+```typescript
+// Select onValueChange
+{
+  value: string[],           // Ausgewählte Werte
+  items: CollectionItem[],   // Ausgewählte Items
+}
+
+// DatePicker onValueChange
+{
+  value: DateValue[],        // Ausgewählte Daten
+  valueAsString: string[],   // Formatierte Strings
+}
+
+// Slider onValueChange
+{
+  value: number[],           // Aktuelle Werte
+}
+
+// FileUpload onFileAccept
+{
+  files: File[],             // Akzeptierte Dateien
+}
+```
+
+---
+
+## Data Binding
+
+Mirror unterstützt deklarative Datenbindung für Zag-Komponenten.
+
+### Collection Binding
+
+```mirror
+// Statische Items
+Select
+  Item "Apple"
+  Item "Banana"
+
+// Dynamische Items via data
+Select data $fruits
+
+// Mit Value/Label Mapping
+Select data $countries, valueKey "code", labelKey "name"
+```
+
+### Implementierung
+
+```typescript
+// Compiler generiert Collection aus data
+function buildCollection(dataRef: string, options: CollectionOptions) {
+  const data = resolveData(dataRef)  // $fruits → [{...}, {...}]
+
+  return createListCollection({
+    items: data,
+    itemToString: (item) => item[options.labelKey] || item.label || item,
+    itemToValue: (item) => item[options.valueKey] || item.value || item,
+  })
+}
+```
+
+### Two-Way Binding
+
+```mirror
+// Binding an Variable
+Select value $selectedCountry
+  Item value "de", label "Deutschland"
+  Item value "at", label "Österreich"
+
+// Bei Änderung wird $selectedCountry automatisch aktualisiert
+```
+
+### Controlled vs Uncontrolled
+
+```mirror
+// Uncontrolled (Zag verwaltet State)
+Select defaultValue "de"
+  Item "Deutschland"
+
+// Controlled (Mirror verwaltet State)
+Select value $country, onchange: assign $country
+  Item "Deutschland"
+```
+
+### Implementierung Controlled Mode
+
+```typescript
+// Bei controlled: Mirror State als Source of Truth
+const machineConfig = {
+  value: () => getVariable('$country'),  // Getter
+  onValueChange: (details) => {
+    setVariable('$country', details.value)  // Sync zurück
+  }
+}
+```
+
+---
+
+## Animation & Transitions
+
+Zag unterstützt Presence-Animationen für Overlays und Collapsibles.
+
+### Presence-Konzept
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Presence steuert Mount/Unmount mit Animation          │
+│                                                         │
+│  closed → mounting → open → unmounting → closed         │
+│              ↓                    ↓                     │
+│         CSS enter            CSS exit                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Syntax
+
+```mirror
+Dialog modal
+  Content:
+    transition "fade", duration 200
+
+  // Oder mit Keyframes
+  Content:
+    enter: opacity 0 → 1, scale 0.95 → 1
+    exit: opacity 1 → 0, scale 1 → 0.95
+```
+
+### Implementierung
+
+```typescript
+// Zag Presence-Integration
+const dialogApi = dialog.connect(state, send, normalizeProps)
+
+// Content wird nur gerendert wenn present
+if (dialogApi.open || isAnimating) {
+  renderContent({
+    ...dialogApi.getContentProps(),
+    'data-state': dialogApi.open ? 'open' : 'closed',
+  })
+}
+```
+
+### CSS-Generierung
+
+```css
+/* Generiert aus: transition "fade", duration 200 */
+[data-scope="dialog"][data-part="content"] {
+  transition: opacity 200ms ease-out;
+}
+
+[data-scope="dialog"][data-part="content"][data-state="open"] {
+  opacity: 1;
+}
+
+[data-scope="dialog"][data-part="content"][data-state="closed"] {
+  opacity: 0;
+}
+```
+
+### Vordefinierte Transitions
+
+| Name | Beschreibung |
+|------|--------------|
+| `fade` | Opacity 0 → 1 |
+| `scale` | Scale 0.95 → 1 + Fade |
+| `slide-up` | TranslateY 10px → 0 + Fade |
+| `slide-down` | TranslateY -10px → 0 + Fade |
+| `slide-left` | TranslateX 10px → 0 + Fade |
+| `slide-right` | TranslateX -10px → 0 + Fade |
+
+---
 
 ## Dateistruktur (Ziel)
 
@@ -602,85 +939,351 @@ studio/
 
 ## Dependencies
 
+Zag-Packages werden nach Bedarf installiert (Tree Shaking).
+
+### Core (immer benötigt)
+
 ```json
 {
   "dependencies": {
     "@zag-js/core": "^1.x",
-    "@zag-js/select": "^1.x",
-    "@zag-js/combobox": "^1.x",
-    "@zag-js/dialog": "^1.x",
-    "@zag-js/menu": "^1.x",
-    "@zag-js/tabs": "^1.x",
-    "@zag-js/accordion": "^1.x",
-    "@zag-js/tooltip": "^1.x",
-    "@zag-js/popover": "^1.x",
-    "@zag-js/slider": "^1.x",
-    "@zag-js/number-input": "^1.x",
-    "@zag-js/date-picker": "^1.x"
+    "@zag-js/dom-query": "^1.x",
+    "@zag-js/interact-outside": "^1.x"
   }
 }
 ```
 
+### Komponenten (nach Kategorie)
+
+```json
+{
+  "dependencies": {
+    // Selection
+    "@zag-js/select": "^1.x",
+    "@zag-js/combobox": "^1.x",
+    "@zag-js/menu": "^1.x",
+    "@zag-js/tree-view": "^1.x",
+
+    // Form Controls
+    "@zag-js/checkbox": "^1.x",
+    "@zag-js/radio-group": "^1.x",
+    "@zag-js/switch": "^1.x",
+    "@zag-js/slider": "^1.x",
+    "@zag-js/number-input": "^1.x",
+    "@zag-js/pin-input": "^1.x",
+    "@zag-js/rating-group": "^1.x",
+    "@zag-js/toggle-group": "^1.x",
+    "@zag-js/signature-pad": "^1.x",
+    "@zag-js/editable": "^1.x",
+    "@zag-js/clipboard": "^1.x",
+
+    // Overlays
+    "@zag-js/dialog": "^1.x",
+    "@zag-js/popover": "^1.x",
+    "@zag-js/tooltip": "^1.x",
+    "@zag-js/hover-card": "^1.x",
+    "@zag-js/toast": "^1.x",
+
+    // Navigation
+    "@zag-js/tabs": "^1.x",
+    "@zag-js/accordion": "^1.x",
+    "@zag-js/pagination": "^1.x",
+    "@zag-js/steps": "^1.x",
+
+    // Date & Time
+    "@zag-js/date-picker": "^1.x",
+    "@zag-js/time-picker": "^1.x",
+    "@zag-js/timer": "^1.x",
+
+    // Media & Upload
+    "@zag-js/file-upload": "^1.x",
+    "@zag-js/avatar": "^1.x",
+    "@zag-js/carousel": "^1.x",
+    "@zag-js/color-picker": "^1.x",
+    "@zag-js/qr-code": "^1.x",
+    "@zag-js/angle-slider": "^1.x",
+
+    // Layout & Structure
+    "@zag-js/collapsible": "^1.x",
+    "@zag-js/splitter": "^1.x",
+    "@zag-js/progress": "^1.x",
+    "@zag-js/tags-input": "^1.x",
+    "@zag-js/floating-panel": "^1.x",
+
+    // Utility
+    "@zag-js/tour": "^1.x",
+    "@zag-js/presence": "^1.x",
+    "@zag-js/focus-trap": "^1.x"
+  }
+}
+```
+
+> **Hinweis:** Nicht alle Packages werden gleichzeitig benötigt. Der Compiler ermittelt verwendete Komponenten und generiert nur die benötigten Imports.
+
 ## Implementierungs-Phasen
+
+Alle 51 Zag-Komponenten werden in 8 Phasen implementiert.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Phase 1   │  Phase 2   │  Phase 3   │  Phase 4   │  Phase 5-8         │
+│  Foundation│  Selection │  Forms     │  Overlays  │  Rest              │
+│  (Infra)   │  (5)       │  (11)      │  (5)       │  (30)              │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ### Phase 1: Foundation
 
-**Ziel:** Select-Komponente im Preview
+**Ziel:** Infrastruktur für Zag-Integration
 
 ```
-□ Zag Dependencies installieren
+□ Zag Core Dependencies installieren
 □ Zag Runtime Basis (machine-runner, dom-binder)
-□ Select Machine Integration
-□ Slot Mapping für Select
-□ Basic Styling (hover, selected)
+□ Slot Mapping System
+□ State → CSS Transformation
+□ Event-Integration
 □ Preview Integration
+□ SourceMap für Slots
 ```
 
-**Deliverable:** `Select` mit Items funktioniert im Preview
+**Deliverable:** Infrastruktur bereit für Komponenten
 
-### Phase 2: Full Select
+---
 
-**Ziel:** Alle Select-Varianten
+### Phase 2: Selection (5 Komponenten)
+
+**Ziel:** Alle Selection-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Select | Hoch | - |
+| Menu | Hoch | - |
+| Combobox | Hoch | Select |
+| TreeView | Mittel | - |
+| ListNavigation | Niedrig | - |
 
 ```
-□ Multiple Selection
-□ Searchable (Combobox Machine)
-□ Grouped Items
-□ Custom Item Content
-□ Keyboard Navigation (automatisch via Zag)
-□ Accessibility (automatisch via Zag)
+□ Select (single, multiple, grouped)
+□ Menu (dropdown, context menu)
+□ Combobox (searchable select)
+□ TreeView (hierarchische Auswahl)
+□ ListNavigation (keyboard nav)
 ```
 
-**Deliverable:** Select feature-complete
+**Deliverable:** Selection-Komponenten feature-complete
 
-### Phase 3: Export
+---
+
+### Phase 3: Form Controls (11 Komponenten)
+
+**Ziel:** Alle Form-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Checkbox | Hoch | - |
+| RadioGroup | Hoch | - |
+| Switch | Hoch | - |
+| Slider | Hoch | - |
+| NumberInput | Hoch | - |
+| PinInput | Mittel | - |
+| RatingGroup | Mittel | - |
+| ToggleGroup | Mittel | - |
+| EditableText | Mittel | - |
+| SignaturePad | Niedrig | - |
+| Clipboard | Niedrig | - |
+
+```
+□ Checkbox (single, indeterminate)
+□ RadioGroup (mit custom styling)
+□ Switch (on/off toggle)
+□ Slider (single, range, vertical)
+□ NumberInput (mit increment/decrement)
+□ PinInput (OTP, verification codes)
+□ RatingGroup (stars, custom icons)
+□ ToggleGroup (single, multiple)
+□ EditableText (inline editing)
+□ SignaturePad (Unterschriften)
+□ Clipboard (copy/paste)
+```
+
+**Deliverable:** Form Controls feature-complete
+
+---
+
+### Phase 4: Overlays (5 Komponenten)
+
+**Ziel:** Alle Overlay-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Dialog | Hoch | Presence |
+| Popover | Hoch | - |
+| Tooltip | Hoch | - |
+| HoverCard | Mittel | - |
+| Toast | Mittel | - |
+
+```
+□ Dialog (modal, non-modal, nested)
+□ Popover (positioning, arrow)
+□ Tooltip (delay, positioning)
+□ HoverCard (rich content preview)
+□ Toast (notifications, stacking)
+```
+
+**Deliverable:** Overlay-Komponenten feature-complete
+
+---
+
+### Phase 5: Navigation (4 Komponenten)
+
+**Ziel:** Alle Navigation-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Tabs | Hoch | - |
+| Accordion | Hoch | Collapsible |
+| Pagination | Mittel | - |
+| Steps | Mittel | - |
+
+```
+□ Tabs (horizontal, vertical, lazy)
+□ Accordion (single, multiple, collapsible)
+□ Pagination (pages, page size)
+□ Steps (wizard, linear/non-linear)
+```
+
+**Deliverable:** Navigation-Komponenten feature-complete
+
+---
+
+### Phase 6: Date & Time + Media (9 Komponenten)
+
+**Ziel:** Date/Time und Media-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| DatePicker | Hoch | - |
+| TimePicker | Mittel | - |
+| Timer | Niedrig | - |
+| FileUpload | Hoch | - |
+| Avatar | Mittel | - |
+| Carousel | Mittel | - |
+| ColorPicker | Mittel | Popover |
+| QRCode | Niedrig | - |
+| Angle | Niedrig | - |
+
+```
+□ DatePicker (single, range, multi)
+□ TimePicker (12h, 24h)
+□ Timer (countdown, stopwatch)
+□ FileUpload (drag & drop, multiple)
+□ Avatar (image, fallback, group)
+□ Carousel (slides, autoplay)
+□ ColorPicker (formats, swatches)
+□ QRCode (generate QR codes)
+□ Angle (angle/rotation input)
+```
+
+**Deliverable:** Date/Time und Media feature-complete
+
+---
+
+### Phase 7: Layout & Structure (8 Komponenten)
+
+**Ziel:** Layout-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Collapsible | Hoch | Presence |
+| ProgressBar | Hoch | - |
+| ProgressCircle | Mittel | - |
+| TagsInput | Mittel | - |
+| Splitter | Mittel | - |
+| Segment | Niedrig | - |
+| Highlight | Niedrig | - |
+| FloatingPanel | Niedrig | - |
+
+```
+□ Collapsible (expand/collapse)
+□ ProgressBar (determinate, indeterminate)
+□ ProgressCircle (circular progress)
+□ TagsInput (tags, chips)
+□ Splitter (resizable panels)
+□ Segment (segmented control)
+□ Highlight (text highlighting)
+□ FloatingPanel (draggable panels)
+```
+
+**Deliverable:** Layout-Komponenten feature-complete
+
+---
+
+### Phase 8: Utility (9 Komponenten)
+
+**Ziel:** Utility-Komponenten
+
+| Komponente | Priorität | Abhängigkeit |
+|------------|-----------|--------------|
+| Field | Hoch | - |
+| Fieldset | Hoch | Field |
+| Presence | Hoch | - |
+| FocusTrap | Mittel | - |
+| ScrollArea | Mittel | - |
+| Tour | Mittel | Popover |
+| Frame | Niedrig | - |
+| Format | Niedrig | - |
+| Locale | Niedrig | - |
+
+```
+□ Field (label, input, error, hint)
+□ Fieldset (grouped fields)
+□ Presence (mount/unmount animation)
+□ FocusTrap (keyboard focus management)
+□ ScrollArea (custom scrollbars)
+□ Tour (onboarding, feature tours)
+□ Frame (iframe wrapper)
+□ Format (number, date, bytes formatting)
+□ Locale (i18n provider)
+```
+
+**Deliverable:** Utility-Komponenten feature-complete
+
+---
+
+### Phase 9: Export & Polish
 
 **Ziel:** Production-ready Export
 
 ```
 □ Vanilla JS + Zag Backend
 □ React + Zag Backend
+□ Vue + Zag Backend (optional)
 □ Export Dialog im Studio
 □ Bundle Optimization
+□ Tree Shaking verifizieren
+□ Performance Benchmarks
+□ Dokumentation vervollständigen
 ```
 
 **Deliverable:** Exportierbare Projekte
 
-### Phase 4: More Components
+---
 
-**Ziel:** Weitere Zag-Komponenten
+### Zusammenfassung
 
-```
-□ Dialog / Modal
-□ Menu / DropdownMenu
-□ Tabs
-□ Accordion
-□ Tooltip
-□ Slider
-□ DatePicker
-```
+| Phase | Komponenten | Kumulativ |
+|-------|-------------|-----------|
+| 1. Foundation | 0 (Infra) | 0 |
+| 2. Selection | 5 | 5 |
+| 3. Form Controls | 11 | 16 |
+| 4. Overlays | 5 | 21 |
+| 5. Navigation | 4 | 25 |
+| 6. Date/Time + Media | 9 | 34 |
+| 7. Layout & Structure | 8 | 42 |
+| 8. Utility | 9 | **51** |
+| 9. Export | 0 (Polish) | 51 |
 
-**Deliverable:** Umfangreiche Komponenten-Bibliothek
+**Alle 51 Komponenten sind abgedeckt.**
 
 ## Koexistenz-Strategie
 
@@ -1381,8 +1984,8 @@ export const DSL = {
     },
     Checkbox: {
       machine: 'checkbox',
-      slots: ['Box', 'Indicator', 'Label'],
-      props: ['label', 'checked', 'disabled', 'required'],
+      slots: ['Control', 'Indicator', 'Label'],
+      props: ['label', 'checked', 'disabled', 'required', 'indeterminate'],
     },
     RadioGroup: {
       machine: 'radio-group',
@@ -1474,25 +2077,50 @@ Phase 5 (Advanced)
 
 ### Feature Flags
 
+Feature Flags steuern den schrittweisen Rollout. Neue Flags werden mit jeder Phase hinzugefügt.
+
 ```typescript
 // Schrittweiser Rollout via Feature Flags
 const FEATURE_FLAGS = {
-  ZAG_SELECT: true,           // Phase 1
-  ZAG_CHECKBOX: false,        // Phase 2
-  ZAG_RADIO: false,           // Phase 2
-  ZAG_DIALOG: false,          // Phase 3
-  ZAG_TABS: false,            // Phase 4
-  ZAG_DATEPICKER: false,      // Phase 5
+  // Phase 1: Selection
+  ZAG_SELECT: true,
+  ZAG_MENU: true,
+  ZAG_COMBOBOX: false,
 
-  // Warnings
+  // Phase 2: Form Controls
+  ZAG_CHECKBOX: false,
+  ZAG_RADIO_GROUP: false,
+  ZAG_SWITCH: false,
+  ZAG_SLIDER: false,
+
+  // Phase 3: Overlays
+  ZAG_DIALOG: false,
+  ZAG_POPOVER: false,
+  ZAG_TOOLTIP: false,
+
+  // Phase 4: Navigation
+  ZAG_TABS: false,
+  ZAG_ACCORDION: false,
+
+  // Phase 5: Advanced
+  ZAG_DATE_PICKER: false,
+  ZAG_NUMBER_INPUT: false,
+  ZAG_FILE_UPLOAD: false,
+
+  // ... weitere Komponenten werden mit jeder Phase hinzugefügt
+
+  // System Flags
   DEPRECATION_WARNINGS: true,
   AUTO_MIGRATION: true,
 }
 
 function shouldUseZag(primitive: string): boolean {
-  const flag = `ZAG_${primitive.toUpperCase()}`
+  const flag = `ZAG_${primitive.toUpperCase().replace('-', '_')}`
   return FEATURE_FLAGS[flag] ?? false
 }
+
+// Alle 51 Komponenten werden über Feature Flags gesteuert
+// Vollständige Liste: siehe syntax-reference.md
 ```
 
 ---
@@ -1698,4 +2326,14 @@ test:
 - [Zag Documentation](https://zagjs.com/)
 - [Zag GitHub](https://github.com/chakra-ui/zag)
 - [ZAG-INTEGRATION.md](./ZAG-INTEGRATION.md)
+
+### Mirror Syntax Dokumentation
+
+- [Syntax-Referenz (51 Komponenten)](../../features/zag-components/syntax-reference.md) - Vollständige Syntax für alle Zag-Komponenten
+- [Syntax-Übersicht](../../features/zag-components/syntax-overview.md) - Kurzübersicht der wichtigsten Patterns
+
+### Feature-Dokumentation
+
 - [Select Requirements](../../features/select/requirements.md)
+- [Select Syntax](../../features/select/syntax.md)
+- [Select Examples](../../features/select/examples.md)

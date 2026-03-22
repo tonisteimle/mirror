@@ -81,6 +81,8 @@ export class GhostRenderer {
   private measureContainer: HTMLElement | null = null
   private cache = new Map<string, CacheEntry>()
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+  private readonly CLEANUP_INTERVAL = 60 * 1000 // 60 seconds
+  private cleanupIntervalId: ReturnType<typeof setInterval> | null = null
 
   /**
    * Render a component off-screen and return the element
@@ -204,6 +206,9 @@ export class GhostRenderer {
    * Pre-warm the cache for a list of items
    */
   async warmCache(items: ComponentItem[]): Promise<void> {
+    // Start cleanup interval when cache is being used
+    this.startCleanup()
+
     // Render items in batches to avoid blocking
     const batchSize = 5
     for (let i = 0; i < items.length; i += batchSize) {
@@ -225,10 +230,42 @@ export class GhostRenderer {
    * Dispose resources
    */
   dispose(): void {
+    this.stopCleanup()
     this.cache.clear()
     if (this.measureContainer) {
       this.measureContainer.remove()
       this.measureContainer = null
+    }
+  }
+
+  /**
+   * Start periodic cache cleanup
+   */
+  private startCleanup(): void {
+    if (this.cleanupIntervalId) return
+
+    this.cleanupIntervalId = setInterval(() => {
+      const now = Date.now()
+      let removed = 0
+      for (const [key, entry] of this.cache) {
+        if (now - entry.timestamp > this.CACHE_TTL) {
+          this.cache.delete(key)
+          removed++
+        }
+      }
+      if (removed > 0) {
+        console.debug(`[GhostRenderer] Cleaned up ${removed} expired cache entries`)
+      }
+    }, this.CLEANUP_INTERVAL)
+  }
+
+  /**
+   * Stop periodic cache cleanup
+   */
+  private stopCleanup(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId)
+      this.cleanupIntervalId = null
     }
   }
 
