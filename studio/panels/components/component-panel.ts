@@ -18,6 +18,7 @@ import type {
 import { getComponentIcon } from './icons'
 import { LAYOUT_PRESETS, BASIC_COMPONENTS } from './layout-presets'
 import { parseComponentSections } from './section-parser'
+import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
 /**
  * Component Panel class
@@ -30,6 +31,7 @@ export class ComponentPanel {
   private searchQuery: string = ''
   private panelElement: HTMLElement | null = null
   private abortController: AbortController | null = null
+  private ghostRenderer: GhostRenderer
 
   constructor(config: ComponentPanelConfig, callbacks: ComponentPanelCallbacks = {}) {
     this.container = config.container
@@ -38,6 +40,7 @@ export class ComponentPanel {
       showBasicComponents: config.showBasicComponents ?? true,
     }
     this.callbacks = callbacks
+    this.ghostRenderer = getGhostRenderer()
 
     this.buildSections()
     this.render()
@@ -112,6 +115,27 @@ export class ComponentPanel {
 
     this.panelElement.appendChild(sectionsContainer)
     this.container.appendChild(this.panelElement)
+
+    // Warm the cache in the background
+    this.warmGhostCache()
+  }
+
+  /**
+   * Pre-render ghosts for all components in the background
+   */
+  private warmGhostCache(): void {
+    // Collect all items from all sections
+    const allItems = this.sections.flatMap(section => section.items)
+
+    // Warm cache asynchronously (low priority)
+    // Use requestIdleCallback if available, otherwise setTimeout
+    const scheduleIdle = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback
+      : (cb: () => void) => setTimeout(cb, 100)
+
+    scheduleIdle(() => {
+      this.ghostRenderer.warmCache(allItems).catch(() => {})
+    })
   }
 
   /**
@@ -253,10 +277,88 @@ export class ComponentPanel {
     const target = event.target as HTMLElement
     target.classList.add('dragging')
 
-    // Browser uses the original element as drag image by default
+    // Try to use cached rendered ghost (sync path)
+    const cached = this.ghostRenderer.renderSync(item)
+    if (cached) {
+      this.setupDragImage(event, cached.element, cached.size)
+    } else {
+      // Fallback: use a placeholder with default size
+      this.setupFallbackDragImage(event, item)
+    }
 
     // Notify callback
     this.callbacks.onDragStart?.(item, event)
+  }
+
+  /**
+   * Setup the drag image from a rendered element
+   */
+  private setupDragImage(event: DragEvent, element: HTMLElement, size: { width: number; height: number }): void {
+    if (!event.dataTransfer) return
+
+    // Create a temporary container for the drag image
+    const dragImage = document.createElement('div')
+    dragImage.id = 'component-drag-image'
+    Object.assign(dragImage.style, {
+      position: 'fixed',
+      left: '-9999px',
+      top: '-9999px',
+      pointerEvents: 'none',
+    })
+
+    // Clone and append the rendered element
+    const clone = element.cloneNode(true) as HTMLElement
+    Object.assign(clone.style, {
+      opacity: '0.85',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    })
+    dragImage.appendChild(clone)
+    document.body.appendChild(dragImage)
+
+    // Set drag image centered on cursor
+    event.dataTransfer.setDragImage(dragImage, size.width / 2, size.height / 2)
+
+    // Clean up after a short delay
+    setTimeout(() => dragImage.remove(), 100)
+  }
+
+  /**
+   * Setup a fallback drag image when cache is not available
+   */
+  private setupFallbackDragImage(event: DragEvent, item: ComponentItem): void {
+    if (!event.dataTransfer) return
+
+    const size = getDefaultSizeForItem(item)
+
+    // Create a placeholder element
+    const dragImage = document.createElement('div')
+    dragImage.id = 'component-drag-image-fallback'
+    Object.assign(dragImage.style, {
+      position: 'fixed',
+      left: '-9999px',
+      top: '-9999px',
+      width: `${size.width}px`,
+      height: `${size.height}px`,
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+      border: '2px solid #3b82f6',
+      borderRadius: '4px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '12px',
+      fontFamily: 'system-ui, sans-serif',
+      color: '#3b82f6',
+      fontWeight: '500',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      pointerEvents: 'none',
+    })
+    dragImage.textContent = item.name
+
+    document.body.appendChild(dragImage)
+    event.dataTransfer.setDragImage(dragImage, size.width / 2, size.height / 2)
+
+    // Clean up after a short delay
+    setTimeout(() => dragImage.remove(), 100)
   }
 
   /**

@@ -27,3 +27,7 @@ export {
   getBasicComponents,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
+
+// Ghost rendering
+export { GhostRenderer, getGhostRenderer, resetGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
+export type { RenderedGhost } from './ghost-renderer'

@@ -327,17 +327,17 @@ describe('ComponentPanel', () => {
       expect(data1).not.toBe(data2)
     })
 
-    it('should use browser default drag image', () => {
-      // Note: Custom drag image was removed in favor of browser default
-      // The browser automatically uses the dragged element as the drag image
+    it('should set custom drag image', () => {
+      // Custom drag image is set to show the rendered component or fallback
       panel = createComponentPanel({ container })
 
       const item = container.querySelector('.component-panel-item') as HTMLElement
       const dataTransfer = new MockDataTransfer()
       item.dispatchEvent(createDragEvent('dragstart', dataTransfer))
 
-      // No custom drag image is set - browser uses default
-      expect(dataTransfer.dragImage).toBeNull()
+      // Custom drag image is set (either rendered ghost or fallback placeholder)
+      expect(dataTransfer.dragImage).not.toBeNull()
+      expect(dataTransfer.dragImage?.element).toBeInstanceOf(HTMLElement)
     })
   })
 
