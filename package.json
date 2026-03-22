@@ -20,7 +20,7 @@
   "scripts": {
     "validate": "npx tsx src/validator/cli.ts",
     "build": "tsup && npm run build:studio",
-    "build:studio": "tsup --config false studio/index.ts --format esm --outDir studio/dist --no-splitting --external tom-select",
+    "build:studio": "tsup --config studio/tsup.config.ts",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "dev:studio": "tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
     "studio": "npx serve . -p 5173",

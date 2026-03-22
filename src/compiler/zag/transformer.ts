@@ -5,7 +5,7 @@
  * code generation and runtime rendering.
  */
 
-import type { ZagNode, ZagSlotDef, ZagItem, Property, State, Event, Instance, Text } from '../../parser/ast'
+import type { ZagNode, ZagSlotDef, ZagItem, Property, State, Event, Instance, Text, Slot } from '../../parser/ast'
 import type { IRZagNode, IRSlot, IRItem, IRStyle, IRNode, IREvent, IRAction, SourcePosition } from '../../ir/types'
 import { getSlotDefinition, getSlotApiMethod, getSlotElement, isPortaledSlot } from './slots'
 import { getZagMachineType } from './detector'
@@ -62,7 +62,7 @@ export function transformZagNode(
     zagType: machineType,
     slots,
     items,
-    machineConfig,
+    machineConfig: machineConfig as unknown as Record<string, unknown>,
     sourcePosition,
   }
 
@@ -91,8 +91,11 @@ function transformSlot(
     styles.push(...stateStyles)
   }
 
-  // Transform children
-  const children = transformChildren(slot.children, context)
+  // Transform children (filter out Slot types for now)
+  const validChildren = slot.children.filter(
+    (child): child is Instance | Text => child.type === 'Instance' || child.type === 'Text'
+  )
+  const children = transformChildren(validChildren, context)
 
   return {
     name: slotName,
