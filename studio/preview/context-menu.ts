@@ -17,6 +17,7 @@ import {
   canGroup,
   canUngroup,
 } from './shared-actions'
+import { MIRROR_ID_SELECTOR } from './constants'
 
 export interface ContextMenuConfig {
   container: HTMLElement
@@ -67,7 +68,7 @@ export class ContextMenu {
   private handleContextMenu(e: MouseEvent): void {
     // Find the clicked element with data-mirror-id
     const target = e.target as HTMLElement
-    const mirrorElement = target.closest('[data-mirror-id]') as HTMLElement | null
+    const mirrorElement = target.closest(MIRROR_ID_SELECTOR) as HTMLElement | null
 
     if (!mirrorElement) {
       return // Not clicking on a Mirror element
