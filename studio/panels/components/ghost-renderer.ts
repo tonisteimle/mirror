@@ -94,11 +94,19 @@ export class GhostRenderer {
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
   private readonly CLEANUP_INTERVAL = 60 * 1000 // 60 seconds
   private cleanupIntervalId: ReturnType<typeof setInterval> | null = null
+  private disposed = false
+  // Track in-flight renders to prevent duplicate work
+  private pendingRenders = new Map<string, Promise<RenderedGhost>>()
 
   /**
    * Render a component off-screen and return the element
    */
   async render(item: ComponentItem): Promise<RenderedGhost> {
+    // Check if disposed
+    if (this.disposed) {
+      return this.createFallback(item)
+    }
+
     // Start cleanup interval on first render
     this.startCleanup()
 
@@ -113,6 +121,42 @@ export class GhostRenderer {
         size: { ...cached.size },
         cleanup: () => {},
       }
+    }
+
+    // Check if there's already a pending render for this item
+    const pendingRender = this.pendingRenders.get(cacheKey)
+    if (pendingRender) {
+      // Wait for the existing render and clone from cache
+      await pendingRender
+      const cachedAfterWait = this.cache.get(cacheKey)
+      if (cachedAfterWait) {
+        return {
+          element: cachedAfterWait.element.cloneNode(true) as HTMLElement,
+          size: { ...cachedAfterWait.size },
+          cleanup: () => {},
+        }
+      }
+      return this.createFallback(item)
+    }
+
+    // Create and track the render promise
+    const renderPromise = this.doRender(item, cacheKey)
+    this.pendingRenders.set(cacheKey, renderPromise)
+
+    try {
+      return await renderPromise
+    } finally {
+      this.pendingRenders.delete(cacheKey)
+    }
+  }
+
+  /**
+   * Internal render implementation
+   */
+  private async doRender(item: ComponentItem, cacheKey: string): Promise<RenderedGhost> {
+    // Check if disposed before starting work
+    if (this.disposed) {
+      return this.createFallback(item)
     }
 
     // Ensure measure container exists
@@ -282,8 +326,10 @@ export class GhostRenderer {
    * Dispose resources
    */
   dispose(): void {
+    this.disposed = true
     this.stopCleanup()
     this.cache.clear()
+    this.pendingRenders.clear()
     if (this.measureContainer) {
       this.measureContainer.remove()
       this.measureContainer = null

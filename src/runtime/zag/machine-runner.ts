@@ -6,7 +6,11 @@
  */
 
 import * as select from '@zag-js/select'
+import { createNormalizer } from '@zag-js/types'
 import type { IRItem } from '../../ir/types'
+
+// Normalizer for DOM props (vanilla JS)
+const normalizeProps = createNormalizer((props: Record<string, any>) => props)
 
 // Machine types supported by the runner
 const MACHINES = {
@@ -43,6 +47,7 @@ export type MachineSubscriber = (api: any) => void
 interface MachineInstance {
   type: MachineType
   config: MachineConfig
+  machine: any
   service: any
   api: any
   cleanup?: () => void
@@ -63,8 +68,8 @@ export class MachineRunner {
    * @returns The machine instance or null
    */
   create(type: MachineType, config: MachineConfig): MachineInstance | null {
-    const machine = MACHINES[type]
-    if (!machine) {
+    const machineModule = MACHINES[type]
+    if (!machineModule) {
       console.warn(`Unknown machine type: ${type}`)
       return null
     }
@@ -84,26 +89,31 @@ export class MachineRunner {
       itemToValue: (item: { value: string }) => item.value,
     })
 
-    // Create machine props
-    const props: any = {
+    // Create machine context
+    const machineContext: any = {
       id: config.id,
       collection: itemCollection,
       disabled: config.disabled,
+      multiple: config.multiple,
       onValueChange: config.onValueChange,
       onOpenChange: config.onOpenChange,
     }
 
     // Set initial value if provided
     if (config.defaultValue) {
-      props.value = Array.isArray(config.defaultValue)
+      machineContext.value = Array.isArray(config.defaultValue)
         ? config.defaultValue
         : [config.defaultValue]
     }
+
+    // Create the machine
+    const machine = machineModule.machine(machineContext)
 
     // Create instance tracking
     const instance: MachineInstance = {
       type,
       config,
+      machine,
       service: null,
       api: null,
     }
@@ -125,28 +135,53 @@ export class MachineRunner {
       return
     }
 
-    // Note: In actual implementation, we would:
-    // 1. Create the service using machine.create() or similar
-    // 2. Subscribe to state changes
-    // 3. Create the API using connect()
-    //
-    // For now, we create a mock API structure that matches
-    // what the rendering code expects.
-    instance.api = this.createMockApi(instance)
+    const machineModule = MACHINES[instance.type]
 
-    // Notify subscribers
+    // Create and start the service (actor)
+    const service = instance.machine.createActor?.()
+    if (!service) {
+      // Fallback for older Zag versions
+      console.warn(`Could not create actor for machine: ${id}`)
+      instance.api = this.createMockApi(instance)
+      this.notifySubscribers(id, instance.api)
+      return
+    }
+
+    instance.service = service
+
+    // Subscribe to state changes
+    const unsubscribe = service.subscribe((state: any) => {
+      // Connect to get the API
+      instance.api = machineModule.connect(state, service.send, normalizeProps)
+      this.notifySubscribers(id, instance.api)
+    })
+
+    // Store cleanup function
+    instance.cleanup = () => {
+      unsubscribe()
+      service.stop()
+    }
+
+    // Start the service
+    service.start()
+  }
+
+  /**
+   * Notify all subscribers of state change
+   */
+  private notifySubscribers(id: string, api: any): void {
     const subs = this.subscribers.get(id)
     if (subs) {
       for (const callback of subs) {
-        callback(instance.api)
+        callback(api)
       }
     }
   }
 
   /**
-   * Create a mock API for development
+   * Create a mock API for fallback
    *
-   * This allows the UI to render while we finalize the Zag integration.
+   * Used when the real Zag service can't be created.
    */
   private createMockApi(instance: MachineInstance): any {
     const id = instance.config.id

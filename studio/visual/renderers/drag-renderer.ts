@@ -143,6 +143,7 @@ export class DragRenderer {
   clear(): void {
     this.ghostFactory.dispose()
     this.currentGhostSource = null
+    this.pendingGhostRender = null
     this.removeIndicator()
     this.removeGuides()
     this.removeAlignmentIndicator()
@@ -259,7 +260,10 @@ export class DragRenderer {
 
     // Render async and update when ready
     this.pendingGhostRender = this.ghostRenderer.render(item).then(rendered => {
-      // Only update if we're still dragging the same component
+      // Only update if we're still dragging the same component and not cleared
+      if (this.pendingGhostRender === null) {
+        return // Cleared while rendering
+      }
       if (this.currentGhostSource?.componentName === componentName) {
         // Get current ghost position before replacing
         const currentGhost = this.ghostFactory.getGhost()
@@ -291,8 +295,10 @@ export class DragRenderer {
           this.ghostFactory.setRect(newRect)
         }
       }
-    }).catch(() => {
-      // Keep placeholder on error
+    }).catch((error: unknown) => {
+      // Keep placeholder on error, log for debugging
+      console.warn(`[DragRenderer] Failed to render ghost for "${componentName}":`,
+        error instanceof Error ? error.message : String(error))
     })
   }
 
