@@ -1,10 +1,10 @@
 # Preview System Audit Report
 
 **Datum:** 2026-03-22
-**Version:** 1.1
-**Status:** Teilweise behoben
+**Version:** 1.2
+**Status:** Größtenteils behoben
 
-> **Update 2026-03-22:** P0 und P1 Issues wurden behoben. Siehe Changelog.
+> **Update 2026-03-22:** P0, P1 und P2 Issues wurden behoben. Siehe Changelog.
 
 ---
 
@@ -939,6 +939,7 @@ describe('Deferred Selection', () => {
 |---------|-------|------------|
 | 1.0 | 2026-03-22 | Initial Audit |
 | 1.1 | 2026-03-22 | P0/P1 Fixes: PREV-001 bis PREV-004, PREV-007, PREV-012 behoben |
+| 1.2 | 2026-03-22 | P2 Fixes: PREV-006, PREV-009, PREV-014, PREV-015 behoben |
 
 ### Behobene Issues
 
@@ -950,3 +951,7 @@ describe('Deferred Selection', () => {
 | PREV-004 | `setPreviewController()` disposed alten Controller | 3d5d832 |
 | PREV-007 | `PreviewController` hört auf `compile:completed` | c97a01e |
 | PREV-012 | `attach()` ruft erst `detach()` auf | c97a01e |
+| PREV-006 | ContextMenu cached bound functions | bedac9e |
+| PREV-009 | PreviewController trackt sourceMapVersion | bedac9e |
+| PREV-014 | SlotVisibilityService Error-Handling | bedac9e |
+| PREV-015 | Constants für data-mirror-id | 438b178 |
