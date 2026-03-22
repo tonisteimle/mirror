@@ -28,6 +28,10 @@ export interface StudioEvents {
   'selection:changed': { nodeId: string | null; origin: 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop' }
   /** Emitted when selection becomes invalid (e.g., selected node removed) */
   'selection:invalidated': { nodeId: string }
+  /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
+  'selection:fallback': { originalNodeId: string; fallbackNodeId: string }
+  /** Emitted when an error occurs in state management */
+  'state:error': { error: unknown; context: string }
   'command:executed': { command: Command }
   'command:undone': { command: Command }
   'command:redone': { command: Command }
