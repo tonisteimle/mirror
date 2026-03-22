@@ -19,5 +19,6 @@ export default defineConfig({
     '@zag-js/select',
     '@zag-js/core',
     '@zag-js/dom-query',
+    '@zag-js/vanilla',
   ],
 })

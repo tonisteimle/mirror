@@ -91,8 +91,13 @@ export class DOMBinder {
   unbind(id: string): void {
     const bound = this.boundElements.get(id)
     if (bound) {
-      bound.cleanup()
+      // Delete from map first to prevent re-entry
       this.boundElements.delete(id)
+      try {
+        bound.cleanup()
+      } catch (e) {
+        console.warn(`Failed to cleanup bindings for ${id}:`, e)
+      }
     }
   }
 
@@ -100,10 +105,17 @@ export class DOMBinder {
    * Unbind all elements
    */
   unbindAll(): void {
-    for (const [id, bound] of this.boundElements) {
-      bound.cleanup()
-    }
+    // Iterate over a copy to allow safe deletion
+    const entries = [...this.boundElements.entries()]
     this.boundElements.clear()
+
+    for (const [id, bound] of entries) {
+      try {
+        bound.cleanup()
+      } catch (e) {
+        console.warn(`Failed to cleanup bindings for ${id}:`, e)
+      }
+    }
   }
 
   /**

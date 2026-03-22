@@ -15,6 +15,7 @@ import type { DropZone } from '../models/drop-zone'
 import type { AlignmentZoneResult } from '../models/alignment-zone'
 import { CodeModifier, ModificationResult } from '../../../src/studio/code-modifier'
 import { SourceMap } from '../../../src/studio/source-map'
+import { getDefaultSize } from '../renderers/ghost-factory'
 
 // ============================================================================
 // Types
@@ -74,6 +75,14 @@ interface DragData {
   isMove?: boolean
 }
 
+// Palette drag data (set when drag starts from component panel)
+export interface PaletteDragData {
+  componentName: string
+  properties?: string
+  textContent?: string
+  defaultSize?: { width: number; height: number }
+}
+
 // ============================================================================
 // StudioDragDropService
 // ============================================================================
@@ -97,6 +106,9 @@ export class StudioDragDropService {
   private currentDragSourceId: string | undefined
   private pendingDragOver: { x: number; y: number } | null = null
   private rafId: number | null = null
+
+  // Palette drag data (cached from component panel drag start)
+  private paletteDragData: PaletteDragData | null = null
 
   // Bound event handlers for HTML5 drag
   private boundHandleDragOver: (e: DragEvent) => void
@@ -143,6 +155,14 @@ export class StudioDragDropService {
    */
   setDragSource(nodeId: string | undefined): void {
     this.currentDragSourceId = nodeId
+  }
+
+  /**
+   * Set palette drag data (called when drag starts from component panel)
+   * This enables the ghost preview during drag
+   */
+  setPaletteDragData(data: PaletteDragData | null): void {
+    this.paletteDragData = data
   }
 
   /**
@@ -241,11 +261,24 @@ export class StudioDragDropService {
       const nodeId = element.dataset.mirrorId!
       const rect = element.getBoundingClientRect()
 
+      // Calculate ghost rect for palette drags
+      let ghostRect: Rect | null = null
+      if (this.paletteDragData) {
+        const size = this.paletteDragData.defaultSize ||
+          getDefaultSize(this.paletteDragData.componentName)
+        ghostRect = {
+          x: x - size.width / 2,
+          y: y - size.height / 2,
+          width: size.width,
+          height: size.height,
+        }
+      }
+
       // Build drag over state
       const state: DragOverState = {
         element,
         nodeId,
-        ghostRect: {
+        ghostRect: ghostRect || {
           x: rect.left,
           y: rect.top,
           width: rect.width,
@@ -256,12 +289,16 @@ export class StudioDragDropService {
 
       // Render visual feedback
       this.renderer.render({
-        ghostRect: null, // No ghost for HTML5 drag (browser handles it)
+        ghostRect,
         indicatorRect: this.calculateIndicatorRect(x, y, element),
         indicatorDirection: 'horizontal',
         alignmentZone: null,
         guides: [],
         isActive: true,
+        // Pass component info for ghost rendering
+        componentName: this.paletteDragData?.componentName,
+        componentProperties: this.paletteDragData?.properties,
+        componentTextContent: this.paletteDragData?.textContent,
       })
 
       this.callbacks.onDragOver?.(state)
@@ -287,6 +324,7 @@ export class StudioDragDropService {
     if (!relatedTarget || !this.container.contains(relatedTarget)) {
       this.isDraggingFlag = false
       this.pendingDragOver = null
+      this.paletteDragData = null
       this.renderer.clear()
       this.callbacks.onDragLeave?.()
     }
@@ -296,6 +334,7 @@ export class StudioDragDropService {
     e.preventDefault()
     this.isDraggingFlag = false
     this.pendingDragOver = null
+    this.paletteDragData = null
     this.renderer.clear()
 
     // Get drag data

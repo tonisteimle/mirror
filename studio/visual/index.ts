@@ -120,4 +120,5 @@ export {
   type StudioDragDropCallbacks,
   type StudioDropResult,
   type DragOverState,
+  type PaletteDragData,
 } from './services/studio-drag-drop-service'

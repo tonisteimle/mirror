@@ -537,6 +537,21 @@ export class PreviewController {
     }
 
     const target = e.target as HTMLElement
+
+    // Check for Zag component click first
+    const zagElement = target.closest('[data-zag-component]') as HTMLElement | null
+    if (zagElement && this.zagPreviewManager) {
+      const selectionContext = this.zagPreviewManager.handlePreviewClick(e)
+      if (selectionContext) {
+        e.stopPropagation()
+        // Select the Zag component
+        actions.clearMultiSelection()
+        this.clearMultiSelectionHighlight()
+        this.select(selectionContext.nodeId)
+        return
+      }
+    }
+
     const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
     if (nodeElement) {
       const nodeId = nodeElement.getAttribute(this.config.nodeIdAttribute)

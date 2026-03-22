@@ -6047,6 +6047,93 @@ function initComponentPalette() {
   console.log('Studio: Component palette initialized with', PRIMITIVE_COMPONENTS.length, 'primitives')
 }
 
+// Global debug function for testing ghosts
+// Usage: await window.testGhost('Button') or window.testGhost('V-Box')
+window.testGhost = async function(componentName) {
+  const { getGhostRenderer } = await import('./dist/index.js')
+  const renderer = getGhostRenderer()
+
+  // Find the component in presets or primitives
+  const layoutPreset = STUDIO_LAYOUT_PRESETS.find(p => p.name === componentName)
+  const primitive = PRIMITIVE_COMPONENTS.find(p => p.name === componentName)
+
+  let item
+  if (layoutPreset) {
+    item = {
+      id: `test-${componentName}`,
+      name: layoutPreset.name,
+      template: layoutPreset.name,
+      properties: layoutPreset.properties || '',
+      children: layoutPreset.children,
+      defaultSize: layoutPreset.defaultSize,
+      category: 'layouts',
+      icon: 'box'
+    }
+  } else if (primitive) {
+    item = {
+      id: `test-${componentName}`,
+      name: primitive.name,
+      template: primitive.template,
+      properties: primitive.properties || '',
+      textContent: primitive.textContent || '',
+      defaultSize: primitive.defaultSize,
+      category: 'components',
+      icon: 'box'
+    }
+  } else {
+    return `Component "${componentName}" not found`
+  }
+
+  try {
+    const result = await renderer.render(item)
+
+    // Remove any previous test ghost
+    const prev = document.getElementById('test-ghost-overlay')
+    if (prev) prev.remove()
+
+    // Create overlay
+    const overlay = document.createElement('div')
+    overlay.id = 'test-ghost-overlay'
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
+      background: 'rgba(0,0,0,0.8)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: '99999',
+      cursor: 'pointer'
+    })
+    overlay.onclick = () => overlay.remove()
+
+    // Label
+    const label = document.createElement('div')
+    label.textContent = `${componentName}: ${result.size.width}x${result.size.height}px (click to close)`
+    Object.assign(label.style, {
+      color: 'white',
+      fontSize: '16px',
+      marginBottom: '20px',
+      fontFamily: 'system-ui'
+    })
+    overlay.appendChild(label)
+
+    // Ghost element with border
+    result.element.style.border = '2px solid lime'
+    result.element.style.boxShadow = '0 0 20px rgba(0,255,0,0.5)'
+    overlay.appendChild(result.element)
+
+    document.body.appendChild(overlay)
+
+    return `Rendered ${componentName}: ${result.size.width}x${result.size.height}px`
+  } catch (e) {
+    return `Error: ${e.message}`
+  }
+}
+
 // Update component palette with primitives + user components
 function updateComponentPalette() {
   const container = document.getElementById('components-palette')

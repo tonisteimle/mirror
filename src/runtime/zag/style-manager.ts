@@ -100,8 +100,11 @@ export class StyleManager {
    * @returns CSS selector including state
    */
   getStateSelector(baseSelector: string, state: string): string {
-    // Check for Zag data attribute mapping
-    const zagSelector = STATE_MAPPINGS[`${state}:`]
+    // Normalize state - remove trailing colon if present
+    const normalizedState = state.endsWith(':') ? state.slice(0, -1) : state
+
+    // Check for Zag data attribute mapping (keys have colon suffix)
+    const zagSelector = STATE_MAPPINGS[`${normalizedState}:`]
     if (zagSelector) {
       return `${baseSelector}${zagSelector}`
     }
@@ -115,13 +118,13 @@ export class StyleManager {
       'focus-visible': ':focus-visible',
     }
 
-    const pseudo = pseudoStates[state]
+    const pseudo = pseudoStates[normalizedState]
     if (pseudo) {
       return `${baseSelector}${pseudo}`
     }
 
     // Fallback to data-state attribute
-    return `${baseSelector}[data-state="${state}"]`
+    return `${baseSelector}[data-state="${normalizedState}"]`
   }
 
   /**

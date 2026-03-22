@@ -20,11 +20,8 @@ import type {
   AnimationDefinition,
   AnimationKeyframe,
   AnimationKeyframeProperty,
-  ZagNode,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRZagNode, IRSlot, IRItem } from './types'
-import { isZagPrimitive } from '../schema/zag-primitives'
-import { getSlotApiMethod, getSlotElement, isPortaledSlot } from '../compiler/zag/slots'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from '../studio/source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -245,13 +242,10 @@ class IRTransformer {
       value: t.value,
     }))
 
-    // Transform instances to IR nodes (handle Instance, Slot, and ZagComponent)
+    // Transform instances to IR nodes (handle both Instance and Slot)
     const nodes = this.ast.instances.map(inst => {
       if (inst.type === 'Slot') {
         return this.transformSlotPrimitive(inst as Slot)
-      }
-      if ((inst as any).type === 'ZagComponent') {
-        return this.transformZagComponent(inst as unknown as ZagNode)
       }
       return this.transformInstance(inst as Instance)
     })
@@ -379,119 +373,6 @@ class IRTransformer {
       children: [],
       sourcePosition,
     }
-  }
-
-  /**
-   * Transform a ZagNode AST into an IRZagNode
-   *
-   * ZagNodes are behavior-driven components (like Select, Accordion) that use
-   * Zag.js state machines for complex interactions.
-   */
-  private transformZagComponent(zagNode: ZagNode): IRZagNode {
-    const nodeId = this.generateId()
-
-    // Build source position
-    const sourcePosition: SourcePosition = {
-      line: zagNode.line,
-      column: zagNode.column,
-      endLine: zagNode.line,
-      endColumn: zagNode.column,
-    }
-
-    // Transform Zag properties to machine config
-    const machineConfig: Record<string, unknown> = {}
-    for (const prop of zagNode.properties) {
-      const value = prop.values.length === 1 ? prop.values[0] : prop.values
-      machineConfig[prop.name] = value
-    }
-
-    // Transform slots
-    const slots: Record<string, IRSlot> = {}
-    for (const [slotName, slotDef] of Object.entries(zagNode.slots)) {
-      const apiMethod = getSlotApiMethod(zagNode.name, slotName) ?? `get${slotName}Props`
-      const element = getSlotElement(zagNode.name, slotName)
-      const portal = isPortaledSlot(zagNode.name, slotName)
-
-      // Transform slot properties to styles
-      const styles = this.transformProperties(slotDef.properties, element)
-
-      // Add state styles
-      for (const state of slotDef.states) {
-        const stateStyles = this.transformStatePropertiesForZag(state, element)
-        styles.push(...stateStyles)
-      }
-
-      // Transform slot children
-      const children = slotDef.children.map(child => this.transformChild(child))
-
-      slots[slotName] = {
-        name: slotName,
-        apiMethod,
-        element,
-        styles,
-        children,
-        portal,
-        sourcePosition: slotDef.sourcePosition,
-      }
-    }
-
-    // Transform items
-    const items: IRItem[] = zagNode.items.map(item => ({
-      value: item.value ?? item.label ?? '',
-      label: item.label ?? item.value ?? '',
-      disabled: item.disabled,
-      children: item.children?.map(child => this.transformChild(child as any)),
-      sourcePosition: item.sourcePosition,
-    }))
-
-    // Transform events
-    const events: IREvent[] = zagNode.events.map(event => ({
-      name: event.name.replace(/^on/, ''),
-      key: event.key,
-      actions: event.actions.map(action => ({
-        type: action.name,
-        target: action.target,
-        args: action.args,
-      })),
-      modifiers: event.modifiers,
-    }))
-
-    // Add to source map
-    if (this.includeSourceMap) {
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        zagNode.name,
-        sourcePosition,
-        {
-          isDefinition: false,
-        }
-      )
-    }
-
-    return {
-      id: nodeId,
-      tag: 'div',
-      primitive: zagNode.name.toLowerCase(),
-      name: zagNode.name,
-      properties: [],
-      styles: [],
-      events,
-      children: [],
-      isZagComponent: true,
-      zagType: zagNode.machine,
-      slots,
-      items,
-      machineConfig,
-      sourcePosition,
-    }
-  }
-
-  /**
-   * Transform state properties (hover:, selected:, etc.) to IRStyle with state attribute
-   */
-  private transformStatePropertiesForZag(state: State, primitive: string): IRStyle[] {
-    const baseStyles = this.transformProperties(state.properties, primitive)
-    return baseStyles.map(style => ({ ...style, state: state.name }))
   }
 
   private transformInstance(
