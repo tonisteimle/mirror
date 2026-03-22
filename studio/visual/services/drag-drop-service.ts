@@ -279,6 +279,10 @@ export class DragDropService {
       componentName = state.source.componentName
     }
 
+    // Get properties for palette drags
+    const componentProperties = state.source.type === 'palette' ? state.source.properties : undefined
+    const componentTextContent = state.source.type === 'palette' ? state.source.textContent : undefined
+
     // Build render state with source information
     const renderState: RenderState = {
       ghostRect: state.ghostRect,
@@ -289,6 +293,8 @@ export class DragDropService {
       isActive: true,
       sourceElement,
       componentName,
+      componentProperties,
+      componentTextContent,
     }
 
     this.renderer.render(renderState)

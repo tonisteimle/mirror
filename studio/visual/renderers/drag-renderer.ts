@@ -30,6 +30,10 @@ import {
   Z_INDEX_DISTANCE_LABEL,
   Z_INDEX_GUIDES,
 } from '../constants/z-index'
+import {
+  GhostRenderer,
+  getGhostRenderer,
+} from '../../panels/components/ghost-renderer'
 
 // ============================================================================
 // Types
@@ -52,6 +56,10 @@ export interface RenderState {
   sourceElement?: HTMLElement
   /** Component name for placeholder ghost (optional) */
   componentName?: string
+  /** Component properties for palette ghost (optional) */
+  componentProperties?: string
+  /** Component text content for palette ghost (optional) */
+  componentTextContent?: string
 }
 
 export interface DragRendererConfig {
@@ -76,13 +84,19 @@ export class DragRenderer {
   // Ghost factory for unified ghost creation
   private ghostFactory: GhostFactory
 
+  // Ghost renderer for palette items (renders components off-screen)
+  private ghostRenderer: GhostRenderer
+
   // DOM elements
   private indicatorElement: HTMLElement | null = null
   private guideContainer: HTMLElement | null = null
   private alignmentIndicator: HTMLElement | null = null
 
   // Track current ghost source for smart updates
-  private currentGhostSource: { type: 'element' | 'placeholder'; id?: string } | null = null
+  private currentGhostSource: { type: 'element' | 'placeholder' | 'rendered'; id?: string; componentName?: string } | null = null
+
+  // Track pending ghost render for palette items
+  private pendingGhostRender: Promise<void> | null = null
 
   constructor(container: HTMLElement, config: DragRendererConfig = {}) {
     this.container = container
@@ -99,6 +113,9 @@ export class DragRenderer {
       zIndex: this.config.zIndex,
       borderColor: this.config.indicatorColor,
     })
+
+    // Initialize ghost renderer for palette items
+    this.ghostRenderer = getGhostRenderer()
   }
 
   // --------------------------------------------------------------------------
@@ -152,36 +169,41 @@ export class DragRenderer {
   /**
    * Render ghost element with smart source detection
    *
-   * Supports two modes:
+   * Supports three modes:
    * 1. Element clone: When sourceElement is provided, creates a visual clone
-   * 2. Placeholder: When only rect is provided, creates a styled placeholder
+   * 2. Rendered component: For palette items, renders the component off-screen
+   * 3. Placeholder: Fallback when component can't be rendered
    */
   private renderGhost(state: RenderState): void {
-    const { ghostRect, sourceElement, componentName } = state
+    const { ghostRect, sourceElement, componentName, componentProperties, componentTextContent } = state
 
     if (!ghostRect) {
       this.ghostFactory.dispose()
       this.currentGhostSource = null
+      this.pendingGhostRender = null
       return
     }
 
     // Determine ghost source type
-    const sourceType = sourceElement ? 'element' : 'placeholder'
     const sourceId = sourceElement?.dataset.mirrorId
 
     // Check if we need to recreate the ghost (source changed)
     const needsRecreate =
       !this.ghostFactory.hasGhost() ||
-      this.currentGhostSource?.type !== sourceType ||
-      (sourceType === 'element' && this.currentGhostSource?.id !== sourceId)
+      (sourceElement && this.currentGhostSource?.type !== 'element') ||
+      (sourceElement && this.currentGhostSource?.id !== sourceId) ||
+      (!sourceElement && componentName && this.currentGhostSource?.componentName !== componentName)
 
     if (needsRecreate) {
       if (sourceElement) {
-        // Create clone ghost from source element
+        // Create clone ghost from source element (existing canvas element)
         this.ghostFactory.createFromElement(sourceElement)
         this.currentGhostSource = { type: 'element', id: sourceId }
+      } else if (componentName) {
+        // Palette item: try to use rendered ghost
+        this.renderPaletteGhost(componentName, ghostRect, componentProperties, componentTextContent)
       } else {
-        // Create placeholder ghost
+        // Fallback: placeholder
         const size = { width: ghostRect.width, height: ghostRect.height }
         this.ghostFactory.createPlaceholder(size, {
           componentName,
@@ -194,6 +216,60 @@ export class DragRenderer {
 
     // Update ghost position and size
     this.ghostFactory.setRect(ghostRect)
+  }
+
+  /**
+   * Render ghost for palette item (new component being dragged)
+   */
+  private renderPaletteGhost(
+    componentName: string,
+    ghostRect: Rect,
+    properties?: string,
+    textContent?: string
+  ): void {
+    // Create a ComponentItem-like object for the ghost renderer
+    const item = {
+      id: `palette-${componentName}-${properties || ''}-${textContent || ''}`,
+      name: componentName,
+      category: 'palette',
+      template: componentName,
+      properties,
+      textContent,
+      icon: 'box' as const,
+    }
+
+    // Try sync render (from cache)
+    const cached = this.ghostRenderer.renderSync(item)
+    if (cached) {
+      // Use the cached rendered element
+      this.ghostFactory.createFromElement(cached.element)
+      this.currentGhostSource = { type: 'rendered', componentName }
+      return
+    }
+
+    // Show placeholder immediately
+    const size = { width: ghostRect.width, height: ghostRect.height }
+    this.ghostFactory.createPlaceholder(size, {
+      componentName,
+      showLabel: true,
+      borderStyle: 'dashed',
+    })
+    this.currentGhostSource = { type: 'placeholder', componentName }
+
+    // Render async and update when ready
+    this.pendingGhostRender = this.ghostRenderer.render(item).then(rendered => {
+      // Only update if we're still dragging the same component
+      if (this.currentGhostSource?.componentName === componentName) {
+        this.ghostFactory.createFromElement(rendered.element)
+        this.currentGhostSource = { type: 'rendered', componentName }
+        // Re-apply position
+        if (this.ghostFactory.hasGhost()) {
+          this.ghostFactory.setRect(ghostRect)
+        }
+      }
+    }).catch(() => {
+      // Keep placeholder on error
+    })
   }
 
   // --------------------------------------------------------------------------
