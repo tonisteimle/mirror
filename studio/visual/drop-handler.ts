@@ -19,6 +19,7 @@
 import { CodeModifier, ModificationResult } from '../../src/studio/code-modifier'
 import type { SourceMap } from '../../src/studio/source-map'
 import type { DropZoneInfo } from './drag-drop-visualizer'
+import { getComponentTemplate, hasComponentTemplate } from '../../src/schema/component-templates'
 
 /**
  * Data transferred during drag operation
@@ -79,39 +80,65 @@ export class DropHandler {
     // Determine component name from drop data
     const componentName = this.getComponentName(data)
 
+    // Check if component has a multi-line template
+    const template = getComponentTemplate(componentName)
+
     let result: ModificationResult
 
     if (zone.placement === 'inside') {
       // Zone-based wrapper insertion
       if (zone.semanticZone && zone.semanticZone !== 'mid-center') {
-        result = codeModifier.insertWithWrapper(
+        // For semantic zones, use template if available
+        if (template) {
+          // First apply layout to container, then insert template
+          codeModifier.applyLayoutToContainer(zone.targetId, zone.semanticZone)
+          result = codeModifier.addChildWithTemplate(zone.targetId, template.code, {
+            position: 'last',
+          })
+        } else {
+          result = codeModifier.insertWithWrapper(
+            zone.targetId,
+            componentName,
+            zone.semanticZone,
+            {
+              properties: data.properties,
+              textContent: data.textContent,
+            }
+          )
+        }
+      } else {
+        // Regular child insertion - use template if available
+        if (template) {
+          result = codeModifier.addChildWithTemplate(zone.targetId, template.code, {
+            position: 'last',
+          })
+        } else {
+          result = codeModifier.addChild(zone.targetId, componentName, {
+            position: 'last',
+            properties: data.properties,
+            textContent: data.textContent,
+          })
+        }
+      }
+    } else {
+      // Sibling insertion (before/after) - use template if available
+      if (template) {
+        result = codeModifier.addChildWithTemplateRelativeTo(
+          zone.targetId,
+          template.code,
+          zone.placement
+        )
+      } else {
+        result = codeModifier.addChildRelativeTo(
           zone.targetId,
           componentName,
-          zone.semanticZone,
+          zone.placement,
           {
             properties: data.properties,
             textContent: data.textContent,
           }
         )
-      } else {
-        // Regular child insertion
-        result = codeModifier.addChild(zone.targetId, componentName, {
-          position: 'last',
-          properties: data.properties,
-          textContent: data.textContent,
-        })
       }
-    } else {
-      // Sibling insertion (before/after)
-      result = codeModifier.addChildRelativeTo(
-        zone.targetId,
-        componentName,
-        zone.placement,
-        {
-          properties: data.properties,
-          textContent: data.textContent,
-        }
-      )
     }
 
     if (result.success) {

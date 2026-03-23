@@ -4,8 +4,9 @@
  * Wraps the AutocompleteEngine for use with CodeMirror 6
  */
 
-import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete'
+import type { CompletionContext, CompletionResult, Completion as CMCompletion } from '@codemirror/autocomplete'
 import { getAutocompleteEngine, type Completion } from './index'
+import { getComponentTemplate, hasComponentTemplate, COMPONENT_TEMPLATES } from '../../src/schema/component-templates'
 
 /**
  * Map our completion types to CodeMirror completion types
@@ -21,6 +22,22 @@ function mapCompletionType(type: Completion['type']): string {
     case 'constant': return 'constant'
     default: return 'text'
   }
+}
+
+/**
+ * Get the indentation of the current line
+ */
+function getLineIndentation(lineText: string): string {
+  const match = lineText.match(/^(\s*)/)
+  return match ? match[1] : ''
+}
+
+/**
+ * Adjust template indentation for insertion
+ */
+function adjustTemplateForInsertion(templateCode: string, baseIndent: string): string {
+  const lines = templateCode.split('\n')
+  return lines.map(line => baseIndent + line).join('\n')
 }
 
 /**
@@ -45,13 +62,46 @@ export function mirrorCompletions(context: CompletionContext): CompletionResult 
     explicit: context.explicit,
   })
 
-  // No completions
-  if (result.completions.length === 0) {
+  // Check if we're in a context where component templates make sense
+  // (at the start of an indented line, typing a component name)
+  const isComponentContext = lineText.trim().match(/^[A-Z]/) || lineText.trim() === ''
+  const baseIndent = getLineIndentation(lineText)
+
+  // Add template completions if in component context and explicit trigger
+  const templateCompletions: CMCompletion[] = []
+  if (isComponentContext && context.explicit) {
+    const typed = lineText.trim().toLowerCase()
+
+    for (const [name, template] of Object.entries(COMPONENT_TEMPLATES)) {
+      // Filter by typed text
+      if (typed && !name.toLowerCase().startsWith(typed)) {
+        continue
+      }
+
+      templateCompletions.push({
+        label: name,
+        detail: template.description,
+        type: 'class',
+        boost: 10, // Boost templates above regular completions
+        apply: (view, completion, from, to) => {
+          // Insert the full template with proper indentation
+          const adjustedTemplate = adjustTemplateForInsertion(template.code, baseIndent)
+          view.dispatch({
+            changes: { from: line.from, to: line.to, insert: adjustedTemplate },
+            selection: { anchor: line.from + adjustedTemplate.length },
+          })
+        },
+      })
+    }
+  }
+
+  // No completions from either source
+  if (result.completions.length === 0 && templateCompletions.length === 0) {
     return null
   }
 
-  // Convert to CodeMirror format
-  const options = result.completions.map(c => ({
+  // Convert engine completions to CodeMirror format
+  const engineOptions: CMCompletion[] = result.completions.map(c => ({
     label: c.label,
     detail: c.detail,
     type: mapCompletionType(c.type),
@@ -59,9 +109,20 @@ export function mirrorCompletions(context: CompletionContext): CompletionResult 
     boost: c.boost,
   }))
 
+  // Merge completions, templates first
+  const allOptions = [...templateCompletions, ...engineOptions]
+
+  // Deduplicate by label (templates take precedence)
+  const seen = new Set<string>()
+  const uniqueOptions = allOptions.filter(opt => {
+    if (seen.has(opt.label)) return false
+    seen.add(opt.label)
+    return true
+  })
+
   return {
     from: line.from + result.from,
-    options,
+    options: uniqueOptions,
     validFor: /^[\w-]*$/,
   }
 }

@@ -396,6 +396,137 @@ export class CodeModifier {
   }
 
   /**
+   * Add a child using a multi-line template
+   *
+   * Used for complex components like Tabs, Carousel, etc. that need children.
+   * The template should use relative indentation (2 spaces per level).
+   *
+   * @param parentId - The parent node to insert into
+   * @param templateCode - Multi-line template code with relative indentation
+   * @param options - Insertion options (position)
+   */
+  addChildWithTemplate(
+    parentId: string,
+    templateCode: string,
+    options: Pick<AddChildOptions, 'position'> = {}
+  ): ModificationResult {
+    const { position = 'last' } = options
+
+    // Get parent node mapping
+    const parentMapping = this.sourceMap.getNodeById(parentId)
+    if (!parentMapping) {
+      return this.errorResult(`Parent node not found: ${parentId}`)
+    }
+
+    // Get existing children
+    const children = this.sourceMap.getChildren(parentId)
+
+    // Calculate insertion point and indentation
+    const insertionInfo = this.calculateChildInsertionPoint(
+      parentMapping,
+      children,
+      position
+    )
+
+    // Adjust template indentation
+    const adjustedTemplate = this.adjustTemplateIndentation(
+      templateCode,
+      insertionInfo.indent
+    )
+
+    // Create the change
+    const insertText = `\n${adjustedTemplate}`
+    const insertPosition = insertionInfo.charOffset
+
+    // Apply the change
+    const newSource =
+      this.source.substring(0, insertPosition) +
+      insertText +
+      this.source.substring(insertPosition)
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: insertPosition,
+        to: insertPosition,
+        insert: insertText,
+      },
+    }
+  }
+
+  /**
+   * Add a child relative to a sibling using a multi-line template
+   */
+  addChildWithTemplateRelativeTo(
+    siblingId: string,
+    templateCode: string,
+    placement: 'before' | 'after'
+  ): ModificationResult {
+    // Get sibling node mapping
+    const siblingMapping = this.sourceMap.getNodeById(siblingId)
+    if (!siblingMapping) {
+      return this.errorResult(`Sibling node not found: ${siblingId}`)
+    }
+
+    // Get sibling's line to determine indentation
+    const siblingLine = this.lines[siblingMapping.position.line - 1]
+    const indent = this.getLineIndent(siblingLine)
+
+    // Adjust template indentation
+    const adjustedTemplate = this.adjustTemplateIndentation(templateCode, indent)
+
+    let insertPosition: number
+    let insertText: string
+
+    if (placement === 'before') {
+      // Insert before sibling's line
+      insertPosition = this.getCharacterOffset(siblingMapping.position.line, 1)
+      insertText = `${adjustedTemplate}\n`
+    } else {
+      // Insert after sibling (at end of sibling's block)
+      const siblingEndLine = siblingMapping.position.endLine
+      const endLineContent = this.lines[siblingEndLine - 1]
+      insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
+      insertText = `\n${adjustedTemplate}`
+    }
+
+    // Apply the change
+    const newSource =
+      this.source.substring(0, insertPosition) +
+      insertText +
+      this.source.substring(insertPosition)
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: insertPosition,
+        to: insertPosition,
+        insert: insertText,
+      },
+    }
+  }
+
+  /**
+   * Adjust template indentation for insertion
+   *
+   * Takes a template with relative indentation and adds the base indentation.
+   */
+  private adjustTemplateIndentation(templateCode: string, baseIndent: string): string {
+    const lines = templateCode.split('\n')
+    return lines.map(line => baseIndent + line).join('\n')
+  }
+
+  /**
    * Add a child component relative to a sibling (before or after)
    */
   addChildRelativeTo(
