@@ -159,42 +159,6 @@ Dropdown
   })
 })
 
-describe.skip('Runtime: VisibleWhen', () => {
-  it('initially hides element with visibleWhen', () => {
-    const { root } = compileAndRun(`
-Menu as frame:
-  if (open)
-
-Menu
-`)
-    const menu = root.querySelector('[data-mirror-id]') as HTMLElement
-    expect(menu.style.display).toBe('none')
-  })
-
-  it('stores _visibleWhen property', () => {
-    const { root } = compileAndRun(`
-Menu as frame:
-  if (open)
-
-Menu
-`)
-    const menu = root.querySelector('[data-mirror-id]') as HTMLElement
-    expect((menu as any)._visibleWhen).toBe('open')
-  })
-})
-
-describe.skip('Runtime: Selection Binding', () => {
-  it('stores _selectionBinding property', () => {
-    const { root } = compileAndRun(`
-Menu as frame:
-  selection $selected
-
-Menu
-`)
-    const menu = root.querySelector('[data-mirror-id]') as HTMLElement
-    expect((menu as any)._selectionBinding).toBe('selected')
-  })
-})
 
 describe('Runtime: Click Outside Handler', () => {
   it('adds document click listener', () => {

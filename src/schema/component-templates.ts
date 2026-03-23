@@ -14,13 +14,22 @@
  * At insertion time, the target indentation is added to all lines.
  */
 
+/** Valid template categories */
+export type TemplateCategory =
+  | 'navigation'
+  | 'form'
+  | 'overlay'
+  | 'media'
+  | 'feedback'
+  | 'layout'
+
 export interface ComponentTemplate {
   /** Human-readable description */
   description: string
   /** Multi-line code template (relative indentation) */
   code: string
-  /** Optional: category for grouping in UI */
-  category?: string
+  /** Category for grouping in UI */
+  category: TemplateCategory
 }
 
 /**
@@ -485,7 +494,7 @@ export function getTemplateNames(): string[] {
 /**
  * Get templates by category
  */
-export function getTemplatesByCategory(category: string): Array<{ name: string; template: ComponentTemplate }> {
+export function getTemplatesByCategory(category: TemplateCategory): Array<{ name: string; template: ComponentTemplate }> {
   return Object.entries(COMPONENT_TEMPLATES)
     .filter(([_, template]) => template.category === category)
     .map(([name, template]) => ({ name, template }))
@@ -494,12 +503,10 @@ export function getTemplatesByCategory(category: string): Array<{ name: string; 
 /**
  * Get all categories
  */
-export function getTemplateCategories(): string[] {
-  const categories = new Set<string>()
+export function getTemplateCategories(): TemplateCategory[] {
+  const categories = new Set<TemplateCategory>()
   for (const template of Object.values(COMPONENT_TEMPLATES)) {
-    if (template.category) {
-      categories.add(template.category)
-    }
+    categories.add(template.category)
   }
   return Array.from(categories)
 }

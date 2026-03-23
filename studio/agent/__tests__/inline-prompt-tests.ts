@@ -460,167 +460,124 @@ async function runTest(test: InlinePromptTest): Promise<TestResult> {
 
 const testCases: InlinePromptTest[] = [
   // ============================================
-  // BASIC INLINE PROMPTS
+  // LEVEL 1: BASIC (⭐)
   // ============================================
   {
-    id: 'inline-basic-button',
-    name: 'Button im Box hinzufügen',
+    id: 'L1-01-simple-button',
+    name: '⭐ Einfacher Button',
     codeWithPrompt: `Box
-  Text "Header"
-  /blauer Button
-  Text "Footer"`,
+  /Button`,
+    expectations: {
+      contains: ['Button'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L1-02-styled-button',
+    name: '⭐ Gestylter Button',
+    codeWithPrompt: `Box pad 20
+  Text "Titel"
+  /roter Button mit weißem Text`,
+    expectations: {
+      contains: ['Button', 'bg', 'col'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L1-03-text-element',
+    name: '⭐ Text Element',
+    codeWithPrompt: `Box
+  /Text "Willkommen auf meiner Seite"`,
+    expectations: {
+      contains: ['Text', 'Willkommen'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L1-04-input-field',
+    name: '⭐ Input Feld',
+    codeWithPrompt: `Box ver gap 12
+  Label "Email"
+  /Eingabefeld mit Placeholder`,
+    expectations: {
+      contains: ['Input', 'placeholder'],
+      checkIndentation: true
+    }
+  },
+
+  // ============================================
+  // LEVEL 2: NESTING & CONTEXT (⭐⭐)
+  // ============================================
+  {
+    id: 'L2-01-deep-nesting',
+    name: '⭐⭐ Tiefes Nesting (6 Spaces)',
+    codeWithPrompt: `Box
+  Card
+    Header hor spread
+      Text "Titel"
+      /Schließen Icon
+    Content
+      Text "Inhalt"`,
+    expectations: {
+      contains: ['Icon'],
+      checkIndentation: true,
+      custom: (code) => {
+        const indent = (code.match(/^\s*/)?.[0] || '').length
+        return {
+          passed: indent === 6,
+          message: `Einrückung sollte 6 sein, ist ${indent}`
+        }
+      }
+    }
+  },
+  {
+    id: 'L2-02-sibling-context',
+    name: '⭐⭐ Geschwister-Kontext',
+    codeWithPrompt: `Box hor gap 16
+  Button "Eins"
+  Button "Zwei"
+  /dritter Button, grün`,
     expectations: {
       contains: ['Button', 'bg'],
       checkIndentation: true
     }
   },
   {
-    id: 'inline-nested',
-    name: 'Element in tieferer Verschachtelung',
+    id: 'L2-03-root-level',
+    name: '⭐⭐ Root-Level (keine Einrückung)',
     codeWithPrompt: `Box
-  Card
-    Header
-      /Icon für Schließen
-    Content
-      Text "Inhalt"`,
-    expectations: {
-      contains: ['Icon'],
-      checkIndentation: true
-    }
-  },
-  {
-    id: 'inline-root-level',
-    name: 'Element auf Root-Level',
-    codeWithPrompt: `Box
-  Text "Eins"
+  Text "Oben"
 
-/Navigation Header
+/Navigation Header mit Logo
 
 Box
-  Text "Zwei"`,
+  Text "Unten"`,
     expectations: {
-      contains: ['Header', 'Nav'],
+      contains: ['Header'],
       custom: (code) => ({
-        passed: !code.startsWith('  '),
-        message: 'Keine Einrückung auf Root-Level'
+        passed: !code.startsWith(' '),
+        message: 'Root-Level sollte keine Einrückung haben'
       })
     }
   },
   {
-    id: 'inline-after-sibling',
-    name: 'Nach Geschwister-Element',
-    codeWithPrompt: `Box hor gap 16
-  Button "Eins"
-  Button "Zwei"
-  /dritter Button rot`,
-    expectations: {
-      contains: ['Button'],
-      checkIndentation: true
-    }
-  },
-
-  // ============================================
-  // STYLING PROMPTS
-  // ============================================
-  {
-    id: 'inline-style-card',
-    name: 'Gestylte Card einfügen',
-    codeWithPrompt: `Box ver gap 20
-  /Card mit Schatten und abgerundeten Ecken
-  Text "Danach"`,
-    expectations: {
-      contains: ['shadow', 'rad'],
-      checkIndentation: true
-    }
-  },
-
-  // ============================================
-  // COMPONENT USAGE
-  // ============================================
-  {
-    id: 'inline-use-component',
-    name: 'Komponente verwenden',
-    codeWithPrompt: `Box
-  /verwende PrimaryButton Komponente`,
-    otherFiles: {
-      'components.com': `PrimaryButton as Button:
-  bg #3b82f6
-  col white
-  pad 12 24
-  rad 8`
-    },
-    expectations: {
-      contains: ['PrimaryButton'],
-      checkIndentation: true
-    }
-  },
-
-  // ============================================
-  // COMPLEX INLINE
-  // ============================================
-  {
-    id: 'inline-form-field',
-    name: 'Formular-Feld hinzufügen',
-    codeWithPrompt: `Box ver gap 20 pad 40
-  H2 "Login"
-  Box ver gap 8
-    Label "Email"
-    Input placeholder "email@example.com"
-  /Passwort Feld wie das Email Feld darüber
-  Button "Anmelden"`,
-    expectations: {
-      contains: ['Label', 'Input', 'Passwort'],
-      checkIndentation: true
-    }
-  },
-  {
-    id: 'inline-grid-item',
-    name: 'Grid Item hinzufügen',
-    codeWithPrompt: `Box grid 3 gap 16
-  Box bg #1a1a1a pad 20 rad 8
-    Text "Item 1"
-  Box bg #1a1a1a pad 20 rad 8
-    Text "Item 2"
-  /drittes Item gleicher Style`,
-    expectations: {
-      contains: ['Box', 'bg', 'pad'],
-      checkIndentation: true
-    }
-  },
-  {
-    id: 'inline-nav-item',
-    name: 'Navigation Item',
-    codeWithPrompt: `Nav hor gap 24
-  Link "Home" href "/"
-  Link "About" href "/about"
-  /Kontakt Link`,
-    expectations: {
-      contains: ['Link', 'Kontakt'],
-      checkIndentation: true
-    }
-  },
-
-  // ============================================
-  // EVENTS & STATES
-  // ============================================
-  {
-    id: 'inline-add-event',
-    name: 'Event hinzufügen',
+    id: 'L2-04-event-syntax',
+    name: '⭐⭐ Event Syntax',
     codeWithPrompt: `Box
   Button "Toggle"
-    /bei klick Panel ein/ausblenden
+    /bei klick das Panel ein/ausblenden
   Box = Panel hidden
-    Text "Content"`,
+    Text "Geheimer Inhalt"`,
     expectations: {
-      contains: ['onclick', 'toggle'],
+      contains: ['onclick', 'toggle', 'Panel'],
       checkIndentation: true
     }
   },
   {
-    id: 'inline-add-hover',
-    name: 'Hover State hinzufügen',
-    codeWithPrompt: `Button "Hover me" bg #3b82f6
-  /hover effekt dunkler`,
+    id: 'L2-05-hover-state',
+    name: '⭐⭐ Hover State',
+    codeWithPrompt: `Button "Hover me" bg #3b82f6 col white rad 8
+  /hover effekt: dunkler und etwas größer`,
     expectations: {
       contains: ['hover:'],
       checkIndentation: true
@@ -628,26 +585,201 @@ Box
   },
 
   // ============================================
-  // GERMAN PROMPTS (REALISTIC)
+  // LEVEL 3: CONTEXT LEARNING (⭐⭐⭐)
   // ============================================
   {
-    id: 'inline-german-1',
-    name: 'Deutscher Prompt - Überschrift',
-    codeWithPrompt: `Box pad 40
-  /große Überschrift "Willkommen"
-  Text "Beschreibung"`,
+    id: 'L3-01-copy-sibling-style',
+    name: '⭐⭐⭐ Style von Geschwister kopieren',
+    codeWithPrompt: `Box grid 3 gap 24 pad 24
+  Box bg #1a1a1a rad 12 pad 20
+    Text "Card 1"
+  Box bg #1a1a1a rad 12 pad 20
+    Text "Card 2"
+  /dritte Card gleiches Design`,
     expectations: {
-      contains: ['H1', 'Willkommen'],
+      contains: ['Box', 'bg #1a1a1a', 'rad 12', 'pad 20'],
       checkIndentation: true
     }
   },
   {
-    id: 'inline-german-2',
-    name: 'Deutscher Prompt - Layout',
-    codeWithPrompt: `Box
-  /zwei Buttons nebeneinander mit Abstand`,
+    id: 'L3-02-form-field-pattern',
+    name: '⭐⭐⭐ Formular-Pattern lernen',
+    codeWithPrompt: `Box ver gap 20 pad 40
+  H2 "Registrierung"
+  Box ver gap 4
+    Label "Email"
+    Input placeholder "email@beispiel.de" bg #1a1a1a bor 1 #333 rad 8 pad 12
+  /Passwort Feld genau wie Email darüber
+  Button "Registrieren"`,
     expectations: {
-      contains: ['hor', 'Button'],
+      contains: ['Label', 'Passwort', 'Input', 'bg #1a1a1a'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L3-03-card-with-image',
+    name: '⭐⭐⭐ Card mit Bild erweitern',
+    codeWithPrompt: `Box grid 3 gap 24
+  Box bg #1a1a1a rad 12 pad 20
+    Text "Einfache Card"
+  /Card mit Bild oben und Text unten`,
+    expectations: {
+      contains: ['Image', 'Text'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L3-04-use-existing-component',
+    name: '⭐⭐⭐ Existierende Komponente nutzen',
+    codeWithPrompt: `Box ver gap 16
+  Text "Aktionen:"
+  /PrimaryButton mit Text "Speichern"`,
+    otherFiles: {
+      'components.com': `PrimaryButton as Button:
+  bg #3b82f6
+  col white
+  pad 12 24
+  rad 8
+
+SecondaryButton as Button:
+  bg transparent
+  col #3b82f6
+  bor 1 #3b82f6
+  pad 12 24
+  rad 8`
+    },
+    expectations: {
+      contains: ['PrimaryButton', 'Speichern'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L3-05-use-tokens',
+    name: '⭐⭐⭐ Tokens verwenden',
+    codeWithPrompt: `Box pad $spacing.lg
+  /Button mit $primary Farbe`,
+    otherFiles: {
+      'tokens.tok': `$primary: #3b82f6
+$secondary: #22c55e
+$error: #ef4444
+
+$spacing.sm: 8
+$spacing.md: 16
+$spacing.lg: 24`
+    },
+    expectations: {
+      contains: ['Button', '$primary'],
+      checkIndentation: true
+    }
+  },
+
+  // ============================================
+  // LEVEL 4: COMPLEX GENERATION (⭐⭐⭐⭐)
+  // ============================================
+  {
+    id: 'L4-01-full-navigation',
+    name: '⭐⭐⭐⭐ Komplette Navigation',
+    codeWithPrompt: `/Navigation Header: Logo links, 3 Links mittig, CTA Button rechts`,
+    expectations: {
+      contains: ['hor', 'spread', 'Link', 'Button'],
+      custom: (code) => ({
+        passed: !code.startsWith(' ') && code.includes('Header') || code.includes('Nav') || code.includes('Box'),
+        message: 'Sollte auf Root-Level starten mit Header/Nav/Box'
+      })
+    }
+  },
+  {
+    id: 'L4-02-login-form',
+    name: '⭐⭐⭐⭐ Login Formular',
+    codeWithPrompt: `Box center h full
+  /Login Card: Titel, Email Input, Passwort Input, Submit Button, "Passwort vergessen" Link`,
+    expectations: {
+      contains: ['Input', 'Button', 'Email', 'Passwort'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L4-03-product-card',
+    name: '⭐⭐⭐⭐ Produkt Card',
+    codeWithPrompt: `Box grid 3 gap 24
+  /Produkt Card: Bild oben, Titel, Preis, "In den Warenkorb" Button`,
+    expectations: {
+      contains: ['Image', 'Text', 'Button'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L4-04-modal-dialog',
+    name: '⭐⭐⭐⭐ Modal Dialog',
+    codeWithPrompt: `Box
+  Button "Modal öffnen"
+    onclick: show Modal
+  /Modal mit Overlay, Card, Titel "Bestätigung", Text und zwei Buttons`,
+    expectations: {
+      contains: ['Box', 'stacked', 'Button'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L4-05-sidebar-nav',
+    name: '⭐⭐⭐⭐ Sidebar Navigation',
+    codeWithPrompt: `/Sidebar: Logo oben, 5 Nav Items mit Icons (Dashboard, Users, Settings, Help, Logout), dunkel`,
+    expectations: {
+      contains: ['Icon', 'Dashboard'],
+      custom: (code) => ({
+        passed: (code.match(/Icon/g) || []).length >= 3,
+        message: 'Sollte mehrere Icons haben'
+      })
+    }
+  },
+
+  // ============================================
+  // LEVEL 5: EDGE CASES (Spezialfälle)
+  // ============================================
+  {
+    id: 'L5-01-german-umlauts',
+    name: '🔧 Deutsche Umlaute',
+    codeWithPrompt: `Box
+  /Überschrift "Größenänderung möglich"`,
+    expectations: {
+      contains: ['Größe'],
+      checkIndentation: true
+    }
+  },
+  {
+    id: 'L5-02-empty-file',
+    name: '🔧 Leere Datei',
+    codeWithPrompt: `/einfache Box mit Text "Hallo Welt"`,
+    expectations: {
+      contains: ['Box', 'Text', 'Hallo'],
+      custom: (code) => ({
+        passed: !code.startsWith(' '),
+        message: 'Leere Datei sollte auf Root-Level starten'
+      })
+    }
+  },
+  {
+    id: 'L5-03-multiple-elements',
+    name: '🔧 Mehrere Elemente generieren',
+    codeWithPrompt: `Box ver gap 16
+  /3 Buttons: Rot, Grün, Blau`,
+    expectations: {
+      contains: ['Button'],
+      custom: (code) => ({
+        passed: (code.match(/Button/g) || []).length >= 3,
+        message: 'Sollte 3 Buttons haben'
+      })
+    }
+  },
+  {
+    id: 'L5-04-preserve-context',
+    name: '🔧 Kontext bewahren',
+    codeWithPrompt: `Box hor gap 16 pad 20 bg #0a0a0a rad 12
+  Icon "star" col #f59e0b
+  /Text "5.0" mit gleicher Farbe wie Icon
+  Text "(128 Bewertungen)" col #888`,
+    expectations: {
+      contains: ['Text', '5.0', '#f59e0b'],
       checkIndentation: true
     }
   }

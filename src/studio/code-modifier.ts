@@ -27,6 +27,7 @@ import {
   isSameProperty,
   type ParsedLine,
 } from './line-property-parser'
+import { adjustTemplateIndentation } from '../schema/component-templates'
 
 /**
  * Result of a code modification
@@ -429,7 +430,7 @@ export class CodeModifier {
     )
 
     // Adjust template indentation
-    const adjustedTemplate = this.adjustTemplateIndentation(
+    const adjustedTemplate = adjustTemplateIndentation(
       templateCode,
       insertionInfo.indent
     )
@@ -478,7 +479,7 @@ export class CodeModifier {
     const indent = this.getLineIndent(siblingLine)
 
     // Adjust template indentation
-    const adjustedTemplate = this.adjustTemplateIndentation(templateCode, indent)
+    const adjustedTemplate = adjustTemplateIndentation(templateCode, indent)
 
     let insertPosition: number
     let insertText: string
@@ -514,16 +515,6 @@ export class CodeModifier {
         insert: insertText,
       },
     }
-  }
-
-  /**
-   * Adjust template indentation for insertion
-   *
-   * Takes a template with relative indentation and adds the base indentation.
-   */
-  private adjustTemplateIndentation(templateCode: string, baseIndent: string): string {
-    const lines = templateCode.split('\n')
-    return lines.map(line => baseIndent + line).join('\n')
   }
 
   /**

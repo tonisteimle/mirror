@@ -6,7 +6,7 @@
 
 import type { CompletionContext, CompletionResult, Completion as CMCompletion } from '@codemirror/autocomplete'
 import { getAutocompleteEngine, type Completion } from './index'
-import { getComponentTemplate, hasComponentTemplate, COMPONENT_TEMPLATES } from '../../src/schema/component-templates'
+import { COMPONENT_TEMPLATES, adjustTemplateIndentation } from '../../src/schema/component-templates'
 
 /**
  * Map our completion types to CodeMirror completion types
@@ -33,11 +33,13 @@ function getLineIndentation(lineText: string): string {
 }
 
 /**
- * Adjust template indentation for insertion
+ * Check if cursor is at start of line (only whitespace before cursor)
+ * This prevents template completions from appearing mid-line
  */
-function adjustTemplateForInsertion(templateCode: string, baseIndent: string): string {
-  const lines = templateCode.split('\n')
-  return lines.map(line => baseIndent + line).join('\n')
+function isAtLineStart(lineText: string, cursorColumn: number): boolean {
+  const textBeforeCursor = lineText.slice(0, cursorColumn)
+  // Only whitespace and optionally starting to type a component name
+  return /^\s*[A-Z]?[a-z]*$/.test(textBeforeCursor)
 }
 
 /**
@@ -63,13 +65,13 @@ export function mirrorCompletions(context: CompletionContext): CompletionResult 
   })
 
   // Check if we're in a context where component templates make sense
-  // (at the start of an indented line, typing a component name)
-  const isComponentContext = lineText.trim().match(/^[A-Z]/) || lineText.trim() === ''
+  // Must be at start of line (only whitespace before) and typing a component name
+  const canShowTemplates = isAtLineStart(lineText, cursorColumn) && context.explicit
   const baseIndent = getLineIndentation(lineText)
 
-  // Add template completions if in component context and explicit trigger
+  // Add template completions if in valid context
   const templateCompletions: CMCompletion[] = []
-  if (isComponentContext && context.explicit) {
+  if (canShowTemplates) {
     const typed = lineText.trim().toLowerCase()
 
     for (const [name, template] of Object.entries(COMPONENT_TEMPLATES)) {
@@ -85,7 +87,7 @@ export function mirrorCompletions(context: CompletionContext): CompletionResult 
         boost: 10, // Boost templates above regular completions
         apply: (view, completion, from, to) => {
           // Insert the full template with proper indentation
-          const adjustedTemplate = adjustTemplateForInsertion(template.code, baseIndent)
+          const adjustedTemplate = adjustTemplateIndentation(template.code, baseIndent)
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: adjustedTemplate },
             selection: { anchor: line.from + adjustedTemplate.length },
