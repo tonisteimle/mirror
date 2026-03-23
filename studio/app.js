@@ -520,7 +520,7 @@ function detectFileType(nameOrContent, content) {
   if (filename) {
     const lower = filename.toLowerCase()
     if (lower.includes('token')) return 'tokens'
-    if (lower.includes('component')) return 'components'
+    if (lower.includes('component')) return 'component'  // Always singular
   }
 
   if (!code || !code.trim()) return 'layout'
@@ -2886,7 +2886,8 @@ function initializeFixer() {
         if (ext === 'tok' || name.includes('token')) type = 'tokens'
         else if (ext === 'com' || name.includes('component')) type = 'component'
 
-        fileList.push({ name, path: name, content, type })
+        // FIX #6: Use 'code' to match FileInfo interface
+        fileList.push({ name, type, code: content })
       }
       return fileList
     },

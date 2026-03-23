@@ -79,12 +79,13 @@ export class CodeApplicator {
         filesCreated
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error applying changes'
       return {
         success: false,
         filesChanged,
         filesCreated,
-        error: error.message || 'Unknown error applying changes'
+        error: errorMessage
       }
     }
   }
@@ -187,17 +188,51 @@ export class CodeApplicator {
 
   /**
    * Indent code based on depth
+   * FIX #7: Properly preserve relative indentation
+   *
+   * The code from the Fixer may have its own internal indentation (for nested elements).
+   * We need to:
+   * 1. Add base indent (depth * 2 spaces) to all lines
+   * 2. Preserve relative indentation between lines
    */
   private indentCode(code: string, depth: number): string {
-    const indent = '  '.repeat(depth)
-    return code
-      .split('\n')
-      .map((line, i) => {
-        // First line uses context indent, subsequent lines add to it
-        if (i === 0) return indent + line.trimStart()
-        // Preserve relative indentation for other lines
-        const lineIndent = line.match(/^(\s*)/)?.[1] || ''
-        return indent + line
+    if (!code || code.trim() === '') {
+      return ''
+    }
+
+    const baseIndent = '  '.repeat(depth)
+    const lines = code.split('\n')
+
+    // Find the minimum indentation in the input (excluding empty lines)
+    // This helps us normalize the input before adding our indent
+    let minIndent = Infinity
+    for (const line of lines) {
+      if (line.trim() === '') continue
+      const lineIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+      minIndent = Math.min(minIndent, lineIndent)
+    }
+
+    // If no non-empty lines, use 0
+    if (minIndent === Infinity) minIndent = 0
+
+    return lines
+      .map(line => {
+        // Keep empty lines empty
+        if (line.trim() === '') {
+          return ''
+        }
+
+        // Get current line's indent
+        const currentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+
+        // Calculate relative indent (how much more than the minimum)
+        const relativeIndent = currentIndent - minIndent
+
+        // New indent = base + relative
+        const newIndent = '  '.repeat(depth + Math.floor(relativeIndent / 2))
+
+        // Return new indent + trimmed content
+        return newIndent + line.trimStart()
       })
       .join('\n')
   }

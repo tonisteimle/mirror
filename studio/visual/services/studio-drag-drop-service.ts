@@ -333,6 +333,11 @@ export class StudioDragDropService {
       this.isDraggingFlag = false
       this.pendingDragOver = null
       this.paletteDragData = null
+      // Cancel any pending RAF to prevent stale updates
+      if (this.rafId !== null) {
+        cancelAnimationFrame(this.rafId)
+        this.rafId = null
+      }
       this.renderer.clear()
       this.callbacks.onDragLeave?.()
     }
