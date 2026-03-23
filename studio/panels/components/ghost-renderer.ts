@@ -130,7 +130,15 @@ export class GhostRenderer {
     const pendingRender = this.pendingRenders.get(cacheKey)
     if (pendingRender) {
       // Wait for the existing render and clone from cache
-      await pendingRender
+      try {
+        await pendingRender
+      } catch {
+        // Original render failed, we'll try again or use fallback
+      }
+      // Check if disposed during await
+      if (this.disposed) {
+        return this.createFallback(item)
+      }
       const cachedAfterWait = this.cache.get(cacheKey)
       if (cachedAfterWait) {
         return {
@@ -280,6 +288,11 @@ export class GhostRenderer {
    * Render synchronously (uses cache only, falls back to default)
    */
   renderSync(item: ComponentItem): RenderedGhost | null {
+    // Don't return cached items if disposed
+    if (this.disposed) {
+      return null
+    }
+
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
 

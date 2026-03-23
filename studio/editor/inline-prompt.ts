@@ -28,6 +28,8 @@ import type { FixerResponse } from '../agent/types'
 
 const MAX_PROMPT_LENGTH = 2000
 const CODE_REPLACEMENT_DELAY = 1500
+const VALIDATION_ERROR_TIMEOUT = 3000
+const SUBMISSION_ERROR_TIMEOUT = 5000
 
 // ============================================
 // TYPES
@@ -42,10 +44,15 @@ export interface InlinePromptState {
   message: string        // Status message to display
   response?: FixerResponse
   timeoutId?: number     // For cleanup
+  abortController?: AbortController  // For cancelling async operations
 }
 
 export interface InlinePromptConfig {
-  /** Called when user submits a prompt */
+  /**
+   * Called when user submits a prompt
+   * NOTE: AbortSignal is checked before and after this call, but not passed to onSubmit.
+   * The onSubmit implementation should be fast or handle its own cancellation.
+   */
   onSubmit: (prompt: string, line: number, view: EditorView) => Promise<FixerResponse | null>
   /** Called when prompt is cancelled */
   onCancel?: () => void
@@ -129,13 +136,21 @@ const promptStateField = StateField.define<InlinePromptState | null>({
   update(state, tr) {
     for (const effect of tr.effects) {
       if (effect.is(setPromptState)) {
-        // Cleanup timeout when clearing state
-        if (state?.timeoutId && effect.value === null) {
+        // FIX #1: Always cleanup old timeout when state changes (not just when null)
+        if (state?.timeoutId) {
           window.clearTimeout(state.timeoutId)
+        }
+        // FIX #2: Abort any running async operation
+        if (state?.abortController) {
+          state.abortController.abort()
         }
         return effect.value
       }
       if (effect.is(updatePromptStatus) && state) {
+        // Clear old timeout if new one is provided
+        if (effect.value.timeoutId && state.timeoutId && effect.value.timeoutId !== state.timeoutId) {
+          window.clearTimeout(state.timeoutId)
+        }
         return {
           ...state,
           status: effect.value.status,
@@ -270,13 +285,13 @@ function createPromptKeymap(config: InlinePromptConfig) {
         const validation = validatePrompt(prompt)
         if (!validation.valid) {
           if (validation.error) {
-            // FIX: Track auto-clear timeout to prevent race conditions
+            // FIX #12: Use constant for timeout duration
             const errorTimeoutId = window.setTimeout(() => {
               const currentState = view.state.field(promptStateField)
               if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
                 view.dispatch({ effects: setPromptState.of(null) })
               }
-            }, 3000)
+            }, VALIDATION_ERROR_TIMEOUT)
 
             view.dispatch({
               effects: setPromptState.of({
@@ -292,18 +307,22 @@ function createPromptKeymap(config: InlinePromptConfig) {
           return false // Empty prompt, let Enter continue
         }
 
+        // FIX #2: Create AbortController for cancellation
+        const abortController = new AbortController()
+
         // Start processing
         view.dispatch({
           effects: setPromptState.of({
             status: 'pending',
             line: line.number,
             prompt,
-            message: 'Generiere Code...'
+            message: 'Generiere Code...',
+            abortController
           })
         })
 
-        // Call the submit handler
-        handlePromptSubmit(view, config, prompt, line.number, getIndent(lineText))
+        // Call the submit handler with abort signal
+        handlePromptSubmit(view, config, prompt, line.number, getIndent(lineText), abortController.signal)
 
         return true // Handled
       }
@@ -339,11 +358,22 @@ async function handlePromptSubmit(
   config: InlinePromptConfig,
   prompt: string,
   lineNumber: number,
-  indent: string
+  indent: string,
+  signal: AbortSignal
 ) {
   try {
+    // FIX #2: Check if already aborted before starting
+    if (signal.aborted) {
+      return
+    }
+
     // Call the fixer
     const response = await config.onSubmit(prompt, lineNumber, view)
+
+    // FIX #2: Check abort signal after async operation
+    if (signal.aborted) {
+      return // Was cancelled during processing
+    }
 
     // Check if view is still valid (user might have closed editor)
     if (view.state.field(promptStateField) === null) {
@@ -379,15 +409,20 @@ async function handlePromptSubmit(
     })
 
   } catch (error: unknown) {
+    // FIX #2: Don't show error if operation was cancelled
+    if (signal.aborted) {
+      return
+    }
+
     const errorMessage = error instanceof Error ? error.message : 'Fehler bei der Verarbeitung'
 
-    // FIX: Track auto-clear timeout for error state
+    // FIX #12: Use constant for timeout duration
     const errorTimeoutId = window.setTimeout(() => {
       const currentState = view.state.field(promptStateField)
       if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
         view.dispatch({ effects: setPromptState.of(null) })
       }
-    }, 5000) // Longer timeout for submission errors
+    }, SUBMISSION_ERROR_TIMEOUT)
 
     view.dispatch({
       effects: updatePromptStatus.of({

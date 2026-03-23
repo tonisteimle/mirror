@@ -292,6 +292,12 @@ export class DragRenderer {
       }
 
       try {
+        // Validate rendered result before using
+        if (!rendered?.element || !rendered?.size?.width || !rendered?.size?.height) {
+          console.warn(`[DragRenderer] Invalid render result for "${componentName}"`)
+          return
+        }
+
         if (this.currentGhostSource?.componentName === componentName) {
           // Create ghost from rendered element with explicit size
           this.ghostFactory.createFromElement(rendered.element, rendered.size)

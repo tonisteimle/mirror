@@ -744,6 +744,9 @@ export class CodeModifier {
     // Then insert at the new position
     newSource = newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
 
+    // Save old source length before persisting (needed for CodeMirror change)
+    const oldSourceLength = this.source.length
+
     // Persist changes for subsequent operations
     this.source = newSource
     this.lines = newSource.split('\n')
@@ -754,7 +757,7 @@ export class CodeModifier {
       newSource,
       change: {
         from: 0,
-        to: this.source.length,
+        to: oldSourceLength,
         insert: newSource,
       },
     }
@@ -1281,6 +1284,7 @@ export class CodeModifier {
 
     // Calculate the change for the current file
     // If import was added, we need to describe the full change
+    // Note: use this.source.length BEFORE persisting (old length for CodeMirror)
     const change: CodeChange = importAdded
       ? {
           from: 0,
@@ -1292,6 +1296,10 @@ export class CodeModifier {
           to: this.getCharacterOffset(nodeLine, line.length + 1),
           insert: instanceLine,
         }
+
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = currentLines
 
     return {
       success: true,
@@ -1356,22 +1364,28 @@ export class CodeModifier {
       // Find end of animation block (next definition or end of indented block)
       const lines = this.source.split('\n')
       const baseIndent = match[1].length
+      // Convert to 0-based index for array access
+      const startIndex = startLine - 1
 
-      for (let i = startLine; i < lines.length; i++) {
+      for (let i = startIndex; i < lines.length; i++) {
         const line = lines[i]
         if (line.trim() === '') continue
 
         const currentIndent = line.match(/^(\s*)/)?.[1].length || 0
-        if (currentIndent <= baseIndent && i > startLine - 1) {
+        if (currentIndent <= baseIndent && i > startIndex) {
           break
         }
-        endLine = i + 1
+        endLine = i + 1  // Convert back to 1-based for getCharacterOffset
       }
 
       const from = this.getCharacterOffset(startLine, 1)
       const toOffset = this.getCharacterOffset(endLine, lines[endLine - 1].length + 1)
 
       const newSource = this.source.substring(0, from) + dsl + this.source.substring(toOffset)
+
+      // Persist changes for subsequent operations
+      this.source = newSource
+      this.lines = newSource.split('\n')
 
       return {
         success: true,
@@ -1382,6 +1396,10 @@ export class CodeModifier {
       // Create new animation - insert at top of file after tokens
       const insertPosition = this.findAnimationInsertPosition()
       const newSource = this.source.substring(0, insertPosition) + dsl + '\n\n' + this.source.substring(insertPosition)
+
+      // Persist changes for subsequent operations
+      this.source = newSource
+      this.lines = newSource.split('\n')
 
       return {
         success: true,
@@ -1494,39 +1512,52 @@ export class CodeModifier {
     const lines = this.source.split('\n')
     const baseIndent = match[1].length
     const keyframeIndent = '  '.repeat(baseIndent / 2 + 1)
+    // Convert to 0-based index for array access
+    const startIndex = startLine - 1
 
     // Find position to insert (sorted by time)
-    let insertLine = startLine
+    // insertLine is 1-based (for getCharacterOffset)
+    // Default to right after the animation definition line
+    let insertLine = startLine + 1
+    let lastKeyframeLine = startLine
 
-    for (let i = startLine; i < lines.length; i++) {
+    for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i]
       if (line.trim() === '') continue
 
       const currentIndent = line.match(/^(\s*)/)?.[1].length || 0
-      if (currentIndent <= baseIndent && i > startLine - 1) {
-        break
+      if (currentIndent <= baseIndent && i > startIndex) {
+        break  // Reached end of animation block
       }
 
-      // Check if this line is a keyframe
+      // Track last line of animation block for fallback insert position
+      lastKeyframeLine = i + 1  // 1-based
+
+      // Check if this line is a keyframe (starts with a time value)
       const keyframeMatch = line.match(/^\s*([\d.]+)\s+/)
       if (keyframeMatch) {
         const lineTime = parseFloat(keyframeMatch[1])
         if (lineTime < time) {
-          insertLine = i + 1
+          // Insert after this keyframe (sorted by time)
+          insertLine = i + 2  // i is 0-based, +1 for 1-based, +1 for "after"
         }
       }
-
-      if (i >= startLine - 1) {
-        insertLine = i + 1
-      }
     }
+
+    // Ensure insertLine doesn't exceed document bounds
+    insertLine = Math.min(insertLine, this.lines.length + 1)
 
     // Build the new keyframe line
     const propsStr = properties.map(p => `${p.property} ${p.value}`).join(', ')
     const newLine = `${keyframeIndent}${time.toFixed(2)} ${propsStr}`
 
-    const insertPosition = this.getCharacterOffset(insertLine + 1, 1)
+    // insertLine is already 1-based
+    const insertPosition = this.getCharacterOffset(insertLine, 1)
     const newSource = this.source.substring(0, insertPosition) + newLine + '\n' + this.source.substring(insertPosition)
+
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
 
     return {
       success: true,
@@ -1658,6 +1689,10 @@ export class CodeModifier {
     const newLines = [...this.lines]
     newLines[containerMapping.position.line - 1] = newLine
     const newSource = newLines.join('\n')
+
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newLines
 
     return {
       success: true,
@@ -1833,6 +1868,10 @@ export class CodeModifier {
     // Apply the change
     const newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
 
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
     return {
       success: true,
       newSource,
@@ -1906,6 +1945,10 @@ export class CodeModifier {
     // Apply the change
     const newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
 
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
     return {
       success: true,
       newSource,
@@ -1965,8 +2008,10 @@ export class CodeModifier {
 
     if (parsedLine.textContent) {
       // Replace existing text content
-      // Find the text content position in the line
-      const textStart = line.lastIndexOf(parsedLine.textContent)
+      // Find the FIRST text content position after the component name
+      // Using indexOf instead of lastIndexOf to avoid matching duplicate text in properties
+      const componentEndApprox = parsedLine.indent.length + (parsedLine.componentPart?.length || 0)
+      const textStart = line.indexOf(parsedLine.textContent, componentEndApprox)
       if (textStart !== -1) {
         newLine = line.substring(0, textStart) + `"${escapedNewText}"` + line.substring(textStart + parsedLine.textContent.length)
       } else {
