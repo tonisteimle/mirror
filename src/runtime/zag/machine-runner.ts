@@ -112,6 +112,10 @@ export interface MachineConfig {
   // Common props
   disabled?: boolean
   readOnly?: boolean
+  // Form validation props
+  invalid?: boolean
+  required?: boolean
+  name?: string
   // Select/Combobox props
   placeholder?: string
   multiple?: boolean
@@ -120,20 +124,32 @@ export interface MachineConfig {
   value?: string | string[]
   defaultValue?: string | string[]
   items?: IRItem[]
+  loopFocus?: boolean
+  deselectable?: boolean
   // Slider props
   min?: number
   max?: number
   step?: number
+  origin?: 'start' | 'center'
   // Progress props
   // Accordion/Collapsible props
   collapsible?: boolean
   // Tabs props
   orientation?: 'horizontal' | 'vertical'
   activationMode?: 'automatic' | 'manual'
-  // Dialog props
+  // Dialog/Popover props
   modal?: boolean
   closeOnOutsideClick?: boolean
   closeOnEscape?: boolean
+  trapFocus?: boolean
+  restoreFocus?: boolean
+  preventScroll?: boolean
+  // Tooltip props
+  interactive?: boolean
+  closeOnScroll?: boolean
+  closeOnClick?: boolean
+  openDelay?: number
+  closeDelay?: number
   // Toast props
   duration?: number
   placement?: string
@@ -225,6 +241,9 @@ export class MachineRunner {
       id: config.id,
       disabled: config.disabled,
       readOnly: config.readOnly,
+      invalid: config.invalid,
+      required: config.required,
+      name: config.name,
     }
 
     switch (type) {
@@ -247,6 +266,8 @@ export class MachineRunner {
         return {
           ...baseProps,
           collection: itemCollection,
+          loopFocus: config.loopFocus,
+          deselectable: config.deselectable,
           onValueChange: config.onValueChange,
           onOpenChange: config.onOpenChange,
         }
@@ -258,6 +279,7 @@ export class MachineRunner {
       case 'navigation-menu':
         return {
           ...baseProps,
+          loopFocus: config.loopFocus,
           onOpenChange: config.onOpenChange,
         }
 
@@ -274,16 +296,25 @@ export class MachineRunner {
           ...baseProps,
           orientation: config.orientation,
           activationMode: config.activationMode,
+          loopFocus: config.loopFocus,
+          deselectable: config.deselectable,
           onValueChange: config.onValueChange,
         }
 
       case 'slider':
       case 'range-slider':
-      case 'angle-slider':
         return {
           ...baseProps,
           min: config.min ?? 0,
           max: config.max ?? 100,
+          step: config.step ?? 1,
+          origin: config.origin,
+          onValueChange: config.onValueChange,
+        }
+
+      case 'angle-slider':
+        return {
+          ...baseProps,
           step: config.step ?? 1,
           onValueChange: config.onValueChange,
         }
@@ -296,21 +327,60 @@ export class MachineRunner {
         }
 
       case 'radio-group':
+        return {
+          ...baseProps,
+          orientation: config.orientation,
+          onValueChange: config.onValueChange,
+        }
+
       case 'toggle-group':
       case 'segmented-control':
         return {
           ...baseProps,
+          loopFocus: config.loopFocus,
+          orientation: config.orientation,
           onValueChange: config.onValueChange,
         }
 
       case 'dialog':
+        return {
+          ...baseProps,
+          modal: config.modal ?? true,
+          closeOnOutsideClick: config.closeOnOutsideClick ?? true,
+          closeOnEscape: config.closeOnEscape ?? true,
+          trapFocus: config.trapFocus ?? true,
+          restoreFocus: config.restoreFocus ?? true,
+          preventScroll: config.preventScroll ?? true,
+          onOpenChange: config.onOpenChange,
+        }
+
       case 'popover':
-      case 'hover-card':
+        return {
+          ...baseProps,
+          modal: config.modal,
+          closeOnOutsideClick: config.closeOnOutsideClick ?? true,
+          closeOnEscape: config.closeOnEscape ?? true,
+          trapFocus: config.trapFocus,
+          restoreFocus: config.restoreFocus ?? true,
+          onOpenChange: config.onOpenChange,
+        }
+
       case 'tooltip':
         return {
           ...baseProps,
-          closeOnOutsideClick: config.closeOnOutsideClick ?? true,
-          closeOnEscape: config.closeOnEscape ?? true,
+          openDelay: config.openDelay,
+          closeDelay: config.closeDelay,
+          closeOnClick: config.closeOnClick ?? true,
+          interactive: config.interactive,
+          closeOnScroll: config.closeOnScroll ?? true,
+          onOpenChange: config.onOpenChange,
+        }
+
+      case 'hover-card':
+        return {
+          ...baseProps,
+          openDelay: config.openDelay ?? 700,
+          closeDelay: config.closeDelay ?? 300,
           onOpenChange: config.onOpenChange,
         }
 

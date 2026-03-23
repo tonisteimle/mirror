@@ -208,56 +208,78 @@ export class EditorDropHandler {
   }
 
   /**
-   * Insert component code at position with smart indentation
+   * Insert component code AFTER the drop line with smart indentation
+   *
+   * ROBUST BEHAVIOR:
+   * - Always inserts NEW lines after the target line
+   * - Never modifies existing code
+   * - Calculates indentation based on context (parent/sibling)
    */
   insertComponentCode(code: string, pos: EditorDropPosition): void {
     const doc = this.editor.state.doc
-    const targetLine = doc.line(pos.line)
+    const totalLines = doc.lines
+
+    // Clamp line number to valid range
+    const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
+    const targetLine = doc.line(lineNumber)
 
     // Calculate the correct indentation based on context
-    const indent = this.calculateIndentation(pos.line)
+    const indent = this.calculateIndentation(lineNumber)
 
-    // Indent all lines of the component code
-    const indentedCode = code
-      .split('\n')
-      .map((codeLine, index) => {
-        if (index === 0) {
-          return indent + codeLine
-        }
-        // For subsequent lines, add base indent + the line's own relative indent
-        const lineIndent = codeLine.match(/^(\s*)/)?.[1] || ''
-        const content = codeLine.trimStart()
-        return indent + lineIndent + content
-      })
-      .join('\n')
+    // Apply indentation to all lines of the component code
+    const codeLines = code.split('\n')
+    const indentedLines = codeLines.map((codeLine, index) => {
+      const trimmedLine = codeLine.trim()
+      if (!trimmedLine) return '' // Empty lines stay empty
 
-    // Insert at end of current line with newline
-    const insertPos = targetLine.to
+      if (index === 0) {
+        // First line gets the calculated indent
+        return indent + trimmedLine
+      } else {
+        // Subsequent lines: preserve relative indentation from original code
+        const originalIndent = codeLine.match(/^(\s*)/)?.[1] || ''
+        const relativeIndent = originalIndent.length > 0 ? '  '.repeat(Math.floor(originalIndent.length / 2)) : ''
+        return indent + relativeIndent + trimmedLine
+      }
+    })
+
+    // Build insert text: newline + indented code
+    const indentedCode = indentedLines.join('\n')
     const insertText = '\n' + indentedCode
 
+    // Insert position: end of target line (after all existing content)
+    const insertPos = targetLine.to
+
+    // Dispatch the change
     this.editor.dispatch({
       changes: {
         from: insertPos,
         to: insertPos,
         insert: insertText,
       },
+      // Move cursor to end of inserted code
       selection: {
         anchor: insertPos + insertText.length,
       },
     })
+
+    // Focus the editor
+    this.editor.focus()
   }
 
   /**
-   * Calculate the correct indentation for a new child element
-   * In Mirror DSL, children are indented 2 spaces more than their parent
+   * Calculate the correct indentation for a new element
+   *
+   * RULES:
+   * 1. Find the nearest component line above (starts with uppercase)
+   * 2. New element is a CHILD → indent = parent indent + 2 spaces
+   * 3. If drop is on a property line, new element is a SIBLING → same indent as component
+   * 4. Root level (no parent) → no indentation
    */
   private calculateIndentation(lineNumber: number): string {
     const doc = this.editor.state.doc
 
-    // Find the parent element by looking at previous lines
-    let parentIndent = ''
-    let foundParent = false
-
+    // Start from the drop line and search upward
     for (let i = lineNumber; i >= 1; i--) {
       const line = doc.line(i)
       const text = line.text
@@ -266,34 +288,53 @@ export class EditorDropHandler {
       // Skip empty lines and comments
       if (!trimmed || trimmed.startsWith('//')) continue
 
-      // Get leading whitespace
-      const leadingWhitespace = text.match(/^(\s*)/)?.[1] || ''
+      // Get the indentation of this line
+      const lineIndent = text.match(/^(\s*)/)?.[1] || ''
 
-      // Check if this line is a component (starts with uppercase or known keywords)
-      const isComponent = /^[A-Z]/.test(trimmed) || /^(Box|Text|Button|Input|Image|Icon)/.test(trimmed)
-
-      if (isComponent) {
-        // This is a potential parent - child should be indented 2 more spaces
-        parentIndent = leadingWhitespace + '  '
-        foundParent = true
-        break
+      // Check if this is a component line (starts with uppercase letter)
+      // Components: Box, Text, Button, App, MyComponent, etc.
+      if (/^[A-Z]/.test(trimmed)) {
+        // Found a component - new element should be its child
+        // Child indent = parent indent + 2 spaces
+        return lineIndent + '  '
       }
 
-      // If we find a property line (starts with lowercase or special char),
-      // use its indentation as we're at the same level
-      if (/^[a-z$@]/.test(trimmed) || /^(pad|bg|col|w |h |gap|rad|bor|margin)/.test(trimmed)) {
-        parentIndent = leadingWhitespace
-        foundParent = true
-        break
+      // Check if this is a property/attribute line
+      // Properties start with lowercase: pad, bg, col, w, h, gap, etc.
+      // Or special chars: $token, @state, etc.
+      if (/^[a-z$@]/.test(trimmed)) {
+        // This is a property line - find its parent component
+        const propertyIndent = lineIndent
+
+        // Search further up to find the parent component
+        for (let j = i - 1; j >= 1; j--) {
+          const parentLine = doc.line(j)
+          const parentText = parentLine.text
+          const parentTrimmed = parentText.trim()
+
+          if (!parentTrimmed || parentTrimmed.startsWith('//')) continue
+
+          const parentIndent = parentText.match(/^(\s*)/)?.[1] || ''
+
+          // If we find a component with less indentation, that's the parent
+          if (/^[A-Z]/.test(parentTrimmed) && parentIndent.length < propertyIndent.length) {
+            // New element is sibling to the properties → child of this parent
+            return parentIndent + '  '
+          }
+
+          // If we find a component at same or greater indent, it's not our parent
+          if (/^[A-Z]/.test(parentTrimmed) && parentIndent.length <= propertyIndent.length) {
+            return parentIndent + '  '
+          }
+        }
+
+        // No parent found, use property indent level
+        return propertyIndent
       }
     }
 
-    // If no parent found, use no indentation (root level)
-    if (!foundParent) {
-      parentIndent = ''
-    }
-
-    return parentIndent
+    // No context found - root level, no indentation
+    return ''
   }
 }
 
