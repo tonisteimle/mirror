@@ -17,6 +17,8 @@ import {
   categoryOrder,
   categoryLabels,
 } from '../schema/properties'
+import { isZagPrimitive } from '../schema/zag-primitives'
+import { getZagPropMetadata, type ZagPropMeta } from '../schema/zag-prop-metadata'
 
 /**
  * Property types for UI rendering
@@ -46,6 +48,11 @@ export interface ExtractedProperty {
   hasValue: boolean           // Whether the property has a value set
   description?: string        // Property description from schema
   options?: string[]          // For select/enum properties
+  category?: string           // Override category (e.g., 'behavior' for Zag props)
+  label?: string              // Human-readable label (e.g., "Close on Select")
+  min?: number                // For number validation/slider
+  max?: number                // For number validation/slider
+  step?: number               // For slider step
 }
 
 /**
@@ -257,6 +264,9 @@ const CATEGORY_MAP: Record<string, string> = {
   z: 'visual',
 }
 
+/** Category name for Zag behavior properties */
+const BEHAVIOR_CATEGORY = 'behavior' as const
+
 const CATEGORY_LABELS: Record<string, string> = {
   layout: 'Layout',
   position: 'Position',
@@ -268,6 +278,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   typography: 'Typography',
   visual: 'Visual',
   hover: 'Hover',
+  [BEHAVIOR_CATEGORY]: 'Behavior',
   other: 'Other',
 }
 
@@ -387,6 +398,15 @@ export class PropertyExtractor {
       this.addAvailableProperties(allProperties, nodeMapping.componentName)
     }
 
+    // Add Zag behavior props for Zag primitives
+    if (isZagPrimitive(nodeMapping.componentName)) {
+      const behaviorProps = this.extractZagBehaviorProps(
+        nodeMapping.componentName,
+        astNode as Instance
+      )
+      allProperties.push(...behaviorProps)
+    }
+
     // Group into categories
     const categories = this.showAllProperties
       ? this.categorizeAllProperties(allProperties)
@@ -436,6 +456,12 @@ export class PropertyExtractor {
     // Add all available properties from schema (if enabled)
     if (this.showAllProperties) {
       this.addAvailableProperties(allProperties, componentName)
+    }
+
+    // Add Zag behavior props for Zag primitives
+    if (isZagPrimitive(componentName)) {
+      const behaviorProps = this.extractZagBehaviorPropsFromDef(componentName, componentDef)
+      allProperties.push(...behaviorProps)
     }
 
     // Group into categories
@@ -524,11 +550,14 @@ export class PropertyExtractor {
     const categoryMap = new Map<string, ExtractedProperty[]>()
 
     for (const prop of properties) {
-      // Find category from schema
-      const schemaProp = allPropertyDefinitions.find(d =>
-        d.name === prop.name || d.aliases.includes(prop.name)
-      )
-      const category = schemaProp?.category || 'other'
+      // Use prop.category if set, otherwise look up in schema
+      let category = prop.category
+      if (!category) {
+        const schemaProp = allPropertyDefinitions.find(d =>
+          d.name === prop.name || d.aliases.includes(prop.name)
+        )
+        category = schemaProp?.category || 'other'
+      }
 
       if (!categoryMap.has(category)) {
         categoryMap.set(category, [])
@@ -536,10 +565,11 @@ export class PropertyExtractor {
       categoryMap.get(category)!.push(prop)
     }
 
-    // Convert to array using schema category order
+    // Convert to array using schema category order (+ behavior)
     const categories: PropertyCategory[] = []
+    const extendedOrder = [...categoryOrder, BEHAVIOR_CATEGORY]
 
-    for (const catName of categoryOrder) {
+    for (const catName of extendedOrder) {
       const props = categoryMap.get(catName)
       if (props && props.length > 0) {
         // Sort: properties with values first
@@ -551,7 +581,7 @@ export class PropertyExtractor {
 
         categories.push({
           name: catName,
-          label: categoryLabels[catName] || catName,
+          label: CATEGORY_LABELS[catName] || (categoryLabels as Record<string, string>)[catName] || catName,
           properties: props,
         })
       }
@@ -737,7 +767,7 @@ export class PropertyExtractor {
 
     // Convert to array with labels (matches schema categoryOrder)
     const categories: PropertyCategory[] = []
-    const order = ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', 'other']
+    const order = ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', BEHAVIOR_CATEGORY, 'other']
 
     for (const name of order) {
       const props = categoryMap.get(name)
@@ -769,6 +799,118 @@ export class PropertyExtractor {
    */
   updateSourceMap(sourceMap: SourceMap): void {
     this.sourceMap = sourceMap
+  }
+
+  /**
+   * Extract Zag behavior properties from an instance
+   */
+  private extractZagBehaviorProps(
+    componentName: string,
+    astNode: Instance
+  ): ExtractedProperty[] {
+    return this.extractZagBehaviorPropsGeneric(
+      componentName,
+      astNode.properties,
+      'instance'
+    )
+  }
+
+  /**
+   * Extract Zag behavior properties from a component definition
+   */
+  private extractZagBehaviorPropsFromDef(
+    componentName: string,
+    componentDef: ComponentDefinition
+  ): ExtractedProperty[] {
+    return this.extractZagBehaviorPropsGeneric(
+      componentName,
+      componentDef.properties,
+      'component'
+    )
+  }
+
+  /**
+   * Generic extraction of Zag behavior properties
+   */
+  private extractZagBehaviorPropsGeneric(
+    componentName: string,
+    properties: Property[],
+    sourceType: 'instance' | 'component'
+  ): ExtractedProperty[] {
+    const metadata = getZagPropMetadata(componentName)
+    if (!metadata) return []
+
+    const props: ExtractedProperty[] = []
+
+    for (const [propName, meta] of Object.entries(metadata)) {
+      const astProp = properties.find(p => p.name === propName)
+
+      props.push({
+        name: propName,
+        value: astProp
+          ? this.getPropertyValueString(astProp)
+          : meta.default !== undefined
+            ? String(meta.default)
+            : '',
+        type: this.zagTypeToPropertyType(meta.type),
+        source: astProp ? sourceType : 'available',
+        line: astProp?.line ?? 0,
+        column: astProp?.column ?? 0,
+        isToken: false,
+        hasValue: !!astProp,
+        description: meta.description,
+        options: meta.options,
+        category: BEHAVIOR_CATEGORY,
+        label: meta.label,
+        min: meta.min,
+        max: meta.max,
+        step: meta.step,
+      })
+    }
+
+    return props
+  }
+
+  /**
+   * Get string value from a property
+   */
+  private getPropertyValueString(prop: Property): string {
+    if (prop.values.length === 0) {
+      return 'true'
+    }
+    if (prop.values.length === 1) {
+      const val = prop.values[0]
+      if (typeof val === 'object' && 'kind' in val && val.kind === 'token') {
+        return `$${val.name}`
+      }
+      return String(val)
+    }
+    return prop.values
+      .map(v => {
+        if (typeof v === 'object' && 'kind' in v && v.kind === 'token') {
+          return `$${v.name}`
+        }
+        return String(v)
+      })
+      .join(' ')
+  }
+
+  /**
+   * Convert Zag prop type to PropertyType
+   */
+  private zagTypeToPropertyType(type: ZagPropMeta['type']): PropertyType {
+    switch (type) {
+      case 'boolean':
+        return 'boolean'
+      case 'number':
+        return 'number'
+      case 'enum':
+        return 'select'
+      case 'string':
+        return 'text'
+      default:
+        return 'unknown'
+    }
   }
 }
 

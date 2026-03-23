@@ -287,6 +287,8 @@ function createPromptKeymap(config: InlinePromptConfig) {
           if (validation.error) {
             // FIX #12: Use constant for timeout duration
             const errorTimeoutId = window.setTimeout(() => {
+              // FIX: Check if view is still valid before dispatching
+              if (!isViewValid(view)) return
               const currentState = view.state.field(promptStateField)
               if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
                 view.dispatch({ effects: setPromptState.of(null) })
@@ -353,6 +355,23 @@ function createPromptKeymap(config: InlinePromptConfig) {
 // PROMPT HANDLER
 // ============================================
 
+/**
+ * Check if EditorView is still valid and attached to DOM
+ */
+function isViewValid(view: EditorView): boolean {
+  try {
+    // Check if view has been destroyed
+    if (!view.dom || !view.dom.isConnected) {
+      return false
+    }
+    // Check if state is still accessible
+    view.state.doc.length  // Will throw if destroyed
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function handlePromptSubmit(
   view: EditorView,
   config: InlinePromptConfig,
@@ -367,12 +386,24 @@ async function handlePromptSubmit(
       return
     }
 
+    // FIX: Check if view is still valid before proceeding
+    if (!isViewValid(view)) {
+      console.warn('[InlinePrompt] View was destroyed before operation started')
+      return
+    }
+
     // Call the fixer
     const response = await config.onSubmit(prompt, lineNumber, view)
 
     // FIX #2: Check abort signal after async operation
     if (signal.aborted) {
       return // Was cancelled during processing
+    }
+
+    // FIX: Check if view is still valid after async operation
+    if (!isViewValid(view)) {
+      console.warn('[InlinePrompt] View was destroyed during processing')
+      return
     }
 
     // Check if view is still valid (user might have closed editor)
@@ -418,6 +449,8 @@ async function handlePromptSubmit(
 
     // FIX #12: Use constant for timeout duration
     const errorTimeoutId = window.setTimeout(() => {
+      // FIX: Check if view is still valid before dispatching
+      if (!isViewValid(view)) return
       const currentState = view.state.field(promptStateField)
       if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
         view.dispatch({ effects: setPromptState.of(null) })
@@ -444,6 +477,12 @@ function replacePromptWithCode(
   response: FixerResponse,
   indent: string
 ) {
+  // FIX: Check if view is still valid
+  if (!isViewValid(view)) {
+    console.warn('[InlinePrompt] View was destroyed before code replacement')
+    return
+  }
+
   // Check if state is still valid
   const currentState = view.state.field(promptStateField)
   if (!currentState || currentState.status !== 'success') {
@@ -482,9 +521,10 @@ function replacePromptWithCode(
       // Replace prompt line with generated code
       const indentedCode = currentFileChange.code
         .split('\n')
-        .map((l, i) => {
+        .map(l => {
           if (l.trim() === '') return '' // Keep empty lines empty
-          return i === 0 ? indent + l.trimStart() : indent + l.trimStart()
+          // FIX: Removed redundant condition (both branches were identical)
+          return indent + l.trimStart()
         })
         .join('\n')
 
@@ -543,26 +583,26 @@ export const inlinePromptStyles = `
   gap: 8px;
   padding: 4px 0 4px 24px;
   font-size: 12px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  background: var(--bg-panel);
-  border-left: 2px solid var(--border-default);
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted, #888);
+  background: var(--bg-panel, #1a1a1a);
+  border-left: 2px solid var(--border-default, #333);
   margin-left: 4px;
 }
 
 .inline-prompt-status[data-status="pending"] {
-  color: var(--color-info);
-  border-left-color: var(--color-info);
+  color: var(--color-info, #3b82f6);
+  border-left-color: var(--color-info, #3b82f6);
 }
 
 .inline-prompt-status[data-status="success"] {
-  color: var(--color-success);
-  border-left-color: var(--color-success);
+  color: var(--color-success, #22c55e);
+  border-left-color: var(--color-success, #22c55e);
 }
 
 .inline-prompt-status[data-status="error"] {
-  color: var(--color-error);
-  border-left-color: var(--color-error);
+  color: var(--color-error, #ef4444);
+  border-left-color: var(--color-error, #ef4444);
 }
 
 .inline-prompt-icon {

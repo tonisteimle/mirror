@@ -173,6 +173,17 @@ export interface IconButtonConfig extends BaseComponentConfig {
 }
 
 // ============================================
+// Toggle
+// ============================================
+
+export interface ToggleConfig extends BaseComponentConfig {
+  /** Current value (on/off) */
+  value: boolean
+  /** Called when value changes */
+  onChange: (value: boolean) => void
+}
+
+// ============================================
 // Slider
 // ============================================
 

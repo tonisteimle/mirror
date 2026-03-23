@@ -20,6 +20,59 @@ import { state } from '../core'
 const MAX_HISTORY_MESSAGES = 10
 const MAX_MESSAGE_LENGTH = 5000  // FIX #4: Limit message size
 const MAX_HISTORY_TOTAL_SIZE = 50000  // FIX #4: Total history size limit
+const INDENT_SIZE = 2  // FIX #14: Spaces per indent level
+
+/**
+ * FIX #5: Type-safe file content accessor
+ * Handles both 'code' and legacy 'content' properties
+ */
+function getFileContent(file: FileInfo): string {
+  // Use type assertion with runtime check
+  const f = file as FileInfo & { content?: string }
+  return f.code ?? f.content ?? ''
+}
+
+/**
+ * Extract a component definition using efficient line scanning
+ * Finds the component starting at startIndex and reads until the next component definition
+ */
+function extractComponentDefinition(content: string, name: string, startIndex: number): string | null {
+  const lines = content.split('\n')
+  let startLine = -1
+  let currentPos = 0
+
+  // Find the line containing startIndex
+  for (let i = 0; i < lines.length; i++) {
+    const lineEnd = currentPos + lines[i].length
+    if (currentPos <= startIndex && startIndex <= lineEnd) {
+      startLine = i
+      break
+    }
+    currentPos = lineEnd + 1 // +1 for newline
+  }
+
+  if (startLine === -1) return null
+
+  // Collect lines until we hit another top-level definition (line starting with word:)
+  const result: string[] = [lines[startLine]]
+  const componentDefPattern = /^\w+(?:\s+as\s+\w+)?:/
+
+  for (let i = startLine + 1; i < lines.length; i++) {
+    const line = lines[i]
+    // Check if this is a new top-level definition (starts with word followed by colon)
+    if (componentDefPattern.test(line)) {
+      break
+    }
+    result.push(line)
+  }
+
+  // Trim trailing empty lines
+  while (result.length > 0 && result[result.length - 1].trim() === '') {
+    result.pop()
+  }
+
+  return result.join('\n').trim() || null
+}
 
 // ============================================
 // TYPES
@@ -71,8 +124,8 @@ export class ContextCollector {
     const componentFiles: Record<string, string> = {}
 
     for (const file of files) {
-      // Handle both 'code' and 'content' properties for compatibility
-      const content = (file as any).code || (file as any).content || ''
+      // FIX #5: Use type-safe content accessor
+      const content = getFileContent(file)
 
       if (file.type === 'tokens' || file.name.endsWith('.tok')) {
         tokenFiles[file.name] = content
@@ -186,7 +239,8 @@ export class ContextCollector {
       const line = lines[lineIndex]
       const indentMatch = line.match(/^(\s*)/)
       const indent = indentMatch ? indentMatch[1].length : 0
-      const depth = Math.floor(indent / 2)
+      // FIX #14: Use INDENT_SIZE constant
+      const depth = Math.floor(indent / INDENT_SIZE)
 
       return {
         currentNode: {
@@ -197,7 +251,8 @@ export class ContextCollector {
         parentNode: parentNode ? {
           type: parentNode.type || 'unknown',
           name: parentNode.name || parentNode.type || 'unknown',
-          line: parentNode.position?.line || 0
+          // Use 1 as minimum valid line number instead of 0
+          line: parentNode.position?.line ?? 1
         } : null,
         siblings,
         depth
@@ -236,15 +291,25 @@ export class ContextCollector {
   /**
    * Trim history if total size exceeds limit
    * FIX #4: Prevent memory issues with large responses
+   * FIX #15: Handle single large entries that exceed limit
    */
   private trimHistoryBySize(): void {
     let totalSize = this.history.reduce((sum, entry) => sum + entry.content.length, 0)
 
+    // Remove oldest entries until under limit
     while (totalSize > MAX_HISTORY_TOTAL_SIZE && this.history.length > 1) {
       const removed = this.history.shift()
       if (removed) {
         totalSize -= removed.content.length
       }
+    }
+
+    // FIX #15: If single remaining entry is too large, truncate it
+    if (this.history.length === 1 && totalSize > MAX_HISTORY_TOTAL_SIZE) {
+      const entry = this.history[0]
+      const maxContentSize = MAX_HISTORY_TOTAL_SIZE - 50 // Leave room for truncation marker
+      entry.content = entry.content.slice(0, maxContentSize) + '... [truncated due to size]'
+      console.warn('[ContextCollector] Single history entry truncated due to size limit')
     }
   }
 
@@ -284,8 +349,8 @@ export function extractProjectContext(files: FileInfo[]): ProjectContext {
   const componentDefinitions: Record<string, string> = {}
 
   for (const file of files) {
-    // Handle both 'code' and 'content' properties for compatibility
-    const content = (file as any).code || (file as any).content || ''
+    // FIX #5: Use type-safe content accessor
+    const content = getFileContent(file)
 
     if (file.type === 'tokens' || file.name.endsWith('.tok')) {
       // Extract tokens: $name: value
@@ -305,10 +370,11 @@ export function extractProjectContext(files: FileInfo[]): ProjectContext {
         const name = match[1]
         componentNames.push(name)
 
-        // Extract full definition (until next component or end)
-        const defMatch = content.match(new RegExp(`^${name}[^\\n]*:[\\s\\S]*?(?=^\\w+[^\\n]*:|$)`, 'm'))
-        if (defMatch) {
-          componentDefinitions[name] = defMatch[0].trim()
+        // FIX: Use line-based extraction instead of slow regex
+        // Find the definition by scanning lines
+        const definition = extractComponentDefinition(content, name, match.index ?? 0)
+        if (definition) {
+          componentDefinitions[name] = definition
         }
       }
     }
@@ -328,7 +394,15 @@ export function extractProjectContext(files: FileInfo[]): ProjectContext {
 
 let instance: ContextCollector | null = null
 
+/**
+ * Create or replace the ContextCollector singleton
+ * Cleans up old instance history before creating new one
+ */
 export function createContextCollector(config: ContextCollectorConfig): ContextCollector {
+  if (instance) {
+    // Clear history from old instance to free memory
+    instance.clearHistory()
+  }
   instance = new ContextCollector(config)
   return instance
 }

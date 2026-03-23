@@ -28,6 +28,20 @@ import { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system
 // ============================================
 
 const AGENT_TIMEOUT_MS = 60000  // 60 seconds
+const MAX_CHANGES_PER_RESPONSE = 50  // Prevent excessive changes from LLM
+const MAX_OUTPUT_BUFFER_SIZE = 100  // Prevent memory issues from fast events
+const MAX_CONTENT_SIZE = 500000  // 500KB max response size
+
+// FIX #8: Valid actions as const for type safety
+const VALID_ACTIONS = ['create', 'insert', 'append', 'replace'] as const
+type ValidAction = typeof VALID_ACTIONS[number]
+
+// FIX #18: Type-safe window augmentation
+declare global {
+  interface Window {
+    TauriBridge?: TauriBridge
+  }
+}
 
 // ============================================
 // TYPES
@@ -152,6 +166,8 @@ export class FixerService {
     this.isProcessing = true
     let unlistenFn: (() => void) | null = null
     let timeoutId: ReturnType<typeof setTimeout> | null = null
+    // Declare outside try for cleanup in finally
+    let resolveNext: ((value: AgentOutput | null) => void) | null = null
 
     try {
       // Collect context
@@ -172,15 +188,23 @@ export class FixerService {
       let isComplete = false
 
       // Set up event listener
+      // FIX #4: Use single pending promise to prevent memory accumulation
       const outputBuffer: AgentOutput[] = []
-      let resolveNext: ((value: AgentOutput | null) => void) | null = null
+      let pendingPromise: Promise<AgentOutput | null> | null = null
+      // Note: resolveNext is declared outside try block for cleanup
 
       unlistenFn = await bridge.agent.onAgentOutput((output) => {
         if (resolveNext) {
           resolveNext(output)
           resolveNext = null
+          pendingPromise = null
         } else {
-          outputBuffer.push(output)
+          // Limit buffer size to prevent memory issues
+          if (outputBuffer.length < MAX_OUTPUT_BUFFER_SIZE) {
+            outputBuffer.push(output)
+          } else {
+            console.warn('[Fixer] Output buffer full, dropping event')
+          }
         }
       })
 
@@ -188,26 +212,48 @@ export class FixerService {
         if (outputBuffer.length > 0) {
           return Promise.resolve(outputBuffer.shift()!)
         }
-        return new Promise((resolve) => {
+        // FIX #4: Reuse pending promise if one exists
+        if (pendingPromise) {
+          return pendingPromise
+        }
+        pendingPromise = new Promise((resolve) => {
           resolveNext = resolve
-          timeoutId = setTimeout(() => {
+          const currentTimeoutId = setTimeout(() => {
+            // Always clear this timeout reference
+            if (timeoutId === currentTimeoutId) {
+              timeoutId = null
+            }
+            // Only resolve if we're still the active resolver
             if (resolveNext === resolve) {
               resolveNext = null
+              pendingPromise = null
               resolve(null)
             }
           }, AGENT_TIMEOUT_MS)
+          timeoutId = currentTimeoutId
         })
+        return pendingPromise
       }
 
       // Start agent
       yield { type: 'thinking', content: 'Generiere Code...' }
 
+      // FIX #3: Wrap promise to prevent unhandled rejection during streaming
+      let resultError: Error | null = null
       const resultPromise = bridge.agent.runAgent(
         fullPrompt,
         'fixer',
         '',
         this.sessionId
-      )
+      ).catch((e: Error) => {
+        resultError = e
+        return {
+          session_id: this.sessionId || '',
+          success: false,
+          output: '',
+          error: e.message
+        }
+      })
 
       // Process streaming
       while (!isComplete) {
@@ -221,7 +267,8 @@ export class FixerService {
 
         if (!output) {
           yield { type: 'error', error: 'Timeout: Keine Antwort vom Agent' }
-          break
+          yield { type: 'done' }  // Yield done here to prevent double-yield
+          return  // Exit generator completely
         }
 
         if (output.is_complete) {
@@ -238,14 +285,14 @@ export class FixerService {
             const result = await this.codeApplicator.apply(response, context)
 
             if (result.success) {
-              // Add to history (truncate large responses)
-              const historyContent = JSON.stringify(response).slice(0, 5000)
-              this.contextCollector.addToHistory('assistant', historyContent)
-
               yield {
                 type: 'text',
                 content: this.formatResult(result.filesChanged, result.filesCreated)
               }
+
+              // Add to history AFTER yield to ensure consistency
+              const historyContent = JSON.stringify(response).slice(0, 5000)
+              this.contextCollector.addToHistory('assistant', historyContent)
             } else {
               yield { type: 'error', error: result.error || 'Fehler beim Anwenden der Änderungen' }
             }
@@ -262,21 +309,29 @@ export class FixerService {
         }
 
         if (output.content) {
-          fullContent += output.content
+          // FIX: Limit content size to prevent memory issues
+          if (fullContent.length + output.content.length <= MAX_CONTENT_SIZE) {
+            fullContent += output.content
+          } else if (fullContent.length < MAX_CONTENT_SIZE) {
+            // Add as much as we can
+            fullContent += output.content.slice(0, MAX_CONTENT_SIZE - fullContent.length)
+            console.warn('[Fixer] Response content truncated at', MAX_CONTENT_SIZE, 'bytes')
+          }
           yield { type: 'text', content: output.content }
         }
       }
 
       // Get session ID for continuation
-      try {
-        const result = await resultPromise
-        this.sessionId = result.session_id
+      // FIX #3: No try-catch needed since promise is already caught above
+      const result = await resultPromise
+      this.sessionId = result.session_id
 
-        if (!result.success && result.error) {
-          yield { type: 'error', error: result.error }
-        }
-      } catch (e) {
-        console.error('[Fixer] Error getting result:', e)
+      if (resultError) {
+        console.error('[Fixer] Error from agent:', resultError)
+      }
+
+      if (!result.success && result.error) {
+        yield { type: 'error', error: result.error }
       }
 
       yield { type: 'done' }
@@ -287,6 +342,12 @@ export class FixerService {
 
       if (timeoutId) {
         clearTimeout(timeoutId)
+      }
+
+      // Resolve any pending promise to prevent memory leaks
+      if (resolveNext) {
+        resolveNext(null)
+        resolveNext = null
       }
 
       if (unlistenFn) {
@@ -364,24 +425,24 @@ export class FixerService {
       try {
         const parsed = JSON.parse(text)
         if (this.isValidFixerResponse(parsed)) {
-          return { success: true, response: parsed }
+          // FIX: Clone response to prevent mutation
+          return { success: true, response: this.cloneResponse(parsed) }
         }
       } catch {
         // Not valid JSON, try extraction
       }
 
-      // Second try: Extract JSON with "changes" key
-      // Use a more specific regex to find the JSON object
-      const jsonMatches = text.match(/\{[^{}]*"changes"\s*:\s*\[[^\]]*\][^{}]*\}/gs)
-
-      if (!jsonMatches || jsonMatches.length === 0) {
+      // Second try: Find JSON by looking for "changes" keyword
+      // Use indexOf for safety instead of complex regex (avoid ReDoS)
+      const changesIndex = text.indexOf('"changes"')
+      if (changesIndex === -1) {
         // Try to find any JSON object
         const anyJsonMatch = text.match(/\{[\s\S]*\}/)
         if (anyJsonMatch) {
           try {
             const parsed = JSON.parse(anyJsonMatch[0])
             if (this.isValidFixerResponse(parsed)) {
-              return { success: true, response: parsed }
+              return { success: true, response: this.cloneResponse(parsed) }
             }
             return {
               success: false,
@@ -400,15 +461,38 @@ export class FixerService {
         }
       }
 
-      // Try to parse the first match
-      const parsed = JSON.parse(jsonMatches[0])
-      if (this.isValidFixerResponse(parsed)) {
-        return { success: true, response: parsed }
+      // Find the JSON object containing "changes"
+      // FIX: Use string-aware bracket matching
+      const startIndex = this.findJsonStart(text, changesIndex)
+
+      if (startIndex === -1) {
+        return { success: false, error: 'Ungültiges JSON-Format' }
       }
 
-      return {
-        success: false,
-        error: 'JSON-Struktur ungültig: "changes" muss ein Array sein'
+      // Find matching closing brace (string-aware)
+      const endIndex = this.findJsonEnd(text, startIndex)
+
+      if (endIndex === -1) {
+        return { success: false, error: 'Unvollständiges JSON' }
+      }
+
+      const jsonStr = text.slice(startIndex, endIndex)
+
+      // Try to parse the extracted JSON
+      try {
+        const parsed = JSON.parse(jsonStr)
+        if (this.isValidFixerResponse(parsed)) {
+          return { success: true, response: this.cloneResponse(parsed) }
+        }
+        return {
+          success: false,
+          error: 'JSON-Struktur ungültig: "changes" muss ein Array sein'
+        }
+      } catch (e) {
+        return {
+          success: false,
+          error: `JSON-Parsing fehlgeschlagen: ${e instanceof Error ? e.message : 'Ungültiges Format'}`
+        }
       }
 
     } catch (e) {
@@ -427,6 +511,7 @@ export class FixerService {
 
   /**
    * Validate FixerResponse structure
+   * FIX #8: Stricter type validation (no mutation)
    */
   private isValidFixerResponse(obj: unknown): obj is FixerResponse {
     if (typeof obj !== 'object' || obj === null) {
@@ -436,8 +521,9 @@ export class FixerService {
     if (!Array.isArray(response.changes)) {
       return false
     }
-    // Validate each change
-    for (const change of response.changes) {
+    // Just validate, don't mutate (cloning happens in cloneResponse)
+    const changesToValidate = response.changes.slice(0, MAX_CHANGES_PER_RESPONSE)
+    for (const change of changesToValidate) {
       if (typeof change !== 'object' || change === null) {
         return false
       }
@@ -445,11 +531,99 @@ export class FixerService {
       if (typeof c.file !== 'string' || typeof c.code !== 'string') {
         return false
       }
-      if (!['create', 'insert', 'append', 'replace'].includes(c.action as string)) {
+      // FIX #8: Use typed const array for action validation
+      if (typeof c.action !== 'string' || !VALID_ACTIONS.includes(c.action as ValidAction)) {
         return false
       }
     }
     return true
+  }
+
+  /**
+   * Find the start of a JSON object containing the given index
+   * FIX: Scans forward from beginning to properly track string state
+   */
+  private findJsonStart(text: string, targetIndex: number): number {
+    let inString = false
+    let escapeNext = false
+    let lastOpenBrace = -1
+
+    // Scan forward to properly track string state
+    for (let i = 0; i <= targetIndex && i < text.length; i++) {
+      const char = text[i]
+
+      if (escapeNext) {
+        escapeNext = false
+        continue
+      }
+
+      if (char === '\\') {
+        escapeNext = true
+        continue
+      }
+
+      if (char === '"') {
+        inString = !inString
+      } else if (!inString && char === '{') {
+        lastOpenBrace = i
+      }
+    }
+
+    return lastOpenBrace
+  }
+
+  /**
+   * Find the end of a JSON object (forwards from given index)
+   * String-aware: ignores brackets inside JSON strings
+   */
+  private findJsonEnd(text: string, startIndex: number): number {
+    let braceCount = 0
+    let inString = false
+    let escapeNext = false
+
+    for (let i = startIndex; i < text.length; i++) {
+      const char = text[i]
+
+      if (escapeNext) {
+        escapeNext = false
+        continue
+      }
+
+      if (char === '\\') {
+        escapeNext = true
+        continue
+      }
+
+      if (char === '"') {
+        inString = !inString
+      } else if (!inString) {
+        if (char === '{') {
+          braceCount++
+        } else if (char === '}') {
+          braceCount--
+          if (braceCount === 0) {
+            return i + 1
+          }
+        }
+      }
+    }
+
+    return -1
+  }
+
+  /**
+   * Clone response and limit changes array
+   * Prevents mutation of original response object
+   */
+  private cloneResponse(response: FixerResponse): FixerResponse {
+    const limitedChanges = response.changes.slice(0, MAX_CHANGES_PER_RESPONSE)
+    if (response.changes.length > MAX_CHANGES_PER_RESPONSE) {
+      console.warn(`[Fixer] Response has ${response.changes.length} changes, limiting to ${MAX_CHANGES_PER_RESPONSE}`)
+    }
+    return {
+      ...response,
+      changes: limitedChanges.map(change => ({ ...change }))
+    }
   }
 
   /**
@@ -470,10 +644,11 @@ export class FixerService {
 
   /**
    * Get Tauri bridge
+   * FIX #18: Use typed window augmentation
    */
   private getTauriBridge(): TauriBridge | null {
-    if (typeof window !== 'undefined' && (window as any).TauriBridge) {
-      return (window as any).TauriBridge
+    if (typeof window !== 'undefined' && window.TauriBridge) {
+      return window.TauriBridge
     }
     return null
   }
@@ -500,7 +675,15 @@ export class FixerService {
 
 let instance: FixerService | null = null
 
+/**
+ * Create or replace the Fixer singleton
+ * FIX #7: Cleanup old instance before creating new one
+ */
 export function createFixer(config: FixerConfig): FixerService {
+  if (instance) {
+    // Cleanup old instance to prevent dangling sessions
+    instance.clearSession()
+  }
   instance = new FixerService(config)
   return instance
 }

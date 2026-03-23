@@ -12,6 +12,62 @@
 import type { FixerResponse, FixerChange, FixerContext } from './types'
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+const INDENT_SIZE = 2  // FIX #14: Spaces per indent level
+const ALLOWED_EXTENSIONS = ['.mir', '.tok', '.com', '.mirror']  // Allowed file types
+
+// ============================================
+// HELPERS
+// ============================================
+
+/**
+ * Validate file path for security
+ * Prevents path traversal and restricts to allowed extensions
+ */
+function validateFilePath(path: string): { valid: boolean; error?: string } {
+  if (!path || typeof path !== 'string') {
+    return { valid: false, error: 'Ungültiger Dateipfad' }
+  }
+
+  // Normalize path
+  const normalized = path.trim()
+
+  // FIX: Check for null bytes (security risk)
+  if (normalized.includes('\0')) {
+    return { valid: false, error: 'Null-Bytes im Pfad nicht erlaubt' }
+  }
+
+  // Check for path traversal
+  if (normalized.includes('..') || normalized.includes('//')) {
+    return { valid: false, error: 'Path traversal nicht erlaubt' }
+  }
+
+  // Check for absolute paths (security risk)
+  if (normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) {
+    return { valid: false, error: 'Absolute Pfade nicht erlaubt' }
+  }
+
+  // Check for allowed extensions
+  const hasAllowedExtension = ALLOWED_EXTENSIONS.some(ext => normalized.endsWith(ext))
+  if (!hasAllowedExtension) {
+    return { valid: false, error: `Nur ${ALLOWED_EXTENSIONS.join(', ')} Dateien erlaubt` }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * Compare file paths case-insensitively (for macOS compatibility)
+ * Normalizes trailing slashes and whitespace
+ */
+function isSameFile(path1: string, path2: string): boolean {
+  const normalize = (p: string) => p.trim().replace(/\/+$/, '').toLowerCase()
+  return normalize(path1) === normalize(path2)
+}
+
+// ============================================
 // TYPES
 // ============================================
 
@@ -39,6 +95,15 @@ export interface ApplyResult {
   error?: string
 }
 
+/**
+ * Snapshot of file state for rollback
+ */
+interface FileSnapshot {
+  path: string
+  content: string | null  // null means file didn't exist
+  wasCreated: boolean
+}
+
 // ============================================
 // CODE APPLICATOR
 // ============================================
@@ -52,12 +117,21 @@ export class CodeApplicator {
 
   /**
    * Apply all changes from a FixerResponse
+   * FIX: Implements rollback on failure
    */
   async apply(response: FixerResponse, context: FixerContext): Promise<ApplyResult> {
     const filesChanged: string[] = []
     const filesCreated: string[] = []
+    const snapshots: FileSnapshot[] = []
 
     try {
+      // Phase 1: Create snapshots of all files that will be modified
+      for (const change of response.changes) {
+        const snapshot = this.createSnapshot(change.file, change.action === 'create')
+        snapshots.push(snapshot)
+      }
+
+      // Phase 2: Apply all changes
       for (const change of response.changes) {
         await this.applyChange(change, context)
 
@@ -81,26 +155,94 @@ export class CodeApplicator {
 
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error applying changes'
+
+      // Phase 3: Rollback all changes on failure
+      console.warn('[CodeApplicator] Error applying changes, rolling back:', errorMessage)
+      await this.rollback(snapshots)
+
       return {
         success: false,
-        filesChanged,
-        filesCreated,
+        filesChanged: [],  // Clear since we rolled back
+        filesCreated: [],  // Clear since we rolled back
         error: errorMessage
       }
     }
   }
 
   /**
+   * Create a snapshot of a file before modification
+   */
+  private createSnapshot(filePath: string, isCreate: boolean): FileSnapshot {
+    return {
+      path: filePath,
+      content: isCreate ? null : this.config.getFileContent(filePath),
+      wasCreated: isCreate
+    }
+  }
+
+  /**
+   * Rollback all changes using snapshots
+   */
+  private async rollback(snapshots: FileSnapshot[]): Promise<void> {
+    const currentFile = this.config.getCurrentFile()
+
+    for (const snapshot of snapshots) {
+      try {
+        if (snapshot.wasCreated) {
+          // File was created, we can't delete it (no deleteFile in config)
+          // Just log it - the file will remain but with empty content
+          console.warn(`[CodeApplicator] Cannot delete created file during rollback: ${snapshot.path}`)
+        } else if (snapshot.content !== null) {
+          // Restore original content
+          await this.config.saveFile(snapshot.path, snapshot.content)
+
+          // Update editor if this is the current file
+          if (isSameFile(snapshot.path, currentFile)) {
+            this.config.updateEditor(snapshot.content)
+          }
+        }
+      } catch (e) {
+        // Log but continue with other rollbacks
+        console.error(`[CodeApplicator] Failed to rollback ${snapshot.path}:`, e)
+      }
+    }
+
+    // Refresh file tree after rollback
+    this.config.refreshFileTree()
+  }
+
+  /**
    * Apply a single change
+   * Validates file path and code before applying
    */
   private async applyChange(change: FixerChange, context: FixerContext): Promise<void> {
     const { file, action, code, position } = change
+
+    // Validate file path for security
+    const pathValidation = validateFilePath(file)
+    if (!pathValidation.valid) {
+      throw new Error(`Ungültiger Dateipfad "${file}": ${pathValidation.error}`)
+    }
+
+    // Validate code parameter
+    if (code === undefined || code === null) {
+      throw new Error(`Fehlender Code für Datei "${file}"`)
+    }
+    if (typeof code !== 'string') {
+      throw new Error(`Ungültiger Code-Typ für Datei "${file}": ${typeof code}`)
+    }
+
     const currentFile = this.config.getCurrentFile()
-    const isCurrentFile = file === currentFile
+    // Use case-insensitive comparison for macOS compatibility
+    const isCurrentFile = isSameFile(file, currentFile)
 
     switch (action) {
       case 'create':
-        await this.config.createFile(file, code)
+        try {
+          await this.config.createFile(file, code)
+        } catch (e) {
+          throw new Error(`Fehler beim Erstellen von "${file}": ${e instanceof Error ? e.message : String(e)}`)
+        }
         break
 
       case 'append':
@@ -141,6 +283,7 @@ export class CodeApplicator {
 
   /**
    * Insert code at specific line
+   * FIX #6: Validate line parameter for NaN/Infinity
    */
   private async insertInFile(
     filename: string,
@@ -149,11 +292,21 @@ export class CodeApplicator {
     context: FixerContext,
     isCurrentFile: boolean
   ): Promise<void> {
+    // FIX #6: Validate line parameter
+    let validLine = line
+    if (!Number.isFinite(validLine) || validLine < 1) {
+      validLine = 1
+    }
+
     let content = this.config.getFileContent(filename)
 
     if (content === null) {
       // File doesn't exist, create it
       await this.config.createFile(filename, code)
+      // FIX #13: Switch to new file if handler is provided
+      if (this.config.switchToFile) {
+        this.config.switchToFile(filename)
+      }
       return
     }
 
@@ -163,7 +316,7 @@ export class CodeApplicator {
     const indentedCode = this.indentCode(code, context.ast.depth)
 
     // Insert at line (1-indexed)
-    const insertIndex = Math.min(Math.max(0, line - 1), lines.length)
+    const insertIndex = Math.min(Math.max(0, validLine - 1), lines.length)
     lines.splice(insertIndex, 0, indentedCode)
 
     const newContent = lines.join('\n')
@@ -189,10 +342,11 @@ export class CodeApplicator {
   /**
    * Indent code based on depth
    * FIX #7: Properly preserve relative indentation
+   * FIX #14: Use INDENT_SIZE constant
    *
    * The code from the Fixer may have its own internal indentation (for nested elements).
    * We need to:
-   * 1. Add base indent (depth * 2 spaces) to all lines
+   * 1. Add base indent (depth * INDENT_SIZE spaces) to all lines
    * 2. Preserve relative indentation between lines
    */
   private indentCode(code: string, depth: number): string {
@@ -200,7 +354,10 @@ export class CodeApplicator {
       return ''
     }
 
-    const baseIndent = '  '.repeat(depth)
+    // FIX #6: Validate depth parameter
+    const validDepth = Number.isFinite(depth) && depth >= 0 ? depth : 0
+
+    const baseIndent = ' '.repeat(INDENT_SIZE).repeat(validDepth)
     const lines = code.split('\n')
 
     // Find the minimum indentation in the input (excluding empty lines)
@@ -228,8 +385,8 @@ export class CodeApplicator {
         // Calculate relative indent (how much more than the minimum)
         const relativeIndent = currentIndent - minIndent
 
-        // New indent = base + relative
-        const newIndent = '  '.repeat(depth + Math.floor(relativeIndent / 2))
+        // FIX #14: Use INDENT_SIZE constant for indent calculation
+        const newIndent = ' '.repeat(INDENT_SIZE).repeat(validDepth + Math.floor(relativeIndent / INDENT_SIZE))
 
         // Return new indent + trimmed content
         return newIndent + line.trimStart()

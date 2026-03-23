@@ -42,6 +42,7 @@ export { Select, createSelect, select } from './select'
 export { Input, createInput, textInput, numberInput } from './input'
 export { IconButton, createIconButton, iconButton } from './icon-button'
 export { Slider, createSlider, slider } from './slider'
+export { Toggle, createToggle, toggle } from './toggle'
 
 // Re-export NumericInput from visual/position-controls
 export { NumericInput } from '../visual/position-controls/numeric-input'
@@ -61,6 +62,7 @@ import type {
   InputConfig,
   IconButtonConfig,
   SliderConfig,
+  ToggleConfig,
   AlignPosition,
 } from './types'
 
@@ -73,6 +75,7 @@ import { Select } from './select'
 import { Input } from './input'
 import { IconButton } from './icon-button'
 import { Slider } from './slider'
+import { Toggle } from './toggle'
 import { ICONS } from './icons'
 
 /**
@@ -218,6 +221,13 @@ export const PP = {
     step?: number
   ): Slider {
     return new Slider({ value, min, max, onChange, step })
+  },
+
+  /**
+   * Create a toggle switch
+   */
+  toggle(value: boolean, onChange: (value: boolean) => void): Toggle {
+    return new Toggle({ value, onChange })
   },
 }
 

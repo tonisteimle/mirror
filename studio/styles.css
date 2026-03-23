@@ -6727,6 +6727,69 @@ select.tomselected,
   font-family: var(--font-mono);
 }
 
+/* ============================================
+   Toggle Switch
+   ============================================ */
+.prop-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  padding: 2px;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.prop-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.prop-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.prop-toggle.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.prop-toggle-thumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.prop-toggle.active .prop-toggle-thumb {
+  transform: translateX(16px);
+  background: white;
+}
+
+.prop-toggle:hover .prop-toggle-thumb {
+  background: var(--text-secondary);
+}
+
+.prop-toggle.active:hover .prop-toggle-thumb {
+  background: white;
+}
+
+.prop-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prop-toggle:disabled:hover {
+  background: var(--bg-input);
+  border-color: var(--border-default);
+}
+
 /* Color picker button */
 .color-picker-btn {
   display: flex;

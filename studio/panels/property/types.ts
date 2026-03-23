@@ -44,7 +44,7 @@ export interface ChildElement {
 }
 
 // Category name type
-export type CategoryName = 'layout' | 'position' | 'alignment' | 'size' | 'sizing' | 'spacing' | 'color' | 'appearance' | 'typography' | 'border' | 'visual' | 'state' | 'event' | 'other'
+export type CategoryName = 'layout' | 'position' | 'alignment' | 'size' | 'sizing' | 'spacing' | 'color' | 'appearance' | 'typography' | 'border' | 'visual' | 'state' | 'event' | 'behavior' | 'other'
 
 // Property categories with display info
 export const CATEGORY_INFO: Record<CategoryName, { label: string; icon: string; order: number }> = {
@@ -61,5 +61,6 @@ export const CATEGORY_INFO: Record<CategoryName, { label: string; icon: string; 
   visual: { label: 'Visual', icon: 'visual', order: 9 },
   state: { label: 'States', icon: 'state', order: 10 },
   event: { label: 'Events', icon: 'event', order: 11 },
-  other: { label: 'Other', icon: 'other', order: 12 },
+  behavior: { label: 'Behavior', icon: 'settings', order: 12 },
+  other: { label: 'Other', icon: 'other', order: 13 },
 }

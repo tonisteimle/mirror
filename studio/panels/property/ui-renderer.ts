@@ -7,6 +7,7 @@
 import type { ExtractedProperty, ExtractedElement, PropertyCategory, PropertyInputConfig, ChildElement, CategoryName } from './types'
 import { CATEGORY_INFO } from './types'
 import { PositionSection } from '../../visual/position-controls'
+import { Section, PropRow, Toggle, Select, Input, Slider } from '../../components'
 
 export interface UIRendererConfig {
   showIcons?: boolean
@@ -59,6 +60,12 @@ export class UIRenderer {
           const positionEl = this.renderPositionSection(category.properties, element.nodeId, callbacks)
           if (positionEl) {
             container.appendChild(positionEl)
+          }
+        } else if (category.name === 'behavior') {
+          // Special handling for behavior category (Zag props)
+          const behaviorEl = this.renderBehaviorSection(category.properties, callbacks)
+          if (behaviorEl) {
+            container.appendChild(behaviorEl)
           }
         } else {
           container.appendChild(
@@ -137,6 +144,97 @@ export class UIRenderer {
     }
 
     return section
+  }
+
+  /**
+   * Render behavior section for Zag component properties
+   * Uses specialized components (Toggle, Select, Input) instead of generic inputs
+   */
+  private renderBehaviorSection(
+    properties: ExtractedProperty[],
+    callbacks: {
+      onPropertyChange: (property: string, value: string) => void
+      onPropertyRemove: (property: string) => void
+    }
+  ): HTMLElement | null {
+    if (properties.length === 0) return null
+
+    const section = new Section({
+      label: CATEGORY_INFO.behavior.label,
+      icon: CATEGORY_INFO.behavior.icon,
+      collapsed: false,
+    })
+
+    for (const prop of properties) {
+      const row = new PropRow({
+        label: prop.label || prop.name,  // Use human-readable label
+        tooltip: prop.description,
+      })
+
+      // Create appropriate input based on property type
+      switch (prop.type) {
+        case 'boolean': {
+          const toggle = new Toggle({
+            value: prop.value === 'true',
+            onChange: (v) => callbacks.onPropertyChange(prop.name, String(v)),
+          })
+          row.append(toggle)
+          break
+        }
+
+        case 'select': {
+          const options = (prop.options || []).map(o => ({
+            value: o,
+            label: o,
+          }))
+          const select = new Select({
+            options,
+            value: prop.value || null,
+            onChange: (v) => callbacks.onPropertyChange(prop.name, String(v)),
+            placeholder: `Select ${prop.label || prop.name}`,
+          })
+          row.append(select)
+          break
+        }
+
+        case 'number': {
+          // Use Slider if min/max are defined, otherwise Input
+          if (prop.min !== undefined && prop.max !== undefined) {
+            const slider = new Slider({
+              value: parseFloat(prop.value) || 0,
+              min: prop.min,
+              max: prop.max,
+              step: prop.step || 1,
+              onChange: (v) => callbacks.onPropertyChange(prop.name, String(v)),
+            })
+            row.append(slider)
+          } else {
+            const input = new Input({
+              value: prop.value,
+              onChange: (v) => callbacks.onPropertyChange(prop.name, v),
+              type: 'number',
+              placeholder: prop.label || prop.name,
+            })
+            row.append(input)
+          }
+          break
+        }
+
+        default: {
+          // text/string
+          const input = new Input({
+            value: prop.value,
+            onChange: (v) => callbacks.onPropertyChange(prop.name, v),
+            placeholder: prop.label || prop.name,
+          })
+          row.append(input)
+        }
+      }
+
+      section.append(row)
+    }
+
+    return section.getElement()
   }
 
   renderHeader(element: ExtractedElement): HTMLElement {
