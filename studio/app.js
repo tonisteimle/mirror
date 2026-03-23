@@ -4601,6 +4601,263 @@ function handleStudioCodeChange(result) {
   debouncedSave(code)
 }
 
+// ============================================
+// Zag Component Drop Handler
+// ============================================
+
+/**
+ * Check if a component is a Zag component (has slot children)
+ * @param {Array} children - Component children array
+ * @returns {boolean}
+ */
+function isZagComponent(children) {
+  if (!children || children.length === 0) return false
+  return children.some(child => child.isSlot === true)
+}
+
+/**
+ * Get the slots from component children
+ * @param {Array} children - Component children array
+ * @returns {Array}
+ */
+function getZagSlots(children) {
+  return children.filter(child => child.isSlot === true)
+}
+
+/**
+ * Get the items from component children (non-slot children or items inside slots)
+ * @param {Array} children - Component children array
+ * @returns {Array}
+ */
+function getZagItems(children) {
+  const items = []
+  for (const child of children) {
+    if (child.isItem) {
+      items.push(child)
+    } else if (child.isSlot && child.children) {
+      // Look for items inside slots (e.g., Content: > Item)
+      items.push(...child.children.filter(c => c.isItem))
+    }
+  }
+  return items
+}
+
+/**
+ * Check if a Zag component definition exists in the current AST
+ * @param {string} zagComponentName - The Zag component name (e.g., 'Select')
+ * @returns {{ exists: boolean, definitionName?: string }}
+ */
+function findExistingZagDefinition(zagComponentName) {
+  const ast = studio.state?.ast
+  if (!ast || !ast.components) {
+    return { exists: false }
+  }
+
+  for (const comp of ast.components) {
+    // Check if this component is defined as this Zag type
+    // e.g., "MySelect as Select:" or extends Select
+    if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
+      return { exists: true, definitionName: comp.name }
+    }
+  }
+
+  return { exists: false }
+}
+
+/**
+ * Generate a unique component name for the Zag definition
+ * @param {string} zagComponentName - The base Zag component name
+ * @returns {string}
+ */
+function generateZagComponentName(zagComponentName) {
+  const ast = studio.state?.ast
+  const existingNames = (ast?.components || []).map(c => c.name)
+
+  // Start with the Zag component name itself (e.g., "Select")
+  if (!existingNames.includes(zagComponentName)) {
+    return zagComponentName
+  }
+
+  // Try prefixes
+  const prefixes = ['My', 'Custom', 'App', 'Project']
+  for (const prefix of prefixes) {
+    const name = `${prefix}${zagComponentName}`
+    if (!existingNames.includes(name)) {
+      return name
+    }
+  }
+
+  // Fall back to numbered suffix
+  let counter = 2
+  while (existingNames.includes(`${zagComponentName}${counter}`)) {
+    counter++
+  }
+  return `${zagComponentName}${counter}`
+}
+
+/**
+ * Generate the component definition code for a Zag component
+ * Creates the definition with slots and their styling
+ *
+ * @param {string} definitionName - Name for the component definition
+ * @param {string} zagComponentName - The Zag component type (e.g., 'Select')
+ * @param {Array} children - Component children with slots
+ * @returns {string}
+ */
+function generateZagDefinitionCode(definitionName, zagComponentName, children) {
+  const lines = []
+
+  // Component definition header
+  lines.push(`${definitionName} as ${zagComponentName}:`)
+
+  // Add slot definitions (only slots, not items)
+  const slots = getZagSlots(children)
+  for (const slot of slots) {
+    lines.push(`  ${slot.template}:`)
+
+    // Add slot properties
+    if (slot.properties) {
+      lines.push(`    ${slot.properties}`)
+    }
+
+    // Add nested children (if any, but NOT items)
+    if (slot.children) {
+      for (const nested of slot.children) {
+        if (!nested.isItem) {
+          // Regular component inside slot
+          let nestedLine = `    ${nested.template}`
+          if (nested.properties) {
+            nestedLine += ` ${nested.properties}`
+          }
+          if (nested.textContent) {
+            nestedLine += ` "${nested.textContent}"`
+          }
+          lines.push(nestedLine)
+        }
+      }
+    }
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Generate the instance code for a Zag component
+ * Creates just the instance with items (no slot definitions)
+ *
+ * @param {string} instanceName - Name of the component to instantiate
+ * @param {string|undefined} properties - Properties string
+ * @param {Array} children - Component children
+ * @param {string} indent - Base indentation
+ * @returns {string}
+ */
+function generateZagInstanceCode(instanceName, properties, children, indent = '') {
+  const lines = []
+
+  // Instance line
+  let instanceLine = `${indent}${instanceName}`
+  if (properties) {
+    instanceLine += ` ${properties}`
+  }
+  lines.push(instanceLine)
+
+  // Add items (only items, no slots)
+  const items = getZagItems(children)
+  for (const item of items) {
+    let itemLine = `${indent}  ${item.template}`
+    if (item.properties) {
+      itemLine += ` ${item.properties}`
+    }
+    if (item.textContent) {
+      itemLine += ` "${item.textContent}"`
+    }
+    lines.push(itemLine)
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Add a Zag component definition to the code
+ * Inserts the definition at the end of the component definitions section
+ *
+ * @param {string} definitionCode - The component definition code
+ * @returns {boolean} - Whether the operation succeeded
+ */
+function addZagDefinitionToCode(definitionCode) {
+  const currentSource = editor.state.doc.toString()
+
+  // Find where to insert the definition
+  // Strategy: Insert after the last component definition or at the start if none exist
+  const ast = studio.state?.ast
+  let insertPosition = 0
+
+  if (ast && ast.components && ast.components.length > 0) {
+    // Find the end of the last component definition
+    const lastComponent = ast.components[ast.components.length - 1]
+    // Get the line after the last component ends
+    const lines = currentSource.split('\n')
+    let endLine = lastComponent.line
+
+    // Find the actual end by looking for the next non-indented line or end of file
+    for (let i = lastComponent.line; i < lines.length; i++) {
+      const line = lines[i]
+      // If we hit an empty line or a line that's not indented (new top-level item), stop
+      if (line.trim() === '' || (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t'))) {
+        endLine = i
+        break
+      }
+      endLine = i + 1
+    }
+
+    // Calculate character position
+    insertPosition = lines.slice(0, endLine).join('\n').length
+  } else if (ast && ast.tokens && ast.tokens.length > 0) {
+    // Insert after tokens section
+    const lastToken = ast.tokens[ast.tokens.length - 1]
+    const lines = currentSource.split('\n')
+    insertPosition = lines.slice(0, lastToken.line).join('\n').length
+  }
+
+  // Insert with blank line before
+  const insertText = '\n\n' + definitionCode
+
+  // Apply the change via CodeMirror
+  const change = {
+    from: insertPosition,
+    to: insertPosition,
+    insert: insertText
+  }
+
+  editor.dispatch({
+    changes: change,
+    annotations: Transaction.userEvent.of('input.drop')
+  })
+
+  // Record for undo
+  const inverseChange = {
+    from: insertPosition,
+    to: insertPosition + insertText.length,
+    insert: ''
+  }
+
+  const command = new RecordedChangeCommand({
+    change: change,
+    inverseChange: inverseChange,
+    description: 'Add component definition'
+  })
+  executor.execute(command)
+
+  // Emit event
+  events.emit('source:changed', {
+    source: editor.state.doc.toString(),
+    origin: 'zag-definition',
+    change: change
+  })
+
+  return true
+}
+
 // Handle drag-drop from DragDropService (uses DropResultInfo format)
 function handleStudioDrop(result) {
   const previewContainer = document.getElementById('preview')
@@ -4701,12 +4958,79 @@ function handleStudioDrop(result) {
       properties = properties ? `${properties}, ${posProps}` : posProps
     }
 
-    // Add child to target
-    modResult = studioCodeModifier.addChild(targetNodeId, componentName, {
-      position: insertionIndex !== undefined ? insertionIndex : 'last',
-      properties: properties || undefined,
-      textContent: source.textContent || undefined,
-    })
+    // ============================================
+    // ZAG COMPONENT HANDLING
+    // ============================================
+    // Check if this is a Zag component (has slot children)
+    // If so, we need to:
+    // 1. Check if a component definition already exists
+    // 2. If not, create the definition with slots/styling
+    // 3. Insert only the instance with items (no slot definitions)
+    if (isZagComponent(source.children)) {
+      console.log('[Drop] Zag component detected:', componentName)
+
+      // Check if definition exists
+      const existingDef = findExistingZagDefinition(componentName)
+      let instanceComponentName = componentName
+
+      if (existingDef.exists && existingDef.definitionName) {
+        // Definition exists - use it for the instance
+        console.log('[Drop] Using existing definition:', existingDef.definitionName)
+        instanceComponentName = existingDef.definitionName
+      } else {
+        // Definition doesn't exist - create it first
+        const definitionName = generateZagComponentName(componentName)
+        console.log('[Drop] Creating new Zag definition:', definitionName)
+
+        // Generate the component definition
+        const definitionCode = generateZagDefinitionCode(
+          definitionName,
+          componentName,
+          source.children
+        )
+
+        // Generate the instance code with just items (no slots)
+        const instanceCode = generateZagInstanceCode(
+          definitionName,
+          properties,
+          source.children
+        )
+
+        // Insert both definition and instance in one operation
+        // This avoids timing issues with recompiling between operations
+        const combinedCode = definitionCode + '\n\n// Instance\n' + instanceCode
+
+        // For now, we'll insert them separately with a simpler approach:
+        // 1. Add definition to code
+        addZagDefinitionToCode(definitionCode)
+
+        // 2. Recompile to update the CodeModifier
+        const updatedCode = editor.state.doc.toString()
+        compile(updatedCode)
+
+        // 3. Now add the instance using the updated CodeModifier
+        instanceComponentName = definitionName
+      }
+
+      // Generate instance code with just items (no slots)
+      const instanceCode = generateZagInstanceCode(
+        instanceComponentName,
+        properties,
+        source.children
+      )
+
+      // Use addChildWithTemplate for multi-line Zag instances
+      modResult = studioCodeModifier.addChildWithTemplate(targetNodeId, instanceCode, {
+        position: insertionIndex !== undefined ? insertionIndex : 'last',
+      })
+    } else {
+      // Regular component (not Zag) - use standard addChild
+      modResult = studioCodeModifier.addChild(targetNodeId, componentName, {
+        position: insertionIndex !== undefined ? insertionIndex : 'last',
+        properties: properties || undefined,
+        textContent: source.textContent || undefined,
+      })
+    }
 
     // Handle alignment for empty containers (set align on parent)
     if (modResult.success && alignment && alignment.zone) {
