@@ -219,7 +219,7 @@ each task in tasks
   it('Conditional with if/else', () => {
     const ast = parse(`
 if (loggedIn)
-    Avatar
+    ProfileImage
     Text username
 else
     Button "Login"

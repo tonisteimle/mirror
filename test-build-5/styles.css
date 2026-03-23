@@ -1,0 +1,370 @@
+/* ==============================================
+   Design Tokens (from _tokens.mirror)
+   ============================================== */
+:root {
+  /* Graustufen */
+  --grey-50: #fafafa;
+  --grey-100: #f4f4f5;
+  --grey-200: #e4e4e7;
+  --grey-300: #d4d4d8;
+  --grey-400: #a1a1aa;
+  --grey-500: #71717a;
+  --grey-600: #52525b;
+  --grey-700: #3f3f46;
+  --grey-800: #27272a;
+  --grey-900: #18181b;
+  --grey-950: #09090b;
+
+  /* Akzentfarben */
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --green-500: #22c55e;
+  --red-500: #ef4444;
+
+  /* Semantische Tokens - Hintergründe */
+  --app-bg: var(--grey-950);
+  --surface-bg: var(--grey-900);
+  --control-bg: var(--grey-800);
+  --control-hover-bg: var(--grey-700);
+  --primary-bg: var(--blue-500);
+  --primary-hover-bg: var(--blue-600);
+
+  /* Semantische Tokens - Text */
+  --text-col: var(--grey-100);
+  --text-muted-col: var(--grey-400);
+  --heading-col: #ffffff;
+  --on-primary-col: #ffffff;
+
+  /* Borders */
+  --border-col: var(--grey-700);
+  --border-subtle-col: var(--grey-800);
+  --border-focus-col: var(--blue-500);
+
+  /* Spacing */
+  --xs-pad: 4px;
+  --sm-pad: 8px;
+  --md-pad: 12px;
+  --lg-pad: 16px;
+  --xl-pad: 24px;
+
+  --xs-gap: 4px;
+  --sm-gap: 8px;
+  --md-gap: 12px;
+  --lg-gap: 16px;
+
+  /* Radius */
+  --xs-rad: 4px;
+  --sm-rad: 6px;
+  --md-rad: 8px;
+  --full-rad: 9999px;
+
+  /* Typography */
+  --xs-font-size: 11px;
+  --sm-font-size: 12px;
+  --base-font-size: 14px;
+  --lg-font-size: 16px;
+  --xl-font-size: 20px;
+  --xxl-font-size: 24px;
+}
+
+/* ==============================================
+   Base Styles
+   ============================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--app-bg);
+  color: var(--text-col);
+  font-size: var(--base-font-size);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+/* ==============================================
+   Layout Components
+   ============================================== */
+.container {
+  width: 100%;
+  height: 100%;
+  max-width: 500px;
+  padding: var(--lg-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-gap);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--md-gap);
+  align-items: center;
+}
+
+/* ==============================================
+   Header
+   ============================================== */
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--md-pad);
+}
+
+.header h2 {
+  font-size: var(--xxl-font-size);
+  font-weight: 600;
+  color: var(--heading-col);
+}
+
+/* ==============================================
+   Buttons
+   ============================================== */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-gap);
+  padding: var(--sm-pad) var(--md-pad);
+  border-radius: var(--sm-rad);
+  background: var(--control-bg);
+  color: var(--text-col);
+  font-size: var(--sm-font-size);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.button:hover {
+  background: var(--control-hover-bg);
+}
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-gap);
+  padding: var(--sm-pad) var(--md-pad);
+  border-radius: var(--sm-rad);
+  background: var(--primary-bg);
+  color: var(--on-primary-col);
+  font-size: var(--sm-font-size);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.primary-button:hover {
+  background: var(--primary-hover-bg);
+}
+
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm-gap);
+  padding: var(--sm-pad) var(--md-pad);
+  border-radius: var(--sm-rad);
+  background: transparent;
+  color: var(--text-col);
+  font-size: var(--sm-font-size);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ghost-button:hover {
+  background: var(--control-bg);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sm-pad);
+  border-radius: var(--sm-rad);
+  background: transparent;
+  color: var(--text-muted-col);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.icon-button:hover {
+  background: var(--control-bg);
+  color: var(--text-col);
+}
+
+/* ==============================================
+   Form Controls
+   ============================================== */
+.input {
+  flex: 1;
+  padding: var(--sm-pad) var(--md-pad);
+  border-radius: var(--sm-rad);
+  background: var(--control-bg);
+  color: var(--text-col);
+  font-size: var(--base-font-size);
+  border: 1px solid transparent;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--border-focus-col);
+}
+
+.input::placeholder {
+  color: var(--text-muted-col);
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--xs-rad);
+  background: var(--control-bg);
+  border: 1px solid var(--border-col);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+}
+
+.checkbox:checked {
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ==============================================
+   New Task Input
+   ============================================== */
+.new-task-input {
+  padding-bottom: var(--md-pad);
+}
+
+.new-task-input.hidden {
+  display: none;
+}
+
+/* ==============================================
+   Task List
+   ============================================== */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm-gap);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ==============================================
+   Task Item
+   ============================================== */
+.task-item {
+  display: flex;
+  flex-direction: row;
+  gap: var(--md-gap);
+  align-items: center;
+  padding: var(--sm-pad) var(--md-pad);
+  border-radius: var(--sm-rad);
+  cursor: pointer;
+}
+
+.task-item:hover {
+  background: var(--control-bg);
+}
+
+.task-item.hidden {
+  display: none;
+}
+
+.task-item .row {
+  flex: 1;
+  justify-content: space-between;
+}
+
+.task-item .task-content {
+  display: flex;
+  flex-direction: row;
+  gap: var(--md-gap);
+  align-items: center;
+}
+
+.task-item .task-text {
+  font-size: var(--base-font-size);
+  color: var(--text-col);
+  transition: color 0.15s, text-decoration 0.15s;
+}
+
+/* Completed state */
+.task-item[data-state="completed"] {
+  opacity: 0.6;
+}
+
+.task-item[data-state="completed"] .task-text {
+  color: var(--text-muted-col);
+  text-decoration: line-through;
+}
+
+/* ==============================================
+   Footer
+   ============================================== */
+.footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--md-pad);
+  border-top: 1px solid var(--border-subtle-col);
+}
+
+.text-small {
+  font-size: var(--sm-font-size);
+  color: var(--text-muted-col);
+}
+
+/* ==============================================
+   Icons (SVG inline)
+   ============================================== */
+.icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

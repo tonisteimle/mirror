@@ -4,7 +4,7 @@
  * Chat interface for interacting with the AI assistant.
  */
 
-import { MirrorAgent, type AgentEvent, type LLMCommand } from '../agent'
+import { MirrorAgent, ClaudeCliAgent, isClaudeCliAvailable, type AgentEvent, type LLMCommand } from '../agent'
 
 // ============================================
 // TYPES
@@ -30,7 +30,8 @@ export interface ToolCall {
 
 export interface ChatPanelConfig {
   container: HTMLElement
-  agent: MirrorAgent
+  agent?: MirrorAgent
+  claudeAgent?: ClaudeCliAgent
   onCommand?: (command: LLMCommand) => void
   onError?: (error: string) => void
 }
@@ -41,7 +42,9 @@ export interface ChatPanelConfig {
 
 export class ChatPanel {
   private container: HTMLElement
-  private agent: MirrorAgent
+  private agent?: MirrorAgent
+  private claudeAgent?: ClaudeCliAgent
+  private useClaudeCli = false
   private messages: ChatMessage[] = []
   private isStreaming = false
   private onCommand?: (command: LLMCommand) => void
@@ -51,15 +54,48 @@ export class ChatPanel {
   private messagesContainer!: HTMLElement
   private inputElement!: HTMLTextAreaElement
   private sendButton!: HTMLButtonElement
+  private agentIndicator!: HTMLElement
 
   constructor(config: ChatPanelConfig) {
     this.container = config.container
     this.agent = config.agent
+    this.claudeAgent = config.claudeAgent
     this.onCommand = config.onCommand
     this.onError = config.onError
 
     this.render()
     this.setupEventListeners()
+    this.detectAgent()
+  }
+
+  /**
+   * Detect which agent to use
+   */
+  private async detectAgent(): Promise<void> {
+    // Prefer Claude CLI if available
+    if (this.claudeAgent) {
+      const available = await isClaudeCliAvailable()
+      if (available) {
+        this.useClaudeCli = true
+        this.updateAgentIndicator('Claude CLI', true)
+        return
+      }
+    }
+
+    // Fall back to OpenRouter
+    if (this.agent) {
+      this.useClaudeCli = false
+      this.updateAgentIndicator('OpenRouter', true)
+    } else {
+      this.updateAgentIndicator('Kein Agent', false)
+    }
+  }
+
+  private updateAgentIndicator(name: string, available: boolean): void {
+    if (this.agentIndicator) {
+      this.agentIndicator.textContent = name
+      this.agentIndicator.className = `agent-indicator ${available ? 'available' : 'unavailable'}`
+    }
   }
 
   // ============================================
@@ -70,7 +106,8 @@ export class ChatPanel {
     this.container.innerHTML = `
       <div class="chat-panel">
         <div class="chat-header">
-          <span class="chat-title">AI Chat</span>
+          <span class="chat-title">Mirror AI</span>
+          <span class="agent-indicator">Lädt...</span>
         </div>
 
         <div class="chat-messages"></div>
@@ -81,10 +118,10 @@ export class ChatPanel {
         <div class="chat-input-container">
           <textarea
             class="chat-input"
-            placeholder="Ask anything... (Cmd+Enter to send)"
+            placeholder="Beschreibe was du bauen willst... (Cmd+Enter)"
             rows="1"
           ></textarea>
-          <button class="chat-send" title="Send (Cmd+Enter)">
+          <button class="chat-send" title="Senden (Cmd+Enter)">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path d="M2 2.5L14 8L2 13.5V9L10 8L2 7V2.5Z"/>
             </svg>
@@ -97,6 +134,7 @@ export class ChatPanel {
     this.messagesContainer = this.container.querySelector('.chat-messages')!
     this.inputElement = this.container.querySelector('.chat-input')!
     this.sendButton = this.container.querySelector('.chat-send')!
+    this.agentIndicator = this.container.querySelector('.agent-indicator')!
 
   }
 
@@ -236,8 +274,17 @@ export class ChatPanel {
     this.updateStreamingState(true)
 
     try {
+      // Choose agent
+      const agentRunner = this.useClaudeCli && this.claudeAgent
+        ? this.claudeAgent.run(messageText)
+        : this.agent?.run(messageText)
+
+      if (!agentRunner) {
+        throw new Error('Kein Agent verfügbar')
+      }
+
       // Run agent
-      for await (const event of this.agent.run(messageText)) {
+      for await (const event of agentRunner) {
         this.handleAgentEvent(event, assistantMessage)
       }
 

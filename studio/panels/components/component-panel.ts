@@ -400,7 +400,35 @@ export class ComponentPanel {
   /**
    * Build Mirror code for a child component
    */
-  private buildChildCode(child: { template: string; properties?: string; textContent?: string; children?: any[] }, indent: string): string {
+  private buildChildCode(child: { template: string; properties?: string; textContent?: string; children?: any[]; isSlot?: boolean; isItem?: boolean }, indent: string): string {
+    // Handle slot syntax (e.g., "Trigger:")
+    if (child.isSlot) {
+      let code = indent + child.template + ':'
+      if (child.properties) {
+        code += '\n' + indent + '  ' + child.properties
+      }
+      // Recursively add nested children
+      if (child.children && child.children.length > 0) {
+        for (const nested of child.children) {
+          code += '\n' + this.buildChildCode(nested, indent + '  ')
+        }
+      }
+      return code
+    }
+
+    // Handle item syntax (e.g., 'Item "Option A"')
+    if (child.isItem) {
+      let code = indent + child.template
+      if (child.textContent) {
+        code += ` "${child.textContent}"`
+      }
+      if (child.properties) {
+        code += `, ${child.properties}`
+      }
+      return code
+    }
+
+    // Standard component syntax
     let code = indent + child.template
 
     if (child.properties) {

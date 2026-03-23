@@ -6,10 +6,11 @@
 
 import { createFileStore, type Store } from './file-store'
 import { createFileOperations, type FileOperations } from './file-operations'
-import { createLocalStorageAdapter, createApiStorageAdapter, type StorageAdapter } from './storage'
+import { createLocalStorageAdapter, createApiStorageAdapter, createTauriStorageAdapter, isTauri, openFolderDialog, type StorageAdapter } from './storage'
 import type { FileStore, FileType, FileMetadata, Project, FileManagerOptions, FileManagerEvents } from './types'
 
 export type { FileStore, FileType, FileMetadata, Project, FileManagerOptions, FileManagerEvents }
+export { createTauriStorageAdapter, isTauri, openFolderDialog, type StorageAdapter }
 
 type EventCallback<K extends keyof FileManagerEvents> = (payload: FileManagerEvents[K]) => void
 
@@ -43,9 +44,21 @@ export function createFileManager(options: FileManagerOptions = { storage: 'loca
   const operations = createFileOperations(store)
 
   // Create storage adapter
-  const storage: StorageAdapter = options.storage === 'api' && options.apiEndpoint
-    ? createApiStorageAdapter(options.apiEndpoint)
-    : createLocalStorageAdapter()
+  let storage: StorageAdapter
+
+  if (typeof options.storage === 'object') {
+    // Custom adapter passed directly
+    storage = options.storage
+  } else if (options.storage === 'tauri') {
+    // Tauri file system adapter
+    storage = createTauriStorageAdapter(options.projectPath)
+  } else if (options.storage === 'api' && options.apiEndpoint) {
+    // API adapter
+    storage = createApiStorageAdapter(options.apiEndpoint)
+  } else {
+    // Default: localStorage
+    storage = createLocalStorageAdapter()
+  }
 
   // Event handlers
   const eventHandlers = new Map<keyof FileManagerEvents, Set<EventCallback<any>>>()

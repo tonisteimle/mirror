@@ -127,6 +127,7 @@ export type LLMCommandType =
   | 'DELETE_NODE'
   | 'MOVE_NODE'
   | 'UPDATE_SOURCE'
+  | 'REPLACE_ALL'
   | 'BATCH'
   // Smart integration commands (target correct file)
   | 'ADD_TOKEN'
@@ -155,6 +156,8 @@ export interface LLMCommand {
   componentName?: string
   componentDefinition?: string
   targetFile?: string
+  // For REPLACE_ALL
+  code?: string
 }
 
 // ============================================
@@ -213,4 +216,83 @@ export interface ToolCall {
   input: any
   result?: ToolResult
   status: 'pending' | 'running' | 'done' | 'error'
+}
+
+// ============================================
+// FIXER TYPES (Multi-File Code Generation)
+// ============================================
+
+/** Context collected from the project for the Fixer */
+export interface FixerContext {
+  // Project files by type
+  files: {
+    tokens: Record<string, string>      // filename -> content (all .tok files)
+    components: Record<string, string>  // filename -> content (all .com files)
+    current: {
+      path: string                      // current file path
+      content: string                   // current file content
+    }
+  }
+
+  // Cursor position in current file
+  cursor: {
+    line: number
+    column: number
+    offset: number
+  }
+
+  // Selection (if any)
+  selection: {
+    from: number
+    to: number
+    text: string
+  } | null
+
+  // AST context (semantic understanding)
+  ast: {
+    currentNode: {
+      type: string          // 'Instance' | 'Component' | 'Property'
+      name: string          // e.g. 'Card'
+      line: number
+    } | null
+    parentNode: {
+      type: string
+      name: string
+      line: number
+    } | null
+    siblings: string[]      // Names of sibling nodes
+    depth: number           // Indentation depth (0 = root)
+  }
+
+  // Conversation history
+  history: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: number
+  }>
+
+  // Current user prompt
+  prompt: string
+}
+
+/** Single file change in a FixerResponse */
+export interface FixerChange {
+  file: string                          // 'tokens.tok', 'components.com', 'index.mir', or new file
+  action: 'create' | 'insert' | 'append' | 'replace'
+  position?: { line: number }           // for 'insert' action
+  code: string
+}
+
+/** Response from the Fixer (multi-file changes) */
+export interface FixerResponse {
+  changes: FixerChange[]
+  explanation?: string
+}
+
+/** Extracted token/component info for quick lookup */
+export interface ProjectContext {
+  tokenNames: string[]                  // ['$primary', '$surface', ...]
+  tokenValues: Record<string, string>   // { '$primary': '#3b82f6', ... }
+  componentNames: string[]              // ['Card', 'PrimaryButton', ...]
+  componentDefinitions: Record<string, string>  // { 'Card': 'Card as Box:\n  ...' }
 }

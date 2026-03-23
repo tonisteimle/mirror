@@ -1,0 +1,9 @@
+Card gap 16
+  H4 "Settings"
+  
+  Row spread
+    Text "Dark Mode"
+    Toggle state off
+      onclick: toggle self
+  
+  PrimaryButton "Save"

@@ -1,0 +1,6 @@
+import _components
+
+Card
+  H3 "Titel"
+  Text "Beschreibung"
+  PrimaryButton "Button"

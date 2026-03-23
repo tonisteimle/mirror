@@ -30,10 +30,20 @@ export interface FileStore {
 }
 
 export interface FileManagerOptions {
-  storage: 'local' | 'api'
+  storage: 'local' | 'api' | 'tauri' | StorageAdapter
   apiEndpoint?: string
+  projectPath?: string  // For Tauri: initial project path
   autoSave?: boolean
   autoSaveInterval?: number
+}
+
+// Forward declaration - actual type is in storage.ts
+interface StorageAdapter {
+  loadProject(id: string): Promise<{ files: Record<string, string>; project: Project } | null>
+  saveProject(project: Project, files: Record<string, string>): Promise<void>
+  listProjects(): Promise<Project[]>
+  deleteProject(id: string): Promise<void>
+  createProject(name: string): Promise<Project>
 }
 
 export interface FileManagerEvents {

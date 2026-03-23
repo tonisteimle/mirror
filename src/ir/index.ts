@@ -1411,13 +1411,14 @@ class IRTransformer {
 
     // Determine final direction
     const primitiveLower = primitive?.toLowerCase() || ''
-    const direction = ctx.direction || (primitiveLower === 'frame' ? 'column' : null)
+    const defaultsToColumn = primitiveLower === 'frame' || primitiveLower === 'app'
+    const direction = ctx.direction || (defaultsToColumn ? 'column' : null)
 
-    // If no layout properties were set and not a frame, skip flex styles
+    // If no layout properties were set and not a frame/app, skip flex styles
     const hasLayoutProps = direction || ctx.justifyContent || ctx.alignItems ||
                           (ctx as any)._hAlign || (ctx as any)._vAlign || ctx.flexWrap
 
-    if (!hasLayoutProps && primitiveLower !== 'frame') {
+    if (!hasLayoutProps && !defaultsToColumn) {
       if (ctx.gap) {
         // Gap without flex context - just return gap
         styles.push({ property: 'gap', value: ctx.gap })

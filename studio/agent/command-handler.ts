@@ -65,6 +65,9 @@ export class AgentCommandHandler {
       case 'UPDATE_SOURCE':
         return this.handleUpdateSource(command)
 
+      case 'REPLACE_ALL':
+        return this.handleReplaceAll(command)
+
       default:
         console.log(`[CommandHandler] Unhandled command type: ${command.type}`)
         return { success: true, message: `Command ${command.type} logged` }
@@ -215,6 +218,29 @@ export class AgentCommandHandler {
       success: true,
       message: `Updating source (${from}-${to})`,
       change: { from, to, insert }
+    }
+  }
+
+  // ============================================
+  // REPLACE ALL HANDLING
+  // ============================================
+
+  private handleReplaceAll(command: LLMCommand): CommandResult {
+    const { code } = command
+
+    if (!code) {
+      return { success: false, error: 'Missing code for replace all' }
+    }
+
+    // Get current file content to determine length
+    const files = this.config.getFiles()
+    const currentFile = this.config.getCurrentFile()
+    const currentCode = files.find(f => f.name === currentFile)?.code || ''
+
+    return {
+      success: true,
+      message: 'Replacing entire file content',
+      change: { from: 0, to: currentCode.length, insert: code }
     }
   }
 

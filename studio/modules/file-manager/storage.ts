@@ -100,6 +100,9 @@ export function createLocalStorageAdapter(): StorageAdapter {
   }
 }
 
+// Re-export Tauri adapter
+export { createTauriStorageAdapter, isTauri, openFolderDialog } from './tauri-storage'
+
 // API adapter for remote storage
 export function createApiStorageAdapter(endpoint: string): StorageAdapter {
   async function apiCall<T>(path: string, options?: RequestInit): Promise<T> {

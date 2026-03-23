@@ -355,7 +355,7 @@ Tags
 Kinder übereinander stapeln (für Overlays, Badges, etc.):
 
 ```
-Avatar as frame:
+ProfileAvatar as frame:
     stacked, size 48
 
     Image "user.jpg"
@@ -1572,7 +1572,7 @@ Bedingte Darstellung von Komponenten.
 
 ```
 if loggedIn
-    Avatar
+    ProfileAvatar
     Text username
 else
     Button "Login"

@@ -14,7 +14,7 @@
  */
 
 import type { IRZagNode, IRItem } from '../../ir/types'
-import { MachineRunner, createMachineRunner, type MachineConfig } from './machine-runner'
+import { MachineRunner, createMachineRunner, type MachineConfig, MACHINES } from './machine-runner'
 import { DOMBinder, createDOMBinder } from './dom-binder'
 import { StyleManager, createStyleManager } from './style-manager'
 import { getSlotElement, isPortaledSlot } from '../../compiler/zag/slots'
@@ -24,6 +24,7 @@ export {
   MachineRunner,
   createMachineRunner,
   type MachineConfig,
+  MACHINES,
 } from './machine-runner'
 
 export {
@@ -74,8 +75,7 @@ export class ZagRuntime {
     const machineId = node.id
 
     // Validate machine type
-    const validMachineTypes = ['select'] as const
-    if (!validMachineTypes.includes(node.zagType as any)) {
+    if (!(node.zagType in MACHINES)) {
       console.warn(`Zag: Unknown machine type "${node.zagType}", falling back to static rendering`)
     }
 

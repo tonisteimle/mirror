@@ -51,10 +51,11 @@ const STORAGE_VERSION = 3  // Increment this when defaultFiles or storage format
 
 // App State
 const DEBUG_SYNC = false  // Enable verbose sync logging
-let authState = {
-  isLoggedIn: false,
-  isAnonymous: true,
-  userId: null,
+// Desktop app: always "logged in" locally
+const authState = {
+  isLoggedIn: true,
+  isAnonymous: false,
+  userId: 'local',
   email: null
 }
 let currentProject = null
@@ -118,670 +119,53 @@ Card: pad 16, bg $grey-800, rad $lg.rad
 
 // API Helper
 async function api(endpoint, options = {}) {
-  const url = API_BASE + endpoint
-  const config = {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    ...options
-  }
-  if (options.body && typeof options.body === 'object') {
-    config.body = JSON.stringify(options.body)
-  }
-  const response = await fetch(url, config)
-  const data = await response.json()
-  if (!response.ok) {
-    throw new Error(data.error || 'API error')
-  }
-  return data
+  // Desktop app: API calls are not used - all file operations go through TauriBridge
+  console.warn('[API] Legacy API call ignored:', endpoint)
+  return {}
 }
 
 // Auth Functions
-// Auto-login credentials for development
-const DEV_AUTO_LOGIN = true
-const DEV_USER_EMAIL = 'test@test.com'
-const DEV_USER_PASSWORD = 'test123'
+// Desktop app: no auth needed, always "logged in" locally
+
+// Check if running in Tauri desktop app
+function isTauriDesktop() {
+  return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
+}
 
 async function checkAuth() {
-  try {
-    // Use new status endpoint that works for anonymous users too
-    const data = await api('/auth/status')
-    authState = {
-      isLoggedIn: !data.anonymous,
-      isAnonymous: data.anonymous,
-      userId: data.user_id,
-      email: data.email || null
-    }
-
-    // Load settings for logged-in users
-    if (!data.anonymous) {
-      loadSettingsFromServer()
-    }
-
-    // Auto-login for development if anonymous
-    if (DEV_AUTO_LOGIN && data.anonymous) {
-      try {
-        const loginData = await api('/auth/login', {
-          method: 'POST',
-          body: { email: DEV_USER_EMAIL, password: DEV_USER_PASSWORD }
-        })
-        authState = {
-          isLoggedIn: true,
-          isAnonymous: false,
-          userId: loginData.user_id,
-          email: DEV_USER_EMAIL
-        }
-        console.log('Auto-logged in as test user')
-        loadSettingsFromServer()
-      } catch (e) {
-        console.warn('Auto-login failed:', e.message)
-      }
-    }
-
-    updateAuthUI()
-    return true
-  } catch (e) {
-    console.error('Auth check failed:', e)
-    authState = { isLoggedIn: false, isAnonymous: true, userId: null, email: null }
-    updateAuthUI()
-    return false
-  }
+  // Desktop app: always logged in, no auth needed
+  console.log('[Auth] Desktop app - always logged in')
+  return true
 }
 
-async function login(email, password) {
-  const data = await api('/auth/login', {
-    method: 'POST',
-    body: { email, password }
-  })
-  authState = { isLoggedIn: true, isAnonymous: false, userId: data.user_id, email }
-  updateAuthUI()
-  await loadProjects()
-  // Load user settings from server
-  loadSettingsFromServer()
-}
-
-async function register(email, password) {
-  const data = await api('/auth/register', {
-    method: 'POST',
-    body: { email, password }
-  })
-  authState = { isLoggedIn: true, isAnonymous: false, userId: data.user_id, email }
-  updateAuthUI()
-  await loadProjects()
-  // Load user settings from server
-  loadSettingsFromServer()
-}
-
-async function logout() {
-  try {
-    await api('/auth/logout', { method: 'POST' })
-  } catch {}
-  authState = { isLoggedIn: false, isAnonymous: true, userId: null, email: null }
-  currentProject = null
-  projects = []
-  updateAuthUI()
-  // Re-check auth to get new anonymous session
-  await checkAuth()
-  await loadProjects()
-}
+// Auth functions removed - Desktop app doesn't need login/register/logout
 
 function updateAuthUI() {
-  const userLabel = document.getElementById('user-label')
-  const loginBtn = document.getElementById('user-login-btn')
-  const logoutBtn = document.getElementById('user-logout-btn')
-  const headerProject = document.getElementById('header-project')
-
-  if (authState.isLoggedIn && !authState.isAnonymous) {
-    // Logged in user
-    userLabel.textContent = authState.email.split('@')[0]
-    loginBtn.style.display = 'none'
-    logoutBtn.style.display = 'flex'
-    headerProject.style.cursor = 'pointer'
-    headerProject.style.opacity = '1'
-  } else {
-    // Anonymous user
-    userLabel.textContent = 'Demo'
-    loginBtn.style.display = 'flex'
-    logoutBtn.style.display = 'none'
-    headerProject.style.cursor = 'pointer'
-    headerProject.style.opacity = '1'
-  }
+  // Desktop app: no auth UI needed
 }
 
 // Project Functions
 async function loadProjects() {
-  try {
-    projects = await api('/projects')
-    renderProjectList()
-    // Auto-select first project or create demo project
-    if (projects.length > 0) {
-      const savedProjectId = localStorage.getItem(PROJECT_KEY)
-      const project = projects.find(p => p.id === savedProjectId) || projects[0]
-      await selectProject(project.id)
-    } else {
-      // Create initial demo project for new users
-      await createProject(authState.isAnonymous ? 'Demo Project' : 'Mein Projekt')
-    }
-  } catch (e) {
-    console.error('Failed to load projects:', e)
-  }
+  // Desktop app: just load default demo files into editor
+  // File tree is managed by desktop-files.js
+  console.log('[App] Loading demo project')
+  Object.assign(files, defaultFiles)
+  currentProject = { id: 'demo', name: 'Demo Project' }
+  currentFile = 'index.mirror'
+  // No need to render project/file lists - desktop-files.js handles file tree
 }
 
-async function createProject(name) {
-  const project = await api('/projects', {
-    method: 'POST',
-    body: { name }
-  })
-  projects.unshift(project)
-  renderProjectList()
-  await selectProject(project.id)
-}
+// Legacy project functions removed - desktop app uses folder-based file management via desktop-files.js
 
-// File tree structure from API (recursive)
+// File tree structure (legacy, kept for compatibility)
 let fileTree = []
 
-// Flatten file tree to load all file contents
-function flattenFileTree(items, result = []) {
-  for (const item of items) {
-    if (item.type === 'file') {
-      result.push(item.path)
-    } else if (item.type === 'folder' && item.children) {
-      flattenFileTree(item.children, result)
-    }
-  }
-  return result
-}
-
-async function selectProject(projectId) {
-  currentProject = projects.find(p => p.id === projectId)
-  if (!currentProject) return
-
-  localStorage.setItem(PROJECT_KEY, projectId)
-  document.getElementById('header-project-name').textContent = currentProject.name
-  document.getElementById('sidebar-project-name').textContent = currentProject.name
-
-  // Load file tree from server (recursive structure)
-  fileTree = await api(`/projects/${projectId}/files`)
-  Object.keys(files).forEach(k => delete files[k])
-
-  // Flatten tree and load all file contents
-  const filePaths = flattenFileTree(fileTree)
-  for (const filePath of filePaths) {
-    const fileData = await api(`/projects/${projectId}/files/${encodeURIComponent(filePath)}`)
-    files[filePath] = fileData.content
-  }
-
-  // Ensure at least index.mirror exists
-  if (!files['index.mirror']) {
-    files['index.mirror'] = defaultFiles['index.mirror']
-  }
-
-  currentFile = 'index.mirror'
-  renderFileList()
-  if (typeof editor !== 'undefined') {
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] },
-      annotations: fileSwitchAnnotation.of(true)
-    })
-    compile(files[currentFile])
-  }
-}
-
-function renderProjectList() {
-  const list = document.getElementById('project-dropdown-list')
-  list.innerHTML = projects.map(p => `
-    <div class="project-dropdown-item ${p.id === currentProject?.id ? 'active' : ''}" data-project-id="${p.id}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-      </svg>
-      <div class="project-dropdown-item-name" data-name="${p.name}">${p.name}</div>
-      <div class="project-dropdown-item-actions">
-        <button class="rename-project-btn" data-project-id="${p.id}" title="Umbenennen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
-        </button>
-        <button class="delete-project-btn danger" data-project-id="${p.id}" title="Löschen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-  `).join('')
-
-  // Add click handlers
-  list.querySelectorAll('.project-dropdown-item').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('button')) return
-      selectProject(el.dataset.projectId)
-      closeProjectDropdown()
-    })
-  })
-
-  list.querySelectorAll('.rename-project-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      startRenameProject(btn.dataset.projectId)
-    })
-  })
-
-  list.querySelectorAll('.delete-project-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      deleteProjectWithConfirm(btn.dataset.projectId)
-    })
-  })
-}
-
-// Project Dropdown Functions
-const projectDropdown = document.getElementById('project-dropdown')
-
-function toggleProjectDropdown() {
-  if (!authState.isLoggedIn) return
-  renderProjectList()
-  projectDropdown.classList.toggle('visible')
-}
-
-function closeProjectDropdown() {
-  projectDropdown.classList.remove('visible')
-}
-
-function startRenameProject(projectId) {
-  const item = document.querySelector(`.project-dropdown-item[data-project-id="${projectId}"]`)
-  if (!item) return
-
-  const nameEl = item.querySelector('.project-dropdown-item-name')
-  const actionsEl = item.querySelector('.project-dropdown-item-actions')
-  const currentName = nameEl.dataset.name
-
-  // Hide actions and show input with confirm button
-  actionsEl.style.display = 'none'
-  nameEl.innerHTML = `
-    <input type="text" value="${currentName}" class="project-dropdown-input" style="flex: 1;">
-    <button class="confirm-btn" title="Bestätigen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    </button>
-  `
-  nameEl.style.display = 'flex'
-  nameEl.style.gap = '6px'
-  nameEl.style.alignItems = 'center'
-
-  const input = nameEl.querySelector('input')
-  const confirmBtn = nameEl.querySelector('.confirm-btn')
-  input.focus()
-  input.select()
-
-  let cancelled = false
-
-  const finishRename = async () => {
-    if (cancelled) return
-    const newName = input.value.trim()
-    actionsEl.style.display = ''
-    nameEl.style.display = ''
-    nameEl.style.gap = ''
-    nameEl.style.alignItems = ''
-    if (newName && newName !== currentName) {
-      await renameProject(projectId, newName)
-    } else {
-      nameEl.innerHTML = currentName
-      nameEl.dataset.name = currentName
-    }
-  }
-
-  confirmBtn.addEventListener('click', (e) => {
-    e.stopPropagation()
-    input.blur()
-  })
-
-  input.addEventListener('blur', finishRename)
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      input.blur()
-    } else if (e.key === 'Escape') {
-      cancelled = true
-      actionsEl.style.display = ''
-      nameEl.style.display = ''
-      nameEl.style.gap = ''
-      nameEl.style.alignItems = ''
-      nameEl.innerHTML = currentName
-      nameEl.dataset.name = currentName
-    }
-  })
-}
-
-async function renameProject(projectId, newName) {
-  try {
-    await api(`/projects/${projectId}`, {
-      method: 'PUT',
-      body: { name: newName }
-    })
-
-    const project = projects.find(p => p.id === projectId)
-    if (project) {
-      project.name = newName
-    }
-
-    if (currentProject?.id === projectId) {
-      currentProject.name = newName
-      document.getElementById('header-project-name').textContent = newName
-      document.getElementById('sidebar-project-name').textContent = newName
-    }
-
-    renderProjectList()
-  } catch (e) {
-    console.error('Failed to rename project:', e)
-    alert('Fehler beim Umbenennen')
-    renderProjectList()
-  }
-}
-
-async function deleteProjectWithConfirm(projectId) {
-  const project = projects.find(p => p.id === projectId)
-  if (!project) return
-
-  if (projects.length <= 1) {
-    alert('Das letzte Projekt kann nicht gelöscht werden.')
-    return
-  }
-
-  if (!confirm(`Projekt "${project.name}" wirklich löschen? Alle Dateien werden unwiderruflich gelöscht.`)) {
-    return
-  }
-
-  try {
-    await api(`/projects/${projectId}`, { method: 'DELETE' })
-
-    projects = projects.filter(p => p.id !== projectId)
-
-    if (currentProject?.id === projectId) {
-      await selectProject(projects[0]?.id)
-    }
-
-    renderProjectList()
-  } catch (e) {
-    console.error('Failed to delete project:', e)
-    alert('Fehler beim Löschen')
-  }
-}
-
-// Legacy storage migration - no longer needed with server-based storage
-function checkAndMigrateStorage() {
-  return false
-}
-
-// Demo Mode - now uses API like everything else
-// This function is kept for backwards compatibility but just delegates to loadProjects
-async function loadDemoProject() {
-  await loadProjects()
-}
-
-// Load Starter Template - creates a new project with default files
-async function loadStarterTemplate() {
-  try {
-    // Create new project via API
-    const project = await api('/projects', {
-      method: 'POST',
-      body: { name: 'Starter Template' }
-    })
-
-    // The API creates default files automatically
-    // Now select the project
-    projects.unshift(project)
-    renderProjectList()
-    await selectProject(project.id)
-
-    // Close dropdown
-    document.getElementById('project-dropdown').classList.remove('show')
-  } catch (e) {
-    console.error('Failed to create starter template:', e)
-  }
-}
-
-// Track collapsed folders
-const collapsedFolders = new Set()
-
-// Render a single file item
-function renderFileItem(item, fileCount) {
-  const filePath = item.path
-  const baseName = item.filename.replace('.mirror', '')
-  const canDelete = fileCount > 1
-  const fileIcon = getFileIcon(filePath)
-
-  return `
-    <div class="file ${filePath === currentFile ? 'active' : ''}" data-file="${filePath}">
-      ${fileIcon}
-      <span class="file-name" data-filename="${filePath}">${baseName}</span>
-      <button class="file-rename" data-file="${filePath}" title="Umbenennen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-      </button>
-      ${canDelete ? `
-        <button class="file-delete" data-file="${filePath}" title="Löschen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      ` : ''}
-    </div>
-  `
-}
-
-// Render a folder item with children
-function renderFolderItem(item) {
-  const folderPath = item.path
-  const isCollapsed = collapsedFolders.has(folderPath)
-  const displayName = item.filename
-
-  const childrenHtml = item.children ? item.children.map(child => {
-    if (child.type === 'folder') {
-      return renderFolderItem(child)
-    } else {
-      return renderFileItem(child, Object.keys(files).length)
-    }
-  }).join('') : ''
-
-  return `
-    <div class="folder-item ${isCollapsed ? 'collapsed' : ''}" data-folder="${folderPath}">
-      <div class="folder-header">
-        <svg class="folder-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-        <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span class="folder-name">${displayName}</span>
-        <button class="folder-delete" data-folder="${folderPath}" title="Ordner löschen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="folder-children">
-        ${childrenHtml}
-      </div>
-    </div>
-  `
-}
-
-// Render file tree (recursive)
-function renderFileTreeItems(items) {
-  const fileCount = Object.keys(files).length
-  return items.map(item => {
-    if (item.type === 'folder') {
-      return renderFolderItem(item)
-    } else {
-      return renderFileItem(item, fileCount)
-    }
-  }).join('')
-}
+// Legacy file list rendering removed - desktop app uses desktop-files.js for file tree
 
 function renderFileList() {
-  const container = document.getElementById('file-list')
-
-  // Use fileTree if available (logged in), otherwise build from files object
-  let itemsHtml = ''
-  if (authState.isLoggedIn && fileTree.length > 0) {
-    itemsHtml = renderFileTreeItems(fileTree)
-  } else {
-    // Fallback for demo mode - flat list
-    const fileCount = Object.keys(files).length
-
-    itemsHtml = Object.keys(files).map(filename => {
-      const baseName = filename.replace(/\.mirror$/, '')
-      const canDelete = fileCount > 1
-      const fileIcon = getFileIcon(filename)
-      return `
-        <div class="file ${filename === currentFile ? 'active' : ''}" data-file="${filename}">
-          ${fileIcon}
-          <span class="file-name" data-filename="${filename}">${baseName}</span>
-          <button class="file-rename" data-file="${filename}" title="Umbenennen">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
-          ${canDelete ? `
-            <button class="file-delete" data-file="${filename}" title="Löschen">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          ` : ''}
-        </div>
-      `
-    }).join('')
-  }
-
-  // Add new page button with dropdown
-  const buttonsHtml = `
-    <div class="add-new-container">
-      <button class="add-new-btn" id="add-file-btn">
-        <span class="add-new-btn-content">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          New...
-        </span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-      <div class="add-new-dropdown" id="add-new-dropdown">
-        ${Object.entries(FILE_TYPES).map(([type, config]) => `
-          <button class="add-new-dropdown-item" data-type="${type}">
-            ${config.icon.replace('stroke="currentColor"', `stroke="${config.color}"`)}
-            ${config.label}
-          </button>
-        `).join('')}
-        <div class="add-new-dropdown-divider"></div>
-        <button class="add-new-dropdown-item" data-type="folder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-          </svg>
-          Folder
-        </button>
-      </div>
-    </div>
-  `
-
-  container.innerHTML = itemsHtml + buttonsHtml
-
-  // File click handlers
-  container.querySelectorAll('.file').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('.file-delete') || e.target.closest('.file-rename')) return
-      switchFile(el.dataset.file)
-    })
-  })
-
-  // Folder header click handlers (expand/collapse)
-  container.querySelectorAll('.folder-header').forEach(header => {
-    header.addEventListener('click', (e) => {
-      if (e.target.closest('.folder-delete')) return
-      const folderItem = header.closest('.folder-item')
-      const folderPath = folderItem.dataset.folder
-      if (collapsedFolders.has(folderPath)) {
-        collapsedFolders.delete(folderPath)
-        folderItem.classList.remove('collapsed')
-      } else {
-        collapsedFolders.add(folderPath)
-        folderItem.classList.add('collapsed')
-      }
-    })
-  })
-
-  // Rename button handlers
-  container.querySelectorAll('.file-rename').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      startRenameFile(btn.dataset.file)
-    })
-  })
-
-  // Delete button handlers
-  container.querySelectorAll('.file-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      deleteFile(btn.dataset.file)
-    })
-  })
-
-  // Folder delete button handlers
-  container.querySelectorAll('.folder-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      deleteFolder(btn.dataset.folder)
-    })
-  })
-
-  // Add file button handler - toggle dropdown
-  document.getElementById('add-file-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation()
-    const btn = e.currentTarget
-    const dropdown = document.getElementById('add-new-dropdown')
-    const isVisible = dropdown.classList.toggle('visible')
-    if (isVisible) {
-      // Position dropdown below button
-      const rect = btn.getBoundingClientRect()
-      dropdown.style.left = rect.left + 'px'
-      dropdown.style.top = (rect.bottom + 4) + 'px'
-    }
-  })
-
-  // Dropdown item handlers
-  document.querySelectorAll('.add-new-dropdown-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation()
-      const type = item.dataset.type
-      document.getElementById('add-new-dropdown').classList.remove('visible')
-      if (type === 'folder') {
-        createNewFolder()
-      } else {
-        createNewFile(type)
-      }
-    })
-  })
-
+  // Desktop app uses desktop-files.js for file tree - this function is no longer needed
+  return
 }
-
-// Close dropdown on outside click
-document.addEventListener('click', (e) => {
-  const dropdown = document.getElementById('add-new-dropdown')
-  const btn = document.getElementById('add-file-btn')
-  if (dropdown && !dropdown.contains(e.target) && !btn?.contains(e.target)) {
-    dropdown.classList.remove('visible')
-  }
-})
 
 // Mode tabs (MIRROR / REACT)
 let currentMode = 'mirror'
@@ -909,40 +293,10 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
   })
 })
 
-// Render file list for React mode (shows .tsx files)
+// Legacy function - desktop app uses desktop-files.js for file tree
 function renderFileListForMode(mode) {
-  if (mode === 'mirror') {
-    renderFileList()
-    return
-  }
-
-  // React mode - render .tsx files
-  const container = document.getElementById('file-list')
-  const fileCount = Object.keys(reactFiles).length
-
-  const itemsHtml = Object.keys(reactFiles).map(filePath => {
-    const displayName = filePath.split('/').pop()  // Keep .tsx extension
-    const isActive = filePath === currentFile
-
-    return `
-      <div class="file ${isActive ? 'active' : ''}" data-file="${filePath}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" width="16" height="16">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-        </svg>
-        <span class="file-name" data-filename="${filePath}">${displayName}</span>
-      </div>
-    `
-  }).join('')
-
-  container.innerHTML = itemsHtml
-
-  // File click handlers for React mode
-  container.querySelectorAll('.file').forEach(el => {
-    el.addEventListener('click', (e) => {
-      switchFileReactMode(el.dataset.file)
-    })
-  })
+  // Desktop app uses desktop-files.js - this function is no longer needed
+  return
 }
 
 // Switch file in React mode
@@ -965,84 +319,13 @@ function switchFileReactMode(filename) {
 }
 
 // File rename functions
+// Legacy file rename functions - desktop app uses desktop-files.js
 function startRenameFile(filePath) {
-  const fileEl = document.querySelector(`.file[data-file="${filePath}"]`)
-  if (!fileEl) return
-
-  const nameEl = fileEl.querySelector('.file-name')
-  // Extract just the filename (without folder path and extension)
-  const fileName = filePath.split('/').pop()
-  const currentName = fileName.replace('.mirror', '')
-  // Get folder path (if any)
-  const folderPath = filePath.includes('/') ? filePath.substring(0, filePath.lastIndexOf('/') + 1) : ''
-
-  nameEl.innerHTML = `<input type="text" class="file-name-input" value="${currentName}">`
-  const input = nameEl.querySelector('input')
-  input.focus()
-  input.select()
-
-  const finishRename = async () => {
-    const newName = input.value.trim().toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    if (newName && newName !== currentName) {
-      const newPath = folderPath + newName + '.mirror'
-      await renameFile(filePath, newPath)
-    } else {
-      nameEl.textContent = currentName
-    }
-  }
-
-  input.addEventListener('blur', finishRename)
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      input.blur()
-    } else if (e.key === 'Escape') {
-      nameEl.textContent = displayName
-    }
-  })
+  console.warn('[Legacy] startRenameFile not supported in desktop app')
 }
 
 async function renameFile(oldPath, newPath) {
-  if (files[newPath]) {
-    alert('Eine Datei mit diesem Namen existiert bereits.')
-    renderFileList()
-    return
-  }
-
-  const content = files[oldPath]
-
-  // Save new file
-  await saveFile(newPath, content)
-
-  // Delete old file (always via API)
-  if (currentProject) {
-    try {
-      await api(`/projects/${currentProject.id}/files/${encodeURIComponent(oldPath)}`, { method: 'DELETE' })
-      // Reload file tree
-      fileTree = await api(`/projects/${currentProject.id}/files`)
-    } catch (e) {
-      console.error('Failed to delete old file:', e)
-    }
-  }
-
-  delete files[oldPath]
-
-  // Transfer file type to new path
-  if (fileTypes[oldPath]) {
-    fileTypes[newPath] = fileTypes[oldPath]
-    delete fileTypes[oldPath]
-    localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
-  }
-
-  // Update current file if needed
-  if (currentFile === oldPath) {
-    currentFile = newPath
-  }
-
-  renderFileList()
+  console.warn('[Legacy] renameFile not supported in desktop app')
 }
 
 // ===========================================
@@ -1271,282 +554,49 @@ function getFileTypeColor(filename) {
   return (FILE_TYPES[type] || FILE_TYPES.layout).color
 }
 
-// Create new file
+// Legacy create file/folder functions - desktop app uses native menu + desktop-files.js
 function createNewFile(type = 'layout') {
-  // Check if input row already exists
-  if (document.querySelector('.file-input-row')) return
-
-  const container = document.getElementById('file-list')
-  const addContainer = document.querySelector('.add-new-container')
-  const fileType = FILE_TYPES[type] || FILE_TYPES.layout
-
-  // Create inline input row
-  const inputRow = document.createElement('div')
-  inputRow.className = 'file-input-row'
-  inputRow.innerHTML = `
-    <input type="text" class="file-name-input" placeholder="${fileType.placeholder}" autofocus>
-    <button class="file-confirm-btn" title="Erstellen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    </button>
-  `
-
-  // Insert before the add container
-  container.insertBefore(inputRow, addContainer)
-
-  const input = inputRow.querySelector('input')
-  const confirmBtn = inputRow.querySelector('.file-confirm-btn')
-
-  input.focus()
-
-  const confirmCreate = async () => {
-    const name = input.value.trim() || fileType.placeholder
-
-    // Sanitize filename
-    const sanitized = name.toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    if (!sanitized) {
-      cancelCreate()
-      return
-    }
-
-    const filename = sanitized + '.mirror'
-
-    // Check if exists
-    if (files[filename]) {
-      input.style.borderColor = '#ef4444'
-      input.focus()
-      return
-    }
-
-    // Create file with template from FILE_TYPES
-    const content = fileType.template(sanitized)
-    await saveFile(filename, content)
-
-    // Save the explicit file type
-    saveFileType(filename, type)
-
-    // Reload file tree if logged in
-    if (authState.isLoggedIn && currentProject) {
-      fileTree = await api(`/projects/${currentProject.id}/files`)
-    }
-
-    // Re-render and switch to new file
-    renderFileList()
-    switchFile(filename)
-  }
-
-  const cancelCreate = () => {
-    inputRow.remove()
-  }
-
-  // Event handlers
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      confirmCreate()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      cancelCreate()
-    }
-  })
-
-  input.addEventListener('blur', (e) => {
-    // Small delay to allow clicking confirm button
-    setTimeout(() => {
-      if (document.activeElement !== confirmBtn && inputRow.parentElement) {
-        cancelCreate()
-      }
-    }, 150)
-  })
-
-  confirmBtn.addEventListener('click', (e) => {
-    e.preventDefault()
-    confirmCreate()
-  })
+  console.warn('[Legacy] createNewFile not supported - use File > New File menu')
 }
 
-// Create new folder
 function createNewFolder() {
-  // Check if input row already exists
-  if (document.querySelector('.file-input-row')) return
-
-  const container = document.getElementById('file-list')
-  const addContainer = document.querySelector('.add-new-container')
-
-  // Create inline input row
-  const inputRow = document.createElement('div')
-  inputRow.className = 'file-input-row'
-  inputRow.innerHTML = `
-    <input type="text" class="file-name-input" placeholder="ordner-name" autofocus>
-    <button class="file-confirm-btn" title="Erstellen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    </button>
-  `
-
-  // Insert before the add container
-  container.insertBefore(inputRow, addContainer)
-
-  const input = inputRow.querySelector('input')
-  const confirmBtn = inputRow.querySelector('.file-confirm-btn')
-
-  input.focus()
-
-  const confirmCreate = async () => {
-    const name = input.value.trim() || 'ordner'
-
-    // Sanitize folder name
-    const sanitized = name.toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    if (!sanitized) {
-      cancelCreate()
-      return
-    }
-
-    const folderPath = sanitized + '/'
-    const filename = folderPath + 'index.mirror'
-
-    // Check if folder exists
-    if (Object.keys(files).some(f => f.startsWith(folderPath))) {
-      input.style.borderColor = '#ef4444'
-      input.focus()
-      return
-    }
-
-    // Create index file in folder
-    const content = `// ${sanitized}\n// Ordner Index\n`
-    await saveFile(filename, content)
-
-    // Reload file tree if logged in
-    if (authState.isLoggedIn && currentProject) {
-      fileTree = await api(`/projects/${currentProject.id}/files`)
-    }
-
-    // Re-render and switch to new file
-    renderFileList()
-    switchFile(filename)
-  }
-
-  const cancelCreate = () => {
-    inputRow.remove()
-  }
-
-  // Event handlers
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      confirmCreate()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      cancelCreate()
-    }
-  })
-
-  input.addEventListener('blur', (e) => {
-    // Small delay to allow clicking confirm button
-    setTimeout(() => {
-      if (document.activeElement !== confirmBtn && inputRow.parentElement) {
-        cancelCreate()
-      }
-    }, 150)
-  })
-
-  confirmBtn.addEventListener('click', (e) => {
-    e.preventDefault()
-    confirmCreate()
-  })
+  console.warn('[Legacy] createNewFolder not supported - use File > New Folder menu')
 }
 
-// Delete file (always via API)
+// Legacy delete functions - desktop app manages files via native file system
 async function deleteFile(filePath) {
-  if (Object.keys(files).length <= 1) {
-    alert('Mindestens eine Datei muss existieren')
-    return
-  }
-
-  // Delete from server
-  if (currentProject) {
-    try {
-      await api(`/projects/${currentProject.id}/files/${encodeURIComponent(filePath)}`, {
-        method: 'DELETE'
-      })
-      // Reload file tree
-      fileTree = await api(`/projects/${currentProject.id}/files`)
-    } catch (e) {
-      console.error('Failed to delete from server:', e)
-    }
-  }
-
-  // Remove from files object and file types
-  delete files[filePath]
-  deleteFileType(filePath)
-
-  // Switch to another file if we deleted the current one
-  if (currentFile === filePath) {
-    currentFile = Object.keys(files)[0] || 'index.mirror'
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] || '' }
-    })
-    compile(files[currentFile] || '')
-  }
-
-  renderFileList()
+  console.warn('[Legacy] deleteFile not supported - use Finder to delete files')
 }
 
-// Delete folder (always via API)
 async function deleteFolder(folderPath) {
-  if (!currentProject) return
+  console.warn('[Legacy] deleteFolder not supported - use Finder to delete folders')
+}
 
-  try {
-    await api(`/projects/${currentProject.id}/folders/${encodeURIComponent(folderPath)}?force=true`, {
-      method: 'DELETE'
-    })
+// Save file - Desktop app uses desktop-files.js for actual disk writes
+async function saveFile(filePath, content) {
+  // Update local cache
+  files[filePath] = content
 
-    // Remove all files in this folder from the files object
-    Object.keys(files).forEach(filePath => {
-      if (filePath.startsWith(folderPath + '/')) {
-        delete files[filePath]
-      }
-    })
-
-    // Switch to another file if current file was in deleted folder
-    if (currentFile.startsWith(folderPath + '/')) {
-      currentFile = Object.keys(files)[0] || 'index.mirror'
-      editor.dispatch({
-        changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] || '' }
-      })
-      compile(files[currentFile] || '')
+  // Desktop: use desktop-files.js for actual disk save
+  if (window.desktopFiles?.saveFile && window.desktopFiles.getCurrentFolder()) {
+    try {
+      await window.desktopFiles.saveFile(filePath, content)
+      console.log('[Save] File saved via desktop-files.js:', filePath)
+    } catch (e) {
+      console.error('[Save] Failed to save:', e)
     }
-
-    // Reload file tree
-    fileTree = await api(`/projects/${currentProject.id}/files`)
-    renderFileList()
-  } catch (e) {
-    console.error('Failed to delete folder:', e)
-    alert('Fehler beim Löschen des Ordners')
   }
 }
 
-// Save file (always to server via API)
-async function saveFile(filePath, content) {
-  files[filePath] = content
-  if (currentProject) {
-    try {
-      await api(`/projects/${currentProject.id}/files/${encodeURIComponent(filePath)}`, {
-        method: 'PUT',
-        body: { content }
-      })
-    } catch (e) {
-      console.error('Failed to save to server:', e)
+// Save current file shortcut
+async function saveCurrentFile() {
+  if (currentFile && files[currentFile] !== undefined) {
+    await saveFile(currentFile, files[currentFile])
+    // Update status
+    const status = document.getElementById('status')
+    if (status) {
+      status.textContent = 'Saved'
+      setTimeout(() => { status.textContent = 'Ready' }, 1500)
     }
   }
 }
@@ -1582,9 +632,17 @@ function getFileType(filename) {
   if (fileTypes[filename]) {
     return fileTypes[filename]
   }
+
+  // Check file extension first (most reliable for Tauri desktop files)
+  const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
+  if (ext === '.tok') return 'tokens'
+  if (ext === '.com') return 'component'
+  if (ext === '.mir' || ext === '.mirror') return 'layout'
+
   // Fall back to detection from content
-  const content = files[filename] || ''
-  return detectFileType(content)
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  const content = allFiles[filename] || ''
+  return detectFileType(filename, content)
 }
 
 // File switching
@@ -1627,216 +685,9 @@ function switchFile(filename) {
   compile(files[filename])
 }
 
-// Auth Modal Handling
-const authOverlay = document.getElementById('auth-overlay')
-const authForm = document.getElementById('auth-form')
-const authError = document.getElementById('auth-error')
-const authTabs = document.querySelectorAll('.auth-tab')
-const authSubmit = document.getElementById('auth-submit')
-const authTitle = document.querySelector('.auth-title')
-let authMode = 'login'
+// Auth removed - Desktop app doesn't need authentication
 
-function showAuthModal() {
-  authOverlay.classList.add('visible')
-  authError.classList.remove('visible')
-  document.getElementById('auth-email').focus()
-}
-
-function hideAuthModal() {
-  authOverlay.classList.remove('visible')
-  authForm.reset()
-  authError.classList.remove('visible')
-}
-
-authTabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    authMode = tab.dataset.tab
-    authTabs.forEach(t => t.classList.remove('active'))
-    tab.classList.add('active')
-    authSubmit.textContent = authMode === 'login' ? 'Anmelden' : 'Registrieren'
-    authTitle.textContent = authMode === 'login' ? 'Anmelden' : 'Registrieren'
-  })
-})
-
-authForm.addEventListener('submit', async (e) => {
-  e.preventDefault()
-  const email = document.getElementById('auth-email').value
-  const password = document.getElementById('auth-password').value
-
-  authSubmit.disabled = true
-  authError.classList.remove('visible')
-
-  try {
-    if (authMode === 'login') {
-      await login(email, password)
-    } else {
-      await register(email, password)
-    }
-    hideAuthModal()
-  } catch (err) {
-    authError.textContent = err.message
-    authError.classList.add('visible')
-  } finally {
-    authSubmit.disabled = false
-  }
-})
-
-document.getElementById('auth-close').addEventListener('click', hideAuthModal)
-document.getElementById('auth-demo-btn').addEventListener('click', () => {
-  hideAuthModal()
-  loadDemoProject()
-})
-
-// User Menu
-const userButton = document.getElementById('user-button')
-const userMenu = document.getElementById('user-menu')
-
-userButton.addEventListener('click', () => {
-  userMenu.classList.toggle('visible')
-})
-
-document.getElementById('user-login-btn').addEventListener('click', () => {
-  userMenu.classList.remove('visible')
-  showAuthModal()
-})
-
-document.getElementById('user-logout-btn').addEventListener('click', () => {
-  userMenu.classList.remove('visible')
-  logout()
-})
-
-// Project Dropdown
-const headerProject = document.getElementById('header-project')
-headerProject.addEventListener('click', (e) => {
-  // Don't toggle if clicking inside dropdown
-  if (e.target.closest('.project-dropdown')) return
-  if (!authState.isLoggedIn) {
-    showAuthModal()
-    return
-  }
-  toggleProjectDropdown()
-})
-
-// Sidebar project folder click (opens dropdown to switch projects)
-document.getElementById('sidebar-project').addEventListener('click', (e) => {
-  // Don't trigger if clicking action buttons
-  if (e.target.closest('.folder-actions')) return
-  if (!authState.isLoggedIn) {
-    showAuthModal()
-    return
-  }
-  toggleProjectDropdown()
-})
-
-// Sidebar project rename
-document.getElementById('sidebar-project-rename').addEventListener('click', (e) => {
-  e.stopPropagation()
-  if (!authState.isLoggedIn || !currentProject) return
-
-  const nameEl = document.getElementById('sidebar-project-name')
-  const currentName = currentProject.name
-
-  nameEl.innerHTML = `<input type="text" class="file-name-input" value="${currentName}" style="width: 100%;">`
-  const input = nameEl.querySelector('input')
-  input.focus()
-  input.select()
-
-  const finishRename = async () => {
-    const newName = input.value.trim()
-    if (newName && newName !== currentName) {
-      await renameProject(currentProject.id, newName)
-    }
-    nameEl.textContent = currentProject.name
-  }
-
-  input.addEventListener('blur', finishRename)
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      input.blur()
-    } else if (e.key === 'Escape') {
-      nameEl.textContent = currentName
-    }
-  })
-})
-
-// Sidebar project delete
-document.getElementById('sidebar-project-delete').addEventListener('click', (e) => {
-  e.stopPropagation()
-  if (!authState.isLoggedIn || !currentProject) return
-  deleteProjectWithConfirm(currentProject.id)
-})
-
-document.getElementById('project-dropdown-new').addEventListener('click', () => {
-  // Add inline input for new project name
-  const list = document.getElementById('project-dropdown-list')
-  const existingInput = list.querySelector('.new-project-input-row')
-  if (existingInput) return // Already showing input
-
-  const inputRow = document.createElement('div')
-  inputRow.className = 'project-dropdown-item new-project-input-row'
-  inputRow.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-    </svg>
-    <input type="text" class="project-dropdown-input" value="Neues Projekt" placeholder="Projektname">
-    <button class="confirm-btn" title="Bestätigen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    </button>
-  `
-  list.insertBefore(inputRow, list.firstChild)
-
-  const input = inputRow.querySelector('input')
-  const confirmBtn = inputRow.querySelector('.confirm-btn')
-  input.focus()
-  input.select()
-
-  let cancelled = false
-
-  const finishCreate = async () => {
-    if (cancelled) return
-    const name = input.value.trim()
-    if (name) {
-      await createProject(name)
-      closeProjectDropdown()
-    } else {
-      inputRow.remove()
-    }
-  }
-
-  confirmBtn.addEventListener('click', (e) => {
-    e.stopPropagation()
-    input.blur()
-  })
-
-  input.addEventListener('blur', finishCreate)
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      input.blur()
-    } else if (e.key === 'Escape') {
-      cancelled = true
-      inputRow.remove()
-    }
-  })
-})
-
-// Load Starter Template button
-document.getElementById('project-dropdown-template').addEventListener('click', () => {
-  loadStarterTemplate()
-})
-
-// Close dropdowns on outside click
-document.addEventListener('click', (e) => {
-  if (!userButton.contains(e.target) && !userMenu.contains(e.target)) {
-    userMenu.classList.remove('visible')
-  }
-  // Close project dropdown when clicking outside
-  const headerProject = document.getElementById('header-project')
-  if (headerProject && !headerProject.contains(e.target)) {
-    closeProjectDropdown()
-  }
-})
+// Project dropdown UI removed - Desktop app uses native menus and file tree
 
 // Initialize: Check auth status and load projects
 async function initApp() {
@@ -3708,6 +2559,24 @@ function parseAnimationKeyframes(doc, startLine) {
 // NOTE: Animation picker triggers are now handled by TriggerManager
 // See: studio/editor/triggers/animation-trigger.ts
 
+// Keyboard shortcut: Cmd+S to save current file
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's' && !e.shiftKey) {
+    e.preventDefault()
+    saveCurrentFile()
+  }
+})
+
+// Keyboard shortcut: Cmd+O to open folder (Desktop only)
+document.addEventListener('keydown', async (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'o' && !e.shiftKey) {
+    e.preventDefault()
+    if (isTauriDesktop() && window.desktopFiles) {
+      await window.desktopFiles.openFolder()
+    }
+  }
+})
+
 // Keyboard shortcut: Cmd+Shift+A to open animation picker (legacy, kept for convenience)
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'a') {
@@ -3799,19 +2668,7 @@ function ensureTokensFile() {
   const tokensFilename = 'tokens.mirror'
   if (!files[tokensFilename]) {
     files[tokensFilename] = '// Design Tokens\n'
-    // Add to file list UI
-    const fileList = document.getElementById('file-list')
-    if (fileList) {
-      const newFileEl = document.createElement('div')
-      newFileEl.className = 'file'
-      newFileEl.dataset.file = tokensFilename
-      newFileEl.innerHTML = `
-        <span class="file-icon">🎨</span>
-        <span class="file-name">${tokensFilename}</span>
-      `
-      newFileEl.addEventListener('click', () => switchFile(tokensFilename))
-      fileList.appendChild(newFileEl)
-    }
+    // Desktop app: file tree is managed by desktop-files.js
     saveFile(tokensFilename, files[tokensFilename])
   }
 }
@@ -3857,6 +2714,7 @@ function showTokenCreatedFeedback(tokenName) {
 /**
  * Extension: App Lock - Makes "App" on line 1 undeletable
  * and auto-indents all other lines with 2 spaces
+ * Only applies to .mir (layout) files, not .tok or .com files
  */
 const APP_PREFIX = 'App'
 const CHILD_INDENT = '  ' // 2 spaces
@@ -3866,6 +2724,12 @@ const appLockExtension = EditorState.transactionFilter.of(tr => {
 
   // Allow file switch transactions through (they may load non-App files like tokens)
   if (tr.annotation(fileSwitchAnnotation)) {
+    return tr
+  }
+
+  // Only apply App lock to .mir (layout) files
+  // Token (.tok) and component (.com) files don't need to start with "App"
+  if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
     return tr
   }
 
@@ -3883,10 +2747,16 @@ const appLockExtension = EditorState.transactionFilter.of(tr => {
 
 /**
  * Extension: Auto-indent new lines with 2 spaces (children of App)
+ * Only applies to .mir (layout) files
  */
 const autoIndentExtension = EditorView.domEventHandlers({
   keydown: (event, view) => {
     if (event.key !== 'Enter') return false
+
+    // Only apply to .mir layout files
+    if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
+      return false
+    }
 
     // Don't intercept if picker is open
     if (getTriggerManager().isOpen()) return false
@@ -3919,6 +2789,7 @@ const autoIndentExtension = EditorView.domEventHandlers({
 
 /**
  * Extension: Style "App" as locked/readonly appearance
+ * Only applies to .mir (layout) files
  */
 const appLockDecoration = Decoration.mark({ class: 'cm-app-locked' })
 const appLockDecorationPlugin = ViewPlugin.fromClass(class {
@@ -3933,6 +2804,10 @@ const appLockDecorationPlugin = ViewPlugin.fromClass(class {
   }
   buildDecorations(view) {
     const builder = new RangeSetBuilder()
+    // Only show "App" decoration for .mir layout files
+    if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
+      return builder.finish()
+    }
     const firstLine = view.state.doc.line(1)
     if (firstLine.text.startsWith(APP_PREFIX)) {
       builder.add(firstLine.from, firstLine.from + APP_PREFIX.length, appLockDecoration)
@@ -4265,18 +3140,21 @@ function autoCreateReferencedFiles(code) {
 function getPreludeCode(excludeFile) {
   const sections = []
 
+  // Use desktop files if available (Tauri mode), fallback to local files
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+
   // Collect files by type in the correct order: tokens first, then components
   const tokenFiles = []
   const componentFiles = []
 
-  for (const filename of Object.keys(files)) {
+  for (const filename of Object.keys(allFiles)) {
     // Skip the current file being compiled
     if (filename === excludeFile) continue
 
     const fileType = getFileType(filename)
     if (fileType === 'tokens') {
       tokenFiles.push(filename)
-    } else if (fileType === 'component') {
+    } else if (fileType === 'component' || fileType === 'components') {
       componentFiles.push(filename)
     }
   }
@@ -4284,7 +3162,7 @@ function getPreludeCode(excludeFile) {
   // Add tokens first (sorted alphabetically for consistency)
   tokenFiles.sort()
   for (const filename of tokenFiles) {
-    const content = files[filename]
+    const content = allFiles[filename]
     if (content && content.trim()) {
       sections.push(`// === ${filename} ===\n${content}`)
     }
@@ -4293,7 +3171,7 @@ function getPreludeCode(excludeFile) {
   // Then components
   componentFiles.sort()
   for (const filename of componentFiles) {
-    const content = files[filename]
+    const content = allFiles[filename]
     if (content && content.trim()) {
       sections.push(`// === ${filename} ===\n${content}`)
     }
@@ -5631,12 +4509,10 @@ function handleStudioDrop(result) {
     componentName = 'Element'
 
     if (isDuplicate) {
-      // TODO: Implement duplicate (copy node then move copy)
-      console.warn('Studio: Duplicate not yet implemented')
-      return
-    }
-
-    if (placement === 'absolute' && absolutePosition) {
+      // Duplicate: copy node to target location (Alt-drag)
+      modResult = studioCodeModifier.duplicateNode(source.nodeId, targetNodeId, placement)
+      componentName = 'Duplicate'
+    } else if (placement === 'absolute' && absolutePosition) {
       // Update x/y atomically using RobustModifier
       // This ensures both properties are updated in a single operation
       // with proper offset handling and validation
@@ -5673,7 +4549,30 @@ function handleStudioDrop(result) {
 
     // Add x/y for absolute positioning
     if (placement === 'absolute' && absolutePosition) {
-      const posProps = `x ${Math.round(absolutePosition.x)}, y ${Math.round(absolutePosition.y)}`
+      // Convert to coordinates relative to target parent (not preview container)
+      let relX = absolutePosition.x
+      let relY = absolutePosition.y
+
+      const previewContainer = document.getElementById('preview')
+      const targetElement = previewContainer?.querySelector(`[data-mirror-id="${targetNodeId}"]`)
+      if (targetElement && previewContainer) {
+        const parentRect = targetElement.getBoundingClientRect()
+        const previewRect = previewContainer.getBoundingClientRect()
+        // absolutePosition is relative to preview, convert to relative to parent
+        relX = absolutePosition.x - (parentRect.left - previewRect.left)
+        relY = absolutePosition.y - (parentRect.top - previewRect.top)
+      }
+
+      // Adjust for zoom scale - getBoundingClientRect returns zoomed values
+      // but x/y properties need unzoomed coordinates
+      const zoomLevel = ZOOM_LEVELS[currentZoomIndex] ?? 100
+      const zoomScale = zoomLevel / 100
+      if (zoomScale && zoomScale !== 1) {
+        relX = relX / zoomScale
+        relY = relY / zoomScale
+      }
+
+      const posProps = `x ${Math.round(relX)}, y ${Math.round(relY)}`
       properties = properties ? `${properties}, ${posProps}` : posProps
     }
 
@@ -5685,10 +4584,30 @@ function handleStudioDrop(result) {
     })
 
     // Handle alignment for empty containers (set align on parent)
-    if (modResult.success && alignment) {
-      // TODO: Set align property on parent based on alignment.zone
-      // alignment.zone is one of: 'top-left', 'top-center', 'top-right', etc.
-      console.log('Studio: Alignment zone:', alignment.zone)
+    if (modResult.success && alignment && alignment.zone) {
+      // Map alignment zone to Mirror align property
+      // Zones: top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right
+      const alignMap = {
+        'top-left': 'top',
+        'top-center': 'top',
+        'top-right': 'top',
+        'center-left': 'left',
+        'center': 'center',
+        'center-right': 'right',
+        'bottom-left': 'bottom',
+        'bottom-center': 'bottom',
+        'bottom-right': 'bottom',
+      }
+      const alignValue = alignMap[alignment.zone]
+      if (alignValue) {
+        // Apply alignment to parent after the child was added
+        // Note: This creates a second change that needs to be applied
+        const alignResult = studioCodeModifier.updateProperty(targetNodeId, 'align', alignValue)
+        if (alignResult.success) {
+          // Chain the alignment change
+          applyDropChange(alignResult, 'Alignment')
+        }
+      }
     }
   }
 
@@ -5926,19 +4845,205 @@ const LAYOUT_PRESETS = [
 // NOTE: Icons must stay in sync with studio/icons/index.ts (COMPONENT_ICONS)
 // NOTE: defaultSize should match the w/h in properties for accurate ghost rendering
 const PRIMITIVE_COMPONENTS = [
-  { name: 'Box', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', defaultSize: { width: 32, height: 32 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
-  { name: 'Button', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', defaultSize: { width: 80, height: 36 }, icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
-  { name: 'Text', properties: 'w hug, h hug', text: 'Text', defaultSize: { width: 80, height: 24 }, icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
-  { name: 'Input', properties: 'w 200, h hug, pad 10, bg #27272a, rad 6, bor 0', text: 'placeholder...', defaultSize: { width: 200, height: 36 }, icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
-  { name: 'Icon', properties: 'w 24, h 24, "star"', defaultSize: { width: 24, height: 24 }, icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
-  { name: 'Image', properties: 'w 200, h 200, "https://picsum.photos/200"', defaultSize: { width: 200, height: 200 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>' },
-  { name: 'Slot', properties: 'w hug, h hug', text: 'Content', defaultSize: { width: 56, height: 24 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="4 2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>' },
+  { name: 'Box', category: 'Basic', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', defaultSize: { width: 32, height: 32 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
+  { name: 'Button', category: 'Basic', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', defaultSize: { width: 80, height: 36 }, icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
+  { name: 'Text', category: 'Basic', properties: 'w hug, h hug', text: 'Text', defaultSize: { width: 80, height: 24 }, icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
+  { name: 'Input', category: 'Basic', properties: 'w 200, h hug, pad 10, bg #27272a, rad 6, bor 0', text: 'placeholder...', defaultSize: { width: 200, height: 36 }, icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
+  { name: 'Icon', category: 'Basic', properties: 'w 24, h 24, "star"', defaultSize: { width: 24, height: 24 }, icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
+  { name: 'Image', category: 'Basic', properties: 'w 200, h 200, "https://picsum.photos/200"', defaultSize: { width: 200, height: 200 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>' },
+  { name: 'Slot', category: 'Basic', properties: 'w hug, h hug', text: 'Content', defaultSize: { width: 56, height: 24 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="4 2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>' },
 ]
 
 // User component icon (cube/component symbol)
 const USER_COMPONENT_ICON = '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>'
 
-// Render a component palette item
+// Zag component icons (SVG paths)
+const ZAG_ICONS = {
+  Select: '<path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 13l-2 2 2 2"/>',
+  Combobox: '<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="3"/>',
+  Listbox: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>',
+  Menu: '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  ContextMenu: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/>',
+  NestedMenu: '<line x1="3" y1="6" x2="15" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><path d="M17 10l4 2-4 2"/>',
+  NavigationMenu: '<rect x="2" y="4" width="20" height="4" rx="1"/><rect x="2" y="10" width="8" height="10" rx="1"/><rect x="12" y="10" width="10" height="10" rx="1"/>',
+  Checkbox: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/>',
+  Switch: '<rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="3"/>',
+  Slider: '<line x1="4" y1="12" x2="20" y2="12"/><circle cx="12" cy="12" r="4"/>',
+  RangeSlider: '<line x1="4" y1="12" x2="20" y2="12"/><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/>',
+  AngleSlider: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="18" y2="8"/>',
+  RadioGroup: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
+  Dialog: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="18" y1="4" x2="18" y2="8"/>',
+  Tooltip: '<rect x="4" y="2" width="16" height="12" rx="2"/><path d="M12 14v4"/>',
+  Popover: '<rect x="3" y="3" width="18" height="14" rx="2"/><path d="M12 17l-3 4h6l-3-4"/>',
+  HoverCard: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="12" y1="10" x2="18" y2="10"/><line x1="12" y1="14" x2="16" y2="14"/>',
+  Tabs: '<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 6v4"/><path d="M10 6v4"/>',
+  Accordion: '<rect x="3" y="3" width="18" height="6" rx="1"/><rect x="3" y="11" width="18" height="6" rx="1"/><path d="M15 6l2 2-2 2"/><path d="M15 14h2"/>',
+  Collapsible: '<rect x="3" y="3" width="18" height="6" rx="1"/><rect x="3" y="11" width="18" height="8" rx="1" stroke-dasharray="2 2"/>',
+  Steps: '<circle cx="5" cy="12" r="3"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="12" r="3"/><line x1="8" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="16" y2="12"/>',
+  Pagination: '<rect x="2" y="8" width="5" height="8" rx="1"/><rect x="9" y="8" width="6" height="8" rx="1"/><rect x="17" y="8" width="5" height="8" rx="1"/>',
+  TreeView: '<line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/><polyline points="4 10 4 18 6 18"/>',
+  NumberInput: '<rect x="3" y="6" width="18" height="12" rx="2"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="18"/><path d="M5 12h2"/><path d="M17 10v4"/>',
+  PinInput: '<rect x="2" y="8" width="5" height="8" rx="1"/><rect x="9" y="8" width="5" height="8" rx="1"/><rect x="17" y="8" width="5" height="8" rx="1"/>',
+  PasswordInput: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="7" cy="12" r="1"/><circle cx="11" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>',
+  TagsInput: '<rect x="2" y="6" width="20" height="12" rx="2"/><rect x="4" y="9" width="6" height="6" rx="1"/><rect x="12" y="9" width="6" height="6" rx="1"/>',
+  Editable: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  RatingGroup: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  SegmentedControl: '<rect x="2" y="8" width="20" height="8" rx="2"/><line x1="9" y1="8" x2="9" y2="16"/><line x1="15" y1="8" x2="15" y2="16"/>',
+  ToggleGroup: '<rect x="2" y="8" width="8" height="8" rx="2"/><rect x="14" y="8" width="8" height="8" rx="2"/>',
+  DatePicker: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  DateInput: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10v4"/><path d="M11 10v4"/><path d="M15 10v4"/>',
+  Timer: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  FloatingPanel: '<rect x="4" y="4" width="16" height="12" rx="2"/><line x1="4" y1="8" x2="20" y2="8"/><path d="M17 16l3 4"/><path d="M20 16l-3 4"/>',
+  Tour: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="1"/>',
+  Presence: '<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>',
+  Avatar: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+  FileUpload: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>',
+  ImageCropper: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/>',
+  Carousel: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10l-2 2 2 2"/><path d="M18 10l2 2-2 2"/>',
+  SignaturePad: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M6 14c2-2 4 2 6 0s4 2 6 0"/>',
+  Progress: '<rect x="2" y="10" width="20" height="4" rx="2"/><rect x="2" y="10" width="12" height="4" rx="2"/>',
+  CircularProgress: '<circle cx="12" cy="12" r="10" stroke-dasharray="40 100"/>',
+  Marquee: '<rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 12h2M10 12h2M14 12h2"/>',
+  Toast: '<rect x="3" y="6" width="18" height="12" rx="2"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="13" y2="14"/>',
+  Clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><rect x="4" y="4" width="16" height="18" rx="2"/>',
+  QRCode: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="4" height="4"/>',
+  ScrollArea: '<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="18" y="6" width="2" height="8" rx="1"/>',
+  Splitter: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><circle cx="12" cy="12" r="2"/>',
+  ColorPicker: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>',
+}
+
+// Zag component categories (3-5 items per group)
+const ZAG_CATEGORIES = {
+  // Input - Text/number entry
+  NumberInput: 'Input',
+  PinInput: 'Input',
+  PasswordInput: 'Input',
+  TagsInput: 'Input',
+  Editable: 'Input',
+  // Toggle - On/off controls
+  Checkbox: 'Toggle',
+  Switch: 'Toggle',
+  RadioGroup: 'Toggle',
+  ToggleGroup: 'Toggle',
+  // Select - Selection from options
+  Select: 'Select',
+  Combobox: 'Select',
+  Listbox: 'Select',
+  SegmentedControl: 'Select',
+  ColorPicker: 'Select',
+  // Slider - Range controls
+  Slider: 'Slider',
+  RangeSlider: 'Slider',
+  AngleSlider: 'Slider',
+  RatingGroup: 'Slider',
+  // Menu - Menu systems
+  Menu: 'Menu',
+  ContextMenu: 'Menu',
+  NestedMenu: 'Menu',
+  NavigationMenu: 'Menu',
+  // Popup - Modal/floating UI
+  Dialog: 'Popup',
+  Tooltip: 'Popup',
+  Popover: 'Popup',
+  HoverCard: 'Popup',
+  // Notification - Alerts/messages
+  Toast: 'Notification',
+  Tour: 'Notification',
+  FloatingPanel: 'Notification',
+  // Disclosure - Show/hide content
+  Tabs: 'Disclosure',
+  Accordion: 'Disclosure',
+  Collapsible: 'Disclosure',
+  Presence: 'Disclosure',
+  // Navigation - Page navigation
+  Steps: 'Navigation',
+  Pagination: 'Navigation',
+  TreeView: 'Navigation',
+  // Date - Date/time controls
+  DatePicker: 'Date',
+  DateInput: 'Date',
+  Timer: 'Date',
+  // Media - Images/files
+  Avatar: 'Media',
+  FileUpload: 'Media',
+  ImageCropper: 'Media',
+  Carousel: 'Media',
+  SignaturePad: 'Media',
+  // Feedback - Progress indicators
+  Progress: 'Feedback',
+  CircularProgress: 'Feedback',
+  Marquee: 'Feedback',
+  // Utility - Other tools
+  Clipboard: 'Utility',
+  QRCode: 'Utility',
+  ScrollArea: 'Utility',
+  Splitter: 'Utility',
+}
+
+// Category display order
+const CATEGORY_ORDER = [
+  'Layouts',
+  'Basic',
+  'Input',
+  'Toggle',
+  'Select',
+  'Slider',
+  'Menu',
+  'Popup',
+  'Notification',
+  'Disclosure',
+  'Navigation',
+  'Date',
+  'Media',
+  'Feedback',
+  'Utility',
+  'User',
+]
+
+// Basic tab: ordered categories with specific components
+const BASIC_TAB_STRUCTURE = [
+  { category: 'Layouts', components: ['Box', 'Frame', 'HStack', 'VStack', 'Grid', 'Spacer', 'Divider'] },
+  { category: 'Content', components: ['Text', 'Image', 'Icon', 'Link'] },
+  { category: 'Controls', components: ['Button', 'Input', 'Checkbox', 'Switch', 'Select', 'Slider'] },
+  { category: 'Containers', components: ['Dialog', 'Tabs', 'Accordion'] },
+  { category: 'Feedback', components: ['Tooltip', 'Popover', 'Progress'] },
+]
+
+// Set for quick lookup
+const BASIC_COMPONENTS = new Set(BASIC_TAB_STRUCTURE.flatMap(g => g.components))
+
+// Active palette tab ('basic' or 'all')
+let activePaletteTab = 'basic'
+
+// Generate Zag components from MirrorLang.ZAG_PRIMITIVES
+function getZagComponents() {
+  if (typeof MirrorLang === 'undefined' || !MirrorLang.ZAG_PRIMITIVES) {
+    console.warn('[Palette] MirrorLang.ZAG_PRIMITIVES not available')
+    return []
+  }
+
+  const zagComponents = []
+  for (const [name, def] of Object.entries(MirrorLang.ZAG_PRIMITIVES)) {
+    // Skip aliases (same machine name as another component)
+    const isAlias = name !== 'Select' && def.machine === 'select' ||
+                    name !== 'Menu' && def.machine === 'menu' ||
+                    name !== 'Slider' && def.machine === 'slider' ||
+                    name !== 'Progress' && def.machine === 'progress'
+    if (isAlias) continue
+
+    zagComponents.push({
+      name: name,
+      category: ZAG_CATEGORIES[name] || 'Components',
+      properties: '',  // No default properties - user adds as needed
+      defaultSize: { width: 200, height: 40 },
+      icon: ZAG_ICONS[name] || USER_COMPONENT_ICON,
+      description: def.description || `${name} component`,
+    })
+  }
+  return zagComponents
+}
+
+// Render a component palette item (icon left, name right)
 function renderPaletteItem(comp) {
   const props = comp.properties ? ` data-properties="${comp.properties.replace(/"/g, '&quot;')}"` : ''
   const text = comp.text ? ` data-text="${comp.text}"` : ''
@@ -5963,16 +5068,17 @@ function attachPaletteDragHandlers(container) {
 
   if (!studioDragDropService) return
 
+  // Get all components for defaultSize lookup
+  const allComponents = window.allPaletteComponents || []
+
   container.querySelectorAll('.component-palette-item').forEach(item => {
     const componentName = item.dataset.component
     const properties = item.dataset.properties || ''
     const textContent = item.dataset.text || ''
 
-    // Find defaultSize - check PRIMITIVE_COMPONENTS first (has accurate sizes),
-    // then fall back to STUDIO_LAYOUT_PRESETS
-    const primitiveComponent = PRIMITIVE_COMPONENTS.find(p => p.name === componentName)
-    const layoutPreset = STUDIO_LAYOUT_PRESETS.find(p => p.name === componentName)
-    const defaultSize = primitiveComponent?.defaultSize || layoutPreset?.defaultSize
+    // Find defaultSize from all palette components (includes Zag, primitives, layouts)
+    const component = allComponents.find(c => c.name === componentName)
+    const defaultSize = component?.defaultSize
 
     // Use DragDropService's makePaletteItemDraggable (mouse events)
     const cleanup = studioDragDropService.makePaletteItemDraggable(item, componentName, {
@@ -6036,6 +5142,22 @@ function warmPaletteGhostCache() {
     })
   }
 
+  // Add Zag components
+  const zagComponents = getZagComponents()
+  for (const comp of zagComponents) {
+    const componentName = comp.name
+    const properties = comp.properties || ''
+    items.push({
+      id: `palette-${componentName}-${properties}-`,
+      name: comp.name,
+      category: comp.category,
+      template: componentName,
+      properties: properties,
+      defaultSize: comp.defaultSize,
+      icon: comp.icon || 'box',
+    })
+  }
+
   // Warm cache in background (low priority)
   const scheduleIdle = typeof requestIdleCallback !== 'undefined'
     ? requestIdleCallback
@@ -6044,6 +5166,37 @@ function warmPaletteGhostCache() {
   scheduleIdle(() => {
     ghostRenderer.warmCache(items).then(() => {
       console.log('Studio: Ghost cache warmed for', items.length, 'components')
+    }).catch(() => {
+      // Ignore errors - fallback will be used
+    })
+  })
+}
+
+// Warm user component ghosts after files are parsed
+// Called after updateComponentPalette when user components are detected
+function warmUserComponentGhosts(userComponents) {
+  if (!userComponents || userComponents.length === 0) return
+
+  const ghostRenderer = getGhostRenderer()
+  const items = userComponents.map(comp => ({
+    id: `palette-${comp.name}--`,
+    name: comp.name,
+    category: 'User',
+    template: comp.name,
+    properties: '',
+    // Use extracted size from component definition, or fallback to default
+    defaultSize: comp.defaultSize || { width: 200, height: 60 },
+    icon: USER_COMPONENT_ICON,
+  }))
+
+  // Schedule in background
+  const scheduleIdle = typeof requestIdleCallback !== 'undefined'
+    ? requestIdleCallback
+    : (cb) => setTimeout(cb, 50)
+
+  scheduleIdle(() => {
+    ghostRenderer.warmCache(items).then(() => {
+      console.log('Studio: User component ghosts warmed for', items.length, 'components')
     }).catch(() => {
       // Ignore errors - fallback will be used
     })
@@ -6168,9 +5321,24 @@ function updateComponentPalette() {
           // Skip token definitions (names starting with $)
           if (comp.name.startsWith('$')) continue
 
+          // Extract size from component properties if defined
+          let defaultSize = null
+          if (comp.properties) {
+            const widthProp = comp.properties.find(p => p.name === 'w' || p.name === 'width')
+            const heightProp = comp.properties.find(p => p.name === 'h' || p.name === 'height')
+            if (widthProp || heightProp) {
+              defaultSize = {
+                width: widthProp?.value ? parseInt(widthProp.value, 10) || 200 : 200,
+                height: heightProp?.value ? parseInt(heightProp.value, 10) || 60 : 60
+              }
+            }
+          }
+
           userComponents.push({
             name: comp.name,
-            sourceFile: filename
+            category: 'User',
+            sourceFile: filename,
+            defaultSize: defaultSize
           })
         }
       }
@@ -6190,7 +5358,13 @@ function updateComponentPalette() {
     }
   }
 
-  // Combine all components: layouts first, then primitives + user (sorted)
+  // Warm ghost cache for user components (async, low priority)
+  warmUserComponentGhosts(uniqueUserComponents)
+
+  // Get Zag components
+  const zagComponents = getZagComponents()
+
+  // Combine all components: layouts first, then primitives, then zag, then user (sorted)
   const componentsToSort = [
     ...PRIMITIVE_COMPONENTS,
     ...uniqueUserComponents
@@ -6198,7 +5372,8 @@ function updateComponentPalette() {
 
   const allComponents = [
     ...LAYOUT_PRESETS,  // Layouts stay at top, unsorted
-    ...componentsToSort
+    ...componentsToSort,
+    ...zagComponents.sort((a, b) => a.name.localeCompare(b.name))
   ]
 
   // Store for filtering
@@ -6208,37 +5383,118 @@ function updateComponentPalette() {
   renderFilteredComponents(allComponents)
 }
 
-// Render filtered components to the palette with sections
+// Track collapsed sections
+const collapsedSections = new Set()
+
+// Render filtered components to the palette with collapsible sections
 function renderFilteredComponents(components) {
   const container = document.getElementById('components-palette')
   if (!container) return
 
-  // Group by category
-  const layouts = components.filter(c => c.category === 'layout')
-  const others = components.filter(c => c.category !== 'layout')
+  // Create lookup map for components
+  const compMap = new Map(components.map(c => [c.name, c]))
 
-  let html = ''
+  // Tabs
+  let html = '<div class="component-palette-tabs">'
+  html += `<button class="palette-tab${activePaletteTab === 'basic' ? ' active' : ''}" data-tab="basic">Basic</button>`
+  html += `<button class="palette-tab${activePaletteTab === 'all' ? ' active' : ''}" data-tab="all">All</button>`
+  html += '</div>'
 
-  // Layouts section
-  if (layouts.length > 0) {
-    html += '<div class="component-palette-section">'
-    html += '<div class="component-palette-section-title">Layouts</div>'
-    html += '<div class="component-palette-items">'
-    html += layouts.map(comp => renderPaletteItem(comp)).join('')
-    html += '</div></div>'
-  }
+  if (activePaletteTab === 'basic') {
+    // Basic tab: use predefined structure and order
+    for (const group of BASIC_TAB_STRUCTURE) {
+      const items = group.components
+        .map(name => compMap.get(name))
+        .filter(Boolean)
+      if (items.length === 0) continue
 
-  // Components section
-  if (others.length > 0) {
-    html += '<div class="component-palette-section">'
-    html += '<div class="component-palette-section-title">Components</div>'
-    html += '<div class="component-palette-items">'
-    html += others.map(comp => renderPaletteItem(comp)).join('')
-    html += '</div></div>'
+      const isCollapsed = collapsedSections.has(group.category)
+      html += `<div class="component-palette-section${isCollapsed ? ' collapsed' : ''}" data-category="${group.category}">`
+      html += `<div class="component-palette-section-title" data-toggle="${group.category}">`
+      html += `<span class="section-name">${group.category}</span>`
+      html += `<span class="section-toggle">`
+      html += `<svg class="icon icon-collapsed" viewBox="0 0 14 14"><polyline points="5 3 10 7 5 11" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+      html += `<svg class="icon icon-expanded" viewBox="0 0 14 14"><polyline points="3 5 7 10 11 5" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+      html += `</span>`
+      html += '</div>'
+      html += `<div class="component-palette-items"${isCollapsed ? ' style="display:none"' : ''}>`
+      html += items.map(comp => renderPaletteItem(comp)).join('')
+      html += '</div></div>'
+    }
+  } else {
+    // All tab: group by category
+    const byCategory = {}
+    for (const comp of components) {
+      const cat = comp.category || 'Other'
+      if (!byCategory[cat]) byCategory[cat] = []
+      byCategory[cat].push(comp)
+    }
+
+    // Sort categories by CATEGORY_ORDER
+    const sortedCategories = Object.keys(byCategory).sort((a, b) => {
+      const indexA = CATEGORY_ORDER.indexOf(a)
+      const indexB = CATEGORY_ORDER.indexOf(b)
+      const orderA = indexA === -1 ? 999 : indexA
+      const orderB = indexB === -1 ? 999 : indexB
+      return orderA - orderB
+    })
+
+    for (const category of sortedCategories) {
+      const items = byCategory[category]
+      if (items.length === 0) continue
+
+      const displayName = category === 'layout' ? 'Layouts' : category
+      const isCollapsed = collapsedSections.has(category)
+
+      html += `<div class="component-palette-section${isCollapsed ? ' collapsed' : ''}" data-category="${category}">`
+      html += `<div class="component-palette-section-title" data-toggle="${category}">`
+      html += `<span class="section-name">${displayName}</span>`
+      html += `<span class="section-toggle">`
+      html += `<svg class="icon icon-collapsed" viewBox="0 0 14 14"><polyline points="5 3 10 7 5 11" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+      html += `<svg class="icon icon-expanded" viewBox="0 0 14 14"><polyline points="3 5 7 10 11 5" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+      html += `</span>`
+      html += '</div>'
+      html += `<div class="component-palette-items"${isCollapsed ? ' style="display:none"' : ''}>`
+      html += items.map(comp => renderPaletteItem(comp)).join('')
+      html += '</div></div>'
+    }
   }
 
   container.innerHTML = html
   attachPaletteDragHandlers(container)
+  attachSectionToggleHandlers(container)
+  attachPaletteTabHandlers(container)
+}
+
+// Attach click handlers for palette tabs
+function attachPaletteTabHandlers(container) {
+  container.querySelectorAll('.palette-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activePaletteTab = tab.dataset.tab
+      renderFilteredComponents(window.allPaletteComponents || [])
+    })
+  })
+}
+
+// Attach click handlers for section toggles
+function attachSectionToggleHandlers(container) {
+  container.querySelectorAll('.component-palette-section-title').forEach(title => {
+    title.addEventListener('click', () => {
+      const category = title.dataset.toggle
+      const section = title.closest('.component-palette-section')
+      const items = section.querySelector('.component-palette-items')
+
+      if (collapsedSections.has(category)) {
+        collapsedSections.delete(category)
+        section.classList.remove('collapsed')
+        items.style.display = ''
+      } else {
+        collapsedSections.add(category)
+        section.classList.add('collapsed')
+        items.style.display = 'none'
+      }
+    })
+  })
 }
 
 // Filter components by search query
@@ -6277,6 +5533,158 @@ initComponentSearch()
 
 // Initial compile
 compile(initialCode)
+
+// ==========================================
+// File Management Integration
+// Works in both Tauri (real files) and Browser (demo files)
+// ==========================================
+import('./desktop-files.js').then(module => {
+  // Initialize with callback to load files into editor
+  module.initDesktopFiles({
+    onFileSelect: (filePath, content) => {
+      console.log('[DesktopFiles] Loading file into editor:', filePath)
+      // Update currentFile for appLockExtension
+      currentFile = filePath
+      // Update editor content
+      const transaction = editor.state.update({
+        changes: {
+          from: 0,
+          to: editor.state.doc.length,
+          insert: content
+        },
+        annotations: [fileSwitchAnnotation.of(true)]
+      })
+      editor.dispatch(transaction)
+      // Recompile
+      compile(content)
+    },
+    onFileChange: (filePath, content) => {
+      console.log('[DesktopFiles] File changed:', filePath)
+    }
+  })
+  console.log('[App] File management initialized')
+}).catch(err => {
+  console.error('[App] Failed to load desktop-files.js:', err)
+})
+
+// ==========================================
+// Desktop Menu Event Handler (Tauri)
+// ==========================================
+async function setupDesktopMenuHandler() {
+  if (!isTauriDesktop()) return
+
+  // Wait for TauriBridge to be available
+  let attempts = 0
+  while (!window.TauriBridge?.menu && attempts < 50) {
+    await new Promise(r => setTimeout(r, 100))
+    attempts++
+  }
+
+  if (!window.TauriBridge?.menu) {
+    console.error('[Menu] TauriBridge.menu not available after waiting')
+    return
+  }
+
+  try {
+    await window.TauriBridge.menu.onMenuClick(async (menuId) => {
+      console.log('[Menu] Event:', menuId)
+
+      switch (menuId) {
+        // File menu
+        case 'open_folder':
+          if (window.desktopFiles) {
+            const path = await window.desktopFiles.openFolder()
+            if (path) {
+              console.log('[Menu] Opened folder:', path)
+            }
+          }
+          break
+
+        case 'new_file':
+          console.log('[Menu] new_file - currentFolder:', window.desktopFiles?.getCurrentFolder())
+          if (window.desktopFiles?.getCurrentFolder()) {
+            // Generate unique filename
+            const existingFiles = Object.keys(window.desktopFiles.getFiles() || {})
+            let counter = 1
+            let fileName = 'new.mirror'
+            while (existingFiles.some(f => f.endsWith(fileName))) {
+              fileName = `new-${counter}.mirror`
+              counter++
+            }
+            console.log('[Menu] new_file - creating:', fileName)
+            await window.desktopFiles.createFile(fileName)
+          } else {
+            alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)')
+          }
+          break
+
+        case 'new_folder':
+          console.log('[Menu] new_folder - currentFolder:', window.desktopFiles?.getCurrentFolder())
+          if (window.desktopFiles?.getCurrentFolder()) {
+            // Generate unique folder name
+            let counter = 1
+            let folderName = 'new-folder'
+            // Note: We can't easily check existing folders, so just increment
+            console.log('[Menu] new_folder - creating:', folderName)
+            await window.desktopFiles.createFolder(folderName)
+          } else {
+            alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)')
+          }
+          break
+
+        case 'save':
+          if (window.desktopFiles?.getCurrentFile()) {
+            const content = editor.state.doc.toString()
+            await window.desktopFiles.saveFile(window.desktopFiles.getCurrentFile(), content)
+          }
+          break
+
+        case 'save_all':
+          // Save all open files
+          const files = window.desktopFiles?.getFiles() || {}
+          for (const [path, content] of Object.entries(files)) {
+            await window.desktopFiles.saveFile(path, content)
+          }
+          break
+
+      case 'new_project':
+        // Not needed for desktop - just open folder
+        break
+
+      // View menu - Panel toggles
+      case 'toggle_prompt':
+      case 'toggle_files':
+      case 'toggle_code':
+      case 'toggle_components':
+      case 'toggle_preview':
+      case 'toggle_property':
+        const panelKey = menuId.replace('toggle_', '')
+        studioActions.setPanelVisibility(panelKey, !studioActions.getPanelVisibility?.(panelKey))
+        break
+
+      // Zoom controls
+      case 'zoom_in':
+        document.getElementById('zoom-in')?.click()
+        break
+      case 'zoom_out':
+        document.getElementById('zoom-out')?.click()
+        break
+      case 'zoom_reset':
+        document.getElementById('zoom-reset')?.click()
+        break
+
+      default:
+        console.log('[Menu] Unhandled:', menuId)
+    }
+    })
+    console.log('[App] Desktop menu handler registered')
+  } catch (err) {
+    console.error('[Menu] Failed to register handler:', err)
+  }
+}
+
+// Call the setup function
+setupDesktopMenuHandler()
 
 // Expose for debugging
 window.editor = editor
@@ -6421,132 +5829,28 @@ window.addEventListener('resize', updateLayout)
 */
 
 // ==========================================
-// Settings
+// Settings (Desktop: removed UI, using Claude CLI instead of API keys)
 // ==========================================
 
-// Get settings key - global for now (TODO: make user-specific after auth refactor)
-function getSettingsKey() {
-  return 'mirror-settings'
-}
-const settingsButton = document.getElementById('settings-button')
-const settingsOverlay = document.getElementById('settings-overlay')
-const settingsClose = document.getElementById('settings-close')
-const settingsSaveButton = document.getElementById('settings-save')
-const imgbbKeyInput = document.getElementById('imgbb-key')
-const imgbbStatus = document.getElementById('imgbb-status')
-const openrouterKeyInput = document.getElementById('openrouter-key')
-const openrouterStatus = document.getElementById('openrouter-status')
+// Settings are no longer needed in desktop app
+// - No API keys required (Claude CLI handles auth)
+// - No imgbb upload (images stored locally)
 
-// Load settings from localStorage
 function loadSettings() {
-  try {
-    const key = getSettingsKey()
-    const stored = localStorage.getItem(key)
-    return stored ? JSON.parse(stored) : {}
-  } catch (e) {
-    console.error('[Settings] Failed to load:', e)
-    return {}
-  }
+  return {} // No settings needed for desktop
 }
 
-// Save settings to localStorage
 function saveSettings(settings) {
-  const key = getSettingsKey()
-  localStorage.setItem(key, JSON.stringify(settings))
+  // No-op for desktop
 }
 
-// Get imgbb API key
 function getImgbbKey() {
-  const settings = loadSettings()
-  return settings.imgbbKey || ''
+  return '' // Disabled in desktop
 }
 
-// Update status indicator
-function updateImgbbStatus() {
-  const key = getImgbbKey()
-  if (key) {
-    imgbbStatus.className = 'settings-status success'
-    imgbbStatus.innerHTML = '✓ API Key gespeichert'
-  } else {
-    imgbbStatus.className = 'settings-status missing'
-    imgbbStatus.innerHTML = '⚠ Kein API Key - Bild-Upload deaktiviert'
-  }
-}
-
-// Get OpenRouter API key
 function getOpenrouterKey() {
-  const settings = loadSettings()
-  return settings.openrouterKey || ''
+  return '' // Not used - Claude CLI handles AI
 }
-
-// Update OpenRouter status indicator
-function updateOpenrouterStatus() {
-  const key = getOpenrouterKey()
-  if (key) {
-    openrouterStatus.className = 'settings-status success'
-    openrouterStatus.innerHTML = '✓ API Key gespeichert'
-  } else {
-    openrouterStatus.className = 'settings-status missing'
-    openrouterStatus.innerHTML = '⚠ Kein API Key - AI Assistant deaktiviert'
-  }
-}
-
-// Open settings
-settingsButton.addEventListener('click', () => {
-  const settings = loadSettings()
-  imgbbKeyInput.value = settings.imgbbKey || ''
-  openrouterKeyInput.value = settings.openrouterKey || ''
-  updateImgbbStatus()
-  updateOpenrouterStatus()
-  settingsOverlay.classList.add('visible')
-})
-
-// Close settings
-function closeSettings() {
-  settingsOverlay.classList.remove('visible')
-}
-
-settingsClose.addEventListener('click', closeSettings)
-settingsOverlay.addEventListener('click', (e) => {
-  if (e.target === settingsOverlay) closeSettings()
-})
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && settingsOverlay.classList.contains('visible')) {
-    closeSettings()
-  }
-})
-
-// Save settings when Save button is clicked
-settingsSaveButton.addEventListener('click', () => {
-  const settings = loadSettings()
-  const oldOpenrouterKey = settings.openrouterKey || ''
-  const newOpenrouterKey = openrouterKeyInput.value.trim()
-  const keyChanged = oldOpenrouterKey !== newOpenrouterKey
-
-  settings.imgbbKey = imgbbKeyInput.value.trim()
-  settings.openrouterKey = newOpenrouterKey
-  saveSettings(settings)
-  updateImgbbStatus()
-  updateOpenrouterStatus()
-
-  // Visual feedback
-  settingsSaveButton.textContent = 'Gespeichert!'
-  settingsSaveButton.classList.add('saved')
-
-  // If OpenRouter key changed, reload page to properly initialize agent
-  if (keyChanged) {
-    setTimeout(() => {
-      window.location.reload()
-    }, 800)
-  } else {
-    // Just close settings if nothing important changed
-    setTimeout(() => {
-      settingsSaveButton.textContent = 'Speichern'
-      settingsSaveButton.classList.remove('saved')
-      closeSettings()
-    }, 1500)
-  }
-})
 
 // ==========================================
 // Image Upload Feature

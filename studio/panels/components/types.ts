@@ -22,6 +22,58 @@ export type ComponentIcon =
   | 'card'
   | 'list'
   | 'custom'
+  // Behavior components (Zag)
+  | 'select'
+  | 'accordion'
+  | 'dialog'
+  | 'tabs'
+  | 'menu'
+  | 'tooltip'
+  | 'popover'
+  | 'toggle'
+  | 'checkbox'
+  | 'radio'
+  | 'slider'
+  // Extended Zag components
+  | 'combobox'
+  | 'listbox'
+  | 'contextMenu'
+  | 'nestedMenu'
+  | 'navigationMenu'
+  | 'rangeSlider'
+  | 'angleSlider'
+  | 'numberInput'
+  | 'pinInput'
+  | 'passwordInput'
+  | 'tagsInput'
+  | 'editable'
+  | 'ratingGroup'
+  | 'segmentedControl'
+  | 'toggleGroup'
+  | 'datePicker'
+  | 'dateInput'
+  | 'timer'
+  | 'floatingPanel'
+  | 'tour'
+  | 'presence'
+  | 'steps'
+  | 'pagination'
+  | 'treeView'
+  | 'avatar'
+  | 'fileUpload'
+  | 'imageCropper'
+  | 'carousel'
+  | 'signaturePad'
+  | 'circularProgress'
+  | 'marquee'
+  | 'clipboard'
+  | 'qrCode'
+  | 'scrollArea'
+  | 'splitter'
+  | 'collapsible'
+  | 'hoverCard'
+  | 'progress'
+  | 'toast'
 
 /**
  * Child component definition for layout templates
@@ -35,6 +87,10 @@ export interface ComponentChild {
   textContent?: string
   /** Nested children */
   children?: ComponentChild[]
+  /** Whether this is a slot definition (uses colon syntax, e.g., "Trigger:") */
+  isSlot?: boolean
+  /** Whether this is an item (for Select, Menu, etc.) */
+  isItem?: boolean
 }
 
 /**

@@ -90,17 +90,65 @@ export interface AddChildOptions {
 }
 
 /**
+ * Snapshot of CodeModifier state for rollback
+ */
+interface StateSnapshot {
+  source: string
+  lines: string[]
+}
+
+/**
  * CodeModifier class
  */
 export class CodeModifier {
   private source: string
   private sourceMap: SourceMap
   private lines: string[]
+  private snapshot: StateSnapshot | null = null
 
   constructor(source: string, sourceMap: SourceMap) {
     this.source = source
     this.sourceMap = sourceMap
     this.lines = source.split('\n')
+  }
+
+  /**
+   * Create a snapshot of current state for potential rollback
+   * Use before multi-step operations that might fail mid-way
+   */
+  createSnapshot(): void {
+    this.snapshot = {
+      source: this.source,
+      lines: [...this.lines],
+    }
+  }
+
+  /**
+   * Restore state from snapshot
+   * Call this if a multi-step operation fails and needs to be rolled back
+   */
+  restoreSnapshot(): boolean {
+    if (!this.snapshot) {
+      return false
+    }
+    this.source = this.snapshot.source
+    this.lines = this.snapshot.lines
+    this.snapshot = null
+    return true
+  }
+
+  /**
+   * Clear snapshot after successful operation
+   */
+  clearSnapshot(): void {
+    this.snapshot = null
+  }
+
+  /**
+   * Check if a snapshot exists
+   */
+  hasSnapshot(): boolean {
+    return this.snapshot !== null
   }
 
   /**
@@ -550,11 +598,13 @@ export class CodeModifier {
 
   /**
    * Move a node to a new location relative to another node
+   * @param insertionIndex - For 'inside' placement: position among siblings (0 = first)
    */
   moveNode(
     sourceNodeId: string,
     targetId: string,
-    placement: 'before' | 'after' | 'inside'
+    placement: 'before' | 'after' | 'inside',
+    insertionIndex?: number
   ): ModificationResult {
     const sourceMapping = this.sourceMap.getNodeById(sourceNodeId)
     if (!sourceMapping) {
@@ -626,18 +676,31 @@ export class CodeModifier {
     let insertText: string
 
     if (placement === 'inside') {
-      // Insert as last child of target
+      // Insert as child of target
       const children = this.sourceMap.getChildren(targetId)
+        // Filter out the source node if it's already a child (prevents self-reference issues)
+        .filter(c => c.nodeId !== sourceNodeId)
+        // Sort by line number for correct ordering
+        .sort((a, b) => a.position.line - b.position.line)
+
       if (children.length > 0) {
-        // After last child
-        const lastChild = children.reduce((a, b) =>
-          a.position.endLine > b.position.endLine ? a : b
-        )
-        const lastChildEndLine = lastChild.position.endLine
-        const lastChildLineContent = this.lines[lastChildEndLine - 1]
-        insertPosition = this.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+        // Check if insertionIndex specifies a position
+        if (insertionIndex !== undefined && insertionIndex < children.length) {
+          // Insert before the child at insertionIndex
+          const targetChild = children[insertionIndex]
+          insertPosition = this.getCharacterOffset(targetChild.position.line, 1) - 1
+          if (insertPosition < 0) insertPosition = 0
+        } else {
+          // After last child (default)
+          const lastChild = children.reduce((a, b) =>
+            a.position.endLine > b.position.endLine ? a : b
+          )
+          const lastChildEndLine = lastChild.position.endLine
+          const lastChildLineContent = this.lines[lastChildEndLine - 1]
+          insertPosition = this.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+        }
       } else {
-        // After parent line
+        // After parent line (no children yet)
         const parentLine = targetMapping.position.line
         const parentLineContent = this.lines[parentLine - 1]
         insertPosition = this.getCharacterOffset(parentLine, parentLineContent.length + 1)
@@ -677,6 +740,90 @@ export class CodeModifier {
         from: 0,
         to: this.source.length,
         insert: newSource,
+      },
+    }
+  }
+
+  /**
+   * Duplicate a node to a new location (copy without removing original)
+   */
+  duplicateNode(
+    sourceNodeId: string,
+    targetId: string,
+    placement: 'before' | 'after' | 'inside'
+  ): ModificationResult {
+    const sourceMapping = this.sourceMap.getNodeById(sourceNodeId)
+    if (!sourceMapping) {
+      return this.errorResult(`Source node not found: ${sourceNodeId}`)
+    }
+
+    const targetMapping = this.sourceMap.getNodeById(targetId)
+    if (!targetMapping) {
+      return this.errorResult(`Target node not found: ${targetId}`)
+    }
+
+    // Extract the source block text
+    const startLine = sourceMapping.position.line
+    const endLine = sourceMapping.position.endLine
+    const sourceLines = this.lines.slice(startLine - 1, endLine)
+    const sourceBlock = sourceLines.join('\n')
+
+    // Get the source indentation
+    const sourceIndent = this.getLineIndent(sourceLines[0])
+
+    // Calculate target indentation
+    let targetIndent: string
+    if (placement === 'inside') {
+      const targetLine = this.lines[targetMapping.position.line - 1]
+      targetIndent = this.getLineIndent(targetLine) + '  '
+    } else {
+      const targetLine = this.lines[targetMapping.position.line - 1]
+      targetIndent = this.getLineIndent(targetLine)
+    }
+
+    // Re-indent the source block
+    const reindentedBlock = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
+
+    // Calculate insertion position
+    let insertPosition: number
+    let insertText: string
+
+    if (placement === 'inside') {
+      const children = this.sourceMap.getChildren(targetId)
+      if (children.length > 0) {
+        const lastChild = children.reduce((a, b) =>
+          a.position.endLine > b.position.endLine ? a : b
+        )
+        const lastChildEndLine = lastChild.position.endLine
+        const lastChildLineContent = this.lines[lastChildEndLine - 1]
+        insertPosition = this.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+      } else {
+        const parentLine = targetMapping.position.line
+        const parentLineContent = this.lines[parentLine - 1]
+        insertPosition = this.getCharacterOffset(parentLine, parentLineContent.length + 1)
+      }
+      insertText = `\n${reindentedBlock}`
+    } else if (placement === 'before') {
+      insertPosition = this.getCharacterOffset(targetMapping.position.line, 1) - 1
+      if (insertPosition < 0) insertPosition = 0
+      insertText = `\n${reindentedBlock}`
+    } else {
+      const targetEndLine = targetMapping.position.endLine
+      const targetEndContent = this.lines[targetEndLine - 1]
+      insertPosition = this.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
+      insertText = `\n${reindentedBlock}`
+    }
+
+    // Insert without removing original
+    const newSource = this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: insertPosition,
+        to: insertPosition,
+        insert: insertText,
       },
     }
   }
@@ -1524,6 +1671,9 @@ export class CodeModifier {
       return this.errorResult(`Parent node not found: ${parentId}`)
     }
 
+    // Create snapshot for rollback if multi-step operation fails
+    this.createSnapshot()
+
     // Check if container already has children
     const children = this.sourceMap.getChildren(parentId)
 
@@ -1535,6 +1685,7 @@ export class CodeModifier {
       const layoutResult = this.applyLayoutToContainer(parentId, semanticZone)
 
       if (!layoutResult.success) {
+        this.restoreSnapshot()
         return layoutResult
       }
 
@@ -1552,8 +1703,13 @@ export class CodeModifier {
     const childResult = this.addChild(parentId, componentName, options)
 
     if (!childResult.success) {
+      // Rollback the layout change if child insert failed
+      this.restoreSnapshot()
       return childResult
     }
+
+    // Success - clear the snapshot
+    this.clearSnapshot()
 
     // If we had a layout change, we need to combine the changes
     // The child change offsets are relative to the source AFTER layout was applied

@@ -6,6 +6,7 @@
  */
 
 import { createMirrorAgent } from './mirror-agent'
+import { createClaudeCliAgent, type ClaudeCliAgent } from './claude-cli-agent'
 import type { MirrorAgentConfig } from './types'
 import { ChatPanel, type ChatPanelConfig } from '../panels/chat-panel'
 import { createCommandHandler, type AgentCommandHandler } from './command-handler'
@@ -58,6 +59,7 @@ const DEFAULT_MODEL = 'anthropic/claude-sonnet-4'
 
 export class AgentIntegration {
   private agent: ReturnType<typeof createMirrorAgent>
+  private claudeAgent: ClaudeCliAgent | null = null
   private chatPanel: ChatPanel | null = null
   private commandHandler: AgentCommandHandler | null = null
   private llmBridge = getLLMBridge()
@@ -142,6 +144,40 @@ export class AgentIntegration {
     this.agent = createMirrorAgent(agentConfig)
     this.config = config
 
+    // Create Claude CLI agent (works in Tauri desktop app)
+    this.claudeAgent = createClaudeCliAgent({
+      getCode: () => state.get().source,
+      getCurrentFile: config.getCurrentFile,
+      getCursor: () => {
+        const pos = state.get().cursor
+        return { line: pos.line, column: pos.column }
+      },
+      getSelection: () => {
+        const nodeId = state.get().selection.nodeId
+        if (!nodeId) return null
+        const sourceMap = state.get().sourceMap
+        if (!sourceMap) return null
+        const node = sourceMap.getNodeById(nodeId)
+        if (!node) return null
+        const source = state.get().source
+        const lines = source.split('\n')
+        let startOffset = 0
+        for (let i = 0; i < node.position.line - 1; i++) {
+          startOffset += lines[i].length + 1
+        }
+        startOffset += node.position.column - 1
+        let endOffset = 0
+        for (let i = 0; i < node.position.endLine - 1; i++) {
+          endOffset += lines[i].length + 1
+        }
+        endOffset += node.position.endColumn - 1
+        const text = source.substring(startOffset, endOffset)
+        return { from: startOffset, to: endOffset, text }
+      },
+      tokens: config.tokens || {},
+      components: config.components || []
+    })
+
     // Initialize command handler if project callbacks provided
     if (config.getFiles && config.getCurrentFile) {
       this.commandHandler = createCommandHandler({
@@ -160,9 +196,29 @@ export class AgentIntegration {
 
   private async handleCommand(command: LLMCommand): Promise<void> {
     // Check if this is a project command that needs special handling
-    const projectCommands = ['ADD_TOKEN', 'ADD_COMPONENT', 'USE_COMPONENT']
+    const projectCommands = ['ADD_TOKEN', 'ADD_COMPONENT', 'USE_COMPONENT', 'REPLACE_ALL']
 
     if (projectCommands.includes(command.type) && this.commandHandler) {
+      // AUTO-VALIDATION for REPLACE_ALL: Validate and fix code before applying
+      if (command.type === 'REPLACE_ALL' && command.code) {
+        const validationResult = validateAndFix(command.code)
+        if (validationResult.fixedCode) {
+          console.log('[Agent] Auto-fixed structural issues in generated code')
+          command = { ...command, code: validationResult.fixedCode }
+        }
+        if (!validationResult.valid && validationResult.errors.length > 0) {
+          const criticalErrors = validationResult.errors.filter(e =>
+            e.type === 'self-closing-with-children'
+          )
+          if (criticalErrors.length > 0) {
+            console.warn('[Agent] Generated code has structural issues:\n', formatErrors(criticalErrors))
+            if (this.config.onError) {
+              this.config.onError(`Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`)
+            }
+          }
+        }
+      }
+
       const result = await this.commandHandler.processCommand(command)
 
       if (result.success) {
@@ -237,6 +293,7 @@ export class AgentIntegration {
     this.chatPanel = new ChatPanel({
       container: config.chatContainer,
       agent: this.agent,
+      claudeAgent: this.claudeAgent || undefined,
       onCommand: (command) => {
         this.handleCommand(command)
       },

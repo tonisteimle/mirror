@@ -63,7 +63,7 @@ describe('Parser: Instance Child Overrides', () => {
   })
 
   it('parses three child overrides', () => {
-    const ast = parse('Menu Item1 "File"; Item2 "Edit"; Item3 "View"')
+    const ast = parse('CustomMenu Item1 "File"; Item2 "Edit"; Item3 "View"')
     const overrides = ast.instances[0].childOverrides!
     expect(overrides.length).toBe(3)
     expect(overrides[0].childName).toBe('Item1')

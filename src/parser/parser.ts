@@ -13,7 +13,7 @@ import {
   LAYOUT_BOOLEANS,
 } from '../schema/parser-helpers'
 import { isPrimitive } from '../schema/dsl'
-import { isZagPrimitive, getZagPrimitive, isZagSlot } from '../schema/zag-primitives'
+import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword } from '../schema/zag-primitives'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -857,8 +857,8 @@ export class Parser {
         }
       }
 
-      // Check for Item definition: Item "Label" or Item value "val" label "Label"
-      if (this.check('IDENTIFIER') && this.current().value === 'Item') {
+      // Check for Item definition: Item/Tab/Step "Label" or Item value "val" label "Label"
+      if (this.check('IDENTIFIER') && isZagItemKeyword(zagNode.name, this.current().value)) {
         const item = this.parseZagItem(zagNode.name)
         if (item) zagNode.items.push(item)
         continue
@@ -993,12 +993,14 @@ export class Parser {
   }
 
   /**
-   * Parse a Zag Item
+   * Parse a Zag Item (Item, Tab, Step, Slide, etc.)
    *
    * Syntax:
    *   Item "Option A"
-   *   Item value "opt-a" label "Option A"
-   *   Item "Option B" disabled
+   *   Tab "Home"
+   *     Text "Welcome content"
+   *   Step "Account" target "#signup-form"
+   *   Item value "opt-a" label "Option A" disabled
    */
   private parseZagItem(componentName: string): ZagItem | null {
     const itemToken = this.advance() // 'Item'
@@ -1053,6 +1055,15 @@ export class Parser {
       if (this.check('IDENTIFIER') && this.current().value === 'disabled') {
         this.advance()
         item.disabled = true
+        continue
+      }
+
+      // target property (for Tour steps): target "#element"
+      if (this.check('IDENTIFIER') && this.current().value === 'target') {
+        this.advance()
+        if (this.check('STRING')) {
+          item.target = this.advance().value
+        }
         continue
       }
 

@@ -98,6 +98,10 @@ export class DragRenderer {
   // Track pending ghost render for palette items
   private pendingGhostRender: Promise<void> | null = null
 
+  // Track last known cursor position for smooth ghost transitions
+  // This is the CENTER of the ghostRect, which represents cursor position for palette drags
+  private lastCursorPosition: { x: number; y: number } | null = null
+
   constructor(container: HTMLElement, config: DragRendererConfig = {}) {
     this.container = container
     this.config = {
@@ -144,6 +148,7 @@ export class DragRenderer {
     this.ghostFactory.dispose()
     this.currentGhostSource = null
     this.pendingGhostRender = null
+    this.lastCursorPosition = null
     this.removeIndicator()
     this.removeGuides()
     this.removeAlignmentIndicator()
@@ -182,7 +187,15 @@ export class DragRenderer {
       this.ghostFactory.dispose()
       this.currentGhostSource = null
       this.pendingGhostRender = null
+      this.lastCursorPosition = null
       return
+    }
+
+    // Track cursor position (center of ghostRect) for smooth transitions
+    // This is used when async ghost rendering completes to avoid jumps
+    this.lastCursorPosition = {
+      x: ghostRect.x + ghostRect.width / 2,
+      y: ghostRect.y + ghostRect.height / 2,
     }
 
     // Determine ghost source type
@@ -265,30 +278,16 @@ export class DragRenderer {
         return // Cleared while rendering
       }
       if (this.currentGhostSource?.componentName === componentName) {
-        // Get current ghost position before replacing
-        const currentGhost = this.ghostFactory.getGhost()
-        let currentCenter = { x: 0, y: 0 }
-        if (currentGhost) {
-          const transform = currentGhost.style.transform
-          const match = transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/)
-          if (match) {
-            const x = parseFloat(match[1])
-            const y = parseFloat(match[2])
-            const oldWidth = parseFloat(currentGhost.style.width) || 100
-            const oldHeight = parseFloat(currentGhost.style.height) || 40
-            currentCenter = { x: x + oldWidth / 2, y: y + oldHeight / 2 }
-          }
-        }
-
         // Create ghost from rendered element with explicit size
         this.ghostFactory.createFromElement(rendered.element, rendered.size)
         this.currentGhostSource = { type: 'rendered', componentName }
 
-        // Re-apply position centered on the old center
-        if (this.ghostFactory.hasGhost()) {
+        // Use the continuously-tracked cursor position (fixes race condition)
+        // This ensures the ghost doesn't jump even if mouse moved during async render
+        if (this.ghostFactory.hasGhost() && this.lastCursorPosition) {
           const newRect = {
-            x: currentCenter.x - rendered.size.width / 2,
-            y: currentCenter.y - rendered.size.height / 2,
+            x: this.lastCursorPosition.x - rendered.size.width / 2,
+            y: this.lastCursorPosition.y - rendered.size.height / 2,
             width: rendered.size.width,
             height: rendered.size.height,
           }

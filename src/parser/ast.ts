@@ -268,7 +268,9 @@ export interface ZagItem {
   label?: string
   /** Whether the item is disabled */
   disabled?: boolean
-  /** Custom children for complex items */
+  /** Target element selector (for Tour steps) */
+  target?: string
+  /** Custom children for complex items (content-items pattern) */
   children?: (Instance | Text)[]
   /** Source position for bidirectional editing */
   sourcePosition: SourcePosition

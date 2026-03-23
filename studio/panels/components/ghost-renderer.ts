@@ -93,6 +93,7 @@ export class GhostRenderer {
   private cache = new Map<string, CacheEntry>()
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
   private readonly CLEANUP_INTERVAL = 60 * 1000 // 60 seconds
+  private readonly MAX_CACHE_SIZE = 100 // Maximum cached items (LRU eviction)
   private cleanupIntervalId: ReturnType<typeof setInterval> | null = null
   private disposed = false
   // Track in-flight renders to prevent duplicate work
@@ -114,6 +115,8 @@ export class GhostRenderer {
     const cacheKey = this.getCacheKey(item)
     const cached = this.cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      // Update timestamp for LRU tracking (move to "most recently used")
+      cached.timestamp = Date.now()
       // Clone the cached element
       const clone = cached.element.cloneNode(true) as HTMLElement
       return {
@@ -227,8 +230,8 @@ export class GhostRenderer {
       // Clone once for cache storage
       const cacheElement = renderedElement.cloneNode(true) as HTMLElement
 
-      // Store in cache
-      this.cache.set(cacheKey, {
+      // Store in cache with LRU eviction
+      this.setCacheEntry(cacheKey, {
         element: cacheElement,
         size: { ...size },
         timestamp: Date.now(),
@@ -272,6 +275,8 @@ export class GhostRenderer {
     const cached = this.cache.get(cacheKey)
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      // Update timestamp for LRU tracking
+      cached.timestamp = Date.now()
       const clone = cached.element.cloneNode(true) as HTMLElement
       return {
         element: clone,
@@ -360,6 +365,39 @@ export class GhostRenderer {
       clearInterval(this.cleanupIntervalId)
       this.cleanupIntervalId = null
     }
+  }
+
+  /**
+   * Set cache entry with LRU eviction
+   * Removes oldest entries when cache exceeds MAX_CACHE_SIZE
+   */
+  private setCacheEntry(key: string, entry: CacheEntry): void {
+    // If key already exists, just update it (no size increase)
+    if (this.cache.has(key)) {
+      this.cache.set(key, entry)
+      return
+    }
+
+    // Check if we need to evict
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      // Find and remove the oldest entry (lowest timestamp)
+      let oldestKey: string | null = null
+      let oldestTime = Infinity
+
+      for (const [k, v] of this.cache) {
+        if (v.timestamp < oldestTime) {
+          oldestTime = v.timestamp
+          oldestKey = k
+        }
+      }
+
+      if (oldestKey) {
+        this.cache.delete(oldestKey)
+      }
+    }
+
+    // Add the new entry
+    this.cache.set(key, entry)
   }
 
   // --------------------------------------------------------------------------

@@ -161,15 +161,12 @@ export const DSL = {
     Frame: { html: 'div', aliases: ['Box'], description: 'Alias for Box' },
     Text: { html: 'span', description: 'Text element' },
 
-    // Form elements
+    // Form elements (basic HTML - complex forms use Zag components)
     Button: { html: 'button', description: 'Clickable button' },
     Input: { html: 'input', description: 'Text input field' },
     Textarea: { html: 'textarea', description: 'Multi-line text input' },
     Label: { html: 'label', description: 'Form label' },
-    Select: { html: 'select', description: 'Dropdown select' },
-    Option: { html: 'option', description: 'Select option' },
-    Checkbox: { html: 'input', description: 'Checkbox input (type=checkbox)' },
-    Radio: { html: 'input', description: 'Radio input (type=radio)' },
+    // Note: Select, Checkbox, Radio are now Zag components with better UX
 
     // Media
     Image: { html: 'img', aliases: ['Img'], description: 'Image element' },

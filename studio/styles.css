@@ -212,12 +212,7 @@
 
     /* Panel flex sizes */
     .chat-panel-left {
-      flex: 0 0 320px;
-      background: var(--bg-panel);
-      border-right: 1px solid var(--border-default);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      display: none; /* Removed in desktop app */
     }
 
     .sidebar {
@@ -280,7 +275,218 @@
     .file-tree {
       flex: 1;
       overflow-y: auto;
-      padding-top: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Desktop File Tree - Empty State */
+    .file-tree-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .file-tree-empty-icon svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.3;
+      margin-bottom: 12px;
+    }
+
+    .file-tree-empty-text {
+      font-size: var(--font-sm);
+      margin-bottom: 4px;
+    }
+
+    .file-tree-empty-hint {
+      font-size: var(--font-xs);
+      color: var(--text-disabled);
+    }
+
+    /* Desktop File Tree - Root */
+    .file-tree-root {
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .file-tree-header {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: var(--font-sm);
+      font-weight: var(--weight-semibold);
+      text-transform: var(--text-uppercase);
+      letter-spacing: var(--tracking-wide);
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-default);
+      flex-shrink: 0;
+      height: 30px;
+      box-sizing: border-box;
+    }
+
+    /* Desktop File Tree - Items */
+    .file-tree-items {
+      padding: 8px 0;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .file-tree-file {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: var(--font-sm);
+      color: var(--text-secondary);
+      transition: background 0.1s;
+    }
+
+    .file-tree-file:hover {
+      background: var(--white-5);
+    }
+
+    .file-tree-file.active {
+      background: var(--primary-10);
+      color: var(--text-primary);
+    }
+
+    .file-tree-file svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .file-tree-file .file-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-tree-file .file-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Desktop File Tree - Folders */
+    .file-tree-folder-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: var(--font-sm);
+      color: var(--text-secondary);
+      transition: background 0.1s;
+    }
+
+    .file-tree-folder-header:hover {
+      background: var(--white-5);
+    }
+
+    .file-tree-folder-header svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .file-tree-folder-header .chevron {
+      color: var(--text-muted);
+      transition: transform 0.15s;
+    }
+
+    .file-tree-folder.expanded > .file-tree-folder-header .chevron {
+      transform: rotate(0deg);
+    }
+
+    .file-tree-folder:not(.expanded) > .file-tree-folder-header .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .file-tree-folder-children {
+      display: none;
+    }
+
+    .file-tree-folder.expanded > .file-tree-folder-children {
+      display: block;
+    }
+
+    /* File Tree - Drag & Drop */
+    .file-tree-file.dragging,
+    .file-tree-folder.dragging {
+      opacity: 0.5;
+    }
+
+    .file-tree-folder.drag-over {
+      background: var(--bg-hover);
+      border-radius: 4px;
+    }
+
+    .file-tree-folder.drag-over > .file-tree-folder-header {
+      background: var(--primary-10);
+    }
+
+    /* File Tree - Inline Rename */
+    .file-tree-rename-input {
+      background: var(--bg-input);
+      border: 1px solid var(--color-primary);
+      border-radius: 3px;
+      color: var(--text-primary);
+      font-size: var(--font-sm);
+      font-family: var(--font-sans);
+      padding: 2px 4px;
+      flex: 1;
+      min-width: 0;
+      outline: none;
+    }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      padding: 4px 0;
+      min-width: 160px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+    }
+
+    .context-menu-item {
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: var(--font-sm);
+      color: var(--text-primary);
+      transition: background 0.1s;
+    }
+
+    .context-menu-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .context-menu-item.danger {
+      color: var(--color-error);
+    }
+
+    .context-menu-item.danger:hover {
+      background: var(--error-10);
+    }
+
+    .context-menu-divider {
+      height: 1px;
+      background: var(--border-default);
+      margin: 4px 0;
     }
 
     .folder {
@@ -557,36 +763,7 @@
       background: var(--color-primary);
     }
 
-    header {
-      flex-shrink: 0;
-      padding: 8px 16px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border-default);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: relative;
-      z-index: 100;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-
-    header h1 {
-      font-size: var(--font-md);
-      font-weight: var(--weight-semibold);
-      color: var(--color-lightest);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .status {
-      display: none;
-    }
+    /* Desktop app - no header, no status bar */
 
     .panel {
       display: flex;
@@ -694,6 +871,37 @@
       padding: 12px;
     }
 
+    .component-palette-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .palette-tab {
+      padding: 6px 12px;
+      font-size: var(--font-xs);
+      font-weight: var(--weight-medium);
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .palette-tab:first-child {
+      padding-left: 0;
+    }
+
+    .palette-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .palette-tab.active {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+
     .component-palette-items {
       display: flex;
       flex-direction: column;
@@ -736,7 +944,7 @@
     }
 
     .component-palette-section {
-      margin-bottom: 16px;
+      margin-bottom: 4px;
     }
 
     .component-palette-section:last-child {
@@ -744,13 +952,71 @@
     }
 
     .component-palette-section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: var(--font-xs);
       font-weight: var(--weight-semibold);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
       color: var(--text-primary);
-      margin-bottom: 6px;
-      padding: 0 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 4px;
+    }
+
+    .component-palette-section-title:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .component-palette-section-title .section-toggle {
+      width: 12px;
+      height: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .component-palette-section-title .section-toggle .icon {
+      width: 10px;
+      height: 10px;
+      stroke: var(--text-muted);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* Show expanded chevron (down) by default, hide collapsed chevron (right) */
+    .component-palette-section-title .section-toggle .icon-collapsed {
+      display: none;
+    }
+
+    .component-palette-section-title .section-toggle .icon-expanded {
+      display: block;
+    }
+
+    /* When collapsed: show right chevron, hide down chevron */
+    .component-palette-section.collapsed .section-toggle .icon-collapsed {
+      display: block;
+    }
+
+    .component-palette-section.collapsed .section-toggle .icon-expanded {
+      display: none;
+    }
+
+    .component-palette-section-title .section-name {
+      flex: 1;
+    }
+
+    .component-palette-section-title .section-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .component-palette-section.collapsed .component-palette-section-title {
+      margin-bottom: 0;
     }
 
     .component-search {
@@ -5520,6 +5786,24 @@
   text-transform: var(--text-uppercase);
   letter-spacing: var(--tracking-wide);
   color: var(--text-muted);
+}
+
+.agent-indicator {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+}
+
+.agent-indicator.available {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.agent-indicator.unavailable {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 .chat-actions {

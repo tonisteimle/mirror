@@ -30,6 +30,7 @@
  */
 
 export { MirrorAgent, createMirrorAgent } from './mirror-agent'
+export { ClaudeCliAgent, createClaudeCliAgent, isClaudeCliAvailable } from './claude-cli-agent'
 export { buildSystemPrompt } from './prompts/system'
 export { coreTools } from './tools/core'
 export { writeTools } from './tools/write'

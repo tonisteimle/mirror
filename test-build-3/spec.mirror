@@ -1,0 +1,7 @@
+Card
+  H3 "Theme auswählen"
+  Select #theme-select
+    Option "Light"
+    Option "Dark"
+    Option "System"
+  Text "Ausgewählt: Light"

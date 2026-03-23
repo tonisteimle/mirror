@@ -15,26 +15,26 @@ describe('Parser: Block Conditionals', () => {
   it('parses basic if block', () => {
     const ast = parse(`
 if loggedIn
-  Avatar
+  UserProfile
 `)
     expect(ast.instances.length).toBe(1)
     const conditional = ast.instances[0] as any
     expect(conditional.type).toBe('Conditional')
     expect(conditional.condition).toBe('loggedIn')
     expect(conditional.then.length).toBe(1)
-    expect(conditional.then[0].component).toBe('Avatar')
+    expect(conditional.then[0].component).toBe('UserProfile')
   })
 
   it('parses if-else block', () => {
     const ast = parse(`
 if loggedIn
-  Avatar
+  UserProfile
 else
   LoginButton
 `)
     const conditional = ast.instances[0] as any
     expect(conditional.type).toBe('Conditional')
-    expect(conditional.then[0].component).toBe('Avatar')
+    expect(conditional.then[0].component).toBe('UserProfile')
     expect(conditional.else[0].component).toBe('LoginButton')
   })
 

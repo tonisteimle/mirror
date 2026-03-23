@@ -1389,7 +1389,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 21 (line 357): AST snapshot 1`
         },
       ],
       "extends": null,
-      "name": "Avatar",
+      "name": "ProfileAvatar",
       "nodeId": "def-1",
       "primitive": "frame",
       "properties": [
@@ -1862,7 +1862,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 27 (line 456): AST snapshot 1`
 {
   "instances": [
     {
-      "children": [
+      "items": [
         {
           "children": [
             {
@@ -1887,13 +1887,14 @@ exports[`Tutorial Examples: AST Snapshots > Block 27 (line 456): AST snapshot 1`
               "type": "Instance",
             },
           ],
-          "component": "Item",
-          "name": null,
-          "type": "Instance",
+          "sourcePosition": {
+            "endColumn": 35,
+            "endLine": 4,
+          },
         },
       ],
-      "component": "Menu",
-      "name": null,
+      "machine": "menu",
+      "name": "Menu",
       "properties": [
         {
           "name": "bg",
@@ -1919,7 +1920,8 @@ exports[`Tutorial Examples: AST Snapshots > Block 27 (line 456): AST snapshot 1`
           "type": "Property",
         },
       ],
-      "type": "Instance",
+      "slots": {},
+      "type": "ZagComponent",
     },
   ],
   "type": "Program",
@@ -5431,9 +5433,16 @@ exports[`Tutorial Examples: AST Snapshots > Block 74 (line 1361): AST snapshot 1
       "type": "Instance",
     },
     {
-      "component": "Menu",
-      "name": "userMenu",
-      "type": "Instance",
+      "machine": "menu",
+      "name": "Menu",
+      "properties": [
+        {
+          "name": "userMenu",
+          "type": "Property",
+        },
+      ],
+      "slots": {},
+      "type": "ZagComponent",
     },
   ],
   "type": "Program",
@@ -5554,53 +5563,36 @@ exports[`Tutorial Examples: AST Snapshots > Block 77 (line 1498): AST snapshot 1
 {
   "instances": [
     {
-      "children": [
+      "items": [
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Profil",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "label": "Profil",
+          "sourcePosition": {
+            "endColumn": 5,
+            "endLine": 3,
+          },
+          "value": "Profil",
         },
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Einstellungen",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "label": "Einstellungen",
+          "sourcePosition": {
+            "endColumn": 5,
+            "endLine": 4,
+          },
+          "value": "Einstellungen",
         },
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Abmelden",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "label": "Abmelden",
+          "sourcePosition": {
+            "endColumn": 20,
+            "endLine": 4,
+          },
+          "value": "Abmelden",
         },
       ],
-      "component": "Menu",
-      "name": null,
-      "type": "Instance",
+      "machine": "menu",
+      "name": "Menu",
+      "slots": {},
+      "type": "ZagComponent",
     },
   ],
   "type": "Program",
@@ -5611,60 +5603,34 @@ exports[`Tutorial Examples: AST Snapshots > Block 78 (line 1509): AST snapshot 1
 {
   "instances": [
     {
-      "children": [
+      "items": [
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Profil",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "label": "Profil",
+          "sourcePosition": {
+            "endColumn": 5,
+            "endLine": 3,
+          },
+          "value": "Profil",
         },
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Einstellungen",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "label": "Einstellungen",
+          "sourcePosition": {
+            "endColumn": 5,
+            "endLine": 4,
+          },
+          "value": "Einstellungen",
         },
         {
-          "component": "Item",
-          "name": null,
-          "properties": [
-            {
-              "name": "col",
-              "type": "Property",
-              "values": [
-                "danger",
-              ],
-            },
-            {
-              "name": "content",
-              "type": "Property",
-              "values": [
-                "Abmelden",
-              ],
-            },
-          ],
-          "type": "Instance",
+          "sourcePosition": {
+            "endColumn": 9,
+            "endLine": 4,
+          },
         },
       ],
-      "component": "Menu",
-      "name": null,
-      "type": "Instance",
+      "machine": "menu",
+      "name": "Menu",
+      "slots": {},
+      "type": "ZagComponent",
     },
   ],
   "type": "Program",
@@ -5938,7 +5904,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 83 (line 1573): AST snapshot 1
       ],
       "then": [
         {
-          "component": "Avatar",
+          "component": "ProfileAvatar",
           "name": null,
           "type": "Instance",
         },
@@ -6660,79 +6626,43 @@ exports[`Tutorial Examples: AST Snapshots > Block 92 (line 1718): AST snapshot 1
   ],
   "instances": [
     {
+      "machine": "dialog",
+      "name": "Dialog",
+      "slots": {},
+      "type": "ZagComponent",
+    },
+    {
       "children": [
         {
-          "component": "Title",
+          "component": "Button",
           "name": null,
           "properties": [
             {
               "name": "content",
               "type": "Property",
               "values": [
-                "Bestätigung",
+                "Abbrechen",
               ],
             },
           ],
           "type": "Instance",
         },
         {
-          "children": [
+          "component": "DangerButton",
+          "name": null,
+          "properties": [
             {
-              "component": "Text",
-              "name": null,
-              "properties": [
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "Bist du sicher?",
-                  ],
-                },
+              "name": "content",
+              "type": "Property",
+              "values": [
+                "Löschen",
               ],
-              "type": "Instance",
             },
           ],
-          "component": "Content",
-          "name": null,
-          "type": "Instance",
-        },
-        {
-          "children": [
-            {
-              "component": "Button",
-              "name": null,
-              "properties": [
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "Abbrechen",
-                  ],
-                },
-              ],
-              "type": "Instance",
-            },
-            {
-              "component": "DangerButton",
-              "name": null,
-              "properties": [
-                {
-                  "name": "content",
-                  "type": "Property",
-                  "values": [
-                    "Löschen",
-                  ],
-                },
-              ],
-              "type": "Instance",
-            },
-          ],
-          "component": "Actions",
-          "name": null,
           "type": "Instance",
         },
       ],
-      "component": "Dialog",
+      "component": "Actions",
       "name": null,
       "type": "Instance",
     },

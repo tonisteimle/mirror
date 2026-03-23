@@ -14,11 +14,6 @@ export default defineConfig({
     '@codemirror/commands',
     '@codemirror/autocomplete',
   ],
-  // Force bundling of @zag-js packages (not external)
-  noExternal: [
-    '@zag-js/select',
-    '@zag-js/core',
-    '@zag-js/dom-query',
-    '@zag-js/vanilla',
-  ],
+  // Force bundling of ALL @zag-js packages (not external)
+  noExternal: [/^@zag-js\/.*/],
 })
