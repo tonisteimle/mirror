@@ -190,18 +190,31 @@ export class StudioDragDropService {
    * Dispose service
    */
   dispose(): void {
-    try {
-      if (this.rafId !== null) {
-        cancelAnimationFrame(this.rafId)
-        this.rafId = null
-      }
-      this.detach()
-    } finally {
-      // Ensure renderer cleanup even if detach() throws
-      this.renderer.dispose()
-      this.codeModifier = null
-      this.sourceMap = null
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
     }
+
+    // Detach event listeners (catch and log errors)
+    try {
+      this.detach()
+    } catch (e) {
+      console.warn('[StudioDragDropService] Detach failed:', e)
+    }
+
+    // Cleanup renderer (catch and log errors)
+    try {
+      this.renderer.dispose()
+    } catch (e) {
+      console.warn('[StudioDragDropService] Renderer dispose failed:', e)
+    }
+
+    // Clear references
+    this.codeModifier = null
+    this.sourceMap = null
+    this.paletteDragData = null
+    this.pendingDragOver = null
   }
 
   // --------------------------------------------------------------------------
@@ -348,6 +361,11 @@ export class StudioDragDropService {
     this.isDraggingFlag = false
     this.pendingDragOver = null
     this.paletteDragData = null
+    // Cancel any pending RAF to prevent stale updates after drop
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
     this.renderer.clear()
 
     // Get drag data
@@ -539,7 +557,8 @@ export class StudioDragDropService {
       if (typeof htmlEl.getBoundingClientRect === 'function') {
         const rect = htmlEl.getBoundingClientRect()
         if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          const nodeId = htmlEl.getAttribute('data-mirror-id')
+          // Use dataset instead of getAttribute for better performance
+          const nodeId = htmlEl.dataset.mirrorId
           if (this.currentDragSourceId && nodeId === this.currentDragSourceId) {
             continue
           }

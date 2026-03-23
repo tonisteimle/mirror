@@ -290,29 +290,40 @@ export class DragRenderer {
       if (this.currentRenderToken !== renderToken) {
         return // Render invalidated
       }
-      if (this.currentGhostSource?.componentName === componentName) {
-        // Create ghost from rendered element with explicit size
-        this.ghostFactory.createFromElement(rendered.element, rendered.size)
-        this.currentGhostSource = { type: 'rendered', componentName }
 
-        // Use the continuously-tracked cursor position (fixes race condition)
-        // This ensures the ghost doesn't jump even if mouse moved during async render
-        // Also verify componentName matches to prevent using stale position from different component
-        if (this.ghostFactory.hasGhost() && this.lastCursorPosition &&
-            this.lastCursorPosition.componentName === componentName) {
-          const newRect = {
-            x: this.lastCursorPosition.x - rendered.size.width / 2,
-            y: this.lastCursorPosition.y - rendered.size.height / 2,
-            width: rendered.size.width,
-            height: rendered.size.height,
+      try {
+        if (this.currentGhostSource?.componentName === componentName) {
+          // Create ghost from rendered element with explicit size
+          this.ghostFactory.createFromElement(rendered.element, rendered.size)
+          this.currentGhostSource = { type: 'rendered', componentName }
+
+          // Use the continuously-tracked cursor position (fixes race condition)
+          // This ensures the ghost doesn't jump even if mouse moved during async render
+          // Also verify componentName matches to prevent using stale position from different component
+          if (this.ghostFactory.hasGhost() && this.lastCursorPosition &&
+              this.lastCursorPosition.componentName === componentName) {
+            const newRect = {
+              x: this.lastCursorPosition.x - rendered.size.width / 2,
+              y: this.lastCursorPosition.y - rendered.size.height / 2,
+              width: rendered.size.width,
+              height: rendered.size.height,
+            }
+            this.ghostFactory.setRect(newRect)
           }
-          this.ghostFactory.setRect(newRect)
         }
+      } catch (error) {
+        console.warn(`[DragRenderer] Failed to apply ghost for "${componentName}":`,
+          error instanceof Error ? error.message : String(error))
+      } finally {
+        // Reset pending state after render completes (success or failure)
+        this.pendingGhostRender = null
       }
     }).catch((error: unknown) => {
-      // Keep placeholder on error, log for debugging
+      // Handle errors from ghostRenderer.render() itself
       console.warn(`[DragRenderer] Failed to render ghost for "${componentName}":`,
         error instanceof Error ? error.message : String(error))
+      // Reset pending state to allow new renders
+      this.pendingGhostRender = null
     })
   }
 
@@ -368,12 +379,14 @@ export class DragRenderer {
   // --------------------------------------------------------------------------
 
   private renderGuides(guides: Guide[]): void {
-    if (guides.length === 0) {
+    // Guard against empty or missing guides
+    if (!guides || guides.length === 0) {
       this.removeGuides()
       return
     }
 
-    if (!this.guideContainer) {
+    // Create or recreate container if needed
+    if (!this.guideContainer || !this.guideContainer.isConnected) {
       this.guideContainer = this.createGuideContainer()
     }
 
@@ -382,11 +395,15 @@ export class DragRenderer {
       this.guideContainer.removeChild(this.guideContainer.firstChild)
     }
 
-    // Create guide lines
-    guides.forEach(guide => {
+    // Create guide lines with defensive copy to prevent concurrent modification
+    const guidesCopy = [...guides]
+    for (const guide of guidesCopy) {
       const line = this.createGuideLine(guide)
-      this.guideContainer!.appendChild(line)
-    })
+      // Guard against container being removed during loop
+      if (this.guideContainer?.isConnected) {
+        this.guideContainer.appendChild(line)
+      }
+    }
   }
 
   private createGuideContainer(): HTMLElement {

@@ -499,6 +499,10 @@ export class CodeModifier {
     const newSource = this.source.substring(0, adjustedStartOffset) +
                       this.source.substring(adjustedEndOffset)
 
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
     return {
       success: true,
       newSource,
@@ -584,6 +588,10 @@ export class CodeModifier {
       this.source.substring(0, startOffset) +
       newLine + '\n' +
       this.source.substring(endOffset)
+
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
 
     return {
       success: true,
@@ -736,6 +744,10 @@ export class CodeModifier {
     // Then insert at the new position
     newSource = newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
 
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
     // For move operations, replace the entire document since we have both remove and insert
     return {
       success: true,
@@ -820,6 +832,10 @@ export class CodeModifier {
 
     // Insert without removing original
     const newSource = this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
+
+    // Persist changes for subsequent operations
+    this.source = newSource
+    this.lines = newSource.split('\n')
 
     return {
       success: true,

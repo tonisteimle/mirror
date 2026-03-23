@@ -177,9 +177,17 @@ export class GhostFactory {
     // Use explicit size if provided, otherwise use getBoundingClientRect
     // (explicit size is needed when element is not attached to DOM)
     // Fallback to minimum size if rect returns 0 (element not in DOM and no explicit size)
+    // Math.max ensures absolute minimum even if explicitSize contains invalid values
     const MIN_GHOST_SIZE = { width: 100, height: 40 }
-    const width = explicitSize?.width ?? (rect.width > 0 ? rect.width : MIN_GHOST_SIZE.width)
-    const height = explicitSize?.height ?? (rect.height > 0 ? rect.height : MIN_GHOST_SIZE.height)
+    const ABSOLUTE_MIN = 20  // Never allow ghost smaller than this
+    const width = Math.max(
+      explicitSize?.width ?? (rect.width > 0 ? rect.width : MIN_GHOST_SIZE.width),
+      ABSOLUTE_MIN
+    )
+    const height = Math.max(
+      explicitSize?.height ?? (rect.height > 0 ? rect.height : MIN_GHOST_SIZE.height),
+      ABSOLUTE_MIN
+    )
 
     // Remove any selection-related classes
     ghost.classList.remove(

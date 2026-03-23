@@ -270,21 +270,23 @@ function createPromptKeymap(config: InlinePromptConfig) {
         const validation = validatePrompt(prompt)
         if (!validation.valid) {
           if (validation.error) {
+            // FIX: Track auto-clear timeout to prevent race conditions
+            const errorTimeoutId = window.setTimeout(() => {
+              const currentState = view.state.field(promptStateField)
+              if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
+                view.dispatch({ effects: setPromptState.of(null) })
+              }
+            }, 3000)
+
             view.dispatch({
               effects: setPromptState.of({
                 status: 'error',
                 line: line.number,
                 prompt: prompt || '',
-                message: validation.error
+                message: validation.error,
+                timeoutId: errorTimeoutId
               })
             })
-            // Auto-clear error after 3 seconds
-            setTimeout(() => {
-              const currentState = view.state.field(promptStateField)
-              if (currentState?.status === 'error') {
-                view.dispatch({ effects: setPromptState.of(null) })
-              }
-            }, 3000)
             return true
           }
           return false // Empty prompt, let Enter continue
@@ -378,10 +380,20 @@ async function handlePromptSubmit(
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Fehler bei der Verarbeitung'
+
+    // FIX: Track auto-clear timeout for error state
+    const errorTimeoutId = window.setTimeout(() => {
+      const currentState = view.state.field(promptStateField)
+      if (currentState?.status === 'error' && currentState?.timeoutId === errorTimeoutId) {
+        view.dispatch({ effects: setPromptState.of(null) })
+      }
+    }, 5000) // Longer timeout for submission errors
+
     view.dispatch({
       effects: updatePromptStatus.of({
         status: 'error',
-        message: errorMessage
+        message: errorMessage,
+        timeoutId: errorTimeoutId
       })
     })
   }
