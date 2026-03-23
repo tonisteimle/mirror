@@ -78,6 +78,7 @@ interface DragData {
   textContent?: string
   sourceNodeId?: string
   isMove?: boolean
+  children?: any[]  // For Zag components with slots/items
 }
 
 // Palette drag data (set when drag starts from component panel)
@@ -812,6 +813,7 @@ export class StudioDragDropService {
         textContent: typeof data.textContent === 'string' ? data.textContent : undefined,
         sourceNodeId: typeof data.sourceNodeId === 'string' ? data.sourceNodeId : undefined,
         isMove: data.isMove === true,
+        children: Array.isArray(data.children) ? data.children : undefined,
       }
     } catch {
       const trimmed = dataStr.trim()

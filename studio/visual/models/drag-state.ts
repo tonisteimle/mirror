@@ -30,7 +30,7 @@ export type DragPhase = 'idle' | 'pending' | 'dragging' | 'complete'
 
 export type DragSource =
   | { type: 'element'; nodeId: string; rect: Rect; grabOffset: Point }
-  | { type: 'palette'; componentName: string; properties?: string; textContent?: string; defaultSize?: { width: number; height: number } }
+  | { type: 'palette'; componentName: string; properties?: string; textContent?: string; defaultSize?: { width: number; height: number }; children?: any[] }
 
 export interface DragTarget {
   nodeId: string

@@ -141,6 +141,9 @@ let studioContext: StudioContext | null = null
 
 /**
  * Generate Mirror component code from drag data
+ *
+ * Returns code with relative indentation only (no base indent).
+ * The base indent is applied by insertComponentCode based on drop position.
  */
 function generateComponentCodeFromDragData(dragData: any): string {
   const { componentName, properties, textContent, children } = dragData
@@ -153,7 +156,7 @@ function generateComponentCodeFromDragData(dragData: any): string {
     code += ` "${textContent}"`
   }
 
-  // Add children if present
+  // Add children if present (with relative indentation starting at 1 level)
   if (children && children.length > 0) {
     for (const child of children) {
       const childCode = generateChildCode(child, 1)

@@ -130,7 +130,7 @@ export class DragDropService {
   startPaletteDrag(
     componentName: string,
     event: MouseEvent,
-    options?: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number } }
+    options?: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number }; children?: any[] }
   ): void {
     this.controller.startPaletteDrag(componentName, event, options)
   }
@@ -166,7 +166,7 @@ export class DragDropService {
   makePaletteItemDraggable(
     element: HTMLElement,
     componentName: string,
-    options?: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number } }
+    options?: { properties?: string; textContent?: string; defaultSize?: { width: number; height: number }; children?: any[] }
   ): () => void {
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return

@@ -307,59 +307,36 @@ export class EditorDropHandler {
   /**
    * Insert component code at the drop position with user-chosen indentation
    *
-   * ROBUST BEHAVIOR:
-   * - Always inserts NEW lines
-   * - Never modifies existing code
-   * - Uses the user-chosen indent level from pos.indent (X cursor position)
-   * - Handles insert before first line (pos.line === 0)
+   * Simple approach:
+   * - Code comes in with relative indentation (0 for root, 2 for children, etc.)
+   * - We add pos.indent spaces to EVERY line
+   * - Insert as new lines after target position
    */
   insertComponentCode(code: string, pos: EditorDropPosition): void {
     const doc = this.editor.state.doc
     const totalLines = doc.lines
 
-    // Convert pos.indent (number of spaces) to string
-    const indentStr = ' '.repeat(pos.indent)
+    // Base indent string from user's X position
+    const baseIndent = ' '.repeat(pos.indent)
 
-    // Helper: apply indentation to code lines
-    const applyIndent = (codeLines: string[], baseIndent: string): string[] => {
-      // Find minimum indentation in original code (excluding empty lines)
-      let minIndent = Infinity
-      for (const line of codeLines) {
-        if (line.trim()) {
-          const indent = line.match(/^(\s*)/)?.[1].length || 0
-          minIndent = Math.min(minIndent, indent)
-        }
-      }
-      if (minIndent === Infinity) minIndent = 0
+    // Add base indent to each line (preserving relative indentation)
+    const lines = code.split('\n')
+    const indentedLines = lines.map(line => {
+      // Empty lines stay empty
+      if (!line.trim()) return ''
+      // Add base indent to each line
+      return baseIndent + line
+    }).filter(line => line.trim() !== '' || lines.length === 1)
 
-      // Normalize and re-indent all lines
-      return codeLines.map(line => {
-        if (!line.trim()) return '' // Empty lines stay empty
-        // Remove original minimum indent, then add new base indent
-        const normalized = line.slice(minIndent)
-        return baseIndent + normalized
-      }).filter((line, index, arr) => {
-        // Keep non-empty lines and preserve structure
-        return line.trim() || (index > 0 && index < arr.length - 1)
-      })
-    }
+    const indentedCode = indentedLines.join('\n')
 
     // Special case: insert BEFORE first line
     if (pos.line === 0) {
-      const codeLines = code.split('\n')
-      const indentedLines = applyIndent(codeLines, indentStr)
-
-      const insertText = indentedLines.join('\n') + '\n'
+      const insertText = indentedCode + '\n'
 
       this.editor.dispatch({
-        changes: {
-          from: 0,
-          to: 0,
-          insert: insertText,
-        },
-        selection: {
-          anchor: insertText.length,
-        },
+        changes: { from: 0, to: 0, insert: insertText },
+        selection: { anchor: insertText.length },
       })
 
       this.editor.focus()
@@ -369,32 +346,14 @@ export class EditorDropHandler {
     // Normal case: insert AFTER target line
     const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
     const targetLine = doc.line(lineNumber)
-
-    // Apply user-chosen indentation to all lines of the component code
-    const codeLines = code.split('\n')
-    const indentedLines = applyIndent(codeLines, indentStr)
-
-    // Build insert text: newline + indented code
-    const indentedCode = indentedLines.join('\n')
+    const insertPos = targetLine.to
     const insertText = '\n' + indentedCode
 
-    // Insert position: end of target line (after all existing content)
-    const insertPos = targetLine.to
-
-    // Dispatch the change
     this.editor.dispatch({
-      changes: {
-        from: insertPos,
-        to: insertPos,
-        insert: insertText,
-      },
-      // Move cursor to end of inserted code
-      selection: {
-        anchor: insertPos + insertText.length,
-      },
+      changes: { from: insertPos, to: insertPos, insert: insertText },
+      selection: { anchor: insertPos + insertText.length },
     })
 
-    // Focus the editor
     this.editor.focus()
   }
 
