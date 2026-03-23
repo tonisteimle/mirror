@@ -20,6 +20,7 @@ import { getDefaultRegistry } from '../../../src/studio/drop-strategies/registry
 import type { LayoutDropResult, FlexDropResult, DropContext } from '../../../src/studio/drop-strategies/types'
 import type { SemanticZone } from '../../../src/studio/drop-zone-calculator'
 import { getComponentTemplate } from '../../../src/schema/component-templates'
+import { deriveSemanticZone } from '../../../src/studio/drop-strategies/flex-strategy'
 
 // ============================================================================
 // Types
@@ -463,37 +464,12 @@ export class StudioDragDropService {
       zone: zoneId,
       horizontal,
       vertical,
-      alignProperty: this.deriveSemanticZone(mainAlign, crossAlign, flexResult.direction),
+      alignProperty: deriveSemanticZone(mainAlign, crossAlign, direction) || 'center',
       indicatorPosition: {
         x: containerRect.left + containerRect.width * xRatio,
         y: containerRect.top + containerRect.height * yRatio,
       },
     }
-  }
-
-  /**
-   * Derive semantic zone from alignment
-   */
-  private deriveSemanticZone(
-    mainAlign: 'start' | 'center' | 'end',
-    crossAlign: 'start' | 'center' | 'end',
-    direction?: 'horizontal' | 'vertical'
-  ): SemanticZone {
-    const isHorizontal = direction === 'horizontal'
-    const horizontalAlign = isHorizontal ? mainAlign : crossAlign
-    const verticalAlign = isHorizontal ? crossAlign : mainAlign
-
-    const verticalMap = { start: 'top', center: 'center', end: 'bottom' } as const
-    const horizontalMap = { start: 'left', center: 'center', end: 'right' } as const
-
-    const v = verticalMap[verticalAlign]
-    const h = horizontalMap[horizontalAlign]
-
-    if (v === 'center' && h === 'center') {
-      return 'center'
-    }
-
-    return `${v}-${h}` as SemanticZone
   }
 
   /**
@@ -714,11 +690,11 @@ export class StudioDragDropService {
       // Inside placement: check for semantic zone (empty container with alignment)
       if (flexResult.suggestedAlignment) {
         // Derive semantic zone from alignment
-        const semanticZone = this.deriveSemanticZone(
+        const semanticZone = deriveSemanticZone(
           flexResult.suggestedAlignment,
           flexResult.suggestedCrossAlignment || 'center',
           direction
-        )
+        ) || 'center'
 
         // Zone other than center: apply layout + insert
         if (semanticZone !== 'center') {

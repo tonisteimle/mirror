@@ -101,6 +101,8 @@ put index.html
 put app.js
 put styles.css
 put logo.png
+put desktop-files.js
+put tauri-bridge.js
 
 # Upload studio/dist (new architecture modules)
 mkdir -f dist
