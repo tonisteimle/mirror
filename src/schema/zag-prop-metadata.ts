@@ -53,6 +53,37 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Placeholder',
       description: 'Placeholder text',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
+      default: true,
+    },
+    deselectable: {
+      type: 'boolean',
+      label: 'Deselectable',
+      description: 'Allow clearing by clicking selected item',
+    },
   },
 
   Combobox: {
@@ -77,6 +108,32 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Placeholder',
       description: 'Placeholder text',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
+      default: true,
+    },
   },
 
   Listbox: {
@@ -92,6 +149,32 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       options: ['vertical', 'horizontal'],
       default: 'vertical',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
+      default: true,
+    },
   },
 
   // ===========================================================================
@@ -104,6 +187,12 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Close after item selection',
       default: true,
     },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
+      default: true,
+    },
   },
 
   ContextMenu: {
@@ -113,6 +202,12 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Close after item selection',
       default: true,
     },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
+      default: true,
+    },
   },
 
   NestedMenu: {
@@ -120,6 +215,12 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       type: 'boolean',
       label: 'Close on Select',
       description: 'Close after item selection',
+      default: true,
+    },
+    loopFocus: {
+      type: 'boolean',
+      label: 'Loop Focus',
+      description: 'Loop keyboard navigation',
       default: true,
     },
   },
@@ -143,6 +244,16 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Indeterminate',
       description: 'Show indeterminate state',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
   },
 
   Switch: {
@@ -150,6 +261,16 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       type: 'boolean',
       label: 'Checked',
       description: 'Initial checked state',
+    },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
     },
   },
 
@@ -160,6 +281,21 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Radio group orientation',
       options: ['vertical', 'horizontal'],
       default: 'vertical',
+    },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
     },
   },
 
@@ -200,6 +336,28 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       options: ['horizontal', 'vertical'],
       default: 'horizontal',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    origin: {
+      type: 'enum',
+      label: 'Origin',
+      description: 'Track fill origin point',
+      options: ['start', 'center'],
+      default: 'start',
+    },
   },
 
   RangeSlider: {
@@ -228,6 +386,28 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Minimum steps between thumbs',
       default: 0,
       min: 0,
+    },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    origin: {
+      type: 'enum',
+      label: 'Origin',
+      description: 'Track fill origin point',
+      options: ['start', 'center'],
+      default: 'start',
     },
   },
 
@@ -271,6 +451,26 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Clamp value on blur',
       default: true,
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
   },
 
   PinInput: {
@@ -298,6 +498,26 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Placeholder character',
       default: '○',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
   },
 
   TagsInput: {
@@ -322,6 +542,26 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Max Tags',
       description: 'Maximum number of tags',
       min: 1,
+    },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    readOnly: {
+      type: 'boolean',
+      label: 'Read Only',
+      description: 'Prevent changes',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
     },
   },
 
@@ -352,6 +592,21 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Placeholder',
       description: 'Placeholder text',
     },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
   },
 
   RatingGroup: {
@@ -372,6 +627,21 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       type: 'boolean',
       label: 'Read Only',
       description: 'Prevent interaction',
+    },
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
+    },
+    required: {
+      type: 'boolean',
+      label: 'Required',
+      description: 'Mark as required field',
+    },
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
     },
   },
 
@@ -492,6 +762,18 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Prevent body scroll',
       default: true,
     },
+    trapFocus: {
+      type: 'boolean',
+      label: 'Trap Focus',
+      description: 'Keep focus within dialog',
+      default: true,
+    },
+    restoreFocus: {
+      type: 'boolean',
+      label: 'Restore Focus',
+      description: 'Restore focus on close',
+      default: true,
+    },
   },
 
   Tooltip: {
@@ -526,6 +808,17 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Close on click',
       default: true,
     },
+    interactive: {
+      type: 'boolean',
+      label: 'Interactive',
+      description: 'Keep open when hovering tooltip',
+    },
+    closeOnScroll: {
+      type: 'boolean',
+      label: 'Close on Scroll',
+      description: 'Close when scrolling',
+      default: true,
+    },
   },
 
   Popover: {
@@ -557,6 +850,17 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       type: 'boolean',
       label: 'Auto Focus',
       description: 'Focus first element',
+      default: true,
+    },
+    trapFocus: {
+      type: 'boolean',
+      label: 'Trap Focus',
+      description: 'Keep focus within popover',
+    },
+    restoreFocus: {
+      type: 'boolean',
+      label: 'Restore Focus',
+      description: 'Restore focus on close',
       default: true,
     },
   },
@@ -684,6 +988,11 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Loop Focus',
       description: 'Loop keyboard navigation',
       default: true,
+    },
+    deselectable: {
+      type: 'boolean',
+      label: 'Deselectable',
+      description: 'Allow deselecting active tab',
     },
   },
 

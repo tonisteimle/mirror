@@ -208,23 +208,32 @@ export class EditorDropHandler {
   }
 
   /**
-   * Insert component code at position
+   * Insert component code at position with smart indentation
    */
   insertComponentCode(code: string, pos: EditorDropPosition): void {
-    // Get current line to determine indentation
-    const line = this.editor.state.doc.line(pos.line)
-    const lineText = line.text
-    const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || ''
+    const doc = this.editor.state.doc
+    const targetLine = doc.line(pos.line)
 
-    // Indent the code to match context
+    // Calculate the correct indentation based on context
+    const indent = this.calculateIndentation(pos.line)
+
+    // Indent all lines of the component code
     const indentedCode = code
       .split('\n')
-      .map((codeLine, index) => (index === 0 ? codeLine : leadingWhitespace + codeLine))
+      .map((codeLine, index) => {
+        if (index === 0) {
+          return indent + codeLine
+        }
+        // For subsequent lines, add base indent + the line's own relative indent
+        const lineIndent = codeLine.match(/^(\s*)/)?.[1] || ''
+        const content = codeLine.trimStart()
+        return indent + lineIndent + content
+      })
       .join('\n')
 
     // Insert at end of current line with newline
-    const insertPos = line.to
-    const insertText = '\n' + leadingWhitespace + indentedCode
+    const insertPos = targetLine.to
+    const insertText = '\n' + indentedCode
 
     this.editor.dispatch({
       changes: {
@@ -236,6 +245,55 @@ export class EditorDropHandler {
         anchor: insertPos + insertText.length,
       },
     })
+  }
+
+  /**
+   * Calculate the correct indentation for a new child element
+   * In Mirror DSL, children are indented 2 spaces more than their parent
+   */
+  private calculateIndentation(lineNumber: number): string {
+    const doc = this.editor.state.doc
+
+    // Find the parent element by looking at previous lines
+    let parentIndent = ''
+    let foundParent = false
+
+    for (let i = lineNumber; i >= 1; i--) {
+      const line = doc.line(i)
+      const text = line.text
+      const trimmed = text.trim()
+
+      // Skip empty lines and comments
+      if (!trimmed || trimmed.startsWith('//')) continue
+
+      // Get leading whitespace
+      const leadingWhitespace = text.match(/^(\s*)/)?.[1] || ''
+
+      // Check if this line is a component (starts with uppercase or known keywords)
+      const isComponent = /^[A-Z]/.test(trimmed) || /^(Box|Text|Button|Input|Image|Icon)/.test(trimmed)
+
+      if (isComponent) {
+        // This is a potential parent - child should be indented 2 more spaces
+        parentIndent = leadingWhitespace + '  '
+        foundParent = true
+        break
+      }
+
+      // If we find a property line (starts with lowercase or special char),
+      // use its indentation as we're at the same level
+      if (/^[a-z$@]/.test(trimmed) || /^(pad|bg|col|w |h |gap|rad|bor|margin)/.test(trimmed)) {
+        parentIndent = leadingWhitespace
+        foundParent = true
+        break
+      }
+    }
+
+    // If no parent found, use no indentation (root level)
+    if (!foundParent) {
+      parentIndent = ''
+    }
+
+    return parentIndent
   }
 }
 

@@ -175,7 +175,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   NumberInput: {
     machine: 'number-input',
     slots: ['Root', 'Label', 'Control', 'Input', 'IncrementTrigger', 'DecrementTrigger', 'ScrubberCursor'],
-    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'allowMouseWheel', 'clampValueOnBlur', 'formatOptions'],
+    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'allowMouseWheel', 'clampValueOnBlur', 'formatOptions', 'invalid', 'readOnly', 'required', 'name'],
     events: ['onchange'],
     description: 'Number input with increment/decrement',
     pattern: 'slots-only',
@@ -184,7 +184,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   PinInput: {
     machine: 'pin-input',
     slots: ['Root', 'Label', 'Control', 'Input', 'HiddenInput'],
-    props: ['value', 'defaultValue', 'length', 'mask', 'otp', 'type', 'disabled', 'placeholder'],
+    props: ['value', 'defaultValue', 'length', 'mask', 'otp', 'type', 'disabled', 'placeholder', 'invalid', 'readOnly', 'required', 'name'],
     events: ['onchange', 'oncomplete'],
     description: 'PIN/OTP input',
     pattern: 'repeating-items',
@@ -202,7 +202,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   TagsInput: {
     machine: 'tags-input',
     slots: ['Root', 'Label', 'Control', 'Tag', 'TagText', 'TagDeleteTrigger', 'Input', 'ClearTrigger', 'HiddenInput'],
-    props: ['value', 'defaultValue', 'addOnPaste', 'addOnBlur', 'allowDuplicate', 'disabled', 'maxTags', 'delimiter'],
+    props: ['value', 'defaultValue', 'addOnPaste', 'addOnBlur', 'allowDuplicate', 'disabled', 'maxTags', 'delimiter', 'invalid', 'readOnly', 'required', 'name'],
     events: ['onchange', 'onadd', 'onremove'],
     description: 'Tags/chips input',
     pattern: 'repeating-items',
@@ -211,7 +211,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Editable: {
     machine: 'editable',
     slots: ['Root', 'Area', 'Preview', 'Input', 'Control', 'EditTrigger', 'SubmitTrigger', 'CancelTrigger'],
-    props: ['value', 'defaultValue', 'disabled', 'readOnly', 'selectOnFocus', 'submitMode', 'placeholder'],
+    props: ['value', 'defaultValue', 'disabled', 'readOnly', 'selectOnFocus', 'submitMode', 'placeholder', 'invalid', 'required', 'name'],
     events: ['onchange', 'onsubmit', 'oncancel', 'onedit'],
     description: 'Inline editable text',
     pattern: 'slots-only',
@@ -220,7 +220,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   RatingGroup: {
     machine: 'rating-group',
     slots: ['Root', 'Label', 'Control', 'Item', 'HiddenInput'],
-    props: ['value', 'defaultValue', 'count', 'disabled', 'allowHalf', 'readOnly'],
+    props: ['value', 'defaultValue', 'count', 'disabled', 'allowHalf', 'readOnly', 'invalid', 'required', 'name'],
     events: ['onchange', 'onhover'],
     description: 'Star rating input',
     pattern: 'repeating-items',
@@ -280,7 +280,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Dialog: {
     machine: 'dialog',
     slots: ['Trigger', 'Backdrop', 'Positioner', 'Content', 'Title', 'Description', 'CloseTrigger'],
-    props: ['open', 'defaultOpen', 'modal', 'preventScroll', 'closeOnOutsideClick', 'closeOnEscape', 'role'],
+    props: ['open', 'defaultOpen', 'modal', 'preventScroll', 'closeOnOutsideClick', 'closeOnEscape', 'role', 'trapFocus', 'restoreFocus'],
     events: ['onopen', 'onclose'],
     description: 'Modal dialog',
     pattern: 'slots-only',
@@ -289,7 +289,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Tooltip: {
     machine: 'tooltip',
     slots: ['Trigger', 'Positioner', 'Content', 'Arrow'],
-    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement', 'disabled', 'closeOnClick', 'closeOnPointerDown'],
+    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement', 'disabled', 'closeOnClick', 'closeOnPointerDown', 'interactive', 'closeOnScroll'],
     events: ['onopen', 'onclose'],
     description: 'Hover tooltip',
     pattern: 'slots-only',
@@ -298,7 +298,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Popover: {
     machine: 'popover',
     slots: ['Trigger', 'Positioner', 'Content', 'Title', 'Description', 'CloseTrigger', 'Arrow', 'Anchor'],
-    props: ['open', 'defaultOpen', 'placement', 'modal', 'closeOnOutsideClick', 'closeOnEscape', 'autoFocus'],
+    props: ['open', 'defaultOpen', 'placement', 'modal', 'closeOnOutsideClick', 'closeOnEscape', 'autoFocus', 'trapFocus', 'restoreFocus'],
     events: ['onopen', 'onclose'],
     description: 'Click popover',
     pattern: 'slots-only',
@@ -347,7 +347,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Tabs: {
     machine: 'tabs',
     slots: ['Root', 'List', 'Trigger', 'Content', 'Indicator'],
-    props: ['value', 'defaultValue', 'orientation', 'activationMode', 'loopFocus'],
+    props: ['value', 'defaultValue', 'orientation', 'activationMode', 'loopFocus', 'deselectable'],
     events: ['onchange'],
     description: 'Tabbed navigation',
     pattern: 'content-items',
