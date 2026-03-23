@@ -23,6 +23,8 @@ export interface EditorDropPosition {
   column: number
   /** Character offset in document */
   offset: number
+  /** Chosen indentation level (number of spaces, snapped to 2-space increments) */
+  indent: number
 }
 
 /**
@@ -142,7 +144,9 @@ export class EditorDropHandler {
 
   /**
    * Convert mouse coordinates to editor position
-   * Snaps to line boundaries - returns the line AFTER which to insert
+   *
+   * - Y position: Snaps to line boundaries (between lines)
+   * - X position: Determines indentation level (snaps to 2-space increments)
    *
    * Returns line=0 for "before first line" (special case)
    */
@@ -157,21 +161,21 @@ export class EditorDropHandler {
     const line = doc.lineAt(offset)
     const lineNumber = line.number
 
-    // Get the visual coordinates for this line to determine if we're
-    // in the top or bottom half of the line
+    // Get the visual coordinates for this line
     const lineCoords = this.editor.coordsAtPos(line.from)
     if (!lineCoords) {
       return {
         line: lineNumber,
         column: 0,
         offset: line.to,
+        indent: 0,
       }
     }
 
     // Calculate line height
     const lineHeight = this.editor.defaultLineHeight
 
-    // Determine if cursor is in top or bottom half of line
+    // Determine if cursor is in top or bottom half of line (for Y snapping)
     const lineMiddle = lineCoords.top + lineHeight / 2
     const isInTopHalf = y < lineMiddle
 
@@ -179,15 +183,25 @@ export class EditorDropHandler {
     let targetLine: number
 
     if (lineNumber === 1 && isInTopHalf) {
-      // Special case: hovering in top half of first line = insert BEFORE first line
       targetLine = 0
     } else if (isInTopHalf && lineNumber > 1) {
-      // In top half of any other line = insert after previous line
       targetLine = lineNumber - 1
     } else {
-      // In bottom half = insert after this line
       targetLine = lineNumber
     }
+
+    // Calculate indent level from X position
+    // X position relative to editor content area → snap to 2-space increments
+    const editorRect = this.editor.dom.getBoundingClientRect()
+    const contentLeft = this.editor.contentDOM.getBoundingClientRect().left
+    const relativeX = x - contentLeft
+
+    // Approximate character width (monospace font)
+    const charWidth = this.editor.defaultCharacterWidth
+
+    // Calculate column from X position and snap to 2-space increments
+    const rawColumn = Math.max(0, Math.floor(relativeX / charWidth))
+    const indent = Math.floor(rawColumn / 2) * 2  // Snap to even numbers (0, 2, 4, 6, ...)
 
     // Handle edge case for line 0 (before first line)
     if (targetLine === 0) {
@@ -195,6 +209,7 @@ export class EditorDropHandler {
         line: 0,
         column: 0,
         offset: 0,
+        indent: indent,
       }
     }
 
@@ -204,6 +219,7 @@ export class EditorDropHandler {
       line: targetLine,
       column: 0,
       offset: targetLineInfo.to,
+      indent: indent,
     }
   }
 

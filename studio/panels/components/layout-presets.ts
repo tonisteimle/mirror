@@ -122,7 +122,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
   {
     id: 'basic-text',
     name: 'Text',
-    category: 'Basic',
+    category: 'Display',
     template: 'Text',
     textContent: 'Text',
     icon: 'text',
@@ -132,7 +132,7 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
   {
     id: 'basic-box',
     name: 'Box',
-    category: 'Basic',
+    category: 'Display',
     template: 'Box',
     icon: 'box',
     description: 'Generic container',
@@ -1030,4 +1030,132 @@ export function getLayoutPresets(): ComponentItem[] {
  */
 export function getBasicComponents(): ComponentItem[] {
   return BASIC_COMPONENTS
+}
+
+/**
+ * Component category mapping for the "All" tab
+ *
+ * Groups components into logical sections of 4-7 items each.
+ * Used by component-panel.ts to create grouped sections.
+ */
+export const COMPONENT_GROUPS: Record<string, string[]> = {
+  'Display': [
+    'basic-text', 'basic-box', 'basic-image', 'basic-icon', 'zag-avatar',
+  ],
+  'Form Inputs': [
+    'basic-button', 'basic-input', 'zag-number-input', 'zag-pin-input',
+    'zag-password-input', 'zag-tags-input', 'zag-editable',
+  ],
+  'Selection': [
+    'zag-select', 'zag-combobox', 'zag-listbox', 'zag-checkbox',
+    'zag-switch', 'zag-radio-group', 'zag-segmented-control',
+  ],
+  'Sliders & Rating': [
+    'zag-slider', 'zag-range-slider', 'zag-angle-slider',
+    'zag-rating-group', 'zag-toggle-group',
+  ],
+  'Menus': [
+    'zag-menu', 'zag-context-menu', 'zag-nested-menu', 'zag-navigation-menu',
+  ],
+  'Overlays': [
+    'zag-dialog', 'zag-tooltip', 'zag-popover', 'zag-hover-card',
+    'zag-floating-panel', 'zag-toast',
+  ],
+  'Navigation': [
+    'zag-tabs', 'zag-accordion', 'zag-collapsible', 'zag-steps',
+    'zag-pagination', 'zag-tree-view',
+  ],
+  'Date & Time': [
+    'zag-date-picker', 'zag-date-input', 'zag-timer',
+  ],
+  'Media': [
+    'zag-file-upload', 'zag-image-cropper', 'zag-carousel',
+    'zag-signature-pad', 'zag-qr-code',
+  ],
+  'Feedback': [
+    'zag-progress', 'zag-circular-progress', 'zag-marquee',
+    'zag-presence', 'zag-tour',
+  ],
+  'Utilities': [
+    'zag-clipboard', 'zag-scroll-area', 'zag-splitter',
+  ],
+}
+
+/**
+ * Group order for consistent display
+ */
+export const GROUP_ORDER = [
+  'Layouts',
+  'Display',
+  'Form Inputs',
+  'Selection',
+  'Sliders & Rating',
+  'Menus',
+  'Overlays',
+  'Navigation',
+  'Date & Time',
+  'Media',
+  'Feedback',
+  'Utilities',
+] as const
+
+/**
+ * Get components grouped by category
+ */
+export function getGroupedComponents(): Array<{ name: string; items: ComponentItem[] }> {
+  const allComponents = [...LAYOUT_PRESETS, ...BASIC_COMPONENTS]
+  const componentMap = new Map(allComponents.map(c => [c.id, c]))
+
+  const groups: Array<{ name: string; items: ComponentItem[] }> = []
+
+  for (const groupName of GROUP_ORDER) {
+    if (groupName === 'Layouts') {
+      groups.push({ name: 'Layouts', items: LAYOUT_PRESETS })
+    } else {
+      const ids = COMPONENT_GROUPS[groupName] || []
+      const items = ids
+        .map(id => componentMap.get(id))
+        .filter((c): c is ComponentItem => c !== undefined)
+      if (items.length > 0) {
+        groups.push({ name: groupName, items })
+      }
+    }
+  }
+
+  return groups
+}
+
+/**
+ * Default selection of essential components for the Basic tab
+ *
+ * When no user-defined components exist, these are shown as sensible defaults.
+ * Includes the most commonly used display, interactive, and layout components.
+ */
+export const DEFAULT_BASIC_SELECTION_IDS = [
+  // Display
+  'basic-text',
+  'basic-box',
+  'basic-image',
+  'basic-icon',
+  // Interactive
+  'basic-button',
+  'basic-input',
+  // Selects
+  'zag-select',
+  'zag-checkbox',
+  'zag-switch',
+  // Layout
+  'layout-vbox',
+  'layout-hbox',
+  'layout-grid',
+] as const
+
+/**
+ * Get the default selection of basic components
+ */
+export function getDefaultBasicSelection(): ComponentItem[] {
+  const allComponents = [...LAYOUT_PRESETS, ...BASIC_COMPONENTS]
+  return DEFAULT_BASIC_SELECTION_IDS
+    .map(id => allComponents.find(c => c.id === id))
+    .filter((c): c is ComponentItem => c !== undefined)
 }

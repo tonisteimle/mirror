@@ -17,7 +17,7 @@ import type {
   ComponentPanelTab,
 } from './types'
 import { getComponentIcon } from './icons'
-import { LAYOUT_PRESETS, BASIC_COMPONENTS } from './layout-presets'
+import { LAYOUT_PRESETS, BASIC_COMPONENTS, getDefaultBasicSelection, getGroupedComponents } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 import { events } from '../../core'
@@ -58,21 +58,22 @@ export class ComponentPanel {
    * Build sections from built-in and user-defined components
    */
   private buildSections(ast?: AST): void {
-    // Build "All" sections (all built-in components)
+    // Build "All" sections (grouped built-in components)
     this.allSections = []
-    if (this.config.showLayoutPresets) {
-      this.allSections.push({
-        name: 'Layouts',
-        items: LAYOUT_PRESETS,
-        isExpanded: true,
-      })
-    }
-    if (this.config.showBasicComponents) {
-      this.allSections.push({
-        name: 'Components',
-        items: BASIC_COMPONENTS,
-        isExpanded: true,
-      })
+    if (this.config.showLayoutPresets || this.config.showBasicComponents) {
+      const grouped = getGroupedComponents()
+      for (const group of grouped) {
+        // Skip layouts if not showing layout presets
+        if (group.name === 'Layouts' && !this.config.showLayoutPresets) continue
+        // Skip non-layout groups if not showing basic components
+        if (group.name !== 'Layouts' && !this.config.showBasicComponents) continue
+
+        this.allSections.push({
+          name: group.name,
+          items: group.items,
+          isExpanded: true,
+        })
+      }
     }
 
     // Build "Basic" sections (user's project components from AST)
@@ -82,11 +83,11 @@ export class ComponentPanel {
       this.basicSections.push(...userSections)
     }
 
-    // If no user components, show helpful layout presets in Basic tab
+    // If no user components, show default selection of essential components
     if (this.basicSections.length === 0) {
       this.basicSections.push({
-        name: 'Quick Start',
-        items: LAYOUT_PRESETS.slice(0, 4),  // First 4 layout presets
+        name: 'Essentials',
+        items: getDefaultBasicSelection(),
         isExpanded: true,
       })
     }
@@ -104,7 +105,7 @@ export class ComponentPanel {
     } else {
       // No tab bar: show all sections (original behavior)
       this.sections = [...this.allSections]
-      if (this.basicSections.length > 0 && this.basicSections[0].name !== 'Quick Start') {
+      if (this.basicSections.length > 0 && this.basicSections[0].name !== 'Essentials') {
         this.sections.push(...this.basicSections)
       }
     }
@@ -208,8 +209,8 @@ export class ComponentPanel {
    */
   private getBasicComponentCount(): number {
     return this.basicSections.reduce((count, section) => {
-      // Don't count Quick Start items
-      if (section.name === 'Quick Start') return count
+      // Don't count Essentials items
+      if (section.name === 'Essentials') return count
       return count + section.items.length
     }, 0)
   }
@@ -243,8 +244,8 @@ export class ComponentPanel {
    * Used to update the Basic tab with user-defined components
    */
   setBasicComponents(sections: ComponentSection[]): void {
-    // Only update if we have meaningful sections (not Quick Start)
-    if (sections.length > 0 && sections[0].name !== 'Quick Start') {
+    // Only update if we have meaningful sections (not Essentials)
+    if (sections.length > 0 && sections[0].name !== 'Essentials') {
       this.basicSections = sections
     }
     this.updateActiveSections()

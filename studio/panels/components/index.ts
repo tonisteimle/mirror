@@ -27,9 +27,14 @@ export { getComponentIcon, COMPONENT_ICONS } from './icons'
 export {
   LAYOUT_PRESETS,
   BASIC_COMPONENTS,
+  COMPONENT_GROUPS,
+  GROUP_ORDER,
+  DEFAULT_BASIC_SELECTION_IDS,
   getBuiltInComponents,
   getLayoutPresets,
   getBasicComponents,
+  getGroupedComponents,
+  getDefaultBasicSelection,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
 
