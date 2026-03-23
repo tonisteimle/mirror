@@ -17,7 +17,7 @@ export interface EditorDropHandlerConfig {
 }
 
 export interface EditorDropPosition {
-  /** Line number (1-indexed) */
+  /** Line number (1-indexed, or 0 for "before first line") */
   line: number
   /** Column number (0-indexed) */
   column: number
@@ -291,11 +291,29 @@ export class EditorDropHandler {
 
     // Special case: insert BEFORE first line
     if (pos.line === 0) {
-      // No indentation context, insert at root level
+      // No indentation context, insert at root level but preserve relative structure
       const codeLines = code.split('\n')
-      const indentedLines = codeLines.map(codeLine => codeLine.trim()).filter(l => l)
-      const indentedCode = indentedLines.join('\n')
-      const insertText = indentedCode + '\n'
+
+      // Find the minimum indentation (excluding empty lines) to normalize
+      let minIndent = Infinity
+      for (const line of codeLines) {
+        if (line.trim()) {
+          const indent = line.match(/^(\s*)/)?.[1].length || 0
+          minIndent = Math.min(minIndent, indent)
+        }
+      }
+      if (minIndent === Infinity) minIndent = 0
+
+      // Remove minimum indent from all lines (normalize to root level)
+      const normalizedLines = codeLines.map(line => {
+        if (!line.trim()) return ''
+        return line.slice(minIndent)
+      }).filter((line, index, arr) => {
+        // Keep non-empty lines, but also keep structure
+        return line.trim() || (index > 0 && index < arr.length - 1)
+      })
+
+      const insertText = normalizedLines.join('\n') + '\n'
 
       this.editor.dispatch({
         changes: {
