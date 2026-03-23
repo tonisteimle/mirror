@@ -5182,12 +5182,12 @@
     .visual-overlay .zone-dot.top-left { top: 8px; left: 8px; }
     .visual-overlay .zone-dot.top-center { top: 8px; left: 50%; margin-left: -3px; }
     .visual-overlay .zone-dot.top-right { top: 8px; right: 8px; }
-    .visual-overlay .zone-dot.mid-left { top: 50%; left: 8px; margin-top: -3px; }
-    .visual-overlay .zone-dot.mid-center { top: 50%; left: 50%; margin: -3px 0 0 -3px; }
-    .visual-overlay .zone-dot.mid-right { top: 50%; right: 8px; margin-top: -3px; }
-    .visual-overlay .zone-dot.bot-left { bottom: 8px; left: 8px; }
-    .visual-overlay .zone-dot.bot-center { bottom: 8px; left: 50%; margin-left: -3px; }
-    .visual-overlay .zone-dot.bot-right { bottom: 8px; right: 8px; }
+    .visual-overlay .zone-dot.center-left { top: 50%; left: 8px; margin-top: -3px; }
+    .visual-overlay .zone-dot.center { top: 50%; left: 50%; margin: -3px 0 0 -3px; }
+    .visual-overlay .zone-dot.center-right { top: 50%; right: 8px; margin-top: -3px; }
+    .visual-overlay .zone-dot.bottom-left { bottom: 8px; left: 8px; }
+    .visual-overlay .zone-dot.bottom-center { bottom: 8px; left: 50%; margin-left: -3px; }
+    .visual-overlay .zone-dot.bottom-right { bottom: 8px; right: 8px; }
 
     /* Sibling Insert Line */
     .visual-overlay .sibling-line {

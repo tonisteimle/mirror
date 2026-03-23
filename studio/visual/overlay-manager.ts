@@ -11,8 +11,8 @@
 
 export type SemanticZone =
   | 'top-left' | 'top-center' | 'top-right'
-  | 'mid-left' | 'mid-center' | 'mid-right'
-  | 'bot-left' | 'bot-center' | 'bot-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right'
 
 export interface OverlayManagerConfig {
   container: HTMLElement
@@ -125,8 +125,8 @@ export class OverlayManager {
 
     const zones: SemanticZone[] = [
       'top-left', 'top-center', 'top-right',
-      'mid-left', 'mid-center', 'mid-right',
-      'bot-left', 'bot-center', 'bot-right'
+      'center-left', 'center', 'center-right',
+      'bottom-left', 'bottom-center', 'bottom-right'
     ]
 
     container.innerHTML = zones.map(zone =>

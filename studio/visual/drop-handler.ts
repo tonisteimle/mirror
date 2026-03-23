@@ -87,11 +87,15 @@ export class DropHandler {
 
     if (zone.placement === 'inside') {
       // Zone-based wrapper insertion
-      if (zone.semanticZone && zone.semanticZone !== 'mid-center') {
+      if (zone.semanticZone && zone.semanticZone !== 'center') {
         // For semantic zones, use template if available
         if (template) {
           // First apply layout to container, then insert template
-          codeModifier.applyLayoutToContainer(zone.targetId, zone.semanticZone)
+          const layoutResult = codeModifier.applyLayoutToContainer(zone.targetId, zone.semanticZone)
+          if (!layoutResult.success) {
+            console.warn('[DropHandler] Failed to apply layout:', layoutResult.error)
+            return false
+          }
           result = codeModifier.addChildWithTemplate(zone.targetId, template.code, {
             position: 'last',
           })

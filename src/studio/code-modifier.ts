@@ -1695,27 +1695,24 @@ export class CodeModifier {
   /**
    * Layout properties to apply to container based on semantic zone
    *
-   * Instead of creating wrappers, we apply layout directly to the container.
-   * This ensures all siblings share the same alignment automatically.
+   * The 9-zone alignment properties map directly to zone names.
+   * Each property sets display:flex + flex-direction:column + justify/align.
    *
-   * Uses alignment properties:
-   * - Horizontal: left, hor-center, right
-   * - Vertical: top, ver-center, bottom
-   *
-   * These are converted by the IR to:
-   * - Column container: horizontal → align-items, vertical → justify-content
-   * - Row container: horizontal → justify-content, vertical → align-items
+   * center-left is the default (no property needed) because:
+   * - flex-direction: column (default vertical flow)
+   * - justify-content: center (centered vertically)
+   * - align-items: flex-start (left-aligned)
    */
   private static readonly ZONE_CONTAINER_LAYOUT: Record<SemanticZone, string> = {
-    'top-left':     'ver',
-    'top-center':   'ver, center',
-    'top-right':    'ver, hor',
-    'mid-left':     '',  // default, no layout needed
-    'mid-center':   'center',
-    'mid-right':    'hor, spread',
-    'bot-left':     'ver, spread',
-    'bot-center':   'ver, spread, center',
-    'bot-right':    'ver, spread, hor',
+    'top-left':       'top-left',
+    'top-center':     'top-center',
+    'top-right':      'top-right',
+    'center-left':    '',  // default, no layout needed
+    'center':         'center',
+    'center-right':   'center-right',
+    'bottom-left':    'bottom-left',
+    'bottom-center':  'bottom-center',
+    'bottom-right':   'bottom-right',
   }
 
   /**

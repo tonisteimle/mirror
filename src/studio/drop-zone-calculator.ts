@@ -38,8 +38,8 @@ export type DropPlacement = 'before' | 'after' | 'inside'
  */
 export type SemanticZone =
   | 'top-left' | 'top-center' | 'top-right'
-  | 'mid-left' | 'mid-center' | 'mid-right'
-  | 'bot-left' | 'bot-center' | 'bot-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right'
 
 /**
  * Absolute position for dropping into abs containers

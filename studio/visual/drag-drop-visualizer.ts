@@ -110,12 +110,12 @@ export class DragDropVisualizer {
       'top-left': 'Top Left',
       'top-center': 'Top Center',
       'top-right': 'Top Right',
-      'mid-left': 'Middle Left',
-      'mid-center': 'Center',
-      'mid-right': 'Middle Right',
-      'bot-left': 'Bottom Left',
-      'bot-center': 'Bottom Center',
-      'bot-right': 'Bottom Right',
+      'center-left': 'Center Left',
+      'center': 'Center',
+      'center-right': 'Center Right',
+      'bottom-left': 'Bottom Left',
+      'bottom-center': 'Bottom Center',
+      'bottom-right': 'Bottom Right',
     }
 
     return names[zone] || 'center'

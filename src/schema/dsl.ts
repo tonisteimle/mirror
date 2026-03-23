@@ -541,7 +541,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   center: {
     name: 'center',
-    aliases: ['cen'],
+    aliases: ['cen', 'c'],
     category: 'layout',
     description: 'Center children horizontally and vertically',
 
@@ -572,6 +572,170 @@ export const SCHEMA: Record<string, PropertyDef> = {
           { property: 'justify-content', value: 'space-between' },
         ],
         example: 'Box spread',
+      },
+    },
+  },
+
+  // ===========================================================================
+  // 9-Zone Alignment Properties
+  // ===========================================================================
+
+  'top-left': {
+    name: 'top-left',
+    aliases: ['tl'],
+    category: 'layout',
+    description: 'Align children to top-left',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to top-left corner',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-start' },
+          { property: 'align-items', value: 'flex-start' },
+        ],
+        example: 'Box top-left',
+      },
+    },
+  },
+
+  'top-center': {
+    name: 'top-center',
+    aliases: ['tc'],
+    category: 'layout',
+    description: 'Align children to top-center',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to top-center',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-start' },
+          { property: 'align-items', value: 'center' },
+        ],
+        example: 'Box top-center',
+      },
+    },
+  },
+
+  'top-right': {
+    name: 'top-right',
+    aliases: ['tr'],
+    category: 'layout',
+    description: 'Align children to top-right',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to top-right corner',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-start' },
+          { property: 'align-items', value: 'flex-end' },
+        ],
+        example: 'Box top-right',
+      },
+    },
+  },
+
+  'center-left': {
+    name: 'center-left',
+    aliases: ['cl'],
+    category: 'layout',
+    description: 'Align children to center-left',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to center-left',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'center' },
+          { property: 'align-items', value: 'flex-start' },
+        ],
+        example: 'Box center-left',
+      },
+    },
+  },
+
+  'center-right': {
+    name: 'center-right',
+    aliases: ['cr'],
+    category: 'layout',
+    description: 'Align children to center-right',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to center-right',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'center' },
+          { property: 'align-items', value: 'flex-end' },
+        ],
+        example: 'Box center-right',
+      },
+    },
+  },
+
+  'bottom-left': {
+    name: 'bottom-left',
+    aliases: ['bl'],
+    category: 'layout',
+    description: 'Align children to bottom-left',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to bottom-left corner',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-end' },
+          { property: 'align-items', value: 'flex-start' },
+        ],
+        example: 'Box bottom-left',
+      },
+    },
+  },
+
+  'bottom-center': {
+    name: 'bottom-center',
+    aliases: ['bc'],
+    category: 'layout',
+    description: 'Align children to bottom-center',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to bottom-center',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-end' },
+          { property: 'align-items', value: 'center' },
+        ],
+        example: 'Box bottom-center',
+      },
+    },
+  },
+
+  'bottom-right': {
+    name: 'bottom-right',
+    aliases: ['br'],
+    category: 'layout',
+    description: 'Align children to bottom-right',
+
+    keywords: {
+      _standalone: {
+        description: 'Align to bottom-right corner',
+        css: [
+          { property: 'display', value: 'flex' },
+          { property: 'flex-direction', value: 'column' },
+          { property: 'justify-content', value: 'flex-end' },
+          { property: 'align-items', value: 'flex-end' },
+        ],
+        example: 'Box bottom-right',
       },
     },
   },
