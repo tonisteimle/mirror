@@ -842,20 +842,21 @@
       background: transparent;
     }
 
-    /* Hover/drag indicator - 2px line */
+    /* Visible divider line - subtle by default, highlighted on hover */
     .divider::after {
       content: '';
       position: absolute;
       top: 0;
       bottom: 0;
       left: -1px;
-      width: 2px;
-      background: transparent;
-      transition: background 0.15s;
+      width: 1px;
+      background: var(--border-subtle);
+      transition: background 0.15s, width 0.15s;
       pointer-events: none;
     }
 
     .divider:hover::after {
+      width: 2px;
       background: var(--primary-50);
     }
 
