@@ -126,6 +126,13 @@ export interface MachineConfig {
   items?: IRItem[]
   loopFocus?: boolean
   deselectable?: boolean
+  closeOnSelect?: boolean
+  highlightedValue?: string
+  defaultHighlightedValue?: string
+  composite?: boolean
+  form?: string
+  open?: boolean
+  defaultOpen?: boolean
   // Slider props
   min?: number
   max?: number
@@ -301,10 +308,24 @@ export class MachineRunner {
         return {
           ...baseProps,
           collection: itemCollection,
+          // Behavior
+          multiple: config.multiple,
           loopFocus: config.loopFocus,
           deselectable: config.deselectable,
+          closeOnSelect: config.closeOnSelect,
           typeahead: config.typeahead,
+          composite: config.composite,
+          // Open state
+          open: config.open,
+          defaultOpen: config.defaultOpen,
+          // Highlighted state
+          highlightedValue: config.highlightedValue,
+          defaultHighlightedValue: config.defaultHighlightedValue,
+          // Positioning
           positioning: this.parsePositioning(config.positioning),
+          // Form
+          form: config.form,
+          // Callbacks
           onValueChange: config.onValueChange,
           onOpenChange: config.onOpenChange,
         }

@@ -5594,29 +5594,22 @@
       font-size: var(--font-base);
     }
 
-    /* Component Panel Tab Bar */
+    /* Component Panel Tab Bar - Minimal design */
     .component-panel-tabs {
       display: flex;
-      padding: 8px 8px 0 8px;
-      gap: 4px;
-      border-bottom: 1px solid var(--border-default);
+      padding: 12px 12px 8px 12px;
+      gap: 12px;
     }
 
     .component-panel-tab {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 12px;
       background: transparent;
       border: none;
-      border-bottom: 2px solid transparent;
+      padding: 0;
       color: var(--text-muted);
       font-size: var(--font-sm);
       font-weight: var(--weight-medium);
       cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s;
     }
 
     .component-panel-tab:hover {
@@ -5625,25 +5618,6 @@
 
     .component-panel-tab.active {
       color: var(--text-primary);
-      border-bottom-color: var(--color-primary);
-    }
-
-    .component-panel-tab-count {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      background: var(--white-10);
-      border-radius: 9px;
-      font-size: var(--font-xs);
-      color: var(--text-muted);
-    }
-
-    .component-panel-tab.active .component-panel-tab-count {
-      background: var(--primary-15);
-      color: var(--color-primary-light);
     }
 
     .component-panel-search {

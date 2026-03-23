@@ -162,6 +162,7 @@ export class ComponentPanel {
 
   /**
    * Render the tab bar (Basic / All)
+   * Minimal design: two text labels, active = white, inactive = gray
    */
   private renderTabBar(): HTMLElement {
     const tabBar = document.createElement('div')
@@ -170,21 +171,7 @@ export class ComponentPanel {
     // Basic tab
     const basicTab = document.createElement('button')
     basicTab.className = `component-panel-tab ${this.activeTab === 'basic' ? 'active' : ''}`
-    basicTab.dataset.tab = 'basic'
-
-    const basicLabel = document.createElement('span')
-    basicLabel.textContent = 'Basic'
-    basicTab.appendChild(basicLabel)
-
-    // Count for Basic tab
-    const basicCount = this.getBasicComponentCount()
-    if (basicCount > 0) {
-      const countSpan = document.createElement('span')
-      countSpan.className = 'component-panel-tab-count'
-      countSpan.textContent = `${basicCount}`
-      basicTab.appendChild(countSpan)
-    }
-
+    basicTab.textContent = 'Basic'
     basicTab.addEventListener('click', () => this.setActiveTab('basic'), {
       signal: this.abortController?.signal,
     })
@@ -192,7 +179,6 @@ export class ComponentPanel {
     // All tab
     const allTab = document.createElement('button')
     allTab.className = `component-panel-tab ${this.activeTab === 'all' ? 'active' : ''}`
-    allTab.dataset.tab = 'all'
     allTab.textContent = 'All'
     allTab.addEventListener('click', () => this.setActiveTab('all'), {
       signal: this.abortController?.signal,
@@ -202,17 +188,6 @@ export class ComponentPanel {
     tabBar.appendChild(allTab)
 
     return tabBar
-  }
-
-  /**
-   * Get count of user-defined components in Basic tab
-   */
-  private getBasicComponentCount(): number {
-    return this.basicSections.reduce((count, section) => {
-      // Don't count Essentials items
-      if (section.name === 'Essentials') return count
-      return count + section.items.length
-    }, 0)
   }
 
   /**

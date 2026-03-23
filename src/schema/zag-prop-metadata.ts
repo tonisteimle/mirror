@@ -27,36 +27,22 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
   // SELECTION & DROPDOWNS
   // ===========================================================================
   Select: {
+    // Value
+    placeholder: {
+      type: 'string',
+      label: 'Placeholder',
+      description: 'Placeholder text when no selection',
+    },
+    // Behavior
     multiple: {
       type: 'boolean',
       label: 'Multiple',
       description: 'Allow multiple selections',
     },
-    searchable: {
+    disabled: {
       type: 'boolean',
-      label: 'Searchable',
-      description: 'Enable search filtering',
-    },
-    clearable: {
-      type: 'boolean',
-      label: 'Clearable',
-      description: 'Show clear button',
-    },
-    closeOnSelect: {
-      type: 'boolean',
-      label: 'Close on Select',
-      description: 'Close after selection',
-      default: true,
-    },
-    placeholder: {
-      type: 'string',
-      label: 'Placeholder',
-      description: 'Placeholder text',
-    },
-    invalid: {
-      type: 'boolean',
-      label: 'Invalid',
-      description: 'Mark as invalid state',
+      label: 'Disabled',
+      description: 'Disable the select',
     },
     readOnly: {
       type: 'boolean',
@@ -68,15 +54,15 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Required',
       description: 'Mark as required field',
     },
-    name: {
-      type: 'string',
-      label: 'Name',
-      description: 'Form field name',
+    invalid: {
+      type: 'boolean',
+      label: 'Invalid',
+      description: 'Mark as invalid state',
     },
     loopFocus: {
       type: 'boolean',
       label: 'Loop Focus',
-      description: 'Loop keyboard navigation',
+      description: 'Loop keyboard navigation at edges',
       default: true,
     },
     deselectable: {
@@ -84,18 +70,59 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Deselectable',
       description: 'Allow clearing by clicking selected item',
     },
-    positioning: {
-      type: 'enum',
-      label: 'Position',
-      description: 'Dropdown placement',
-      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
-      default: 'bottom-start',
+    closeOnSelect: {
+      type: 'boolean',
+      label: 'Close on Select',
+      description: 'Close dropdown after selection',
+      default: true,
     },
     typeahead: {
       type: 'boolean',
       label: 'Typeahead',
       description: 'Focus item by typing letters',
       default: true,
+    },
+    // Open state
+    open: {
+      type: 'boolean',
+      label: 'Open',
+      description: 'Control open state',
+    },
+    defaultOpen: {
+      type: 'boolean',
+      label: 'Default Open',
+      description: 'Initially open',
+    },
+    // Highlighted state
+    highlightedValue: {
+      type: 'string',
+      label: 'Highlighted',
+      description: 'Currently highlighted item value',
+    },
+    // Positioning
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Dropdown placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
+      default: 'bottom-start',
+    },
+    // Form integration
+    name: {
+      type: 'string',
+      label: 'Name',
+      description: 'Form field name',
+    },
+    form: {
+      type: 'string',
+      label: 'Form',
+      description: 'Associated form ID',
+    },
+    // Advanced
+    composite: {
+      type: 'boolean',
+      label: 'Composite',
+      description: 'Treat as composite widget',
     },
   },
 

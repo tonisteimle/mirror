@@ -52,8 +52,24 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Select: {
     machine: 'select',
     slots: ['Trigger', 'Content', 'Item', 'ItemIndicator', 'Group', 'GroupLabel', 'Input', 'Empty', 'Pill', 'PillRemove', 'ClearButton'],
-    props: ['placeholder', 'multiple', 'searchable', 'clearable', 'disabled', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'deselectable', 'open', 'defaultOpen', 'positioning', 'typeahead'],
-    events: ['onchange', 'onopen', 'onclose'],
+    props: [
+      // Value
+      'value', 'defaultValue', 'placeholder',
+      // Behavior
+      'multiple', 'disabled', 'readOnly', 'required', 'invalid',
+      'loopFocus', 'deselectable', 'closeOnSelect', 'typeahead',
+      // Open state
+      'open', 'defaultOpen',
+      // Highlighted state
+      'highlightedValue', 'defaultHighlightedValue',
+      // Positioning
+      'positioning',
+      // Form integration
+      'name', 'form',
+      // Advanced
+      'composite',
+    ],
+    events: ['onchange', 'onopen', 'onclose', 'onhighlightchange', 'onselect'],
     description: 'Dropdown select with keyboard navigation',
     pattern: 'simple-items',
   },
