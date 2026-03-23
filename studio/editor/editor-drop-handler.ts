@@ -142,21 +142,68 @@ export class EditorDropHandler {
 
   /**
    * Convert mouse coordinates to editor position
+   * Snaps to line boundaries - returns the line AFTER which to insert
+   *
+   * Returns line=0 for "before first line" (special case)
    */
   private getPositionFromCoords(x: number, y: number): EditorDropPosition | null {
+    const doc = this.editor.state.doc
+
     // Get position from CodeMirror
     const offset = this.editor.posAtCoords({ x, y })
     if (offset === null) return null
 
     // Convert offset to line/column
-    const line = this.editor.state.doc.lineAt(offset)
+    const line = doc.lineAt(offset)
     const lineNumber = line.number
-    const column = offset - line.from
+
+    // Get the visual coordinates for this line to determine if we're
+    // in the top or bottom half of the line
+    const lineCoords = this.editor.coordsAtPos(line.from)
+    if (!lineCoords) {
+      return {
+        line: lineNumber,
+        column: 0,
+        offset: line.to,
+      }
+    }
+
+    // Calculate line height
+    const lineHeight = this.editor.defaultLineHeight
+
+    // Determine if cursor is in top or bottom half of line
+    const lineMiddle = lineCoords.top + lineHeight / 2
+    const isInTopHalf = y < lineMiddle
+
+    // Determine target line (the line AFTER which we insert)
+    let targetLine: number
+
+    if (lineNumber === 1 && isInTopHalf) {
+      // Special case: hovering in top half of first line = insert BEFORE first line
+      targetLine = 0
+    } else if (isInTopHalf && lineNumber > 1) {
+      // In top half of any other line = insert after previous line
+      targetLine = lineNumber - 1
+    } else {
+      // In bottom half = insert after this line
+      targetLine = lineNumber
+    }
+
+    // Handle edge case for line 0 (before first line)
+    if (targetLine === 0) {
+      return {
+        line: 0,
+        column: 0,
+        offset: 0,
+      }
+    }
+
+    const targetLineInfo = doc.line(targetLine)
 
     return {
-      line: lineNumber,
-      column,
-      offset,
+      line: targetLine,
+      column: 0,
+      offset: targetLineInfo.to,
     }
   }
 
@@ -179,22 +226,44 @@ export class EditorDropHandler {
   }
 
   /**
-   * Show drop indicator at position
+   * Show drop indicator at line boundary
+   *
+   * The indicator appears AFTER the target line (between target line and next line)
+   * Special case: if target line is 0 (before first line), show at top of editor
    */
   private showDropIndicator(pos: EditorDropPosition): void {
     if (!this.dropIndicator) return
 
-    // Get visual coordinates for the line
-    const coords = this.editor.coordsAtPos(pos.offset)
-    if (!coords) return
-
+    const doc = this.editor.state.doc
     const editorRect = this.editor.dom.getBoundingClientRect()
+    const lineHeight = this.editor.defaultLineHeight
+
+    let indicatorTop: number
+
+    if (pos.line === 0) {
+      // Special case: drop before first line - show at very top
+      const firstLineCoords = this.editor.coordsAtPos(0)
+      if (!firstLineCoords) return
+      indicatorTop = firstLineCoords.top - editorRect.top
+    } else if (pos.line >= doc.lines) {
+      // Drop after last line - show at bottom of last line
+      const lastLine = doc.line(doc.lines)
+      const lastLineCoords = this.editor.coordsAtPos(lastLine.from)
+      if (!lastLineCoords) return
+      indicatorTop = lastLineCoords.top - editorRect.top + lineHeight
+    } else {
+      // Normal case: show at bottom of target line (between target and next)
+      const targetLine = doc.line(pos.line)
+      const coords = this.editor.coordsAtPos(targetLine.from)
+      if (!coords) return
+      indicatorTop = coords.top - editorRect.top + lineHeight
+    }
 
     this.dropIndicator.style.display = 'block'
     this.dropIndicator.style.position = 'absolute'
     this.dropIndicator.style.left = '0'
     this.dropIndicator.style.right = '0'
-    this.dropIndicator.style.top = `${coords.top - editorRect.top}px`
+    this.dropIndicator.style.top = `${indicatorTop}px`
     this.dropIndicator.style.height = '2px'
   }
 
@@ -208,18 +277,42 @@ export class EditorDropHandler {
   }
 
   /**
-   * Insert component code AFTER the drop line with smart indentation
+   * Insert component code at the drop position with smart indentation
    *
    * ROBUST BEHAVIOR:
-   * - Always inserts NEW lines after the target line
+   * - Always inserts NEW lines
    * - Never modifies existing code
    * - Calculates indentation based on context (parent/sibling)
+   * - Handles insert before first line (pos.line === 0)
    */
   insertComponentCode(code: string, pos: EditorDropPosition): void {
     const doc = this.editor.state.doc
     const totalLines = doc.lines
 
-    // Clamp line number to valid range
+    // Special case: insert BEFORE first line
+    if (pos.line === 0) {
+      // No indentation context, insert at root level
+      const codeLines = code.split('\n')
+      const indentedLines = codeLines.map(codeLine => codeLine.trim()).filter(l => l)
+      const indentedCode = indentedLines.join('\n')
+      const insertText = indentedCode + '\n'
+
+      this.editor.dispatch({
+        changes: {
+          from: 0,
+          to: 0,
+          insert: insertText,
+        },
+        selection: {
+          anchor: insertText.length,
+        },
+      })
+
+      this.editor.focus()
+      return
+    }
+
+    // Normal case: insert AFTER target line
     const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
     const targetLine = doc.line(lineNumber)
 
