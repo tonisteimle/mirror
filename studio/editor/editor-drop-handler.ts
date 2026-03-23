@@ -113,6 +113,12 @@ export class EditorDropHandler {
 
     event.preventDefault()
     event.stopPropagation()
+    event.stopImmediatePropagation()
+
+    // Mark event as handled to prevent other handlers from processing it
+    ;(event as any)._mirrorEditorHandled = true
+
+    console.log('[EditorDropHandler] Handling drop')
 
     this.hideDropIndicator()
 

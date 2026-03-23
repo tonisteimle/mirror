@@ -537,6 +537,17 @@ export class StudioDragDropService {
   }
 
   private handleDrop(e: DragEvent): void {
+    // Skip if already handled by editor drop handler
+    if ((e as any)._mirrorEditorHandled) {
+      console.log('[StudioDragDropService] Drop already handled by editor, skipping')
+      this.renderer.clear()
+      this.isDraggingFlag = false
+      this.pendingDragOver = null
+      this.paletteDragData = null
+      this.currentDropResult = null
+      return
+    }
+
     e.preventDefault()
     this.isDraggingFlag = false
     this.pendingDragOver = null
