@@ -155,7 +155,8 @@ class FixerTestHarnessImpl implements FixerTestHarness {
 
   constructor(config: FixerTestHarnessConfig = {}) {
     // Initialize file system
-    this.files = { ...config.files } || { 'app.mir': '' }
+    // Note: Use ternary because { ...undefined } returns {} which is truthy
+    this.files = config.files ? { ...config.files } : { 'app.mir': '' }
     this.currentFile = config.currentFile || Object.keys(this.files)[0] || 'app.mir'
     this.cursor = {
       line: config.cursor?.line ?? 1,

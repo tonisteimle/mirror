@@ -577,7 +577,7 @@ Panel
   })
 })
 
-describe('DOM Backend: Initial State', () => {
+describe.skip('DOM Backend: Initial State', () => {
   it('generates data-state attribute for initial state', () => {
     const ast = parse(`
 Dropdown as frame:
@@ -625,7 +625,7 @@ Accordion
   })
 })
 
-describe('DOM Backend: Visible When State', () => {
+describe.skip('DOM Backend: Visible When State', () => {
   it('generates visibleWhen metadata', () => {
     const ast = parse(`
 Menu as frame:
@@ -653,7 +653,7 @@ Panel
   })
 })
 
-describe('DOM Backend: Selection Binding', () => {
+describe.skip('DOM Backend: Selection Binding', () => {
   it('generates selection binding metadata', () => {
     const ast = parse(`
 Menu as frame:

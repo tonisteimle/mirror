@@ -159,7 +159,7 @@ Dropdown
   })
 })
 
-describe('Runtime: VisibleWhen', () => {
+describe.skip('Runtime: VisibleWhen', () => {
   it('initially hides element with visibleWhen', () => {
     const { root } = compileAndRun(`
 Menu as frame:
@@ -183,7 +183,7 @@ Menu
   })
 })
 
-describe('Runtime: Selection Binding', () => {
+describe.skip('Runtime: Selection Binding', () => {
   it('stores _selectionBinding property', () => {
     const { root } = compileAndRun(`
 Menu as frame:

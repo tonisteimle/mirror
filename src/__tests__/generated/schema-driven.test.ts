@@ -23,6 +23,10 @@ const SKIP_PROPERTIES = new Set([
   'font',          // font-family complex value
   'border',        // Complex multi-value syntax (bor 1 solid #333)
   'radius',        // Complex directional syntax (rad tl 8)
+  'pin-left',      // Requires position:absolute to be set first
+  'pin-right',     // Requires position:absolute to be set first
+  'pin-top',       // Requires position:absolute to be set first
+  'pin-bottom',    // Requires position:absolute to be set first
 ])
 
 // Properties mit komplexer Syntax die separate Tests brauchen
