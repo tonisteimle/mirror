@@ -87,6 +87,8 @@ export class ExplorerPanel {
 
     // Apply initial view
     this.updateViewVisibility()
+    console.log('[ExplorerPanel] Initialized with view:', this.activeView)
+    console.log('[ExplorerPanel] File tree classes:', this.config.fileTreeContainer.className)
   }
 
   showView(view: ExplorerView): void {

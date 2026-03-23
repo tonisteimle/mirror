@@ -314,6 +314,7 @@ export class StudioDragDropService {
 
       if (dropResult) {
         const flexResult = dropResult as FlexDropResult
+        const direction = flexResult.direction || 'vertical'
 
         if (dropResult.placement === 'inside' && flexResult.suggestedAlignment) {
           // Empty container: show zone indicator
@@ -324,8 +325,15 @@ export class StudioDragDropService {
           indicatorRect = { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
         } else if (dropResult.placement === 'before' || dropResult.placement === 'after') {
           // Sibling insertion: show line indicator
-          indicatorRect = this.calculateSiblingIndicatorRect(dropResult, element, flexResult.direction)
-          indicatorDirection = flexResult.direction === 'horizontal' ? 'vertical' : 'horizontal'
+          // Find the sibling element that the drop is relative to
+          const siblingElement = this.findElementByNodeId(dropResult.targetId)
+          if (siblingElement) {
+            indicatorRect = this.calculateSiblingIndicatorRect(dropResult, siblingElement, direction)
+          } else {
+            // Fallback to hover element if sibling not found
+            indicatorRect = this.calculateSiblingIndicatorRect(dropResult, element, direction)
+          }
+          indicatorDirection = direction === 'horizontal' ? 'vertical' : 'horizontal'
         } else {
           // Default: simple indicator
           indicatorRect = this.calculateIndicatorRect(x, y, element)
@@ -424,7 +432,8 @@ export class StudioDragDropService {
     const xMap = { start: 0.15, center: 0.5, end: 0.85 }
     const yMap = { start: 0.15, center: 0.5, end: 0.85 }
 
-    const isHorizontal = flexResult.direction === 'horizontal'
+    const direction = flexResult.direction || 'vertical'
+    const isHorizontal = direction === 'horizontal'
     const mainAlign = flexResult.suggestedAlignment || 'center'
     const crossAlign = flexResult.suggestedCrossAlignment || 'center'
 
@@ -468,7 +477,7 @@ export class StudioDragDropService {
   private deriveSemanticZone(
     mainAlign: 'start' | 'center' | 'end',
     crossAlign: 'start' | 'center' | 'end',
-    direction: 'horizontal' | 'vertical'
+    direction?: 'horizontal' | 'vertical'
   ): SemanticZone {
     const isHorizontal = direction === 'horizontal'
     const horizontalAlign = isHorizontal ? mainAlign : crossAlign
@@ -698,6 +707,7 @@ export class StudioDragDropService {
     }
 
     const flexResult = dropResult as FlexDropResult
+    const direction = flexResult.direction || 'vertical'
     let modification: ModificationResult
 
     if (dropResult.placement === 'inside') {
@@ -707,7 +717,7 @@ export class StudioDragDropService {
         const semanticZone = this.deriveSemanticZone(
           flexResult.suggestedAlignment,
           flexResult.suggestedCrossAlignment || 'center',
-          flexResult.direction
+          direction
         )
 
         // Zone other than center: apply layout + insert
@@ -881,6 +891,13 @@ export class StudioDragDropService {
       width: rect.width,
       height: 2,
     }
+  }
+
+  /**
+   * Find element by node ID
+   */
+  private findElementByNodeId(nodeId: string): HTMLElement | null {
+    return this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
   }
 }
 

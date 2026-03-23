@@ -207,6 +207,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
 
   // Initialize Explorer Panel if containers provided
+  console.log('[Studio] Explorer containers:', {
+    explorerPanelContainer: !!config.explorerPanelContainer,
+    fileTreeContainer: !!config.fileTreeContainer,
+    explorerComponentsContainer: !!config.explorerComponentsContainer,
+  })
   if (config.explorerPanelContainer && config.fileTreeContainer && config.explorerComponentsContainer) {
     studio.explorerPanel = createExplorerPanel(
       {

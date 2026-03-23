@@ -430,3 +430,37 @@ export class FlexDropStrategy implements LayoutDropStrategy {
 export function createFlexDropStrategy(): FlexDropStrategy {
   return new FlexDropStrategy()
 }
+
+/**
+ * Derive semantic zone from alignment suggestions (exported utility)
+ *
+ * Maps alignment (start/center/end) to zone names (top/center/bottom, left/center/right)
+ * For horizontal layouts: main = horizontal, cross = vertical
+ * For vertical layouts: main = vertical, cross = horizontal
+ */
+export function deriveSemanticZone(
+  mainAlignment?: 'start' | 'center' | 'end',
+  crossAlignment?: 'start' | 'center' | 'end',
+  direction?: 'horizontal' | 'vertical'
+): SemanticZone | undefined {
+  if (!mainAlignment || !crossAlignment) {
+    return undefined
+  }
+
+  const isHorizontal = direction === 'horizontal'
+  const horizontalAlign = isHorizontal ? mainAlignment : crossAlignment
+  const verticalAlign = isHorizontal ? crossAlignment : mainAlignment
+
+  const verticalMap = { start: 'top', center: 'center', end: 'bottom' } as const
+  const horizontalMap = { start: 'left', center: 'center', end: 'right' } as const
+
+  const v = verticalMap[verticalAlign]
+  const h = horizontalMap[horizontalAlign]
+
+  // Special case: center-center → just 'center'
+  if (v === 'center' && h === 'center') {
+    return 'center' as SemanticZone
+  }
+
+  return `${v}-${h}` as SemanticZone
+}
