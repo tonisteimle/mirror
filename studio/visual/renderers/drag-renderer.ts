@@ -98,9 +98,13 @@ export class DragRenderer {
   // Track pending ghost render for palette items
   private pendingGhostRender: Promise<void> | null = null
 
+  // Render token to invalidate stale async renders (prevents race condition)
+  private currentRenderToken: symbol | null = null
+
   // Track last known cursor position for smooth ghost transitions
   // This is the CENTER of the ghostRect, which represents cursor position for palette drags
-  private lastCursorPosition: { x: number; y: number } | null = null
+  // Includes componentName to prevent using stale position for different component
+  private lastCursorPosition: { x: number; y: number; componentName?: string } | null = null
 
   constructor(container: HTMLElement, config: DragRendererConfig = {}) {
     this.container = container
@@ -148,6 +152,7 @@ export class DragRenderer {
     this.ghostFactory.dispose()
     this.currentGhostSource = null
     this.pendingGhostRender = null
+    this.currentRenderToken = null  // Invalidate any pending async renders
     this.lastCursorPosition = null
     this.removeIndicator()
     this.removeGuides()
@@ -193,9 +198,11 @@ export class DragRenderer {
 
     // Track cursor position (center of ghostRect) for smooth transitions
     // This is used when async ghost rendering completes to avoid jumps
+    // Include componentName to prevent using stale position for different component
     this.lastCursorPosition = {
       x: ghostRect.x + ghostRect.width / 2,
       y: ghostRect.y + ghostRect.height / 2,
+      componentName,
     }
 
     // Determine ghost source type
@@ -271,11 +278,17 @@ export class DragRenderer {
     })
     this.currentGhostSource = { type: 'placeholder', componentName }
 
+    // Create unique render token to track this specific render
+    // This prevents race conditions when switching components quickly
+    const renderToken = Symbol('ghost-render')
+    this.currentRenderToken = renderToken
+
     // Render async and update when ready
     this.pendingGhostRender = this.ghostRenderer.render(item).then(rendered => {
-      // Only update if we're still dragging the same component and not cleared
-      if (this.pendingGhostRender === null) {
-        return // Cleared while rendering
+      // Only update if this render is still valid (token matches)
+      // Token will be different if clear() was called or another render started
+      if (this.currentRenderToken !== renderToken) {
+        return // Render invalidated
       }
       if (this.currentGhostSource?.componentName === componentName) {
         // Create ghost from rendered element with explicit size
@@ -284,7 +297,9 @@ export class DragRenderer {
 
         // Use the continuously-tracked cursor position (fixes race condition)
         // This ensures the ghost doesn't jump even if mouse moved during async render
-        if (this.ghostFactory.hasGhost() && this.lastCursorPosition) {
+        // Also verify componentName matches to prevent using stale position from different component
+        if (this.ghostFactory.hasGhost() && this.lastCursorPosition &&
+            this.lastCursorPosition.componentName === componentName) {
           const newRect = {
             x: this.lastCursorPosition.x - rendered.size.width / 2,
             y: this.lastCursorPosition.y - rendered.size.height / 2,

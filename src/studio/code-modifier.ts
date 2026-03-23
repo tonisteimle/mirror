@@ -684,8 +684,12 @@ export class CodeModifier {
         .sort((a, b) => a.position.line - b.position.line)
 
       if (children.length > 0) {
-        // Check if insertionIndex specifies a position
-        if (insertionIndex !== undefined && insertionIndex < children.length) {
+        // Check if insertionIndex specifies a valid position
+        const validIndex = typeof insertionIndex === 'number' &&
+          Number.isFinite(insertionIndex) &&
+          insertionIndex >= 0 &&
+          insertionIndex < children.length
+        if (validIndex) {
           // Insert before the child at insertionIndex
           const targetChild = children[insertionIndex]
           insertPosition = this.getCharacterOffset(targetChild.position.line, 1) - 1
@@ -905,7 +909,8 @@ export class CodeModifier {
     if (position === 'last' || typeof position === 'number') {
       // Find the target child to insert after
       let targetIndex = sortedChildren.length - 1
-      if (typeof position === 'number') {
+      // Validate position: must be finite and non-negative
+      if (typeof position === 'number' && Number.isFinite(position) && position >= 0) {
         targetIndex = Math.min(position - 1, sortedChildren.length - 1)
         targetIndex = Math.max(0, targetIndex)
       }
@@ -1690,7 +1695,9 @@ export class CodeModifier {
       }
 
       // If layout was applied, update our internal state and track the change
-      if (layoutResult.change.insert) {
+      // Check for actual changes: either content was replaced (from !== to) or new content inserted
+      const hasLayoutChange = layoutResult.change.from !== layoutResult.change.to || layoutResult.change.insert
+      if (hasLayoutChange) {
         layoutChange = layoutResult.change
         // Calculate how much the layout change shifted positions
         layoutLengthDelta = layoutResult.change.insert.length - (layoutResult.change.to - layoutResult.change.from)

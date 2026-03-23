@@ -210,6 +210,12 @@ export class GhostRenderer {
         }
       })
 
+      // Check if disposed during await - clean up and return fallback
+      if (this.disposed) {
+        ui.root.remove()
+        return this.createFallback(item)
+      }
+
       // Get the actual rendered element
       // ui.root is a wrapper div, the actual component is the first child
       const renderedElement = ui.root.firstElementChild as HTMLElement || ui.root
@@ -253,10 +259,13 @@ export class GhostRenderer {
       }
 
       // Clean up measure container to prevent orphaned elements
-      if (container) {
+      if (container && container.isConnected) {
         while (container.firstChild) {
           container.removeChild(container.firstChild)
         }
+      } else if (container && !container.isConnected) {
+        // Container was disconnected externally - reset reference
+        this.measureContainer = null
       }
 
       // Log with context

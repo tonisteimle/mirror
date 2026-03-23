@@ -6775,3 +6775,52 @@ select.tomselected,
   width: 12px;
   height: 12px;
 }
+
+/* ============================================
+   INLINE PROMPT - AI Code Generation
+   ============================================ */
+
+.inline-prompt-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 4px 24px;
+  font-size: var(--font-sm);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-panel);
+  border-left: 2px solid var(--border-default);
+  margin-left: 4px;
+}
+
+.inline-prompt-status[data-status="pending"] {
+  color: var(--color-info);
+  border-left-color: var(--color-info);
+}
+
+.inline-prompt-status[data-status="success"] {
+  color: var(--color-success);
+  border-left-color: var(--color-success);
+}
+
+.inline-prompt-status[data-status="error"] {
+  color: var(--color-error);
+  border-left-color: var(--color-error);
+}
+
+.inline-prompt-icon {
+  font-size: 14px;
+}
+
+.inline-prompt-icon.spinning {
+  animation: inline-prompt-spin 1s linear infinite;
+}
+
+@keyframes inline-prompt-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.inline-prompt-message {
+  flex: 1;
+}

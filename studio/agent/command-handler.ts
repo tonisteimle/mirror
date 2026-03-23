@@ -128,7 +128,7 @@ export class AgentCommandHandler {
 
     // Find components file
     const files = this.config.getFiles()
-    const componentsFile = files.find(f => f.type === 'components' || f.type === 'component') || files.find(f => f.name.includes('component'))
+    const componentsFile = files.find(f => f.type === 'component') || files.find(f => f.name.includes('component'))
 
     if (componentsFile) {
       // Add to existing components file

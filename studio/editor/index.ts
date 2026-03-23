@@ -30,6 +30,15 @@ export {
 // Re-export all triggers
 export * from './triggers'
 
+// Re-export inline prompt
+export {
+  inlinePromptExtension,
+  inlinePromptStyles,
+  type InlinePromptConfig,
+  type InlinePromptState,
+  type PromptStatus
+} from './inline-prompt'
+
 export interface EditorConfig {
   container: HTMLElement
 }

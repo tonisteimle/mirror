@@ -29,7 +29,12 @@ import {
   // Layout presets from studio bundle (single source of truth)
   LAYOUT_PRESETS as STUDIO_LAYOUT_PRESETS,
   BASIC_COMPONENTS as STUDIO_BASIC_COMPONENTS,
-} from './dist/index.js?v=100'
+  // Inline Prompt Extension (AI code generation)
+  inlinePromptExtension,
+  // Fixer Service (AI multi-file code generation)
+  createFixer,
+  getFixer,
+} from './dist/index.js?v=101'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -530,8 +535,7 @@ function detectFileType(nameOrContent, content) {
   const checkOrder = ['javascript', 'data', 'tokens', 'component']
   for (const type of checkOrder) {
     if (FILE_TYPES[type].detect(lines, code)) {
-      // Map 'component' to 'components' for new architecture
-      return type === 'component' ? 'components' : type
+      return type  // Always return singular form ('component', not 'components')
     }
   }
 
@@ -2867,6 +2871,113 @@ registerAllTriggers({
   componentPrimitives: getIconTriggerPrimitives(),
 })
 
+// Initialize Fixer Service for AI code generation
+let fixerService = null
+
+function initializeFixer() {
+  if (fixerService) return fixerService
+
+  fixerService = createFixer({
+    getFiles: () => {
+      const fileList = []
+      for (const [name, content] of Object.entries(files)) {
+        const ext = name.split('.').pop()
+        let type = 'layout'
+        if (ext === 'tok' || name.includes('token')) type = 'tokens'
+        else if (ext === 'com' || name.includes('component')) type = 'component'
+
+        fileList.push({ name, path: name, content, type })
+      }
+      return fileList
+    },
+    getCurrentFile: () => currentFile,
+    getEditorContent: () => window.editor?.state.doc.toString() || '',
+    getCursor: () => {
+      if (!window.editor) return { line: 1, column: 1, offset: 0 }
+      const offset = window.editor.state.selection.main.head
+      const line = window.editor.state.doc.lineAt(offset)
+      return { line: line.number, column: offset - line.from + 1, offset }
+    },
+    getSelection: () => {
+      if (!window.editor) return null
+      const { from, to } = window.editor.state.selection.main
+      if (from === to) return null
+      return {
+        from,
+        to,
+        text: window.editor.state.sliceDoc(from, to)
+      }
+    },
+    getFileContent: (filename) => files[filename] || null,
+    saveFile: async (filename, content) => {
+      files[filename] = content
+      if (filename === currentFile) {
+        window.editor?.dispatch({
+          changes: { from: 0, to: window.editor.state.doc.length, insert: content }
+        })
+      }
+    },
+    createFile: async (filename, content) => {
+      files[filename] = content
+      // Refresh file tree if desktop-files module is available
+      if (window.DesktopFiles?.renderFileTree) {
+        window.DesktopFiles.renderFileTree()
+      }
+    },
+    updateEditor: (content) => {
+      window.editor?.dispatch({
+        changes: { from: 0, to: window.editor.state.doc.length, insert: content }
+      })
+    },
+    refreshFileTree: () => {
+      if (window.DesktopFiles?.renderFileTree) {
+        window.DesktopFiles.renderFileTree()
+      }
+    },
+    switchToFile: (filename) => {
+      if (window.DesktopFiles?.selectFile) {
+        window.DesktopFiles.selectFile(filename)
+      }
+    }
+  })
+
+  return fixerService
+}
+
+// Inline Prompt submit handler
+async function handleInlinePromptSubmit(prompt, line, view) {
+  console.log('[InlinePrompt] Submit:', prompt, 'at line', line)
+
+  // Check if TauriBridge is available
+  const bridge = window.TauriBridge
+  if (!bridge || !bridge.isTauri()) {
+    console.warn('[InlinePrompt] Only available in desktop app')
+    return null
+  }
+
+  // Initialize Fixer if needed
+  const fixer = initializeFixer()
+  if (!fixer) {
+    console.error('[InlinePrompt] Failed to initialize fixer')
+    return null
+  }
+
+  try {
+    // Use quick fix for inline prompts
+    const response = await fixer.quickFix(prompt)
+    return response
+  } catch (error) {
+    console.error('[InlinePrompt] Error:', error)
+    return null
+  }
+}
+
+// Create inline prompt extension configuration
+const inlinePromptConfig = {
+  onSubmit: handleInlinePromptSubmit,
+  onCancel: () => console.log('[InlinePrompt] Cancelled')
+}
+
 // Initialize modular color picker API for property panel
 
 const editor = new EditorView({
@@ -2945,6 +3056,8 @@ const editor = new EditorView({
       // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)
       ...createTriggerExtensions(),
       Prec.high(inlineTokenExtension),
+      // Inline Prompt Extension (AI code generation via /prompt)
+      ...inlinePromptExtension(inlinePromptConfig),
       // App Lock: "App" is undeletable, auto-indent children
       Prec.highest(appLockExtension),
       Prec.high(autoIndentExtension),
@@ -3154,7 +3267,7 @@ function getPreludeCode(excludeFile) {
     const fileType = getFileType(filename)
     if (fileType === 'tokens') {
       tokenFiles.push(filename)
-    } else if (fileType === 'component' || fileType === 'components') {
+    } else if (fileType === 'component') {
       componentFiles.push(filename)
     }
   }
@@ -4561,6 +4674,9 @@ function handleStudioDrop(result) {
         // absolutePosition is relative to preview, convert to relative to parent
         relX = absolutePosition.x - (parentRect.left - previewRect.left)
         relY = absolutePosition.y - (parentRect.top - previewRect.top)
+      } else if (!targetElement) {
+        // Log warning when target element not found - coordinates won't be transformed
+        console.warn(`[Drop] Target element not found for id "${targetNodeId}", using untransformed coordinates`)
       }
 
       // Adjust for zoom scale - getBoundingClientRect returns zoomed values

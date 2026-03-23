@@ -35,6 +35,9 @@ export * from './visual'
 // LLM
 export * from './llm'
 
+// Agent (Fixer, Context, etc.)
+export * from './agent'
+
 // Bootstrap
 export {
   studio,

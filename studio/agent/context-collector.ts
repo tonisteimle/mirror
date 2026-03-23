@@ -59,7 +59,7 @@ export class ContextCollector {
     for (const file of files) {
       if (file.type === 'tokens' || file.name.endsWith('.tok')) {
         tokenFiles[file.name] = file.code
-      } else if (file.type === 'components' || file.type === 'component' || file.name.endsWith('.com')) {
+      } else if (file.type === 'component' || file.name.endsWith('.com')) {
         componentFiles[file.name] = file.code
       }
     }
@@ -216,7 +216,7 @@ export function extractProjectContext(files: FileInfo[]): ProjectContext {
       }
     }
 
-    if (file.type === 'components' || file.type === 'component' || file.name.endsWith('.com')) {
+    if (file.type === 'component' || file.name.endsWith('.com')) {
       // Extract component definitions: Name as Primitive: or Name:
       const matches = file.code.matchAll(/^(\w+)(?:\s+as\s+\w+)?:/gm)
       for (const match of matches) {

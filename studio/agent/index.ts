@@ -5,30 +5,30 @@
  *
  * @example
  * ```typescript
- * import { createMirrorAgent } from './agent'
- * import { getLLMBridge } from '../llm'
+ * import { createFixer } from './agent'
  *
- * const agent = createMirrorAgent({
- *   apiKey: 'sk-...',
- *   getCode: () => editor.state.doc.toString(),
- *   tokens: { '$primary.bg': '#007bff' }
+ * const fixer = createFixer({
+ *   getFiles: () => fileManager.getFiles(),
+ *   getCurrentFile: () => fileManager.currentFile,
+ *   // ... other config
  * })
  *
- * const bridge = getLLMBridge()
- *
- * // Stream responses
- * for await (const event of agent.run("Make the button red")) {
- *   if (event.type === 'text') {
- *     console.log(event.content)
- *   }
- *   if (event.type === 'command') {
- *     // Execute command through LLMBridge
- *     bridge.executeResponse({ commands: [event.command] })
- *   }
+ * // Stream code generation
+ * for await (const event of fixer.fix("füge einen roten button hinzu")) {
+ *   if (event.type === 'text') console.log(event.content)
+ *   if (event.type === 'done') console.log('Fertig!')
  * }
  * ```
  */
 
+// Fixer (Multi-File Code Generation)
+export { FixerService, createFixer, getFixer } from './fixer'
+export type { FixerConfig } from './fixer'
+export { ContextCollector, createContextCollector, getContextCollector, extractProjectContext } from './context-collector'
+export { CodeApplicator, createCodeApplicator, getCodeApplicator } from './code-applicator'
+export { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system'
+
+// Legacy agents
 export { MirrorAgent, createMirrorAgent } from './mirror-agent'
 export { ClaudeCliAgent, createClaudeCliAgent, isClaudeCliAvailable } from './claude-cli-agent'
 export { buildSystemPrompt } from './prompts/system'

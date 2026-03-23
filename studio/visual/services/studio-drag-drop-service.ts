@@ -190,14 +190,18 @@ export class StudioDragDropService {
    * Dispose service
    */
   dispose(): void {
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
+    try {
+      if (this.rafId !== null) {
+        cancelAnimationFrame(this.rafId)
+        this.rafId = null
+      }
+      this.detach()
+    } finally {
+      // Ensure renderer cleanup even if detach() throws
+      this.renderer.dispose()
+      this.codeModifier = null
+      this.sourceMap = null
     }
-    this.detach()
-    this.renderer.dispose()
-    this.codeModifier = null
-    this.sourceMap = null
   }
 
   // --------------------------------------------------------------------------
@@ -258,7 +262,11 @@ export class StudioDragDropService {
     const element = this.findDropTarget(x, y)
 
     if (element) {
-      const nodeId = element.dataset.mirrorId!
+      const nodeId = element.dataset.mirrorId
+      if (!nodeId) {
+        console.warn('[DragOver] Element missing data-mirror-id, skipping')
+        return
+      }
       const rect = element.getBoundingClientRect()
 
       // Calculate ghost rect for palette drags
@@ -392,7 +400,14 @@ export class StudioDragDropService {
     x: number,
     y: number
   ): StudioDropResult {
-    const targetId = element.dataset.mirrorId!
+    const targetId = element.dataset.mirrorId
+    if (!targetId) {
+      return {
+        success: false,
+        modification: null,
+        error: 'Drop target missing data-mirror-id',
+      }
+    }
     const { componentName, properties, textContent, sourceNodeId, isMove } = dragData
 
     // Handle move operation
