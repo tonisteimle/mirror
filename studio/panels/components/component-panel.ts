@@ -14,11 +14,13 @@ import type {
   ComponentPanelConfig,
   ComponentPanelCallbacks,
   ComponentDragData,
+  ComponentPanelTab,
 } from './types'
 import { getComponentIcon } from './icons'
 import { LAYOUT_PRESETS, BASIC_COMPONENTS } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
+import { events } from '../../core'
 
 /**
  * Component Panel class
@@ -28,19 +30,25 @@ export class ComponentPanel {
   private config: Required<Omit<ComponentPanelConfig, 'container'>>
   private callbacks: ComponentPanelCallbacks
   private sections: ComponentSection[] = []
+  private allSections: ComponentSection[] = []  // All built-in components
+  private basicSections: ComponentSection[] = []  // User's project components
   private searchQuery: string = ''
   private panelElement: HTMLElement | null = null
   private abortController: AbortController | null = null
   private ghostRenderer: GhostRenderer
+  private activeTab: ComponentPanelTab = 'basic'
 
   constructor(config: ComponentPanelConfig, callbacks: ComponentPanelCallbacks = {}) {
     this.container = config.container
     this.config = {
       showLayoutPresets: config.showLayoutPresets ?? true,
       showBasicComponents: config.showBasicComponents ?? true,
+      showTabBar: config.showTabBar ?? false,
+      defaultTab: config.defaultTab ?? 'basic',
     }
     this.callbacks = callbacks
     this.ghostRenderer = getGhostRenderer()
+    this.activeTab = this.config.defaultTab
 
     this.buildSections()
     this.render()
@@ -50,30 +58,55 @@ export class ComponentPanel {
    * Build sections from built-in and user-defined components
    */
   private buildSections(ast?: AST): void {
-    this.sections = []
-
-    // Add layout presets section
+    // Build "All" sections (all built-in components)
+    this.allSections = []
     if (this.config.showLayoutPresets) {
-      this.sections.push({
+      this.allSections.push({
         name: 'Layouts',
         items: LAYOUT_PRESETS,
         isExpanded: true,
       })
     }
-
-    // Add basic components section
     if (this.config.showBasicComponents) {
-      this.sections.push({
-        name: 'Basic',
+      this.allSections.push({
+        name: 'Components',
         items: BASIC_COMPONENTS,
         isExpanded: true,
       })
     }
 
-    // Add user-defined sections from AST
+    // Build "Basic" sections (user's project components from AST)
+    this.basicSections = []
     if (ast) {
       const userSections = parseComponentSections(ast)
-      this.sections.push(...userSections)
+      this.basicSections.push(...userSections)
+    }
+
+    // If no user components, show helpful layout presets in Basic tab
+    if (this.basicSections.length === 0) {
+      this.basicSections.push({
+        name: 'Quick Start',
+        items: LAYOUT_PRESETS.slice(0, 4),  // First 4 layout presets
+        isExpanded: true,
+      })
+    }
+
+    // Set active sections based on current tab
+    this.updateActiveSections()
+  }
+
+  /**
+   * Update sections based on active tab
+   */
+  private updateActiveSections(): void {
+    if (this.config.showTabBar) {
+      this.sections = this.activeTab === 'basic' ? this.basicSections : this.allSections
+    } else {
+      // No tab bar: show all sections (original behavior)
+      this.sections = [...this.allSections]
+      if (this.basicSections.length > 0 && this.basicSections[0].name !== 'Quick Start') {
+        this.sections.push(...this.basicSections)
+      }
     }
   }
 
@@ -100,6 +133,12 @@ export class ComponentPanel {
     this.panelElement = document.createElement('div')
     this.panelElement.className = 'component-panel'
 
+    // Add tab bar if enabled
+    if (this.config.showTabBar) {
+      const tabBar = this.renderTabBar()
+      this.panelElement.appendChild(tabBar)
+    }
+
     // Add search bar
     const searchBar = this.renderSearchBar()
     this.panelElement.appendChild(searchBar)
@@ -118,6 +157,105 @@ export class ComponentPanel {
 
     // Warm the cache in the background
     this.warmGhostCache()
+  }
+
+  /**
+   * Render the tab bar (Basic / All)
+   */
+  private renderTabBar(): HTMLElement {
+    const tabBar = document.createElement('div')
+    tabBar.className = 'component-panel-tabs'
+
+    // Basic tab
+    const basicTab = document.createElement('button')
+    basicTab.className = `component-panel-tab ${this.activeTab === 'basic' ? 'active' : ''}`
+    basicTab.dataset.tab = 'basic'
+
+    const basicLabel = document.createElement('span')
+    basicLabel.textContent = 'Basic'
+    basicTab.appendChild(basicLabel)
+
+    // Count for Basic tab
+    const basicCount = this.getBasicComponentCount()
+    if (basicCount > 0) {
+      const countSpan = document.createElement('span')
+      countSpan.className = 'component-panel-tab-count'
+      countSpan.textContent = `${basicCount}`
+      basicTab.appendChild(countSpan)
+    }
+
+    basicTab.addEventListener('click', () => this.setActiveTab('basic'), {
+      signal: this.abortController?.signal,
+    })
+
+    // All tab
+    const allTab = document.createElement('button')
+    allTab.className = `component-panel-tab ${this.activeTab === 'all' ? 'active' : ''}`
+    allTab.dataset.tab = 'all'
+    allTab.textContent = 'All'
+    allTab.addEventListener('click', () => this.setActiveTab('all'), {
+      signal: this.abortController?.signal,
+    })
+
+    tabBar.appendChild(basicTab)
+    tabBar.appendChild(allTab)
+
+    return tabBar
+  }
+
+  /**
+   * Get count of user-defined components in Basic tab
+   */
+  private getBasicComponentCount(): number {
+    return this.basicSections.reduce((count, section) => {
+      // Don't count Quick Start items
+      if (section.name === 'Quick Start') return count
+      return count + section.items.length
+    }, 0)
+  }
+
+  /**
+   * Set the active tab
+   */
+  setActiveTab(tab: ComponentPanelTab): void {
+    if (this.activeTab === tab) return
+    this.activeTab = tab
+
+    // Update sections
+    this.updateActiveSections()
+
+    // Re-render
+    this.render()
+
+    // Emit event
+    events.emit('components:tab-changed', { tab })
+  }
+
+  /**
+   * Get the active tab
+   */
+  getActiveTab(): ComponentPanelTab {
+    return this.activeTab
+  }
+
+  /**
+   * Set basic components (from components file sync)
+   * Used to update the Basic tab with user-defined components
+   */
+  setBasicComponents(sections: ComponentSection[]): void {
+    // Only update if we have meaningful sections (not Quick Start)
+    if (sections.length > 0 && sections[0].name !== 'Quick Start') {
+      this.basicSections = sections
+    }
+    this.updateActiveSections()
+    this.render()
+  }
+
+  /**
+   * Get basic sections
+   */
+  getBasicSections(): ComponentSection[] {
+    return this.basicSections
   }
 
   /**
@@ -266,6 +404,7 @@ export class ComponentPanel {
       properties: item.properties,
       textContent: item.textContent,
       fromComponentPanel: true,
+      fromAllTab: this.config.showTabBar && this.activeTab === 'all',
       children: item.children,
     }
 

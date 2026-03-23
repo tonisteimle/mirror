@@ -173,7 +173,7 @@ describe('DragDropVisualizer', () => {
       const zone: DropZoneInfo = {
         targetId: 'node-1',
         placement: 'inside',
-        semanticZone: 'mid-center',
+        semanticZone: 'center',
         targetRect: new MockDOMRect(100, 100, 200, 150),
       }
 
@@ -193,12 +193,12 @@ describe('DragDropVisualizer', () => {
       ['top-left', 'Top Left'],
       ['top-center', 'Top Center'],
       ['top-right', 'Top Right'],
-      ['mid-left', 'Middle Left'],
-      ['mid-center', 'Center'],
-      ['mid-right', 'Middle Right'],
-      ['bot-left', 'Bottom Left'],
-      ['bot-center', 'Bottom Center'],
-      ['bot-right', 'Bottom Right'],
+      ['center-left', 'Center Left'],
+      ['center', 'Center'],
+      ['center-right', 'Center Right'],
+      ['bottom-left', 'Bottom Left'],
+      ['bottom-center', 'Bottom Center'],
+      ['bottom-right', 'Bottom Right'],
     ])('displays %s as "%s"', (zone, expected) => {
       const showZoneIndicatorSpy = vi.spyOn(overlayManager, 'showZoneIndicator')
 

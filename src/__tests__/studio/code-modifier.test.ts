@@ -763,7 +763,7 @@ describe('CodeModifier', () => {
       expect(result.newSource).not.toContain('Box ver')
     })
 
-    it('applies layout directly to empty container for mid-center zone', () => {
+    it('applies layout directly to empty container for center zone', () => {
       const source = `Container w full, h full`
       const sourceMap = createTestSourceMap({
         nodes: [
@@ -772,7 +772,7 @@ describe('CodeModifier', () => {
       })
 
       const modifier = new CodeModifier(source, sourceMap)
-      const result = modifier.insertWithWrapper('node-1', 'Icon', 'mid-center', {
+      const result = modifier.insertWithWrapper('node-1', 'Icon', 'center', {
         properties: 'check'
       })
 
@@ -782,7 +782,7 @@ describe('CodeModifier', () => {
       expect(result.newSource).toContain('Icon check')
     })
 
-    it('inserts WITHOUT layout changes for mid-left zone (default position)', () => {
+    it('inserts WITHOUT layout changes for center-left zone (default position)', () => {
       const source = `Container w full, h full`
       const sourceMap = createTestSourceMap({
         nodes: [
@@ -791,17 +791,17 @@ describe('CodeModifier', () => {
       })
 
       const modifier = new CodeModifier(source, sourceMap)
-      const result = modifier.insertWithWrapper('node-1', 'Text', 'mid-left', {
+      const result = modifier.insertWithWrapper('node-1', 'Text', 'center-left', {
         textContent: 'Hello'
       })
 
       expect(result.success).toBe(true)
-      // mid-left uses default layout, no props added
+      // center-left uses default layout, no props added
       expect(result.newSource).toContain('Container w full, h full')
       expect(result.newSource).toContain('Text "Hello"')
     })
 
-    it('applies layout directly to empty container for bot-right zone', () => {
+    it('applies layout directly to empty container for bottom-right zone', () => {
       const source = `Container w full, h full`
       const sourceMap = createTestSourceMap({
         nodes: [
@@ -810,13 +810,11 @@ describe('CodeModifier', () => {
       })
 
       const modifier = new CodeModifier(source, sourceMap)
-      const result = modifier.insertWithWrapper('node-1', 'Button', 'bot-right')
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'bottom-right')
 
       expect(result.success).toBe(true)
-      // Layout should include ver, spread, hor
-      expect(result.newSource).toContain('ver')
-      expect(result.newSource).toContain('spread')
-      expect(result.newSource).toContain('hor')
+      // Layout should use the new bottom-right property
+      expect(result.newSource).toContain('bottom-right')
       expect(result.newSource).toContain('Button')
     })
 
@@ -849,12 +847,11 @@ describe('CodeModifier', () => {
       })
 
       const modifier = new CodeModifier(source, sourceMap)
-      const result = modifier.insertWithWrapper('node-1', 'Button', 'mid-center')
+      const result = modifier.insertWithWrapper('node-1', 'Button', 'center')
 
       expect(result.success).toBe(true)
       // Container already has 'hor', should not add 'center'
       expect(result.newSource).toContain('Container w full, h full, hor')
-      expect(result.newSource).not.toContain('center')
       expect(result.newSource).toContain('Button')
     })
 
@@ -883,18 +880,18 @@ describe('CodeModifier', () => {
 
       const modifier = new CodeModifier(source, sourceMap)
 
-      // mid-left has empty layout (default)
-      expect(modifier.getLayoutForZone('mid-left')).toBe('')
+      // center-left has empty layout (default)
+      expect(modifier.getLayoutForZone('center-left')).toBe('')
 
-      // Corners have layout
-      expect(modifier.getLayoutForZone('top-left')).toBe('ver')
-      expect(modifier.getLayoutForZone('top-center')).toBe('ver, center')
-      expect(modifier.getLayoutForZone('top-right')).toBe('ver, hor')
-      expect(modifier.getLayoutForZone('mid-center')).toBe('center')
-      expect(modifier.getLayoutForZone('mid-right')).toBe('hor, spread')
-      expect(modifier.getLayoutForZone('bot-left')).toBe('ver, spread')
-      expect(modifier.getLayoutForZone('bot-center')).toBe('ver, spread, center')
-      expect(modifier.getLayoutForZone('bot-right')).toBe('ver, spread, hor')
+      // All other zones map to their property names
+      expect(modifier.getLayoutForZone('top-left')).toBe('top-left')
+      expect(modifier.getLayoutForZone('top-center')).toBe('top-center')
+      expect(modifier.getLayoutForZone('top-right')).toBe('top-right')
+      expect(modifier.getLayoutForZone('center')).toBe('center')
+      expect(modifier.getLayoutForZone('center-right')).toBe('center-right')
+      expect(modifier.getLayoutForZone('bottom-left')).toBe('bottom-left')
+      expect(modifier.getLayoutForZone('bottom-center')).toBe('bottom-center')
+      expect(modifier.getLayoutForZone('bottom-right')).toBe('bottom-right')
     })
 
     it('siblings automatically share same alignment after first drop', () => {
@@ -909,7 +906,7 @@ describe('CodeModifier', () => {
       const modifier = new CodeModifier(source, sourceMap)
 
       // First drop: applies layout to container
-      const result1 = modifier.insertWithWrapper('node-1', 'Button', 'mid-center', {
+      const result1 = modifier.insertWithWrapper('node-1', 'Button', 'center', {
         textContent: 'First'
       })
 

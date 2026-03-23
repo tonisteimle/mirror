@@ -39,6 +39,14 @@ export {
   type PromptStatus
 } from './inline-prompt'
 
+// Re-export editor drop handler
+export {
+  EditorDropHandler,
+  createEditorDropHandler,
+  type EditorDropHandlerConfig,
+  type EditorDropPosition,
+} from './editor-drop-handler'
+
 export interface EditorConfig {
   container: HTMLElement
 }
@@ -127,6 +135,25 @@ export class EditorController {
 
   getContent(): string {
     return this.editorView?.state.doc.toString() || ''
+  }
+
+  /**
+   * Get the underlying CodeMirror EditorView
+   */
+  getEditorView(): any {
+    return this.editorView
+  }
+
+  /**
+   * Insert text at current cursor position
+   */
+  insertAtCursor(text: string): void {
+    if (!this.editorView) return
+    const cursor = this.editorView.state.selection.main.head
+    this.editorView.dispatch({
+      changes: { from: cursor, to: cursor, insert: text },
+      selection: { anchor: cursor + text.length },
+    })
   }
 
   setContent(content: string): void {

@@ -127,7 +127,7 @@ describe('OverlayManager API Contract', () => {
       expect(() => {
         manager.showSemanticDots(
           { left: 10, top: 10, width: 200, height: 200 },
-          'mid-center'
+          'center'
         )
       }).not.toThrow()
     })
@@ -176,7 +176,7 @@ describe('OverlayManager API Contract', () => {
     })
 
     it('hideZoneIndicator works', () => {
-      manager.showZoneIndicator('Box', 'mid-center')
+      manager.showZoneIndicator('Box', 'center')
       expect(() => {
         manager.hideZoneIndicator()
       }).not.toThrow()
@@ -245,7 +245,7 @@ describe('OverlayManager API Contract', () => {
   describe('hideAll', () => {
     it('hides all visual elements', () => {
       manager.showDropZone({ left: 0, top: 0, width: 100, height: 50 })
-      manager.showSemanticDots({ left: 0, top: 0, width: 200, height: 200 }, 'mid-center')
+      manager.showSemanticDots({ left: 0, top: 0, width: 200, height: 200 }, 'center')
       manager.showSiblingLine({ left: 0, top: 0, width: 100, height: 50 }, 'before', 'horizontal')
       manager.showZoneIndicator('Box', 'top-left')
       manager.showSizeIndicator(100, 100, '200px', '150px')
@@ -259,7 +259,7 @@ describe('OverlayManager API Contract', () => {
   describe('dispose', () => {
     it('cleans up resources', () => {
       manager.showDropZone({ left: 0, top: 0, width: 100, height: 50 })
-      manager.showSemanticDots({ left: 0, top: 0, width: 200, height: 200 }, 'mid-center')
+      manager.showSemanticDots({ left: 0, top: 0, width: 200, height: 200 }, 'center')
 
       expect(() => {
         manager.dispose()

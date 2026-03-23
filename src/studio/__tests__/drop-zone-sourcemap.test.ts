@@ -522,7 +522,7 @@ describe('DropZone SourceMap: Semantic Zones', () => {
     expect(result?.semanticZone).toBe('top-left')
   })
 
-  it('detects mid-center zone', () => {
+  it('detects center zone', () => {
     const target = createNodeElement('target-1', { name: 'Container', width: 300, height: 300 })
     container.appendChild(target)
 
@@ -534,10 +534,10 @@ describe('DropZone SourceMap: Semantic Zones', () => {
 
     expect(result).not.toBeNull()
     expect(result?.placement).toBe('inside')
-    expect(result?.semanticZone).toBe('mid-center')
+    expect(result?.semanticZone).toBe('center')
   })
 
-  it('detects bot-right zone', () => {
+  it('detects bottom-right zone', () => {
     const target = createNodeElement('target-1', { name: 'Container', width: 300, height: 300 })
     container.appendChild(target)
 
@@ -549,7 +549,7 @@ describe('DropZone SourceMap: Semantic Zones', () => {
 
     expect(result).not.toBeNull()
     expect(result?.placement).toBe('inside')
-    expect(result?.semanticZone).toBe('bot-right')
+    expect(result?.semanticZone).toBe('bottom-right')
   })
 
   it('does not set semantic zone when disabled', () => {

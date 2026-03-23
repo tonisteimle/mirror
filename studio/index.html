@@ -21,7 +21,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=121">
+  <link rel="stylesheet" href="styles.css?v=123">
 </head>
 <body>
   <div class="container">
@@ -37,9 +37,12 @@
     <!-- Main Content Area -->
     <div class="main-content">
 
-    <div class="sidebar" id="files-panel">
-      <!-- File Tree - rendered by JS -->
-      <div class="file-tree" id="file-tree"></div>
+    <div class="sidebar" id="explorer-panel">
+      <!-- Explorer Panel Structure - Activity Bar + Content Views -->
+      <!-- File Tree Container -->
+      <div id="file-tree-container" class="file-tree"></div>
+      <!-- Component Panel Container (inside explorer) -->
+      <div id="explorer-components-container"></div>
     </div>
 
     <div class="divider" id="sidebar-divider"></div>
@@ -80,15 +83,15 @@
 
     <div class="divider" id="editor-divider"></div>
 
-    <!-- Components Panel -->
-    <div class="components-panel" id="components-panel">
+    <!-- Components Panel - now integrated in Explorer, keeping for potential standalone mode -->
+    <div class="components-panel" id="components-panel" style="display: none;">
       <div class="components-panel-header">Components</div>
       <div class="component-palette" id="component-palette">
         <div class="component-palette-items" id="components-palette"></div>
       </div>
     </div>
 
-    <div class="divider" id="components-divider"></div>
+    <div class="divider" id="components-divider" style="display: none;"></div>
 
     <div class="panel preview-panel">
       <div class="preview-toolbar">

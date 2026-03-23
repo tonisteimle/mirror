@@ -4082,6 +4082,11 @@ function initStudio() {
     return
   }
 
+  // Explorer Panel containers
+  const explorerPanelContainer = document.getElementById('explorer-panel')
+  const fileTreeContainer = document.getElementById('file-tree-container')
+  const explorerComponentsContainer = document.getElementById('explorer-components-container')
+
   // ============================================
   // NEW ARCHITECTURE: Initialize new studio
   // ============================================
@@ -4095,6 +4100,9 @@ function initStudio() {
       editor: editor,
       previewContainer: previewContainer,
       propertyPanelContainer: propertyPanelContainer,
+      explorerPanelContainer: explorerPanelContainer,
+      fileTreeContainer: fileTreeContainer,
+      explorerComponentsContainer: explorerComponentsContainer,
       chatPanelContainer: chatPanelContainer,
       agentApiKey: agentApiKey,
       initialSource: files[currentFile] || '',

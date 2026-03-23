@@ -90,11 +90,11 @@ describe('DropHandler', () => {
       expect(onCodeChange).toHaveBeenCalled()
     })
 
-    it('skips wrapper for mid-center zone', () => {
+    it('skips wrapper for center zone', () => {
       const zone: DropZoneInfo = {
         targetId: 'node-1',
         placement: 'inside',
-        semanticZone: 'mid-center',
+        semanticZone: 'center',
         targetRect: mockRect(),
       }
       const data: DropData = {

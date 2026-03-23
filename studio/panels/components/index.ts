@@ -15,7 +15,12 @@ export type {
   ComponentPanelCallbacks,
   ComponentDragData,
   ComponentIcon,
+  ComponentPanelTab,
 } from './types'
+
+// Components File Sync
+export { ComponentsFileSync, createComponentsFileSync } from './components-file-sync'
+export type { ComponentsFileSyncConfig } from './components-file-sync'
 
 // Utilities
 export { getComponentIcon, COMPONENT_ICONS } from './icons'

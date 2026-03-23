@@ -12,10 +12,14 @@ import { DragController, createDragController, type DragMoveState } from '../con
 import { DragRenderer, createDragRenderer, type RenderState } from '../renderers/drag-renderer'
 import type { DragResult, DragSource, Point, Rect } from '../models/drag-state'
 import type { DropZone } from '../models/drop-zone'
-import type { AlignmentZoneResult } from '../models/alignment-zone'
+import type { AlignmentZoneResult, ZoneId, HorizontalZone, VerticalZone } from '../models/alignment-zone'
 import { CodeModifier, ModificationResult } from '../../../src/studio/code-modifier'
 import { SourceMap } from '../../../src/studio/source-map'
 import { getDefaultSize } from '../renderers/ghost-factory'
+import { getDefaultRegistry } from '../../../src/studio/drop-strategies/registry'
+import type { LayoutDropResult, FlexDropResult, DropContext } from '../../../src/studio/drop-strategies/types'
+import type { SemanticZone } from '../../../src/studio/drop-zone-calculator'
+import { getComponentTemplate } from '../../../src/schema/component-templates'
 
 // ============================================================================
 // Types
@@ -109,6 +113,9 @@ export class StudioDragDropService {
 
   // Palette drag data (cached from component panel drag start)
   private paletteDragData: PaletteDragData | null = null
+
+  // Current drop result from strategy calculation (persists between dragover and drop)
+  private currentDropResult: LayoutDropResult | null = null
 
   // Bound event handlers for HTML5 drag
   private boundHandleDragOver: (e: DragEvent) => void
@@ -215,6 +222,7 @@ export class StudioDragDropService {
     this.sourceMap = null
     this.paletteDragData = null
     this.pendingDragOver = null
+    this.currentDropResult = null
   }
 
   // --------------------------------------------------------------------------
@@ -295,6 +303,37 @@ export class StudioDragDropService {
         }
       }
 
+      // Calculate drop zone using strategy
+      const dropResult = this.calculateDropZone(element, x, y)
+      this.currentDropResult = dropResult
+
+      // Determine indicator based on drop result
+      let indicatorRect: Rect
+      let indicatorDirection: 'horizontal' | 'vertical' = 'horizontal'
+      let alignmentZone: AlignmentZoneResult | null = null
+
+      if (dropResult) {
+        const flexResult = dropResult as FlexDropResult
+
+        if (dropResult.placement === 'inside' && flexResult.suggestedAlignment) {
+          // Empty container: show zone indicator
+          alignmentZone = this.buildAlignmentZoneResult(
+            flexResult,
+            rect
+          )
+          indicatorRect = { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
+        } else if (dropResult.placement === 'before' || dropResult.placement === 'after') {
+          // Sibling insertion: show line indicator
+          indicatorRect = this.calculateSiblingIndicatorRect(dropResult, element, flexResult.direction)
+          indicatorDirection = flexResult.direction === 'horizontal' ? 'vertical' : 'horizontal'
+        } else {
+          // Default: simple indicator
+          indicatorRect = this.calculateIndicatorRect(x, y, element)
+        }
+      } else {
+        indicatorRect = this.calculateIndicatorRect(x, y, element)
+      }
+
       // Build drag over state
       const state: DragOverState = {
         element,
@@ -305,15 +344,15 @@ export class StudioDragDropService {
           width: rect.width,
           height: rect.height,
         },
-        alignmentZone: null, // TODO: Detect alignment zone
+        alignmentZone,
       }
 
       // Render visual feedback
       this.renderer.render({
         ghostRect,
-        indicatorRect: this.calculateIndicatorRect(x, y, element),
-        indicatorDirection: 'horizontal',
-        alignmentZone: null,
+        indicatorRect,
+        indicatorDirection,
+        alignmentZone,
         guides: [],
         isActive: true,
         // Pass component info for ghost rendering
@@ -324,8 +363,159 @@ export class StudioDragDropService {
 
       this.callbacks.onDragOver?.(state)
     } else {
+      this.currentDropResult = null
       this.renderer.clear()
       this.callbacks.onDragOver?.(null)
+    }
+  }
+
+  /**
+   * Calculate drop zone using layout strategy
+   */
+  private calculateDropZone(element: HTMLElement, x: number, y: number): LayoutDropResult | null {
+    const registry = getDefaultRegistry()
+    const strategy = registry.getStrategy(element)
+
+    if (!strategy) {
+      return null
+    }
+
+    // Build context for strategy
+    const children = this.getChildElements(element)
+    const containerRect = element.getBoundingClientRect()
+
+    const context: DropContext = {
+      clientX: x,
+      clientY: y,
+      containerRect,
+      children,
+      sourceNodeId: this.currentDragSourceId,
+    }
+
+    return strategy.calculateDropZone(element, context)
+  }
+
+  /**
+   * Get child elements with their node IDs
+   */
+  private getChildElements(container: HTMLElement): Array<{ element: HTMLElement; nodeId: string }> {
+    const children: Array<{ element: HTMLElement; nodeId: string }> = []
+
+    for (const child of Array.from(container.children)) {
+      if (child instanceof HTMLElement && child.dataset.mirrorId) {
+        children.push({
+          element: child,
+          nodeId: child.dataset.mirrorId,
+        })
+      }
+    }
+
+    return children
+  }
+
+  /**
+   * Build alignment zone result for visual feedback
+   */
+  private buildAlignmentZoneResult(
+    flexResult: FlexDropResult,
+    containerRect: DOMRect
+  ): AlignmentZoneResult {
+    // Map start/center/end to zone position
+    const xMap = { start: 0.15, center: 0.5, end: 0.85 }
+    const yMap = { start: 0.15, center: 0.5, end: 0.85 }
+
+    const isHorizontal = flexResult.direction === 'horizontal'
+    const mainAlign = flexResult.suggestedAlignment || 'center'
+    const crossAlign = flexResult.suggestedCrossAlignment || 'center'
+
+    const xRatio = isHorizontal ? xMap[mainAlign] : xMap[crossAlign]
+    const yRatio = isHorizontal ? yMap[crossAlign] : yMap[mainAlign]
+
+    // Map start/center/end to horizontal/vertical
+    const horizontalAlign = isHorizontal ? mainAlign : crossAlign
+    const verticalAlign = isHorizontal ? crossAlign : mainAlign
+    const horizontalMap: Record<'start' | 'center' | 'end', HorizontalZone> = {
+      start: 'left',
+      center: 'center',
+      end: 'right',
+    }
+    const verticalMap: Record<'start' | 'center' | 'end', VerticalZone> = {
+      start: 'top',
+      center: 'center',
+      end: 'bottom',
+    }
+    const horizontal = horizontalMap[horizontalAlign]
+    const vertical = verticalMap[verticalAlign]
+
+    // Build zone ID (AlignmentZoneResult uses "center-center" not "center")
+    const zoneId = `${vertical}-${horizontal}` as ZoneId
+
+    return {
+      zone: zoneId,
+      horizontal,
+      vertical,
+      alignProperty: this.deriveSemanticZone(mainAlign, crossAlign, flexResult.direction),
+      indicatorPosition: {
+        x: containerRect.left + containerRect.width * xRatio,
+        y: containerRect.top + containerRect.height * yRatio,
+      },
+    }
+  }
+
+  /**
+   * Derive semantic zone from alignment
+   */
+  private deriveSemanticZone(
+    mainAlign: 'start' | 'center' | 'end',
+    crossAlign: 'start' | 'center' | 'end',
+    direction: 'horizontal' | 'vertical'
+  ): SemanticZone {
+    const isHorizontal = direction === 'horizontal'
+    const horizontalAlign = isHorizontal ? mainAlign : crossAlign
+    const verticalAlign = isHorizontal ? crossAlign : mainAlign
+
+    const verticalMap = { start: 'top', center: 'center', end: 'bottom' } as const
+    const horizontalMap = { start: 'left', center: 'center', end: 'right' } as const
+
+    const v = verticalMap[verticalAlign]
+    const h = horizontalMap[horizontalAlign]
+
+    if (v === 'center' && h === 'center') {
+      return 'center'
+    }
+
+    return `${v}-${h}` as SemanticZone
+  }
+
+  /**
+   * Calculate indicator rect for sibling insertion
+   */
+  private calculateSiblingIndicatorRect(
+    dropResult: LayoutDropResult,
+    element: HTMLElement,
+    direction: 'horizontal' | 'vertical'
+  ): Rect {
+    const rect = element.getBoundingClientRect()
+    const thickness = 3
+
+    if (direction === 'horizontal') {
+      // Vertical line for horizontal layout
+      const xPos = dropResult.placement === 'before' ? rect.left : rect.right
+      return {
+        x: xPos - thickness / 2,
+        y: rect.top,
+        width: thickness,
+        height: rect.height,
+      }
+    } else {
+      // Horizontal line for vertical layout
+      const yPos = dropResult.placement === 'before' ? rect.top : rect.bottom
+      return {
+        x: rect.left,
+        y: yPos - thickness / 2,
+        width: rect.width,
+        height: thickness,
+      }
     }
   }
 
@@ -346,6 +536,7 @@ export class StudioDragDropService {
       this.isDraggingFlag = false
       this.pendingDragOver = null
       this.paletteDragData = null
+      this.currentDropResult = null
       // Cancel any pending RAF to prevent stale updates
       if (this.rafId !== null) {
         cancelAnimationFrame(this.rafId)
@@ -361,6 +552,9 @@ export class StudioDragDropService {
     this.isDraggingFlag = false
     this.pendingDragOver = null
     this.paletteDragData = null
+    // Capture drop result before clearing (needed for performDrop)
+    const dropResult = this.currentDropResult
+    this.currentDropResult = null
     // Cancel any pending RAF to prevent stale updates after drop
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
@@ -409,7 +603,7 @@ export class StudioDragDropService {
     }
 
     // Perform the drop
-    const result = this.performDrop(dragData, element, e.clientX, e.clientY)
+    const result = this.performDrop(dragData, element, dropResult)
     this.callbacks.onDrop?.(result)
   }
 
@@ -420,8 +614,26 @@ export class StudioDragDropService {
   private performDrop(
     dragData: DragData,
     element: HTMLElement,
-    x: number,
-    y: number
+    dropResult: LayoutDropResult | null
+  ): StudioDropResult {
+    const { componentName, properties, textContent, sourceNodeId, isMove } = dragData
+
+    // Handle move operation
+    if (isMove && sourceNodeId) {
+      return this.performMoveOperation(sourceNodeId, dropResult, element)
+    }
+
+    // Handle insert operation with strategy-based placement
+    return this.performInsertOperation(componentName, dropResult, element, properties, textContent)
+  }
+
+  /**
+   * Perform move operation (element being repositioned)
+   */
+  private performMoveOperation(
+    sourceNodeId: string,
+    dropResult: LayoutDropResult | null,
+    element: HTMLElement
   ): StudioDropResult {
     const targetId = element.dataset.mirrorId
     if (!targetId) {
@@ -431,25 +643,114 @@ export class StudioDragDropService {
         error: 'Drop target missing data-mirror-id',
       }
     }
-    const { componentName, properties, textContent, sourceNodeId, isMove } = dragData
 
-    // Handle move operation
-    if (isMove && sourceNodeId) {
-      const modification = this.codeModifier!.moveNode(sourceNodeId, targetId, 'inside')
+    // Determine placement from drop result
+    let placement: 'before' | 'after' | 'inside' = 'inside'
+    let moveTargetId = targetId
+
+    if (dropResult) {
+      placement = dropResult.placement
+      moveTargetId = dropResult.targetId
+    }
+
+    const modification = this.codeModifier!.moveNode(sourceNodeId, moveTargetId, placement)
+    return {
+      success: modification.success,
+      modification,
+      error: modification.error,
+      source: { type: 'element', nodeId: sourceNodeId },
+    }
+  }
+
+  /**
+   * Perform insert operation (new component from palette)
+   */
+  private performInsertOperation(
+    componentName: string,
+    dropResult: LayoutDropResult | null,
+    element: HTMLElement,
+    properties?: string,
+    textContent?: string
+  ): StudioDropResult {
+    const targetId = element.dataset.mirrorId
+    if (!targetId) {
+      return {
+        success: false,
+        modification: null,
+        error: 'Drop target missing data-mirror-id',
+      }
+    }
+
+    // Check if component has a multi-line template
+    const template = getComponentTemplate(componentName)
+
+    // If no drop result, fallback to simple addChild
+    if (!dropResult) {
+      const modification = template
+        ? this.codeModifier!.addChildWithTemplate(targetId, template.code, { position: 'last' })
+        : this.codeModifier!.addChild(targetId, componentName, { position: 'last', properties, textContent })
       return {
         success: modification.success,
         modification,
         error: modification.error,
-        source: { type: 'element', nodeId: sourceNodeId },
+        source: { type: 'palette', componentName },
       }
     }
 
-    // Handle insert operation
-    const modification = this.codeModifier!.addChild(targetId, componentName, {
-      position: 'last',
-      properties,
-      textContent,
-    })
+    const flexResult = dropResult as FlexDropResult
+    let modification: ModificationResult
+
+    if (dropResult.placement === 'inside') {
+      // Inside placement: check for semantic zone (empty container with alignment)
+      if (flexResult.suggestedAlignment) {
+        // Derive semantic zone from alignment
+        const semanticZone = this.deriveSemanticZone(
+          flexResult.suggestedAlignment,
+          flexResult.suggestedCrossAlignment || 'center',
+          flexResult.direction
+        )
+
+        // Zone other than center: apply layout + insert
+        if (semanticZone !== 'center') {
+          if (template) {
+            // First apply layout, then insert template
+            const layoutResult = this.codeModifier!.applyLayoutToContainer(dropResult.targetId, semanticZone)
+            if (!layoutResult.success) {
+              return {
+                success: false,
+                modification: layoutResult,
+                error: layoutResult.error,
+                source: { type: 'palette', componentName },
+              }
+            }
+            modification = this.codeModifier!.addChildWithTemplate(dropResult.targetId, template.code, { position: 'last' })
+          } else {
+            // Use insertWithWrapper for single-line components
+            modification = this.codeModifier!.insertWithWrapper(
+              dropResult.targetId,
+              componentName,
+              semanticZone,
+              { properties, textContent }
+            )
+          }
+        } else {
+          // Center zone: simple insert
+          modification = template
+            ? this.codeModifier!.addChildWithTemplate(dropResult.targetId, template.code, { position: 'last' })
+            : this.codeModifier!.addChild(dropResult.targetId, componentName, { position: 'last', properties, textContent })
+        }
+      } else {
+        // No alignment (container with children): simple insert
+        modification = template
+          ? this.codeModifier!.addChildWithTemplate(dropResult.targetId, template.code, { position: 'last' })
+          : this.codeModifier!.addChild(dropResult.targetId, componentName, { position: 'last', properties, textContent })
+      }
+    } else {
+      // Before/after placement: sibling insertion
+      modification = template
+        ? this.codeModifier!.addChildWithTemplateRelativeTo(dropResult.targetId, template.code, dropResult.placement)
+        : this.codeModifier!.addChildRelativeTo(dropResult.targetId, componentName, dropResult.placement, { properties, textContent })
+    }
 
     return {
       success: modification.success,
@@ -462,11 +763,12 @@ export class StudioDragDropService {
   private insertAtRoot(dragData: DragData, rootId: string): StudioDropResult {
     const { componentName, properties, textContent } = dragData
 
-    const modification = this.codeModifier!.addChild(rootId, componentName, {
-      position: 'last',
-      properties,
-      textContent,
-    })
+    // Check for template
+    const template = getComponentTemplate(componentName)
+
+    const modification = template
+      ? this.codeModifier!.addChildWithTemplate(rootId, template.code, { position: 'last' })
+      : this.codeModifier!.addChild(rootId, componentName, { position: 'last', properties, textContent })
 
     return {
       success: modification.success,

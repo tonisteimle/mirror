@@ -1747,7 +1747,7 @@ export class CodeModifier {
   ): ModificationResult {
     const layoutProps = this.getLayoutForZone(semanticZone)
 
-    // No layout needed for mid-left (default)
+    // No layout needed for center-left (default)
     if (!layoutProps) {
       return {
         success: true,

@@ -5,7 +5,7 @@
 import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, SetTextContentCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
 import { createSyncCoordinator, createLineOffsetService, type SyncCoordinator } from './sync'
 import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
-import { EditorController, createEditorController, setEditorController } from './editor'
+import { EditorController, createEditorController, setEditorController, EditorDropHandler, createEditorDropHandler } from './editor'
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
@@ -13,6 +13,7 @@ import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../src
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
 import { ComponentPanel, createComponentPanel } from './panels/components'
+import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import type { AST } from '../src/parser/ast'
@@ -25,6 +26,9 @@ export interface BootstrapConfig {
   previewContainer: HTMLElement
   propertyPanelContainer?: HTMLElement
   componentPanelContainer?: HTMLElement
+  explorerPanelContainer?: HTMLElement
+  fileTreeContainer?: HTMLElement
+  explorerComponentsContainer?: HTMLElement
   chatPanelContainer?: HTMLElement
   initialSource?: string
   currentFile?: string
@@ -52,6 +56,8 @@ export interface StudioInstance {
   sync: SyncCoordinator | null
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
+  explorerPanel: ExplorerPanel | null
+  editorDropHandler: EditorDropHandler | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
   llm: LLMBridge
@@ -75,6 +81,8 @@ export const studio: StudioInstance = {
   sync: null,
   propertyPanel: null,
   componentPanel: null,
+  explorerPanel: null,
+  editorDropHandler: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
   llm: getLLMBridge(),
@@ -92,6 +100,8 @@ export const studio: StudioInstance = {
     studio.sync?.dispose()
     studio.propertyPanel?.detach()
     studio.componentPanel?.dispose()
+    studio.explorerPanel?.dispose()
+    studio.editorDropHandler?.detach()
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
     studio.preview?.dispose()
@@ -102,6 +112,8 @@ export const studio: StudioInstance = {
     studio.sync = null
     studio.propertyPanel = null
     studio.componentPanel = null
+    studio.explorerPanel = null
+    studio.editorDropHandler = null
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
@@ -127,6 +139,54 @@ let getAllSourceCallback: (() => string) | null = null
 // Global studio context
 let studioContext: StudioContext | null = null
 
+/**
+ * Generate Mirror component code from drag data
+ */
+function generateComponentCodeFromDragData(dragData: any): string {
+  const { componentName, properties, textContent, children } = dragData
+
+  let code = componentName
+  if (properties) {
+    code += ` ${properties}`
+  }
+  if (textContent) {
+    code += ` "${textContent}"`
+  }
+
+  // Add children if present
+  if (children && children.length > 0) {
+    for (const child of children) {
+      const childCode = generateChildCode(child, 1)
+      code += '\n' + childCode
+    }
+  }
+
+  return code
+}
+
+/**
+ * Generate code for child components
+ */
+function generateChildCode(child: any, indent: number): string {
+  const spaces = '  '.repeat(indent)
+  let code = spaces + child.template
+
+  if (child.properties) {
+    code += ` ${child.properties}`
+  }
+  if (child.textContent) {
+    code += ` "${child.textContent}"`
+  }
+
+  if (child.children && child.children.length > 0) {
+    for (const subChild of child.children) {
+      code += '\n' + generateChildCode(subChild, indent + 1)
+    }
+  }
+
+  return code
+}
+
 export function initializeStudio(config: BootstrapConfig): StudioInstance {
   console.log('[Studio] Initializing new architecture...')
 
@@ -146,10 +206,38 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   if (config.agentApiKey) agentApiKey = config.agentApiKey
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
 
+  // Initialize Explorer Panel if containers provided
+  if (config.explorerPanelContainer && config.fileTreeContainer && config.explorerComponentsContainer) {
+    studio.explorerPanel = createExplorerPanel(
+      {
+        container: config.explorerPanelContainer,
+        fileTreeContainer: config.fileTreeContainer,
+        componentPanelContainer: config.explorerComponentsContainer,
+        defaultView: 'files',
+      },
+      {
+        onViewChange: (view) => {
+          console.log('[Explorer] View changed:', view)
+        },
+      }
+    )
+    studio.explorerPanel.initialize()
+    console.log('[Studio] ExplorerPanel initialized')
+
+    // Use explorer's component container for ComponentPanel
+    componentPanelContainer = config.explorerComponentsContainer
+  }
+
   // Initialize Component Panel if container provided
   if (componentPanelContainer) {
+    // Enable tab bar when inside explorer panel
+    const isInsideExplorer = !!config.explorerPanelContainer
     studio.componentPanel = createComponentPanel(
-      { container: componentPanelContainer },
+      {
+        container: componentPanelContainer,
+        showTabBar: isInsideExplorer,
+        defaultTab: 'basic',
+      },
       {
         onDragStart: (item, event) => {
           events.emit('component:drag-start', { item, event })
@@ -197,6 +285,22 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   setEditorController(editorController)
   studioContext.editor = editorController
   studio.editor = editorController
+
+  // Editor Drop Handler - allows dragging components into code editor
+  const editorView = editorController.getEditorView()
+  if (editorView) {
+    studio.editorDropHandler = createEditorDropHandler({
+      editor: editorView,
+      onDrop: (dragData, position) => {
+        // Generate component code
+        const code = generateComponentCodeFromDragData(dragData)
+        studio.editorDropHandler?.insertComponentCode(code, position)
+        console.log('[Studio] Component dropped into editor:', dragData.componentName)
+      },
+    })
+    studio.editorDropHandler.attach()
+    console.log('[Studio] EditorDropHandler initialized')
+  }
 
   // Preview (with direct manipulation handles, keyboard shortcuts, context menu, visual code system, and element move)
   const previewController = createPreviewController({
@@ -405,6 +509,44 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   studio.drawManager = drawManager
 
+  // ============================================
+  // Component Event Handlers
+  // ============================================
+
+  // Handle component insert request (click on component in palette)
+  eventUnsubscribes.push(
+    events.on('component:insert-requested', ({ item }) => {
+      // Try DrawManager first, fallback to editor insert
+      if (studio.drawManager && studio.preview) {
+        studio.drawManager.enterDrawMode(item)
+      } else if (studio.editor) {
+        // Insert at cursor in editor
+        const code = generateComponentCodeFromDragData({
+          componentName: item.template,
+          properties: item.properties,
+          textContent: item.textContent,
+          children: item.children,
+        })
+        studio.editor.insertAtCursor('\n' + code)
+      }
+    })
+  )
+
+  // Handle explorer view changes
+  eventUnsubscribes.push(
+    events.on('explorer:view-changed', ({ view }) => {
+      // Could persist preference or update UI state
+      console.log('[Studio] Explorer view changed to:', view)
+    })
+  )
+
+  // Handle component tab changes
+  eventUnsubscribes.push(
+    events.on('components:tab-changed', ({ tab }) => {
+      console.log('[Studio] Component tab changed to:', tab)
+    })
+  )
+
   // Initialize Panel Toolbar
   initializePanelToolbar()
 
@@ -423,7 +565,7 @@ function initializePanelToolbar(): void {
   // Panel ID to DOM element mapping
   const panelElements: Record<string, HTMLElement | null> = {
     prompt: document.getElementById('chat-panel'),
-    files: document.querySelector('.sidebar'),
+    files: document.getElementById('explorer-panel') || document.querySelector('.sidebar'),
     code: document.querySelector('.editor-panel'),
     components: document.getElementById('components-panel'),
     preview: document.querySelector('.preview-panel'),

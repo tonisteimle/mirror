@@ -52,7 +52,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Select: {
     machine: 'select',
     slots: ['Trigger', 'Content', 'Item', 'ItemIndicator', 'Group', 'GroupLabel', 'Input', 'Empty', 'Pill', 'PillRemove', 'ClearButton'],
-    props: ['placeholder', 'multiple', 'searchable', 'clearable', 'disabled', 'value', 'defaultValue'],
+    props: ['placeholder', 'multiple', 'searchable', 'clearable', 'disabled', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'deselectable', 'open', 'defaultOpen'],
     events: ['onchange', 'onopen', 'onclose'],
     description: 'Dropdown select with keyboard navigation',
     pattern: 'simple-items',
@@ -61,7 +61,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Combobox: {
     machine: 'combobox',
     slots: ['Root', 'Label', 'Control', 'Input', 'Trigger', 'Positioner', 'Content', 'Item', 'ItemText', 'ItemIndicator', 'Empty', 'ClearTrigger'],
-    props: ['placeholder', 'allowCustomValue', 'autoFocus', 'disabled', 'inputBehavior', 'openOnChange', 'openOnKeyPress', 'value', 'defaultValue'],
+    props: ['placeholder', 'allowCustomValue', 'autoFocus', 'disabled', 'inputBehavior', 'openOnChange', 'openOnKeyPress', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus'],
     events: ['onchange', 'onopen', 'onclose', 'oninputchange'],
     description: 'Autocomplete combobox with filtering',
     pattern: 'simple-items',
@@ -70,7 +70,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Listbox: {
     machine: 'listbox',
     slots: ['Root', 'Label', 'Content', 'Item', 'ItemText', 'ItemIndicator', 'ItemGroup', 'ItemGroupLabel'],
-    props: ['multiple', 'disabled', 'value', 'defaultValue', 'orientation'],
+    props: ['multiple', 'disabled', 'value', 'defaultValue', 'orientation', 'invalid', 'readOnly', 'required', 'name', 'loopFocus'],
     events: ['onchange'],
     description: 'Listbox selection',
     pattern: 'simple-items',
@@ -82,7 +82,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Menu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'ItemGroup', 'ItemGroupLabel', 'Separator', 'Arrow'],
-    props: ['disabled', 'closeOnSelect'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Dropdown menu with keyboard navigation',
     pattern: 'simple-items',
@@ -91,7 +91,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   ContextMenu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'ItemGroup', 'ItemGroupLabel', 'Separator'],
-    props: ['disabled', 'closeOnSelect'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Right-click context menu',
     pattern: 'simple-items',
@@ -100,7 +100,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   NestedMenu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'Submenu', 'SubmenuTrigger', 'SubmenuContent', 'Separator'],
-    props: ['disabled', 'closeOnSelect'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Nested submenu structure',
     pattern: 'complex-nested',
@@ -121,7 +121,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Checkbox: {
     machine: 'checkbox',
     slots: ['Root', 'Control', 'Label', 'Indicator', 'HiddenInput'],
-    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'value', 'indeterminate'],
+    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'value', 'indeterminate', 'invalid', 'readOnly'],
     events: ['onchange'],
     description: 'Checkbox with label',
     pattern: 'slots-only',
@@ -130,7 +130,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Switch: {
     machine: 'switch',
     slots: ['Root', 'Track', 'Thumb', 'Label', 'HiddenInput'],
-    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name'],
+    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'invalid', 'readOnly'],
     events: ['onchange'],
     description: 'Toggle switch',
     pattern: 'slots-only',
@@ -139,7 +139,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   RadioGroup: {
     machine: 'radio-group',
     slots: ['Root', 'Item', 'ItemControl', 'ItemText', 'ItemHiddenInput', 'Label', 'Indicator'],
-    props: ['value', 'defaultValue', 'disabled', 'name', 'orientation'],
+    props: ['value', 'defaultValue', 'disabled', 'name', 'orientation', 'invalid', 'readOnly', 'required'],
     events: ['onchange'],
     description: 'Radio button group',
     pattern: 'repeating-items',
@@ -148,7 +148,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Slider: {
     machine: 'slider',
     slots: ['Root', 'Track', 'Range', 'Thumb', 'Label', 'ValueText', 'MarkerGroup', 'Marker', 'HiddenInput'],
-    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'orientation', 'minStepsBetweenThumbs'],
+    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'orientation', 'minStepsBetweenThumbs', 'invalid', 'readOnly', 'name', 'origin'],
     events: ['onchange', 'onchangeend'],
     description: 'Range slider',
     pattern: 'slots-only',
@@ -157,7 +157,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   RangeSlider: {
     machine: 'slider',
     slots: ['Root', 'Track', 'Range', 'Thumb', 'Label', 'ValueText', 'MarkerGroup', 'Marker', 'HiddenInput'],
-    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'orientation', 'minStepsBetweenThumbs'],
+    props: ['value', 'defaultValue', 'min', 'max', 'step', 'disabled', 'orientation', 'minStepsBetweenThumbs', 'invalid', 'readOnly', 'name', 'origin'],
     events: ['onchange', 'onchangeend'],
     description: 'Range slider with two thumbs',
     pattern: 'slots-only',

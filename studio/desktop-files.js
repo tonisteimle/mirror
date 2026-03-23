@@ -997,7 +997,8 @@ function startInlineRename(path) {
 // === Render File Tree ===
 
 function renderFileTree() {
-  const container = document.getElementById('file-tree')
+  // Try new explorer structure first, fallback to old id
+  const container = document.getElementById('file-tree-container') || document.getElementById('file-tree')
   if (!container) return
 
   if (!currentFolder) {

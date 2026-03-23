@@ -125,9 +125,9 @@ describe('OverlayManager', () => {
 
     it('marks active zone', () => {
       const rect = { left: 100, top: 50, width: 200, height: 150 }
-      manager.showSemanticDots(rect, 'mid-center')
+      manager.showSemanticDots(rect, 'center')
 
-      const activeDot = container.querySelector('.zone-dot.mid-center.active')
+      const activeDot = container.querySelector('.zone-dot.center.active')
       expect(activeDot).not.toBeNull()
     })
 
@@ -229,9 +229,9 @@ describe('OverlayManager', () => {
       // Show everything
       const rect = { left: 100, top: 50, width: 200, height: 150 }
       manager.showSizeIndicator(100, 50, '200px', '100px')
-      manager.showSemanticDots(rect, 'mid-center')
+      manager.showSemanticDots(rect, 'center')
       manager.showSiblingLine(rect, 'before', 'horizontal')
-      manager.showZoneIndicator('Container', 'mid-center')
+      manager.showZoneIndicator('Container', 'center')
 
       // Hide all
       manager.hideAll()

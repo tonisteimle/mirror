@@ -216,12 +216,112 @@
     }
 
     .sidebar {
-      flex: 0 0 180px;
+      flex: 0 0 220px;
       background: var(--bg-panel);
       border-right: 1px solid var(--border-default);
       display: flex;
       flex-direction: column;
       font-size: var(--font-md);
+    }
+
+    /* ============================================
+       EXPLORER PANEL - Activity Bar + Content Views
+       ============================================ */
+
+    .explorer-panel {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .explorer-activity-bar {
+      display: flex;
+      flex-direction: column;
+      width: 40px;
+      background: var(--bg-base);
+      border-right: 1px solid var(--border-default);
+      flex-shrink: 0;
+    }
+
+    .activity-bar {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .activity-bar-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.15s, background 0.15s;
+      position: relative;
+    }
+
+    .activity-bar-item:hover {
+      color: var(--text-secondary);
+      background: var(--white-5);
+    }
+
+    .activity-bar-item.active {
+      color: var(--text-primary);
+    }
+
+    .activity-bar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--color-primary);
+      border-radius: 0 1px 1px 0;
+    }
+
+    .activity-bar-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .activity-bar-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .explorer-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .explorer-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .explorer-view:not(.active) {
+      display: none;
+    }
+
+    /* Components view inside explorer */
+    .explorer-view-components {
+      background: var(--bg-panel);
+    }
+
+    .explorer-view-components .component-panel {
+      height: 100%;
     }
 
     .editor-panel {
@@ -1451,6 +1551,16 @@
       color: var(--text-muted);
       margin-left: 8px;
       font-style: var(--font-italic);
+    }
+
+    /* Editor Drop Indicator - shows where component will be inserted */
+    .editor-drop-indicator {
+      pointer-events: none;
+      background: var(--color-primary);
+      opacity: 0.8;
+      z-index: 100;
+      border-radius: 1px;
+      box-shadow: 0 0 4px var(--color-primary);
     }
 
     /* App Lock - "App" prefix on line 1 is locked/readonly */
@@ -5482,6 +5592,58 @@
       color: var(--text-primary);
       font-family: var(--font-sans);
       font-size: var(--font-base);
+    }
+
+    /* Component Panel Tab Bar */
+    .component-panel-tabs {
+      display: flex;
+      padding: 8px 8px 0 8px;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .component-panel-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: var(--font-sm);
+      font-weight: var(--weight-medium);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .component-panel-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .component-panel-tab.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .component-panel-tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      background: var(--white-10);
+      border-radius: 9px;
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+    }
+
+    .component-panel-tab.active .component-panel-tab-count {
+      background: var(--primary-15);
+      color: var(--color-primary-light);
     }
 
     .component-panel-search {

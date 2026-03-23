@@ -111,6 +111,14 @@ export interface StudioEvents {
   'inline-edit:input': { nodeId: string; element: HTMLElement }
   /** Inline text editing ended */
   'inline-edit:ended': { nodeId: string; originalText: string; newText: string; saved: boolean }
+  /** Explorer view changed */
+  'explorer:view-changed': { view: 'files' | 'components' }
+  /** Component panel tab changed */
+  'components:tab-changed': { tab: 'basic' | 'all' }
+  /** Component added to project from All tab */
+  'components:added-to-project': { componentName: string }
+  /** Component dropped into editor */
+  'component:editor-dropped': { data: any; position: { line: number; column: number; offset: number } }
 }
 
 /** Component Panel item (simplified for event typing) */

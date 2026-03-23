@@ -350,7 +350,7 @@ describe('DropHandler Integration: Semantic Zone Insertion', () => {
     expect(getNewSource()).toContain('Icon')
   })
 
-  it('applies layout for bot-right zone', () => {
+  it('applies layout for bottom-right zone', () => {
     const source = `Container w 200, h 200`
     const sourceMap = createTestSourceMap({
       nodes: [
@@ -363,7 +363,7 @@ describe('DropHandler Integration: Semantic Zone Insertion', () => {
     const zone = createDropZone({
       targetId: 'node-1',
       placement: 'inside',
-      semanticZone: 'bot-right',
+      semanticZone: 'bottom-right',
     })
     const data: DropData = {
       type: 'component',
@@ -379,7 +379,7 @@ describe('DropHandler Integration: Semantic Zone Insertion', () => {
     expect(newSource).toContain('Submit')
   })
 
-  it('skips wrapper for mid-center zone (default)', () => {
+  it('skips wrapper for center zone (default)', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
       nodes: [
@@ -392,7 +392,7 @@ describe('DropHandler Integration: Semantic Zone Insertion', () => {
     const zone = createDropZone({
       targetId: 'node-1',
       placement: 'inside',
-      semanticZone: 'mid-center',
+      semanticZone: 'center',
     })
     const data: DropData = { type: 'component', component: 'Text' }
 
@@ -407,8 +407,8 @@ describe('DropHandler Integration: Semantic Zone Insertion', () => {
 
   it.each([
     'top-left', 'top-center', 'top-right',
-    'mid-left', 'mid-right',
-    'bot-left', 'bot-center', 'bot-right',
+    'center-left', 'center-right',
+    'bottom-left', 'bottom-center', 'bottom-right',
   ] as const)('handles %s semantic zone', (semanticZone) => {
     const source = `Container w 200, h 200`
     const sourceMap = createTestSourceMap({
