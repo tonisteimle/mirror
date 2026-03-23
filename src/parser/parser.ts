@@ -1575,15 +1575,13 @@ export class Parser {
           this.skipNewlines()
           if (this.check('DEDENT') || this.isAtEnd()) break
 
-          // Child instance
+          // Child instance (including Zag components)
           if (this.check('IDENTIFIER')) {
             const name = this.advance()
             const child = this.parseInstance(name)
-            if (child.type !== 'ZagComponent') {
-              ;(child as any).visibleWhen = visibleWhen
-              if (!instance.children) instance.children = []
-              instance.children.push(child as Instance | Slot)
-            }
+            ;(child as any).visibleWhen = visibleWhen
+            if (!instance.children) instance.children = []
+            instance.children.push(child as any)
             continue
           }
 
@@ -1656,11 +1654,9 @@ export class Parser {
           continue
         }
 
-        // Child instance
+        // Child instance (including Zag components)
         const child = this.parseInstance(this.advance())
-        if (child.type !== 'ZagComponent') {
-          instance.children.push(child as Instance | Slot)
-        }
+        instance.children.push(child as any)
         continue
       }
 
