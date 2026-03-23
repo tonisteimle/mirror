@@ -5677,9 +5677,22 @@
     }
 
     .component-panel-section-toggle {
-      font-size: var(--font-xs);
-      width: 10px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 12px;
+      height: 12px;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .component-panel-section-toggle svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .component-panel-section-header:hover .component-panel-section-toggle {
+      color: var(--text-secondary);
     }
 
     .component-panel-items {
