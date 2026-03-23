@@ -132,14 +132,12 @@ export class EditorDropHandler {
       return
     }
 
-    // Call handler
+    // Call handler (this performs the insert)
     this.onDrop?.(dragData, pos)
 
-    // Emit event
-    events.emit('component:editor-dropped', {
-      data: dragData,
-      position: pos,
-    })
+    // Note: We don't emit 'component:editor-dropped' event here because
+    // the onDrop callback already handles the insertion. Emitting an event
+    // could cause double-insertion if something else also listens for it.
   }
 
   /**
