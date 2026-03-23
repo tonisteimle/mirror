@@ -242,9 +242,10 @@ export class EditorDropHandler {
   }
 
   /**
-   * Show drop indicator at line boundary
+   * Show drop indicator at line boundary with indent
    *
    * The indicator appears AFTER the target line (between target line and next line)
+   * and starts at the chosen indentation level (based on X position).
    * Special case: if target line is 0 (before first line), show at top of editor
    */
   private showDropIndicator(pos: EditorDropPosition): void {
@@ -252,7 +253,9 @@ export class EditorDropHandler {
 
     const doc = this.editor.state.doc
     const editorRect = this.editor.dom.getBoundingClientRect()
+    const contentRect = this.editor.contentDOM.getBoundingClientRect()
     const lineHeight = this.editor.defaultLineHeight
+    const charWidth = this.editor.defaultCharacterWidth
 
     let indicatorTop: number
 
@@ -275,9 +278,14 @@ export class EditorDropHandler {
       indicatorTop = coords.top - editorRect.top + lineHeight
     }
 
+    // Calculate left position based on indent level
+    // pos.indent is number of spaces; multiply by charWidth for pixels
+    const contentLeftOffset = contentRect.left - editorRect.left
+    const indentLeft = contentLeftOffset + (pos.indent * charWidth)
+
     this.dropIndicator.style.display = 'block'
     this.dropIndicator.style.position = 'absolute'
-    this.dropIndicator.style.left = '0'
+    this.dropIndicator.style.left = `${indentLeft}px`
     this.dropIndicator.style.right = '0'
     this.dropIndicator.style.top = `${indicatorTop}px`
     this.dropIndicator.style.height = '2px'
@@ -293,24 +301,24 @@ export class EditorDropHandler {
   }
 
   /**
-   * Insert component code at the drop position with smart indentation
+   * Insert component code at the drop position with user-chosen indentation
    *
    * ROBUST BEHAVIOR:
    * - Always inserts NEW lines
    * - Never modifies existing code
-   * - Calculates indentation based on context (parent/sibling)
+   * - Uses the user-chosen indent level from pos.indent (X cursor position)
    * - Handles insert before first line (pos.line === 0)
    */
   insertComponentCode(code: string, pos: EditorDropPosition): void {
     const doc = this.editor.state.doc
     const totalLines = doc.lines
 
-    // Special case: insert BEFORE first line
-    if (pos.line === 0) {
-      // No indentation context, insert at root level but preserve relative structure
-      const codeLines = code.split('\n')
+    // Convert pos.indent (number of spaces) to string
+    const indentStr = ' '.repeat(pos.indent)
 
-      // Find the minimum indentation (excluding empty lines) to normalize
+    // Helper: apply indentation to code lines
+    const applyIndent = (codeLines: string[], baseIndent: string): string[] => {
+      // Find minimum indentation in original code (excluding empty lines)
       let minIndent = Infinity
       for (const line of codeLines) {
         if (line.trim()) {
@@ -320,16 +328,24 @@ export class EditorDropHandler {
       }
       if (minIndent === Infinity) minIndent = 0
 
-      // Remove minimum indent from all lines (normalize to root level)
-      const normalizedLines = codeLines.map(line => {
-        if (!line.trim()) return ''
-        return line.slice(minIndent)
+      // Normalize and re-indent all lines
+      return codeLines.map(line => {
+        if (!line.trim()) return '' // Empty lines stay empty
+        // Remove original minimum indent, then add new base indent
+        const normalized = line.slice(minIndent)
+        return baseIndent + normalized
       }).filter((line, index, arr) => {
-        // Keep non-empty lines, but also keep structure
+        // Keep non-empty lines and preserve structure
         return line.trim() || (index > 0 && index < arr.length - 1)
       })
+    }
 
-      const insertText = normalizedLines.join('\n') + '\n'
+    // Special case: insert BEFORE first line
+    if (pos.line === 0) {
+      const codeLines = code.split('\n')
+      const indentedLines = applyIndent(codeLines, indentStr)
+
+      const insertText = indentedLines.join('\n') + '\n'
 
       this.editor.dispatch({
         changes: {
@@ -350,25 +366,9 @@ export class EditorDropHandler {
     const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
     const targetLine = doc.line(lineNumber)
 
-    // Calculate the correct indentation based on context
-    const indent = this.calculateIndentation(lineNumber)
-
-    // Apply indentation to all lines of the component code
+    // Apply user-chosen indentation to all lines of the component code
     const codeLines = code.split('\n')
-    const indentedLines = codeLines.map((codeLine, index) => {
-      const trimmedLine = codeLine.trim()
-      if (!trimmedLine) return '' // Empty lines stay empty
-
-      if (index === 0) {
-        // First line gets the calculated indent
-        return indent + trimmedLine
-      } else {
-        // Subsequent lines: preserve relative indentation from original code
-        const originalIndent = codeLine.match(/^(\s*)/)?.[1] || ''
-        const relativeIndent = originalIndent.length > 0 ? '  '.repeat(Math.floor(originalIndent.length / 2)) : ''
-        return indent + relativeIndent + trimmedLine
-      }
-    })
+    const indentedLines = applyIndent(codeLines, indentStr)
 
     // Build insert text: newline + indented code
     const indentedCode = indentedLines.join('\n')
@@ -394,75 +394,6 @@ export class EditorDropHandler {
     this.editor.focus()
   }
 
-  /**
-   * Calculate the correct indentation for a new element
-   *
-   * RULES:
-   * 1. Find the nearest component line above (starts with uppercase)
-   * 2. New element is a CHILD → indent = parent indent + 2 spaces
-   * 3. If drop is on a property line, new element is a SIBLING → same indent as component
-   * 4. Root level (no parent) → no indentation
-   */
-  private calculateIndentation(lineNumber: number): string {
-    const doc = this.editor.state.doc
-
-    // Start from the drop line and search upward
-    for (let i = lineNumber; i >= 1; i--) {
-      const line = doc.line(i)
-      const text = line.text
-      const trimmed = text.trim()
-
-      // Skip empty lines and comments
-      if (!trimmed || trimmed.startsWith('//')) continue
-
-      // Get the indentation of this line
-      const lineIndent = text.match(/^(\s*)/)?.[1] || ''
-
-      // Check if this is a component line (starts with uppercase letter)
-      // Components: Box, Text, Button, App, MyComponent, etc.
-      if (/^[A-Z]/.test(trimmed)) {
-        // Found a component - new element should be its child
-        // Child indent = parent indent + 2 spaces
-        return lineIndent + '  '
-      }
-
-      // Check if this is a property/attribute line
-      // Properties start with lowercase: pad, bg, col, w, h, gap, etc.
-      // Or special chars: $token, @state, etc.
-      if (/^[a-z$@]/.test(trimmed)) {
-        // This is a property line - find its parent component
-        const propertyIndent = lineIndent
-
-        // Search further up to find the parent component
-        for (let j = i - 1; j >= 1; j--) {
-          const parentLine = doc.line(j)
-          const parentText = parentLine.text
-          const parentTrimmed = parentText.trim()
-
-          if (!parentTrimmed || parentTrimmed.startsWith('//')) continue
-
-          const parentIndent = parentText.match(/^(\s*)/)?.[1] || ''
-
-          // If we find a component with less indentation, that's the parent
-          if (/^[A-Z]/.test(parentTrimmed) && parentIndent.length < propertyIndent.length) {
-            // New element is sibling to the properties → child of this parent
-            return parentIndent + '  '
-          }
-
-          // If we find a component at same or greater indent, it's not our parent
-          if (/^[A-Z]/.test(parentTrimmed) && parentIndent.length <= propertyIndent.length) {
-            return parentIndent + '  '
-          }
-        }
-
-        // No parent found, use property indent level
-        return propertyIndent
-      }
-    }
-
-    // No context found - root level, no indentation
-    return ''
-  }
 }
 
 /**
