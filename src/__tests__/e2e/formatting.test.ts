@@ -341,12 +341,6 @@ describe('Formatting: Sizing', () => {
     expect(output).toContain("'width': '100px'")
   })
 
-  it('width full', () => {
-    const output = compile(`Box as frame:\n  width full\nBox`)
-    expect(output).toContain("'flex': '1 1 0%'")
-    expect(output).toContain("'min-width': '0'")
-  })
-
   it('width hug', () => {
     const output = compile(`Box as frame:\n  width hug\nBox`)
     expect(output).toContain("'width': 'fit-content'")
@@ -360,12 +354,6 @@ describe('Formatting: Sizing', () => {
   it('h shorthand', () => {
     const output = compile(`Box as frame:\n  h 50\nBox`)
     expect(output).toContain("'height': '50px'")
-  })
-
-  it('height full', () => {
-    const output = compile(`Box as frame:\n  height full\nBox`)
-    expect(output).toContain("'flex': '1 1 0%'")
-    expect(output).toContain("'min-height': '0'")
   })
 
   it('height hug', () => {

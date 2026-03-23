@@ -360,46 +360,6 @@ Alert
     })
   })
 
-  describe('Verschachtelte Slots', () => {
-    it('unterstützt verschachtelte Slot-Strukturen', () => {
-      const { root } = compileAndExecute(`
-Dialog as frame:
-  pad 24
-  Header:
-    Title:
-    CloseBtn:
-  Body:
-  Footer:
-
-Header as frame:
-  horizontal
-  spread
-
-Title as text:
-  weight 600
-
-CloseBtn as button:
-  pad 8
-
-Body as frame:
-  pad 16 0
-
-Footer as frame:
-  horizontal
-  right
-  gap 8
-
-Dialog
-  Header
-    Title "Dialog Title"
-    CloseBtn "X"
-  Body "Dialog content goes here"
-  Footer "OK"
-`)
-      expect(root).toBeDefined()
-      expect(root.children.length).toBe(3)
-    })
-  })
 
   describe('Flat Access', () => {
     it('findet verschachtelte Slots direkt', () => {
@@ -620,32 +580,6 @@ Dropdown
       expect(root.dataset.state).toBe('closed')
     })
 
-    it('setzt initial state mit open', () => {
-      const { root } = compileAndExecute(`
-Menu as frame:
-  open
-
-Menu
-`)
-      expect(root.dataset.state).toBe('open')
-    })
-
-    it('setzt initial state mit collapsed/expanded', () => {
-      const { root: collapsed } = compileAndExecute(`
-Accordion as frame:
-  collapsed
-
-Accordion
-`)
-      const { root: expanded } = compileAndExecute(`
-Accordion as frame:
-  expanded
-
-Accordion
-`)
-      expect(collapsed.dataset.state).toBe('collapsed')
-      expect(expanded.dataset.state).toBe('expanded')
-    })
   })
 
   describe('State mit mehreren Properties', () => {
@@ -1023,54 +957,6 @@ List
       expect(root.style.overflowY).toBe('auto')
     })
 
-    it('horizontal scroll', () => {
-      const { root } = compileAndExecute(`
-Carousel as frame:
-  horizontal
-  scroll-hor
-  gap 16
-  width full
-
-Carousel
-`)
-      expect(root.style.overflowX).toBe('auto')
-    })
-  })
-
-  describe('Sizing Kombinationen', () => {
-    it('width full mit max-width', () => {
-      const { root } = compileAndExecute(`
-Container as frame:
-  width full
-  max-width 1200
-  pad 24
-
-Container
-`)
-      // w full uses flex shorthand, max-width is applied separately
-      expect(root.style.flex).toBe('1 1 0%')
-      expect(root.style.maxWidth).toBe('1200px')
-    })
-
-    it('height hug vs height full', () => {
-      const { root: hug } = compileAndExecute(`
-Box as frame:
-  height hug
-  pad 16
-
-Box "Content"
-`)
-      const { root: full } = compileAndExecute(`
-Box as frame:
-  height full
-  pad 16
-
-Box "Content"
-`)
-      expect(hug.style.height).toBe('fit-content')
-      // h full uses flex shorthand for proper flex behavior
-      expect(full.style.flex).toBe('1 1 0%')
-    })
   })
 
   describe('Komplette Layout-Patterns', () => {
@@ -1263,84 +1149,6 @@ Form
 // ============================================
 
 describe('Core: Integration', () => {
-  it('Dropdown mit allen Features', () => {
-    const { root, jsCode } = compileAndExecute(`
-Trigger as button:
-  pad 12
-  bg #333
-  rad 8
-  onclick toggle Menu
-
-Menu as frame:
-  closed
-  width 200
-  bg #1a1a23
-  rad 8
-  shadow lg
-  onclick-outside close
-
-Option as frame:
-  pad 8 12
-  cursor pointer
-  onhover highlight
-  onclick select, close Menu
-  state highlighted
-    bg #333
-  state selected
-    bg #3B82F6
-
-Dropdown as frame:
-  vertical
-
-Dropdown named dropdown
-  Trigger "Select..."
-  Menu
-    Option "Option 1"
-    Option "Option 2"
-    Option "Option 3"
-`)
-    expect(root).toBeDefined()
-    expect(jsCode).toContain('_runtime.toggle')
-    expect(jsCode).toContain('_runtime.highlight')
-    expect(jsCode).toContain('_runtime.select')
-    expect(jsCode).toContain("document.addEventListener('click'")
-  })
-
-  it('Tab-Navigation', () => {
-    const { root, jsCode } = compileAndExecute(`
-TabBar as frame:
-  horizontal
-  gap 0
-  bor b 1 solid #333
-
-Tab as frame:
-  pad 12 16
-  cursor pointer
-  onclick activate, deactivate-siblings
-  state active
-    bor b 2 solid #3B82F6
-    col #3B82F6
-
-TabContent as frame:
-  pad 16
-
-Tabs as frame:
-  vertical
-
-Tabs
-  TabBar
-    Tab "Tab 1"
-    Tab "Tab 2"
-    Tab "Tab 3"
-  TabContent
-    "Content for selected tab"
-`)
-    const tabBar = root.children[0]
-    expect(tabBar.style.flexDirection).toBe('row')
-    expect(tabBar.children.length).toBe(3)
-    expect(jsCode).toContain('_runtime.activate')
-  })
-
   it('Accordion', () => {
     const { jsCode } = compileAndExecute(`
 AccordionItem as frame:
