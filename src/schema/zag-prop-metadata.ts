@@ -84,6 +84,19 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Deselectable',
       description: 'Allow clearing by clicking selected item',
     },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Dropdown placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
+      default: 'bottom-start',
+    },
+    typeahead: {
+      type: 'boolean',
+      label: 'Typeahead',
+      description: 'Focus item by typing letters',
+      default: true,
+    },
   },
 
   Combobox: {
@@ -133,6 +146,13 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Loop Focus',
       description: 'Loop keyboard navigation',
       default: true,
+    },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Dropdown placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
+      default: 'bottom-start',
     },
   },
 
@@ -193,6 +213,19 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Loop keyboard navigation',
       default: true,
     },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Menu placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end', 'left', 'right'],
+      default: 'bottom-start',
+    },
+    typeahead: {
+      type: 'boolean',
+      label: 'Typeahead',
+      description: 'Focus item by typing letters',
+      default: true,
+    },
   },
 
   ContextMenu: {
@@ -208,6 +241,19 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       description: 'Loop keyboard navigation',
       default: true,
     },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Menu placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end', 'left', 'right'],
+      default: 'bottom-start',
+    },
+    typeahead: {
+      type: 'boolean',
+      label: 'Typeahead',
+      description: 'Focus item by typing letters',
+      default: true,
+    },
   },
 
   NestedMenu: {
@@ -221,6 +267,19 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       type: 'boolean',
       label: 'Loop Focus',
       description: 'Loop keyboard navigation',
+      default: true,
+    },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Menu placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end', 'left', 'right'],
+      default: 'bottom-start',
+    },
+    typeahead: {
+      type: 'boolean',
+      label: 'Typeahead',
+      description: 'Focus item by typing letters',
       default: true,
     },
   },
@@ -696,6 +755,13 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       min: 0,
       max: 6,
     },
+    positioning: {
+      type: 'enum',
+      label: 'Position',
+      description: 'Calendar dropdown placement',
+      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
+      default: 'bottom-start',
+    },
   },
 
   DateInput: {
@@ -802,6 +868,13 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       options: ['top', 'bottom', 'left', 'right'],
       default: 'top',
     },
+    positioning: {
+      type: 'enum',
+      label: 'Alignment',
+      description: 'Detailed tooltip positioning',
+      options: ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
+      default: 'top',
+    },
     closeOnClick: {
       type: 'boolean',
       label: 'Close on Click',
@@ -827,6 +900,13 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Position',
       description: 'Popover placement',
       options: ['top', 'bottom', 'left', 'right'],
+      default: 'bottom',
+    },
+    positioning: {
+      type: 'enum',
+      label: 'Alignment',
+      description: 'Detailed popover positioning',
+      options: ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
       default: 'bottom',
     },
     modal: {
@@ -889,6 +969,13 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
       label: 'Position',
       description: 'Card placement',
       options: ['top', 'bottom', 'left', 'right'],
+      default: 'bottom',
+    },
+    positioning: {
+      type: 'enum',
+      label: 'Alignment',
+      description: 'Detailed card positioning',
+      options: ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
       default: 'bottom',
     },
   },

@@ -166,9 +166,43 @@ function generateComponentCodeFromDragData(dragData: any): string {
 
 /**
  * Generate code for child components
+ *
+ * Handles:
+ * - isSlot: adds ":" suffix (e.g., "ItemGroup:")
+ * - isItem: simple item with text content (e.g., 'Item "Option"')
+ * - Regular components with properties and nested children
  */
 function generateChildCode(child: any, indent: number): string {
   const spaces = '  '.repeat(indent)
+
+  // Handle slot syntax (e.g., "Trigger:", "ItemGroup:")
+  if (child.isSlot) {
+    let code = spaces + child.template + ':'
+    if (child.properties) {
+      code += '\n' + spaces + '  ' + child.properties
+    }
+    // Recursively add nested children
+    if (child.children && child.children.length > 0) {
+      for (const nested of child.children) {
+        code += '\n' + generateChildCode(nested, indent + 1)
+      }
+    }
+    return code
+  }
+
+  // Handle item syntax (e.g., 'Item "Option A"')
+  if (child.isItem) {
+    let code = spaces + child.template
+    if (child.textContent) {
+      code += ` "${child.textContent}"`
+    }
+    if (child.properties) {
+      code += `, ${child.properties}`
+    }
+    return code
+  }
+
+  // Standard component syntax
   let code = spaces + child.template
 
   if (child.properties) {
@@ -178,6 +212,7 @@ function generateChildCode(child: any, indent: number): string {
     code += ` "${child.textContent}"`
   }
 
+  // Recursively add nested children
   if (child.children && child.children.length > 0) {
     for (const subChild of child.children) {
       code += '\n' + generateChildCode(subChild, indent + 1)

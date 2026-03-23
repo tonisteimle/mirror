@@ -150,6 +150,10 @@ export interface MachineConfig {
   closeOnClick?: boolean
   openDelay?: number
   closeDelay?: number
+  // Positioning props (for overlays)
+  positioning?: string | { placement?: string; offset?: { mainAxis?: number; crossAxis?: number }; flip?: boolean }
+  // Typeahead props (for lists)
+  typeahead?: boolean
   // Toast props
   duration?: number
   placement?: string
@@ -234,6 +238,37 @@ export class MachineRunner {
   }
 
   /**
+   * Parse positioning prop into Zag-compatible format
+   * Accepts string shorthand (e.g., 'bottom-start') or full config object
+   */
+  private parsePositioning(
+    positioning?: string | { placement?: string; offset?: { mainAxis?: number; crossAxis?: number }; flip?: boolean }
+  ): { placement: string; offset?: { mainAxis: number; crossAxis: number }; flip?: boolean } | undefined {
+    if (!positioning) return undefined
+
+    // String shorthand: 'bottom-start' → { placement: 'bottom-start' }
+    if (typeof positioning === 'string') {
+      return { placement: positioning }
+    }
+
+    // Full config object
+    const result: { placement: string; offset?: { mainAxis: number; crossAxis: number }; flip?: boolean } = {
+      placement: positioning.placement ?? 'bottom',
+      flip: positioning.flip,
+    }
+
+    // Only add offset if both values are defined
+    if (positioning.offset?.mainAxis !== undefined && positioning.offset?.crossAxis !== undefined) {
+      result.offset = {
+        mainAxis: positioning.offset.mainAxis,
+        crossAxis: positioning.offset.crossAxis,
+      }
+    }
+
+    return result
+  }
+
+  /**
    * Create machine-specific props based on type
    */
   private createMachineProps(type: MachineType, config: MachineConfig): any {
@@ -268,6 +303,8 @@ export class MachineRunner {
           collection: itemCollection,
           loopFocus: config.loopFocus,
           deselectable: config.deselectable,
+          typeahead: config.typeahead,
+          positioning: this.parsePositioning(config.positioning),
           onValueChange: config.onValueChange,
           onOpenChange: config.onOpenChange,
         }
@@ -280,6 +317,8 @@ export class MachineRunner {
         return {
           ...baseProps,
           loopFocus: config.loopFocus,
+          typeahead: config.typeahead,
+          positioning: this.parsePositioning(config.positioning),
           onOpenChange: config.onOpenChange,
         }
 
@@ -362,6 +401,7 @@ export class MachineRunner {
           closeOnEscape: config.closeOnEscape ?? true,
           trapFocus: config.trapFocus,
           restoreFocus: config.restoreFocus ?? true,
+          positioning: this.parsePositioning(config.positioning),
           onOpenChange: config.onOpenChange,
         }
 
@@ -373,6 +413,7 @@ export class MachineRunner {
           closeOnClick: config.closeOnClick ?? true,
           interactive: config.interactive,
           closeOnScroll: config.closeOnScroll ?? true,
+          positioning: this.parsePositioning(config.positioning),
           onOpenChange: config.onOpenChange,
         }
 
@@ -381,6 +422,7 @@ export class MachineRunner {
           ...baseProps,
           openDelay: config.openDelay ?? 700,
           closeDelay: config.closeDelay ?? 300,
+          positioning: this.parsePositioning(config.positioning),
           onOpenChange: config.onOpenChange,
         }
 
@@ -431,6 +473,7 @@ export class MachineRunner {
       case 'date-input':
         return {
           ...baseProps,
+          positioning: this.parsePositioning(config.positioning),
           onValueChange: config.onValueChange,
         }
 

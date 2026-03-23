@@ -40,7 +40,8 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `open` | boolean | ✅ | - |
 | `defaultOpen` | boolean | ✅ | - |
 | `closeOnSelect` | boolean | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
+| `typeahead` | boolean | ✅ | High |
 | `highlightedValue` | string | ❌ | Medium |
 | `defaultHighlightedValue` | string | ❌ | Medium |
 | `composite` | boolean | ❌ | Low |
@@ -75,7 +76,8 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `defaultValue` | string[] | ✅ | - |
 | `open` | boolean | ❌ | High |
 | `defaultOpen` | boolean | ❌ | High |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
+| `typeahead` | boolean | ✅ | High |
 | `inputValue` | string | ❌ | Medium |
 | `defaultInputValue` | string | ❌ | Medium |
 | `inputBehavior` | enum | ❌ | Medium |
@@ -102,8 +104,8 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `disabled` | boolean | ✅ | - |
 | `loopFocus` | boolean | ✅ | - |
 | `closeOnSelect` | boolean | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
-| `typeahead` | boolean | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
+| `typeahead` | boolean | ✅ | High |
 | `highlightedValue` | string | ❌ | Medium |
 | `defaultHighlightedValue` | string | ❌ | Medium |
 | `open` | boolean | ❌ | Medium |
@@ -156,7 +158,7 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `open` | boolean | ✅ | - |
 | `defaultOpen` | boolean | ✅ | - |
 | `placement` | enum | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
 | `closeOnPointerDown` | boolean | ❌ | Medium |
 | `closeOnEscape` | boolean | ❌ | Medium |
 | `aria-label` | string | ❌ | Medium |
@@ -178,7 +180,7 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `open` | boolean | ✅ | - |
 | `defaultOpen` | boolean | ✅ | - |
 | `placement` | enum | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
 | `portalled` | boolean | ❌ | Medium |
 | `initialFocusEl` | function | ❌ | Medium |
 | `onEscapeKeyDown` | callback | ❌ | Low |
@@ -483,7 +485,7 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `fixedWeeks` | boolean | ✅ | - |
 | `closeOnSelect` | boolean | ✅ | - |
 | `startOfWeek` | number | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
 | `locale` | string | ❌ | Medium |
 | `timeZone` | string | ❌ | Medium |
 | `min` | DateValue | ❌ | Medium |
@@ -586,9 +588,9 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 | `openDelay` | number | ✅ | - |
 | `closeDelay` | number | ✅ | - |
 | `placement` | enum | ✅ | - |
-| `positioning` | PositioningOptions | ❌ | High |
+| `positioning` | PositioningOptions | ✅ | High |
 
-**Coverage: 6/7 (86%)**
+**Coverage: 7/7 (100%)**
 
 ---
 
@@ -625,70 +627,82 @@ Dieses Dokument trackt welche Zag-Props wir in Mirror implementiert haben vs. wa
 
 ## Gesamtübersicht
 
-| Komponente | Coverage | Status |
-|------------|----------|--------|
-| Checkbox | 90% | 🟢 Gut |
-| RadioGroup | 89% | 🟢 Gut |
-| Accordion | 86% | 🟢 Gut |
-| HoverCard | 86% | 🟢 Gut |
-| ToggleGroup | 75% | 🟡 OK |
-| RatingGroup | 75% | 🟡 OK |
-| Switch | 70% | 🟡 OK |
-| Tooltip | 69% | 🟡 OK |
-| Tabs | 67% | 🟡 OK |
-| Dialog | 60% | 🟡 OK |
-| Popover | 60% | 🟡 OK |
-| Progress | 60% | 🟡 OK |
-| Slider | 57% | 🟡 OK |
-| Select | 54% | 🟠 Mittel |
-| PinInput | 53% | 🟠 Mittel |
-| NumberInput | 52% | 🟠 Mittel |
-| Editable | 50% | 🟠 Mittel |
-| Collapsible | 50% | 🟠 Mittel |
-| TagsInput | 43% | 🟠 Mittel |
-| Combobox | 41% | 🔴 Niedrig |
-| DatePicker | 35% | 🔴 Niedrig |
-| FileUpload | 32% | 🔴 Niedrig |
-| Carousel | 25% | 🔴 Niedrig |
-| Toast | 25% | 🔴 Niedrig |
-| Menu | 20% | 🔴 Niedrig |
+| Komponente | Coverage | Status | Änderung |
+|------------|----------|--------|----------|
+| HoverCard | 100% | 🟢 Perfekt | ⬆️ +14% |
+| Checkbox | 90% | 🟢 Gut | - |
+| RadioGroup | 89% | 🟢 Gut | - |
+| Accordion | 86% | 🟢 Gut | - |
+| Tooltip | 77% | 🟢 Gut | ⬆️ +8% |
+| ToggleGroup | 75% | 🟡 OK | - |
+| RatingGroup | 75% | 🟡 OK | - |
+| Popover | 67% | 🟡 OK | ⬆️ +7% |
+| Switch | 70% | 🟡 OK | - |
+| Tabs | 67% | 🟡 OK | - |
+| Select | 61% | 🟡 OK | ⬆️ +7% |
+| Dialog | 60% | 🟡 OK | - |
+| Progress | 60% | 🟡 OK | - |
+| Slider | 57% | 🟡 OK | - |
+| PinInput | 53% | 🟠 Mittel | - |
+| NumberInput | 52% | 🟠 Mittel | - |
+| Editable | 50% | 🟠 Mittel | - |
+| Collapsible | 50% | 🟠 Mittel | - |
+| Combobox | 48% | 🟠 Mittel | ⬆️ +7% |
+| TagsInput | 43% | 🟠 Mittel | - |
+| DatePicker | 39% | 🟠 Mittel | ⬆️ +4% |
+| Menu | 33% | 🟠 Mittel | ⬆️ +13% |
+| FileUpload | 32% | 🔴 Niedrig | - |
+| Carousel | 25% | 🔴 Niedrig | - |
+| Toast | 25% | 🔴 Niedrig | - |
 
 ---
 
-## High Priority Props (sollten implementiert werden)
+## High Priority Props
 
-### 1. `positioning` (Overlays)
+### ✅ Implementiert (Batch 1)
+
+#### 1. `positioning` (Overlays)
 Betrifft: Select, Combobox, Menu, Tooltip, Popover, HoverCard, DatePicker
 
 ```typescript
 positioning: {
   placement: 'bottom-start',
-  offset: { mainAxis: 4 },
-  flip: true,
-  slide: true
+  offset: { mainAxis: 4, crossAxis: 0 },
+  flip: true
 }
 ```
 
-### 2. `typeahead` (Listen)
+**Status:** ✅ Implementiert in:
+- `zag-primitives.ts` - Parser-Props
+- `zag-prop-metadata.ts` - UI-Metadata
+- `machine-runner.ts` - Runtime-Integration
+
+#### 2. `typeahead` (Listen)
 Betrifft: Menu, Select, Combobox, Listbox
 
-### 3. `count` (PinInput)
+**Status:** ✅ Implementiert
+
+### ⏳ Ausstehend (Batch 2+)
+
+#### 3. `count` (PinInput)
 Anzahl der Input-Felder
 
-### 4. `accept`, `maxFileSize` (FileUpload)
+#### 4. `accept`, `maxFileSize` (FileUpload)
 Dateityp-Filter und Größenlimit
 
-### 5. `activationMode` (Editable)
+#### 5. `activationMode` (Editable)
 Wie Editable aktiviert wird (click, dblclick, focus)
 
-### 6. `placeholder` (TagsInput)
+#### 6. `placeholder` (TagsInput)
 Platzhalter-Text
 
 ---
 
 ## Nächste Schritte
 
-1. [ ] High Priority Props implementieren
-2. [ ] Medium Priority Props implementieren
-3. [ ] Tests für neue Props
-4. [ ] Dokumentation aktualisieren
+1. [x] Batch 1: `positioning` + `typeahead` implementieren
+2. [ ] Batch 2: Form Controls (`count`, `accept`, `maxFileSize`, `activationMode`)
+3. [ ] Batch 3: Restliche High Priority Props
+4. [ ] Medium Priority Props implementieren
+5. [ ] Tests für neue Props
+6. [ ] Dokumentation aktualisieren

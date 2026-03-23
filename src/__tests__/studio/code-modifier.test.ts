@@ -756,11 +756,11 @@ describe('CodeModifier', () => {
       })
 
       expect(result.success).toBe(true)
-      // Layout should be applied to Container, not a wrapper Box
-      expect(result.newSource).toContain('Container w full, h full, ver')
+      // Layout should be applied to Container using 9-zone property
+      expect(result.newSource).toContain('Container w full, h full, top-left')
       expect(result.newSource).toContain('Button "Click"')
       // No wrapper Box should be created
-      expect(result.newSource).not.toContain('Box ver')
+      expect(result.newSource).not.toContain('Box')
     })
 
     it('applies layout directly to empty container for center zone', () => {

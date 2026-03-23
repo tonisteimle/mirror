@@ -314,13 +314,15 @@ export class StudioDragDropService {
       let alignmentZone: AlignmentZoneResult | null = null
 
       if (dropResult) {
-        const flexResult = dropResult as FlexDropResult
-        const direction = flexResult.direction || 'vertical'
+        // Type-safe access to flex-specific properties
+        const isFlexResult = dropResult.layoutType === 'flex'
+        const direction = isFlexResult ? (dropResult as FlexDropResult).direction : 'vertical'
+        const suggestedAlignment = isFlexResult ? (dropResult as FlexDropResult).suggestedAlignment : undefined
 
-        if (dropResult.placement === 'inside' && flexResult.suggestedAlignment) {
+        if (dropResult.placement === 'inside' && suggestedAlignment) {
           // Empty container: show zone indicator
           alignmentZone = this.buildAlignmentZoneResult(
-            flexResult,
+            dropResult as FlexDropResult,
             rect
           )
           indicatorRect = { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
@@ -331,7 +333,9 @@ export class StudioDragDropService {
           if (siblingElement) {
             indicatorRect = this.calculateSiblingIndicatorRect(dropResult, siblingElement, direction)
           } else {
-            // Fallback to hover element if sibling not found
+            // Sibling not found - this can happen during rapid DOM updates
+            // Fall back to hover element position
+            console.warn(`[DragDrop] Sibling element not found: ${dropResult.targetId}, using hover target`)
             indicatorRect = this.calculateSiblingIndicatorRect(dropResult, element, direction)
           }
           indicatorDirection = direction === 'horizontal' ? 'vertical' : 'horizontal'
@@ -682,17 +686,20 @@ export class StudioDragDropService {
       }
     }
 
-    const flexResult = dropResult as FlexDropResult
-    const direction = flexResult.direction || 'vertical'
+    // Type-safe access to flex-specific properties
+    const isFlexResult = dropResult.layoutType === 'flex'
+    const direction = isFlexResult ? (dropResult as FlexDropResult).direction : 'vertical'
+    const suggestedAlignment = isFlexResult ? (dropResult as FlexDropResult).suggestedAlignment : undefined
+    const suggestedCrossAlignment = isFlexResult ? (dropResult as FlexDropResult).suggestedCrossAlignment : undefined
     let modification: ModificationResult
 
     if (dropResult.placement === 'inside') {
       // Inside placement: check for semantic zone (empty container with alignment)
-      if (flexResult.suggestedAlignment) {
+      if (suggestedAlignment) {
         // Derive semantic zone from alignment
         const semanticZone = deriveSemanticZone(
-          flexResult.suggestedAlignment,
-          flexResult.suggestedCrossAlignment || 'center',
+          suggestedAlignment,
+          suggestedCrossAlignment || 'center',
           direction
         ) || 'center'
 

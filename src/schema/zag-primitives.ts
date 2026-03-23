@@ -52,7 +52,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Select: {
     machine: 'select',
     slots: ['Trigger', 'Content', 'Item', 'ItemIndicator', 'Group', 'GroupLabel', 'Input', 'Empty', 'Pill', 'PillRemove', 'ClearButton'],
-    props: ['placeholder', 'multiple', 'searchable', 'clearable', 'disabled', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'deselectable', 'open', 'defaultOpen'],
+    props: ['placeholder', 'multiple', 'searchable', 'clearable', 'disabled', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'deselectable', 'open', 'defaultOpen', 'positioning', 'typeahead'],
     events: ['onchange', 'onopen', 'onclose'],
     description: 'Dropdown select with keyboard navigation',
     pattern: 'simple-items',
@@ -61,7 +61,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Combobox: {
     machine: 'combobox',
     slots: ['Root', 'Label', 'Control', 'Input', 'Trigger', 'Positioner', 'Content', 'Item', 'ItemText', 'ItemIndicator', 'Empty', 'ClearTrigger'],
-    props: ['placeholder', 'allowCustomValue', 'autoFocus', 'disabled', 'inputBehavior', 'openOnChange', 'openOnKeyPress', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus'],
+    props: ['placeholder', 'allowCustomValue', 'autoFocus', 'disabled', 'inputBehavior', 'openOnChange', 'openOnKeyPress', 'value', 'defaultValue', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'positioning'],
     events: ['onchange', 'onopen', 'onclose', 'oninputchange'],
     description: 'Autocomplete combobox with filtering',
     pattern: 'simple-items',
@@ -82,7 +82,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Menu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'ItemGroup', 'ItemGroupLabel', 'Separator', 'Arrow'],
-    props: ['disabled', 'closeOnSelect', 'loopFocus'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus', 'positioning', 'typeahead'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Dropdown menu with keyboard navigation',
     pattern: 'simple-items',
@@ -91,7 +91,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   ContextMenu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'ItemGroup', 'ItemGroupLabel', 'Separator'],
-    props: ['disabled', 'closeOnSelect', 'loopFocus'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus', 'positioning', 'typeahead'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Right-click context menu',
     pattern: 'simple-items',
@@ -100,7 +100,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   NestedMenu: {
     machine: 'menu',
     slots: ['Trigger', 'Positioner', 'Content', 'Item', 'Submenu', 'SubmenuTrigger', 'SubmenuContent', 'Separator'],
-    props: ['disabled', 'closeOnSelect', 'loopFocus'],
+    props: ['disabled', 'closeOnSelect', 'loopFocus', 'positioning', 'typeahead'],
     events: ['onselect', 'onopen', 'onclose'],
     description: 'Nested submenu structure',
     pattern: 'complex-nested',
@@ -250,7 +250,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   DatePicker: {
     machine: 'date-picker',
     slots: ['Root', 'Label', 'Control', 'Input', 'Trigger', 'Positioner', 'Content', 'ViewControl', 'PrevTrigger', 'NextTrigger', 'ViewTrigger', 'RangeText', 'Table', 'TableHead', 'TableRow', 'TableHeader', 'TableBody', 'TableCell', 'TableCellTrigger', 'MonthSelect', 'YearSelect', 'ClearTrigger', 'PresetTrigger'],
-    props: ['value', 'defaultValue', 'disabled', 'readOnly', 'min', 'max', 'locale', 'selectionMode', 'fixedWeeks', 'startOfWeek', 'closeOnSelect'],
+    props: ['value', 'defaultValue', 'disabled', 'readOnly', 'min', 'max', 'locale', 'selectionMode', 'fixedWeeks', 'startOfWeek', 'closeOnSelect', 'positioning'],
     events: ['onchange', 'onopen', 'onclose', 'onviewchange'],
     description: 'Date picker calendar',
     pattern: 'complex-nested',
@@ -289,7 +289,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Tooltip: {
     machine: 'tooltip',
     slots: ['Trigger', 'Positioner', 'Content', 'Arrow'],
-    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement', 'disabled', 'closeOnClick', 'closeOnPointerDown', 'interactive', 'closeOnScroll'],
+    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement', 'disabled', 'closeOnClick', 'closeOnPointerDown', 'interactive', 'closeOnScroll', 'positioning'],
     events: ['onopen', 'onclose'],
     description: 'Hover tooltip',
     pattern: 'slots-only',
@@ -298,7 +298,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Popover: {
     machine: 'popover',
     slots: ['Trigger', 'Positioner', 'Content', 'Title', 'Description', 'CloseTrigger', 'Arrow', 'Anchor'],
-    props: ['open', 'defaultOpen', 'placement', 'modal', 'closeOnOutsideClick', 'closeOnEscape', 'autoFocus', 'trapFocus', 'restoreFocus'],
+    props: ['open', 'defaultOpen', 'placement', 'modal', 'closeOnOutsideClick', 'closeOnEscape', 'autoFocus', 'trapFocus', 'restoreFocus', 'positioning'],
     events: ['onopen', 'onclose'],
     description: 'Click popover',
     pattern: 'slots-only',
@@ -307,7 +307,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   HoverCard: {
     machine: 'hover-card',
     slots: ['Trigger', 'Positioner', 'Content', 'Arrow'],
-    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement'],
+    props: ['open', 'defaultOpen', 'openDelay', 'closeDelay', 'placement', 'positioning'],
     events: ['onopen', 'onclose'],
     description: 'Hover card preview',
     pattern: 'slots-only',

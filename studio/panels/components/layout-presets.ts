@@ -202,10 +202,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 200, height: 40 },
     children: [
       { template: 'Trigger', isSlot: true, properties: 'pad 12, bg #1e1e2e, rad 6, bor 1 #333' },
-      { template: 'Content', isSlot: true, properties: 'bg #2a2a3e, rad 8, pad 4, shadow md' },
-      { template: 'Item', isItem: true, textContent: 'Option A' },
-      { template: 'Item', isItem: true, textContent: 'Option B' },
-      { template: 'Item', isItem: true, textContent: 'Option C' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Option A' },
+          { template: 'Item', isItem: true, textContent: 'Option B' },
+          { template: 'Item', isItem: true, textContent: 'Option C' },
+        ],
+      },
     ],
   },
   {
@@ -218,9 +224,15 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 120, height: 40 },
     children: [
       { template: 'Trigger', isSlot: true, properties: 'pad 12, bg #1e1e2e, rad 6' },
-      { template: 'Content', isSlot: true, properties: 'bg #2a2a3e, rad 8, pad 4, shadow md' },
-      { template: 'Item', isItem: true, textContent: 'Action 1' },
-      { template: 'Item', isItem: true, textContent: 'Action 2' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Action 1' },
+          { template: 'Item', isItem: true, textContent: 'Action 2' },
+        ],
+      },
     ],
   },
 
@@ -346,10 +358,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     description: 'Tabbed navigation (Zag)',
     defaultSize: { width: 300, height: 200 },
     children: [
-      { template: 'List', isSlot: true, properties: 'hor, gap 4, bg #1e1e2e, pad 4, rad 8' },
-      { template: 'Tab', isItem: true, textContent: 'Tab 1' },
-      { template: 'Tab', isItem: true, textContent: 'Tab 2' },
-      { template: 'Tab', isItem: true, textContent: 'Tab 3' },
+      {
+        template: 'List',
+        isSlot: true,
+        properties: 'hor, gap 4, bg #1e1e2e, pad 4, rad 8',
+        children: [
+          { template: 'Tab', isItem: true, textContent: 'Tab 1' },
+          { template: 'Tab', isItem: true, textContent: 'Tab 2' },
+          { template: 'Tab', isItem: true, textContent: 'Tab 3' },
+        ],
+      },
       { template: 'Content', isSlot: true, properties: 'pad 16' },
     ],
   },
@@ -389,10 +407,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     description: 'Wizard steps (Zag)',
     defaultSize: { width: 400, height: 60 },
     children: [
-      { template: 'List', isSlot: true, properties: 'hor, gap 8' },
-      { template: 'Step', isItem: true, textContent: 'Step 1' },
-      { template: 'Step', isItem: true, textContent: 'Step 2' },
-      { template: 'Step', isItem: true, textContent: 'Step 3' },
+      {
+        template: 'List',
+        isSlot: true,
+        properties: 'hor, gap 8',
+        children: [
+          { template: 'Step', isItem: true, textContent: 'Step 1' },
+          { template: 'Step', isItem: true, textContent: 'Step 2' },
+          { template: 'Step', isItem: true, textContent: 'Step 3' },
+        ],
+      },
     ],
   },
   {
@@ -440,9 +464,15 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
       { template: 'Control', isSlot: true },
       { template: 'Input', isSlot: true },
       { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true, properties: 'bg #2a2a3e, rad 8, pad 4, shadow md' },
-      { template: 'Item', isItem: true, textContent: 'Option A' },
-      { template: 'Item', isItem: true, textContent: 'Option B' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Option A' },
+          { template: 'Item', isItem: true, textContent: 'Option B' },
+        ],
+      },
     ],
   },
   {
@@ -454,10 +484,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     description: 'List selection (Zag)',
     defaultSize: { width: 200, height: 150 },
     children: [
-      { template: 'Content', isSlot: true, properties: 'bg #1e1e2e, rad 6, pad 4' },
-      { template: 'Item', isItem: true, textContent: 'Item 1' },
-      { template: 'Item', isItem: true, textContent: 'Item 2' },
-      { template: 'Item', isItem: true, textContent: 'Item 3' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #1e1e2e, rad 6, pad 4',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Item 1' },
+          { template: 'Item', isItem: true, textContent: 'Item 2' },
+          { template: 'Item', isItem: true, textContent: 'Item 3' },
+        ],
+      },
     ],
   },
   {
@@ -470,10 +506,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 150, height: 100 },
     children: [
       { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true, properties: 'bg #2a2a3e, rad 8, pad 4, shadow md' },
-      { template: 'Item', isItem: true, textContent: 'Cut' },
-      { template: 'Item', isItem: true, textContent: 'Copy' },
-      { template: 'Item', isItem: true, textContent: 'Paste' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Cut' },
+          { template: 'Item', isItem: true, textContent: 'Copy' },
+          { template: 'Item', isItem: true, textContent: 'Paste' },
+        ],
+      },
     ],
   },
   {
@@ -486,9 +528,15 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 150, height: 120 },
     children: [
       { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true, properties: 'bg #2a2a3e, rad 8, pad 4, shadow md' },
-      { template: 'Item', isItem: true, textContent: 'File' },
-      { template: 'Item', isItem: true, textContent: 'Edit' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'File' },
+          { template: 'Item', isItem: true, textContent: 'Edit' },
+        ],
+      },
     ],
   },
   {
@@ -500,9 +548,15 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     description: 'Navigation with dropdowns (Zag)',
     defaultSize: { width: 400, height: 50 },
     children: [
-      { template: 'List', isSlot: true, properties: 'hor, gap 8' },
-      { template: 'Item', isItem: true, textContent: 'Products' },
-      { template: 'Item', isItem: true, textContent: 'Pricing' },
+      {
+        template: 'List',
+        isSlot: true,
+        properties: 'hor, gap 8',
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Products' },
+          { template: 'Item', isItem: true, textContent: 'Pricing' },
+        ],
+      },
     ],
   },
 
@@ -823,9 +877,14 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     description: 'Image slideshow (Zag)',
     defaultSize: { width: 400, height: 250 },
     children: [
-      { template: 'ItemGroup', isSlot: true },
-      { template: 'Item', isItem: true, textContent: 'Slide 1' },
-      { template: 'Item', isItem: true, textContent: 'Slide 2' },
+      {
+        template: 'ItemGroup',
+        isSlot: true,
+        children: [
+          { template: 'Item', isItem: true, textContent: 'Slide 1' },
+          { template: 'Item', isItem: true, textContent: 'Slide 2' },
+        ],
+      },
       { template: 'PrevTrigger', isSlot: true },
       { template: 'NextTrigger', isSlot: true },
     ],
