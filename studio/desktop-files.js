@@ -670,7 +670,7 @@ function renderFileTree() {
       <div class="file-tree-header">EXPLORER</div>
       <div class="file-tree-items">
         <div class="file-tree-folder expanded" data-path="." data-root="true">
-          <div class="file-tree-folder-header" style="padding-left: 12px">
+          <div class="file-tree-folder-header" style="padding-left: 8px">
             ${ICON_CHEVRON}
             <span>${escapedProjectName}</span>
           </div>
@@ -723,7 +723,7 @@ function renderTreeItems(items, depth = 1) {
       const escapedPath = escapeHtml(item.path)
       return `
         <div class="file-tree-folder ${isExpanded ? 'expanded' : ''}" data-path="${escapedPath}" draggable="true">
-          <div class="file-tree-folder-header" style="padding-left: ${12 + depth * 12}px">
+          <div class="file-tree-folder-header" style="padding-left: ${8 + depth * 12}px">
             ${ICON_CHEVRON}
             <span>${escapedName}</span>
           </div>
@@ -741,7 +741,7 @@ function renderTreeItems(items, depth = 1) {
         <div class="file-tree-file ${isActive ? 'active' : ''}"
              data-path="${escapedPath}"
              draggable="true"
-             style="padding-left: ${12 + depth * 12}px">
+             style="padding-left: ${16 + depth * 12}px">
           <span class="file-icon" style="color: ${fileType.color}">${fileType.icon}</span>
           <span>${escapedName}</span>
         </div>
