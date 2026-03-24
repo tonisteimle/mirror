@@ -3,23 +3,33 @@
  * Mirror Studio API Router
  *
  * Routes:
+ *   GET  /api/health                         - Health check for auto-detection
+ *
  *   POST /api/auth/register
  *   POST /api/auth/login
  *   POST /api/auth/logout
  *   GET  /api/auth/me
+ *   GET  /api/auth/status
+ *   GET  /api/auth/settings
+ *   PUT  /api/auth/settings
  *
  *   GET    /api/projects
  *   POST   /api/projects
  *   PUT    /api/projects/{id}
  *   DELETE /api/projects/{id}
  *
- *   GET    /api/projects/{id}/files          - List all files (recursive with folders)
- *   GET    /api/projects/{id}/files/{path}   - Get file content (supports paths)
- *   PUT    /api/projects/{id}/files/{path}   - Create/update file (supports paths)
- *   DELETE /api/projects/{id}/files/{path}   - Delete file (supports paths)
+ *   GET    /api/projects/{id}/files               - List all files (recursive with folders)
+ *   GET    /api/projects/{id}/files/{path}        - Get file content
+ *   PUT    /api/projects/{id}/files/{path}        - Create/update file
+ *   DELETE /api/projects/{id}/files/{path}        - Delete file
+ *   POST   /api/projects/{id}/files/{path}/rename - Rename file { newPath }
+ *   POST   /api/projects/{id}/files/{path}/copy   - Copy file { targetPath }
  *
- *   POST   /api/projects/{id}/folders        - Create folder { name, parent? }
- *   DELETE /api/projects/{id}/folders/{path} - Delete folder (?force=true for non-empty)
+ *   POST   /api/projects/{id}/move                - Move file/folder { sourcePath, targetFolder }
+ *
+ *   POST   /api/projects/{id}/folders             - Create folder { name, parent? }
+ *   DELETE /api/projects/{id}/folders/{path}      - Delete folder (?force=true for non-empty)
+ *   POST   /api/projects/{id}/folders/{path}/rename - Rename folder { newName }
  */
 
 // Error reporting for development

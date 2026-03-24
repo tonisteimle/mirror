@@ -159,9 +159,14 @@ export class ServerProvider implements StorageProvider {
   async createFolder(path: string): Promise<void> {
     this.ensureProjectOpen()
 
+    // Split path into name and parent
+    const parts = path.split('/')
+    const name = parts.pop()!
+    const parent = parts.length > 0 ? parts.join('/') : undefined
+
     await this.fetch(`/projects/${this.projectId}/folders`, {
       method: 'POST',
-      body: JSON.stringify({ path })
+      body: JSON.stringify({ name, parent })
     })
   }
 
@@ -176,18 +181,21 @@ export class ServerProvider implements StorageProvider {
   async renameFolder(oldPath: string, newPath: string): Promise<void> {
     this.ensureProjectOpen()
 
+    // Extract just the new name from the new path
+    const newName = newPath.split('/').pop()!
+
     await this.fetch(`/projects/${this.projectId}/folders/${encodeURIComponent(oldPath)}/rename`, {
       method: 'POST',
-      body: JSON.stringify({ newPath })
+      body: JSON.stringify({ newName })
     })
   }
 
   async moveItem(sourcePath: string, targetFolder: string): Promise<void> {
     this.ensureProjectOpen()
 
-    await this.fetch(`/projects/${this.projectId}/files/${encodeURIComponent(sourcePath)}/move`, {
+    await this.fetch(`/projects/${this.projectId}/move`, {
       method: 'POST',
-      body: JSON.stringify({ targetFolder })
+      body: JSON.stringify({ sourcePath, targetFolder })
     })
   }
 
