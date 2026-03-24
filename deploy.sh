@@ -91,17 +91,15 @@ set net:max-retries 2
 open -u $FTP_USER,$FTP_PASS $FTP_HOST
 mkdir -f mirror
 mkdir -f mirror/dist
-mkdir -f dist
-mkdir -f dist/browser
+mkdir -f mirror/dist/browser
 
-# Upload studio files directly to /mirror/
+# Upload studio files to /mirror/
 cd mirror
 lcd $STUDIO_DIR
 put index.html
 put app.js
 put styles.css
 put logo.png
-put desktop-files.js
 put tauri-bridge.js
 
 # Upload studio/dist (new architecture modules)
@@ -110,11 +108,10 @@ cd dist
 lcd $STUDIO_DIR/dist
 put index.js
 
-# Upload compiled JS (the compiler) to /dist/browser/ (root level for ../dist/browser/ path)
-cd /
-mkdir -f dist
-mkdir -f dist/browser
-cd dist/browser
+# Upload compiled JS (the compiler) to /mirror/dist/browser/
+cd /mirror/dist
+mkdir -f browser
+cd browser
 lcd $DIST_DIR/browser
 put index.global.js
 

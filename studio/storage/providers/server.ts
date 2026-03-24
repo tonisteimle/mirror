@@ -14,8 +14,7 @@ import type { StorageProvider, StorageProject, StorageItem } from '../types'
  * Ermittelt die korrekte API-Basis-URL relativ zur aktuellen Seite
  *
  * Beispiele:
- * - Seite: /mirror/studio/index.html → API: /mirror/api
- * - Seite: /studio/index.html → API: /api
+ * - Seite: /mirror/index.html → API: /mirror/api
  * - Seite: /index.html → API: /api
  */
 function getDefaultApiBase(): string {
@@ -25,15 +24,12 @@ function getDefaultApiBase(): string {
 
   const pathname = window.location.pathname
 
-  // Finde den Basis-Pfad (alles vor /studio/)
-  const studioIndex = pathname.indexOf('/studio')
-  if (studioIndex > 0) {
-    // z.B. /mirror/studio/index.html → /mirror/api
-    return pathname.slice(0, studioIndex) + '/api'
-  }
+  // Entferne den Dateinamen (z.B. index.html)
+  const lastSlash = pathname.lastIndexOf('/')
+  const basePath = lastSlash > 0 ? pathname.slice(0, lastSlash) : ''
 
-  // Fallback: /api
-  return '/api'
+  // z.B. /mirror → /mirror/api
+  return basePath + '/api'
 }
 
 // =============================================================================
