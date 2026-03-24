@@ -274,7 +274,7 @@ function putFile(string $projectId, string $filePath, array $body): array {
     // Create parent directories if they don't exist
     $parentDir = dirname($fullPath);
     if (!file_exists($parentDir)) {
-        mkdir($parentDir, 0755, true);
+        mkdir($parentDir, 0700, true);
     }
 
     file_put_contents($fullPath, $content);
@@ -395,7 +395,7 @@ function createFolder(string $projectId, array $body): array {
         return ['error' => 'Folder already exists'];
     }
 
-    mkdir($fullPath, 0755, true);
+    mkdir($fullPath, 0700, true);
 
     return [
         'success' => true,
@@ -522,7 +522,7 @@ function renameFile(string $projectId, string $oldPath, array $body): array {
     // Create parent directories if they don't exist
     $parentDir = dirname($newFullPath);
     if (!file_exists($parentDir)) {
-        mkdir($parentDir, 0755, true);
+        mkdir($parentDir, 0700, true);
     }
 
     rename($oldFullPath, $newFullPath);
@@ -598,7 +598,7 @@ function copyFile(string $projectId, string $sourcePath, array $body): array {
     // Create parent directories if they don't exist
     $parentDir = dirname($targetFullPath);
     if (!file_exists($parentDir)) {
-        mkdir($parentDir, 0755, true);
+        mkdir($parentDir, 0700, true);
     }
 
     copy($sourceFullPath, $targetFullPath);
@@ -671,7 +671,7 @@ function moveItem(string $projectId, array $body): array {
     if ($targetFolder) {
         $targetFolderFull = $projectDir . '/' . $targetFolder;
         if (!file_exists($targetFolderFull)) {
-            mkdir($targetFolderFull, 0755, true);
+            mkdir($targetFolderFull, 0700, true);
         }
     }
 

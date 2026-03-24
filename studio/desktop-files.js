@@ -20,6 +20,18 @@ let expandedFolders = new Set()  // Track expanded folders (UI state)
 // This is updated by storage events and provides sync access to file contents
 let filesCache = {}
 
+/**
+ * Reset all UI state (called on project close/switch)
+ */
+function resetUIState() {
+  currentFile = null
+  contextMenu = null
+  draggedItem = null
+  expandedFolders.clear()
+  filesCache = {}
+  hideContextMenu()
+}
+
 // =============================================================================
 // File Types with Icons and Colors
 // =============================================================================
@@ -220,11 +232,19 @@ export async function initDesktopFiles(options = {}) {
     renderFileTree()
   })
 
+  storage.events.on('project:closed', () => {
+    console.log('[DesktopFiles] Project closed')
+    resetUIState()
+    renderFileTree()
+  })
+
   storage.events.on('project:opened', async ({ project }) => {
     console.log('[DesktopFiles] Project opened:', project.name)
 
-    // Clear and reload cache with all files
-    filesCache = {}
+    // Reset UI state before loading new project
+    resetUIState()
+
+    // Preload all files
     await preloadAllFiles()
 
     // Auto-select first file

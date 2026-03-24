@@ -75,7 +75,7 @@ function authRegister(array $body): array {
     // Create user's project directory
     $userDir = PROJECTS_DIR . '/' . $userId;
     if (!file_exists($userDir)) {
-        mkdir($userDir, 0755, true);
+        mkdir($userDir, 0700, true);
     }
 
     // Auto-login after registration
@@ -223,7 +223,7 @@ function getOrCreateSessionUser(): string {
         // Create directory for anonymous user
         $userDir = PROJECTS_DIR . '/' . $_SESSION['anon_id'];
         if (!file_exists($userDir)) {
-            mkdir($userDir, 0755, true);
+            mkdir($userDir, 0700, true);
         }
     }
 

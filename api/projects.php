@@ -55,7 +55,7 @@ function getProjects(): array {
     $userDir = getUserProjectsDir($userId);
 
     if (!is_dir($userDir)) {
-        mkdir($userDir, 0755, true);
+        mkdir($userDir, 0700, true);
         return [];
     }
 
@@ -107,7 +107,7 @@ function createProject(array $body): array {
     $projectDir = getProjectDir($userId, $projectId);
 
     // Create directory
-    mkdir($projectDir, 0755, true);
+    mkdir($projectDir, 0700, true);
 
     // Save metadata
     $now = date('c');

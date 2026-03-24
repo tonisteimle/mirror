@@ -448,6 +448,7 @@ export class StorageService {
 
   /**
    * Gibt alle Token- und Component-Dateien zurück
+   * Fehlerhafte Dateien werden übersprungen (mit Warnung)
    */
   async getPreludeFiles(): Promise<PreludeFile[]> {
     const preludeFiles: { path: string; type: 'tokens' | 'component' }[] = []
@@ -475,17 +476,31 @@ export class StorageService {
       return a.path.localeCompare(b.path)
     })
 
-    // Inhalte laden
-    return Promise.all(
-      preludeFiles.map(async (f) => ({
-        ...f,
-        content: await this.readFile(f.path)
-      }))
-    )
+    // Inhalte laden - mit Fehlertoleranz pro Datei
+    const results: PreludeFile[] = []
+
+    for (const f of preludeFiles) {
+      try {
+        const content = await this.readFile(f.path)
+        results.push({ ...f, content })
+      } catch (error) {
+        // Log warning but continue with other files
+        console.warn(`[Storage] Failed to load prelude file ${f.path}:`, error)
+        this.events.emit('error', {
+          error: error as Error,
+          operation: 'getPreludeFiles',
+          path: f.path,
+          recoverable: true
+        })
+      }
+    }
+
+    return results
   }
 
   /**
    * Baut Prelude-String für Compiler
+   * Fehlerhafte Dateien werden übersprungen
    */
   async buildPrelude(): Promise<string> {
     const files = await this.getPreludeFiles()

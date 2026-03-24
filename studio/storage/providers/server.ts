@@ -11,22 +11,49 @@ import type { StorageProvider, StorageProject, StorageItem } from '../types'
 // =============================================================================
 
 /**
- * Ermittelt die korrekte API-Basis-URL relativ zur aktuellen Seite
+ * Ermittelt die korrekte API-Basis-URL
  *
- * Beispiele:
+ * Prüft in dieser Reihenfolge:
+ * 1. window.MIRROR_API_BASE (explizite Konfiguration)
+ * 2. data-api-base Attribut auf <script> Tag
+ * 3. Automatische Erkennung basierend auf aktuellem Pfad
+ *
+ * Beispiele für automatische Erkennung:
  * - Seite: /mirror/index.html → API: /mirror/api
  * - Seite: /index.html → API: /api
+ * - Seite: /app/studio/ → API: /app/studio/api
  */
 function getDefaultApiBase(): string {
   if (typeof window === 'undefined') {
     return '/api'
   }
 
+  // 1. Explizite Konfiguration
+  const globalConfig = (window as unknown as { MIRROR_API_BASE?: string }).MIRROR_API_BASE
+  if (globalConfig) {
+    return globalConfig
+  }
+
+  // 2. data-api-base auf Script-Tag
+  const scriptTag = document.querySelector('script[data-api-base]')
+  if (scriptTag) {
+    const apiBase = scriptTag.getAttribute('data-api-base')
+    if (apiBase) return apiBase
+  }
+
+  // 3. Automatische Erkennung
   const pathname = window.location.pathname
 
-  // Entferne den Dateinamen (z.B. index.html)
-  const lastSlash = pathname.lastIndexOf('/')
-  const basePath = lastSlash > 0 ? pathname.slice(0, lastSlash) : ''
+  // Entferne den Dateinamen (z.B. index.html) und Query-Parameter
+  let basePath = pathname
+
+  // Entferne Dateiendung wenn vorhanden
+  if (basePath.includes('.')) {
+    basePath = basePath.substring(0, basePath.lastIndexOf('/'))
+  }
+
+  // Entferne trailing slash
+  basePath = basePath.replace(/\/$/, '')
 
   // z.B. /mirror → /mirror/api
   return basePath + '/api'
@@ -53,20 +80,59 @@ export class ServerProvider implements StorageProvider {
   // ===========================================================================
 
   private async fetch<T>(path: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.apiBase}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-      }
-    })
+    let response: Response
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`API Error ${response.status}: ${error}`)
+    try {
+      response = await fetch(`${this.apiBase}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers
+        }
+      })
+    } catch (networkError) {
+      // Network error (offline, DNS failure, CORS, etc.)
+      throw new Error(`Network error: Unable to connect to server. Please check your connection.`)
     }
 
-    return response.json()
+    // Get response text first (safer than direct JSON parse)
+    const responseText = await response.text()
+
+    if (!response.ok) {
+      // Try to extract error message from JSON response
+      let errorMessage = responseText
+      try {
+        const errorJson = JSON.parse(responseText)
+        errorMessage = errorJson.error || errorJson.message || responseText
+      } catch {
+        // Response is not JSON, use raw text
+      }
+
+      // Provide user-friendly error messages based on status
+      switch (response.status) {
+        case 401:
+          throw new Error('Session expired. Please refresh the page.')
+        case 403:
+          throw new Error('Access denied. You do not have permission for this action.')
+        case 404:
+          throw new Error(`Not found: ${errorMessage}`)
+        case 500:
+          throw new Error(`Server error: ${errorMessage}`)
+        default:
+          throw new Error(`API Error ${response.status}: ${errorMessage}`)
+      }
+    }
+
+    // Parse JSON response safely
+    if (!responseText) {
+      return {} as T // Empty response
+    }
+
+    try {
+      return JSON.parse(responseText) as T
+    } catch (parseError) {
+      throw new Error(`Invalid server response: Expected JSON but received: ${responseText.substring(0, 100)}...`)
+    }
   }
 
   // ===========================================================================
