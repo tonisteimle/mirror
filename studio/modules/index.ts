@@ -4,19 +4,8 @@
  * Re-exports all module functionality.
  */
 
-// File Manager
-export {
-  createFileManager,
-  getFileManager,
-  resetFileManager,
-  type FileManager,
-  type FileStore,
-  type FileType,
-  type FileMetadata,
-  type Project,
-  type FileManagerOptions,
-  type FileManagerEvents,
-} from './file-manager'
+// Note: File Manager has been replaced by studio/storage/
+// See docs/architecture/STORAGE.md for details
 
 // Compiler
 export {

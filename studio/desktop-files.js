@@ -290,6 +290,9 @@ export async function selectFile(filePath) {
     const content = await storage.readFile(filePath)
     currentFile = filePath
 
+    // Update cache (in case it wasn't preloaded)
+    filesCache[filePath] = content
+
     // Update UI
     renderFileTree()
 
@@ -306,6 +309,9 @@ export async function selectFile(filePath) {
  * Save file content
  */
 export async function saveFile(filePath, content) {
+  // Update cache immediately for sync access
+  filesCache[filePath] = content
+
   try {
     await storage.writeFile(filePath, content)
   } catch (e) {

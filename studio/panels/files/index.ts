@@ -2,9 +2,19 @@
  * File Panel Module
  *
  * Displays and manages project files.
+ *
+ * NOTE: This module is DEPRECATED - use desktop-files.js instead.
+ * Kept for backwards compatibility only.
  */
 
-import type { FileMetadata, FileType } from '../../modules/file-manager'
+// Local type definitions (previously imported from file-manager)
+export type FileType = 'tokens' | 'component' | 'layout'
+
+export interface FileMetadata {
+  name: string
+  type: FileType
+  modified: Date
+}
 
 export interface FilePanelConfig {
   container: HTMLElement
