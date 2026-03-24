@@ -672,7 +672,6 @@ function renderFileTree() {
         <div class="file-tree-folder expanded" data-path="." data-root="true">
           <div class="file-tree-folder-header" style="padding-left: 12px">
             ${ICON_CHEVRON}
-            ${ICON_FOLDER_OPEN}
             <span>${escapedProjectName}</span>
           </div>
           <div class="file-tree-folder-children">
@@ -686,8 +685,38 @@ function renderFileTree() {
   attachTreeEvents(container)
 }
 
+/**
+ * Get sort priority for file extension
+ * .mir = 0, .com = 1, .tok = 2, others = 3
+ */
+function getExtensionPriority(name) {
+  if (name.endsWith('.mir') || name.endsWith('.mirror')) return 0
+  if (name.endsWith('.com') || name.endsWith('.components')) return 1
+  if (name.endsWith('.tok') || name.endsWith('.tokens')) return 2
+  return 3
+}
+
+/**
+ * Sort items: folders first, then files by extension priority, then alphabetically
+ */
+function sortTreeItems(items) {
+  return [...items].sort((a, b) => {
+    // Folders first
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
+    // Files: sort by extension priority
+    if (a.type === 'file') {
+      const priorityA = getExtensionPriority(a.name)
+      const priorityB = getExtensionPriority(b.name)
+      if (priorityA !== priorityB) return priorityA - priorityB
+    }
+    // Then alphabetically
+    return a.name.localeCompare(b.name)
+  })
+}
+
 function renderTreeItems(items, depth = 1) {
-  return items.map(item => {
+  const sortedItems = sortTreeItems(items)
+  return sortedItems.map(item => {
     if (item.type === 'folder') {
       const isExpanded = expandedFolders.has(item.path)
       const escapedName = escapeHtml(item.name)
