@@ -27,8 +27,21 @@ function validateFilename(string $filename): bool {
 }
 
 /**
+ * Allowed file extensions for Mirror files
+ */
+define('ALLOWED_EXTENSIONS', ['mir', 'mirror', 'tok', 'tokens', 'com', 'components']);
+
+/**
+ * Check if a filename has an allowed extension
+ */
+function hasAllowedExtension(string $filename): bool {
+    $ext = pathinfo($filename, PATHINFO_EXTENSION);
+    return in_array(strtolower($ext), ALLOWED_EXTENSIONS);
+}
+
+/**
  * Validate a path (for files in folders)
- * Allows: folder/file.mirror, folder/subfolder/file.mirror
+ * Allows: folder/file.mir, folder/subfolder/file.tok
  * Disallows: .., absolute paths, special characters
  */
 function validatePath(string $path): bool {
@@ -54,13 +67,22 @@ function validatePath(string $path): bool {
 
     // Each segment must be valid
     $segments = explode('/', $path);
-    foreach ($segments as $segment) {
+    foreach ($segments as $i => $segment) {
         if (empty($segment)) {
             return false; // No empty segments (// in path)
         }
-        // Segment must be alphanumeric with - _ or end with .mirror
-        if (!preg_match('/^[a-zA-Z0-9_-]+(\\.mirror)?$/', $segment)) {
-            return false;
+        // Last segment (filename) can have extension
+        $isLast = ($i === count($segments) - 1);
+        if ($isLast) {
+            // Filename must be alphanumeric with - _ and valid extension
+            if (!preg_match('/^[a-zA-Z0-9_-]+\.[a-z]+$/', $segment)) {
+                return false;
+            }
+        } else {
+            // Folder must be alphanumeric with - _
+            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $segment)) {
+                return false;
+            }
         }
     }
 
@@ -90,10 +112,14 @@ function validateFolderName(string $name): bool {
 }
 
 /**
- * Recursively scan a directory for .mirror files and folders
+ * Recursively scan a directory for Mirror files and folders
  */
 function scanDirRecursive(string $dir, string $relativePath = ''): array {
     $items = [];
+
+    if (!is_dir($dir)) {
+        return $items;
+    }
 
     $entries = scandir($dir);
     foreach ($entries as $entry) {
@@ -106,37 +132,41 @@ function scanDirRecursive(string $dir, string $relativePath = ''): array {
             // It's a folder - recurse
             $children = scanDirRecursive($fullPath, $itemPath);
             $items[] = [
-                'filename' => $entry,
+                'name' => $entry,
                 'path' => $itemPath,
                 'type' => 'folder',
                 'children' => $children
             ];
-        } elseif (is_file($fullPath) && pathinfo($entry, PATHINFO_EXTENSION) === 'mirror') {
-            // It's a .mirror file
+        } elseif (is_file($fullPath) && hasAllowedExtension($entry)) {
+            // It's a Mirror file (.mir, .tok, .com, etc.)
             $items[] = [
-                'filename' => $entry,
+                'name' => $entry,
                 'path' => $itemPath,
                 'type' => 'file',
-                'updated_at' => date('c', filemtime($fullPath))
+                'updatedAt' => date('c', filemtime($fullPath))
             ];
         }
     }
 
-    // Sort: folders first, then files; index.mirror and tokens.mirror first among files
+    // Sort: folders first, then files by extension priority (.mir, .com, .tok)
     usort($items, function($a, $b) {
         // Folders first
         if ($a['type'] === 'folder' && $b['type'] !== 'folder') return -1;
         if ($a['type'] !== 'folder' && $b['type'] === 'folder') return 1;
 
-        // Among files: index.mirror first, tokens.mirror second
+        // Among files: sort by extension priority
         if ($a['type'] === 'file' && $b['type'] === 'file') {
-            if ($a['filename'] === 'index.mirror') return -1;
-            if ($b['filename'] === 'index.mirror') return 1;
-            if ($a['filename'] === 'tokens.mirror') return -1;
-            if ($b['filename'] === 'tokens.mirror') return 1;
+            $extA = pathinfo($a['name'], PATHINFO_EXTENSION);
+            $extB = pathinfo($b['name'], PATHINFO_EXTENSION);
+
+            $priority = ['mir' => 0, 'mirror' => 0, 'com' => 1, 'components' => 1, 'tok' => 2, 'tokens' => 2];
+            $prioA = $priority[$extA] ?? 3;
+            $prioB = $priority[$extB] ?? 3;
+
+            if ($prioA !== $prioB) return $prioA - $prioB;
         }
 
-        return strcmp($a['filename'], $b['filename']);
+        return strcmp($a['name'], $b['name']);
     });
 
     return $items;
@@ -177,10 +207,10 @@ function getFile(string $projectId, string $filePath): array {
         return ['error' => 'Invalid file path'];
     }
 
-    // Must end with .mirror
-    if (!preg_match('/\.mirror$/', $filePath)) {
+    // Must have allowed extension
+    if (!hasAllowedExtension($filePath)) {
         http_response_code(400);
-        return ['error' => 'Only .mirror files allowed'];
+        return ['error' => 'Only Mirror files allowed (.mir, .tok, .com, etc.)'];
     }
 
     // Validate ownership
@@ -220,10 +250,10 @@ function putFile(string $projectId, string $filePath, array $body): array {
         return ['error' => 'Invalid file path'];
     }
 
-    // Must end with .mirror
-    if (!preg_match('/\.mirror$/', $filePath)) {
+    // Must have allowed extension
+    if (!hasAllowedExtension($filePath)) {
         http_response_code(400);
-        return ['error' => 'Only .mirror files allowed'];
+        return ['error' => 'Only Mirror files allowed (.mir, .tok, .com, etc.)'];
     }
 
     // Validate ownership
@@ -272,10 +302,10 @@ function deleteFile(string $projectId, string $filePath): array {
         return ['error' => 'Invalid file path'];
     }
 
-    // Must end with .mirror
-    if (!preg_match('/\.mirror$/', $filePath)) {
+    // Must have allowed extension
+    if (!hasAllowedExtension($filePath)) {
         http_response_code(400);
-        return ['error' => 'Only .mirror files allowed'];
+        return ['error' => 'Only Mirror files allowed (.mir, .tok, .com, etc.)'];
     }
 
     // Validate ownership
@@ -431,4 +461,286 @@ function deleteFolderRecursive(string $dir): void {
         }
     }
     rmdir($dir);
+}
+
+/**
+ * Rename a file
+ *
+ * POST /api/projects/{id}/files/{path}/rename
+ * Body: { newPath }
+ * Returns: { success, path }
+ */
+function renameFile(string $projectId, string $oldPath, array $body): array {
+    $userId = getOrCreateSessionUser();
+
+    $newPath = $body['newPath'] ?? '';
+
+    // Validate old path
+    if (!validateFilename($oldPath) && !validatePath($oldPath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid source path'];
+    }
+
+    // Validate new path
+    if (!validateFilename($newPath) && !validatePath($newPath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid target path'];
+    }
+
+    // Both must have allowed extension
+    if (!hasAllowedExtension($oldPath) || !hasAllowedExtension($newPath)) {
+        http_response_code(400);
+        return ['error' => 'Only Mirror files allowed (.mir, .tok, .com, etc.)'];
+    }
+
+    // Validate ownership
+    if (!validateProjectOwnership($userId, $projectId)) {
+        http_response_code(404);
+        return ['error' => 'Project not found'];
+    }
+
+    $projectDir = getProjectDir($userId, $projectId);
+    $oldFullPath = $projectDir . '/' . $oldPath;
+    $newFullPath = $projectDir . '/' . $newPath;
+
+    if (!file_exists($oldFullPath)) {
+        http_response_code(404);
+        return ['error' => 'File not found'];
+    }
+
+    if (file_exists($newFullPath)) {
+        http_response_code(400);
+        return ['error' => 'Target file already exists'];
+    }
+
+    // Create parent directories if they don't exist
+    $parentDir = dirname($newFullPath);
+    if (!file_exists($parentDir)) {
+        mkdir($parentDir, 0755, true);
+    }
+
+    rename($oldFullPath, $newFullPath);
+
+    // Clean up empty parent directories of old path
+    $oldParentDir = dirname($oldFullPath);
+    while ($oldParentDir !== $projectDir && is_dir($oldParentDir)) {
+        $items = array_diff(scandir($oldParentDir), ['.', '..']);
+        if (empty($items)) {
+            rmdir($oldParentDir);
+            $oldParentDir = dirname($oldParentDir);
+        } else {
+            break;
+        }
+    }
+
+    return [
+        'success' => true,
+        'path' => $newPath
+    ];
+}
+
+/**
+ * Copy a file
+ *
+ * POST /api/projects/{id}/files/{path}/copy
+ * Body: { targetPath }
+ * Returns: { success, path }
+ */
+function copyFile(string $projectId, string $sourcePath, array $body): array {
+    $userId = getOrCreateSessionUser();
+
+    $targetPath = $body['targetPath'] ?? '';
+
+    // Validate source path
+    if (!validateFilename($sourcePath) && !validatePath($sourcePath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid source path'];
+    }
+
+    // Validate target path
+    if (!validateFilename($targetPath) && !validatePath($targetPath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid target path'];
+    }
+
+    // Both must have allowed extension
+    if (!hasAllowedExtension($sourcePath) || !hasAllowedExtension($targetPath)) {
+        http_response_code(400);
+        return ['error' => 'Only Mirror files allowed (.mir, .tok, .com, etc.)'];
+    }
+
+    // Validate ownership
+    if (!validateProjectOwnership($userId, $projectId)) {
+        http_response_code(404);
+        return ['error' => 'Project not found'];
+    }
+
+    $projectDir = getProjectDir($userId, $projectId);
+    $sourceFullPath = $projectDir . '/' . $sourcePath;
+    $targetFullPath = $projectDir . '/' . $targetPath;
+
+    if (!file_exists($sourceFullPath)) {
+        http_response_code(404);
+        return ['error' => 'Source file not found'];
+    }
+
+    if (file_exists($targetFullPath)) {
+        http_response_code(400);
+        return ['error' => 'Target file already exists'];
+    }
+
+    // Create parent directories if they don't exist
+    $parentDir = dirname($targetFullPath);
+    if (!file_exists($parentDir)) {
+        mkdir($parentDir, 0755, true);
+    }
+
+    copy($sourceFullPath, $targetFullPath);
+
+    return [
+        'success' => true,
+        'path' => $targetPath
+    ];
+}
+
+/**
+ * Move a file or folder to a different location
+ *
+ * POST /api/projects/{id}/move
+ * Body: { sourcePath, targetFolder }
+ * Returns: { success, path }
+ */
+function moveItem(string $projectId, array $body): array {
+    $userId = getOrCreateSessionUser();
+
+    $sourcePath = $body['sourcePath'] ?? '';
+    $targetFolder = $body['targetFolder'] ?? '';
+
+    // Validate source path
+    if (!validateFilename($sourcePath) && !validatePath($sourcePath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid source path'];
+    }
+
+    // Validate target folder (can be empty for root)
+    if ($targetFolder && !validatePath($targetFolder)) {
+        http_response_code(400);
+        return ['error' => 'Invalid target folder'];
+    }
+
+    // Validate ownership
+    if (!validateProjectOwnership($userId, $projectId)) {
+        http_response_code(404);
+        return ['error' => 'Project not found'];
+    }
+
+    $projectDir = getProjectDir($userId, $projectId);
+    $sourceFullPath = $projectDir . '/' . $sourcePath;
+
+    if (!file_exists($sourceFullPath)) {
+        http_response_code(404);
+        return ['error' => 'Source not found'];
+    }
+
+    // Compute new path
+    $itemName = basename($sourcePath);
+    $newPath = $targetFolder ? $targetFolder . '/' . $itemName : $itemName;
+    $newFullPath = $projectDir . '/' . $newPath;
+
+    // Prevent moving into itself
+    if (is_dir($sourceFullPath)) {
+        $targetFolderFull = $projectDir . '/' . $targetFolder;
+        if (strpos($targetFolderFull, $sourceFullPath) === 0) {
+            http_response_code(400);
+            return ['error' => 'Cannot move folder into itself'];
+        }
+    }
+
+    if (file_exists($newFullPath)) {
+        http_response_code(400);
+        return ['error' => 'Target already exists'];
+    }
+
+    // Create target folder if it doesn't exist
+    if ($targetFolder) {
+        $targetFolderFull = $projectDir . '/' . $targetFolder;
+        if (!file_exists($targetFolderFull)) {
+            mkdir($targetFolderFull, 0755, true);
+        }
+    }
+
+    rename($sourceFullPath, $newFullPath);
+
+    // Clean up empty parent directories of old path
+    $oldParentDir = dirname($sourceFullPath);
+    while ($oldParentDir !== $projectDir && is_dir($oldParentDir)) {
+        $items = array_diff(scandir($oldParentDir), ['.', '..']);
+        if (empty($items)) {
+            rmdir($oldParentDir);
+            $oldParentDir = dirname($oldParentDir);
+        } else {
+            break;
+        }
+    }
+
+    return [
+        'success' => true,
+        'path' => $newPath
+    ];
+}
+
+/**
+ * Rename a folder
+ *
+ * POST /api/projects/{id}/folders/{path}/rename
+ * Body: { newName }
+ * Returns: { success, path }
+ */
+function renameFolder(string $projectId, string $folderPath, array $body): array {
+    $userId = getOrCreateSessionUser();
+
+    $newName = $body['newName'] ?? '';
+
+    // Validate folder path
+    if (!validatePath($folderPath)) {
+        http_response_code(400);
+        return ['error' => 'Invalid folder path'];
+    }
+
+    // Validate new name
+    if (!validateFolderName($newName)) {
+        http_response_code(400);
+        return ['error' => 'Invalid new folder name'];
+    }
+
+    // Validate ownership
+    if (!validateProjectOwnership($userId, $projectId)) {
+        http_response_code(404);
+        return ['error' => 'Project not found'];
+    }
+
+    $projectDir = getProjectDir($userId, $projectId);
+    $oldFullPath = $projectDir . '/' . $folderPath;
+
+    if (!is_dir($oldFullPath)) {
+        http_response_code(404);
+        return ['error' => 'Folder not found'];
+    }
+
+    // Compute new path (same parent, new name)
+    $parentPath = dirname($folderPath);
+    $newPath = $parentPath === '.' ? $newName : $parentPath . '/' . $newName;
+    $newFullPath = $projectDir . '/' . $newPath;
+
+    if (file_exists($newFullPath)) {
+        http_response_code(400);
+        return ['error' => 'A folder with this name already exists'];
+    }
+
+    rename($oldFullPath, $newFullPath);
+
+    return [
+        'success' => true,
+        'path' => $newPath
+    ];
 }

@@ -78,6 +78,12 @@ $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
 // Route the request
 try {
+    // Health check (for auto-detection)
+    if (preg_match('#^/health$#', $uri) && $method === 'GET') {
+        echo json_encode(['status' => 'ok', 'version' => '1.0']);
+        exit;
+    }
+
     // Auth routes
     if (preg_match('#^/auth/register$#', $uri) && $method === 'POST') {
         echo json_encode(authRegister($body));
@@ -143,33 +149,65 @@ try {
         exit;
     }
 
-    // File routes
+    // File routes (specific patterns first)
+
+    // File rename: POST /projects/{id}/files/{path}/rename
+    if (preg_match('#^/projects/([^/]+)/files/(.+)/rename$#', $uri, $matches) && $method === 'POST') {
+        echo json_encode(renameFile($matches[1], urldecode($matches[2]), $body));
+        exit;
+    }
+
+    // File copy: POST /projects/{id}/files/{path}/copy
+    if (preg_match('#^/projects/([^/]+)/files/(.+)/copy$#', $uri, $matches) && $method === 'POST') {
+        echo json_encode(copyFile($matches[1], urldecode($matches[2]), $body));
+        exit;
+    }
+
+    // Move item (file or folder): POST /projects/{id}/move
+    if (preg_match('#^/projects/([^/]+)/move$#', $uri, $matches) && $method === 'POST') {
+        echo json_encode(moveItem($matches[1], $body));
+        exit;
+    }
+
+    // List files: GET /projects/{id}/files
     if (preg_match('#^/projects/([^/]+)/files$#', $uri, $matches) && $method === 'GET') {
         echo json_encode(getFiles($matches[1]));
         exit;
     }
 
+    // Get file: GET /projects/{id}/files/{path}
     if (preg_match('#^/projects/([^/]+)/files/(.+)$#', $uri, $matches) && $method === 'GET') {
         echo json_encode(getFile($matches[1], urldecode($matches[2])));
         exit;
     }
 
+    // Create/update file: PUT /projects/{id}/files/{path}
     if (preg_match('#^/projects/([^/]+)/files/(.+)$#', $uri, $matches) && $method === 'PUT') {
         echo json_encode(putFile($matches[1], urldecode($matches[2]), $body));
         exit;
     }
 
+    // Delete file: DELETE /projects/{id}/files/{path}
     if (preg_match('#^/projects/([^/]+)/files/(.+)$#', $uri, $matches) && $method === 'DELETE') {
         echo json_encode(deleteFile($matches[1], urldecode($matches[2])));
         exit;
     }
 
-    // Folder routes
+    // Folder routes (specific patterns first)
+
+    // Folder rename: POST /projects/{id}/folders/{path}/rename
+    if (preg_match('#^/projects/([^/]+)/folders/(.+)/rename$#', $uri, $matches) && $method === 'POST') {
+        echo json_encode(renameFolder($matches[1], urldecode($matches[2]), $body));
+        exit;
+    }
+
+    // Create folder: POST /projects/{id}/folders
     if (preg_match('#^/projects/([^/]+)/folders$#', $uri, $matches) && $method === 'POST') {
         echo json_encode(createFolder($matches[1], $body));
         exit;
     }
 
+    // Delete folder: DELETE /projects/{id}/folders/{path}
     if (preg_match('#^/projects/([^/]+)/folders/(.+)$#', $uri, $matches) && $method === 'DELETE') {
         echo json_encode(deleteFolder($matches[1], urldecode($matches[2])));
         exit;
