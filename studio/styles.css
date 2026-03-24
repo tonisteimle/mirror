@@ -1468,7 +1468,7 @@
 
     .cm-editor .cm-gutters {
       background: var(--bg-base);
-      border-right: 1px solid var(--border-default);
+      border-right: none;
       color: var(--text-disabled);
     }
 
