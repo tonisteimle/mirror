@@ -1,20 +1,13 @@
 /**
  * Editor Drop Handler - Handle component drops into CodeMirror editor
  *
- * Allows dragging components from the Component Panel directly into
- * the code editor at the cursor position.
+ * Uses CodeMirror's native extension system (EditorView.domEventHandlers)
+ * to properly intercept drops and prevent default text insertion.
  */
 
-import type { EditorView } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
+import type { Extension } from '@codemirror/state'
 import type { ComponentDragData } from '../panels/components/types'
-import { events } from '../core'
-
-export interface EditorDropHandlerConfig {
-  /** CodeMirror EditorView instance */
-  editor: EditorView
-  /** Called when a component is dropped */
-  onDrop?: (data: ComponentDragData, position: EditorDropPosition) => void
-}
 
 export interface EditorDropPosition {
   /** Line number (1-indexed, or 0 for "before first line") */
@@ -27,365 +20,314 @@ export interface EditorDropPosition {
   indent: number
 }
 
+export interface ComponentDropConfig {
+  /** Called when a component is dropped */
+  onDrop: (data: ComponentDragData, position: EditorDropPosition, view: EditorView) => void
+}
+
+// Store for drop indicator element
+let dropIndicator: HTMLElement | null = null
+let currentView: EditorView | null = null
+
 /**
- * Editor Drop Handler class
+ * Create drop indicator element
  */
-export class EditorDropHandler {
-  private editor: EditorView
-  private onDrop?: EditorDropHandlerConfig['onDrop']
-  private dropIndicator: HTMLElement | null = null
-  private abortController: AbortController | null = null
-
-  constructor(config: EditorDropHandlerConfig) {
-    this.editor = config.editor
-    this.onDrop = config.onDrop
+function ensureDropIndicator(view: EditorView): HTMLElement {
+  if (!dropIndicator || currentView !== view) {
+    dropIndicator?.remove()
+    dropIndicator = document.createElement('div')
+    dropIndicator.className = 'editor-drop-indicator'
+    dropIndicator.style.display = 'none'
+    dropIndicator.style.position = 'absolute'
+    dropIndicator.style.height = '2px'
+    dropIndicator.style.pointerEvents = 'none'
+    view.dom.appendChild(dropIndicator)
+    currentView = view
   }
+  return dropIndicator
+}
 
-  /**
-   * Attach drop handlers to the editor
-   */
-  attach(): void {
-    this.abortController?.abort()
-    this.abortController = new AbortController()
-    const signal = this.abortController.signal
+/**
+ * Convert mouse coordinates to editor position
+ */
+function getPositionFromCoords(view: EditorView, x: number, y: number): EditorDropPosition | null {
+  const doc = view.state.doc
 
-    const editorDom = this.editor.dom
-    const contentDom = this.editor.contentDOM
+  // Get position from CodeMirror
+  const offset = view.posAtCoords({ x, y })
+  if (offset === null) return null
 
-    // Dragover - show drop indicator (capture phase to intercept before CodeMirror)
-    editorDom.addEventListener('dragover', this.handleDragOver.bind(this), { signal, capture: true })
+  // Convert offset to line/column
+  const line = doc.lineAt(offset)
+  const lineNumber = line.number
 
-    // Dragleave - hide drop indicator
-    editorDom.addEventListener('dragleave', this.handleDragLeave.bind(this), { signal })
-
-    // Drop - intercept on BOTH dom and contentDOM to ensure we catch it before CodeMirror
-    // Use capture phase on both to intercept as early as possible
-    editorDom.addEventListener('drop', this.handleDrop.bind(this), { signal, capture: true })
-    contentDom.addEventListener('drop', this.handleDrop.bind(this), { signal, capture: true })
-
-    // Create drop indicator
-    this.createDropIndicator()
-  }
-
-  /**
-   * Detach drop handlers
-   */
-  detach(): void {
-    this.abortController?.abort()
-    this.abortController = null
-    this.removeDropIndicator()
-  }
-
-  /**
-   * Handle dragover event
-   */
-  private handleDragOver(event: DragEvent): void {
-    // Check if this is a component drop
-    if (!event.dataTransfer?.types.includes('application/mirror-component')) {
-      return
-    }
-
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'copy'
-
-    // Get position from coordinates
-    const pos = this.getPositionFromCoords(event.clientX, event.clientY)
-    if (pos) {
-      this.showDropIndicator(pos)
-    }
-  }
-
-  /**
-   * Handle dragleave event
-   */
-  private handleDragLeave(event: DragEvent): void {
-    // Only hide if actually leaving the editor
-    const relatedTarget = event.relatedTarget as HTMLElement
-    if (!this.editor.dom.contains(relatedTarget)) {
-      this.hideDropIndicator()
-    }
-  }
-
-  /**
-   * Handle drop event
-   */
-  private handleDrop(event: DragEvent): void {
-    // Check if already handled (we have handlers on both dom and contentDOM)
-    if ((event as any)._mirrorEditorHandled) {
-      return
-    }
-
-    // Check if this is a component drop by checking types first (fast check)
-    if (!event.dataTransfer?.types.includes('application/mirror-component')) {
-      return
-    }
-
-    // Mark event as handled FIRST to prevent double processing
-    ;(event as any)._mirrorEditorHandled = true
-
-    // IMMEDIATELY prevent default and stop propagation to block CodeMirror
-    event.preventDefault()
-    event.stopPropagation()
-    event.stopImmediatePropagation()
-
-    console.log('[EditorDropHandler] Handling drop')
-
-    this.hideDropIndicator()
-
-    // Now get the actual data
-    const dataStr = event.dataTransfer.getData('application/mirror-component')
-    if (!dataStr) {
-      console.error('[EditorDropHandler] No component data in drop')
-      return
-    }
-
-    // Parse component data
-    let dragData: ComponentDragData
-    try {
-      dragData = JSON.parse(dataStr)
-    } catch {
-      console.error('[EditorDropHandler] Failed to parse drag data')
-      return
-    }
-
-    // Get position from coordinates
-    const pos = this.getPositionFromCoords(event.clientX, event.clientY)
-    if (!pos) {
-      console.error('[EditorDropHandler] Could not determine drop position')
-      return
-    }
-
-    // Call handler (this performs the insert)
-    this.onDrop?.(dragData, pos)
-
-    // Note: We don't emit 'component:editor-dropped' event here because
-    // the onDrop callback already handles the insertion. Emitting an event
-    // could cause double-insertion if something else also listens for it.
-  }
-
-  /**
-   * Convert mouse coordinates to editor position
-   *
-   * - Y position: Snaps to line boundaries (between lines)
-   * - X position: Determines indentation level (snaps to 2-space increments)
-   *
-   * Returns line=0 for "before first line" (special case)
-   */
-  private getPositionFromCoords(x: number, y: number): EditorDropPosition | null {
-    const doc = this.editor.state.doc
-
-    // Get position from CodeMirror
-    const offset = this.editor.posAtCoords({ x, y })
-    if (offset === null) return null
-
-    // Convert offset to line/column
-    const line = doc.lineAt(offset)
-    const lineNumber = line.number
-
-    // Get the visual coordinates for this line
-    const lineCoords = this.editor.coordsAtPos(line.from)
-    if (!lineCoords) {
-      return {
-        line: lineNumber,
-        column: 0,
-        offset: line.to,
-        indent: 0,
-      }
-    }
-
-    // Calculate line height
-    const lineHeight = this.editor.defaultLineHeight
-
-    // Determine if cursor is in top or bottom half of line (for Y snapping)
-    const lineMiddle = lineCoords.top + lineHeight / 2
-    const isInTopHalf = y < lineMiddle
-
-    // Determine target line (the line AFTER which we insert)
-    let targetLine: number
-
-    if (lineNumber === 1 && isInTopHalf) {
-      targetLine = 0
-    } else if (isInTopHalf && lineNumber > 1) {
-      targetLine = lineNumber - 1
-    } else {
-      targetLine = lineNumber
-    }
-
-    // Calculate indent level from X position
-    // X position relative to editor content area → snap to 2-space increments
-    const editorRect = this.editor.dom.getBoundingClientRect()
-    const contentLeft = this.editor.contentDOM.getBoundingClientRect().left
-    const relativeX = x - contentLeft
-
-    // Approximate character width (monospace font)
-    const charWidth = this.editor.defaultCharacterWidth
-
-    // Calculate column from X position and snap to 2-space increments
-    const rawColumn = Math.max(0, Math.floor(relativeX / charWidth))
-    const indent = Math.floor(rawColumn / 2) * 2  // Snap to even numbers (0, 2, 4, 6, ...)
-
-    // Handle edge case for line 0 (before first line)
-    if (targetLine === 0) {
-      return {
-        line: 0,
-        column: 0,
-        offset: 0,
-        indent: indent,
-      }
-    }
-
-    const targetLineInfo = doc.line(targetLine)
-
+  // Get the visual coordinates for this line
+  const lineCoords = view.coordsAtPos(line.from)
+  if (!lineCoords) {
     return {
-      line: targetLine,
+      line: lineNumber,
       column: 0,
-      offset: targetLineInfo.to,
+      offset: line.to,
+      indent: 0,
+    }
+  }
+
+  // Calculate line height
+  const lineHeight = view.defaultLineHeight
+
+  // Determine if cursor is in top or bottom half of line (for Y snapping)
+  const lineMiddle = lineCoords.top + lineHeight / 2
+  const isInTopHalf = y < lineMiddle
+
+  // Determine target line (the line AFTER which we insert)
+  let targetLine: number
+
+  if (lineNumber === 1 && isInTopHalf) {
+    targetLine = 0
+  } else if (isInTopHalf && lineNumber > 1) {
+    targetLine = lineNumber - 1
+  } else {
+    targetLine = lineNumber
+  }
+
+  // Calculate indent level from X position
+  const contentLeft = view.contentDOM.getBoundingClientRect().left
+  const relativeX = x - contentLeft
+  const charWidth = view.defaultCharacterWidth
+  const rawColumn = Math.max(0, Math.floor(relativeX / charWidth))
+  const indent = Math.floor(rawColumn / 2) * 2  // Snap to even numbers
+
+  // Handle edge case for line 0 (before first line)
+  if (targetLine === 0) {
+    return {
+      line: 0,
+      column: 0,
+      offset: 0,
       indent: indent,
     }
   }
 
-  /**
-   * Create drop indicator element
-   */
-  private createDropIndicator(): void {
-    this.dropIndicator = document.createElement('div')
-    this.dropIndicator.className = 'editor-drop-indicator'
-    this.dropIndicator.style.display = 'none'
-    this.editor.dom.appendChild(this.dropIndicator)
+  const targetLineInfo = doc.line(targetLine)
+
+  return {
+    line: targetLine,
+    column: 0,
+    offset: targetLineInfo.to,
+    indent: indent,
   }
-
-  /**
-   * Remove drop indicator
-   */
-  private removeDropIndicator(): void {
-    this.dropIndicator?.remove()
-    this.dropIndicator = null
-  }
-
-  /**
-   * Show drop indicator at line boundary with indent
-   *
-   * The indicator appears AFTER the target line (between target line and next line)
-   * and starts at the chosen indentation level (based on X position).
-   * Special case: if target line is 0 (before first line), show at top of editor
-   */
-  private showDropIndicator(pos: EditorDropPosition): void {
-    if (!this.dropIndicator) return
-
-    const doc = this.editor.state.doc
-    const editorRect = this.editor.dom.getBoundingClientRect()
-    const contentRect = this.editor.contentDOM.getBoundingClientRect()
-    const lineHeight = this.editor.defaultLineHeight
-    const charWidth = this.editor.defaultCharacterWidth
-
-    let indicatorTop: number
-
-    if (pos.line === 0) {
-      // Special case: drop before first line - show at very top
-      const firstLineCoords = this.editor.coordsAtPos(0)
-      if (!firstLineCoords) return
-      indicatorTop = firstLineCoords.top - editorRect.top
-    } else if (pos.line >= doc.lines) {
-      // Drop after last line - show at bottom of last line
-      const lastLine = doc.line(doc.lines)
-      const lastLineCoords = this.editor.coordsAtPos(lastLine.from)
-      if (!lastLineCoords) return
-      indicatorTop = lastLineCoords.top - editorRect.top + lineHeight
-    } else {
-      // Normal case: show at bottom of target line (between target and next)
-      const targetLine = doc.line(pos.line)
-      const coords = this.editor.coordsAtPos(targetLine.from)
-      if (!coords) return
-      indicatorTop = coords.top - editorRect.top + lineHeight
-    }
-
-    // Calculate left position based on indent level
-    // pos.indent is number of spaces; multiply by charWidth for pixels
-    const contentLeftOffset = contentRect.left - editorRect.left
-    const indentLeft = contentLeftOffset + (pos.indent * charWidth)
-
-    this.dropIndicator.style.display = 'block'
-    this.dropIndicator.style.position = 'absolute'
-    this.dropIndicator.style.left = `${indentLeft}px`
-    this.dropIndicator.style.right = '0'
-    this.dropIndicator.style.top = `${indicatorTop}px`
-    this.dropIndicator.style.height = '2px'
-  }
-
-  /**
-   * Hide drop indicator
-   */
-  private hideDropIndicator(): void {
-    if (this.dropIndicator) {
-      this.dropIndicator.style.display = 'none'
-    }
-  }
-
-  /**
-   * Insert component code at the drop position with user-chosen indentation
-   *
-   * Simple approach:
-   * - Code comes in with relative indentation (0 for root, 2 for children, etc.)
-   * - We add pos.indent spaces to EVERY line
-   * - Insert as new lines after target position
-   */
-  insertComponentCode(code: string, pos: EditorDropPosition): void {
-    const doc = this.editor.state.doc
-    const totalLines = doc.lines
-
-    // Base indent string from user's X position
-    const baseIndent = ' '.repeat(pos.indent)
-
-    // Add base indent to each line (preserving relative indentation)
-    const lines = code.split('\n')
-    const indentedLines = lines.map(line => {
-      // Empty lines stay empty
-      if (!line.trim()) return ''
-      // Add base indent to each line
-      return baseIndent + line
-    }).filter(line => line.trim() !== '' || lines.length === 1)
-
-    const indentedCode = indentedLines.join('\n')
-
-    // Special case: insert BEFORE first line
-    if (pos.line === 0) {
-      const insertText = indentedCode + '\n'
-
-      this.editor.dispatch({
-        changes: { from: 0, to: 0, insert: insertText },
-        selection: { anchor: insertText.length },
-      })
-
-      this.editor.focus()
-      return
-    }
-
-    // Normal case: insert AFTER target line
-    const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
-    const targetLine = doc.line(lineNumber)
-    const insertPos = targetLine.to
-    const insertText = '\n' + indentedCode
-
-    this.editor.dispatch({
-      changes: { from: insertPos, to: insertPos, insert: insertText },
-      selection: { anchor: insertPos + insertText.length },
-    })
-
-    this.editor.focus()
-  }
-
 }
 
 /**
- * Create an EditorDropHandler instance
+ * Show drop indicator at position
  */
-export function createEditorDropHandler(
-  config: EditorDropHandlerConfig
-): EditorDropHandler {
+function showDropIndicator(view: EditorView, pos: EditorDropPosition): void {
+  const indicator = ensureDropIndicator(view)
+  const doc = view.state.doc
+  const editorRect = view.dom.getBoundingClientRect()
+  const contentRect = view.contentDOM.getBoundingClientRect()
+  const lineHeight = view.defaultLineHeight
+  const charWidth = view.defaultCharacterWidth
+
+  let indicatorTop: number
+
+  if (pos.line === 0) {
+    const firstLineCoords = view.coordsAtPos(0)
+    if (!firstLineCoords) return
+    indicatorTop = firstLineCoords.top - editorRect.top
+  } else if (pos.line >= doc.lines) {
+    const lastLine = doc.line(doc.lines)
+    const lastLineCoords = view.coordsAtPos(lastLine.from)
+    if (!lastLineCoords) return
+    indicatorTop = lastLineCoords.top - editorRect.top + lineHeight
+  } else {
+    const targetLine = doc.line(pos.line)
+    const coords = view.coordsAtPos(targetLine.from)
+    if (!coords) return
+    indicatorTop = coords.top - editorRect.top + lineHeight
+  }
+
+  const contentLeftOffset = contentRect.left - editorRect.left
+  const indentLeft = contentLeftOffset + (pos.indent * charWidth)
+
+  indicator.style.display = 'block'
+  indicator.style.left = `${indentLeft}px`
+  indicator.style.right = '0'
+  indicator.style.top = `${indicatorTop}px`
+}
+
+/**
+ * Hide drop indicator
+ */
+function hideDropIndicator(): void {
+  if (dropIndicator) {
+    dropIndicator.style.display = 'none'
+  }
+}
+
+/**
+ * Insert component code at the drop position
+ */
+export function insertComponentCode(view: EditorView, code: string, pos: EditorDropPosition): void {
+  const doc = view.state.doc
+  const totalLines = doc.lines
+
+  // Base indent string from user's X position
+  const baseIndent = ' '.repeat(pos.indent)
+
+  // Add base indent to each line (preserving relative indentation)
+  const lines = code.split('\n')
+  const indentedLines = lines.map(line => {
+    if (!line.trim()) return ''
+    return baseIndent + line
+  }).filter(line => line.trim() !== '' || lines.length === 1)
+
+  const indentedCode = indentedLines.join('\n')
+
+  // Special case: insert BEFORE first line
+  if (pos.line === 0) {
+    const insertText = indentedCode + '\n'
+    view.dispatch({
+      changes: { from: 0, to: 0, insert: insertText },
+      selection: { anchor: insertText.length },
+    })
+    view.focus()
+    return
+  }
+
+  // Normal case: insert AFTER target line
+  const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
+  const targetLine = doc.line(lineNumber)
+  const insertPos = targetLine.to
+  const insertText = '\n' + indentedCode
+
+  view.dispatch({
+    changes: { from: insertPos, to: insertPos, insert: insertText },
+    selection: { anchor: insertPos + insertText.length },
+  })
+
+  view.focus()
+}
+
+/**
+ * Create CodeMirror extension for component drop handling
+ *
+ * This is the PROPER way to handle drops in CodeMirror 6.
+ * Returning `true` from the handler prevents CodeMirror's default text insertion.
+ */
+export function createComponentDropExtension(config: ComponentDropConfig): Extension {
+  return EditorView.domEventHandlers({
+    dragover(event: DragEvent, view: EditorView) {
+      // Only handle component drops
+      if (!event.dataTransfer?.types.includes('application/mirror-component')) {
+        return false
+      }
+
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'copy'
+
+      // Show drop indicator
+      const pos = getPositionFromCoords(view, event.clientX, event.clientY)
+      if (pos) {
+        showDropIndicator(view, pos)
+      }
+
+      return true  // Prevent default handling
+    },
+
+    dragleave(event: DragEvent, view: EditorView) {
+      // Only handle if leaving the editor
+      const relatedTarget = event.relatedTarget as HTMLElement
+      if (!view.dom.contains(relatedTarget)) {
+        hideDropIndicator()
+      }
+      return false
+    },
+
+    drop(event: DragEvent, view: EditorView) {
+      // Only handle component drops
+      if (!event.dataTransfer?.types.includes('application/mirror-component')) {
+        return false
+      }
+
+      event.preventDefault()
+      hideDropIndicator()
+
+      // Get component data
+      const dataStr = event.dataTransfer.getData('application/mirror-component')
+      if (!dataStr) {
+        console.error('[ComponentDrop] No component data in drop')
+        return true  // Still prevent default
+      }
+
+      // Parse component data
+      let dragData: ComponentDragData
+      try {
+        dragData = JSON.parse(dataStr)
+      } catch {
+        console.error('[ComponentDrop] Failed to parse drag data')
+        return true
+      }
+
+      // Get position from coordinates
+      const pos = getPositionFromCoords(view, event.clientX, event.clientY)
+      if (!pos) {
+        console.error('[ComponentDrop] Could not determine drop position')
+        return true
+      }
+
+      // Call the handler
+      config.onDrop(dragData, pos, view)
+
+      console.log('[ComponentDrop] Component dropped:', dragData.componentName)
+
+      return true  // CRITICAL: Prevents CodeMirror from inserting text/plain
+    },
+  })
+}
+
+// ============================================================================
+// Legacy EditorDropHandler class (for backward compatibility during transition)
+// ============================================================================
+
+export interface EditorDropHandlerConfig {
+  editor: EditorView
+  onDrop?: (data: ComponentDragData, position: EditorDropPosition) => void
+}
+
+/**
+ * @deprecated Use createComponentDropExtension instead
+ */
+export class EditorDropHandler {
+  private editor: EditorView
+  private onDropCallback?: EditorDropHandlerConfig['onDrop']
+
+  constructor(config: EditorDropHandlerConfig) {
+    this.editor = config.editor
+    this.onDropCallback = config.onDrop
+  }
+
+  attach(): void {
+    // No-op: Extension handles everything now
+    console.log('[EditorDropHandler] Using CodeMirror extension (attach is no-op)')
+  }
+
+  detach(): void {
+    hideDropIndicator()
+    dropIndicator?.remove()
+    dropIndicator = null
+    currentView = null
+  }
+
+  insertComponentCode(code: string, pos: EditorDropPosition): void {
+    insertComponentCode(this.editor, code, pos)
+  }
+}
+
+export function createEditorDropHandler(config: EditorDropHandlerConfig): EditorDropHandler {
   return new EditorDropHandler(config)
 }
 
-// Add event type
+// Type augmentation for events
 declare module '../core/events' {
   interface StudioEvents {
     'component:editor-dropped': {

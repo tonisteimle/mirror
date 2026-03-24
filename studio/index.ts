@@ -55,6 +55,7 @@ export {
   onSelectionChange,
   onSourceChange,
   onCompileComplete,
+  generateComponentCodeFromDragData,
   type BootstrapConfig,
   type StudioInstance,
 } from './bootstrap'

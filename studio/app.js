@@ -34,13 +34,62 @@ import {
   // Fixer Service (AI multi-file code generation)
   createFixer,
   getFixer,
-} from './dist/index.js?v=101'
+  // Component Drop Extension (proper CodeMirror integration)
+  createComponentDropExtension,
+  insertComponentCode,
+  generateComponentCodeFromDragData,
+} from './dist/index.js?v=102'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
 
 // Annotation to mark file switch transactions (bypass App lock filter)
 const fileSwitchAnnotation = Annotation.define()
+
+// ============================================
+// File Extension Utilities
+// ============================================
+
+const MIRROR_EXTENSIONS = {
+  layout: ['.mir', '.mirror'],
+  components: ['.com', '.components'],
+  tokens: ['.tok', '.tokens']
+}
+
+/**
+ * Check if a filename is a Mirror file (any type)
+ * @param {string} filename
+ * @returns {boolean}
+ */
+function isMirrorFile(filename) {
+  if (!filename) return false
+  const allExtensions = [
+    ...MIRROR_EXTENSIONS.layout,
+    ...MIRROR_EXTENSIONS.components,
+    ...MIRROR_EXTENSIONS.tokens
+  ]
+  return allExtensions.some(ext => filename.endsWith(ext))
+}
+
+/**
+ * Check if a filename is a components file (.com, .components)
+ * @param {string} filename
+ * @returns {boolean}
+ */
+function isComponentsFile(filename) {
+  if (!filename) return false
+  return MIRROR_EXTENSIONS.components.some(ext => filename.endsWith(ext))
+}
+
+/**
+ * Check if a filename is a layout file (.mir, .mirror)
+ * @param {string} filename
+ * @returns {boolean}
+ */
+function isLayoutFile(filename) {
+  if (!filename) return false
+  return MIRROR_EXTENSIONS.layout.some(ext => filename.endsWith(ext))
+}
 
 // ============================================
 // API Client & Auth State
@@ -2733,7 +2782,7 @@ const appLockExtension = EditorState.transactionFilter.of(tr => {
 
   // Only apply App lock to .mir (layout) files
   // Token (.tok) and component (.com) files don't need to start with "App"
-  if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
+  if (!isLayoutFile(currentFile)) {
     return tr
   }
 
@@ -2758,7 +2807,7 @@ const autoIndentExtension = EditorView.domEventHandlers({
     if (event.key !== 'Enter') return false
 
     // Only apply to .mir layout files
-    if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
+    if (!isLayoutFile(currentFile)) {
       return false
     }
 
@@ -2809,7 +2858,7 @@ const appLockDecorationPlugin = ViewPlugin.fromClass(class {
   buildDecorations(view) {
     const builder = new RangeSetBuilder()
     // Only show "App" decoration for .mir layout files
-    if (!currentFile || (!currentFile.endsWith('.mir') && !currentFile.endsWith('.mirror'))) {
+    if (!isLayoutFile(currentFile)) {
       return builder.finish()
     }
     const firstLine = view.state.doc.line(1)
@@ -3063,6 +3112,13 @@ const editor = new EditorView({
       Prec.highest(appLockExtension),
       Prec.high(autoIndentExtension),
       appLockDecorationPlugin,
+      // Component Drop: Proper CodeMirror integration for drag & drop from component palette
+      Prec.highest(createComponentDropExtension({
+        onDrop: (dragData, position, view) => {
+          const code = generateComponentCodeFromDragData(dragData)
+          insertComponentCode(view, code, position)
+        }
+      })),
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
@@ -4648,16 +4704,38 @@ function getZagItems(children) {
  * @returns {{ exists: boolean, definitionName?: string }}
  */
 function findExistingZagDefinition(zagComponentName) {
+  // First check current file's AST
   const ast = studio.state?.ast
-  if (!ast || !ast.components) {
-    return { exists: false }
+  if (ast?.components) {
+    for (const comp of ast.components) {
+      // Check if this component is defined as this Zag type
+      // e.g., "MySelect as Select:" or extends Select
+      if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
+        return { exists: true, definitionName: comp.name, sourceFile: currentFile }
+      }
+    }
   }
 
-  for (const comp of ast.components) {
-    // Check if this component is defined as this Zag type
-    // e.g., "MySelect as Select:" or extends Select
-    if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
-      return { exists: true, definitionName: comp.name }
+  // Search ALL project files for the definition
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  for (const [filename, content] of Object.entries(allFiles)) {
+    // Skip current file (already checked above)
+    if (filename === currentFile) continue
+    // Only check Mirror files
+    if (!isMirrorFile(filename)) continue
+    if (!content || !content.trim()) continue
+
+    try {
+      const fileAst = MirrorLang.parse(content)
+      if (fileAst?.components) {
+        for (const comp of fileAst.components) {
+          if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
+            return { exists: true, definitionName: comp.name, sourceFile: filename }
+          }
+        }
+      }
+    } catch (e) {
+      // Skip files that fail to parse
     }
   }
 
@@ -4666,15 +4744,43 @@ function findExistingZagDefinition(zagComponentName) {
 
 /**
  * Generate a unique component name for the Zag definition
+ * Searches ALL project files to ensure uniqueness
  * @param {string} zagComponentName - The base Zag component name
  * @returns {string}
  */
 function generateZagComponentName(zagComponentName) {
+  // Collect all existing component names from all files
+  const existingNames = new Set()
+
+  // Current file
   const ast = studio.state?.ast
-  const existingNames = (ast?.components || []).map(c => c.name)
+  if (ast?.components) {
+    for (const comp of ast.components) {
+      existingNames.add(comp.name)
+    }
+  }
+
+  // All other files
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  for (const [filename, content] of Object.entries(allFiles)) {
+    if (filename === currentFile) continue
+    if (!isMirrorFile(filename)) continue
+    if (!content || !content.trim()) continue
+
+    try {
+      const fileAst = MirrorLang.parse(content)
+      if (fileAst?.components) {
+        for (const comp of fileAst.components) {
+          existingNames.add(comp.name)
+        }
+      }
+    } catch (e) {
+      // Skip files that fail to parse
+    }
+  }
 
   // Start with the Zag component name itself (e.g., "Select")
-  if (!existingNames.includes(zagComponentName)) {
+  if (!existingNames.has(zagComponentName)) {
     return zagComponentName
   }
 
@@ -4682,17 +4788,120 @@ function generateZagComponentName(zagComponentName) {
   const prefixes = ['My', 'Custom', 'App', 'Project']
   for (const prefix of prefixes) {
     const name = `${prefix}${zagComponentName}`
-    if (!existingNames.includes(name)) {
+    if (!existingNames.has(name)) {
       return name
     }
   }
 
-  // Fall back to numbered suffix
+  // Fall back to numbered suffix with safety limit
   let counter = 2
-  while (existingNames.includes(`${zagComponentName}${counter}`)) {
+  const MAX_COUNTER = 1000
+  while (existingNames.has(`${zagComponentName}${counter}`) && counter < MAX_COUNTER) {
     counter++
   }
   return `${zagComponentName}${counter}`
+}
+
+/**
+ * Find an existing .com file or create a new components.com file
+ * @returns {Promise<string|null>} Path to the components file, or null if creation failed
+ */
+async function findOrCreateComponentsFile() {
+  // Get all files
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+
+  // Look for existing .com files
+  const comFiles = Object.keys(allFiles).filter(f => isComponentsFile(f))
+
+  if (comFiles.length > 0) {
+    // Prefer 'components.com' or the first .com file
+    const preferred = comFiles.find(f => f.includes('components')) || comFiles[0]
+    return preferred
+  }
+
+  // No .com file exists - create one
+  // Get current directory from currentFile
+  if (!currentFile) {
+    console.warn('[Zag] No current file, cannot determine directory for components.com')
+    return null
+  }
+
+  const dir = currentFile.substring(0, currentFile.lastIndexOf('/') + 1)
+  const newFilePath = dir + 'components.com'
+  const initialContent = '// Component definitions\n'
+
+  if (window.TauriBridge?.isTauri?.()) {
+    try {
+      await window.TauriBridge.fs.writeFile(newFilePath, initialContent)
+      // Update in-memory cache immediately
+      if (window.desktopFiles?.getFiles) {
+        window.desktopFiles.getFiles()[newFilePath] = initialContent
+      }
+      // Refresh file list
+      window.desktopFiles?.loadFolder?.(dir.slice(0, -1))
+      console.log('[Zag] Created new components file:', newFilePath)
+      return newFilePath
+    } catch (err) {
+      console.error('[Zag] Failed to create components.com:', err)
+      studio.events.emit('notification:error', {
+        message: 'Konnte components.com nicht erstellen',
+        duration: 3000
+      })
+      return null
+    }
+  } else {
+    // Browser mode
+    files[newFilePath] = initialContent
+    updateFileList()
+    console.log('[Zag] Created new components file (browser mode):', newFilePath)
+    return newFilePath
+  }
+}
+
+/**
+ * Add a Zag definition to a components file
+ * @param {string} definitionCode - The definition code to add
+ * @param {string} filePath - Path to the components file
+ * @returns {Promise<boolean>} True if successful
+ */
+async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  let content = allFiles[filePath] || ''
+
+  // Append definition to file
+  content = content.trim() ? content.trimEnd() + '\n\n' + definitionCode + '\n' : definitionCode + '\n'
+
+  if (window.TauriBridge?.isTauri?.()) {
+    try {
+      await window.TauriBridge.fs.writeFile(filePath, content)
+      // Update in-memory cache immediately
+      if (window.desktopFiles?.getFiles) {
+        window.desktopFiles.getFiles()[filePath] = content
+      }
+      console.log('[Zag] Added definition to:', filePath)
+      studio.events.emit('notification:success', {
+        message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
+        duration: 2000
+      })
+      return true
+    } catch (err) {
+      console.error('[Zag] Failed to write to components file:', err)
+      studio.events.emit('notification:error', {
+        message: `Konnte nicht zu ${filePath.split('/').pop()} speichern`,
+        duration: 3000
+      })
+      return false
+    }
+  } else {
+    // Browser mode
+    files[filePath] = content
+    console.log('[Zag] Added definition to (browser mode):', filePath)
+    studio.events.emit('notification:success', {
+      message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
+      duration: 2000
+    })
+    return true
+  }
 }
 
 /**
@@ -4859,7 +5068,7 @@ function addZagDefinitionToCode(definitionCode) {
 }
 
 // Handle drag-drop from DragDropService (uses DropResultInfo format)
-function handleStudioDrop(result) {
+async function handleStudioDrop(result) {
   const previewContainer = document.getElementById('preview')
 
   // Hide drop zone visualization
@@ -4959,70 +5168,122 @@ function handleStudioDrop(result) {
     }
 
     // ============================================
-    // ZAG COMPONENT HANDLING
+    // ZAG COMPONENT HANDLING - 4 CASES
     // ============================================
-    // Check if this is a Zag component (has slot children)
-    // If so, we need to:
-    // 1. Check if a component definition already exists
-    // 2. If not, create the definition with slots/styling
-    // 3. Insert only the instance with items (no slot definitions)
+    // Case 1: Component exists + .com file → Show info message (nothing to do)
+    // Case 2: Component doesn't exist + .com file → Create definition only (no instance)
+    // Case 3: Component exists + .mir file → Create instance only
+    // Case 4: Component doesn't exist + .mir file → Create definition in .com + instance in .mir
     if (isZagComponent(source.children)) {
       console.log('[Drop] Zag component detected:', componentName)
 
-      // Check if definition exists
+      // Determine if dropping into a .com (components) file
+      const droppingIntoComponentsFile = isComponentsFile(currentFile)
+      console.log('[Drop] File type:', droppingIntoComponentsFile ? '.com' : '.mir', 'File:', currentFile)
+
+      // Check if definition exists (searches all project files)
       const existingDef = findExistingZagDefinition(componentName)
-      let instanceComponentName = componentName
+      console.log('[Drop] Existing definition:', existingDef)
 
-      if (existingDef.exists && existingDef.definitionName) {
-        // Definition exists - use it for the instance
-        console.log('[Drop] Using existing definition:', existingDef.definitionName)
-        instanceComponentName = existingDef.definitionName
+      if (droppingIntoComponentsFile) {
+        // === DROPPING INTO .COM FILE ===
+        if (existingDef.exists) {
+          // Case 1: Component exists + .com file → Show info message
+          console.log('[Drop] Case 1: Component already defined:', existingDef.definitionName)
+          studio.events.emit('notification:info', {
+            message: `${existingDef.definitionName} ist bereits definiert`,
+            duration: 2000
+          })
+          return // Nothing to do
+        } else {
+          // Case 2: Component doesn't exist + .com file → Create definition only
+          const definitionName = generateZagComponentName(componentName)
+          console.log('[Drop] Case 2: Creating definition only:', definitionName)
+
+          const definitionCode = generateZagDefinitionCode(
+            definitionName,
+            componentName,
+            source.children
+          )
+
+          // Add definition to current .com file
+          addZagDefinitionToCode(definitionCode)
+
+          // Recompile
+          const updatedCode = editor.state.doc.toString()
+          compile(updatedCode)
+
+          studio.events.emit('notification:success', {
+            message: `${definitionName} wurde erstellt`,
+            duration: 2000
+          })
+          return // No instance needed in .com files
+        }
       } else {
-        // Definition doesn't exist - create it first
-        const definitionName = generateZagComponentName(componentName)
-        console.log('[Drop] Creating new Zag definition:', definitionName)
+        // === DROPPING INTO .MIR FILE ===
+        let instanceComponentName = componentName
 
-        // Generate the component definition
-        const definitionCode = generateZagDefinitionCode(
-          definitionName,
-          componentName,
-          source.children
-        )
+        if (existingDef.exists && existingDef.definitionName) {
+          // Case 3: Component exists + .mir file → Create instance only
+          console.log('[Drop] Case 3: Using existing definition:', existingDef.definitionName)
+          instanceComponentName = existingDef.definitionName
+        } else {
+          // Case 4: Component doesn't exist + .mir file → Create definition in .com + instance here
+          const definitionName = generateZagComponentName(componentName)
+          console.log('[Drop] Case 4: Creating definition in .com file:', definitionName)
 
-        // Generate the instance code with just items (no slots)
+          const definitionCode = generateZagDefinitionCode(
+            definitionName,
+            componentName,
+            source.children
+          )
+
+          // Find or create components file
+          try {
+            const componentsFile = await findOrCreateComponentsFile()
+            if (componentsFile) {
+              // Add definition to components file
+              const success = await addZagDefinitionToComponentsFile(definitionCode, componentsFile)
+              if (!success) {
+                console.error('[Drop] Failed to add definition to components file')
+                studio.events.emit('notification:error', {
+                  message: 'Konnte Definition nicht erstellen',
+                  duration: 3000
+                })
+                return // Abort on failure
+              }
+              console.log('[Drop] Added definition to:', componentsFile)
+            } else {
+              // Fallback: add to current file
+              console.log('[Drop] No components file, adding to current file')
+              addZagDefinitionToCode(definitionCode)
+              const updatedCode = editor.state.doc.toString()
+              compile(updatedCode)
+            }
+          } catch (err) {
+            console.error('[Drop] Error creating definition:', err)
+            studio.events.emit('notification:error', {
+              message: 'Fehler beim Erstellen der Definition',
+              duration: 3000
+            })
+            return
+          }
+
+          instanceComponentName = definitionName
+        }
+
+        // Generate instance code with just items (no slots)
         const instanceCode = generateZagInstanceCode(
-          definitionName,
+          instanceComponentName,
           properties,
           source.children
         )
 
-        // Insert both definition and instance in one operation
-        // This avoids timing issues with recompiling between operations
-        const combinedCode = definitionCode + '\n\n// Instance\n' + instanceCode
-
-        // For now, we'll insert them separately with a simpler approach:
-        // 1. Add definition to code
-        addZagDefinitionToCode(definitionCode)
-
-        // 2. Recompile to update the CodeModifier
-        const updatedCode = editor.state.doc.toString()
-        compile(updatedCode)
-
-        // 3. Now add the instance using the updated CodeModifier
-        instanceComponentName = definitionName
+        // Use addChildWithTemplate for multi-line Zag instances
+        modResult = studioCodeModifier.addChildWithTemplate(targetNodeId, instanceCode, {
+          position: insertionIndex !== undefined ? insertionIndex : 'last',
+        })
       }
-
-      // Generate instance code with just items (no slots)
-      const instanceCode = generateZagInstanceCode(
-        instanceComponentName,
-        properties,
-        source.children
-      )
-
-      // Use addChildWithTemplate for multi-line Zag instances
-      modResult = studioCodeModifier.addChildWithTemplate(targetNodeId, instanceCode, {
-        position: insertionIndex !== undefined ? insertionIndex : 'last',
-      })
     } else {
       // Regular component (not Zag) - use standard addChild
       modResult = studioCodeModifier.addChild(targetNodeId, componentName, {

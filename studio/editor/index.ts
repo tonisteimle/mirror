@@ -43,8 +43,11 @@ export {
 export {
   EditorDropHandler,
   createEditorDropHandler,
+  createComponentDropExtension,
+  insertComponentCode,
   type EditorDropHandlerConfig,
   type EditorDropPosition,
+  type ComponentDropConfig,
 } from './editor-drop-handler'
 
 export interface EditorConfig {
