@@ -17,7 +17,7 @@ import type {
   ComponentPanelTab,
 } from './types'
 import { getComponentIcon } from './icons'
-import { LAYOUT_PRESETS, BASIC_COMPONENTS, getDefaultBasicSelection, getGroupedComponents } from './layout-presets'
+import { LAYOUT_PRESETS, BASIC_COMPONENTS, getDefaultBasicSelection } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 import { events } from '../../core'
@@ -58,22 +58,16 @@ export class ComponentPanel {
    * Build sections from built-in and user-defined components
    */
   private buildSections(ast?: AST): void {
-    // Build "All" sections (grouped built-in components)
+    // Build "All" sections - flat alphabetical list (no groups)
     this.allSections = []
     if (this.config.showLayoutPresets || this.config.showBasicComponents) {
-      const grouped = getGroupedComponents()
-      for (const group of grouped) {
-        // Skip layouts if not showing layout presets
-        if (group.name === 'Layouts' && !this.config.showLayoutPresets) continue
-        // Skip non-layout groups if not showing basic components
-        if (group.name !== 'Layouts' && !this.config.showBasicComponents) continue
-
-        this.allSections.push({
-          name: group.name,
-          items: group.items,
-          isExpanded: true,
-        })
-      }
+      const allItems = [...LAYOUT_PRESETS, ...BASIC_COMPONENTS]
+      allItems.sort((a, b) => a.name.localeCompare(b.name))
+      this.allSections.push({
+        name: '_all',  // Special marker - no header will be rendered
+        items: allItems,
+        isExpanded: true,
+      })
     }
 
     // Build "Basic" sections (user's project components from AST)
@@ -286,28 +280,33 @@ export class ComponentPanel {
     sectionEl.className = 'component-panel-section'
     sectionEl.dataset.section = section.name
 
-    // Section header
-    const header = document.createElement('div')
-    header.className = 'component-panel-section-header'
+    // Skip header for flat list (_all section)
+    const isFlat = section.name === '_all'
 
-    const toggle = document.createElement('span')
-    toggle.className = 'component-panel-section-toggle'
-    toggle.innerHTML = section.isExpanded ? ComponentPanel.CHEVRON_DOWN : ComponentPanel.CHEVRON_RIGHT
+    if (!isFlat) {
+      // Section header with toggle
+      const header = document.createElement('div')
+      header.className = 'component-panel-section-header'
 
-    const nameSpan = document.createElement('span')
-    nameSpan.className = 'component-panel-section-name'
-    nameSpan.textContent = section.name
-
-    header.appendChild(toggle)
-    header.appendChild(nameSpan)
-
-    header.addEventListener('click', () => {
-      section.isExpanded = !section.isExpanded
-      sectionEl.classList.toggle('collapsed', !section.isExpanded)
+      const toggle = document.createElement('span')
+      toggle.className = 'component-panel-section-toggle'
       toggle.innerHTML = section.isExpanded ? ComponentPanel.CHEVRON_DOWN : ComponentPanel.CHEVRON_RIGHT
-    }, { signal: this.abortController?.signal })
 
-    sectionEl.appendChild(header)
+      const nameSpan = document.createElement('span')
+      nameSpan.className = 'component-panel-section-name'
+      nameSpan.textContent = section.name
+
+      header.appendChild(toggle)
+      header.appendChild(nameSpan)
+
+      header.addEventListener('click', () => {
+        section.isExpanded = !section.isExpanded
+        sectionEl.classList.toggle('collapsed', !section.isExpanded)
+        toggle.innerHTML = section.isExpanded ? ComponentPanel.CHEVRON_DOWN : ComponentPanel.CHEVRON_RIGHT
+      }, { signal: this.abortController?.signal })
+
+      sectionEl.appendChild(header)
+    }
 
     // Section items
     const itemsContainer = document.createElement('div')
@@ -320,7 +319,7 @@ export class ComponentPanel {
 
     sectionEl.appendChild(itemsContainer)
 
-    if (!section.isExpanded) {
+    if (!isFlat && !section.isExpanded) {
       sectionEl.classList.add('collapsed')
     }
 
@@ -389,7 +388,8 @@ export class ComponentPanel {
     }
 
     event.dataTransfer.setData('application/mirror-component', JSON.stringify(dragData))
-    event.dataTransfer.setData('text/plain', this.buildComponentCode(item))
+    // NOTE: We intentionally do NOT set text/plain to prevent CodeMirror from auto-inserting
+    // the text at cursor position. EditorDropHandler handles code insertion properly.
     event.dataTransfer.effectAllowed = 'copy'
 
     // Add dragging class

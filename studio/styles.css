@@ -5697,28 +5697,25 @@
     }
 
     .component-panel-items {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 4px;
-      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
     }
 
     .component-panel-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 10px;
-      background: var(--bg-input);
-      border: 1px solid transparent;
-      border-radius: 6px;
+      gap: 8px;
+      padding: 6px 12px;
+      background: transparent;
+      border: none;
       cursor: grab;
       user-select: none;
-      transition: all 0.15s ease;
+      transition: background 0.15s ease;
     }
 
     .component-panel-item:hover {
       background: var(--bg-hover);
-      border-color: var(--border-default);
     }
 
     .component-panel-item:active {
@@ -5727,7 +5724,6 @@
 
     .component-panel-item.dragging {
       opacity: 0.5;
-      border-color: var(--color-primary);
     }
 
     .component-panel-item-icon {

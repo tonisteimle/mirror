@@ -6468,10 +6468,9 @@ editorPanel.addEventListener('drop', async (e) => {
   dragCounter = 0
   dropOverlay.classList.remove('visible')
 
-  // Block component drops on editor (they should go to preview)
+  // Component drops are handled by EditorDropHandler (see bootstrap.ts)
+  // Skip this handler for component drops
   if (e.dataTransfer.types.includes('application/mirror-component')) {
-    e.preventDefault()
-    e.stopPropagation()
     return
   }
 

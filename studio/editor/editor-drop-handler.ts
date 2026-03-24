@@ -51,14 +51,14 @@ export class EditorDropHandler {
 
     const editorDom = this.editor.dom
 
-    // Dragover - show drop indicator
-    editorDom.addEventListener('dragover', this.handleDragOver.bind(this), { signal })
+    // Dragover - show drop indicator (capture phase to intercept before CodeMirror)
+    editorDom.addEventListener('dragover', this.handleDragOver.bind(this), { signal, capture: true })
 
     // Dragleave - hide drop indicator
     editorDom.addEventListener('dragleave', this.handleDragLeave.bind(this), { signal })
 
-    // Drop - insert component code
-    editorDom.addEventListener('drop', this.handleDrop.bind(this), { signal })
+    // Drop - insert component code (capture phase to intercept BEFORE CodeMirror processes text/plain)
+    editorDom.addEventListener('drop', this.handleDrop.bind(this), { signal, capture: true })
 
     // Create drop indicator
     this.createDropIndicator()
@@ -107,10 +107,12 @@ export class EditorDropHandler {
    * Handle drop event
    */
   private handleDrop(event: DragEvent): void {
-    // Check if this is a component drop
-    const dataStr = event.dataTransfer?.getData('application/mirror-component')
-    if (!dataStr) return
+    // Check if this is a component drop by checking types first (fast check)
+    if (!event.dataTransfer?.types.includes('application/mirror-component')) {
+      return
+    }
 
+    // IMMEDIATELY prevent default and stop propagation to block CodeMirror
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
@@ -121,6 +123,13 @@ export class EditorDropHandler {
     console.log('[EditorDropHandler] Handling drop')
 
     this.hideDropIndicator()
+
+    // Now get the actual data
+    const dataStr = event.dataTransfer.getData('application/mirror-component')
+    if (!dataStr) {
+      console.error('[EditorDropHandler] No component data in drop')
+      return
+    }
 
     // Parse component data
     let dragData: ComponentDragData
