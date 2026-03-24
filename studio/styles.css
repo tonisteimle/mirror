@@ -1404,8 +1404,8 @@
 
     .components-preview-name {
       font-size: var(--font-md);
-      font-weight: var(--weight-semibold);
-      color: var(--text-primary);
+      font-weight: var(--weight-medium);
+      color: var(--text-secondary);
       width: 80px;
       flex-shrink: 0;
       display: flex;
