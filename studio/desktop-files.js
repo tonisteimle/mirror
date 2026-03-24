@@ -565,18 +565,10 @@ async function handleContextAction(action) {
       if (path) await deleteItem(path, isFolder)
       break
     case 'new-file':
-      const fileName = prompt('File name:', 'new-file.mir')
-      if (fileName) {
-        const parentPath = isFolder ? path : null
-        await createFile(fileName, parentPath)
-      }
+      startInlineCreate('file', isFolder ? path : null)
       break
     case 'new-folder':
-      const folderName = prompt('Folder name:', 'new-folder')
-      if (folderName) {
-        const parentPath = isFolder ? path : null
-        await createFolder(folderName, parentPath)
-      }
+      startInlineCreate('folder', isFolder ? path : null)
       break
   }
 }
@@ -637,6 +629,120 @@ function startInlineRename(path) {
     if (e.key === 'Escape') {
       input.value = oldName
       input.blur()
+    }
+  })
+}
+
+/**
+ * Start inline creation of a new file or folder
+ */
+function startInlineCreate(type, parentPath) {
+  // Find the container where to insert the new element
+  let container
+  if (parentPath && parentPath !== '.') {
+    // Find parent folder and expand it
+    const parentFolder = document.querySelector(`[data-path="${parentPath}"]`)
+    if (parentFolder) {
+      expandedFolders.add(parentPath)
+      parentFolder.classList.add('expanded')
+      container = parentFolder.querySelector('.file-tree-folder-children')
+    }
+  }
+
+  // Fallback to root folder children
+  if (!container) {
+    container = document.querySelector('[data-root="true"] .file-tree-folder-children')
+  }
+
+  if (!container) return
+
+  // Create temporary element
+  const tempElement = document.createElement('div')
+  const isFile = type === 'file'
+  const defaultName = isFile ? 'new-file.mir' : 'new-folder'
+  const depth = parentPath && parentPath !== '.' ? parentPath.split('/').length + 1 : 1
+
+  if (isFile) {
+    const fileType = getFileType(defaultName)
+    tempElement.className = 'file-tree-file creating'
+    tempElement.style.paddingLeft = `${16 + depth * 12}px`
+    tempElement.innerHTML = `
+      <span class="file-icon" style="color: ${fileType.color}">${fileType.icon}</span>
+      <input type="text" class="file-tree-rename-input" value="${defaultName}" />
+    `
+  } else {
+    tempElement.className = 'file-tree-folder creating'
+    tempElement.style.paddingLeft = `${8 + depth * 12}px`
+    tempElement.innerHTML = `
+      <div class="file-tree-folder-header" style="padding-left: 0">
+        ${ICON_CHEVRON}
+        <input type="text" class="file-tree-rename-input" value="${defaultName}" />
+      </div>
+    `
+  }
+
+  // Insert at the beginning of the container
+  container.insertBefore(tempElement, container.firstChild)
+
+  const input = tempElement.querySelector('input')
+  input.focus()
+
+  // Select name without extension for files
+  if (isFile) {
+    const dotIndex = defaultName.lastIndexOf('.')
+    if (dotIndex > 0) {
+      input.setSelectionRange(0, dotIndex)
+    } else {
+      input.select()
+    }
+  } else {
+    input.select()
+  }
+
+  const finishCreate = async () => {
+    const name = input.value.trim()
+
+    if (!name) {
+      tempElement.remove()
+      return
+    }
+
+    const validationError = validateFilename(name)
+    if (validationError) {
+      alert(validationError)
+      tempElement.remove()
+      return
+    }
+
+    // Remove temp element before creating real one
+    tempElement.remove()
+
+    if (isFile) {
+      await createFile(name, parentPath)
+    } else {
+      await createFolder(name, parentPath)
+    }
+  }
+
+  let finished = false
+
+  input.addEventListener('blur', () => {
+    if (!finished) {
+      finished = true
+      finishCreate()
+    }
+  })
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      finished = true
+      finishCreate()
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      finished = true
+      tempElement.remove()
     }
   })
 }

@@ -23,8 +23,8 @@ export {
 } from '../ir/source-map'
 
 /**
- * @deprecated Use StateSelectionAdapter from studio/core instead.
- * These exports are kept for backwards compatibility.
+ * @deprecated Since v2.0. Use StateSelectionAdapter from studio/core instead.
+ * Will be removed in v3.0.
  */
 export {
   SelectionManager,
@@ -75,35 +75,10 @@ export {
   type SemanticZone,
 } from './drop-zone-calculator'
 
-/**
- * @deprecated Import from 'studio/visual' instead:
- *   import { DragDropService, createDragDropService } from '../studio/visual'
- * These re-exports create circular dependencies and will be removed.
- */
-export {
-  DragDropService,
-  createDragDropService,
-  type DragDropServiceConfig,
-  type DragDropCallbacks,
-  type DropResultInfo,
-} from '../../studio/visual/services/drag-drop-service'
-
-/**
- * @deprecated Import from 'studio/visual' instead:
- *   import { StudioDragDropService } from '../studio/visual'
- * These re-exports create circular dependencies and will be removed.
- */
-export {
-  StudioDragDropService,
-  createStudioDragDropService,
-  makePaletteDraggable,
-  makeCanvasElementDraggable,
-  makeCanvasElementDraggable as makeCanvasElementDraggableV2,
-  type StudioDragDropConfig,
-  type StudioDragDropCallbacks,
-  type StudioDropResult,
-  type DragOverState,
-} from '../../studio/visual/services/studio-drag-drop-service'
+// DragDropService and StudioDragDropService removed in v2.1 to fix circular dependencies.
+// Import directly from 'studio/visual' instead:
+//   import { DragDropService, createDragDropService } from '../studio/visual'
+//   import { StudioDragDropService, createStudioDragDropService } from '../studio/visual'
 
 export {
   createSmartSizingService,

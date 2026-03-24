@@ -16,9 +16,9 @@ import {
   StudioDragDropService,
   createStudioDragDropService,
   makeCanvasElementDraggable,
-  SourceMapBuilder,
-  CodeModifier,
-} from '../index'
+} from '../../../studio/visual/services/studio-drag-drop-service'
+import { SourceMapBuilder } from '../../ir/source-map'
+import { CodeModifier } from '../code-modifier'
 
 /**
  * Mock DataTransfer for JSDOM (which doesn't implement it)
