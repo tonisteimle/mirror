@@ -3750,9 +3750,14 @@ function renderComponentsPreview(ast) {
   for (const section of sections) {
     if (section.components.length === 0) continue
 
+    // Only show section header if name is not empty
+    const headerHtml = section.name
+      ? `<div class="components-preview-section-header">${section.name}</div>`
+      : ''
+
     html += `
       <div class="components-preview-section">
-        <div class="components-preview-section-header">${section.name}</div>
+        ${headerHtml}
         <div class="components-preview-list">
           ${section.components.map(comp => renderComponentWithStates(comp, ast)).join('')}
         </div>
@@ -3797,9 +3802,9 @@ function extractComponentSections(ast, components) {
     }
   }
 
-  // If no sections defined, return all components in one section
+  // If no sections defined, return all components without section header
   if (sectionHeaders.length === 0) {
-    return [{ name: 'Components', components }]
+    return [{ name: '', components }]
   }
 
   // Group components by section based on line numbers
@@ -3826,12 +3831,12 @@ function extractComponentSections(ast, components) {
     }
   }
 
-  // Add unsorted components to first section or create default section
+  // Add unsorted components to first section or create default section (no header)
   if (unsortedComponents.length > 0) {
     if (sections.length > 0) {
       sections[0].components = [...unsortedComponents, ...sections[0].components]
     } else {
-      sections.unshift({ name: 'Components', components: unsortedComponents })
+      sections.unshift({ name: '', components: unsortedComponents })
     }
   }
 
