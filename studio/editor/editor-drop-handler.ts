@@ -50,6 +50,7 @@ export class EditorDropHandler {
     const signal = this.abortController.signal
 
     const editorDom = this.editor.dom
+    const contentDom = this.editor.contentDOM
 
     // Dragover - show drop indicator (capture phase to intercept before CodeMirror)
     editorDom.addEventListener('dragover', this.handleDragOver.bind(this), { signal, capture: true })
@@ -57,8 +58,10 @@ export class EditorDropHandler {
     // Dragleave - hide drop indicator
     editorDom.addEventListener('dragleave', this.handleDragLeave.bind(this), { signal })
 
-    // Drop - insert component code (capture phase to intercept BEFORE CodeMirror processes text/plain)
+    // Drop - intercept on BOTH dom and contentDOM to ensure we catch it before CodeMirror
+    // Use capture phase on both to intercept as early as possible
     editorDom.addEventListener('drop', this.handleDrop.bind(this), { signal, capture: true })
+    contentDom.addEventListener('drop', this.handleDrop.bind(this), { signal, capture: true })
 
     // Create drop indicator
     this.createDropIndicator()
@@ -107,18 +110,23 @@ export class EditorDropHandler {
    * Handle drop event
    */
   private handleDrop(event: DragEvent): void {
+    // Check if already handled (we have handlers on both dom and contentDOM)
+    if ((event as any)._mirrorEditorHandled) {
+      return
+    }
+
     // Check if this is a component drop by checking types first (fast check)
     if (!event.dataTransfer?.types.includes('application/mirror-component')) {
       return
     }
 
+    // Mark event as handled FIRST to prevent double processing
+    ;(event as any)._mirrorEditorHandled = true
+
     // IMMEDIATELY prevent default and stop propagation to block CodeMirror
     event.preventDefault()
     event.stopPropagation()
     event.stopImmediatePropagation()
-
-    // Mark event as handled to prevent other handlers from processing it
-    ;(event as any)._mirrorEditorHandled = true
 
     console.log('[EditorDropHandler] Handling drop')
 

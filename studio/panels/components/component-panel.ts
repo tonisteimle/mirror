@@ -388,8 +388,9 @@ export class ComponentPanel {
     }
 
     event.dataTransfer.setData('application/mirror-component', JSON.stringify(dragData))
-    // NOTE: We intentionally do NOT set text/plain to prevent CodeMirror from auto-inserting
-    // the text at cursor position. EditorDropHandler handles code insertion properly.
+    // Set text/plain to a marker - required for drag to work in some browsers
+    // EditorDropHandler will prevent CodeMirror from inserting this
+    event.dataTransfer.setData('text/plain', '\n')
     event.dataTransfer.effectAllowed = 'copy'
 
     // Add dragging class
