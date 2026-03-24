@@ -1,7 +1,0 @@
-// Design Tokens
-
-$primary.bg: #3B82F6
-$primary.col: #FFFFFF
-
-$default.bg: #18181b
-$default.col: #e4e4e7

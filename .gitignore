@@ -26,6 +26,10 @@ dist-ssr
 # Test artifacts
 playwright-report
 test-results
+test-build*/
+
+# Local data
+local-data/
 
 # Environment
 .env
