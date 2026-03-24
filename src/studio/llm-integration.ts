@@ -397,9 +397,23 @@ export function prepareCodeForInsertion(
 // Export for use in studio.html
 // =============================================================================
 
+// Extend Window for global MirrorLLM
+declare global {
+  interface Window {
+    MirrorLLM?: {
+      extractStudioContext: typeof extractStudioContext
+      buildReactSystemPrompt: typeof buildReactSystemPrompt
+      generateFromPrompt: typeof generateFromPrompt
+      prepareCodeForInsertion: typeof prepareCodeForInsertion
+      callLLM: typeof callLLM
+      extractReactFromResponse: typeof extractReactFromResponse
+    }
+  }
+}
+
 // Make available globally for non-module usage
 if (typeof window !== 'undefined') {
-  (window as any).MirrorLLM = {
+  window.MirrorLLM = {
     extractStudioContext,
     buildReactSystemPrompt,
     generateFromPrompt,
