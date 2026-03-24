@@ -1,63 +1,52 @@
 /**
  * Desktop File Management
  *
- * Handles file tree rendering and operations for Tauri desktop app.
- * Falls back to demo mode in browser for testing.
+ * Handles file tree rendering and operations.
+ * Uses the abstracted storage service for all file operations.
  */
 
-// Check if running in Tauri
-const isTauri = () => typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
+import { storage } from './storage/index.js'
 
-// State
-let currentFolder = null  // Absolute path to open folder (or 'demo' in browser)
-let fileTree = []         // Recursive file tree structure
+// =============================================================================
+// State (UI only - file data comes from storage service)
+// =============================================================================
+
 let currentFile = null    // Currently selected file path
-let files = {}            // filename → content cache
 let contextMenu = null    // Current context menu state
 let draggedItem = null    // Currently dragged item path
+let expandedFolders = new Set()  // Track expanded folders (UI state)
 
-// Supported file extensions
-const SUPPORTED_EXTENSIONS = ['.mir', '.tok', '.com', '.mirror']
+// Synchronous file cache for app.js compatibility
+// This is updated by storage events and provides sync access to file contents
+let filesCache = {}
 
+// =============================================================================
 // File Types with Icons and Colors
+// =============================================================================
+
 const FILE_TYPES = {
   layout: {
-    extension: '.mir',
+    extensions: ['.mir', '.mirror'],
     color: '#3B82F6',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7"></rect>
-      <rect x="14" y="3" width="7" height="7"></rect>
-      <rect x="3" y="14" width="7" height="7"></rect>
-      <rect x="14" y="14" width="7" height="7"></rect>
+    // Lucide: LayoutDashboard
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
     </svg>`
   },
   tokens: {
-    extension: '.tok',
+    extensions: ['.tok', '.tokens'],
     color: '#F59E0B',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="8" r="4"></circle>
-      <circle cx="7" cy="17" r="3"></circle>
-      <circle cx="17" cy="17" r="3"></circle>
+    // Lucide: Palette
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
     </svg>`
   },
   component: {
-    extension: '.com',
+    extensions: ['.com', '.components'],
     color: '#8B5CF6',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="8" height="8" rx="1"></rect>
-      <rect x="13" y="3" width="8" height="8" rx="1"></rect>
-      <rect x="3" y="13" width="8" height="8" rx="1"></rect>
-      <rect x="13" y="13" width="8" height="8" rx="1"></rect>
-    </svg>`
-  },
-  legacy: {
-    extension: '.mirror',
-    color: '#3B82F6',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7"></rect>
-      <rect x="14" y="3" width="7" height="7"></rect>
-      <rect x="3" y="14" width="7" height="7"></rect>
-      <rect x="14" y="14" width="7" height="7"></rect>
+    // Lucide: Package
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
     </svg>`
   }
 }
@@ -66,6 +55,10 @@ const FILE_TYPES = {
 const ICON_FOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`
 const ICON_FOLDER_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v1"></path><path d="M5 12h16l-2 7H3l2-7z"></path></svg>`
 const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`
+
+// =============================================================================
+// Utilities
+// =============================================================================
 
 /**
  * Escape HTML entities to prevent XSS
@@ -87,275 +80,17 @@ function validateFilename(name) {
   return null
 }
 
-// Demo files for browser testing
-// NOTE: index.mir MUST start with "App" on line 1 due to appLockExtension in app.js
-const DEMO_FILES = {
-  'index.mir': `App bg #18181b, pad 24, gap 16
-  // Demo Project - Browser Mode
-  Text "Mirror Studio", font-size 24, weight bold, col white
-  Text "Browser Demo Mode", col #888
-
-  Card bg #27272a, pad 16, rad 8, gap 8
-    Text "Edit this code to test", col #a1a1aa
-    Button "Click Me"
-      pad 12 24, bg #3b82f6, rad 6, col white
-      hover bg #2563eb`,
-
-  'components.com': `// Component Definitions
-
-Button:
-  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
-  hover bg #2563eb
-
-Card:
-  bg #27272a, pad 16, rad 8
-
-Input:
-  pad 12, bg #1f1f1f, rad 6, bor 1 #333
-  col white
-  focus bor 1 #3b82f6`,
-
-  'tokens.tok': `// Design Tokens
-
-// Colors
-$primary: #3b82f6
-$surface: #27272a
-$background: #18181b
-$text: #ffffff
-$muted: #a1a1aa
-
-// Spacing
-$spacing-sm: 8
-$spacing-md: 16
-$spacing-lg: 24
-
-// Radius
-$radius: 8`
-}
-
 /**
  * Get file type from filename
  */
 function getFileType(filename) {
   for (const [type, config] of Object.entries(FILE_TYPES)) {
-    if (filename.endsWith(config.extension)) {
+    if (config.extensions.some(ext => filename.endsWith(ext))) {
       return { type, ...config }
     }
   }
   // Default to layout for unknown
   return { type: 'layout', ...FILE_TYPES.layout }
-}
-
-/**
- * Initialize desktop file management
- */
-export function initDesktopFiles(options = {}) {
-  const { onFileSelect, onFileChange } = options
-
-  // Store callbacks
-  window._desktopFiles = {
-    onFileSelect,
-    onFileChange,
-    files
-  }
-
-  // Browser mode: auto-load demo project
-  if (!isTauri()) {
-    console.log('[DesktopFiles] Browser mode - loading demo project')
-    loadDemoProject()
-
-    // Select first file after a short delay (wait for editor)
-    setTimeout(() => {
-      if (window._desktopFiles?.onFileSelect && currentFile) {
-        window._desktopFiles.onFileSelect(currentFile, files[currentFile])
-      }
-    }, 100)
-  } else {
-    // Tauri mode: show empty state until folder is opened
-    renderFileTree()
-  }
-
-  // Add global click handler to close context menu
-  document.addEventListener('click', hideContextMenu)
-
-  console.log('[DesktopFiles] Initialized', isTauri() ? '(Tauri)' : '(Browser Demo)')
-}
-
-/**
- * Load demo project for browser testing
- */
-function loadDemoProject() {
-  currentFolder = 'demo'
-  files = { ...DEMO_FILES }
-
-  // Build file tree from demo files
-  fileTree = Object.keys(DEMO_FILES).map(name => ({
-    type: 'file',
-    name,
-    path: name
-  }))
-
-  // Select first file
-  currentFile = Object.keys(DEMO_FILES)[0]
-
-  renderFileTree()
-}
-
-/**
- * Open a folder via Tauri dialog
- */
-export async function openFolder() {
-  // Browser mode: just reload demo
-  if (!isTauri()) {
-    console.log('[DesktopFiles] Browser mode - reloading demo project')
-    loadDemoProject()
-    if (window._desktopFiles?.onFileSelect && currentFile) {
-      window._desktopFiles.onFileSelect(currentFile, files[currentFile])
-    }
-    return 'demo'
-  }
-
-  console.log('[DesktopFiles] openFolder called')
-  const bridge = window.TauriBridge
-  if (!bridge?.dialog) {
-    console.error('[DesktopFiles] TauriBridge not available')
-    return null
-  }
-
-  try {
-    const path = await bridge.dialog.openFolder()
-    if (path) {
-      await loadFolder(path)
-      return path
-    }
-  } catch (e) {
-    console.error('[DesktopFiles] Open folder failed:', e)
-  }
-  return null
-}
-
-/**
- * Load a folder and its contents
- */
-export async function loadFolder(folderPath) {
-  const bridge = window.TauriBridge
-  if (!bridge?.fs) return
-
-  currentFolder = folderPath
-  files = {}
-
-  try {
-    // Load recursive file tree
-    fileTree = await loadFolderRecursive(folderPath)
-
-    // Preload all token and component files for prelude support
-    await preloadPreludeFiles(fileTree)
-
-    // Render tree
-    renderFileTree()
-
-    // Auto-select first file
-    const firstFile = findFirstFile(fileTree)
-    if (firstFile) {
-      await selectFile(firstFile)
-    }
-
-    // Update window title
-    if (bridge.window?.setTitle) {
-      const folderName = folderPath.split('/').pop()
-      bridge.window.setTitle(`${folderName} - Mirror IDE`)
-    }
-
-    console.log('[DesktopFiles] Loaded folder:', folderPath)
-  } catch (e) {
-    console.error('[DesktopFiles] Load folder failed:', e)
-  }
-}
-
-/**
- * Preload all token (.tok) and component (.com) files for prelude
- * This ensures tokens and components are available when compiling layouts
- */
-async function preloadPreludeFiles(tree) {
-  const bridge = window.TauriBridge
-  if (!bridge?.fs) return
-
-  const preludeFiles = []
-
-  // Collect all .tok and .com files from tree
-  function collectPreludeFiles(items) {
-    for (const item of items) {
-      if (item.type === 'file') {
-        const ext = item.name.substring(item.name.lastIndexOf('.')).toLowerCase()
-        if (ext === '.tok' || ext === '.com') {
-          preludeFiles.push(item.path)
-        }
-      } else if (item.type === 'folder' && item.children) {
-        collectPreludeFiles(item.children)
-      }
-    }
-  }
-
-  collectPreludeFiles(tree)
-
-  // Load all prelude files in parallel
-  if (preludeFiles.length > 0) {
-    console.log('[DesktopFiles] Preloading', preludeFiles.length, 'prelude files (tokens/components)')
-    await Promise.all(preludeFiles.map(async (filePath) => {
-      try {
-        files[filePath] = await bridge.fs.readFile(filePath)
-      } catch (e) {
-        console.warn('[DesktopFiles] Failed to preload:', filePath, e)
-      }
-    }))
-  }
-}
-
-/**
- * Recursively load folder structure
- */
-async function loadFolderRecursive(folderPath, depth = 0) {
-  if (depth > 5) return [] // Max depth limit
-
-  const bridge = window.TauriBridge
-  const result = await bridge.fs.listDirectory(folderPath)
-
-  // Rust returns { path, files } - extract the files array
-  const entries = result.files || []
-
-  const items = []
-
-  for (const entry of entries) {
-    // Skip hidden files
-    if (entry.name.startsWith('.')) continue
-
-    const fullPath = `${folderPath}/${entry.name}`
-
-    if (entry.is_dir) {
-      const children = await loadFolderRecursive(fullPath, depth + 1)
-      items.push({
-        type: 'folder',
-        name: entry.name,
-        path: fullPath,
-        children,
-        expanded: depth === 0 // Auto-expand root level
-      })
-    } else if (SUPPORTED_EXTENSIONS.some(ext => entry.name.endsWith(ext))) {
-      items.push({
-        type: 'file',
-        name: entry.name,
-        path: fullPath
-      })
-    }
-  }
-
-  // Sort: folders first, then files, alphabetically
-  items.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
-    return a.name.localeCompare(b.name)
-  })
-
-  return items
 }
 
 /**
@@ -373,64 +108,206 @@ function findFirstFile(tree) {
 }
 
 /**
+ * Preload all files into cache for synchronous access
+ */
+async function preloadAllFiles() {
+  const tree = storage.getTree()
+
+  async function loadRecursive(items) {
+    for (const item of items) {
+      if (item.type === 'file') {
+        try {
+          filesCache[item.path] = await storage.readFile(item.path)
+        } catch (e) {
+          console.warn('[DesktopFiles] Failed to preload:', item.path)
+        }
+      } else if (item.children) {
+        await loadRecursive(item.children)
+      }
+    }
+  }
+
+  await loadRecursive(tree)
+  console.log('[DesktopFiles] Preloaded', Object.keys(filesCache).length, 'files')
+}
+
+// =============================================================================
+// Initialization
+// =============================================================================
+
+/**
+ * Initialize desktop file management
+ */
+export async function initDesktopFiles(options = {}) {
+  const { onFileSelect, onFileChange } = options
+
+  // Store callbacks
+  window._desktopFiles = {
+    onFileSelect,
+    onFileChange
+  }
+
+  // Initialize storage service
+  if (!storage.isInitialized) {
+    await storage.init()
+  }
+
+  console.log(`[DesktopFiles] Initialized with ${storage.providerType} provider`)
+
+  // Subscribe to storage events
+  storage.events.on('tree:changed', ({ tree }) => {
+    renderFileTree()
+  })
+
+  storage.events.on('file:created', async ({ path }) => {
+    // Load content into cache
+    try {
+      filesCache[path] = await storage.readFile(path)
+    } catch (e) {
+      console.warn('[DesktopFiles] Failed to cache new file:', path)
+    }
+    // Auto-select new file
+    selectFile(path)
+  })
+
+  storage.events.on('file:changed', ({ path, content }) => {
+    // Update cache
+    filesCache[path] = content
+  })
+
+  storage.events.on('file:deleted', ({ path }) => {
+    // Remove from cache
+    delete filesCache[path]
+
+    if (currentFile === path) {
+      currentFile = null
+      const tree = storage.getTree()
+      const nextFile = findFirstFile(tree)
+      if (nextFile) {
+        selectFile(nextFile)
+      }
+    }
+    renderFileTree()
+  })
+
+  storage.events.on('file:renamed', ({ oldPath, newPath }) => {
+    // Update cache
+    if (filesCache[oldPath] !== undefined) {
+      filesCache[newPath] = filesCache[oldPath]
+      delete filesCache[oldPath]
+    }
+
+    if (currentFile === oldPath) {
+      currentFile = newPath
+    }
+    renderFileTree()
+  })
+
+  storage.events.on('project:opened', async ({ project }) => {
+    console.log('[DesktopFiles] Project opened:', project.name)
+
+    // Clear and reload cache with all files
+    filesCache = {}
+    await preloadAllFiles()
+
+    // Auto-select first file
+    const tree = storage.getTree()
+    const firstFile = findFirstFile(tree)
+    if (firstFile) {
+      await selectFile(firstFile)
+    }
+
+    renderFileTree()
+  })
+
+  storage.events.on('error', ({ error, operation }) => {
+    console.error(`[DesktopFiles] Error in ${operation}:`, error)
+  })
+
+  // Auto-open demo project if no project is open
+  if (!storage.hasProject) {
+    await storage.openProject('demo')
+  }
+
+  // Add global click handler to close context menu
+  document.addEventListener('click', hideContextMenu)
+
+  // Initial render
+  renderFileTree()
+
+  // Select first file after a short delay
+  setTimeout(async () => {
+    const tree = storage.getTree()
+    const firstFile = findFirstFile(tree)
+    if (firstFile && !currentFile) {
+      await selectFile(firstFile)
+    }
+  }, 100)
+}
+
+// =============================================================================
+// Project Operations
+// =============================================================================
+
+/**
+ * Open a folder via dialog
+ */
+export async function openFolder() {
+  try {
+    if (storage.canOpenFolderDialog()) {
+      const path = await storage.openFolderDialog()
+      if (path) {
+        await storage.openProject(path)
+        return path
+      }
+    } else {
+      // Fallback: reload demo project
+      await storage.openProject('demo')
+      return 'demo'
+    }
+  } catch (e) {
+    console.error('[DesktopFiles] Open folder failed:', e)
+  }
+  return null
+}
+
+/**
+ * Load a folder (for external calls)
+ */
+export async function loadFolder(folderPath) {
+  await storage.openProject(folderPath)
+}
+
+// =============================================================================
+// File Operations
+// =============================================================================
+
+/**
  * Select and load a file
  */
 export async function selectFile(filePath) {
-  // Browser mode: files already in memory
-  if (!isTauri()) {
-    currentFile = filePath
-    renderFileTree()
-    if (window._desktopFiles?.onFileSelect) {
-      window._desktopFiles.onFileSelect(filePath, files[filePath] || '')
-    }
-    return
-  }
-
-  // Tauri mode: load from disk
-  const bridge = window.TauriBridge
-  if (!bridge?.fs) return
-
   try {
-    // Load content if not cached
-    if (!files[filePath]) {
-      files[filePath] = await bridge.fs.readFile(filePath)
-    }
-
+    const content = await storage.readFile(filePath)
     currentFile = filePath
 
     // Update UI
     renderFileTree()
 
-    // Callback
+    // Callback to editor
     if (window._desktopFiles?.onFileSelect) {
-      window._desktopFiles.onFileSelect(filePath, files[filePath])
+      window._desktopFiles.onFileSelect(filePath, content)
     }
-
   } catch (e) {
     console.error('[DesktopFiles] Select file failed:', e)
   }
 }
 
 /**
- * Save current file
+ * Save file content
  */
 export async function saveFile(filePath, content) {
-  // Always update in-memory cache
-  files[filePath] = content
-
-  // Browser mode: just keep in memory (no persistence)
-  if (!isTauri()) {
-    console.log('[DesktopFiles] Browser mode - saved in memory:', filePath)
-    return
-  }
-
-  // Tauri mode: write to disk
-  const bridge = window.TauriBridge
-  if (!bridge?.fs) return
-
   try {
-    await bridge.fs.writeFile(filePath, content)
-    console.log('[DesktopFiles] Saved:', filePath)
+    await storage.writeFile(filePath, content)
   } catch (e) {
     console.error('[DesktopFiles] Save failed:', e)
   }
@@ -440,20 +317,18 @@ export async function saveFile(filePath, content) {
  * Create a new file
  */
 export async function createFile(fileName, parentFolder = null) {
-  const targetFolder = parentFolder || currentFolder
-  console.log('[DesktopFiles] createFile called:', fileName, 'in:', targetFolder)
+  // Determine target folder
+  let targetPath = fileName
 
-  if (!targetFolder) {
-    console.warn('[DesktopFiles] No folder open')
-    return
+  if (parentFolder && parentFolder !== 'demo') {
+    targetPath = `${parentFolder}/${fileName}`
   }
 
   // Ensure valid extension
+  const SUPPORTED_EXTENSIONS = ['.mir', '.tok', '.com', '.mirror', '.tokens', '.components']
   if (!SUPPORTED_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
-    fileName = `${fileName}.mir`
+    targetPath = targetPath.endsWith('.mir') ? targetPath : `${targetPath}.mir`
   }
-
-  const content = `// ${fileName}\n\nBox w 100, h 100, bg #333\n`
 
   // Validate filename
   const validationError = validateFilename(fileName)
@@ -462,51 +337,11 @@ export async function createFile(fileName, parentFolder = null) {
     return
   }
 
-  // Browser mode: add to in-memory files
-  if (!isTauri()) {
-    const filePath = targetFolder === 'demo' ? fileName : `${targetFolder}/${fileName}`
-    files[filePath] = content
-
-    // Add to correct location in tree
-    if (targetFolder === 'demo' || targetFolder === currentFolder) {
-      fileTree.push({ type: 'file', name: fileName, path: filePath })
-      fileTree.sort((a, b) => a.name.localeCompare(b.name))
-    } else {
-      // Find parent folder in tree and add there
-      addFileToTree(fileTree, targetFolder, { type: 'file', name: fileName, path: filePath })
-    }
-
-    currentFile = filePath
-    renderFileTree()
-    if (window._desktopFiles?.onFileSelect) {
-      window._desktopFiles.onFileSelect(filePath, content)
-    }
-    console.log('[DesktopFiles] Browser mode - created file:', filePath)
-    return
-  }
-
-  // Tauri mode: write to disk
-  const bridge = window.TauriBridge
-  console.log('[DesktopFiles] Tauri mode - bridge:', !!bridge, 'fs:', !!bridge?.fs)
-  if (!bridge?.fs) {
-    console.error('[DesktopFiles] No TauriBridge.fs available')
-    return
-  }
-
-  const filePath = `${targetFolder}/${fileName}`
-  console.log('[DesktopFiles] Writing to:', filePath)
+  const content = `// ${fileName}\n\nBox w 100, h 100, bg #333\n`
 
   try {
-    await bridge.fs.writeFile(filePath, content)
-    console.log('[DesktopFiles] File written, reloading folder...')
-
-    // Reload tree
-    await loadFolder(currentFolder)
-
-    // Select new file
-    await selectFile(filePath)
-    console.log('[DesktopFiles] File created and selected:', filePath)
-
+    await storage.writeFile(targetPath, content)
+    await selectFile(targetPath)
   } catch (e) {
     console.error('[DesktopFiles] Create file failed:', e)
   }
@@ -516,34 +351,17 @@ export async function createFile(fileName, parentFolder = null) {
  * Create a new folder
  */
 export async function createFolder(folderName, parentFolder = null) {
-  const targetFolder = parentFolder || currentFolder
+  let targetPath = folderName
 
-  if (!targetFolder) {
-    console.warn('[DesktopFiles] No folder open')
-    return
+  if (parentFolder && parentFolder !== 'demo') {
+    targetPath = `${parentFolder}/${folderName}`
   }
-
-  // Browser mode: not supported (flat file list)
-  if (!isTauri()) {
-    console.log('[DesktopFiles] Browser mode - folders not supported')
-    alert('Ordner werden im Browser-Modus nicht unterstützt')
-    return
-  }
-
-  // Tauri mode: create on disk
-  const bridge = window.TauriBridge
-  if (!bridge?.fs) return
-
-  const folderPath = `${targetFolder}/${folderName}`
 
   try {
-    await bridge.fs.createDirectory(folderPath)
-
-    // Reload tree
-    await loadFolder(currentFolder)
-
+    await storage.createFolder(targetPath)
   } catch (e) {
     console.error('[DesktopFiles] Create folder failed:', e)
+    alert('Ordner erstellen fehlgeschlagen')
   }
 }
 
@@ -554,32 +372,8 @@ export async function renameItem(oldPath, newName) {
   const dir = oldPath.substring(0, oldPath.lastIndexOf('/'))
   const newPath = dir ? `${dir}/${newName}` : newName
 
-  if (!isTauri()) {
-    // Browser mode: rename in memory
-    const content = files[oldPath]
-    delete files[oldPath]
-    files[newPath] = content
-    if (currentFile === oldPath) currentFile = newPath
-
-    // Update fileTree
-    updateTreeItemPath(fileTree, oldPath, newPath, newName)
-    renderFileTree()
-
-    if (window._desktopFiles?.onFileSelect && currentFile === newPath) {
-      window._desktopFiles.onFileSelect(newPath, files[newPath])
-    }
-    return
-  }
-
-  // Tauri mode
-  const bridge = window.TauriBridge
   try {
-    await bridge.fs.renamePath(oldPath, newPath)
-    delete files[oldPath]
-    await loadFolder(currentFolder)
-    if (currentFile === oldPath) {
-      await selectFile(newPath)
-    }
+    await storage.renameFile(oldPath, newPath)
   } catch (e) {
     console.error('[DesktopFiles] Rename failed:', e)
   }
@@ -594,49 +388,33 @@ export async function duplicateFile(path) {
   const baseName = name.substring(0, name.lastIndexOf('.'))
   const dir = path.substring(0, path.lastIndexOf('/'))
 
-  if (!isTauri()) {
-    // Browser mode: check memory
-    const existingFiles = new Set(Object.keys(files))
-    let newName = `${baseName}-copy${ext}`
-    let counter = 1
+  // Find unique name
+  const tree = storage.getTree()
+  const existingNames = new Set()
 
-    while (existingFiles.has(dir ? `${dir}/${newName}` : newName)) {
-      newName = `${baseName}-copy-${counter}${ext}`
-      counter++
+  function collectNames(items, prefix = '') {
+    for (const item of items) {
+      if (item.type === 'file') {
+        existingNames.add(item.path)
+      } else if (item.children) {
+        collectNames(item.children)
+      }
     }
+  }
+  collectNames(tree)
 
-    const newPath = dir ? `${dir}/${newName}` : newName
-    const content = files[path] || ''
+  let newName = `${baseName}-copy${ext}`
+  let newPath = dir ? `${dir}/${newName}` : newName
+  let counter = 1
 
-    files[newPath] = content
-    fileTree.push({ type: 'file', name: newName, path: newPath })
-    fileTree.sort((a, b) => a.name.localeCompare(b.name))
-    renderFileTree()
-    return
+  while (existingNames.has(newPath)) {
+    newName = `${baseName}-copy-${counter}${ext}`
+    newPath = dir ? `${dir}/${newName}` : newName
+    counter++
   }
 
-  // Tauri mode: check filesystem
-  const bridge = window.TauriBridge
   try {
-    let newName = `${baseName}-copy${ext}`
-    let newPath = `${dir}/${newName}`
-    let counter = 1
-
-    // Check if file exists on disk
-    while (await bridge.fs.pathExists(newPath)) {
-      newName = `${baseName}-copy-${counter}${ext}`
-      newPath = `${dir}/${newName}`
-      counter++
-    }
-
-    // Read original content
-    let fileContent = files[path]
-    if (!fileContent) {
-      fileContent = await bridge.fs.readFile(path)
-    }
-
-    await bridge.fs.writeFile(newPath, fileContent)
-    await loadFolder(currentFolder)
+    await storage.copyFile(path, newPath)
   } catch (e) {
     console.error('[DesktopFiles] Duplicate failed:', e)
   }
@@ -653,42 +431,11 @@ export async function deleteItem(path, isFolder = false) {
 
   if (!confirm(confirmMsg)) return
 
-  if (!isTauri()) {
-    // Browser mode
-    if (isFolder) {
-      // Remove all files in folder
-      Object.keys(files).forEach(f => {
-        if (f.startsWith(path + '/')) delete files[f]
-      })
-    } else {
-      delete files[path]
-    }
-    removeFromTree(fileTree, path)
-    if (currentFile === path) {
-      currentFile = null
-      // Select next available file
-      const nextFile = findFirstFile(fileTree)
-      if (nextFile) {
-        await selectFile(nextFile)
-      }
-    }
-    renderFileTree()
-    return
-  }
-
-  // Tauri mode
-  const bridge = window.TauriBridge
   try {
-    await bridge.fs.deletePath(path)
-    delete files[path]
-    await loadFolder(currentFolder)
-
-    if (currentFile === path) {
-      currentFile = null
-      const nextFile = findFirstFile(fileTree)
-      if (nextFile) {
-        await selectFile(nextFile)
-      }
+    if (isFolder) {
+      await storage.deleteFolder(path)
+    } else {
+      await storage.deleteFile(path)
     }
   } catch (e) {
     console.error('[DesktopFiles] Delete failed:', e)
@@ -704,124 +451,20 @@ export async function moveItem(sourcePath, targetFolder) {
 
   if (sourcePath === newPath) return
   if (newPath.startsWith(sourcePath + '/')) {
-    // Prevent moving folder into itself
     console.warn('[DesktopFiles] Cannot move folder into itself')
     return
   }
 
-  if (!isTauri()) {
-    // Browser mode: move in memory
-    const content = files[sourcePath]
-    delete files[sourcePath]
-    files[newPath] = content
-    if (currentFile === sourcePath) currentFile = newPath
-
-    // Update tree structure
-    moveInTree(fileTree, sourcePath, targetFolder)
-    renderFileTree()
-    return
-  }
-
-  // Tauri mode
-  const bridge = window.TauriBridge
   try {
-    await bridge.fs.renamePath(sourcePath, newPath)
-    delete files[sourcePath]
-    await loadFolder(currentFolder)
-    if (currentFile === sourcePath) {
-      await selectFile(newPath)
-    }
+    await storage.moveItem(sourcePath, targetFolder)
   } catch (e) {
     console.error('[DesktopFiles] Move failed:', e)
   }
 }
 
-// === Tree manipulation helpers ===
-
-function updateTreeItemPath(items, oldPath, newPath, newName) {
-  for (const item of items) {
-    if (item.path === oldPath) {
-      item.path = newPath
-      item.name = newName
-      return true
-    }
-    if (item.children && updateTreeItemPath(item.children, oldPath, newPath, newName)) {
-      return true
-    }
-  }
-  return false
-}
-
-function removeFromTree(items, path) {
-  for (let i = items.length - 1; i >= 0; i--) {
-    if (items[i].path === path) {
-      items.splice(i, 1)
-      return true
-    }
-    if (items[i].children && removeFromTree(items[i].children, path)) {
-      return true
-    }
-  }
-  return false
-}
-
-function moveInTree(items, sourcePath, targetFolder) {
-  let sourceItem = null
-
-  // Find and remove source item
-  function findAndRemove(items) {
-    for (let i = items.length - 1; i >= 0; i--) {
-      if (items[i].path === sourcePath) {
-        sourceItem = items.splice(i, 1)[0]
-        return true
-      }
-      if (items[i].children && findAndRemove(items[i].children)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Find target folder and add item
-  function addToFolder(items) {
-    for (const item of items) {
-      if (item.path === targetFolder && item.type === 'folder') {
-        const newPath = `${targetFolder}/${sourceItem.name}`
-        sourceItem.path = newPath
-        item.children = item.children || []
-        item.children.push(sourceItem)
-        item.children.sort((a, b) => a.name.localeCompare(b.name))
-        return true
-      }
-      if (item.children && addToFolder(item.children)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  findAndRemove(items)
-  if (sourceItem) {
-    addToFolder(items)
-  }
-}
-
-function addFileToTree(items, parentPath, newItem) {
-  for (const item of items) {
-    if (item.path === parentPath && item.type === 'folder') {
-      item.children = item.children || []
-      item.children.push(newItem)
-      item.children.sort((a, b) => a.name.localeCompare(b.name))
-      return true
-    }
-    if (item.children && addFileToTree(item.children, parentPath, newItem)) {
-      return true
-    }
-  }
-  return false
-}
-
-// === Context Menu ===
+// =============================================================================
+// Context Menu
+// =============================================================================
 
 function showContextMenu(e, target) {
   e.preventDefault()
@@ -845,7 +488,6 @@ function showContextMenu(e, target) {
       <div class="context-menu-item danger" data-action="delete">Delete</div>
     `
   } else if (isFolder) {
-    // Root folder: only New File/Folder, no rename/delete
     if (isRoot) {
       menu.innerHTML = `
         <div class="context-menu-item" data-action="new-file">New File</div>
@@ -862,7 +504,6 @@ function showContextMenu(e, target) {
       `
     }
   } else {
-    // Empty area
     menu.innerHTML = `
       <div class="context-menu-item" data-action="new-file">New File</div>
       <div class="context-menu-item" data-action="new-folder">New Folder</div>
@@ -871,7 +512,7 @@ function showContextMenu(e, target) {
 
   document.body.appendChild(menu)
 
-  // Position menu, checking viewport bounds
+  // Position menu
   const menuRect = menu.getBoundingClientRect()
   let x = e.clientX
   let y = e.clientY
@@ -888,7 +529,6 @@ function showContextMenu(e, target) {
 
   contextMenu = { element: menu, path, isFile, isFolder }
 
-  // Event handlers
   menu.querySelectorAll('.context-menu-item').forEach(item => {
     item.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -921,19 +561,23 @@ async function handleContextAction(action) {
     case 'new-file':
       const fileName = prompt('File name:', 'new-file.mir')
       if (fileName) {
-        await createFile(fileName, isFolder ? path : currentFolder)
+        const parentPath = isFolder ? path : null
+        await createFile(fileName, parentPath)
       }
       break
     case 'new-folder':
       const folderName = prompt('Folder name:', 'new-folder')
       if (folderName) {
-        await createFolder(folderName, isFolder ? path : currentFolder)
+        const parentPath = isFolder ? path : null
+        await createFolder(folderName, parentPath)
       }
       break
   }
 }
 
-// === Inline Rename ===
+// =============================================================================
+// Inline Rename
+// =============================================================================
 
 function startInlineRename(path) {
   const element = document.querySelector(`[data-path="${path}"]`)
@@ -952,7 +596,6 @@ function startInlineRename(path) {
   nameSpan.replaceWith(input)
   input.focus()
 
-  // Select filename without extension
   const dotIndex = oldName.lastIndexOf('.')
   if (dotIndex > 0) {
     input.setSelectionRange(0, dotIndex)
@@ -966,7 +609,6 @@ function startInlineRename(path) {
       const validationError = validateFilename(newName)
       if (validationError) {
         alert(validationError)
-        // Restore original
         const span = document.createElement('span')
         span.textContent = oldName
         input.replaceWith(span)
@@ -974,7 +616,6 @@ function startInlineRename(path) {
       }
       await renameItem(path, newName)
     } else {
-      // Restore original
       const span = document.createElement('span')
       span.textContent = oldName
       input.replaceWith(span)
@@ -994,15 +635,18 @@ function startInlineRename(path) {
   })
 }
 
-// === Render File Tree ===
+// =============================================================================
+// Render File Tree
+// =============================================================================
 
 function renderFileTree() {
-  // Try new explorer structure first, fallback to old id
   const container = document.getElementById('file-tree-container') || document.getElementById('file-tree')
   if (!container) return
 
-  if (!currentFolder) {
-    // Empty state
+  const tree = storage.getTree()
+  const projectName = storage.currentProjectName || 'Project'
+
+  if (!storage.hasProject || tree.length === 0) {
     container.innerHTML = `
       <div class="file-tree-empty">
         <div class="file-tree-empty-icon">${ICON_FOLDER}</div>
@@ -1013,50 +657,43 @@ function renderFileTree() {
     return
   }
 
-  const folderName = currentFolder === 'demo' ? 'Demo Project' : currentFolder.split('/').pop()
-  const escapedFolderName = escapeHtml(folderName)
-  const escapedCurrentFolder = escapeHtml(currentFolder)
+  const escapedProjectName = escapeHtml(projectName)
 
   container.innerHTML = `
     <div class="file-tree-root">
       <div class="file-tree-header">EXPLORER</div>
       <div class="file-tree-items">
-        <div class="file-tree-folder expanded" data-path="${escapedCurrentFolder}" data-root="true">
+        <div class="file-tree-folder expanded" data-path="." data-root="true">
           <div class="file-tree-folder-header" style="padding-left: 12px">
             ${ICON_CHEVRON}
             ${ICON_FOLDER_OPEN}
-            <span>${escapedFolderName}</span>
+            <span>${escapedProjectName}</span>
           </div>
           <div class="file-tree-folder-children">
-            ${renderTreeItems(fileTree)}
+            ${renderTreeItems(tree)}
           </div>
         </div>
       </div>
     </div>
   `
 
-  // Attach event listeners
   attachTreeEvents(container)
 }
 
-/**
- * Render tree items recursively
- */
 function renderTreeItems(items, depth = 1) {
   return items.map(item => {
     if (item.type === 'folder') {
-      const folderIcon = item.expanded ? ICON_FOLDER_OPEN : ICON_FOLDER
+      const isExpanded = expandedFolders.has(item.path)
       const escapedName = escapeHtml(item.name)
       const escapedPath = escapeHtml(item.path)
       return `
-        <div class="file-tree-folder ${item.expanded ? 'expanded' : ''}" data-path="${escapedPath}" draggable="true">
+        <div class="file-tree-folder ${isExpanded ? 'expanded' : ''}" data-path="${escapedPath}" draggable="true">
           <div class="file-tree-folder-header" style="padding-left: ${12 + depth * 12}px">
             ${ICON_CHEVRON}
-            ${folderIcon}
             <span>${escapedName}</span>
           </div>
           <div class="file-tree-folder-children">
-            ${item.expanded ? renderTreeItems(item.children || [], depth + 1) : ''}
+            ${isExpanded ? renderTreeItems(item.children || [], depth + 1) : ''}
           </div>
         </div>
       `
@@ -1078,9 +715,6 @@ function renderTreeItems(items, depth = 1) {
   }).join('')
 }
 
-/**
- * Attach events to tree
- */
 function attachTreeEvents(container) {
   // File clicks
   container.querySelectorAll('.file-tree-file').forEach(el => {
@@ -1097,7 +731,7 @@ function attachTreeEvents(container) {
       if (e.target.closest('.file-tree-rename-input')) return
       const folder = el.closest('.file-tree-folder')
       const path = folder.dataset.path
-      if (path !== currentFolder) {
+      if (path !== '.') {
         toggleFolder(path)
       }
     })
@@ -1118,33 +752,22 @@ function attachTreeEvents(container) {
   attachDragEvents(container)
 }
 
-/**
- * Toggle folder expanded state
- */
 function toggleFolder(folderPath) {
-  function toggle(items) {
-    for (const item of items) {
-      if (item.path === folderPath) {
-        item.expanded = !item.expanded
-        return true
-      }
-      if (item.children && toggle(item.children)) {
-        return true
-      }
-    }
-    return false
+  if (expandedFolders.has(folderPath)) {
+    expandedFolders.delete(folderPath)
+  } else {
+    expandedFolders.add(folderPath)
   }
-
-  toggle(fileTree)
   renderFileTree()
 }
 
-// === Drag & Drop ===
+// =============================================================================
+// Drag & Drop
+// =============================================================================
 
 function attachDragEvents(container) {
   container.querySelectorAll('.file-tree-file, .file-tree-folder').forEach(el => {
-    // Skip root folder
-    if (el.dataset.path === currentFolder) return
+    if (el.dataset.root === 'true') return
 
     el.addEventListener('dragstart', (e) => {
       draggedItem = el.dataset.path
@@ -1160,12 +783,10 @@ function attachDragEvents(container) {
     })
   })
 
-  // Drop targets (folders only)
   container.querySelectorAll('.file-tree-folder').forEach(folder => {
     folder.addEventListener('dragover', (e) => {
       e.preventDefault()
       if (draggedItem && draggedItem !== folder.dataset.path) {
-        // Don't allow dropping into self or children
         if (!draggedItem.startsWith(folder.dataset.path + '/')) {
           folder.classList.add('drag-over')
           e.dataTransfer.dropEffect = 'move'
@@ -1174,7 +795,6 @@ function attachDragEvents(container) {
     })
 
     folder.addEventListener('dragleave', (e) => {
-      // Only remove if actually leaving the folder (not entering a child)
       if (!folder.contains(e.relatedTarget)) {
         folder.classList.remove('drag-over')
       }
@@ -1186,23 +806,48 @@ function attachDragEvents(container) {
       folder.classList.remove('drag-over')
 
       if (!draggedItem || draggedItem === folder.dataset.path) return
-      if (draggedItem.startsWith(folder.dataset.path + '/')) return // Can't drop into children
+      if (draggedItem.startsWith(folder.dataset.path + '/')) return
 
-      const targetFolder = folder.dataset.path
+      const targetFolder = folder.dataset.path === '.' ? '' : folder.dataset.path
       await moveItem(draggedItem, targetFolder)
       draggedItem = null
     })
   })
 }
 
-// Export state getters
-export function getCurrentFolder() { return currentFolder }
-export function getCurrentFile() { return currentFile }
-export function getFiles() { return files }
-export function getFileContent(path) { return files[path] }
+// =============================================================================
+// Exports
+// =============================================================================
 
-// Export for testing
-export { getFileType, updateTreeItemPath, removeFromTree, moveInTree }
+export function getCurrentFolder() {
+  return storage.hasProject ? storage.currentProjectName : null
+}
+
+export function getCurrentFile() {
+  return currentFile
+}
+
+/**
+ * Get all files (synchronous - returns cached content)
+ * Used by app.js for prelude building
+ */
+export function getFiles() {
+  return filesCache
+}
+
+/**
+ * Get file content (synchronous - returns cached content)
+ */
+export function getFileContent(path) {
+  return filesCache[path]
+}
+
+/**
+ * Update file in cache (called by app.js when editor content changes)
+ */
+export function updateFileCache(path, content) {
+  filesCache[path] = content
+}
 
 // Expose globally for menu handlers
 window.desktopFiles = {
@@ -1219,5 +864,9 @@ window.desktopFiles = {
   getCurrentFolder,
   getCurrentFile,
   getFiles,
-  getFileContent
+  getFileContent,
+  updateFileCache
 }
+
+// Also export for testing
+export { getFileType }
