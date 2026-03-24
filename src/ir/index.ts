@@ -20,6 +20,8 @@ import type {
   AnimationDefinition,
   AnimationKeyframe,
   AnimationKeyframeProperty,
+  ZagSlotDef,
+  ZagItem,
 } from '../parser/ast'
 import {
   isComponent,
@@ -261,6 +263,23 @@ class IRTransformer {
       value: t.value,
     }))
 
+    // Add component definitions to source map (for .com file cursor sync)
+    if (this.includeSourceMap) {
+      for (const comp of this.ast.components) {
+        if (comp.line !== undefined && comp.column !== undefined) {
+          const position = calculateSourcePosition(comp.line, comp.column)
+          this.sourceMapBuilder.addNode(
+            comp.nodeId || `def-${comp.name}`,
+            comp.name,
+            position,
+            {
+              isDefinition: true,
+            }
+          )
+        }
+      }
+    }
+
     // Transform instances to IR nodes (handle Instance, Slot, and ZagComponent)
     const nodes = this.ast.instances.map(inst => {
       if (isSlot(inst)) {
@@ -460,7 +479,8 @@ class IRTransformer {
 
     // Transform slots
     const slots: Record<string, IRSlot> = {}
-    for (const [slotName, slotDef] of Object.entries(zagNode.slots || {})) {
+    for (const [slotName, slotDefUnknown] of Object.entries(zagNode.slots || {})) {
+      const slotDef = slotDefUnknown as ZagSlotDef
       slots[slotName] = {
         name: slotName,
         apiMethod: `get${slotName}Props`,
@@ -473,7 +493,7 @@ class IRTransformer {
     }
 
     // Transform items
-    const items = (zagNode.items || []).map((item) => ({
+    const items = (zagNode.items || []).map((item: ZagItem) => ({
       value: item.value ?? item.label ?? '',
       label: item.label ?? item.value ?? '',
       disabled: item.disabled,
@@ -884,7 +904,22 @@ class IRTransformer {
         const slotIsComponent = isComponent(slot)
 
         if (slotIsInstance || slotIsComponent) {
-          const slotName = slotIsInstance ? slot.component : slot.name
+          // Explicitly narrow the types for TypeScript
+          let slotName: string
+          let slotVisibleWhen: string | undefined
+          let slotInitialState: string | undefined
+
+          if (slotIsInstance) {
+            const instSlot = slot as Instance
+            slotName = instSlot.component
+            slotVisibleWhen = instSlot.visibleWhen
+            slotInitialState = instSlot.initialState
+          } else {
+            const compSlot = slot as ComponentDefinition
+            slotName = compSlot.name
+            slotVisibleWhen = compSlot.visibleWhen
+            slotInitialState = compSlot.initialState
+          }
 
           // Skip Component definitions that are templates (have sibling instances using them)
           if (slotIsComponent && templateNames.has(slotName)) {
@@ -892,10 +927,6 @@ class IRTransformer {
             // The instances using this template will be processed below
             continue
           }
-
-          // Get slot's visibility condition and initial state
-          const slotVisibleWhen = slotIsInstance ? slot.visibleWhen : slot.visibleWhen
-          const slotInitialState = slotIsInstance ? slot.initialState : slot.initialState
 
           // Check if instance provided content for this slot
           const fillers = slotFillers.get(slotName)
@@ -935,7 +966,7 @@ class IRTransformer {
               }
               result.push(this.transformInstance(pseudoInstance, parentId))
             } else if (slotIsInstance) {
-              result.push(this.transformInstance(slot, parentId))
+              result.push(this.transformInstance(slot as Instance, parentId))
             }
           }
         } else if (isSlot(slot)) {
@@ -1031,12 +1062,12 @@ class IRTransformer {
 
     for (const child of children) {
       // Only process Instance type
-      if ((child as any).type !== 'Instance') {
+      if (!isInstance(child)) {
         remainingChildren.push(child)
         continue
       }
 
-      const inst = child as Instance
+      const inst = child
       const component = inst.component.toLowerCase()
 
       // Check for inline state: "state hover bg #333"

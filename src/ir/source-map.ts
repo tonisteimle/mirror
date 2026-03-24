@@ -187,15 +187,47 @@ export class SourceMap {
   /**
    * Find the node that contains a specific line (for editor cursor sync)
    * Returns the most specific (deepest/smallest range) node at that line
-   * Skips definition nodes to prefer instances
+   * By default skips definition nodes to prefer instances
+   * @param line - Line number to search for
+   * @param includeDefinitions - If true, also search definition nodes (for .com files)
    */
-  getNodeAtLine(line: number): NodeMapping | null {
+  getNodeAtLine(line: number, includeDefinitions: boolean = false): NodeMapping | null {
     let bestMatch: NodeMapping | null = null
     let bestSpecificity = Infinity
 
     for (const node of this.nodes.values()) {
-      // Skip definitions - we want to select instances in preview
-      if (node.isDefinition) continue
+      // Skip definitions unless explicitly requested
+      if (node.isDefinition && !includeDefinitions) continue
+
+      const startLine = node.position.line
+      const endLine = node.position.endLine
+
+      // Check if line is within this node's range
+      if (line >= startLine && line <= endLine) {
+        // Prefer more specific (smaller range) matches
+        const specificity = endLine - startLine
+
+        if (specificity < bestSpecificity) {
+          bestMatch = node
+          bestSpecificity = specificity
+        }
+      }
+    }
+
+    return bestMatch
+  }
+
+  /**
+   * Find a definition node at a specific line
+   * Used for .com files where we want to select component definitions
+   */
+  getDefinitionAtLine(line: number): NodeMapping | null {
+    let bestMatch: NodeMapping | null = null
+    let bestSpecificity = Infinity
+
+    for (const node of this.nodes.values()) {
+      // Only look at definitions
+      if (!node.isDefinition) continue
 
       const startLine = node.position.line
       const endLine = node.position.endLine

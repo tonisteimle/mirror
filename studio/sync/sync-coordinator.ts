@@ -312,6 +312,8 @@ export class SyncCoordinator {
       console.log('[SyncCoordinator] executeCursorSync', { sourceMapLine, hasSourceMap: !!this.sourceMap })
     }
     if (!this.sourceMap) return
+
+    // First try to find an instance node
     const node = this.sourceMap.getNodeAtLine(sourceMapLine)
     if (this.options.debug) {
       console.log('[SyncCoordinator] node at line', { node: node?.nodeId })
@@ -319,6 +321,17 @@ export class SyncCoordinator {
     if (node && node.nodeId) {
       // Set selection - sync will be triggered by event
       actions.setSelection(node.nodeId, 'editor')
+      return
+    }
+
+    // If no instance found, try to find a definition (for .com files)
+    const definition = this.sourceMap.getDefinitionAtLine(sourceMapLine)
+    if (this.options.debug) {
+      console.log('[SyncCoordinator] definition at line', { definition: definition?.componentName })
+    }
+    if (definition && definition.componentName) {
+      // Emit definition:selected event for PropertyPanel to handle
+      events.emit('definition:selected', { componentName: definition.componentName, origin: 'editor' })
     }
   }
 

@@ -92,6 +92,7 @@ export class PropertyPanel {
   // Event subscription cleanup
   private unsubscribeSelectionInvalidated: (() => void) | null = null
   private unsubscribeCompileCompleted: (() => void) | null = null
+  private unsubscribeDefinitionSelected: (() => void) | null = null
 
   // Pending update during compile
   private pendingUpdateNodeId: string | null = null
@@ -212,6 +213,11 @@ export class PropertyPanel {
       }
     })
 
+    // Listen for definition:selected (for .com files where cursor is on a component definition)
+    this.unsubscribeDefinitionSelected = events.on('definition:selected', ({ componentName }) => {
+      this.showComponentDefinition(componentName)
+    })
+
     // Initial render
     const currentSelection = this.selectionManager.getSelection()
     if (currentSelection) {
@@ -236,6 +242,10 @@ export class PropertyPanel {
     if (this.unsubscribeCompileCompleted) {
       this.unsubscribeCompileCompleted()
       this.unsubscribeCompileCompleted = null
+    }
+    if (this.unsubscribeDefinitionSelected) {
+      this.unsubscribeDefinitionSelected()
+      this.unsubscribeDefinitionSelected = null
     }
     this.clearDebounceTimers()
     this.invalidateTokenCache()
