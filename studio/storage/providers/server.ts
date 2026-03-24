@@ -7,6 +7,36 @@
 import type { StorageProvider, StorageProject, StorageItem } from '../types'
 
 // =============================================================================
+// API Base URL Helper
+// =============================================================================
+
+/**
+ * Ermittelt die korrekte API-Basis-URL relativ zur aktuellen Seite
+ *
+ * Beispiele:
+ * - Seite: /mirror/studio/index.html → API: /mirror/api
+ * - Seite: /studio/index.html → API: /api
+ * - Seite: /index.html → API: /api
+ */
+function getDefaultApiBase(): string {
+  if (typeof window === 'undefined') {
+    return '/api'
+  }
+
+  const pathname = window.location.pathname
+
+  // Finde den Basis-Pfad (alles vor /studio/)
+  const studioIndex = pathname.indexOf('/studio')
+  if (studioIndex > 0) {
+    // z.B. /mirror/studio/index.html → /mirror/api
+    return pathname.slice(0, studioIndex) + '/api'
+  }
+
+  // Fallback: /api
+  return '/api'
+}
+
+// =============================================================================
 // Server Provider
 // =============================================================================
 
@@ -18,8 +48,8 @@ export class ServerProvider implements StorageProvider {
   private apiBase: string
   private projectId: string | null = null
 
-  constructor(apiBase: string = '/api') {
-    this.apiBase = apiBase
+  constructor(apiBase?: string) {
+    this.apiBase = apiBase ?? getDefaultApiBase()
   }
 
   // ===========================================================================
@@ -220,12 +250,13 @@ export class ServerProvider implements StorageProvider {
 /**
  * Prüft ob der Server erreichbar ist
  */
-export async function isServerAvailable(apiBase: string = '/api', timeout: number = 2000): Promise<boolean> {
+export async function isServerAvailable(apiBase?: string, timeout: number = 2000): Promise<boolean> {
   try {
+    const base = apiBase ?? getDefaultApiBase()
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-    const response = await fetch(`${apiBase}/health`, {
+    const response = await fetch(`${base}/health`, {
       signal: controller.signal
     })
 
