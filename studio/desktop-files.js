@@ -326,7 +326,8 @@ export async function createFile(fileName, parentFolder = null) {
   // Determine target folder
   let targetPath = fileName
 
-  if (parentFolder && parentFolder !== 'demo') {
+  // Only prepend parent folder if it's a real path (not root "." or "demo")
+  if (parentFolder && parentFolder !== 'demo' && parentFolder !== '.') {
     targetPath = `${parentFolder}/${fileName}`
   }
 
@@ -359,7 +360,8 @@ export async function createFile(fileName, parentFolder = null) {
 export async function createFolder(folderName, parentFolder = null) {
   let targetPath = folderName
 
-  if (parentFolder && parentFolder !== 'demo') {
+  // Only prepend parent folder if it's a real path (not root "." or "demo")
+  if (parentFolder && parentFolder !== 'demo' && parentFolder !== '.') {
     targetPath = `${parentFolder}/${folderName}`
   }
 
