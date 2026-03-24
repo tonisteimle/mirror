@@ -38,6 +38,9 @@ export * from './llm'
 // Agent (Fixer, Context, etc.)
 export * from './agent'
 
+// Storage (abstracted file system)
+export * from './storage'
+
 // Bootstrap
 export {
   studio,
