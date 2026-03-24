@@ -227,18 +227,34 @@ export async function initDesktopFiles(options = {}) {
   // Auto-open first available project if no project is open
   if (!storage.hasProject) {
     try {
-      // Try to get list of projects and open the first one
+      // Try to get list of projects
       const projects = await storage.listProjects()
+
       if (projects.length > 0) {
+        // Open existing project
         await storage.openProject(projects[0].id)
-        console.log('[DesktopFiles] Opened first available project:', projects[0].name)
+        console.log('[DesktopFiles] Opened existing project:', projects[0].name)
+      } else if (storage.providerType === 'server') {
+        // No projects exist on server - create one automatically
+        console.log('[DesktopFiles] No server projects, creating default project...')
+        const newProject = await storage.createProject('My Project')
+        await storage.openProject(newProject.id)
+        console.log('[DesktopFiles] Created and opened new project:', newProject.name)
+
+        // Create a starter file
+        await storage.writeFile('index.mir', `// Welcome to Mirror Studio!
+// This is your first file.
+
+Box w full, h full, bg #1a1a2e
+  Text "Hello, Mirror!" col #fff, fs 24, weight bold
+`)
       } else {
-        // No projects exist, fall back to demo
+        // Non-server provider with no projects - fall back to demo
         throw new Error('No projects available')
       }
     } catch (e) {
-      // If no projects or error, switch to DemoProvider
-      console.log('[DesktopFiles] No server projects, falling back to DemoProvider')
+      // If error (e.g., server unreachable), switch to DemoProvider
+      console.log('[DesktopFiles] Server unavailable or error, falling back to DemoProvider:', e.message)
       await storage.switchProvider('demo')
       await storage.openProject('demo')
     }
