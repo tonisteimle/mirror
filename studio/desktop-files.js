@@ -5,39 +5,20 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { storage, type StorageItem } from './storage'
-
-// =============================================================================
-// Types
-// =============================================================================
-
-interface DesktopFilesCallbacks {
-  onFileSelect?: (path: string, content: string) => void
-  onFileChange?: (path: string, content: string) => void
-}
-
-interface FileTypeConfig {
-  extensions: string[]
-  color: string
-  icon: string
-}
-
-interface FileTypeWithName extends FileTypeConfig {
-  type: string
-}
+import { storage } from './storage.js'
 
 // =============================================================================
 // State (UI only - file data comes from storage service)
 // =============================================================================
 
-let currentFile: string | null = null    // Currently selected file path
-let contextMenu: { element: HTMLElement; path: string; isFile: boolean; isFolder: boolean } | null = null    // Current context menu state
-let draggedItem: string | null = null    // Currently dragged item path
-let expandedFolders = new Set<string>()  // Track expanded folders (UI state)
+let currentFile = null    // Currently selected file path
+let contextMenu = null    // Current context menu state
+let draggedItem = null    // Currently dragged item path
+let expandedFolders = new Set()  // Track expanded folders (UI state)
 
 // Synchronous file cache for app.js compatibility
 // This is updated by storage events and provides sync access to file contents
-let filesCache: Record<string, string> = {}
+let filesCache = {}
 
 // =============================================================================
 // File Types with Icons and Colors
@@ -82,7 +63,7 @@ const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" strok
 /**
  * Escape HTML entities to prevent XSS
  */
-function escapeHtml(text: string): string {
+function escapeHtml(text) {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
@@ -91,7 +72,7 @@ function escapeHtml(text: string): string {
 /**
  * Validate filename - returns error message or null if valid
  */
-function validateFilename(name: string): string | null {
+function validateFilename(name) {
   if (!name || !name.trim()) return 'Name cannot be empty'
   if (name.includes('/') || name.includes('\\')) return 'Name cannot contain / or \\'
   if (name.includes(':')) return 'Name cannot contain :'
@@ -102,7 +83,7 @@ function validateFilename(name: string): string | null {
 /**
  * Get file type from filename
  */
-function getFileType(filename: string): FileTypeWithName {
+function getFileType(filename) {
   for (const [type, config] of Object.entries(FILE_TYPES)) {
     if (config.extensions.some(ext => filename.endsWith(ext))) {
       return { type, ...config }
@@ -115,7 +96,7 @@ function getFileType(filename: string): FileTypeWithName {
 /**
  * Find first file in tree
  */
-function findFirstFile(tree: StorageItem[]): string | null {
+function findFirstFile(tree) {
   for (const item of tree) {
     if (item.type === 'file') return item.path
     if (item.type === 'folder' && item.children) {
@@ -129,10 +110,10 @@ function findFirstFile(tree: StorageItem[]): string | null {
 /**
  * Preload all files into cache for synchronous access
  */
-async function preloadAllFiles(): Promise<void> {
+async function preloadAllFiles() {
   const tree = storage.getTree()
 
-  async function loadRecursive(items: StorageItem[]): Promise<void> {
+  async function loadRecursive(items) {
     for (const item of items) {
       if (item.type === 'file') {
         try {
@@ -154,36 +135,10 @@ async function preloadAllFiles(): Promise<void> {
 // Initialization
 // =============================================================================
 
-// Extend Window interface for global callbacks
-declare global {
-  interface Window {
-    _desktopFiles?: DesktopFilesCallbacks
-    desktopFiles?: DesktopFilesAPI
-  }
-}
-
-interface DesktopFilesAPI {
-  openFolder: typeof openFolder
-  loadFolder: typeof loadFolder
-  selectFile: typeof selectFile
-  saveFile: typeof saveFile
-  createFile: typeof createFile
-  createFolder: typeof createFolder
-  renameItem: typeof renameItem
-  duplicateFile: typeof duplicateFile
-  deleteItem: typeof deleteItem
-  moveItem: typeof moveItem
-  getCurrentFolder: typeof getCurrentFolder
-  getCurrentFile: typeof getCurrentFile
-  getFiles: typeof getFiles
-  getFileContent: typeof getFileContent
-  updateFileCache: typeof updateFileCache
-}
-
 /**
  * Initialize desktop file management
  */
-export async function initDesktopFiles(options: DesktopFilesCallbacks = {}): Promise<void> {
+export async function initDesktopFiles(options = {}) {
   const { onFileSelect, onFileChange } = options
 
   // Store callbacks
@@ -297,7 +252,7 @@ export async function initDesktopFiles(options: DesktopFilesCallbacks = {}): Pro
 /**
  * Open a folder via dialog
  */
-export async function openFolder(): Promise<string | null> {
+export async function openFolder() {
   try {
     if (storage.canOpenFolderDialog()) {
       const path = await storage.openFolderDialog()
@@ -319,7 +274,7 @@ export async function openFolder(): Promise<string | null> {
 /**
  * Load a folder (for external calls)
  */
-export async function loadFolder(folderPath: string): Promise<void> {
+export async function loadFolder(folderPath) {
   await storage.openProject(folderPath)
 }
 
@@ -330,7 +285,7 @@ export async function loadFolder(folderPath: string): Promise<void> {
 /**
  * Select and load a file
  */
-export async function selectFile(filePath: string): Promise<void> {
+export async function selectFile(filePath) {
   try {
     const content = await storage.readFile(filePath)
     currentFile = filePath
@@ -353,7 +308,7 @@ export async function selectFile(filePath: string): Promise<void> {
 /**
  * Save file content
  */
-export async function saveFile(filePath: string, content: string): Promise<void> {
+export async function saveFile(filePath, content) {
   // Update cache immediately for sync access
   filesCache[filePath] = content
 
@@ -367,7 +322,7 @@ export async function saveFile(filePath: string, content: string): Promise<void>
 /**
  * Create a new file
  */
-export async function createFile(fileName: string, parentFolder: string | null = null): Promise<void> {
+export async function createFile(fileName, parentFolder = null) {
   // Determine target folder
   let targetPath = fileName
 
@@ -401,7 +356,7 @@ export async function createFile(fileName: string, parentFolder: string | null =
 /**
  * Create a new folder
  */
-export async function createFolder(folderName: string, parentFolder: string | null = null): Promise<void> {
+export async function createFolder(folderName, parentFolder = null) {
   let targetPath = folderName
 
   if (parentFolder && parentFolder !== 'demo') {
@@ -419,7 +374,7 @@ export async function createFolder(folderName: string, parentFolder: string | nu
 /**
  * Rename a file or folder
  */
-export async function renameItem(oldPath: string, newName: string): Promise<void> {
+export async function renameItem(oldPath, newName) {
   const dir = oldPath.substring(0, oldPath.lastIndexOf('/'))
   const newPath = dir ? `${dir}/${newName}` : newName
 
@@ -433,17 +388,17 @@ export async function renameItem(oldPath: string, newName: string): Promise<void
 /**
  * Duplicate a file
  */
-export async function duplicateFile(path: string): Promise<void> {
-  const name = path.split('/').pop()!
+export async function duplicateFile(path) {
+  const name = path.split('/').pop()
   const ext = name.substring(name.lastIndexOf('.'))
   const baseName = name.substring(0, name.lastIndexOf('.'))
   const dir = path.substring(0, path.lastIndexOf('/'))
 
   // Find unique name
   const tree = storage.getTree()
-  const existingNames = new Set<string>()
+  const existingNames = new Set()
 
-  function collectNames(items: StorageItem[]): void {
+  function collectNames(items) {
     for (const item of items) {
       if (item.type === 'file') {
         existingNames.add(item.path)
@@ -474,7 +429,7 @@ export async function duplicateFile(path: string): Promise<void> {
 /**
  * Delete a file or folder
  */
-export async function deleteItem(path: string, isFolder = false): Promise<void> {
+export async function deleteItem(path, isFolder = false) {
   const name = path.split('/').pop()
   const confirmMsg = isFolder
     ? `Delete folder "${name}" and all contents?`
@@ -496,7 +451,7 @@ export async function deleteItem(path: string, isFolder = false): Promise<void> 
 /**
  * Move an item to a new folder
  */
-export async function moveItem(sourcePath: string, targetFolder: string): Promise<void> {
+export async function moveItem(sourcePath, targetFolder) {
   const name = sourcePath.split('/').pop()
   const newPath = `${targetFolder}/${name}`
 
@@ -517,7 +472,7 @@ export async function moveItem(sourcePath: string, targetFolder: string): Promis
 // Context Menu
 // =============================================================================
 
-function showContextMenu(e: MouseEvent, target: HTMLElement | null): void {
+function showContextMenu(e, target) {
   e.preventDefault()
   e.stopPropagation()
   hideContextMenu()
@@ -588,14 +543,14 @@ function showContextMenu(e: MouseEvent, target: HTMLElement | null): void {
   })
 }
 
-function hideContextMenu(): void {
+function hideContextMenu() {
   if (contextMenu?.element) {
     contextMenu.element.remove()
     contextMenu = null
   }
 }
 
-async function handleContextAction(action: string | undefined): Promise<void> {
+async function handleContextAction(action) {
   const { path, isFile, isFolder } = contextMenu || {}
   hideContextMenu()
 
@@ -630,7 +585,7 @@ async function handleContextAction(action: string | undefined): Promise<void> {
 // Inline Rename
 // =============================================================================
 
-function startInlineRename(path: string): void {
+function startInlineRename(path) {
   const element = document.querySelector(`[data-path="${path}"]`)
   if (!element) return
 
@@ -690,7 +645,7 @@ function startInlineRename(path: string): void {
 // Render File Tree
 // =============================================================================
 
-function renderFileTree(): void {
+function renderFileTree() {
   const container = document.getElementById('file-tree-container') || document.getElementById('file-tree')
   if (!container) return
 
@@ -731,7 +686,7 @@ function renderFileTree(): void {
   attachTreeEvents(container)
 }
 
-function renderTreeItems(items: StorageItem[], depth = 1): string {
+function renderTreeItems(items, depth = 1) {
   return items.map(item => {
     if (item.type === 'folder') {
       const isExpanded = expandedFolders.has(item.path)
@@ -766,7 +721,7 @@ function renderTreeItems(items: StorageItem[], depth = 1): string {
   }).join('')
 }
 
-function attachTreeEvents(container: HTMLElement): void {
+function attachTreeEvents(container) {
   // File clicks
   container.querySelectorAll('.file-tree-file').forEach(el => {
     el.addEventListener('click', (e) => {
@@ -803,7 +758,7 @@ function attachTreeEvents(container: HTMLElement): void {
   attachDragEvents(container)
 }
 
-function toggleFolder(folderPath: string): void {
+function toggleFolder(folderPath) {
   if (expandedFolders.has(folderPath)) {
     expandedFolders.delete(folderPath)
   } else {
@@ -816,7 +771,7 @@ function toggleFolder(folderPath: string): void {
 // Drag & Drop
 // =============================================================================
 
-function attachDragEvents(container: HTMLElement): void {
+function attachDragEvents(container) {
   container.querySelectorAll('.file-tree-file, .file-tree-folder').forEach(el => {
     if (el.dataset.root === 'true') return
 
@@ -870,11 +825,11 @@ function attachDragEvents(container: HTMLElement): void {
 // Exports
 // =============================================================================
 
-export function getCurrentFolder(): string | null {
+export function getCurrentFolder() {
   return storage.hasProject ? storage.currentProjectName : null
 }
 
-export function getCurrentFile(): string | null {
+export function getCurrentFile() {
   return currentFile
 }
 
@@ -882,21 +837,21 @@ export function getCurrentFile(): string | null {
  * Get all files (synchronous - returns cached content)
  * Used by app.js for prelude building
  */
-export function getFiles(): Record<string, string> {
+export function getFiles() {
   return filesCache
 }
 
 /**
  * Get file content (synchronous - returns cached content)
  */
-export function getFileContent(path: string): string | undefined {
+export function getFileContent(path) {
   return filesCache[path]
 }
 
 /**
  * Update file in cache (called by app.js when editor content changes)
  */
-export function updateFileCache(path: string, content: string): void {
+export function updateFileCache(path, content) {
   filesCache[path] = content
 }
 
