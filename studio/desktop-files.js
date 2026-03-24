@@ -5,7 +5,7 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { storage } from './storage.js'
+import { storage } from './storage'
 
 // =============================================================================
 // State (UI only - file data comes from storage service)
