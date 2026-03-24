@@ -303,3 +303,47 @@ export type Node =
   | ZagNode
 
 export type AST = Program
+
+// =============================================================================
+// Type Guards
+// =============================================================================
+
+/** Check if node is a Component definition */
+export function isComponent(node: unknown): node is ComponentDefinition {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Component'
+}
+
+/** Check if node is an Instance */
+export function isInstance(node: unknown): node is Instance {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Instance'
+}
+
+/** Check if node is a ZagComponent */
+export function isZagComponent(node: unknown): node is ZagNode {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'ZagComponent'
+}
+
+/** Check if node is a Slot */
+export function isSlot(node: unknown): node is Slot {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Slot'
+}
+
+/** Check if node is a Text node */
+export function isText(node: unknown): node is Text {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Text'
+}
+
+/** Check if node is an Each loop */
+export function isEach(node: unknown): node is Each {
+  return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Each'
+}
+
+/** Check if node is a Conditional */
+export function isConditional(node: unknown): node is Conditional {
+  return typeof node === 'object' && node !== null && (node as { kind?: string }).kind === 'conditional'
+}
+
+/** Check if node has content (Text-like) */
+export function hasContent(node: unknown): node is { content: string } {
+  return typeof node === 'object' && node !== null && 'content' in node
+}

@@ -21,7 +21,16 @@ import type {
   AnimationKeyframe,
   AnimationKeyframeProperty,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType } from './types'
+import {
+  isComponent,
+  isInstance,
+  isZagComponent,
+  isSlot,
+  isText,
+  isEach,
+  hasContent,
+} from '../parser/ast'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -92,6 +101,9 @@ interface LayoutContext {
   gap: string | null
   isGrid: boolean
   gridColumns: string | null
+  // Internal alignment tracking (before direction-based mapping)
+  _hAlign?: 'start' | 'end' | 'center'
+  _vAlign?: 'start' | 'end' | 'center'
 }
 
 class IRTransformer {
@@ -235,8 +247,8 @@ class IRTransformer {
     }
     // Recursively register nested component definitions
     for (const child of comp.children) {
-      if ((child as any).type === 'Component') {
-        this.registerComponent(child as unknown as ComponentDefinition)
+      if (isComponent(child)) {
+        this.registerComponent(child)
       }
     }
   }
@@ -251,10 +263,10 @@ class IRTransformer {
 
     // Transform instances to IR nodes (handle Instance, Slot, and ZagComponent)
     const nodes = this.ast.instances.map(inst => {
-      if (inst.type === 'Slot') {
-        return this.transformSlotPrimitive(inst as Slot)
+      if (isSlot(inst)) {
+        return this.transformSlotPrimitive(inst)
       }
-      if ((inst as any).type === 'ZagComponent') {
+      if (isZagComponent(inst)) {
         return this.transformZagComponent(inst)
       }
       return this.transformInstance(inst as Instance)
@@ -447,22 +459,21 @@ class IRTransformer {
     }
 
     // Transform slots
-    const slots: Record<string, any> = {}
+    const slots: Record<string, IRSlot> = {}
     for (const [slotName, slotDef] of Object.entries(zagNode.slots || {})) {
-      const slot = slotDef as any
       slots[slotName] = {
         name: slotName,
         apiMethod: `get${slotName}Props`,
         element: slotName === 'Trigger' ? 'button' : 'div',
-        styles: this.transformProperties(slot.properties || [], 'box'),
+        styles: this.transformProperties(slotDef.properties || [], 'box'),
         children: [],
         portal: slotName === 'Content',
-        sourcePosition: slot.sourcePosition,
+        sourcePosition: slotDef.sourcePosition,
       }
     }
 
     // Transform items
-    const items = (zagNode.items || []).map((item: any) => ({
+    const items = (zagNode.items || []).map((item) => ({
       value: item.value ?? item.label ?? '',
       label: item.label ?? item.value ?? '',
       disabled: item.disabled,
@@ -609,10 +620,10 @@ class IRTransformer {
 
     // Merge dropdown features from component definition and instance
     // Instance values override component definition values
-    const visibleWhen = (instance as any).visibleWhen || (resolvedComponent as any)?.visibleWhen
-    const initialState = (instance as any).initialState || (resolvedComponent as any)?.initialState
-    const selection = (instance as any).selection || (resolvedComponent as any)?.selection
-    const route = (instance as any).route || (resolvedComponent as any)?.route
+    const visibleWhen = instance.visibleWhen || resolvedComponent?.visibleWhen
+    const initialState = instance.initialState || resolvedComponent?.initialState
+    const selection = instance.selection || resolvedComponent?.selection
+    const route = instance.route || resolvedComponent?.route
 
     // If this node has a route, add a click event with navigate action
     if (route) {
@@ -839,14 +850,12 @@ class IRTransformer {
     const nonSlotChildren: (Instance | Text)[] = []
 
     for (const child of instanceChildren) {
-      const childType = (child as any).type
-      if (childType === 'Instance') {
-        const instance = child as Instance
-        if (!slotFillers.has(instance.component)) {
-          slotFillers.set(instance.component, [])
+      if (isInstance(child)) {
+        if (!slotFillers.has(child.component)) {
+          slotFillers.set(child.component, [])
         }
-        slotFillers.get(instance.component)!.push(instance)
-      } else if (childType === 'Component') {
+        slotFillers.get(child.component)!.push(child)
+      } else if (isComponent(child)) {
         // Skip Component children - they are template definitions, not actual content
         // They will be processed when we iterate componentChildren
         continue
@@ -861,11 +870,9 @@ class IRTransformer {
     // Identify which Component children are template definitions vs fillable slots
     // If a Component has sibling Instances using it, it's a template (not a slot)
     const templateNames = new Set<string>()
-    for (const child of componentChildren) {
-      const childType = (child as any).type
-      if (childType === 'Instance') {
-        const inst = child as Instance
-        templateNames.add(inst.component)
+    for (const child of instanceChildren) {
+      if (isInstance(child)) {
+        templateNames.add(child.component)
       }
     }
 
@@ -873,21 +880,22 @@ class IRTransformer {
     if (componentChildren.length > 0) {
       for (const slot of componentChildren) {
         // Handle both Instance slots (Title:) and Component slots (Title as frame:)
-        const slotType = (slot as any).type
-        if (slotType === 'Instance' || slotType === 'Component') {
-          const slotDef = slot as any
-          const slotName = slotDef.component || slotDef.name
+        const slotIsInstance = isInstance(slot)
+        const slotIsComponent = isComponent(slot)
+
+        if (slotIsInstance || slotIsComponent) {
+          const slotName = slotIsInstance ? slot.component : slot.name
 
           // Skip Component definitions that are templates (have sibling instances using them)
-          if (slotType === 'Component' && templateNames.has(slotName)) {
+          if (slotIsComponent && templateNames.has(slotName)) {
             // This is a template definition, not a fillable slot - skip it
             // The instances using this template will be processed below
             continue
           }
 
           // Get slot's visibility condition and initial state
-          const slotVisibleWhen = slotDef.visibleWhen
-          const slotInitialState = slotDef.initialState
+          const slotVisibleWhen = slotIsInstance ? slot.visibleWhen : slot.visibleWhen
+          const slotInitialState = slotIsInstance ? slot.initialState : slot.initialState
 
           // Check if instance provided content for this slot
           const fillers = slotFillers.get(slotName)
@@ -910,8 +918,8 @@ class IRTransformer {
           } else {
             // Use slot's default content (the slot definition itself)
             // For Component type, create an instance-like object
-            if (slotType === 'Component') {
-              const compSlot = slot as unknown as ComponentDefinition
+            if (slotIsComponent) {
+              const compSlot = slot as ComponentDefinition
               const pseudoInstance: Instance = {
                 type: 'Instance',
                 component: compSlot.name,
@@ -922,15 +930,15 @@ class IRTransformer {
                 children: [],
                 line: compSlot.line,
                 column: compSlot.column,
+                visibleWhen: slotVisibleWhen,
+                initialState: slotInitialState,
               }
-              ;(pseudoInstance as any).visibleWhen = slotVisibleWhen
-              ;(pseudoInstance as any).initialState = slotInitialState
               result.push(this.transformInstance(pseudoInstance, parentId))
-            } else {
-              result.push(this.transformInstance(slot as Instance, parentId))
+            } else if (slotIsInstance) {
+              result.push(this.transformInstance(slot, parentId))
             }
           }
-        } else if (slot.type === 'Slot') {
+        } else if (isSlot(slot)) {
           // Named slot placeholder - check for filler
           const slotObj = slot as Slot
           const fillers = slotFillers.get(slotObj.name)
@@ -982,10 +990,10 @@ class IRTransformer {
   }
 
   private transformChild(child: Instance | Text | Slot, parentId?: string): IRNode {
-    if (child.type === 'Slot') {
-      return this.transformSlotPrimitive(child as Slot, parentId)
+    if (isSlot(child)) {
+      return this.transformSlotPrimitive(child, parentId)
     }
-    if (child.type === 'Text' || (child as any).content !== undefined) {
+    if (isText(child) || hasContent(child)) {
       const text = child as Text
       return {
         id: this.generateId(),
@@ -1358,10 +1366,10 @@ class IRTransformer {
         case 'cen':
           if (hasVertical && !hasHorizontal) {
             // With top/bottom → center means horizontal center
-            ;(ctx as any)._hAlign = 'center'
+            ctx._hAlign = 'center'
           } else if (hasHorizontal && !hasVertical) {
             // With left/right → center means vertical center
-            ;(ctx as any)._vAlign = 'center'
+            ctx._vAlign = 'center'
           } else {
             // Alone or with both → center both
             ctx.justifyContent = 'center'
@@ -1372,22 +1380,22 @@ class IRTransformer {
           ctx.justifyContent = 'space-between'
           break
         case 'left':
-          ;(ctx as any)._hAlign = 'start'
+          ctx._hAlign = 'start'
           break
         case 'right':
-          ;(ctx as any)._hAlign = 'end'
+          ctx._hAlign = 'end'
           break
         case 'hor-center':
-          ;(ctx as any)._hAlign = 'center'
+          ctx._hAlign = 'center'
           break
         case 'top':
-          ;(ctx as any)._vAlign = 'start'
+          ctx._vAlign = 'start'
           break
         case 'bottom':
-          ;(ctx as any)._vAlign = 'end'
+          ctx._vAlign = 'end'
           break
         case 'ver-center':
-          ;(ctx as any)._vAlign = 'center'
+          ctx._vAlign = 'center'
           break
       }
     }
@@ -1422,7 +1430,7 @@ class IRTransformer {
 
     // If no layout properties were set and not a frame/app, skip flex styles
     const hasLayoutProps = direction || ctx.justifyContent || ctx.alignItems ||
-                          (ctx as any)._hAlign || (ctx as any)._vAlign || ctx.flexWrap
+                          ctx._hAlign || ctx._vAlign || ctx.flexWrap
 
     if (!hasLayoutProps && !defaultsToColumn) {
       if (ctx.gap) {
@@ -1440,8 +1448,8 @@ class IRTransformer {
     styles.push({ property: 'flex-direction', value: finalDirection })
 
     // Map horizontal/vertical alignment to justify-content/align-items based on direction
-    const hAlign = (ctx as any)._hAlign as 'start' | 'end' | 'center' | undefined
-    const vAlign = (ctx as any)._vAlign as 'start' | 'end' | 'center' | undefined
+    const hAlign = ctx._hAlign
+    const vAlign = ctx._vAlign
 
     const alignValue = (align: 'start' | 'end' | 'center'): string => {
       if (align === 'start') return 'flex-start'

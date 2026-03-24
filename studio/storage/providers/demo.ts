@@ -118,6 +118,33 @@ export class DemoProvider implements StorageProvider {
       const parts = path.split('/')
       const fileName = parts.pop()!
 
+      // .folder Marker überspringen (nur für Ordner-Erstellung)
+      if (fileName === '.folder') {
+        // Aber Ordner trotzdem erstellen
+        if (parts.length > 0) {
+          let currentPath = ''
+          let parentChildren = tree
+
+          for (const folderName of parts) {
+            currentPath = currentPath ? `${currentPath}/${folderName}` : folderName
+
+            if (!folders.has(currentPath)) {
+              const folder: StorageFolder = {
+                type: 'folder',
+                name: folderName,
+                path: currentPath,
+                children: []
+              }
+              folders.set(currentPath, folder)
+              parentChildren.push(folder)
+            }
+
+            parentChildren = folders.get(currentPath)!.children
+          }
+        }
+        continue
+      }
+
       if (parts.length === 0) {
         // Datei im Root
         tree.push({
@@ -288,10 +315,10 @@ export class DemoProvider implements StorageProvider {
 
   private persist(): void {
     try {
-      // Nur Mirror-Dateien speichern, keine .folder Marker
+      // Mirror-Dateien und .folder Marker speichern
       const toSave: Record<string, string> = {}
       for (const [path, content] of Object.entries(this.files)) {
-        if (isMirrorFile(path)) {
+        if (isMirrorFile(path) || path.endsWith('/.folder')) {
           toSave[path] = content
         }
       }
