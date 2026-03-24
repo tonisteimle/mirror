@@ -842,7 +842,7 @@
       background: transparent;
     }
 
-    /* Visible divider line - subtle by default, highlighted on hover */
+    /* Visible divider line - matches panel borders, highlighted on hover */
     .divider::after {
       content: '';
       position: absolute;
@@ -850,7 +850,7 @@
       bottom: 0;
       left: -1px;
       width: 1px;
-      background: var(--border-subtle);
+      background: var(--border-default);
       transition: background 0.15s, width 0.15s;
       pointer-events: none;
     }

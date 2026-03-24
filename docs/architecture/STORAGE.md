@@ -569,34 +569,280 @@ describe('FilePanel', () => {
 
 ---
 
-## Offene Fragen
+## Entscheidungen
 
 ### 1. Projekt-Wechsel in Tauri
 
-Bei Tauri ist ein "Projekt" ein Ordner. Wie soll der Projekt-Wechsel funktionieren?
+**Entscheidung: Im gleichen Fenster wechseln**
 
-**Option A**: Neues Fenster öffnen (wie VS Code)
-**Option B**: Im gleichen Fenster wechseln (wie Sublime)
+Bei Tauri ist ein "Projekt" ein Ordner. Beim Öffnen eines neuen Ordners:
+- Aktuelles Projekt schließen (`closeProject()`)
+- Neuen Ordner öffnen (`openProject(path)`)
+- Editor-Inhalt und File-Tree aktualisieren
 
-**Empfehlung**: Option B - einfacher zu implementieren
+Das ist einfacher als Multi-Window und entspricht dem aktuellen Verhalten.
 
 ### 2. localStorage im Demo-Modus
 
-Sollen Änderungen im Demo-Modus in localStorage persistiert werden?
+**Entscheidung: Ja, mit Reset-Option**
 
-**Option A**: Ja - Änderungen überleben Page Reload
-**Option B**: Nein - Immer frische Demo-Daten
+- Änderungen werden in localStorage persistiert (Key: `mirror-demo-files`)
+- Beim Start: localStorage laden, falls vorhanden
+- "Reset Demo" Button setzt auf Default-Dateien zurück
+- Bessere UX beim Experimentieren
 
-**Empfehlung**: Option A - bessere UX beim Experimentieren
+```typescript
+class DemoProvider {
+  private readonly STORAGE_KEY = 'mirror-demo-files'
+
+  constructor() {
+    // Aus localStorage laden oder Defaults verwenden
+    const saved = localStorage.getItem(this.STORAGE_KEY)
+    this.files = saved ? JSON.parse(saved) : { ...DEFAULT_DEMO_FILES }
+  }
+
+  private persist() {
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.files))
+  }
+
+  resetToDefaults() {
+    this.files = { ...DEFAULT_DEMO_FILES }
+    localStorage.removeItem(this.STORAGE_KEY)
+  }
+}
+```
 
 ### 3. Konflikt-Handling
 
-Was passiert, wenn eine Datei extern geändert wurde?
+**Entscheidung: Ignorieren (Single-User)**
 
-**Tauri**: Könnte File-Watcher implementieren
-**Server**: Timestamps vergleichen vor Save
+- Kein File-Watcher, keine Timestamp-Prüfung
+- Single-User-Anwendung, Konflikte unwahrscheinlich
+- Kann später nachgerüstet werden falls nötig
 
-**Empfehlung**: Erstmal ignorieren (single-user), später nachrüsten
+### 4. Pfad-Handling
+
+**Problem:** Tauri verwendet absolute Pfade (`/Users/foo/project/file.mir`), Server verwendet relative Pfade (`file.mir`).
+
+**Entscheidung: Relative Pfade in der API, Provider konvertiert**
+
+```typescript
+// StorageService API verwendet IMMER relative Pfade
+await storage.readFile('components/button.mir')
+
+// TauriProvider konvertiert intern
+class TauriProvider {
+  private basePath: string  // z.B. "/Users/foo/project"
+
+  async readFile(relativePath: string) {
+    const absolutePath = `${this.basePath}/${relativePath}`
+    return TauriBridge.fs.readFile(absolutePath)
+  }
+}
+
+// ServerProvider verwendet relative Pfade direkt
+class ServerProvider {
+  async readFile(path: string) {
+    return this.fetch(`/api/projects/${this.projectId}/files/${encodeURIComponent(path)}`)
+  }
+}
+```
+
+### 5. File Extensions
+
+**Problem:** Verschiedene Extensions im Projekt (`.mir`, `.tok`, `.com`, `.mirror`).
+
+**Entscheidung: Alle unterstützen, Typ aus Extension ableiten**
+
+```typescript
+const FILE_EXTENSIONS = {
+  layout: ['.mir', '.mirror'],
+  tokens: ['.tok', '.tokens'],
+  component: ['.com', '.components']
+}
+
+function getFileType(filename: string): 'layout' | 'tokens' | 'component' | 'unknown' {
+  for (const [type, extensions] of Object.entries(FILE_EXTENSIONS)) {
+    if (extensions.some(ext => filename.endsWith(ext))) {
+      return type as 'layout' | 'tokens' | 'component'
+    }
+  }
+  return 'unknown'
+}
+
+function isMirrorFile(filename: string): boolean {
+  const allExtensions = Object.values(FILE_EXTENSIONS).flat()
+  return allExtensions.some(ext => filename.endsWith(ext))
+}
+```
+
+### 6. Prelude-Building
+
+**Problem:** Compiler braucht alle Token/Component-Dateien als Prelude.
+
+**Entscheidung: StorageService bietet `getPreludeFiles()` Methode**
+
+```typescript
+class StorageService {
+  /**
+   * Gibt alle Token- und Component-Dateien zurück (für Prelude)
+   * Sortiert: Tokens zuerst, dann Components
+   */
+  async getPreludeFiles(): Promise<{ path: string; content: string; type: 'tokens' | 'component' }[]> {
+    const tree = this.getTree()
+    const preludeFiles: { path: string; type: 'tokens' | 'component' }[] = []
+
+    // Rekursiv alle .tok und .com Dateien sammeln
+    function collect(items: StorageItem[]) {
+      for (const item of items) {
+        if (item.type === 'file') {
+          const fileType = getFileType(item.name)
+          if (fileType === 'tokens' || fileType === 'component') {
+            preludeFiles.push({ path: item.path, type: fileType })
+          }
+        } else if (item.type === 'folder') {
+          collect(item.children)
+        }
+      }
+    }
+
+    collect(tree)
+
+    // Tokens zuerst, dann Components
+    preludeFiles.sort((a, b) => {
+      if (a.type === 'tokens' && b.type !== 'tokens') return -1
+      if (a.type !== 'tokens' && b.type === 'tokens') return 1
+      return a.path.localeCompare(b.path)
+    })
+
+    // Inhalte laden
+    return Promise.all(
+      preludeFiles.map(async (f) => ({
+        ...f,
+        content: await this.readFile(f.path)
+      }))
+    )
+  }
+
+  /**
+   * Baut Prelude-String für Compiler
+   */
+  async buildPrelude(): Promise<string> {
+    const files = await this.getPreludeFiles()
+    return files.map(f => f.content).join('\n\n')
+  }
+}
+```
+
+### 7. Current File State
+
+**Problem:** Wo wird die aktuell geöffnete Datei verwaltet?
+
+**Entscheidung: Im UI State, NICHT im StorageService**
+
+Der StorageService ist nur für Lesen/Schreiben zuständig. Die Auswahl der aktuellen Datei ist UI-Logik:
+
+```typescript
+// In studio/core/state.ts (existiert bereits)
+interface StudioState {
+  currentFile: string | null
+  // ...
+}
+
+// UI-Code
+storage.events.on('file:deleted', ({ path }) => {
+  if (state.get().currentFile === path) {
+    // Nächste Datei auswählen
+    const tree = storage.getTree()
+    const nextFile = findFirstFile(tree)
+    actions.setCurrentFile(nextFile)
+  }
+})
+```
+
+### 8. Tree-Caching
+
+**Problem:** `getTree()` ist synchron, aber Provider lädt asynchron.
+
+**Entscheidung: Tree wird bei `openProject()` und nach Mutationen gecached**
+
+```typescript
+class StorageService {
+  private treeCache: StorageItem[] = []
+
+  async openProject(id: string): Promise<void> {
+    await this.provider.openProject(id)
+    this.treeCache = await this.provider.getTree()
+    this.events.emit('tree:changed', { tree: this.treeCache })
+  }
+
+  // Synchron - gibt Cache zurück
+  getTree(): StorageItem[] {
+    return this.treeCache
+  }
+
+  // Asynchron - aktualisiert Cache
+  async refreshTree(): Promise<StorageItem[]> {
+    this.treeCache = await this.provider.getTree()
+    this.events.emit('tree:changed', { tree: this.treeCache })
+    return this.treeCache
+  }
+
+  // Nach Mutationen automatisch refreshen
+  async writeFile(path: string, content: string): Promise<void> {
+    const isNew = !this.fileExists(path)
+    await this.provider.writeFile(path, content)
+
+    if (isNew) {
+      await this.refreshTree()
+      this.events.emit('file:created', { path })
+    } else {
+      this.events.emit('file:changed', { path, content })
+    }
+  }
+
+  private fileExists(path: string): boolean {
+    return this.cache.has(path) || this.findInTree(path) !== null
+  }
+}
+```
+
+### 9. Error Recovery
+
+**Problem:** Was passiert bei Fehlern (Netzwerk, Disk voll, etc.)?
+
+**Entscheidung: Fehler werfen + Event emittieren, UI entscheidet**
+
+```typescript
+class StorageService {
+  async writeFile(path: string, content: string): Promise<void> {
+    try {
+      await this.provider.writeFile(path, content)
+      this.cache.set(path, { content, timestamp: Date.now() })
+      this.events.emit('file:changed', { path, content })
+    } catch (error) {
+      this.events.emit('error', {
+        error: error as Error,
+        operation: 'writeFile',
+        path,
+        recoverable: true  // UI kann Retry anbieten
+      })
+      throw error  // Caller kann auch reagieren
+    }
+  }
+}
+
+// UI-Handling
+storage.events.on('error', ({ error, operation, path, recoverable }) => {
+  if (recoverable) {
+    showToast(`Speichern fehlgeschlagen: ${error.message}`, {
+      action: { label: 'Erneut versuchen', onClick: () => retrySave(path) }
+    })
+  } else {
+    showToast(`Fehler: ${error.message}`, 'error')
+  }
+})
+```
 
 ---
 
