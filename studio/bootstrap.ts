@@ -18,7 +18,7 @@ import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import type { AST } from '../src/parser/ast'
 import type { IR } from '../src/ir/types'
-import type { SourceMap } from '../src/studio/source-map'
+import type { SourceMap } from '../src/ir/source-map'
 import type { CodeChange } from '../src/studio/code-modifier'
 
 export interface BootstrapConfig {

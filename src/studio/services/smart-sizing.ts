@@ -8,7 +8,7 @@
  * - Existing siblings
  */
 
-import type { SourceMap } from '../source-map'
+import type { SourceMap } from '../../ir/source-map'
 import { isHorizontalLayout } from '../utils/layout-detection'
 
 export interface SizingResult {

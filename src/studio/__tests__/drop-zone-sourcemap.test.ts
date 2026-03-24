@@ -16,7 +16,7 @@ import {
   DropZoneCalculator,
   type DropZone,
 } from '../drop-zone-calculator'
-import { SourceMap, SourceMapBuilder } from '../source-map'
+import { SourceMap, SourceMapBuilder } from '../../ir/source-map'
 
 // ============================================================================
 // TEST HELPERS

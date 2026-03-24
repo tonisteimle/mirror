@@ -41,6 +41,9 @@ export * from './agent'
 // Storage (abstracted file system)
 export * from './storage'
 
+// Desktop Files (file tree UI and operations)
+export * from './desktop-files'
+
 // Bootstrap
 export {
   studio,

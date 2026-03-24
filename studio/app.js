@@ -6253,7 +6253,7 @@ compile(initialCode)
 // File Management Integration
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
-import('./desktop-files.js').then(module => {
+import('./dist/index.js').then(module => {
   // Initialize with callback to load files into editor
   module.initDesktopFiles({
     onFileSelect: (filePath, content) => {
@@ -6279,7 +6279,7 @@ import('./desktop-files.js').then(module => {
   })
   console.log('[App] File management initialized')
 }).catch(err => {
-  console.error('[App] Failed to load desktop-files.js:', err)
+  console.error('[App] Failed to load studio bundle:', err)
 })
 
 // ==========================================

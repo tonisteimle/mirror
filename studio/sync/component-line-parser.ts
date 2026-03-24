@@ -5,7 +5,7 @@
  * Used for editor-cursor-to-element synchronization.
  */
 
-import type { SourceMap } from '../../src/studio/source-map'
+import type { SourceMap } from '../../src/ir/source-map'
 
 /**
  * Information about a component found on a line

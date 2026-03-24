@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { DropHandler, createDropHandler, DropData } from '../drop-handler'
 import { CodeModifier } from '../../../src/studio/code-modifier'
-import { SourceMap, SourceMapBuilder } from '../../../src/studio/source-map'
+import { SourceMap, SourceMapBuilder } from '../../../src/ir/source-map'
 import type { DropZoneInfo } from '../drag-drop-visualizer'
 
 // ============================================================================

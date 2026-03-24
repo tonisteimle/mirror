@@ -17,7 +17,7 @@
  */
 
 import { CodeModifier, ModificationResult } from '../../src/studio/code-modifier'
-import type { SourceMap } from '../../src/studio/source-map'
+import type { SourceMap } from '../../src/ir/source-map'
 import type { DropZoneInfo } from './drag-drop-visualizer'
 import { getComponentTemplate, hasComponentTemplate } from '../../src/schema/component-templates'
 

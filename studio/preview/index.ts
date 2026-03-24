@@ -3,7 +3,7 @@
  */
 
 import { state, actions, events, executor, ResizeCommand, SetPropertyCommand, MoveNodeWithLayoutCommand } from '../core'
-import type { SourceMap } from '../../src/studio/source-map'
+import type { SourceMap } from '../../src/ir/source-map'
 import { HandleManager, createHandleManager } from './handle-manager'
 import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
 import { ContextMenu, createContextMenu } from './context-menu'

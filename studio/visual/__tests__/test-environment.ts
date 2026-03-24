@@ -11,7 +11,7 @@
 import { parse } from '../../../src/parser'
 import { toIR, type IRResult } from '../../../src/ir'
 import { createCodeModifier, type CodeModifier } from '../../../src/studio/code-modifier'
-import type { SourceMap, NodeMapping } from '../../../src/studio/source-map'
+import type { SourceMap, NodeMapping } from '../../../src/ir/source-map'
 import type { Point, Rect } from '../models/drag-state'
 
 // ============================================================================

@@ -9,7 +9,7 @@
  */
 
 import type { AST, ComponentDefinition, Instance, Property } from '../parser/ast'
-import type { SourceMap, NodeMapping } from './source-map'
+import type { SourceMap, NodeMapping } from '../ir/source-map'
 import {
   properties as allPropertyDefinitions,
   type PropertyDefinition,

@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { CodeModifier } from '../code-modifier'
-import { SourceMapBuilder } from '../source-map'
+import { SourceMapBuilder } from '../../ir/source-map'
 
 // Helper to create SourceMap from source
 function createSourceMap(config: {

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createSmartSizingService, SmartSizingService } from '../services/smart-sizing'
-import { SourceMap, SourceMapBuilder } from '../source-map'
+import { SourceMap, SourceMapBuilder } from '../../ir/source-map'
 
 // Helper to create container with mock getBoundingClientRect
 function createContainer(): HTMLElement {

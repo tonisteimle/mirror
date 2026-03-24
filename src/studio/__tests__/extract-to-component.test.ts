@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { CodeModifier, type FilesAccess } from '../code-modifier'
-import { SourceMapBuilder, type SourceMap } from '../source-map'
+import { SourceMapBuilder, type SourceMap } from '../../ir/source-map'
 
 /**
  * Helper to create a simple SourceMap for testing

@@ -22,7 +22,7 @@ import { CodeModifier } from '../code-modifier'
 import { parse } from '../../parser'
 import { toIR } from '../../ir'
 import type { AST } from '../../parser/ast'
-import type { SourceMap } from '../source-map'
+import type { SourceMap } from '../../ir/source-map'
 
 // =============================================================================
 // TEST HELPERS

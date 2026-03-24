@@ -20,7 +20,7 @@ export {
   calculateSourcePosition,
   calculatePropertyPosition,
   type NodeMapping,
-} from './source-map'
+} from '../ir/source-map'
 
 /**
  * @deprecated Use StateSelectionAdapter from studio/core instead.

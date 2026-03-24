@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { PropertyExtractor, createPropertyExtractor, type ExtractedProperty } from '../property-extractor'
-import { SourceMap, SourceMapBuilder } from '../source-map'
+import { SourceMap, SourceMapBuilder } from '../../ir/source-map'
 import { parse } from '../../parser'
 import { toIR } from '../../ir'
 import type { AST } from '../../parser/ast'

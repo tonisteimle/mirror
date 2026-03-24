@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { CodeModifier } from '../code-modifier'
-import { SourceMap, SourceMapBuilder } from '../source-map'
+import { SourceMap, SourceMapBuilder } from '../../ir/source-map'
 
 // ============================================================================
 // TEST HELPERS

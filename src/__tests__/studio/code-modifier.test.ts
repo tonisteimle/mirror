@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { CodeModifier, applyChange } from '../../studio/code-modifier'
-import { SourceMap, SourceMapBuilder } from '../../studio/source-map'
+import { SourceMap, SourceMapBuilder } from '../../ir/source-map'
 
 /**
  * Helper to create a simple SourceMap for testing

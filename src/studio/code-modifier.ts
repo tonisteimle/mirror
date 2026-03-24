@@ -14,7 +14,7 @@
  * - Correct property boundary detection
  */
 
-import type { SourceMap, NodeMapping } from './source-map'
+import type { SourceMap, NodeMapping } from '../ir/source-map'
 import type { SourcePosition } from '../ir/types'
 import type { SemanticZone } from './drop-zone-calculator'
 import {

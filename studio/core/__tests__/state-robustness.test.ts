@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { state, actions, selectors } from '../state'
 import { events } from '../events'
-import type { SourceMap } from '../../../src/studio/source-map'
+import type { SourceMap } from '../../../src/ir/source-map'
 import type { AST } from '../../../src/parser/ast'
 import type { IR } from '../../../src/ir/types'
 

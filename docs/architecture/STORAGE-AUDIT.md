@@ -1,13 +1,20 @@
 # Storage Audit
 
+> **Status: ABGESCHLOSSEN** (2026-03-24)
+>
+> Die Migration ist abgeschlossen. Das neue `studio/storage/` Modul ersetzt alle alten Systeme.
+
 ## Zusammenfassung
 
-Es existieren **zwei parallele Systeme** für File-Management, die teilweise überlappen:
+**Nach Migration:**
 
-| System | Dateien | Verwendet von |
-|--------|---------|---------------|
-| **file-manager/** (TypeScript) | `studio/modules/file-manager/` | Nicht aktiv genutzt |
-| **desktop-files.js** (JavaScript) | `studio/desktop-files.js` | Aktiv - app.js |
+| System | Dateien | Beschreibung |
+|--------|---------|--------------|
+| **storage/** (TypeScript) | `studio/storage/` | Abstrahierter Storage-Service mit Providern |
+| **desktop-files.ts** (TypeScript) | `studio/desktop-files.ts` | File-Tree UI, gebündelt in `studio/dist/index.js` |
+
+**Entfernt:**
+- `studio/modules/file-manager/` - Komplett gelöscht (war ungenutzt)
 
 ---
 

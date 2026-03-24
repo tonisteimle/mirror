@@ -7,7 +7,7 @@
 
 import type { ComponentItem } from '../panels/components/types'
 import type { CodeModifier, ModificationResult } from '../../src/studio/code-modifier'
-import type { SourceMap } from '../../src/studio/source-map'
+import type { SourceMap } from '../../src/ir/source-map'
 import { detectLayout } from '../../src/studio/utils/layout-detection'
 import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'

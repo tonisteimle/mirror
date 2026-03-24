@@ -3,7 +3,7 @@
  */
 
 import { state, actions } from './state'
-import type { SourceMap } from '../../src/studio/source-map'
+import type { SourceMap } from '../../src/ir/source-map'
 import { CodeModifier, type CodeChange, type AddChildOptions } from '../../src/studio/code-modifier'
 
 export interface Command {

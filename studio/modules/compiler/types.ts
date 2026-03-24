@@ -4,7 +4,7 @@
 
 import type { AST, ParseError } from '../../../src/parser/ast'
 import type { IR } from '../../../src/ir/types'
-import type { SourceMap } from '../../../src/studio/source-map'
+import type { SourceMap } from '../../../src/ir/source-map'
 
 export type CompileTarget = 'dom' | 'react' | 'svelte'
 

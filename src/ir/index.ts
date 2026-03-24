@@ -22,7 +22,7 @@ import type {
   AnimationKeyframeProperty,
 } from '../parser/ast'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType } from './types'
-import { SourceMap, SourceMapBuilder, calculateSourcePosition } from '../studio/source-map'
+import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
   schemaPropertyToCSS,
@@ -42,7 +42,13 @@ import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive } from '../schema/zag-primitives'
 
 export type { IR, IRWarning } from './types'
-export { SourceMap, SourceMapBuilder } from '../studio/source-map'
+export {
+  SourceMap,
+  SourceMapBuilder,
+  calculateSourcePosition,
+  calculatePropertyPosition,
+  type NodeMapping,
+} from './source-map'
 
 /**
  * Result of IR transformation including source map and warnings
