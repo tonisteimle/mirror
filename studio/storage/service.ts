@@ -73,6 +73,16 @@ export class StorageService {
     this.currentProject = null
   }
 
+  /**
+   * Provider wechseln (z.B. Fallback auf Demo wenn Server-Projekt nicht existiert)
+   */
+  async switchProvider(type: ProviderType): Promise<void> {
+    const { createProvider } = await import('./providers')
+    const newProvider = createProvider(type)
+    this.setProvider(newProvider)
+    console.log(`[Storage] Switched to ${type} provider`)
+  }
+
   // ===========================================================================
   // Status
   // ===========================================================================

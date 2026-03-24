@@ -226,7 +226,14 @@ export async function initDesktopFiles(options = {}) {
 
   // Auto-open demo project if no project is open
   if (!storage.hasProject) {
-    await storage.openProject('demo')
+    try {
+      await storage.openProject('demo')
+    } catch (e) {
+      // If 'demo' project doesn't exist (e.g., on server), switch to DemoProvider
+      console.log('[DesktopFiles] Demo project not found, falling back to DemoProvider')
+      await storage.switchProvider('demo')
+      await storage.openProject('demo')
+    }
   }
 
   // Add global click handler to close context menu
