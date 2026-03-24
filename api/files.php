@@ -43,6 +43,11 @@ function hasAllowedExtension(string $filename): bool {
  * Validate a path (for files in folders)
  * Allows: folder/file.mir, folder/subfolder/file.tok
  * Disallows: .., absolute paths, special characters
+ *
+ * SECURITY NOTE: Only ASCII characters are allowed in paths.
+ * This is intentional to prevent Unicode-based path traversal attacks,
+ * homograph attacks, and encoding issues across different systems.
+ * Use English alphanumeric characters, hyphens, and underscores only.
  */
 function validatePath(string $path): bool {
     // No .. allowed (path traversal)
@@ -60,7 +65,8 @@ function validatePath(string $path): bool {
         return false;
     }
 
-    // Only alphanumeric, -, _, / and . (for extension) allowed
+    // Only ASCII alphanumeric, -, _, / and . (for extension) allowed
+    // Unicode is intentionally not supported for security reasons
     if (!preg_match('#^[a-zA-Z0-9_/.-]+$#', $path)) {
         return false;
     }

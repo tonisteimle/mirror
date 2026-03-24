@@ -531,6 +531,96 @@ class IRTransformer {
     return irNode
   }
 
+  /**
+   * Build a synthetic ZagNode from an Instance that inherits from a Zag primitive
+   * This allows component definitions like "MySelect as Select:" to work correctly
+   */
+  private buildZagNodeFromInstance(
+    instance: Instance,
+    resolvedComponent: ComponentDefinition | null,
+    primitive: string
+  ): any {
+    // Merge properties from instance and component definition
+    const properties = this.mergeProperties(
+      resolvedComponent?.properties || [],
+      instance.properties
+    )
+
+    // Extract slots from component children
+    const slots: Record<string, any> = {}
+    const items: any[] = []
+
+    // Process children from both component definition and instance
+    const allChildren = [
+      ...(resolvedComponent?.children || []),
+      ...(instance.children || [])
+    ]
+
+    for (const child of allChildren) {
+      if (!child) continue
+
+      // Check if child is a Slot definition (e.g., "Trigger:", "Content:")
+      if (child.type === 'Slot' || (child.type === 'Instance' && child.component?.endsWith(':'))) {
+        const slotName = child.type === 'Slot'
+          ? child.name
+          : child.component.replace(':', '')
+        slots[slotName] = {
+          properties: child.properties || [],
+          sourcePosition: child.line !== undefined
+            ? { line: child.line, column: child.column ?? 0 }
+            : undefined
+        }
+      }
+      // Check if child is an Item
+      else if (child.type === 'Instance' && child.component === 'Item') {
+        const labelProp = child.properties?.find((p: Property) => p.name === 'text' || p.values?.[0])
+        const label = labelProp?.values?.[0] ?? child.content ?? ''
+        const disabledProp = child.properties?.find((p: Property) => p.name === 'disabled')
+        items.push({
+          value: label,
+          label: label,
+          disabled: disabledProp ? true : false,
+          sourcePosition: child.line !== undefined
+            ? {
+                line: child.line,
+                column: child.column ?? 0,
+                endLine: child.endLine ?? child.line,
+                endColumn: child.endColumn ?? 0
+              }
+            : undefined
+        })
+      }
+      // Check for slot-like children (Component definitions with colon)
+      else if (child.type === 'Component' && (child.name === 'Trigger' || child.name === 'Content')) {
+        slots[child.name] = {
+          properties: child.properties || [],
+          sourcePosition: child.line !== undefined
+            ? { line: child.line, column: child.column ?? 0 }
+            : undefined
+        }
+      }
+    }
+
+    // If there are items but no slots defined, add default Trigger and Content slots
+    // This allows simple definitions like "MySelect as Select: Item "A""
+    if (items.length > 0 && Object.keys(slots).length === 0) {
+      slots['Trigger'] = { properties: [] }
+      slots['Content'] = { properties: [] }
+    }
+
+    // Build the synthetic ZagNode
+    return {
+      type: 'ZagComponent',
+      name: primitive.charAt(0).toUpperCase() + primitive.slice(1), // Capitalize
+      machine: primitive.toLowerCase(),
+      properties,
+      slots,
+      items,
+      line: instance.line,
+      column: instance.column,
+    }
+  }
+
   private transformInstance(
     instance: Instance | Each | any,
     parentId?: string,
@@ -553,21 +643,20 @@ class IRTransformer {
       return this.createEmptyNode(instance)
     }
 
-    // Handle Zag primitives (Select, Accordion, etc.)
-    // Note: Full Zag transformation requires parser support for slot syntax
-    // For now, we detect Zag primitives but transform them as regular components
-    // The DOM backend will handle them specially via isIRZagNode check
-    if (isZagPrimitive(instance.component)) {
-      // TODO: When parser supports Zag slot syntax, call transformZagNode here
-      // For now, fall through to regular transformation
-    }
-
-    // Resolve component definition
+    // Resolve component definition first
     const component = this.componentMap.get(instance.component)
     const resolvedComponent = component ? this.resolveComponent(component) : null
 
     // Determine primitive for defaults and layout context
     const primitive = resolvedComponent?.primitive || instance.component.toLowerCase()
+
+    // Handle Zag primitives (Select, Accordion, etc.)
+    // Check both direct usage (e.g., "Select") and inheritance (e.g., "MySelect as Select:")
+    if (isZagPrimitive(instance.component) || isZagPrimitive(primitive)) {
+      // Build a synthetic ZagNode from the instance + resolved component
+      const zagNode = this.buildZagNodeFromInstance(instance, resolvedComponent, primitive)
+      return this.transformZagComponent(zagNode)
+    }
 
     // Get primitive defaults and convert to Property format
     const primitiveDefaults = this.convertDefaultsToProperties(getPrimitiveDefaults(primitive))

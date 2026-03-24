@@ -121,12 +121,6 @@ try {
         exit;
     }
 
-    // Reset test user (development only)
-    if (preg_match('#^/auth/reset-test$#', $uri) && $method === 'POST') {
-        echo json_encode(resetTestUser());
-        exit;
-    }
-
     // User settings
     if (preg_match('#^/auth/settings$#', $uri) && $method === 'GET') {
         echo json_encode(authGetSettings());

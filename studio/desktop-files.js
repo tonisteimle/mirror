@@ -61,7 +61,7 @@ const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" strok
 // =============================================================================
 
 /**
- * Escape HTML entities to prevent XSS
+ * Escape HTML entities to prevent XSS in text content
  */
 function escapeHtml(text) {
   const div = document.createElement('div')
@@ -70,13 +70,30 @@ function escapeHtml(text) {
 }
 
 /**
+ * Escape for use in HTML attributes (escapes quotes)
+ */
+function escapeAttr(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+/**
  * Validate filename - returns error message or null if valid
+ * Note: Only ASCII characters allowed (security requirement)
  */
 function validateFilename(name) {
   if (!name || !name.trim()) return 'Name cannot be empty'
   if (name.includes('/') || name.includes('\\')) return 'Name cannot contain / or \\'
   if (name.includes(':')) return 'Name cannot contain :'
   if (name.startsWith('.')) return 'Name cannot start with .'
+  // Only ASCII alphanumeric, -, _, and . allowed (matches server validation)
+  if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
+    return 'Name can only contain letters, numbers, hyphens, and underscores'
+  }
   return null
 }
 
@@ -859,7 +876,7 @@ function renderTreeItems(items, depth = 1) {
     if (item.type === 'folder') {
       const isExpanded = expandedFolders.has(item.path)
       const escapedName = escapeHtml(item.name)
-      const escapedPath = escapeHtml(item.path)
+      const escapedPath = escapeAttr(item.path)  // Use escapeAttr for data attributes
       return `
         <div class="file-tree-folder ${isExpanded ? 'expanded' : ''}" data-path="${escapedPath}" draggable="true">
           <div class="file-tree-folder-header" style="padding-left: ${8 + depth * 12}px">
@@ -875,7 +892,7 @@ function renderTreeItems(items, depth = 1) {
       const fileType = getFileType(item.name)
       const isActive = currentFile === item.path
       const escapedName = escapeHtml(item.name)
-      const escapedPath = escapeHtml(item.path)
+      const escapedPath = escapeAttr(item.path)  // Use escapeAttr for data attributes
       return `
         <div class="file-tree-file ${isActive ? 'active' : ''}"
              data-path="${escapedPath}"

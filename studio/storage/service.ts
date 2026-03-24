@@ -26,6 +26,37 @@ interface CacheEntry {
 }
 
 // =============================================================================
+// Operation Lock (Mutex per file)
+// =============================================================================
+
+class OperationLock {
+  private locks = new Map<string, Promise<void>>()
+
+  /**
+   * Acquire lock for a path, wait if already locked
+   */
+  async acquire(path: string): Promise<() => void> {
+    // Wait for any existing operation on this path
+    while (this.locks.has(path)) {
+      await this.locks.get(path)
+    }
+
+    // Create new lock
+    let release!: () => void
+    const lock = new Promise<void>(resolve => {
+      release = resolve
+    })
+    this.locks.set(path, lock)
+
+    // Return release function
+    return () => {
+      this.locks.delete(path)
+      release()
+    }
+  }
+}
+
+// =============================================================================
 // Storage Service
 // =============================================================================
 
@@ -35,6 +66,7 @@ export class StorageService {
   private treeCache: StorageItem[] = []
   private currentProject: StorageProject | null = null
   private initialized = false
+  private operationLock = new OperationLock()
 
   private readonly CACHE_TTL = 5000 // 5 Sekunden
 
@@ -220,9 +252,12 @@ export class StorageService {
   async writeFile(path: string, content: string): Promise<void> {
     this.ensureInitialized()
 
-    const isNew = !this.fileExistsInTree(path)
+    // Acquire lock to prevent concurrent writes to same file
+    const release = await this.operationLock.acquire(path)
 
     try {
+      const isNew = !this.fileExistsInTree(path)
+
       await this.provider!.writeFile(path, content)
 
       // Cache aktualisieren
@@ -238,11 +273,15 @@ export class StorageService {
     } catch (error) {
       this.emitError(error as Error, 'writeFile', path, true)
       throw error
+    } finally {
+      release()
     }
   }
 
   async deleteFile(path: string): Promise<void> {
     this.ensureInitialized()
+
+    const release = await this.operationLock.acquire(path)
 
     try {
       await this.provider!.deleteFile(path)
@@ -257,11 +296,17 @@ export class StorageService {
     } catch (error) {
       this.emitError(error as Error, 'deleteFile', path, false)
       throw error
+    } finally {
+      release()
     }
   }
 
   async renameFile(oldPath: string, newPath: string): Promise<void> {
     this.ensureInitialized()
+
+    // Lock both paths to prevent concurrent operations
+    const releaseOld = await this.operationLock.acquire(oldPath)
+    const releaseNew = await this.operationLock.acquire(newPath)
 
     try {
       await this.provider!.renameFile(oldPath, newPath)
@@ -280,11 +325,17 @@ export class StorageService {
     } catch (error) {
       this.emitError(error as Error, 'renameFile', oldPath, false)
       throw error
+    } finally {
+      releaseNew()
+      releaseOld()
     }
   }
 
   async copyFile(sourcePath: string, targetPath: string): Promise<void> {
     this.ensureInitialized()
+
+    // Lock target path to prevent concurrent writes
+    const release = await this.operationLock.acquire(targetPath)
 
     try {
       await this.provider!.copyFile(sourcePath, targetPath)
@@ -296,6 +347,8 @@ export class StorageService {
     } catch (error) {
       this.emitError(error as Error, 'copyFile', sourcePath, false)
       throw error
+    } finally {
+      release()
     }
   }
 

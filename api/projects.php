@@ -103,7 +103,7 @@ function createProject(array $body): array {
     }
 
     // Generate project ID
-    $projectId = 'p_' . bin2hex(random_bytes(8));
+    $projectId = 'p_' . bin2hex(random_bytes(16));
     $projectDir = getProjectDir($userId, $projectId);
 
     // Create directory

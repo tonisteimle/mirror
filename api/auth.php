@@ -3,57 +3,14 @@
  * Auth handlers for Mirror Studio
  */
 
-// Test account credentials (for development)
-define('TEST_USER_EMAIL', 'test@test.com');
-define('TEST_USER_PASSWORD', 'test123');
-define('TEST_USER_ID', 'u_test');
-
-/**
- * Ensure test user exists (for development)
- */
-function ensureTestUser(): void {
-    $data = loadUsersRaw();
-
-    // Check if test user already exists
-    foreach ($data['users'] as $user) {
-        if ($user['id'] === TEST_USER_ID) {
-            return; // Already exists
-        }
-    }
-
-    // Create test user
-    $data['users'][] = [
-        'id' => TEST_USER_ID,
-        'email' => TEST_USER_EMAIL,
-        'password_hash' => password_hash(TEST_USER_PASSWORD, PASSWORD_BCRYPT),
-        'created_at' => date('c')
-    ];
-
-    file_put_contents(USERS_FILE, json_encode($data, JSON_PRETTY_PRINT));
-
-    // Create test user's project directory
-    $userDir = PROJECTS_DIR . '/' . TEST_USER_ID;
-    if (!file_exists($userDir)) {
-        mkdir($userDir, 0755, true);
-    }
-}
-
-/**
- * Load users from JSON file (raw, without ensuring test user)
- */
-function loadUsersRaw(): array {
-    if (!file_exists(USERS_FILE)) {
-        return ['users' => []];
-    }
-    return json_decode(file_get_contents(USERS_FILE), true) ?? ['users' => []];
-}
-
 /**
  * Load users from JSON file
  */
 function loadUsers(): array {
-    ensureTestUser();
-    return loadUsersRaw();
+    if (!file_exists(USERS_FILE)) {
+        return ['users' => []];
+    }
+    return json_decode(file_get_contents(USERS_FILE), true) ?? ['users' => []];
 }
 
 /**
@@ -67,7 +24,7 @@ function saveUsers(array $data): void {
  * Generate unique ID
  */
 function generateId(string $prefix = ''): string {
-    return $prefix . bin2hex(random_bytes(8));
+    return $prefix . bin2hex(random_bytes(16));
 }
 
 /**
@@ -261,7 +218,7 @@ function getOrCreateSessionUser(): string {
 
     // Create or return anonymous session user
     if (!isset($_SESSION['anon_id'])) {
-        $_SESSION['anon_id'] = 'anon_' . bin2hex(random_bytes(8));
+        $_SESSION['anon_id'] = 'anon_' . bin2hex(random_bytes(16));
 
         // Create directory for anonymous user
         $userDir = PROJECTS_DIR . '/' . $_SESSION['anon_id'];
@@ -352,24 +309,3 @@ function authSaveSettings(array $body): array {
     return ['success' => true];
 }
 
-/**
- * Reset test user - deletes all projects and recreates fresh
- * POST /api/auth/reset-test
- */
-function resetTestUser(): array {
-    $userDir = PROJECTS_DIR . '/' . TEST_USER_ID;
-
-    // Delete all test user projects
-    if (is_dir($userDir)) {
-        $dirs = scandir($userDir);
-        foreach ($dirs as $dir) {
-            if ($dir === '.' || $dir === '..') continue;
-            $projectPath = $userDir . '/' . $dir;
-            if (is_dir($projectPath)) {
-                deleteDirectory($projectPath);
-            }
-        }
-    }
-
-    return ['success' => true, 'message' => 'Test user reset'];
-}
