@@ -574,7 +574,17 @@ class IRTransformer {
       // Check if child is an Item
       else if (child.type === 'Instance' && child.component === 'Item') {
         const labelProp = child.properties?.find((p: Property) => p.name === 'text' || p.values?.[0])
-        const label = labelProp?.values?.[0] ?? child.content ?? ''
+        // Get label from text property, or from first Text child, or empty string
+        let label = ''
+        if (labelProp?.values?.[0]) {
+          label = String(labelProp.values[0])
+        } else {
+          // Look for a Text child to get content
+          const textChild = child.children?.find(c => c.type === 'Text')
+          if (textChild && textChild.type === 'Text') {
+            label = textChild.content
+          }
+        }
         const disabledProp = child.properties?.find((p: Property) => p.name === 'disabled')
         items.push({
           value: label,
@@ -583,16 +593,14 @@ class IRTransformer {
           sourcePosition: child.line !== undefined
             ? {
                 line: child.line,
-                column: child.column ?? 0,
-                endLine: child.endLine ?? child.line,
-                endColumn: child.endColumn ?? 0
+                column: child.column ?? 0
               }
             : undefined
         })
       }
-      // Check for slot-like children (Component definitions with colon)
-      else if (child.type === 'Component' && (child.name === 'Trigger' || child.name === 'Content')) {
-        slots[child.name] = {
+      // Check for slot-like Instance children (named slots like "Trigger:", "Content:")
+      else if (child.type === 'Instance' && (child.component === 'Trigger' || child.component === 'Content')) {
+        slots[child.component] = {
           properties: child.properties || [],
           sourcePosition: child.line !== undefined
             ? { line: child.line, column: child.column ?? 0 }

@@ -141,8 +141,18 @@ App bg #18181b, pad 24
     return this.loadFolderRecursive(this.basePath, 0)
   }
 
+  private readonly MAX_DEPTH = 10
+  private depthWarningShown = false
+
   private async loadFolderRecursive(folderPath: string, depth: number): Promise<StorageItem[]> {
-    if (depth > 5) return [] // Max Tiefe
+    if (depth > this.MAX_DEPTH) {
+      // Warn user once about depth limit
+      if (!this.depthWarningShown) {
+        console.warn(`[TauriProvider] Maximum folder depth (${this.MAX_DEPTH}) reached. Some nested folders may not be shown.`)
+        this.depthWarningShown = true
+      }
+      return []
+    }
 
     try {
       const result = await this.bridge.fs.listDirectory(folderPath)

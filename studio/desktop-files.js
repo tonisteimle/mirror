@@ -138,25 +138,52 @@ function findFirstFile(tree) {
 
 /**
  * Preload all files into cache for synchronous access
+ * Uses batched loading with concurrency limit to prevent OOM
  */
 async function preloadAllFiles() {
   const tree = storage.getTree()
+  const MAX_CONCURRENT = 5
+  const LARGE_PROJECT_WARNING = 100
 
-  async function loadRecursive(items) {
+  // Collect all file paths
+  const filePaths = []
+  function collectFiles(items) {
     for (const item of items) {
       if (item.type === 'file') {
-        try {
-          filesCache[item.path] = await storage.readFile(item.path)
-        } catch (e) {
-          console.warn('[DesktopFiles] Failed to preload:', item.path)
-        }
+        filePaths.push(item.path)
       } else if (item.type === 'folder' && item.children) {
-        await loadRecursive(item.children)
+        collectFiles(item.children)
       }
     }
   }
+  collectFiles(tree)
 
-  await loadRecursive(tree)
+  // Warn about large projects
+  if (filePaths.length > LARGE_PROJECT_WARNING) {
+    console.warn(`[DesktopFiles] Large project: ${filePaths.length} files. Loading may take a moment.`)
+  }
+
+  // Load files in batches with concurrency limit
+  let loaded = 0
+  for (let i = 0; i < filePaths.length; i += MAX_CONCURRENT) {
+    const batch = filePaths.slice(i, i + MAX_CONCURRENT)
+    const results = await Promise.allSettled(
+      batch.map(async (path) => {
+        const content = await storage.readFile(path)
+        return { path, content }
+      })
+    )
+
+    // Process results
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        filesCache[result.value.path] = result.value.content
+        loaded++
+      } else {
+        console.warn('[DesktopFiles] Failed to preload:', result.reason)
+      }
+    }
+  }
   console.log('[DesktopFiles] Preloaded', Object.keys(filesCache).length, 'files')
 }
 

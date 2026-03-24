@@ -79,60 +79,110 @@ export class ServerProvider implements StorageProvider {
   // API Helper
   // ===========================================================================
 
+  private readonly MAX_RETRIES = 3
+  private readonly RETRY_DELAY_MS = 1000
+
+  /**
+   * Sleep for a given number of milliseconds
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Check if an error is retryable (network errors, 5xx server errors)
+   */
+  private isRetryableError(error: unknown, status?: number): boolean {
+    // Network errors are retryable
+    if (error instanceof TypeError) return true
+
+    // 5xx server errors are retryable
+    if (status && status >= 500 && status < 600) return true
+
+    // 429 Too Many Requests is retryable
+    if (status === 429) return true
+
+    return false
+  }
+
   private async fetch<T>(path: string, options?: RequestInit): Promise<T> {
-    let response: Response
+    let lastError: Error | null = null
 
-    try {
-      response = await fetch(`${this.apiBase}${path}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers
-        }
-      })
-    } catch (networkError) {
-      // Network error (offline, DNS failure, CORS, etc.)
-      throw new Error(`Network error: Unable to connect to server. Please check your connection.`)
-    }
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      let response: Response
 
-    // Get response text first (safer than direct JSON parse)
-    const responseText = await response.text()
-
-    if (!response.ok) {
-      // Try to extract error message from JSON response
-      let errorMessage = responseText
       try {
-        const errorJson = JSON.parse(responseText)
-        errorMessage = errorJson.error || errorJson.message || responseText
-      } catch {
-        // Response is not JSON, use raw text
+        response = await fetch(`${this.apiBase}${path}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers
+          }
+        })
+      } catch (networkError) {
+        // Network error (offline, DNS failure, CORS, etc.)
+        lastError = new Error(`Network error: Unable to connect to server.`)
+
+        if (attempt < this.MAX_RETRIES) {
+          const delay = this.RETRY_DELAY_MS * Math.pow(2, attempt - 1)
+          console.warn(`[ServerProvider] Network error, retrying in ${delay}ms (attempt ${attempt}/${this.MAX_RETRIES})`)
+          await this.sleep(delay)
+          continue
+        }
+
+        throw new Error(`Network error: Unable to connect to server after ${this.MAX_RETRIES} attempts. Please check your connection.`)
       }
 
-      // Provide user-friendly error messages based on status
-      switch (response.status) {
-        case 401:
-          throw new Error('Session expired. Please refresh the page.')
-        case 403:
-          throw new Error('Access denied. You do not have permission for this action.')
-        case 404:
-          throw new Error(`Not found: ${errorMessage}`)
-        case 500:
-          throw new Error(`Server error: ${errorMessage}`)
-        default:
-          throw new Error(`API Error ${response.status}: ${errorMessage}`)
+      // Get response text first (safer than direct JSON parse)
+      const responseText = await response.text()
+
+      if (!response.ok) {
+        // Check if we should retry
+        if (this.isRetryableError(null, response.status) && attempt < this.MAX_RETRIES) {
+          const delay = this.RETRY_DELAY_MS * Math.pow(2, attempt - 1)
+          console.warn(`[ServerProvider] Server error ${response.status}, retrying in ${delay}ms (attempt ${attempt}/${this.MAX_RETRIES})`)
+          await this.sleep(delay)
+          continue
+        }
+
+        // Try to extract error message from JSON response
+        let errorMessage = responseText
+        try {
+          const errorJson = JSON.parse(responseText)
+          errorMessage = errorJson.error || errorJson.message || responseText
+        } catch {
+          // Response is not JSON, use raw text
+        }
+
+        // Provide user-friendly error messages based on status
+        switch (response.status) {
+          case 401:
+            throw new Error('Session expired. Please refresh the page.')
+          case 403:
+            throw new Error('Access denied. You do not have permission for this action.')
+          case 404:
+            throw new Error(`Not found: ${errorMessage}`)
+          case 500:
+            throw new Error(`Server error: ${errorMessage}`)
+          default:
+            throw new Error(`API Error ${response.status}: ${errorMessage}`)
+        }
+      }
+
+      // Parse JSON response safely
+      if (!responseText) {
+        return {} as T // Empty response
+      }
+
+      try {
+        return JSON.parse(responseText) as T
+      } catch (parseError) {
+        throw new Error(`Invalid server response: Expected JSON but received: ${responseText.substring(0, 100)}...`)
       }
     }
 
-    // Parse JSON response safely
-    if (!responseText) {
-      return {} as T // Empty response
-    }
-
-    try {
-      return JSON.parse(responseText) as T
-    } catch (parseError) {
-      throw new Error(`Invalid server response: Expected JSON but received: ${responseText.substring(0, 100)}...`)
-    }
+    // Should not reach here, but just in case
+    throw lastError ?? new Error('Unknown error in fetch')
   }
 
   // ===========================================================================
