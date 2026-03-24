@@ -929,6 +929,7 @@ export function createUI(data = {}) {
     'padding': '8px',
     'border-radius': '8px',
   })
+  node_1.appendChild(node_1_content)
   
   // Items
   const node_1_item0 = document.createElement('div')

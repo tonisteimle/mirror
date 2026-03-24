@@ -618,10 +618,10 @@ class DOMGenerator {
         this.emit('})')
       }
 
-      // Append to root (portaled elements handled by runtime)
-      if (!slot.portal) {
-        this.emit(`${varName}.appendChild(${slotVar})`)
-      }
+      // Append to root
+      // Note: Even portal elements are appended initially - the runtime
+      // can relocate them to a portal container if needed
+      this.emit(`${varName}.appendChild(${slotVar})`)
       this.emit('')
     }
 

@@ -224,13 +224,21 @@ export async function initDesktopFiles(options = {}) {
     console.error(`[DesktopFiles] Error in ${operation}:`, error)
   })
 
-  // Auto-open demo project if no project is open
+  // Auto-open first available project if no project is open
   if (!storage.hasProject) {
     try {
-      await storage.openProject('demo')
+      // Try to get list of projects and open the first one
+      const projects = await storage.listProjects()
+      if (projects.length > 0) {
+        await storage.openProject(projects[0].id)
+        console.log('[DesktopFiles] Opened first available project:', projects[0].name)
+      } else {
+        // No projects exist, fall back to demo
+        throw new Error('No projects available')
+      }
     } catch (e) {
-      // If 'demo' project doesn't exist (e.g., on server), switch to DemoProvider
-      console.log('[DesktopFiles] Demo project not found, falling back to DemoProvider')
+      // If no projects or error, switch to DemoProvider
+      console.log('[DesktopFiles] No server projects, falling back to DemoProvider')
       await storage.switchProvider('demo')
       await storage.openProject('demo')
     }
