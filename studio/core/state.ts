@@ -257,7 +257,7 @@ const initialState: StudioState = {
   breadcrumb: [],
   cursor: { line: 1, column: 1 },
   editorHasFocus: true,
-  currentFile: 'index.mirror',
+  currentFile: 'index.mir',
   files: {},
   fileTypes: {},
   panels: { left: true, right: true },

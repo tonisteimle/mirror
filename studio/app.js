@@ -38,7 +38,7 @@ import {
   createComponentDropExtension,
   insertComponentCode,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=110'
+} from './dist/index.js?v=111'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -2716,7 +2716,7 @@ function escapeRegex(str) {
  * Ensure tokens file exists, create if not
  */
 function ensureTokensFile() {
-  const tokensFilename = 'tokens.mirror'
+  const tokensFilename = 'tokens.tok'
   if (!files[tokensFilename]) {
     files[tokensFilename] = '// Design Tokens\n'
     // Desktop app: file tree is managed by desktop-files.js
@@ -2729,7 +2729,7 @@ function ensureTokensFile() {
  */
 function addTokenToFile(tokenName, tokenValue) {
   ensureTokensFile()
-  const tokensFilename = 'tokens.mirror'
+  const tokensFilename = 'tokens.tok'
   let content = files[tokensFilename] || '// Design Tokens\n'
 
   const tokenLine = `$${tokenName}: ${tokenValue}`

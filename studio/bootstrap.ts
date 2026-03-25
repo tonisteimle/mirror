@@ -234,7 +234,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Create studio context with initial state
   studioContext = createStudioContext({
     source: config.initialSource || '',
-    currentFile: config.currentFile || 'index.mirror',
+    currentFile: config.currentFile || 'index.mir',
   })
   setStudioContext(studioContext)
 
