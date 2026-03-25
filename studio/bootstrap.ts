@@ -16,6 +16,7 @@ import { ComponentPanel, createComponentPanel } from './panels/components'
 import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
+import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
 import type { AST } from '../src/parser/ast'
 import type { IR } from '../src/ir/types'
 import type { SourceMap } from '../src/ir/source-map'
@@ -64,6 +65,7 @@ export interface StudioInstance {
   agent: AgentIntegration | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
+  dragDrop: DragDropSystem | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
 }
@@ -89,6 +91,7 @@ export const studio: StudioInstance = {
   agent: null,
   drawManager: null,
   inlineEdit: null,
+  dragDrop: null,
   dispose: () => {
     // Unsubscribe all event listeners
     for (const unsubscribe of eventUnsubscribes) {
@@ -104,6 +107,7 @@ export const studio: StudioInstance = {
     studio.editorDropHandler?.detach()
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
+    studio.dragDrop?.dispose()
     studio.preview?.dispose()
 
     // Clear references
@@ -117,6 +121,7 @@ export const studio: StudioInstance = {
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
+    studio.dragDrop = null
     studio.agent = null
   },
 }
@@ -546,6 +551,73 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   }
 
   studio.drawManager = drawManager
+
+  // ============================================
+  // Drag & Drop System (New Pragmatic DnD based)
+  // ============================================
+
+  // Create code executor that bridges to CodeModifier
+  const codeExecutor = createCodeExecutor({
+    getSource: () => editorController.getContent(),
+    getSourceMap: () => state.get().sourceMap,
+    applyChange: (newSource: string) => {
+      // Apply the change via editor dispatch
+      const currentContent = editorController.getContent()
+      if (newSource !== currentContent) {
+        config.editor.dispatch({
+          changes: { from: 0, to: currentContent.length, insert: newSource }
+        })
+      }
+    },
+    recompile: async () => {
+      events.emit('compile:requested', {})
+    },
+    createModifier: (source: string, sourceMap: SourceMap) => {
+      return new CodeModifier(source, sourceMap)
+    },
+  })
+
+  // Initialize drag-drop system
+  const dragDropSystem = createDragDropSystem({
+    container: config.previewContainer,
+    codeExecutor,
+    enableAltDuplicate: true,
+    onDragStart: (source) => {
+      console.log('[DragDrop] Drag started:', source.type, source.componentName || source.nodeId)
+    },
+    onDrop: (source, result) => {
+      console.log('[DragDrop] Drop completed:', result.placement, result.targetId)
+      // Defer selection to after compile
+      if (result.target?.nodeId) {
+        actions.setDeferredSelection({
+          type: 'nodeId',
+          nodeId: result.target.nodeId,
+          origin: 'preview',
+        })
+      }
+    },
+    onDragEnd: (source, success) => {
+      console.log('[DragDrop] Drag ended:', success ? 'success' : 'cancelled')
+    },
+  })
+
+  dragDropSystem.init()
+  studio.dragDrop = dragDropSystem
+
+  // Disable drag during compile to prevent stale SourceMap issues
+  eventUnsubscribes.push(
+    events.on('compile:requested', () => {
+      dragDropSystem.disable()
+    })
+  )
+
+  eventUnsubscribes.push(
+    events.on('compile:completed', () => {
+      dragDropSystem.enable()
+    })
+  )
+
+  console.log('[Studio] DragDropSystem initialized')
 
   // ============================================
   // Component Event Handlers

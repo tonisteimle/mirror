@@ -7,7 +7,30 @@
  */
 
 import type { ComponentItem, ComponentChild } from './types'
-import { COMPONENT_DEFAULT_SIZES } from '../../visual/renderers/ghost-factory'
+
+// Default sizes for drag ghost previews
+const COMPONENT_DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
+  // Basic components
+  Box: { width: 100, height: 100 },
+  Text: { width: 80, height: 24 },
+  Button: { width: 80, height: 36 },
+  Input: { width: 200, height: 36 },
+  Textarea: { width: 200, height: 100 },
+  Image: { width: 100, height: 100 },
+  Icon: { width: 24, height: 24 },
+
+  // Layout components
+  'V-Box': { width: 200, height: 150 },
+  'H-Box': { width: 200, height: 60 },
+  Grid: { width: 200, height: 150 },
+  ZStack: { width: 150, height: 150 },
+
+  // Semantic components
+  Header: { width: 300, height: 60 },
+  Footer: { width: 300, height: 48 },
+  Nav: { width: 200, height: 300 },
+  Section: { width: 300, height: 200 },
+}
 
 // ============================================================================
 // Types

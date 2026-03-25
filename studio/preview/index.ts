@@ -9,7 +9,6 @@ import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
 import { ContextMenu, createContextMenu } from './context-menu'
 import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
-import { DragDropVisualizer, createDragDropVisualizer, type DropZoneInfo } from '../visual/drag-drop-visualizer'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 
 // Re-export renderer
@@ -62,13 +61,6 @@ export {
   type ResizeState,
   type SizingMode,
 } from '../visual/resize-manager'
-
-export {
-  DragDropVisualizer,
-  createDragDropVisualizer,
-  type DragDropVisualizerConfig,
-  type DropZoneInfo,
-} from '../visual/drag-drop-visualizer'
 
 // Re-export slot visibility
 export {
@@ -504,8 +496,8 @@ export class PreviewController {
   }
 
   private handleClick(e: MouseEvent): void {
-    // In play mode, let clicks pass through to components for testing
-    if (state.get().playMode) {
+    // In play mode or Alt+Click, let clicks pass through to components for interaction
+    if (state.get().playMode || e.altKey) {
       return
     }
 

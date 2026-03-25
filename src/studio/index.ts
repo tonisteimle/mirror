@@ -7,11 +7,8 @@
  * - PropertyExtractor: Extracts properties from AST
  * - CodeModifier: Modifies source code
  * - PropertyPanel: Dynamic property panel UI
- * - DropZoneCalculator: Calculates drop zones for drag-and-drop
- * - StudioDragDropService: Coordinates drag-and-drop operations (testable)
  *
- * Note: PreviewInteraction and EditorSyncManager have been replaced by
- * studio/preview/PreviewController and studio/sync/SyncCoordinator
+ * Note: Drag & Drop has been moved to studio/drag-drop module (v2.2)
  */
 
 export {
@@ -66,19 +63,7 @@ export {
 
 export { PROPERTY_ICON_PATHS } from './icons'
 
-export {
-  DropZoneCalculator,
-  createDropZoneCalculator,
-  type DropZone,
-  type DropPlacement,
-  type DropZoneCalculatorOptions,
-  type SemanticZone,
-} from './drop-zone-calculator'
-
-// DragDropService and StudioDragDropService removed in v2.1 to fix circular dependencies.
-// Import directly from 'studio/visual' instead:
-//   import { DragDropService, createDragDropService } from '../studio/visual'
-//   import { StudioDragDropService, createStudioDragDropService } from '../studio/visual'
+// DropZoneCalculator removed in v2.2 - use studio/drag-drop instead
 
 export {
   createSmartSizingService,
@@ -86,14 +71,6 @@ export {
   type SizingResult,
   type ResidualSpace,
 } from './services/smart-sizing'
-
-// Drop preview utilities
-export {
-  calculateNewComponentSize,
-  getDefaultSize,
-  type DragContext,
-  type Size as PreviewSize,
-} from './drop-preview'
 
 export {
   findIconForComponent,
@@ -137,39 +114,8 @@ export {
   type SpatialItem,
 } from './spatial-cache'
 
-// Drop indicator rendering
-export {
-  DropIndicatorRenderer,
-  createDropIndicatorRenderer,
-  type LineIndicatorConfig,
-  type CrosshairIndicatorConfig,
-  type HighlightConfig,
-  type ZoneIndicatorConfig,
-  type RendererIndicatorConfig,
-} from './drop-indicator-renderer'
-
-// Drop Strategies (layout-specific drop behavior)
-export {
-  // Types
-  type LayoutType,
-  type DropContext,
-  type LayoutDropResult,
-  type FlexDropResult,
-  type AbsoluteDropResult,
-  type IndicatorConfig,
-  type LayoutDropStrategy,
-  type DropStrategyRegistry,
-  // Strategies
-  FlexDropStrategy,
-  createFlexDropStrategy,
-  AbsoluteDropStrategy,
-  createAbsoluteDropStrategy,
-  type AbsoluteStrategyOptions,
-  // Registry
-  createDefaultRegistry,
-  createRegistry,
-  getDefaultRegistry,
-} from './drop-strategies'
+// Drop indicator rendering - removed in v2.2, use studio/drag-drop/visual instead
+// Drop Strategies - removed in v2.2, use studio/drag-drop/strategies instead
 
 // Coordinate transformation (centralized coordinate handling)
 export {

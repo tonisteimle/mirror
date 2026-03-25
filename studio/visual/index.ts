@@ -2,6 +2,8 @@
  * Visual Code System - Module Exports
  *
  * Stellt visuelle Manipulation-Features für Mirror Studio bereit.
+ *
+ * Note: Drag & Drop is now handled by studio/drag-drop module
  */
 
 // Overlay Manager
@@ -22,29 +24,6 @@ export {
   type SizingMode,
 } from './resize-manager'
 
-// Drag Drop Visualizer
-export {
-  DragDropVisualizer,
-  createDragDropVisualizer,
-  type DragDropVisualizerConfig,
-  type DropZoneInfo,
-} from './drag-drop-visualizer'
-
-// Drop Handler
-export {
-  DropHandler,
-  createDropHandler,
-  type DropData,
-  type DropHandlerOptions,
-} from './drop-handler'
-
-// Drop Indicator
-export {
-  DropIndicator,
-  createDropIndicator,
-  type DropIndicatorConfig,
-} from './drop-indicator'
-
 // Position Controls
 export {
   NumericInput,
@@ -55,7 +34,7 @@ export {
   type PositionValue,
 } from './position-controls'
 
-// Smart Guides
+// Smart Guides (used by resize and drawing)
 export {
   GuideCalculator,
   createGuideCalculator,
@@ -81,44 +60,79 @@ export {
   type ConstraintChangeEvent,
 } from './constraints'
 
-// Pure Models (testable)
-export * from './models'
-
-// Controllers
+// Draw Manager
 export {
-  DragController,
-  createDragController,
-  type DragControllerConfig,
-  type DragCallbacks,
-  type DragMoveState,
-  type ContainerInfo,
-} from './controllers/drag-controller'
+  DrawManager,
+  createDrawManager,
+  type DrawManagerConfig,
+  type DrawState,
+  type DrawResult,
+} from './draw-manager'
 
-// Renderers
+// Snap Integration (used by resize)
 export {
-  DragRenderer,
-  createDragRenderer,
-  type RenderState,
-  type DragRendererConfig,
-} from './renderers/drag-renderer'
+  SnapIntegration,
+  createSnapIntegration,
+  type SnapIntegrationConfig,
+} from './snap-integration'
 
-// Services
+// Pure Models (coordinate utilities)
 export {
-  DragDropService,
-  createDragDropService,
-  type DragDropServiceConfig,
-  type DragDropCallbacks,
-  type DropResultInfo,
-} from './services/drag-drop-service'
+  // Coordinate Transformations
+  clientToCanvas,
+  canvasToClient,
+  elementToCanvas,
+  canvasToElement,
+  createCoordinateContext,
+  // Rect utilities
+  getCenter,
+  rectToBounds,
+  boundsToRect,
+  pointInRect,
+  rectsIntersect,
+  getIntersection,
+  getUnion,
+  expandRect,
+  contractRect,
+  // Point utilities
+  distance,
+  delta,
+  addPoints,
+  subtractPoints,
+  scalePoint,
+  roundPoint,
+  clampPoint,
+  // Grid utilities
+  snapToGrid,
+  snapPointToGrid,
+  snapRectToGrid,
+  type Bounds,
+  type CoordinateContext,
+} from './models/coordinate'
 
+// Coordinate Calculator (centralized position calculations)
 export {
-  StudioDragDropService,
-  createStudioDragDropService,
-  makePaletteDraggable,
-  makeCanvasElementDraggable,
-  type StudioDragDropConfig,
-  type StudioDragDropCallbacks,
-  type StudioDropResult,
-  type DragOverState,
-  type PaletteDragData,
-} from './services/studio-drag-drop-service'
+  calculateElementPosition,
+  calculateDragDelta,
+  calculateGhostPosition,
+  calculateDropPosition,
+  calculateAbsolutePosition,
+  calculateFlexToAbsolutePosition,
+  validateCoordinate,
+  validatePoint,
+  validateAndClampCoordinates,
+  type ValidatedCoordinates,
+} from './models/coordinate-calculator'
+
+// Snap Calculations (used by resize and drawing)
+export {
+  calculateSnap,
+  createSnapConfig,
+  createSnapContext,
+  type SnapAxis,
+  type SnapResult as SnapCalcResult,
+  type SnapAxisInfo,
+  type Guide as SnapGuide,
+  type SnapConfig,
+  type SnapContext,
+} from './models/snap'

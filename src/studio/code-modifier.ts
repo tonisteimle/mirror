@@ -16,7 +16,11 @@
 
 import type { SourceMap, NodeMapping } from '../ir/source-map'
 import type { SourcePosition } from '../ir/types'
-import type { SemanticZone } from './drop-zone-calculator'
+// SemanticZone type for insertWithWrapper
+type SemanticZone =
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right'
 import {
   parseLine,
   updatePropertyInLine,
