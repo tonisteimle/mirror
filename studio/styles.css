@@ -43,6 +43,10 @@
       --color-primary-selection: rgba(59, 130, 246, 0.25);
       --color-primary-bg: var(--primary-10);
 
+      /* Accent Colors (Alias for Primary) */
+      --accent: #3B82F6;
+      --accent-hover: #2563EB;
+
       /* Semantic Colors */
       --color-success: #22c55e;
       --color-success-muted: rgba(34, 197, 94, 0.2);
@@ -73,7 +77,7 @@
       /* Background Colors - Consolidated */
       --bg-base: #0a0a0f;           /* App background (darkest) */
       --bg-panel: #141418;          /* All panel backgrounds */
-      --bg-input: #1c1c22;          /* Inputs, toggles, interactive elements */
+      --bg-input: #222228;          /* Inputs, toggles, interactive elements */
       --bg-hover: #27272a;          /* Hover state */
       --bg-active: #3f3f46;         /* Active/pressed state */
 
@@ -1600,13 +1604,9 @@
       visibility: hidden;
     }
 
-    /* Preview Zoom Controls */
+    /* Preview Zoom Controls - hidden for v1 */
     .preview-zoom {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-      margin-left: 12px;
+      display: none;
     }
 
     .preview-zoom .zoom-btn {
@@ -1664,57 +1664,17 @@
     }
 
     .play-btn:hover {
-      background: var(--bg-hover);
       color: var(--text-secondary);
     }
 
     .play-btn.active {
-      background: var(--accent);
       color: white;
-    }
-
-    .play-btn.active:hover {
-      background: var(--accent-hover);
-    }
-
-    .play-btn .stop-icon {
-      display: none;
-    }
-
-    .play-btn.active .play-icon {
-      display: none;
-    }
-
-    .play-btn.active .stop-icon {
-      display: block;
     }
 
     /* Play Mode Preview Styling */
     .preview-panel.play-mode {
       outline: 2px solid var(--accent);
       outline-offset: -2px;
-    }
-
-    .preview-panel.play-mode .preview-toolbar {
-      background: var(--accent);
-      color: white;
-    }
-
-    .preview-panel.play-mode .preview-breadcrumb {
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .preview-panel.play-mode .zoom-btn {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .preview-panel.play-mode .zoom-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .preview-panel.play-mode .zoom-level {
-      color: rgba(255, 255, 255, 0.8);
     }
 
     .preview-breadcrumb .breadcrumb-item {
@@ -3568,6 +3528,7 @@
       box-shadow: var(--focus-ring);
     }
 
+
     /* ============================================
        ALIGNMENT GRID (integrated in Layout)
        ============================================ */
@@ -3662,6 +3623,14 @@
     .pp-content .prop-input::placeholder,
     .pp-content .pp-v2-input::placeholder {
       color: var(--text-disabled);
+    }
+
+    /* Wide input for text fields (behavior section) */
+    .pp-content .prop-input.wide,
+    .pp-content input[data-behavior-input] {
+      width: auto;
+      flex: 1;
+      min-width: 0;
     }
 
     /* Input with value: show in light gray */
@@ -5649,6 +5618,197 @@
 
     .file-panel-context-item.danger:hover {
       background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* ============================================
+       ZAG TREE VIEW
+       Headless tree component (Zag.js)
+       Compact IDE styling
+       ============================================ */
+
+    .zag-tree-view {
+      font-family: var(--font-sans);
+      font-size: var(--font-sm);
+      color: var(--text-primary);
+      user-select: none;
+    }
+
+    .zag-tree-view .tree-root {
+      outline: none;
+    }
+
+    .zag-tree-view .tree-list,
+    .zag-tree-view .tree-children {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .zag-tree-view .tree-children {
+      padding-left: 16px;
+    }
+
+    .zag-tree-view .tree-item,
+    .zag-tree-view .tree-branch > .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+      min-height: 22px;
+    }
+
+    .zag-tree-view .tree-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .zag-tree-view .tree-item-wrapper.selected > .tree-item,
+    .zag-tree-view .tree-branch.selected > .tree-item {
+      background: var(--color-primary-selection);
+    }
+
+    .zag-tree-view .tree-item-wrapper.selected > .tree-item:hover,
+    .zag-tree-view .tree-branch.selected > .tree-item:hover {
+      background: rgba(59, 130, 246, 0.35);
+    }
+
+    .zag-tree-view .tree-item[data-focus] {
+      outline: 1px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .zag-tree-view .tree-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+    }
+
+    .zag-tree-view .tree-indicator svg {
+      transition: transform 0.15s ease;
+    }
+
+    .zag-tree-view .tree-spacer {
+      width: 14px;
+      flex-shrink: 0;
+    }
+
+    .zag-tree-view .tree-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      color: var(--text-secondary);
+    }
+
+    .zag-tree-view .tree-icon-folder {
+      color: #f59e0b;
+    }
+
+    .zag-tree-view .tree-icon-tokens {
+      color: #a855f7;
+    }
+
+    .zag-tree-view .tree-icon-component {
+      color: #3b82f6;
+    }
+
+    .zag-tree-view .tree-icon-layout {
+      color: #22c55e;
+    }
+
+    .zag-tree-view .tree-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.4;
+    }
+
+    .zag-tree-view .tree-item-wrapper.selected .tree-label,
+    .zag-tree-view .tree-branch.selected .tree-label {
+      color: var(--color-primary-light);
+    }
+
+    /* ============================================
+       ZAG CONTEXT MENU
+       Headless context menu (Zag.js)
+       ============================================ */
+
+    .zag-context-menu {
+      min-width: 160px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      padding: 4px;
+      font-family: var(--font-sans);
+      font-size: var(--font-sm);
+    }
+
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 6px 10px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .context-menu-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .context-menu-item.danger {
+      color: var(--color-error);
+    }
+
+    .context-menu-item.danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .context-menu-item.disabled {
+      color: var(--text-disabled);
+      cursor: not-allowed;
+    }
+
+    .context-menu-item.disabled:hover {
+      background: transparent;
+    }
+
+    .context-menu-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .context-menu-label {
+      flex: 1;
+    }
+
+    .context-menu-shortcut {
+      color: var(--text-muted);
+      font-size: var(--font-xs);
+    }
+
+    .context-menu-separator {
+      height: 1px;
+      background: var(--border-default);
+      margin: 4px 0;
     }
 
     /* ============================================

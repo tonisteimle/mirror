@@ -5,3 +5,6 @@
  */
 
 export * from './properties'
+export * from './component-tokens'
+export * from './theme-generator'
+export * from './color-utils'

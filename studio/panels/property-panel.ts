@@ -456,6 +456,11 @@ export class PropertyPanel {
 
     let result = ''
 
+    // Render behavior section FIRST (for Zag components)
+    if (behaviorCat && behaviorCat.properties.length > 0) {
+      result += this.renderBehaviorSection(behaviorCat)
+    }
+
     // Render layout section (includes alignment and position/absolute)
     if (layoutCat) {
       result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
@@ -482,11 +487,6 @@ export class PropertyPanel {
     // Render typography section
     if (typographyCat) {
       result += this.renderTypographySection(typographyCat)
-    }
-
-    // Render behavior section (for Zag components)
-    if (behaviorCat && behaviorCat.properties.length > 0) {
-      result += this.renderBehaviorSection(behaviorCat)
     }
 
     return result
@@ -1762,39 +1762,20 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Render behavior section for Zag component properties
-   * Shows toggles for boolean props, selects for enums, inputs for strings
+   * Uses Feature Chips for booleans, selects for enums, inputs for strings
    */
   private renderBehaviorSection(category: PropertyCategory): string {
     const props = category.properties
     if (props.length === 0) return ''
 
-    // Separate boolean toggles from other properties
-    const booleans = props.filter(p => p.type === 'boolean')
-    const selects = props.filter(p => p.type === 'select' && p.options && p.options.length > 0)
-    const others = props.filter(p => p.type !== 'boolean' && !(p.type === 'select' && p.options && p.options.length > 0))
+    // Properties to exclude from UI
+    const excludedProps = ['clearable', 'disabled', 'required']
+    const filteredProps = props.filter(p => !excludedProps.includes(p.name))
 
-    // Render boolean toggles in rows of 2
-    const booleanRows: string[] = []
-    for (let i = 0; i < booleans.length; i += 2) {
-      const row = booleans.slice(i, i + 2)
-      const toggles = row.map(prop => {
-        const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
-        const label = prop.label || prop.name
-        return `
-          <div class="prop-row">
-            <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
-            <div class="prop-content">
-              <button class="toggle-btn single ${isActive ? 'active' : ''}" data-behavior-toggle="${prop.name}" title="${this.escapeHtml(prop.description || label)}">
-                <svg class="icon" viewBox="0 0 14 14">
-                  ${isActive ? '<path d="M11 4L6 10L3 7" stroke="currentColor" stroke-width="2" fill="none"/>' : ''}
-                </svg>
-              </button>
-            </div>
-          </div>
-        `
-      }).join('')
-      booleanRows.push(toggles)
-    }
+    // Separate boolean from other properties
+    const booleans = filteredProps.filter(p => p.type === 'boolean')
+    const selects = filteredProps.filter(p => p.type === 'select' && p.options && p.options.length > 0)
+    const others = filteredProps.filter(p => p.type !== 'boolean' && !(p.type === 'select' && p.options && p.options.length > 0))
 
     // Render select dropdowns
     const selectRows = selects.map(prop => {
@@ -1815,15 +1796,34 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       `
     }).join('')
 
-    // Render other properties (strings, numbers)
+    // Render other properties (strings, numbers) - standard prop-row layout
     const otherRows = others.map(prop => {
       const label = prop.label || prop.name
-      const inputType = prop.type === 'number' ? 'number' : 'text'
+      const placeholder = prop.type === 'number' ? '0' : ''
+      const isWide = prop.type === 'text'
       return `
         <div class="prop-row">
           <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
           <div class="prop-content">
-            <input type="${inputType}" class="prop-input" value="${this.escapeHtml(prop.value || '')}" data-behavior-input="${prop.name}" placeholder="${this.escapeHtml(label)}" autocomplete="off">
+            <input type="text" class="prop-input${isWide ? ' wide' : ''}" value="${this.escapeHtml(prop.value || '')}" data-behavior-input="${prop.name}" placeholder="${placeholder}" autocomplete="off">
+          </div>
+        </div>
+      `
+    }).join('')
+
+    // Render boolean properties as individual toggle rows
+    const booleanRows = booleans.map(prop => {
+      const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
+      const label = prop.label || prop.name
+      return `
+        <div class="prop-row">
+          <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
+          <div class="prop-content">
+            <button class="toggle-btn single ${isActive ? 'active' : ''}" data-behavior-toggle="${prop.name}" title="${this.escapeHtml(prop.description || label)}">
+              <svg class="icon" viewBox="0 0 14 14">
+                ${isActive ? '<path d="M11 4L6 10L3 7" stroke="currentColor" stroke-width="2" fill="none"/>' : ''}
+              </svg>
+            </button>
           </div>
         </div>
       `
@@ -1833,9 +1833,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       <div class="section">
         <div class="section-label">Behavior</div>
         <div class="section-content">
-          ${booleanRows.join('')}
-          ${selectRows}
           ${otherRows}
+          ${selectRows}
+          ${booleanRows}
         </div>
       </div>
     `

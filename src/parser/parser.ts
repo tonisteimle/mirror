@@ -1229,6 +1229,15 @@ export class Parser {
         continue
       }
 
+      // icon property: icon "star"
+      if (this.check('IDENTIFIER') && this.current().value === 'icon') {
+        this.advance()
+        if (this.check('STRING')) {
+          item.icon = this.advance().value
+        }
+        continue
+      }
+
       // Layout properties (ver, hor, gap, pad, spread, etc.)
       if (this.check('IDENTIFIER') && layoutProps.includes(this.current().value)) {
         // Initialize properties array if needed

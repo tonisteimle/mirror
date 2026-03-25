@@ -474,11 +474,36 @@ class IRTransformer {
           break
         case 'value':
         case 'defaultValue':
-          if (prop.values.length === 1) {
-            machineConfig[prop.name] = String(prop.values[0])
+          // Filter out empty values (can occur in nested components)
+          const nonEmptyValues = prop.values.filter((v: any) => v !== '' && v !== undefined && v !== null)
+          if (nonEmptyValues.length === 0) {
+            // No valid values, skip
+          } else if (nonEmptyValues.length === 1) {
+            machineConfig[prop.name] = String(nonEmptyValues[0])
           } else {
-            machineConfig[prop.name] = prop.values.map((v: any) => String(v))
+            machineConfig[prop.name] = nonEmptyValues.map((v: any) => String(v))
           }
+          break
+        // NumberInput-specific props
+        case 'step':
+          machineConfig.step = Number(prop.values[0] ?? 1)
+          break
+        case 'allowMouseWheel':
+          machineConfig.allowMouseWheel = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'clampValueOnBlur':
+          machineConfig.clampValueOnBlur = prop.values.length === 0 || prop.values[0] === true
+          break
+        // TagsInput-specific props
+        case 'maxTags':
+          machineConfig.maxTags = Number(prop.values[0] ?? Infinity)
+          break
+        case 'allowDuplicate':
+          machineConfig.allowDuplicate = prop.values.length === 0 || prop.values[0] === true
+          break
+        // Editable-specific props
+        case 'submitMode':
+          machineConfig.submitMode = String(prop.values[0] ?? 'both')
           break
         case 'placement':
           machineConfig.placement = String(prop.values[0] ?? 'bottom-start')
@@ -489,6 +514,107 @@ class IRTransformer {
         case 'deselectable':
           machineConfig.deselectable = prop.values.length === 0 || prop.values[0] === true
           break
+        // Tabs-specific props
+        case 'orientation':
+          machineConfig.orientation = String(prop.values[0] ?? 'horizontal')
+          break
+        case 'activationMode':
+          machineConfig.activationMode = String(prop.values[0] ?? 'automatic')
+          break
+        case 'loopFocus':
+          machineConfig.loopFocus = prop.values.length === 0 || prop.values[0] === true
+          break
+        // Checkbox/Switch-specific props
+        case 'checked':
+        case 'defaultChecked':
+          machineConfig[prop.name] = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'indeterminate':
+          machineConfig.indeterminate = prop.values.length === 0 || prop.values[0] === true
+          break
+        // Accordion-specific props
+        case 'collapsible':
+          machineConfig.collapsible = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'label':
+          machineConfig.label = String(prop.values[0] ?? '')
+          break
+        case 'invalid':
+          machineConfig.invalid = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'readOnly':
+          machineConfig.readOnly = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'required':
+          machineConfig.required = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'name':
+          machineConfig.name = String(prop.values[0] ?? '')
+          break
+        // Avatar-specific props
+        case 'src':
+          machineConfig.src = String(prop.values[0] ?? '')
+          break
+        case 'fallback':
+          machineConfig.fallback = String(prop.values[0] ?? '')
+          break
+        // FileUpload-specific props
+        case 'accept':
+          machineConfig.accept = String(prop.values[0] ?? '*')
+          break
+        case 'maxFiles':
+          machineConfig.maxFiles = Number(prop.values[0] ?? 10)
+          break
+        case 'maxSize':
+          machineConfig.maxSize = Number(prop.values[0] ?? 10485760)
+          break
+        // DatePicker-specific props
+        case 'min':
+        case 'max':
+          machineConfig[prop.name] = String(prop.values[0] ?? '')
+          break
+        case 'locale':
+          machineConfig.locale = String(prop.values[0] ?? 'en-US')
+          break
+        case 'selectionMode':
+        case 'mode':
+          // Allow 'mode' as alias for 'selectionMode'
+          machineConfig.selectionMode = String(prop.values[0] ?? 'single')
+          break
+        case 'fixedWeeks':
+          machineConfig.fixedWeeks = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'startOfWeek':
+          machineConfig.startOfWeek = Number(prop.values[0] ?? 0)
+          break
+        case 'closeOnSelect':
+          machineConfig.closeOnSelect = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'inline':
+          machineConfig.inline = prop.values.length === 0 || prop.values[0] === true
+          break
+        // Listbox-specific props
+        case 'icon':
+          machineConfig.icon = String(prop.values[0] ?? 'check')
+          break
+        // PinInput-specific props
+        case 'length':
+          machineConfig.length = Number(prop.values[0] ?? 4)
+          break
+        case 'mask':
+          machineConfig.mask = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'otp':
+          machineConfig.otp = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'type':
+          machineConfig.type = String(prop.values[0] ?? 'numeric')
+          break
+        // PasswordInput-specific props
+        case 'visible':
+        case 'defaultVisible':
+          machineConfig[prop.name] = prop.values.length === 0 || prop.values[0] === true
+          break
       }
     }
 
@@ -498,12 +624,14 @@ class IRTransformer {
     // Process defined slots
     for (const [slotName, slotDefUnknown] of Object.entries(zagNode.slots || {})) {
       const slotDef = slotDefUnknown as ZagSlotDef
+      // Transform slot children if present
+      const slotChildren = (slotDef.children || []).map((child: any) => this.transformChild(child))
       slots[slotName] = {
         name: slotName,
         apiMethod: `get${slotName}Props`,
         element: slotName === 'Trigger' ? 'button' : 'div',
-        styles: this.transformProperties(slotDef.properties || [], 'box'),
-        children: [],
+        styles: this.transformProperties(slotDef.properties || [], 'slot'),
+        children: slotChildren,
         portal: slotName === 'Content',
         sourcePosition: slotDef.sourcePosition,
       }
@@ -539,6 +667,7 @@ class IRTransformer {
         value: item.value ?? item.label ?? '',
         label: item.label ?? item.value ?? '',
         disabled: item.disabled,
+        icon: item.icon,
         sourcePosition: item.sourcePosition,
       }
       // Include isGroup flag for groups
@@ -1648,7 +1777,7 @@ class IRTransformer {
     const nonContainerPrimitives = new Set([
       'text', 'span', 'input', 'textarea', 'button', 'img', 'image', 'icon',
       'label', 'link', 'a', 'option', 'divider', 'hr', 'spacer', 'h1', 'h2',
-      'h3', 'h4', 'h5', 'h6', 'checkbox', 'radio'
+      'h3', 'h4', 'h5', 'h6', 'checkbox', 'radio', 'slot', 'zagslot'
     ])
     const isContainer = !nonContainerPrimitives.has(primitiveLower)
     const direction = ctx.direction || (isContainer ? 'column' : null)

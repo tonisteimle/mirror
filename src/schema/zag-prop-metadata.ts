@@ -27,102 +27,37 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
   // SELECTION & DROPDOWNS
   // ===========================================================================
   Select: {
-    // Value
+    // Primary - always visible
     placeholder: {
       type: 'string',
       label: 'Placeholder',
-      description: 'Placeholder text when no selection',
+      description: 'Text shown when nothing selected',
     },
-    // Behavior
+    // Feature flags (shown as chips)
     multiple: {
       type: 'boolean',
       label: 'Multiple',
-      description: 'Allow multiple selections',
+      description: 'Allow selecting multiple items',
+    },
+    searchable: {
+      type: 'boolean',
+      label: 'Searchable',
+      description: 'Enable search/filter input',
+    },
+    clearable: {
+      type: 'boolean',
+      label: 'Clearable',
+      description: 'Show clear button to reset selection',
     },
     disabled: {
       type: 'boolean',
       label: 'Disabled',
-      description: 'Disable the select',
-    },
-    readOnly: {
-      type: 'boolean',
-      label: 'Read Only',
-      description: 'Prevent changes',
+      description: 'Disable interaction',
     },
     required: {
       type: 'boolean',
       label: 'Required',
       description: 'Mark as required field',
-    },
-    invalid: {
-      type: 'boolean',
-      label: 'Invalid',
-      description: 'Mark as invalid state',
-    },
-    loopFocus: {
-      type: 'boolean',
-      label: 'Loop Focus',
-      description: 'Loop keyboard navigation at edges',
-      default: true,
-    },
-    deselectable: {
-      type: 'boolean',
-      label: 'Deselectable',
-      description: 'Allow clearing by clicking selected item',
-    },
-    closeOnSelect: {
-      type: 'boolean',
-      label: 'Close on Select',
-      description: 'Close dropdown after selection',
-      default: true,
-    },
-    typeahead: {
-      type: 'boolean',
-      label: 'Typeahead',
-      description: 'Focus item by typing letters',
-      default: true,
-    },
-    // Open state
-    open: {
-      type: 'boolean',
-      label: 'Open',
-      description: 'Control open state',
-    },
-    defaultOpen: {
-      type: 'boolean',
-      label: 'Default Open',
-      description: 'Initially open',
-    },
-    // Highlighted state
-    highlightedValue: {
-      type: 'string',
-      label: 'Highlighted',
-      description: 'Currently highlighted item value',
-    },
-    // Positioning
-    positioning: {
-      type: 'enum',
-      label: 'Position',
-      description: 'Dropdown placement',
-      options: ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
-      default: 'bottom-start',
-    },
-    // Form integration
-    name: {
-      type: 'string',
-      label: 'Name',
-      description: 'Form field name',
-    },
-    form: {
-      type: 'string',
-      label: 'Form',
-      description: 'Associated form ID',
-    },
-    // Advanced
-    composite: {
-      type: 'boolean',
-      label: 'Composite',
-      description: 'Treat as composite widget',
     },
   },
 
@@ -343,10 +278,20 @@ export const ZAG_PROP_METADATA: Record<string, Record<string, ZagPropMeta>> = {
   },
 
   Switch: {
+    label: {
+      type: 'string',
+      label: 'Label',
+      description: 'Switch label text',
+    },
     checked: {
       type: 'boolean',
       label: 'Checked',
       description: 'Initial checked state',
+    },
+    disabled: {
+      type: 'boolean',
+      label: 'Disabled',
+      description: 'Disable interaction',
     },
     invalid: {
       type: 'boolean',

@@ -565,9 +565,9 @@ export class PropertyExtractor {
       categoryMap.get(category)!.push(prop)
     }
 
-    // Convert to array using schema category order (+ behavior)
+    // Convert to array using schema category order (behavior FIRST for Zag components)
     const categories: PropertyCategory[] = []
-    const extendedOrder = [...categoryOrder, BEHAVIOR_CATEGORY]
+    const extendedOrder = [BEHAVIOR_CATEGORY, ...categoryOrder]
 
     for (const catName of extendedOrder) {
       const props = categoryMap.get(catName)
@@ -780,9 +780,9 @@ export class PropertyExtractor {
       categoryMap.get(category)!.push(prop)
     }
 
-    // Convert to array with labels (matches schema categoryOrder)
+    // Convert to array with labels (behavior FIRST for Zag components)
     const categories: PropertyCategory[] = []
-    const order = ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', BEHAVIOR_CATEGORY, 'other']
+    const order = [BEHAVIOR_CATEGORY, 'layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', 'other']
 
     for (const name of order) {
       const props = categoryMap.get(name)

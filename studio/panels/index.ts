@@ -8,12 +8,10 @@
 export {
   PropertyPanel,
   createPropertyPanel,
-  UIRenderer,
-  ChangeHandler,
   type PropertyPanelConfig,
   type PropertyPanelCallbacks,
   type ExtractedElement,
-} from './property'
+} from './property-panel'
 
 // Tree Panel
 export {

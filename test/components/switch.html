@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Switch Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Switch
+  </div>
+  <h1>Switch Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Switch label "Dark Mode"`,
+
+        `Switch label "Notifications", checked`,
+
+        `Switch label "Auto-save"`,
+      ],
+
+      "STATES": [
+        `Switch label "Enabled switch"`,
+
+        `Switch label "Disabled switch", disabled`,
+
+        `Switch label "Checked disabled", checked, disabled`,
+
+        `Switch label "Invalid input", invalid`,
+
+        `Switch label "Read-only", readOnly, checked`,
+      ],
+
+      "IN CONTEXT": [
+        `Box ver, gap 16
+  Text "Settings" weight bold, fs 14
+  Box ver, gap 12
+    Switch label "WiFi", checked
+    Switch label "Bluetooth"
+    Switch label "Airplane Mode"`,
+
+        `Box ver, gap 12, pad 16, bg #111, rad 8
+  Box hor, spread
+    Text "Push Notifications"
+    Switch checked
+  Box hor, spread
+    Text "Email Updates"
+    Switch
+  Box hor, spread
+    Text "SMS Alerts"
+    Switch disabled`,
+      ],
+
+      "TRACK COLORS": [
+        `Switch label "Green Track", checked
+  Track: bg #22c55e`,
+
+        `Switch label "Red Track", checked
+  Track: bg #ef4444`,
+
+        `Switch label "Amber Track", checked
+  Track: bg #f59e0b`,
+
+        `Switch label "Blue Track", checked
+  Track: bg #3b82f6`,
+      ],
+
+      "THUMB COLORS": [
+        `Switch label "Purple Thumb", checked
+  Thumb: bg #a855f7`,
+
+        `Switch label "Black Thumb", checked
+  Thumb: bg #000`,
+
+        `Switch label "Gradient Look", checked
+  Track: bg #6366f1
+  Thumb: bg #fbbf24`,
+      ],
+
+      "SIZES & SHAPES": [
+        `Switch label "Large Switch"
+  Track: w 52, h 28, rad 14
+  Thumb: w 24, h 24`,
+
+        `Switch label "Pill Style", checked
+  Track: bg #ec4899, rad 4
+  Thumb: rad 2`,
+
+        `Switch label "Square Style"
+  Track: rad 4
+  Thumb: rad 2`,
+
+        `Switch label "Custom Border", checked
+  Track: bg transparent, bor 2 #4f46e5
+  Thumb: bg #4f46e5`,
+      ],
+
+      "WITH FORM FIELDS": [
+        `Box ver, gap 16
+  Box ver, gap 4
+    Text "Email" fs 12, col #888
+    Input placeholder "your@email.com"
+  Box hor, spread
+    Text "Subscribe to newsletter"
+    Switch`,
+
+        `Box ver, gap 12
+  Text "Preferences" weight bold
+  Box hor, spread
+    Box ver, gap 2
+      Text "Marketing emails"
+      Text "Receive promotional content" fs 11, col #666
+    Switch
+  Box hor, spread
+    Box ver, gap 2
+      Text "Product updates"
+      Text "Get notified about new features" fs 11, col #666
+    Switch checked`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

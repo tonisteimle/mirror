@@ -271,6 +271,8 @@ export interface ZagItem {
   label?: string
   /** Whether the item is disabled */
   disabled?: boolean
+  /** Icon name for this item (Lucide icon) */
+  icon?: string
   /** Target element selector (for Tour steps) */
   target?: string
   /** Layout properties for the item (ver, hor, gap, pad, spread) */

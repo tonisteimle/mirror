@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accordion Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 60px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Accordion
+  </div>
+  <h1>Accordion Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Accordion
+  AccordionItem "Section 1"
+    Text "Content for section 1"
+  AccordionItem "Section 2"
+    Text "Content for section 2"
+  AccordionItem "Section 3"
+    Text "Content for section 3"`,
+      ],
+
+      "WITH DEFAULT OPEN": [
+        `Accordion defaultValue "item-0"
+  AccordionItem "First (open by default)"
+    Text "This section starts expanded"
+  AccordionItem "Second"
+    Text "Click to expand"`,
+      ],
+
+      "MULTIPLE OPEN": [
+        `Accordion multiple
+  AccordionItem "Section A"
+    Text "Can be open with B and C"
+  AccordionItem "Section B"
+    Text "Can be open with A and C"
+  AccordionItem "Section C"
+    Text "Can be open with A and B"`,
+      ],
+
+      "NON-COLLAPSIBLE": [
+        `Accordion collapsible false
+  AccordionItem "Always one open"
+    Text "This cannot be collapsed if it's the only one open"
+  AccordionItem "Click to switch"
+    Text "Only one can be open at a time"`,
+      ],
+
+      "STYLING ITEM": [
+        `Accordion
+  AccordionItem "Styled Item"
+    Text "Content here"
+  Item: bg #1a1a1a, rad 8`,
+
+        `Accordion
+  AccordionItem "Custom Border"
+    Text "Content here"
+  Item: bor 1 #3b82f6`,
+      ],
+
+      "STYLING TRIGGER": [
+        `Accordion
+  AccordionItem "Blue Trigger"
+    Text "Content"
+  ItemTrigger: bg #1e3a5f, col #60a5fa`,
+
+        `Accordion
+  AccordionItem "Large Trigger"
+    Text "Content"
+  ItemTrigger: pad 20, fs 16`,
+      ],
+
+      "STYLING CONTENT": [
+        `Accordion
+  AccordionItem "Padded Content"
+    Text "This has extra padding"
+  ItemContent: pad 24, bg #111`,
+
+        `Accordion
+  AccordionItem "Styled Content Text"
+    Text "Custom styled content"
+  ItemContent: col #3b82f6, fs 16`,
+      ],
+
+      "STYLING INDICATOR": [
+        `Accordion
+  AccordionItem "Green Indicator"
+    Text "Content"
+  ItemIndicator: col #22c55e`,
+
+        `Accordion
+  AccordionItem "Large Indicator"
+    Text "Content"
+  ItemIndicator: w 24, h 24`,
+      ],
+
+      "CUSTOM ICONS": [
+        `Accordion icon "plus"
+  AccordionItem "Plus Icon"
+    Text "Uses plus instead of chevron"
+  AccordionItem "Another Section"
+    Text "Same icon for all"`,
+
+        `Accordion icon "arrow-down"
+  AccordionItem "Arrow Icon"
+    Text "Uses arrow-down"`,
+
+        `Accordion icon "circle-chevron-down"
+  AccordionItem "Circle Chevron"
+    Text "Uses circle-chevron-down"`,
+      ],
+
+      "IN CONTEXT - FAQ": [
+        `Box ver, gap 0, w full
+  Text "Frequently Asked Questions" weight bold, fs 16, pad 16
+  Accordion
+    AccordionItem "What is Mirror?"
+      Text "Mirror is a DSL for rapid UI prototyping that compiles to DOM or React."
+    AccordionItem "How do I get started?"
+      Text "Install Mirror via npm and start writing your first component."
+    AccordionItem "Is it production ready?"
+      Text "Mirror is designed for prototyping but can be used in production with care."`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

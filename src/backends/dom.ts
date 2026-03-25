@@ -5,11 +5,12 @@
  * Flagship backend - no framework dependencies.
  */
 
-import type { AST, JavaScriptBlock } from '../parser/ast'
+import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode } from '../ir/types'
 import { isIRZagNode } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
+import { generateTheme, isThemeToken } from '../schema/theme-generator'
 
 /**
  * Generate DOM manipulation JavaScript code from Mirror AST
@@ -28,19 +29,21 @@ import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
  */
 export function generateDOM(ast: AST): string {
   const ir = toIR(ast)
-  const generator = new DOMGenerator(ir, ast.javascript)
+  const generator = new DOMGenerator(ir, ast.javascript, ast.tokens)
   return generator.generate()
 }
 
 class DOMGenerator {
   private ir: IR
   private javascript?: JavaScriptBlock
+  private astTokens: TokenDefinition[]
   private indent = 0
   private lines: string[] = []
 
-  constructor(ir: IR, javascript?: JavaScriptBlock) {
+  constructor(ir: IR, javascript?: JavaScriptBlock, astTokens: TokenDefinition[] = []) {
     this.ir = ir
     this.javascript = javascript
+    this.astTokens = astTokens
   }
 
   generate(): string {
@@ -139,19 +142,37 @@ class DOMGenerator {
     this.emit("const _style = document.createElement('style')")
     this.emit('_style.textContent = `')
 
-    // CSS Variables
-    if (this.ir.tokens.length > 0) {
+    // Generate theme tokens from user-defined tokens
+    // These are CSS custom properties used by Zag components
+    const themeTokens = this.astTokens.filter(t => {
+      const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
+      return isThemeToken(name)
+    })
+
+    if (themeTokens.length > 0) {
+      const theme = generateTheme(themeTokens)
+      // Emit the generated theme CSS (contains :root { ... })
+      this.emitRaw(theme.css)
+      this.emit('')
+    }
+
+    // Emit user-defined CSS variables (non-theme tokens)
+    const customTokens = this.ir.tokens.filter(t => {
+      const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
+      return !isThemeToken(name)
+    })
+
+    if (customTokens.length > 0) {
+      this.emit('/* User Tokens */')
       this.emit(':root {')
       this.indent++
-      for (const token of this.ir.tokens) {
+      for (const token of customTokens) {
         let value = token.value
         // Strip $ prefix and convert dots to hyphens for valid CSS variable name
-        // e.g., $primary.bg -> primary-bg
         const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
           .replace(/\./g, '-')
 
         // Add px unit for numeric spacing/sizing tokens
-        // These are tokens with names ending in .pad, .gap, .rad, .margin, .size
         const needsPx = /\.(pad|gap|rad|radius|margin|size)$/.test(token.name)
         if (needsPx && typeof value === 'number') {
           value = `${value}px`
@@ -578,6 +599,80 @@ class DOMGenerator {
   }
 
   private emitZagComponent(node: IRZagNode, parentVar: string): void {
+    // Route to specialized emitters for complex components
+    if (node.zagType === 'tabs') {
+      this.emitTabsComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'switch') {
+      this.emitSwitchComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'datepicker' || node.zagType === 'date-picker') {
+      this.emitDatePickerComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'number-input' || node.zagType === 'numberinput') {
+      this.emitNumberInputComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'tags-input' || node.zagType === 'tagsinput') {
+      this.emitTagsInputComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'editable') {
+      this.emitEditableComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'checkbox') {
+      this.emitCheckboxComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'accordion') {
+      this.emitAccordionComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'listbox') {
+      this.emitListboxComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'select') {
+      this.emitSelectComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'radio-group' || node.zagType === 'radiogroup') {
+      this.emitRadioGroupComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'slider') {
+      this.emitSliderComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'pin-input' || node.zagType === 'pininput') {
+      this.emitPinInputComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'password-input' || node.zagType === 'passwordinput') {
+      this.emitPasswordInputComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'progress') {
+      this.emitProgressComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'circular-progress' || node.zagType === 'circularprogress') {
+      this.emitCircularProgressComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'avatar') {
+      this.emitAvatarComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'file-upload' || node.zagType === 'fileupload') {
+      this.emitFileUploadComponent(node, parentVar)
+      return
+    }
+
     const varName = this.sanitizeVarName(node.id)
 
     this.emit(`// Zag Component: ${node.name} (${node.zagType})`)
@@ -765,6 +860,2406 @@ class DOMGenerator {
         itemIndex++
       }
     }
+  }
+
+  /**
+   * Emit Tabs component with content-items pattern
+   * Structure: Root > List (contains Triggers + Indicator) + Content panels
+   */
+  private emitTabsComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Tabs Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'tabs'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'tabs',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create List slot (contains triggers)
+    const listVar = `${varName}_list`
+    const listSlot = node.slots['List']
+    this.emit(`// List slot (tab bar)`)
+    this.emit(`const ${listVar} = document.createElement('div')`)
+    this.emit(`${listVar}.dataset.slot = 'List'`)
+    this.emit(`${listVar}.setAttribute('role', 'tablist')`)
+    if (listSlot?.styles && listSlot.styles.length > 0) {
+      this.emit(`${listVar}.setAttribute('data-styled', 'true')`)
+      this.emit(`Object.assign(${listVar}.style, {`)
+      this.indent++
+      for (const style of listSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${listVar})`)
+    this.emit('')
+
+    // Create Trigger for each item (inside List)
+    const triggerSlot = node.slots['Trigger']
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const triggerVar = `${varName}_trigger${i}`
+      this.emit(`// Tab trigger: ${item.label}`)
+      this.emit(`const ${triggerVar} = document.createElement('button')`)
+      this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+      this.emit(`${triggerVar}.dataset.value = '${this.escapeString(item.value)}'`)
+      this.emit(`${triggerVar}.setAttribute('role', 'tab')`)
+      this.emit(`${triggerVar}.setAttribute('type', 'button')`)
+      this.emit(`${triggerVar}.textContent = '${this.escapeString(item.label)}'`)
+      if (item.disabled) {
+        this.emit(`${triggerVar}.disabled = true`)
+        this.emit(`${triggerVar}.setAttribute('data-disabled', 'true')`)
+      }
+      if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+        this.emit(`${triggerVar}.setAttribute('data-styled', 'true')`)
+        this.emit(`Object.assign(${triggerVar}.style, {`)
+        this.indent++
+        for (const style of triggerSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${listVar}.appendChild(${triggerVar})`)
+      this.emit('')
+    }
+
+    // Create Indicator (inside List, after triggers)
+    const indicatorSlot = node.slots['Indicator']
+    const indicatorVar = `${varName}_indicator`
+    this.emit(`// Tab indicator`)
+    this.emit(`const ${indicatorVar} = document.createElement('div')`)
+    this.emit(`${indicatorVar}.dataset.slot = 'Indicator'`)
+    if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+      this.emit(`${indicatorVar}.setAttribute('data-styled', 'true')`)
+      this.emit(`Object.assign(${indicatorVar}.style, {`)
+      this.indent++
+      for (const style of indicatorSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    // Render custom indicator children if present
+    if (indicatorSlot?.children && indicatorSlot.children.length > 0) {
+      this.emit(`${indicatorVar}.setAttribute('data-custom-indicator', 'true')`)
+      for (const child of indicatorSlot.children) {
+        this.emitNode(child, indicatorVar)
+      }
+    }
+    this.emit(`${listVar}.appendChild(${indicatorVar})`)
+    this.emit('')
+
+    // Create Content panel for each item (after List)
+    const contentSlot = node.slots['Content']
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const contentVar = `${varName}_content${i}`
+      this.emit(`// Tab content: ${item.label}`)
+      this.emit(`const ${contentVar} = document.createElement('div')`)
+      this.emit(`${contentVar}.dataset.slot = 'Content'`)
+      this.emit(`${contentVar}.dataset.value = '${this.escapeString(item.value)}'`)
+      this.emit(`${contentVar}.setAttribute('role', 'tabpanel')`)
+      this.emit(`${contentVar}.setAttribute('tabindex', '0')`)
+      if (contentSlot?.styles && contentSlot.styles.length > 0) {
+        this.emit(`${contentVar}.setAttribute('data-styled', 'true')`)
+        this.emit(`Object.assign(${contentVar}.style, {`)
+        this.indent++
+        for (const style of contentSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      // Render children content
+      if (item.children && item.children.length > 0) {
+        for (const child of item.children) {
+          this.emitNode(child, contentVar)
+        }
+      }
+      this.emit(`${varName}.appendChild(${contentVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Tabs via runtime
+    this.emit(`// Initialize Tabs`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initTabsComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initTabsComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit Switch component (slots-only pattern)
+   * Structure: label > [track > thumb] [labelText]
+   */
+  private emitSwitchComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Switch Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('label')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'switch'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'switch',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create Track (the sliding background)
+    const trackSlot = node.slots['Track']
+    const trackVar = `${varName}_track`
+    this.emit(`// Track (background)`)
+    this.emit(`const ${trackVar} = document.createElement('span')`)
+    this.emit(`${trackVar}.dataset.slot = 'Track'`)
+    if (trackSlot?.styles && trackSlot.styles.length > 0) {
+      this.emit(`Object.assign(${trackVar}.style, {`)
+      this.indent++
+      for (const style of trackSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${trackVar})`)
+    this.emit('')
+
+    // Create Thumb (the sliding circle)
+    const thumbSlot = node.slots['Thumb']
+    const thumbVar = `${varName}_thumb`
+    this.emit(`// Thumb (slider)`)
+    this.emit(`const ${thumbVar} = document.createElement('span')`)
+    this.emit(`${thumbVar}.dataset.slot = 'Thumb'`)
+    if (thumbSlot?.styles && thumbSlot.styles.length > 0) {
+      this.emit(`Object.assign(${thumbVar}.style, {`)
+      this.indent++
+      for (const style of thumbSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${trackVar}.appendChild(${thumbVar})`)
+    this.emit('')
+
+    // Create Label (text)
+    const labelText = (node.machineConfig?.label as string) || ''
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label text`)
+      this.emit(`const ${labelVar} = document.createElement('span')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Switch via runtime
+    this.emit(`// Initialize Switch`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSwitchComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initSwitchComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitDatePickerComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// DatePicker Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'datepicker'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'datepicker',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create Control (wrapper for Input + Trigger)
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (Input + Trigger wrapper)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create Input
+    const inputSlot = node.slots['Input']
+    const inputVar = `${varName}_input`
+    this.emit(`// Input`)
+    this.emit(`const ${inputVar} = document.createElement('input')`)
+    this.emit(`${inputVar}.type = 'text'`)
+    this.emit(`${inputVar}.dataset.slot = 'Input'`)
+    const placeholder = (node.machineConfig?.placeholder as string) || 'Select date...'
+    this.emit(`${inputVar}.placeholder = '${this.escapeString(placeholder)}'`)
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(${inputVar}.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${inputVar})`)
+    this.emit('')
+
+    // Create Trigger (calendar icon button)
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger (calendar button)`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    this.emit(`${triggerVar}.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Create Content (calendar popup - will be populated by runtime)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (calendar popup)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize DatePicker via runtime
+    this.emit(`// Initialize DatePicker`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initDatePickerComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initDatePickerComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit NumberInput component
+   * Structure: Root > Control (DecrementTrigger + Input + IncrementTrigger)
+   */
+  private emitNumberInputComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// NumberInput Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'numberinput'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'numberinput',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create Label if present
+    const labelText = (node.machineConfig?.label as string) || ''
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Control (wrapper)
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (wrapper)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create Decrement Trigger
+    const decrementSlot = node.slots['DecrementTrigger']
+    const decrementVar = `${varName}_decrement`
+    this.emit(`// Decrement Trigger`)
+    this.emit(`const ${decrementVar} = document.createElement('button')`)
+    this.emit(`${decrementVar}.type = 'button'`)
+    this.emit(`${decrementVar}.dataset.slot = 'DecrementTrigger'`)
+    this.emit(`${decrementVar}.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'`)
+    this.emit(`${decrementVar}.setAttribute('aria-label', 'Decrease value')`)
+    if (decrementSlot?.styles && decrementSlot.styles.length > 0) {
+      this.emit(`Object.assign(${decrementVar}.style, {`)
+      this.indent++
+      for (const style of decrementSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${decrementVar})`)
+    this.emit('')
+
+    // Create Input
+    const inputSlot = node.slots['Input']
+    const inputVar = `${varName}_input`
+    this.emit(`// Input`)
+    this.emit(`const ${inputVar} = document.createElement('input')`)
+    this.emit(`${inputVar}.type = 'text'`)
+    this.emit(`${inputVar}.inputMode = 'decimal'`)
+    this.emit(`${inputVar}.dataset.slot = 'Input'`)
+    const placeholder = (node.machineConfig?.placeholder as string) || ''
+    if (placeholder) {
+      this.emit(`${inputVar}.placeholder = '${this.escapeString(placeholder)}'`)
+    }
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(${inputVar}.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${inputVar})`)
+    this.emit('')
+
+    // Create Increment Trigger
+    const incrementSlot = node.slots['IncrementTrigger']
+    const incrementVar = `${varName}_increment`
+    this.emit(`// Increment Trigger`)
+    this.emit(`const ${incrementVar} = document.createElement('button')`)
+    this.emit(`${incrementVar}.type = 'button'`)
+    this.emit(`${incrementVar}.dataset.slot = 'IncrementTrigger'`)
+    this.emit(`${incrementVar}.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'`)
+    this.emit(`${incrementVar}.setAttribute('aria-label', 'Increase value')`)
+    if (incrementSlot?.styles && incrementSlot.styles.length > 0) {
+      this.emit(`Object.assign(${incrementVar}.style, {`)
+      this.indent++
+      for (const style of incrementSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${incrementVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize NumberInput via runtime
+    this.emit(`// Initialize NumberInput`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initNumberInputComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initNumberInputComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit TagsInput component
+   * Structure: Root > Control (Tags + Input) + HiddenInput
+   */
+  private emitTagsInputComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// TagsInput Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'tagsinput'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'tagsinput',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create Label if present
+    const labelText = (node.machineConfig?.label as string) || ''
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Control (wrapper for tags + input)
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (tags container)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create Input
+    const inputSlot = node.slots['Input']
+    const inputVar = `${varName}_input`
+    this.emit(`// Input`)
+    this.emit(`const ${inputVar} = document.createElement('input')`)
+    this.emit(`${inputVar}.type = 'text'`)
+    this.emit(`${inputVar}.dataset.slot = 'Input'`)
+    const placeholder = (node.machineConfig?.placeholder as string) || 'Add tag...'
+    this.emit(`${inputVar}.placeholder = '${this.escapeString(placeholder)}'`)
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(${inputVar}.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${inputVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize TagsInput via runtime
+    this.emit(`// Initialize TagsInput`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initTagsInputComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initTagsInputComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit Editable component
+   * Structure: Root > Area (Preview + Input) + Control (EditTrigger + SubmitTrigger + CancelTrigger)
+   */
+  private emitEditableComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Editable Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'editable'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'editable',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Create Area (contains Preview and Input)
+    const areaSlot = node.slots['Area']
+    const areaVar = `${varName}_area`
+    this.emit(`// Area (Preview + Input container)`)
+    this.emit(`const ${areaVar} = document.createElement('div')`)
+    this.emit(`${areaVar}.dataset.slot = 'Area'`)
+    if (areaSlot?.styles && areaSlot.styles.length > 0) {
+      this.emit(`Object.assign(${areaVar}.style, {`)
+      this.indent++
+      for (const style of areaSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${areaVar})`)
+    this.emit('')
+
+    // Create Preview
+    const previewSlot = node.slots['Preview']
+    const previewVar = `${varName}_preview`
+    this.emit(`// Preview (display text)`)
+    this.emit(`const ${previewVar} = document.createElement('span')`)
+    this.emit(`${previewVar}.dataset.slot = 'Preview'`)
+    const defaultValue = (node.machineConfig?.defaultValue as string) || (node.machineConfig?.value as string) || ''
+    const placeholder = (node.machineConfig?.placeholder as string) || 'Click to edit...'
+    this.emit(`${previewVar}.textContent = '${this.escapeString(defaultValue || placeholder)}'`)
+    if (previewSlot?.styles && previewSlot.styles.length > 0) {
+      this.emit(`Object.assign(${previewVar}.style, {`)
+      this.indent++
+      for (const style of previewSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${areaVar}.appendChild(${previewVar})`)
+    this.emit('')
+
+    // Create Input (hidden initially)
+    const inputSlot = node.slots['Input']
+    const inputVar = `${varName}_input`
+    this.emit(`// Input (edit mode)`)
+    this.emit(`const ${inputVar} = document.createElement('input')`)
+    this.emit(`${inputVar}.type = 'text'`)
+    this.emit(`${inputVar}.dataset.slot = 'Input'`)
+    this.emit(`${inputVar}.value = '${this.escapeString(defaultValue)}'`)
+    this.emit(`${inputVar}.placeholder = '${this.escapeString(placeholder)}'`)
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(${inputVar}.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${areaVar}.appendChild(${inputVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Editable via runtime
+    this.emit(`// Initialize Editable`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initEditableComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initEditableComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitCheckboxComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Checkbox Component: ${node.name}`)
+    // Root is a label element for accessibility
+    this.emit(`const ${varName} = document.createElement('label')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'checkbox'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'checkbox',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create HiddenInput (for form submission)
+    const hiddenInputVar = `${varName}_hiddenInput`
+    this.emit(`// HiddenInput (form submission)`)
+    this.emit(`const ${hiddenInputVar} = document.createElement('input')`)
+    this.emit(`${hiddenInputVar}.type = 'checkbox'`)
+    this.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
+    this.emit(`${hiddenInputVar}.style.position = 'absolute'`)
+    this.emit(`${hiddenInputVar}.style.width = '1px'`)
+    this.emit(`${hiddenInputVar}.style.height = '1px'`)
+    this.emit(`${hiddenInputVar}.style.padding = '0'`)
+    this.emit(`${hiddenInputVar}.style.margin = '-1px'`)
+    this.emit(`${hiddenInputVar}.style.overflow = 'hidden'`)
+    this.emit(`${hiddenInputVar}.style.clip = 'rect(0, 0, 0, 0)'`)
+    this.emit(`${hiddenInputVar}.style.whiteSpace = 'nowrap'`)
+    this.emit(`${hiddenInputVar}.style.border = '0'`)
+    const formName = (node.machineConfig?.name as string) || ''
+    if (formName) {
+      this.emit(`${hiddenInputVar}.name = '${this.escapeString(formName)}'`)
+    }
+    this.emit(`${varName}.appendChild(${hiddenInputVar})`)
+    this.emit('')
+
+    // Create Control (the visual checkbox box)
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (visual checkbox)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create Indicator (checkmark icon inside Control)
+    const indicatorSlot = node.slots['Indicator']
+    const indicatorVar = `${varName}_indicator`
+    this.emit(`// Indicator (checkmark)`)
+    this.emit(`const ${indicatorVar} = document.createElement('span')`)
+    this.emit(`${indicatorVar}.dataset.slot = 'Indicator'`)
+    // Icon can be customized via machineConfig
+    const checkboxIcon = node.machineConfig.icon || 'check'
+    this.emit(`${indicatorVar}.dataset.icon = '${this.escapeString(String(checkboxIcon))}'`)
+    if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+      this.emit(`Object.assign(${indicatorVar}.style, {`)
+      this.indent++
+      for (const style of indicatorSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${indicatorVar})`)
+    this.emit('')
+
+    // Create Label (text)
+    const labelText = (node.machineConfig?.label as string) || ''
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('span')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Checkbox via runtime
+    this.emit(`// Initialize Checkbox`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initCheckboxComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitAccordionComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Accordion Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'accordion'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'accordion',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Item containers for each accordion item
+    const itemSlot = node.slots['Item']
+    const triggerSlot = node.slots['ItemTrigger']
+    const contentSlot = node.slots['ItemContent']
+    const indicatorSlot = node.slots['ItemIndicator']
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || `item-${i}`
+
+      // Item container
+      this.emit(`// Accordion Item: ${item.label || itemValue}`)
+      this.emit(`const ${itemVar} = document.createElement('div')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(itemValue)}'`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      }
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // ItemTrigger (header/button)
+      const triggerVar = `${itemVar}_trigger`
+      this.emit(`const ${triggerVar} = document.createElement('button')`)
+      this.emit(`${triggerVar}.type = 'button'`)
+      this.emit(`${triggerVar}.dataset.slot = 'ItemTrigger'`)
+      this.emit(`${triggerVar}.dataset.value = '${this.escapeString(itemValue)}'`)
+      this.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
+      if (item.disabled) {
+        this.emit(`${triggerVar}.disabled = true`)
+      }
+      if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+        this.emit(`Object.assign(${triggerVar}.style, {`)
+        this.indent++
+        for (const style of triggerSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Trigger text
+      const triggerTextVar = `${triggerVar}_text`
+      this.emit(`const ${triggerTextVar} = document.createElement('span')`)
+      this.emit(`${triggerTextVar}.textContent = '${this.escapeString(item.label || itemValue)}'`)
+      this.emit(`${triggerVar}.appendChild(${triggerTextVar})`)
+
+      // ItemIndicator (icon loaded via runtime)
+      const indicatorVar = `${itemVar}_indicator`
+      const accordionIcon = node.machineConfig.icon || 'chevron-down'
+      this.emit(`const ${indicatorVar} = document.createElement('span')`)
+      this.emit(`${indicatorVar}.dataset.slot = 'ItemIndicator'`)
+      this.emit(`${indicatorVar}.dataset.icon = '${this.escapeString(String(accordionIcon))}'`)
+      if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+        this.emit(`Object.assign(${indicatorVar}.style, {`)
+        this.indent++
+        for (const style of indicatorSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${triggerVar}.appendChild(${indicatorVar})`)
+
+      this.emit(`${itemVar}.appendChild(${triggerVar})`)
+
+      // ItemContent (collapsible body)
+      const contentVar = `${itemVar}_content`
+      this.emit(`const ${contentVar} = document.createElement('div')`)
+      this.emit(`${contentVar}.dataset.slot = 'ItemContent'`)
+      this.emit(`${contentVar}.dataset.value = '${this.escapeString(itemValue)}'`)
+      this.emit(`${contentVar}.setAttribute('role', 'region')`)
+      if (contentSlot?.styles && contentSlot.styles.length > 0) {
+        this.emit(`Object.assign(${contentVar}.style, {`)
+        this.indent++
+        for (const style of contentSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Render item children inside content
+      if (item.children && item.children.length > 0) {
+        for (const child of item.children) {
+          this.emitNode(child, contentVar)
+        }
+      }
+
+      this.emit(`${itemVar}.appendChild(${contentVar})`)
+      this.emit(`${varName}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Accordion via runtime
+    this.emit(`// Initialize Accordion`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initAccordionComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initAccordionComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitListboxComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Listbox Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'listbox'`)
+    this.emit(`${varName}.setAttribute('role', 'listbox')`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'listbox',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if provided
+    const labelSlot = node.slots['Label']
+    if (labelSlot && node.machineConfig.label) {
+      const labelVar = `${varName}_label`
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(String(node.machineConfig.label))}'`)
+      if (labelSlot.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+    }
+
+    // Create Content container
+    const contentVar = `${varName}_content`
+    const contentSlot = node.slots['Content']
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create items
+    const itemSlot = node.slots['Item']
+    const textSlot = node.slots['ItemText']
+    const indicatorSlot = node.slots['ItemIndicator']
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || `item-${i}`
+
+      // Item container
+      this.emit(`// Listbox Item: ${item.label || itemValue}`)
+      this.emit(`const ${itemVar} = document.createElement('div')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(itemValue)}'`)
+      this.emit(`${itemVar}.setAttribute('role', 'option')`)
+      this.emit(`${itemVar}.setAttribute('tabindex', '${i === 0 ? "0" : "-1"}')`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+        this.emit(`${itemVar}.setAttribute('aria-disabled', 'true')`)
+      }
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Item indicator (checkmark for selected)
+      const indicatorVar = `${itemVar}_indicator`
+      this.emit(`const ${indicatorVar} = document.createElement('span')`)
+      this.emit(`${indicatorVar}.dataset.slot = 'ItemIndicator'`)
+      // Icon can be customized per-item or globally via machineConfig
+      const itemIcon = item.icon || node.machineConfig.icon || 'check'
+      this.emit(`${indicatorVar}.dataset.icon = '${this.escapeString(String(itemIcon))}'`)
+      if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+        this.emit(`Object.assign(${indicatorVar}.style, {`)
+        this.indent++
+        for (const style of indicatorSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${indicatorVar})`)
+
+      // Item text
+      const textVar = `${itemVar}_text`
+      this.emit(`const ${textVar} = document.createElement('span')`)
+      this.emit(`${textVar}.dataset.slot = 'ItemText'`)
+      this.emit(`${textVar}.textContent = '${this.escapeString(item.label || itemValue)}'`)
+      if (textSlot?.styles && textSlot.styles.length > 0) {
+        this.emit(`Object.assign(${textVar}.style, {`)
+        this.indent++
+        for (const style of textSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${textVar})`)
+
+      // Render item children if any
+      if (item.children && item.children.length > 0) {
+        for (const child of item.children) {
+          this.emitNode(child, itemVar)
+        }
+      }
+
+      this.emit(`${contentVar}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    this.emit(`${varName}.appendChild(${contentVar})`)
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Listbox via runtime
+    this.emit(`// Initialize Listbox`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initListboxComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initListboxComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitSelectComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Select Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'select'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'select',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled,
+      icon: item.icon
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Trigger
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    const placeholder = node.machineConfig.placeholder || 'Select...'
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    this.emit(`${triggerVar}.setAttribute('role', 'combobox')`)
+    this.emit(`${triggerVar}.setAttribute('aria-haspopup', 'listbox')`)
+    this.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Trigger text (value display)
+    const triggerTextVar = `${triggerVar}_text`
+    this.emit(`const ${triggerTextVar} = document.createElement('span')`)
+    this.emit(`${triggerTextVar}.dataset.slot = 'TriggerText'`)
+    this.emit(`${triggerTextVar}.textContent = '${this.escapeString(String(placeholder))}'`)
+    this.emit(`${triggerVar}.appendChild(${triggerTextVar})`)
+
+    // Trigger arrow icon
+    const triggerArrowVar = `${triggerVar}_arrow`
+    this.emit(`const ${triggerArrowVar} = document.createElement('span')`)
+    this.emit(`${triggerArrowVar}.dataset.slot = 'TriggerArrow'`)
+    this.emit(`${triggerArrowVar}.dataset.icon = 'chevron-down'`)
+    this.emit(`${triggerVar}.appendChild(${triggerArrowVar})`)
+
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Create Content (dropdown)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (dropdown)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    this.emit(`${contentVar}.setAttribute('role', 'listbox')`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit('')
+
+    // Create Items
+    const itemSlot = node.slots['Item']
+    const indicatorSlot = node.slots['ItemIndicator']
+    const selectIcon = node.machineConfig.icon || 'check'
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || item.label || `item-${i}`
+      const itemLabel = item.label || itemValue
+
+      this.emit(`// Item: ${itemLabel}`)
+      this.emit(`const ${itemVar} = document.createElement('div')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(String(itemValue))}'`)
+      this.emit(`${itemVar}.setAttribute('role', 'option')`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      }
+      // Set icon for this item (item-specific or global)
+      const itemIcon = item.icon || selectIcon
+      this.emit(`${itemVar}.dataset.icon = '${this.escapeString(String(itemIcon))}'`)
+
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Item text
+      const itemTextVar = `${itemVar}_text`
+      this.emit(`const ${itemTextVar} = document.createElement('span')`)
+      this.emit(`${itemTextVar}.dataset.slot = 'ItemText'`)
+      this.emit(`${itemTextVar}.textContent = '${this.escapeString(String(itemLabel))}'`)
+      this.emit(`${itemVar}.appendChild(${itemTextVar})`)
+
+      // Item indicator (checkmark)
+      const indicatorVar = `${itemVar}_indicator`
+      this.emit(`const ${indicatorVar} = document.createElement('span')`)
+      this.emit(`${indicatorVar}.dataset.slot = 'ItemIndicator'`)
+      if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+        this.emit(`Object.assign(${indicatorVar}.style, {`)
+        this.indent++
+        for (const style of indicatorSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${indicatorVar})`)
+
+      this.emit(`${contentVar}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    this.emit(`${varName}.appendChild(${contentVar})`)
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Select via runtime
+    this.emit(`// Initialize Select`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initSelectComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitRadioGroupComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// RadioGroup Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'radio-group'`)
+    this.emit(`${varName}.setAttribute('role', 'radiogroup')`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'radio-group',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Group Label`)
+      this.emit(`const ${labelVar} = document.createElement('span')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Items
+    const itemSlot = node.slots['Item']
+    const controlSlot = node.slots['ItemControl']
+    const textSlot = node.slots['ItemText']
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || item.label || `item-${i}`
+      const itemLabel = item.label || itemValue
+
+      this.emit(`// Radio Item: ${itemLabel}`)
+      this.emit(`const ${itemVar} = document.createElement('label')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(String(itemValue))}'`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      }
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // ItemControl (the radio circle)
+      const controlVar = `${itemVar}_control`
+      this.emit(`const ${controlVar} = document.createElement('div')`)
+      this.emit(`${controlVar}.dataset.slot = 'ItemControl'`)
+      this.emit(`${controlVar}.setAttribute('role', 'radio')`)
+      this.emit(`${controlVar}.setAttribute('aria-checked', 'false')`)
+      if (controlSlot?.styles && controlSlot.styles.length > 0) {
+        this.emit(`Object.assign(${controlVar}.style, {`)
+        this.indent++
+        for (const style of controlSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${controlVar})`)
+
+      // ItemText
+      const textVar = `${itemVar}_text`
+      this.emit(`const ${textVar} = document.createElement('span')`)
+      this.emit(`${textVar}.dataset.slot = 'ItemText'`)
+      this.emit(`${textVar}.textContent = '${this.escapeString(String(itemLabel))}'`)
+      if (textSlot?.styles && textSlot.styles.length > 0) {
+        this.emit(`Object.assign(${textVar}.style, {`)
+        this.indent++
+        for (const style of textSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${textVar})`)
+
+      this.emit(`${varName}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize RadioGroup via runtime
+    this.emit(`// Initialize RadioGroup`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initRadioGroupComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initRadioGroupComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitSliderComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Slider Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'slider'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'slider',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Track
+    const trackSlot = node.slots['Track']
+    const trackVar = `${varName}_track`
+    this.emit(`// Track`)
+    this.emit(`const ${trackVar} = document.createElement('div')`)
+    this.emit(`${trackVar}.dataset.slot = 'Track'`)
+    if (trackSlot?.styles && trackSlot.styles.length > 0) {
+      this.emit(`Object.assign(${trackVar}.style, {`)
+      this.indent++
+      for (const style of trackSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Range (filled portion)
+    const rangeSlot = node.slots['Range']
+    const rangeVar = `${varName}_range`
+    this.emit(`// Range (filled portion)`)
+    this.emit(`const ${rangeVar} = document.createElement('div')`)
+    this.emit(`${rangeVar}.dataset.slot = 'Range'`)
+    if (rangeSlot?.styles && rangeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${rangeVar}.style, {`)
+      this.indent++
+      for (const style of rangeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${trackVar}.appendChild(${rangeVar})`)
+
+    // Create Thumb
+    const thumbSlot = node.slots['Thumb']
+    const thumbVar = `${varName}_thumb`
+    this.emit(`// Thumb`)
+    this.emit(`const ${thumbVar} = document.createElement('div')`)
+    this.emit(`${thumbVar}.dataset.slot = 'Thumb'`)
+    this.emit(`${thumbVar}.setAttribute('role', 'slider')`)
+    this.emit(`${thumbVar}.setAttribute('tabindex', '0')`)
+    if (thumbSlot?.styles && thumbSlot.styles.length > 0) {
+      this.emit(`Object.assign(${thumbVar}.style, {`)
+      this.indent++
+      for (const style of thumbSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${trackVar}.appendChild(${thumbVar})`)
+
+    this.emit(`${varName}.appendChild(${trackVar})`)
+    this.emit('')
+
+    // Create ValueText if needed
+    const valueTextSlot = node.slots['ValueText']
+    if (valueTextSlot) {
+      const valueTextVar = `${varName}_valueText`
+      this.emit(`// ValueText`)
+      this.emit(`const ${valueTextVar} = document.createElement('span')`)
+      this.emit(`${valueTextVar}.dataset.slot = 'ValueText'`)
+      if (valueTextSlot.styles && valueTextSlot.styles.length > 0) {
+        this.emit(`Object.assign(${valueTextVar}.style, {`)
+        this.indent++
+        for (const style of valueTextSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${valueTextVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Slider via runtime
+    this.emit(`// Initialize Slider`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSliderComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initSliderComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitPinInputComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// PinInput Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'pin-input'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'pin-input',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Control container
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (input container)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create input fields based on length
+    const length = (node.machineConfig.length as number) || 4
+    const inputSlot = node.slots['Input']
+    this.emit(`// Input fields`)
+    this.emit(`for (let i = 0; i < ${length}; i++) {`)
+    this.indent++
+    this.emit(`const input = document.createElement('input')`)
+    this.emit(`input.dataset.slot = 'Input'`)
+    this.emit(`input.dataset.index = String(i)`)
+    this.emit(`input.type = 'text'`)
+    this.emit(`input.maxLength = 1`)
+    this.emit(`input.inputMode = 'numeric'`)
+    this.emit(`input.autocomplete = 'one-time-code'`)
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(input.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(input)`)
+    this.indent--
+    this.emit(`}`)
+
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create hidden input for form submission
+    const hiddenInputVar = `${varName}_hiddenInput`
+    this.emit(`// Hidden input for form submission`)
+    this.emit(`const ${hiddenInputVar} = document.createElement('input')`)
+    this.emit(`${hiddenInputVar}.type = 'hidden'`)
+    this.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
+    const name = node.machineConfig.name as string
+    if (name) {
+      this.emit(`${hiddenInputVar}.name = '${this.escapeString(name)}'`)
+    }
+    this.emit(`${varName}.appendChild(${hiddenInputVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize PinInput via runtime
+    this.emit(`// Initialize PinInput`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initPinInputComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initPinInputComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitPasswordInputComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// PasswordInput Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'password-input'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'password-input',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Control container
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (input container)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Input
+    const inputSlot = node.slots['Input']
+    const inputVar = `${varName}_input`
+    this.emit(`// Input`)
+    this.emit(`const ${inputVar} = document.createElement('input')`)
+    this.emit(`${inputVar}.type = 'password'`)
+    this.emit(`${inputVar}.dataset.slot = 'Input'`)
+    const placeholder = node.machineConfig.placeholder as string
+    if (placeholder) {
+      this.emit(`${inputVar}.placeholder = '${this.escapeString(placeholder)}'`)
+    }
+    if (inputSlot?.styles && inputSlot.styles.length > 0) {
+      this.emit(`Object.assign(${inputVar}.style, {`)
+      this.indent++
+      for (const style of inputSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${inputVar})`)
+
+    // Create VisibilityTrigger
+    const visibilitySlot = node.slots['VisibilityTrigger']
+    const visibilityVar = `${varName}_visibility`
+    this.emit(`// VisibilityTrigger`)
+    this.emit(`const ${visibilityVar} = document.createElement('button')`)
+    this.emit(`${visibilityVar}.type = 'button'`)
+    this.emit(`${visibilityVar}.dataset.slot = 'VisibilityTrigger'`)
+    this.emit(`${visibilityVar}.setAttribute('aria-label', 'Toggle password visibility')`)
+    if (visibilitySlot?.styles && visibilitySlot.styles.length > 0) {
+      this.emit(`Object.assign(${visibilityVar}.style, {`)
+      this.indent++
+      for (const style of visibilitySlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${visibilityVar})`)
+
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize PasswordInput via runtime
+    this.emit(`// Initialize PasswordInput`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initPasswordInputComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initPasswordInputComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitProgressComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Progress Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'progress'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'progress',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Track
+    const trackSlot = node.slots['Track']
+    const trackVar = `${varName}_track`
+    this.emit(`// Track`)
+    this.emit(`const ${trackVar} = document.createElement('div')`)
+    this.emit(`${trackVar}.dataset.slot = 'Track'`)
+    if (trackSlot?.styles && trackSlot.styles.length > 0) {
+      this.emit(`Object.assign(${trackVar}.style, {`)
+      this.indent++
+      for (const style of trackSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Range (filled portion)
+    const rangeSlot = node.slots['Range']
+    const rangeVar = `${varName}_range`
+    this.emit(`// Range (filled portion)`)
+    this.emit(`const ${rangeVar} = document.createElement('div')`)
+    this.emit(`${rangeVar}.dataset.slot = 'Range'`)
+    if (rangeSlot?.styles && rangeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${rangeVar}.style, {`)
+      this.indent++
+      for (const style of rangeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${trackVar}.appendChild(${rangeVar})`)
+
+    this.emit(`${varName}.appendChild(${trackVar})`)
+    this.emit('')
+
+    // Create ValueText if slot is defined
+    const valueTextSlot = node.slots['ValueText']
+    if (valueTextSlot) {
+      const valueTextVar = `${varName}_valueText`
+      this.emit(`// ValueText`)
+      this.emit(`const ${valueTextVar} = document.createElement('span')`)
+      this.emit(`${valueTextVar}.dataset.slot = 'ValueText'`)
+      if (valueTextSlot.styles && valueTextSlot.styles.length > 0) {
+        this.emit(`Object.assign(${valueTextVar}.style, {`)
+        this.indent++
+        for (const style of valueTextSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${valueTextVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Progress via runtime
+    this.emit(`// Initialize Progress`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initProgressComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initProgressComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitCircularProgressComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// CircularProgress Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'circular-progress'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'circular-progress',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if exists
+    const labelText = node.machineConfig.label as string
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create SVG Circle container
+    const circleSlot = node.slots['Circle']
+    const circleVar = `${varName}_circle`
+    this.emit(`// Circle (SVG container)`)
+    this.emit(`const ${circleVar} = document.createElementNS('http://www.w3.org/2000/svg', 'svg')`)
+    this.emit(`${circleVar}.dataset.slot = 'Circle'`)
+    this.emit(`${circleVar}.setAttribute('viewBox', '0 0 100 100')`)
+    if (circleSlot?.styles && circleSlot.styles.length > 0) {
+      this.emit(`Object.assign(${circleVar}.style, {`)
+      this.indent++
+      for (const style of circleSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create CircleTrack
+    const circleTrackSlot = node.slots['CircleTrack']
+    const circleTrackVar = `${varName}_circleTrack`
+    this.emit(`// CircleTrack`)
+    this.emit(`const ${circleTrackVar} = document.createElementNS('http://www.w3.org/2000/svg', 'circle')`)
+    this.emit(`${circleTrackVar}.dataset.slot = 'CircleTrack'`)
+    this.emit(`${circleTrackVar}.setAttribute('cx', '50')`)
+    this.emit(`${circleTrackVar}.setAttribute('cy', '50')`)
+    this.emit(`${circleTrackVar}.setAttribute('r', '42')`)
+    this.emit(`${circleTrackVar}.setAttribute('fill', 'none')`)
+    if (circleTrackSlot?.styles && circleTrackSlot.styles.length > 0) {
+      this.emit(`Object.assign(${circleTrackVar}.style, {`)
+      this.indent++
+      for (const style of circleTrackSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${circleVar}.appendChild(${circleTrackVar})`)
+
+    // Create CircleRange
+    const circleRangeSlot = node.slots['CircleRange']
+    const circleRangeVar = `${varName}_circleRange`
+    this.emit(`// CircleRange`)
+    this.emit(`const ${circleRangeVar} = document.createElementNS('http://www.w3.org/2000/svg', 'circle')`)
+    this.emit(`${circleRangeVar}.dataset.slot = 'CircleRange'`)
+    this.emit(`${circleRangeVar}.setAttribute('cx', '50')`)
+    this.emit(`${circleRangeVar}.setAttribute('cy', '50')`)
+    this.emit(`${circleRangeVar}.setAttribute('r', '42')`)
+    this.emit(`${circleRangeVar}.setAttribute('fill', 'none')`)
+    if (circleRangeSlot?.styles && circleRangeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${circleRangeVar}.style, {`)
+      this.indent++
+      for (const style of circleRangeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${circleVar}.appendChild(${circleRangeVar})`)
+
+    this.emit(`${varName}.appendChild(${circleVar})`)
+    this.emit('')
+
+    // Create ValueText if slot is defined
+    const valueTextSlot = node.slots['ValueText']
+    if (valueTextSlot) {
+      const valueTextVar = `${varName}_valueText`
+      this.emit(`// ValueText`)
+      this.emit(`const ${valueTextVar} = document.createElement('span')`)
+      this.emit(`${valueTextVar}.dataset.slot = 'ValueText'`)
+      if (valueTextSlot.styles && valueTextSlot.styles.length > 0) {
+        this.emit(`Object.assign(${valueTextVar}.style, {`)
+        this.indent++
+        for (const style of valueTextSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${valueTextVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize CircularProgress via runtime
+    this.emit(`// Initialize CircularProgress`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCircularProgressComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initCircularProgressComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitAvatarComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Avatar Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'avatar'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'avatar',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Image
+    const imageSlot = node.slots['Image']
+    const imageVar = `${varName}_image`
+    this.emit(`// Image`)
+    this.emit(`const ${imageVar} = document.createElement('img')`)
+    this.emit(`${imageVar}.dataset.slot = 'Image'`)
+    const src = node.machineConfig.src as string
+    if (src) {
+      this.emit(`${imageVar}.src = '${this.escapeString(src)}'`)
+    }
+    const name = node.machineConfig.name as string
+    if (name) {
+      this.emit(`${imageVar}.alt = '${this.escapeString(name)}'`)
+    }
+    if (imageSlot?.styles && imageSlot.styles.length > 0) {
+      this.emit(`Object.assign(${imageVar}.style, {`)
+      this.indent++
+      for (const style of imageSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${imageVar})`)
+    this.emit('')
+
+    // Create Fallback
+    const fallbackSlot = node.slots['Fallback']
+    const fallbackVar = `${varName}_fallback`
+    this.emit(`// Fallback`)
+    this.emit(`const ${fallbackVar} = document.createElement('span')`)
+    this.emit(`${fallbackVar}.dataset.slot = 'Fallback'`)
+    if (fallbackSlot?.styles && fallbackSlot.styles.length > 0) {
+      this.emit(`Object.assign(${fallbackVar}.style, {`)
+      this.indent++
+      for (const style of fallbackSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${fallbackVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Avatar via runtime
+    this.emit(`// Initialize Avatar`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initAvatarComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initAvatarComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitFileUploadComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// FileUpload Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'file-upload'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'file-upload',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label (optional)
+    const label = node.machineConfig.label as string
+    if (label) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(label)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Dropzone
+    const dropzoneSlot = node.slots['Dropzone']
+    const dropzoneVar = `${varName}_dropzone`
+    this.emit(`// Dropzone`)
+    this.emit(`const ${dropzoneVar} = document.createElement('div')`)
+    this.emit(`${dropzoneVar}.dataset.slot = 'Dropzone'`)
+    if (dropzoneSlot?.styles && dropzoneSlot.styles.length > 0) {
+      this.emit(`Object.assign(${dropzoneVar}.style, {`)
+      this.indent++
+      for (const style of dropzoneSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${dropzoneVar})`)
+    this.emit('')
+
+    // Create HiddenInput
+    const hiddenInputVar = `${varName}_input`
+    this.emit(`// HiddenInput`)
+    this.emit(`const ${hiddenInputVar} = document.createElement('input')`)
+    this.emit(`${hiddenInputVar}.type = 'file'`)
+    this.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
+    this.emit(`${dropzoneVar}.appendChild(${hiddenInputVar})`)
+    this.emit('')
+
+    // Create Trigger
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${dropzoneVar}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Create DropzoneContent (icon + text)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${dropzoneVar}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Create ItemGroup
+    const itemGroupSlot = node.slots['ItemGroup']
+    const itemGroupVar = `${varName}_itemgroup`
+    this.emit(`// ItemGroup`)
+    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
+    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
+    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
+      this.emit(`Object.assign(${itemGroupVar}.style, {`)
+      this.indent++
+      for (const style of itemGroupSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${itemGroupVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize FileUpload via runtime
+    this.emit(`// Initialize FileUpload`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initFileUploadComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initFileUploadComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
   }
 
   private emitConditionalTemplateNode(node: IRNode, parentVar: string): void {
@@ -1262,8 +3757,9 @@ class DOMGenerator {
     return id.replace(/-/g, '_')
   }
 
-  private escapeString(str: string): string {
-    return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
+  private escapeString(str: string | number | boolean | undefined | null): string {
+    const s = String(str ?? '')
+    return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
   }
 
   private mapKeyName(key: string): string {

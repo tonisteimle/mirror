@@ -26,6 +26,8 @@ export interface ZagPrimitiveDef {
   pattern?: 'slots-only' | 'simple-items' | 'content-items' | 'repeating-items' | 'complex-nested'
   /** Item keywords for this component (e.g., ['Tab'] for Tabs, ['Step'] for Steps). Default is ['Item'] */
   itemKeywords?: string[]
+  /** Item-specific props (e.g., ['icon', 'disabled', 'value']) */
+  itemProps?: string[]
 }
 
 /**
@@ -72,11 +74,14 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
       'searchable',   // Enable search input
       'clearable',    // Enable clear button
       'keepOpen',     // Keep open after selection (inverts closeOnSelect)
+      // Custom icon for indicator
+      'icon',
     ],
     events: ['onchange', 'onopen', 'onclose', 'onhighlightchange', 'onselect'],
     description: 'Dropdown select with keyboard navigation',
     pattern: 'simple-items',
     itemKeywords: ['Item', 'Option'],
+    itemProps: ['icon', 'disabled', 'value'],
   },
 
   Combobox: {
@@ -92,11 +97,12 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Listbox: {
     machine: 'listbox',
     slots: ['Root', 'Label', 'Content', 'Item', 'ItemText', 'ItemIndicator', 'ItemGroup', 'ItemGroupLabel'],
-    props: ['multiple', 'disabled', 'value', 'defaultValue', 'orientation', 'invalid', 'readOnly', 'required', 'name', 'loopFocus'],
+    props: ['multiple', 'disabled', 'value', 'defaultValue', 'orientation', 'invalid', 'readOnly', 'required', 'name', 'loopFocus', 'icon'],
     events: ['onchange'],
     description: 'Listbox selection',
     pattern: 'simple-items',
-    itemKeywords: ['Item', 'Option'],
+    itemKeywords: ['ListboxItem', 'Item', 'Option'],
+    itemProps: ['icon', 'disabled', 'value'],
   },
 
   // ===========================================================================
@@ -144,7 +150,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Checkbox: {
     machine: 'checkbox',
     slots: ['Root', 'Control', 'Label', 'Indicator', 'HiddenInput'],
-    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'value', 'indeterminate', 'invalid', 'readOnly'],
+    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'value', 'indeterminate', 'invalid', 'readOnly', 'icon'],
     events: ['onchange'],
     description: 'Checkbox with label',
     pattern: 'slots-only',
@@ -152,8 +158,8 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
 
   Switch: {
     machine: 'switch',
-    slots: ['Root', 'Track', 'Thumb', 'Label', 'HiddenInput'],
-    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'invalid', 'readOnly'],
+    slots: ['Track', 'Thumb', 'Label'],
+    props: ['checked', 'defaultChecked', 'disabled', 'required', 'name', 'invalid', 'readOnly', 'label'],
     events: ['onchange'],
     description: 'Toggle switch',
     pattern: 'slots-only',
@@ -166,6 +172,8 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     events: ['onchange'],
     description: 'Radio button group',
     pattern: 'repeating-items',
+    itemKeywords: ['RadioItem', 'Radio', 'Item', 'Option'],
+    itemProps: ['disabled', 'value'],
   },
 
   Slider: {
@@ -380,10 +388,11 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
   Accordion: {
     machine: 'accordion',
     slots: ['Root', 'Item', 'ItemTrigger', 'ItemContent', 'ItemIndicator'],
-    props: ['value', 'defaultValue', 'multiple', 'collapsible', 'disabled', 'orientation'],
+    props: ['value', 'defaultValue', 'multiple', 'collapsible', 'disabled', 'orientation', 'icon'],
     events: ['onchange'],
     description: 'Collapsible accordion',
     pattern: 'content-items',
+    itemKeywords: ['AccordionItem', 'Item'],
   },
 
   Collapsible: {
@@ -653,11 +662,9 @@ export const SLOT_MAPPINGS: Record<string, Record<string, ZagSlotDef>> = {
   },
 
   Switch: {
-    Root: { api: 'getRootProps', element: 'label' },
-    Track: { api: 'getTrackProps', element: 'span' },
+    Track: { api: 'getControlProps', element: 'span' },
     Thumb: { api: 'getThumbProps', element: 'span' },
     Label: { api: 'getLabelProps', element: 'span' },
-    HiddenInput: { api: 'getHiddenInputProps', element: 'input' },
   },
 
   RadioGroup: {
