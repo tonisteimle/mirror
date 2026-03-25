@@ -315,6 +315,15 @@ export async function initDesktopFiles(options = {}) {
     Button "Click Me"
       pad 12 24, bg #3b82f6, rad 6, col white
       hover bg #2563eb
+
+  // Zag Select Component
+  Select
+    SelectTrigger
+      SelectValue "Choose an option"
+    SelectContent
+      SelectItem "Option 1"
+      SelectItem "Option 2"
+      SelectItem "Option 3"
 `)
 
         await storage.writeFile('tokens.tok', `// Design Tokens

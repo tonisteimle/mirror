@@ -38,7 +38,7 @@ import {
   createComponentDropExtension,
   insertComponentCode,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=108'
+} from './dist/index.js?v=110'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -116,59 +116,57 @@ let currentProject = null
 let projects = []
 const files = {}
 const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
-let currentFile = 'index.mirror'
+let currentFile = 'index.mir'
 
 // Default files for demo mode
 const defaultFiles = {
-  'index.mirror': `App bg #18181b, pad 20
-  rect w 100, h 200, bg #FCC419`,
-  'tokens.mirror': `// Design Tokens
-// Farben, Abstände und Typografie
+  'index.mir': `App bg #18181b, pad 24, gap 16
+  Text "Mirror Studio", fs 24, weight bold, col white
+  Text "Edit this code to get started", col #888
 
-// Farb-Palette
-$grey-900: #18181B
-$grey-800: #27272A
-$grey-700: #3F3F46
+  Card bg #27272a, pad 16, rad 8, gap 8
+    Text "Your first component", col #a1a1aa
+    Button "Click Me"
+      pad 12 24, bg #3b82f6, rad 6, col white
+      hover bg #2563eb
 
-// Semantische Farben
-$primary.bg: #3B82F6
-$primary.hover.bg: #2563EB
-$surface.bg: $grey-800
-$elevated.bg: $grey-700
+  // Zag Select Component
+  Select
+    SelectTrigger
+      SelectValue "Choose an option"
+    SelectContent
+      SelectItem "Option 1"
+      SelectItem "Option 2"
+      SelectItem "Option 3"`,
+  'tokens.tok': `// Design Tokens
 
-// Text-Farben
-$text.col: #E4E4E7
-$muted.col: #A1A1AA
-$subtle.col: #71717A
+// Colors
+$primary: #3b82f6
+$surface: #27272a
+$background: #18181b
+$text: #ffffff
+$muted: #a1a1aa
 
-// Abstände
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+// Spacing
+$spacing-sm: 8
+$spacing-md: 16
+$spacing-lg: 24
 
-// Gap
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
+// Radius
+$radius: 8`,
+  'components.com': `// Component Definitions
 
-// Radien
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 16`,
-  'components.mirror': `// Komponenten-Definitionen
+Button:
+  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
+  hover bg #2563eb
 
---- Buttons ---
+Card:
+  bg #27272a, pad 16, rad 8
 
-Button: pad 12 24, bg $primary.bg, rad $md.rad, cursor pointer
-  state hover bg $primary.hover.bg
-
-GhostButton: pad 12 24, bg transparent, bor 1 $primary.bg, col $primary.bg, rad $md.rad
-  state hover bg $primary.bg, col white
-
---- Cards ---
-
-Card: pad 16, bg $grey-800, rad $lg.rad
-  state hover bg $grey-700`
+Input:
+  pad 12, bg #1f1f1f, rad 6, bor 1 #333
+  col white
+  focus bor 1 #3b82f6`
 }
 
 // API Helper
@@ -205,7 +203,7 @@ async function loadProjects() {
   console.log('[App] Loading demo project')
   Object.assign(files, defaultFiles)
   currentProject = { id: 'demo', name: 'Demo Project' }
-  currentFile = 'index.mirror'
+  currentFile = 'index.mir'
   // No need to render project/file lists - desktop-files.js handles file tree
 }
 
@@ -756,7 +754,7 @@ const initPromise = initApp()
 // End of API Client & Auth
 // ============================================
 
-const initialCode = files[currentFile] || defaultFiles['index.mirror']
+const initialCode = files[currentFile] || defaultFiles['index.mir']
 
 // Token patterns
 const patterns = [

@@ -21,7 +21,16 @@ const DEFAULT_DEMO_FILES: Record<string, string> = {
     Text "Edit this code to test", col #a1a1aa
     Button "Click Me"
       pad 12 24, bg #3b82f6, rad 6, col white
-      hover bg #2563eb`,
+      hover bg #2563eb
+
+  // Zag Select Component
+  Select
+    SelectTrigger
+      SelectValue "Choose an option"
+    SelectContent
+      SelectItem "Option 1"
+      SelectItem "Option 2"
+      SelectItem "Option 3"`,
 
   'tokens.tok': `// Design Tokens
 
