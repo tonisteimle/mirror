@@ -305,12 +305,49 @@ export async function initDesktopFiles(options = {}) {
         await storage.openProject(newProject.id)
         console.log('[DesktopFiles] Created and opened new project:', newProject.name)
 
-        // Create a starter file
-        await storage.writeFile('index.mir', `// Welcome to Mirror Studio!
-// This is your first file.
+        // Create starter files (matching demo.ts defaults)
+        await storage.writeFile('index.mir', `App bg #18181b, pad 24, gap 16
+  Text "Mirror Studio", fs 24, weight bold, col white
+  Text "Edit this code to get started", col #888
 
-Box w full, h full, bg #1a1a2e
-  Text "Hello, Mirror!" col #fff, fs 24, weight bold
+  Card bg #27272a, pad 16, rad 8, gap 8
+    Text "Your first component", col #a1a1aa
+    Button "Click Me"
+      pad 12 24, bg #3b82f6, rad 6, col white
+      hover bg #2563eb
+`)
+
+        await storage.writeFile('tokens.tok', `// Design Tokens
+
+// Colors
+$primary: #3b82f6
+$surface: #27272a
+$background: #18181b
+$text: #ffffff
+$muted: #a1a1aa
+
+// Spacing
+$spacing-sm: 8
+$spacing-md: 16
+$spacing-lg: 24
+
+// Radius
+$radius: 8
+`)
+
+        await storage.writeFile('components.com', `// Component Definitions
+
+Button:
+  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
+  hover bg #2563eb
+
+Card:
+  bg #27272a, pad 16, rad 8
+
+Input:
+  pad 12, bg #1f1f1f, rad 6, bor 1 #333
+  col white
+  focus bor 1 #3b82f6
 `)
       } else {
         // Non-server provider with no projects - fall back to demo
