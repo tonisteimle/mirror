@@ -98,6 +98,7 @@ export class ZagRuntime {
     // Create root element
     const rootElement = document.createElement('div')
     rootElement.setAttribute('data-mirror-id', node.id)
+    rootElement.setAttribute('data-node-id', node.id)
     rootElement.setAttribute('data-zag-component', node.zagType)
 
     // Create slot elements

@@ -270,6 +270,8 @@ export interface ZagItem {
   disabled?: boolean
   /** Target element selector (for Tour steps) */
   target?: string
+  /** Layout properties for the item (ver, hor, gap, pad, spread) */
+  properties?: Property[]
   /** Custom children for complex items (content-items pattern) */
   children?: (Instance | Text)[]
   /** Source position for bidirectional editing */

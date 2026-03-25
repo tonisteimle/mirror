@@ -386,7 +386,9 @@ export const actions = {
     }
 
     // Validate current selection against new SourceMap
-    const currentSelection = currentState.selection.nodeId
+    // IMPORTANT: Re-read selection state here as it may have changed during compile:completed handlers
+    const latestState = state.get()
+    const currentSelection = latestState.selection.nodeId
     if (currentSelection && result.sourceMap) {
       const nodeExists = result.sourceMap.getNodeById(currentSelection) !== null
       if (!nodeExists) {
@@ -397,11 +399,11 @@ export const actions = {
 
         if (fallbackId) {
           console.log(`[State] Fallback selection: ${fallbackId}`)
-          state.set({ selection: { nodeId: fallbackId, origin: currentState.selection.origin } })
-          events.emit('selection:changed', { nodeId: fallbackId, origin: currentState.selection.origin })
+          state.set({ selection: { nodeId: fallbackId, origin: latestState.selection.origin } })
+          events.emit('selection:changed', { nodeId: fallbackId, origin: latestState.selection.origin })
         } else {
           console.warn(`[State] No fallback found, clearing selection`)
-          state.set({ selection: { nodeId: null, origin: currentState.selection.origin } })
+          state.set({ selection: { nodeId: null, origin: latestState.selection.origin } })
         }
         events.emit('selection:invalidated', { nodeId: currentSelection })
       }

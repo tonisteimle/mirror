@@ -1,0 +1,188 @@
+/**
+ * Mirror Default Styles
+ *
+ * Minimalist dark UI - flat, no borders, pure grayscale
+ * Include this CSS for out-of-the-box styling.
+ * All styles can be overridden with Mirror code (inline styles).
+ */
+
+/* ========================================
+   1. CSS Variables
+   ======================================== */
+
+:root {
+  /* Surfaces - pure grayscale, no blue tint */
+  --m-bg: #0a0a0a;
+  --m-surface: #1a1a1a;
+  --m-surface-hover: #252525;
+  --m-surface-active: #2a2a2a;
+  --m-surface-selected: #333333;
+
+  /* Text */
+  --m-text: #e0e0e0;
+  --m-text-muted: #888888;
+  --m-text-placeholder: #555555;
+
+  /* Accent */
+  --m-accent: #4f46e5;
+  --m-accent-hover: #5b52f0;
+
+  /* Spacing - Base */
+  --m-radius: 5px;
+  --m-gap: 8px;
+
+  /* Spacing - Controls (inputs, selects, buttons) */
+  --m-control-pad-y: 8px;
+  --m-control-pad-x: 10px;
+  --m-control-item-pad-y: 6px;
+  --m-control-item-pad-x: 10px;
+
+  /* Typography */
+  --m-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --m-font-size: 13px;
+  --m-line-height: 1.4;
+}
+
+
+/* ========================================
+   2. Base / Root
+   ======================================== */
+
+.mirror-root {
+  font-family: var(--m-font);
+  font-size: var(--m-font-size);
+  line-height: var(--m-line-height);
+  color: var(--m-text);
+  background: var(--m-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ========================================
+   3. Zag Select
+   ======================================== */
+
+[data-zag-component="select"] {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.mirror-root [data-slot="Trigger"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 140px;
+  padding: var(--m-control-pad-y) var(--m-control-pad-x);
+  background: var(--m-surface);
+  color: var(--m-text);
+  border: none;
+  border-radius: var(--m-radius);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.mirror-root [data-slot="Trigger"]:hover {
+  background: var(--m-surface-hover);
+}
+
+.mirror-root [data-slot="Trigger"]:focus {
+  outline: none;
+  background: var(--m-surface-hover);
+}
+
+.mirror-root [data-slot="Trigger"][aria-expanded="true"] {
+  background: var(--m-surface-active);
+}
+
+[data-slot="Content"] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 0;
+  background: var(--m-surface);
+  border-radius: var(--m-radius);
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+[data-mirror-item] {
+  padding: var(--m-control-item-pad-y) var(--m-control-item-pad-x);
+  color: var(--m-text);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+[data-mirror-item]:hover,
+[data-mirror-item][data-highlighted="true"] {
+  background: var(--m-surface-hover);
+}
+
+[data-mirror-item][data-selected="true"] {
+  background: var(--m-surface-selected);
+}
+
+
+/* ========================================
+   4. Primitives (basic)
+   ======================================== */
+
+.mirror-root button,
+.mirror-root [data-component="Button"] {
+  padding: var(--m-control-pad-y) var(--m-control-pad-x);
+  background: var(--m-surface);
+  color: var(--m-text);
+  border: none;
+  border-radius: var(--m-radius);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.mirror-root button:hover,
+.mirror-root [data-component="Button"]:hover {
+  background: var(--m-surface-hover);
+}
+
+/* Input */
+.mirror-root input,
+.mirror-root textarea,
+.mirror-root [data-component="Input"],
+.mirror-root [data-component="Textarea"] {
+  padding: var(--m-control-pad-y) var(--m-control-pad-x);
+  background: var(--m-surface);
+  color: var(--m-text);
+  border: none;
+  border-radius: var(--m-radius);
+  font: inherit;
+}
+
+.mirror-root input::placeholder,
+.mirror-root textarea::placeholder {
+  color: var(--m-text-placeholder);
+}
+
+.mirror-root input:focus,
+.mirror-root textarea:focus {
+  outline: none;
+  background: var(--m-surface-hover);
+}
+
+
+/* ========================================
+   5. Utility States
+   ======================================== */
+
+[data-state="disabled"],
+[disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+[hidden] {
+  display: none !important;
+}

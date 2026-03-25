@@ -1,225 +1,360 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mirror Compiler Test</title>
+  <title>Select Properties</title>
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: #0a0a0f;
+      background: #0a0a0a;
       color: #e0e0e0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      padding: 12px 20px;
-      background: #1a1a23;
-      border-bottom: 1px solid #2a2a3a;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    header h1 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .test-selector {
-      display: flex;
-      gap: 8px;
-    }
-
-    .test-btn {
-      padding: 6px 12px;
-      background: #2a2a3a;
-      border: 1px solid #3a3a4a;
-      border-radius: 4px;
-      color: #e0e0e0;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    .test-btn:hover { background: #3a3a4a; }
-    .test-btn.active { background: #4f46e5; border-color: #4f46e5; }
-
-    main {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
-
-    .panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 8px 16px;
-      background: #1a1a23;
-      border-bottom: 1px solid #2a2a3a;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-    }
-
-    .panel-content {
-      flex: 1;
-      overflow: auto;
-      padding: 16px;
-    }
-
-    .code-panel {
-      border-right: 1px solid #2a2a3a;
-    }
-
-    .code-panel pre {
-      font-family: 'SF Mono', Monaco, monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      color: #b0b0b0;
-    }
-
-    .preview-panel .panel-content {
-      background: #fff;
-      color: #000;
-    }
-
-    .divider {
-      width: 1px;
-      background: #2a2a3a;
-    }
-
-    /* Preview area - neutral styling to see Mirror's actual output */
-    .preview-container {
       padding: 20px;
     }
 
-    .preview-label {
-      font-size: 11px;
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
       color: #666;
-      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      padding: 12px 16px;
+      background: #111;
+      border-radius: 4px;
+      align-items: center;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #777;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .example-preview {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Mirror Compiler Test</h1>
-    <div class="test-selector" id="testButtons"></div>
-  </header>
+  <h1>Select Tutorial Examples</h1>
+  <div class="examples" id="examples"></div>
 
-  <main>
-    <div class="panel code-panel">
-      <div class="panel-header">Mirror Code</div>
-      <div class="panel-content">
-        <pre id="codeDisplay"></pre>
-      </div>
-    </div>
-
-    <div class="panel preview-panel">
-      <div class="panel-header">Rendered Output</div>
-      <div class="panel-content">
-        <div class="preview-container" id="previewContainer"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Load Mirror compiler (browser bundle) -->
   <script src="../dist/browser/index.global.js"></script>
-
   <script>
-    // Test Cases
-    const testCases = [
-      {
-        name: 'Select Basic',
-        code: `ColorSelect as Select:
+    const sections = {
+      "BASIC PROPERTIES": [
+        // placeholder
+        `Select placeholder "Farbe wählen...":
+  Item "Rot"
+  Item "Grün"
+  Item "Blau"`,
+
+        // value
+        `Select value "Grün":
+  Item "Rot"
+  Item "Grün"
+  Item "Blau"`,
+
+        // value mit separatem Item-Value
+        `Select value "DE":
+  Item "Deutschland" value "DE"
+  Item "Österreich" value "AT"
+  Item "Schweiz" value "CH"`,
+
+        // label
+        `Select label "Land", placeholder "Bitte wählen...":
+  Item "Deutschland"
+  Item "Schweiz"`,
+
+        // defaultValue
+        `Select defaultValue "B":
+  Item "A"
+  Item "B"
+  Item "C"`,
+      ],
+
+      "MULTIPLE SELECTION": [
+        // multiple
+        `Select multiple, placeholder "Farben wählen...":
   Item "Rot"
   Item "Grün"
   Item "Blau"
+  Item "Gelb"`,
 
-ColorSelect placeholder "Wähle eine Farbe"`
-      },
-      {
-        name: 'Select Styled',
-        code: `MySelect as Select:
-  Trigger:
-    bg #1e1e2e, pad 12, rad 6
-  Content:
-    bg #2a2a3e, rad 6
+        // multiple mit defaultValue
+        `Select multiple, defaultValue "JS":
+  Item "JS"
+  Item "TS"
+  Item "React"`,
+      ],
+
+      "SEARCHABLE": [
+        // searchable
+        `Select searchable, placeholder "Land suchen...":
+  Item "Afghanistan"
+  Item "Albanien"
+  Item "Algerien"
+  Item "Andorra"
+  Item "Angola"`,
+
+        // searchable + multiple
+        `Select searchable, multiple, placeholder "Teammitglieder suchen...":
+  Item "Anna Schmidt"
+  Item "Max Müller"
+  Item "Lisa Weber"
+  Item "Tom Fischer"`,
+      ],
+
+      "CLEARABLE": [
+        // clearable
+        `Select clearable, placeholder "Optional...":
   Item "Option A"
   Item "Option B"
-  Item "Option C"
+  Item "Option C"`,
 
-MySelect placeholder "Auswählen..."`
-      },
-      {
-        name: 'Box Layout',
-        code: `Card as Box:
-  pad 20, bg #f5f5f5, rad 8
+        // clearable mit value
+        `Select clearable, value "Option A":
+  Item "Option A"
+  Item "Option B"`,
+      ],
 
-Card
-  Text "Hello World"`
-      },
-      {
-        name: 'Button',
-        code: `PrimaryBtn as Button:
-  bg #4f46e5, col #fff, pad 12 24, rad 6
+      "KEEPOPEN": [
+        // keepOpen
+        `Select keepOpen, placeholder "Mehrere anklicken...":
+  Item "Eins"
+  Item "Zwei"
+  Item "Drei"`,
+      ],
 
-PrimaryBtn "Click me"`
-      },
-    ];
+      "DISABLED & READONLY": [
+        // disabled
+        `Select disabled, placeholder "Nicht verfügbar":
+  Item "A"
+  Item "B"`,
 
-    // Use global Mirror compiler (exported as MirrorLang)
+        // readonly
+        `Select readonly, value "Festgelegt":
+  Item "Festgelegt"
+  Item "Andere Option"`,
+
+        // Item disabled
+        `Select placeholder "Plan wählen...":
+  Item "Free"
+  Item "Pro" disabled
+  Item "Enterprise" disabled`,
+      ],
+
+      "FORM INTEGRATION": [
+        // required
+        `Select required, label "Land *", name "country", placeholder "Pflichtfeld":
+  Item "Deutschland"
+  Item "Schweiz"`,
+
+        // invalid
+        `Select invalid, placeholder "Bitte auswählen":
+  Item "Option A"
+  Item "Option B"`,
+
+        // name
+        `Select name "country", placeholder "Land wählen...":
+  Item "Deutschland" value "DE"
+  Item "Schweiz" value "CH"`,
+
+        // form
+        `Select name "category", form "settings-form", placeholder "Kategorie":
+  Item "Allgemein"
+  Item "Erweitert"`,
+      ],
+
+      "POSITIONING": [
+        // placement
+        `Select placement "top-start", placeholder "Öffnet nach oben":
+  Item "Option A"
+  Item "Option B"`,
+
+        // offset
+        `Select offset 12, placeholder "12px Abstand":
+  Item "A"
+  Item "B"`,
+      ],
+
+      "KOMBINATIONEN": [
+        // searchable + clearable
+        `Select searchable, clearable, placeholder "Suche...":
+  Item "React"
+  Item "Vue"
+  Item "Angular"
+  Item "Svelte"`,
+
+        // multiple + searchable + clearable
+        `Select multiple, searchable, clearable, placeholder "Alles kombiniert":
+  Item "Design"
+  Item "Code"
+  Item "Test"
+  Item "Deploy"`,
+
+        // viele Items
+        `Select placeholder "Land wählen":
+  Item "Deutschland"
+  Item "Österreich"
+  Item "Schweiz"
+  Item "Frankreich"
+  Item "Italien"
+  Item "Spanien"
+  Item "Portugal"`,
+      ],
+
+      "CUSTOM ITEMS - Zweizeilig": [
+        // Items mit Titel und Beschreibung
+        `Select placeholder "Plan wählen...":
+  Item value "free", ver, gap 2, pad 12 14:
+    Text "Free" weight medium
+    Text "Für Einzelpersonen" fs 12, col #666
+
+  Item value "pro", ver, gap 2, pad 12 14:
+    Text "Pro – $19/Monat" weight medium
+    Text "Unbegrenzte Projekte" fs 12, col #666`,
+      ],
+
+      "CUSTOM ITEMS - Mit Icons": [
+        // Items mit Leading Icon
+        `Select placeholder "Status wählen...":
+  Item value "draft":
+    Icon "file-text" col #888
+    Text "Entwurf"
+  Item value "published":
+    Icon "check-circle" col #22c55e
+    Text "Veröffentlicht"
+  Item value "archived":
+    Icon "archive" col #888
+    Text "Archiviert"`,
+
+        // Priorität
+        `Select value "medium":
+  Item value "urgent": Icon "alert-circle" col #ef4444, Text "Dringend" col #ef4444
+  Item value "high": Icon "arrow-up" col #f97316, Text "Hoch"
+  Item value "medium": Icon "minus" col #eab308, Text "Mittel"
+  Item value "low": Icon "arrow-down" col #22c55e, Text "Niedrig"`,
+      ],
+
+      "CUSTOM ITEMS - Status & Farben": [
+        // Status mit Punkt
+        `Select value "online":
+  Item value "online": Box w 8, h 8, rad 4, bg #22c55e, Text "Online"
+  Item value "away": Box w 8, h 8, rad 4, bg #eab308, Text "Abwesend"
+  Item value "busy": Box w 8, h 8, rad 4, bg #ef4444, Text "Beschäftigt"
+  Item value "offline": Box w 8, h 8, rad 4, bg #666, Text "Offline"`,
+
+        // Farbauswahl
+        `Select placeholder "Farbe wählen...":
+  Item value "red": Box w 10, h 10, rad 5, bg #ef4444, Text "Rot"
+  Item value "green": Box w 10, h 10, rad 5, bg #22c55e, Text "Grün"
+  Item value "blue": Box w 10, h 10, rad 5, bg #3b82f6, Text "Blau"
+  Item value "yellow": Box w 10, h 10, rad 5, bg #eab308, Text "Gelb"`,
+      ],
+
+      "CUSTOM ITEMS - Mit Shortcuts": [
+        // Aktionen mit Shortcuts
+        `Select placeholder "Aktionen...":
+  Item value "save" spread:
+    Box hor, gap 8: Icon "save", Text "Speichern"
+    Text "⌘S" fs 11, col #666
+  Item value "copy" spread:
+    Box hor, gap 8: Icon "copy", Text "Kopieren"
+    Text "⌘C" fs 11, col #666
+  Item value "delete" spread:
+    Box hor, gap 8: Icon "trash" col #ef4444, Text "Löschen" col #ef4444
+    Text "⌫" fs 11, col #666`,
+      ],
+
+      "CUSTOM ITEMS - Fonts & Währungen": [
+        // Font-Auswahl
+        `Select value "inter":
+  Item value "inter" spread:
+    Text "Inter" font sans
+    Text "Aa" font sans, col #666
+  Item value "georgia" spread:
+    Text "Georgia" font serif
+    Text "Aa" font serif, col #666
+  Item value "fira" spread:
+    Text "Fira Code" font mono
+    Text "Aa" font mono, col #666`,
+
+        // Währungs-Auswahl
+        `Select value "eur":
+  Item value "eur": Text "€" w 20 col #888, Text "Euro"
+  Item value "usd": Text "$" w 20 col #888, Text "US Dollar"
+  Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"
+  Item value "chf": Text "₣" w 20 col #888, Text "Schweizer Franken"`,
+      ],
+    };
+
     const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
 
-    // Render test case
-    function renderTest(testCase) {
-      // Show code
-      document.getElementById('codeDisplay').textContent = testCase.code;
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
 
-      // Compile and render
-      const container = document.getElementById('previewContainer');
-      container.innerHTML = '';
+      examples.forEach(code => {
+        const row = document.createElement('div');
+        row.className = 'example';
 
-      try {
-        const jsCode = compile(testCase.code);
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
 
-        // Execute the generated code
-        const execCode = jsCode.replace('export function createUI', 'function createUI');
-        const fn = new Function(execCode + '\nreturn createUI();');
-        const ui = fn();
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
 
-        if (ui && ui.root) {
-          container.appendChild(ui.root);
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+        } catch (err) {
+          previewDiv.innerHTML = `<span class="error">${err.message}</span>`;
         }
-      } catch (err) {
-        container.innerHTML = `<div style="color:red;font-family:monospace;white-space:pre-wrap">Error: ${err.message}\n\n${err.stack}</div>`;
-      }
-    }
 
-    // Create test buttons
-    const buttonContainer = document.getElementById('testButtons');
-    testCases.forEach((tc, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'test-btn' + (i === 0 ? ' active' : '');
-      btn.textContent = tc.name;
-      btn.onclick = () => {
-        document.querySelectorAll('.test-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderTest(tc);
-      };
-      buttonContainer.appendChild(btn);
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
     });
-
-    // Render first test
-    renderTest(testCases[0]);
   </script>
 </body>
 </html>

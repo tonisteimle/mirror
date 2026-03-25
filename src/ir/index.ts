@@ -463,6 +463,12 @@ class IRTransformer {
         case 'clearable':
           machineConfig.clearable = prop.values.length === 0 || prop.values[0] === true
           break
+        case 'keepOpen':
+          // keepOpen inverts closeOnSelect - if keepOpen is set, closeOnSelect should be false
+          if (prop.values.length === 0 || prop.values[0] === true) {
+            machineConfig.closeOnSelect = false
+          }
+          break
         case 'disabled':
           machineConfig.disabled = prop.values.length === 0 || prop.values[0] === true
           break
@@ -477,8 +483,10 @@ class IRTransformer {
       }
     }
 
-    // Transform slots
+    // Transform slots - always ensure Trigger and Content exist
     const slots: Record<string, IRSlot> = {}
+
+    // Process defined slots
     for (const [slotName, slotDefUnknown] of Object.entries(zagNode.slots || {})) {
       const slotDef = slotDefUnknown as ZagSlotDef
       slots[slotName] = {
@@ -492,13 +500,48 @@ class IRTransformer {
       }
     }
 
-    // Transform items
-    const items = (zagNode.items || []).map((item: ZagItem) => ({
-      value: item.value ?? item.label ?? '',
-      label: item.label ?? item.value ?? '',
-      disabled: item.disabled,
-      sourcePosition: item.sourcePosition,
-    }))
+    // Add default Trigger if not defined
+    if (!slots['Trigger']) {
+      slots['Trigger'] = {
+        name: 'Trigger',
+        apiMethod: 'getTriggerProps',
+        element: 'button',
+        styles: [],
+        children: [],
+        portal: false,
+      }
+    }
+
+    // Add default Content if not defined
+    if (!slots['Content']) {
+      slots['Content'] = {
+        name: 'Content',
+        apiMethod: 'getContentProps',
+        element: 'div',
+        styles: [],
+        children: [],
+        portal: true,
+      }
+    }
+
+    // Transform items (including children for custom item content)
+    const items = (zagNode.items || []).map((item: ZagItem) => {
+      const irItem: any = {
+        value: item.value ?? item.label ?? '',
+        label: item.label ?? item.value ?? '',
+        disabled: item.disabled,
+        sourcePosition: item.sourcePosition,
+      }
+      // Include properties if present (layout props like ver, gap, pad)
+      if (item.properties && item.properties.length > 0) {
+        irItem.properties = item.properties
+      }
+      // Include children if present (custom content like Icon, Text)
+      if (item.children && item.children.length > 0) {
+        irItem.children = item.children.map((child: any) => this.transformChild(child))
+      }
+      return irItem
+    })
 
     // Source position
     const sourcePosition = zagNode.line !== undefined
@@ -526,6 +569,30 @@ class IRTransformer {
       items,
       machineConfig,
       sourcePosition,
+    }
+
+    // Add to source map builder for selection support in Studio
+    if (this.includeSourceMap && sourcePosition) {
+      this.sourceMapBuilder.addNode(
+        nodeId,
+        zagNode.name || 'Select',
+        sourcePosition,
+        {
+          isDefinition: false,
+        }
+      )
+
+      // Add property positions for inline editing
+      for (const prop of zagNode.properties || []) {
+        if (prop.line !== undefined && prop.column !== undefined) {
+          this.sourceMapBuilder.addPropertyPosition(nodeId, prop.name, {
+            line: prop.line,
+            column: prop.column,
+            endLine: prop.line,
+            endColumn: prop.column,
+          })
+        }
+      }
     }
 
     return irNode
@@ -1132,6 +1199,10 @@ class IRTransformer {
         events: [],
         children: [],
       }
+    }
+    // Handle ZagComponent children (e.g., Select: inside a Box)
+    if (isZagComponent(child)) {
+      return this.transformZagComponent(child)
     }
     return this.transformInstance(child as Instance, parentId)
   }

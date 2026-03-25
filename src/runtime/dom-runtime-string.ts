@@ -116,11 +116,16 @@ const _runtime = {
   show(el) {
     if (!el) return
     el.hidden = false
-    el.style.display = ''
+    // Restore saved display value or clear inline style
+    el.style.display = el._savedDisplay || ''
   },
 
   hide(el) {
     if (!el) return
+    // Save current display before hiding (unless already hidden)
+    if (el.style.display !== 'none') {
+      el._savedDisplay = el.style.display
+    }
     el.hidden = true
     el.style.display = 'none'
   },
@@ -452,7 +457,392 @@ const _runtime = {
     // Track state
     el._zagState = { open: false, value: [], highlightedIndex: -1 }
 
-    // Toggle dropdown on trigger click
+    // Get config values
+    const isDisabled = config.machineConfig?.disabled
+    const placeholder = config.machineConfig?.placeholder
+    const defaultValue = config.machineConfig?.defaultValue
+    const value = config.machineConfig?.value
+    const isMultiple = config.machineConfig?.multiple
+    // Default: closeOnSelect=true for single, closeOnSelect=false for multiple (keepOpen)
+    const closeOnSelect = isMultiple
+      ? config.machineConfig?.closeOnSelect === true
+      : config.machineConfig?.closeOnSelect !== false
+    const isSearchable = config.machineConfig?.searchable
+    const isClearable = config.machineConfig?.clearable
+    const items = content.querySelectorAll('[data-mirror-item]')
+
+    // ========================================
+    // DEFAULT STYLING (Tutorial-konform)
+    // ========================================
+
+    // Trigger Styling
+    if (!trigger.hasAttribute('data-styled')) {
+      Object.assign(trigger.style, {
+        background: '#1a1a1a',
+        padding: '7px 10px',
+        borderRadius: '5px',
+        height: '34px',
+        boxSizing: 'border-box',
+        border: '1px solid #333',
+        minWidth: '160px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: '8px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        color: '#e0e0e0',
+        transition: 'border-color 0.15s',
+        position: 'relative',
+        textAlign: 'left',
+        fontFamily: 'inherit',
+      })
+    }
+
+    // Content/Dropdown Styling
+    if (!content.hasAttribute('data-styled')) {
+      Object.assign(content.style, {
+        background: '#1a1a1a',
+        borderRadius: '6px',
+        border: '1px solid #333',
+        boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+        marginTop: '3px',
+        padding: '3px',
+        maxHeight: '200px',
+        overflow: 'auto',
+        minWidth: '160px',
+        position: 'absolute',
+        zIndex: '1000',
+      })
+    }
+
+    // Item Styling
+    items.forEach(item => {
+      if (!item.hasAttribute('data-styled')) {
+        Object.assign(item.style, {
+          padding: '6px 10px',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          color: '#e0e0e0',
+        })
+      }
+    })
+
+    // ========================================
+    // DEFAULT ICONS
+    // ========================================
+
+    // Create or find ValueText
+    let triggerText = trigger.querySelector('[data-slot="ValueText"]')
+    if (!triggerText) {
+      triggerText = document.createElement('span')
+      triggerText.dataset.slot = 'ValueText'
+      triggerText.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+      trigger.insertBefore(triggerText, trigger.firstChild)
+    }
+    el._zagTriggerText = triggerText
+
+    // Create or find Indicator (chevron-down)
+    let indicator = trigger.querySelector('[data-slot="Indicator"]')
+    if (!indicator) {
+      indicator = document.createElement('span')
+      indicator.dataset.slot = 'Indicator'
+      indicator.style.cssText = 'color:#666;display:flex;transition:transform 0.15s;flex-shrink:0;'
+      indicator.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
+      trigger.appendChild(indicator)
+    }
+    el._zagIndicator = indicator
+
+    // Create ItemIndicator (check/checkbox) for each item
+    items.forEach(item => {
+      let check = item.querySelector('[data-slot="ItemIndicator"]')
+      if (!check) {
+        check = document.createElement('span')
+        check.dataset.slot = 'ItemIndicator'
+
+        if (isMultiple) {
+          // Multiple: Checkbox style (box with border, filled when selected)
+          check.style.cssText = 'width:15px;height:15px;border-radius:3px;border:1px solid #444;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;'
+          check.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;color:#fff;"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+          // Insert at beginning for checkbox
+          item.insertBefore(check, item.firstChild)
+        } else {
+          // Single: Checkmark style (appears on right when selected)
+          check.style.cssText = 'margin-left:auto;display:none;color:#4f46e5;flex-shrink:0;'
+          check.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+          item.appendChild(check)
+        }
+      }
+    })
+
+    // ========================================
+    // CLEAR BUTTON
+    // ========================================
+
+    let clearButton = null
+    if (isClearable) {
+      clearButton = trigger.querySelector('[data-slot="ClearButton"]')
+      if (!clearButton) {
+        clearButton = document.createElement('button')
+        clearButton.type = 'button'
+        clearButton.dataset.slot = 'ClearButton'
+        clearButton.style.cssText = 'color:#666;padding:2px;border-radius:4px;cursor:pointer;display:none;background:none;border:none;flex-shrink:0;align-items:center;justify-content:center;'
+        clearButton.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+        clearButton.title = 'Auswahl löschen'
+        // Insert before indicator
+        trigger.insertBefore(clearButton, indicator)
+      }
+
+      clearButton.addEventListener('mouseenter', () => {
+        clearButton.style.color = '#fff'
+        clearButton.style.background = '#333'
+      })
+      clearButton.addEventListener('mouseleave', () => {
+        clearButton.style.color = '#666'
+        clearButton.style.background = 'none'
+      })
+      clearButton.addEventListener('click', (e) => {
+        e.stopPropagation()
+        el._zagState.value = []
+        items.forEach(i => {
+          i.removeAttribute('data-selected')
+          const ind = i.querySelector('[data-slot="ItemIndicator"]')
+          if (ind) ind.style.display = 'none'
+        })
+        renderTriggerValue()
+        clearButton.style.display = 'none'
+      })
+
+      el._zagClearButton = clearButton
+    }
+
+    // ========================================
+    // SEARCH INPUT
+    // ========================================
+
+    let searchInput = null
+    let emptyElement = null
+    if (isSearchable) {
+      searchInput = content.querySelector('[data-slot="Input"]')
+      if (!searchInput) {
+        searchInput = document.createElement('input')
+        searchInput.type = 'text'
+        searchInput.placeholder = 'Suchen...'
+        searchInput.dataset.slot = 'Input'
+        searchInput.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333;padding:7px 10px;color:#fff;width:100%;font-size:13px;outline:none;'
+        content.insertBefore(searchInput, content.firstChild)
+      }
+
+      // Create Empty element for no results
+      emptyElement = content.querySelector('[data-slot="Empty"]')
+      if (!emptyElement) {
+        emptyElement = document.createElement('div')
+        emptyElement.dataset.slot = 'Empty'
+        emptyElement.textContent = 'Keine Ergebnisse'
+        emptyElement.style.cssText = 'padding:16px;text-align:center;color:#666;font-size:12px;display:none;'
+        content.appendChild(emptyElement)
+      }
+      el._zagEmptyElement = emptyElement
+
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase()
+        items.forEach(item => {
+          const text = item.textContent.toLowerCase()
+          // Use 'flex' instead of '' to preserve horizontal layout
+          item.style.display = text.includes(query) ? 'flex' : 'none'
+        })
+        const visibleItems = Array.from(items).filter(i => i.style.display !== 'none')
+
+        // Show/hide empty state
+        if (emptyElement) {
+          emptyElement.style.display = visibleItems.length === 0 ? '' : 'none'
+        }
+
+        el._zagState.highlightedIndex = 0
+        if (visibleItems.length > 0) {
+          this._updateZagHighlight(el, visibleItems)
+        }
+      })
+
+      el._zagSearchInput = searchInput
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const getItemLabel = (item) => {
+      // First check for explicit ItemText slot
+      const textEl = item.querySelector('[data-slot="ItemText"]')
+      if (textEl) return textEl.textContent
+
+      // For items with multiple child elements (custom items like Icon + Text),
+      // only use the first text-like element to avoid concatenation
+      // e.g., Item: Text "Inter", Text "Aa" -> should return "Inter", not "InterAa"
+      const childElements = item.children
+      if (childElements.length > 1) {
+        // Multiple children - find the first text-bearing child
+        for (const child of childElements) {
+          // Skip indicators (checkmarks), icons at start might be decorative
+          if (child.dataset?.slot === 'ItemIndicator') continue
+          // Return first child's text that has actual content
+          const text = child.textContent?.trim()
+          if (text) return text
+        }
+      }
+
+      // Simple items: use all text content
+      return item.textContent?.trim() || ''
+    }
+
+    const updateCheckIcons = () => {
+      items.forEach(item => {
+        const ind = item.querySelector('[data-slot="ItemIndicator"]')
+        if (ind) {
+          const isSelected = el._zagState.value.includes(item.dataset.mirrorItem)
+
+          if (isMultiple) {
+            // Checkbox style: fill background and show checkmark when selected
+            if (isSelected) {
+              ind.style.background = '#4f46e5'
+              ind.style.borderColor = '#4f46e5'
+              const svg = ind.querySelector('svg')
+              if (svg) svg.style.opacity = '1'
+            } else {
+              ind.style.background = ''
+              ind.style.borderColor = '#444'
+              const svg = ind.querySelector('svg')
+              if (svg) svg.style.opacity = '0'
+            }
+          } else {
+            // Checkmark style: show/hide
+            ind.style.display = isSelected ? '' : 'none'
+          }
+        }
+      })
+    }
+
+    // Render tags for multiple mode
+    const renderTags = () => {
+      // Remove existing tag group
+      const existingTags = trigger.querySelector('[data-slot="TagGroup"]')
+      if (existingTags) existingTags.remove()
+
+      if (!isMultiple || el._zagState.value.length === 0) {
+        triggerText.style.display = ''
+        return
+      }
+
+      // Hide text, show tags
+      triggerText.style.display = 'none'
+
+      const tagGroup = document.createElement('div')
+      tagGroup.dataset.slot = 'TagGroup'
+      tagGroup.style.cssText = 'display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;flex:1;'
+
+      for (const val of el._zagState.value) {
+        const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === val)
+        const label = matchItem ? getItemLabel(matchItem) : val
+
+        const tag = document.createElement('span')
+        tag.dataset.slot = 'Pill'
+        tag.dataset.value = val
+        tag.style.cssText = 'background:#333;color:#e0e0e0;padding:2px 6px;border-radius:3px;font-size:12px;display:flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;'
+        tag.textContent = label
+
+        const removeBtn = document.createElement('span')
+        removeBtn.dataset.slot = 'PillRemove'
+        removeBtn.style.cssText = 'color:#888;cursor:pointer;display:flex;'
+        removeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+        removeBtn.addEventListener('mouseenter', () => removeBtn.style.color = '#fff')
+        removeBtn.addEventListener('mouseleave', () => removeBtn.style.color = '#888')
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const idx = el._zagState.value.indexOf(val)
+          if (idx > -1) el._zagState.value.splice(idx, 1)
+          const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === val)
+          if (matchItem) matchItem.removeAttribute('data-selected')
+          updateCheckIcons()
+          renderTags()
+          renderTriggerValue()
+        })
+        tag.appendChild(removeBtn)
+        tagGroup.appendChild(tag)
+      }
+
+      // Insert before clear button or indicator
+      const insertBefore = clearButton || indicator
+      trigger.insertBefore(tagGroup, insertBefore)
+    }
+
+    const renderTriggerValue = () => {
+      if (isMultiple) {
+        if (el._zagState.value.length === 0) {
+          triggerText.style.display = ''
+          triggerText.textContent = placeholder || 'Auswählen...'
+          triggerText.style.color = '#666'
+          if (clearButton) clearButton.style.display = 'none'
+        } else {
+          renderTags()
+          if (clearButton) clearButton.style.display = 'flex'
+        }
+      } else {
+        if (el._zagState.value.length === 0) {
+          triggerText.textContent = placeholder || 'Auswählen...'
+          triggerText.style.color = '#666'
+          if (clearButton) clearButton.style.display = 'none'
+        } else {
+          const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === el._zagState.value[0])
+          triggerText.textContent = matchItem ? getItemLabel(matchItem) : el._zagState.value[0]
+          triggerText.style.color = '#e0e0e0'
+          if (clearButton) clearButton.style.display = 'flex'
+        }
+      }
+    }
+
+    // ========================================
+    // DISABLED STATE
+    // ========================================
+
+    if (isDisabled) {
+      trigger.setAttribute('disabled', 'true')
+      trigger.style.opacity = '0.5'
+      trigger.style.cursor = 'not-allowed'
+      trigger.style.pointerEvents = 'none'
+    }
+
+    // ========================================
+    // TRACK STATE
+    // ========================================
+
+    el._zagState.multiple = isMultiple
+    el._zagPlaceholder = placeholder || 'Auswählen...'
+
+    // Pre-select value
+    const preselect = value || defaultValue
+    if (preselect) {
+      const preselectArr = Array.isArray(preselect) ? preselect : [preselect]
+      el._zagState.value = preselectArr
+      items.forEach(item => {
+        if (preselectArr.includes(item.dataset.mirrorItem)) {
+          item.setAttribute('data-selected', 'true')
+        }
+      })
+      updateCheckIcons()
+    }
+    renderTriggerValue()
+
+    // If disabled, don't set up interactions
+    if (isDisabled) return
+
+    // ========================================
+    // TRIGGER CLICK
+    // ========================================
+
     trigger.addEventListener('click', (e) => {
       e.stopPropagation()
       el._zagState.open = !el._zagState.open
@@ -460,48 +850,98 @@ const _runtime = {
       content.style.display = el._zagState.open ? '' : 'none'
       trigger.setAttribute('aria-expanded', el._zagState.open)
 
+      // Update styles
+      trigger.style.borderColor = el._zagState.open ? '#4f46e5' : '#333'
+      if (indicator) {
+        indicator.style.transform = el._zagState.open ? 'rotate(180deg)' : ''
+        indicator.style.color = el._zagState.open ? '#4f46e5' : '#666'
+      }
+
       if (el._zagState.open) {
-        // Highlight first item
-        const items = content.querySelectorAll('[data-mirror-item]')
-        if (items.length > 0) {
-          el._zagState.highlightedIndex = 0
-          this._updateZagHighlight(el, items)
+        if (searchInput) {
+          searchInput.value = ''
+          searchInput.focus()
+          // Use 'flex' to preserve horizontal layout
+          items.forEach(item => item.style.display = 'flex')
         }
+        el._zagState.highlightedIndex = 0
+        this._updateZagHighlight(el, items)
       }
     })
 
-    // Close on click outside
+    // Hover effect
+    trigger.addEventListener('mouseenter', () => {
+      if (!el._zagState.open) trigger.style.borderColor = '#444'
+    })
+    trigger.addEventListener('mouseleave', () => {
+      if (!el._zagState.open) trigger.style.borderColor = '#333'
+    })
+
+    // ========================================
+    // CLICK OUTSIDE
+    // ========================================
+
     document.addEventListener('click', (e) => {
       if (el._zagState.open && !el.contains(e.target)) {
         el._zagState.open = false
         content.hidden = true
         content.style.display = 'none'
         trigger.setAttribute('aria-expanded', 'false')
+        trigger.style.borderColor = '#333'
+        if (indicator) {
+          indicator.style.transform = ''
+          indicator.style.color = '#666'
+        }
       }
     })
 
-    // Item selection
-    const items = content.querySelectorAll('[data-mirror-item]')
+    // ========================================
+    // ITEM INTERACTIONS
+    // ========================================
+
     items.forEach((item, index) => {
-      item.style.cursor = 'pointer'
+      const isItemDisabled = item.dataset.disabled === 'true'
+
+      if (isItemDisabled) {
+        item.style.opacity = '0.4'
+        item.style.cursor = 'not-allowed'
+        return
+      }
 
       item.addEventListener('click', (e) => {
         e.stopPropagation()
-        const value = item.dataset.mirrorItem
-        el._zagState.value = [value]
+        const itemValue = item.dataset.mirrorItem
 
-        // Update trigger text
-        trigger.textContent = item.textContent
+        if (isMultiple) {
+          const idx = el._zagState.value.indexOf(itemValue)
+          if (idx > -1) {
+            el._zagState.value.splice(idx, 1)
+            item.removeAttribute('data-selected')
+          } else {
+            el._zagState.value.push(itemValue)
+            item.setAttribute('data-selected', 'true')
+          }
+          updateCheckIcons()
+          renderTriggerValue()
+        } else {
+          el._zagState.value = [itemValue]
+          items.forEach(i => i.removeAttribute('data-selected'))
+          item.setAttribute('data-selected', 'true')
+          updateCheckIcons()
+          renderTriggerValue()
 
-        // Mark selected
-        items.forEach(i => i.removeAttribute('data-selected'))
-        item.setAttribute('data-selected', 'true')
-
-        // Close dropdown
-        el._zagState.open = false
-        content.hidden = true
-        content.style.display = 'none'
-        trigger.setAttribute('aria-expanded', 'false')
+          if (closeOnSelect) {
+            el._zagState.open = false
+            content.hidden = true
+            content.style.display = 'none'
+            trigger.setAttribute('aria-expanded', 'false')
+            trigger.style.borderColor = '#333'
+            if (indicator) {
+              indicator.style.transform = ''
+              indicator.style.color = '#666'
+            }
+          }
+        }
       })
 
       item.addEventListener('mouseenter', () => {
@@ -510,7 +950,10 @@ const _runtime = {
       })
     })
 
-    // Keyboard navigation
+    // ========================================
+    // KEYBOARD NAVIGATION
+    // ========================================
+
     el.addEventListener('keydown', (e) => {
       if (!el._zagState.open) {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
@@ -520,25 +963,25 @@ const _runtime = {
         return
       }
 
-      const items = content.querySelectorAll('[data-mirror-item]')
-      const count = items.length
+      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      const count = visibleItems.length
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
           el._zagState.highlightedIndex = (el._zagState.highlightedIndex + 1) % count
-          this._updateZagHighlight(el, items)
+          this._updateZagHighlight(el, visibleItems)
           break
         case 'ArrowUp':
           e.preventDefault()
           el._zagState.highlightedIndex = (el._zagState.highlightedIndex - 1 + count) % count
-          this._updateZagHighlight(el, items)
+          this._updateZagHighlight(el, visibleItems)
           break
         case 'Enter':
         case ' ':
           e.preventDefault()
-          if (el._zagState.highlightedIndex >= 0) {
-            items[el._zagState.highlightedIndex].click()
+          if (el._zagState.highlightedIndex >= 0 && visibleItems[el._zagState.highlightedIndex]) {
+            visibleItems[el._zagState.highlightedIndex].click()
           }
           break
         case 'Escape':
@@ -547,12 +990,20 @@ const _runtime = {
           content.hidden = true
           content.style.display = 'none'
           trigger.setAttribute('aria-expanded', 'false')
+          trigger.style.borderColor = '#333'
+          if (indicator) {
+            indicator.style.transform = ''
+            indicator.style.color = '#666'
+          }
           trigger.focus()
           break
       }
     })
 
-    // Make trigger focusable
+    // ========================================
+    // ACCESSIBILITY
+    // ========================================
+
     trigger.setAttribute('tabindex', '0')
     trigger.setAttribute('role', 'combobox')
     trigger.setAttribute('aria-haspopup', 'listbox')
@@ -564,8 +1015,10 @@ const _runtime = {
     items.forEach((item, i) => {
       if (i === el._zagState.highlightedIndex) {
         item.setAttribute('data-highlighted', 'true')
+        item.style.background = '#252525'
       } else {
         item.removeAttribute('data-highlighted')
+        item.style.background = ''
       }
     })
   },

@@ -390,6 +390,14 @@ export class PropertyPanel {
    * Render the property panel
    */
   private render(element: ExtractedElement): void {
+    // Guard: Check if the selection has changed since updatePanel was called
+    // This prevents race conditions where multiple selection changes are in flight
+    const currentSelection = this.selectionManager.getSelection()
+    if (currentSelection && element.nodeId !== currentSelection) {
+      // Selection changed while we were processing - skip this stale render
+      return
+    }
+
     const title = element.instanceName || element.componentName
     const badge = element.isDefinition ? 'Definition' : ''
 
@@ -399,6 +407,8 @@ export class PropertyPanel {
     // 3. When filesAccess is available
     const hasInlineProperties = element.allProperties.some(p => p.source === 'instance')
     const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess
+
+    const categoriesHtml = this.renderCategories(element.categories)
 
     this.container.innerHTML = `
       <div class="pp-header">
@@ -415,7 +425,7 @@ export class PropertyPanel {
         </div>
       ` : ''}
       <div class="pp-content">
-        ${this.renderCategories(element.categories)}
+        ${categoriesHtml}
       </div>
     `
 
@@ -440,7 +450,8 @@ export class PropertyPanel {
     const borderCat = categories.find(c => c.name === 'border')
     const typographyCat = categories.find(c => c.name === 'typography')
 
-    const specialCats = ['layout', 'alignment', 'position', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover']
+    const specialCats = ['layout', 'alignment', 'position', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover', 'behavior']
+    const behaviorCat = categories.find(c => c.name === 'behavior')
     const otherCats = categories.filter(c => !specialCats.includes(c.name))
 
     let result = ''
@@ -471,6 +482,11 @@ export class PropertyPanel {
     // Render typography section
     if (typographyCat) {
       result += this.renderTypographySection(typographyCat)
+    }
+
+    // Render behavior section (for Zag components)
+    if (behaviorCat && behaviorCat.properties.length > 0) {
+      result += this.renderBehaviorSection(behaviorCat)
     }
 
     return result
@@ -1745,6 +1761,87 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
+   * Render behavior section for Zag component properties
+   * Shows toggles for boolean props, selects for enums, inputs for strings
+   */
+  private renderBehaviorSection(category: PropertyCategory): string {
+    const props = category.properties
+    if (props.length === 0) return ''
+
+    // Separate boolean toggles from other properties
+    const booleans = props.filter(p => p.type === 'boolean')
+    const selects = props.filter(p => p.type === 'select' && p.options && p.options.length > 0)
+    const others = props.filter(p => p.type !== 'boolean' && !(p.type === 'select' && p.options && p.options.length > 0))
+
+    // Render boolean toggles in rows of 2
+    const booleanRows: string[] = []
+    for (let i = 0; i < booleans.length; i += 2) {
+      const row = booleans.slice(i, i + 2)
+      const toggles = row.map(prop => {
+        const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
+        const label = prop.label || prop.name
+        return `
+          <div class="prop-row">
+            <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
+            <div class="prop-content">
+              <button class="toggle-btn single ${isActive ? 'active' : ''}" data-behavior-toggle="${prop.name}" title="${this.escapeHtml(prop.description || label)}">
+                <svg class="icon" viewBox="0 0 14 14">
+                  ${isActive ? '<path d="M11 4L6 10L3 7" stroke="currentColor" stroke-width="2" fill="none"/>' : ''}
+                </svg>
+              </button>
+            </div>
+          </div>
+        `
+      }).join('')
+      booleanRows.push(toggles)
+    }
+
+    // Render select dropdowns
+    const selectRows = selects.map(prop => {
+      const options = (prop.options || []).map(opt =>
+        `<option value="${this.escapeHtml(opt)}" ${prop.value === opt ? 'selected' : ''}>${this.escapeHtml(opt)}</option>`
+      ).join('')
+      const label = prop.label || prop.name
+      return `
+        <div class="prop-row">
+          <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
+          <div class="prop-content">
+            <select class="prop-select" data-behavior-select="${prop.name}">
+              <option value="">-</option>
+              ${options}
+            </select>
+          </div>
+        </div>
+      `
+    }).join('')
+
+    // Render other properties (strings, numbers)
+    const otherRows = others.map(prop => {
+      const label = prop.label || prop.name
+      const inputType = prop.type === 'number' ? 'number' : 'text'
+      return `
+        <div class="prop-row">
+          <span class="prop-label" title="${this.escapeHtml(prop.description || '')}">${this.escapeHtml(label)}</span>
+          <div class="prop-content">
+            <input type="${inputType}" class="prop-input" value="${this.escapeHtml(prop.value || '')}" data-behavior-input="${prop.name}" placeholder="${this.escapeHtml(label)}" autocomplete="off">
+          </div>
+        </div>
+      `
+    }).join('')
+
+    return `
+      <div class="section">
+        <div class="section-label">Behavior</div>
+        <div class="section-content">
+          ${booleanRows.join('')}
+          ${selectRows}
+          ${otherRows}
+        </div>
+      </div>
+    `
+  }
+
+  /**
    * Shadow presets
    */
   private readonly SHADOW_PRESETS = ['none', 'sm', 'md', 'lg'] as const
@@ -2484,6 +2581,24 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     if (cursorSelect) {
       cursorSelect.addEventListener('change', (e) => this.handleSelectChange(e))
     }
+
+    // Behavior toggle buttons
+    const behaviorToggles = this.container.querySelectorAll('[data-behavior-toggle]')
+    behaviorToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleBehaviorToggle(e))
+    })
+
+    // Behavior select dropdowns
+    const behaviorSelects = this.container.querySelectorAll('[data-behavior-select]')
+    behaviorSelects.forEach(select => {
+      select.addEventListener('change', (e) => this.handleBehaviorSelect(e))
+    })
+
+    // Behavior text/number inputs
+    const behaviorInputs = this.container.querySelectorAll('[data-behavior-input]')
+    behaviorInputs.forEach(input => {
+      input.addEventListener('change', (e) => this.handleBehaviorInput(e))
+    })
 
     // Initialize Tom Select for dropdowns
     this.initializeTomSelect()
@@ -4120,6 +4235,79 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         }
       }
     )
+  }
+
+  /**
+   * Handle behavior toggle click (boolean props)
+   */
+  private handleBehaviorToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('[data-behavior-toggle]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const propName = toggle.dataset.behaviorToggle
+    if (!propName) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the property (set to false or remove)
+      const result = this.codeModifier.updateProperty(nodeId, propName, 'false')
+      this.onCodeChange(result)
+    } else {
+      // Add the property (set to true)
+      const result = this.codeModifier.updateProperty(nodeId, propName, 'true')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle behavior select change (enum props)
+   */
+  private handleBehaviorSelect(e: Event): void {
+    const select = e.target as HTMLSelectElement
+    if (!select || !this.currentElement) return
+
+    const propName = select.dataset.behaviorSelect
+    const value = select.value
+    if (!propName) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (value === '' || value === '-') {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, propName)
+      this.onCodeChange(result)
+    } else {
+      // Update the property
+      const result = this.codeModifier.updateProperty(nodeId, propName, value)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle behavior input change (string/number props)
+   */
+  private handleBehaviorInput(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const propName = input.dataset.behaviorInput
+    const value = input.value.trim()
+    if (!propName) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (value === '') {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, propName)
+      this.onCodeChange(result)
+    } else {
+      // Update the property - quote string values if needed
+      const quotedValue = /^[a-zA-Z]/.test(value) && !/^\d+$/.test(value) ? `"${value}"` : value
+      const result = this.codeModifier.updateProperty(nodeId, propName, quotedValue)
+      this.onCodeChange(result)
+    }
   }
 
   /**

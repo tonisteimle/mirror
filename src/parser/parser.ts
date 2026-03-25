@@ -315,7 +315,13 @@ export class Parser {
 
     // Component definition without explicit primitive: Name:
     // Defaults to Frame as the base primitive
+    // BUT if the name is a Zag primitive (Select, Accordion, etc.), treat it as an instance
     if (this.check('COLON')) {
+      if (isZagPrimitive(name.value)) {
+        // Consume the colon and parse as Zag component
+        this.advance() // consume ':'
+        return this.parseZagComponent(name, true) // true = already consumed colon
+      }
       return this.parseComponentDefinitionWithDefaultPrimitive(name)
     }
 
@@ -672,6 +678,13 @@ export class Parser {
       this.parseInlineProperties(instance.properties)
     }
 
+    // Check for inline children after colon (same line)
+    // Syntax: Box hor, gap 8: Icon "save", Text "Speichern"
+    if (this.check('COLON')) {
+      this.advance()
+      this.parseInlineChildren(instance)
+    }
+
     // Extract _route property and move to instance.route
     const routeIndex = instance.properties.findIndex(p => p.name === '_route')
     if (routeIndex !== -1) {
@@ -735,7 +748,12 @@ export class Parser {
    *     Item "Option A"
    *     Item "Option B" disabled
    */
-  private parseZagComponent(nameToken: Token): ZagNode {
+  private parseZagComponent(nameToken: Token, colonAlreadyConsumed = false): ZagNode {
+    // Consume colon if present and not already consumed
+    if (!colonAlreadyConsumed && this.check('COLON')) {
+      this.advance()
+    }
+
     const zagPrimitive = getZagPrimitive(nameToken.value)
     const machineType = zagPrimitive?.machine ?? 'unknown'
 
@@ -753,6 +771,11 @@ export class Parser {
 
     // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
     this.parseZagInlineProperties(zagNode)
+
+    // Consume colon at end of line (e.g., "Select value "x":")
+    if (this.check('COLON')) {
+      this.advance()
+    }
 
     // Skip newline before checking for indented body
     this.skipNewlines()
@@ -773,7 +796,7 @@ export class Parser {
     const zagPrimitive = getZagPrimitive(zagNode.name)
     const validProps = new Set(zagPrimitive?.props ?? [])
 
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
       if (this.check('COMMA')) {
         this.advance()
@@ -802,8 +825,8 @@ export class Parser {
           const token = this.advance()
           const values: any[] = []
 
-          // Parse value(s)
-          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.isAtEnd()) {
+          // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA
+          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.check('COLON') && !this.isAtEnd()) {
             if (this.check('STRING')) {
               values.push(this.advance().value)
             } else if (this.check('NUMBER')) {
@@ -843,18 +866,114 @@ export class Parser {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
 
-      // Check for slot definition: SlotName:
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+      // IMPORTANT: Check for Item BEFORE slots, because "Item" can be both a slot and an item keyword
+      // Item definitions are distinguished by having: Item "Label" or Item value "x"
+      // Slot definitions look like: Item: (just keyword + colon)
+      if (this.check('IDENTIFIER') && isZagItemKeyword(zagNode.name, this.current().value)) {
+        // Check if this looks like an item definition (has string or "value" keyword after)
+        const nextToken = this.tokens[this.pos + 1]
+        const isItemDefinition = nextToken && (
+          nextToken.type === 'STRING' ||
+          (nextToken.type === 'IDENTIFIER' && nextToken.value === 'value')
+        )
+
+        if (isItemDefinition) {
+          const item = this.parseZagItem(zagNode.name)
+          if (item) zagNode.items.push(item)
+          continue
+        }
+      }
+
+      // Check for slot definition: SlotName: or SlotName, props:
+      // Slots can have inline properties before the colon (e.g., "Trigger, hor, spread:")
+      if (this.check('IDENTIFIER')) {
         const slotName = this.current().value
 
         // Verify this is a valid slot for this Zag component
         if (isZagSlot(zagNode.name, slotName)) {
-          this.advance() // slot name
-          this.advance() // colon
-          const slot = this.parseZagSlot(zagNode.name, slotName)
-          zagNode.slots[slotName] = slot
+          // Look ahead to find if there's a colon on this line
+          if (this.hasColonOnLine()) {
+            this.advance() // slot name
+            // Parse inline properties until we hit the colon
+            const properties: Property[] = []
+            while (!this.check('COLON') && !this.check('NEWLINE') && !this.isAtEnd()) {
+              if (this.check('COMMA')) {
+                this.advance()
+                continue
+              }
+              if (this.check('IDENTIFIER')) {
+                const prop = this.parseProperty()
+                if (prop) properties.push(prop)
+              } else {
+                this.advance()
+              }
+            }
+            if (this.check('COLON')) {
+              this.advance() // consume colon
+            }
+            const slot = this.parseZagSlot(zagNode.name, slotName, zagNode)
+            // Merge parsed properties into slot
+            slot.properties = [...properties, ...slot.properties]
+            zagNode.slots[slotName] = slot
+            continue
+          }
+        }
+      }
+
+      // Check for Zag properties (placeholder, defaultValue, disabled, etc.)
+      const zagPrimitive = getZagPrimitive(zagNode.name)
+      const validProps = new Set(zagPrimitive?.props ?? [])
+      if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
+        const propName = this.current().value
+        const token = this.advance()
+
+        // Boolean property (no value following)
+        if (this.check('NEWLINE') || this.check('DEDENT') || this.isAtEnd()) {
+          zagNode.properties.push({
+            type: 'Property',
+            name: propName,
+            values: [true],
+            line: token.line,
+            column: token.column,
+          })
           continue
         }
+
+        // Property with value(s)
+        const values: any[] = []
+        while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
+          if (this.check('STRING')) {
+            values.push(this.advance().value)
+          } else if (this.check('NUMBER')) {
+            values.push(parseFloat(this.advance().value))
+          } else if (this.check('COMMA')) {
+            this.advance()
+          } else if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
+            break // Next property
+          } else {
+            values.push(this.advance().value)
+          }
+        }
+
+        if (values.length > 0) {
+          zagNode.properties.push({
+            type: 'Property',
+            name: propName,
+            values,
+            line: token.line,
+            column: token.column,
+          })
+        } else {
+          // Boolean if no values parsed
+          zagNode.properties.push({
+            type: 'Property',
+            name: propName,
+            values: [true],
+            line: token.line,
+            column: token.column,
+          })
+        }
+        continue
       }
 
       // Check for Item definition: Item/Tab/Step "Label" or Item value "val" label "Label"
@@ -887,7 +1006,7 @@ export class Parser {
    *     hover:
    *       bg #2a2a3e
    */
-  private parseZagSlot(componentName: string, slotName: string): ZagSlotDef {
+  private parseZagSlot(componentName: string, slotName: string, parentZagNode?: ZagNode): ZagSlotDef {
     const startLine = this.previous()?.line ?? 1
     const startColumn = this.previous()?.column ?? 1
 
@@ -913,7 +1032,7 @@ export class Parser {
     // Parse indented body (properties, states, children)
     if (this.check('INDENT')) {
       this.advance()
-      this.parseZagSlotBody(slot)
+      this.parseZagSlotBody(slot, componentName, parentZagNode)
     }
 
     return slot
@@ -922,7 +1041,7 @@ export class Parser {
   /**
    * Parse the body of a Zag slot
    */
-  private parseZagSlotBody(slot: ZagSlotDef): void {
+  private parseZagSlotBody(slot: ZagSlotDef, componentName?: string, parentZagNode?: ZagNode): void {
     while (!this.check('DEDENT') && !this.isAtEnd()) {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
@@ -976,6 +1095,14 @@ export class Parser {
         continue
       }
 
+      // Check for Item children - add to parent ZagNode's items
+      if (this.check('IDENTIFIER') && componentName && parentZagNode &&
+          isZagItemKeyword(componentName, this.current().value)) {
+        const item = this.parseZagItem(componentName)
+        if (item) parentZagNode.items.push(item)
+        continue
+      }
+
       // Child instance
       if (this.check('IDENTIFIER')) {
         const name = this.advance()
@@ -1016,8 +1143,11 @@ export class Parser {
       },
     }
 
+    // Layout properties that can be on items
+    const layoutProps = ['ver', 'hor', 'vertical', 'horizontal', 'gap', 'pad', 'spread', 'center', 'g', 'p']
+
     // Parse item content
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
       if (this.check('COMMA')) {
         this.advance()
@@ -1067,8 +1197,112 @@ export class Parser {
         continue
       }
 
-      // Unknown, stop parsing
+      // Layout properties (ver, hor, gap, pad, spread, etc.)
+      if (this.check('IDENTIFIER') && layoutProps.includes(this.current().value)) {
+        // Initialize properties array if needed
+        if (!item.properties) item.properties = []
+        const propToken = this.current()
+        const propName = this.advance().value
+        // Check for value(s)
+        const values: (string | number | boolean)[] = []
+        while (this.check('NUMBER') || this.check('STRING')) {
+          const valToken = this.advance()
+          values.push(valToken.type === 'NUMBER' ? Number(valToken.value) : valToken.value)
+        }
+        // If no values, treat as boolean flag (e.g., "ver" = true)
+        if (values.length === 0) values.push(true)
+        item.properties.push({ type: 'Property', name: propName, values, line: propToken.line, column: propToken.column })
+        continue
+      }
+
+      // Unknown, stop parsing properties
       break
+    }
+
+    // Check for colon (indicates inline or indented children)
+    if (this.check('COLON')) {
+      this.advance()
+      item.children = []
+
+      // Parse inline children on same line
+      // Children are separated by commas followed by capitalized component names
+      // e.g., "Box w 8, h 8, bg #fff, Text "label"" - commas between props don't separate children
+      while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+        // Skip leading commas
+        if (this.check('COMMA')) {
+          this.advance()
+          continue
+        }
+
+        // Check if this looks like a component (capitalized identifier)
+        if (this.check('IDENTIFIER')) {
+          const name = this.current().value
+          const isComponent = name.charAt(0) === name.charAt(0).toUpperCase()
+
+          if (isComponent) {
+            const childName = this.advance()
+
+            // Create child instance
+            const child: Instance = {
+              type: 'Instance',
+              component: childName.value,
+              name: null,
+              properties: [],
+              children: [],
+              line: childName.line,
+              column: childName.column,
+            }
+
+            // Parse child's properties until we hit a comma followed by another component
+            while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+              // Check for comma - if followed by capitalized identifier, it's a new child
+              if (this.check('COMMA')) {
+                const nextToken = this.tokens[this.pos + 1]
+                if (nextToken && nextToken.type === 'IDENTIFIER') {
+                  const nextName = nextToken.value
+                  const isNextComponent = nextName.charAt(0) === nextName.charAt(0).toUpperCase()
+                  if (isNextComponent) {
+                    // This comma separates children - break to outer loop
+                    break
+                  }
+                }
+                // Comma between properties - skip it and continue
+                this.advance()
+                continue
+              }
+
+              // String content
+              if (this.check('STRING')) {
+                const str = this.advance()
+                child.properties.push({
+                  type: 'Property',
+                  name: 'content',
+                  values: [str.value],
+                  line: str.line,
+                  column: str.column,
+                })
+                continue
+              }
+
+              // Property (lowercase identifier)
+              if (this.check('IDENTIFIER')) {
+                const prop = this.parseProperty()
+                if (prop) child.properties.push(prop)
+                continue
+              }
+
+              break
+            }
+
+            item.children.push(child)
+          } else {
+            // Lowercase - not a component, stop parsing
+            break
+          }
+        } else {
+          break
+        }
+      }
     }
 
     // Skip newline
@@ -1077,7 +1311,7 @@ export class Parser {
     // Check for indented children (custom item content)
     if (this.check('INDENT')) {
       this.advance()
-      item.children = []
+      if (!item.children) item.children = []
       while (!this.check('DEDENT') && !this.isAtEnd()) {
         this.skipNewlines()
         if (this.check('DEDENT') || this.isAtEnd()) break
@@ -1116,6 +1350,25 @@ export class Parser {
         return false
       }
       if (token.type === 'SEMICOLON') {
+        return true
+      }
+      ahead++
+    }
+    return false
+  }
+
+  /**
+   * Look ahead to check if there's a colon on the current line
+   * Used for slot detection: "Trigger, hor, spread:" has colon at the end
+   */
+  private hasColonOnLine(): boolean {
+    let ahead = 0
+    while (this.pos + ahead < this.tokens.length) {
+      const token = this.tokens[this.pos + ahead]
+      if (token.type === 'NEWLINE' || token.type === 'INDENT' || token.type === 'EOF') {
+        return false
+      }
+      if (token.type === 'COLON') {
         return true
       }
       ahead++
@@ -1666,8 +1919,92 @@ export class Parser {
     if (this.check('DEDENT')) this.advance()
   }
 
+  /**
+   * Parse inline children after a colon on the same line
+   * Syntax: Box hor, gap 8: Icon "save", Text "Speichern"
+   * Children are separated by commas followed by capitalized component names
+   */
+  private parseInlineChildren(instance: Instance): void {
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+      // Skip leading commas
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // Check if this looks like a component (capitalized identifier)
+      if (this.check('IDENTIFIER')) {
+        const name = this.current().value
+        const isComponent = name.charAt(0) === name.charAt(0).toUpperCase()
+
+        if (isComponent) {
+          const childName = this.advance()
+
+          // Create child instance
+          const child: Instance = {
+            type: 'Instance',
+            component: childName.value,
+            name: null,
+            properties: [],
+            children: [],
+            line: childName.line,
+            column: childName.column,
+          }
+
+          // Parse child's properties until we hit a comma followed by another component
+          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+            // Check for comma - if followed by capitalized identifier, it's a new child
+            if (this.check('COMMA')) {
+              const nextToken = this.tokens[this.pos + 1]
+              if (nextToken && nextToken.type === 'IDENTIFIER') {
+                const nextName = nextToken.value
+                const isNextComponent = nextName.charAt(0) === nextName.charAt(0).toUpperCase()
+                if (isNextComponent) {
+                  // This comma separates children - break to outer loop
+                  break
+                }
+              }
+              // Comma between properties - skip it and continue
+              this.advance()
+              continue
+            }
+
+            // String content
+            if (this.check('STRING')) {
+              const str = this.advance()
+              child.properties.push({
+                type: 'Property',
+                name: 'content',
+                values: [str.value],
+                line: str.line,
+                column: str.column,
+              })
+              continue
+            }
+
+            // Property (lowercase identifier)
+            if (this.check('IDENTIFIER')) {
+              const prop = this.parseProperty()
+              if (prop) child.properties.push(prop)
+              continue
+            }
+
+            break
+          }
+
+          instance.children.push(child)
+        } else {
+          // Lowercase - not a component, stop parsing
+          break
+        }
+      } else {
+        break
+      }
+    }
+  }
+
   private parseInlineProperties(properties: Property[]): void {
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('SEMICOLON') && !this.isAtEnd()) {
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
       if (this.check('COMMA')) {
         this.advance()

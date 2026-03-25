@@ -5,6 +5,9 @@
  * Handles creation, starting, stopping, and API access for machines.
  */
 
+// Import Zag vanilla utilities for machine interpretation
+import { VanillaMachine, normalizeProps } from '@zag-js/vanilla'
+
 // Import all Zag machines
 import * as accordion from '@zag-js/accordion'
 import * as angleSlider from '@zag-js/angle-slider'
@@ -628,11 +631,52 @@ export class MachineRunner {
       return
     }
 
-    // Create mock API for rendering
-    instance.api = this.createMockApi(instance)
+    const machineModule = MACHINES[instance.type] as any
+    if (!machineModule || !machineModule.machine || !machineModule.connect) {
+      // Fallback to mock API for machines without proper Zag implementation
+      instance.api = this.createMockApi(instance)
+      this.notifySubscribers(id, instance.api)
+      return
+    }
 
-    // Notify subscribers
-    this.notifySubscribers(id, instance.api)
+    try {
+      // Create machine-specific props
+      const props = this.createMachineProps(instance.type, instance.config)
+
+      // Create VanillaMachine wrapper for the Zag machine
+      const vanillaMachine = new VanillaMachine(machineModule.machine, props)
+
+      // Subscribe to state changes and connect to API
+      const unsubscribe = vanillaMachine.subscribe((service: any) => {
+        // Connect service state to API
+        instance.api = machineModule.connect(service, vanillaMachine.send, normalizeProps)
+        this.notifySubscribers(id, instance.api)
+      })
+
+      // Start the machine
+      vanillaMachine.start()
+
+      // Store service and cleanup
+      instance.service = vanillaMachine
+      instance.cleanup = () => {
+        unsubscribe()
+        vanillaMachine.stop()
+      }
+
+      // Initial API connection
+      instance.api = machineModule.connect(
+        vanillaMachine.service,
+        vanillaMachine.send,
+        normalizeProps
+      )
+      this.notifySubscribers(id, instance.api)
+
+    } catch (error) {
+      console.warn(`Failed to start Zag machine for ${id}:`, error)
+      // Fallback to mock API
+      instance.api = this.createMockApi(instance)
+      this.notifySubscribers(id, instance.api)
+    }
   }
 
   /**

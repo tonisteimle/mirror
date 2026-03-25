@@ -8,7 +8,7 @@
  * - All available properties (from schema)
  */
 
-import type { AST, ComponentDefinition, Instance, Property } from '../parser/ast'
+import type { AST, ComponentDefinition, Instance, Property, ZagNode } from '../parser/ast'
 import type { SourceMap, NodeMapping } from '../ir/source-map'
 import {
   properties as allPropertyDefinitions,
@@ -398,11 +398,11 @@ export class PropertyExtractor {
       this.addAvailableProperties(allProperties, nodeMapping.componentName)
     }
 
-    // Add Zag behavior props for Zag primitives
-    if (isZagPrimitive(nodeMapping.componentName)) {
+    // Add Zag behavior props for Zag primitives or ZagNodes
+    if (isZagPrimitive(nodeMapping.componentName) || astNode.type === 'ZagComponent') {
       const behaviorProps = this.extractZagBehaviorProps(
         nodeMapping.componentName,
-        astNode as Instance
+        astNode as Instance | ZagNode
       )
       allProperties.push(...behaviorProps)
     }
@@ -613,7 +613,7 @@ export class PropertyExtractor {
   /**
    * Find AST node from source map mapping
    */
-  private findAstNode(mapping: NodeMapping): Instance | ComponentDefinition | null {
+  private findAstNode(mapping: NodeMapping): Instance | ComponentDefinition | ZagNode | null {
     // Search in instances
     for (const inst of this.ast.instances) {
       const found = this.findInInstance(inst, mapping)
@@ -629,9 +629,18 @@ export class PropertyExtractor {
   }
 
   /**
-   * Recursively find an instance matching the mapping
+   * Recursively find an instance or ZagNode matching the mapping
    */
-  private findInInstance(inst: Instance | any, mapping: NodeMapping): Instance | null {
+  private findInInstance(inst: Instance | ZagNode | any, mapping: NodeMapping): Instance | ZagNode | null {
+    // Check if this is a ZagComponent at top level
+    if (inst.type === 'ZagComponent') {
+      if (inst.line === mapping.position.line && inst.column === mapping.position.column) {
+        return inst as ZagNode
+      }
+      // ZagComponents don't have nested children to search
+      return null
+    }
+
     // Check if this instance matches
     if (inst.line === mapping.position.line && inst.column === mapping.position.column) {
       return inst as Instance
@@ -643,6 +652,11 @@ export class PropertyExtractor {
         if (child.type === 'Instance') {
           const found = this.findInInstance(child, mapping)
           if (found) return found
+        } else if (child.type === 'ZagComponent') {
+          // Check if this ZagNode matches
+          if (child.line === mapping.position.line && child.column === mapping.position.column) {
+            return child as ZagNode
+          }
         }
       }
     }
@@ -758,7 +772,8 @@ export class PropertyExtractor {
     const categoryMap = new Map<string, ExtractedProperty[]>()
 
     for (const prop of properties) {
-      const category = CATEGORY_MAP[prop.name] || 'other'
+      // Use prop.category if set (e.g., for Zag behavior props), otherwise lookup in CATEGORY_MAP
+      const category = prop.category || CATEGORY_MAP[prop.name] || 'other'
       if (!categoryMap.has(category)) {
         categoryMap.set(category, [])
       }
@@ -802,11 +817,11 @@ export class PropertyExtractor {
   }
 
   /**
-   * Extract Zag behavior properties from an instance
+   * Extract Zag behavior properties from an instance or ZagNode
    */
   private extractZagBehaviorProps(
     componentName: string,
-    astNode: Instance
+    astNode: Instance | ZagNode
   ): ExtractedProperty[] {
     return this.extractZagBehaviorPropsGeneric(
       componentName,
@@ -840,9 +855,25 @@ export class PropertyExtractor {
     const metadata = getZagPropMetadata(componentName)
     if (!metadata) return []
 
+    // Build a map of current property values for dependency checking
+    const currentValues = new Map<string, string | boolean>()
+    for (const prop of properties) {
+      if (prop.values.length === 0) {
+        currentValues.set(prop.name, true)
+      } else {
+        currentValues.set(prop.name, String(prop.values[0]))
+      }
+    }
+
+    // Get hidden properties based on dependencies
+    const hiddenProps = this.getHiddenBehaviorProps(componentName, currentValues)
+
     const props: ExtractedProperty[] = []
 
     for (const [propName, meta] of Object.entries(metadata)) {
+      // Skip hidden properties
+      if (hiddenProps.has(propName)) continue
+
       const astProp = properties.find(p => p.name === propName)
 
       props.push({
@@ -869,6 +900,61 @@ export class PropertyExtractor {
     }
 
     return props
+  }
+
+  /**
+   * Determine which behavior properties should be hidden based on current values
+   * Handles mutually exclusive and dependent properties
+   */
+  private getHiddenBehaviorProps(
+    componentName: string,
+    currentValues: Map<string, string | boolean>
+  ): Set<string> {
+    const hidden = new Set<string>()
+
+    // Select-specific rules
+    if (componentName === 'Select' || componentName === 'Combobox' || componentName === 'Listbox') {
+      const isMultiple = currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
+
+      if (isMultiple) {
+        // When multiple is true, these don't apply
+        hidden.add('closeOnSelect')  // Dropdown should stay open for multiple selection
+        hidden.add('deselectable')   // Always deselectable in multiple mode
+      }
+
+      // open vs defaultOpen: show only one
+      const hasOpen = currentValues.has('open')
+      const hasDefaultOpen = currentValues.has('defaultOpen')
+
+      if (hasOpen) {
+        hidden.add('defaultOpen')  // Controlled mode - defaultOpen irrelevant
+      } else if (hasDefaultOpen) {
+        hidden.add('open')  // Uncontrolled mode - open would override
+      }
+    }
+
+    // Accordion-specific rules
+    if (componentName === 'Accordion') {
+      const isMultiple = currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
+
+      if (isMultiple) {
+        hidden.add('collapsible')  // Always collapsible in multiple mode
+      }
+    }
+
+    // Dialog/Popover open state rules
+    if (componentName === 'Dialog' || componentName === 'Popover' || componentName === 'Tooltip') {
+      const hasOpen = currentValues.has('open')
+      const hasDefaultOpen = currentValues.has('defaultOpen')
+
+      if (hasOpen) {
+        hidden.add('defaultOpen')
+      } else if (hasDefaultOpen) {
+        hidden.add('open')
+      }
+    }
+
+    return hidden
   }
 
   /**

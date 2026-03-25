@@ -68,10 +68,15 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
       'name', 'form',
       // Advanced
       'composite',
+      // Simplified intent-oriented props
+      'searchable',   // Enable search input
+      'clearable',    // Enable clear button
+      'keepOpen',     // Keep open after selection (inverts closeOnSelect)
     ],
     events: ['onchange', 'onopen', 'onclose', 'onhighlightchange', 'onselect'],
     description: 'Dropdown select with keyboard navigation',
     pattern: 'simple-items',
+    itemKeywords: ['Item', 'Option'],
   },
 
   Combobox: {
@@ -81,6 +86,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     events: ['onchange', 'onopen', 'onclose', 'oninputchange'],
     description: 'Autocomplete combobox with filtering',
     pattern: 'simple-items',
+    itemKeywords: ['Item', 'Option'],
   },
 
   Listbox: {
@@ -90,6 +96,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     events: ['onchange'],
     description: 'Listbox selection',
     pattern: 'simple-items',
+    itemKeywords: ['Item', 'Option'],
   },
 
   // ===========================================================================
@@ -1132,6 +1139,68 @@ export const STATE_MAPPINGS: Record<string, string> = {
   // Timer states
   'running:': '[data-state="running"]',
   'paused:': '[data-state="paused"]',
+}
+
+/**
+ * Slot aliases for designer-friendly naming
+ *
+ * Maps intuitive slot names to their Zag equivalents.
+ * e.g., "Dropdown" → "Content", "Arrow" → "Indicator"
+ */
+export const SLOT_ALIASES: Record<string, Record<string, string>> = {
+  Select: {
+    Dropdown: 'Content',
+    Arrow: 'Indicator',
+    Check: 'ItemIndicator',
+    Value: 'ValueText',
+    Tags: 'TagGroup',
+    Search: 'Input',
+    Clear: 'ClearButton',
+  },
+  Combobox: {
+    Dropdown: 'Content',
+    Arrow: 'Indicator',
+    Check: 'ItemIndicator',
+    Search: 'Input',
+    Clear: 'ClearTrigger',
+  },
+  Menu: {
+    Dropdown: 'Content',
+    Arrow: 'Arrow',
+    Divider: 'Separator',
+  },
+  Accordion: {
+    Header: 'ItemTrigger',
+    Panel: 'ItemContent',
+    Arrow: 'ItemIndicator',
+  },
+  Tabs: {
+    Tab: 'Trigger',
+    Panel: 'Content',
+  },
+  Dialog: {
+    Overlay: 'Backdrop',
+    Modal: 'Content',
+    Close: 'CloseTrigger',
+  },
+  Popover: {
+    Dropdown: 'Content',
+    Close: 'CloseTrigger',
+  },
+  Tooltip: {
+    Popup: 'Content',
+  },
+}
+
+/**
+ * Resolve a slot alias to its canonical Zag slot name
+ */
+export function resolveSlotAlias(primitiveName: string, slotName: string): string {
+  const aliases = SLOT_ALIASES[primitiveName]
+  if (aliases && aliases[slotName]) {
+    return aliases[slotName]
+  }
+  return slotName
 }
 
 /**

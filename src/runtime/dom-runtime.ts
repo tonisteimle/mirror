@@ -26,6 +26,7 @@ export interface MirrorElement extends HTMLElement {
   _selectionBinding?: string
   _textBinding?: string
   _textPlaceholder?: string
+  _savedDisplay?: string
   _clickOutsideHandler?: (e: MouseEvent) => void
   _eachConfig?: {
     itemVar: string
@@ -233,7 +234,8 @@ export function toggle(el: MirrorElement | null): void {
 export function show(el: MirrorElement | null): void {
   if (!el) return
   el.hidden = false
-  el.style.display = ''
+  // Restore saved display value or clear inline style
+  el.style.display = el._savedDisplay || ''
 }
 
 /**
@@ -241,6 +243,10 @@ export function show(el: MirrorElement | null): void {
  */
 export function hide(el: MirrorElement | null): void {
   if (!el) return
+  // Save current display before hiding (unless already hidden)
+  if (el.style.display !== 'none') {
+    el._savedDisplay = el.style.display
+  }
   el.hidden = true
   el.style.display = 'none'
 }

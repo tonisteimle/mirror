@@ -999,11 +999,16 @@ const runtime = {
   show(el: HTMLElement | null) {
     if (!el) return
     el.hidden = false
-    el.style.display = ''
+    // Restore saved display value or clear inline style
+    el.style.display = (el as any)._savedDisplay || ''
   },
 
   hide(el: HTMLElement | null) {
     if (!el) return
+    // Save current display before hiding (unless already hidden)
+    if (el.style.display !== 'none') {
+      (el as any)._savedDisplay = el.style.display
+    }
     el.hidden = true
     el.style.display = 'none'
   },

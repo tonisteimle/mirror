@@ -607,8 +607,9 @@ class DOMGenerator {
       this.emit(`${slotVar}.dataset.slot = '${slotName}'`)
       this.emit(`${slotVar}.dataset.mirrorSlot = '${node.id}-${slotName}'`)
 
-      // Apply base styles
+      // Apply base styles and mark as styled to prevent runtime defaults
       if (slot.styles.length > 0) {
+        this.emit(`${slotVar}.setAttribute('data-styled', 'true')`)
         this.emit(`Object.assign(${slotVar}.style, {`)
         this.indent++
         for (const style of slot.styles) {
@@ -634,9 +635,58 @@ class DOMGenerator {
         const itemVar = `${varName}_item${i}`
         this.emit(`const ${itemVar} = document.createElement('div')`)
         this.emit(`${itemVar}.dataset.mirrorItem = '${item.value}'`)
-        this.emit(`${itemVar}.textContent = '${this.escapeString(item.label)}'`)
         if (item.disabled) {
           this.emit(`${itemVar}.dataset.disabled = 'true'`)
+        }
+        // Apply item layout properties if present
+        if (item.properties && item.properties.length > 0) {
+          for (const prop of item.properties) {
+            const propName = prop.name
+            // Handle layout properties
+            if (propName === 'ver' || propName === 'vertical') {
+              this.emit(`${itemVar}.style.display = 'flex'`)
+              this.emit(`${itemVar}.style.flexDirection = 'column'`)
+            } else if (propName === 'hor' || propName === 'horizontal') {
+              this.emit(`${itemVar}.style.display = 'flex'`)
+              this.emit(`${itemVar}.style.flexDirection = 'row'`)
+            } else if (propName === 'gap' || propName === 'g') {
+              const gapValue = prop.values[0]
+              this.emit(`${itemVar}.style.gap = '${gapValue}px'`)
+            } else if (propName === 'pad' || propName === 'p' || propName === 'padding') {
+              const padValues = prop.values
+              if (padValues.length === 1) {
+                this.emit(`${itemVar}.style.padding = '${padValues[0]}px'`)
+              } else if (padValues.length === 2) {
+                this.emit(`${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px'`)
+              } else if (padValues.length === 4) {
+                this.emit(`${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px ${padValues[2]}px ${padValues[3]}px'`)
+              }
+            } else if (propName === 'spread') {
+              this.emit(`${itemVar}.style.display = 'flex'`)
+              this.emit(`${itemVar}.style.justifyContent = 'space-between'`)
+            } else if (propName === 'center') {
+              this.emit(`${itemVar}.style.display = 'flex'`)
+              this.emit(`${itemVar}.style.alignItems = 'center'`)
+              this.emit(`${itemVar}.style.justifyContent = 'center'`)
+            }
+          }
+        }
+        // Render children if present, otherwise use label as text
+        if (item.children && item.children.length > 0) {
+          // Default to horizontal layout with centered alignment if no explicit layout
+          const hasLayoutProp = item.properties?.some((p: any) =>
+            ['ver', 'hor', 'vertical', 'horizontal', 'spread', 'center'].includes(p.name)
+          )
+          if (!hasLayoutProp) {
+            this.emit(`${itemVar}.style.display = 'flex'`)
+            this.emit(`${itemVar}.style.alignItems = 'center'`)
+            this.emit(`${itemVar}.style.gap = '8px'`)
+          }
+          for (const child of item.children) {
+            this.emitNode(child, itemVar)
+          }
+        } else {
+          this.emit(`${itemVar}.textContent = '${this.escapeString(item.label)}'`)
         }
         this.emit(`${contentSlotVar}.appendChild(${itemVar})`)
       }

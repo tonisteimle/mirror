@@ -206,6 +206,12 @@ export class PreviewController {
     // Initialize Zag Preview Manager
     this.zagPreviewManager = createZagPreviewManager({
       container: this.container,
+      onSelect: (context) => {
+        // Select the Zag component when clicked
+        actions.clearMultiSelection()
+        this.clearMultiSelectionHighlight()
+        this.select(context.nodeId)
+      },
     })
 
     // Subscribe to compile:completed for automatic refresh

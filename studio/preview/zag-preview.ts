@@ -105,15 +105,11 @@ export class ZagPreviewManager {
     const nodeId = zagElement.getAttribute(MIRROR_ID_ATTR)
     if (!nodeId) return null
 
-    // Verify nodeId is tracked as a Zag component
-    const node = this.mountedNodes.get(nodeId)
-    if (!node) return null
-
-    // Additional verification: ensure node's zagType matches element's attribute
-    if (node.zagType !== zagType) {
-      console.warn(`Zag type mismatch: expected "${node.zagType}", got "${zagType}"`)
-      return null
-    }
+    // Stop propagation to prevent Zag machine from handling the click
+    // This allows selecting the component instead of triggering its behavior
+    // Use stopImmediatePropagation to also stop handlers on the same element
+    event.stopImmediatePropagation()
+    event.preventDefault()
 
     // Check if we clicked on a specific slot
     const slotElement = target.closest('[data-slot]') as HTMLElement
@@ -123,19 +119,31 @@ export class ZagPreviewManager {
     const itemElement = target.closest('[data-mirror-item]') as HTMLElement
     const itemValue = itemElement?.getAttribute('data-mirror-item') ?? undefined
 
-    // Determine source position based on what was clicked
-    let sourcePosition = node.sourcePosition
+    // Try to get source position from tracked node if available
+    let sourcePosition: SourcePosition | undefined
+    const node = this.mountedNodes.get(nodeId)
 
-    if (slotName && node.slots[slotName]) {
-      sourcePosition = node.slots[slotName].sourcePosition
-    }
+    if (node) {
+      // Additional verification: ensure node's zagType matches element's attribute
+      if (node.zagType !== zagType) {
+        console.warn(`Zag type mismatch: expected "${node.zagType}", got "${zagType}"`)
+      }
 
-    if (itemValue) {
-      const item = node.items.find(i => i.value === itemValue)
-      if (item) {
-        sourcePosition = item.sourcePosition
+      sourcePosition = node.sourcePosition
+
+      if (slotName && node.slots[slotName]) {
+        sourcePosition = node.slots[slotName].sourcePosition
+      }
+
+      if (itemValue) {
+        const item = node.items.find(i => i.value === itemValue)
+        if (item) {
+          sourcePosition = item.sourcePosition
+        }
       }
     }
+    // Note: If node is not tracked, sourcePosition will be undefined
+    // The selection will still work - SourceMap lookup will provide position
 
     const context: ZagSelectionContext = {
       nodeId,

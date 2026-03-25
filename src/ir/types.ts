@@ -209,6 +209,8 @@ export interface IRItem {
   label: string
   /** Whether the item is disabled */
   disabled?: boolean
+  /** Layout properties for the item (ver, hor, gap, pad, spread, etc.) */
+  properties?: any[]
   /** Custom children for complex item rendering */
   children?: IRNode[]
   /** Source position for bidirectional editing */
