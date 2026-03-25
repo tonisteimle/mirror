@@ -19,7 +19,7 @@
   },
   "scripts": {
     "validate": "npx tsx src/validator/cli.ts",
-    "build": "tsup && npm run build:studio && cp assets/mirror-defaults.css dist/",
+    "build": "tsup && npm run build:studio && cp assets/mirror-defaults.css dist/ && cp dist/browser/index.global.js studio/dist/browser/",
     "build:studio": "tsup --config studio/tsup.config.ts",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "dev:studio": "tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",

@@ -128,6 +128,18 @@ export const SELECT_EXAMPLES: Section[] = [
     ]
   },
   {
+    name: 'DESELECTABLE',
+    examples: [
+      {
+        code: `Select deselectable, value "Option A", placeholder "Klicken zum Abwählen..."
+  Item "Option A"
+  Item "Option B"
+  Item "Option C"`,
+        description: 'deselectable - kann durch erneutes Klicken abgewählt werden'
+      },
+    ]
+  },
+  {
     name: 'DISABLED & READONLY',
     examples: [
       {
@@ -333,6 +345,35 @@ export const SELECT_EXAMPLES: Section[] = [
   Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"
   Item value "chf": Text "₣" w 20 col #888, Text "Schweizer Franken"`,
         description: 'Währungs-Auswahl'
+      },
+    ]
+  },
+  {
+    name: 'GROUPS',
+    examples: [
+      {
+        code: `Select placeholder "Obst oder Gemüse wählen..."
+  Group "Obst"
+    Item "Apfel"
+    Item "Birne"
+    Item "Orange"
+  Group "Gemüse"
+    Item "Karotte"
+    Item "Gurke"
+    Item "Tomate"`,
+        description: 'Gruppierte Items'
+      },
+      {
+        code: `Select placeholder "Mitarbeiter wählen..."
+  Group "Entwicklung"
+    Item "Max Müller"
+    Item "Anna Schmidt"
+  Group "Design"
+    Item "Lisa Weber"
+    Item "Tom Fischer"
+  Group "Management"
+    Item "Eva Braun"`,
+        description: 'Mehrere Gruppen'
       },
     ]
   },

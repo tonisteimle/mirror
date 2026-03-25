@@ -173,6 +173,8 @@ export interface IRZagNode extends IRNode {
   items: IRItem[]
   /** Machine configuration derived from properties */
   machineConfig: Record<string, unknown>
+  /** True if this is a definition (not rendered), false if instance */
+  isDefinition?: boolean
 }
 
 /**

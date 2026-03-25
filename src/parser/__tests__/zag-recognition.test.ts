@@ -187,4 +187,56 @@ describe('Zag Component Recognition', () => {
       expect(value?.values[0]).toBe('opt-1')
     })
   })
+
+  describe('Group Parsing', () => {
+    it('should parse Select with Groups', () => {
+      const code = `Select placeholder "Choose..."
+  Group "Fruits"
+    Item "Apple"
+    Item "Banana"
+  Group "Vegetables"
+    Item "Carrot"`
+      const ast = parse(code)
+
+      const select = ast.instances[0] as any
+      expect(select.type).toBe('ZagComponent')
+      expect(select.items.length).toBe(2)
+      expect(select.items[0].isGroup).toBe(true)
+      expect(select.items[0].label).toBe('Fruits')
+      expect(select.items[0].items.length).toBe(2)
+      expect(select.items[0].items[0].label).toBe('Apple')
+      expect(select.items[0].items[1].label).toBe('Banana')
+      expect(select.items[1].isGroup).toBe(true)
+      expect(select.items[1].label).toBe('Vegetables')
+      expect(select.items[1].items.length).toBe(1)
+    })
+
+    it('should parse Group with label keyword', () => {
+      const code = `Select
+  Group label "Category A"
+    Item "Item 1"
+    Item "Item 2"`
+      const ast = parse(code)
+
+      const select = ast.instances[0] as any
+      expect(select.items[0].isGroup).toBe(true)
+      expect(select.items[0].label).toBe('Category A')
+    })
+
+    it('should allow mixing Groups and Items', () => {
+      const code = `Select placeholder "Choose..."
+  Item "Ungrouped"
+  Group "Grouped"
+    Item "A"
+    Item "B"`
+      const ast = parse(code)
+
+      const select = ast.instances[0] as any
+      expect(select.items.length).toBe(2)
+      expect(select.items[0].isGroup).toBeUndefined()
+      expect(select.items[0].label).toBe('Ungrouped')
+      expect(select.items[1].isGroup).toBe(true)
+      expect(select.items[1].label).toBe('Grouped')
+    })
+  })
 })

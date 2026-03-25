@@ -35,9 +35,11 @@ const COMPLEX_PROPERTIES = new Set([
   'radius',        // directional syntax
 ])
 
-// Properties wo Keywords vielleicht nicht 1:1 implementiert sind
+/// Properties wo Keywords vielleicht nicht 1:1 implementiert sind
 const KEYWORD_SKIP = new Set([
   'weight',        // Keywords wie 'thin', 'bold' werden zu numerischen Werten
+  'width',         // 'full' is context-dependent (flex in nested, 100% at root)
+  'height',        // 'full' is context-dependent (flex in nested, 100% at root)
 ])
 
 // Keyword-Werte die Browser anders normalisiert

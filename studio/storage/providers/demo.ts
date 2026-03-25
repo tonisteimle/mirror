@@ -24,13 +24,10 @@ const DEFAULT_DEMO_FILES: Record<string, string> = {
       hover bg #2563eb
 
   // Zag Select Component
-  Select
-    SelectTrigger
-      SelectValue "Choose an option"
-    SelectContent
-      SelectItem "Option 1"
-      SelectItem "Option 2"
-      SelectItem "Option 3"`,
+  Select placeholder "Choose an option..."
+    Item "Option 1"
+    Item "Option 2"
+    Item "Option 3"`,
 
   'tokens.tok': `// Design Tokens
 

@@ -480,6 +480,15 @@ class IRTransformer {
             machineConfig[prop.name] = prop.values.map((v: any) => String(v))
           }
           break
+        case 'placement':
+          machineConfig.placement = String(prop.values[0] ?? 'bottom-start')
+          break
+        case 'offset':
+          machineConfig.offset = Number(prop.values[0] ?? 4)
+          break
+        case 'deselectable':
+          machineConfig.deselectable = prop.values.length === 0 || prop.values[0] === true
+          break
       }
     }
 
@@ -525,12 +534,20 @@ class IRTransformer {
     }
 
     // Transform items (including children for custom item content)
-    const items = (zagNode.items || []).map((item: ZagItem) => {
+    const transformItem = (item: ZagItem): any => {
       const irItem: any = {
         value: item.value ?? item.label ?? '',
         label: item.label ?? item.value ?? '',
         disabled: item.disabled,
         sourcePosition: item.sourcePosition,
+      }
+      // Include isGroup flag for groups
+      if (item.isGroup) {
+        irItem.isGroup = true
+        // Recursively transform group items
+        if (item.items && item.items.length > 0) {
+          irItem.items = item.items.map(transformItem)
+        }
       }
       // Include properties if present (layout props like ver, gap, pad)
       if (item.properties && item.properties.length > 0) {
@@ -541,7 +558,8 @@ class IRTransformer {
         irItem.children = item.children.map((child: any) => this.transformChild(child))
       }
       return irItem
-    })
+    }
+    const items = (zagNode.items || []).map(transformItem)
 
     // Source position
     const sourcePosition = zagNode.line !== undefined
@@ -569,6 +587,7 @@ class IRTransformer {
       items,
       machineConfig,
       sourcePosition,
+      isDefinition: zagNode.isDefinition ?? false,
     }
 
     // Add to source map builder for selection support in Studio
@@ -937,6 +956,7 @@ class IRTransformer {
       sourcePosition,
       propertySourceMaps,
       layoutType,
+      isDefinition: instance.isDefinition ?? false,
     }
   }
 
@@ -1623,15 +1643,21 @@ class IRTransformer {
     }
 
     // Determine final direction
+    // Non-container primitives should NOT get default flex layout
     const primitiveLower = primitive?.toLowerCase() || ''
-    const defaultsToColumn = primitiveLower === 'frame' || primitiveLower === 'app'
-    const direction = ctx.direction || (defaultsToColumn ? 'column' : null)
+    const nonContainerPrimitives = new Set([
+      'text', 'span', 'input', 'textarea', 'button', 'img', 'image', 'icon',
+      'label', 'link', 'a', 'option', 'divider', 'hr', 'spacer', 'h1', 'h2',
+      'h3', 'h4', 'h5', 'h6', 'checkbox', 'radio'
+    ])
+    const isContainer = !nonContainerPrimitives.has(primitiveLower)
+    const direction = ctx.direction || (isContainer ? 'column' : null)
 
-    // If no layout properties were set and not a frame/app, skip flex styles
+    // If no layout properties were set and not a container, skip flex styles
     const hasLayoutProps = direction || ctx.justifyContent || ctx.alignItems ||
                           ctx._hAlign || ctx._vAlign || ctx.flexWrap
 
-    if (!hasLayoutProps && !defaultsToColumn) {
+    if (!hasLayoutProps && !isContainer) {
       if (ctx.gap) {
         // Gap without flex context - just return gap
         styles.push({ property: 'gap', value: ctx.gap })
@@ -1642,7 +1668,7 @@ class IRTransformer {
     // Add flex display
     styles.push({ property: 'display', value: 'flex' })
 
-    // Add direction (default column for frame)
+    // Add direction (default column for containers)
     const finalDirection = direction || 'column'
     styles.push({ property: 'flex-direction', value: finalDirection })
 
@@ -1660,6 +1686,9 @@ class IRTransformer {
       // Column: horizontal → align-items, vertical → justify-content
       if (hAlign) {
         ctx.alignItems = alignValue(hAlign)
+      } else if (!ctx.alignItems) {
+        // Default for vertical layouts: left-aligned (flex-start)
+        ctx.alignItems = 'flex-start'
       }
       if (vAlign) {
         ctx.justifyContent = alignValue(vAlign)
@@ -2028,6 +2057,7 @@ class IRTransformer {
       return [
         { property: 'display', value: 'flex' },
         { property: 'flex-direction', value: 'column' },
+        { property: 'align-items', value: 'flex-start' },
       ]
     }
 
@@ -2348,6 +2378,14 @@ class IRTransformer {
       htmlProps.push({ name: 'type', value: 'checkbox' })
     } else if (primitive === 'radio') {
       htmlProps.push({ name: 'type', value: 'radio' })
+    }
+
+    // Default icon size (can be overridden via icon-size or is property)
+    if (primitive === 'icon') {
+      const hasIconSize = properties.some(p => p.name === 'icon-size' || p.name === 'is')
+      if (!hasIconSize) {
+        htmlProps.push({ name: 'data-icon-size', value: '16' })
+      }
     }
 
     for (const prop of properties) {

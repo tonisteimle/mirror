@@ -11,7 +11,6 @@ import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
 import { DragDropVisualizer, createDragDropVisualizer, type DropZoneInfo } from '../visual/drag-drop-visualizer'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
-import { ZagPreviewManager, createZagPreviewManager } from './zag-preview'
 
 // Re-export renderer
 export {
@@ -97,13 +96,6 @@ export {
   type BreadcrumbConfig,
 } from './breadcrumb'
 
-// Re-export Zag preview manager
-export {
-  ZagPreviewManager,
-  createZagPreviewManager,
-  type ZagPreviewConfig,
-  type ZagSelectionContext,
-} from './zag-preview'
 
 export interface PreviewConfig {
   container: HTMLElement
@@ -148,9 +140,6 @@ export class PreviewController {
 
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
-
-  // Zag Preview System
-  private zagPreviewManager: ZagPreviewManager | null = null
 
   // Event subscriptions
   private unsubscribeCompile: (() => void) | null = null
@@ -201,17 +190,6 @@ export class PreviewController {
     // Initialize Slot Visibility Service (always enabled)
     this.slotVisibilityService = createSlotVisibilityService({
       container: this.container,
-    })
-
-    // Initialize Zag Preview Manager
-    this.zagPreviewManager = createZagPreviewManager({
-      container: this.container,
-      onSelect: (context) => {
-        // Select the Zag component when clicked
-        actions.clearMultiSelection()
-        this.clearMultiSelectionHighlight()
-        this.select(context.nodeId)
-      },
     })
 
     // Subscribe to compile:completed for automatic refresh
@@ -283,8 +261,6 @@ export class PreviewController {
     // Do NOT add duplicate dragover/drop/dragleave handlers here
     // Start observing slot visibility
     this.slotVisibilityService?.attach()
-    // Attach Zag preview manager
-    this.zagPreviewManager?.attach()
   }
 
   detach(): void {
@@ -294,8 +270,6 @@ export class PreviewController {
     this.container.removeEventListener('mouseout', this.boundHandleMouseOut)
     // Stop observing slot visibility
     this.slotVisibilityService?.detach()
-    // Detach Zag preview manager
-    this.zagPreviewManager?.detach()
   }
 
   /** Re-apply visual selection after preview DOM refresh */
@@ -336,8 +310,6 @@ export class PreviewController {
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
-    // Zag Preview cleanup
-    this.zagPreviewManager?.dispose()
   }
 
   setSourceMap(sourceMap: SourceMap | null): void {
@@ -432,11 +404,6 @@ export class PreviewController {
     this.overlayManager?.dispose()
     this.resizeManager = null
     this.overlayManager = null
-  }
-
-  /** Get the Zag preview manager */
-  getZagPreviewManager(): ZagPreviewManager | null {
-    return this.zagPreviewManager
   }
 
   /**
@@ -548,21 +515,6 @@ export class PreviewController {
     }
 
     const target = e.target as HTMLElement
-
-    // Check for Zag component click first
-    const zagElement = target.closest('[data-zag-component]') as HTMLElement | null
-    if (zagElement && this.zagPreviewManager) {
-      const selectionContext = this.zagPreviewManager.handlePreviewClick(e)
-      if (selectionContext) {
-        e.stopPropagation()
-        // Select the Zag component
-        actions.clearMultiSelection()
-        this.clearMultiSelectionHighlight()
-        this.select(selectionContext.nodeId)
-        return
-      }
-    }
-
     const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
     if (nodeElement) {
       const nodeId = nodeElement.getAttribute(this.config.nodeIdAttribute)

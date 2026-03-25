@@ -43,7 +43,8 @@ export const SIZING: GoldenCategory = {
 
     // Width - keywords
     { input: 'w hug', css: { width: 'fit-content' } },
-    { input: 'w full', css: { flex: '1 1 0%' } },
+    // Note: w full at root level becomes width: 100% (no flex parent)
+    { input: 'w full', css: { width: '100%' } },
 
     // Height - numeric
     { input: 'h 100', css: { height: '100px' } },
@@ -52,7 +53,8 @@ export const SIZING: GoldenCategory = {
 
     // Height - keywords
     { input: 'h hug', css: { height: 'fit-content' } },
-    { input: 'h full', css: { flex: '1 1 0%' } },
+    // Note: h full at root level becomes height: 100% (no flex parent)
+    { input: 'h full', css: { height: '100%' } },
 
     // Size (width + height)
     { input: 'size 100', css: { width: '100px', height: '100px' } },

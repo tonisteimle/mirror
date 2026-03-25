@@ -51,12 +51,15 @@ describe('DSL Schema', () => {
 
   describe('Primitives', () => {
     it('has required primitives', () => {
-      expect(DSL.primitives.Box).toBeDefined()
+      expect(DSL.primitives.Frame).toBeDefined()
       expect(DSL.primitives.Text).toBeDefined()
       expect(DSL.primitives.Button).toBeDefined()
     })
 
     it('isPrimitive works', () => {
+      expect(isPrimitive('Frame')).toBe(true)
+      expect(isPrimitive('frame')).toBe(true)
+      // Box is an alias for Frame
       expect(isPrimitive('Box')).toBe(true)
       expect(isPrimitive('box')).toBe(true)
       expect(isPrimitive('NotAPrimitive')).toBe(false)

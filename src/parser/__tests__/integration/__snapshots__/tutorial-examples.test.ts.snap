@@ -1883,6 +1883,7 @@ exports[`Tutorial Examples: AST Snapshots > Block 27 (line 456): AST snapshot 1`
                 },
               ],
               "component": "hover",
+              "isDefinition": true,
               "name": null,
               "type": "Instance",
             },

@@ -82,6 +82,7 @@ export interface Instance extends BaseNode {
   initialState?: string       // initial state: "closed" → initialState: "closed"
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
   route?: string              // navigation target: "route Home" → route: "Home"
+  isDefinition?: boolean      // true if ends with : (definition, not rendered)
 }
 
 export interface Property extends BaseNode {
@@ -230,6 +231,8 @@ export interface ZagNode extends BaseNode {
   items: ZagItem[]
   /** Events (e.g., onchange) */
   events: Event[]
+  /** True if this is a definition (ends with :), not an instance */
+  isDefinition?: boolean
 }
 
 /**
@@ -274,6 +277,10 @@ export interface ZagItem {
   properties?: Property[]
   /** Custom children for complex items (content-items pattern) */
   children?: (Instance | Text)[]
+  /** Whether this item is a group container */
+  isGroup?: boolean
+  /** Child items (for groups) */
+  items?: ZagItem[]
   /** Source position for bidirectional editing */
   sourcePosition: SourcePosition
 }

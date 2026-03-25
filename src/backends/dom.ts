@@ -247,8 +247,17 @@ class DOMGenerator {
   }
 
   private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
+    // Skip definitions - they are not rendered, only instances are
+    if (node.isDefinition) {
+      return
+    }
+
     // Handle Zag components
     if (isIRZagNode(node)) {
+      // Also check Zag component isDefinition
+      if ((node as any).isDefinition) {
+        return
+      }
       this.emitZagComponent(node, parentVar)
       return
     }
@@ -312,6 +321,16 @@ class DOMGenerator {
 
     // Load icon from CDN if this is an icon element
     if (isIcon && iconName) {
+      this.emit(`// Icon default styles`)
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      this.emit(`'display': 'inline-flex',`)
+      this.emit(`'align-items': 'center',`)
+      this.emit(`'justify-content': 'center',`)
+      this.emit(`'flex-shrink': '0',`)
+      this.emit(`'line-height': '0',`)
+      this.indent--
+      this.emit(`})`)
       this.emit(`// Load Lucide icon`)
       this.emit(`_runtime.loadIcon(${varName}, "${this.escapeString(iconName)}")`)
     }
@@ -630,9 +649,62 @@ class DOMGenerator {
     if (node.items.length > 0) {
       const contentSlotVar = `${varName}_content`
       this.emit(`// Items`)
-      for (let i = 0; i < node.items.length; i++) {
-        const item = node.items[i]
-        const itemVar = `${varName}_item${i}`
+      this.emitZagItems(node.items, varName, contentSlotVar)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Zag component via runtime
+    this.emit(`// Initialize Zag machine`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initZagComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initZagComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit Zag items (including groups)
+   */
+  private emitZagItems(
+    items: any[],
+    varNamePrefix: string,
+    parentVar: string,
+    indexOffset: number = 0
+  ): void {
+    let itemIndex = indexOffset
+    for (const item of items) {
+      if (item.isGroup) {
+        // Render Group
+        const groupVar = `${varNamePrefix}_group${itemIndex}`
+        this.emit(`// Group: ${item.label || 'Unnamed'}`)
+        this.emit(`const ${groupVar} = document.createElement('div')`)
+        this.emit(`${groupVar}.dataset.slot = 'Group'`)
+        this.emit(`${groupVar}.setAttribute('role', 'group')`)
+
+        // Render GroupLabel if present
+        if (item.label) {
+          const labelVar = `${groupVar}_label`
+          this.emit(`const ${labelVar} = document.createElement('span')`)
+          this.emit(`${labelVar}.dataset.slot = 'GroupLabel'`)
+          this.emit(`${labelVar}.textContent = '${this.escapeString(item.label)}'`)
+          this.emit(`${groupVar}.appendChild(${labelVar})`)
+        }
+
+        // Render group items
+        if (item.items && item.items.length > 0) {
+          this.emitZagItems(item.items, `${groupVar}_item`, groupVar, 0)
+        }
+
+        this.emit(`${parentVar}.appendChild(${groupVar})`)
+        itemIndex++
+      } else {
+        // Render regular Item
+        const itemVar = `${varNamePrefix}_item${itemIndex}`
         this.emit(`const ${itemVar} = document.createElement('div')`)
         this.emit(`${itemVar}.dataset.mirrorItem = '${item.value}'`)
         if (item.disabled) {
@@ -646,6 +718,7 @@ class DOMGenerator {
             if (propName === 'ver' || propName === 'vertical') {
               this.emit(`${itemVar}.style.display = 'flex'`)
               this.emit(`${itemVar}.style.flexDirection = 'column'`)
+              this.emit(`${itemVar}.style.alignItems = 'flex-start'`)
             } else if (propName === 'hor' || propName === 'horizontal') {
               this.emit(`${itemVar}.style.display = 'flex'`)
               this.emit(`${itemVar}.style.flexDirection = 'row'`)
@@ -688,23 +761,10 @@ class DOMGenerator {
         } else {
           this.emit(`${itemVar}.textContent = '${this.escapeString(item.label)}'`)
         }
-        this.emit(`${contentSlotVar}.appendChild(${itemVar})`)
+        this.emit(`${parentVar}.appendChild(${itemVar})`)
+        itemIndex++
       }
-      this.emit('')
     }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Zag component via runtime
-    this.emit(`// Initialize Zag machine`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initZagComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initZagComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
   }
 
   private emitConditionalTemplateNode(node: IRNode, parentVar: string): void {

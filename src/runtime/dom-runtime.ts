@@ -738,7 +738,7 @@ export function destroy(el: MirrorElement | null): void {
 export async function loadIcon(el: MirrorElement, iconName: string): Promise<void> {
   if (!el || !iconName) return
 
-  const size = el.dataset.iconSize || '24'
+  const size = el.dataset.iconSize || '16'
   const color = el.dataset.iconColor || 'currentColor'
   const strokeWidth = el.dataset.iconWeight || '2'
 

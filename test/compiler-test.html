@@ -141,6 +141,12 @@
   Item "Zwei"
   Item "Drei"`
       ],
+      "DESELECTABLE": [
+        `Select deselectable, value "Option A", placeholder "Klicken zum Abwählen..."
+  Item "Option A"
+  Item "Option B"
+  Item "Option C"`
+      ],
       "DISABLED & READONLY": [
         `Select disabled, placeholder "Nicht verfügbar"
   Item "A"
@@ -262,6 +268,26 @@
   Item value "usd": Text "\$" w 20 col #888, Text "US Dollar"
   Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"
   Item value "chf": Text "₣" w 20 col #888, Text "Schweizer Franken"`
+      ],
+      "GROUPS": [
+        `Select placeholder "Obst oder Gemüse wählen..."
+  Group "Obst"
+    Item "Apfel"
+    Item "Birne"
+    Item "Orange"
+  Group "Gemüse"
+    Item "Karotte"
+    Item "Gurke"
+    Item "Tomate"`,
+        `Select placeholder "Mitarbeiter wählen..."
+  Group "Entwicklung"
+    Item "Max Müller"
+    Item "Anna Schmidt"
+  Group "Design"
+    Item "Lisa Weber"
+    Item "Tom Fischer"
+  Group "Management"
+    Item "Eva Braun"`
       ]
     };
 

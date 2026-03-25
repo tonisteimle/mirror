@@ -13,7 +13,7 @@ import {
   LAYOUT_BOOLEANS,
 } from '../schema/parser-helpers'
 import { isPrimitive } from '../schema/dsl'
-import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword } from '../schema/zag-primitives'
+import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -678,11 +678,18 @@ export class Parser {
       this.parseInlineProperties(instance.properties)
     }
 
-    // Check for inline children after colon (same line)
-    // Syntax: Box hor, gap 8: Icon "save", Text "Speichern"
+    // Check for colon at end of properties
+    // Two cases:
+    // 1. Colon + NEWLINE → Definition (not rendered): Box pad 8:
+    // 2. Colon + tokens → Instance with inline children: Box pad 8: Icon "save"
     if (this.check('COLON')) {
       this.advance()
-      this.parseInlineChildren(instance)
+      // Check if followed by NEWLINE (definition) or tokens (inline children)
+      if (this.check('NEWLINE') || this.check('INDENT') || this.isAtEnd()) {
+        instance.isDefinition = true
+      } else {
+        this.parseInlineChildren(instance)
+      }
     }
 
     // Extract _route property and move to instance.route
@@ -772,9 +779,12 @@ export class Parser {
     // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
     this.parseZagInlineProperties(zagNode)
 
-    // Consume colon at end of line (e.g., "Select value "x":")
+    // Check for colon at end of line - this marks it as a DEFINITION, not an instance
+    // Select placeholder "...":  → Definition (not rendered)
+    // Select placeholder "..."   → Instance (rendered)
     if (this.check('COLON')) {
       this.advance()
+      zagNode.isDefinition = true
     }
 
     // Skip newline before checking for indented body
@@ -884,6 +894,13 @@ export class Parser {
         }
       }
 
+      // Check for Group definition: Group "Label" or Group label "Label"
+      if (this.check('IDENTIFIER') && isZagGroupKeyword(zagNode.name, this.current().value)) {
+        const group = this.parseZagGroup(zagNode.name)
+        if (group) zagNode.items.push(group)
+        continue
+      }
+
       // Check for slot definition: SlotName: or SlotName, props:
       // Slots can have inline properties before the colon (e.g., "Trigger, hor, spread:")
       if (this.check('IDENTIFIER')) {
@@ -980,6 +997,13 @@ export class Parser {
       if (this.check('IDENTIFIER') && isZagItemKeyword(zagNode.name, this.current().value)) {
         const item = this.parseZagItem(zagNode.name)
         if (item) zagNode.items.push(item)
+        continue
+      }
+
+      // Check for Group definition: Group "Label" or Group label "Label"
+      if (this.check('IDENTIFIER') && isZagGroupKeyword(zagNode.name, this.current().value)) {
+        const group = this.parseZagGroup(zagNode.name)
+        if (group) zagNode.items.push(group)
         continue
       }
 
@@ -1100,6 +1124,14 @@ export class Parser {
           isZagItemKeyword(componentName, this.current().value)) {
         const item = this.parseZagItem(componentName)
         if (item) parentZagNode.items.push(item)
+        continue
+      }
+
+      // Check for Group children - add to parent ZagNode's items
+      if (this.check('IDENTIFIER') && componentName && parentZagNode &&
+          isZagGroupKeyword(componentName, this.current().value)) {
+        const group = this.parseZagGroup(componentName)
+        if (group) parentZagNode.items.push(group)
         continue
       }
 
@@ -1337,6 +1369,95 @@ export class Parser {
     }
 
     return item
+  }
+
+  /**
+   * Parse a Zag Group (container for related items)
+   *
+   * Syntax:
+   *   Group "Fruits"
+   *     Item "Apple"
+   *     Item "Banana"
+   *   Group label "Vegetables"
+   *     Item "Carrot"
+   *     Item "Tomato"
+   */
+  private parseZagGroup(componentName: string): ZagItem | null {
+    const groupToken = this.advance() // 'Group'
+    const startLine = groupToken.line
+    const startColumn = groupToken.column
+
+    const group: ZagItem = {
+      isGroup: true,
+      items: [],
+      sourcePosition: {
+        line: startLine,
+        column: startColumn,
+        endLine: startLine,
+        endColumn: startColumn,
+      },
+    }
+
+    // Parse group properties (label)
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+      // Skip commas
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // String as label (shorthand): Group "Fruits"
+      if (this.check('STRING') && !group.label) {
+        const str = this.advance()
+        group.label = str.value
+        continue
+      }
+
+      // Explicit label: label "Fruits"
+      if (this.check('IDENTIFIER') && this.current().value === 'label') {
+        this.advance()
+        if (this.check('STRING')) {
+          group.label = this.advance().value
+        }
+        continue
+      }
+
+      break
+    }
+
+    // Consume newline
+    if (this.check('NEWLINE')) this.advance()
+
+    // Parse indented children (Items)
+    if (this.check('INDENT')) {
+      this.advance() // consume INDENT
+
+      while (!this.check('DEDENT') && !this.isAtEnd()) {
+        this.skipNewlines()
+        if (this.check('DEDENT') || this.isAtEnd()) break
+
+        // Check for Item
+        if (this.check('IDENTIFIER') && isZagItemKeyword(componentName, this.current().value)) {
+          const item = this.parseZagItem(componentName)
+          if (item) group.items!.push(item)
+          continue
+        }
+
+        // Skip unknown tokens
+        this.advance()
+      }
+
+      if (this.check('DEDENT')) this.advance()
+    }
+
+    // Update end position
+    const prevToken = this.previous()
+    if (prevToken) {
+      group.sourcePosition.endLine = prevToken.line
+      group.sourcePosition.endColumn = prevToken.column
+    }
+
+    return group
   }
 
   /**

@@ -1278,3 +1278,14 @@ export function isZagItemKeyword(primitiveName: string, keyword: string): boolea
   const keywords = getItemKeywords(primitiveName)
   return keywords.includes(keyword)
 }
+
+/**
+ * Check if a keyword is a valid group keyword for a Zag component
+ * Currently only Select, Menu, Combobox, and Listbox support groups
+ */
+export function isZagGroupKeyword(primitiveName: string, keyword: string): boolean {
+  const primitivesDef = ZAG_PRIMITIVES[primitiveName]
+  if (!primitivesDef) return false
+  // Check if Group is in the slots
+  return primitivesDef.slots.includes('Group') && keyword === 'Group'
+}

@@ -157,8 +157,7 @@ export const DSL = {
   // ---------------------------------------------------------------------------
   primitives: {
     // Layout primitives
-    Box: { html: 'div', description: 'Generic container' },
-    Frame: { html: 'div', aliases: ['Box'], description: 'Alias for Box' },
+    Frame: { html: 'div', aliases: ['Box'], description: 'Container with vertical layout (default)' },
     Text: { html: 'span', description: 'Text element' },
 
     // Form elements (basic HTML - complex forms use Zag components)
@@ -541,7 +540,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   center: {
     name: 'center',
-    aliases: ['cen', 'c'],
+    aliases: ['cen'],
     category: 'layout',
     description: 'Center children horizontally and vertically',
 

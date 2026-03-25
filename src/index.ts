@@ -23,7 +23,6 @@ export * from './studio'
 // Zag integration exports
 export * from './schema/zag-primitives'
 export * from './compiler/zag'
-export { ZagRuntime, createZagRuntime } from './runtime/zag'
 
 import { parse } from './parser'
 import { generateDOM } from './backends/dom'

@@ -469,6 +469,9 @@ const _runtime = {
       : config.machineConfig?.closeOnSelect !== false
     const isSearchable = config.machineConfig?.searchable
     const isClearable = config.machineConfig?.clearable
+    const isDeselectable = config.machineConfig?.deselectable
+    const placement = config.machineConfig?.placement || 'bottom-start'
+    const offset = config.machineConfig?.offset ?? 4
     const items = content.querySelectorAll('[data-mirror-item]')
 
     // ========================================
@@ -499,35 +502,87 @@ const _runtime = {
       })
     }
 
-    // Content/Dropdown Styling
+    // Content/Dropdown Styling with placement support
     if (!content.hasAttribute('data-styled')) {
+      const placementStyles = {
+        position: 'absolute',
+        zIndex: '1000',
+      }
+      // Apply placement-based positioning
+      if (placement.startsWith('top')) {
+        placementStyles.bottom = '100%'
+        placementStyles.marginBottom = offset + 'px'
+      } else {
+        placementStyles.top = '100%'
+        placementStyles.marginTop = offset + 'px'
+      }
+      if (placement.endsWith('-start') || placement.endsWith('-left')) {
+        placementStyles.left = '0'
+      } else if (placement.endsWith('-end') || placement.endsWith('-right')) {
+        placementStyles.right = '0'
+      } else {
+        placementStyles.left = '0' // default
+      }
+
       Object.assign(content.style, {
         background: '#1a1a1a',
         borderRadius: '6px',
         border: '1px solid #333',
         boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
-        marginTop: '3px',
         padding: '3px',
         maxHeight: '200px',
         overflow: 'auto',
         minWidth: '160px',
-        position: 'absolute',
-        zIndex: '1000',
+        ...placementStyles,
       })
+      content.dataset.placement = placement
     }
 
     // Item Styling
     items.forEach(item => {
       if (!item.hasAttribute('data-styled')) {
-        Object.assign(item.style, {
+        // Only set alignItems if not already set by compiler (e.g., via center, ver, etc.)
+        const hasAlignItems = item.style.alignItems !== ''
+        const baseStyles = {
           padding: '6px 10px',
           borderRadius: '4px',
           display: 'flex',
-          alignItems: 'center',
           gap: '8px',
           cursor: 'pointer',
           fontSize: '13px',
           color: '#e0e0e0',
+        }
+        // Only add alignItems default if not already set
+        if (!hasAlignItems) {
+          baseStyles.alignItems = 'center'
+        }
+        Object.assign(item.style, baseStyles)
+      }
+    })
+
+    // Group & GroupLabel Styling
+    const groups = content.querySelectorAll('[data-slot="Group"]')
+    groups.forEach(group => {
+      if (!group.hasAttribute('data-styled')) {
+        Object.assign(group.style, {
+          display: 'flex',
+          flexDirection: 'column',
+        })
+        // Add margin-top for groups after the first one
+        if (group.previousElementSibling) {
+          group.style.marginTop = '8px'
+        }
+      }
+      // Style GroupLabel
+      const groupLabel = group.querySelector('[data-slot="GroupLabel"]')
+      if (groupLabel && !groupLabel.hasAttribute('data-styled')) {
+        Object.assign(groupLabel.style, {
+          padding: '6px 10px 4px',
+          fontSize: '11px',
+          fontWeight: '600',
+          color: '#888',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
         })
       }
     })
@@ -675,24 +730,38 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
+    // Event dispatching helpers
+    const fireOpenEvent = () => {
+      el.dispatchEvent(new CustomEvent('open', { detail: { value: el._zagState.value } }))
+    }
+    const fireCloseEvent = () => {
+      el.dispatchEvent(new CustomEvent('close', { detail: { value: el._zagState.value } }))
+    }
+    const fireChangeEvent = (newValue, previousValue) => {
+      el.dispatchEvent(new CustomEvent('change', {
+        detail: { value: newValue, previousValue },
+        bubbles: true
+      }))
+    }
+
     const getItemLabel = (item) => {
       // First check for explicit ItemText slot
       const textEl = item.querySelector('[data-slot="ItemText"]')
       if (textEl) return textEl.textContent
 
-      // For items with multiple child elements (custom items like Icon + Text),
-      // only use the first text-like element to avoid concatenation
-      // e.g., Item: Text "Inter", Text "Aa" -> should return "Inter", not "InterAa"
+      // For items with multiple child elements, collect text from span elements
       const childElements = item.children
       if (childElements.length > 1) {
-        // Multiple children - find the first text-bearing child
+        const texts = []
         for (const child of childElements) {
-          // Skip indicators (checkmarks), icons at start might be decorative
+          // Skip indicators and icons
           if (child.dataset?.slot === 'ItemIndicator') continue
-          // Return first child's text that has actual content
+          if (child.querySelector('svg')) continue
+          // Collect text from span elements
           const text = child.textContent?.trim()
-          if (text) return text
+          if (text) texts.push(text)
         }
+        if (texts.length > 0) return texts.join(' ')
       }
 
       // Simple items: use all text content
@@ -845,10 +914,18 @@ const _runtime = {
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation()
-      el._zagState.open = !el._zagState.open
+      const wasOpen = el._zagState.open
+      el._zagState.open = !wasOpen
       content.hidden = !el._zagState.open
       content.style.display = el._zagState.open ? '' : 'none'
       trigger.setAttribute('aria-expanded', el._zagState.open)
+
+      // Fire open/close events
+      if (el._zagState.open) {
+        fireOpenEvent()
+      } else {
+        fireCloseEvent()
+      }
 
       // Update styles
       trigger.style.borderColor = el._zagState.open ? '#4f46e5' : '#333'
@@ -892,6 +969,7 @@ const _runtime = {
           indicator.style.transform = ''
           indicator.style.color = '#666'
         }
+        fireCloseEvent()
       }
     })
 
@@ -911,6 +989,7 @@ const _runtime = {
       item.addEventListener('click', (e) => {
         e.stopPropagation()
         const itemValue = item.dataset.mirrorItem
+        const previousValue = [...el._zagState.value]
 
         if (isMultiple) {
           const idx = el._zagState.value.indexOf(itemValue)
@@ -923,12 +1002,24 @@ const _runtime = {
           }
           updateCheckIcons()
           renderTriggerValue()
+          fireChangeEvent([...el._zagState.value], previousValue)
         } else {
-          el._zagState.value = [itemValue]
-          items.forEach(i => i.removeAttribute('data-selected'))
-          item.setAttribute('data-selected', 'true')
+          // Single select mode
+          const isCurrentlySelected = el._zagState.value.includes(itemValue)
+
+          if (isCurrentlySelected && isDeselectable) {
+            // Deselect if already selected and deselectable is enabled
+            el._zagState.value = []
+            item.removeAttribute('data-selected')
+          } else {
+            // Select new item
+            el._zagState.value = [itemValue]
+            items.forEach(i => i.removeAttribute('data-selected'))
+            item.setAttribute('data-selected', 'true')
+          }
           updateCheckIcons()
           renderTriggerValue()
+          fireChangeEvent([...el._zagState.value], previousValue)
 
           if (closeOnSelect) {
             el._zagState.open = false
@@ -940,6 +1031,7 @@ const _runtime = {
               indicator.style.transform = ''
               indicator.style.color = '#666'
             }
+            fireCloseEvent()
           }
         }
       })
@@ -996,6 +1088,7 @@ const _runtime = {
             indicator.style.color = '#666'
           }
           trigger.focus()
+          fireCloseEvent()
           break
       }
     })
@@ -1026,7 +1119,7 @@ const _runtime = {
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
-    const size = el.dataset.iconSize || '24'
+    const size = el.dataset.iconSize || '16'
     const color = el.dataset.iconColor || 'currentColor'
     const strokeWidth = el.dataset.iconWeight || '2'
     try {
