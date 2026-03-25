@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Select Properties</title>
+  <title>Mirror Compiler Test</title>
   <link rel="stylesheet" href="../assets/mirror-defaults.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,167 +63,129 @@
       color: #f55;
       font-size: 11px;
     }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+    }
   </style>
 </head>
 <body>
-  <h1>Select Tutorial Examples</h1>
+  <h1>Mirror Compiler Test</h1>
+  <div class="stats" id="stats"></div>
   <div class="examples" id="examples"></div>
 
   <script src="../dist/browser/index.global.js"></script>
   <script>
     const sections = {
       "BASIC PROPERTIES": [
-        // placeholder
         `Select placeholder "Farbe wählen...":
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
-
-        // value
         `Select value "Grün":
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
-
-        // value mit separatem Item-Value
         `Select value "DE":
   Item "Deutschland" value "DE"
   Item "Österreich" value "AT"
   Item "Schweiz" value "CH"`,
-
-        // label
         `Select label "Land", placeholder "Bitte wählen...":
   Item "Deutschland"
   Item "Schweiz"`,
-
-        // defaultValue
         `Select defaultValue "B":
   Item "A"
   Item "B"
-  Item "C"`,
+  Item "C"`
       ],
-
       "MULTIPLE SELECTION": [
-        // multiple
         `Select multiple, placeholder "Farben wählen...":
   Item "Rot"
   Item "Grün"
   Item "Blau"
   Item "Gelb"`,
-
-        // multiple mit defaultValue
         `Select multiple, defaultValue "JS":
   Item "JS"
   Item "TS"
-  Item "React"`,
+  Item "React"`
       ],
-
       "SEARCHABLE": [
-        // searchable
         `Select searchable, placeholder "Land suchen...":
   Item "Afghanistan"
   Item "Albanien"
   Item "Algerien"
   Item "Andorra"
   Item "Angola"`,
-
-        // searchable + multiple
         `Select searchable, multiple, placeholder "Teammitglieder suchen...":
   Item "Anna Schmidt"
   Item "Max Müller"
   Item "Lisa Weber"
-  Item "Tom Fischer"`,
+  Item "Tom Fischer"`
       ],
-
       "CLEARABLE": [
-        // clearable
         `Select clearable, placeholder "Optional...":
   Item "Option A"
   Item "Option B"
   Item "Option C"`,
-
-        // clearable mit value
         `Select clearable, value "Option A":
   Item "Option A"
-  Item "Option B"`,
+  Item "Option B"`
       ],
-
       "KEEPOPEN": [
-        // keepOpen
         `Select keepOpen, placeholder "Mehrere anklicken...":
   Item "Eins"
   Item "Zwei"
-  Item "Drei"`,
+  Item "Drei"`
       ],
-
       "DISABLED & READONLY": [
-        // disabled
         `Select disabled, placeholder "Nicht verfügbar":
   Item "A"
   Item "B"`,
-
-        // readonly
         `Select readonly, value "Festgelegt":
   Item "Festgelegt"
   Item "Andere Option"`,
-
-        // Item disabled
         `Select placeholder "Plan wählen...":
   Item "Free"
   Item "Pro" disabled
-  Item "Enterprise" disabled`,
+  Item "Enterprise" disabled`
       ],
-
       "FORM INTEGRATION": [
-        // required
         `Select required, label "Land *", name "country", placeholder "Pflichtfeld":
   Item "Deutschland"
   Item "Schweiz"`,
-
-        // invalid
         `Select invalid, placeholder "Bitte auswählen":
   Item "Option A"
   Item "Option B"`,
-
-        // name
         `Select name "country", placeholder "Land wählen...":
   Item "Deutschland" value "DE"
   Item "Schweiz" value "CH"`,
-
-        // form
         `Select name "category", form "settings-form", placeholder "Kategorie":
   Item "Allgemein"
-  Item "Erweitert"`,
+  Item "Erweitert"`
       ],
-
       "POSITIONING": [
-        // placement
         `Select placement "top-start", placeholder "Öffnet nach oben":
   Item "Option A"
   Item "Option B"`,
-
-        // offset
         `Select offset 12, placeholder "12px Abstand":
   Item "A"
-  Item "B"`,
+  Item "B"`
       ],
-
       "KOMBINATIONEN": [
-        // searchable + clearable
         `Select searchable, clearable, placeholder "Suche...":
   Item "React"
   Item "Vue"
   Item "Angular"
   Item "Svelte"`,
-
-        // multiple + searchable + clearable
         `Select multiple, searchable, clearable, placeholder "Alles kombiniert":
   Item "Design"
   Item "Code"
   Item "Test"
   Item "Deploy"`,
-
-        // viele Items
         `Select placeholder "Land wählen":
   Item "Deutschland"
   Item "Österreich"
@@ -231,23 +193,19 @@
   Item "Frankreich"
   Item "Italien"
   Item "Spanien"
-  Item "Portugal"`,
+  Item "Portugal"`
       ],
-
       "CUSTOM ITEMS - Zweizeilig": [
-        // Items mit Titel und Beschreibung
         `Select placeholder "Plan wählen...":
   Item value "free", ver, gap 2, pad 12 14:
     Text "Free" weight medium
     Text "Für Einzelpersonen" fs 12, col #666
 
   Item value "pro", ver, gap 2, pad 12 14:
-    Text "Pro – $19/Monat" weight medium
-    Text "Unbegrenzte Projekte" fs 12, col #666`,
+    Text "Pro – \$19/Monat" weight medium
+    Text "Unbegrenzte Projekte" fs 12, col #666`
       ],
-
       "CUSTOM ITEMS - Mit Icons": [
-        // Items mit Leading Icon
         `Select placeholder "Status wählen...":
   Item value "draft":
     Icon "file-text" col #888
@@ -258,33 +216,25 @@
   Item value "archived":
     Icon "archive" col #888
     Text "Archiviert"`,
-
-        // Priorität
         `Select value "medium":
   Item value "urgent": Icon "alert-circle" col #ef4444, Text "Dringend" col #ef4444
   Item value "high": Icon "arrow-up" col #f97316, Text "Hoch"
   Item value "medium": Icon "minus" col #eab308, Text "Mittel"
-  Item value "low": Icon "arrow-down" col #22c55e, Text "Niedrig"`,
+  Item value "low": Icon "arrow-down" col #22c55e, Text "Niedrig"`
       ],
-
       "CUSTOM ITEMS - Status & Farben": [
-        // Status mit Punkt
         `Select value "online":
   Item value "online": Box w 8, h 8, rad 4, bg #22c55e, Text "Online"
   Item value "away": Box w 8, h 8, rad 4, bg #eab308, Text "Abwesend"
   Item value "busy": Box w 8, h 8, rad 4, bg #ef4444, Text "Beschäftigt"
   Item value "offline": Box w 8, h 8, rad 4, bg #666, Text "Offline"`,
-
-        // Farbauswahl
         `Select placeholder "Farbe wählen...":
   Item value "red": Box w 10, h 10, rad 5, bg #ef4444, Text "Rot"
   Item value "green": Box w 10, h 10, rad 5, bg #22c55e, Text "Grün"
   Item value "blue": Box w 10, h 10, rad 5, bg #3b82f6, Text "Blau"
-  Item value "yellow": Box w 10, h 10, rad 5, bg #eab308, Text "Gelb"`,
+  Item value "yellow": Box w 10, h 10, rad 5, bg #eab308, Text "Gelb"`
       ],
-
       "CUSTOM ITEMS - Mit Shortcuts": [
-        // Aktionen mit Shortcuts
         `Select placeholder "Aktionen...":
   Item value "save" spread:
     Box hor, gap 8: Icon "save", Text "Speichern"
@@ -294,11 +244,9 @@
     Text "⌘C" fs 11, col #666
   Item value "delete" spread:
     Box hor, gap 8: Icon "trash" col #ef4444, Text "Löschen" col #ef4444
-    Text "⌫" fs 11, col #666`,
+    Text "⌫" fs 11, col #666`
       ],
-
       "CUSTOM ITEMS - Fonts & Währungen": [
-        // Font-Auswahl
         `Select value "inter":
   Item value "inter" spread:
     Text "Inter" font sans
@@ -309,18 +257,19 @@
   Item value "fira" spread:
     Text "Fira Code" font mono
     Text "Aa" font mono, col #666`,
-
-        // Währungs-Auswahl
         `Select value "eur":
   Item value "eur": Text "€" w 20 col #888, Text "Euro"
-  Item value "usd": Text "$" w 20 col #888, Text "US Dollar"
+  Item value "usd": Text "\$" w 20 col #888, Text "US Dollar"
   Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"
-  Item value "chf": Text "₣" w 20 col #888, Text "Schweizer Franken"`,
-      ],
+  Item value "chf": Text "₣" w 20 col #888, Text "Schweizer Franken"`
+      ]
     };
 
     const { compile } = MirrorLang;
     const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
 
     Object.entries(sections).forEach(([sectionName, examples]) => {
       const heading = document.createElement('h2');
@@ -328,6 +277,7 @@
       container.appendChild(heading);
 
       examples.forEach(code => {
+        total++;
         const row = document.createElement('div');
         row.className = 'example';
 
@@ -346,8 +296,10 @@
           if (ui && ui.root) {
             previewDiv.appendChild(ui.root);
           }
+          success++;
         } catch (err) {
           previewDiv.innerHTML = `<span class="error">${err.message}</span>`;
+          failed++;
         }
 
         row.appendChild(codeDiv);
@@ -355,6 +307,10 @@
         container.appendChild(row);
       });
     });
+
+    // Update stats
+    document.getElementById('stats').textContent =
+      `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
   </script>
 </body>
 </html>

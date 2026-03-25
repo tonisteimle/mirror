@@ -359,14 +359,13 @@ Input:
   focus bor 1 #3b82f6
 `)
       } else {
-        // Non-server provider with no projects - fall back to demo
-        throw new Error('No projects available')
+        // Non-server provider - this shouldn't happen in browser mode
+        console.error('[DesktopFiles] Unexpected provider type:', storage.providerType)
       }
     } catch (e) {
-      // If error (e.g., server unreachable), switch to DemoProvider
-      console.log('[DesktopFiles] Server unavailable or error, falling back to DemoProvider:', e.message)
-      await storage.switchProvider('demo')
-      await storage.openProject('demo')
+      // Server error - show error, don't fallback to localStorage
+      console.error('[DesktopFiles] Server error:', e.message)
+      // Don't fallback to DemoProvider - just show the error
     }
   }
 
@@ -402,9 +401,9 @@ export async function openFolder() {
         return path
       }
     } else {
-      // Fallback: reload demo project
-      await storage.openProject('demo')
-      return 'demo'
+      // No native dialogs available - browser mode doesn't support this
+      console.log('[DesktopFiles] Native folder dialog not available in browser mode')
+      return null
     }
   } catch (e) {
     console.error('[DesktopFiles] Open folder failed:', e)

@@ -34,9 +34,10 @@ export async function detectProvider(): Promise<StorageProvider> {
     return new ServerProvider()
   }
 
-  // 3. Fallback: Demo
-  console.log('[Storage] Using DemoProvider (fallback)')
-  return new DemoProvider()
+  // 3. No fallback - server is required
+  console.error('[Storage] Server not available - no fallback to localStorage')
+  // Still use ServerProvider - it will create projects when server becomes available
+  return new ServerProvider()
 }
 
 /**
