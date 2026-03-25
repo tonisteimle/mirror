@@ -1640,6 +1640,83 @@
       user-select: none;
     }
 
+    /* Play Mode Button */
+    .preview-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: 8px;
+    }
+
+    .play-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .play-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+    }
+
+    .play-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .play-btn.active:hover {
+      background: var(--accent-hover);
+    }
+
+    .play-btn .stop-icon {
+      display: none;
+    }
+
+    .play-btn.active .play-icon {
+      display: none;
+    }
+
+    .play-btn.active .stop-icon {
+      display: block;
+    }
+
+    /* Play Mode Preview Styling */
+    .preview-panel.play-mode {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .preview-panel.play-mode .preview-toolbar {
+      background: var(--accent);
+      color: white;
+    }
+
+    .preview-panel.play-mode .preview-breadcrumb {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .preview-panel.play-mode .zoom-btn {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .preview-panel.play-mode .zoom-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .preview-panel.play-mode .zoom-level {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
     .preview-breadcrumb .breadcrumb-item {
       color: var(--text-muted);
       cursor: pointer;

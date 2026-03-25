@@ -537,6 +537,11 @@ export class PreviewController {
   }
 
   private handleClick(e: MouseEvent): void {
+    // In play mode, let clicks pass through to components for testing
+    if (state.get().playMode) {
+      return
+    }
+
     // Suppress selection changes during inline editing
     if (state.get().inlineEditActive) {
       return
@@ -582,6 +587,11 @@ export class PreviewController {
    * Handle double-click for inline text editing
    */
   private handleDoubleClick(e: MouseEvent): void {
+    // In play mode, disable inline editing
+    if (state.get().playMode) {
+      return
+    }
+
     const target = e.target as HTMLElement
     const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
     if (!nodeElement) return
@@ -617,6 +627,11 @@ export class PreviewController {
   }
 
   private handleMouseOver(e: MouseEvent): void {
+    // In play mode, disable hover highlighting
+    if (state.get().playMode) {
+      return
+    }
+
     const target = e.target as HTMLElement
     const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
     if (nodeElement) {

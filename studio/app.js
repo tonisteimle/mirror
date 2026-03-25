@@ -4227,6 +4227,53 @@ function initStudio() {
 
   // Initialize preview zoom controls
   initPreviewZoom()
+
+  // Initialize play mode button
+  initPlayMode()
+}
+
+// ============================================
+// Play Mode (Component Testing)
+// ============================================
+
+function initPlayMode() {
+  const playBtn = document.getElementById('play-btn')
+  const previewPanel = document.querySelector('.preview-panel')
+
+  if (!playBtn || !previewPanel) {
+    console.warn('Play mode: Missing elements')
+    return
+  }
+
+  // Handle button click
+  playBtn.addEventListener('click', () => {
+    studioActions.togglePlayMode()
+  })
+
+  // Listen for play mode changes
+  if (studio?.events) {
+    studio.events.on('preview:playmode', ({ active }) => {
+      // Update button state
+      playBtn.classList.toggle('active', active)
+
+      // Update preview panel styling
+      previewPanel.classList.toggle('play-mode', active)
+
+      // Clear selection when entering play mode
+      if (active) {
+        studioActions.setSelection(null, 'preview')
+      }
+    })
+  }
+
+  // Keyboard shortcut: Escape to exit play mode
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && studioState.get().playMode) {
+      studioActions.setPlayMode(false)
+    }
+  })
+
+  console.log('Play mode: Initialized')
 }
 
 // ============================================

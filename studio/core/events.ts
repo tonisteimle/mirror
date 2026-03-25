@@ -43,6 +43,8 @@ export interface StudioEvents {
   'preview:element-clicked': { nodeId: string; element: HTMLElement }
   'preview:element-hovered': { nodeId: string | null; element: HTMLElement | null }
   'preview:element-dblclicked': { nodeId: string; element: HTMLElement }
+  'preview:zoom': { zoom: number; scale: number }
+  'preview:playmode': { active: boolean }
   'panel:property-changed': { nodeId: string; property: string; value: string }
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }

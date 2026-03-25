@@ -120,6 +120,8 @@ export interface StudioState {
   inlineEditNodeId: string | null
   /** Preview zoom level (100 = 100%) */
   previewZoom: number
+  /** Play mode - disables editor interactions, allows component testing */
+  playMode: boolean
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -270,6 +272,7 @@ const initialState: StudioState = {
   inlineEditActive: false,
   inlineEditNodeId: null,
   previewZoom: 100,
+  playMode: false,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -856,6 +859,23 @@ export const actions = {
    */
   getPreviewScale(): number {
     return state.get().previewZoom / 100
+  },
+
+  /**
+   * Set play mode - when active, editor interactions are disabled
+   * and components can be tested/interacted with normally
+   */
+  setPlayMode(active: boolean): void {
+    state.set({ playMode: active })
+    events.emit('preview:playmode', { active })
+  },
+
+  /**
+   * Toggle play mode
+   */
+  togglePlayMode(): void {
+    const current = state.get().playMode
+    actions.setPlayMode(!current)
   },
 }
 
