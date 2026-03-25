@@ -227,13 +227,14 @@ Img "https://example.com/image.png"
   })
 
   it('image with dimensions', () => {
+    // Note: Using MyAvatar instead of Avatar because Avatar is a Zag primitive
     const input = `
-Avatar as image:
+MyAvatar as image:
   width 48
   height 48
   rad 24
 
-Avatar "https://example.com/avatar.png"
+MyAvatar "https://example.com/avatar.png"
 `
     const output = compile(input)
     expect(output).toContain("'width': '48px'")

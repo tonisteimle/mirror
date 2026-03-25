@@ -111,8 +111,9 @@ Card
 
   it('generates CSS variables', () => {
     const output = compile(input)
-    expect(output).toContain('--primary: #3B82F6')
-    expect(output).toContain('--surface: #1a1a23')
+    // Note: Theme tokens now use --m- prefix
+    expect(output).toContain('--m-primary: #3B82F6')
+    expect(output).toContain('--m-surface: #1a1a23')
   })
 
   it('uses CSS variable for token reference', () => {
@@ -241,17 +242,18 @@ Panel
   })
 
   it('supports collapsed/expanded states', () => {
+    // Note: Using MyAccordion instead of Accordion because Accordion is a Zag primitive
     const collapsedInput = `
-Accordion as frame:
+MyAccordion as frame:
   collapsed
 
-Accordion
+MyAccordion
 `
     const expandedInput = `
-Accordion as frame:
+MyAccordion as frame:
   expanded
 
-Accordion
+MyAccordion
 `
     expect(compile(collapsedInput)).toContain("dataset.state = 'collapsed'")
     expect(compile(expandedInput)).toContain("dataset.state = 'expanded'")
@@ -288,12 +290,13 @@ Dropdown
 })
 
 describe('E2E: Visible When State', () => {
+  // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
   const input = `
-Menu as frame:
+MyMenu as frame:
   if (open)
   pad 8
 
-Menu
+MyMenu
 `
 
   it('generates visibleWhen metadata', () => {
@@ -319,11 +322,12 @@ Panel
 })
 
 describe('E2E: Selection Binding', () => {
+  // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
   const input = `
-Menu as frame:
+MyMenu as frame:
   selection $selected
 
-Menu
+MyMenu
 `
 
   it('generates selection binding metadata', () => {

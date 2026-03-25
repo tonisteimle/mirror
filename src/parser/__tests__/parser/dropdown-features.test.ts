@@ -14,7 +14,7 @@ import { parse } from '../../parser'
 describe('Parser: State-based Visibility', () => {
   it('parses if (open) as visibleWhen on component', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if (open)
   pad 8
 `)
@@ -34,7 +34,7 @@ Placeholder:
 
   it('parses complex condition as visibleWhen', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if (open && hasItems)
   pad 8
 `)
@@ -46,7 +46,7 @@ Menu:
 describe('Parser: Selection Binding', () => {
   it('parses selection $variable', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection $selected
   pad 8
 `)
@@ -77,7 +77,7 @@ Dropdown:
 
   it('parses open as initialState', () => {
     const ast = parse(`
-Accordion:
+MyAccordion:
   open
   pad 8
 `)
@@ -107,7 +107,7 @@ Details:
 describe('Parser: Focusable Property', () => {
   it('parses focusable as boolean property', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   focusable
   pad 8
 `)
@@ -146,7 +146,7 @@ Panel:
 describe('Parser: Edge Cases and Combinations', () => {
   it('handles nested parentheses in visibleWhen', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if ((open && hasItems) || forceShow)
 `)
     expect(ast.components).toHaveLength(1)
@@ -164,7 +164,7 @@ Dropdown:
 
   it('handles selection with other properties', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection $value
   pad 8
   bg #222
@@ -195,12 +195,12 @@ Panel:
   it('child instance can have initialState', () => {
     const ast = parse(`
 Dropdown as frame:
-  Menu:
+  ChildMenu:
     open
 `)
     expect(ast.components).toHaveLength(1)
-    // Menu is a child of Dropdown
-    const menu = ast.components[0].children.find((c: any) => c.component === 'Menu')
+    // ChildMenu is a child of Dropdown
+    const menu = ast.components[0].children.find((c: any) => c.component === 'ChildMenu')
     expect(menu).toBeDefined()
     expect((menu as any).initialState).toBe('open')
   })
@@ -210,10 +210,10 @@ Dropdown as frame:
 Dropdown as frame:
   closed
 
-  Menu:
+  ChildMenu:
     if (open)
 `)
-    const menu = ast.components[0].children.find((c: any) => c.component === 'Menu')
+    const menu = ast.components[0].children.find((c: any) => c.component === 'ChildMenu')
     expect(menu).toBeDefined()
     expect((menu as any).visibleWhen).toBe('open')
   })
@@ -254,7 +254,7 @@ Dropdown:
     onclick toggle
     Label:
 
-  Menu:
+  MyMenu:
     if (open)
     selection $selected
     focusable
@@ -282,10 +282,10 @@ Dropdown:
     expect(dropdown.initialState).toBe('closed')
     expect(dropdown.events).toHaveLength(1)
     expect(dropdown.events[0].name).toBe('onclick-outside')
-    expect(dropdown.children).toHaveLength(2) // Trigger, Menu
+    expect(dropdown.children).toHaveLength(2) // Trigger, MyMenu
 
-    // Menu (as slot/child instance of Dropdown)
-    const menu = dropdown.children.find((c: any) => c.component === 'Menu') as any
+    // MyMenu (as slot/child instance of Dropdown)
+    const menu = dropdown.children.find((c: any) => c.component === 'MyMenu') as any
     expect(menu).toBeDefined()
     expect(menu.visibleWhen).toBe('open')
     expect(menu.selection).toBe('$selected')

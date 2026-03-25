@@ -220,7 +220,10 @@ export class Validator {
     // Check primitive
     if (component.primitive) {
       const primLower = component.primitive.toLowerCase()
-      if (!this.rules.validPrimitives.has(primLower)) {
+      // Check both direct primitives and aliases
+      const isValidPrimitive = this.rules.validPrimitives.has(primLower) ||
+                               this.rules.primitiveAliases.has(primLower)
+      if (!isValidPrimitive) {
         const suggestion = suggestSimilar(component.primitive, this.rules.validPrimitives)
         this.addError(
           ERROR_CODES.UNKNOWN_COMPONENT,
@@ -234,8 +237,10 @@ export class Validator {
 
     // Check extends
     if (component.extends) {
-      if (!this.definedComponents.has(component.extends) &&
-          !this.rules.validPrimitives.has(component.extends.toLowerCase())) {
+      const extendsLower = component.extends.toLowerCase()
+      const isKnownPrimitive = this.rules.validPrimitives.has(extendsLower) ||
+                               this.rules.primitiveAliases.has(extendsLower)
+      if (!this.definedComponents.has(component.extends) && !isKnownPrimitive) {
         this.trackUsedComponent(component.extends, component.line, component.column)
       }
     }

@@ -225,11 +225,12 @@ List
   })
 
   it('generates select action', () => {
+    // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
     const input = `
-Menu as frame:
+MyMenu as frame:
   onkeydown enter: select
 
-Menu
+MyMenu
 `
     const output = compile(input)
     expect(output).toContain('_runtime.select')

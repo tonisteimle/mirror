@@ -36,9 +36,10 @@ Dropdown:
 })
 
 describe('Parser: Selection Binding Validation', () => {
+  // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
   it('parses selection with or without $ prefix', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection selected
 `)
     // Parser currently accepts both with and without $
@@ -48,7 +49,7 @@ Menu:
 
   it('parses selection with $ prefix correctly', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection $myVar
 `)
     expect(ast.components[0].selection).toBe('$myVar')
@@ -56,7 +57,7 @@ Menu:
 
   it('handles selection with underscore variable names', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection $my_selected_item
 `)
     expect(ast.components[0].selection).toBe('$my_selected_item')
@@ -64,10 +65,11 @@ Menu:
 })
 
 describe('Parser: VisibleWhen Validation', () => {
+  // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
   it('handles empty if condition gracefully', () => {
     // Empty condition - parser should handle this
     const ast = parse(`
-Menu:
+MyMenu:
   if ()
   pad 8
 `)
@@ -77,7 +79,7 @@ Menu:
 
   it('handles if without parentheses', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if open
   pad 8
 `)
@@ -87,7 +89,7 @@ Menu:
 
   it('handles unbalanced parentheses', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if (open && (hasItems)
   pad 8
 `)
@@ -98,7 +100,7 @@ Menu:
 
   it('handles complex nested conditions', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if ((a || (b && c)) && !d)
 `)
     expect(ast.components).toHaveLength(1)
@@ -129,7 +131,7 @@ Panel:
 
   it('handles multiple selection bindings', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   selection $first
   selection $second
 `)
@@ -174,7 +176,7 @@ Dropdown:
 
   it('handles visibleWhen with initialState (potential conflict)', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   closed
   if (open)
 `)
@@ -185,7 +187,7 @@ Menu:
 
   it('handles selection and visibleWhen together', () => {
     const ast = parse(`
-Menu:
+MyMenu:
   if (open)
   selection $selected
   pad 8

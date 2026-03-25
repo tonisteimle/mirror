@@ -219,11 +219,12 @@ Card
   })
 
   it('handles visibleWhen without parent state', () => {
+    // Note: Using MyMenu instead of Menu because Menu is a Zag primitive
     const input = `
-Menu as frame:
+MyMenu as frame:
   if (open)
 
-Menu
+MyMenu
 `
     const output = compile(input)
     expect(output).toContain("_visibleWhen = 'open'")

@@ -5,9 +5,15 @@
  * They ensure that every element in the schema is properly validated.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { validate } from '../index'
+import { clearRulesCache } from '../generator'
 import { DSL, SCHEMA } from '../../schema/dsl'
+
+// Clear cache before tests to ensure fresh rules
+beforeAll(() => {
+  clearRulesCache()
+})
 
 describe('Schema-Driven: Primitives', () => {
   const primitiveNames = Object.keys(DSL.primitives)
@@ -184,6 +190,9 @@ describe('Schema-Driven: States', () => {
       const code = `Card as Box:\n  w 100\n  ${syntax}\n    bg #444`
       const result = validate(code)
       // All defined states should be valid
+      if (!result.valid) {
+        console.log(`State "${stateName}" failed:`, result.errors)
+      }
       expect(result.valid).toBe(true)
       // System states should not warn
       if (stateDef.system) {

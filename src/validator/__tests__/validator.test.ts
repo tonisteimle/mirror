@@ -414,10 +414,14 @@ describe('generateValidationRules', () => {
   it('generates primitive rules from schema', () => {
     const rules = generateValidationRules()
 
-    expect(rules.validPrimitives.has('box')).toBe(true)
+    // Primary primitives
+    expect(rules.validPrimitives.has('frame')).toBe(true)
     expect(rules.validPrimitives.has('button')).toBe(true)
     expect(rules.validPrimitives.has('text')).toBe(true)
     expect(rules.validPrimitives.has('input')).toBe(true)
+    // Aliases
+    expect(rules.primitiveAliases.has('box')).toBe(true)
+    expect(rules.primitiveAliases.get('box')).toBe('Frame')
   })
 
   it('generates property rules from schema', () => {

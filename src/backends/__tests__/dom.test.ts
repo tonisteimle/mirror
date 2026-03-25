@@ -224,8 +224,9 @@ Card
     const js = generateDOM(ast)
 
     expect(js).toContain("const _style = document.createElement('style')")
-    expect(js).toContain('--primary: #3B82F6;')
-    expect(js).toContain('--surface: #1a1a23;')
+    // Note: Theme tokens now use --m- prefix
+    expect(js).toContain('--m-primary: #3B82F6;')
+    expect(js).toContain('--m-surface: #1a1a23;')
     expect(js).toContain('document.head.appendChild(_style)')
   })
 
