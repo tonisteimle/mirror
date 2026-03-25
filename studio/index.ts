@@ -29,8 +29,13 @@ export * from './editor'
 // Preview
 export * from './preview'
 
-// Visual (drag-drop system)
+// Visual (overlay, resize, etc.)
 export * from './visual'
+
+// Drag & Drop (Pragmatic DnD based)
+export * from './drag-drop'
+// Backward compatibility alias
+export { DragDropSystem as DragDropService } from './drag-drop'
 
 // LLM
 export * from './llm'

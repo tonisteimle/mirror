@@ -529,6 +529,50 @@ export class DragDropSystem implements IDragDropSystem {
     this.cleanupFns = []
     this.visual.dispose()
   }
+
+  // ========================================
+  // Backward compatibility methods (legacy API)
+  // ========================================
+
+  /**
+   * Legacy: Make an element draggable (preview canvas element)
+   * @deprecated Use enableCanvasDrag instead
+   */
+  makeElementDraggable(element: HTMLElement): () => void {
+    const nodeId = element.getAttribute(this.nodeIdAttr)
+    if (!nodeId) {
+      console.warn('makeElementDraggable: element has no nodeId attribute')
+      return () => {}
+    }
+
+    const cleanup = draggable({
+      element,
+      getInitialData: () => ({
+        type: 'canvas' as const,
+        nodeId,
+      }),
+    })
+
+    this.cleanupFns.push(cleanup)
+    return cleanup
+  }
+
+  /**
+   * Legacy: Make a palette item draggable
+   * @deprecated Use registerPaletteItem instead
+   */
+  makePaletteItemDraggable(
+    element: HTMLElement,
+    componentName: string,
+    options?: { properties?: string; textContent?: string; children?: DragSource['children'] }
+  ): () => void {
+    return this.registerPaletteItem(element, {
+      componentName,
+      properties: options?.properties,
+      textContent: options?.textContent,
+      children: options?.children,
+    })
+  }
 }
 
 /**

@@ -14,6 +14,6 @@ export default defineConfig({
     '@codemirror/commands',
     '@codemirror/autocomplete',
   ],
-  // Force bundling of ALL @zag-js packages (not external)
-  noExternal: [/^@zag-js\/.*/],
+  // Force bundling of ALL @zag-js and @atlaskit packages (not external)
+  noExternal: [/^@zag-js\/.*/, /^@atlaskit\/.*/],
 })

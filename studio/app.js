@@ -4551,16 +4551,11 @@ function updateStudio(ast, ir, sourceMap, source) {
     )
   }
 
-  // Update or create DragDropService (new testable architecture with mouse events)
-  // IMPORTANT: Use studio bundle's DragDropService to share GhostRenderer cache
+  // Update or create DragDropService (Pragmatic DnD based)
+  // IMPORTANT: Use studio bundle's DragDropService to share instance
   if (!studioDragDropService) {
-    studioDragDropService = new DragDropService(previewContainer, {
-      // Config
-      gridSize: 0,
-      enableGuides: true,
-      enableAlignmentZones: true,
-    }, {
-      // Callbacks
+    studioDragDropService = new DragDropService({
+      container: previewContainer,
       onDrop: handleStudioDrop,
       onDragStart: () => {
         // Drag started - could add visual feedback here
@@ -4574,6 +4569,7 @@ function updateStudio(ast, ir, sourceMap, source) {
         })
       },
     })
+    studioDragDropService.init()
     initComponentPalette()
   }
 
