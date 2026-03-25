@@ -263,7 +263,9 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     props: ['value', 'defaultValue', 'disabled', 'name', 'orientation'],
     events: ['onchange'],
     description: 'Segmented control / button group',
-    pattern: 'simple-items',
+    pattern: 'repeating-items',
+    itemKeywords: ['Segment', 'Item', 'Option'],
+    itemProps: ['disabled', 'value'],
   },
 
   ToggleGroup: {
@@ -272,7 +274,9 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     props: ['value', 'defaultValue', 'multiple', 'disabled', 'orientation', 'loopFocus'],
     events: ['onchange'],
     description: 'Toggle button group',
-    pattern: 'simple-items',
+    pattern: 'repeating-items',
+    itemKeywords: ['Toggle', 'Item', 'Option'],
+    itemProps: ['disabled', 'value'],
   },
 
   // ===========================================================================

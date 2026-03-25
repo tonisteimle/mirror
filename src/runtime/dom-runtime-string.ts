@@ -5896,6 +5896,1608 @@ const _runtime = {
     updateUI()
   },
 
+  initCarouselComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+
+    // Get elements
+    const viewport = el.querySelector('[data-slot="Viewport"]')
+    const itemGroup = el.querySelector('[data-slot="ItemGroup"]')
+    const control = el.querySelector('[data-slot="Control"]')
+    const prevTrigger = el.querySelector('[data-slot="PrevTrigger"]')
+    const nextTrigger = el.querySelector('[data-slot="NextTrigger"]')
+    const indicatorGroup = el.querySelector('[data-slot="IndicatorGroup"]')
+
+    if (!viewport || !itemGroup) return
+
+    // Configuration
+    const items = config.items || []
+    const slidesPerView = Number(config.slidesPerView ?? 1)
+    const loop = config.loop !== false
+    const autoPlay = config.autoPlay === true
+    const autoPlayInterval = Number(config.autoPlayInterval ?? 5000)
+
+    // State
+    el._carouselState = {
+      currentIndex: 0,
+      totalSlides: items.length,
+      autoPlayTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+    setDefault(el, 'gap', '16px')
+    setDefault(el, 'width', '100%')
+    setDefault(el, 'position', 'relative')
+
+    // Viewport styles
+    setDefault(viewport, 'overflow', 'hidden')
+    setDefault(viewport, 'borderRadius', '8px')
+
+    // ItemGroup styles
+    setDefault(itemGroup, 'display', 'flex')
+    setDefault(itemGroup, 'transition', 'transform 0.3s ease')
+
+    // Control styles
+    if (control) {
+      setDefault(control, 'display', 'flex')
+      setDefault(control, 'alignItems', 'center')
+      setDefault(control, 'justifyContent', 'center')
+      setDefault(control, 'gap', '16px')
+    }
+
+    // PrevTrigger styles
+    if (prevTrigger) {
+      setDefault(prevTrigger, 'display', 'flex')
+      setDefault(prevTrigger, 'alignItems', 'center')
+      setDefault(prevTrigger, 'justifyContent', 'center')
+      setDefault(prevTrigger, 'width', '40px')
+      setDefault(prevTrigger, 'height', '40px')
+      setDefault(prevTrigger, 'borderRadius', '50%')
+      setDefault(prevTrigger, 'backgroundColor', '#333')
+      setDefault(prevTrigger, 'border', 'none')
+      setDefault(prevTrigger, 'cursor', 'pointer')
+      setDefault(prevTrigger, 'color', '#e0e0e0')
+      prevTrigger.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+    }
+
+    // NextTrigger styles
+    if (nextTrigger) {
+      setDefault(nextTrigger, 'display', 'flex')
+      setDefault(nextTrigger, 'alignItems', 'center')
+      setDefault(nextTrigger, 'justifyContent', 'center')
+      setDefault(nextTrigger, 'width', '40px')
+      setDefault(nextTrigger, 'height', '40px')
+      setDefault(nextTrigger, 'borderRadius', '50%')
+      setDefault(nextTrigger, 'backgroundColor', '#333')
+      setDefault(nextTrigger, 'border', 'none')
+      setDefault(nextTrigger, 'cursor', 'pointer')
+      setDefault(nextTrigger, 'color', '#e0e0e0')
+      nextTrigger.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+    }
+
+    // IndicatorGroup styles
+    if (indicatorGroup) {
+      setDefault(indicatorGroup, 'display', 'flex')
+      setDefault(indicatorGroup, 'alignItems', 'center')
+      setDefault(indicatorGroup, 'gap', '8px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const createSlide = (item, index) => {
+      const slide = document.createElement('div')
+      slide.dataset.slot = 'Item'
+      slide.dataset.index = String(index)
+      slide.style.cssText = \`flex: 0 0 \${100 / slidesPerView}%; min-width: 0;\`
+
+      if (typeof item === 'string') {
+        // If item is a string (URL), create an image
+        const img = document.createElement('img')
+        img.src = item
+        img.alt = \`Slide \${index + 1}\`
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;'
+        slide.appendChild(img)
+      } else if (item.src) {
+        // If item is an object with src
+        const img = document.createElement('img')
+        img.src = item.src
+        img.alt = item.alt || \`Slide \${index + 1}\`
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;'
+        slide.appendChild(img)
+      } else if (item.content) {
+        // If item has content
+        slide.innerHTML = item.content
+      }
+
+      return slide
+    }
+
+    const createIndicator = (index) => {
+      const indicator = document.createElement('button')
+      indicator.type = 'button'
+      indicator.dataset.slot = 'Indicator'
+      indicator.dataset.index = String(index)
+      indicator.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: #444; border: none; cursor: pointer; padding: 0; transition: background 0.2s;'
+
+      indicator.onclick = () => goTo(index)
+
+      return indicator
+    }
+
+    const updateUI = () => {
+      const { currentIndex, totalSlides } = el._carouselState
+
+      // Update slide position
+      const offset = -(currentIndex * (100 / slidesPerView))
+      itemGroup.style.transform = \`translateX(\${offset}%)\`
+
+      // Update indicators
+      if (indicatorGroup) {
+        const indicators = indicatorGroup.querySelectorAll('[data-slot="Indicator"]')
+        indicators.forEach((ind, i) => {
+          if (i === currentIndex) {
+            ind.style.backgroundColor = '#3b82f6'
+          } else {
+            ind.style.backgroundColor = '#444'
+          }
+        })
+      }
+
+      // Update button states
+      if (!loop) {
+        if (prevTrigger) {
+          prevTrigger.disabled = currentIndex === 0
+          prevTrigger.style.opacity = currentIndex === 0 ? '0.5' : '1'
+        }
+        if (nextTrigger) {
+          nextTrigger.disabled = currentIndex >= totalSlides - slidesPerView
+          nextTrigger.style.opacity = currentIndex >= totalSlides - slidesPerView ? '0.5' : '1'
+        }
+      }
+
+      // Set data attributes
+      el.setAttribute('data-current', String(currentIndex))
+      el.setAttribute('data-total', String(totalSlides))
+
+      // Emit change event
+      el.dispatchEvent(new CustomEvent('slide-change', { detail: { index: currentIndex, total: totalSlides } }))
+    }
+
+    const goTo = (index) => {
+      const { totalSlides } = el._carouselState
+      let newIndex = index
+
+      if (loop) {
+        if (newIndex < 0) newIndex = totalSlides - 1
+        if (newIndex >= totalSlides) newIndex = 0
+      } else {
+        newIndex = Math.max(0, Math.min(totalSlides - slidesPerView, newIndex))
+      }
+
+      el._carouselState.currentIndex = newIndex
+      updateUI()
+    }
+
+    const next = () => {
+      goTo(el._carouselState.currentIndex + 1)
+    }
+
+    const prev = () => {
+      goTo(el._carouselState.currentIndex - 1)
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    if (prevTrigger) {
+      prevTrigger.onclick = prev
+    }
+
+    if (nextTrigger) {
+      nextTrigger.onclick = next
+    }
+
+    // Keyboard navigation
+    el.tabIndex = 0
+    el.onkeydown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        prev()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        next()
+      }
+    }
+
+    // ========================================
+    // AUTO PLAY
+    // ========================================
+
+    const startAutoPlay = () => {
+      if (!autoPlay) return
+      stopAutoPlay()
+      el._carouselState.autoPlayTimer = setInterval(next, autoPlayInterval)
+    }
+
+    const stopAutoPlay = () => {
+      if (el._carouselState.autoPlayTimer) {
+        clearInterval(el._carouselState.autoPlayTimer)
+        el._carouselState.autoPlayTimer = null
+      }
+    }
+
+    // Pause on hover
+    el.onmouseenter = stopAutoPlay
+    el.onmouseleave = startAutoPlay
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.next = next
+    el.prev = prev
+    el.goTo = goTo
+    el.getCurrentIndex = () => el._carouselState.currentIndex
+    el.getTotalSlides = () => el._carouselState.totalSlides
+
+    el.setItems = (newItems) => {
+      el._carouselState.totalSlides = newItems.length
+      el._carouselState.currentIndex = 0
+
+      // Clear and rebuild
+      itemGroup.innerHTML = ''
+      if (indicatorGroup) indicatorGroup.innerHTML = ''
+
+      newItems.forEach((item, index) => {
+        const slide = createSlide(item, index)
+        itemGroup.appendChild(slide)
+      })
+
+      if (indicatorGroup) {
+        newItems.forEach((_, index) => {
+          const indicator = createIndicator(index)
+          indicatorGroup.appendChild(indicator)
+        })
+      }
+
+      updateUI()
+    }
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    // Create slides from items
+    items.forEach((item, index) => {
+      const slide = createSlide(item, index)
+      itemGroup.appendChild(slide)
+    })
+
+    // Create indicators
+    if (indicatorGroup) {
+      items.forEach((_, index) => {
+        const indicator = createIndicator(index)
+        indicatorGroup.appendChild(indicator)
+      })
+    }
+
+    updateUI()
+    startAutoPlay()
+  },
+
+  initStepsComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+
+    // Get elements
+    const list = el.querySelector('[data-slot="List"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const navigation = el.querySelector('[data-slot="Navigation"]')
+    const prevTrigger = el.querySelector('[data-slot="PrevTrigger"]')
+    const nextTrigger = el.querySelector('[data-slot="NextTrigger"]')
+
+    if (!list) return
+
+    // Configuration
+    const steps = config.steps || []
+    const defaultStep = Number(config.defaultStep ?? 0)
+    const linear = config.linear !== false
+    const orientation = config.orientation || 'horizontal'
+
+    // State
+    el._stepsState = {
+      currentStep: defaultStep,
+      totalSteps: steps.length
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+    setDefault(el, 'gap', '24px')
+    setDefault(el, 'width', '100%')
+
+    // List styles
+    setDefault(list, 'display', 'flex')
+    setDefault(list, 'alignItems', 'center')
+    setDefault(list, 'gap', '0')
+    if (orientation === 'vertical') {
+      list.style.flexDirection = 'column'
+      list.style.alignItems = 'flex-start'
+    }
+
+    // Content styles
+    if (content) {
+      setDefault(content, 'padding', '16px 0')
+    }
+
+    // Navigation styles
+    if (navigation) {
+      setDefault(navigation, 'display', 'flex')
+      setDefault(navigation, 'gap', '12px')
+      setDefault(navigation, 'justifyContent', 'flex-end')
+    }
+
+    // PrevTrigger styles
+    if (prevTrigger) {
+      setDefault(prevTrigger, 'padding', '8px 16px')
+      setDefault(prevTrigger, 'backgroundColor', '#333')
+      setDefault(prevTrigger, 'color', '#e0e0e0')
+      setDefault(prevTrigger, 'border', 'none')
+      setDefault(prevTrigger, 'borderRadius', '6px')
+      setDefault(prevTrigger, 'cursor', 'pointer')
+      setDefault(prevTrigger, 'fontSize', '14px')
+      prevTrigger.textContent = 'Previous'
+    }
+
+    // NextTrigger styles
+    if (nextTrigger) {
+      setDefault(nextTrigger, 'padding', '8px 16px')
+      setDefault(nextTrigger, 'backgroundColor', '#3b82f6')
+      setDefault(nextTrigger, 'color', '#fff')
+      setDefault(nextTrigger, 'border', 'none')
+      setDefault(nextTrigger, 'borderRadius', '6px')
+      setDefault(nextTrigger, 'cursor', 'pointer')
+      setDefault(nextTrigger, 'fontSize', '14px')
+      nextTrigger.textContent = 'Next'
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const createStepItem = (step, index) => {
+      const item = document.createElement('div')
+      item.dataset.slot = 'Item'
+      item.dataset.index = String(index)
+      item.style.cssText = 'display: flex; align-items: center; gap: 8px;'
+
+      // Create trigger (clickable part)
+      const trigger = document.createElement('button')
+      trigger.type = 'button'
+      trigger.dataset.slot = 'Trigger'
+      trigger.dataset.index = String(index)
+      trigger.style.cssText = 'display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 0;'
+
+      // Indicator (circle with number)
+      const indicator = document.createElement('span')
+      indicator.dataset.slot = 'Indicator'
+      indicator.textContent = String(index + 1)
+      indicator.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: background-color 0.2s, color 0.2s, border-color 0.2s;'
+      trigger.appendChild(indicator)
+
+      // Title
+      if (step.title) {
+        const title = document.createElement('span')
+        title.dataset.slot = 'Title'
+        title.textContent = step.title
+        title.style.cssText = 'font-size: 14px; font-weight: 500; color: #e0e0e0;'
+        trigger.appendChild(title)
+      }
+
+      trigger.onclick = () => {
+        if (!linear || index <= el._stepsState.currentStep) {
+          goTo(index)
+        }
+      }
+
+      item.appendChild(trigger)
+
+      // Separator (except for last item)
+      if (index < steps.length - 1) {
+        const separator = document.createElement('div')
+        separator.dataset.slot = 'Separator'
+        if (orientation === 'vertical') {
+          separator.style.cssText = 'width: 2px; height: 24px; background: #333; margin: 8px 0 8px 15px;'
+        } else {
+          separator.style.cssText = 'flex: 1; height: 2px; background: #333; min-width: 24px; margin: 0 8px;'
+        }
+        item.appendChild(separator)
+      }
+
+      return item
+    }
+
+    const updateUI = () => {
+      const { currentStep, totalSteps } = el._stepsState
+
+      // Update step items
+      const items = list.querySelectorAll('[data-slot="Item"]')
+      items.forEach((item, i) => {
+        const indicator = item.querySelector('[data-slot="Indicator"]')
+        const trigger = item.querySelector('[data-slot="Trigger"]')
+        const separator = item.querySelector('[data-slot="Separator"]')
+
+        if (i < currentStep) {
+          // Completed
+          item.setAttribute('data-state', 'complete')
+          if (indicator) {
+            indicator.style.backgroundColor = '#22c55e'
+            indicator.style.color = '#fff'
+            indicator.style.border = 'none'
+            indicator.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+          }
+          if (separator) {
+            separator.style.backgroundColor = '#22c55e'
+          }
+          if (trigger) {
+            trigger.style.cursor = 'pointer'
+          }
+        } else if (i === currentStep) {
+          // Current
+          item.setAttribute('data-state', 'current')
+          if (indicator) {
+            indicator.style.backgroundColor = '#3b82f6'
+            indicator.style.color = '#fff'
+            indicator.style.border = 'none'
+            indicator.textContent = String(i + 1)
+          }
+          if (separator) {
+            separator.style.backgroundColor = '#333'
+          }
+          if (trigger) {
+            trigger.style.cursor = 'pointer'
+          }
+        } else {
+          // Upcoming
+          item.setAttribute('data-state', 'upcoming')
+          if (indicator) {
+            indicator.style.backgroundColor = 'transparent'
+            indicator.style.color = '#666'
+            indicator.style.border = '2px solid #444'
+            indicator.textContent = String(i + 1)
+          }
+          if (separator) {
+            separator.style.backgroundColor = '#333'
+          }
+          if (trigger) {
+            trigger.style.cursor = linear ? 'not-allowed' : 'pointer'
+          }
+        }
+      })
+
+      // Update content
+      if (content) {
+        content.innerHTML = ''
+        if (steps[currentStep]?.content) {
+          const stepContent = document.createElement('div')
+          stepContent.innerHTML = steps[currentStep].content
+          content.appendChild(stepContent)
+        }
+      }
+
+      // Update button states
+      if (prevTrigger) {
+        prevTrigger.disabled = currentStep === 0
+        prevTrigger.style.opacity = currentStep === 0 ? '0.5' : '1'
+        prevTrigger.style.cursor = currentStep === 0 ? 'not-allowed' : 'pointer'
+      }
+      if (nextTrigger) {
+        const isLast = currentStep === totalSteps - 1
+        nextTrigger.textContent = isLast ? 'Finish' : 'Next'
+      }
+
+      // Set data attributes
+      el.setAttribute('data-step', String(currentStep))
+      el.setAttribute('data-total', String(totalSteps))
+
+      // Emit change event
+      el.dispatchEvent(new CustomEvent('step-change', { detail: { step: currentStep, total: totalSteps } }))
+    }
+
+    const goTo = (index) => {
+      const { totalSteps } = el._stepsState
+      const newIndex = Math.max(0, Math.min(totalSteps - 1, index))
+      el._stepsState.currentStep = newIndex
+      updateUI()
+    }
+
+    const next = () => {
+      goTo(el._stepsState.currentStep + 1)
+    }
+
+    const prev = () => {
+      goTo(el._stepsState.currentStep - 1)
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    if (prevTrigger) {
+      prevTrigger.onclick = prev
+    }
+
+    if (nextTrigger) {
+      nextTrigger.onclick = () => {
+        if (el._stepsState.currentStep === el._stepsState.totalSteps - 1) {
+          el.dispatchEvent(new CustomEvent('complete'))
+        } else {
+          next()
+        }
+      }
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.next = next
+    el.prev = prev
+    el.goTo = goTo
+    el.getCurrentStep = () => el._stepsState.currentStep
+    el.getTotalSteps = () => el._stepsState.totalSteps
+    el.isComplete = () => el._stepsState.currentStep === el._stepsState.totalSteps - 1
+
+    el.setSteps = (newSteps) => {
+      el._stepsState.totalSteps = newSteps.length
+      el._stepsState.currentStep = 0
+
+      // Clear and rebuild
+      list.innerHTML = ''
+
+      newSteps.forEach((step, index) => {
+        const item = createStepItem(step, index)
+        list.appendChild(item)
+      })
+
+      updateUI()
+    }
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    // Create step items
+    steps.forEach((step, index) => {
+      const item = createStepItem(step, index)
+      list.appendChild(item)
+    })
+
+    updateUI()
+  },
+
+  initPaginationComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+
+    // Get elements
+    const prevTrigger = el.querySelector('[data-slot="PrevTrigger"]')
+    const nextTrigger = el.querySelector('[data-slot="NextTrigger"]')
+    const itemGroup = el.querySelector('[data-slot="ItemGroup"]')
+
+    if (!itemGroup) return
+
+    // Configuration
+    const totalPages = Number(config.count ?? config.totalPages ?? 10)
+    const defaultPage = Number(config.page ?? config.defaultPage ?? 1)
+    const siblingCount = Number(config.siblingCount ?? 1)
+
+    // State
+    el._paginationState = {
+      currentPage: defaultPage,
+      totalPages: totalPages
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'alignItems', 'center')
+    setDefault(el, 'gap', '4px')
+
+    // ItemGroup styles
+    setDefault(itemGroup, 'display', 'flex')
+    setDefault(itemGroup, 'alignItems', 'center')
+    setDefault(itemGroup, 'gap', '4px')
+
+    // PrevTrigger styles
+    if (prevTrigger) {
+      setDefault(prevTrigger, 'display', 'flex')
+      setDefault(prevTrigger, 'alignItems', 'center')
+      setDefault(prevTrigger, 'justifyContent', 'center')
+      setDefault(prevTrigger, 'width', '32px')
+      setDefault(prevTrigger, 'height', '32px')
+      setDefault(prevTrigger, 'borderRadius', '6px')
+      setDefault(prevTrigger, 'backgroundColor', 'transparent')
+      setDefault(prevTrigger, 'border', '1px solid #333')
+      setDefault(prevTrigger, 'cursor', 'pointer')
+      setDefault(prevTrigger, 'color', '#e0e0e0')
+      prevTrigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+    }
+
+    // NextTrigger styles
+    if (nextTrigger) {
+      setDefault(nextTrigger, 'display', 'flex')
+      setDefault(nextTrigger, 'alignItems', 'center')
+      setDefault(nextTrigger, 'justifyContent', 'center')
+      setDefault(nextTrigger, 'width', '32px')
+      setDefault(nextTrigger, 'height', '32px')
+      setDefault(nextTrigger, 'borderRadius', '6px')
+      setDefault(nextTrigger, 'backgroundColor', 'transparent')
+      setDefault(nextTrigger, 'border', '1px solid #333')
+      setDefault(nextTrigger, 'cursor', 'pointer')
+      setDefault(nextTrigger, 'color', '#e0e0e0')
+      nextTrigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const getPageRange = () => {
+      const { currentPage, totalPages } = el._paginationState
+      const pages = []
+
+      // Always show first page
+      pages.push(1)
+
+      // Calculate range around current page
+      const leftSibling = Math.max(2, currentPage - siblingCount)
+      const rightSibling = Math.min(totalPages - 1, currentPage + siblingCount)
+
+      // Add ellipsis after first if needed
+      if (leftSibling > 2) {
+        pages.push('...')
+      }
+
+      // Add pages in range
+      for (let i = leftSibling; i <= rightSibling; i++) {
+        if (i !== 1 && i !== totalPages) {
+          pages.push(i)
+        }
+      }
+
+      // Add ellipsis before last if needed
+      if (rightSibling < totalPages - 1) {
+        pages.push('...')
+      }
+
+      // Always show last page (if more than 1 page)
+      if (totalPages > 1) {
+        pages.push(totalPages)
+      }
+
+      return pages
+    }
+
+    const createPageItem = (page) => {
+      const item = document.createElement('button')
+      item.type = 'button'
+      item.dataset.slot = 'Item'
+
+      if (page === '...') {
+        item.dataset.slot = 'Ellipsis'
+        item.textContent = '...'
+        item.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; color: #666; cursor: default; font-size: 14px;'
+        item.disabled = true
+      } else {
+        item.dataset.page = String(page)
+        item.textContent = String(page)
+        item.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: transparent; border: 1px solid #333; cursor: pointer; color: #e0e0e0; font-size: 14px; transition: background-color 0.2s, border-color 0.2s;'
+
+        item.onmouseenter = () => {
+          if (!item.classList.contains('active')) {
+            item.style.borderColor = '#555'
+          }
+        }
+        item.onmouseleave = () => {
+          if (!item.classList.contains('active')) {
+            item.style.borderColor = '#333'
+          }
+        }
+
+        item.onclick = () => goTo(page)
+      }
+
+      return item
+    }
+
+    const updateUI = () => {
+      const { currentPage, totalPages } = el._paginationState
+
+      // Clear items
+      itemGroup.innerHTML = ''
+
+      // Create page items
+      const pages = getPageRange()
+      pages.forEach(page => {
+        const item = createPageItem(page)
+
+        if (page === currentPage) {
+          item.classList.add('active')
+          item.style.backgroundColor = '#3b82f6'
+          item.style.borderColor = '#3b82f6'
+          item.style.color = '#fff'
+        }
+
+        itemGroup.appendChild(item)
+      })
+
+      // Update trigger states
+      if (prevTrigger) {
+        prevTrigger.disabled = currentPage === 1
+        prevTrigger.style.opacity = currentPage === 1 ? '0.5' : '1'
+        prevTrigger.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer'
+      }
+      if (nextTrigger) {
+        nextTrigger.disabled = currentPage === totalPages
+        nextTrigger.style.opacity = currentPage === totalPages ? '0.5' : '1'
+        nextTrigger.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer'
+      }
+
+      // Set data attributes
+      el.setAttribute('data-page', String(currentPage))
+      el.setAttribute('data-total', String(totalPages))
+
+      // Emit change event
+      el.dispatchEvent(new CustomEvent('page-change', { detail: { page: currentPage, total: totalPages } }))
+    }
+
+    const goTo = (page) => {
+      const { totalPages } = el._paginationState
+      const newPage = Math.max(1, Math.min(totalPages, Number(page)))
+      el._paginationState.currentPage = newPage
+      updateUI()
+    }
+
+    const next = () => {
+      goTo(el._paginationState.currentPage + 1)
+    }
+
+    const prev = () => {
+      goTo(el._paginationState.currentPage - 1)
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    if (prevTrigger) {
+      prevTrigger.onclick = prev
+    }
+
+    if (nextTrigger) {
+      nextTrigger.onclick = next
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.next = next
+    el.prev = prev
+    el.goTo = goTo
+    el.getCurrentPage = () => el._paginationState.currentPage
+    el.getTotalPages = () => el._paginationState.totalPages
+
+    el.setTotalPages = (total) => {
+      el._paginationState.totalPages = total
+      if (el._paginationState.currentPage > total) {
+        el._paginationState.currentPage = total
+      }
+      updateUI()
+    }
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    el.setAttribute('role', 'navigation')
+    el.setAttribute('aria-label', 'Pagination')
+    updateUI()
+  },
+
+  initTreeViewComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const slotStyles = el._slotStyles || {}
+
+    // Get elements
+    const tree = el.querySelector('[data-slot="Tree"]')
+
+    if (!tree) return
+
+    // Configuration
+    const items = config.items || []
+    const selectionMode = config.selectionMode || 'single'
+    const expandedKeys = new Set(config.expandedKeys || [])
+    const selectedKeys = new Set(config.selectedKeys || [])
+
+    // State
+    el._treeViewState = {
+      expandedKeys: expandedKeys,
+      selectedKeys: selectedKeys
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Apply slot styles
+    const applySlotStyles = (element, slotName) => {
+      const styles = slotStyles[slotName]
+      if (styles) {
+        Object.assign(element.style, styles)
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'block')
+
+    // Tree styles
+    setDefault(tree, 'listStyle', 'none')
+    setDefault(tree, 'margin', '0')
+    setDefault(tree, 'padding', '0')
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const createTreeItem = (item, depth = 0) => {
+      const hasChildren = item.children && item.children.length > 0
+      const id = item.id || item.value || String(Math.random())
+      const label = item.label || item.name || item.text || id
+
+      const li = document.createElement('li')
+      li.dataset.slot = hasChildren ? 'Branch' : 'Item'
+      li.dataset.itemId = id
+      li.setAttribute('role', 'treeitem')
+      li.setAttribute('aria-selected', selectedKeys.has(id) ? 'true' : 'false')
+
+      // Apply styles
+      applySlotStyles(li, hasChildren ? 'Branch' : 'Item')
+      setDefault(li, 'listStyle', 'none')
+      setDefault(li, 'margin', '0')
+      setDefault(li, 'padding', '0')
+
+      if (hasChildren) {
+        // Branch with children
+        li.setAttribute('aria-expanded', expandedKeys.has(id) ? 'true' : 'false')
+
+        // BranchTrigger (clickable row)
+        const trigger = document.createElement('div')
+        trigger.dataset.slot = 'BranchTrigger'
+        trigger.dataset.itemId = id
+        applySlotStyles(trigger, 'BranchTrigger')
+        setDefault(trigger, 'display', 'flex')
+        setDefault(trigger, 'alignItems', 'center')
+        setDefault(trigger, 'gap', '4px')
+        setDefault(trigger, 'padding', '6px 8px')
+        setDefault(trigger, 'paddingLeft', (depth * 16 + 8) + 'px')
+        setDefault(trigger, 'cursor', 'pointer')
+        setDefault(trigger, 'userSelect', 'none')
+        setDefault(trigger, 'borderRadius', '4px')
+        setDefault(trigger, 'color', '#e0e0e0')
+
+        // Hover effect
+        trigger.onmouseenter = () => {
+          if (!trigger.classList.contains('selected')) {
+            trigger.style.backgroundColor = '#1a1a1a'
+          }
+        }
+        trigger.onmouseleave = () => {
+          if (!trigger.classList.contains('selected')) {
+            trigger.style.backgroundColor = ''
+          }
+        }
+
+        // BranchIndicator (expand/collapse icon)
+        const indicator = document.createElement('span')
+        indicator.dataset.slot = 'BranchIndicator'
+        applySlotStyles(indicator, 'BranchIndicator')
+        setDefault(indicator, 'display', 'flex')
+        setDefault(indicator, 'alignItems', 'center')
+        setDefault(indicator, 'justifyContent', 'center')
+        setDefault(indicator, 'width', '16px')
+        setDefault(indicator, 'height', '16px')
+        setDefault(indicator, 'color', '#888')
+        setDefault(indicator, 'transition', 'transform 0.15s ease')
+        indicator.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+
+        if (expandedKeys.has(id)) {
+          indicator.style.transform = 'rotate(90deg)'
+        }
+
+        // ItemText
+        const text = document.createElement('span')
+        text.dataset.slot = 'ItemText'
+        text.textContent = label
+        applySlotStyles(text, 'ItemText')
+        setDefault(text, 'flex', '1')
+        setDefault(text, 'fontSize', '14px')
+
+        trigger.appendChild(indicator)
+        trigger.appendChild(text)
+        li.appendChild(trigger)
+
+        // BranchContent (children container)
+        const content = document.createElement('ul')
+        content.dataset.slot = 'BranchContent'
+        content.dataset.itemId = id
+        content.setAttribute('role', 'group')
+        applySlotStyles(content, 'BranchContent')
+        setDefault(content, 'listStyle', 'none')
+        setDefault(content, 'margin', '0')
+        setDefault(content, 'padding', '0')
+        setDefault(content, 'overflow', 'hidden')
+
+        if (!expandedKeys.has(id)) {
+          content.style.display = 'none'
+        }
+
+        // Recursively add children
+        for (const child of item.children) {
+          content.appendChild(createTreeItem(child, depth + 1))
+        }
+
+        li.appendChild(content)
+
+        // Click handler for expand/collapse
+        trigger.onclick = (e) => {
+          e.stopPropagation()
+          toggleExpand(id)
+          // Also select the item
+          selectItem(id, e)
+        }
+
+        // Indicator click for expand/collapse only
+        indicator.onclick = (e) => {
+          e.stopPropagation()
+          toggleExpand(id)
+        }
+      } else {
+        // Leaf item (no children)
+        const itemContent = document.createElement('div')
+        itemContent.dataset.slot = 'ItemContent'
+        setDefault(itemContent, 'display', 'flex')
+        setDefault(itemContent, 'alignItems', 'center')
+        setDefault(itemContent, 'gap', '4px')
+        setDefault(itemContent, 'padding', '6px 8px')
+        setDefault(itemContent, 'paddingLeft', (depth * 16 + 28) + 'px')
+        setDefault(itemContent, 'cursor', 'pointer')
+        setDefault(itemContent, 'userSelect', 'none')
+        setDefault(itemContent, 'borderRadius', '4px')
+        setDefault(itemContent, 'color', '#e0e0e0')
+
+        // Hover effect
+        itemContent.onmouseenter = () => {
+          if (!itemContent.classList.contains('selected')) {
+            itemContent.style.backgroundColor = '#1a1a1a'
+          }
+        }
+        itemContent.onmouseleave = () => {
+          if (!itemContent.classList.contains('selected')) {
+            itemContent.style.backgroundColor = ''
+          }
+        }
+
+        // ItemText
+        const text = document.createElement('span')
+        text.dataset.slot = 'ItemText'
+        text.textContent = label
+        applySlotStyles(text, 'ItemText')
+        setDefault(text, 'flex', '1')
+        setDefault(text, 'fontSize', '14px')
+
+        itemContent.appendChild(text)
+        li.appendChild(itemContent)
+
+        // Click handler for selection
+        itemContent.onclick = (e) => {
+          e.stopPropagation()
+          selectItem(id, e)
+        }
+      }
+
+      // Apply selected state
+      if (selectedKeys.has(id)) {
+        const trigger = li.querySelector('[data-slot="BranchTrigger"], [data-slot="ItemContent"]')
+        if (trigger) {
+          trigger.classList.add('selected')
+          trigger.style.backgroundColor = '#3b82f6'
+          trigger.style.color = '#fff'
+        }
+      }
+
+      return li
+    }
+
+    const toggleExpand = (id) => {
+      const { expandedKeys } = el._treeViewState
+      const branch = tree.querySelector(\`[data-item-id="\${id}"][data-slot="Branch"]\`)
+      const content = branch?.querySelector(\`[data-slot="BranchContent"][data-item-id="\${id}"]\`)
+      const indicator = branch?.querySelector('[data-slot="BranchIndicator"]')
+
+      if (expandedKeys.has(id)) {
+        expandedKeys.delete(id)
+        if (content) content.style.display = 'none'
+        if (indicator) indicator.style.transform = ''
+        if (branch) branch.setAttribute('aria-expanded', 'false')
+        el.dispatchEvent(new CustomEvent('collapse', { detail: { id } }))
+      } else {
+        expandedKeys.add(id)
+        if (content) content.style.display = ''
+        if (indicator) indicator.style.transform = 'rotate(90deg)'
+        if (branch) branch.setAttribute('aria-expanded', 'true')
+        el.dispatchEvent(new CustomEvent('expand', { detail: { id } }))
+      }
+    }
+
+    const selectItem = (id, event) => {
+      const { selectedKeys } = el._treeViewState
+      const isMultiple = selectionMode === 'multiple'
+      const isCtrl = event?.ctrlKey || event?.metaKey
+
+      // Clear previous selection unless multi-select
+      if (!isMultiple && !isCtrl) {
+        tree.querySelectorAll('[data-slot="BranchTrigger"].selected, [data-slot="ItemContent"].selected').forEach(el => {
+          el.classList.remove('selected')
+          el.style.backgroundColor = ''
+          el.style.color = '#e0e0e0'
+        })
+        selectedKeys.clear()
+      }
+
+      // Toggle selection
+      const itemEl = tree.querySelector(\`[data-item-id="\${id}"]\`)
+      const trigger = itemEl?.querySelector('[data-slot="BranchTrigger"], [data-slot="ItemContent"]')
+
+      if (selectedKeys.has(id) && (isMultiple || isCtrl)) {
+        selectedKeys.delete(id)
+        if (trigger) {
+          trigger.classList.remove('selected')
+          trigger.style.backgroundColor = ''
+          trigger.style.color = '#e0e0e0'
+        }
+        if (itemEl) itemEl.setAttribute('aria-selected', 'false')
+      } else {
+        selectedKeys.add(id)
+        if (trigger) {
+          trigger.classList.add('selected')
+          trigger.style.backgroundColor = '#3b82f6'
+          trigger.style.color = '#fff'
+        }
+        if (itemEl) itemEl.setAttribute('aria-selected', 'true')
+      }
+
+      // Emit change event
+      el.dispatchEvent(new CustomEvent('change', {
+        detail: {
+          selectedKeys: Array.from(selectedKeys),
+          value: isMultiple ? Array.from(selectedKeys) : Array.from(selectedKeys)[0]
+        }
+      }))
+    }
+
+    const renderTree = () => {
+      tree.innerHTML = ''
+      for (const item of items) {
+        tree.appendChild(createTreeItem(item))
+      }
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.getSelectedKeys = () => Array.from(el._treeViewState.selectedKeys)
+    el.getExpandedKeys = () => Array.from(el._treeViewState.expandedKeys)
+
+    el.select = (id) => selectItem(id)
+    el.toggle = (id) => toggleExpand(id)
+
+    el.expandAll = () => {
+      const getAllIds = (items) => {
+        let ids = []
+        for (const item of items) {
+          if (item.children && item.children.length > 0) {
+            ids.push(item.id || item.value)
+            ids = ids.concat(getAllIds(item.children))
+          }
+        }
+        return ids
+      }
+      const allIds = getAllIds(items)
+      for (const id of allIds) {
+        if (!el._treeViewState.expandedKeys.has(id)) {
+          toggleExpand(id)
+        }
+      }
+    }
+
+    el.collapseAll = () => {
+      const ids = Array.from(el._treeViewState.expandedKeys)
+      for (const id of ids) {
+        toggleExpand(id)
+      }
+    }
+
+    el.setItems = (newItems) => {
+      config.items = newItems
+      el._treeViewState.expandedKeys.clear()
+      el._treeViewState.selectedKeys.clear()
+      renderTree()
+    }
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    el.setAttribute('role', 'tree')
+    renderTree()
+  },
+
+  initSegmentedControlComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const orientation = config.orientation ?? 'horizontal'
+    const disabled = config.disabled ?? false
+    const defaultValue = config.value ?? config.defaultValue ?? ''
+    const name = config.name ?? \`segmented-\${el._zagConfig.id}\`
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    let indicator = el.querySelector('[data-slot="Indicator"]')
+
+    if (itemEls.length === 0) return
+
+    // State
+    el._segmentedState = {
+      value: defaultValue
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'inline-flex')
+    setDefault(el, 'position', 'relative')
+    setDefault(el, 'gap', '0')
+    setDefault(el, 'padding', '4px')
+    setDefault(el, 'backgroundColor', '#1a1a1a')
+    setDefault(el, 'borderRadius', '8px')
+    setDefault(el, 'border', '1px solid #333')
+
+    if (orientation === 'vertical') {
+      setDefault(el, 'flexDirection', 'column')
+    }
+
+    // Indicator styles
+    if (indicator) {
+      setDefault(indicator, 'position', 'absolute')
+      setDefault(indicator, 'backgroundColor', '#3b82f6')
+      setDefault(indicator, 'borderRadius', '6px')
+      setDefault(indicator, 'transition', 'all 0.2s ease')
+      setDefault(indicator, 'zIndex', '0')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const selectItem = (value) => {
+      if (el._segmentedState.value === value) return
+
+      el._segmentedState.value = value
+      updateUI()
+
+      // Emit change event
+      el.dispatchEvent(new CustomEvent('change', {
+        detail: { value },
+        bubbles: true
+      }))
+    }
+
+    const updateUI = () => {
+      const { value } = el._segmentedState
+
+      itemEls.forEach(itemEl => {
+        const itemValue = itemEl.dataset.value
+        const isSelected = itemValue === value
+
+        if (isSelected) {
+          itemEl.dataset.selected = 'true'
+          itemEl.style.color = '#fff'
+
+          // Update radio input if exists
+          const input = itemEl.querySelector('input')
+          if (input) input.checked = true
+
+          // Position indicator
+          if (indicator) {
+            indicator.style.left = itemEl.offsetLeft + 'px'
+            indicator.style.top = itemEl.offsetTop + 'px'
+            indicator.style.width = itemEl.offsetWidth + 'px'
+            indicator.style.height = itemEl.offsetHeight + 'px'
+          }
+        } else {
+          delete itemEl.dataset.selected
+          itemEl.style.color = '#888'
+
+          const input = itemEl.querySelector('input')
+          if (input) input.checked = false
+        }
+      })
+
+      // Update data attribute
+      el.setAttribute('data-value', value)
+    }
+
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
+
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const text = itemEl.querySelector('[data-slot="ItemText"]')
+      const value = itemEl.dataset.value
+
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 16px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'userSelect', 'none')
+      setDefault(itemEl, 'transition', 'color 0.2s, background-color 0.2s')
+      setDefault(itemEl, 'position', 'relative')
+      setDefault(itemEl, 'zIndex', '1')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+
+      // Default text styles
+      if (text) {
+        setDefault(text, 'whiteSpace', 'nowrap')
+      }
+
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+      }
+
+      // Click handler
+      itemEl.onclick = (e) => {
+        if (isItemDisabled) return
+        selectItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#888'
+        }
+      }
+    })
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.getValue = () => el._segmentedState.value
+    el.setValue = (value) => selectItem(value)
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    if (orientation === 'vertical') {
+      el.setAttribute('aria-orientation', 'vertical')
+    }
+
+    // Initial UI update
+    updateUI()
+  },
+
+  initToggleGroupComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const multiple = config.multiple ?? false
+    const disabled = config.disabled ?? false
+    const orientation = config.orientation ?? 'horizontal'
+    const loopFocus = config.loopFocus ?? true
+    const defaultValue = config.value ?? config.defaultValue ?? (multiple ? [] : '')
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    if (itemEls.length === 0) return
+
+    // State
+    el._toggleState = {
+      value: multiple ? (Array.isArray(defaultValue) ? new Set(defaultValue) : new Set()) : defaultValue
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'inline-flex')
+    setDefault(el, 'gap', '4px')
+    setDefault(el, 'padding', '4px')
+    setDefault(el, 'backgroundColor', '#1a1a1a')
+    setDefault(el, 'borderRadius', '8px')
+    setDefault(el, 'border', '1px solid #333')
+
+    if (orientation === 'vertical') {
+      setDefault(el, 'flexDirection', 'column')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggleItem = (value) => {
+      if (multiple) {
+        const newSet = new Set(el._toggleState.value)
+        if (newSet.has(value)) {
+          newSet.delete(value)
+        } else {
+          newSet.add(value)
+        }
+        el._toggleState.value = newSet
+      } else {
+        // Single toggle - can deselect
+        el._toggleState.value = el._toggleState.value === value ? '' : value
+      }
+
+      updateUI()
+
+      // Emit change event
+      const detail = multiple
+        ? { value: Array.from(el._toggleState.value) }
+        : { value: el._toggleState.value }
+      el.dispatchEvent(new CustomEvent('change', {
+        detail,
+        bubbles: true
+      }))
+    }
+
+    const updateUI = () => {
+      itemEls.forEach(itemEl => {
+        const itemValue = itemEl.dataset.value
+        const isPressed = multiple
+          ? el._toggleState.value.has(itemValue)
+          : el._toggleState.value === itemValue
+
+        if (isPressed) {
+          itemEl.dataset.pressed = 'true'
+          itemEl.setAttribute('aria-pressed', 'true')
+          itemEl.style.backgroundColor = '#3b82f6'
+          itemEl.style.color = '#fff'
+        } else {
+          delete itemEl.dataset.pressed
+          itemEl.setAttribute('aria-pressed', 'false')
+          itemEl.style.backgroundColor = 'transparent'
+          itemEl.style.color = '#888'
+        }
+      })
+
+      // Update data attribute
+      if (multiple) {
+        el.setAttribute('data-value', Array.from(el._toggleState.value).join(','))
+      } else {
+        el.setAttribute('data-value', el._toggleState.value)
+      }
+    }
+
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
+
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const value = itemEl.dataset.value
+
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 12px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'border', 'none')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'transition', 'all 0.2s')
+
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+        itemEl.disabled = true
+      }
+
+      // Click handler
+      itemEl.onclick = () => {
+        if (isItemDisabled) return
+        toggleItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = '#333'
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = 'transparent'
+          itemEl.style.color = '#888'
+        }
+      }
+    })
+
+    // ========================================
+    // KEYBOARD NAVIGATION
+    // ========================================
+
+    el.onkeydown = (e) => {
+      const enabledItems = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
+      const currentIndex = enabledItems.indexOf(document.activeElement)
+
+      let nextIndex = currentIndex
+
+      if (orientation === 'horizontal') {
+        if (e.key === 'ArrowRight') {
+          nextIndex = loopFocus
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
+        } else if (e.key === 'ArrowLeft') {
+          nextIndex = loopFocus
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
+            : Math.max(currentIndex - 1, 0)
+        }
+      } else {
+        if (e.key === 'ArrowDown') {
+          nextIndex = loopFocus
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
+        } else if (e.key === 'ArrowUp') {
+          nextIndex = loopFocus
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
+            : Math.max(currentIndex - 1, 0)
+        }
+      }
+
+      if (nextIndex !== currentIndex && enabledItems[nextIndex]) {
+        enabledItems[nextIndex].focus()
+        e.preventDefault()
+      }
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (document.activeElement.dataset.slot === 'Item') {
+          const value = document.activeElement.dataset.value
+          toggleItem(value)
+          e.preventDefault()
+        }
+      }
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.getValue = () => multiple ? Array.from(el._toggleState.value) : el._toggleState.value
+    el.setValue = (value) => {
+      if (multiple) {
+        el._toggleState.value = new Set(Array.isArray(value) ? value : [value])
+      } else {
+        el._toggleState.value = value
+      }
+      updateUI()
+    }
+    el.toggle = (value) => toggleItem(value)
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    if (orientation === 'vertical') {
+      el.setAttribute('aria-orientation', 'vertical')
+    }
+
+    // Initial UI update
+    updateUI()
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return

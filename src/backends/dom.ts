@@ -672,6 +672,32 @@ class DOMGenerator {
       this.emitFileUploadComponent(node, parentVar)
       return
     }
+    if (node.zagType === 'carousel') {
+      this.emitCarouselComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'steps' || node.zagType === 'stepper') {
+      this.emitStepsComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'pagination') {
+      this.emitPaginationComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'tree-view' || node.zagType === 'treeview') {
+      this.emitTreeViewComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'segmented-control' || node.zagType === 'segmentedcontrol') {
+      this.emitSegmentedControlComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'toggle-group' || node.zagType === 'togglegroup') {
+      this.emitToggleGroupComponent(node, parentVar)
+      return
+    }
+    // Group 5: Overlays - TODO: implement emitters
+    // Dialog, Tooltip, Popover, HoverCard, Collapsible
 
     const varName = this.sanitizeVarName(node.id)
 
@@ -3257,6 +3283,700 @@ class DOMGenerator {
     this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initFileUploadComponent) {`)
     this.indent++
     this.emit(`_runtime.initFileUploadComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitCarouselComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Carousel Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'carousel'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'carousel',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Viewport
+    const viewportSlot = node.slots['Viewport']
+    const viewportVar = `${varName}_viewport`
+    this.emit(`// Viewport`)
+    this.emit(`const ${viewportVar} = document.createElement('div')`)
+    this.emit(`${viewportVar}.dataset.slot = 'Viewport'`)
+    if (viewportSlot?.styles && viewportSlot.styles.length > 0) {
+      this.emit(`Object.assign(${viewportVar}.style, {`)
+      this.indent++
+      for (const style of viewportSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${viewportVar})`)
+    this.emit('')
+
+    // Create ItemGroup
+    const itemGroupSlot = node.slots['ItemGroup']
+    const itemGroupVar = `${varName}_itemgroup`
+    this.emit(`// ItemGroup`)
+    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
+    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
+    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
+      this.emit(`Object.assign(${itemGroupVar}.style, {`)
+      this.indent++
+      for (const style of itemGroupSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${viewportVar}.appendChild(${itemGroupVar})`)
+    this.emit('')
+
+    // Create Control
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Create PrevTrigger
+    const prevTriggerSlot = node.slots['PrevTrigger']
+    const prevTriggerVar = `${varName}_prev`
+    this.emit(`// PrevTrigger`)
+    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
+    this.emit(`${prevTriggerVar}.type = 'button'`)
+    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
+    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
+      this.indent++
+      for (const style of prevTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${prevTriggerVar})`)
+    this.emit('')
+
+    // Create IndicatorGroup
+    const indicatorGroupSlot = node.slots['IndicatorGroup']
+    const indicatorGroupVar = `${varName}_indicators`
+    this.emit(`// IndicatorGroup`)
+    this.emit(`const ${indicatorGroupVar} = document.createElement('div')`)
+    this.emit(`${indicatorGroupVar}.dataset.slot = 'IndicatorGroup'`)
+    if (indicatorGroupSlot?.styles && indicatorGroupSlot.styles.length > 0) {
+      this.emit(`Object.assign(${indicatorGroupVar}.style, {`)
+      this.indent++
+      for (const style of indicatorGroupSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${indicatorGroupVar})`)
+    this.emit('')
+
+    // Create NextTrigger
+    const nextTriggerSlot = node.slots['NextTrigger']
+    const nextTriggerVar = `${varName}_next`
+    this.emit(`// NextTrigger`)
+    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
+    this.emit(`${nextTriggerVar}.type = 'button'`)
+    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
+    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
+      this.indent++
+      for (const style of nextTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${controlVar}.appendChild(${nextTriggerVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Carousel via runtime
+    this.emit(`// Initialize Carousel`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCarouselComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initCarouselComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitStepsComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Steps Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'steps'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'steps',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create List
+    const listSlot = node.slots['List']
+    const listVar = `${varName}_list`
+    this.emit(`// List`)
+    this.emit(`const ${listVar} = document.createElement('div')`)
+    this.emit(`${listVar}.dataset.slot = 'List'`)
+    if (listSlot?.styles && listSlot.styles.length > 0) {
+      this.emit(`Object.assign(${listVar}.style, {`)
+      this.indent++
+      for (const style of listSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${listVar})`)
+    this.emit('')
+
+    // Create Content container
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Create navigation buttons container
+    const navSlot = node.slots['Navigation']
+    const navVar = `${varName}_nav`
+    this.emit(`// Navigation`)
+    this.emit(`const ${navVar} = document.createElement('div')`)
+    this.emit(`${navVar}.dataset.slot = 'Navigation'`)
+    if (navSlot?.styles && navSlot.styles.length > 0) {
+      this.emit(`Object.assign(${navVar}.style, {`)
+      this.indent++
+      for (const style of navSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${navVar})`)
+    this.emit('')
+
+    // Create PrevTrigger
+    const prevTriggerSlot = node.slots['PrevTrigger']
+    const prevTriggerVar = `${varName}_prev`
+    this.emit(`// PrevTrigger`)
+    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
+    this.emit(`${prevTriggerVar}.type = 'button'`)
+    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
+    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
+      this.indent++
+      for (const style of prevTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${navVar}.appendChild(${prevTriggerVar})`)
+    this.emit('')
+
+    // Create NextTrigger
+    const nextTriggerSlot = node.slots['NextTrigger']
+    const nextTriggerVar = `${varName}_next`
+    this.emit(`// NextTrigger`)
+    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
+    this.emit(`${nextTriggerVar}.type = 'button'`)
+    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
+    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
+      this.indent++
+      for (const style of nextTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${navVar}.appendChild(${nextTriggerVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Steps via runtime
+    this.emit(`// Initialize Steps`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initStepsComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initStepsComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitPaginationComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Pagination Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('nav')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'pagination'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'pagination',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create PrevTrigger
+    const prevTriggerSlot = node.slots['PrevTrigger']
+    const prevTriggerVar = `${varName}_prev`
+    this.emit(`// PrevTrigger`)
+    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
+    this.emit(`${prevTriggerVar}.type = 'button'`)
+    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
+    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
+      this.indent++
+      for (const style of prevTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${prevTriggerVar})`)
+    this.emit('')
+
+    // Create ItemGroup
+    const itemGroupSlot = node.slots['ItemGroup']
+    const itemGroupVar = `${varName}_items`
+    this.emit(`// ItemGroup`)
+    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
+    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
+    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
+      this.emit(`Object.assign(${itemGroupVar}.style, {`)
+      this.indent++
+      for (const style of itemGroupSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${itemGroupVar})`)
+    this.emit('')
+
+    // Create NextTrigger
+    const nextTriggerSlot = node.slots['NextTrigger']
+    const nextTriggerVar = `${varName}_next`
+    this.emit(`// NextTrigger`)
+    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
+    this.emit(`${nextTriggerVar}.type = 'button'`)
+    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
+    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
+      this.indent++
+      for (const style of nextTriggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${nextTriggerVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Pagination via runtime
+    this.emit(`// Initialize Pagination`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initPaginationComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initPaginationComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitTreeViewComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// TreeView Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'tree-view'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'tree-view',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Tree element (ul)
+    const treeSlot = node.slots['Tree']
+    const treeVar = `${varName}_tree`
+    this.emit(`// Tree`)
+    this.emit(`const ${treeVar} = document.createElement('ul')`)
+    this.emit(`${treeVar}.dataset.slot = 'Tree'`)
+    this.emit(`${treeVar}.setAttribute('role', 'tree')`)
+    if (treeSlot?.styles && treeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${treeVar}.style, {`)
+      this.indent++
+      for (const style of treeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${treeVar})`)
+    this.emit('')
+
+    // Store slot styles for runtime use
+    this.emit(`${varName}._slotStyles = {`)
+    this.indent++
+    for (const slotName of ['Branch', 'BranchTrigger', 'BranchContent', 'BranchIndicator', 'Item', 'ItemText']) {
+      const slot = node.slots[slotName]
+      if (slot?.styles && slot.styles.length > 0) {
+        this.emit(`'${slotName}': {`)
+        this.indent++
+        for (const style of slot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`},`)
+      }
+    }
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize TreeView via runtime
+    this.emit(`// Initialize TreeView`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initTreeViewComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initTreeViewComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitSegmentedControlComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// SegmentedControl Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'segmented-control'`)
+    this.emit(`${varName}.setAttribute('role', 'radiogroup')`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'segmented-control',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Indicator (slides behind active item)
+    const indicatorSlot = node.slots['Indicator']
+    const indicatorVar = `${varName}_indicator`
+    this.emit(`// Indicator`)
+    this.emit(`const ${indicatorVar} = document.createElement('div')`)
+    this.emit(`${indicatorVar}.dataset.slot = 'Indicator'`)
+    if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
+      this.emit(`Object.assign(${indicatorVar}.style, {`)
+      this.indent++
+      for (const style of indicatorSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${indicatorVar})`)
+    this.emit('')
+
+    // Create Items
+    const itemSlot = node.slots['Item']
+    const textSlot = node.slots['ItemText']
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || item.label || `item-${i}`
+      const itemLabel = item.label || itemValue
+
+      this.emit(`// Segment Item: ${itemLabel}`)
+      this.emit(`const ${itemVar} = document.createElement('label')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(String(itemValue))}'`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      }
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // ItemText
+      const textVar = `${itemVar}_text`
+      this.emit(`const ${textVar} = document.createElement('span')`)
+      this.emit(`${textVar}.dataset.slot = 'ItemText'`)
+      this.emit(`${textVar}.textContent = '${this.escapeString(String(itemLabel))}'`)
+      if (textSlot?.styles && textSlot.styles.length > 0) {
+        this.emit(`Object.assign(${textVar}.style, {`)
+        this.indent++
+        for (const style of textSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${itemVar}.appendChild(${textVar})`)
+
+      this.emit(`${varName}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize SegmentedControl via runtime
+    this.emit(`// Initialize SegmentedControl`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSegmentedControlComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initSegmentedControlComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitToggleGroupComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// ToggleGroup Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'toggle-group'`)
+    this.emit(`${varName}.setAttribute('role', 'group')`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'toggle-group',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled
+    })))},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Items
+    const itemSlot = node.slots['Item']
+
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as any
+      const itemVar = `${varName}_item${i}`
+      const itemValue = item.value || item.label || `item-${i}`
+      const itemLabel = item.label || itemValue
+
+      this.emit(`// Toggle Item: ${itemLabel}`)
+      this.emit(`const ${itemVar} = document.createElement('button')`)
+      this.emit(`${itemVar}.dataset.slot = 'Item'`)
+      this.emit(`${itemVar}.dataset.value = '${this.escapeString(String(itemValue))}'`)
+      this.emit(`${itemVar}.setAttribute('type', 'button')`)
+      this.emit(`${itemVar}.textContent = '${this.escapeString(String(itemLabel))}'`)
+      if (item.disabled) {
+        this.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+        this.emit(`${itemVar}.disabled = true`)
+      }
+      if (itemSlot?.styles && itemSlot.styles.length > 0) {
+        this.emit(`Object.assign(${itemVar}.style, {`)
+        this.indent++
+        for (const style of itemSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      this.emit(`${varName}.appendChild(${itemVar})`)
+      this.emit('')
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize ToggleGroup via runtime
+    this.emit(`// Initialize ToggleGroup`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initToggleGroupComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initToggleGroupComponent(${varName})`)
     this.indent--
     this.emit(`}`)
     this.emit('')

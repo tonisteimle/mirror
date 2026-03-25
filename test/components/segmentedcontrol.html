@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SegmentedControl Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: center;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / SegmentedControl
+  </div>
+  <h1>SegmentedControl Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `SegmentedControl
+  Segment "Day"
+  Segment "Week"
+  Segment "Month"`,
+
+        `SegmentedControl
+  Segment "List"
+  Segment "Grid"
+  Segment "Table"`,
+
+        `SegmentedControl
+  Segment "S"
+  Segment "M"
+  Segment "L"
+  Segment "XL"`,
+      ],
+
+      "WITH DEFAULT VALUE": [
+        `SegmentedControl defaultValue "week"
+  Segment "Day" value "day"
+  Segment "Week" value "week"
+  Segment "Month" value "month"`,
+      ],
+
+      "ORIENTATION": [
+        `SegmentedControl orientation "horizontal"
+  Segment "Left"
+  Segment "Center"
+  Segment "Right"`,
+
+        `SegmentedControl orientation "vertical"
+  Segment "Top"
+  Segment "Middle"
+  Segment "Bottom"`,
+      ],
+
+      "STATES": [
+        `SegmentedControl disabled
+  Segment "Disabled A"
+  Segment "Disabled B"`,
+
+        `SegmentedControl
+  Segment "Enabled"
+  Segment "Disabled" disabled
+  Segment "Also enabled"`,
+      ],
+
+      "STYLING ROOT": [
+        `SegmentedControl
+  Segment "Option A"
+  Segment "Option B"
+  Root: pad 8, bg #222, rad 12`,
+
+        `SegmentedControl
+  Segment "Option A"
+  Segment "Option B"
+  Root: bor 2 #3b82f6, rad 10`,
+
+        `SegmentedControl
+  Segment "Option A"
+  Segment "Option B"
+  Root: bg #0a0a0a, pad 6`,
+      ],
+
+      "STYLING ITEMS": [
+        `SegmentedControl
+  Segment "Styled A"
+  Segment "Styled B"
+  Item: pad 12 24, fs 16`,
+
+        `SegmentedControl
+  Segment "Large gap"
+  Segment "Between items"
+  Item: rad 4`,
+
+        `SegmentedControl
+  Segment "S"
+  Segment "M"
+  Segment "L"
+  Item: w 48, h 36`,
+      ],
+
+      "STYLING INDICATOR": [
+        `SegmentedControl defaultValue "day"
+  Segment "Day" value "day"
+  Segment "Week" value "week"
+  Indicator: bg #22c55e`,
+
+        `SegmentedControl defaultValue "week"
+  Segment "Day" value "day"
+  Segment "Week" value "week"
+  Indicator: bg #f59e0b, rad 4`,
+
+        `SegmentedControl defaultValue "month"
+  Segment "Day" value "day"
+  Segment "Month" value "month"
+  Indicator: bg #ef4444`,
+      ],
+
+      "STYLING TEXT": [
+        `SegmentedControl
+  Segment "Bold"
+  Segment "Normal"
+  ItemText: weight bold`,
+
+        `SegmentedControl
+  Segment "UPPER"
+  Segment "CASE"
+  ItemText: uppercase`,
+      ],
+
+      "IN CONTEXT - VIEW SWITCHER": [
+        `Box ver, gap 16, w 400
+  Box hor, spread
+    Text "Products" weight bold, fs 18
+    SegmentedControl defaultValue "grid"
+      Segment "List" value "list"
+      Segment "Grid" value "grid"
+      Segment "Table" value "table"
+      Root: bg #0a0a0a, bor 1 #333`,
+
+        `Box ver, gap 12, pad 16, bg #111, rad 8
+  Text "Time Range" fs 12, col #888
+  SegmentedControl defaultValue "week"
+    Segment "Day" value "day"
+    Segment "Week" value "week"
+    Segment "Month" value "month"
+    Indicator: bg #3b82f6`,
+      ],
+
+      "IN CONTEXT - SIZE SELECTOR": [
+        `Box ver, gap 8
+  Text "Size" weight 500, fs 14
+  SegmentedControl
+    Segment "S"
+    Segment "M"
+    Segment "L"
+    Segment "XL"
+    Root: bg transparent, bor 1 #333
+    Item: pad 8 16
+    Indicator: bg #fff`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

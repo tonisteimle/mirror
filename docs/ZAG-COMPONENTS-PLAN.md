@@ -22,17 +22,17 @@
 ### Group 2: Feedback & Media
 - [x] Progress / CircularProgress (29/29 tests)
 - [x] Avatar (25/25 tests)
-- [ ] FileUpload
-- [ ] Carousel
+- [x] FileUpload (22/22 tests)
+- [x] Carousel (19/19 tests)
 
 ### Group 3: Navigation
-- [ ] Steps
-- [ ] Pagination
-- [ ] TreeView
+- [x] Steps (16/16 tests)
+- [x] Pagination (17/17 tests)
+- [x] TreeView (15/15 tests)
 
 ### Group 4: Selection
-- [ ] SegmentedControl
-- [ ] ToggleGroup
+- [x] SegmentedControl (20/20 tests)
+- [x] ToggleGroup (19/19 tests)
 
 ### Group 5: Overlays
 - [ ] Dialog

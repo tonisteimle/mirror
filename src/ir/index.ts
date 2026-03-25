@@ -50,7 +50,7 @@ import {
   getHtmlTag,
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
-import { isZagPrimitive } from '../schema/zag-primitives'
+import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -568,6 +568,79 @@ class IRTransformer {
         case 'maxSize':
           machineConfig.maxSize = Number(prop.values[0] ?? 10485760)
           break
+        // Carousel-specific props
+        case 'items':
+          // Items can be passed as JSON array
+          try {
+            machineConfig.items = JSON.parse(String(prop.values[0] ?? '[]'))
+          } catch {
+            machineConfig.items = prop.values
+          }
+          break
+        case 'slidesPerView':
+          machineConfig.slidesPerView = Number(prop.values[0] ?? 1)
+          break
+        case 'loop':
+          machineConfig.loop = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'autoPlay':
+          machineConfig.autoPlay = prop.values.length === 0 || prop.values[0] === true
+          break
+        case 'autoPlayInterval':
+          machineConfig.autoPlayInterval = Number(prop.values[0] ?? 5000)
+          break
+        // Steps-specific props
+        case 'steps':
+          // Steps can be passed as JSON array
+          try {
+            machineConfig.steps = JSON.parse(String(prop.values[0] ?? '[]'))
+          } catch {
+            machineConfig.steps = prop.values
+          }
+          break
+        case 'defaultStep':
+          machineConfig.defaultStep = Number(prop.values[0] ?? 0)
+          break
+        case 'linear':
+          machineConfig.linear = prop.values.length === 0 || prop.values[0] === true
+          break
+        // Pagination-specific props
+        case 'count':
+        case 'totalPages':
+          machineConfig.count = Number(prop.values[0] ?? 10)
+          break
+        case 'page':
+        case 'defaultPage':
+          machineConfig.page = Number(prop.values[0] ?? 1)
+          break
+        case 'siblingCount':
+          machineConfig.siblingCount = Number(prop.values[0] ?? 1)
+          break
+        // TreeView-specific props
+        case 'data':
+          // 'data' alias for tree items (items is handled above)
+          try {
+            machineConfig.items = JSON.parse(String(prop.values[0] ?? '[]'))
+          } catch {
+            machineConfig.items = prop.values
+          }
+          break
+        case 'expandedKeys':
+        case 'defaultExpandedKeys':
+          try {
+            machineConfig.expandedKeys = JSON.parse(String(prop.values[0] ?? '[]'))
+          } catch {
+            machineConfig.expandedKeys = prop.values.map(String)
+          }
+          break
+        case 'selectedKeys':
+        case 'defaultSelectedKeys':
+          try {
+            machineConfig.selectedKeys = JSON.parse(String(prop.values[0] ?? '[]'))
+          } catch {
+            machineConfig.selectedKeys = prop.values.map(String)
+          }
+          break
         // DatePicker-specific props
         case 'min':
         case 'max':
@@ -618,7 +691,7 @@ class IRTransformer {
       }
     }
 
-    // Transform slots - always ensure Trigger and Content exist
+    // Transform slots based on the component type
     const slots: Record<string, IRSlot> = {}
 
     // Process defined slots
@@ -637,27 +710,48 @@ class IRTransformer {
       }
     }
 
-    // Add default Trigger if not defined
-    if (!slots['Trigger']) {
-      slots['Trigger'] = {
-        name: 'Trigger',
-        apiMethod: 'getTriggerProps',
-        element: 'button',
-        styles: [],
-        children: [],
-        portal: false,
-      }
-    }
+    // Add default slots based on the component type from ZAG_PRIMITIVES
+    const machineType = zagNode.machine || 'select'
+    const primitiveKey = Object.keys(ZAG_PRIMITIVES).find(
+      key => ZAG_PRIMITIVES[key].machine === machineType
+    )
+    const primitiveDef = primitiveKey ? ZAG_PRIMITIVES[primitiveKey] : null
 
-    // Add default Content if not defined
-    if (!slots['Content']) {
-      slots['Content'] = {
-        name: 'Content',
-        apiMethod: 'getContentProps',
-        element: 'div',
-        styles: [],
-        children: [],
-        portal: true,
+    if (primitiveDef?.slots) {
+      // Add default slots from the primitive definition
+      for (const slotName of primitiveDef.slots) {
+        if (!slots[slotName]) {
+          slots[slotName] = {
+            name: slotName,
+            apiMethod: `get${slotName}Props`,
+            element: slotName === 'Trigger' ? 'button' : 'div',
+            styles: [],
+            children: [],
+            portal: slotName === 'Content' || slotName === 'Positioner',
+          }
+        }
+      }
+    } else {
+      // Fallback for Select-like components
+      if (!slots['Trigger']) {
+        slots['Trigger'] = {
+          name: 'Trigger',
+          apiMethod: 'getTriggerProps',
+          element: 'button',
+          styles: [],
+          children: [],
+          portal: false,
+        }
+      }
+      if (!slots['Content']) {
+        slots['Content'] = {
+          name: 'Content',
+          apiMethod: 'getContentProps',
+          element: 'div',
+          styles: [],
+          children: [],
+          portal: true,
+        }
       }
     }
 
@@ -711,7 +805,9 @@ class IRTransformer {
       events: [],
       children: [],
       isZagComponent: true,
-      zagType: zagNode.machine ?? 'select',
+      // Use component name for routing (e.g., 'segmentedcontrol') not machine name (e.g., 'radio-group')
+      // This allows components sharing the same machine to have distinct routing
+      zagType: (zagNode.name || zagNode.machine || 'select').toLowerCase(),
       slots,
       items,
       machineConfig,
@@ -824,11 +920,25 @@ class IRTransformer {
       }
     }
 
-    // If there are items but no slots defined, add default Trigger and Content slots
+    // If no slots defined, add default slots based on the primitive type
     // This allows simple definitions like "MySelect as Select: Item "A""
-    if (items.length > 0 && Object.keys(slots).length === 0) {
-      slots['Trigger'] = { properties: [] }
-      slots['Content'] = { properties: [] }
+    if (Object.keys(slots).length === 0) {
+      // Find the matching ZAG_PRIMITIVES key (case-insensitive)
+      const primitiveKey = Object.keys(ZAG_PRIMITIVES).find(
+        key => key.toLowerCase() === primitive.toLowerCase()
+      )
+      const primitiveDef = primitiveKey ? ZAG_PRIMITIVES[primitiveKey] : null
+      if (primitiveDef?.slots) {
+        // Add first two slots as defaults (typically Root + main content)
+        const defaultSlots = primitiveDef.slots.slice(0, 2)
+        for (const slotName of defaultSlots) {
+          slots[slotName] = { properties: [] }
+        }
+      } else {
+        // Fallback for Select-like components
+        slots['Trigger'] = { properties: [] }
+        slots['Content'] = { properties: [] }
+      }
     }
 
     // Build the synthetic ZagNode

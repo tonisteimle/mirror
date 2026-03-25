@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pagination Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: center;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Pagination
+  </div>
+  <h1>Pagination Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Pagination`,
+
+        `Pagination count 5`,
+
+        `Pagination count 20`,
+      ],
+
+      "CONFIGURATION": [
+        `Pagination count 10, page 5`,
+
+        `Pagination count 15, page 1`,
+
+        `Pagination count 20, siblingCount 2`,
+      ],
+
+      "STYLING ROOT": [
+        `Pagination count 10
+  Root: gap 8`,
+
+        `Pagination count 10
+  Root: pad 12, bg #1a1a1a, rad 8`,
+      ],
+
+      "STYLING TRIGGERS": [
+        `Pagination count 10
+  PrevTrigger: bg #333
+  NextTrigger: bg #333`,
+
+        `Pagination count 10
+  PrevTrigger: rad 20, w 36, h 36
+  NextTrigger: rad 20, w 36, h 36`,
+
+        `Pagination count 10
+  PrevTrigger: bg #3b82f6, boc transparent
+  NextTrigger: bg #3b82f6, boc transparent`,
+      ],
+
+      "STYLING ITEM GROUP": [
+        `Pagination count 10
+  ItemGroup: gap 8`,
+
+        `Pagination count 10
+  ItemGroup: bg #0a0a0a, pad 4, rad 8`,
+      ],
+
+      "IN CONTEXT - TABLE": [
+        `Box ver, gap 16, w 500
+  Text "Results" weight bold, fs 16
+  Box ver, gap 8, pad 12, bg #111, rad 8
+    Text "Item 1" fs 14
+    Text "Item 2" fs 14
+    Text "Item 3" fs 14
+  Pagination count 10
+    Root: gap 8`,
+
+        `Box ver, gap 12, pad 16, bg #111, rad 8
+  Box hor, spread
+    Text "Showing 1-10 of 150" fs 12, col #888
+    Pagination count 15
+      PrevTrigger: w 28, h 28
+      NextTrigger: w 28, h 28`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

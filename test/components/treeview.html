@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TreeView Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 48px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / TreeView
+  </div>
+  <h1>TreeView Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    // Note: JSON data must be wrapped in double quotes as a string to avoid parser issues
+    // The runtime will parse the JSON string
+    const simpleData = '"[{\\"id\\":\\"documents\\",\\"label\\":\\"Documents\\",\\"children\\":[{\\"id\\":\\"work\\",\\"label\\":\\"Work\\"},{\\"id\\":\\"personal\\",\\"label\\":\\"Personal\\"}]},{\\"id\\":\\"images\\",\\"label\\":\\"Images\\"},{\\"id\\":\\"music\\",\\"label\\":\\"Music\\"}]"';
+
+    const nestedData = '"[{\\"id\\":\\"src\\",\\"label\\":\\"src\\",\\"children\\":[{\\"id\\":\\"components\\",\\"label\\":\\"components\\",\\"children\\":[{\\"id\\":\\"button\\",\\"label\\":\\"Button.tsx\\"},{\\"id\\":\\"input\\",\\"label\\":\\"Input.tsx\\"},{\\"id\\":\\"modal\\",\\"label\\":\\"Modal.tsx\\"}]},{\\"id\\":\\"utils\\",\\"label\\":\\"utils\\",\\"children\\":[{\\"id\\":\\"helpers\\",\\"label\\":\\"helpers.ts\\"},{\\"id\\":\\"constants\\",\\"label\\":\\"constants.ts\\"}]},{\\"id\\":\\"index\\",\\"label\\":\\"index.ts\\"}]},{\\"id\\":\\"package\\",\\"label\\":\\"package.json\\"},{\\"id\\":\\"readme\\",\\"label\\":\\"README.md\\"}]"';
+
+    const deepData = '"[{\\"id\\":\\"level1\\",\\"label\\":\\"Level 1\\",\\"children\\":[{\\"id\\":\\"level2\\",\\"label\\":\\"Level 2\\",\\"children\\":[{\\"id\\":\\"level3\\",\\"label\\":\\"Level 3\\",\\"children\\":[{\\"id\\":\\"level4\\",\\"label\\":\\"Level 4\\"}]}]}]}]"';
+
+    const navData = '"[{\\"id\\":\\"dashboard\\",\\"label\\":\\"Dashboard\\"},{\\"id\\":\\"users\\",\\"label\\":\\"Users\\",\\"children\\":[{\\"id\\":\\"all\\",\\"label\\":\\"All Users\\"},{\\"id\\":\\"active\\",\\"label\\":\\"Active\\"},{\\"id\\":\\"inactive\\",\\"label\\":\\"Inactive\\"}]},{\\"id\\":\\"settings\\",\\"label\\":\\"Settings\\",\\"children\\":[{\\"id\\":\\"general\\",\\"label\\":\\"General\\"},{\\"id\\":\\"security\\",\\"label\\":\\"Security\\"},{\\"id\\":\\"notifications\\",\\"label\\":\\"Notifications\\"}]},{\\"id\\":\\"logout\\",\\"label\\":\\"Logout\\"}]"';
+
+    const sections = {
+      "BASIC": [
+        `TreeView items ${simpleData}`,
+
+        `TreeView items ${nestedData}`,
+
+        `TreeView items ${deepData}`,
+      ],
+
+      "CONFIGURATION": [
+        `TreeView items ${simpleData}, expandedKeys "[\\"documents\\"]"`,
+
+        `TreeView items ${nestedData}, expandedKeys "[\\"src\\", \\"components\\"]"`,
+
+        `TreeView items ${simpleData}, selectionMode multiple`,
+      ],
+
+      "STYLING ROOT": [
+        `TreeView items ${simpleData}
+  Root: pad 12, bg #111, rad 8`,
+
+        `TreeView items ${simpleData}
+  Root: bor 1 #333, rad 8, pad 8`,
+      ],
+
+      "STYLING TREE": [
+        `TreeView items ${simpleData}
+  Tree: pad 8, bg #1a1a1a, rad 6`,
+
+        `TreeView items ${simpleData}
+  Tree: gap 4`,
+      ],
+
+      "STYLING ITEMS": [
+        `TreeView items ${simpleData}
+  BranchTrigger: bg #1a1a1a, rad 4
+  Item: bg #1a1a1a, rad 4`,
+
+        `TreeView items ${simpleData}
+  ItemText: col #3b82f6, fs 14`,
+
+        `TreeView items ${simpleData}
+  BranchIndicator: col #f59e0b`,
+      ],
+
+      "FILE BROWSER STYLE": [
+        `Box ver, w 300, pad 12, bg #111, rad 8
+  Text "File Browser" weight bold, fs 14, margin 0 0 12 0
+  TreeView items ${nestedData}, expandedKeys "[\\"src\\"]"
+    Root: bg #0a0a0a, rad 6
+    BranchTrigger: pad 8
+    ItemText: fs 13`,
+      ],
+
+      "SIDEBAR NAVIGATION": [
+        `Box ver, w 250, h 400, bg #111, rad 8
+  Box pad 16
+    Text "Navigation" weight bold, fs 12, col #888
+  TreeView items ${navData}
+    Root: pad 8
+    BranchTrigger: rad 8
+    ItemText: fs 13`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>
