@@ -55,8 +55,10 @@ describe('Basic Components with Zag', () => {
       expect(select).toBeDefined()
       expect(select?.template).toBe('Select')
       expect(select?.children?.find(c => c.template === 'Trigger')?.isSlot).toBe(true)
-      expect(select?.children?.find(c => c.template === 'Content')?.isSlot).toBe(true)
-      expect(select?.children?.filter(c => c.isItem).length).toBe(3)
+      const content = select?.children?.find(c => c.template === 'Content')
+      expect(content?.isSlot).toBe(true)
+      // Items are nested inside Content slot
+      expect(content?.children?.filter(c => c.isItem).length).toBe(3)
     })
 
     it('should include Menu with slots and items', () => {
@@ -122,8 +124,10 @@ describe('Basic Components with Zag', () => {
     it('should include Tabs with List slot and Tab items', () => {
       const tabs = BASIC_COMPONENTS.find(c => c.id === 'zag-tabs')
       expect(tabs).toBeDefined()
-      expect(tabs?.children?.find(c => c.template === 'List')?.isSlot).toBe(true)
-      expect(tabs?.children?.filter(c => c.template === 'Tab').length).toBe(3)
+      const list = tabs?.children?.find(c => c.template === 'List')
+      expect(list?.isSlot).toBe(true)
+      // Tab items are nested inside List slot
+      expect(list?.children?.filter(c => c.template === 'Tab').length).toBe(3)
     })
 
     it('should include Accordion with items', () => {
@@ -167,29 +171,29 @@ describe('Basic Components with Zag', () => {
   })
 
   describe('Component Panel Structure', () => {
-    it('should have Layouts and Basic sections', () => {
+    it('should have all components in flat list by default', () => {
       const container = document.createElement('div')
       const panel = new ComponentPanel({ container })
 
       const sections = panel.getSections()
       const sectionNames = sections.map(s => s.name)
 
-      expect(sectionNames).toContain('Layouts')
-      expect(sectionNames).toContain('Basic')
+      // Default panel has '_all' section with flat list of components
+      expect(sectionNames).toContain('_all')
 
       panel.dispose()
     })
 
-    it('should have all Zag components in Basic section', () => {
+    it('should have all Zag components available', () => {
       const container = document.createElement('div')
       const panel = new ComponentPanel({ container })
 
       const sections = panel.getSections()
-      const basicSection = sections.find(s => s.name === 'Basic')
+      const allItems = sections.flatMap(s => s.items)
 
       const zagIds = ['zag-select', 'zag-checkbox', 'zag-switch', 'zag-slider', 'zag-dialog', 'zag-tabs', 'zag-accordion']
       for (const id of zagIds) {
-        expect(basicSection?.items.find(i => i.id === id)).toBeDefined()
+        expect(allItems.find(i => i.id === id)).toBeDefined()
       }
 
       panel.dispose()

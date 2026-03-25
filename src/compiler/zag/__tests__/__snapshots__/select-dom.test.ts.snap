@@ -7230,15 +7230,16 @@ const _runtime = {
     if (!el || !el._zagConfig) return
 
     const config = el._zagConfig.machineConfig || {}
-    // Check both _zagConfig.items (from DSL Item children) and config.items (from items prop)
-    const items = el._zagConfig.items?.length ? el._zagConfig.items : (config.items || [])
-    const slotStyles = el._slotStyles || {}
-
-    // Configuration
-    const defaultValue = config.value ?? config.defaultValue ?? ''
-    const disabled = config.disabled ?? false
-    const name = config.name ?? \`segmented-\${el._zagConfig.id}\`
     const orientation = config.orientation ?? 'horizontal'
+    const disabled = config.disabled ?? false
+    const defaultValue = config.value ?? config.defaultValue ?? ''
+    const name = config.name ?? \`segmented-\${el._zagConfig.id}\`
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    let indicator = el.querySelector('[data-slot="Indicator"]')
+
+    if (itemEls.length === 0) return
 
     // State
     el._segmentedState = {
@@ -7268,84 +7269,18 @@ const _runtime = {
       setDefault(el, 'flexDirection', 'column')
     }
 
+    // Indicator styles
+    if (indicator) {
+      setDefault(indicator, 'position', 'absolute')
+      setDefault(indicator, 'backgroundColor', '#3b82f6')
+      setDefault(indicator, 'borderRadius', '6px')
+      setDefault(indicator, 'transition', 'all 0.2s ease')
+      setDefault(indicator, 'zIndex', '0')
+    }
+
     // ========================================
     // HELPER FUNCTIONS
     // ========================================
-
-    const createItem = (item, index) => {
-      const itemEl = document.createElement('label')
-      itemEl.dataset.slot = 'Item'
-      itemEl.dataset.value = item.value ?? item.label ?? String(index)
-
-      // Default item styles
-      setDefault(itemEl, 'display', 'flex')
-      setDefault(itemEl, 'alignItems', 'center')
-      setDefault(itemEl, 'justifyContent', 'center')
-      setDefault(itemEl, 'padding', '8px 16px')
-      setDefault(itemEl, 'borderRadius', '6px')
-      setDefault(itemEl, 'cursor', disabled ? 'not-allowed' : 'pointer')
-      setDefault(itemEl, 'fontSize', '14px')
-      setDefault(itemEl, 'fontWeight', '500')
-      setDefault(itemEl, 'color', '#888')
-      setDefault(itemEl, 'userSelect', 'none')
-      setDefault(itemEl, 'transition', 'color 0.2s, background-color 0.2s')
-      setDefault(itemEl, 'position', 'relative')
-      setDefault(itemEl, 'zIndex', '1')
-      setDefault(itemEl, 'backgroundColor', 'transparent')
-
-      // Apply user styles
-      if (slotStyles.Item) {
-        Object.assign(itemEl.style, slotStyles.Item)
-      }
-
-      // Hidden input
-      const input = document.createElement('input')
-      input.type = 'radio'
-      input.name = name
-      input.value = item.value ?? item.label ?? String(index)
-      input.style.cssText = 'position: absolute; opacity: 0; pointer-events: none;'
-      if (slotStyles.ItemHiddenInput) {
-        Object.assign(input.style, slotStyles.ItemHiddenInput)
-      }
-      itemEl.appendChild(input)
-
-      // Item text
-      const text = document.createElement('span')
-      text.dataset.slot = 'ItemText'
-      text.textContent = item.label ?? item.value ?? String(index)
-      setDefault(text, 'whiteSpace', 'nowrap')
-      if (slotStyles.ItemText) {
-        Object.assign(text.style, slotStyles.ItemText)
-      }
-      itemEl.appendChild(text)
-
-      // Click handler
-      itemEl.onclick = (e) => {
-        if (disabled || item.disabled) return
-        selectItem(item.value ?? item.label ?? String(index))
-      }
-
-      // Hover effects
-      itemEl.onmouseenter = () => {
-        if (disabled || item.disabled) return
-        if (el._segmentedState.value !== (item.value ?? item.label ?? String(index))) {
-          itemEl.style.color = '#ccc'
-        }
-      }
-      itemEl.onmouseleave = () => {
-        if (el._segmentedState.value !== (item.value ?? item.label ?? String(index))) {
-          itemEl.style.color = '#888'
-        }
-      }
-
-      if (item.disabled) {
-        itemEl.dataset.disabled = 'true'
-        itemEl.style.opacity = '0.5'
-        itemEl.style.cursor = 'not-allowed'
-      }
-
-      return itemEl
-    }
 
     const selectItem = (value) => {
       if (el._segmentedState.value === value) return
@@ -7360,11 +7295,8 @@ const _runtime = {
       }))
     }
 
-    let indicator = null
-
     const updateUI = () => {
       const { value } = el._segmentedState
-      const itemEls = el.querySelectorAll('[data-slot="Item"]')
 
       itemEls.forEach(itemEl => {
         const itemValue = itemEl.dataset.value
@@ -7374,7 +7306,7 @@ const _runtime = {
           itemEl.dataset.selected = 'true'
           itemEl.style.color = '#fff'
 
-          // Update radio input
+          // Update radio input if exists
           const input = itemEl.querySelector('input')
           if (input) input.checked = true
 
@@ -7398,32 +7330,61 @@ const _runtime = {
       el.setAttribute('data-value', value)
     }
 
-    const renderItems = () => {
-      // Clear existing items
-      el.innerHTML = ''
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
 
-      // Create indicator (sliding background)
-      indicator = document.createElement('div')
-      indicator.dataset.slot = 'Indicator'
-      setDefault(indicator, 'position', 'absolute')
-      setDefault(indicator, 'backgroundColor', '#3b82f6')
-      setDefault(indicator, 'borderRadius', '6px')
-      setDefault(indicator, 'transition', 'all 0.2s ease')
-      setDefault(indicator, 'zIndex', '0')
-      if (slotStyles.Indicator) {
-        Object.assign(indicator.style, slotStyles.Indicator)
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const text = itemEl.querySelector('[data-slot="ItemText"]')
+      const value = itemEl.dataset.value
+
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 16px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'userSelect', 'none')
+      setDefault(itemEl, 'transition', 'color 0.2s, background-color 0.2s')
+      setDefault(itemEl, 'position', 'relative')
+      setDefault(itemEl, 'zIndex', '1')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+
+      // Default text styles
+      if (text) {
+        setDefault(text, 'whiteSpace', 'nowrap')
       }
-      el.appendChild(indicator)
 
-      // Create items
-      items.forEach((item, index) => {
-        const itemEl = createItem(item, index)
-        el.appendChild(itemEl)
-      })
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+      }
 
-      // Initial UI update
-      updateUI()
-    }
+      // Click handler
+      itemEl.onclick = (e) => {
+        if (isItemDisabled) return
+        selectItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#888'
+        }
+      }
+    })
 
     // ========================================
     // PUBLIC API
@@ -7431,38 +7392,32 @@ const _runtime = {
 
     el.getValue = () => el._segmentedState.value
     el.setValue = (value) => selectItem(value)
-    el.setItems = (newItems) => {
-      el._zagConfig.items = newItems
-      items.length = 0
-      items.push(...newItems)
-      renderItems()
-    }
 
     // ========================================
     // INITIAL STATE
     // ========================================
 
-    el.setAttribute('role', 'radiogroup')
     if (orientation === 'vertical') {
       el.setAttribute('aria-orientation', 'vertical')
     }
-    renderItems()
+
+    // Initial UI update
+    updateUI()
   },
 
   initToggleGroupComponent(el) {
     if (!el || !el._zagConfig) return
 
     const config = el._zagConfig.machineConfig || {}
-    // Check both _zagConfig.items (from DSL Item children) and config.items (from items prop)
-    const items = el._zagConfig.items?.length ? el._zagConfig.items : (config.items || [])
-    const slotStyles = el._slotStyles || {}
-
-    // Configuration
     const multiple = config.multiple ?? false
     const disabled = config.disabled ?? false
     const orientation = config.orientation ?? 'horizontal'
     const loopFocus = config.loopFocus ?? true
     const defaultValue = config.value ?? config.defaultValue ?? (multiple ? [] : '')
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    if (itemEls.length === 0) return
 
     // State
     el._toggleState = {
@@ -7495,82 +7450,6 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const createItem = (item, index) => {
-      const itemEl = document.createElement('button')
-      itemEl.type = 'button'
-      itemEl.dataset.slot = 'Item'
-      itemEl.dataset.value = item.value ?? item.label ?? String(index)
-
-      // Default item styles
-      setDefault(itemEl, 'display', 'flex')
-      setDefault(itemEl, 'alignItems', 'center')
-      setDefault(itemEl, 'justifyContent', 'center')
-      setDefault(itemEl, 'padding', '8px 12px')
-      setDefault(itemEl, 'borderRadius', '6px')
-      setDefault(itemEl, 'border', 'none')
-      setDefault(itemEl, 'backgroundColor', 'transparent')
-      setDefault(itemEl, 'cursor', disabled ? 'not-allowed' : 'pointer')
-      setDefault(itemEl, 'fontSize', '14px')
-      setDefault(itemEl, 'fontWeight', '500')
-      setDefault(itemEl, 'color', '#888')
-      setDefault(itemEl, 'transition', 'all 0.2s')
-
-      // Apply user styles
-      if (slotStyles.Item) {
-        Object.assign(itemEl.style, slotStyles.Item)
-      }
-
-      // Item content (icon or text)
-      if (item.icon) {
-        const icon = document.createElement('span')
-        icon.dataset.icon = item.icon
-        icon.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;'
-        // Icon loading happens via loadIcon
-        itemEl.appendChild(icon)
-        if (typeof _runtime !== 'undefined' && _runtime.loadIcon) {
-          _runtime.loadIcon(icon, item.icon)
-        }
-      } else {
-        itemEl.textContent = item.label ?? item.value ?? String(index)
-      }
-
-      // Click handler
-      itemEl.onclick = () => {
-        if (disabled || item.disabled) return
-        toggleItem(item.value ?? item.label ?? String(index))
-      }
-
-      // Hover effects
-      itemEl.onmouseenter = () => {
-        if (disabled || item.disabled) return
-        const isPressed = multiple
-          ? el._toggleState.value.has(item.value ?? item.label ?? String(index))
-          : el._toggleState.value === (item.value ?? item.label ?? String(index))
-        if (!isPressed) {
-          itemEl.style.backgroundColor = '#333'
-          itemEl.style.color = '#ccc'
-        }
-      }
-      itemEl.onmouseleave = () => {
-        const isPressed = multiple
-          ? el._toggleState.value.has(item.value ?? item.label ?? String(index))
-          : el._toggleState.value === (item.value ?? item.label ?? String(index))
-        if (!isPressed) {
-          itemEl.style.backgroundColor = 'transparent'
-          itemEl.style.color = '#888'
-        }
-      }
-
-      if (item.disabled) {
-        itemEl.dataset.disabled = 'true'
-        itemEl.disabled = true
-        itemEl.style.opacity = '0.5'
-        itemEl.style.cursor = 'not-allowed'
-      }
-
-      return itemEl
-    }
-
     const toggleItem = (value) => {
       if (multiple) {
         const newSet = new Set(el._toggleState.value)
@@ -7598,8 +7477,6 @@ const _runtime = {
     }
 
     const updateUI = () => {
-      const itemEls = el.querySelectorAll('[data-slot="Item"]')
-
       itemEls.forEach(itemEl => {
         const itemValue = itemEl.dataset.value
         const isPressed = multiple
@@ -7627,54 +7504,97 @@ const _runtime = {
       }
     }
 
-    const renderItems = () => {
-      // Clear existing items
-      el.innerHTML = ''
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
 
-      // Create items
-      items.forEach((item, index) => {
-        const itemEl = createItem(item, index)
-        el.appendChild(itemEl)
-      })
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const value = itemEl.dataset.value
 
-      // Initial UI update
-      updateUI()
-    }
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 12px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'border', 'none')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'transition', 'all 0.2s')
+
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+        itemEl.disabled = true
+      }
+
+      // Click handler
+      itemEl.onclick = () => {
+        if (isItemDisabled) return
+        toggleItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = '#333'
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = 'transparent'
+          itemEl.style.color = '#888'
+        }
+      }
+    })
 
     // ========================================
     // KEYBOARD NAVIGATION
     // ========================================
 
     el.onkeydown = (e) => {
-      const itemEls = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
-      const currentIndex = itemEls.indexOf(document.activeElement)
+      const enabledItems = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
+      const currentIndex = enabledItems.indexOf(document.activeElement)
 
       let nextIndex = currentIndex
 
       if (orientation === 'horizontal') {
         if (e.key === 'ArrowRight') {
           nextIndex = loopFocus
-            ? (currentIndex + 1) % itemEls.length
-            : Math.min(currentIndex + 1, itemEls.length - 1)
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
         } else if (e.key === 'ArrowLeft') {
           nextIndex = loopFocus
-            ? (currentIndex - 1 + itemEls.length) % itemEls.length
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
             : Math.max(currentIndex - 1, 0)
         }
       } else {
         if (e.key === 'ArrowDown') {
           nextIndex = loopFocus
-            ? (currentIndex + 1) % itemEls.length
-            : Math.min(currentIndex + 1, itemEls.length - 1)
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
         } else if (e.key === 'ArrowUp') {
           nextIndex = loopFocus
-            ? (currentIndex - 1 + itemEls.length) % itemEls.length
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
             : Math.max(currentIndex - 1, 0)
         }
       }
 
-      if (nextIndex !== currentIndex && itemEls[nextIndex]) {
-        itemEls[nextIndex].focus()
+      if (nextIndex !== currentIndex && enabledItems[nextIndex]) {
+        enabledItems[nextIndex].focus()
         e.preventDefault()
       }
 
@@ -7700,23 +7620,661 @@ const _runtime = {
       }
       updateUI()
     }
-    el.setItems = (newItems) => {
-      el._zagConfig.items = newItems
-      items.length = 0
-      items.push(...newItems)
-      renderItems()
-    }
     el.toggle = (value) => toggleItem(value)
 
     // ========================================
     // INITIAL STATE
     // ========================================
 
-    el.setAttribute('role', 'group')
     if (orientation === 'vertical') {
       el.setAttribute('aria-orientation', 'vertical')
     }
-    renderItems()
+
+    // Initial UI update
+    updateUI()
+  },
+
+  // =========================================================================
+  // GROUP 5: OVERLAYS
+  // =========================================================================
+
+  initCollapsibleComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._collapsibleState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+
+    // Trigger styles
+    setDefault(trigger, 'display', 'flex')
+    setDefault(trigger, 'alignItems', 'center')
+    setDefault(trigger, 'justifyContent', 'space-between')
+    setDefault(trigger, 'padding', '12px 16px')
+    setDefault(trigger, 'backgroundColor', '#1a1a1a')
+    setDefault(trigger, 'border', '1px solid #333')
+    setDefault(trigger, 'borderRadius', '8px')
+    setDefault(trigger, 'color', '#e0e0e0')
+    setDefault(trigger, 'cursor', disabled ? 'not-allowed' : 'pointer')
+    setDefault(trigger, 'fontSize', '14px')
+    setDefault(trigger, 'fontWeight', '500')
+
+    // Content styles
+    setDefault(content, 'overflow', 'hidden')
+    setDefault(content, 'padding', '0 16px')
+    setDefault(content, 'backgroundColor', '#111')
+    setDefault(content, 'borderRadius', '0 0 8px 8px')
+    setDefault(content, 'transition', 'all 0.2s ease')
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      if (disabled) return
+      el._collapsibleState.open = !el._collapsibleState.open
+      updateUI()
+
+      const eventName = el._collapsibleState.open ? 'open' : 'close'
+      el.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+    }
+
+    const updateUI = () => {
+      const { open } = el._collapsibleState
+
+      trigger.setAttribute('aria-expanded', String(open))
+
+      if (open) {
+        content.style.display = 'block'
+        content.style.padding = '16px'
+        content.style.maxHeight = '1000px'
+        el.setAttribute('data-state', 'open')
+      } else {
+        content.style.display = 'none'
+        content.style.padding = '0 16px'
+        content.style.maxHeight = '0'
+        el.setAttribute('data-state', 'closed')
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (disabled) {
+      trigger.setAttribute('disabled', 'true')
+      trigger.style.opacity = '0.5'
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._collapsibleState.open
+    el.toggle = toggle
+    el.open = () => {
+      if (!el._collapsibleState.open) toggle()
+    }
+    el.close = () => {
+      if (el._collapsibleState.open) toggle()
+    }
+
+    // Initial state
+    updateUI()
+  },
+
+  initTooltipComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 200
+    const closeDelay = config.closeDelay ?? 100
+    const placement = config.placement ?? 'top'
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._tooltipState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Content (tooltip) styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'padding', '8px 12px')
+    setDefault(content, 'backgroundColor', '#333')
+    setDefault(content, 'color', '#fff')
+    setDefault(content, 'borderRadius', '6px')
+    setDefault(content, 'fontSize', '12px')
+    setDefault(content, 'whiteSpace', 'nowrap')
+    setDefault(content, 'pointerEvents', 'none')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      if (disabled) return
+      clearTimeout(el._tooltipState.closeTimer)
+
+      el._tooltipState.openTimer = setTimeout(() => {
+        el._tooltipState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionTooltip()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._tooltipState.openTimer)
+
+      el._tooltipState.closeTimer = setTimeout(() => {
+        el._tooltipState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionTooltip = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const contentRect = content.getBoundingClientRect()
+      const gap = 8
+
+      let top, left
+
+      switch (placement) {
+        case 'bottom':
+          top = triggerRect.bottom + gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+          break
+        case 'left':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.left - contentRect.width - gap
+          break
+        case 'right':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.right + gap
+          break
+        default: // top
+          top = triggerRect.top - contentRect.height - gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+      }
+
+      content.style.top = top + 'px'
+      content.style.left = left + 'px'
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    trigger.onfocus = show
+    trigger.onblur = hide
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._tooltipState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initPopoverComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._popoverState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '200px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '8px')
+      setDefault(closeTrigger, 'right', '8px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '18px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      el._popoverState.open ? close() : open()
+    }
+
+    const open = () => {
+      el._popoverState.open = true
+      content.style.display = 'block'
+      trigger.setAttribute('aria-expanded', 'true')
+      positionPopover()
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._popoverState.open = false
+      content.style.display = 'none'
+      trigger.setAttribute('aria-expanded', 'false')
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    const positionPopover = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        case 'left':
+          content.style.top = triggerRect.top + 'px'
+          content.style.right = (window.innerWidth - triggerRect.left + gap) + 'px'
+          break
+        case 'right':
+          content.style.top = triggerRect.top + 'px'
+          content.style.left = (triggerRect.right + gap) + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (closeOnOutsideClick) {
+      document.addEventListener('click', (e) => {
+        if (el._popoverState.open && !el.contains(e.target)) {
+          close()
+        }
+      })
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._popoverState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._popoverState.open
+    el.open = open
+    el.close = close
+    el.toggle = toggle
+
+    // Initial state
+    if (defaultOpen) open()
+  },
+
+  initHoverCardComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 300
+    const closeDelay = config.closeDelay ?? 200
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._hoverCardState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'color', '#3b82f6')
+    setDefault(trigger, 'textDecoration', 'underline')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '250px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      clearTimeout(el._hoverCardState.closeTimer)
+
+      el._hoverCardState.openTimer = setTimeout(() => {
+        el._hoverCardState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionCard()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._hoverCardState.openTimer)
+
+      el._hoverCardState.closeTimer = setTimeout(() => {
+        el._hoverCardState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionCard = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    content.onmouseenter = () => clearTimeout(el._hoverCardState.closeTimer)
+    content.onmouseleave = hide
+
+    // Prevent link navigation
+    trigger.onclick = (e) => e.preventDefault()
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._hoverCardState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initDialogComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const modal = config.modal ?? true
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const preventScroll = config.preventScroll ?? true
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const backdrop = el.querySelector('[data-slot="Backdrop"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._dialogState = {
+      open: defaultOpen,
+      previousOverflow: ''
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Backdrop styles
+    if (backdrop) {
+      setDefault(backdrop, 'position', 'fixed')
+      setDefault(backdrop, 'inset', '0')
+      setDefault(backdrop, 'backgroundColor', 'rgba(0, 0, 0, 0.5)')
+      setDefault(backdrop, 'zIndex', '999')
+      setDefault(backdrop, 'transition', 'opacity 0.2s')
+      backdrop.style.display = 'none'
+    }
+
+    // Content styles
+    setDefault(content, 'position', 'fixed')
+    setDefault(content, 'top', '50%')
+    setDefault(content, 'left', '50%')
+    setDefault(content, 'transform', 'translate(-50%, -50%)')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '300px')
+    setDefault(content, 'maxWidth', '90vw')
+    setDefault(content, 'maxHeight', '90vh')
+    setDefault(content, 'padding', '24px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '12px')
+    setDefault(content, 'boxShadow', '0 8px 32px rgba(0,0,0,0.5)')
+    setDefault(content, 'overflow', 'auto')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '12px')
+      setDefault(closeTrigger, 'right', '12px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '20px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const open = () => {
+      el._dialogState.open = true
+
+      if (backdrop) backdrop.style.display = 'block'
+      content.style.display = 'block'
+
+      if (preventScroll) {
+        el._dialogState.previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+      }
+
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._dialogState.open = false
+
+      if (backdrop) backdrop.style.display = 'none'
+      content.style.display = 'none'
+
+      if (preventScroll) {
+        document.body.style.overflow = el._dialogState.previousOverflow
+      }
+
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = open
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (backdrop && closeOnOutsideClick) {
+      backdrop.onclick = close
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._dialogState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._dialogState.open
+    el.open = open
+    el.close = close
+
+    // Initial state
+    if (defaultOpen) open()
   },
 
   // Icon loading
@@ -15154,15 +15712,16 @@ const _runtime = {
     if (!el || !el._zagConfig) return
 
     const config = el._zagConfig.machineConfig || {}
-    // Check both _zagConfig.items (from DSL Item children) and config.items (from items prop)
-    const items = el._zagConfig.items?.length ? el._zagConfig.items : (config.items || [])
-    const slotStyles = el._slotStyles || {}
-
-    // Configuration
-    const defaultValue = config.value ?? config.defaultValue ?? ''
-    const disabled = config.disabled ?? false
-    const name = config.name ?? \`segmented-\${el._zagConfig.id}\`
     const orientation = config.orientation ?? 'horizontal'
+    const disabled = config.disabled ?? false
+    const defaultValue = config.value ?? config.defaultValue ?? ''
+    const name = config.name ?? \`segmented-\${el._zagConfig.id}\`
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    let indicator = el.querySelector('[data-slot="Indicator"]')
+
+    if (itemEls.length === 0) return
 
     // State
     el._segmentedState = {
@@ -15192,84 +15751,18 @@ const _runtime = {
       setDefault(el, 'flexDirection', 'column')
     }
 
+    // Indicator styles
+    if (indicator) {
+      setDefault(indicator, 'position', 'absolute')
+      setDefault(indicator, 'backgroundColor', '#3b82f6')
+      setDefault(indicator, 'borderRadius', '6px')
+      setDefault(indicator, 'transition', 'all 0.2s ease')
+      setDefault(indicator, 'zIndex', '0')
+    }
+
     // ========================================
     // HELPER FUNCTIONS
     // ========================================
-
-    const createItem = (item, index) => {
-      const itemEl = document.createElement('label')
-      itemEl.dataset.slot = 'Item'
-      itemEl.dataset.value = item.value ?? item.label ?? String(index)
-
-      // Default item styles
-      setDefault(itemEl, 'display', 'flex')
-      setDefault(itemEl, 'alignItems', 'center')
-      setDefault(itemEl, 'justifyContent', 'center')
-      setDefault(itemEl, 'padding', '8px 16px')
-      setDefault(itemEl, 'borderRadius', '6px')
-      setDefault(itemEl, 'cursor', disabled ? 'not-allowed' : 'pointer')
-      setDefault(itemEl, 'fontSize', '14px')
-      setDefault(itemEl, 'fontWeight', '500')
-      setDefault(itemEl, 'color', '#888')
-      setDefault(itemEl, 'userSelect', 'none')
-      setDefault(itemEl, 'transition', 'color 0.2s, background-color 0.2s')
-      setDefault(itemEl, 'position', 'relative')
-      setDefault(itemEl, 'zIndex', '1')
-      setDefault(itemEl, 'backgroundColor', 'transparent')
-
-      // Apply user styles
-      if (slotStyles.Item) {
-        Object.assign(itemEl.style, slotStyles.Item)
-      }
-
-      // Hidden input
-      const input = document.createElement('input')
-      input.type = 'radio'
-      input.name = name
-      input.value = item.value ?? item.label ?? String(index)
-      input.style.cssText = 'position: absolute; opacity: 0; pointer-events: none;'
-      if (slotStyles.ItemHiddenInput) {
-        Object.assign(input.style, slotStyles.ItemHiddenInput)
-      }
-      itemEl.appendChild(input)
-
-      // Item text
-      const text = document.createElement('span')
-      text.dataset.slot = 'ItemText'
-      text.textContent = item.label ?? item.value ?? String(index)
-      setDefault(text, 'whiteSpace', 'nowrap')
-      if (slotStyles.ItemText) {
-        Object.assign(text.style, slotStyles.ItemText)
-      }
-      itemEl.appendChild(text)
-
-      // Click handler
-      itemEl.onclick = (e) => {
-        if (disabled || item.disabled) return
-        selectItem(item.value ?? item.label ?? String(index))
-      }
-
-      // Hover effects
-      itemEl.onmouseenter = () => {
-        if (disabled || item.disabled) return
-        if (el._segmentedState.value !== (item.value ?? item.label ?? String(index))) {
-          itemEl.style.color = '#ccc'
-        }
-      }
-      itemEl.onmouseleave = () => {
-        if (el._segmentedState.value !== (item.value ?? item.label ?? String(index))) {
-          itemEl.style.color = '#888'
-        }
-      }
-
-      if (item.disabled) {
-        itemEl.dataset.disabled = 'true'
-        itemEl.style.opacity = '0.5'
-        itemEl.style.cursor = 'not-allowed'
-      }
-
-      return itemEl
-    }
 
     const selectItem = (value) => {
       if (el._segmentedState.value === value) return
@@ -15284,11 +15777,8 @@ const _runtime = {
       }))
     }
 
-    let indicator = null
-
     const updateUI = () => {
       const { value } = el._segmentedState
-      const itemEls = el.querySelectorAll('[data-slot="Item"]')
 
       itemEls.forEach(itemEl => {
         const itemValue = itemEl.dataset.value
@@ -15298,7 +15788,7 @@ const _runtime = {
           itemEl.dataset.selected = 'true'
           itemEl.style.color = '#fff'
 
-          // Update radio input
+          // Update radio input if exists
           const input = itemEl.querySelector('input')
           if (input) input.checked = true
 
@@ -15322,32 +15812,61 @@ const _runtime = {
       el.setAttribute('data-value', value)
     }
 
-    const renderItems = () => {
-      // Clear existing items
-      el.innerHTML = ''
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
 
-      // Create indicator (sliding background)
-      indicator = document.createElement('div')
-      indicator.dataset.slot = 'Indicator'
-      setDefault(indicator, 'position', 'absolute')
-      setDefault(indicator, 'backgroundColor', '#3b82f6')
-      setDefault(indicator, 'borderRadius', '6px')
-      setDefault(indicator, 'transition', 'all 0.2s ease')
-      setDefault(indicator, 'zIndex', '0')
-      if (slotStyles.Indicator) {
-        Object.assign(indicator.style, slotStyles.Indicator)
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const text = itemEl.querySelector('[data-slot="ItemText"]')
+      const value = itemEl.dataset.value
+
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 16px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'userSelect', 'none')
+      setDefault(itemEl, 'transition', 'color 0.2s, background-color 0.2s')
+      setDefault(itemEl, 'position', 'relative')
+      setDefault(itemEl, 'zIndex', '1')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+
+      // Default text styles
+      if (text) {
+        setDefault(text, 'whiteSpace', 'nowrap')
       }
-      el.appendChild(indicator)
 
-      // Create items
-      items.forEach((item, index) => {
-        const itemEl = createItem(item, index)
-        el.appendChild(itemEl)
-      })
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+      }
 
-      // Initial UI update
-      updateUI()
-    }
+      // Click handler
+      itemEl.onclick = (e) => {
+        if (isItemDisabled) return
+        selectItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        if (el._segmentedState.value !== value) {
+          itemEl.style.color = '#888'
+        }
+      }
+    })
 
     // ========================================
     // PUBLIC API
@@ -15355,38 +15874,32 @@ const _runtime = {
 
     el.getValue = () => el._segmentedState.value
     el.setValue = (value) => selectItem(value)
-    el.setItems = (newItems) => {
-      el._zagConfig.items = newItems
-      items.length = 0
-      items.push(...newItems)
-      renderItems()
-    }
 
     // ========================================
     // INITIAL STATE
     // ========================================
 
-    el.setAttribute('role', 'radiogroup')
     if (orientation === 'vertical') {
       el.setAttribute('aria-orientation', 'vertical')
     }
-    renderItems()
+
+    // Initial UI update
+    updateUI()
   },
 
   initToggleGroupComponent(el) {
     if (!el || !el._zagConfig) return
 
     const config = el._zagConfig.machineConfig || {}
-    // Check both _zagConfig.items (from DSL Item children) and config.items (from items prop)
-    const items = el._zagConfig.items?.length ? el._zagConfig.items : (config.items || [])
-    const slotStyles = el._slotStyles || {}
-
-    // Configuration
     const multiple = config.multiple ?? false
     const disabled = config.disabled ?? false
     const orientation = config.orientation ?? 'horizontal'
     const loopFocus = config.loopFocus ?? true
     const defaultValue = config.value ?? config.defaultValue ?? (multiple ? [] : '')
+
+    // Get existing elements created by emitter
+    const itemEls = el.querySelectorAll('[data-slot="Item"]')
+    if (itemEls.length === 0) return
 
     // State
     el._toggleState = {
@@ -15419,82 +15932,6 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const createItem = (item, index) => {
-      const itemEl = document.createElement('button')
-      itemEl.type = 'button'
-      itemEl.dataset.slot = 'Item'
-      itemEl.dataset.value = item.value ?? item.label ?? String(index)
-
-      // Default item styles
-      setDefault(itemEl, 'display', 'flex')
-      setDefault(itemEl, 'alignItems', 'center')
-      setDefault(itemEl, 'justifyContent', 'center')
-      setDefault(itemEl, 'padding', '8px 12px')
-      setDefault(itemEl, 'borderRadius', '6px')
-      setDefault(itemEl, 'border', 'none')
-      setDefault(itemEl, 'backgroundColor', 'transparent')
-      setDefault(itemEl, 'cursor', disabled ? 'not-allowed' : 'pointer')
-      setDefault(itemEl, 'fontSize', '14px')
-      setDefault(itemEl, 'fontWeight', '500')
-      setDefault(itemEl, 'color', '#888')
-      setDefault(itemEl, 'transition', 'all 0.2s')
-
-      // Apply user styles
-      if (slotStyles.Item) {
-        Object.assign(itemEl.style, slotStyles.Item)
-      }
-
-      // Item content (icon or text)
-      if (item.icon) {
-        const icon = document.createElement('span')
-        icon.dataset.icon = item.icon
-        icon.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;'
-        // Icon loading happens via loadIcon
-        itemEl.appendChild(icon)
-        if (typeof _runtime !== 'undefined' && _runtime.loadIcon) {
-          _runtime.loadIcon(icon, item.icon)
-        }
-      } else {
-        itemEl.textContent = item.label ?? item.value ?? String(index)
-      }
-
-      // Click handler
-      itemEl.onclick = () => {
-        if (disabled || item.disabled) return
-        toggleItem(item.value ?? item.label ?? String(index))
-      }
-
-      // Hover effects
-      itemEl.onmouseenter = () => {
-        if (disabled || item.disabled) return
-        const isPressed = multiple
-          ? el._toggleState.value.has(item.value ?? item.label ?? String(index))
-          : el._toggleState.value === (item.value ?? item.label ?? String(index))
-        if (!isPressed) {
-          itemEl.style.backgroundColor = '#333'
-          itemEl.style.color = '#ccc'
-        }
-      }
-      itemEl.onmouseleave = () => {
-        const isPressed = multiple
-          ? el._toggleState.value.has(item.value ?? item.label ?? String(index))
-          : el._toggleState.value === (item.value ?? item.label ?? String(index))
-        if (!isPressed) {
-          itemEl.style.backgroundColor = 'transparent'
-          itemEl.style.color = '#888'
-        }
-      }
-
-      if (item.disabled) {
-        itemEl.dataset.disabled = 'true'
-        itemEl.disabled = true
-        itemEl.style.opacity = '0.5'
-        itemEl.style.cursor = 'not-allowed'
-      }
-
-      return itemEl
-    }
-
     const toggleItem = (value) => {
       if (multiple) {
         const newSet = new Set(el._toggleState.value)
@@ -15522,8 +15959,6 @@ const _runtime = {
     }
 
     const updateUI = () => {
-      const itemEls = el.querySelectorAll('[data-slot="Item"]')
-
       itemEls.forEach(itemEl => {
         const itemValue = itemEl.dataset.value
         const isPressed = multiple
@@ -15551,54 +15986,97 @@ const _runtime = {
       }
     }
 
-    const renderItems = () => {
-      // Clear existing items
-      el.innerHTML = ''
+    // ========================================
+    // SETUP ITEMS
+    // ========================================
 
-      // Create items
-      items.forEach((item, index) => {
-        const itemEl = createItem(item, index)
-        el.appendChild(itemEl)
-      })
+    itemEls.forEach((itemEl, index) => {
+      const isItemDisabled = itemEl.hasAttribute('data-disabled') || disabled
+      const value = itemEl.dataset.value
 
-      // Initial UI update
-      updateUI()
-    }
+      // Default item styles
+      setDefault(itemEl, 'display', 'flex')
+      setDefault(itemEl, 'alignItems', 'center')
+      setDefault(itemEl, 'justifyContent', 'center')
+      setDefault(itemEl, 'padding', '8px 12px')
+      setDefault(itemEl, 'borderRadius', '6px')
+      setDefault(itemEl, 'border', 'none')
+      setDefault(itemEl, 'backgroundColor', 'transparent')
+      setDefault(itemEl, 'cursor', isItemDisabled ? 'not-allowed' : 'pointer')
+      setDefault(itemEl, 'fontSize', '14px')
+      setDefault(itemEl, 'fontWeight', '500')
+      setDefault(itemEl, 'color', '#888')
+      setDefault(itemEl, 'transition', 'all 0.2s')
+
+      // Disabled state
+      if (isItemDisabled) {
+        itemEl.style.opacity = '0.5'
+        itemEl.style.cursor = 'not-allowed'
+        itemEl.disabled = true
+      }
+
+      // Click handler
+      itemEl.onclick = () => {
+        if (isItemDisabled) return
+        toggleItem(value)
+      }
+
+      // Hover effects
+      itemEl.onmouseenter = () => {
+        if (isItemDisabled) return
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = '#333'
+          itemEl.style.color = '#ccc'
+        }
+      }
+      itemEl.onmouseleave = () => {
+        const isPressed = multiple
+          ? el._toggleState.value.has(value)
+          : el._toggleState.value === value
+        if (!isPressed) {
+          itemEl.style.backgroundColor = 'transparent'
+          itemEl.style.color = '#888'
+        }
+      }
+    })
 
     // ========================================
     // KEYBOARD NAVIGATION
     // ========================================
 
     el.onkeydown = (e) => {
-      const itemEls = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
-      const currentIndex = itemEls.indexOf(document.activeElement)
+      const enabledItems = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
+      const currentIndex = enabledItems.indexOf(document.activeElement)
 
       let nextIndex = currentIndex
 
       if (orientation === 'horizontal') {
         if (e.key === 'ArrowRight') {
           nextIndex = loopFocus
-            ? (currentIndex + 1) % itemEls.length
-            : Math.min(currentIndex + 1, itemEls.length - 1)
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
         } else if (e.key === 'ArrowLeft') {
           nextIndex = loopFocus
-            ? (currentIndex - 1 + itemEls.length) % itemEls.length
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
             : Math.max(currentIndex - 1, 0)
         }
       } else {
         if (e.key === 'ArrowDown') {
           nextIndex = loopFocus
-            ? (currentIndex + 1) % itemEls.length
-            : Math.min(currentIndex + 1, itemEls.length - 1)
+            ? (currentIndex + 1) % enabledItems.length
+            : Math.min(currentIndex + 1, enabledItems.length - 1)
         } else if (e.key === 'ArrowUp') {
           nextIndex = loopFocus
-            ? (currentIndex - 1 + itemEls.length) % itemEls.length
+            ? (currentIndex - 1 + enabledItems.length) % enabledItems.length
             : Math.max(currentIndex - 1, 0)
         }
       }
 
-      if (nextIndex !== currentIndex && itemEls[nextIndex]) {
-        itemEls[nextIndex].focus()
+      if (nextIndex !== currentIndex && enabledItems[nextIndex]) {
+        enabledItems[nextIndex].focus()
         e.preventDefault()
       }
 
@@ -15624,23 +16102,661 @@ const _runtime = {
       }
       updateUI()
     }
-    el.setItems = (newItems) => {
-      el._zagConfig.items = newItems
-      items.length = 0
-      items.push(...newItems)
-      renderItems()
-    }
     el.toggle = (value) => toggleItem(value)
 
     // ========================================
     // INITIAL STATE
     // ========================================
 
-    el.setAttribute('role', 'group')
     if (orientation === 'vertical') {
       el.setAttribute('aria-orientation', 'vertical')
     }
-    renderItems()
+
+    // Initial UI update
+    updateUI()
+  },
+
+  // =========================================================================
+  // GROUP 5: OVERLAYS
+  // =========================================================================
+
+  initCollapsibleComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._collapsibleState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+
+    // Trigger styles
+    setDefault(trigger, 'display', 'flex')
+    setDefault(trigger, 'alignItems', 'center')
+    setDefault(trigger, 'justifyContent', 'space-between')
+    setDefault(trigger, 'padding', '12px 16px')
+    setDefault(trigger, 'backgroundColor', '#1a1a1a')
+    setDefault(trigger, 'border', '1px solid #333')
+    setDefault(trigger, 'borderRadius', '8px')
+    setDefault(trigger, 'color', '#e0e0e0')
+    setDefault(trigger, 'cursor', disabled ? 'not-allowed' : 'pointer')
+    setDefault(trigger, 'fontSize', '14px')
+    setDefault(trigger, 'fontWeight', '500')
+
+    // Content styles
+    setDefault(content, 'overflow', 'hidden')
+    setDefault(content, 'padding', '0 16px')
+    setDefault(content, 'backgroundColor', '#111')
+    setDefault(content, 'borderRadius', '0 0 8px 8px')
+    setDefault(content, 'transition', 'all 0.2s ease')
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      if (disabled) return
+      el._collapsibleState.open = !el._collapsibleState.open
+      updateUI()
+
+      const eventName = el._collapsibleState.open ? 'open' : 'close'
+      el.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+    }
+
+    const updateUI = () => {
+      const { open } = el._collapsibleState
+
+      trigger.setAttribute('aria-expanded', String(open))
+
+      if (open) {
+        content.style.display = 'block'
+        content.style.padding = '16px'
+        content.style.maxHeight = '1000px'
+        el.setAttribute('data-state', 'open')
+      } else {
+        content.style.display = 'none'
+        content.style.padding = '0 16px'
+        content.style.maxHeight = '0'
+        el.setAttribute('data-state', 'closed')
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (disabled) {
+      trigger.setAttribute('disabled', 'true')
+      trigger.style.opacity = '0.5'
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._collapsibleState.open
+    el.toggle = toggle
+    el.open = () => {
+      if (!el._collapsibleState.open) toggle()
+    }
+    el.close = () => {
+      if (el._collapsibleState.open) toggle()
+    }
+
+    // Initial state
+    updateUI()
+  },
+
+  initTooltipComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 200
+    const closeDelay = config.closeDelay ?? 100
+    const placement = config.placement ?? 'top'
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._tooltipState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Content (tooltip) styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'padding', '8px 12px')
+    setDefault(content, 'backgroundColor', '#333')
+    setDefault(content, 'color', '#fff')
+    setDefault(content, 'borderRadius', '6px')
+    setDefault(content, 'fontSize', '12px')
+    setDefault(content, 'whiteSpace', 'nowrap')
+    setDefault(content, 'pointerEvents', 'none')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      if (disabled) return
+      clearTimeout(el._tooltipState.closeTimer)
+
+      el._tooltipState.openTimer = setTimeout(() => {
+        el._tooltipState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionTooltip()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._tooltipState.openTimer)
+
+      el._tooltipState.closeTimer = setTimeout(() => {
+        el._tooltipState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionTooltip = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const contentRect = content.getBoundingClientRect()
+      const gap = 8
+
+      let top, left
+
+      switch (placement) {
+        case 'bottom':
+          top = triggerRect.bottom + gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+          break
+        case 'left':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.left - contentRect.width - gap
+          break
+        case 'right':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.right + gap
+          break
+        default: // top
+          top = triggerRect.top - contentRect.height - gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+      }
+
+      content.style.top = top + 'px'
+      content.style.left = left + 'px'
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    trigger.onfocus = show
+    trigger.onblur = hide
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._tooltipState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initPopoverComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._popoverState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '200px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '8px')
+      setDefault(closeTrigger, 'right', '8px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '18px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      el._popoverState.open ? close() : open()
+    }
+
+    const open = () => {
+      el._popoverState.open = true
+      content.style.display = 'block'
+      trigger.setAttribute('aria-expanded', 'true')
+      positionPopover()
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._popoverState.open = false
+      content.style.display = 'none'
+      trigger.setAttribute('aria-expanded', 'false')
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    const positionPopover = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        case 'left':
+          content.style.top = triggerRect.top + 'px'
+          content.style.right = (window.innerWidth - triggerRect.left + gap) + 'px'
+          break
+        case 'right':
+          content.style.top = triggerRect.top + 'px'
+          content.style.left = (triggerRect.right + gap) + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (closeOnOutsideClick) {
+      document.addEventListener('click', (e) => {
+        if (el._popoverState.open && !el.contains(e.target)) {
+          close()
+        }
+      })
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._popoverState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._popoverState.open
+    el.open = open
+    el.close = close
+    el.toggle = toggle
+
+    // Initial state
+    if (defaultOpen) open()
+  },
+
+  initHoverCardComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 300
+    const closeDelay = config.closeDelay ?? 200
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._hoverCardState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'color', '#3b82f6')
+    setDefault(trigger, 'textDecoration', 'underline')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '250px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      clearTimeout(el._hoverCardState.closeTimer)
+
+      el._hoverCardState.openTimer = setTimeout(() => {
+        el._hoverCardState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionCard()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._hoverCardState.openTimer)
+
+      el._hoverCardState.closeTimer = setTimeout(() => {
+        el._hoverCardState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionCard = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    content.onmouseenter = () => clearTimeout(el._hoverCardState.closeTimer)
+    content.onmouseleave = hide
+
+    // Prevent link navigation
+    trigger.onclick = (e) => e.preventDefault()
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._hoverCardState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initDialogComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const modal = config.modal ?? true
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const preventScroll = config.preventScroll ?? true
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const backdrop = el.querySelector('[data-slot="Backdrop"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._dialogState = {
+      open: defaultOpen,
+      previousOverflow: ''
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Backdrop styles
+    if (backdrop) {
+      setDefault(backdrop, 'position', 'fixed')
+      setDefault(backdrop, 'inset', '0')
+      setDefault(backdrop, 'backgroundColor', 'rgba(0, 0, 0, 0.5)')
+      setDefault(backdrop, 'zIndex', '999')
+      setDefault(backdrop, 'transition', 'opacity 0.2s')
+      backdrop.style.display = 'none'
+    }
+
+    // Content styles
+    setDefault(content, 'position', 'fixed')
+    setDefault(content, 'top', '50%')
+    setDefault(content, 'left', '50%')
+    setDefault(content, 'transform', 'translate(-50%, -50%)')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '300px')
+    setDefault(content, 'maxWidth', '90vw')
+    setDefault(content, 'maxHeight', '90vh')
+    setDefault(content, 'padding', '24px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '12px')
+    setDefault(content, 'boxShadow', '0 8px 32px rgba(0,0,0,0.5)')
+    setDefault(content, 'overflow', 'auto')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '12px')
+      setDefault(closeTrigger, 'right', '12px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '20px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const open = () => {
+      el._dialogState.open = true
+
+      if (backdrop) backdrop.style.display = 'block'
+      content.style.display = 'block'
+
+      if (preventScroll) {
+        el._dialogState.previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+      }
+
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._dialogState.open = false
+
+      if (backdrop) backdrop.style.display = 'none'
+      content.style.display = 'none'
+
+      if (preventScroll) {
+        document.body.style.overflow = el._dialogState.previousOverflow
+      }
+
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = open
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (backdrop && closeOnOutsideClick) {
+      backdrop.onclick = close
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._dialogState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._dialogState.open
+    el.open = open
+    el.close = close
+
+    // Initial state
+    if (defaultOpen) open()
   },
 
   // Icon loading

@@ -51,13 +51,13 @@ describe('Zag Select - DOM Generation', () => {
     bg #222
 `)
 
-      // Should contain slot definitions
-      expect(code).toContain("slots:")
-      expect(code).toContain("'Trigger':")
-      expect(code).toContain("'Content':")
+      // Should create Trigger slot element with styles
+      expect(code).toContain("dataset.slot = 'Trigger'")
+      expect(code).toContain("// Trigger")
 
-      // Should create slot elements
-      expect(code).toContain("data-slot")
+      // Should create Content slot element with styles
+      expect(code).toContain("dataset.slot = 'Content'")
+      expect(code).toContain("// Content")
     })
 
     it('should generate disabled items correctly', () => {
@@ -111,17 +111,15 @@ describe('Zag Select - DOM Generation', () => {
       expect(trigger?.tagName.toLowerCase()).toBe('button')
     })
 
-    it('should create Content slot element (portal: true means outside container)', () => {
-      // Content is a portaled element, so it's not in the normal DOM tree
-      // We verify via generated code instead
+    it('should create Content slot element', () => {
+      // Content is generated as a slot element with role="listbox"
       const { jsCode } = compileOnly(`Select placeholder "Test"
   Content:
     bg #222
 `)
 
-      expect(jsCode).toContain("data-slot")
-      expect(jsCode).toContain("'Content'")
-      expect(jsCode).toContain("portal: true")
+      expect(jsCode).toContain("dataset.slot = 'Content'")
+      expect(jsCode).toContain("role', 'listbox'")
     })
 
     it('should create item elements with Content slot', () => {
@@ -189,29 +187,33 @@ describe('Zag Select - DOM Generation', () => {
     })
   })
 
-  describe('Slot API Methods', () => {
-    it('should map Trigger to getTriggerProps', () => {
+  describe('Slot Element Attributes', () => {
+    it('should create Trigger with combobox role', () => {
       const code = compile(`Select
   Trigger:
     bg #333
 `)
-      expect(code).toContain("apiMethod: 'getTriggerProps'")
+      expect(code).toContain("dataset.slot = 'Trigger'")
+      expect(code).toContain("role', 'combobox'")
+      expect(code).toContain("aria-haspopup', 'listbox'")
     })
 
-    it('should map Content to getContentProps', () => {
+    it('should create Content with listbox role', () => {
       const code = compile(`Select
   Content:
     bg #222
 `)
-      expect(code).toContain("apiMethod: 'getContentProps'")
+      expect(code).toContain("dataset.slot = 'Content'")
+      expect(code).toContain("role', 'listbox'")
     })
 
-    it('should mark Content as portal', () => {
+    it('should create Items with option role', () => {
       const code = compile(`Select
-  Content:
-    bg #222
+  Item "Option A"
+  Item "Option B"
 `)
-      expect(code).toContain("portal: true")
+      expect(code).toContain("dataset.slot = 'Item'")
+      expect(code).toContain("role', 'option'")
     })
   })
 
