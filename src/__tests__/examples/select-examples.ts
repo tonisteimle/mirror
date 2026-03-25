@@ -20,34 +20,34 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'BASIC PROPERTIES',
     examples: [
       {
-        code: `Select placeholder "Farbe wählen...":
+        code: `Select placeholder "Farbe wählen..."
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
         description: 'placeholder'
       },
       {
-        code: `Select value "Grün":
+        code: `Select value "Grün"
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
         description: 'value'
       },
       {
-        code: `Select value "DE":
+        code: `Select value "DE"
   Item "Deutschland" value "DE"
   Item "Österreich" value "AT"
   Item "Schweiz" value "CH"`,
         description: 'value mit separatem Item-Value'
       },
       {
-        code: `Select label "Land", placeholder "Bitte wählen...":
+        code: `Select label "Land", placeholder "Bitte wählen..."
   Item "Deutschland"
   Item "Schweiz"`,
         description: 'label'
       },
       {
-        code: `Select defaultValue "B":
+        code: `Select defaultValue "B"
   Item "A"
   Item "B"
   Item "C"`,
@@ -59,7 +59,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'MULTIPLE SELECTION',
     examples: [
       {
-        code: `Select multiple, placeholder "Farben wählen...":
+        code: `Select multiple, placeholder "Farben wählen..."
   Item "Rot"
   Item "Grün"
   Item "Blau"
@@ -67,7 +67,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'multiple'
       },
       {
-        code: `Select multiple, defaultValue "JS":
+        code: `Select multiple, defaultValue "JS"
   Item "JS"
   Item "TS"
   Item "React"`,
@@ -79,7 +79,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'SEARCHABLE',
     examples: [
       {
-        code: `Select searchable, placeholder "Land suchen...":
+        code: `Select searchable, placeholder "Land suchen..."
   Item "Afghanistan"
   Item "Albanien"
   Item "Algerien"
@@ -88,7 +88,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'searchable'
       },
       {
-        code: `Select searchable, multiple, placeholder "Teammitglieder suchen...":
+        code: `Select searchable, multiple, placeholder "Teammitglieder suchen..."
   Item "Anna Schmidt"
   Item "Max Müller"
   Item "Lisa Weber"
@@ -101,14 +101,14 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CLEARABLE',
     examples: [
       {
-        code: `Select clearable, placeholder "Optional...":
+        code: `Select clearable, placeholder "Optional..."
   Item "Option A"
   Item "Option B"
   Item "Option C"`,
         description: 'clearable'
       },
       {
-        code: `Select clearable, value "Option A":
+        code: `Select clearable, value "Option A"
   Item "Option A"
   Item "Option B"`,
         description: 'clearable mit value'
@@ -119,7 +119,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'KEEPOPEN',
     examples: [
       {
-        code: `Select keepOpen, placeholder "Mehrere anklicken...":
+        code: `Select keepOpen, placeholder "Mehrere anklicken..."
   Item "Eins"
   Item "Zwei"
   Item "Drei"`,
@@ -131,19 +131,19 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'DISABLED & READONLY',
     examples: [
       {
-        code: `Select disabled, placeholder "Nicht verfügbar":
+        code: `Select disabled, placeholder "Nicht verfügbar"
   Item "A"
   Item "B"`,
         description: 'disabled'
       },
       {
-        code: `Select readonly, value "Festgelegt":
+        code: `Select readonly, value "Festgelegt"
   Item "Festgelegt"
   Item "Andere Option"`,
         description: 'readonly'
       },
       {
-        code: `Select placeholder "Plan wählen...":
+        code: `Select placeholder "Plan wählen..."
   Item "Free"
   Item "Pro" disabled
   Item "Enterprise" disabled`,
@@ -155,25 +155,25 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'FORM INTEGRATION',
     examples: [
       {
-        code: `Select required, label "Land *", name "country", placeholder "Pflichtfeld":
+        code: `Select required, label "Land *", name "country", placeholder "Pflichtfeld"
   Item "Deutschland"
   Item "Schweiz"`,
         description: 'required'
       },
       {
-        code: `Select invalid, placeholder "Bitte auswählen":
+        code: `Select invalid, placeholder "Bitte auswählen"
   Item "Option A"
   Item "Option B"`,
         description: 'invalid'
       },
       {
-        code: `Select name "country", placeholder "Land wählen...":
+        code: `Select name "country", placeholder "Land wählen..."
   Item "Deutschland" value "DE"
   Item "Schweiz" value "CH"`,
         description: 'name'
       },
       {
-        code: `Select name "category", form "settings-form", placeholder "Kategorie":
+        code: `Select name "category", form "settings-form", placeholder "Kategorie"
   Item "Allgemein"
   Item "Erweitert"`,
         description: 'form'
@@ -184,13 +184,13 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'POSITIONING',
     examples: [
       {
-        code: `Select placement "top-start", placeholder "Öffnet nach oben":
+        code: `Select placement "top-start", placeholder "Öffnet nach oben"
   Item "Option A"
   Item "Option B"`,
         description: 'placement'
       },
       {
-        code: `Select offset 12, placeholder "12px Abstand":
+        code: `Select offset 12, placeholder "12px Abstand"
   Item "A"
   Item "B"`,
         description: 'offset'
@@ -201,7 +201,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'KOMBINATIONEN',
     examples: [
       {
-        code: `Select searchable, clearable, placeholder "Suche...":
+        code: `Select searchable, clearable, placeholder "Suche..."
   Item "React"
   Item "Vue"
   Item "Angular"
@@ -209,7 +209,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'searchable + clearable'
       },
       {
-        code: `Select multiple, searchable, clearable, placeholder "Alles kombiniert":
+        code: `Select multiple, searchable, clearable, placeholder "Alles kombiniert"
   Item "Design"
   Item "Code"
   Item "Test"
@@ -217,7 +217,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'multiple + searchable + clearable'
       },
       {
-        code: `Select placeholder "Land wählen":
+        code: `Select placeholder "Land wählen"
   Item "Deutschland"
   Item "Österreich"
   Item "Schweiz"
@@ -233,7 +233,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CUSTOM ITEMS - Zweizeilig',
     examples: [
       {
-        code: `Select placeholder "Plan wählen...":
+        code: `Select placeholder "Plan wählen..."
   Item value "free", ver, gap 2, pad 12 14:
     Text "Free" weight medium
     Text "Für Einzelpersonen" fs 12, col #666
@@ -249,20 +249,20 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CUSTOM ITEMS - Mit Icons',
     examples: [
       {
-        code: `Select placeholder "Status wählen...":
-  Item value "draft":
+        code: `Select placeholder "Status wählen..."
+  Item value "draft"
     Icon "file-text" col #888
     Text "Entwurf"
-  Item value "published":
+  Item value "published"
     Icon "check-circle" col #22c55e
     Text "Veröffentlicht"
-  Item value "archived":
+  Item value "archived"
     Icon "archive" col #888
     Text "Archiviert"`,
         description: 'Items mit Leading Icon'
       },
       {
-        code: `Select value "medium":
+        code: `Select value "medium"
   Item value "urgent": Icon "alert-circle" col #ef4444, Text "Dringend" col #ef4444
   Item value "high": Icon "arrow-up" col #f97316, Text "Hoch"
   Item value "medium": Icon "minus" col #eab308, Text "Mittel"
@@ -275,7 +275,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CUSTOM ITEMS - Status & Farben',
     examples: [
       {
-        code: `Select value "online":
+        code: `Select value "online"
   Item value "online": Box w 8, h 8, rad 4, bg #22c55e, Text "Online"
   Item value "away": Box w 8, h 8, rad 4, bg #eab308, Text "Abwesend"
   Item value "busy": Box w 8, h 8, rad 4, bg #ef4444, Text "Beschäftigt"
@@ -283,7 +283,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'Status mit Punkt'
       },
       {
-        code: `Select placeholder "Farbe wählen...":
+        code: `Select placeholder "Farbe wählen..."
   Item value "red": Box w 10, h 10, rad 5, bg #ef4444, Text "Rot"
   Item value "green": Box w 10, h 10, rad 5, bg #22c55e, Text "Grün"
   Item value "blue": Box w 10, h 10, rad 5, bg #3b82f6, Text "Blau"
@@ -296,7 +296,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CUSTOM ITEMS - Mit Shortcuts',
     examples: [
       {
-        code: `Select placeholder "Aktionen...":
+        code: `Select placeholder "Aktionen..."
   Item value "save" spread:
     Box hor, gap 8: Icon "save", Text "Speichern"
     Text "⌘S" fs 11, col #666
@@ -314,7 +314,7 @@ export const SELECT_EXAMPLES: Section[] = [
     name: 'CUSTOM ITEMS - Fonts & Währungen',
     examples: [
       {
-        code: `Select value "inter":
+        code: `Select value "inter"
   Item value "inter" spread:
     Text "Inter" font sans
     Text "Aa" font sans, col #666
@@ -327,7 +327,7 @@ export const SELECT_EXAMPLES: Section[] = [
         description: 'Font-Auswahl'
       },
       {
-        code: `Select value "eur":
+        code: `Select value "eur"
   Item value "eur": Text "€" w 20 col #888, Text "Euro"
   Item value "usd": Text "$" w 20 col #888, Text "US Dollar"
   Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"

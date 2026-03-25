@@ -82,111 +82,111 @@
   <script>
     const sections = {
       "BASIC PROPERTIES": [
-        `Select placeholder "Farbe wählen...":
+        `Select placeholder "Farbe wählen..."
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
-        `Select value "Grün":
+        `Select value "Grün"
   Item "Rot"
   Item "Grün"
   Item "Blau"`,
-        `Select value "DE":
+        `Select value "DE"
   Item "Deutschland" value "DE"
   Item "Österreich" value "AT"
   Item "Schweiz" value "CH"`,
-        `Select label "Land", placeholder "Bitte wählen...":
+        `Select label "Land", placeholder "Bitte wählen..."
   Item "Deutschland"
   Item "Schweiz"`,
-        `Select defaultValue "B":
+        `Select defaultValue "B"
   Item "A"
   Item "B"
   Item "C"`
       ],
       "MULTIPLE SELECTION": [
-        `Select multiple, placeholder "Farben wählen...":
+        `Select multiple, placeholder "Farben wählen..."
   Item "Rot"
   Item "Grün"
   Item "Blau"
   Item "Gelb"`,
-        `Select multiple, defaultValue "JS":
+        `Select multiple, defaultValue "JS"
   Item "JS"
   Item "TS"
   Item "React"`
       ],
       "SEARCHABLE": [
-        `Select searchable, placeholder "Land suchen...":
+        `Select searchable, placeholder "Land suchen..."
   Item "Afghanistan"
   Item "Albanien"
   Item "Algerien"
   Item "Andorra"
   Item "Angola"`,
-        `Select searchable, multiple, placeholder "Teammitglieder suchen...":
+        `Select searchable, multiple, placeholder "Teammitglieder suchen..."
   Item "Anna Schmidt"
   Item "Max Müller"
   Item "Lisa Weber"
   Item "Tom Fischer"`
       ],
       "CLEARABLE": [
-        `Select clearable, placeholder "Optional...":
+        `Select clearable, placeholder "Optional..."
   Item "Option A"
   Item "Option B"
   Item "Option C"`,
-        `Select clearable, value "Option A":
+        `Select clearable, value "Option A"
   Item "Option A"
   Item "Option B"`
       ],
       "KEEPOPEN": [
-        `Select keepOpen, placeholder "Mehrere anklicken...":
+        `Select keepOpen, placeholder "Mehrere anklicken..."
   Item "Eins"
   Item "Zwei"
   Item "Drei"`
       ],
       "DISABLED & READONLY": [
-        `Select disabled, placeholder "Nicht verfügbar":
+        `Select disabled, placeholder "Nicht verfügbar"
   Item "A"
   Item "B"`,
-        `Select readonly, value "Festgelegt":
+        `Select readonly, value "Festgelegt"
   Item "Festgelegt"
   Item "Andere Option"`,
-        `Select placeholder "Plan wählen...":
+        `Select placeholder "Plan wählen..."
   Item "Free"
   Item "Pro" disabled
   Item "Enterprise" disabled`
       ],
       "FORM INTEGRATION": [
-        `Select required, label "Land *", name "country", placeholder "Pflichtfeld":
+        `Select required, label "Land *", name "country", placeholder "Pflichtfeld"
   Item "Deutschland"
   Item "Schweiz"`,
-        `Select invalid, placeholder "Bitte auswählen":
+        `Select invalid, placeholder "Bitte auswählen"
   Item "Option A"
   Item "Option B"`,
-        `Select name "country", placeholder "Land wählen...":
+        `Select name "country", placeholder "Land wählen..."
   Item "Deutschland" value "DE"
   Item "Schweiz" value "CH"`,
-        `Select name "category", form "settings-form", placeholder "Kategorie":
+        `Select name "category", form "settings-form", placeholder "Kategorie"
   Item "Allgemein"
   Item "Erweitert"`
       ],
       "POSITIONING": [
-        `Select placement "top-start", placeholder "Öffnet nach oben":
+        `Select placement "top-start", placeholder "Öffnet nach oben"
   Item "Option A"
   Item "Option B"`,
-        `Select offset 12, placeholder "12px Abstand":
+        `Select offset 12, placeholder "12px Abstand"
   Item "A"
   Item "B"`
       ],
       "KOMBINATIONEN": [
-        `Select searchable, clearable, placeholder "Suche...":
+        `Select searchable, clearable, placeholder "Suche..."
   Item "React"
   Item "Vue"
   Item "Angular"
   Item "Svelte"`,
-        `Select multiple, searchable, clearable, placeholder "Alles kombiniert":
+        `Select multiple, searchable, clearable, placeholder "Alles kombiniert"
   Item "Design"
   Item "Code"
   Item "Test"
   Item "Deploy"`,
-        `Select placeholder "Land wählen":
+        `Select placeholder "Land wählen"
   Item "Deutschland"
   Item "Österreich"
   Item "Schweiz"
@@ -196,7 +196,7 @@
   Item "Portugal"`
       ],
       "CUSTOM ITEMS - Zweizeilig": [
-        `Select placeholder "Plan wählen...":
+        `Select placeholder "Plan wählen..."
   Item value "free", ver, gap 2, pad 12 14:
     Text "Free" weight medium
     Text "Für Einzelpersonen" fs 12, col #666
@@ -206,36 +206,36 @@
     Text "Unbegrenzte Projekte" fs 12, col #666`
       ],
       "CUSTOM ITEMS - Mit Icons": [
-        `Select placeholder "Status wählen...":
-  Item value "draft":
+        `Select placeholder "Status wählen..."
+  Item value "draft"
     Icon "file-text" col #888
     Text "Entwurf"
-  Item value "published":
+  Item value "published"
     Icon "check-circle" col #22c55e
     Text "Veröffentlicht"
-  Item value "archived":
+  Item value "archived"
     Icon "archive" col #888
     Text "Archiviert"`,
-        `Select value "medium":
+        `Select value "medium"
   Item value "urgent": Icon "alert-circle" col #ef4444, Text "Dringend" col #ef4444
   Item value "high": Icon "arrow-up" col #f97316, Text "Hoch"
   Item value "medium": Icon "minus" col #eab308, Text "Mittel"
   Item value "low": Icon "arrow-down" col #22c55e, Text "Niedrig"`
       ],
       "CUSTOM ITEMS - Status & Farben": [
-        `Select value "online":
+        `Select value "online"
   Item value "online": Box w 8, h 8, rad 4, bg #22c55e, Text "Online"
   Item value "away": Box w 8, h 8, rad 4, bg #eab308, Text "Abwesend"
   Item value "busy": Box w 8, h 8, rad 4, bg #ef4444, Text "Beschäftigt"
   Item value "offline": Box w 8, h 8, rad 4, bg #666, Text "Offline"`,
-        `Select placeholder "Farbe wählen...":
+        `Select placeholder "Farbe wählen..."
   Item value "red": Box w 10, h 10, rad 5, bg #ef4444, Text "Rot"
   Item value "green": Box w 10, h 10, rad 5, bg #22c55e, Text "Grün"
   Item value "blue": Box w 10, h 10, rad 5, bg #3b82f6, Text "Blau"
   Item value "yellow": Box w 10, h 10, rad 5, bg #eab308, Text "Gelb"`
       ],
       "CUSTOM ITEMS - Mit Shortcuts": [
-        `Select placeholder "Aktionen...":
+        `Select placeholder "Aktionen..."
   Item value "save" spread:
     Box hor, gap 8: Icon "save", Text "Speichern"
     Text "⌘S" fs 11, col #666
@@ -247,7 +247,7 @@
     Text "⌫" fs 11, col #666`
       ],
       "CUSTOM ITEMS - Fonts & Währungen": [
-        `Select value "inter":
+        `Select value "inter"
   Item value "inter" spread:
     Text "Inter" font sans
     Text "Aa" font sans, col #666
@@ -257,7 +257,7 @@
   Item value "fira" spread:
     Text "Fira Code" font mono
     Text "Aa" font mono, col #666`,
-        `Select value "eur":
+        `Select value "eur"
   Item value "eur": Text "€" w 20 col #888, Text "Euro"
   Item value "usd": Text "\$" w 20 col #888, Text "US Dollar"
   Item value "gbp": Text "£" w 20 col #888, Text "Britisches Pfund"

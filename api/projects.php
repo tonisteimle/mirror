@@ -118,30 +118,59 @@ function createProject(array $body): array {
     ];
     saveProjectMeta($userId, $projectId, $meta);
 
-    // Create default files
+    // Create default files with correct extensions (.mir, .tok, .com)
     $defaultIndex = <<<'MIRROR'
-App bg #18181b, pad 20
-  rect w 100, h 200, bg #FCC419
+App bg #18181b, pad 24, gap 16
+  Text "Mirror Studio", fs 24, weight bold, col white
+  Text "Edit this code to get started", col #888
+
+  Card bg #27272a, pad 16, rad 8, gap 8
+    Text "Your first component", col #a1a1aa
+    Button "Click Me"
+      pad 12 24, bg #3b82f6, rad 6, col white
+      hover bg #2563eb
+
+  // Zag Select Component
+  Select
+    SelectTrigger
+      SelectValue "Choose an option"
+    SelectContent
+      SelectItem "Option 1"
+      SelectItem "Option 2"
+      SelectItem "Option 3"
 MIRROR;
 
     $defaultTokens = <<<'MIRROR'
 // Design Tokens
-// Define your colors, spacing, and typography here.
+$primary.bg: #3b82f6
+$primary.hover: #2563eb
 
-$primary.bg: #3B82F6
-$primary.col: #FFFFFF
+$surface.bg: #18181b
+$surface.card: #27272a
 
-$default.bg: #18181b
-$default.col: #e4e4e7
-$muted.col: #71717a
-
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$text.primary: #ffffff
+$text.secondary: #a1a1aa
+$text.muted: #888888
 MIRROR;
 
-    file_put_contents($projectDir . '/index.mirror', $defaultIndex);
-    file_put_contents($projectDir . '/tokens.mirror', $defaultTokens);
+    $defaultComponents = <<<'MIRROR'
+// Component Definitions
+Button:
+  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
+  hover bg #2563eb
+
+Card:
+  bg #27272a, pad 16, rad 8
+
+Input:
+  pad 12, bg #1f1f1f, rad 6, bor 1 #333
+  col white
+  focus bor 1 #3b82f6
+MIRROR;
+
+    file_put_contents($projectDir . '/index.mir', $defaultIndex);
+    file_put_contents($projectDir . '/tokens.tok', $defaultTokens);
+    file_put_contents($projectDir . '/components.com', $defaultComponents);
 
     return [
         'id' => $projectId,

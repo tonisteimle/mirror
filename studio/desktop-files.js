@@ -300,64 +300,11 @@ export async function initDesktopFiles(options = {}) {
         console.log('[DesktopFiles] Opened existing project:', projects[0].name)
       } else if (storage.providerType === 'server') {
         // No projects exist on server - create one automatically
+        // PHP API creates default files (index.mir, tokens.tok, components.com)
         console.log('[DesktopFiles] No server projects, creating default project...')
         const newProject = await storage.createProject('My Project')
         await storage.openProject(newProject.id)
         console.log('[DesktopFiles] Created and opened new project:', newProject.name)
-
-        // Create starter files (matching demo.ts defaults)
-        await storage.writeFile('index.mir', `App bg #18181b, pad 24, gap 16
-  Text "Mirror Studio", fs 24, weight bold, col white
-  Text "Edit this code to get started", col #888
-
-  Card bg #27272a, pad 16, rad 8, gap 8
-    Text "Your first component", col #a1a1aa
-    Button "Click Me"
-      pad 12 24, bg #3b82f6, rad 6, col white
-      hover bg #2563eb
-
-  // Zag Select Component
-  Select
-    SelectTrigger
-      SelectValue "Choose an option"
-    SelectContent
-      SelectItem "Option 1"
-      SelectItem "Option 2"
-      SelectItem "Option 3"
-`)
-
-        await storage.writeFile('tokens.tok', `// Design Tokens
-
-// Colors
-$primary: #3b82f6
-$surface: #27272a
-$background: #18181b
-$text: #ffffff
-$muted: #a1a1aa
-
-// Spacing
-$spacing-sm: 8
-$spacing-md: 16
-$spacing-lg: 24
-
-// Radius
-$radius: 8
-`)
-
-        await storage.writeFile('components.com', `// Component Definitions
-
-Button:
-  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
-  hover bg #2563eb
-
-Card:
-  bg #27272a, pad 16, rad 8
-
-Input:
-  pad 12, bg #1f1f1f, rad 6, bor 1 #333
-  col white
-  focus bor 1 #3b82f6
-`)
       } else {
         // Non-server provider - this shouldn't happen in browser mode
         console.error('[DesktopFiles] Unexpected provider type:', storage.providerType)
