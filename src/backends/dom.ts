@@ -696,8 +696,27 @@ class DOMGenerator {
       this.emitToggleGroupComponent(node, parentVar)
       return
     }
-    // Group 5: Overlays - TODO: implement emitters
-    // Dialog, Tooltip, Popover, HoverCard, Collapsible
+    // Group 5: Overlays
+    if (node.zagType === 'collapsible') {
+      this.emitCollapsibleComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'tooltip') {
+      this.emitTooltipComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'popover') {
+      this.emitPopoverComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'hover-card' || node.zagType === 'hovercard') {
+      this.emitHoverCardComponent(node, parentVar)
+      return
+    }
+    if (node.zagType === 'dialog') {
+      this.emitDialogComponent(node, parentVar)
+      return
+    }
 
     const varName = this.sanitizeVarName(node.id)
 
@@ -3977,6 +3996,585 @@ class DOMGenerator {
     this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initToggleGroupComponent) {`)
     this.indent++
     this.emit(`_runtime.initToggleGroupComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  // =========================================================================
+  // GROUP 5: OVERLAYS
+  // =========================================================================
+
+  private emitCollapsibleComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Collapsible Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'collapsible'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'collapsible',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Trigger button
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    this.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    // Trigger text from machineConfig.label or default
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Toggle'
+    this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Content container
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    this.emit(`${contentVar}.setAttribute('role', 'region')`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Emit children into content
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        this.emitNode(child as IRNode, contentVar)
+      }
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Collapsible via runtime
+    this.emit(`// Initialize Collapsible`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCollapsibleComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initCollapsibleComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitTooltipComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Tooltip Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'tooltip'`)
+    this.emit(`${varName}.style.display = 'inline-block'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'tooltip',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Trigger element
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Hover me'
+    this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Content (tooltip popup)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (tooltip popup)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    this.emit(`${contentVar}.setAttribute('role', 'tooltip')`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    const tooltipText = node.machineConfig.content || node.machineConfig.text || 'Tooltip content'
+    this.emit(`${contentVar}.textContent = '${this.escapeString(String(tooltipText))}'`)
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Tooltip via runtime
+    this.emit(`// Initialize Tooltip`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initTooltipComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initTooltipComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitPopoverComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Popover Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'popover'`)
+    this.emit(`${varName}.style.display = 'inline-block'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'popover',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Trigger button
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    this.emit(`${triggerVar}.setAttribute('aria-haspopup', 'dialog')`)
+    this.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Popover'
+    this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Content container
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (popover panel)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    this.emit(`${contentVar}.setAttribute('role', 'dialog')`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Title (optional)
+    const titleSlot = node.slots['Title']
+    if (node.machineConfig.title) {
+      const titleVar = `${varName}_title`
+      this.emit(`// Title`)
+      this.emit(`const ${titleVar} = document.createElement('h3')`)
+      this.emit(`${titleVar}.dataset.slot = 'Title'`)
+      this.emit(`${titleVar}.textContent = '${this.escapeString(String(node.machineConfig.title))}'`)
+      if (titleSlot?.styles && titleSlot.styles.length > 0) {
+        this.emit(`Object.assign(${titleVar}.style, {`)
+        this.indent++
+        for (const style of titleSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${contentVar}.appendChild(${titleVar})`)
+      this.emit('')
+    }
+
+    // Description (optional)
+    const descSlot = node.slots['Description']
+    if (node.machineConfig.description) {
+      const descVar = `${varName}_desc`
+      this.emit(`// Description`)
+      this.emit(`const ${descVar} = document.createElement('p')`)
+      this.emit(`${descVar}.dataset.slot = 'Description'`)
+      this.emit(`${descVar}.textContent = '${this.escapeString(String(node.machineConfig.description))}'`)
+      if (descSlot?.styles && descSlot.styles.length > 0) {
+        this.emit(`Object.assign(${descVar}.style, {`)
+        this.indent++
+        for (const style of descSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${contentVar}.appendChild(${descVar})`)
+      this.emit('')
+    }
+
+    // CloseTrigger (optional)
+    const closeSlot = node.slots['CloseTrigger']
+    const closeVar = `${varName}_close`
+    this.emit(`// Close trigger`)
+    this.emit(`const ${closeVar} = document.createElement('button')`)
+    this.emit(`${closeVar}.type = 'button'`)
+    this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
+    this.emit(`${closeVar}.textContent = '×'`)
+    this.emit(`${closeVar}.setAttribute('aria-label', 'Close')`)
+    if (closeSlot?.styles && closeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${closeVar}.style, {`)
+      this.indent++
+      for (const style of closeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${contentVar}.appendChild(${closeVar})`)
+    this.emit('')
+
+    // Emit children into content
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        this.emitNode(child as IRNode, contentVar)
+      }
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Popover via runtime
+    this.emit(`// Initialize Popover`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initPopoverComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initPopoverComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitHoverCardComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// HoverCard Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'hover-card'`)
+    this.emit(`${varName}.style.display = 'inline-block'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'hover-card',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Trigger element (usually a link)
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('a')`)
+    this.emit(`${triggerVar}.href = '#'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Hover me'
+    this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Content (hover card popup)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (hover card)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Emit children into content
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        this.emitNode(child as IRNode, contentVar)
+      }
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize HoverCard via runtime
+    this.emit(`// Initialize HoverCard`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initHoverCardComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initHoverCardComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  private emitDialogComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// Dialog Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'dialog'`)
+    this.emit(`${varName}.style.display = 'inline-block'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'dialog',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Trigger button
+    const triggerSlot = node.slots['Trigger']
+    const triggerVar = `${varName}_trigger`
+    this.emit(`// Trigger`)
+    this.emit(`const ${triggerVar} = document.createElement('button')`)
+    this.emit(`${triggerVar}.type = 'button'`)
+    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
+    this.emit(`${triggerVar}.setAttribute('aria-haspopup', 'dialog')`)
+    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
+      this.emit(`Object.assign(${triggerVar}.style, {`)
+      this.indent++
+      for (const style of triggerSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Dialog'
+    this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
+    this.emit(`${varName}.appendChild(${triggerVar})`)
+    this.emit('')
+
+    // Backdrop
+    const backdropSlot = node.slots['Backdrop']
+    const backdropVar = `${varName}_backdrop`
+    this.emit(`// Backdrop`)
+    this.emit(`const ${backdropVar} = document.createElement('div')`)
+    this.emit(`${backdropVar}.dataset.slot = 'Backdrop'`)
+    if (backdropSlot?.styles && backdropSlot.styles.length > 0) {
+      this.emit(`Object.assign(${backdropVar}.style, {`)
+      this.indent++
+      for (const style of backdropSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${backdropVar})`)
+    this.emit('')
+
+    // Content container (the modal)
+    const contentSlot = node.slots['Content']
+    const contentVar = `${varName}_content`
+    this.emit(`// Content (modal)`)
+    this.emit(`const ${contentVar} = document.createElement('div')`)
+    this.emit(`${contentVar}.dataset.slot = 'Content'`)
+    this.emit(`${contentVar}.setAttribute('role', 'dialog')`)
+    this.emit(`${contentVar}.setAttribute('aria-modal', 'true')`)
+    if (contentSlot?.styles && contentSlot.styles.length > 0) {
+      this.emit(`Object.assign(${contentVar}.style, {`)
+      this.indent++
+      for (const style of contentSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${contentVar})`)
+    this.emit('')
+
+    // Title
+    const titleSlot = node.slots['Title']
+    if (node.machineConfig.title) {
+      const titleVar = `${varName}_title`
+      this.emit(`// Title`)
+      this.emit(`const ${titleVar} = document.createElement('h2')`)
+      this.emit(`${titleVar}.dataset.slot = 'Title'`)
+      this.emit(`${titleVar}.textContent = '${this.escapeString(String(node.machineConfig.title))}'`)
+      if (titleSlot?.styles && titleSlot.styles.length > 0) {
+        this.emit(`Object.assign(${titleVar}.style, {`)
+        this.indent++
+        for (const style of titleSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${contentVar}.appendChild(${titleVar})`)
+      this.emit('')
+    }
+
+    // Description
+    const descSlot = node.slots['Description']
+    if (node.machineConfig.description) {
+      const descVar = `${varName}_desc`
+      this.emit(`// Description`)
+      this.emit(`const ${descVar} = document.createElement('p')`)
+      this.emit(`${descVar}.dataset.slot = 'Description'`)
+      this.emit(`${descVar}.textContent = '${this.escapeString(String(node.machineConfig.description))}'`)
+      if (descSlot?.styles && descSlot.styles.length > 0) {
+        this.emit(`Object.assign(${descVar}.style, {`)
+        this.indent++
+        for (const style of descSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${contentVar}.appendChild(${descVar})`)
+      this.emit('')
+    }
+
+    // CloseTrigger
+    const closeSlot = node.slots['CloseTrigger']
+    const closeVar = `${varName}_close`
+    this.emit(`// Close trigger`)
+    this.emit(`const ${closeVar} = document.createElement('button')`)
+    this.emit(`${closeVar}.type = 'button'`)
+    this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
+    this.emit(`${closeVar}.textContent = '×'`)
+    this.emit(`${closeVar}.setAttribute('aria-label', 'Close')`)
+    if (closeSlot?.styles && closeSlot.styles.length > 0) {
+      this.emit(`Object.assign(${closeVar}.style, {`)
+      this.indent++
+      for (const style of closeSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${contentVar}.appendChild(${closeVar})`)
+    this.emit('')
+
+    // Emit children into content
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        this.emitNode(child as IRNode, contentVar)
+      }
+    }
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize Dialog via runtime
+    this.emit(`// Initialize Dialog`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initDialogComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initDialogComponent(${varName})`)
     this.indent--
     this.emit(`}`)
     this.emit('')

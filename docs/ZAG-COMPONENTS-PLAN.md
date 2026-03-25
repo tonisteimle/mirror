@@ -31,15 +31,15 @@
 - [x] TreeView (15/15 tests)
 
 ### Group 4: Selection
-- [x] SegmentedControl (20/20 tests)
-- [x] ToggleGroup (19/19 tests)
+- [x] SegmentedControl (22/22 tests, child syntax: Segment "Label")
+- [x] ToggleGroup (18/18 tests, child syntax: Toggle "Label")
 
 ### Group 5: Overlays
-- [ ] Dialog
-- [ ] Tooltip
-- [ ] Popover
-- [ ] HoverCard
-- [ ] Collapsible
+- [x] Collapsible (11/11 tests, slot syntax: Trigger/Content)
+- [x] Tooltip (17/17 tests, slot syntax: Trigger/Content)
+- [x] Popover (14/14 tests, slot syntax: Trigger/Content/CloseTrigger)
+- [x] HoverCard (16/16 tests, slot syntax: Trigger/Content)
+- [x] Dialog (13/13 tests, slot syntax: Trigger/Content/Title/Description/CloseTrigger/Backdrop)
 
 ## Implementation Checklist per Component
 1. Add `icon` prop to schema if has indicator (zag-primitives.ts)

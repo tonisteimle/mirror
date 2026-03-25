@@ -83,12 +83,13 @@ Panel
   })
 
   it('handles state transitions', () => {
+    // Note: Using MyAccordion instead of Accordion because Accordion is a Zag primitive
     const { root } = compileAndExecute(`
-Accordion as frame:
+MyAccordion as frame:
   collapsed
   onclick toggle
 
-Accordion
+MyAccordion
 `)
     expect(root.dataset.state).toBe('collapsed')
     root.click()

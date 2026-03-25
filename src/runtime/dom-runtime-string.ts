@@ -7498,6 +7498,649 @@ const _runtime = {
     updateUI()
   },
 
+  // =========================================================================
+  // GROUP 5: OVERLAYS
+  // =========================================================================
+
+  initCollapsibleComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._collapsibleState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+
+    // Trigger styles
+    setDefault(trigger, 'display', 'flex')
+    setDefault(trigger, 'alignItems', 'center')
+    setDefault(trigger, 'justifyContent', 'space-between')
+    setDefault(trigger, 'padding', '12px 16px')
+    setDefault(trigger, 'backgroundColor', '#1a1a1a')
+    setDefault(trigger, 'border', '1px solid #333')
+    setDefault(trigger, 'borderRadius', '8px')
+    setDefault(trigger, 'color', '#e0e0e0')
+    setDefault(trigger, 'cursor', disabled ? 'not-allowed' : 'pointer')
+    setDefault(trigger, 'fontSize', '14px')
+    setDefault(trigger, 'fontWeight', '500')
+
+    // Content styles
+    setDefault(content, 'overflow', 'hidden')
+    setDefault(content, 'padding', '0 16px')
+    setDefault(content, 'backgroundColor', '#111')
+    setDefault(content, 'borderRadius', '0 0 8px 8px')
+    setDefault(content, 'transition', 'all 0.2s ease')
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      if (disabled) return
+      el._collapsibleState.open = !el._collapsibleState.open
+      updateUI()
+
+      const eventName = el._collapsibleState.open ? 'open' : 'close'
+      el.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+    }
+
+    const updateUI = () => {
+      const { open } = el._collapsibleState
+
+      trigger.setAttribute('aria-expanded', String(open))
+
+      if (open) {
+        content.style.display = 'block'
+        content.style.padding = '16px'
+        content.style.maxHeight = '1000px'
+        el.setAttribute('data-state', 'open')
+      } else {
+        content.style.display = 'none'
+        content.style.padding = '0 16px'
+        content.style.maxHeight = '0'
+        el.setAttribute('data-state', 'closed')
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (disabled) {
+      trigger.setAttribute('disabled', 'true')
+      trigger.style.opacity = '0.5'
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._collapsibleState.open
+    el.toggle = toggle
+    el.open = () => {
+      if (!el._collapsibleState.open) toggle()
+    }
+    el.close = () => {
+      if (el._collapsibleState.open) toggle()
+    }
+
+    // Initial state
+    updateUI()
+  },
+
+  initTooltipComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 200
+    const closeDelay = config.closeDelay ?? 100
+    const placement = config.placement ?? 'top'
+    const disabled = config.disabled ?? false
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._tooltipState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Content (tooltip) styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'padding', '8px 12px')
+    setDefault(content, 'backgroundColor', '#333')
+    setDefault(content, 'color', '#fff')
+    setDefault(content, 'borderRadius', '6px')
+    setDefault(content, 'fontSize', '12px')
+    setDefault(content, 'whiteSpace', 'nowrap')
+    setDefault(content, 'pointerEvents', 'none')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      if (disabled) return
+      clearTimeout(el._tooltipState.closeTimer)
+
+      el._tooltipState.openTimer = setTimeout(() => {
+        el._tooltipState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionTooltip()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._tooltipState.openTimer)
+
+      el._tooltipState.closeTimer = setTimeout(() => {
+        el._tooltipState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionTooltip = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const contentRect = content.getBoundingClientRect()
+      const gap = 8
+
+      let top, left
+
+      switch (placement) {
+        case 'bottom':
+          top = triggerRect.bottom + gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+          break
+        case 'left':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.left - contentRect.width - gap
+          break
+        case 'right':
+          top = triggerRect.top + (triggerRect.height - contentRect.height) / 2
+          left = triggerRect.right + gap
+          break
+        default: // top
+          top = triggerRect.top - contentRect.height - gap
+          left = triggerRect.left + (triggerRect.width - contentRect.width) / 2
+      }
+
+      content.style.top = top + 'px'
+      content.style.left = left + 'px'
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    trigger.onfocus = show
+    trigger.onblur = hide
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._tooltipState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initPopoverComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._popoverState = {
+      open: defaultOpen
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '200px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '8px')
+      setDefault(closeTrigger, 'right', '8px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '18px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const toggle = () => {
+      el._popoverState.open ? close() : open()
+    }
+
+    const open = () => {
+      el._popoverState.open = true
+      content.style.display = 'block'
+      trigger.setAttribute('aria-expanded', 'true')
+      positionPopover()
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._popoverState.open = false
+      content.style.display = 'none'
+      trigger.setAttribute('aria-expanded', 'false')
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    const positionPopover = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        case 'left':
+          content.style.top = triggerRect.top + 'px'
+          content.style.right = (window.innerWidth - triggerRect.left + gap) + 'px'
+          break
+        case 'right':
+          content.style.top = triggerRect.top + 'px'
+          content.style.left = (triggerRect.right + gap) + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = toggle
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (closeOnOutsideClick) {
+      document.addEventListener('click', (e) => {
+        if (el._popoverState.open && !el.contains(e.target)) {
+          close()
+        }
+      })
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._popoverState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._popoverState.open
+    el.open = open
+    el.close = close
+    el.toggle = toggle
+
+    // Initial state
+    if (defaultOpen) open()
+  },
+
+  initHoverCardComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const openDelay = config.openDelay ?? 300
+    const closeDelay = config.closeDelay ?? 200
+    const placement = config.placement ?? 'bottom'
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const content = el.querySelector('[data-slot="Content"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._hoverCardState = {
+      open: false,
+      openTimer: null,
+      closeTimer: null
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'color', '#3b82f6')
+    setDefault(trigger, 'textDecoration', 'underline')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Content styles
+    setDefault(content, 'position', 'absolute')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '250px')
+    setDefault(content, 'padding', '16px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '8px')
+    setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
+    setDefault(content, 'transition', 'opacity 0.2s')
+    content.style.opacity = '0'
+    content.style.visibility = 'hidden'
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const show = () => {
+      clearTimeout(el._hoverCardState.closeTimer)
+
+      el._hoverCardState.openTimer = setTimeout(() => {
+        el._hoverCardState.open = true
+        content.style.opacity = '1'
+        content.style.visibility = 'visible'
+        positionCard()
+        el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+      }, openDelay)
+    }
+
+    const hide = () => {
+      clearTimeout(el._hoverCardState.openTimer)
+
+      el._hoverCardState.closeTimer = setTimeout(() => {
+        el._hoverCardState.open = false
+        content.style.opacity = '0'
+        content.style.visibility = 'hidden'
+        el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+      }, closeDelay)
+    }
+
+    const positionCard = () => {
+      const triggerRect = trigger.getBoundingClientRect()
+      const gap = 8
+
+      switch (placement) {
+        case 'top':
+          content.style.bottom = (window.innerHeight - triggerRect.top + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+          break
+        default: // bottom
+          content.style.top = (triggerRect.bottom + gap) + 'px'
+          content.style.left = triggerRect.left + 'px'
+      }
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onmouseenter = show
+    trigger.onmouseleave = hide
+    content.onmouseenter = () => clearTimeout(el._hoverCardState.closeTimer)
+    content.onmouseleave = hide
+
+    // Prevent link navigation
+    trigger.onclick = (e) => e.preventDefault()
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._hoverCardState.open
+    el.show = show
+    el.hide = hide
+  },
+
+  initDialogComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+    const defaultOpen = config.open ?? config.defaultOpen ?? false
+    const modal = config.modal ?? true
+    const closeOnOutsideClick = config.closeOnOutsideClick ?? true
+    const closeOnEscape = config.closeOnEscape ?? true
+    const preventScroll = config.preventScroll ?? true
+
+    // Get elements
+    const trigger = el.querySelector('[data-slot="Trigger"]')
+    const backdrop = el.querySelector('[data-slot="Backdrop"]')
+    const content = el.querySelector('[data-slot="Content"]')
+    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+
+    if (!trigger || !content) return
+
+    // State
+    el._dialogState = {
+      open: defaultOpen,
+      previousOverflow: ''
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, val) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = val
+      }
+    }
+
+    // Trigger styles
+    setDefault(trigger, 'padding', '8px 16px')
+    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'color', '#fff')
+    setDefault(trigger, 'border', 'none')
+    setDefault(trigger, 'borderRadius', '6px')
+    setDefault(trigger, 'cursor', 'pointer')
+
+    // Backdrop styles
+    if (backdrop) {
+      setDefault(backdrop, 'position', 'fixed')
+      setDefault(backdrop, 'inset', '0')
+      setDefault(backdrop, 'backgroundColor', 'rgba(0, 0, 0, 0.5)')
+      setDefault(backdrop, 'zIndex', '999')
+      setDefault(backdrop, 'transition', 'opacity 0.2s')
+      backdrop.style.display = 'none'
+    }
+
+    // Content styles
+    setDefault(content, 'position', 'fixed')
+    setDefault(content, 'top', '50%')
+    setDefault(content, 'left', '50%')
+    setDefault(content, 'transform', 'translate(-50%, -50%)')
+    setDefault(content, 'zIndex', '1000')
+    setDefault(content, 'minWidth', '300px')
+    setDefault(content, 'maxWidth', '90vw')
+    setDefault(content, 'maxHeight', '90vh')
+    setDefault(content, 'padding', '24px')
+    setDefault(content, 'backgroundColor', '#1a1a1a')
+    setDefault(content, 'border', '1px solid #333')
+    setDefault(content, 'borderRadius', '12px')
+    setDefault(content, 'boxShadow', '0 8px 32px rgba(0,0,0,0.5)')
+    setDefault(content, 'overflow', 'auto')
+    content.style.display = 'none'
+
+    // Close trigger styles
+    if (closeTrigger) {
+      setDefault(closeTrigger, 'position', 'absolute')
+      setDefault(closeTrigger, 'top', '12px')
+      setDefault(closeTrigger, 'right', '12px')
+      setDefault(closeTrigger, 'padding', '4px 8px')
+      setDefault(closeTrigger, 'backgroundColor', 'transparent')
+      setDefault(closeTrigger, 'border', 'none')
+      setDefault(closeTrigger, 'color', '#888')
+      setDefault(closeTrigger, 'cursor', 'pointer')
+      setDefault(closeTrigger, 'fontSize', '20px')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const open = () => {
+      el._dialogState.open = true
+
+      if (backdrop) backdrop.style.display = 'block'
+      content.style.display = 'block'
+
+      if (preventScroll) {
+        el._dialogState.previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+      }
+
+      el.dispatchEvent(new CustomEvent('open', { bubbles: true }))
+    }
+
+    const close = () => {
+      el._dialogState.open = false
+
+      if (backdrop) backdrop.style.display = 'none'
+      content.style.display = 'none'
+
+      if (preventScroll) {
+        document.body.style.overflow = el._dialogState.previousOverflow
+      }
+
+      el.dispatchEvent(new CustomEvent('close', { bubbles: true }))
+    }
+
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+
+    trigger.onclick = open
+
+    if (closeTrigger) {
+      closeTrigger.onclick = close
+    }
+
+    if (backdrop && closeOnOutsideClick) {
+      backdrop.onclick = close
+    }
+
+    if (closeOnEscape) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && el._dialogState.open) {
+          close()
+        }
+      })
+    }
+
+    // ========================================
+    // PUBLIC API
+    // ========================================
+
+    el.isOpen = () => el._dialogState.open
+    el.open = open
+    el.close = close
+
+    // Initial state
+    if (defaultOpen) open()
+  },
+
   // Icon loading
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
