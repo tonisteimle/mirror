@@ -7,7 +7,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: #0a0a0a;
+      background: #0f0f0f;
       color: #e0e0e0;
       padding: 20px;
     }
@@ -110,6 +110,152 @@
   <script src="../../dist/browser/index.global.js"></script>
   <script>
     const sections = {
+      // =========================================================================
+      // PRIMITIVES - BUTTONS
+      // =========================================================================
+      "BUTTON": [
+        `Button "Click me"`,
+
+        `Button "Primary" bg #3b82f6`,
+
+        `Button "Disabled" disabled`,
+
+        `Box hor, gap 8
+  Button "Save"
+  Button "Cancel"
+  Button "Delete" bg #ef4444`,
+
+        `Button hor, gap 8
+  Icon "plus"
+  Text "Add Item"`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - INPUT
+      // =========================================================================
+      "INPUT": [
+        `Input placeholder "Enter text..."`,
+
+        `Input placeholder "Email" type email`,
+
+        `Input placeholder "Disabled" disabled`,
+
+        `Box ver, gap 4
+  Label "Username"
+  Input placeholder "Enter username"`,
+
+        `Box hor, gap 8
+  Input placeholder "Search..." w 200
+  Button "Search"`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - TEXTAREA
+      // =========================================================================
+      "TEXTAREA": [
+        `Textarea placeholder "Enter description..."`,
+
+        `Textarea placeholder "Write here..." h 120`,
+
+        `Box ver, gap 4
+  Label "Message"
+  Textarea placeholder "Your message..."`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - TEXT & LABEL
+      // =========================================================================
+      "TEXT & LABEL": [
+        `Text "Regular text"`,
+
+        `Text "Muted text" col #888`,
+
+        `Text "Bold text" weight bold`,
+
+        `Label "Form Label"`,
+
+        `Box ver, gap 4
+  Text "Large" fs 24
+  Text "Medium" fs 16
+  Text "Small" fs 12`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - HEADINGS
+      // =========================================================================
+      "HEADINGS": [
+        `H1 "Heading 1"`,
+
+        `H2 "Heading 2"`,
+
+        `H3 "Heading 3"`,
+
+        `H4 "Heading 4"`,
+
+        `H5 "Heading 5"`,
+
+        `H6 "Heading 6"`,
+
+        `Box ver, gap 8
+  H2 "Article Title"
+  Text "Published on March 25, 2024" fs 12, col #888
+  Text "Article content goes here..."`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - LINK
+      // =========================================================================
+      "LINK": [
+        `Link "Click here" href "#"`,
+
+        `Box hor, gap 4
+  Text "Read the"
+  Link "documentation" href "#"
+  Text "for more."`,
+
+        `Box ver, gap 4
+  Link "Home" href "#"
+  Link "About" href "#"
+  Link "Contact" href "#"`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - DIVIDER & SPACER
+      // =========================================================================
+      "DIVIDER & SPACER": [
+        `Box ver, gap 8, w 200
+  Text "Section 1"
+  Divider
+  Text "Section 2"`,
+
+        `Box hor, w 300
+  Text "Left"
+  Spacer
+  Text "Right"`,
+
+        `Box hor, w 300, gap 8
+  Button "Cancel"
+  Spacer
+  Button "Save" bg #3b82f6`,
+      ],
+
+      // =========================================================================
+      // PRIMITIVES - ICON
+      // =========================================================================
+      "ICON": [
+        `Icon "home"`,
+
+        `Box hor, gap 12
+  Icon "home"
+  Icon "settings"
+  Icon "user"
+  Icon "bell"`,
+
+        `Box hor, gap 8
+  Icon "check" col #22c55e
+  Text "Success"`,
+      ],
+
       // =========================================================================
       // SWITCH
       // =========================================================================

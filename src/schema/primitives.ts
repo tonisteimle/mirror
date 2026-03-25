@@ -33,12 +33,10 @@ export interface PrimitiveDefinition {
 
 /**
  * Design System Constants
+ *
+ * Note: Background colors are now controlled via CSS (mirror-defaults.css)
+ * to allow proper theming with CSS custom properties.
  */
-const COLORS = {
-  bg: '#555',           // Medium gray background
-  text: '#e4e4e7',      // Light text
-}
-
 const SIZES = {
   controlHeight: 36,    // Unified height for inputs, buttons
   radius: 6,            // Border radius
@@ -82,12 +80,10 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'h', values: [SIZES.controlHeight] },
       { name: 'pad', values: [0, 16] },
-      { name: 'bg', values: [COLORS.bg] },
-      { name: 'col', values: [COLORS.text] },
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },
       { name: 'cursor', values: ['pointer'] },
-      // font inherited from parent (App)
+      // bg, col via CSS (mirror-defaults.css)
     ],
     description: 'Clickable button with default styling',
   },
@@ -97,12 +93,10 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'h', values: [SIZES.controlHeight] },
       { name: 'pad', values: [0, 12] },
-      { name: 'bg', values: [COLORS.bg] },
-      { name: 'col', values: [COLORS.text] },
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },
       { name: 'w', values: [200] },
-      // font inherited from parent (App)
+      // bg, col via CSS (mirror-defaults.css)
     ],
     description: 'Text input field',
   },
@@ -111,13 +105,11 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     tag: 'textarea',
     defaults: [
       { name: 'pad', values: [10, 12] },
-      { name: 'bg', values: [COLORS.bg] },
-      { name: 'col', values: [COLORS.text] },
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },
       { name: 'w', values: [200] },
       { name: 'h', values: [100] },
-      // font inherited from parent (App)
+      // bg, col via CSS (mirror-defaults.css)
     ],
     description: 'Multi-line text input',
   },
@@ -145,8 +137,8 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'w', values: [100] },
       { name: 'h', values: [100] },
-      { name: 'bg', values: [COLORS.bg] },
       { name: 'rad', values: [SIZES.radius] },
+      // bg via CSS (mirror-defaults.css)
     ],
     description: 'Image placeholder',
   },
@@ -156,8 +148,8 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'w', values: [100] },
       { name: 'h', values: [100] },
-      { name: 'bg', values: [COLORS.bg] },
       { name: 'rad', values: [SIZES.radius] },
+      // bg via CSS (mirror-defaults.css)
     ],
     description: 'Alias for image',
   },
@@ -183,8 +175,8 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'w', values: ['full'] },
       { name: 'h', values: [1] },
-      { name: 'bg', values: [COLORS.bg] },
       { name: 'bor', values: [0] },
+      // bg via CSS (mirror-defaults.css)
     ],
     description: 'Horizontal divider line',
   },
