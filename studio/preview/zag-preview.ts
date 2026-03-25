@@ -9,6 +9,7 @@ import type { IRZagNode, SourcePosition } from '../../src/ir/types'
 import { isIRZagNode } from '../../src/ir/types'
 import { ZagRuntime, createZagRuntime } from '../../src/runtime/zag'
 import { MIRROR_ID_ATTR } from './constants'
+import { state } from '../core/state'
 
 /**
  * Selection context returned when clicking on a Zag component part
@@ -92,6 +93,11 @@ export class ZagPreviewManager {
    * @param event The click event
    */
   handlePreviewClick(event: MouseEvent): ZagSelectionContext | null {
+    // In play mode, let clicks pass through to Zag machines for normal interaction
+    if (state.get().playMode) {
+      return null
+    }
+
     const target = event.target as HTMLElement
 
     // Find the nearest Zag component
