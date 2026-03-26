@@ -49,10 +49,12 @@ export {
   createProvider,
   TauriProvider,
   ServerProvider,
-  DemoProvider,
   isTauri,
   isServerAvailable
 } from './providers'
+
+// User settings (recent icons, agent memory)
+export { getUserSettings, initUserSettings } from './user-settings'
 
 export type {
   StorageProvider,

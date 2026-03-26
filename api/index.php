@@ -13,6 +13,9 @@
  *   GET  /api/auth/settings
  *   PUT  /api/auth/settings
  *
+ *   GET  /api/user/settings                  - Get user settings (works for all sessions)
+ *   PUT  /api/user/settings                  - Save user settings (recentIcons, agentMemory)
+ *
  *   GET    /api/projects
  *   POST   /api/projects
  *   PUT    /api/projects/{id}
@@ -71,6 +74,7 @@ if (!file_exists(USERS_FILE)) {
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/projects.php';
 require_once __DIR__ . '/files.php';
+require_once __DIR__ . '/user-settings.php';
 
 // Get request info
 $method = $_SERVER['REQUEST_METHOD'];
@@ -121,7 +125,7 @@ try {
         exit;
     }
 
-    // User settings
+    // User settings (legacy auth path)
     if (preg_match('#^/auth/settings$#', $uri) && $method === 'GET') {
         echo json_encode(authGetSettings());
         exit;
@@ -129,6 +133,17 @@ try {
 
     if (preg_match('#^/auth/settings$#', $uri) && $method === 'PUT') {
         echo json_encode(authSaveSettings($body));
+        exit;
+    }
+
+    // User settings (new path - works for all sessions including anonymous)
+    if (preg_match('#^/user/settings$#', $uri) && $method === 'GET') {
+        echo json_encode(getUserSettings());
+        exit;
+    }
+
+    if (preg_match('#^/user/settings$#', $uri) && $method === 'PUT') {
+        echo json_encode(saveUserSettings($body));
         exit;
     }
 

@@ -17,6 +17,7 @@ import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
+import { initUserSettings } from './storage/user-settings'
 import type { AST } from '../src/parser/ast'
 import type { IR } from '../src/ir/types'
 import type { SourceMap } from '../src/ir/source-map'
@@ -253,6 +254,11 @@ function generateChildCode(child: any, indent: number): string {
 
 export function initializeStudio(config: BootstrapConfig): StudioInstance {
   console.log('[Studio] Initializing new architecture...')
+
+  // Load user settings from server (non-blocking)
+  initUserSettings().catch(err => {
+    console.warn('[Studio] Failed to load user settings:', err)
+  })
 
   // Initialize grid settings provider (breaks circular dependency)
   setGridSettingsProvider(gridSettings)

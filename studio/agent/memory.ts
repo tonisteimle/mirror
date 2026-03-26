@@ -1,8 +1,10 @@
 /**
  * Memory Store for Mirror Agent
  *
- * Persists preferences, patterns, and learned behaviors.
+ * Persists preferences, patterns, and learned behaviors to server.
  */
+
+import { getUserSettings } from '../storage/user-settings'
 
 // ============================================
 // TYPES
@@ -384,13 +386,37 @@ export class MemoryStore {
   // ============================================
 
   private save(): void {
-    // In-memory only - no persistence
-    // Could be extended to save to server for logged-in users
+    // Save to server via UserSettings
+    getUserSettings().setAgentMemory({
+      preferences: Array.from(this.preferences.entries()),
+      patterns: Array.from(this.patterns.entries()),
+      corrections: this.corrections.map(c => ({
+        ...c,
+        timestamp: c.timestamp.toISOString(),
+      })),
+      snippets: Array.from(this.snippets.entries()),
+    })
   }
 
   private load(): void {
-    // In-memory only - starts fresh each session
-    // Could be extended to load from server for logged-in users
+    // Load from server via UserSettings
+    const data = getUserSettings().getAgentMemory()
+    if (data) {
+      try {
+        if (data.preferences) this.preferences = new Map(data.preferences)
+        if (data.patterns) this.patterns = new Map(data.patterns)
+        if (data.corrections) {
+          this.corrections = data.corrections.map(c => ({
+            ...c,
+            timestamp: new Date(c.timestamp),
+          }))
+        }
+        if (data.snippets) this.snippets = new Map(data.snippets)
+        console.log('[MemoryStore] Loaded from server')
+      } catch (e) {
+        console.error('[MemoryStore] Failed to load:', e)
+      }
+    }
   }
 
   /**
@@ -402,6 +428,7 @@ export class MemoryStore {
     this.corrections = []
     this.snippets.clear()
     this.recentInteractions = []
+    getUserSettings().clearAgentMemory()
   }
 
   /**

@@ -7,12 +7,11 @@
 import { BasePicker, KeyboardNav, type PickerConfig, type PickerCallbacks } from '../base'
 import { ICONS, searchIcons, getIconsByCategory, getCategories } from './icon-data'
 import type { IconDefinition, IconCategory, IconCategoryName } from './types'
+import { getUserSettings } from '../../storage/user-settings'
 
 export { ICONS, searchIcons, getIconsByCategory, getCategories }
 export type { IconDefinition, IconCategory, IconCategoryName }
 
-// In-memory storage for recent icons (per session)
-let recentIconsMemory: string[] = []
 const MAX_RECENT_ICONS = 12
 
 export interface IconPickerConfig extends Partial<PickerConfig> {
@@ -107,19 +106,17 @@ export class IconPicker extends BasePicker {
   }
 
   /**
-   * Get recent icons (in-memory, per session)
+   * Get recent icons (persisted to server)
    */
   getRecentIcons(): string[] {
-    return [...recentIconsMemory]
+    return getUserSettings().getRecentIcons()
   }
 
   /**
    * Add icon to recent list
    */
   addToRecent(iconName: string): void {
-    recentIconsMemory = recentIconsMemory.filter(i => i !== iconName)
-    recentIconsMemory.unshift(iconName)
-    recentIconsMemory = recentIconsMemory.slice(0, this.maxRecent)
+    getUserSettings().addRecentIcon(iconName, this.maxRecent)
 
     // Update recent section if visible
     this.updateRecentSection()
@@ -129,7 +126,7 @@ export class IconPicker extends BasePicker {
    * Clear recent icons
    */
   clearRecent(): void {
-    recentIconsMemory = []
+    getUserSettings().clearRecentIcons()
     this.updateRecentSection()
   }
 
