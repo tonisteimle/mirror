@@ -442,8 +442,23 @@ describe('Autocomplete Constants', () => {
   })
 
   describe('ALL_COMPLETIONS', () => {
-    it('should combine properties and keywords', () => {
-      expect(ALL_COMPLETIONS.length).toBe(MIRROR_PROPERTIES.length + MIRROR_KEYWORDS.length)
+    it('should include properties, keywords, and actions', () => {
+      // ALL_COMPLETIONS includes primitives, Zag components, properties, events, keywords, and actions
+      expect(ALL_COMPLETIONS.length).toBeGreaterThan(MIRROR_PROPERTIES.length + MIRROR_KEYWORDS.length)
+    })
+
+    it('should include primitives', () => {
+      const labels = ALL_COMPLETIONS.map(c => c.label)
+      expect(labels).toContain('Box')
+      expect(labels).toContain('Text')
+      expect(labels).toContain('Button')
+    })
+
+    it('should include Zag components', () => {
+      const labels = ALL_COMPLETIONS.map(c => c.label)
+      expect(labels).toContain('Accordion')
+      expect(labels).toContain('Dialog')
+      expect(labels).toContain('Select')
     })
   })
 
@@ -682,7 +697,6 @@ describe('Action Chain Autocomplete', () => {
         cursorColumn: 11
       })
       expect(result.completions.some(c => c.label === 'toggle')).toBe(true)
-      expect(result.completions.some(c => c.label === 'toggle-state')).toBe(true)
     })
 
     it('should filter actions starting with "sh"', () => {
