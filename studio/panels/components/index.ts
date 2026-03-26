@@ -15,7 +15,6 @@ export type {
   ComponentPanelCallbacks,
   ComponentDragData,
   ComponentIcon,
-  ComponentPanelTab,
 } from './types'
 
 // Components File Sync
@@ -25,16 +24,10 @@ export type { ComponentsFileSyncConfig } from './components-file-sync'
 // Utilities
 export { getComponentIcon, COMPONENT_ICONS } from './icons'
 export {
-  LAYOUT_PRESETS,
+  BASIC_PRIMITIVES,
   BASIC_COMPONENTS,
-  COMPONENT_GROUPS,
-  GROUP_ORDER,
-  DEFAULT_BASIC_SELECTION_IDS,
-  getBuiltInComponents,
-  getLayoutPresets,
-  getBasicComponents,
-  getGroupedComponents,
-  getDefaultBasicSelection,
+  // Backwards compatibility alias
+  BASIC_PRIMITIVES as LAYOUT_PRESETS,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
 

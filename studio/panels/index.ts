@@ -35,8 +35,9 @@ export {
   ComponentPanel,
   createComponentPanel,
   getComponentIcon,
-  LAYOUT_PRESETS,
+  BASIC_PRIMITIVES,
   BASIC_COMPONENTS,
+  LAYOUT_PRESETS,  // Backwards compatibility alias
   GhostRenderer,
   getGhostRenderer,
   resetGhostRenderer,
