@@ -137,6 +137,7 @@ put index.php
 put auth.php
 put projects.php
 put files.php
+put user-settings.php
 put .htaccess
 
 # Upload data directory structure (not user data)
