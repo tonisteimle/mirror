@@ -540,26 +540,17 @@ export class PropertyPanel {
       return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
     }
 
-    // Check if absolute is active from position category
-    const posProps = positionCat?.properties || []
-    const absProp = posProps.find(p => p.name === 'absolute' || p.name === 'abs')
-    const isAbsolute = absProp && absProp.source !== 'available'
-
     // Determine active mode (default to vertical if none set)
     let activeMode: string = 'vertical'
-    if (isAbsolute) {
-      activeMode = 'absolute'
-    } else {
-      for (const mode of this.LAYOUT_MODES) {
-        if (mode !== 'absolute' && isActive(mode)) {
-          activeMode = mode
-          break
-        }
+    for (const mode of this.LAYOUT_MODES) {
+      if (isActive(mode)) {
+        activeMode = mode
+        break
       }
-      // Also check short forms
-      if (isActive('hor')) activeMode = 'horizontal'
-      if (isActive('ver')) activeMode = 'vertical'
     }
+    // Also check short forms
+    if (isActive('hor')) activeMode = 'horizontal'
+    if (isActive('ver')) activeMode = 'vertical'
 
     // Find gap property
     const gapProp = props.find(p => p.name === 'gap' || p.name === 'g')
@@ -3418,16 +3409,14 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       })
     }
 
-    // Remove x/y position properties when switching away from absolute
-    if (newLayout !== 'absolute') {
-      for (const keyword of positionKeywords) {
-        line = line.replace(new RegExp(`,?\\s*${keyword}\\s*,?`, 'g'), (match) => {
-          if (match.startsWith(',') && match.endsWith(',')) {
-            return ', '
-          }
-          return ''
-        })
-      }
+    // Also remove x/y position properties (absolute positioning disabled)
+    for (const keyword of positionKeywords) {
+      line = line.replace(new RegExp(`,?\\s*${keyword}\\s*,?`, 'g'), (match) => {
+        if (match.startsWith(',') && match.endsWith(',')) {
+          return ', '
+        }
+        return ''
+      })
     }
 
     // Clean up commas
@@ -3437,9 +3426,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
     // Don't add 'vertical' if it's the default (no layout keyword means vertical)
     if (newLayout !== 'vertical') {
-      // Use 'abs' as short form for absolute
-      const layoutToAdd = newLayout === 'absolute' ? 'abs' : newLayout
-      line = line.trimEnd() + ', ' + layoutToAdd
+      line = line.trimEnd() + ', ' + newLayout
     }
 
     lines[lineIndex] = line

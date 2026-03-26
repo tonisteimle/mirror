@@ -29,18 +29,10 @@ push_to_github() {
 
     cd "$PROJECT_DIR"
 
-    # Check for uncommitted changes - auto-commit without asking
-    if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-        echo "📝 Committing changes..."
-        git add -A
-
-        # Generate commit message with timestamp
-        commit_msg="deploy: $(date '+%Y-%m-%d %H:%M')"
-
-        git commit -m "$commit_msg
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
-        echo "✅ Changes committed"
+    # Check for uncommitted changes - warn but don't auto-commit
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        echo "⚠️  Uncommitted changes detected. Please commit manually before deploying."
+        exit 1
     fi
 
     # Push to origin
