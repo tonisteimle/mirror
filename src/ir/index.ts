@@ -2551,7 +2551,7 @@ class IRTransformer {
     'col': '.col', 'color': '.col', 'c': '.col',
     'boc': '.boc', 'border-color': '.boc',
     // Typography
-    'fs': '.font.size', 'font-size': '.font.size',
+    'fs': '.fs', 'font-size': '.fs',
   }
 
   /**

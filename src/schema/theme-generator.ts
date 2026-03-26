@@ -102,13 +102,15 @@ function generateCSS(tokens: Record<string, string | number>): string {
     const numericValue = isNumeric ? Number(value) : null
 
     if (isNumeric && numericValue !== null) {
-      // Add px unit for sizing/spacing/border (but not line-height)
-      if (
-        (definition.category === 'sizing' ||
-          definition.category === 'spacing' ||
-          definition.category === 'border') &&
-        tokenKey !== 'line-height'
-      ) {
+      // Add px unit for sizing/spacing/border/typography (but not line-height)
+      const needsPx = (
+        definition.category === 'sizing' ||
+        definition.category === 'spacing' ||
+        definition.category === 'border' ||
+        definition.category === 'typography'
+      ) && tokenKey !== 'line-height'
+
+      if (needsPx) {
         cssValue = `${numericValue}px`
       } else {
         cssValue = String(numericValue)
