@@ -83,28 +83,11 @@ export class DragDropSystem implements IDragDropSystem {
 
         this.state.isActive = true
         this.state.source = dragSource
-
-        // Show ghost
-        const location = source.element.getBoundingClientRect()
-        const center: Point = {
-          x: location.x + location.width / 2,
-          y: location.y + location.height / 2,
-        }
-        this.visual.showGhost(dragSource, center)
-
         this.config.onDragStart?.(dragSource)
       },
 
       onDrag: ({ location }) => {
-        if (!this.state.isActive || !this.state.source) return
-
-        const cursor: Point = {
-          x: location.current.input.clientX,
-          y: location.current.input.clientY,
-        }
-
-        // Update ghost position
-        this.visual.updateGhost(cursor)
+        // No visual update needed during drag - line indicator is shown on dragover
       },
 
       onDrop: ({ source, location }) => {
@@ -178,20 +161,15 @@ export class DragDropSystem implements IDragDropSystem {
 
       // If not already active from Pragmatic DnD, handle natively
       if (!this.state.isActive) {
-        // Extract drag source from native drag data
         const source = this.extractNativeDragSource(e)
         if (!source) return
 
         this.state.isActive = true
         this.state.source = source
-
-        // Show ghost
-        this.visual.showGhost(source, { x: e.clientX, y: e.clientY })
         this.config.onDragStart?.(source)
       }
 
-      // Update ghost and indicator
-      this.visual.updateGhost({ x: e.clientX, y: e.clientY })
+      // Update drop indicator (line showing insertion point)
       this.updateDropIndicator({ clientX: e.clientX, clientY: e.clientY })
     }
 
