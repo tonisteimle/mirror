@@ -102,13 +102,16 @@ export async function exportProject(): Promise<void> {
 // Browser Implementation
 // =============================================================================
 
-async function browserNewProject(): Promise<void> {
-  // localStorage leeren
-  localStorage.removeItem('mirror-files')
+// Empty project template (three files, all empty)
+const EMPTY_PROJECT: Record<string, string> = {
+  'index.mir': '',
+  'tokens.tok': '',
+  'components.com': ''
+}
 
-  // Storage neu initialisieren (lädt Demo weil leer)
-  // Aber wir wollen leer, nicht Demo
-  localStorage.setItem('mirror-files', JSON.stringify({}))
+async function browserNewProject(): Promise<void> {
+  // Leeres Projekt mit drei Dateien erstellen
+  localStorage.setItem('mirror-files', JSON.stringify(EMPTY_PROJECT))
 
   // Seite neu laden um sauberen State zu haben
   window.location.reload()
