@@ -162,33 +162,19 @@ function authMe(): array {
 }
 
 /**
- * Get session/auth status (works for anonymous and logged-in users)
+ * Get session/auth status
+ *
+ * DEV MODE: Always returns authenticated dev user.
  *
  * GET /api/auth/status
- * Returns: { authenticated, anonymous, user_id?, email? }
+ * Returns: { authenticated, anonymous, user_id, email? }
  */
 function authStatus(): array {
-    if (isset($_SESSION['user_id'])) {
-        // Logged in user
-        $data = loadUsers();
-        foreach ($data['users'] as $user) {
-            if ($user['id'] === $_SESSION['user_id']) {
-                return [
-                    'authenticated' => true,
-                    'anonymous' => false,
-                    'user_id' => $user['id'],
-                    'email' => $user['email']
-                ];
-            }
-        }
-    }
-
-    // Anonymous session user
-    $userId = getOrCreateSessionUser();
     return [
         'authenticated' => true,
-        'anonymous' => true,
-        'user_id' => $userId
+        'anonymous' => false,
+        'user_id' => 'dev',
+        'email' => 'dev@mirror.studio'
     ];
 }
 
@@ -208,26 +194,21 @@ function isAnonymousUser(): bool {
 
 /**
  * Get or create session-based user ID
- * Returns logged-in user ID or creates anonymous session user
+ *
+ * DEV MODE: Always returns fixed 'dev' user for easy development.
+ * All data is stored on the server, no login required.
  */
 function getOrCreateSessionUser(): string {
-    // If logged in, use real user ID
-    if (isset($_SESSION['user_id'])) {
-        return $_SESSION['user_id'];
+    // DEV MODE: Fixed user for development
+    $userId = 'dev';
+
+    // Ensure dev user directory exists
+    $userDir = PROJECTS_DIR . '/' . $userId;
+    if (!file_exists($userDir)) {
+        mkdir($userDir, 0700, true);
     }
 
-    // Create or return anonymous session user
-    if (!isset($_SESSION['anon_id'])) {
-        $_SESSION['anon_id'] = 'anon_' . bin2hex(random_bytes(16));
-
-        // Create directory for anonymous user
-        $userDir = PROJECTS_DIR . '/' . $_SESSION['anon_id'];
-        if (!file_exists($userDir)) {
-            mkdir($userDir, 0700, true);
-        }
-    }
-
-    return $_SESSION['anon_id'];
+    return $userId;
 }
 
 /**
@@ -245,67 +226,31 @@ function requireAuth(): string {
 /**
  * Get user settings
  *
+ * DEV MODE: Returns settings from dev user settings file.
+ *
  * GET /api/auth/settings
- * Returns: { settings } or { error }
+ * Returns: { success, settings }
  */
 function authGetSettings(): array {
-    $userId = getOrCreateSessionUser();
-
-    $data = loadUsersRaw();
-    foreach ($data['users'] as $user) {
-        if ($user['id'] === $userId) {
-            return [
-                'success' => true,
-                'settings' => $user['settings'] ?? []
-            ];
-        }
-    }
-
-    // Anonymous user - return empty settings (they use localStorage only)
     return [
         'success' => true,
-        'settings' => []
+        'settings' => getUserSettings()
     ];
 }
 
 /**
  * Save user settings
  *
+ * DEV MODE: Settings saved to dev user settings file.
+ *
  * PUT /api/auth/settings
  * Body: { settings: { panelVisibility, ... } }
- * Returns: { success } or { error }
+ * Returns: { success }
  */
 function authSaveSettings(array $body): array {
-    $userId = getOrCreateSessionUser();
     $settings = $body['settings'] ?? [];
 
-    // Anonymous users can't save to server
-    if (strpos($userId, 'anon_') === 0) {
-        return [
-            'success' => true,
-            'message' => 'Settings saved locally only (not logged in)'
-        ];
-    }
-
-    $data = loadUsersRaw();
-    $found = false;
-
-    foreach ($data['users'] as &$user) {
-        if ($user['id'] === $userId) {
-            // Merge settings (don't overwrite everything)
-            $user['settings'] = array_merge($user['settings'] ?? [], $settings);
-            $found = true;
-            break;
-        }
-    }
-
-    if (!$found) {
-        http_response_code(404);
-        return ['error' => 'User not found'];
-    }
-
-    saveUsers($data);
-
-    return ['success' => true];
+    // Use the user-settings system for dev user
+    return saveUserSettings($settings);
 }
 
