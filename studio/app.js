@@ -118,54 +118,6 @@ const files = {}
 const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
 let currentFile = 'index.mir'
 
-// Default files for demo mode
-const defaultFiles = {
-  'index.mir': `App bg #18181b, pad 24, gap 16
-  Text "Mirror Studio", fs 24, weight bold, col white
-  Text "Edit this code to get started", col #888
-
-  Card bg #27272a, pad 16, rad 8, gap 8
-    Text "Your first component", col #a1a1aa
-    Button "Click Me"
-      pad 12 24, bg #3b82f6, rad 6, col white
-      hover bg #2563eb
-
-  // Zag Select Component
-  Select placeholder "Choose an option..."
-    Item "Option 1"
-    Item "Option 2"
-    Item "Option 3"`,
-  'tokens.tok': `// Design Tokens
-
-// Colors
-$primary: #3b82f6
-$surface: #27272a
-$background: #18181b
-$text: #ffffff
-$muted: #a1a1aa
-
-// Spacing
-$spacing-sm: 8
-$spacing-md: 16
-$spacing-lg: 24
-
-// Radius
-$radius: 8`,
-  'components.com': `// Component Definitions
-
-Button:
-  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
-  hover bg #2563eb
-
-Card:
-  bg #27272a, pad 16, rad 8
-
-Input:
-  pad 12, bg #1f1f1f, rad 6, bor 1 #333
-  col white
-  focus bor 1 #3b82f6`
-}
-
 // API Helper
 async function api(endpoint, options = {}) {
   // Desktop app: API calls are not used - all file operations go through TauriBridge
