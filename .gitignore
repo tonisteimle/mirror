@@ -37,3 +37,7 @@ archive/
 coverage/
 # Playwright MCP screenshots
 .playwright-mcp/
+
+# Test project files
+Testproject/
+Testproject.zip
