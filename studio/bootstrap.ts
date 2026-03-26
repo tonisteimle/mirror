@@ -12,7 +12,7 @@ import { initializeAgent, getAgentIntegration, type AgentIntegration } from './a
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../src/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
-import { ComponentPanel, createComponentPanel, getComponentTemplate, getFileType } from './panels/components'
+import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
 import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
@@ -31,6 +31,7 @@ export interface BootstrapConfig {
   explorerPanelContainer?: HTMLElement
   fileTreeContainer?: HTMLElement
   explorerComponentsContainer?: HTMLElement
+  explorerUserComponentsContainer?: HTMLElement
   chatPanelContainer?: HTMLElement
   initialSource?: string
   currentFile?: string
@@ -58,6 +59,7 @@ export interface StudioInstance {
   sync: SyncCoordinator | null
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
+  userComponentsPanel: UserComponentsPanel | null
   explorerPanel: ExplorerPanel | null
   editorDropHandler: EditorDropHandler | null
   breadcrumb: PreviewBreadcrumb | null
@@ -84,6 +86,7 @@ export const studio: StudioInstance = {
   sync: null,
   propertyPanel: null,
   componentPanel: null,
+  userComponentsPanel: null,
   explorerPanel: null,
   editorDropHandler: null,
   breadcrumb: null,
@@ -104,6 +107,7 @@ export const studio: StudioInstance = {
     studio.sync?.dispose()
     studio.propertyPanel?.detach()
     studio.componentPanel?.dispose()
+    studio.userComponentsPanel?.dispose()
     studio.explorerPanel?.dispose()
     studio.editorDropHandler?.detach()
     studio.drawManager?.dispose()
@@ -117,6 +121,7 @@ export const studio: StudioInstance = {
     studio.sync = null
     studio.propertyPanel = null
     studio.componentPanel = null
+    studio.userComponentsPanel = null
     studio.explorerPanel = null
     studio.editorDropHandler = null
     studio.breadcrumb = null
@@ -132,6 +137,9 @@ let propertyPanelContainer: HTMLElement | null = null
 
 // Store component panel container for lazy initialization
 let componentPanelContainer: HTMLElement | null = null
+
+// Store user components panel container for lazy initialization
+let userComponentsPanelContainer: HTMLElement | null = null
 
 // Store chat panel container for lazy initialization
 let chatPanelContainer: HTMLElement | null = null
@@ -284,6 +292,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         container: config.explorerPanelContainer,
         fileTreeContainer: config.fileTreeContainer,
         componentPanelContainer: config.explorerComponentsContainer,
+        userComponentsPanelContainer: config.explorerUserComponentsContainer,
         defaultView: 'files',
       },
       {
@@ -297,6 +306,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
     // Use explorer's component container for ComponentPanel
     componentPanelContainer = config.explorerComponentsContainer
+
+    // Use explorer's user components container for UserComponentsPanel
+    userComponentsPanelContainer = config.explorerUserComponentsContainer ?? null
   }
 
   // Initialize Component Panel if container provided
@@ -328,6 +340,43 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       }
     )
     console.log('[Studio] ComponentPanel initialized')
+  }
+
+  // Initialize User Components Panel if container and getFiles provided
+  if (userComponentsPanelContainer && config.getFiles) {
+    const getFilesCallback = config.getFiles
+    studio.userComponentsPanel = createUserComponentsPanel(
+      {
+        container: userComponentsPanelContainer,
+        getComFiles: () => {
+          const files = getFilesCallback()
+          return files
+            .filter(f => f.type === 'components' || f.type === 'component')
+            .map(f => ({ name: f.name, content: f.code }))
+        },
+      },
+      {
+        onDragStart: (item, event) => {
+          events.emit('component:drag-start', { item, event })
+        },
+        onDragEnd: (item, event) => {
+          events.emit('component:drag-end', { item, event })
+        },
+        onClick: (item) => {
+          // Enter draw mode if DrawManager is available
+          if (studio.drawManager) {
+            studio.drawManager.enterDrawMode(item)
+          } else {
+            // Fallback to event emission (legacy behavior)
+            events.emit('component:insert-requested', { item })
+          }
+        },
+        onRefresh: () => {
+          console.log('[Studio] UserComponentsPanel refreshed')
+        },
+      }
+    )
+    console.log('[Studio] UserComponentsPanel initialized')
   }
 
   // Initialize AI Agent if API key provided
@@ -857,6 +906,11 @@ export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap,
   // Refresh Component Panel if needed
   if (studio.componentPanel) {
     studio.componentPanel.refresh()
+  }
+
+  // Refresh User Components Panel if needed
+  if (studio.userComponentsPanel) {
+    studio.userComponentsPanel.refresh()
   }
 
   // Note: compile:completed is now emitted by setCompileResult action

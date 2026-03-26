@@ -1,13 +1,14 @@
 /**
  * Explorer Panel - Container for Activity Bar + switchable views
  *
- * Manages Files view and Components view, with Activity Bar for switching.
+ * Manages Files view, Components view, and User Components view,
+ * with Activity Bar for switching.
  */
 
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './activity-bar'
 import { events } from '../../core'
 
-export type ExplorerView = 'files' | 'components'
+export type ExplorerView = 'files' | 'components' | 'userComponents'
 
 export interface ExplorerPanelConfig {
   container: HTMLElement
@@ -15,6 +16,8 @@ export interface ExplorerPanelConfig {
   fileTreeContainer: HTMLElement
   /** Component panel container element */
   componentPanelContainer: HTMLElement
+  /** User components panel container element */
+  userComponentsPanelContainer?: HTMLElement
   /** Default view */
   defaultView?: ExplorerView
 }
@@ -48,7 +51,7 @@ export class ExplorerPanel {
     const activityBarContainer = document.createElement('div')
     activityBarContainer.className = 'explorer-activity-bar'
 
-    // Content container (holds both views)
+    // Content container (holds all views)
     const contentContainer = document.createElement('div')
     contentContainer.className = 'explorer-content'
 
@@ -60,6 +63,12 @@ export class ExplorerPanel {
     this.config.componentPanelContainer.classList.add('explorer-view', 'explorer-view-components')
     contentContainer.appendChild(this.config.componentPanelContainer)
 
+    // Move user components panel into content (if provided)
+    if (this.config.userComponentsPanelContainer) {
+      this.config.userComponentsPanelContainer.classList.add('explorer-view', 'explorer-view-user-components')
+      contentContainer.appendChild(this.config.userComponentsPanelContainer)
+    }
+
     this.element.appendChild(activityBarContainer)
     this.element.appendChild(contentContainer)
 
@@ -67,14 +76,26 @@ export class ExplorerPanel {
     this.config.container.innerHTML = ''
     this.config.container.appendChild(this.element)
 
+    // Build activity bar items
+    const activityBarItems = [
+      { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
+      { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
+    ]
+
+    // Add user components item if container is provided
+    if (this.config.userComponentsPanelContainer) {
+      activityBarItems.push({
+        id: 'userComponents',
+        icon: ACTIVITY_BAR_ICONS.userComponents,
+        tooltip: 'My Components',
+      })
+    }
+
     // Initialize Activity Bar
     this.activityBar = createActivityBar(
       {
         container: activityBarContainer,
-        items: [
-          { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
-          { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
-        ],
+        items: activityBarItems,
         defaultActive: this.activeView,
       },
       {
@@ -104,17 +125,34 @@ export class ExplorerPanel {
   private updateViewVisibility(): void {
     const filesView = this.config.fileTreeContainer
     const componentsView = this.config.componentPanelContainer
+    const userComponentsView = this.config.userComponentsPanelContainer
 
-    if (this.activeView === 'files') {
-      filesView.classList.add('active')
-      filesView.style.display = ''
-      componentsView.classList.remove('active')
-      componentsView.style.display = 'none'
-    } else {
-      filesView.classList.remove('active')
-      filesView.style.display = 'none'
-      componentsView.classList.add('active')
-      componentsView.style.display = ''
+    // Hide all views first
+    filesView.classList.remove('active')
+    filesView.style.display = 'none'
+    componentsView.classList.remove('active')
+    componentsView.style.display = 'none'
+    if (userComponentsView) {
+      userComponentsView.classList.remove('active')
+      userComponentsView.style.display = 'none'
+    }
+
+    // Show active view
+    switch (this.activeView) {
+      case 'files':
+        filesView.classList.add('active')
+        filesView.style.display = ''
+        break
+      case 'components':
+        componentsView.classList.add('active')
+        componentsView.style.display = ''
+        break
+      case 'userComponents':
+        if (userComponentsView) {
+          userComponentsView.classList.add('active')
+          userComponentsView.style.display = ''
+        }
+        break
     }
   }
 
