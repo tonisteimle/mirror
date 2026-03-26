@@ -18,7 +18,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // BASIC PRIMITIVES
   // ============================================================================
   'basic-frame': {
-    mir: 'Frame',
+    mir: 'Frame w 100, h 100, bg #3f3f46',
     com: 'Frame w 100, h 100, bg #27272a, rad 8',
   },
   'basic-text': {
@@ -30,7 +30,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
     com: 'Icon star, size 24, col #a1a1aa',
   },
   'basic-image': {
-    mir: 'Image',
+    mir: 'Image w 200, h 150, bg #3f3f46',
     com: 'Image w 200, h 150, fit cover, rad 8, bg #3f3f46',
   },
 
