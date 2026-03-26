@@ -195,13 +195,10 @@ function updateAuthUI() {
 
 // Project Functions
 async function loadProjects() {
-  // Desktop app: just load default demo files into editor
-  // File tree is managed by desktop-files.js
-  console.log('[App] Loading demo project')
-  Object.assign(files, defaultFiles)
-  currentProject = { id: 'demo', name: 'Demo Project' }
+  // Server mode: desktop-files.js handles loading from server
+  // Don't load defaults here - wait for server content
+  console.log('[App] Waiting for server content (via desktop-files.js)')
   currentFile = 'index.mir'
-  // No need to render project/file lists - desktop-files.js handles file tree
 }
 
 // Legacy project functions removed - desktop app uses folder-based file management via desktop-files.js
