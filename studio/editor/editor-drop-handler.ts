@@ -255,14 +255,24 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       event.preventDefault()
       event.dataTransfer.dropEffect = 'copy'
 
-      // SIMPLIFIED: No visual indicator needed - cursor position IS the indicator
-      // User places cursor where they want the component, then drags
+      // Add visual highlight to editor
+      view.dom.classList.add('editor-drop-target')
 
       return true  // Prevent default handling
     },
 
     dragleave(event: DragEvent, view: EditorView) {
-      // No-op: No indicator to hide
+      // Only handle component drops
+      if (!event.dataTransfer?.types.includes('application/mirror-component')) {
+        return false
+      }
+
+      // Only remove highlight if actually leaving the editor (not entering a child)
+      const relatedTarget = event.relatedTarget as HTMLElement | null
+      if (!relatedTarget || !view.dom.contains(relatedTarget)) {
+        view.dom.classList.remove('editor-drop-target')
+      }
+
       return false
     },
 
@@ -274,6 +284,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
 
       event.preventDefault()
       hideDropIndicator()
+      view.dom.classList.remove('editor-drop-target')
 
       // Get component data
       const dataStr = event.dataTransfer.getData('application/mirror-component')

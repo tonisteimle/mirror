@@ -1562,6 +1562,12 @@
       box-shadow: 0 0 4px var(--color-primary);
     }
 
+    /* Editor drop target highlight - blue border when dragging over */
+    .cm-editor.editor-drop-target {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
     /* App Lock - "App" prefix on line 1 is locked/readonly */
     .cm-app-locked {
       color: var(--text-muted);
