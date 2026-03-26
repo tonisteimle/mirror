@@ -266,8 +266,9 @@ export class ComponentPanel {
   private handleDragStart(item: ComponentItem, event: DragEvent): void {
     if (!event.dataTransfer) return
 
-    // Set drag data
+    // Set drag data (include componentId for template-based code generation)
     const dragData: ComponentDragData = {
+      componentId: item.id,
       componentName: item.template,
       properties: item.properties,
       textContent: item.textContent,

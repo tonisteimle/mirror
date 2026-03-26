@@ -357,8 +357,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     studio.editorDropHandler = createEditorDropHandler({
       editor: editorView,
       onDrop: (dragData, position) => {
-        // Generate component code
-        const code = generateComponentCodeFromDragData(dragData)
+        // Generate component code (use template based on file type)
+        const currentFile = getCurrentFileCallback?.() || 'index.mir'
+        const code = generateComponentCodeFromDragData(dragData, {
+          componentId: dragData.componentId,
+          filename: currentFile,
+        })
         studio.editorDropHandler?.insertComponentCode(code, position)
         console.log('[Studio] Component dropped into editor:', dragData.componentName)
       },
@@ -586,6 +590,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   const codeExecutor = createCodeExecutor({
     getSource: () => editorController.getContent(),
     getSourceMap: () => state.get().sourceMap,
+    getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
     applyChange: (newSource: string) => {
       const currentContent = editorController.getContent()
       if (newSource !== currentContent) {
@@ -658,12 +663,17 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       if (studio.drawManager && studio.preview) {
         studio.drawManager.enterDrawMode(item)
       } else if (studio.editor) {
-        // Insert at cursor in editor
+        // Insert at cursor in editor (use template based on file type)
+        const currentFile = getCurrentFileCallback?.() || 'index.mir'
         const code = generateComponentCodeFromDragData({
           componentName: item.template,
+          componentId: item.id,
           properties: item.properties,
           textContent: item.textContent,
           children: item.children,
+        }, {
+          componentId: item.id,
+          filename: currentFile,
         })
         studio.editor.insertAtCursor('\n' + code)
       }

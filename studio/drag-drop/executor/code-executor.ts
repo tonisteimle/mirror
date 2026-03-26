@@ -16,6 +16,7 @@ import type {
 } from '../types'
 import type { CodeModifier } from '../../../src/studio/code-modifier'
 import type { SourceMap } from '../../../src/ir/source-map'
+import { getComponentTemplate, getFileType } from '../../panels/components'
 
 /**
  * Dependencies for CodeExecutor
@@ -35,6 +36,9 @@ export interface CodeExecutorDependencies {
 
   /** Create CodeModifier instance */
   createModifier: (source: string, sourceMap: SourceMap) => CodeModifier
+
+  /** Get current filename for template selection (optional) */
+  getCurrentFile?: () => string
 }
 
 export class CodeExecutor implements ICodeExecutor {
@@ -171,6 +175,36 @@ export class CodeExecutor implements ICodeExecutor {
       return { success: false, error: 'No component name' }
     }
 
+    // Try to get template based on file type
+    let template: string | undefined
+    if (source.componentId && this.deps.getCurrentFile) {
+      const filename = this.deps.getCurrentFile()
+      const fileType = getFileType(filename)
+      template = getComponentTemplate(source.componentId, fileType)
+    }
+
+    // Use template-based insertion if template exists
+    if (template) {
+      switch (result.placement) {
+        case 'before':
+        case 'after':
+          return modifier.addChildWithTemplateRelativeTo(
+            result.targetId,
+            template,
+            result.placement
+          )
+
+        case 'inside':
+          return modifier.addChildWithTemplate(result.target.nodeId, template, {
+            position: result.insertionIndex ?? 'last',
+          })
+
+        default:
+          return { success: false, error: `Unknown placement: ${result.placement}` }
+      }
+    }
+
+    // Fallback to property-based insertion
     const properties = source.properties || ''
 
     switch (result.placement) {

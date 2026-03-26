@@ -165,6 +165,8 @@ export interface ComponentPanelCallbacks {
  * Data transferred during drag operations
  */
 export interface ComponentDragData {
+  /** Component ID for template lookup (e.g., 'zag-dialog') */
+  componentId?: string
   /** Mirror component name */
   componentName: string
   /** Properties string */

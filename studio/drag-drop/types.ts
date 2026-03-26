@@ -35,6 +35,7 @@ export interface DragSource {
   type: DragSourceType
 
   // Palette source
+  componentId?: string // For template lookup (e.g., 'zag-dialog')
   componentName?: string
   properties?: string
   textContent?: string

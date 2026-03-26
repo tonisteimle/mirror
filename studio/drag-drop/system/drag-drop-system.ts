@@ -132,6 +132,7 @@ export class DragDropSystem implements IDragDropSystem {
 
       onDragLeave: () => {
         this.visual.hideIndicator()
+        this.visual.hideParentOutline()
         this.visual.hideZoneOverlay()
         this.state.currentTarget = null
         this.state.currentResult = null
@@ -189,6 +190,7 @@ export class DragDropSystem implements IDragDropSystem {
       if (relatedTarget && container.contains(relatedTarget)) return
 
       this.visual.hideIndicator()
+      this.visual.hideParentOutline()
       this.visual.hideZoneOverlay()
     }
 
@@ -209,6 +211,7 @@ export class DragDropSystem implements IDragDropSystem {
       const dragData = JSON.parse(jsonData)
       const source: DragSource = {
         type: 'palette',
+        componentId: dragData.componentId,
         componentName: dragData.componentName,
         properties: dragData.properties,
         textContent: dragData.textContent,
@@ -317,6 +320,14 @@ export class DragDropSystem implements IDragDropSystem {
     // Get visual hint and show indicator (Webflow-style: no zone overlay)
     const visualHint = strategy.getVisualHint(calcResult, childRects, domRectToRect(containerRect))
     this.visual.showIndicator(visualHint)
+
+    // Show parent outline for before/after placements (not for inside - that already shows outline)
+    if (calcResult.placement === 'before' || calcResult.placement === 'after') {
+      this.visual.showParentOutline(domRectToRect(containerRect))
+    } else {
+      this.visual.hideParentOutline()
+    }
+
     this.visual.hideZoneOverlay()
   }
 

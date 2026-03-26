@@ -12,6 +12,10 @@ export interface VisualSystem {
   showIndicator(hint: VisualHint): void
   hideIndicator(): void
 
+  // Parent outline (shows which container receives the drop)
+  showParentOutline(rect: { x: number; y: number; width: number; height: number }): void
+  hideParentOutline(): void
+
   // Legacy no-ops (for compatibility)
   showGhost(): void
   updateGhost(): void
@@ -31,4 +35,5 @@ export interface VisualSystem {
  */
 export const VISUAL_IDS = {
   indicator: 'mirror-drop-indicator',
+  parentOutline: 'mirror-drop-parent-outline',
 } as const

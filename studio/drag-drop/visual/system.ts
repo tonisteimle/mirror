@@ -12,6 +12,7 @@ import { VISUAL_IDS } from './types'
 export class VisualSystem implements IVisualSystem {
   private container: HTMLElement
   private indicatorElement: HTMLElement | null = null
+  private parentOutlineElement: HTMLElement | null = null
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -57,6 +58,41 @@ export class VisualSystem implements IVisualSystem {
   }
 
   // ==========================================================================
+  // Parent Outline (shows which container receives the drop)
+  // ==========================================================================
+
+  showParentOutline(rect: { x: number; y: number; width: number; height: number }): void {
+    this.hideParentOutline()
+
+    const outline = document.createElement('div')
+    outline.id = VISUAL_IDS.parentOutline
+    outline.className = 'drop-parent-outline'
+
+    Object.assign(outline.style, {
+      position: 'fixed',
+      left: `${rect.x}px`,
+      top: `${rect.y}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      backgroundColor: 'transparent',
+      border: '2px dashed rgba(59, 130, 246, 0.5)',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      zIndex: '9998', // Below the indicator line
+    })
+
+    document.body.appendChild(outline)
+    this.parentOutlineElement = outline
+  }
+
+  hideParentOutline(): void {
+    if (this.parentOutlineElement) {
+      this.parentOutlineElement.remove()
+      this.parentOutlineElement = null
+    }
+  }
+
+  // ==========================================================================
   // Legacy methods (no-op for compatibility)
   // ==========================================================================
 
@@ -74,6 +110,7 @@ export class VisualSystem implements IVisualSystem {
 
   clear(): void {
     this.hideIndicator()
+    this.hideParentOutline()
   }
 
   dispose(): void {
