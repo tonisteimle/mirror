@@ -101,7 +101,7 @@ const STORAGE_PREFIX = 'mirror-file-'
 const PROJECT_KEY = 'mirror-current-project'
 const AUTH_KEY = 'mirror-auth-state'
 const STORAGE_VERSION_KEY = 'mirror-storage-version'
-const STORAGE_VERSION = 3  // Increment this when defaultFiles or storage format changes
+const STORAGE_VERSION = 4  // Increment this when storage format changes
 
 // App State
 const DEBUG_SYNC = false  // Enable verbose sync logging
@@ -690,7 +690,7 @@ const initPromise = initApp()
 // End of API Client & Auth
 // ============================================
 
-const initialCode = files[currentFile] || defaultFiles['index.mir']
+const initialCode = files[currentFile] || ''
 
 // Token patterns
 const patterns = [
@@ -6385,17 +6385,8 @@ window.startCompletion = startCompletion
 window.files = files
 window.studio = studio  // New architecture
 window.resetCode = async () => {
-  // Reset all files to defaults (via API)
-  for (const [name, content] of Object.entries(defaultFiles)) {
-    files[name] = content
-    await saveFile(name, content)
-  }
-  // Reload current file
-  editor.dispatch({
-    changes: { from: 0, to: editor.state.doc.length, insert: files[currentFile] }
-  })
-  compile(files[currentFile])
-  renderFileList()
+  // No longer supported - all content comes from server
+  console.log('[App] resetCode is deprecated - content managed by server')
 }
 
 // ==========================================

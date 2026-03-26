@@ -2037,6 +2037,12 @@ export class Parser {
           continue
         }
 
+        // Property line (lowercase identifier that is a known property)
+        if (PROPERTY_STARTERS.has(name)) {
+          this.parseInlineProperties(instance.properties)
+          continue
+        }
+
         // Child instance (including Zag components)
         const child = this.parseInstance(this.advance())
         instance.children.push(child as any)
