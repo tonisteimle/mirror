@@ -874,9 +874,9 @@ export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap,
     }
   }
 
-  // Update Component Panel with new AST (for user-defined components)
+  // Refresh Component Panel if needed
   if (studio.componentPanel) {
-    studio.componentPanel.update(ast)
+    studio.componentPanel.refresh()
   }
 
   // Note: compile:completed is now emitted by setCompileResult action
