@@ -3890,12 +3890,26 @@ function injectComponentPreviewStyles(force = false) {
       return value
     }
 
+    // Token suffixes that need px units when numeric
+    const pxSuffixes = ['-pad', '-gap', '-rad', '-fs', '-w', '-h', '-minw', '-maxw', '-minh', '-maxh', '-bor']
+
+    // Check if a CSS var name needs px unit
+    const needsPxUnit = (varName) => {
+      return pxSuffixes.some(suffix => varName.endsWith(suffix))
+    }
+
     let cssVars = ':root {\n'
     for (const token of ast.tokens) {
       // Strip $ prefix and convert dots to hyphens
       const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
         .replace(/\./g, '-')
-      const resolvedValue = resolveValue(token.value)
+      let resolvedValue = resolveValue(token.value)
+
+      // Add px unit for numeric spacing/sizing values
+      if (typeof resolvedValue === 'number' && needsPxUnit(cssVarName)) {
+        resolvedValue = `${resolvedValue}px`
+      }
+
       cssVars += `  --${cssVarName}: ${resolvedValue};\n`
     }
     cssVars += '}\n'

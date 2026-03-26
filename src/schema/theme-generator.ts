@@ -97,7 +97,11 @@ function generateCSS(tokens: Record<string, string | number>): string {
     const cssVar = `--${definition.cssVar}`
     let cssValue: string
 
-    if (typeof value === 'number') {
+    // Check if value is numeric (either number type or numeric string)
+    const isNumeric = typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
+    const numericValue = isNumeric ? Number(value) : null
+
+    if (isNumeric && numericValue !== null) {
       // Add px unit for sizing/spacing/border (but not line-height)
       if (
         (definition.category === 'sizing' ||
@@ -105,12 +109,12 @@ function generateCSS(tokens: Record<string, string | number>): string {
           definition.category === 'border') &&
         tokenKey !== 'line-height'
       ) {
-        cssValue = `${value}px`
+        cssValue = `${numericValue}px`
       } else {
-        cssValue = String(value)
+        cssValue = String(numericValue)
       }
     } else {
-      cssValue = value
+      cssValue = String(value)
     }
 
     categories[definition.category].push(`  ${cssVar}: ${cssValue};`)
