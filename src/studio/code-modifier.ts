@@ -478,8 +478,20 @@ export class CodeModifier {
       return this.errorResult(`Sibling node not found: ${siblingId}`)
     }
 
+    // Validate line position
+    const lineIndex = siblingMapping.position.line - 1
+    if (lineIndex < 0 || lineIndex >= this.lines.length) {
+      console.error('[CodeModifier] Invalid line position in addChildWithTemplateRelativeTo', {
+        siblingId,
+        line: siblingMapping.position.line,
+        lineIndex,
+        totalLines: this.lines.length,
+      })
+      return this.errorResult(`Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`)
+    }
+
     // Get sibling's line to determine indentation
-    const siblingLine = this.lines[siblingMapping.position.line - 1]
+    const siblingLine = this.lines[lineIndex]
     const indent = this.getLineIndent(siblingLine)
 
     // Adjust template indentation
@@ -538,8 +550,20 @@ export class CodeModifier {
       return this.errorResult(`Sibling node not found: ${siblingId}`)
     }
 
+    // Validate line position
+    const lineIndex = siblingMapping.position.line - 1
+    if (lineIndex < 0 || lineIndex >= this.lines.length) {
+      console.error('[CodeModifier] Invalid line position in addChildRelativeTo', {
+        siblingId,
+        line: siblingMapping.position.line,
+        lineIndex,
+        totalLines: this.lines.length,
+      })
+      return this.errorResult(`Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`)
+    }
+
     // Get sibling's line to determine indentation
-    const siblingLine = this.lines[siblingMapping.position.line - 1]
+    const siblingLine = this.lines[lineIndex]
     const indent = this.getLineIndent(siblingLine)
 
     // Build the new component line
@@ -1110,7 +1134,8 @@ export class CodeModifier {
   /**
    * Get the indentation of a line (leading whitespace)
    */
-  private getLineIndent(line: string): string {
+  private getLineIndent(line: string | undefined): string {
+    if (!line) return ''
     const match = line.match(/^(\s*)/)
     return match ? match[1] : ''
   }
