@@ -360,8 +360,11 @@ export class DragDropSystem implements IDragDropSystem {
    * Execute the drop action
    */
   private executeDrop(source: DragSource, result: DropResult): void {
+    console.log('[DragDrop] executeDrop called', { source, result })
+
     const executor = this.config.codeExecutor
     if (!executor) {
+      console.warn('[DragDrop] No code executor configured')
       // Just call the callback if no executor
       this.config.onDrop?.(source, result)
       return
@@ -369,14 +372,20 @@ export class DragDropSystem implements IDragDropSystem {
 
     // Duplicate if Alt is pressed and this is a canvas element
     if (this.config.enableAltDuplicate && this.state.isAltKeyPressed && source.type === 'canvas') {
+      console.log('[DragDrop] Executing duplicate')
       const execResult = executor.duplicate(source, result)
       if (!execResult.success) {
-        console.error('Duplicate failed:', execResult.error)
+        console.error('[DragDrop] Duplicate failed:', execResult.error)
+      } else {
+        console.log('[DragDrop] Duplicate successful')
       }
     } else {
+      console.log('[DragDrop] Executing drop')
       const execResult = executor.execute(source, result)
       if (!execResult.success) {
-        console.error('Drop failed:', execResult.error)
+        console.error('[DragDrop] Drop failed:', execResult.error)
+      } else {
+        console.log('[DragDrop] Drop successful')
       }
     }
 

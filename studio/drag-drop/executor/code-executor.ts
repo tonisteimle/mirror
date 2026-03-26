@@ -52,18 +52,29 @@ export class CodeExecutor implements ICodeExecutor {
    * Execute a drop operation
    */
   execute(source: DragSource, result: DropResult): ExecutionResult {
+    console.log('[CodeExecutor] execute called', { source, result })
+
     try {
       const currentSource = this.deps.getSource()
       const sourceMap = this.deps.getSourceMap()
+
+      console.log('[CodeExecutor] sourceMap size:', sourceMap?.size ?? 'null')
+      console.log('[CodeExecutor] targetId:', result.targetId)
+      console.log('[CodeExecutor] placement:', result.placement)
+
       const modifier = this.deps.createModifier(currentSource, sourceMap)
 
       let modResult
 
       if (source.type === 'palette') {
+        console.log('[CodeExecutor] Executing palette drop')
         modResult = this.executePaletteDrop(modifier, source, result)
       } else {
+        console.log('[CodeExecutor] Executing canvas drop')
         modResult = this.executeCanvasDrop(modifier, source, result)
       }
+
+      console.log('[CodeExecutor] Modifier result:', modResult)
 
       if (!modResult.success) {
         return {
@@ -73,11 +84,12 @@ export class CodeExecutor implements ICodeExecutor {
       }
 
       // Apply the change
+      console.log('[CodeExecutor] Applying change, new source length:', modResult.newSource?.length)
       this.deps.applyChange(modResult.newSource)
 
       // Trigger recompile (async, don't await)
       this.deps.recompile().catch(err => {
-        console.error('Recompile failed:', err)
+        console.error('[CodeExecutor] Recompile failed:', err)
       })
 
       return {
@@ -85,6 +97,7 @@ export class CodeExecutor implements ICodeExecutor {
         newSource: modResult.newSource,
       }
     } catch (err) {
+      console.error('[CodeExecutor] Exception:', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : String(err),
