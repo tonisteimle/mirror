@@ -6,6 +6,8 @@
 
 // Main exports
 export { ComponentPanel, createComponentPanel } from './component-panel'
+export { UserComponentsPanel, createUserComponentsPanel } from './user-components-panel'
+export type { UserComponentsPanelConfig, UserComponentsPanelCallbacks } from './user-components-panel'
 
 // Types
 export type {
