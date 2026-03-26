@@ -134,11 +134,6 @@ export interface ComponentSection {
 }
 
 /**
- * Component Panel Tab
- */
-export type ComponentPanelTab = 'basic' | 'all'
-
-/**
  * Component panel configuration
  */
 export interface ComponentPanelConfig {
@@ -148,10 +143,6 @@ export interface ComponentPanelConfig {
   showLayoutPresets?: boolean
   /** Whether to show basic components (default: true) */
   showBasicComponents?: boolean
-  /** Whether to show tab bar (Basic/All tabs) (default: false) */
-  showTabBar?: boolean
-  /** Default active tab (default: 'basic') */
-  defaultTab?: ComponentPanelTab
 }
 
 /**
@@ -178,8 +169,6 @@ export interface ComponentDragData {
   textContent?: string
   /** Whether this is from the component panel */
   fromComponentPanel: boolean
-  /** Whether this is from the All tab (needs to be added to project) */
-  fromAllTab?: boolean
   /** Child components for layout templates */
   children?: ComponentChild[]
   /** Default size for drag preview */

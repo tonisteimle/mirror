@@ -19,7 +19,6 @@ import { getComponentIcon } from './icons'
 import { LAYOUT_PRESETS, BASIC_COMPONENTS } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
-import { events } from '../../core'
 
 /**
  * Component Panel class
