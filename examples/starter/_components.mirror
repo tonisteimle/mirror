@@ -10,13 +10,13 @@ import _tokens
 // --------------------------------------------
 
 Container:
-  pad $lg.pad, gap $md.gap
+  pad $l.pad, gap $m.gap
 
 Row:
-  horizontal, gap $md.gap, ver-center
+  horizontal, gap $m.gap, ver-center
 
 Column:
-  vertical, gap $md.gap
+  vertical, gap $m.gap
 
 Stack:
   stacked
@@ -41,31 +41,31 @@ H3:
   font-size $xl.font.size, weight 600, col $heading.col
 
 H4:
-  font-size $lg.font.size, weight 600, col $heading.col
+  font-size $l.font.size, weight 600, col $heading.col
 
 Text:
   font-size $base.font.size, col $text.col
 
 TextSmall:
-  font-size $sm.font.size, col $text.muted.col
+  font-size $s.font.size, col $text.muted.col
 
 Label:
-  font-size $sm.font.size, weight 500, col $text.muted.col, uppercase
+  font-size $s.font.size, weight 500, col $text.muted.col, uppercase
 
 // --------------------------------------------
 // Buttons
 // --------------------------------------------
 
 Button:
-  pad $sm.pad $md.pad, rad $sm.rad
+  pad $s.pad $m.pad, rad $s.rad
   bg $control.bg, col $text.col
-  font-size $sm.font.size, weight 500
+  font-size $s.font.size, weight 500
   cursor pointer
   hover
     bg $control.hover.bg
 
 PrimaryButton as Button:
-  bg $primary.bg, col $on-primary.col
+  bg $accent.bg, col $on-primary.col
   hover
     bg $primary.hover.bg
 
@@ -80,7 +80,7 @@ DangerButton as Button:
     bg $red-600
 
 IconButton:
-  pad $sm.pad, rad $sm.rad
+  pad $s.pad, rad $s.rad
   bg transparent, col $text.muted.col
   cursor pointer
   hover
@@ -92,7 +92,7 @@ IconButton:
 // --------------------------------------------
 
 Card:
-  pad $lg.pad, gap $md.gap, rad $md.rad
+  pad $l.pad, gap $m.gap, rad $m.rad
   bg $surface.bg
 
 CardElevated as Card:
@@ -106,7 +106,7 @@ CardBordered as Card:
 // --------------------------------------------
 
 Input:
-  pad $sm.pad $md.pad, rad $sm.rad
+  pad $s.pad $m.pad, rad $s.rad
   bg $control.bg, col $text.col
   font-size $base.font.size
   bor 1 transparent
@@ -119,7 +119,7 @@ TextArea as Input:
   min-height 100
 
 Select:
-  pad $sm.pad $md.pad, rad $sm.rad
+  pad $s.pad $m.pad, rad $s.rad
   bg $control.bg, col $text.col
   font-size $base.font.size
   bor 1 transparent, cursor pointer
@@ -131,8 +131,8 @@ Checkbox:
   bg $control.bg, bor 1 $border.col
   cursor pointer
   state checked
-    bg $primary.bg
-    bor 1 $primary.bg
+    bg $accent.bg
+    bor 1 $accent.bg
 
 Toggle:
   width 40, height 22, rad $full.rad
@@ -141,7 +141,7 @@ Toggle:
   Thumb:
     size 18, rad $full.rad, bg $text.muted.col
   state on
-    bg $primary.bg
+    bg $accent.bg
     Thumb bg white, translate 18 0
 
 // --------------------------------------------
@@ -149,8 +149,8 @@ Toggle:
 // --------------------------------------------
 
 NavItem:
-  horizontal, gap $sm.gap, ver-center
-  pad $sm.pad $md.pad, rad $sm.rad
+  horizontal, gap $s.gap, ver-center
+  pad $s.pad $m.pad, rad $s.rad
   col $text.muted.col, cursor pointer
   hover
     bg $control.bg
@@ -165,7 +165,7 @@ NavSection:
 NavHeader:
   font-size $xs.font.size, weight 600
   col $text.subtle.col, uppercase
-  pad $sm.pad $md.pad
+  pad $s.pad $m.pad
   letter-spacing 0.5
 
 // --------------------------------------------
@@ -173,8 +173,8 @@ NavHeader:
 // --------------------------------------------
 
 ListItem:
-  horizontal, gap $md.gap, ver-center
-  pad $sm.pad $md.pad, rad $sm.rad
+  horizontal, gap $m.gap, ver-center
+  pad $s.pad $m.pad, rad $s.rad
   cursor pointer
   hover
     bg $control.bg
@@ -188,12 +188,12 @@ ListDivider:
 // --------------------------------------------
 
 Badge:
-  pad $xs.pad $sm.pad, rad $xs.rad
+  pad $xs.pad $s.pad, rad $xs.rad
   bg $control.bg, col $text.muted.col
   font-size $xs.font.size, weight 500
 
 BadgePrimary as Badge:
-  bg $primary.bg, col $on-primary.col
+  bg $accent.bg, col $on-primary.col
 
 BadgeSuccess as Badge:
   bg $success.bg, col $on-primary.col
@@ -202,7 +202,7 @@ BadgeDanger as Badge:
   bg $danger.bg, col $on-primary.col
 
 Tag:
-  pad $xs.pad $sm.pad, rad $full.rad
+  pad $xs.pad $s.pad, rad $full.rad
   bg $control.bg, col $text.muted.col
   font-size $xs.font.size
 
@@ -213,33 +213,33 @@ Tag:
 Avatar:
   size 32, rad $full.rad
   bg $control.bg, center
-  col $text.muted.col, font-size $sm.font.size, weight 500
+  col $text.muted.col, font-size $s.font.size, weight 500
 
 AvatarSmall as Avatar:
   size 24, font-size $xs.font.size
 
 AvatarLarge as Avatar:
-  size 48, font-size $lg.font.size
+  size 48, font-size $l.font.size
 
 // --------------------------------------------
 // Icons
 // --------------------------------------------
 
 IconSmall:
-  icon-size $sm.icon, col $text.muted.col
+  icon-size $s.icon, col $text.muted.col
 
 IconMedium:
-  icon-size $md.icon, col $text.col
+  icon-size $m.icon, col $text.col
 
 IconLarge:
-  icon-size $lg.icon, col $text.col
+  icon-size $l.icon, col $text.col
 
 // --------------------------------------------
 // Overlays
 // --------------------------------------------
 
 Modal:
-  pad $xl.pad, gap $lg.gap, rad $lg.rad
+  pad $xl.pad, gap $l.gap, rad $l.rad
   bg $elevated.bg
   min-width 400, max-width 600
 
@@ -247,13 +247,13 @@ ModalHeader:
   horizontal, spread, ver-center
 
 ModalBody:
-  gap $md.gap
+  gap $m.gap
 
 ModalFooter:
-  horizontal, gap $sm.gap, right
+  horizontal, gap $s.gap, right
 
 Tooltip:
-  pad $xs.pad $sm.pad, rad $xs.rad
+  pad $xs.pad $s.pad, rad $xs.rad
   bg $grey-700, col $text.col
   font-size $xs.font.size
 
@@ -262,8 +262,8 @@ Tooltip:
 // --------------------------------------------
 
 Alert:
-  horizontal, gap $md.gap, ver-center
-  pad $md.pad, rad $sm.rad
+  horizontal, gap $m.gap, ver-center
+  pad $m.pad, rad $s.rad
   bg $control.bg, col $text.col
 
 AlertSuccess as Alert:
@@ -282,12 +282,12 @@ AlertWarning as Alert:
 ProgressBar:
   height 4, rad $full.rad, bg $control.bg, width full
   Track:
-    height full, rad $full.rad, bg $primary.bg
+    height full, rad $full.rad, bg $accent.bg
     width 60%
 
 Spinner:
   size 20, bor 2 $control.bg
-  bor-top 2 $primary.bg, rad $full.rad
+  bor-top 2 $accent.bg, rad $full.rad
   animate spin 800
 
 // --------------------------------------------
@@ -295,7 +295,7 @@ Spinner:
 // --------------------------------------------
 
 EmptyState:
-  center, gap $md.gap, pad $xxl.pad
+  center, gap $m.gap, pad $xxl.pad
   col $text.muted.col
 
 // --------------------------------------------
@@ -303,7 +303,7 @@ EmptyState:
 // --------------------------------------------
 
 Skeleton:
-  bg $control.bg, rad $sm.rad
+  bg $control.bg, rad $s.rad
   animate pulse 1500
 
 SkeletonText as Skeleton:

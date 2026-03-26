@@ -13,10 +13,10 @@ App:
   horizontal, bg $app.bg, height full
 
   // Sidebar
-  Sidebar width 240, bg $surface.bg, pad $md.pad, gap $lg.gap
+  Sidebar width 240, bg $surface.bg, pad $m.pad, gap $l.gap
     // Logo
-    Row pad $sm.pad
-      Icon "hexagon", is $lg.icon, col $primary.bg
+    Row pad $s.pad
+      Icon "hexagon", is $l.icon, col $accent.bg
       Text "Acme Inc" weight 600
 
     // Navigation
@@ -47,19 +47,19 @@ App:
     Spacer
 
     // User
-    Row pad $sm.pad, gap $md.gap
+    Row pad $s.pad, gap $m.gap
       Avatar "JD"
       Column gap $xs.gap
-        Text "John Doe" font-size $sm.font.size
+        Text "John Doe" font-size $s.font.size
         TextSmall "john@acme.com"
 
   // Main Content
   Main vertical, width full, height full
 
     // Header
-    Header horizontal, spread, ver-center, pad $md.pad $lg.pad, bg $surface.bg
+    Header horizontal, spread, ver-center, pad $m.pad $l.pad, bg $surface.bg
       H3 "Dashboard"
-      Row gap $sm.gap
+      Row gap $s.gap
         Input width 250
           Placeholder "Search..."
         IconButton
@@ -67,52 +67,52 @@ App:
         Avatar "JD"
 
     // Content Area
-    Content pad $lg.pad, gap $lg.gap, scroll
+    Content pad $l.pad, gap $l.gap, scroll
 
       // Stats Row
-      StatsRow horizontal, gap $lg.gap
+      StatsRow horizontal, gap $l.gap
         StatCard
         StatCard
         StatCard
         StatCard
 
       // Main Grid
-      Row gap $lg.gap, top
+      Row gap $l.gap, top
         // Left Column
-        Column width full, gap $lg.gap
+        Column width full, gap $l.gap
 
           // Recent Activity
           Card
             CardHeader horizontal, spread, ver-center
               H4 "Recent Activity"
               GhostButton "View all"
-            ActivityList gap $sm.gap
+            ActivityList gap $s.gap
               ActivityItem
                 Avatar "AS" size 28
                 Column gap $xs.gap
-                  Text "Anna Schmidt" font-size $sm.font.size
+                  Text "Anna Schmidt" font-size $s.font.size
                   TextSmall "Created new project"
                 TextSmall "2m ago"
               ActivityItem
                 Avatar "MK" size 28
                 Column gap $xs.gap
-                  Text "Max Krause" font-size $sm.font.size
+                  Text "Max Krause" font-size $s.font.size
                   TextSmall "Completed task"
                 TextSmall "15m ago"
               ActivityItem
                 Avatar "LM" size 28
                 Column gap $xs.gap
-                  Text "Lisa Meier" font-size $sm.font.size
+                  Text "Lisa Meier" font-size $s.font.size
                   TextSmall "Added comment"
                 TextSmall "1h ago"
 
         // Right Column
-        Column width 320, gap $lg.gap
+        Column width 320, gap $l.gap
 
           // Quick Actions
           Card
             H4 "Quick Actions"
-            Column gap $sm.gap
+            Column gap $s.gap
               PrimaryButton width full
                 Icon "plus", is 16
                 Text "New Project"
@@ -128,7 +128,7 @@ App:
             CardHeader horizontal, spread, ver-center
               H4 "Tasks"
               Badge "5"
-            TaskList gap $sm.gap
+            TaskList gap $s.gap
               TaskItem
               TaskItem
               TaskItem
@@ -138,7 +138,7 @@ App:
 // --------------------------------------------
 
 StatCard as Card:
-  gap $sm.gap
+  gap $s.gap
   TextSmall "Total Revenue"
   H2 "$45,231"
   Row gap $xs.gap
@@ -148,12 +148,12 @@ StatCard as Card:
     TextSmall "vs last month"
 
 ActivityItem as ListItem:
-  gap $md.gap
+  gap $m.gap
 
 TaskItem as ListItem:
   Checkbox:
   Column gap $xs.gap, width full
-    Text "Review design specs" font-size $sm.font.size
+    Text "Review design specs" font-size $s.font.size
     TextSmall "Due tomorrow"
   IconButton
     Icon "more-horizontal", is 16
