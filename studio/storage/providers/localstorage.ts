@@ -19,9 +19,9 @@ const STORAGE_KEY = 'mirror-files'
 // =============================================================================
 
 const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `App bg $canvas.bg, pad $l.pad, gap $m.gap
-  Text "Welcome to Mirror", fs $xl.fs, weight bold, col $text.col
-  Text "Edit this code to get started", fs $m.fs, col $muted.col
+  'index.mir': `App bg $canvas.bg, pad $l, gap $m
+  Text "Welcome to Mirror", fs $xl, weight bold, col $text.col
+  Text "Edit this code to get started", fs $m, col $muted.col
 
   Card
     Text "Your first component", col $muted.col
@@ -72,14 +72,14 @@ $l.rad: 12`,
   'components.com': `// Component Definitions
 
 Button:
-  pad $s.pad $m.pad, bg $accent.bg, rad $s.rad, col white, cursor pointer
+  pad $s $m, bg $accent.bg, rad $s, col white, cursor pointer
   hover bg #2563eb
 
 Card:
-  bg $surface.bg, pad $m.pad, rad $m.rad, gap $s.gap
+  bg $surface.bg, pad $m, rad $m, gap $s
 
 Input:
-  pad $s.pad, bg $input.bg, rad $s.rad, bor 1 $border.boc
+  pad $s, bg $input.bg, rad $s, bor 1 $border.boc
   col $text.col
   focus bor 1 $focus.boc`
 }
