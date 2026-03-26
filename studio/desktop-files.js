@@ -310,7 +310,7 @@ export async function initDesktopFiles(options = {}) {
         console.error('[DesktopFiles] Unexpected provider type:', storage.providerType)
       }
     } catch (e) {
-      // Server error - show error, don't fallback to localStorage
+      // Server error - show error
       console.error('[DesktopFiles] Server error:', e.message)
       // Don't fallback to DemoProvider - just show the error
     }

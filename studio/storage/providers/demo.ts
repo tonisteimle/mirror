@@ -1,7 +1,7 @@
 /**
  * Demo Storage Provider
  *
- * In-Memory Storage mit localStorage-Persistenz.
+ * In-Memory Storage (per session).
  * Fallback wenn kein Tauri und kein Server verfügbar.
  */
 
@@ -70,14 +70,13 @@ export class DemoProvider implements StorageProvider {
   readonly supportsProjects = false
   readonly supportsNativeDialogs = false
 
-  private readonly STORAGE_KEY = 'mirror-demo-files'
   private files: Record<string, string>
   private projectOpen = false
+  private hasBeenModified = false
 
   constructor() {
-    // Aus localStorage laden oder Defaults verwenden
-    const saved = this.loadFromStorage()
-    this.files = saved ?? { ...DEFAULT_DEMO_FILES }
+    // Start with default demo files (in-memory only)
+    this.files = { ...DEFAULT_DEMO_FILES }
   }
 
   // ===========================================================================
@@ -221,7 +220,7 @@ export class DemoProvider implements StorageProvider {
 
   async writeFile(path: string, content: string): Promise<void> {
     this.files[path] = content
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async deleteFile(path: string): Promise<void> {
@@ -229,7 +228,7 @@ export class DemoProvider implements StorageProvider {
       throw new Error(`File not found: ${path}`)
     }
     delete this.files[path]
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async renameFile(oldPath: string, newPath: string): Promise<void> {
@@ -242,7 +241,7 @@ export class DemoProvider implements StorageProvider {
 
     this.files[newPath] = this.files[oldPath]
     delete this.files[oldPath]
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async copyFile(sourcePath: string, targetPath: string): Promise<void> {
@@ -254,7 +253,7 @@ export class DemoProvider implements StorageProvider {
     }
 
     this.files[targetPath] = this.files[sourcePath]
-    this.persist()
+    this.hasBeenModified = true
   }
 
   // ===========================================================================
@@ -266,7 +265,7 @@ export class DemoProvider implements StorageProvider {
     // Wir erstellen eine .gitkeep-ähnliche Markierung
     const markerPath = `${path}/.folder`
     this.files[markerPath] = ''
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async deleteFolder(path: string): Promise<void> {
@@ -277,7 +276,7 @@ export class DemoProvider implements StorageProvider {
         delete this.files[filePath]
       }
     }
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async renameFolder(oldPath: string, newPath: string): Promise<void> {
@@ -298,7 +297,7 @@ export class DemoProvider implements StorageProvider {
       delete this.files[oldFilePath]
     }
 
-    this.persist()
+    this.hasBeenModified = true
   }
 
   async moveItem(sourcePath: string, targetFolder: string): Promise<void> {
@@ -316,48 +315,21 @@ export class DemoProvider implements StorageProvider {
   }
 
   // ===========================================================================
-  // Persistenz
+  // State
   // ===========================================================================
-
-  private persist(): void {
-    try {
-      // Mirror-Dateien und .folder Marker speichern
-      const toSave: Record<string, string> = {}
-      for (const [path, content] of Object.entries(this.files)) {
-        if (isMirrorFile(path) || path.endsWith('/.folder')) {
-          toSave[path] = content
-        }
-      }
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave))
-    } catch (error) {
-      console.warn('[DemoProvider] Failed to persist to localStorage:', error)
-    }
-  }
-
-  private loadFromStorage(): Record<string, string> | null {
-    try {
-      const saved = localStorage.getItem(this.STORAGE_KEY)
-      if (saved) {
-        return JSON.parse(saved)
-      }
-    } catch (error) {
-      console.warn('[DemoProvider] Failed to load from localStorage:', error)
-    }
-    return null
-  }
 
   /**
    * Demo-Dateien auf Defaults zurücksetzen
    */
   resetToDefaults(): void {
     this.files = { ...DEFAULT_DEMO_FILES }
-    localStorage.removeItem(this.STORAGE_KEY)
+    this.hasBeenModified = false
   }
 
   /**
    * Prüft ob Demo-Daten modifiziert wurden
    */
   hasModifications(): boolean {
-    return localStorage.getItem(this.STORAGE_KEY) !== null
+    return this.hasBeenModified
   }
 }

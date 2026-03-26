@@ -1,8 +1,8 @@
 /**
  * Settings Store Tests
  *
- * Tests for the settings persistence system:
- * - localStorage persistence
+ * Tests for the settings system:
+ * - In-memory state
  * - Toggle functions
  * - Default values
  * - Event emission
@@ -12,30 +12,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { gridSettings, smartGuidesSettings, generalSettings } from '../settings'
 import { events } from '../events'
 
-// Create localStorage mock with internal storage access
-function createLocalStorageMock() {
-  const storage: Record<string, string> = {}
-
-  return {
-    storage,
-    mock: {
-      getItem: vi.fn((key: string) => storage[key] || null),
-      setItem: vi.fn((key: string, value: string) => { storage[key] = value }),
-      removeItem: vi.fn((key: string) => { delete storage[key] }),
-      clear: vi.fn(() => { Object.keys(storage).forEach(k => delete storage[k]) }),
-      get length() { return Object.keys(storage).length },
-      key: vi.fn((i: number) => Object.keys(storage)[i] || null),
-    }
-  }
-}
-
 describe('Settings Store', () => {
-  let mockData: ReturnType<typeof createLocalStorageMock>
-
   beforeEach(() => {
-    mockData = createLocalStorageMock()
-    // @ts-ignore
-    global.localStorage = mockData.mock
+    // Reset to defaults before each test
+    gridSettings.reset()
+    smartGuidesSettings.reset()
+    generalSettings.reset()
   })
 
   afterEach(() => {
@@ -44,7 +26,7 @@ describe('Settings Store', () => {
 
   describe('gridSettings', () => {
     describe('get()', () => {
-      it('returns default values when no storage', () => {
+      it('returns default values', () => {
         const settings = gridSettings.get()
 
         expect(settings.enabled).toBe(true)
@@ -53,57 +35,28 @@ describe('Settings Store', () => {
         expect(settings.color).toBe('#3B82F6')
       })
 
-      it('returns stored values', () => {
-        mockData.storage['mirror-studio-grid'] = JSON.stringify({
-          enabled: false,
-          size: 16,
-        })
-
+      it('returns a copy (not mutable)', () => {
         const settings = gridSettings.get()
+        settings.size = 999
 
-        expect(settings.enabled).toBe(false)
-        expect(settings.size).toBe(16)
-      })
-
-      it('merges stored values with defaults', () => {
-        mockData.storage['mirror-studio-grid'] = JSON.stringify({
-          enabled: false,
-        })
-
-        const settings = gridSettings.get()
-
-        expect(settings.enabled).toBe(false)
-        expect(settings.size).toBe(8) // Default
-        expect(settings.showVisual).toBe(false) // Default
-      })
-
-      it('handles invalid JSON gracefully', () => {
-        mockData.storage['mirror-studio-grid'] = 'invalid json'
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-        const settings = gridSettings.get()
-
-        expect(settings.enabled).toBe(true) // Default
-        expect(warnSpy).toHaveBeenCalled()
+        expect(gridSettings.get().size).toBe(8) // Unchanged
       })
     })
 
     describe('set()', () => {
-      it('saves settings to localStorage', () => {
+      it('updates settings', () => {
         gridSettings.set({ size: 12 })
 
-        expect(mockData.storage['mirror-studio-grid']).toBeDefined()
-        const saved = JSON.parse(mockData.storage['mirror-studio-grid'])
-        expect(saved.size).toBe(12)
+        expect(gridSettings.get().size).toBe(12)
       })
 
       it('merges with existing settings', () => {
         gridSettings.set({ size: 12 })
         gridSettings.set({ enabled: false })
 
-        const saved = JSON.parse(mockData.storage['mirror-studio-grid'])
-        expect(saved.size).toBe(12)
-        expect(saved.enabled).toBe(false)
+        const settings = gridSettings.get()
+        expect(settings.size).toBe(12)
+        expect(settings.enabled).toBe(false)
       })
 
       it('emits grid:changed event', () => {
@@ -201,13 +154,14 @@ describe('Settings Store', () => {
     })
 
     describe('reset()', () => {
-      it('removes from localStorage', () => {
-        gridSettings.set({ size: 16 })
-        expect(mockData.storage['mirror-studio-grid']).toBeDefined()
+      it('resets to defaults', () => {
+        gridSettings.set({ size: 16, enabled: false })
 
         gridSettings.reset()
 
-        expect(mockData.storage['mirror-studio-grid']).toBeUndefined()
+        const settings = gridSettings.get()
+        expect(settings.size).toBe(8)
+        expect(settings.enabled).toBe(true)
       })
 
       it('emits event with defaults', () => {
@@ -236,26 +190,13 @@ describe('Settings Store', () => {
         expect(settings.color).toBe('#FF6B6B')
         expect(settings.showDistances).toBe(true)
       })
-
-      it('returns stored values', () => {
-        mockData.storage['mirror-studio-smart-guides'] = JSON.stringify({
-          enabled: false,
-          threshold: 8,
-        })
-
-        const settings = smartGuidesSettings.get()
-
-        expect(settings.enabled).toBe(false)
-        expect(settings.threshold).toBe(8)
-      })
     })
 
     describe('set()', () => {
-      it('saves settings', () => {
+      it('updates settings', () => {
         smartGuidesSettings.set({ threshold: 10 })
 
-        const saved = JSON.parse(mockData.storage['mirror-studio-smart-guides'])
-        expect(saved.threshold).toBe(10)
+        expect(smartGuidesSettings.get().threshold).toBe(10)
       })
 
       it('emits smartGuides:changed event', () => {
@@ -289,6 +230,16 @@ describe('Settings Store', () => {
         expect(result2).toBe(true)
       })
     })
+
+    describe('reset()', () => {
+      it('resets to defaults', () => {
+        smartGuidesSettings.set({ threshold: 10 })
+
+        smartGuidesSettings.reset()
+
+        expect(smartGuidesSettings.get().threshold).toBe(4)
+      })
+    })
   })
 
   describe('generalSettings', () => {
@@ -300,26 +251,13 @@ describe('Settings Store', () => {
         expect(settings.moveStepShift).toBe(10)
         expect(settings.showPositionLabels).toBe(true)
       })
-
-      it('returns stored values', () => {
-        mockData.storage['mirror-studio-general'] = JSON.stringify({
-          moveStep: 2,
-          moveStepShift: 20,
-        })
-
-        const settings = generalSettings.get()
-
-        expect(settings.moveStep).toBe(2)
-        expect(settings.moveStepShift).toBe(20)
-      })
     })
 
     describe('set()', () => {
-      it('saves settings', () => {
+      it('updates settings', () => {
         generalSettings.set({ moveStep: 5 })
 
-        const saved = JSON.parse(mockData.storage['mirror-studio-general'])
-        expect(saved.moveStep).toBe(5)
+        expect(generalSettings.get().moveStep).toBe(5)
       })
 
       it('emits settings:changed event', () => {
@@ -334,28 +272,15 @@ describe('Settings Store', () => {
         unsub()
       })
     })
-  })
 
-  describe('localStorage error handling', () => {
-    it('handles setItem errors gracefully', () => {
-      mockData.mock.setItem.mockImplementation(() => {
-        throw new Error('Storage full')
+    describe('reset()', () => {
+      it('resets to defaults', () => {
+        generalSettings.set({ moveStep: 5 })
+
+        generalSettings.reset()
+
+        expect(generalSettings.get().moveStep).toBe(1)
       })
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-      // Should not throw
-      gridSettings.set({ size: 16 })
-
-      expect(warnSpy).toHaveBeenCalled()
-    })
-
-    it('handles removeItem errors gracefully', () => {
-      mockData.mock.removeItem.mockImplementation(() => {
-        throw new Error('Error')
-      })
-
-      // Should not throw
-      gridSettings.reset()
     })
   })
 })

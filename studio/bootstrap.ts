@@ -589,6 +589,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Create code executor for drag-drop operations
   const codeExecutor = createCodeExecutor({
     getSource: () => editorController.getContent(),
+    getResolvedSource: () => {
+      // Resolved source = prelude + current file (matches SourceMap positions)
+      const resolved = state.get().resolvedSource
+      return resolved || editorController.getContent()
+    },
+    getPreludeOffset: () => state.get().preludeOffset,
     getSourceMap: () => state.get().sourceMap,
     getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
     applyChange: (newSource: string) => {
@@ -720,7 +726,7 @@ function initializePanelToolbar(): void {
     property: document.getElementById('property-panel'),
   }
 
-  // Apply initial state from localStorage
+  // Apply initial state (defaults, then loaded from server after login)
   const visibility = state.get().panelVisibility
   for (const [panelKey, panel] of Object.entries(panelElements)) {
     const isVisible = visibility[panelKey as keyof typeof visibility]

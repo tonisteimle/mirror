@@ -11,8 +11,8 @@ import type { IconDefinition, IconCategory, IconCategoryName } from './types'
 export { ICONS, searchIcons, getIconsByCategory, getCategories }
 export type { IconDefinition, IconCategory, IconCategoryName }
 
-// Storage key for recent icons
-const RECENT_ICONS_KEY = 'mirror-recent-icons'
+// In-memory storage for recent icons (per session)
+let recentIconsMemory: string[] = []
 const MAX_RECENT_ICONS = 12
 
 export interface IconPickerConfig extends Partial<PickerConfig> {
@@ -107,24 +107,19 @@ export class IconPicker extends BasePicker {
   }
 
   /**
-   * Get recent icons from localStorage
+   * Get recent icons (in-memory, per session)
    */
   getRecentIcons(): string[] {
-    try {
-      const stored = localStorage.getItem(RECENT_ICONS_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
+    return [...recentIconsMemory]
   }
 
   /**
    * Add icon to recent list
    */
   addToRecent(iconName: string): void {
-    const recent = this.getRecentIcons().filter(i => i !== iconName)
-    recent.unshift(iconName)
-    localStorage.setItem(RECENT_ICONS_KEY, JSON.stringify(recent.slice(0, this.maxRecent)))
+    recentIconsMemory = recentIconsMemory.filter(i => i !== iconName)
+    recentIconsMemory.unshift(iconName)
+    recentIconsMemory = recentIconsMemory.slice(0, this.maxRecent)
 
     // Update recent section if visible
     this.updateRecentSection()
@@ -134,7 +129,7 @@ export class IconPicker extends BasePicker {
    * Clear recent icons
    */
   clearRecent(): void {
-    localStorage.removeItem(RECENT_ICONS_KEY)
+    recentIconsMemory = []
     this.updateRecentSection()
   }
 

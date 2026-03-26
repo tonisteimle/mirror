@@ -22,8 +22,14 @@ import { getComponentTemplate, getFileType } from '../../panels/components'
  * Dependencies for CodeExecutor
  */
 export interface CodeExecutorDependencies {
-  /** Get current source code */
+  /** Get current source code (editor only, without prelude) */
   getSource: () => string
+
+  /** Get resolved source (prelude + current file) - matches SourceMap positions */
+  getResolvedSource: () => string
+
+  /** Get prelude character offset (to extract editor content after modification) */
+  getPreludeOffset: () => number
 
   /** Get current source map */
   getSourceMap: () => SourceMap
@@ -55,14 +61,18 @@ export class CodeExecutor implements ICodeExecutor {
     console.log('[CodeExecutor] execute called', { source, result })
 
     try {
-      const currentSource = this.deps.getSource()
+      // Use resolved source (prelude + current file) to match SourceMap positions
+      const resolvedSource = this.deps.getResolvedSource()
+      const preludeOffset = this.deps.getPreludeOffset()
       const sourceMap = this.deps.getSourceMap()
 
       console.log('[CodeExecutor] sourceMap size:', sourceMap?.size ?? 'null')
       console.log('[CodeExecutor] targetId:', result.targetId)
       console.log('[CodeExecutor] placement:', result.placement)
+      console.log('[CodeExecutor] resolvedSource length:', resolvedSource.length)
+      console.log('[CodeExecutor] preludeOffset:', preludeOffset)
 
-      const modifier = this.deps.createModifier(currentSource, sourceMap)
+      const modifier = this.deps.createModifier(resolvedSource, sourceMap)
 
       let modResult
 
@@ -83,9 +93,14 @@ export class CodeExecutor implements ICodeExecutor {
         }
       }
 
-      // Apply the change
-      console.log('[CodeExecutor] Applying change, new source length:', modResult.newSource?.length)
-      this.deps.applyChange(modResult.newSource)
+      // Extract editor content (after prelude) from modified source
+      const newEditorContent = preludeOffset > 0
+        ? modResult.newSource.substring(preludeOffset)
+        : modResult.newSource
+
+      // Apply the change (editor content only)
+      console.log('[CodeExecutor] Applying change, new editor content length:', newEditorContent.length)
+      this.deps.applyChange(newEditorContent)
 
       // Trigger recompile (async, don't await)
       this.deps.recompile().catch(err => {
@@ -94,7 +109,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       return {
         success: true,
-        newSource: modResult.newSource,
+        newSource: newEditorContent,
       }
     } catch (err) {
       console.error('[CodeExecutor] Exception:', err)
@@ -117,9 +132,11 @@ export class CodeExecutor implements ICodeExecutor {
     }
 
     try {
-      const currentSource = this.deps.getSource()
+      // Use resolved source (prelude + current file) to match SourceMap positions
+      const resolvedSource = this.deps.getResolvedSource()
+      const preludeOffset = this.deps.getPreludeOffset()
       const sourceMap = this.deps.getSourceMap()
-      const modifier = this.deps.createModifier(currentSource, sourceMap)
+      const modifier = this.deps.createModifier(resolvedSource, sourceMap)
 
       let modResult
 
@@ -155,8 +172,13 @@ export class CodeExecutor implements ICodeExecutor {
         }
       }
 
-      // Apply the change
-      this.deps.applyChange(modResult.newSource)
+      // Extract editor content (after prelude) from modified source
+      const newEditorContent = preludeOffset > 0
+        ? modResult.newSource.substring(preludeOffset)
+        : modResult.newSource
+
+      // Apply the change (editor content only)
+      this.deps.applyChange(newEditorContent)
 
       // Trigger recompile
       this.deps.recompile().catch(err => {
@@ -165,7 +187,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       return {
         success: true,
-        newSource: modResult.newSource,
+        newSource: newEditorContent,
       }
     } catch (err) {
       return {

@@ -66,7 +66,7 @@ export interface Interaction {
 // ============================================
 
 export class MemoryStore {
-  private storageKey = 'mirror-agent-memory'
+  // Memory is in-memory only (per session)
   private entries: MemoryEntry[] = []
   private preferences: Map<string, Preference> = new Map()
   private patterns: Map<string, Pattern> = new Map()
@@ -384,40 +384,13 @@ export class MemoryStore {
   // ============================================
 
   private save(): void {
-    try {
-      const data = {
-        preferences: Array.from(this.preferences.entries()),
-        patterns: Array.from(this.patterns.entries()),
-        corrections: this.corrections,
-        snippets: Array.from(this.snippets.entries()),
-        recentInteractions: this.recentInteractions
-      }
-      localStorage.setItem(this.storageKey, JSON.stringify(data))
-    } catch (e) {
-      console.warn('Failed to save agent memory:', e)
-    }
+    // In-memory only - no persistence
+    // Could be extended to save to server for logged-in users
   }
 
   private load(): void {
-    try {
-      const data = localStorage.getItem(this.storageKey)
-      if (data) {
-        const parsed = JSON.parse(data)
-        this.preferences = new Map(parsed.preferences || [])
-        this.patterns = new Map(parsed.patterns || [])
-        this.corrections = (parsed.corrections || []).map((c: any) => ({
-          ...c,
-          timestamp: new Date(c.timestamp)
-        }))
-        this.snippets = new Map(parsed.snippets || [])
-        this.recentInteractions = (parsed.recentInteractions || []).map((i: any) => ({
-          ...i,
-          timestamp: new Date(i.timestamp)
-        }))
-      }
-    } catch (e) {
-      console.warn('Failed to load agent memory:', e)
-    }
+    // In-memory only - starts fresh each session
+    // Could be extended to load from server for logged-in users
   }
 
   /**
@@ -429,7 +402,6 @@ export class MemoryStore {
     this.corrections = []
     this.snippets.clear()
     this.recentInteractions = []
-    localStorage.removeItem(this.storageKey)
   }
 
   /**

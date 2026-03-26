@@ -97,7 +97,7 @@ function isLayoutFile(filename) {
 
 const API_BASE = 'api'  // Relative path for deployment flexibility
 const STORAGE_PREFIX = 'mirror-file-'
-const FILE_TYPES_KEY = 'mirror-file-types'
+// File types are stored in-memory only (per session)
 const PROJECT_KEY = 'mirror-current-project'
 const AUTH_KEY = 'mirror-auth-state'
 const STORAGE_VERSION_KEY = 'mirror-storage-version'
@@ -649,29 +649,19 @@ async function saveCurrentFile() {
   }
 }
 
-// Save file type (explicit user-selected type)
+// Save file type (explicit user-selected type) - in-memory only
 function saveFileType(filename, type) {
   fileTypes[filename] = type
-  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
 }
 
-// Load file types from localStorage
+// Load file types - no-op (in-memory only)
 function loadFileTypes() {
-  try {
-    const stored = localStorage.getItem(FILE_TYPES_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      Object.assign(fileTypes, parsed)
-    }
-  } catch (e) {
-    console.error('Failed to load file types:', e)
-  }
+  // File types are stored in-memory only (per session)
 }
 
 // Delete file type when file is deleted
 function deleteFileType(filename) {
   delete fileTypes[filename]
-  localStorage.setItem(FILE_TYPES_KEY, JSON.stringify(fileTypes))
 }
 
 // Get file type (stored or detected)
@@ -3136,7 +3126,7 @@ function debounce(fn, ms) {
   return debounced
 }
 
-// Save current file (debounced) - uses API or localStorage based on auth state
+// Save current file (debounced) - uses API for logged-in users
 const debouncedSave = debounce((code) => {
   saveFile(currentFile, code)
   // Update icon if content type changed
@@ -4149,7 +4139,7 @@ function initStudio() {
   try {
     // Get chat panel container (content area) and API key
     const chatPanelContainer = document.getElementById('chat-panel-content')
-    // API Key from localStorage (can be set via settings modal)
+    // API Key for AI agent
     const agentApiKey = getOpenrouterKey()
 
     initNewStudio({
@@ -6461,45 +6451,23 @@ window.resetCode = async () => {
 
 // ==========================================
 // Resizable Panel Dividers
-// Best practices: requestAnimationFrame, localStorage persistence, no visible lines
+// Best practices: requestAnimationFrame, no visible lines
 // ==========================================
 const sidebarDivider = document.getElementById('sidebar-divider')
 const editorDivider = document.getElementById('editor-divider')
 const componentsDivider = document.getElementById('components-divider')
 const container = document.querySelector('.container')
 
-const LAYOUT_STORAGE_KEY = 'mirror-panel-layout'
 const DIVIDER_WIDTH = 0  // Invisible dividers - hit area via CSS ::before
 const PROPERTY_PANEL_WIDTH = 320
 
-// Load saved layout or use defaults
+// Load default layout (in-memory only)
 function loadLayout() {
-  try {
-    const saved = localStorage.getItem(LAYOUT_STORAGE_KEY)
-    if (saved) {
-      const layout = JSON.parse(saved)
-      return {
-        sidebarWidth: layout.sidebarWidth ?? 240,
-        componentsWidth: layout.componentsWidth ?? 160,
-        editorRatio: layout.editorRatio ?? 0.5
-      }
-    }
-  } catch (e) {
-    console.warn('Failed to load panel layout:', e)
-  }
   return { sidebarWidth: 240, componentsWidth: 160, editorRatio: 0.5 }
 }
 
 function saveLayout() {
-  try {
-    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({
-      sidebarWidth: layout.sidebarWidth,
-      componentsWidth: layout.componentsWidth,
-      editorRatio: layout.editorRatio
-    }))
-  } catch (e) {
-    // Ignore storage errors
-  }
+  // Layout is in-memory only (per session)
 }
 
 // DISABLED: Panel resizing - using fixed CSS grid layout

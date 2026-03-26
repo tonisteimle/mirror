@@ -39,34 +39,13 @@ class MockDOMRect implements DOMRect {
   }
 }
 
-// Create localStorage mock
-function createLocalStorageMock() {
-  const storage: Record<string, string> = {}
-  return {
-    storage,
-    mock: {
-      getItem: vi.fn((key: string) => storage[key] || null),
-      setItem: vi.fn((key: string, value: string) => { storage[key] = value }),
-      removeItem: vi.fn((key: string) => { delete storage[key] }),
-      clear: vi.fn(() => { Object.keys(storage).forEach(k => delete storage[k]) }),
-      get length() { return Object.keys(storage).length },
-      key: vi.fn((i: number) => Object.keys(storage)[i] || null),
-    }
-  }
-}
-
 describe('GuideCalculator', () => {
   let calculator: GuideCalculator
   let containerRect: DOMRect
-  let mockData: ReturnType<typeof createLocalStorageMock>
 
   beforeEach(() => {
-    // Mock localStorage
-    mockData = createLocalStorageMock()
-    // @ts-ignore
-    global.localStorage = mockData.mock
-
-    // Enable smart guides
+    // Reset and enable smart guides
+    smartGuidesSettings.reset()
     smartGuidesSettings.set({ enabled: true, threshold: 4 })
 
     calculator = new GuideCalculator(4)
