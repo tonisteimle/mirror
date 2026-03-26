@@ -553,56 +553,14 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studio.drawManager = drawManager
 
   // ============================================
-  // Drag & Drop System - SIMPLIFIED
+  // Drag & Drop System - Webflow Style
   // ============================================
   //
-  // All component drops insert at the current editor cursor position.
-  // This is much simpler than calculating drop targets in the preview.
-  // User workflow: 1) Position cursor in editor 2) Drag component 3) Drop anywhere
-  //
-  // The preview-based DragDropSystem is kept for element MOVES (reordering),
-  // but new component drops always use the cursor-based approach.
+  // Handles both NEW components (from palette) and MOVING elements (in preview).
+  // Uses line indicators to show insertion point.
+  // No absolute positioning, no 9-zone system.
 
-  // Global drop handler for preview area - redirects to cursor-based insertion
-  const handlePreviewDrop = (event: DragEvent) => {
-    // Only handle component panel drops
-    if (!event.dataTransfer?.types.includes('application/mirror-component')) {
-      return
-    }
-
-    event.preventDefault()
-    event.stopPropagation()
-
-    const dataStr = event.dataTransfer.getData('application/mirror-component')
-    if (!dataStr) return
-
-    try {
-      const dragData = JSON.parse(dataStr)
-
-      // Generate component code and insert at cursor
-      const code = generateComponentCodeFromDragData(dragData)
-      if (studio.editor) {
-        studio.editor.insertAtCursor('\n' + code)
-        console.log('[DragDrop] Component inserted at cursor:', dragData.componentName)
-      }
-    } catch (err) {
-      console.error('[DragDrop] Failed to parse drop data:', err)
-    }
-  }
-
-  // Allow drop on preview by preventing default dragover
-  const handlePreviewDragOver = (event: DragEvent) => {
-    if (event.dataTransfer?.types.includes('application/mirror-component')) {
-      event.preventDefault()
-      event.dataTransfer.dropEffect = 'copy'
-    }
-  }
-
-  // Attach handlers to preview container
-  config.previewContainer.addEventListener('drop', handlePreviewDrop)
-  config.previewContainer.addEventListener('dragover', handlePreviewDragOver)
-
-  // Create code executor for element moves (kept for compatibility)
+  // Create code executor for drag-drop operations
   const codeExecutor = createCodeExecutor({
     getSource: () => editorController.getContent(),
     getSourceMap: () => state.get().sourceMap,
@@ -622,34 +580,30 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     },
   })
 
-  // Initialize drag-drop system (for element moves within preview)
+  // Initialize drag-drop system (Webflow-style)
   const dragDropSystem = createDragDropSystem({
     container: config.previewContainer,
     codeExecutor,
     enableAltDuplicate: true,
     onDragStart: (source) => {
-      // Only log canvas drags (element moves), not palette drags
       if (source.type === 'canvas') {
-        console.log('[DragDrop] Element move started:', source.nodeId)
+        console.log('[DragDrop] Move started:', source.nodeId)
+      } else {
+        console.log('[DragDrop] Insert started:', source.componentName)
       }
     },
     onDrop: (source, result) => {
-      // Only handle canvas drops (element moves)
-      if (source.type === 'canvas') {
-        console.log('[DragDrop] Element moved:', result.placement, result.targetId)
-        if (result.target?.nodeId) {
-          actions.setDeferredSelection({
-            type: 'nodeId',
-            nodeId: result.target.nodeId,
-            origin: 'preview',
-          })
-        }
+      console.log('[DragDrop] Drop:', source.type, result.placement, result.targetId)
+      if (result.target?.nodeId) {
+        actions.setDeferredSelection({
+          type: 'nodeId',
+          nodeId: result.target.nodeId,
+          origin: 'preview',
+        })
       }
     },
     onDragEnd: (source, success) => {
-      if (source.type === 'canvas') {
-        console.log('[DragDrop] Element move ended:', success ? 'success' : 'cancelled')
-      }
+      console.log('[DragDrop] End:', success ? 'success' : 'cancelled')
     },
   })
 
@@ -669,7 +623,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
   )
 
-  console.log('[Studio] Simplified drag-drop initialized (cursor-based insertion)')
+  console.log('[Studio] Drag-drop initialized (Webflow-style)')
 
   // ============================================
   // Component Event Handlers

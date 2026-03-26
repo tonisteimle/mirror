@@ -12,6 +12,7 @@ export { FlexWithChildrenStrategy, calculateInsertionLineRect } from './flex-wit
 export { EmptyFlexStrategy, detectZone, getZoneRect, zoneToDSLProperties } from './empty-flex'
 export { PositionedStrategy, getDefaultComponentSize } from './positioned'
 export { NonContainerStrategy } from './non-container'
+export { SimpleInsideStrategy } from './simple-inside'
 
 // Registry
-export { StrategyRegistry, createDefaultRegistry } from './registry'
+export { StrategyRegistry, createDefaultRegistry, createWebflowRegistry } from './registry'

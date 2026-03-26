@@ -65,3 +65,27 @@ export function createDefaultRegistry(): StrategyRegistry {
 
   return registry
 }
+
+/**
+ * Create a Webflow-style registry (simplified)
+ *
+ * No absolute positioning, no 9-zone system.
+ * Just: insert between siblings OR insert inside container.
+ */
+export function createWebflowRegistry(): StrategyRegistry {
+  const { FlexWithChildrenStrategy } = require('./flex-with-children')
+  const { SimpleInsideStrategy } = require('./simple-inside')
+  const { NonContainerStrategy } = require('./non-container')
+
+  const registry = new StrategyRegistry()
+
+  // Order matters:
+  // 1. FlexWithChildren - containers with children (insert between siblings)
+  // 2. SimpleInside - empty containers (insert as child)
+  // 3. NonContainer - leaf elements (insert before/after as sibling)
+  registry.register(new FlexWithChildrenStrategy())
+  registry.register(new SimpleInsideStrategy())
+  registry.register(new NonContainerStrategy())
+
+  return registry
+}

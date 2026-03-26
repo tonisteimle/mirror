@@ -24,14 +24,13 @@ import type {
   DragState,
 } from './types'
 
-import { StrategyRegistry, createDefaultRegistry } from '../strategies/registry'
+import { StrategyRegistry, createWebflowRegistry } from '../strategies/registry'
 import { VisualSystem, createVisualSystem } from '../visual/system'
 import {
   detectTarget,
   findClosestTarget,
   getChildRects,
   getContainerRect,
-  isPositionedContainer,
 } from './target-detector'
 
 const DEFAULT_NODE_ID_ATTR = 'data-mirror-id'
@@ -50,7 +49,7 @@ export class DragDropSystem implements IDragDropSystem {
   constructor(config: DragDropConfig) {
     this.config = config
     this.nodeIdAttr = config.nodeIdAttribute ?? DEFAULT_NODE_ID_ATTR
-    this.registry = createDefaultRegistry()
+    this.registry = createWebflowRegistry()
     this.visual = createVisualSystem(config.container)
     this.state = {
       isActive: false,
@@ -303,13 +302,7 @@ export class DragDropSystem implements IDragDropSystem {
       return
     }
 
-    // Check if target is positioned container
-    if (isPositionedContainer(target.element)) {
-      target.layoutType = 'positioned'
-      target.isPositioned = true
-    }
-
-    // Find strategy for this target
+    // Find strategy for this target (Webflow-style: no positioned container handling)
     const strategy = this.registry.findStrategy(target)
     if (!strategy) {
       this.visual.hideIndicator()
@@ -336,16 +329,10 @@ export class DragDropSystem implements IDragDropSystem {
     this.state.currentTarget = target
     this.state.currentResult = dropResult
 
-    // Get visual hint and show indicator
+    // Get visual hint and show indicator (Webflow-style: no zone overlay)
     const visualHint = strategy.getVisualHint(calcResult, childRects, domRectToRect(containerRect))
     this.visual.showIndicator(visualHint)
-
-    // Show zone overlay for empty flex containers
-    if (target.layoutType === 'flex' && !target.hasChildren) {
-      this.visual.showZoneOverlay(domRectToRect(containerRect), calcResult.zone)
-    } else {
-      this.visual.hideZoneOverlay()
-    }
+    this.visual.hideZoneOverlay()
   }
 
   /**
