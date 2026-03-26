@@ -665,10 +665,10 @@ describe('CodeModifier', () => {
       })
 
       const modifier = new CodeModifier(source, sourceMap)
-      const result = modifier.updateProperty('node-1', 'bg', '$primary.bg')
+      const result = modifier.updateProperty('node-1', 'bg', '$accent.bg')
 
       expect(result.success).toBe(true)
-      expect(result.newSource).toBe(`rect w 100, h 200, bg $primary.bg`)
+      expect(result.newSource).toBe(`rect w 100, h 200, bg $accent.bg`)
     })
 
     it('updates property with alias on lowercase component', () => {

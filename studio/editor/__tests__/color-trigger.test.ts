@@ -121,7 +121,7 @@ describe('Color Trigger', () => {
     it('should match token definitions', () => {
       const pattern = getColorContextPattern()
 
-      expect(pattern.test('$primary.bg: ')).toBe(true)
+      expect(pattern.test('$accent.bg: ')).toBe(true)
       expect(pattern.test('$name.col: ')).toBe(true)
     })
 

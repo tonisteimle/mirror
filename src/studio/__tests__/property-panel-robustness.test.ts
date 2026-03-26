@@ -9,7 +9,7 @@
  * 3. Multi-value properties (pad 16 12, bor 1 solid #333)
  * 4. Directional properties (pad left 16, rad tl 8)
  * 5. Boolean properties (hor, ver, center, wrap)
- * 6. Token references ($primary.bg, $sm.pad)
+ * 6. Token references ($accent.bg, $s.pad)
  * 7. Component definitions vs instances
  * 8. Inherited properties from parent components
  * 9. Instance overrides
@@ -431,18 +431,18 @@ describe('Token References', () => {
   })
 
   it('recognizes namespaced token', () => {
-    const ctx = createContext('Box bg $primary.bg')
+    const ctx = createContext('Box bg $accent.bg')
     const nodeId = getFirstNodeId(ctx)!
     const result = ctx.extractor.getProperties(nodeId)!
 
     const prop = findProp(result.allProperties, 'bg')
     expect(prop).toBeDefined()
     expect(prop.isToken).toBe(true)
-    expect(prop.value).toBe('$primary.bg')
+    expect(prop.value).toBe('$accent.bg')
   })
 
   it('recognizes spacing token', () => {
-    const ctx = createContext('Box pad $sm.pad')
+    const ctx = createContext('Box pad $s.pad')
     const nodeId = getFirstNodeId(ctx)!
     const result = ctx.extractor.getProperties(nodeId)!
 

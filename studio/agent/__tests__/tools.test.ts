@@ -23,7 +23,7 @@ const SAMPLE_CODE = `Box ver gap 16 pad 24 bg #f5f5f5
     Text "Item 2"`
 
 const SAMPLE_TOKENS = {
-  '$primary.bg': '#007bff',
+  '$accent.bg': '#007bff',
   '$primary.col': '#fff',
   '$surface.bg': '#f5f5f5',
   '$text.primary': '#333'

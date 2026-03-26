@@ -216,7 +216,7 @@ describe('Property Type Detection', () => {
 
 describe('Token Detection', () => {
   it('should identify token values', () => {
-    const { ast, sourceMap } = createTestContext('Box bg $primary.bg')
+    const { ast, sourceMap } = createTestContext('Box bg $accent.bg')
     const extractor = new PropertyExtractor(ast, sourceMap, { showAllProperties: false })
 
     const nodeIds = sourceMap.getAllNodeIds()

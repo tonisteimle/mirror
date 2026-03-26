@@ -99,37 +99,37 @@ describe('extractTokens()', () => {
 
   test('extracts simple tokens', () => {
     const source = `
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover.bg: #2563EB
 $surface.bg: #1a1a23
 `
     const tokens = extractTokens(source)
 
     expect(tokens).toHaveLength(3)
-    expect(tokens[0].name).toBe('$primary.bg')
+    expect(tokens[0].name).toBe('$accent.bg')
     expect(tokens[0].value).toBe('#3B82F6')
     expect(tokens[0].category).toBe('color')
   })
 
   test('extracts spacing tokens', () => {
     const source = `
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
-$md.gap: 12
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$m.gap: 12
 `
     const tokens = extractTokens(source)
 
     expect(tokens).toHaveLength(4)
     expect(tokens[0].category).toBe('spacing')
-    expect(tokens[3].name).toBe('$md.gap')
+    expect(tokens[3].name).toBe('$m.gap')
   })
 
   test('extracts radius tokens', () => {
     const source = `
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 12
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 `
     const tokens = extractTokens(source)
 
@@ -222,9 +222,9 @@ describe('buildContext()', () => {
 
   test('builds complete context', () => {
     const source = `
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 
-Card: bg $primary.bg, pad 16
+Card: bg $accent.bg, pad 16
   Title:
   Content:
 `
@@ -272,8 +272,8 @@ describe('formatContextForPrompt()', () => {
     const context = {
       components: [],
       tokens: [
-        { name: '$primary.bg', value: '#3B82F6', category: 'color' as const },
-        { name: '$md.pad', value: '8', category: 'spacing' as const }
+        { name: '$accent.bg', value: '#3B82F6', category: 'color' as const },
+        { name: '$m.pad', value: '8', category: 'spacing' as const }
       ]
     }
 
@@ -281,9 +281,9 @@ describe('formatContextForPrompt()', () => {
 
     expect(prompt).toContain('## Design Tokens')
     expect(prompt).toContain('### Color')
-    expect(prompt).toContain('$primary.bg: #3B82F6')
+    expect(prompt).toContain('$accent.bg: #3B82F6')
     expect(prompt).toContain('### Spacing')
-    expect(prompt).toContain('$md.pad: 8')
+    expect(prompt).toContain('$m.pad: 8')
   })
 
   test('formats cursor context', () => {
@@ -324,7 +324,7 @@ describe('buildSystemPrompt()', () => {
         { name: 'Card', props: ['bg #333'], slots: [] }
       ],
       tokens: [
-        { name: '$primary.bg', value: '#3B82F6', category: 'color' as const }
+        { name: '$accent.bg', value: '#3B82F6', category: 'color' as const }
       ]
     }
 
@@ -334,7 +334,7 @@ describe('buildSystemPrompt()', () => {
     expect(prompt).toContain('# Project Context')
     expect(prompt).toContain('## Available Components')
     expect(prompt).toContain('Card:')
-    expect(prompt).toContain('$primary.bg: #3B82F6')
+    expect(prompt).toContain('$accent.bg: #3B82F6')
   })
 
   test('reminds to reuse components', () => {
@@ -464,28 +464,28 @@ $grey-900: #18181B
 $grey-800: #27272A
 $grey-700: #3F3F46
 
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover.bg: #2563EB
 $surface.bg: $grey-800
 $card.bg: $grey-700
 
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 
-$sm.rad: 4
-$md.rad: 8
+$s.rad: 4
+$m.rad: 8
 
 // Components
-Card: bg $card.bg, pad $lg.pad, rad $md.rad, shadow md
+Card: bg $card.bg, pad $l.pad, rad $m.rad, shadow md
   Title:
   Content:
   Footer:
 
-Button: pad $md.pad $lg.pad, rad $sm.rad, cursor pointer
+Button: pad $m.pad $l.pad, rad $s.rad, cursor pointer
   state hover bg $primary.hover.bg
 
-PrimaryButton as Button: bg $primary.bg, col white
+PrimaryButton as Button: bg $accent.bg, col white
 
 IconButton as Button: center, w 32, h 32, rad 16
 
@@ -507,8 +507,8 @@ Card
 
     // Check tokens
     expect(context.tokens.length).toBeGreaterThanOrEqual(5)
-    expect(context.tokens.find(t => t.name === '$primary.bg')).toBeDefined()
-    expect(context.tokens.find(t => t.name === '$lg.pad')).toBeDefined()
+    expect(context.tokens.find(t => t.name === '$accent.bg')).toBeDefined()
+    expect(context.tokens.find(t => t.name === '$l.pad')).toBeDefined()
 
     // Check cursor context
     expect(context.cursor).toBeDefined()
@@ -516,7 +516,7 @@ Card
     // Generate prompt
     const prompt = buildSystemPrompt(context)
     expect(prompt).toContain('Card:')
-    expect(prompt).toContain('$primary.bg')
+    expect(prompt).toContain('$accent.bg')
     expect(prompt).toContain('# Project Context')
   })
 

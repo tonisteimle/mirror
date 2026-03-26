@@ -36,7 +36,7 @@ describe('Trigger Integration', () => {
   describe('registerAllTriggers', () => {
     it('should register all four trigger types', () => {
       const files = {
-        'theme.txt': '$primary.bg: #007bff\n$base.pad: 16',
+        'theme.txt': '$accent.bg: #007bff\n$base.pad: 16',
       }
 
       registerAllTriggers({
@@ -86,7 +86,7 @@ describe('Trigger Integration', () => {
     beforeEach(() => {
       registerAllTriggers({
         getFiles: () => ({
-          'tokens.txt': '$primary.bg: #007bff\n$base.pad: 16',
+          'tokens.txt': '$accent.bg: #007bff\n$base.pad: 16',
         }),
         componentPrimitives: new Map([['Logo', 'icon']]),
       })

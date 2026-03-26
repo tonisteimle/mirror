@@ -44,7 +44,7 @@ describe('TokenPicker', () => {
     })
 
     sampleTokens = [
-      { name: '$primary.bg', value: '#007bff', type: 'color', category: 'primary' },
+      { name: '$accent.bg', value: '#007bff', type: 'color', category: 'primary' },
       { name: '$primary.col', value: '#ffffff', type: 'color', category: 'primary' },
       { name: '$secondary.bg', value: '#6c757d', type: 'color', category: 'secondary' },
       { name: '$base.pad', value: '16', type: 'spacing', category: 'base' },
@@ -149,7 +149,7 @@ describe('TokenPicker', () => {
     it('should show token name', () => {
       picker.show(anchor)
       const names = document.querySelectorAll('.token-picker-name')
-      expect(names[0].textContent).toBe('$primary.bg')
+      expect(names[0].textContent).toBe('$accent.bg')
     })
 
     it('should show token value', () => {
@@ -167,7 +167,7 @@ describe('TokenPicker', () => {
     it('should set data-token attribute', () => {
       picker.show(anchor)
       const item = document.querySelector('.token-picker-item') as HTMLElement
-      expect(item.getAttribute('data-token')).toBe('$primary.bg')
+      expect(item.getAttribute('data-token')).toBe('$accent.bg')
     })
 
     it('should set role attribute', () => {
@@ -190,7 +190,7 @@ describe('TokenPicker', () => {
       const item = document.querySelector('.token-picker-item') as HTMLElement
       item.click()
 
-      expect(onSelect).toHaveBeenCalledWith('$primary.bg')
+      expect(onSelect).toHaveBeenCalledWith('$accent.bg')
     })
 
     it('should close picker after selection (default)', () => {
@@ -323,7 +323,7 @@ describe('TokenPicker', () => {
 
     it('should accept token name', () => {
       picker = new TokenPicker({ tokens: sampleTokens }, { onSelect })
-      picker.setValue('$primary.bg')
+      picker.setValue('$accent.bg')
       // No error thrown
     })
   })
@@ -397,11 +397,11 @@ describe('TokenPicker', () => {
 
 describe('parseTokens', () => {
   it('should parse simple token definition', () => {
-    const source = '$primary.bg: #007bff'
+    const source = '$accent.bg: #007bff'
     const tokens = parseTokens(source)
 
     expect(tokens).toHaveLength(1)
-    expect(tokens[0].name).toBe('$primary.bg')
+    expect(tokens[0].name).toBe('$accent.bg')
     expect(tokens[0].value).toBe('#007bff')
     expect(tokens[0].type).toBe('color')
     expect(tokens[0].category).toBe('primary')
@@ -409,7 +409,7 @@ describe('parseTokens', () => {
 
   it('should parse multiple tokens', () => {
     const source = `
-$primary.bg: #007bff
+$accent.bg: #007bff
 $primary.col: #ffffff
 $base.pad: 16
     `
@@ -504,20 +504,20 @@ describe('getTokenTypesForProperty', () => {
 describe('parseTokensFromFiles', () => {
   it('should parse tokens from multiple files', () => {
     const files = {
-      'theme.txt': '$primary.bg: #007bff\n$primary.col: #ffffff',
+      'theme.txt': '$accent.bg: #007bff\n$primary.col: #ffffff',
       'spacing.txt': '$base.pad: 16\n$base.gap: 8',
     }
     const tokens = parseTokensFromFiles(files)
 
     expect(tokens).toHaveLength(4)
-    expect(tokens.map(t => t.name)).toContain('$primary.bg')
+    expect(tokens.map(t => t.name)).toContain('$accent.bg')
     expect(tokens.map(t => t.name)).toContain('$base.pad')
   })
 
   it('should deduplicate tokens by name', () => {
     const files = {
-      'file1.txt': '$primary.bg: #007bff',
-      'file2.txt': '$primary.bg: #ff0000', // Same name, different value
+      'file1.txt': '$accent.bg: #007bff',
+      'file2.txt': '$accent.bg: #ff0000', // Same name, different value
     }
     const tokens = parseTokensFromFiles(files)
 
@@ -528,7 +528,7 @@ describe('parseTokensFromFiles', () => {
   it('should handle empty files', () => {
     const files = {
       'empty.txt': '',
-      'valid.txt': '$primary.bg: #007bff',
+      'valid.txt': '$accent.bg: #007bff',
     }
     const tokens = parseTokensFromFiles(files)
 
@@ -537,7 +537,7 @@ describe('parseTokensFromFiles', () => {
 
   it('should skip null/undefined content', () => {
     const files = {
-      'valid.txt': '$primary.bg: #007bff',
+      'valid.txt': '$accent.bg: #007bff',
       'null.txt': null as any,
       'undefined.txt': undefined as any,
     }
@@ -549,7 +549,7 @@ describe('parseTokensFromFiles', () => {
 
 describe('filterTokensBySuffix', () => {
   const tokens: TokenDefinition[] = [
-    { name: '$primary.bg', value: '#007bff', type: 'color' },
+    { name: '$accent.bg', value: '#007bff', type: 'color' },
     { name: '$primary.col', value: '#ffffff', type: 'color' },
     { name: '$base.pad', value: '16', type: 'spacing' },
   ]
@@ -557,7 +557,7 @@ describe('filterTokensBySuffix', () => {
   it('should filter by suffix', () => {
     const filtered = filterTokensBySuffix(tokens, '.bg')
     expect(filtered).toHaveLength(1)
-    expect(filtered[0].name).toBe('$primary.bg')
+    expect(filtered[0].name).toBe('$accent.bg')
   })
 
   it('should return all if no suffix', () => {
@@ -568,7 +568,7 @@ describe('filterTokensBySuffix', () => {
 
 describe('filterTokensByType', () => {
   const tokens: TokenDefinition[] = [
-    { name: '$primary.bg', value: '#007bff', type: 'color' },
+    { name: '$accent.bg', value: '#007bff', type: 'color' },
     { name: '$primary.col', value: '#ffffff', type: 'color' },
     { name: '$base.pad', value: '16', type: 'spacing' },
   ]
@@ -591,7 +591,7 @@ describe('filterTokensByType', () => {
 
 describe('filterTokensBySearch', () => {
   const tokens: TokenDefinition[] = [
-    { name: '$primary.bg', value: '#007bff', type: 'color', category: 'theme' },
+    { name: '$accent.bg', value: '#007bff', type: 'color', category: 'theme' },
     { name: '$secondary.bg', value: '#6c757d', type: 'color', category: 'theme' },
     { name: '$base.pad', value: '16', type: 'spacing', category: 'layout' },
   ]
@@ -599,7 +599,7 @@ describe('filterTokensBySearch', () => {
   it('should filter by name', () => {
     const filtered = filterTokensBySearch(tokens, 'primary')
     expect(filtered).toHaveLength(1)
-    expect(filtered[0].name).toBe('$primary.bg')
+    expect(filtered[0].name).toBe('$accent.bg')
   })
 
   it('should filter by value', () => {
@@ -634,7 +634,7 @@ describe('parseTokens - enhanced', () => {
   })
 
   it('should strip inline comments', () => {
-    const source = '$primary.bg: #007bff // main background'
+    const source = '$accent.bg: #007bff // main background'
     const tokens = parseTokens(source)
 
     expect(tokens).toHaveLength(1)
@@ -644,7 +644,7 @@ describe('parseTokens - enhanced', () => {
   it('should skip comment lines', () => {
     const source = `
 // This is a comment
-$primary.bg: #007bff
+$accent.bg: #007bff
 # Another comment format
 $secondary.bg: #6c757d
     `

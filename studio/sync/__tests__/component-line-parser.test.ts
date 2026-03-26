@@ -55,7 +55,7 @@ describe('extractComponentFromLine', () => {
     })
 
     it('returns null for token definitions', () => {
-      expect(extractComponentFromLine('$primary.bg: #333')).toBeNull()
+      expect(extractComponentFromLine('$accent.bg: #333')).toBeNull()
     })
 
     it('returns null for section headers', () => {

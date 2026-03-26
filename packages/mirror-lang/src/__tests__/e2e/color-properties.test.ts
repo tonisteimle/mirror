@@ -207,11 +207,11 @@ Card
 
   it('semantic tokens', () => {
     const input = `
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.col: #fff
 
 Button as button:
-  bg $primary.bg
+  bg $accent.bg
   col $primary.col
 
 Button "Primary"

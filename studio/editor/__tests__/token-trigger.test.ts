@@ -83,7 +83,7 @@ describe('Token Trigger', () => {
   describe('extractAllTokens', () => {
     it('should extract tokens from single file', () => {
       const files = {
-        'theme.txt': `$primary.bg: #007bff
+        'theme.txt': `$accent.bg: #007bff
 $primary.col: #ffffff
 $base.pad: 16`,
       }
@@ -91,12 +91,12 @@ $base.pad: 16`,
       const tokens = extractAllTokens(files)
 
       expect(tokens).toHaveLength(3)
-      expect(tokens.map(t => t.name)).toContain('$primary.bg')
+      expect(tokens.map(t => t.name)).toContain('$accent.bg')
     })
 
     it('should extract tokens from multiple files', () => {
       const files = {
-        'colors.txt': '$primary.bg: #007bff',
+        'colors.txt': '$accent.bg: #007bff',
         'spacing.txt': '$base.pad: 16',
       }
 
@@ -107,8 +107,8 @@ $base.pad: 16`,
 
     it('should deduplicate tokens by name', () => {
       const files = {
-        'file1.txt': '$primary.bg: #007bff',
-        'file2.txt': '$primary.bg: #ff0000',
+        'file1.txt': '$accent.bg: #007bff',
+        'file2.txt': '$accent.bg: #ff0000',
       }
 
       const tokens = extractAllTokens(files)

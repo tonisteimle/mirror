@@ -84,8 +84,8 @@ describe('parseLine', () => {
     })
 
     it('should parse token values', () => {
-      const result = parseLine('Box bg $primary.bg')
-      expect(result.properties[0].value).toBe('$primary.bg')
+      const result = parseLine('Box bg $accent.bg')
+      expect(result.properties[0].value).toBe('$accent.bg')
     })
 
     it('should parse numeric values', () => {
@@ -449,7 +449,7 @@ describe('isMultiValueProperty', () => {
 
 describe('Complex Scenarios', () => {
   it('should handle full component definition', () => {
-    const line = '  PrimaryButton as Button: bg $primary.bg, col #FFF, pad 12 24, rad 8'
+    const line = '  PrimaryButton as Button: bg $accent.bg, col #FFF, pad 12 24, rad 8'
     const parsed = parseLine(line)
 
     expect(parsed.indent).toBe('  ')

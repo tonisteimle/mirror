@@ -16,13 +16,13 @@ import { JSDOM } from 'jsdom'
 // =============================================================================
 
 interface SpacingToken {
-  name: string      // e.g., "sm", "md", "lg"
-  fullName: string  // e.g., "sm.pad", "md.rad"
+  name: string      // e.g., "s", "m", "l"
+  fullName: string  // e.g., "s.pad", "m.rad"
   value: string     // e.g., "4", "8"
 }
 
 interface ColorToken {
-  name: string      // e.g., "primary.bg", "text.col"
+  name: string      // e.g., "accent.bg", "text.col"
   value: string     // e.g., "#3B82F6"
 }
 
@@ -33,7 +33,7 @@ function extractSpacingTokens(source: string, propType: string): SpacingToken[] 
   const lines = source.split('\n')
   const tokenMap = new Map<string, SpacingToken>()
 
-  // Matches: $name.propType: value (e.g., "$sm.pad: 4", "$md.rad: 8")
+  // Matches: $name.propType: value (e.g., "$s.pad: 4", "$m.rad: 8")
   const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${propType}\\s*:\\s*(\\d+)$`)
 
   for (const line of lines) {
@@ -106,52 +106,52 @@ function resolveTokenValue(source: string, tokenRef: string): string | null {
 describe('Spacing Token Extraction', () => {
   it('extracts padding tokens', () => {
     const source = `
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 `
     const tokens = extractSpacingTokens(source, 'pad')
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'sm')?.value).toBe('4')
-    expect(tokens.find(t => t.name === 'md')?.value).toBe('8')
-    expect(tokens.find(t => t.name === 'lg')?.value).toBe('16')
+    expect(tokens.find(t => t.name === 's')?.value).toBe('4')
+    expect(tokens.find(t => t.name === 'm')?.value).toBe('8')
+    expect(tokens.find(t => t.name === 'l')?.value).toBe('16')
   })
 
   it('extracts radius tokens', () => {
     const source = `
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 16
+$s.rad: 4
+$m.rad: 8
+$l.rad: 16
 `
     const tokens = extractSpacingTokens(source, 'rad')
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'sm')?.value).toBe('4')
-    expect(tokens.find(t => t.name === 'md')?.value).toBe('8')
-    expect(tokens.find(t => t.name === 'lg')?.value).toBe('16')
+    expect(tokens.find(t => t.name === 's')?.value).toBe('4')
+    expect(tokens.find(t => t.name === 'm')?.value).toBe('8')
+    expect(tokens.find(t => t.name === 'l')?.value).toBe('16')
   })
 
   it('extracts gap tokens', () => {
     const source = `
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 `
     const tokens = extractSpacingTokens(source, 'gap')
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'sm')?.value).toBe('4')
+    expect(tokens.find(t => t.name === 's')?.value).toBe('4')
   })
 
   it('handles mixed token types', () => {
     const source = `
-$sm.pad: 4
-$sm.rad: 2
-$sm.gap: 4
-$md.pad: 8
-$md.rad: 4
-$md.gap: 8
+$s.pad: 4
+$s.rad: 2
+$s.gap: 4
+$m.pad: 8
+$m.rad: 4
+$m.gap: 8
 `
     const padTokens = extractSpacingTokens(source, 'pad')
     const radTokens = extractSpacingTokens(source, 'rad')
@@ -164,8 +164,8 @@ $md.gap: 8
 
   it('ignores non-matching tokens', () => {
     const source = `
-$primary.bg: #3B82F6
-$sm.pad: 4
+$accent.bg: #3B82F6
+$s.pad: 4
 $button.hover: #2563EB
 `
     const padTokens = extractSpacingTokens(source, 'pad')
@@ -177,7 +177,7 @@ $button.hover: #2563EB
   it('handles tokens without $ prefix in value lookup', () => {
     const source = `
 $xs.pad: 2
-$sm.pad: 4
+$s.pad: 4
 `
     const tokens = extractSpacingTokens(source, 'pad')
 
@@ -186,16 +186,16 @@ $sm.pad: 4
   })
 
   it('returns fullName with property type', () => {
-    const source = `$sm.pad: 4`
+    const source = `$s.pad: 4`
     const tokens = extractSpacingTokens(source, 'pad')
 
-    expect(tokens[0].fullName).toBe('sm.pad')
+    expect(tokens[0].fullName).toBe('s.pad')
   })
 
   it('later definitions override earlier ones', () => {
     const source = `
-$sm.pad: 4
-$sm.pad: 8
+$s.pad: 4
+$s.pad: 8
 `
     const tokens = extractSpacingTokens(source, 'pad')
 
@@ -241,7 +241,7 @@ $danger: #EF4444
 
   it('extracts namespaced color tokens', () => {
     const source = `
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover: #2563EB
 $text.col: #FFFFFF
 `
@@ -287,9 +287,9 @@ $text.col: #FFFFFF
 
   it('ignores non-color tokens', () => {
     const source = `
-$sm.pad: 4
+$s.pad: 4
 $primary: #3B82F6
-$lg.rad: 16
+$l.rad: 16
 `
     const tokens = extractColorTokens(source)
 
@@ -312,22 +312,22 @@ $lg.rad: 16
 
 describe('Token Resolution', () => {
   it('resolves spacing token', () => {
-    const source = `$sm.pad: 4`
-    const value = resolveTokenValue(source, '$sm.pad')
+    const source = `$s.pad: 4`
+    const value = resolveTokenValue(source, '$s.pad')
 
     expect(value).toBe('4')
   })
 
   it('resolves spacing token without $ prefix', () => {
-    const source = `$sm.pad: 4`
-    const value = resolveTokenValue(source, 'sm.pad')
+    const source = `$s.pad: 4`
+    const value = resolveTokenValue(source, 's.pad')
 
     expect(value).toBe('4')
   })
 
   it('resolves color token', () => {
-    const source = `$primary.bg: #3B82F6`
-    const value = resolveTokenValue(source, '$primary.bg')
+    const source = `$accent.bg: #3B82F6`
+    const value = resolveTokenValue(source, '$accent.bg')
 
     expect(value).toBe('#3B82F6')
   })
@@ -340,7 +340,7 @@ describe('Token Resolution', () => {
   })
 
   it('returns null for non-existent token', () => {
-    const source = `$sm.pad: 4`
+    const source = `$s.pad: 4`
     const value = resolveTokenValue(source, '$nonexistent')
 
     expect(value).toBeNull()
@@ -349,28 +349,28 @@ describe('Token Resolution', () => {
   it('resolves from complex source', () => {
     const source = `
 // Design Tokens
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $secondary.bg: #10B981
 
-Card pad $md.pad, bg $primary.bg
+Card pad $m.pad, bg $accent.bg
 `
-    expect(resolveTokenValue(source, '$sm.pad')).toBe('4')
-    expect(resolveTokenValue(source, '$md.pad')).toBe('8')
-    expect(resolveTokenValue(source, '$lg.pad')).toBe('16')
-    expect(resolveTokenValue(source, '$primary.bg')).toBe('#3B82F6')
+    expect(resolveTokenValue(source, '$s.pad')).toBe('4')
+    expect(resolveTokenValue(source, '$m.pad')).toBe('8')
+    expect(resolveTokenValue(source, '$l.pad')).toBe('16')
+    expect(resolveTokenValue(source, '$accent.bg')).toBe('#3B82F6')
     expect(resolveTokenValue(source, '$secondary.bg')).toBe('#10B981')
   })
 
   it('handles overridden tokens (uses last definition)', () => {
     const source = `
-$sm.pad: 4
-$sm.pad: 8
+$s.pad: 4
+$s.pad: 8
 `
-    const value = resolveTokenValue(source, '$sm.pad')
+    const value = resolveTokenValue(source, '$s.pad')
     expect(value).toBe('8')
   })
 })
@@ -383,26 +383,26 @@ describe('Token Categorization', () => {
   const source = `
 // Spacing Tokens
 $xs.pad: 2
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 $xl.pad: 24
 
 // Gap Tokens
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
 // Radius Tokens
-$sm.rad: 2
-$md.rad: 4
-$lg.rad: 8
+$s.rad: 2
+$m.rad: 4
+$l.rad: 8
 $xl.rad: 16
 
 // Color Tokens
 $grey-900: #18181B
 $grey-800: #27272A
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover: #2563EB
 $text.col: #E4E4E7
 `
@@ -460,9 +460,9 @@ Card rad 8
   it('handles comments in source', () => {
     const source = `
 // This is a comment
-$sm.pad: 4
-// $md.pad: 8 - this is commented out
-$lg.pad: 16
+$s.pad: 4
+// $m.pad: 8 - this is commented out
+$l.pad: 16
 `
     const tokens = extractSpacingTokens(source, 'pad')
 
@@ -472,16 +472,16 @@ $lg.pad: 16
 
   it('handles whitespace variations', () => {
     const source = `
-$sm.pad:4
-$md.pad: 8
-$lg.pad:  16
+$s.pad:4
+$m.pad: 8
+$l.pad:  16
 `
     const tokens = extractSpacingTokens(source, 'pad')
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'sm')?.value).toBe('4')
-    expect(tokens.find(t => t.name === 'md')?.value).toBe('8')
-    expect(tokens.find(t => t.name === 'lg')?.value).toBe('16')
+    expect(tokens.find(t => t.name === 's')?.value).toBe('4')
+    expect(tokens.find(t => t.name === 'm')?.value).toBe('8')
+    expect(tokens.find(t => t.name === 'l')?.value).toBe('16')
   })
 
   it('handles deeply namespaced tokens', () => {
@@ -513,22 +513,22 @@ describe('Real-World Scenarios', () => {
 
 // Spacing Scale
 $xs.pad: 2
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 $xl.pad: 24
 $2xl.pad: 32
 
 // Gap Scale (same as spacing)
 $xs.gap: 2
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
 // Border Radius
-$sm.rad: 2
-$md.rad: 4
-$lg.rad: 8
+$s.rad: 2
+$m.rad: 4
+$l.rad: 8
 $xl.rad: 16
 $full.rad: 9999
 
@@ -546,7 +546,7 @@ $grey-900: #18181B
 
 // Colors - Primary
 $primary: #3B82F6
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover: #2563EB
 $primary.active: #1D4ED8
 
@@ -573,19 +573,19 @@ $text.muted: #A1A1AA
     expect(colorTokens.length).toBeGreaterThan(15)
 
     // Verify specific values
-    expect(resolveTokenValue(source, '$md.pad')).toBe('8')
-    expect(resolveTokenValue(source, '$lg.rad')).toBe('8')
+    expect(resolveTokenValue(source, '$m.pad')).toBe('8')
+    expect(resolveTokenValue(source, '$l.rad')).toBe('8')
     expect(resolveTokenValue(source, '$primary')).toBe('#3B82F6')
     expect(resolveTokenValue(source, '$grey-800')).toBe('#27272A')
   })
 
   it('Component using tokens', () => {
     const source = `
-$primary.bg: #3B82F6
-$md.pad: 8
-$md.rad: 4
+$accent.bg: #3B82F6
+$m.pad: 8
+$m.rad: 4
 
-Button: bg $primary.bg, pad $md.pad, rad $md.rad
+Button: bg $accent.bg, pad $m.pad, rad $m.rad
 Button
 `
     // Tokens should be extractable even when used in components
@@ -594,22 +594,22 @@ Button
     const radTokens = extractSpacingTokens(source, 'rad')
 
     expect(colorTokens.find(t => t.name === 'primary.bg')).toBeDefined()
-    expect(padTokens.find(t => t.name === 'md')).toBeDefined()
-    expect(radTokens.find(t => t.name === 'md')).toBeDefined()
+    expect(padTokens.find(t => t.name === 'm')).toBeDefined()
+    expect(radTokens.find(t => t.name === 'm')).toBeDefined()
   })
 
   it('Multi-file scenario (concatenated source)', () => {
     // Simulates getAllSource() returning concatenated content
     const tokensFile = `
 // tokens.mirror
-$sm.pad: 4
-$md.pad: 8
-$primary.bg: #3B82F6
+$s.pad: 4
+$m.pad: 8
+$accent.bg: #3B82F6
 `
     const componentsFile = `
 // components.mirror
-Button: bg $primary.bg, pad $md.pad
-Card: pad $sm.pad, bg #333
+Button: bg $accent.bg, pad $m.pad
+Card: pad $s.pad, bg #333
 `
     const combinedSource = tokensFile + '\n' + componentsFile
 

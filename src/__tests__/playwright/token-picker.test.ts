@@ -27,7 +27,7 @@ Button bg $`)
 
     // Should show matching tokens with .bg suffix
     await expect(page.locator('.token-item')).toHaveCount(2)
-    await expect(page.locator('.token-name').first()).toContainText('$primary.bg')
+    await expect(page.locator('.token-name').first()).toContainText('$accent.bg')
   })
 
   // Color picker only shows when space-triggered (not $ triggered)
@@ -66,7 +66,7 @@ Button pad `)
     await expect(colorSection).toBeHidden()
 
     // Should show spacing tokens
-    await expect(page.locator('.token-name').first()).toContainText('$sm.pad')
+    await expect(page.locator('.token-name').first()).toContainText('$s.pad')
   })
 
   test('inserts token when clicking on it', async ({ page }) => {
