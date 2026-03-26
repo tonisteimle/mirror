@@ -30,6 +30,11 @@ export {
   BASIC_PRIMITIVES as LAYOUT_PRESETS,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
+export {
+  COMPONENT_TEMPLATES,
+  getComponentTemplate,
+  getFileType,
+} from './component-templates'
 
 // Ghost rendering
 export { GhostRenderer, getGhostRenderer, resetGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'

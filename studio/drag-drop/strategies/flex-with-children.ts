@@ -46,15 +46,32 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult): VisualHint {
+  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint {
     const isVertical = result.target.direction === 'vertical'
 
-    // We need the target element's rect for the indicator
-    // This will be filled in by the caller
+    // Find the target child's rect
+    const targetChildRect = childRects?.find(c => c.nodeId === result.targetId)
+
+    if (!targetChildRect || !containerRect) {
+      // Fallback: outline the container
+      return {
+        type: 'outline',
+        rect: containerRect ?? { x: 0, y: 0, width: 0, height: 0 },
+      }
+    }
+
+    // Calculate the insertion line position
+    const lineRect = calculateInsertionLineRect(
+      targetChildRect.rect,
+      result.placement as 'before' | 'after',
+      result.target.direction,
+      containerRect
+    )
+
     return {
       type: 'line',
       direction: isVertical ? 'horizontal' : 'vertical',
-      rect: { x: 0, y: 0, width: 0, height: 0 }, // Placeholder - filled by caller
+      rect: lineRect,
     }
   }
 
@@ -112,27 +129,29 @@ export function calculateInsertionLineRect(
   targetRect: Rect,
   placement: 'before' | 'after',
   direction: 'horizontal' | 'vertical',
+  containerRect: Rect,
   thickness: number = 2
 ): Rect {
   const isVertical = direction === 'vertical'
 
   if (isVertical) {
-    // Horizontal line
+    // Horizontal line (for vertical flex layout)
+    // Y position based on target element's top/bottom edge
     const y = placement === 'before' ? targetRect.y : targetRect.y + targetRect.height
     return {
-      x: targetRect.x,
+      x: containerRect.x, // Use container x for full-width line
       y: y - thickness / 2,
-      width: targetRect.width,
+      width: containerRect.width, // Use container width
       height: thickness,
     }
   } else {
-    // Vertical line
+    // Vertical line (for horizontal flex layout)
     const x = placement === 'before' ? targetRect.x : targetRect.x + targetRect.width
     return {
       x: x - thickness / 2,
-      y: targetRect.y,
+      y: containerRect.y, // Use container y for full-height line
       width: thickness,
-      height: targetRect.height,
+      height: containerRect.height, // Use container height
     }
   }
 }

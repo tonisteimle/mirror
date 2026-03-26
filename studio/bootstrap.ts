@@ -12,7 +12,7 @@ import { initializeAgent, getAgentIntegration, type AgentIntegration } from './a
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../src/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
-import { ComponentPanel, createComponentPanel } from './panels/components'
+import { ComponentPanel, createComponentPanel, getComponentTemplate, getFileType } from './panels/components'
 import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
@@ -141,6 +141,9 @@ let agentApiKey: string | null = null
 // Store getAllSource callback for token extraction from all files
 let getAllSourceCallback: (() => string) | null = null
 
+// Store getCurrentFile callback for template selection
+let getCurrentFileCallback: (() => string) | null = null
+
 // Global studio context
 let studioContext: StudioContext | null = null
 
@@ -149,10 +152,28 @@ let studioContext: StudioContext | null = null
  *
  * Returns code with relative indentation only (no base indent).
  * The base indent is applied by insertComponentCode based on drop position.
+ *
+ * @param dragData - Component drag data (componentName, properties, etc.)
+ * @param options - Optional settings
+ * @param options.componentId - Component ID for template lookup (e.g., 'zag-dialog')
+ * @param options.filename - Current filename to determine file type (.mir or .com)
  */
-export function generateComponentCodeFromDragData(dragData: any): string {
+export function generateComponentCodeFromDragData(
+  dragData: any,
+  options?: { componentId?: string; filename?: string }
+): string {
   const { componentName, properties, textContent, children } = dragData
 
+  // Try template-based code generation first
+  if (options?.componentId && options?.filename) {
+    const fileType = getFileType(options.filename)
+    const template = getComponentTemplate(options.componentId, fileType)
+    if (template) {
+      return template
+    }
+  }
+
+  // Fallback to property-based code generation
   let code = componentName
   if (properties) {
     code += ` ${properties}`
@@ -248,6 +269,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   if (config.chatPanelContainer) chatPanelContainer = config.chatPanelContainer
   if (config.agentApiKey) agentApiKey = config.agentApiKey
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
+  if (config.getCurrentFile) getCurrentFileCallback = config.getCurrentFile
 
   // Initialize Explorer Panel if containers provided
   if (config.explorerPanelContainer && config.fileTreeContainer && config.explorerComponentsContainer) {

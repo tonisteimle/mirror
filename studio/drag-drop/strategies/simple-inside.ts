@@ -36,10 +36,17 @@ export class SimpleInsideStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult): VisualHint {
+  getVisualHint(result: DropResult, _childRects?: unknown, containerRect?: Rect): VisualHint {
     // Show outline around the target container
-    const rect = result.target.element.getBoundingClientRect()
+    if (containerRect) {
+      return {
+        type: 'outline',
+        rect: containerRect,
+      }
+    }
 
+    // Fallback to element rect
+    const rect = result.target.element.getBoundingClientRect()
     return {
       type: 'outline',
       rect: {

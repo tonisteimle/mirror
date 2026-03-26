@@ -40,7 +40,7 @@ export interface DropStrategy {
   /**
    * Generate visual hint for rendering feedback
    */
-  getVisualHint(result: DropResult): VisualHint
+  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint
 }
 
 /**

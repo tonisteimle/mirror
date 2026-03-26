@@ -119,6 +119,10 @@ export interface ComponentItem {
   children?: ComponentChild[]
   /** Default size for drag preview ghost */
   defaultSize?: { width: number; height: number }
+  /** Code template for .mir files (minimal, ready to use) */
+  mirTemplate?: string
+  /** Code template for .com files (full, with all slots and styling) */
+  comTemplate?: string
 }
 
 /**

@@ -5,8 +5,8 @@
  * Placement: before | after (as sibling)
  */
 
-import type { Point, DropTarget, DragSource, DropResult, VisualHint } from '../types'
-import type { DropStrategy } from './types'
+import type { Point, DropTarget, DragSource, DropResult, VisualHint, Rect } from '../types'
+import type { DropStrategy, ChildRect } from './types'
 
 export class NonContainerStrategy implements DropStrategy {
   readonly name = 'NonContainerStrategy'
@@ -33,20 +33,23 @@ export class NonContainerStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult): VisualHint {
+  getVisualHint(result: DropResult, _childRects?: ChildRect[], containerRect?: Rect): VisualHint {
     const rect = result.target.element.getBoundingClientRect()
 
     // Horizontal line above or below the element
     const y = result.placement === 'before' ? rect.top : rect.bottom
     const thickness = 2
 
+    // Use container width if available for full-width line
+    const width = containerRect?.width ?? rect.width
+
     return {
       type: 'line',
       direction: 'horizontal',
       rect: {
-        x: rect.left,
+        x: containerRect?.x ?? rect.left,
         y: y - thickness / 2,
-        width: rect.width,
+        width: width,
         height: thickness,
       },
     }

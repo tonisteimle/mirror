@@ -289,7 +289,14 @@ export class DragDropSystem implements IDragDropSystem {
 
     // Get child rects for calculation
     const childRects = getChildRects(target.element, this.nodeIdAttr)
-    const containerRect = getContainerRect(target.element)
+
+    // For non-container targets, use parent's rect for the indicator width
+    let containerRect: DOMRect
+    if (target.layoutType === 'none' && target.element.parentElement) {
+      containerRect = getContainerRect(target.element.parentElement)
+    } else {
+      containerRect = getContainerRect(target.element)
+    }
 
     // Calculate drop result
     const calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
