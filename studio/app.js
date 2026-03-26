@@ -1413,6 +1413,15 @@ function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = nu
     updateHueSlider()
     updateAlphaSlider()
   }
+
+  // Focus hex input when opened from property panel (callback mode)
+  // This ensures keyboard input goes to the picker, not the editor
+  if (callback && colorPickerHexInput && currentColorTab === 'custom') {
+    setTimeout(() => {
+      colorPickerHexInput.focus()
+      colorPickerHexInput.select()
+    }, 50)
+  }
 }
 
 function hideColorPicker() {
@@ -1559,14 +1568,53 @@ function insertColorAtPosition(editor, from, to, hex) {
   })
 }
 
-// Close on escape or click outside
-// Note: Hash trigger mode handles Escape in hashColorKeyboardExtension (removes # char)
+// Color picker keyboard handling
+// Use capturing phase to intercept events before CodeMirror
 document.addEventListener('keydown', (e) => {
-  if (colorPickerVisible && e.key === 'Escape' && !hashTriggerActive) {
+  if (!colorPickerVisible) return
+
+  // Escape: close picker (except in hash trigger mode which has its own handler)
+  if (e.key === 'Escape' && !hashTriggerActive) {
+    e.preventDefault()
+    e.stopPropagation()
     hideColorPicker()
     if (window.editor) window.editor.focus()
+    return
   }
-})
+
+  // Enter: select current color
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    e.stopPropagation()
+
+    let colorToSelect = null
+
+    // On custom tab, use the custom color state
+    if (currentColorTab === 'custom') {
+      colorToSelect = getCurrentColorHex()
+    } else {
+      // On swatch tabs, use the selected swatch
+      const selected = colorSwatchElements[selectedSwatchIndex]
+      if (selected) {
+        colorToSelect = selected.dataset.color
+      }
+    }
+
+    if (colorToSelect) {
+      selectColor(colorToSelect.toUpperCase())
+    }
+    return
+  }
+
+  // Arrow keys: navigate swatches (only on swatch tabs)
+  if (currentColorTab !== 'custom' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault()
+    e.stopPropagation()
+    const direction = e.key.replace('Arrow', '').toLowerCase()
+    navigateSwatches(direction)
+    return
+  }
+}, true) // Use capturing phase
 
 document.addEventListener('mousedown', (e) => {
   if (colorPickerVisible && !colorPicker.contains(e.target)) {

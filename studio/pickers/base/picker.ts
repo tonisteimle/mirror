@@ -190,13 +190,14 @@ export abstract class BasePicker {
     }
 
     if (this.config.closeOnEscape) {
-      document.addEventListener('keydown', this.boundHandleKeyDown)
+      // Use capturing phase to intercept events before CodeMirror
+      document.addEventListener('keydown', this.boundHandleKeyDown, true)
     }
   }
 
   protected teardownEventListeners(): void {
     document.removeEventListener('mousedown', this.boundHandleClickOutside)
-    document.removeEventListener('keydown', this.boundHandleKeyDown)
+    document.removeEventListener('keydown', this.boundHandleKeyDown, true)
   }
 
   protected handleClickOutside(event: MouseEvent): void {
@@ -211,13 +212,17 @@ export abstract class BasePicker {
   protected handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.config.closeOnEscape) {
       event.preventDefault()
+      event.stopPropagation()
       this.hide()
       return
     }
 
     // Delegate to keyboard nav if available
     if (this.keyboardNav) {
-      this.keyboardNav.handleKeyDown(event)
+      const handled = this.keyboardNav.handleKeyDown(event)
+      if (handled) {
+        event.stopPropagation()
+      }
     }
   }
 

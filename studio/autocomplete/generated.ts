@@ -115,36 +115,6 @@ export const ALL_PROPERTIES: string[] = (() => {
 })()
 
 // ============================================================================
-// 9-Zone Alignment Properties
-// ============================================================================
-
-export const NINE_ZONE_PROPERTIES: string[] = [
-  'top-left', 'tl',
-  'top-center', 'tc',
-  'top-right', 'tr',
-  'center-left', 'cl',
-  'center', 'cen',
-  'center-right', 'cr',
-  'bottom-left', 'bl',
-  'bottom-center', 'bc',
-  'bottom-right', 'br',
-]
-
-// ============================================================================
-// Pin/Constraint Properties
-// ============================================================================
-
-export const PIN_PROPERTIES: string[] = [
-  'pin-left', 'pl',
-  'pin-right', 'pr',
-  'pin-top', 'pt',
-  'pin-bottom', 'pb',
-  'pin-center-x', 'pcx',
-  'pin-center-y', 'pcy',
-  'pin-center', 'pc',
-]
-
-// ============================================================================
 // Directional Properties (with direction suffixes)
 // ============================================================================
 

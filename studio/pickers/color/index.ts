@@ -459,6 +459,7 @@ export class ColorPicker extends BasePicker {
     // Handle Enter on custom tab
     if (this.currentTab === 'custom' && event.key === 'Enter') {
       event.preventDefault()
+      event.stopPropagation()
       const parsed = parseColor(this.customInput?.value || '')
       if (parsed) {
         this.currentColor = parsed
@@ -468,9 +469,23 @@ export class ColorPicker extends BasePicker {
       return
     }
 
-    // Use keyboard nav for palette
+    // Handle Enter on palette tab
+    if (this.currentTab === 'palette' && event.key === 'Enter') {
+      event.preventDefault()
+      event.stopPropagation()
+      const color = this.getSelectedValue()
+      if (color) {
+        this.currentColor = color
+        this.addToRecent(color)
+        this.selectValue(color)
+      }
+      return
+    }
+
+    // Use keyboard nav for palette (arrow keys)
     if (this.keyboardNav && this.currentTab === 'palette') {
       if (this.keyboardNav.handleKeyDown(event)) {
+        event.stopPropagation()
         return
       }
     }
