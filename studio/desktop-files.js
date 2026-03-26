@@ -51,8 +51,16 @@ function initProjectToolbar() {
   const container = document.getElementById('file-tree-container')
   if (!container) return
 
-  // Check if header already exists
-  if (container.querySelector('.fp-header')) return
+  // Check if already initialized (header exists)
+  if (container.querySelector('.fp-header')) {
+    toolbarInitialized = true
+    return
+  }
+
+  // Create wrapper structure:
+  // file-tree-container
+  //   ├── fp-header (toolbar - stays fixed)
+  //   └── file-tree-content (replaced by renderFileTree)
 
   // Create header element
   const header = document.createElement('div')
@@ -66,8 +74,19 @@ function initProjectToolbar() {
     </div>
   `
 
-  // Insert at the beginning of the container
-  container.insertBefore(header, container.firstChild)
+  // Create content wrapper for the file tree
+  const content = document.createElement('div')
+  content.id = 'file-tree-content'
+  content.className = 'file-tree-content'
+
+  // Move existing content to the new wrapper
+  while (container.firstChild) {
+    content.appendChild(container.firstChild)
+  }
+
+  // Build new structure
+  container.appendChild(header)
+  container.appendChild(content)
 
   // Menu button handler
   const menuBtn = document.getElementById('project-menu-btn')
@@ -1006,7 +1025,13 @@ function startInlineCreate(type, parentPath) {
 // =============================================================================
 
 function renderFileTree() {
-  const container = document.getElementById('file-tree-container') || document.getElementById('file-tree')
+  // Ensure toolbar is initialized first (creates file-tree-content)
+  initProjectToolbar()
+
+  // Render into file-tree-content (inside file-tree-container)
+  const container = document.getElementById('file-tree-content')
+    || document.getElementById('file-tree-container')
+    || document.getElementById('file-tree')
   if (!container) return
 
   const tree = storage.getTree()

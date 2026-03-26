@@ -370,9 +370,14 @@
 
     .file-tree {
       flex: 1;
-      overflow-y: auto;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
+    }
+
+    .file-tree-content {
+      flex: 1;
+      overflow-y: auto;
     }
 
     /* Desktop File Tree - Empty State */
