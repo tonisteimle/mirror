@@ -404,7 +404,7 @@ describe('parseTokens', () => {
     expect(tokens[0].name).toBe('$accent.bg')
     expect(tokens[0].value).toBe('#007bff')
     expect(tokens[0].type).toBe('color')
-    expect(tokens[0].category).toBe('primary')
+    expect(tokens[0].category).toBe('accent')
   })
 
   it('should parse multiple tokens', () => {
@@ -597,7 +597,7 @@ describe('filterTokensBySearch', () => {
   ]
 
   it('should filter by name', () => {
-    const filtered = filterTokensBySearch(tokens, 'primary')
+    const filtered = filterTokensBySearch(tokens, 'accent')
     expect(filtered).toHaveLength(1)
     expect(filtered[0].name).toBe('$accent.bg')
   })
@@ -613,7 +613,7 @@ describe('filterTokensBySearch', () => {
   })
 
   it('should be case insensitive', () => {
-    const filtered = filterTokensBySearch(tokens, 'PRIMARY')
+    const filtered = filterTokensBySearch(tokens, 'ACCENT')
     expect(filtered).toHaveLength(1)
   })
 

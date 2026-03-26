@@ -171,7 +171,7 @@ $button.hover: #2563EB
     const padTokens = extractSpacingTokens(source, 'pad')
 
     expect(padTokens).toHaveLength(1)
-    expect(padTokens[0].name).toBe('sm')
+    expect(padTokens[0].name).toBe('s')
   })
 
   it('handles tokens without $ prefix in value lookup', () => {
@@ -248,7 +248,7 @@ $text.col: #FFFFFF
     const tokens = extractColorTokens(source)
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'primary.bg')?.value).toBe('#3B82F6')
+    expect(tokens.find(t => t.name === 'accent.bg')?.value).toBe('#3B82F6')
     expect(tokens.find(t => t.name === 'primary.hover')?.value).toBe('#2563EB')
     expect(tokens.find(t => t.name === 'text.col')?.value).toBe('#FFFFFF')
   })
@@ -593,7 +593,7 @@ Button
     const padTokens = extractSpacingTokens(source, 'pad')
     const radTokens = extractSpacingTokens(source, 'rad')
 
-    expect(colorTokens.find(t => t.name === 'primary.bg')).toBeDefined()
+    expect(colorTokens.find(t => t.name === 'accent.bg')).toBeDefined()
     expect(padTokens.find(t => t.name === 'm')).toBeDefined()
     expect(radTokens.find(t => t.name === 'm')).toBeDefined()
   })
@@ -617,6 +617,6 @@ Card: pad $s.pad, bg #333
     const colorTokens = extractColorTokens(combinedSource)
 
     expect(padTokens).toHaveLength(2)
-    expect(colorTokens.find(t => t.name === 'primary.bg')).toBeDefined()
+    expect(colorTokens.find(t => t.name === 'accent.bg')).toBeDefined()
   })
 })

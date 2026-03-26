@@ -6,7 +6,7 @@
  * - Multi-value properties (pad 16 12, bor 1 solid #333)
  * - Directional properties (pad left 16, rad tl 8)
  * - Quoted string values
- * - Token references ($primary.bg)
+ * - Token references ($accent.bg)
  *
  * This parser analyzes the ENTIRE line to ensure correct modifications.
  */

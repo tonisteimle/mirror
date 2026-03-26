@@ -2537,7 +2537,7 @@ class IRTransformer {
 
   /**
    * Map from property name to token suffix for auto-completion
-   * e.g., pad $md -> $md.pad if $md.pad exists
+   * e.g., pad $md -> $m.pad if $m.pad exists
    */
   private static PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
     // Spacing
@@ -2583,7 +2583,7 @@ class IRTransformer {
 
   /**
    * Try to resolve a short token name using property context
-   * e.g., 'md' with property 'pad' -> 'md.pad' if '$md.pad' exists in tokens
+   * e.g., 'md' with property 'pad' -> 'md.pad' if '$m.pad' exists in tokens
    */
   private resolveTokenWithContext(tokenName: string, propertyName?: string): string {
     // If token already exists as-is, use it

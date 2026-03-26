@@ -470,7 +470,7 @@ describe('FileManager + Compiler Integration', () => {
     await fileManager.createFile('button.mirror', 'component')
     await fileManager.createFile('main.mirror', 'layout')
 
-    fileManager.setContent('tokens.mirror', '$primary.bg: #007bff')
+    fileManager.setContent('tokens.mirror', '$accent.bg: #007bff')
     fileManager.setContent('button.mirror', 'Button: = Box pad 16')
     fileManager.selectFile('main.mirror')
 
@@ -479,7 +479,7 @@ describe('FileManager + Compiler Integration', () => {
       'main.mirror'
     )
 
-    expect(prelude.prelude).toContain('$primary.bg: #007bff')
+    expect(prelude.prelude).toContain('$accent.bg: #007bff')
     expect(prelude.prelude).toContain('Button: = Box pad 16')
   })
 })
@@ -754,7 +754,7 @@ test.describe('Critical User Journeys', () => {
     await page.click('[data-testid="create-button"]')
 
     const editor = page.locator('.cm-content')
-    await editor.fill('$primary.bg: #007bff')
+    await editor.fill('$accent.bg: #007bff')
 
     // Create layout file
     await page.click('[data-testid="new-file-button"]')
@@ -762,7 +762,7 @@ test.describe('Critical User Journeys', () => {
     await page.selectOption('[data-testid="file-type"]', 'layout')
     await page.click('[data-testid="create-button"]')
 
-    await editor.fill('Box bg $primary.bg')
+    await editor.fill('Box bg $accent.bg')
 
     // Token should resolve
     const box = page.locator('[data-node-id="node_1"]')

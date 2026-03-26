@@ -146,7 +146,7 @@ export class Validator {
     // Collect token definitions
     for (const token of ast.tokens) {
       const baseName = token.name.startsWith('$') ? token.name.slice(1) : token.name
-      // Handle dotted names like $primary.bg
+      // Handle dotted names like $accent.bg
       const rootName = baseName.split('.')[0]
       this.definedTokens.add(rootName)
       this.definedTokens.add(baseName) // Also add full name
@@ -640,7 +640,7 @@ export class Validator {
   }
 
   private validateTokenReference(tokenRef: string, line: number, column: number): void {
-    // Extract token name: $primary.bg → primary or primary.bg
+    // Extract token name: $accent.bg → primary or primary.bg
     const name = tokenRef.slice(1) // Remove $
     const rootName = name.split('.')[0]
 

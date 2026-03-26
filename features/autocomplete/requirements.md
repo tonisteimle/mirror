@@ -178,7 +178,7 @@ Kontextsensitives Autocomplete im Mirror Studio Editor. Je nach Cursor-Position 
 | `$primary: #` | **Color Picker** | ✅ |
 | `$primary: $` | Token-Referenz Autocomplete | ❌ TODO |
 | `$component.bg: #` | **Color Picker** | ✅ |
-| `$sm.pad: ` | Kein Autocomplete (Zahl) | ✅ |
+| `$s.pad: ` | Kein Autocomplete (Zahl) | ✅ |
 
 **Trigger für Color Picker:**
 - `/\$[\w.-]+\.(bg|col|color|boc):\s*$/`

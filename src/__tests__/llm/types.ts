@@ -224,7 +224,7 @@ $text: #E4E4E7
 
   full: `
 // Colors
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover.bg: #2563EB
 $secondary.bg: #10B981
 $surface.bg: #1A1A23
@@ -233,15 +233,15 @@ $text.col: #E4E4E7
 $muted.col: #71717A
 
 // Spacing
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 $xl.pad: 24
 
 // Radius
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 12
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 `,
 }
 
@@ -249,12 +249,12 @@ $lg.rad: 12
 export const COMPONENT_SETS = {
   basic: `
 Button as button:
-  pad 12 24, bg $primary.bg, rad $md.rad, col white
+  pad 12 24, bg $accent.bg, rad $m.rad, col white
   hover
     bg $primary.hover.bg
 
 Card as frame:
-  pad $lg.pad, bg $surface.bg, rad $lg.rad
+  pad $l.pad, bg $surface.bg, rad $l.rad
 
 Text as text:
   col $text.col
@@ -262,18 +262,18 @@ Text as text:
 
   full: `
 Button as button:
-  pad 12 24, bg $primary.bg, rad $md.rad, col white
+  pad 12 24, bg $accent.bg, rad $m.rad, col white
   cursor pointer
   hover
     bg $primary.hover.bg
 
 IconButton as button:
-  pad $md.pad, bg transparent, rad $sm.rad
+  pad $m.pad, bg transparent, rad $s.rad
   hover
     bg $elevated.bg
 
 Card as frame:
-  pad $lg.pad, bg $surface.bg, rad $lg.rad, gap $md.gap
+  pad $l.pad, bg $surface.bg, rad $l.rad, gap $m.gap
 
 Title as text:
   weight 600, font-size 18, col $text.col
@@ -282,16 +282,16 @@ Subtitle as text:
   font-size 14, col $muted.col
 
 Badge as frame:
-  pad 4 8, bg $primary.bg, rad $sm.rad
+  pad 4 8, bg $accent.bg, rad $s.rad
 
 Badge > Label as text:
   font-size 12, col white
 
 List as frame:
-  gap $sm.gap
+  gap $s.gap
 
 ListItem as frame:
-  pad $md.pad, rad $sm.rad, hor, spread
+  pad $m.pad, rad $s.rad, hor, spread
   cursor pointer
   hover
     bg $elevated.bg
@@ -300,9 +300,9 @@ Avatar as frame:
   w 40, h 40, rad 20, bg $elevated.bg, center
 
 Input as input:
-  pad $md.pad, bg $elevated.bg, rad $sm.rad, col $text.col
+  pad $m.pad, bg $elevated.bg, rad $s.rad, col $text.col
   bor 1 transparent
   focus
-    bor 1 $primary.bg
+    bor 1 $accent.bg
 `,
 }

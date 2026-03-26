@@ -196,7 +196,7 @@ function createAgent(initialCode?: string): ReturnType<typeof createMirrorAgent>
     model: 'anthropic/claude-sonnet-4',
     getCode: () => initialCode || 'App ver gap 16 pad 24\n  Text "Hello"',
     tokens: {
-      '$primary.bg': '#007bff',
+      '$accent.bg': '#007bff',
       '$primary.col': '#ffffff',
       '$surface.bg': '#f8f9fa',
       '$text.primary': '#212529',

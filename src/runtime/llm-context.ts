@@ -37,7 +37,7 @@ export interface ComponentContext {
 }
 
 export interface TokenContext {
-  name: string             // e.g., "$primary.bg"
+  name: string             // e.g., "$accent.bg"
   value: string            // e.g., "#3B82F6"
   category: 'color' | 'spacing' | 'radius' | 'typography' | 'other'
 }
@@ -481,8 +481,8 @@ onclick: 'actionName'
 - Use 'col' for text color, NOT 'color'
 - Use 'stacked: true' for position: relative
 - Reuse existing components when available
-- Use design tokens AS STRINGS: bg: '$primary.bg' (NOT bg: $primary.bg)
-- Tokens are strings like '$surface.bg' or '$lg.pad', not JS variables
+- Use design tokens AS STRINGS: bg: '$accent.bg' (NOT bg: $accent.bg)
+- Tokens are strings like '$surface.bg' or '$l.pad', not JS variables
 
 ## Dark Mode Palette (use if no tokens provided)
 #0a0a0f (app bg), #12121a (surface), #1a1a23 (card), #2a2a33 (hover), #333 (border)

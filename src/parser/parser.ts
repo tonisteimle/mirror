@@ -83,7 +83,7 @@ export class Parser {
       }
 
       // Token reference: $name: $other (token referencing another token)
-      // e.g., $primary.bg: $primary or $surface.bg: $grey-800
+      // e.g., $accent.bg: $primary or $surface.bg: $grey-800
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           this.checkAt(2, 'IDENTIFIER') &&
           this.peekAt(0)?.value.startsWith('$') &&
@@ -212,7 +212,7 @@ export class Parser {
 
   // Token reference: $name: $other (token referencing another token)
   private parseTokenReference(section?: string): TokenDefinition | null {
-    const name = this.advance() // identifier (e.g., $primary.bg)
+    const name = this.advance() // identifier (e.g., $accent.bg)
     this.advance() // :
     const value = this.advance() // identifier (e.g., $primary)
 

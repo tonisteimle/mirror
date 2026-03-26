@@ -5,7 +5,7 @@
 export type TokenType = 'color' | 'spacing' | 'size' | 'font' | 'other'
 
 export interface TokenDefinition {
-  name: string           // e.g., "$primary.bg"
+  name: string           // e.g., "$accent.bg"
   value: string          // e.g., "#007bff"
   type: TokenType
   category?: string      // e.g., "primary", "secondary"
@@ -66,7 +66,7 @@ export function getTokenTypesForProperty(property: string): TokenType[] {
 /**
  * Parse token definitions from source code
  * Supports multiple formats:
- * - $name.property: value (e.g., $primary.bg: #3B82F6)
+ * - $name.property: value (e.g., $accent.bg: #3B82F6)
  * - $name: value (e.g., $primary: #3B82F6)
  * - name: value (e.g., primary: #3B82F6 - without $)
  */

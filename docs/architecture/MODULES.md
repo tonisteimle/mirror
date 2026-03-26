@@ -449,7 +449,7 @@ function createColorPicker(
 // studio/pickers/token/index.ts
 
 interface TokenDefinition {
-  name: string                    // e.g., "$primary.bg"
+  name: string                    // e.g., "$accent.bg"
   value: string                   // e.g., "#007bff"
   type: 'color' | 'spacing' | 'size' | 'font' | 'other'
   category?: string               // e.g., "primary", "secondary"

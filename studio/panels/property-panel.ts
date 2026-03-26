@@ -759,7 +759,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Get spacing tokens from source for a specific property type (cached)
-   * Parses tokens like "$sm.pad: 4", "$md.rad: 8", "$lg.gap: 16" from the source code
+   * Parses tokens like "$s.pad: 4", "$m.rad: 8", "$l.gap: 16" from the source code
    * Uses getAllSource callback if available to get tokens from all project files
    * @param propType - The property type to extract (pad, rad, gap, etc.)
    */
@@ -787,7 +787,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const tokenMap = new Map<string, SpacingToken>()
 
     // Build regex for the specific property type
-    // Matches: $name.propType: value (e.g., "$sm.pad: 4", "$md.rad: 8")
+    // Matches: $name.propType: value (e.g., "$s.pad: 4", "$m.rad: 8")
     const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${propType}\\s*:\\s*(\\d+)$`)
 
     for (const line of lines) {
@@ -841,7 +841,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Resolve token value - get numeric value for a token reference
-   * Token ref can be "sm.pad" or "$sm.pad" - we normalize it
+   * Token ref can be "sm.pad" or "$s.pad" - we normalize it
    */
   private resolveTokenValue(tokenRef: string): string | null {
     // Normalize: remove $ prefix if present
@@ -859,7 +859,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Get color tokens from source (cached)
-   * Parses tokens with hex colors like "$primary.bg: #3B82F6"
+   * Parses tokens with hex colors like "$accent.bg: #3B82F6"
    * Uses getAllSource callback if available to get tokens from all project files
    */
   private getColorTokens(): Array<{ name: string; value: string }> {
@@ -1650,7 +1650,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       `<option value="${w.value}" ${weightValue === w.value ? 'selected' : ''}>${w.label}</option>`
     ).join('')
 
-    // Font size tokens - dynamic from source (e.g., $sm.fs: 12)
+    // Font size tokens - dynamic from source (e.g., $s.fs: 12)
     const dynamicFontSizeTokens = this.getFontSizeTokens()
     const sizeTokens = dynamicFontSizeTokens.map(token => {
       const isActive = fontSizeValue === token.value
@@ -2929,7 +2929,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     // Check if clicking on already active token - deselect it
     const isActive = btn.classList.contains('active')
 
-    // Token reference with $ prefix for code (e.g., "$sm.pad")
+    // Token reference with $ prefix for code (e.g., "$s.pad")
     const tokenRef = `$${tokenName}`
 
     // Get current padding values from token refs or input values
@@ -4065,7 +4065,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Handle color swatch click (legacy)
-   * Uses token name ($primary.bg) when available, falls back to hex value
+   * Uses token name ($accent.bg) when available, falls back to hex value
    */
   private handleColorSwatchClick(e: Event): void {
     const swatch = (e.target as HTMLElement).closest('.pp-color-swatch, .color-swatch') as HTMLElement
@@ -4099,7 +4099,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Handle color button click (v2)
-   * Uses token name ($primary.bg) when available, falls back to hex value
+   * Uses token name ($accent.bg) when available, falls back to hex value
    */
   private handleColorBtnClick(e: Event): void {
     const btn = (e.target as HTMLElement).closest('.pp-color-btn') as HTMLElement

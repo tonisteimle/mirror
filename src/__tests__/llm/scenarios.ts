@@ -354,7 +354,7 @@ List
     existingCode: TOKEN_SETS.full + `
 Card
   Title "Settings"
-  Button bg $primary.bg, "Save"
+  Button bg $accent.bg, "Save"
   Button bg $elevated.bg, "Cancel"`,
     editorContext: {
       cursorLine: 4,

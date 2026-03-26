@@ -40,30 +40,30 @@ $heading.col: $grey-100
 $text.col: $grey-300
 $muted.col: $grey-500
 
-$primary.bg: $blue-500
+$accent.bg: $blue-500
 $primary.hover.bg: $blue-600
 
-$sm.pad: 8
-$md.pad: 12
-$lg.pad: 16
+$s.pad: 8
+$m.pad: 12
+$l.pad: 16
 
-$sm.gap: 8
-$md.gap: 12
+$s.gap: 8
+$m.gap: 12
 
-$sm.rad: 4
-$md.rad: 6
+$s.rad: 4
+$m.rad: 6
 
 // Components
 Heading: col $heading.col, weight bold, font-size 18
 Body: col $text.col, font-size 13
 Muted: col $muted.col, font-size 12
 
-Button: pad $sm.pad $md.pad, bg $primary.bg, col white, rad $sm.rad, cursor pointer
+Button: pad $s.pad $m.pad, bg $accent.bg, col white, rad $s.rad, cursor pointer
   hover bg $primary.hover.bg
 
-Card: pad $lg.pad, bg $card.bg, rad $md.rad, gap $md.gap
+Card: pad $l.pad, bg $card.bg, rad $m.rad, gap $m.gap
 
-NavItem: hor, gap $sm.gap, pad $sm.pad $md.pad, rad $sm.rad, cursor pointer
+NavItem: hor, gap $s.gap, pad $s.pad $m.pad, rad $s.rad, cursor pointer
   Icon: is 18, col $muted.col
   Label: col $text.col
   hover bg $hover.bg
@@ -71,13 +71,13 @@ NavItem: hor, gap $sm.gap, pad $sm.pad $md.pad, rad $sm.rad, cursor pointer
 // App
 App hor, w full, h full, bg $app.bg
 
-  Sidebar w 220, h full, bg $surface.bg, pad $md.pad, gap $md.gap
+  Sidebar w 220, h full, bg $surface.bg, pad $m.pad, gap $m.gap
     Heading "App Name", font-size 15
     Nav gap 4
       NavItem Icon "home"; Label "Home"
       NavItem Icon "settings"; Label "Settings"
 
-  Main w full, pad $lg.pad, gap $lg.pad
+  Main w full, pad $l.pad, gap $l.pad
     Heading "Welcome"
     Card
       Body "Your content here."`

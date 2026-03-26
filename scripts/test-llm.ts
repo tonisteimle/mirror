@@ -26,7 +26,7 @@ $grey-700: #3F3F46
 $grey-500: #71717A
 $grey-400: #A1A1AA
 
-$primary.bg: #3B82F6
+$accent.bg: #3B82F6
 $primary.hover.bg: #2563EB
 $primary.col: #3B82F6
 $success.bg: #22C55E
@@ -42,28 +42,28 @@ $text.col: #e0e0e5
 $muted.col: #a0a0aa
 $hint.col: #888
 
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
 $xl.pad: 24
 
-$sm.gap: 4
-$md.gap: 8
-$lg.gap: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 12
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 
 // Components
-Card: bg $card.bg, pad $lg.pad, rad $md.rad, bor 1 $grey-700
+Card: bg $card.bg, pad $l.pad, rad $m.rad, bor 1 $grey-700
   Title:
   Content:
 
-Button: pad $md.pad $lg.pad, rad $sm.rad, cursor pointer
+Button: pad $m.pad $l.pad, rad $s.rad, cursor pointer
   state hover opacity 0.9
 
-PrimaryButton as Button: bg $primary.bg, col white
+PrimaryButton as Button: bg $accent.bg, col white
   state hover bg $primary.hover.bg
 
 SecondaryButton as Button: bg transparent, col $text.col, bor 1 $grey-700
@@ -71,24 +71,24 @@ SecondaryButton as Button: bg transparent, col $text.col, bor 1 $grey-700
 
 DangerButton as Button: bg $danger.bg, col white
 
-IconButton: center, w 36, h 36, rad $md.rad, cursor pointer
+IconButton: center, w 36, h 36, rad $m.rad, cursor pointer
   state hover bg $elevated.bg
 
-Input: pad $md.pad $lg.pad, bg $surface.bg, col $text.col, rad $sm.rad, bor 1 $grey-700
+Input: pad $m.pad $l.pad, bg $surface.bg, col $text.col, rad $s.rad, bor 1 $grey-700
   Placeholder col $hint.col
-  state focus bor 1 $primary.bg
+  state focus bor 1 $accent.bg
 
-Badge: pad $sm.pad $md.pad, rad 999, bg $primary.bg, col white, font-size 11
+Badge: pad $s.pad $m.pad, rad 999, bg $accent.bg, col white, font-size 11
 
-Avatar: center, rad 999, bg $primary.bg, col white, weight bold
+Avatar: center, rad 999, bg $accent.bg, col white, weight bold
 
-NavItem: hor, gap $md.gap, pad $md.pad $lg.pad, rad $md.rad, cursor pointer, col $muted.col
+NavItem: hor, gap $m.gap, pad $m.pad $l.pad, rad $m.rad, cursor pointer, col $muted.col
   state hover bg $elevated.bg
-  state active bg $primary.bg, col white
+  state active bg $accent.bg, col white
 
 Toggle: w 44, h 24, rad 12, bg $grey-700, cursor pointer, pad 2
   Thumb w 20, h 20, rad 10, bg white, shadow sm
-  state on bg $primary.bg
+  state on bg $accent.bg
 `
 
 // Build context from project source
@@ -113,7 +113,7 @@ const TEST_PROMPTS: TestPrompt[] = [
   },
   {
     name: 'Settings Panel (with Toggle)',
-    prompt: 'Create a settings panel using Card. Add 3 rows, each with: icon in IconButton, title/description Box, and Toggle component. Use tokens: $heading.col, $muted.col, $lg.gap. Include Notifications, Dark Mode, Auto-updates settings.',
+    prompt: 'Create a settings panel using Card. Add 3 rows, each with: icon in IconButton, title/description Box, and Toggle component. Use tokens: $heading.col, $muted.col, $l.gap. Include Notifications, Dark Mode, Auto-updates settings.',
     useContext: true
   },
   {
@@ -170,7 +170,7 @@ async function callLLM(model: string, userPrompt: string, useContext: boolean = 
  * Fix common LLM code errors before parsing
  */
 function fixCodeErrors(code: string): string {
-  // Fix tokens used as JS variables: $lg.gap → '$lg.gap'
+  // Fix tokens used as JS variables: $l.gap → '$l.gap'
   // Match $word.word patterns that are NOT already in quotes
   code = code.replace(/:\s*(\$[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*)/g, (match, token) => {
     // Check if already in quotes (look back for quote)

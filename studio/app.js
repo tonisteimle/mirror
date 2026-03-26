@@ -1279,7 +1279,7 @@ function extractColorTokens() {
     // Match token definitions: $name: #hex or name: #hex
     const lines = content.split('\n')
     for (const line of lines) {
-      // Match patterns like: $primary.bg: #3B82F6 or primary: #3B82F6
+      // Match patterns like: $accent.bg: #3B82F6 or primary: #3B82F6
       const tokenMatch = line.match(/^\s*\$?([\w.-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*(?:\/\/.*)?$/)
       if (tokenMatch) {
         const name = tokenMatch[1]

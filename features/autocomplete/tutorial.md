@@ -185,15 +185,15 @@ Tippe `$` nach einer Property um definierte Tokens einzufügen:
 
 ```mirror
 // Tokens definieren
-$primary.bg: #3B82F6
-$sm.pad: 8
+$accent.bg: #3B82F6
+$s.pad: 8
 
 // Tokens verwenden
 Box bg $|          ← $ getippt
         ↓
 ┌─────────────────────────────────┐
 │ TOKENS                          │
-│  $primary.bg      #3B82F6    ●  │
+│  $accent.bg      #3B82F6    ●  │
 └─────────────────────────────────┘
 ```
 
