@@ -28,17 +28,12 @@ Built-in component types:
 
 | Primitive | HTML Tag | Description |
 |-----------|----------|-------------|
-| Box | `<div>` | Generic container |
-| Frame (Box) | `<div>` | Alias for Box |
+| Frame (Box) | `<div>` | Container with vertical layout (default) |
 | Text | `<span>` | Text element |
 | Button | `<button>` | Clickable button |
 | Input | `<input>` | Text input field |
 | Textarea | `<textarea>` | Multi-line text input |
 | Label | `<label>` | Form label |
-| Select | `<select>` | Dropdown select |
-| Option | `<option>` | Select option |
-| Checkbox | `<input>` | Checkbox input (type=checkbox) |
-| Radio | `<input>` | Radio input (type=radio) |
 | Image (Img) | `<img>` | Image element |
 | Icon | `<span>` | Icon element |
 | Link | `<a>` | Anchor link |
@@ -63,7 +58,7 @@ Built-in component types:
 
 See [properties.md](./properties.md) for detailed property documentation.
 
-Total: 63 properties
+Total: 79 properties
 
 ## Events
 

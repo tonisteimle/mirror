@@ -28,6 +28,7 @@ import {
   getSystemStates,
   getCustomStates,
 } from '../src/schema/dsl'
+import { ZAG_PRIMITIVES } from '../src/schema/zag-primitives'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -583,6 +584,37 @@ function generateClaudeSection(): string {
   for (const [name, def] of Object.entries(DSL.primitives)) {
     const aliases = def.aliases ? def.aliases.join(', ') : '-'
     lines.push(`| ${name} | \`<${def.html}>\` | ${aliases} |`)
+  }
+
+  // Zag Primitives (Behavior Components)
+  lines.push('', '### Zag Primitives (Behavior Components)', '')
+  lines.push('> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.', '')
+  lines.push('| Component | Machine | Slots | Description |')
+  lines.push('|-----------|---------|-------|-------------|')
+
+  // Group components by category
+  const zagCategories: Record<string, string[]> = {
+    'Selection & Dropdowns': ['Select', 'Combobox', 'Listbox'],
+    'Menus': ['Menu', 'ContextMenu', 'NestedMenu', 'NavigationMenu'],
+    'Form Controls': ['Checkbox', 'Switch', 'RadioGroup', 'Slider', 'RangeSlider', 'AngleSlider', 'NumberInput', 'PinInput', 'PasswordInput', 'TagsInput', 'Editable', 'RatingGroup', 'SegmentedControl', 'ToggleGroup'],
+    'Date & Time': ['DatePicker', 'DateInput', 'Timer'],
+    'Overlays & Modals': ['Dialog', 'Tooltip', 'Popover', 'HoverCard', 'FloatingPanel', 'Tour', 'Presence'],
+    'Navigation': ['Tabs', 'Accordion', 'Collapsible', 'Steps', 'Pagination', 'TreeView'],
+    'Media & Files': ['Avatar', 'FileUpload', 'ImageCropper', 'Carousel', 'SignaturePad'],
+    'Feedback & Status': ['Progress', 'CircularProgress', 'Toast', 'Marquee'],
+    'Utility': ['Clipboard', 'QRCode', 'ScrollArea', 'Splitter'],
+  }
+
+  for (const [category, components] of Object.entries(zagCategories)) {
+    lines.push(`| **${category}** | | | |`)
+    for (const name of components) {
+      const def = ZAG_PRIMITIVES[name]
+      if (def) {
+        const slotsCount = def.slots.length
+        const slotsPreview = def.slots.slice(0, 3).join(', ') + (slotsCount > 3 ? ` +${slotsCount - 3}` : '')
+        lines.push(`| ${name} | ${def.machine} | ${slotsPreview} | ${def.description || '-'} |`)
+      }
+    }
   }
 
   // Properties

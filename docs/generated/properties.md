@@ -213,6 +213,110 @@ Spread children with space between
 Box spread
 ```
 
+### top-left (`tl`)
+
+Align children to top-left
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to top-left corner | `display: flex`, `flex-direction: column`, `justify-content: flex-start`, `align-items: flex-start` |
+
+**Beispiele:**
+```mirror
+Box top-left
+```
+
+### top-center (`tc`)
+
+Align children to top-center
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to top-center | `display: flex`, `flex-direction: column`, `justify-content: flex-start`, `align-items: center` |
+
+**Beispiele:**
+```mirror
+Box top-center
+```
+
+### top-right (`tr`)
+
+Align children to top-right
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to top-right corner | `display: flex`, `flex-direction: column`, `justify-content: flex-start`, `align-items: flex-end` |
+
+**Beispiele:**
+```mirror
+Box top-right
+```
+
+### center-left (`cl`)
+
+Align children to center-left
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to center-left | `display: flex`, `flex-direction: column`, `justify-content: center`, `align-items: flex-start` |
+
+**Beispiele:**
+```mirror
+Box center-left
+```
+
+### center-right (`cr`)
+
+Align children to center-right
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to center-right | `display: flex`, `flex-direction: column`, `justify-content: center`, `align-items: flex-end` |
+
+**Beispiele:**
+```mirror
+Box center-right
+```
+
+### bottom-left (`bl`)
+
+Align children to bottom-left
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to bottom-left corner | `display: flex`, `flex-direction: column`, `justify-content: flex-end`, `align-items: flex-start` |
+
+**Beispiele:**
+```mirror
+Box bottom-left
+```
+
+### bottom-center (`bc`)
+
+Align children to bottom-center
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to bottom-center | `display: flex`, `flex-direction: column`, `justify-content: flex-end`, `align-items: center` |
+
+**Beispiele:**
+```mirror
+Box bottom-center
+```
+
+### bottom-right (`br`)
+
+Align children to bottom-right
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Align to bottom-right corner | `display: flex`, `flex-direction: column`, `justify-content: flex-end`, `align-items: flex-end` |
+
+**Beispiele:**
+```mirror
+Box bottom-right
+```
+
 ### wrap
 
 Allow flex items to wrap
@@ -226,17 +330,30 @@ Allow flex items to wrap
 Box wrap
 ```
 
-### stacked
+### pos (`positioned`)
 
-Stacked positioning context
+Positioned container - children are automatically absolute and can use x/y
 
 | Wert | Beschreibung | CSS |
 |------|--------------|-----|
-| *(standalone)* | Enable relative positioning for children | `position: relative` |
+| *(standalone)* | Children can be positioned with x/y coordinates | `position: relative` |
 
 **Beispiele:**
 ```mirror
-Box stacked
+Box pos w 400 h 300
+```
+
+### stacked
+
+Stack children on top of each other (z-layers for overlays, badges)
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Children stacked on z-axis | `position: relative` |
+
+**Beispiele:**
+```mirror
+Box stacked size 48
 ```
 
 ### grid
@@ -518,6 +635,7 @@ Font family
 | `sans` | Sans-serif font stack | `font-family: system-ui, sans-serif` |
 | `serif` | Serif font stack | `font-family: Georgia, serif` |
 | `mono` | Monospace font stack | `font-family: ui-monospace, monospace` |
+| `roboto` | Roboto font | `font-family: Roboto, system-ui, sans-serif` |
 | `$token` | Design Token | *(Token-Wert)* |
 
 ### text-align
@@ -623,6 +741,82 @@ Y position (top) - sets position: absolute
 ```mirror
 Box y 50
 ```
+
+### pin-left (`pl`)
+
+Pin to left edge with offset
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| `<number>` | Distance from left edge in pixels | `pin-left: Npx` |
+
+**Beispiele:**
+```mirror
+Box pin-left 20
+```
+
+### pin-right (`pr`)
+
+Pin to right edge with offset
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| `<number>` | Distance from right edge in pixels | `pin-right: Npx` |
+
+**Beispiele:**
+```mirror
+Box pin-right 20
+```
+
+### pin-top (`pt`)
+
+Pin to top edge with offset
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| `<number>` | Distance from top edge in pixels | `pin-top: Npx` |
+
+**Beispiele:**
+```mirror
+Box pin-top 20
+```
+
+### pin-bottom (`pb`)
+
+Pin to bottom edge with offset
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| `<number>` | Distance from bottom edge in pixels | `pin-bottom: Npx` |
+
+**Beispiele:**
+```mirror
+Box pin-bottom 20
+```
+
+### pin-center-x (`pcx`)
+
+Center horizontally within parent
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Center horizontally | `position: absolute`, `left: 50%`, `transform: translateX(-50%)` |
+
+### pin-center-y (`pcy`)
+
+Center vertically within parent
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Center vertically | `position: absolute`, `top: 50%`, `transform: translateY(-50%)` |
+
+### pin-center (`pc`)
+
+Center both horizontally and vertically
+
+| Wert | Beschreibung | CSS |
+|------|--------------|-----|
+| *(standalone)* | Center in both directions | `position: absolute`, `left: 50%`, `top: 50%`, `transform: translate(-50%, -50%)` |
 
 ### z
 

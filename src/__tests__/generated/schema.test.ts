@@ -51,15 +51,12 @@ describe('DSL Schema', () => {
 
   describe('Primitives', () => {
     it('has required primitives', () => {
-      expect(DSL.primitives.Frame).toBeDefined()
+      expect(DSL.primitives.Box).toBeDefined()
       expect(DSL.primitives.Text).toBeDefined()
       expect(DSL.primitives.Button).toBeDefined()
     })
 
     it('isPrimitive works', () => {
-      expect(isPrimitive('Frame')).toBe(true)
-      expect(isPrimitive('frame')).toBe(true)
-      // Box is an alias for Frame
       expect(isPrimitive('Box')).toBe(true)
       expect(isPrimitive('box')).toBe(true)
       expect(isPrimitive('NotAPrimitive')).toBe(false)
@@ -107,6 +104,42 @@ describe('DSL Schema', () => {
       expect(findProperty('cen')?.name).toBe('center')
     })
 
+    it('tl resolves to top-left', () => {
+      expect(findProperty('tl')?.name).toBe('top-left')
+    })
+
+    it('tc resolves to top-center', () => {
+      expect(findProperty('tc')?.name).toBe('top-center')
+    })
+
+    it('tr resolves to top-right', () => {
+      expect(findProperty('tr')?.name).toBe('top-right')
+    })
+
+    it('cl resolves to center-left', () => {
+      expect(findProperty('cl')?.name).toBe('center-left')
+    })
+
+    it('cr resolves to center-right', () => {
+      expect(findProperty('cr')?.name).toBe('center-right')
+    })
+
+    it('bl resolves to bottom-left', () => {
+      expect(findProperty('bl')?.name).toBe('bottom-left')
+    })
+
+    it('bc resolves to bottom-center', () => {
+      expect(findProperty('bc')?.name).toBe('bottom-center')
+    })
+
+    it('br resolves to bottom-right', () => {
+      expect(findProperty('br')?.name).toBe('bottom-right')
+    })
+
+    it('positioned resolves to pos', () => {
+      expect(findProperty('positioned')?.name).toBe('pos')
+    })
+
     it('pad resolves to padding', () => {
       expect(findProperty('pad')?.name).toBe('padding')
     })
@@ -145,6 +178,34 @@ describe('DSL Schema', () => {
 
     it('fs resolves to font-size', () => {
       expect(findProperty('fs')?.name).toBe('font-size')
+    })
+
+    it('pl resolves to pin-left', () => {
+      expect(findProperty('pl')?.name).toBe('pin-left')
+    })
+
+    it('pr resolves to pin-right', () => {
+      expect(findProperty('pr')?.name).toBe('pin-right')
+    })
+
+    it('pt resolves to pin-top', () => {
+      expect(findProperty('pt')?.name).toBe('pin-top')
+    })
+
+    it('pb resolves to pin-bottom', () => {
+      expect(findProperty('pb')?.name).toBe('pin-bottom')
+    })
+
+    it('pcx resolves to pin-center-x', () => {
+      expect(findProperty('pcx')?.name).toBe('pin-center-x')
+    })
+
+    it('pcy resolves to pin-center-y', () => {
+      expect(findProperty('pcy')?.name).toBe('pin-center-y')
+    })
+
+    it('pc resolves to pin-center', () => {
+      expect(findProperty('pc')?.name).toBe('pin-center')
     })
 
     it('abs resolves to absolute', () => {
@@ -223,11 +284,12 @@ describe('DSL Schema', () => {
       expect(keywords).toContain('black')
     })
 
-    it('font has keywords: sans, serif, mono', () => {
+    it('font has keywords: sans, serif, mono, roboto', () => {
       const keywords = getKeywordsForProperty('font')
       expect(keywords).toContain('sans')
       expect(keywords).toContain('serif')
       expect(keywords).toContain('mono')
+      expect(keywords).toContain('roboto')
     })
 
     it('text-align has keywords: left, center, right, justify', () => {

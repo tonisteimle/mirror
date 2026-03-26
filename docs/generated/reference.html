@@ -111,11 +111,11 @@
 
     <div class="stats">
       <div class="stat">
-        <div class="stat-value">30</div>
+        <div class="stat-value">25</div>
         <div class="stat-label">Primitives</div>
       </div>
       <div class="stat">
-        <div class="stat-value">63</div>
+        <div class="stat-value">79</div>
         <div class="stat-label">Properties</div>
       </div>
       <div class="stat">
@@ -150,17 +150,11 @@
           <tr><th>Name</th><th>HTML Tag</th><th>Aliases</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr data-search="box ">
-            <td><strong>Box</strong></td>
-            <td><code>&lt;div&gt;</code></td>
-            <td>-</td>
-            <td>Generic container</td>
-          </tr>
           <tr data-search="frame Box">
             <td><strong>Frame</strong></td>
             <td><code>&lt;div&gt;</code></td>
             <td><code>Box</code></td>
-            <td>Alias for Box</td>
+            <td>Container with vertical layout (default)</td>
           </tr>
           <tr data-search="text ">
             <td><strong>Text</strong></td>
@@ -191,30 +185,6 @@
             <td><code>&lt;label&gt;</code></td>
             <td>-</td>
             <td>Form label</td>
-          </tr>
-          <tr data-search="select ">
-            <td><strong>Select</strong></td>
-            <td><code>&lt;select&gt;</code></td>
-            <td>-</td>
-            <td>Dropdown select</td>
-          </tr>
-          <tr data-search="option ">
-            <td><strong>Option</strong></td>
-            <td><code>&lt;option&gt;</code></td>
-            <td>-</td>
-            <td>Select option</td>
-          </tr>
-          <tr data-search="checkbox ">
-            <td><strong>Checkbox</strong></td>
-            <td><code>&lt;input&gt;</code></td>
-            <td>-</td>
-            <td>Checkbox input (type=checkbox)</td>
-          </tr>
-          <tr data-search="radio ">
-            <td><strong>Radio</strong></td>
-            <td><code>&lt;input&gt;</code></td>
-            <td>-</td>
-            <td>Radio input (type=radio)</td>
           </tr>
           <tr data-search="image Img">
             <td><strong>Image</strong></td>
@@ -428,17 +398,71 @@
             <td><span class="tag">standalone</span></td>
             <td>Spread children with space between</td>
           </tr>
+          <tr data-search="top-left tl layout">
+            <td><strong>top-left</strong></td>
+            <td><code>tl</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to top-left</td>
+          </tr>
+          <tr data-search="top-center tc layout">
+            <td><strong>top-center</strong></td>
+            <td><code>tc</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to top-center</td>
+          </tr>
+          <tr data-search="top-right tr layout">
+            <td><strong>top-right</strong></td>
+            <td><code>tr</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to top-right</td>
+          </tr>
+          <tr data-search="center-left cl layout">
+            <td><strong>center-left</strong></td>
+            <td><code>cl</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to center-left</td>
+          </tr>
+          <tr data-search="center-right cr layout">
+            <td><strong>center-right</strong></td>
+            <td><code>cr</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to center-right</td>
+          </tr>
+          <tr data-search="bottom-left bl layout">
+            <td><strong>bottom-left</strong></td>
+            <td><code>bl</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to bottom-left</td>
+          </tr>
+          <tr data-search="bottom-center bc layout">
+            <td><strong>bottom-center</strong></td>
+            <td><code>bc</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to bottom-center</td>
+          </tr>
+          <tr data-search="bottom-right br layout">
+            <td><strong>bottom-right</strong></td>
+            <td><code>br</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Align children to bottom-right</td>
+          </tr>
           <tr data-search="wrap  layout">
             <td><strong>wrap</strong></td>
             <td>-</td>
             <td><span class="tag">standalone</span></td>
             <td>Allow flex items to wrap</td>
           </tr>
+          <tr data-search="pos positioned layout">
+            <td><strong>pos</strong></td>
+            <td><code>positioned</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Positioned container - children are automatically absolute and can use x/y</td>
+          </tr>
           <tr data-search="stacked  layout">
             <td><strong>stacked</strong></td>
             <td>-</td>
             <td><span class="tag">standalone</span></td>
-            <td>Stacked positioning context</td>
+            <td>Stack children on top of each other (z-layers for overlays, badges)</td>
           </tr>
           <tr data-search="grid  layout">
             <td><strong>grid</strong></td>
@@ -595,7 +619,7 @@
           <tr data-search="font  typography">
             <td><strong>font</strong></td>
             <td>-</td>
-            <td><code>sans</code> <code>serif</code> <code>mono</code> <span class="tag">$token</span></td>
+            <td><code>sans</code> <code>serif</code> <code>mono</code> <code>roboto</code> <span class="tag">$token</span></td>
             <td>Font family</td>
           </tr>
           <tr data-search="text-align  typography">
@@ -653,6 +677,48 @@
             <td>-</td>
             <td><span class="tag">number</span></td>
             <td>Y position (top) - sets position: absolute</td>
+          </tr>
+          <tr data-search="pin-left pl position">
+            <td><strong>pin-left</strong></td>
+            <td><code>pl</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Pin to left edge with offset</td>
+          </tr>
+          <tr data-search="pin-right pr position">
+            <td><strong>pin-right</strong></td>
+            <td><code>pr</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Pin to right edge with offset</td>
+          </tr>
+          <tr data-search="pin-top pt position">
+            <td><strong>pin-top</strong></td>
+            <td><code>pt</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Pin to top edge with offset</td>
+          </tr>
+          <tr data-search="pin-bottom pb position">
+            <td><strong>pin-bottom</strong></td>
+            <td><code>pb</code></td>
+            <td><span class="tag">number</span></td>
+            <td>Pin to bottom edge with offset</td>
+          </tr>
+          <tr data-search="pin-center-x pcx position">
+            <td><strong>pin-center-x</strong></td>
+            <td><code>pcx</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center horizontally within parent</td>
+          </tr>
+          <tr data-search="pin-center-y pcy position">
+            <td><strong>pin-center-y</strong></td>
+            <td><code>pcy</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center vertically within parent</td>
+          </tr>
+          <tr data-search="pin-center pc position">
+            <td><strong>pin-center</strong></td>
+            <td><code>pc</code></td>
+            <td><span class="tag">standalone</span></td>
+            <td>Center both horizontally and vertically</td>
           </tr>
           <tr data-search="z  position">
             <td><strong>z</strong></td>
@@ -1065,8 +1131,8 @@
     </section>
 
     <footer>
-      Generated on 2026-03-16 &bull;
-      Schema version: 63 properties
+      Generated on 2026-03-26 &bull;
+      Schema version: 79 properties
     </footer>
   </div>
 

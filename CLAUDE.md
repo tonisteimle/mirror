@@ -135,17 +135,12 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 
 | Primitive | HTML | Aliases |
 |-----------|------|---------|
-| Box | `<div>` | - |
 | Frame | `<div>` | Box |
 | Text | `<span>` | - |
 | Button | `<button>` | - |
 | Input | `<input>` | - |
 | Textarea | `<textarea>` | - |
 | Label | `<label>` | - |
-| Select | `<select>` | - |
-| Option | `<option>` | - |
-| Checkbox | `<input>` | - |
-| Radio | `<input>` | - |
 | Image | `<img>` | Img |
 | Icon | `<span>` | - |
 | Link | `<a>` | - |
@@ -166,6 +161,72 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | H5 | `<h5>` | - |
 | H6 | `<h6>` | - |
 
+### Zag Primitives (Behavior Components)
+
+> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.
+
+| Component | Machine | Slots | Description |
+|-----------|---------|-------|-------------|
+| **Selection & Dropdowns** | | | |
+| Select | select | Trigger, Content, Item +8 | Dropdown select with keyboard navigation |
+| Combobox | combobox | Root, Label, Control +9 | Autocomplete combobox with filtering |
+| Listbox | listbox | Root, Label, Content +5 | Listbox selection |
+| **Menus** | | | |
+| Menu | menu | Trigger, Positioner, Content +5 | Dropdown menu with keyboard navigation |
+| ContextMenu | menu | Trigger, Positioner, Content +4 | Right-click context menu |
+| NestedMenu | menu | Trigger, Positioner, Content +5 | Nested submenu structure |
+| NavigationMenu | navigation-menu | Root, List, Item +5 | Navigation menu with submenus |
+| **Form Controls** | | | |
+| Checkbox | checkbox | Root, Control, Label +2 | Checkbox with label |
+| Switch | switch | Track, Thumb, Label | Toggle switch |
+| RadioGroup | radio-group | Root, Item, ItemControl +4 | Radio button group |
+| Slider | slider | Root, Track, Range +6 | Range slider |
+| RangeSlider | slider | Root, Track, Range +6 | Range slider with two thumbs |
+| AngleSlider | angle-slider | Root, Control, Thumb +4 | Circular angle slider |
+| NumberInput | number-input | Root, Label, Control +4 | Number input with increment/decrement |
+| PinInput | pin-input | Root, Label, Control +2 | PIN/OTP input |
+| PasswordInput | password-input | Root, Label, Control +2 | Password input with visibility toggle |
+| TagsInput | tags-input | Root, Label, Control +6 | Tags/chips input |
+| Editable | editable | Root, Area, Preview +5 | Inline editable text |
+| RatingGroup | rating-group | Root, Label, Control +2 | Star rating input |
+| SegmentedControl | radio-group | Root, Item, ItemText +2 | Segmented control / button group |
+| ToggleGroup | toggle-group | Root, Item | Toggle button group |
+| **Date & Time** | | | |
+| DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
+| DateInput | date-input | Root, Label, Control +2 | Segmented date input |
+| Timer | timer | Root, Area, Control +3 | Timer/stopwatch |
+| **Overlays & Modals** | | | |
+| Dialog | dialog | Trigger, Backdrop, Positioner +4 | Modal dialog |
+| Tooltip | tooltip | Trigger, Positioner, Content +1 | Hover tooltip |
+| Popover | popover | Trigger, Positioner, Content +5 | Click popover |
+| HoverCard | hover-card | Trigger, Positioner, Content +1 | Hover card preview |
+| FloatingPanel | floating-panel | Trigger, Positioner, Content +5 | Draggable floating panel |
+| Tour | tour | Backdrop, Spotlight, Positioner +9 | Guided tour/walkthrough |
+| Presence | presence | Root | Presence animation utility |
+| **Navigation** | | | |
+| Tabs | tabs | Root, List, Trigger +2 | Tabbed navigation |
+| Accordion | accordion | Root, Item, ItemTrigger +2 | Collapsible accordion |
+| Collapsible | collapsible | Root, Trigger, Content | Collapsible section |
+| Steps | steps | Root, List, Item +7 | Step wizard/stepper |
+| Pagination | pagination | Root, PrevTrigger, NextTrigger +2 | Pagination controls |
+| TreeView | tree-view | Root, Tree, Branch +5 | Tree view navigation |
+| **Media & Files** | | | |
+| Avatar | avatar | Root, Image, Fallback | Avatar with fallback |
+| FileUpload | file-upload | Root, Dropzone, Trigger +8 | File upload with drag & drop |
+| ImageCropper | image-cropper | Root, Image, Overlay +9 | Image cropping tool |
+| Carousel | carousel | Root, ItemGroup, Item +6 | Carousel/slider |
+| SignaturePad | signature-pad | Root, Control, Segment +4 | Signature drawing pad |
+| **Feedback & Status** | | | |
+| Progress | progress | Root, Track, Range +5 | Linear progress bar |
+| CircularProgress | progress | Root, Circle, CircleTrack +3 | Circular progress indicator |
+| Toast | toast | Root, Title, Description +2 | Toast notification |
+| Marquee | marquee | Root, Content | Scrolling marquee |
+| **Utility** | | | |
+| Clipboard | clipboard | Root, Label, Control +3 | Clipboard copy utility |
+| QRCode | qr-code | Root, Frame, Pattern +1 | QR code generator |
+| ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
+| Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
+
 ### Properties
 
 | Property | Aliases | Werte |
@@ -183,9 +244,17 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | gap | g | <number>, $token |
 | center | cen | *(standalone)* |
 | spread | - | *(standalone)* |
+| top-left | tl | *(standalone)* |
+| top-center | tc | *(standalone)* |
+| top-right | tr | *(standalone)* |
+| center-left | cl | *(standalone)* |
+| center-right | cr | *(standalone)* |
+| bottom-left | bl | *(standalone)* |
+| bottom-center | bc | *(standalone)* |
+| bottom-right | br | *(standalone)* |
 | wrap | - | *(standalone)* |
-| stacked | - | *(standalone)* |
 | pos | positioned | *(standalone)* |
+| stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
 | grow | - | *(standalone)* |
 | shrink | - | *(standalone)* |
@@ -206,7 +275,7 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | font-size | fs | <number>, $token |
 | weight | - | thin, light, normal, medium, semibold, bold, black, <number> |
 | line | - | <number>, $token |
-| font | - | sans, serif, mono, $token |
+| font | - | sans, serif, mono, roboto, $token |
 | text-align | - | left, center, right, justify |
 | italic | - | *(standalone)* |
 | underline | - | *(standalone)* |
@@ -215,6 +284,13 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | truncate | - | *(standalone)* |
 | x | - | <number> |
 | y | - | <number> |
+| pin-left | pl | <number> |
+| pin-right | pr | <number> |
+| pin-top | pt | <number> |
+| pin-bottom | pb | <number> |
+| pin-center-x | pcx | *(standalone)* |
+| pin-center-y | pcy | *(standalone)* |
+| pin-center | pc | *(standalone)* |
 | z | - | <number> |
 | absolute | abs | *(standalone)* |
 | fixed | - | *(standalone)* |
