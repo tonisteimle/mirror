@@ -6,17 +6,17 @@
 
 import type { StorageProvider } from '../types'
 import { TauriProvider, isTauri } from './tauri'
-import { ServerProvider, isServerAvailable } from './server'
+import { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
 
 export { TauriProvider, isTauri } from './tauri'
-export { ServerProvider, isServerAvailable } from './server'
+export { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
 
 /**
  * Erkennt automatisch den verfügbaren Provider
  *
  * Priorität:
  * 1. Tauri (Desktop-App)
- * 2. Server (PHP API) - kein Fallback, Server ist erforderlich
+ * 2. LocalStorage (Browser)
  */
 export async function detectProvider(): Promise<StorageProvider> {
   // 1. Tauri verfügbar?
@@ -25,20 +25,25 @@ export async function detectProvider(): Promise<StorageProvider> {
     return new TauriProvider()
   }
 
-  // 2. Server (immer verwenden, kein Demo-Fallback)
-  console.log('[Storage] Using ServerProvider')
-  return new ServerProvider()
+  // 2. LocalStorage (Standard für Browser)
+  if (isLocalStorageAvailable()) {
+    console.log('[Storage] Using LocalStorageProvider')
+    return new LocalStorageProvider()
+  }
+
+  // Fallback: sollte nie passieren
+  throw new Error('No storage provider available')
 }
 
 /**
  * Erstellt einen spezifischen Provider
  */
-export function createProvider(type: 'tauri' | 'server'): StorageProvider {
+export function createProvider(type: 'tauri' | 'localstorage'): StorageProvider {
   switch (type) {
     case 'tauri':
       return new TauriProvider()
-    case 'server':
-      return new ServerProvider()
+    case 'localstorage':
+      return new LocalStorageProvider()
     default:
       throw new Error(`Unknown provider type: ${type}`)
   }

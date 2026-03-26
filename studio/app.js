@@ -15,7 +15,6 @@ import {
   actions as studioActions,
   mirrorCompletions,
   getStateSelectionAdapter,
-  loadSettingsFromServer,
   // New Unified Trigger System
   getTriggerManager,
   registerAllTriggers,
@@ -38,7 +37,7 @@ import {
   createComponentDropExtension,
   insertComponentCode,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=113'
+} from './dist/index.js?v=114'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -92,57 +91,24 @@ function isLayoutFile(filename) {
 }
 
 // ============================================
-// API Client & Auth State
+// App State
 // ============================================
 
-const API_BASE = 'api'  // Relative path for deployment flexibility
 const STORAGE_PREFIX = 'mirror-file-'
-// File types are stored in-memory only (per session)
 const PROJECT_KEY = 'mirror-current-project'
-const AUTH_KEY = 'mirror-auth-state'
 const STORAGE_VERSION_KEY = 'mirror-storage-version'
 const STORAGE_VERSION = 4  // Increment this when storage format changes
 
-// App State
 const DEBUG_SYNC = false  // Enable verbose sync logging
-// Desktop app: always "logged in" locally
-const authState = {
-  isLoggedIn: true,
-  isAnonymous: false,
-  userId: 'local',
-  email: null
-}
 let currentProject = null
 let projects = []
 const files = {}
 const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
 let currentFile = 'index.mir'
 
-// API Helper
-async function api(endpoint, options = {}) {
-  // Desktop app: API calls are not used - all file operations go through TauriBridge
-  console.warn('[API] Legacy API call ignored:', endpoint)
-  return {}
-}
-
-// Auth Functions
-// Desktop app: no auth needed, always "logged in" locally
-
 // Check if running in Tauri desktop app
 function isTauriDesktop() {
   return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
-}
-
-async function checkAuth() {
-  // Desktop app: always logged in, no auth needed
-  console.log('[Auth] Desktop app - always logged in')
-  return true
-}
-
-// Auth functions removed - Desktop app doesn't need login/register/logout
-
-function updateAuthUI() {
-  // Desktop app: no auth UI needed
 }
 
 // Project Functions
@@ -672,23 +638,14 @@ function switchFile(filename) {
   compile(files[filename])
 }
 
-// Auth removed - Desktop app doesn't need authentication
-
-// Project dropdown UI removed - Desktop app uses native menus and file tree
-
-// Initialize: Check auth status and load projects
+// Initialize: Load projects
 async function initApp() {
-  await checkAuth()  // Sets up session (logged in or anonymous)
-  await loadProjects()  // Loads or creates projects
+  await loadProjects()
 }
 
 // Start initialization (will complete after editor is set up)
 let editorReady = false
 const initPromise = initApp()
-
-// ============================================
-// End of API Client & Auth
-// ============================================
 
 const initialCode = files[currentFile] || ''
 
@@ -4490,30 +4447,8 @@ function updateStudio(ast, ir, sourceMap, source) {
     )
   }
 
-  // Update or create DragDropService (Pragmatic DnD based)
-  // IMPORTANT: Use studio bundle's DragDropService to share instance
-  if (!studioDragDropService) {
-    studioDragDropService = new DragDropService({
-      container: previewContainer,
-      onDrop: handleStudioDrop,
-      onDragStart: () => {
-        // Drag started - could add visual feedback here
-      },
-      onDragEnd: () => {
-        // Hide drop zone visualization
-        studio.preview?.hideDropZone()
-        // Remove drop target highlight from all elements
-        previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
-          el.classList.remove('studio-drop-target')
-        })
-      },
-    })
-    studioDragDropService.init()
-    initComponentPalette()
-  }
-
-  // Make preview elements draggable for canvas-internal movement
-  makePreviewElementsDraggable()
+  // Legacy DragDropService disabled - using new Webflow-style DragDropSystem (studio.dragDrop)
+  // The new system handles all drag-drop via native HTML5 events in bootstrap.ts
 
   // Sync property panel to editor cursor after compile (if editor has focus)
   // Use new architecture: trigger SyncCoordinator via EditorController

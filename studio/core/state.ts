@@ -181,57 +181,9 @@ const defaultPanelVisibility: PanelVisibility = {
 
 /**
  * Load panel visibility defaults
- * Settings are loaded from server after login via loadSettingsFromServer()
  */
 function loadPanelVisibility(): PanelVisibility {
   return { ...defaultPanelVisibility }
-}
-
-/**
- * Save settings to server (for logged-in users)
- */
-async function saveSettingsToServer(settings: { panelVisibility?: PanelVisibility }): Promise<void> {
-  try {
-    const response = await fetch('/mirror/api/auth/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ settings }),
-    })
-    if (!response.ok) {
-      console.warn('[Settings] Failed to save to server:', response.status)
-    }
-  } catch (e) {
-    console.warn('[Settings] Failed to save to server:', e)
-  }
-}
-
-/**
- * Load settings from server
- * Call this after login
- */
-export async function loadSettingsFromServer(): Promise<void> {
-  try {
-    const response = await fetch('/mirror/api/auth/settings', {
-      credentials: 'include',
-    })
-    if (!response.ok) return
-
-    const data = await response.json()
-    if (data.success && data.settings?.panelVisibility) {
-      const merged: PanelVisibility = {
-        ...defaultPanelVisibility,
-        ...data.settings.panelVisibility,
-      }
-      state.set({ panelVisibility: merged })
-
-      // Emit event for UI update
-      events.emit('settings:loaded', { panelVisibility: merged })
-      DEBUG_STATE && console.log('[Settings] Loaded from server:', merged)
-    }
-  } catch (e) {
-    console.warn('[Settings] Failed to load from server:', e)
-  }
 }
 
 const initialState: StudioState = {
@@ -517,15 +469,11 @@ export const actions = {
       [panel]: !current[panel],
     }
     state.set({ panelVisibility: newVisibility })
-
-    // Persist to server (async, fire-and-forget)
-    saveSettingsToServer({ panelVisibility: newVisibility })
-
     events.emit('panel:visibility-changed', { panel, visible: newVisibility[panel] })
   },
 
   /**
-   * Set panel visibility directly and persist to server
+   * Set panel visibility directly
    */
   setPanelVisibility(panel: keyof PanelVisibility, visible: boolean): void {
     const current = state.get().panelVisibility
@@ -536,10 +484,6 @@ export const actions = {
       [panel]: visible,
     }
     state.set({ panelVisibility: newVisibility })
-
-    // Persist to server (async, fire-and-forget)
-    saveSettingsToServer({ panelVisibility: newVisibility })
-
     events.emit('panel:visibility-changed', { panel, visible })
   },
 

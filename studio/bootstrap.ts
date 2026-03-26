@@ -790,24 +790,6 @@ function initializePanelToolbar(): void {
     })
   )
 
-  // Listen for settings loaded from server (after login)
-  eventUnsubscribes.push(
-    events.on('settings:loaded', ({ panelVisibility }) => {
-      for (const [panelKey, isVisible] of Object.entries(panelVisibility)) {
-        const panelEl = panelElements[panelKey]
-        const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
-
-        if (panelEl) {
-          panelEl.classList.toggle('panel-hidden', !isVisible)
-        }
-        if (checkbox) {
-          checkbox.checked = isVisible as boolean
-        }
-      }
-      console.log('[ViewMenu] Settings loaded from server')
-    })
-  )
-
   console.log('[Studio] View menu initialized')
 }
 
