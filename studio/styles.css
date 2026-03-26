@@ -5983,10 +5983,14 @@
 
     .component-panel-item-name {
       font-size: var(--font-sm);
-      color: var(--text-primary);
+      color: var(--text-muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .component-panel-item:hover .component-panel-item-name {
+      color: var(--text-primary);
     }
 
     /* ============================================
