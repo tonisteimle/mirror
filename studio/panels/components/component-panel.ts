@@ -16,7 +16,7 @@ import type {
   ComponentDragData,
 } from './types'
 import { getComponentIcon } from './icons'
-import { LAYOUT_PRESETS, BASIC_COMPONENTS } from './layout-presets'
+import { BASIC_PRIMITIVES, BASIC_COMPONENTS } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
@@ -49,22 +49,22 @@ export class ComponentPanel {
   }
 
   /**
-   * Build sections - grouped by category with headers
+   * Build sections - Basic primitives and Components
    */
   private buildSections(): void {
     this.sections = []
 
-    // Layouts section
-    if (this.config.showLayoutPresets && LAYOUT_PRESETS.length > 0) {
+    // Basic section (Frame, Text, Icon, Image)
+    if (BASIC_PRIMITIVES.length > 0) {
       this.sections.push({
-        name: 'Layouts',
-        items: [...LAYOUT_PRESETS],
+        name: 'Basic',
+        items: [...BASIC_PRIMITIVES],
         isExpanded: true,
       })
     }
 
     // Components section (alphabetically sorted)
-    if (this.config.showBasicComponents && BASIC_COMPONENTS.length > 0) {
+    if (BASIC_COMPONENTS.length > 0) {
       const sortedComponents = [...BASIC_COMPONENTS].sort((a, b) => a.name.localeCompare(b.name))
       this.sections.push({
         name: 'Components',
