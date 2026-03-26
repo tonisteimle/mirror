@@ -143,22 +143,36 @@
 
   <!-- Initial code template (outside grid container) -->
   <script type="text/plain" id="initial-code">// Design Tokens
-primary: #3B82F6
-surface: #1a1a23
-text: #e4e4e7
+
+// Background Colors
+$primary.bg: #3B82F6
+$primary-hover.bg: #2563eb
+$surface.bg: #1a1a23
+
+// Text Colors
+$text.col: #e4e4e7
+
+// Spacing
+$sm.pad: 10
+$md.pad: 20
+$sm.gap: 8
+$md.gap: 12
+
+// Radius
+$sm.rad: 6
+$md.rad: 8
 
 // Components
 Card as frame:
-  pad 20, gap 12, bg surface, rad 8
+  pad $md.pad, gap $md.gap, bg $surface.bg, rad $md.rad
 
 Title as text:
-  col text, weight 600, font-size 18
+  col $text.col, weight 600, font-size 18
 
 Button as button:
-  pad 10 20, bg primary, rad 6
+  pad $sm.pad $md.pad, bg $primary.bg, rad $sm.rad
   col white, weight 500
-  hover
-    bg #2563eb
+  hover bg $primary-hover.bg
 
 // Instance
 Card

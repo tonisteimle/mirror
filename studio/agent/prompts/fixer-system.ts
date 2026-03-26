@@ -68,37 +68,63 @@ const FILE_CONVENTIONS = `
 Mirror-Projekte haben drei Datei-Typen:
 
 ### .tok Dateien (Tokens)
-Design-Tokens wie Farben, Spacing, Sizes:
+Design-Tokens mit semantischen Suffixen (bg, col, pad, gap, rad):
 \`\`\`
-$primary: #3b82f6
-$surface: #27272a
-$spacing-md: 16
-$radius: 8
+// Background Colors
+$primary.bg: #3b82f6
+$primary-hover.bg: #2563eb
+$surface.bg: #27272a
+
+// Text Colors
+$text.col: #ffffff
+$muted.col: #a1a1aa
+
+// Padding
+$sm.pad: 8
+$md.pad: 16
+
+// Gap
+$sm.gap: 8
+$md.gap: 12
+
+// Radius
+$sm.rad: 4
+$md.rad: 8
 \`\`\`
 
 ### .com Dateien (Komponenten)
 Wiederverwendbare Komponenten-Definitionen:
 \`\`\`
 PrimaryButton as Button:
-  bg $primary, col white, pad 12 24, rad 6
-  hover bg #2563eb
+  bg $primary.bg, col white, pad $sm.pad $md.pad, rad $sm.rad
+  hover bg $primary-hover.bg
 
 Card as Box:
-  bg $surface, pad 16, rad 8, gap 12
+  bg $surface.bg, pad $md.pad, rad $md.rad, gap $sm.gap
 \`\`\`
 
 ### .mir Dateien (Layout/App)
 Die eigentliche App-Struktur mit Instanzen:
 \`\`\`
-App bg #18181b, pad 24, gap 16
+App bg $app.bg, pad $lg.pad, gap $md.gap
   Card
-    Text "Willkommen", weight bold
+    Text "Willkommen", weight bold, col $text.col
     PrimaryButton "Weiter"
 \`\`\`
 
+## Token-Namenskonvention
+
+Tokens haben IMMER einen Property-Suffix:
+- \`.bg\` für Hintergrundfarben (background)
+- \`.col\` für Textfarben (color)
+- \`.boc\` für Rahmenfarben (border-color)
+- \`.pad\` für Innenabstände (padding)
+- \`.gap\` für Abstände (gap)
+- \`.rad\` für Eckenradius (radius)
+
 ## Regeln
 
-1. **Neue Tokens** → in die passende .tok Datei (oder tokens.tok)
+1. **Neue Tokens** → in die passende .tok Datei (oder tokens.tok) MIT Property-Suffix
 2. **Neue Komponenten** → in die passende .com Datei (oder components.com)
 3. **Instanzen/Layout** → in die aktuelle .mir Datei an Cursor-Position
 4. **Prüfe zuerst** ob Token/Komponente schon existiert bevor du neu erstellst`

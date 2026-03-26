@@ -19,39 +19,49 @@ const STORAGE_KEY = 'mirror-files'
 // =============================================================================
 
 const DEMO_FILES: Record<string, string> = {
-  'index.mir': `App bg $background, pad 24, gap 16
-  Text "Welcome to Mirror", fs 24, weight bold, col $text
-  Text "Edit this code to get started", col $muted
+  'index.mir': `App bg $app.bg, pad $lg.pad, gap $md.gap
+  Text "Welcome to Mirror", fs 24, weight bold, col $text.col
+  Text "Edit this code to get started", col $muted.col
 
   Card
-    Text "Your first component", col $muted
+    Text "Your first component", col $muted.col
     Button "Click Me"`,
 
   'tokens.tok': `// Design Tokens
 
-// Colors
-$primary: #3b82f6
-$surface: #27272a
-$background: #18181b
-$text: #ffffff
-$muted: #a1a1aa
+// Background Colors
+$primary.bg: #3b82f6
+$primary-hover.bg: #2563eb
+$surface.bg: #27272a
+$app.bg: #18181b
 
-// Spacing
-$spacing-sm: 8
-$spacing-md: 16
-$spacing-lg: 24
+// Text Colors
+$text.col: #ffffff
+$muted.col: #a1a1aa
+
+// Padding
+$sm.pad: 8
+$md.pad: 16
+$lg.pad: 24
+
+// Gap
+$sm.gap: 8
+$md.gap: 12
+$lg.gap: 16
 
 // Radius
-$radius: 8`,
+$sm.rad: 4
+$md.rad: 8
+$lg.rad: 12`,
 
   'components.com': `// Component Definitions
 
 Card:
-  bg $surface, pad 16, rad $radius, gap 8
+  bg $surface.bg, pad $md.pad, rad $md.rad, gap $sm.gap
 
 Button:
-  pad 12 24, bg $primary, rad 6, col white
-  hover bg #2563eb`
+  pad $sm.pad $md.pad, bg $primary.bg, rad $sm.rad, col white
+  hover bg $primary-hover.bg`
 }
 
 // =============================================================================

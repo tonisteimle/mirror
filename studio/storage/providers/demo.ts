@@ -13,15 +13,13 @@ import { isMirrorFile } from '../types'
 // =============================================================================
 
 const DEFAULT_DEMO_FILES: Record<string, string> = {
-  'index.mir': `App bg #18181b, pad 24, gap 16
-  Text "Mirror Studio", fs 24, weight bold, col white
-  Text "Browser Demo Mode", col #888
+  'index.mir': `App bg $app.bg, pad $lg.pad, gap $md.gap
+  Text "Mirror Studio", fs 24, weight bold, col $text.col
+  Text "Browser Demo Mode", col $muted.col
 
-  Card bg #27272a, pad 16, rad 8, gap 8
-    Text "Edit this code to test", col #a1a1aa
+  Card
+    Text "Edit this code to test", col $muted.col
     Button "Click Me"
-      pad 12 24, bg #3b82f6, rad 6, col white
-      hover bg #2563eb
 
   // Zag Select Component
   Select placeholder "Choose an option..."
@@ -31,34 +29,49 @@ const DEFAULT_DEMO_FILES: Record<string, string> = {
 
   'tokens.tok': `// Design Tokens
 
-// Colors
-$primary: #3b82f6
-$surface: #27272a
-$background: #18181b
-$text: #ffffff
-$muted: #a1a1aa
+// Background Colors
+$primary.bg: #3b82f6
+$primary-hover.bg: #2563eb
+$surface.bg: #27272a
+$app.bg: #18181b
+$input.bg: #1f1f1f
 
-// Spacing
-$spacing-sm: 8
-$spacing-md: 16
-$spacing-lg: 24
+// Text Colors
+$text.col: #ffffff
+$muted.col: #a1a1aa
+
+// Border Colors
+$border.boc: #333333
+$focus.boc: #3b82f6
+
+// Padding
+$sm.pad: 8
+$md.pad: 16
+$lg.pad: 24
+
+// Gap
+$sm.gap: 8
+$md.gap: 12
+$lg.gap: 16
 
 // Radius
-$radius: 8`,
+$sm.rad: 4
+$md.rad: 8
+$lg.rad: 12`,
 
   'components.com': `// Component Definitions
 
 Button:
-  pad 12 24, bg #3b82f6, rad 6, col white, cursor pointer
-  hover bg #2563eb
+  pad $sm.pad $md.pad, bg $primary.bg, rad $sm.rad, col white, cursor pointer
+  hover bg $primary-hover.bg
 
 Card:
-  bg #27272a, pad 16, rad 8
+  bg $surface.bg, pad $md.pad, rad $md.rad, gap $sm.gap
 
 Input:
-  pad 12, bg #1f1f1f, rad 6, bor 1 #333
-  col white
-  focus bor 1 #3b82f6`
+  pad $sm.pad, bg $input.bg, rad $sm.rad, bor 1 $border.boc
+  col $text.col
+  focus bor 1 $focus.boc`
 }
 
 // =============================================================================

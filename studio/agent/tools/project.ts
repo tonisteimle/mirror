@@ -180,10 +180,14 @@ export const addTokenTool: Tool = {
 
 IMPORTANT:
 1. First check if a similar token already exists using get_tokens
-2. Use semantic names: $primary, $surface, $spacing-sm, etc.
+2. Use semantic names WITH property suffix:
+   - Colors: $primary.bg, $text.col, $border.boc
+   - Spacing: $sm.pad, $md.gap, $lg.margin
+   - Radius: $sm.rad, $md.rad
 3. Token will be added to the tokens file automatically
 
-Example: add_token("primary", "#3B82F6")`,
+Example: add_token("primary.bg", "#3B82F6")
+Example: add_token("md.pad", "16")`,
   parameters: {
     name: {
       type: 'string',
