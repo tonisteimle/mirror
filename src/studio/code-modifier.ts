@@ -506,7 +506,8 @@ export class CodeModifier {
       insertText = `${adjustedTemplate}\n`
     } else {
       // Insert after sibling (at end of sibling's block)
-      const siblingEndLine = siblingMapping.position.endLine
+      // Use getBlockEndLine to find actual end including all children
+      const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
       const endLineContent = this.lines[siblingEndLine - 1]
       insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
       insertText = `\n${adjustedTemplate}`
@@ -583,7 +584,8 @@ export class CodeModifier {
       insertText = `${componentLine}\n`
     } else {
       // Insert after sibling (at end of sibling's block)
-      const siblingEndLine = siblingMapping.position.endLine
+      // Use getBlockEndLine to find actual end including all children
+      const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
       const endLineContent = this.lines[siblingEndLine - 1]
       insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
       insertText = `\n${componentLine}`
@@ -619,9 +621,9 @@ export class CodeModifier {
       return this.errorResult(`Node not found: ${nodeId}`)
     }
 
-    // Get the full block span (node line to endLine)
+    // Get the full block span (node line to actual endLine including children)
     const startLine = nodeMapping.position.line
-    const endLine = nodeMapping.position.endLine
+    const endLine = this.getBlockEndLine(startLine)
 
     // Calculate character offsets for the entire block
     const startOffset = this.getCharacterOffset(startLine, 1)
@@ -783,9 +785,9 @@ export class CodeModifier {
       return this.errorResult('Cannot move node into its own descendant')
     }
 
-    // Extract the source block text
+    // Extract the source block text (including all children)
     const startLine = sourceMapping.position.line
-    const endLine = sourceMapping.position.endLine
+    const endLine = this.getBlockEndLine(startLine)
     const sourceLines = this.lines.slice(startLine - 1, endLine)
     const sourceBlock = sourceLines.join('\n')
 
@@ -875,8 +877,8 @@ export class CodeModifier {
       if (insertPosition < 0) insertPosition = 0
       insertText = `\n${reindentedBlock}`
     } else {
-      // After target
-      const targetEndLine = targetMapping.position.endLine
+      // After target - use getBlockEndLine to find actual end including all children
+      const targetEndLine = this.getBlockEndLine(targetMapping.position.line)
       const targetEndContent = this.lines[targetEndLine - 1]
       insertPosition = this.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
       insertText = `\n${reindentedBlock}`
@@ -931,9 +933,9 @@ export class CodeModifier {
       return this.errorResult(`Target node not found: ${targetId}`)
     }
 
-    // Extract the source block text
+    // Extract the source block text (including all children)
     const startLine = sourceMapping.position.line
-    const endLine = sourceMapping.position.endLine
+    const endLine = this.getBlockEndLine(startLine)
     const sourceLines = this.lines.slice(startLine - 1, endLine)
     const sourceBlock = sourceLines.join('\n')
 
@@ -977,7 +979,8 @@ export class CodeModifier {
       if (insertPosition < 0) insertPosition = 0
       insertText = `\n${reindentedBlock}`
     } else {
-      const targetEndLine = targetMapping.position.endLine
+      // After target - use getBlockEndLine to find actual end including all children
+      const targetEndLine = this.getBlockEndLine(targetMapping.position.line)
       const targetEndContent = this.lines[targetEndLine - 1]
       insertPosition = this.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
       insertText = `\n${reindentedBlock}`
@@ -1138,6 +1141,48 @@ export class CodeModifier {
     if (!line) return ''
     const match = line.match(/^(\s*)/)
     return match ? match[1] : ''
+  }
+
+  /**
+   * Find the actual end line of a block (including all children)
+   * by looking at indentation levels.
+   *
+   * @param startLine - 1-based line number where the block starts
+   * @returns 1-based line number where the block ends
+   */
+  private getBlockEndLine(startLine: number): number {
+    const lineIndex = startLine - 1
+    if (lineIndex < 0 || lineIndex >= this.lines.length) {
+      return startLine
+    }
+
+    const blockLine = this.lines[lineIndex]
+    const blockIndent = this.getLineIndent(blockLine).length
+
+    // Walk through subsequent lines
+    let endLine = startLine
+    for (let i = lineIndex + 1; i < this.lines.length; i++) {
+      const line = this.lines[i]
+
+      // Skip empty lines and comment-only lines
+      const trimmed = line.trim()
+      if (trimmed === '' || trimmed.startsWith('//')) {
+        endLine = i + 1 // Include empty/comment lines in the block
+        continue
+      }
+
+      // Check indentation
+      const lineIndent = this.getLineIndent(line).length
+      if (lineIndent <= blockIndent) {
+        // This line is at same or lower indentation - block ended before this
+        break
+      }
+
+      // This line is more indented - it's part of the block
+      endLine = i + 1
+    }
+
+    return endLine
   }
 
   /**
