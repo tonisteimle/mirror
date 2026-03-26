@@ -46,11 +46,18 @@ const ICON_SAVE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 function initProjectToolbar() {
   if (toolbarInitialized) return
 
-  const container = document.getElementById('project-toolbar-container')
+  // Render toolbar inside file-tree-container (not separate container)
+  // because ExplorerPanel clears the parent container
+  const container = document.getElementById('file-tree-container')
   if (!container) return
 
-  container.className = 'fp-header'
-  container.innerHTML = `
+  // Check if header already exists
+  if (container.querySelector('.fp-header')) return
+
+  // Create header element
+  const header = document.createElement('div')
+  header.className = 'fp-header'
+  header.innerHTML = `
     <span class="fp-title">Files</span>
     <div class="fp-header-actions">
       <button class="fp-menu-btn" id="project-menu-btn" title="Menü">
@@ -58,6 +65,9 @@ function initProjectToolbar() {
       </button>
     </div>
   `
+
+  // Insert at the beginning of the container
+  container.insertBefore(header, container.firstChild)
 
   // Menu button handler
   const menuBtn = document.getElementById('project-menu-btn')

@@ -24,26 +24,6 @@ import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-
 // Icons
 // =============================================================================
 
-const ICON_HAMBURGER = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <line x1="4" y1="6" x2="20" y2="6"/>
-  <line x1="4" y1="12" x2="20" y2="12"/>
-  <line x1="4" y1="18" x2="20" y2="18"/>
-</svg>`
-
-const ICON_COLLAPSE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <polyline points="4 14 10 14 10 20"/>
-  <polyline points="20 10 14 10 14 4"/>
-  <line x1="14" y1="10" x2="21" y2="3"/>
-  <line x1="3" y1="21" x2="10" y2="14"/>
-</svg>`
-
-const ICON_EXPAND = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <polyline points="15 3 21 3 21 9"/>
-  <polyline points="9 21 3 21 3 15"/>
-  <line x1="21" y1="3" x2="14" y2="10"/>
-  <line x1="3" y1="21" x2="10" y2="14"/>
-</svg>`
-
 /**
  * Component Panel class
  */
@@ -56,7 +36,6 @@ export class ComponentPanel {
   private panelElement: HTMLElement | null = null
   private abortController: AbortController | null = null
   private ghostRenderer: GhostRenderer
-  private menuOpen: boolean = false
 
   constructor(config: ComponentPanelConfig, callbacks: ComponentPanelCallbacks = {}) {
     this.container = config.container
@@ -165,103 +144,13 @@ export class ComponentPanel {
   }
 
   /**
-   * Render the header with hamburger menu
+   * Render the header
    */
   private renderHeader(): HTMLElement {
     const header = document.createElement('div')
     header.className = 'cp-header'
-    header.innerHTML = `
-      <span class="cp-title">Components</span>
-      <div class="cp-header-actions">
-        <button class="cp-menu-btn" id="component-menu-btn" title="Menü">
-          ${ICON_HAMBURGER}
-        </button>
-      </div>
-    `
-
-    // Menu button handler
-    const menuBtn = header.querySelector('#component-menu-btn') as HTMLButtonElement
-    menuBtn?.addEventListener('click', (e) => {
-      e.stopPropagation()
-      this.toggleMenu(menuBtn)
-    }, { signal: this.abortController?.signal })
-
+    header.innerHTML = `<span class="cp-title">Components</span>`
     return header
-  }
-
-  /**
-   * Toggle the dropdown menu
-   */
-  private toggleMenu(anchorBtn: HTMLElement): void {
-    // Remove existing menu
-    const existingMenu = document.getElementById('component-panel-menu')
-    if (existingMenu) {
-      existingMenu.remove()
-      this.menuOpen = false
-      return
-    }
-
-    // Create menu
-    const menu = document.createElement('div')
-    menu.id = 'component-panel-menu'
-    menu.className = 'dropdown-menu'
-
-    const menuItems = [
-      { id: 'collapse-all', icon: ICON_COLLAPSE, label: 'Alle einklappen' },
-      { id: 'expand-all', icon: ICON_EXPAND, label: 'Alle ausklappen' },
-    ]
-
-    for (const item of menuItems) {
-      const btn = document.createElement('button')
-      btn.className = 'dropdown-menu-item'
-      btn.innerHTML = `
-        <span class="dropdown-menu-icon">${item.icon}</span>
-        <span class="dropdown-menu-label">${item.label}</span>
-      `
-      btn.addEventListener('click', () => this.handleMenuAction(item.id))
-      menu.appendChild(btn)
-    }
-
-    // Position menu below button
-    const rect = anchorBtn.getBoundingClientRect()
-    menu.style.position = 'fixed'
-    menu.style.top = `${rect.bottom + 4}px`
-    menu.style.left = `${rect.right - 180}px` // Align right edge
-    menu.style.zIndex = '9999'
-
-    document.body.appendChild(menu)
-    this.menuOpen = true
-
-    // Close on click outside
-    const closeMenu = (e: MouseEvent) => {
-      if (!menu.contains(e.target as Node) && e.target !== anchorBtn) {
-        menu.remove()
-        this.menuOpen = false
-        document.removeEventListener('click', closeMenu)
-      }
-    }
-    setTimeout(() => document.addEventListener('click', closeMenu), 0)
-  }
-
-  /**
-   * Handle menu action
-   */
-  private handleMenuAction(action: string): void {
-    // Close menu
-    const menu = document.getElementById('component-panel-menu')
-    if (menu) {
-      menu.remove()
-      this.menuOpen = false
-    }
-
-    switch (action) {
-      case 'collapse-all':
-        this.collapseAllSections()
-        break
-      case 'expand-all':
-        this.expandAllSections()
-        break
-    }
   }
 
   /**
