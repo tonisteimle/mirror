@@ -95,15 +95,8 @@ describe('AutocompleteEngine', () => {
         expect(context).toBe('value')
       })
 
-      it('should detect value context after "overflow "', () => {
-        const context = engine.detectContext('overflow ', 9)
-        expect(context).toBe('value')
-      })
-
-      it('should detect value context after "position "', () => {
-        const context = engine.detectContext('position ', 9)
-        expect(context).toBe('value')
-      })
+      // Note: overflow and position are not schema properties with keywords
+      // These are tested with properties that DO have keywords (weight, shadow, etc.)
 
       it('should detect value context after "weight "', () => {
         const context = engine.detectContext('weight ', 7)
@@ -268,8 +261,8 @@ describe('AutocompleteEngine', () => {
       expect(result.context).toBe('value')
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('pointer')
-      expect(labels).toContain('default')
       expect(labels).toContain('grab')
+      expect(labels).toContain('move')
     })
 
     it('should return width values after "w "', () => {
@@ -292,26 +285,19 @@ describe('AutocompleteEngine', () => {
       expect(result.completions.some(c => c.label === 'hug')).toBe(true)
     })
 
-    it('should return position values', () => {
-      const result = engine.getCompletions({
-        lineText: 'position ',
-        cursorColumn: 9
-      })
-      const labels = result.completions.map(c => c.label)
-      expect(labels).toContain('absolute')
-      expect(labels).toContain('relative')
-      expect(labels).toContain('fixed')
-    })
+    // Note: position and overflow are not schema properties with keywords
+    // Use 'absolute', 'fixed', etc. as standalone properties instead
 
-    it('should return overflow values', () => {
+    it('should return shadow values', () => {
       const result = engine.getCompletions({
-        lineText: 'overflow ',
-        cursorColumn: 9
+        lineText: 'shadow ',
+        cursorColumn: 7
       })
+      expect(result.context).toBe('value')
       const labels = result.completions.map(c => c.label)
-      expect(labels).toContain('hidden')
-      expect(labels).toContain('auto')
-      expect(labels).toContain('scroll')
+      expect(labels).toContain('sm')
+      expect(labels).toContain('md')
+      expect(labels).toContain('lg')
     })
 
     it('should return weight values', () => {
@@ -404,12 +390,13 @@ describe('Autocomplete Constants', () => {
   })
 
   describe('MIRROR_KEYWORDS', () => {
-    it('should contain component keywords', () => {
+    it('should contain reserved keywords', () => {
       const labels = MIRROR_KEYWORDS.map(k => k.label)
-      expect(labels).toContain('frame')
-      expect(labels).toContain('box')
-      expect(labels).toContain('text')
-      expect(labels).toContain('button')
+      // Reserved keywords (component names are in primitives now)
+      expect(labels).toContain('as')
+      expect(labels).toContain('extends')
+      expect(labels).toContain('if')
+      expect(labels).toContain('state')
     })
 
     it('should have correct type', () => {
@@ -445,12 +432,12 @@ describe('Autocomplete Constants', () => {
       expect(PROPERTY_VALUES['width'].length).toBeGreaterThan(0)
     })
 
-    it('should have position values', () => {
-      expect(PROPERTY_VALUES['position'].length).toBeGreaterThan(0)
+    it('should have shadow values', () => {
+      expect(PROPERTY_VALUES['shadow'].length).toBeGreaterThan(0)
     })
 
-    it('should have overflow values', () => {
-      expect(PROPERTY_VALUES['overflow'].length).toBeGreaterThan(0)
+    it('should have weight values', () => {
+      expect(PROPERTY_VALUES['weight'].length).toBeGreaterThan(0)
     })
   })
 
