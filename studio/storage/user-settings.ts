@@ -1,8 +1,8 @@
 /**
  * User Settings Service
  *
- * Persists user-level settings to server.
- * During development: single default user, no login required.
+ * Persists user-level settings to localStorage.
+ * No server, no user management.
  */
 
 import { events } from '../core/events'
@@ -58,43 +58,14 @@ interface Snippet {
 }
 
 // =============================================================================
-// Default Values
+// Constants
 // =============================================================================
+
+const STORAGE_KEY = 'mirror-user-settings'
 
 const DEFAULT_SETTINGS: UserSettings = {
   recentIcons: [],
   agentMemory: null,
-}
-
-// =============================================================================
-// API Helper
-// =============================================================================
-
-function getApiBase(): string {
-  if (typeof window === 'undefined') {
-    return '/api'
-  }
-
-  const globalConfig = (window as unknown as { MIRROR_API_BASE?: string }).MIRROR_API_BASE
-  if (globalConfig) {
-    return globalConfig
-  }
-
-  const scriptTag = document.querySelector('script[data-api-base]')
-  if (scriptTag) {
-    const apiBase = scriptTag.getAttribute('data-api-base')
-    if (apiBase) return apiBase
-  }
-
-  const pathname = window.location.pathname
-  let basePath = pathname
-
-  if (basePath.includes('.')) {
-    basePath = basePath.substring(0, basePath.lastIndexOf('/'))
-  }
-
-  basePath = basePath.replace(/\/$/, '')
-  return basePath + '/api'
 }
 
 // =============================================================================
@@ -105,45 +76,35 @@ class UserSettingsService {
   private settings: UserSettings = { ...DEFAULT_SETTINGS }
   private loaded = false
   private saveTimeout: ReturnType<typeof setTimeout> | null = null
-  private apiBase: string
-
-  constructor() {
-    this.apiBase = getApiBase()
-  }
 
   /**
-   * Load settings from server
+   * Load settings from localStorage
    */
   async load(): Promise<void> {
     try {
-      const response = await fetch(`${this.apiBase}/user/settings`)
-
-      if (response.ok) {
-        const data = await response.json()
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        const data = JSON.parse(stored)
         this.settings = {
           ...DEFAULT_SETTINGS,
           ...data,
         }
-        this.loaded = true
-        console.log('[UserSettings] Loaded from server')
-        events.emit('userSettings:loaded', this.settings)
-      } else if (response.status === 404) {
-        // No settings yet, use defaults
-        this.settings = { ...DEFAULT_SETTINGS }
-        this.loaded = true
-        console.log('[UserSettings] No settings found, using defaults')
+        console.log('[UserSettings] Loaded from localStorage')
       } else {
-        console.warn('[UserSettings] Failed to load:', response.status)
+        this.settings = { ...DEFAULT_SETTINGS }
+        console.log('[UserSettings] No settings found, using defaults')
       }
+      this.loaded = true
+      events.emit('userSettings:loaded', this.settings)
     } catch (error) {
       console.warn('[UserSettings] Failed to load:', error)
-      // Use defaults on error
       this.settings = { ...DEFAULT_SETTINGS }
+      this.loaded = true
     }
   }
 
   /**
-   * Save settings to server (debounced)
+   * Save settings to localStorage (debounced)
    */
   private scheduleSave(): void {
     if (this.saveTimeout) {
@@ -158,14 +119,10 @@ class UserSettingsService {
   /**
    * Save settings immediately
    */
-  private async saveNow(): Promise<void> {
+  private saveNow(): void {
     try {
-      await fetch(`${this.apiBase}/user/settings`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.settings),
-      })
-      console.log('[UserSettings] Saved to server')
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings))
+      console.log('[UserSettings] Saved to localStorage')
     } catch (error) {
       console.warn('[UserSettings] Failed to save:', error)
     }
@@ -219,6 +176,14 @@ class UserSettingsService {
 
   getAll(): UserSettings {
     return { ...this.settings }
+  }
+
+  /**
+   * Clear all settings and reset to defaults
+   */
+  reset(): void {
+    this.settings = { ...DEFAULT_SETTINGS }
+    this.saveNow()
   }
 }
 

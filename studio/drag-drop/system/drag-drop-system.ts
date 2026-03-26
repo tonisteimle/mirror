@@ -358,8 +358,18 @@ export class DragDropSystem implements IDragDropSystem {
 
   /**
    * Execute the drop action
+   * Uses a flag to prevent double execution when both native HTML5 and Pragmatic DnD fire
    */
+  private dropExecuted = false
+
   private executeDrop(source: DragSource, result: DropResult): void {
+    // Prevent double execution
+    if (this.dropExecuted) {
+      console.log('[DragDrop] Drop already executed, skipping')
+      return
+    }
+    this.dropExecuted = true
+
     console.log('[DragDrop] executeDrop called', { source, result })
 
     const executor = this.config.codeExecutor
@@ -505,6 +515,7 @@ export class DragDropSystem implements IDragDropSystem {
       currentResult: null,
       isAltKeyPressed: this.state.isAltKeyPressed,
     }
+    this.dropExecuted = false
   }
 
   /**

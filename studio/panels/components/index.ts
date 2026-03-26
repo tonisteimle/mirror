@@ -39,3 +39,6 @@ export {
 // Ghost rendering
 export { GhostRenderer, getGhostRenderer, resetGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 export type { RenderedGhost } from './ghost-renderer'
+
+// Auto-add to .com files
+export { isComponentDefined, addComponentToComFile } from './component-auto-add'

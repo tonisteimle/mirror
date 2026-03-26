@@ -16,7 +16,7 @@ import type {
 } from '../types'
 import type { CodeModifier } from '../../../src/studio/code-modifier'
 import type { SourceMap } from '../../../src/ir/source-map'
-import { getComponentTemplate, getFileType } from '../../panels/components'
+import { getComponentTemplate, getFileType, addComponentToComFile } from '../../panels/components'
 
 /**
  * Dependencies for CodeExecutor
@@ -216,6 +216,13 @@ export class CodeExecutor implements ICodeExecutor {
       const filename = this.deps.getCurrentFile()
       const fileType = getFileType(filename)
       template = getComponentTemplate(source.componentId, fileType)
+
+      // Auto-add to .com file when dropping on .mir file
+      if (fileType === 'mir') {
+        addComponentToComFile(source.componentId).catch(err => {
+          console.warn('[CodeExecutor] Auto-add to .com failed:', err)
+        })
+      }
     }
 
     // Use template-based insertion if template exists

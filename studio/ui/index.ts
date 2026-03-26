@@ -27,3 +27,10 @@ export {
   type ContextMenuConfig,
   type ContextMenuCallbacks,
 } from './context-menu'
+
+// Project Toolbar
+export {
+  ProjectToolbar,
+  createProjectToolbar,
+  type ProjectToolbarConfig,
+} from './project-toolbar'

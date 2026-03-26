@@ -21,7 +21,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=142">
+  <link rel="stylesheet" href="styles.css?v=146">
 </head>
 <body>
   <div class="container">
@@ -39,6 +39,8 @@
 
     <div class="sidebar" id="explorer-panel">
       <!-- Explorer Panel Structure - Activity Bar + Content Views -->
+      <!-- Project Toolbar -->
+      <div id="project-toolbar-container"></div>
       <!-- File Tree Container -->
       <div id="file-tree-container" class="file-tree"></div>
       <!-- Component Panel Container (inside explorer) -->
@@ -254,8 +256,8 @@ Card
 
   <!-- Settings and Auth modals removed - Desktop app uses native system -->
 
-  <script src="dist/browser/index.global.js?v=82"></script>
+  <script src="dist/browser/index.global.js?v=84"></script>
   <script type="module" src="tauri-bridge.js"></script>
-  <script type="module" src="app.js?v=188"></script>
+  <script type="module" src="app.js?v=189"></script>
 </body>
 </html>

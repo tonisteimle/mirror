@@ -5,7 +5,162 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { storage } from './storage'
+import { storage, projectActions } from './storage'
+
+// =============================================================================
+// Project Toolbar (Title Bar + Hamburger Menu)
+// =============================================================================
+
+let toolbarInitialized = false
+let menuOpen = false
+
+const ICON_HAMBURGER = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <line x1="4" y1="6" x2="20" y2="6"/>
+  <line x1="4" y1="12" x2="20" y2="12"/>
+  <line x1="4" y1="18" x2="20" y2="18"/>
+</svg>`
+
+const ICON_NEW = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+  <path d="M14 2v6h6"/>
+  <line x1="12" y1="18" x2="12" y2="12"/>
+  <line x1="9" y1="15" x2="15" y2="15"/>
+</svg>`
+
+const ICON_DEMO = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <polygon points="5 3 19 12 5 21 5 3"/>
+</svg>`
+
+const ICON_LOAD = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+  <polyline points="17 8 12 3 7 8"/>
+  <line x1="12" y1="3" x2="12" y2="15"/>
+</svg>`
+
+const ICON_SAVE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+  <polyline points="7 10 12 15 17 10"/>
+  <line x1="12" y1="15" x2="12" y2="3"/>
+</svg>`
+
+function initProjectToolbar() {
+  if (toolbarInitialized) return
+
+  const container = document.getElementById('project-toolbar-container')
+  if (!container) return
+
+  container.className = 'fp-header'
+  container.innerHTML = `
+    <span class="fp-title">Files</span>
+    <div class="fp-header-actions">
+      <button class="fp-menu-btn" id="project-menu-btn" title="Menü">
+        ${ICON_HAMBURGER}
+      </button>
+    </div>
+  `
+
+  // Menu button handler
+  const menuBtn = document.getElementById('project-menu-btn')
+  menuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggleProjectMenu(menuBtn)
+  })
+
+  toolbarInitialized = true
+}
+
+function toggleProjectMenu(anchorBtn) {
+  // Remove existing menu
+  const existingMenu = document.getElementById('project-menu')
+  if (existingMenu) {
+    existingMenu.remove()
+    menuOpen = false
+    return
+  }
+
+  // Create menu
+  const menu = document.createElement('div')
+  menu.id = 'project-menu'
+  menu.className = 'dropdown-menu'
+
+  const menuItems = [
+    { id: 'new', icon: ICON_NEW, label: 'Neues Projekt' },
+    { id: 'demo', icon: ICON_DEMO, label: 'Demo-Projekt' },
+    { type: 'separator' },
+    { id: 'load', icon: ICON_LOAD, label: 'Projekt öffnen...' },
+    { id: 'save', icon: ICON_SAVE, label: 'Projekt speichern...' },
+  ]
+
+  for (const item of menuItems) {
+    if (item.type === 'separator') {
+      const sep = document.createElement('div')
+      sep.className = 'dropdown-menu-separator'
+      menu.appendChild(sep)
+    } else {
+      const btn = document.createElement('button')
+      btn.className = 'dropdown-menu-item'
+      btn.innerHTML = `
+        <span class="dropdown-menu-icon">${item.icon}</span>
+        <span class="dropdown-menu-label">${item.label}</span>
+      `
+      btn.addEventListener('click', () => handleMenuAction(item.id))
+      menu.appendChild(btn)
+    }
+  }
+
+  // Position menu below button
+  const rect = anchorBtn.getBoundingClientRect()
+  menu.style.position = 'fixed'
+  menu.style.top = `${rect.bottom + 4}px`
+  menu.style.left = `${rect.right - 180}px` // Align right edge
+  menu.style.zIndex = '9999'
+
+  document.body.appendChild(menu)
+  menuOpen = true
+
+  // Close on click outside
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target) && e.target !== anchorBtn) {
+      menu.remove()
+      menuOpen = false
+      document.removeEventListener('click', closeMenu)
+    }
+  }
+  setTimeout(() => document.addEventListener('click', closeMenu), 0)
+}
+
+async function handleMenuAction(action) {
+  // Close menu
+  const menu = document.getElementById('project-menu')
+  if (menu) {
+    menu.remove()
+    menuOpen = false
+  }
+
+  switch (action) {
+    case 'new':
+      if (!confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.')) return
+      await projectActions.new()
+      break
+    case 'demo':
+      if (!confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.')) return
+      await projectActions.demo()
+      break
+    case 'load':
+      await projectActions.import()
+      break
+    case 'save':
+      await projectActions.export()
+      break
+  }
+}
+
+// Initialize toolbar when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initProjectToolbar)
+} else {
+  initProjectToolbar()
+}
 
 // =============================================================================
 // State (UI only - file data comes from storage service)
@@ -862,7 +1017,6 @@ function renderFileTree() {
 
   container.innerHTML = `
     <div class="file-tree-root">
-      <div class="file-tree-header">EXPLORER</div>
       <div class="file-tree-items">
         <div class="file-tree-folder expanded" data-path="." data-root="true">
           <div class="file-tree-folder-header" style="padding-left: 8px">
