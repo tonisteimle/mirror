@@ -49,10 +49,7 @@ export class FlexWithChildrenStrategy implements DropStrategy {
   getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint {
     const isVertical = result.target.direction === 'vertical'
 
-    // Find the target child's rect
-    const targetChildRect = childRects?.find(c => c.nodeId === result.targetId)
-
-    if (!targetChildRect || !containerRect) {
+    if (!childRects || childRects.length === 0 || !containerRect) {
       // Fallback: outline the container
       return {
         type: 'outline',
@@ -60,11 +57,12 @@ export class FlexWithChildrenStrategy implements DropStrategy {
       }
     }
 
-    // Calculate the insertion line position
-    const lineRect = calculateInsertionLineRect(
-      targetChildRect.rect,
-      result.placement as 'before' | 'after',
-      result.target.direction,
+    // Calculate the gap midpoint between siblings
+    const insertionIndex = result.insertionIndex ?? 0
+    const lineRect = calculateGapMidpointRect(
+      childRects,
+      insertionIndex,
+      isVertical,
       containerRect
     )
 
@@ -123,35 +121,68 @@ export class FlexWithChildrenStrategy implements DropStrategy {
 }
 
 /**
- * Calculate indicator rect for insertion line
+ * Calculate indicator rect at the midpoint of the gap between siblings
+ *
+ * insertionIndex determines where in the children array the new element will be inserted:
+ * - 0 = before first child
+ * - N = after child N-1, before child N
+ * - children.length = after last child
  */
-export function calculateInsertionLineRect(
-  targetRect: Rect,
-  placement: 'before' | 'after',
-  direction: 'horizontal' | 'vertical',
+export function calculateGapMidpointRect(
+  childRects: ChildRect[],
+  insertionIndex: number,
+  isVertical: boolean,
   containerRect: Rect,
   thickness: number = 2
 ): Rect {
-  const isVertical = direction === 'vertical'
+  // Sort children by position
+  const sorted = [...childRects].sort((a, b) => {
+    return isVertical
+      ? a.rect.y - b.rect.y
+      : a.rect.x - b.rect.x
+  })
+
+  let linePos: number
+
+  if (insertionIndex <= 0) {
+    // Before first child - line at top/left edge of first child
+    const firstChild = sorted[0]
+    linePos = isVertical ? firstChild.rect.y : firstChild.rect.x
+  } else if (insertionIndex >= sorted.length) {
+    // After last child - line at bottom/right edge of last child
+    const lastChild = sorted[sorted.length - 1]
+    linePos = isVertical
+      ? lastChild.rect.y + lastChild.rect.height
+      : lastChild.rect.x + lastChild.rect.width
+  } else {
+    // Between two children - line at midpoint of gap
+    const prevChild = sorted[insertionIndex - 1]
+    const nextChild = sorted[insertionIndex]
+
+    if (isVertical) {
+      const prevBottom = prevChild.rect.y + prevChild.rect.height
+      const nextTop = nextChild.rect.y
+      linePos = (prevBottom + nextTop) / 2
+    } else {
+      const prevRight = prevChild.rect.x + prevChild.rect.width
+      const nextLeft = nextChild.rect.x
+      linePos = (prevRight + nextLeft) / 2
+    }
+  }
 
   if (isVertical) {
-    // Horizontal line (for vertical flex layout)
-    // Y position based on target element's top/bottom edge
-    const y = placement === 'before' ? targetRect.y : targetRect.y + targetRect.height
     return {
-      x: containerRect.x, // Use container x for full-width line
-      y: y - thickness / 2,
-      width: containerRect.width, // Use container width
+      x: containerRect.x,
+      y: linePos - thickness / 2,
+      width: containerRect.width,
       height: thickness,
     }
   } else {
-    // Vertical line (for horizontal flex layout)
-    const x = placement === 'before' ? targetRect.x : targetRect.x + targetRect.width
     return {
-      x: x - thickness / 2,
-      y: containerRect.y, // Use container y for full-height line
+      x: linePos - thickness / 2,
+      y: containerRect.y,
       width: thickness,
-      height: containerRect.height, // Use container height
+      height: containerRect.height,
     }
   }
 }
