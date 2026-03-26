@@ -77,6 +77,7 @@
       /* Background Colors - Consolidated */
       --bg-base: #0a0a0f;           /* App background (darkest) */
       --bg-panel: #141418;          /* All panel backgrounds */
+      --bg-elevated: #1e1e24;       /* Floating elements (dropdowns, popovers) */
       --bg-input: #222228;          /* Inputs, toggles, interactive elements */
       --bg-hover: #27272a;          /* Hover state */
       --bg-active: #3f3f46;         /* Active/pressed state */
