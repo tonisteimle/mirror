@@ -39,189 +39,268 @@ export interface UserTokenMapping {
 
 export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
   // ---------------------------------------------------------------------------
-  // Colors - Primary/Accent
+  // Colors - Accent (Primary action color)
   // ---------------------------------------------------------------------------
-  'primary': {
-    cssVar: 'm-primary',
-    description: 'Primary accent color',
+  'accent.bg': {
+    cssVar: 'accent-bg',
+    description: 'Primary accent background',
     defaultValue: '#3b82f6',
     category: 'color',
   },
-  'primary-hover': {
-    cssVar: 'm-primary-hover',
-    description: 'Primary color on hover',
+  'accent-hover.bg': {
+    cssVar: 'accent-hover-bg',
+    description: 'Accent color on hover',
     defaultValue: '#2563eb',
     category: 'color',
-    derivedFrom: { token: 'primary', transform: 'darken', amount: 10 },
+    derivedFrom: { token: 'accent.bg', transform: 'darken', amount: 10 },
   },
-  'primary-active': {
-    cssVar: 'm-primary-active',
-    description: 'Primary color when active/pressed',
+  'accent-active.bg': {
+    cssVar: 'accent-active-bg',
+    description: 'Accent color when active/pressed',
     defaultValue: '#1d4ed8',
     category: 'color',
-    derivedFrom: { token: 'primary', transform: 'darken', amount: 15 },
+    derivedFrom: { token: 'accent.bg', transform: 'darken', amount: 15 },
+  },
+  'accent.col': {
+    cssVar: 'accent-col',
+    description: 'Text on accent background',
+    defaultValue: '#ffffff',
+    category: 'color',
   },
 
   // ---------------------------------------------------------------------------
-  // Colors - Surface (backgrounds)
+  // Colors - Surface (cards, panels)
   // ---------------------------------------------------------------------------
-  'surface': {
-    cssVar: 'm-surface',
-    description: 'Default surface/background color',
-    defaultValue: '#1a1a1a',
+  'surface.bg': {
+    cssVar: 'surface-bg',
+    description: 'Surface/card background',
+    defaultValue: '#27272a',
     category: 'color',
   },
-  'surface-hover': {
-    cssVar: 'm-surface-hover',
+  'surface-hover.bg': {
+    cssVar: 'surface-hover-bg',
     description: 'Surface color on hover',
-    defaultValue: '#252525',
+    defaultValue: '#323238',
     category: 'color',
-    derivedFrom: { token: 'surface', transform: 'lighten', amount: 5 },
+    derivedFrom: { token: 'surface.bg', transform: 'lighten', amount: 5 },
   },
-  'surface-active': {
-    cssVar: 'm-surface-active',
+  'surface-active.bg': {
+    cssVar: 'surface-active-bg',
     description: 'Surface color when active',
-    defaultValue: '#2a2a2a',
+    defaultValue: '#3a3a42',
     category: 'color',
-    derivedFrom: { token: 'surface', transform: 'lighten', amount: 8 },
+    derivedFrom: { token: 'surface.bg', transform: 'lighten', amount: 8 },
   },
-  'surface-selected': {
-    cssVar: 'm-surface-selected',
+  'surface-selected.bg': {
+    cssVar: 'surface-selected-bg',
     description: 'Surface color when selected',
-    defaultValue: '#333333',
+    defaultValue: '#42424a',
     category: 'color',
-    derivedFrom: { token: 'surface', transform: 'lighten', amount: 12 },
+    derivedFrom: { token: 'surface.bg', transform: 'lighten', amount: 12 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Colors - Canvas (page background)
+  // ---------------------------------------------------------------------------
+  'canvas.bg': {
+    cssVar: 'canvas-bg',
+    description: 'Page/app background',
+    defaultValue: '#18181b',
+    category: 'color',
+  },
+
+  // ---------------------------------------------------------------------------
+  // Colors - Elevated (dropdowns, modals)
+  // ---------------------------------------------------------------------------
+  'elevated.bg': {
+    cssVar: 'elevated-bg',
+    description: 'Elevated surface (dropdowns, modals)',
+    defaultValue: '#2a2a2e',
+    category: 'color',
+  },
+  'elevated-hover.bg': {
+    cssVar: 'elevated-hover-bg',
+    description: 'Elevated surface on hover',
+    defaultValue: '#353539',
+    category: 'color',
+    derivedFrom: { token: 'elevated.bg', transform: 'lighten', amount: 5 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Colors - Input
+  // ---------------------------------------------------------------------------
+  'input.bg': {
+    cssVar: 'input-bg',
+    description: 'Input field background',
+    defaultValue: '#1f1f23',
+    category: 'color',
+  },
+  'input-hover.bg': {
+    cssVar: 'input-hover-bg',
+    description: 'Input field on hover',
+    defaultValue: '#28282e',
+    category: 'color',
+    derivedFrom: { token: 'input.bg', transform: 'lighten', amount: 5 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Colors - Overlay
+  // ---------------------------------------------------------------------------
+  'overlay.bg': {
+    cssVar: 'overlay-bg',
+    description: 'Modal backdrop overlay',
+    defaultValue: 'rgba(0, 0, 0, 0.5)',
+    category: 'color',
   },
 
   // ---------------------------------------------------------------------------
   // Colors - Text
   // ---------------------------------------------------------------------------
-  'text': {
-    cssVar: 'm-text',
-    description: 'Default text color',
-    defaultValue: '#e0e0e0',
+  'text.col': {
+    cssVar: 'text-col',
+    description: 'Primary text color',
+    defaultValue: '#ffffff',
     category: 'color',
   },
-  'text-muted': {
-    cssVar: 'm-text-muted',
+  'muted.col': {
+    cssVar: 'muted-col',
     description: 'Muted/secondary text',
-    defaultValue: '#888888',
+    defaultValue: '#a1a1aa',
     category: 'color',
-    derivedFrom: { token: 'text', transform: 'darken', amount: 35 },
   },
-  'text-placeholder': {
-    cssVar: 'm-text-placeholder',
-    description: 'Placeholder text',
-    defaultValue: '#555555',
+  'subtle.col': {
+    cssVar: 'subtle-col',
+    description: 'Subtle text (placeholders)',
+    defaultValue: '#71717a',
     category: 'color',
-    derivedFrom: { token: 'text', transform: 'darken', amount: 55 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Colors - Border
+  // ---------------------------------------------------------------------------
+  'border.boc': {
+    cssVar: 'border-boc',
+    description: 'Default border color',
+    defaultValue: '#3f3f46',
+    category: 'color',
+  },
+  'border-hover.boc': {
+    cssVar: 'border-hover-boc',
+    description: 'Border color on hover',
+    defaultValue: '#52525b',
+    category: 'color',
+    derivedFrom: { token: 'border.boc', transform: 'lighten', amount: 10 },
+  },
+  'focus.boc': {
+    cssVar: 'focus-boc',
+    description: 'Focus ring/border color',
+    defaultValue: '#3b82f6',
+    category: 'color',
   },
 
   // ---------------------------------------------------------------------------
   // Colors - Semantic
   // ---------------------------------------------------------------------------
-  'error': {
-    cssVar: 'm-error',
-    description: 'Error color',
+  'error.bg': {
+    cssVar: 'error-bg',
+    description: 'Error background',
     defaultValue: '#ef4444',
     category: 'color',
   },
-  'success': {
-    cssVar: 'm-success',
-    description: 'Success color',
+  'error.col': {
+    cssVar: 'error-col',
+    description: 'Error text',
+    defaultValue: '#fca5a5',
+    category: 'color',
+  },
+  'success.bg': {
+    cssVar: 'success-bg',
+    description: 'Success background',
     defaultValue: '#22c55e',
     category: 'color',
   },
-  'warning': {
-    cssVar: 'm-warning',
-    description: 'Warning color',
+  'success.col': {
+    cssVar: 'success-col',
+    description: 'Success text',
+    defaultValue: '#86efac',
+    category: 'color',
+  },
+  'warning.bg': {
+    cssVar: 'warning-bg',
+    description: 'Warning background',
     defaultValue: '#f59e0b',
+    category: 'color',
+  },
+  'warning.col': {
+    cssVar: 'warning-col',
+    description: 'Warning text',
+    defaultValue: '#fcd34d',
     category: 'color',
   },
 
   // ---------------------------------------------------------------------------
-  // Spacing
+  // Spacing - Padding
   // ---------------------------------------------------------------------------
-  'spacing': {
-    cssVar: 'm-spacing',
-    description: 'Base spacing unit',
+  's.pad': {
+    cssVar: 's-pad',
+    description: 'Small padding (4px)',
     defaultValue: 4,
     category: 'spacing',
   },
-  'gap': {
-    cssVar: 'm-gap',
-    description: 'Default gap between elements',
-    defaultValue: 8,
-    category: 'spacing',
-  },
-  'pad': {
+  'm.pad': {
     cssVar: 'm-pad',
-    description: 'Default padding',
+    description: 'Medium padding (8px)',
     defaultValue: 8,
     category: 'spacing',
   },
-  'pad-x': {
-    cssVar: 'm-pad-x',
-    description: 'Horizontal padding for controls',
-    defaultValue: 12,
-    category: 'spacing',
-  },
-  'pad-y': {
-    cssVar: 'm-pad-y',
-    description: 'Vertical padding for controls',
-    defaultValue: 8,
-    category: 'spacing',
-  },
-
-  // ---------------------------------------------------------------------------
-  // Sizing
-  // ---------------------------------------------------------------------------
-  'control-height': {
-    cssVar: 'm-control-h',
-    description: 'Height of controls (buttons, inputs, selects)',
-    defaultValue: 36,
-    category: 'sizing',
-  },
-  'item-height': {
-    cssVar: 'm-item-h',
-    description: 'Height of list/dropdown items',
-    defaultValue: 32,
-    category: 'sizing',
-  },
-  'icon-size': {
-    cssVar: 'm-icon',
-    description: 'Size of icons',
+  'l.pad': {
+    cssVar: 'l-pad',
+    description: 'Large padding (16px)',
     defaultValue: 16,
-    category: 'sizing',
+    category: 'spacing',
   },
 
   // ---------------------------------------------------------------------------
-  // Border
+  // Spacing - Gap
   // ---------------------------------------------------------------------------
-  'radius': {
-    cssVar: 'm-radius',
-    description: 'Border radius',
-    defaultValue: 6,
-    category: 'border',
+  's.gap': {
+    cssVar: 's-gap',
+    description: 'Small gap (4px)',
+    defaultValue: 4,
+    category: 'spacing',
   },
-  'radius-sm': {
-    cssVar: 'm-radius-sm',
-    description: 'Small border radius',
+  'm.gap': {
+    cssVar: 'm-gap',
+    description: 'Medium gap (8px)',
+    defaultValue: 8,
+    category: 'spacing',
+  },
+  'l.gap': {
+    cssVar: 'l-gap',
+    description: 'Large gap (16px)',
+    defaultValue: 16,
+    category: 'spacing',
+  },
+
+  // ---------------------------------------------------------------------------
+  // Border - Radius
+  // ---------------------------------------------------------------------------
+  's.rad': {
+    cssVar: 's-rad',
+    description: 'Small radius (4px)',
     defaultValue: 4,
     category: 'border',
-    derivedFrom: { token: 'radius', transform: 'multiply', amount: 0.66 },
   },
-  'radius-lg': {
-    cssVar: 'm-radius-lg',
-    description: 'Large border radius',
+  'm.rad': {
+    cssVar: 'm-rad',
+    description: 'Medium radius (8px)',
     defaultValue: 8,
     category: 'border',
-    derivedFrom: { token: 'radius', transform: 'multiply', amount: 1.33 },
   },
-  'border-width': {
-    cssVar: 'm-border',
-    description: 'Border width',
-    defaultValue: 1,
+  'l.rad': {
+    cssVar: 'l-rad',
+    description: 'Large radius (12px)',
+    defaultValue: 12,
     category: 'border',
   },
 
@@ -229,26 +308,37 @@ export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
   // Typography
   // ---------------------------------------------------------------------------
   'font': {
-    cssVar: 'm-font',
+    cssVar: 'font',
     description: 'Font family',
-    defaultValue: 'system-ui, -apple-system, sans-serif',
+    defaultValue: 'Inter, system-ui, -apple-system, sans-serif',
     category: 'typography',
   },
-  'font-size': {
-    cssVar: 'm-font-size',
-    description: 'Base font size',
+  's.fs': {
+    cssVar: 's-fs',
+    description: 'Small font size (12px)',
+    defaultValue: 12,
+    category: 'typography',
+  },
+  'm.fs': {
+    cssVar: 'm-fs',
+    description: 'Medium font size (14px)',
     defaultValue: 14,
     category: 'typography',
   },
-  'font-size-sm': {
-    cssVar: 'm-font-size-sm',
-    description: 'Small font size',
-    defaultValue: 12,
+  'l.fs': {
+    cssVar: 'l-fs',
+    description: 'Large font size (18px)',
+    defaultValue: 18,
     category: 'typography',
-    derivedFrom: { token: 'font-size', transform: 'multiply', amount: 0.85 },
+  },
+  'xl.fs': {
+    cssVar: 'xl-fs',
+    description: 'Extra large font size (24px)',
+    defaultValue: 24,
+    category: 'typography',
   },
   'line-height': {
-    cssVar: 'm-line-height',
+    cssVar: 'line-height',
     description: 'Line height',
     defaultValue: 1.5,
     category: 'typography',
@@ -261,43 +351,54 @@ export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
 
 /**
  * Maps user-defined tokens to theme tokens.
- * When user defines "primary: #ff0000", it generates:
- * - --m-primary: #ff0000
- * - --m-primary-hover: (auto-darkened)
- * - --m-primary-active: (auto-darkened more)
+ * When user defines "$accent.bg: #ff0000", it generates:
+ * - --accent-bg: #ff0000
+ * - --accent-hover-bg: (auto-darkened)
+ * - --accent-active-bg: (auto-darkened more)
  */
 export const USER_TOKEN_MAPPINGS: UserTokenMapping[] = [
+  // Accent colors
   {
-    userToken: 'primary',
-    generates: ['primary', 'primary-hover', 'primary-active'],
+    userToken: 'accent.bg',
+    generates: ['accent.bg', 'accent-hover.bg', 'accent-active.bg'],
+  },
+  // Surface colors
+  {
+    userToken: 'surface.bg',
+    generates: ['surface.bg', 'surface-hover.bg', 'surface-active.bg', 'surface-selected.bg'],
+  },
+  // Elevated colors
+  {
+    userToken: 'elevated.bg',
+    generates: ['elevated.bg', 'elevated-hover.bg'],
+  },
+  // Input colors
+  {
+    userToken: 'input.bg',
+    generates: ['input.bg', 'input-hover.bg'],
+  },
+  // Text colors
+  {
+    userToken: 'text.col',
+    generates: ['text.col', 'muted.col', 'subtle.col'],
+  },
+  // Border colors
+  {
+    userToken: 'border.boc',
+    generates: ['border.boc', 'border-hover.boc'],
+  },
+  // Semantic colors
+  {
+    userToken: 'error.bg',
+    generates: ['error.bg'],
   },
   {
-    userToken: 'surface',
-    generates: ['surface', 'surface-hover', 'surface-active', 'surface-selected'],
+    userToken: 'success.bg',
+    generates: ['success.bg'],
   },
   {
-    userToken: 'text',
-    generates: ['text', 'text-muted', 'text-placeholder'],
-  },
-  {
-    userToken: 'error',
-    generates: ['error'],
-  },
-  {
-    userToken: 'success',
-    generates: ['success'],
-  },
-  {
-    userToken: 'warning',
-    generates: ['warning'],
-  },
-  {
-    userToken: 'radius',
-    generates: ['radius', 'radius-sm', 'radius-lg'],
-  },
-  {
-    userToken: 'font-size',
-    generates: ['font-size', 'font-size-sm'],
+    userToken: 'warning.bg',
+    generates: ['warning.bg'],
   },
 ]
 

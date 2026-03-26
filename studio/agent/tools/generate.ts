@@ -361,10 +361,10 @@ function extractFieldNames(description: string): string[] {
 }
 
 function generatePattern(pattern: string, options: any, tokens: Record<string, string>): string {
-  const bg = tokens['$bg'] || tokens['$card.bg'] || '#fff'
-  const primary = tokens['$primary'] || tokens['$primary.bg'] || '#007bff'
-  const text = tokens['$text'] || tokens['$col'] || '#333'
-  const muted = tokens['$muted'] || tokens['$text.muted'] || '#666'
+  const bg = tokens['$bg'] || tokens['$surface.bg'] || tokens['$card.bg'] || '#fff'
+  const primary = tokens['$primary'] || tokens['$accent.bg'] || tokens['$primary.bg'] || '#007bff'
+  const text = tokens['$text'] || tokens['$text.col'] || tokens['$col'] || '#333'
+  const muted = tokens['$muted'] || tokens['$muted.col'] || tokens['$text.muted'] || '#666'
 
   switch (pattern) {
     case 'card':

@@ -373,19 +373,27 @@ $grey-900: #18181B
 $grey-800: #27272A
 $grey-700: #3F3F46
 
-// Semantische Farben
-$primary.bg: #3B82F6
-$primary.hover.bg: #2563EB
+// Background Colors
+$accent.bg: #3B82F6
 $surface.bg: $grey-800
+$canvas.bg: $grey-900
 
-// Abstände
-$sm.pad: 4
-$md.pad: 8
-$lg.pad: 16
+// Text Colors
+$text.col: #ffffff
+$muted.col: #a1a1aa
 
-// Radien
-$sm.rad: 4
-$md.rad: 8
+// Spacing (s=4, m=8, l=16)
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
+
+// Radius (s=4, m=8, l=12)
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 `,
     detect: (lines) => {
       // Token definitions: $name: value or lowercase: value

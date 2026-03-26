@@ -512,7 +512,7 @@ function getOrganizationSuggestions(code: string): Suggestion[] {
       title: 'Extract design tokens',
       description: 'Define colors, spacing, and other values as tokens for consistency.',
       impact: 'high',
-      action: 'Add $primary.bg: #007bff and similar tokens at the top'
+      action: 'Add $accent.bg: #007bff and similar tokens at the top'
     })
   }
 

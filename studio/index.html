@@ -21,7 +21,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=147">
+  <link rel="stylesheet" href="styles.css?v=148">
 </head>
 <body>
   <div class="container">
@@ -142,42 +142,64 @@
   </div>
 
   <!-- Initial code template (outside grid container) -->
-  <script type="text/plain" id="initial-code">// Design Tokens
+  <script type="text/plain" id="initial-code">// Theme Tokens
+
+// Typography
+$font: Inter, system-ui, -apple-system, sans-serif
+$s.fs: 12
+$m.fs: 14
+$l.fs: 18
+$xl.fs: 24
 
 // Background Colors
-$primary.bg: #3B82F6
-$primary-hover.bg: #2563eb
-$surface.bg: #1a1a23
+$accent.bg: #3b82f6
+$surface.bg: #27272a
+$canvas.bg: #18181b
+$input.bg: #1f1f1f
 
 // Text Colors
-$text.col: #e4e4e7
+$text.col: #ffffff
+$muted.col: #a1a1aa
+
+// Border Colors
+$border.boc: #333333
+$focus.boc: #3b82f6
 
 // Spacing
-$sm.pad: 10
-$md.pad: 20
-$sm.gap: 8
-$md.gap: 12
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
 // Radius
-$sm.rad: 6
-$md.rad: 8
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 
 // Components
-Card as frame:
-  pad $md.pad, gap $md.gap, bg $surface.bg, rad $md.rad
+Button:
+  pad $s.pad $m.pad, bg $accent.bg, rad $s.rad, col white, cursor pointer
+  hover bg #2563eb
 
-Title as text:
-  col $text.col, weight 600, font-size 18
+Card:
+  bg $surface.bg, pad $m.pad, rad $m.rad, gap $s.gap
 
-Button as button:
-  pad $sm.pad $md.pad, bg $primary.bg, rad $sm.rad
-  col white, weight 500
-  hover bg $primary-hover.bg
+Input:
+  pad $s.pad, bg $input.bg, rad $s.rad, bor 1 $border.boc
+  col $text.col
+  focus bor 1 $focus.boc
 
-// Instance
-Card
-  Title "Welcome to Mirror"
-  Button "Get Started"
+// Layout
+App bg $canvas.bg, pad $l.pad, gap $m.gap
+  Text "Welcome to Mirror", fs $xl.fs, weight bold, col $text.col
+  Text "Edit this code to get started", fs $m.fs, col $muted.col
+
+  Card
+    Text "Your first component", col $muted.col
+    Button "Click Me"
+
   Select placeholder "Choose an option..."
     Item "Option 1"
     Item "Option 2"
@@ -272,9 +294,9 @@ Card
 
   <!-- Settings and Auth modals removed - Desktop app uses native system -->
 
-  <script src="dist/browser/index.global.js?v=85"></script>
+  <script src="dist/browser/index.global.js?v=86"></script>
   <script type="module" src="tauri-bridge.js"></script>
   <script type="module" src="desktop-files.js?v=1"></script>
-  <script type="module" src="app.js?v=191"></script>
+  <script type="module" src="app.js?v=192"></script>
 </body>
 </html>

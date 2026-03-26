@@ -58,7 +58,7 @@
   --m-border: 1px;
 
   /* Typography */
-  --m-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --m-font: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --m-font-size: 14px;
   --m-font-size-sm: 12px;
   --m-line-height: 1.5;

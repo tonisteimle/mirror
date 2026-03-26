@@ -9,16 +9,16 @@ import type { StorageProvider, StorageProject, StorageItem, StorageFile, Storage
 import { isMirrorFile } from '../types'
 
 // =============================================================================
-// Default Demo Files
+// Default Project Template
 // =============================================================================
 
-const DEFAULT_DEMO_FILES: Record<string, string> = {
-  'index.mir': `App bg $app.bg, pad $lg.pad, gap $md.gap
-  Text "Mirror Studio", fs 24, weight bold, col $text.col
-  Text "Browser Demo Mode", col $muted.col
+const DEFAULT_PROJECT: Record<string, string> = {
+  'index.mir': `App bg $canvas.bg, pad $l.pad, gap $m.gap
+  Text "Welcome to Mirror", fs $xl.fs, weight bold, col $text.col
+  Text "Edit this code to get started", fs $m.fs, col $muted.col
 
   Card
-    Text "Edit this code to test", col $muted.col
+    Text "Your first component", col $muted.col
     Button "Click Me"
 
   // Zag Select Component
@@ -27,13 +27,19 @@ const DEFAULT_DEMO_FILES: Record<string, string> = {
     Item "Option 2"
     Item "Option 3"`,
 
-  'tokens.tok': `// Design Tokens
+  'tokens.tok': `// Theme Tokens
+
+// Typography
+$font: Inter, system-ui, -apple-system, sans-serif
+$s.fs: 12
+$m.fs: 14
+$l.fs: 18
+$xl.fs: 24
 
 // Background Colors
-$primary.bg: #3b82f6
-$primary-hover.bg: #2563eb
+$accent.bg: #3b82f6
 $surface.bg: #27272a
-$app.bg: #18181b
+$canvas.bg: #18181b
 $input.bg: #1f1f1f
 
 // Text Colors
@@ -44,32 +50,30 @@ $muted.col: #a1a1aa
 $border.boc: #333333
 $focus.boc: #3b82f6
 
-// Padding
-$sm.pad: 8
-$md.pad: 16
-$lg.pad: 24
-
-// Gap
-$sm.gap: 8
-$md.gap: 12
-$lg.gap: 16
+// Spacing
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
 // Radius
-$sm.rad: 4
-$md.rad: 8
-$lg.rad: 12`,
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12`,
 
   'components.com': `// Component Definitions
 
 Button:
-  pad $sm.pad $md.pad, bg $primary.bg, rad $sm.rad, col white, cursor pointer
-  hover bg $primary-hover.bg
+  pad $s.pad $m.pad, bg $accent.bg, rad $s.rad, col white, cursor pointer
+  hover bg #2563eb
 
 Card:
-  bg $surface.bg, pad $md.pad, rad $md.rad, gap $sm.gap
+  bg $surface.bg, pad $m.pad, rad $m.rad, gap $s.gap
 
 Input:
-  pad $sm.pad, bg $input.bg, rad $sm.rad, bor 1 $border.boc
+  pad $s.pad, bg $input.bg, rad $s.rad, bor 1 $border.boc
   col $text.col
   focus bor 1 $focus.boc`
 }
@@ -89,7 +93,7 @@ export class DemoProvider implements StorageProvider {
 
   constructor() {
     // Start with default demo files (in-memory only)
-    this.files = { ...DEFAULT_DEMO_FILES }
+    this.files = { ...DEFAULT_PROJECT }
   }
 
   // ===========================================================================
@@ -335,7 +339,7 @@ export class DemoProvider implements StorageProvider {
    * Demo-Dateien auf Defaults zurücksetzen
    */
   resetToDefaults(): void {
-    this.files = { ...DEFAULT_DEMO_FILES }
+    this.files = { ...DEFAULT_PROJECT }
     this.hasBeenModified = false
   }
 

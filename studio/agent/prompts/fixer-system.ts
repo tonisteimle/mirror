@@ -68,45 +68,53 @@ const FILE_CONVENTIONS = `
 Mirror-Projekte haben drei Datei-Typen:
 
 ### .tok Dateien (Tokens)
-Design-Tokens mit semantischen Suffixen (bg, col, pad, gap, rad):
+Design-Tokens mit semantischen Suffixen (bg, col, fs, pad, gap, rad):
 \`\`\`
+// Typography
+$font: Inter, system-ui, -apple-system, sans-serif
+$s.fs: 12
+$m.fs: 14
+$l.fs: 18
+$xl.fs: 24
+
 // Background Colors
-$primary.bg: #3b82f6
-$primary-hover.bg: #2563eb
+$accent.bg: #3b82f6
 $surface.bg: #27272a
+$canvas.bg: #18181b
 
 // Text Colors
 $text.col: #ffffff
 $muted.col: #a1a1aa
 
-// Padding
-$sm.pad: 8
-$md.pad: 16
+// Spacing (s=4, m=8, l=16)
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
 
-// Gap
-$sm.gap: 8
-$md.gap: 12
-
-// Radius
-$sm.rad: 4
-$md.rad: 8
+// Radius (s=4, m=8, l=12)
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 \`\`\`
 
 ### .com Dateien (Komponenten)
 Wiederverwendbare Komponenten-Definitionen:
 \`\`\`
 PrimaryButton as Button:
-  bg $primary.bg, col white, pad $sm.pad $md.pad, rad $sm.rad
-  hover bg $primary-hover.bg
+  bg $accent.bg, col white, pad $s.pad $m.pad, rad $s.rad
+  hover bg #2563eb
 
 Card as Box:
-  bg $surface.bg, pad $md.pad, rad $md.rad, gap $sm.gap
+  bg $surface.bg, pad $m.pad, rad $m.rad, gap $s.gap
 \`\`\`
 
 ### .mir Dateien (Layout/App)
 Die eigentliche App-Struktur mit Instanzen:
 \`\`\`
-App bg $app.bg, pad $lg.pad, gap $md.gap
+App bg $canvas.bg, pad $l.pad, gap $m.gap
   Card
     Text "Willkommen", weight bold, col $text.col
     PrimaryButton "Weiter"
@@ -118,9 +126,15 @@ Tokens haben IMMER einen Property-Suffix:
 - \`.bg\` für Hintergrundfarben (background)
 - \`.col\` für Textfarben (color)
 - \`.boc\` für Rahmenfarben (border-color)
+- \`.fs\` für Schriftgrößen (font-size)
 - \`.pad\` für Innenabstände (padding)
 - \`.gap\` für Abstände (gap)
 - \`.rad\` für Eckenradius (radius)
+
+Token-Stufen: s (small), m (medium), l (large), xl (extra large)
+Font-Size-Werte: 12, 14, 18, 24
+Spacing-Werte: 4, 8, 16
+Radius-Werte: 4, 8, 12
 
 ## Regeln
 
