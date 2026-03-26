@@ -1,6 +1,9 @@
 /**
  * Editor Drop Handler - Handle component drops into CodeMirror editor
  *
+ * SIMPLIFIED: Always inserts at current cursor position.
+ * No complex mouse-position-to-code-position calculation needed.
+ *
  * Uses CodeMirror's native extension system (EditorView.domEventHandlers)
  * to properly intercept drops and prevent default text insertion.
  */
@@ -48,7 +51,34 @@ function ensureDropIndicator(view: EditorView): HTMLElement {
 }
 
 /**
- * Convert mouse coordinates to editor position
+ * Get the current cursor position in the editor.
+ * This is the SIMPLIFIED approach: always insert at cursor.
+ */
+function getCursorPosition(view: EditorView): EditorDropPosition {
+  const doc = view.state.doc
+  const selection = view.state.selection.main
+  const offset = selection.head
+
+  // Get line info at cursor
+  const line = doc.lineAt(offset)
+  const lineNumber = line.number
+  const column = offset - line.from
+
+  // Calculate indent from the current line's leading whitespace
+  const lineText = line.text
+  const leadingSpaces = lineText.match(/^(\s*)/)?.[1].length || 0
+  const indent = Math.floor(leadingSpaces / 2) * 2  // Snap to even numbers
+
+  return {
+    line: lineNumber,
+    column: column,
+    offset: offset,
+    indent: indent,
+  }
+}
+
+/**
+ * Convert mouse coordinates to editor position (legacy, kept for compatibility)
  */
 function getPositionFromCoords(view: EditorView, x: number, y: number): EditorDropPosition | null {
   const doc = view.state.doc
@@ -225,21 +255,14 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       event.preventDefault()
       event.dataTransfer.dropEffect = 'copy'
 
-      // Show drop indicator
-      const pos = getPositionFromCoords(view, event.clientX, event.clientY)
-      if (pos) {
-        showDropIndicator(view, pos)
-      }
+      // SIMPLIFIED: No visual indicator needed - cursor position IS the indicator
+      // User places cursor where they want the component, then drags
 
       return true  // Prevent default handling
     },
 
     dragleave(event: DragEvent, view: EditorView) {
-      // Only handle if leaving the editor
-      const relatedTarget = event.relatedTarget as HTMLElement
-      if (!view.dom.contains(relatedTarget)) {
-        hideDropIndicator()
-      }
+      // No-op: No indicator to hide
       return false
     },
 
@@ -268,17 +291,14 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
         return true
       }
 
-      // Get position from coordinates
-      const pos = getPositionFromCoords(view, event.clientX, event.clientY)
-      if (!pos) {
-        console.error('[ComponentDrop] Could not determine drop position')
-        return true
-      }
+      // SIMPLIFIED: Always use current cursor position
+      // No need to calculate position from mouse coordinates
+      const pos = getCursorPosition(view)
 
       // Call the handler
       config.onDrop(dragData, pos, view)
 
-      console.log('[ComponentDrop] Component dropped:', dragData.componentName)
+      console.log('[ComponentDrop] Component dropped at cursor:', dragData.componentName, `line ${pos.line}`)
 
       return true  // CRITICAL: Prevents CodeMirror from inserting text/plain
     },
