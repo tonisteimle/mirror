@@ -14,5 +14,4 @@ export {
   getChildRects,
   getSiblingRects,
   getContainerRect,
-  isPositionedContainer,
 } from './target-detector'

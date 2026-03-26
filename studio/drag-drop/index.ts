@@ -1,19 +1,8 @@
 /**
- * Drag & Drop Module
+ * Drag & Drop Module - Webflow Style
  *
- * New drag-drop system based on Pragmatic DnD.
- *
- * @example
- * ```typescript
- * import { DragDropSystem, createDefaultRegistry } from './drag-drop'
- *
- * const system = new DragDropSystem(previewContainer, {
- *   registry: createDefaultRegistry(),
- *   codeExecutor: myCodeExecutor,
- * })
- *
- * system.initialize()
- * ```
+ * Simple drag-drop system: insert between siblings or inside containers.
+ * No absolute positioning, no 9-zone system.
  */
 
 // Types
@@ -28,12 +17,8 @@ export type {
   Direction,
   DropResult,
   Placement,
-  AlignmentZone,
   VisualHint,
   VisualHintType,
-  SnapConfig,
-  SnapGuide,
-  SnapResult,
   ExecutionResult,
   CodeExecutor,
   PaletteItemData,
@@ -43,24 +28,14 @@ export type {
 // Strategies
 export {
   FlexWithChildrenStrategy,
-  EmptyFlexStrategy,
-  PositionedStrategy,
   NonContainerStrategy,
   SimpleInsideStrategy,
   StrategyRegistry,
-  createDefaultRegistry,
   createWebflowRegistry,
-  detectZone,
-  getZoneRect,
-  zoneToDSLProperties,
   calculateInsertionLineRect,
-  getDefaultComponentSize,
 } from './strategies'
 
 export type { DropStrategy, ChildRect } from './strategies'
-
-// Snap
-export { calculateSnap, DEFAULT_SNAP_CONFIG } from './snap'
 
 // Visual
 export { VisualSystem, createVisualSystem, VISUAL_IDS } from './visual'
@@ -75,7 +50,6 @@ export {
   getChildRects,
   getSiblingRects,
   getContainerRect,
-  isPositionedContainer,
 } from './system'
 
 export type { DragDropConfig, DragState } from './system'

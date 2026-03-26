@@ -525,7 +525,8 @@ export class PropertyPanel {
   /**
    * Layout mode options (mutually exclusive)
    */
-  private readonly LAYOUT_MODES = ['vertical', 'horizontal', 'grid', 'stacked', 'absolute'] as const
+  // Note: absolute positioning disabled (Webflow-style)
+  private readonly LAYOUT_MODES = ['vertical', 'horizontal', 'grid', 'stacked'] as const
 
   /**
    * Render layout as exclusive toggle group (includes alignment and position)
@@ -654,9 +655,6 @@ export class PropertyPanel {
                 <button class="toggle-btn ${activeMode === 'stacked' ? 'active' : ''}" data-layout="stacked" title="Stacked">
                   ${getLayoutIcon('zstack', 'icon')}
                 </button>
-                <button class="toggle-btn ${activeMode === 'absolute' ? 'active' : ''}" data-layout="absolute" title="Absolute">
-                  ${getLayoutIcon('absolute', 'icon')}
-                </button>
               </div>
             </div>
           </div>
@@ -702,29 +700,8 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const heightIsHug = heightValue === 'hug'
     const heightIsFull = heightValue === 'full'
 
-    // Check if element should show x/y inputs:
-    // 1. Element has absolute/abs property itself, OR
-    // 2. Element is inside a positioned container (parent has pos/stacked)
-    const posProps = positionCat?.properties || []
-    const absProp = posProps.find(p => p.name === 'absolute' || p.name === 'abs')
-    const hasAbsoluteProperty = absProp && absProp.source !== 'available'
-    const inPositionedContainer = this.isInPositionedContainer()
-    const showXY = hasAbsoluteProperty || inPositionedContainer
-
-    const xProp = posProps.find(p => p.name === 'x')
-    const yProp = posProps.find(p => p.name === 'y')
-    const xValue = xProp?.value || ''
-    const yValue = yProp?.value || ''
-
-    // Build x/y inputs if in positioned context (on one line, before width/height)
-    const xyRow = showXY ? `
-          <div class="prop-row">
-            <span class="prop-label">Pos X/Y</span>
-            <div class="prop-content dual-input">
-              <input type="text" class="prop-input" autocomplete="off" data-prop="x" value="${xValue}" placeholder="0">
-              <input type="text" class="prop-input" autocomplete="off" data-prop="y" value="${yValue}" placeholder="0">
-            </div>
-          </div>` : ''
+    // Note: x/y positioning disabled (Webflow-style, no absolute positioning)
+    const xyRow = ''
 
     return `
       <div class="section">

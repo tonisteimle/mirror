@@ -46,28 +46,7 @@ export class StrategyRegistry implements IStrategyRegistry {
 }
 
 /**
- * Create a pre-configured registry with all standard strategies
- */
-export function createDefaultRegistry(): StrategyRegistry {
-  // Import strategies lazily to avoid circular dependencies
-  const { FlexWithChildrenStrategy } = require('./flex-with-children')
-  const { EmptyFlexStrategy } = require('./empty-flex')
-  const { PositionedStrategy } = require('./positioned')
-  const { NonContainerStrategy } = require('./non-container')
-
-  const registry = new StrategyRegistry()
-
-  // Order matters: more specific strategies first
-  registry.register(new PositionedStrategy())
-  registry.register(new FlexWithChildrenStrategy())
-  registry.register(new EmptyFlexStrategy())
-  registry.register(new NonContainerStrategy())
-
-  return registry
-}
-
-/**
- * Create a Webflow-style registry (simplified)
+ * Create a Webflow-style registry
  *
  * No absolute positioning, no 9-zone system.
  * Just: insert between siblings OR insert inside container.
