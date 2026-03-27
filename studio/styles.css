@@ -1577,12 +1577,19 @@
       position: relative;
     }
 
-    .components-preview-render > *:empty::before {
-      /* Show component name for empty components */
+    /* Show component name for empty components */
+    .components-preview-wrapper > *:empty::before {
       content: attr(data-component);
       color: var(--white-50);
       font-size: var(--font-sm);
       padding: 4px 8px;
+      display: block;
+    }
+
+    /* Ensure empty components have minimum size */
+    .components-preview-wrapper > *:empty {
+      min-width: 40px;
+      min-height: 24px;
     }
 
     #react-editor-container {
