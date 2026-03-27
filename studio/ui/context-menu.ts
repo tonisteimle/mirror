@@ -6,7 +6,7 @@
  */
 
 import * as menu from '@zag-js/menu'
-import { normalizeProps } from '@zag-js/types'
+import { normalizeProps } from '@zag-js/vanilla'
 
 // ============================================================================
 // Types
