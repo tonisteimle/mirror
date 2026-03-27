@@ -3990,7 +3990,6 @@ let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
 let studioRobustModifier = null  // Robust wrapper for atomic updates
-let studioDragDropService = null
 let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
 const initializedDraggables = new WeakSet()  // Track elements with drag handlers to prevent duplicates
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
@@ -4519,9 +4518,6 @@ function updateStudio(ast, ir, sourceMap, source) {
     )
   }
 
-  // Legacy DragDropService disabled - using new Webflow-style DragDropSystem (studio.dragDrop)
-  // The new system handles all drag-drop via native HTML5 events in bootstrap.ts
-
   // Sync property panel to editor cursor after compile (if editor has focus)
   // Use new architecture: trigger SyncCoordinator via EditorController
   if (getEditorHasFocus() && studio.editor && editor) {
@@ -4550,7 +4546,7 @@ function makePreviewElementsDraggable() {
   canvasDragCleanups.forEach(cleanup => cleanup())
   canvasDragCleanups = []
 
-  if (!studioDragDropService) return
+  if (!studio.dragDrop) return
 
   const previewContainer = document.getElementById('preview')
   if (!previewContainer) return
@@ -4570,8 +4566,8 @@ function makePreviewElementsDraggable() {
     const isMainRoot = el.dataset.mirrorRoot === 'true'
     if (isMainRoot) return
 
-    // Make element draggable using DragDropService (mouse events, not HTML5 drag)
-    const cleanup = studioDragDropService.makeElementDraggable(el)
+    // Make element draggable using new DragDropSystem
+    const cleanup = studio.dragDrop.makeElementDraggable(el)
     canvasDragCleanups.push(cleanup)
     initializedDraggables.add(el)
   })
@@ -5759,13 +5755,13 @@ function renderPaletteItem(comp) {
 // Cleanup functions for palette drag handlers
 let paletteDragCleanups = []
 
-// Attach drag handlers to palette items (using mousedown, not HTML5 drag)
+// Attach drag handlers to palette items (using DragDropSystem)
 function attachPaletteDragHandlers(container) {
   // Cleanup previous handlers
   paletteDragCleanups.forEach(cleanup => cleanup())
   paletteDragCleanups = []
 
-  if (!studioDragDropService) return
+  if (!studio.dragDrop) return
 
   // Get all components for defaultSize lookup
   const allComponents = window.allPaletteComponents || []
@@ -5779,8 +5775,8 @@ function attachPaletteDragHandlers(container) {
     const component = allComponents.find(c => c.name === componentName)
     const defaultSize = component?.defaultSize
 
-    // Use DragDropService's makePaletteItemDraggable (mouse events)
-    const cleanup = studioDragDropService.makePaletteItemDraggable(item, componentName, {
+    // Use DragDropSystem's makePaletteItemDraggable
+    const cleanup = studio.dragDrop.makePaletteItemDraggable(item, componentName, {
       properties: properties || undefined,
       textContent: textContent || undefined,
       defaultSize: defaultSize,

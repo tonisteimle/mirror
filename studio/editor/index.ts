@@ -163,8 +163,36 @@ export class EditorController {
     if (!this.editorView) return
     const currentContent = this.getContent()
     if (currentContent === content) return
+
+    // Preserve cursor position as much as possible
+    const currentCursor = this.getCursor()
+
     this.editorView.dispatch({
       changes: { from: 0, to: currentContent.length, insert: content },
+    })
+
+    // Try to restore cursor to same line/column if valid
+    // Use requestAnimationFrame to ensure the dispatch is complete
+    requestAnimationFrame(() => {
+      if (!this.editorView) return
+      const newDoc = this.editorView.state.doc
+      const maxLine = newDoc.lines
+
+      if (currentCursor.line <= maxLine) {
+        try {
+          const lineInfo = newDoc.line(currentCursor.line)
+          // Clamp column to line length
+          const maxCol = lineInfo.to - lineInfo.from
+          const newCol = Math.min(currentCursor.column - 1, maxCol)
+          const newOffset = lineInfo.from + newCol
+
+          this.editorView.dispatch({
+            selection: { anchor: newOffset },
+          })
+        } catch {
+          // Line doesn't exist, cursor will be at start
+        }
+      }
     })
   }
 
@@ -190,9 +218,17 @@ export class EditorController {
   scrollToLineAndSelect(lineNumber: number): void {
     if (!this.editorView) return
     try {
+      const currentCursor = this.getCursor()
       const lineInfo = this.editorView.state.doc.line(lineNumber)
       const effect = this.editorView.constructor.scrollIntoView(lineInfo.from, { y: 'center' })
-      this.editorView.dispatch({ effects: effect, selection: { anchor: lineInfo.from } })
+
+      // If cursor is already on the target line, only scroll - don't move cursor
+      // This prevents cursor jumping to line start when user is at end of line
+      if (currentCursor.line === lineNumber) {
+        this.editorView.dispatch({ effects: effect })
+      } else {
+        this.editorView.dispatch({ effects: effect, selection: { anchor: lineInfo.from } })
+      }
     } catch (e) {
       // Line number may be out of bounds after code changes
       console.warn('[EditorController] scrollToLineAndSelect failed:', lineNumber, e)
@@ -220,7 +256,8 @@ export class EditorController {
 
   notifyCursorMove(position: CursorPosition): void {
     for (const cb of this.cursorCallbacks) cb(position)
-    actions.setCursor(position.line, position.column)
+    // Note: setCursor is called by the callback in bootstrap.ts
+    // Don't call it here to avoid duplicate state updates
   }
 
   dispose(): void {
