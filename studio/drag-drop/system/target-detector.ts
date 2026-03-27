@@ -11,6 +11,48 @@ import type { ChildRect } from '../strategies/types'
 const DEFAULT_NODE_ID_ATTR = 'data-node-id'
 
 /**
+ * Component names that are "leaf" elements and should not accept children.
+ * These are text elements, form inputs, media elements, etc.
+ */
+const LEAF_COMPONENTS = new Set([
+  // Text elements
+  'text', 'muted', 'title', 'label',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  // Interactive elements
+  'button', 'link',
+  // Form elements
+  'input', 'textarea',
+  // Media elements
+  'image', 'img', 'icon',
+  // Layout helpers
+  'divider', 'spacer',
+])
+
+/**
+ * Check if an element is a leaf component that shouldn't accept children
+ */
+function isLeafComponent(element: HTMLElement): boolean {
+  // Check data-mirror-name attribute (set by Mirror's DOM backend)
+  const mirrorName = element.dataset.mirrorName?.toLowerCase()
+  if (mirrorName && LEAF_COMPONENTS.has(mirrorName)) {
+    return true
+  }
+
+  // Check tag name for semantic HTML elements
+  const tagName = element.tagName.toLowerCase()
+  if (['span', 'button', 'input', 'textarea', 'img', 'hr', 'a'].includes(tagName)) {
+    return true
+  }
+
+  // Check for heading elements
+  if (/^h[1-6]$/.test(tagName)) {
+    return true
+  }
+
+  return false
+}
+
+/**
  * Detect drop target from a DOM element
  */
 export function detectTarget(
@@ -19,6 +61,18 @@ export function detectTarget(
 ): DropTarget | null {
   const nodeId = element.getAttribute(nodeIdAttr)
   if (!nodeId) return null
+
+  // Check if this is a leaf component - force non-container layout
+  if (isLeafComponent(element)) {
+    return {
+      nodeId,
+      element,
+      layoutType: 'none',
+      direction: 'vertical',
+      hasChildren: false,
+      isPositioned: false,
+    }
+  }
 
   const style = window.getComputedStyle(element)
   const layoutType = detectLayoutType(style)
