@@ -1163,15 +1163,15 @@ export class CodeModifier {
     let endLine = startLine
     for (let i = lineIndex + 1; i < this.lines.length; i++) {
       const line = this.lines[i]
-
-      // Skip empty lines and comment-only lines
       const trimmed = line.trim()
-      if (trimmed === '' || trimmed.startsWith('//')) {
-        endLine = i + 1 // Include empty/comment lines in the block
+
+      // Empty lines: only include if followed by more indented content
+      if (trimmed === '') {
+        // Don't include empty line yet - peek ahead to see what follows
         continue
       }
 
-      // Check indentation
+      // For comments and code, check indentation
       const lineIndent = this.getLineIndent(line).length
       if (lineIndent <= blockIndent) {
         // This line is at same or lower indentation - block ended before this
@@ -1179,6 +1179,7 @@ export class CodeModifier {
       }
 
       // This line is more indented - it's part of the block
+      // Also include any skipped empty lines
       endLine = i + 1
     }
 
