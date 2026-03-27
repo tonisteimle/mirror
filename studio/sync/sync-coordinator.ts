@@ -48,7 +48,9 @@ export class SyncCoordinator {
   readonly lineOffset: LineOffsetService
 
   constructor(options: SyncCoordinatorOptions = {}) {
-    this.options = { cursorDebounce: 150, debug: false, ...options }
+    // Reduced debounce from 150ms to 50ms for faster cursor sync
+    // 150ms was too slow and caused stale cursor positions during fast typing
+    this.options = { cursorDebounce: 50, debug: false, ...options }
     this.lineOffset = options.lineOffset ?? new LineOffsetService()
   }
 
@@ -174,8 +176,17 @@ export class SyncCoordinator {
 
   /**
    * Handle click in preview - just set selection, sync happens via event
+   * IMPORTANT: Cancel any pending cursor sync to prevent cursor jumping back
    */
   handlePreviewClick(nodeId: string): void {
+    // Cancel pending cursor sync - preview click takes priority
+    // This prevents: user clicks preview → cursor jumps to preview element →
+    // then old debounced cursor sync fires → cursor jumps back to old position
+    if (this.pendingCursorSync) {
+      clearTimeout(this.pendingCursorSync)
+      this.pendingCursorSync = null
+    }
+
     if (this.options.debug) {
       console.log('[SyncCoordinator] handlePreviewClick', { nodeId })
     }

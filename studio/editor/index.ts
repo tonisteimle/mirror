@@ -72,6 +72,8 @@ export class EditorController {
   private focusCallbacks: Set<FocusCallback> = new Set()
   private boundHandleFocusIn: () => void
   private boundHandleMouseDown: () => void
+  /** Version counter to invalidate stale cursor restoration in setContent() */
+  private contentVersion = 0
 
   constructor(config: EditorConfig) {
     this.container = config.container
@@ -164,6 +166,9 @@ export class EditorController {
     const currentContent = this.getContent()
     if (currentContent === content) return
 
+    // Increment version to invalidate any pending cursor restoration
+    const capturedVersion = ++this.contentVersion
+
     // Preserve cursor position as much as possible
     const currentCursor = this.getCursor()
 
@@ -174,14 +179,17 @@ export class EditorController {
     // Try to restore cursor to same line/column if valid
     // Use requestAnimationFrame to ensure the dispatch is complete
     requestAnimationFrame(() => {
-      if (!this.editorView) return
+      // Abort if another setContent() was called (version changed)
+      // or if editor was disposed
+      if (!this.editorView || this.contentVersion !== capturedVersion) return
+
       const newDoc = this.editorView.state.doc
       const maxLine = newDoc.lines
 
       if (currentCursor.line <= maxLine) {
         try {
           const lineInfo = newDoc.line(currentCursor.line)
-          // Clamp column to line length
+          // Clamp column to line length (0-based for offset calculation)
           const maxCol = lineInfo.to - lineInfo.from
           const newCol = Math.min(currentCursor.column - 1, maxCol)
           const newOffset = lineInfo.from + newCol
@@ -217,6 +225,14 @@ export class EditorController {
 
   scrollToLineAndSelect(lineNumber: number): void {
     if (!this.editorView) return
+
+    // Bounds check before accessing line
+    const maxLine = this.editorView.state.doc.lines
+    if (lineNumber < 1 || lineNumber > maxLine) {
+      console.warn('[EditorController] scrollToLineAndSelect: line out of bounds', { lineNumber, maxLine })
+      return
+    }
+
     try {
       const currentCursor = this.getCursor()
       const lineInfo = this.editorView.state.doc.line(lineNumber)
