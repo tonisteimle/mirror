@@ -19,12 +19,12 @@ const STORAGE_KEY = 'mirror-files'
 // =============================================================================
 
 const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `App bg $canvas.bg, pad $l, gap $m
-  Text "Welcome to Mirror", fs $xl, weight bold, col $text.col
-  Text "Edit this code to get started", fs $m, col $muted.col
+  'index.mir': `App
+  Title "Welcome to Mirror"
+  Muted "Edit this code to get started"
 
   Card
-    Text "Your first component", col $muted.col
+    Muted "Your first component"
     Button "Click Me"
 
   // Zag Select Component
@@ -37,32 +37,33 @@ const DEFAULT_PROJECT: Record<string, string> = {
 
 // Typography
 $font: Inter, system-ui, -apple-system, sans-serif
+
 $s.fs: 12
 $m.fs: 14
 $l.fs: 18
 $xl.fs: 24
+$xxl.fs: 32
 
-// Background Colors
-$accent.bg: #3b82f6
-$surface.bg: #27272a
-$canvas.bg: #18181b
-$input.bg: #1f1f1f
-
-// Text Colors
-$text.col: #ffffff
-$muted.col: #a1a1aa
-
-// Border Colors
-$border.boc: #333333
-$focus.boc: #3b82f6
+// Colors
+$accent: #3b82f6
+$surface: #27272a
+$canvas: #18181b
+$input: #1f1f1f
+$text: #ffffff
+$muted: #a1a1aa
+$border: #333333
+$focus: #3b82f6
 
 // Spacing
 $s.pad: 4
 $m.pad: 8
 $l.pad: 16
+$xl.pad: 32
+
 $s.gap: 4
 $m.gap: 8
 $l.gap: 16
+$xl.gap: 32
 
 // Radius
 $s.rad: 4
@@ -71,17 +72,19 @@ $l.rad: 12`,
 
   'components.com': `// Component Definitions
 
-Button:
-  pad $s $m, bg $accent.bg, rad $s, col white, cursor pointer
+App: bg $canvas, pad $l, gap $l
+
+Title: fs $xl, weight bold, col $text
+
+Muted: fs $m, col $muted
+
+Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
   hover bg #2563eb
 
-Card:
-  bg $surface.bg, pad $m, rad $m, gap $s
+Card: bg $surface, pad $l, rad $m, gap $l
 
-Input:
-  pad $s, bg $input.bg, rad $s, bor 1 $border.boc
-  col $text.col
-  focus bor 1 $focus.boc`
+Input: pad $m, bg $input, rad $s, bor 1 $border, col $text
+  focus bor 1 $focus`
 }
 
 // =============================================================================
