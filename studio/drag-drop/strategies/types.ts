@@ -39,8 +39,9 @@ export interface DropStrategy {
 
   /**
    * Generate visual hint for rendering feedback
+   * Returns null if no indicator should be shown (e.g., no-op position)
    */
-  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint
+  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint | null
 }
 
 /**

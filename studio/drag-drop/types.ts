@@ -93,6 +93,8 @@ export interface DropResult {
   zone?: AlignmentZone
   /** Insertion index for flex containers */
   insertionIndex?: number
+  /** True if this drop would result in no change (element stays in place) */
+  isNoOp?: boolean
 }
 
 // ============================================================================

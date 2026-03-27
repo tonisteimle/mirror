@@ -319,12 +319,18 @@ export class DragDropSystem implements IDragDropSystem {
 
     // Get visual hint and show indicator (Webflow-style: no zone overlay)
     const visualHint = strategy.getVisualHint(calcResult, childRects, domRectToRect(containerRect))
-    this.visual.showIndicator(visualHint)
 
-    // Show parent outline for before/after placements (not for inside - that already shows outline)
-    if (calcResult.placement === 'before' || calcResult.placement === 'after') {
-      this.visual.showParentOutline(domRectToRect(containerRect))
+    // If no visual hint (no-op position), hide indicator but keep result for drop
+    if (visualHint) {
+      this.visual.showIndicator(visualHint)
+      // Show parent outline for before/after placements
+      if (calcResult.placement === 'before' || calcResult.placement === 'after') {
+        this.visual.showParentOutline(domRectToRect(containerRect))
+      } else {
+        this.visual.hideParentOutline()
+      }
     } else {
+      this.visual.hideIndicator()
       this.visual.hideParentOutline()
     }
 

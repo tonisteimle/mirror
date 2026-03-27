@@ -32,7 +32,7 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     }
 
     // Find closest child and edge
-    const { childRect, placement, index } = this.findClosestChild(
+    const { childRect, placement, index, isNoOp } = this.findClosestChild(
       cursor,
       childRects,
       target.direction,
@@ -44,10 +44,16 @@ export class FlexWithChildrenStrategy implements DropStrategy {
       placement,
       targetId: childRect.nodeId,
       insertionIndex: placement === 'before' ? index : index + 1,
+      isNoOp,
     }
   }
 
-  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint {
+  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint | null {
+    // Don't show indicator for no-op positions
+    if (result.isNoOp) {
+      return null
+    }
+
     const isVertical = result.target.direction === 'vertical'
 
     if (!childRects || childRects.length === 0 || !containerRect) {
@@ -76,16 +82,13 @@ export class FlexWithChildrenStrategy implements DropStrategy {
 
   /**
    * Find closest child and determine before/after
-   *
-   * For canvas elements being moved, excludes positions that would result
-   * in no change (same position or adjacent position).
    */
   private findClosestChild(
     cursor: Point,
     childRects: ChildRect[],
     direction: 'horizontal' | 'vertical',
     source: DragSource
-  ): { childRect: ChildRect; placement: 'before' | 'after'; index: number } {
+  ): { childRect: ChildRect; placement: 'before' | 'after'; index: number; isNoOp?: boolean } {
     const isHorizontal = direction === 'horizontal'
 
     // Find source element's current index (if it's a canvas element being moved)
@@ -121,41 +124,21 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     const rectSize = isHorizontal ? rect.width : rect.height
     const rectCenter = rectStart + rectSize / 2
 
-    let placement: 'before' | 'after' = cursorPos < rectCenter ? 'before' : 'after'
+    const placement: 'before' | 'after' = cursorPos < rectCenter ? 'before' : 'after'
 
-    // For canvas elements: skip positions that wouldn't change anything
+    // Check if this would be a no-op (no actual change)
+    let isNoOp = false
     if (sourceIndex !== -1) {
       const insertionIndex = placement === 'before' ? closestIndex : closestIndex + 1
-
-      // If inserting at current position or position+1, it's a no-op
-      // (inserting before self or after self doesn't move the element)
-      if (insertionIndex === sourceIndex || insertionIndex === sourceIndex + 1) {
-        // Find the nearest valid position instead
-        // If cursor is above source, go to before source's previous sibling
-        // If cursor is below source, go to after source's next sibling
-        if (closestIndex <= sourceIndex && sourceIndex > 0) {
-          // Move to before previous sibling
-          return {
-            childRect: childRects[sourceIndex - 1],
-            placement: 'before',
-            index: sourceIndex - 1,
-          }
-        } else if (closestIndex >= sourceIndex && sourceIndex < childRects.length - 1) {
-          // Move to after next sibling
-          return {
-            childRect: childRects[sourceIndex + 1],
-            placement: 'after',
-            index: sourceIndex + 1,
-          }
-        }
-        // If no valid position (element is alone), return current position anyway
-      }
+      // Inserting at current position or position+1 means no change
+      isNoOp = insertionIndex === sourceIndex || insertionIndex === sourceIndex + 1
     }
 
     return {
       childRect: closestRect,
       placement,
       index: closestIndex,
+      isNoOp,
     }
   }
 }
