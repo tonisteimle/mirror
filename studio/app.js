@@ -6259,50 +6259,6 @@ import('./dist/index.js').then(module => {
   })
   console.log('[App] File management initialized')
 
-  // ==========================================
-  // Panel Splitter (Zag.js) - Resizable Panels
-  // ==========================================
-  const sidebar = document.getElementById('explorer-panel')
-  const sidebarDivider = document.getElementById('sidebar-divider')
-  const editorPanel = document.querySelector('.editor-panel')
-  const editorDivider = document.getElementById('editor-divider')
-  const previewPanel = document.querySelector('.preview-panel')
-  const propertyPanel = document.getElementById('property-panel')
-
-  if (sidebar && sidebarDivider && editorPanel && editorDivider && previewPanel && module.createStudioSplitter) {
-    try {
-      const splitter = module.createStudioSplitter({
-        sidebar,
-        sidebarDivider,
-        editor: editorPanel,
-        editorDivider,
-        preview: previewPanel,
-        propertyPanel,
-      }, {
-        onLayoutChange: (sizes) => {
-          // Apply sizes to panels (percentage-based)
-          const mainContent = document.querySelector('.main-content')
-          if (!mainContent) return
-
-          const totalWidth = mainContent.clientWidth
-          const propertyWidth = 320 // Fixed property panel width
-
-          const availableWidth = totalWidth - propertyWidth
-          const sidebarWidth = Math.round(availableWidth * sizes.sidebar / 100)
-          const editorWidth = Math.round(availableWidth * sizes.editor / 100)
-          const previewWidth = availableWidth - sidebarWidth - editorWidth
-
-          sidebar.style.width = `${sidebarWidth}px`
-          editorPanel.style.width = `${editorWidth}px`
-          previewPanel.style.width = `${previewWidth}px`
-        }
-      })
-      console.log('[App] Panel splitter initialized')
-      window.studioSplitter = splitter
-    } catch (err) {
-      console.error('[App] Failed to initialize splitter:', err)
-    }
-  }
 }).catch(err => {
   console.error('[App] Failed to load studio bundle:', err)
 })
@@ -6438,104 +6394,100 @@ window.resetCode = async () => {
 }
 
 // ==========================================
-// Resizable Panel Dividers
-// Best practices: requestAnimationFrame, no visible lines
+// Resizable Panel Dividers (Vanilla JS)
+// Simple drag-to-resize for sidebar, editor, preview panels
 // ==========================================
-const sidebarDivider = document.getElementById('sidebar-divider')
-const editorDivider = document.getElementById('editor-divider')
-const componentsDivider = document.getElementById('components-divider')
-const container = document.querySelector('.container')
+;(function initPanelResizer() {
+  const sidebar = document.getElementById('explorer-panel')
+  const sidebarDivider = document.getElementById('sidebar-divider')
+  const editorPanel = document.querySelector('.editor-panel')
+  const editorDivider = document.getElementById('editor-divider')
+  const previewPanel = document.querySelector('.preview-panel')
+  const mainContent = document.querySelector('.main-content')
 
-const DIVIDER_WIDTH = 0  // Invisible dividers - hit area via CSS ::before
-const PROPERTY_PANEL_WIDTH = 320
-
-// Load default layout (in-memory only)
-function loadLayout() {
-  return { sidebarWidth: 240, componentsWidth: 160, editorRatio: 0.5 }
-}
-
-function saveLayout() {
-  // Layout is in-memory only (per session)
-}
-
-// DISABLED: Panel resizing - using fixed CSS grid layout
-// Fixed sizes: Chat 320, Files 200, Editor 420, Components 200, Preview flex, Property 320
-/*
-let layout = loadLayout()
-let activeDivider = null
-let rafPending = false
-
-function updateLayout() {
-  if (rafPending) return
-  rafPending = true
-
-  requestAnimationFrame(() => {
-    rafPending = false
-    const totalWidth = container.getBoundingClientRect().width
-    const dividerTotal = DIVIDER_WIDTH * 3
-    const remainingWidth = totalWidth - layout.sidebarWidth - layout.componentsWidth - PROPERTY_PANEL_WIDTH - dividerTotal
-    const editorWidth = Math.round(remainingWidth * layout.editorRatio)
-    const previewWidth = remainingWidth - editorWidth
-
-    container.style.gridTemplateColumns =
-      `${layout.sidebarWidth}px ${DIVIDER_WIDTH}px ${editorWidth}px ${DIVIDER_WIDTH}px ${layout.componentsWidth}px ${DIVIDER_WIDTH}px ${previewWidth}px ${PROPERTY_PANEL_WIDTH}px`
-  })
-}
-
-function startDrag(dividerName, dividerElement, e) {
-  activeDivider = dividerName
-  dividerElement.classList.add('dragging')
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-  e.preventDefault()
-}
-
-sidebarDivider?.addEventListener('mousedown', (e) => startDrag('sidebar', sidebarDivider, e))
-editorDivider?.addEventListener('mousedown', (e) => startDrag('editor', editorDivider, e))
-componentsDivider?.addEventListener('mousedown', (e) => startDrag('components', componentsDivider, e))
-
-document.addEventListener('mousemove', (e) => {
-  if (!activeDivider) return
-
-  const containerRect = container.getBoundingClientRect()
-  const x = e.clientX - containerRect.left
-  const totalWidth = containerRect.width
-  const dividerTotal = DIVIDER_WIDTH * 3
-
-  if (activeDivider === 'sidebar') {
-    layout.sidebarWidth = Math.max(120, Math.min(400, x - DIVIDER_WIDTH / 2))
-  } else if (activeDivider === 'editor') {
-    const editorStart = layout.sidebarWidth + DIVIDER_WIDTH
-    const availableForEditorPreview = totalWidth - layout.sidebarWidth - layout.componentsWidth - PROPERTY_PANEL_WIDTH - dividerTotal
-    const editorX = x - editorStart - DIVIDER_WIDTH / 2
-    layout.editorRatio = Math.max(0.15, Math.min(0.85, editorX / availableForEditorPreview))
-  } else if (activeDivider === 'components') {
-    const availableForEditorPreview = totalWidth - layout.sidebarWidth - PROPERTY_PANEL_WIDTH - dividerTotal
-    const editorWidth = availableForEditorPreview * layout.editorRatio
-    const componentsStart = layout.sidebarWidth + DIVIDER_WIDTH + editorWidth + DIVIDER_WIDTH
-    const newComponentsWidth = x - componentsStart - DIVIDER_WIDTH / 2
-    layout.componentsWidth = Math.max(120, Math.min(400, newComponentsWidth))
+  if (!sidebar || !sidebarDivider || !editorPanel || !editorDivider || !previewPanel || !mainContent) {
+    console.warn('[PanelResizer] Missing elements, skipping initialization')
+    return
   }
 
-  updateLayout()
-})
+  const PROPERTY_PANEL_WIDTH = 320
+  const MIN_SIDEBAR = 150
+  const MAX_SIDEBAR = 400
+  const MIN_PANEL = 200
 
-document.addEventListener('mouseup', () => {
-  if (activeDivider) {
-    sidebarDivider?.classList.remove('dragging')
-    editorDivider?.classList.remove('dragging')
-    componentsDivider?.classList.remove('dragging')
+  let activeDivider = null
+  let startX = 0
+  let startWidths = { sidebar: 0, editor: 0, preview: 0 }
+
+  function getWidths() {
+    return {
+      sidebar: sidebar.offsetWidth,
+      editor: editorPanel.offsetWidth,
+      preview: previewPanel.offsetWidth,
+    }
+  }
+
+  function startDrag(dividerName, e) {
+    activeDivider = dividerName
+    startX = e.clientX
+    startWidths = getWidths()
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    if (dividerName === 'sidebar') {
+      sidebarDivider.classList.add('dragging')
+    } else {
+      editorDivider.classList.add('dragging')
+    }
+
+    e.preventDefault()
+  }
+
+  function onMouseMove(e) {
+    if (!activeDivider) return
+
+    const deltaX = e.clientX - startX
+
+    if (activeDivider === 'sidebar') {
+      // Resize sidebar, editor takes the difference
+      const newSidebarWidth = Math.max(MIN_SIDEBAR, Math.min(MAX_SIDEBAR, startWidths.sidebar + deltaX))
+      const sidebarDelta = newSidebarWidth - startWidths.sidebar
+      const newEditorWidth = Math.max(MIN_PANEL, startWidths.editor - sidebarDelta)
+
+      sidebar.style.width = `${newSidebarWidth}px`
+      editorPanel.style.width = `${newEditorWidth}px`
+    } else if (activeDivider === 'editor') {
+      // Resize editor vs preview
+      const newEditorWidth = Math.max(MIN_PANEL, startWidths.editor + deltaX)
+      const newPreviewWidth = Math.max(MIN_PANEL, startWidths.preview - deltaX)
+
+      // Only apply if both are valid
+      if (newEditorWidth >= MIN_PANEL && newPreviewWidth >= MIN_PANEL) {
+        editorPanel.style.width = `${newEditorWidth}px`
+        previewPanel.style.width = `${newPreviewWidth}px`
+      }
+    }
+  }
+
+  function onMouseUp() {
+    if (!activeDivider) return
+
+    sidebarDivider.classList.remove('dragging')
+    editorDivider.classList.remove('dragging')
     activeDivider = null
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
-    saveLayout() // Persist on drag end
   }
-})
 
-// Initialize layout
-updateLayout()
-window.addEventListener('resize', updateLayout)
-*/
+  // Event listeners
+  sidebarDivider.addEventListener('mousedown', (e) => startDrag('sidebar', e))
+  editorDivider.addEventListener('mousedown', (e) => startDrag('editor', e))
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+
+  console.log('[PanelResizer] Initialized')
+})()
 
 // ==========================================
 // Settings (Desktop: removed UI, using Claude CLI instead of API keys)
