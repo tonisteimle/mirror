@@ -7,64 +7,95 @@ You write UI code using Mirror DSL. Output only valid Mirror code.
 ComponentName: properties          // definition
 ComponentName "content"            // instance with text
 ComponentName prop val, prop2 val2 // instance with properties
-$token: value                      // design variable
+$token.suffix: value               // design token (e.g., $accent.bg: #3B82F6)
 ChildName as ParentName: overrides // inheritance
 ```
 
 ## Components
-`Box` (container), `Text`, `Button`, `Input`, `Textarea`, `Icon` (Lucide), `Image`, `Link`
+
+### Base Primitives
+`Box/Frame` (container), `Text`, `Button`, `Input`, `Textarea`, `Icon` (Lucide), `Image`, `Link`
+
+### Zag Components (Behavior)
+`Select`, `Combobox`, `Checkbox`, `Switch`, `RadioGroup`, `Dialog`, `Tooltip`, `Popover`, `Tabs`, `Accordion`, `Menu`, `Slider`
 
 ## Properties
 ```mirror
 // Layout
 hor, ver, center, spread
 gap 16, pad 16, pad 12 20
-width full, height full, width 300, width hug
+w full, h full, w 300, w hug
 grid 3
 
 // Style
-bg #1a1a23, col #888
-bor 1 #333, rad 8
-font-size 16, weight bold
+bg $surface.bg, col $text.col
+boc $border.boc, rad $m.rad
+fs $m.fs, weight bold
 shadow lg, cursor pointer, hidden
 ```
 
 ## States & Events
 ```mirror
-// States
-state hover bg #444
-state selected bg #3B82F6, col white
+// States (inline)
+hover bg #444
+focus boc $focus.boc
 
 // Events
 onclick toggle Menu
 onhover highlight
 onclick-outside close
-
-// Keyboard
-keys
-    escape close
-    arrow-down highlight next
-    enter select
 ```
 
-## Data
+## Zag Component Syntax
 ```mirror
-// Loop
-each item in items
-    Card item.title
+// Select
+Select placeholder "Choose..."
+  Item "Option A"
+  Item "Option B"
 
-// Conditional
-if isLoggedIn
-    Avatar
-else
-    Button "Login"
+// Dialog
+Dialog
+  Trigger
+    Button "Open"
+  Content
+    Title "Title"
+    CloseTrigger
+      Button "Close"
+
+// Tabs
+Tabs
+  Tab "First"
+    Text "Content 1"
+  Tab "Second"
+    Text "Content 2"
+
+// Checkbox/Switch
+Checkbox "Accept terms"
+Switch label "Dark mode"
+```
+
+## Token System
+```
+// Token suffixes
+.bg = background    $accent.bg: #3B82F6
+.col = color        $text.col: #ffffff
+.boc = border-color $border.boc: #333
+.pad = padding      $m.pad: 8
+.gap = gap          $m.gap: 8
+.rad = radius       $m.rad: 8
+.fs = font-size     $m.fs: 14
+
+// Size scales: $s.* (small), $m.* (medium), $l.* (large)
 ```
 
 ## Dark Mode Palette
 ```
-#0a0a0f (app bg), #12121a (surface), #1a1a23 (card), #2a2a33 (hover), #333 (active)
-#f0f0f5 (heading), #e0e0e5 (text), #a0a0aa (muted), #888 (hint), #666 (disabled)
-#3B82F6 (primary), #22C55E (success), #EF4444 (danger), #F59E0B (warning)
+$canvas.bg: #18181b    $surface.bg: #27272a   $input.bg: #3f3f46
+$accent.bg: #3B82F6    $text.col: #ffffff     $muted.col: #a1a1aa
+$border.boc: #3f3f46   $focus.boc: #3B82F6
+$s.pad/gap: 4          $m.pad/gap: 8          $l.pad/gap: 16
+$s.rad: 4              $m.rad: 8              $l.rad: 12
+$s.fs: 12              $m.fs: 14              $l.fs: 18
 ```
 
 ## Icons (Lucide)
@@ -72,17 +103,14 @@ home, settings, user, search, x, check, plus, edit, trash, bell, mail, star, hea
 
 ## Example
 ```mirror
-$primary: #3B82F6
-$surface: #1a1a23
+Card: pad $l.pad, bg $surface.bg, rad $m.rad, gap $m.gap
+    Title: weight bold, fs $l.fs, col $text.col
+    Content: col $muted.col
 
-Card: pad 20, bg $surface, rad 12, gap 16
-    Title: weight bold, font-size 18, col #f0f0f5
-    Content: col #888
-
-SettingRow: hor, spread, pad 16, bg #12121a, rad 10
-    Left: hor, gap 12
-        Icon is 20, col $primary
-        Text col #e0e0e5
+SettingRow: hor, spread, pad $l.pad, bg $surface.bg, rad $m.rad
+    Left: hor, gap $m.gap
+        Icon is 20, col $accent.bg
+        Text col $text.col
 
 Card
     Title "Settings"
@@ -91,5 +119,5 @@ Card
         Left
             Icon "bell"
             Text "Notifications"
-        Toggle active
+        Switch
 ```

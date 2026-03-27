@@ -198,8 +198,41 @@ Antworte IMMER als JSON mit diesem Format:
 const DSL_QUICK_REFERENCE = `
 ## Mirror DSL Kurzreferenz
 
-### Primitives
-Box, Frame, Text, Button, Input, Icon, Image, H1-H6, Label, Select, Option
+### Base Primitives
+Box, Frame, Text, Button, Input, Icon, Image, H1-H6, Label, Link, Divider, Spacer
+
+### Zag Components (Behavior)
+Select, Combobox, Checkbox, Switch, RadioGroup, Dialog, Tooltip, Popover, Tabs, Accordion, Menu, Slider
+
+**WICHTIG:** Für Dropdowns, Dialoge, Tabs etc. immer Zag-Komponenten verwenden!
+
+### Zag Syntax Beispiele
+\`\`\`
+// Select (Dropdown)
+Select placeholder "Wähle..."
+  Item "Option A"
+  Item "Option B"
+
+// Dialog
+Dialog
+  Trigger
+    Button "Öffnen"
+  Content
+    Title "Titel"
+    CloseTrigger
+      Button "Schließen"
+
+// Tabs
+Tabs
+  Tab "Tab 1"
+    Text "Inhalt 1"
+  Tab "Tab 2"
+    Text "Inhalt 2"
+
+// Checkbox/Switch
+Checkbox "Akzeptieren"
+Switch label "Dunkelmodus"
+\`\`\`
 
 ### Layout
 - \`hor\` = horizontal (nebeneinander)
@@ -217,20 +250,20 @@ Box, Frame, Text, Button, Input, Icon, Image, H1-H6, Label, Select, Option
 - \`h full\` / \`h 200\` / \`h hug\`
 
 ### Farben
-- \`bg #hex\` oder \`bg $token\`
-- \`col #hex\` oder \`col $token\`
+- \`bg #hex\` oder \`bg $token.bg\`
+- \`col #hex\` oder \`col $token.col\`
 - \`boc #hex\` (border-color)
 
 ### Border & Radius
 - \`bor 1\` (border-width)
 - \`rad 8\` oder \`rad full\`
 
-### States
+### States (inline!)
 - \`hover bg #xxx\` (Hover-Style)
 - \`focus boc #xxx\` (Focus-Style)
 
 ### Self-Closing (KEINE Kinder!)
-Input, Textarea, Image, Icon, Checkbox, Radio, Divider, Spacer
+Input, Textarea, Image, Icon, Divider, Spacer
 
 ### Text-Elemente (brauchen Text)
 H1-H6, Text, Label, Button, Link - z.B. \`H2 "Titel"\``

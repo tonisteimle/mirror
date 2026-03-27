@@ -14,7 +14,7 @@ ComponentName "content"
 ComponentName property value, property2 value2
 
 // Tokens (design variables)
-$tokenName: value
+$tokenName.suffix: value   // e.g., $accent.bg: #3B82F6
 
 // Inheritance
 ChildComponent as ParentComponent: overrides
@@ -24,14 +24,73 @@ ChildComponent as ParentComponent: overrides
 
 | Component | Purpose | Content |
 |-----------|---------|---------|
-| `Box` / `frame` | Container/Layout | - |
-| `Text` / `text` | Text display | string |
-| `Button` / `button` | Clickable button | label string |
-| `Input` / `input` | Text input | placeholder |
+| `Box` / `Frame` | Container/Layout | - |
+| `Text` | Text display | string |
+| `Button` | Clickable button | label string |
+| `Input` | Text input | placeholder |
 | `Textarea` | Multi-line input | placeholder |
-| `Icon` / `icon` | Lucide icon | icon name |
-| `Image` / `image` | Image | src |
-| `Link` / `link` | Hyperlink | label string |
+| `Icon` | Lucide icon | icon name |
+| `Image` | Image | src |
+| `Link` | Hyperlink | label string |
+
+## Zag Components (Behavior Components)
+
+Complex interactive components with built-in accessibility and keyboard navigation:
+
+| Component | Purpose | Pattern |
+|-----------|---------|---------|
+| `Select` | Dropdown select | Item children |
+| `Combobox` | Searchable dropdown | Item children |
+| `Checkbox` | Checkbox with label | Standalone |
+| `Switch` | Toggle switch | Standalone |
+| `RadioGroup` | Radio button group | Item children |
+| `Dialog` | Modal dialog | Trigger + Content |
+| `Tooltip` | Hover tooltip | Trigger + Content |
+| `Popover` | Click popover | Trigger + Content |
+| `Tabs` | Tabbed navigation | Tab children |
+| `Accordion` | Collapsible sections | Item children |
+| `Menu` | Dropdown menu | Item children |
+| `Slider` | Range slider | Standalone |
+
+### Zag Component Syntax
+
+```mirror
+// Select (dropdown)
+Select placeholder "Choose..."
+  Item "Option A"
+  Item "Option B"
+  Item "Option C"
+
+// Dialog (modal)
+Dialog
+  Trigger
+    Button "Open Dialog"
+  Content
+    Title "Dialog Title"
+    Description "Dialog content here"
+    CloseTrigger
+      Button "Close"
+
+// Tabs
+Tabs
+  Tab "First"
+    Text "First tab content"
+  Tab "Second"
+    Text "Second tab content"
+
+// Accordion
+Accordion
+  Item "Section 1"
+    Text "Content for section 1"
+  Item "Section 2"
+    Text "Content for section 2"
+
+// Checkbox
+Checkbox "Accept terms"
+
+// Switch
+Switch label "Dark mode"
+```
 
 ## Layout Properties
 
@@ -144,38 +203,72 @@ else
     Button "Login"
 ```
 
-## Dark Mode Color Palette
+## Token System
+
+Tokens use semantic suffixes to indicate their purpose:
+
+| Suffix | Property | Example |
+|--------|----------|---------|
+| `.bg` | background | `$accent.bg: #3B82F6` |
+| `.col` | color (text) | `$text.col: #ffffff` |
+| `.boc` | border-color | `$border.boc: #333` |
+| `.fs` | font-size | `$m.fs: 14` |
+| `.pad` | padding | `$m.pad: 8` |
+| `.gap` | gap | `$m.gap: 8` |
+| `.rad` | radius | `$m.rad: 8` |
+
+### Size Scales
+
+- `$s.*` = small (4px for spacing, 12px for font)
+- `$m.*` = medium (8px for spacing, 14px for font)
+- `$l.*` = large (16px for spacing, 18px for font)
+- `$xl.*` = extra large (24px for font)
+
+### Dark Mode Color Palette
 
 ```mirror
-// Backgrounds
-$app.bg: #0a0a0f        // app background (darkest)
-$surface.bg: #12121a    // surface background
-$card.bg: #1a1a23       // card/elevated background
-$hover.bg: #2a2a33      // hover/interactive background
-$active.bg: #333        // active/pressed background
+// Typography
+$font: Inter, system-ui, sans-serif
+$s.fs: 12
+$m.fs: 14
+$l.fs: 18
+$xl.fs: 24
 
-// Text
-$heading.col: #f0f0f5   // primary text (headings)
-$text.col: #e0e0e5      // secondary text
-$muted.col: #a0a0aa     // muted text
-$hint.col: #888         // disabled/hint text
-$disabled.col: #666     // very muted
+// Background Colors
+$canvas.bg: #18181b     // app background (darkest)
+$surface.bg: #27272a    // surface/card background
+$input.bg: #3f3f46      // input background
+$accent.bg: #3B82F6     // primary accent
 
-// Accent Colors
-$primary: #3B82F6       // primary blue
-$primary.hover: #2563EB // primary hover
-$success: #22C55E       // success green
-$danger: #EF4444        // danger red
-$warning: #F59E0B       // warning yellow
+// Text Colors
+$text.col: #ffffff      // primary text
+$muted.col: #a1a1aa     // secondary/muted text
+
+// Border Colors
+$border.boc: #3f3f46    // default border
+$focus.boc: #3B82F6     // focus ring
+
+// Spacing
+$s.pad: 4
+$m.pad: 8
+$l.pad: 16
+$s.gap: 4
+$m.gap: 8
+$l.gap: 16
+
+// Radius
+$s.rad: 4
+$m.rad: 8
+$l.rad: 12
 ```
 
 ## Common Patterns
 
 ### Card
 ```mirror
-Card: pad 20, bg #1a1a23, rad 12
-    Title: weight bold, font-size 16
-    Description: col #888
+Card: pad $l.pad, bg $surface.bg, rad $m.rad, gap $m.gap
+    Title: weight bold, fs $l.fs, col $text.col
+    Description: col $muted.col
 
 Card
     Title "Welcome"
@@ -184,22 +277,24 @@ Card
 
 ### Button
 ```mirror
-Button: pad 10 20, bg #3B82F6, col white, rad 8, cursor pointer
-    state hover bg #2563EB
+PrimaryButton as Button: pad $s.pad $m.pad, bg $accent.bg, col white, rad $s.rad
+    hover bg #2563EB
+
+PrimaryButton "Click me"
 ```
 
 ### Input
 ```mirror
-Input: pad 12, bg #12121a, rad 8, bor 1 #333, col #e0e0e5
-    Placeholder "Enter email..." col #888
-    state focus bor 1 #3B82F6
+Input: pad $m.pad, bg $input.bg, rad $s.rad, boc $border.boc, col $text.col
+    placeholder "Enter email..."
+    focus boc $focus.boc
 ```
 
 ### Icon Button
 ```mirror
-IconButton: pad 8, rad 8, cursor pointer
-    state hover bg #2a2a33
-    Icon is 20, col #888
+IconButton: pad $s.pad, rad $s.rad, cursor pointer
+    hover bg $surface.bg
+    Icon is 20, col $muted.col
 
 IconButton
     Icon "settings"
@@ -207,80 +302,74 @@ IconButton
 
 ### Setting Row
 ```mirror
-SettingRow: hor, spread, pad 16, bg #12121a, rad 12
-    Left: hor, gap 14
-        IconBox: center, size 40, bg #2a2a33, rad 10
-            Icon is 20, col #3B82F6
-        Labels: gap 4
-            Title: col #e0e0e5, font-size 14
-            Subtitle: col #666, font-size 12
-    Toggle:
+SettingRow: hor, spread, pad $l.pad, bg $surface.bg, rad $m.rad
+    Left: hor, gap $m.gap
+        IconBox: center, size 40, bg $input.bg, rad $s.rad
+            Icon is 20, col $accent.bg
+        Labels: gap $s.gap
+            Title: col $text.col, fs $m.fs
+            Subtitle: col $muted.col, fs $s.fs
 
 SettingRow
-    IconBox
-        Icon "bell"
-    Labels
-        Title "Notifications"
-        Subtitle "Receive alerts"
-    Toggle active
+    Left
+        IconBox
+            Icon "bell"
+        Labels
+            Title "Notifications"
+            Subtitle "Receive alerts"
+    Switch
 ```
 
-### Dialog
+### Dialog (Zag Component)
 ```mirror
-$backdrop: rgba(0,0,0,0.6)
-
-Dialog: stacked
-    Backdrop: w full, h full, bg $backdrop, center
-    Content: w 420, bg #1a1a23, rad 16, shadow lg
-        Header: hor, spread, pad 20, bor b 1 #2a2a33
-            Title: weight bold, font-size 18, col #f0f0f5
-            CloseBtn: cursor pointer
-                Icon "x", is 20, col #666
-        Body: pad 20, gap 12
-        Footer: hor, gap 12, pad 20, right
-            CancelBtn: bg #2a2a33, col #a0a0aa, pad 10 20, rad 8
-            ConfirmBtn: bg #3B82F6, col white, pad 10 20, rad 8
+Dialog
+    Trigger
+        Button "Open Dialog"
+    Backdrop bg rgba(0,0,0,0.6)
+    Content w 420, bg $surface.bg, rad $l.rad, shadow lg
+        Title "Confirm Action"
+        Description "Are you sure you want to proceed?"
+        CloseTrigger
+            Button "Cancel"
+        Button "Confirm", bg $accent.bg, col white
 ```
 
-### Dropdown
+### Select (Zag Component)
 ```mirror
-Dropdown: closed
-    onclick toggle
-    onclick-outside close
-    selection selected
+Select placeholder "Choose option..."
+    Item "Option 1"
+    Item "Option 2"
+    Item "Option 3"
 
-    Trigger: hor, spread, pad 10 16, bg #333, rad 4, cursor pointer
-        Label: col #ccc
-        Icon "chevron-down", is 16, col #888
+// With multiple selection
+Select placeholder "Select items...", multiple
+    Item "Item A"
+    Item "Item B"
+    Item "Item C"
+```
 
-    if (open)
-        Menu: pad 4, bg #1a1a23, rad 6, bor 1 #444
-            keys
-                escape close
-                arrow-down highlight next
-                arrow-up highlight prev
-                enter select, close
-
-            Item "Option 1"
-            Item "Option 2"
-            Item "Option 3"
-
-Item: pad 10 12, rad 4, cursor pointer, col #ccc
-    onhover highlight
-    onclick select, close
-    state highlighted bg #444
-    state selected bg #2563EB, col white
+### Tabs (Zag Component)
+```mirror
+Tabs
+    Tab "Overview"
+        Text "Overview content"
+    Tab "Settings"
+        Text "Settings content"
+    Tab "Help"
+        Text "Help content"
 ```
 
 ## Rules
 
-1. **Always use dark mode colors** - Use the palette above
-2. **Properties after colon** - `Card: pad 16, bg #333`
-3. **Content in quotes** - `Text "Hello"` or `Button "Click"`
-4. **Children indented** - 4 spaces or 1 tab
-5. **States with `state`** - `state hover bg #444`
-6. **Numeric values** - `pad 16` not `pad: 16px`
-7. **Icon names** - Use Lucide: `home`, `settings`, `user`, `x`, `check`
+1. **Use tokens** - Prefer `$accent.bg` over hardcoded `#3B82F6`
+2. **Token suffixes** - Always use semantic suffixes: `.bg`, `.col`, `.pad`, `.gap`, `.rad`, `.fs`
+3. **Use Zag components** - For Select, Dialog, Tabs, Accordion, Menu use Zag components
+4. **Properties after colon** - `Card: pad 16, bg #333`
+5. **Content in quotes** - `Text "Hello"` or `Button "Click"`
+6. **Children indented** - 4 spaces or 1 tab
+7. **States inline** - `hover bg #444` not `state hover bg #444`
+8. **Numeric values** - `pad 16` not `pad: 16px`
+9. **Icon names** - Use Lucide: `home`, `settings`, `user`, `x`, `check`
 
 ## Icon Reference (Lucide)
 
