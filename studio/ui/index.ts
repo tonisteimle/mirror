@@ -34,3 +34,15 @@ export {
   createProjectToolbar,
   type ProjectToolbarConfig,
 } from './project-toolbar'
+
+// Splitter (resizable panels)
+export {
+  ZagSplitter,
+  createSplitter,
+  createStudioSplitter,
+  type PanelConfig,
+  type SplitterConfig,
+  type SplitterCallbacks,
+  type StudioLayoutConfig,
+  type StudioLayoutCallbacks,
+} from './splitter'

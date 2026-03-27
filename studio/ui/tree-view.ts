@@ -6,7 +6,6 @@
  */
 
 import * as treeView from '@zag-js/tree-view'
-import { normalizeProps } from '@zag-js/types'
 import type { TreeNode } from '@zag-js/collection'
 
 // ============================================================================
@@ -182,9 +181,9 @@ export class ZagTreeView {
   /**
    * Get the Zag API
    */
-  private getApi(): treeView.Api<typeof normalizeProps, FileNode> | null {
+  private getApi(): treeView.Api<FileNode> | null {
     if (!this.service) return null
-    return treeView.connect(this.service, normalizeProps)
+    return treeView.connect(this.service)
   }
 
   /**
@@ -223,7 +222,7 @@ export class ZagTreeView {
    * Render a single tree node
    */
   private renderNode(
-    api: treeView.Api<typeof normalizeProps, FileNode>,
+    api: treeView.Api<FileNode>,
     node: FileNode,
     indexPath: number[]
   ): HTMLElement {

@@ -49,6 +49,9 @@ export * from './storage'
 // Desktop Files (file tree UI and operations)
 export * from './desktop-files'
 
+// UI Components (Zag.js-based)
+export * from './ui'
+
 // Bootstrap
 export {
   studio,

@@ -222,7 +222,9 @@
     }
 
     .sidebar {
-      flex: 0 0 220px;
+      flex: 0 0 auto; /* Size controlled by Splitter */
+      width: 220px; /* Default, overridden by Splitter */
+      min-width: 0;
       background: var(--bg-panel);
       border-right: 1px solid var(--border-default);
       display: flex;
@@ -322,7 +324,8 @@
     }
 
     .editor-panel {
-      flex: 0 0 400px;
+      flex: 1 1 auto; /* Size controlled by Splitter */
+      min-width: 200px;
     }
 
     .components-panel {
@@ -936,16 +939,19 @@
     }
 
 
-    /* Panel Divider - 0px width, invisible hit area */
-    .divider {
+    /* Panel Divider (Zag Splitter) - 0px width, invisible hit area */
+    .divider,
+    [data-scope="splitter"][data-part="resize-trigger"] {
       position: relative;
       width: 0;
       cursor: col-resize;
       z-index: 10;
+      flex-shrink: 0;
     }
 
     /* Invisible hit area - 12px wide for easy grabbing */
-    .divider::before {
+    .divider::before,
+    [data-scope="splitter"][data-part="resize-trigger"]::before {
       content: '';
       position: absolute;
       top: 0;
@@ -956,7 +962,8 @@
     }
 
     /* Visible divider line - matches panel borders, highlighted on hover */
-    .divider::after {
+    .divider::after,
+    [data-scope="splitter"][data-part="resize-trigger"]::after {
       content: '';
       position: absolute;
       top: 0;
@@ -968,13 +975,34 @@
       pointer-events: none;
     }
 
-    .divider:hover::after {
+    .divider:hover::after,
+    [data-scope="splitter"][data-part="resize-trigger"]:hover::after {
       width: 2px;
       background: var(--primary-50);
     }
 
-    .divider.dragging::after {
+    .divider.dragging::after,
+    [data-scope="splitter"][data-part="resize-trigger"][data-dragging]::after {
+      width: 2px;
       background: var(--color-primary);
+    }
+
+    /* Focus state for accessibility (keyboard navigation) */
+    [data-scope="splitter"][data-part="resize-trigger"]:focus-visible::after {
+      width: 2px;
+      background: var(--color-primary);
+      outline: none;
+    }
+
+    [data-scope="splitter"][data-part="resize-trigger"]:focus {
+      outline: none;
+    }
+
+    /* Panel styles for Zag Splitter */
+    [data-scope="splitter"][data-part="panel"] {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     /* Desktop app - no header, no status bar */

@@ -6258,6 +6258,51 @@ import('./dist/index.js').then(module => {
     }
   })
   console.log('[App] File management initialized')
+
+  // ==========================================
+  // Panel Splitter (Zag.js) - Resizable Panels
+  // ==========================================
+  const sidebar = document.getElementById('explorer-panel')
+  const sidebarDivider = document.getElementById('sidebar-divider')
+  const editorPanel = document.querySelector('.editor-panel')
+  const editorDivider = document.getElementById('editor-divider')
+  const previewPanel = document.querySelector('.preview-panel')
+  const propertyPanel = document.getElementById('property-panel')
+
+  if (sidebar && sidebarDivider && editorPanel && editorDivider && previewPanel && module.createStudioSplitter) {
+    try {
+      const splitter = module.createStudioSplitter({
+        sidebar,
+        sidebarDivider,
+        editor: editorPanel,
+        editorDivider,
+        preview: previewPanel,
+        propertyPanel,
+      }, {
+        onLayoutChange: (sizes) => {
+          // Apply sizes to panels (percentage-based)
+          const mainContent = document.querySelector('.main-content')
+          if (!mainContent) return
+
+          const totalWidth = mainContent.clientWidth
+          const propertyWidth = 320 // Fixed property panel width
+
+          const availableWidth = totalWidth - propertyWidth
+          const sidebarWidth = Math.round(availableWidth * sizes.sidebar / 100)
+          const editorWidth = Math.round(availableWidth * sizes.editor / 100)
+          const previewWidth = availableWidth - sidebarWidth - editorWidth
+
+          sidebar.style.width = `${sidebarWidth}px`
+          editorPanel.style.width = `${editorWidth}px`
+          previewPanel.style.width = `${previewWidth}px`
+        }
+      })
+      console.log('[App] Panel splitter initialized')
+      window.studioSplitter = splitter
+    } catch (err) {
+      console.error('[App] Failed to initialize splitter:', err)
+    }
+  }
 }).catch(err => {
   console.error('[App] Failed to load studio bundle:', err)
 })
