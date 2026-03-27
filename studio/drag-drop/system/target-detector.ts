@@ -92,6 +92,10 @@ export function detectTarget(
 
 /**
  * Find the closest drop target from an element
+ *
+ * For leaf elements (text, button, etc.), we return the parent container
+ * so that drop positions are calculated between siblings, not before/after
+ * the individual leaf element.
  */
 export function findClosestTarget(
   element: HTMLElement | null,
@@ -104,7 +108,17 @@ export function findClosestTarget(
 
   while (current) {
     const target = detectTarget(current, nodeIdAttr)
-    if (target) return target
+    if (target) {
+      // If this is a leaf element, find the parent container instead
+      // This ensures drop positions are calculated between siblings
+      if (target.layoutType === 'none' && current.parentElement) {
+        const parentTarget = findClosestTarget(current.parentElement, nodeIdAttr)
+        if (parentTarget && parentTarget.layoutType !== 'none') {
+          return parentTarget
+        }
+      }
+      return target
+    }
     current = current.parentElement
   }
 
