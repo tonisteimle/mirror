@@ -5388,16 +5388,35 @@
 
     /* Preview selection highlight (JS-controlled via classes) */
 
-    /* Hover (mouse over without selection): subtle */
+    /* Hover (mouse over without selection): subtle + drag cursor */
     [data-mirror-id].studio-hover {
       outline: 1px solid var(--primary-30) !important;
       outline-offset: -1px;
+      cursor: grab;
     }
 
-    /* Normal selection: prominent solid border */
+    /* During drag: grabbing cursor */
+    [data-mirror-id].studio-hover:active {
+      cursor: grabbing;
+    }
+
+    /* Normal selection: prominent solid border + drag cursor */
     [data-mirror-id].studio-selected {
       outline: 1px solid var(--color-primary) !important;
       outline-offset: -1px;
+      cursor: grab;
+    }
+
+    [data-mirror-id].studio-selected:active {
+      cursor: grabbing;
+    }
+
+    /* Text inputs keep text cursor for editing */
+    input[data-mirror-id].studio-hover,
+    input[data-mirror-id].studio-selected,
+    textarea[data-mirror-id].studio-hover,
+    textarea[data-mirror-id].studio-selected {
+      cursor: text;
     }
 
     /* Selected + Hover: even more prominent */
