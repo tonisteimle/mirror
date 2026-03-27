@@ -6394,99 +6394,55 @@ window.resetCode = async () => {
 }
 
 // ==========================================
-// Resizable Panel Dividers (Vanilla JS)
-// Simple drag-to-resize for sidebar, editor, preview panels
+// Resizable Editor/Preview Divider
 // ==========================================
 ;(function initPanelResizer() {
-  const sidebar = document.getElementById('explorer-panel')
-  const sidebarDivider = document.getElementById('sidebar-divider')
   const editorPanel = document.querySelector('.editor-panel')
   const editorDivider = document.getElementById('editor-divider')
   const previewPanel = document.querySelector('.preview-panel')
-  const mainContent = document.querySelector('.main-content')
 
-  if (!sidebar || !sidebarDivider || !editorPanel || !editorDivider || !previewPanel || !mainContent) {
-    console.warn('[PanelResizer] Missing elements, skipping initialization')
+  if (!editorPanel || !editorDivider || !previewPanel) {
+    console.warn('[PanelResizer] Missing elements')
     return
   }
 
-  const PROPERTY_PANEL_WIDTH = 320
-  const MIN_SIDEBAR = 150
-  const MAX_SIDEBAR = 400
   const MIN_PANEL = 200
-
-  let activeDivider = null
+  let isDragging = false
   let startX = 0
-  let startWidths = { sidebar: 0, editor: 0, preview: 0 }
+  let startEditorWidth = 0
+  let startPreviewWidth = 0
 
-  function getWidths() {
-    return {
-      sidebar: sidebar.offsetWidth,
-      editor: editorPanel.offsetWidth,
-      preview: previewPanel.offsetWidth,
-    }
-  }
-
-  function startDrag(dividerName, e) {
-    activeDivider = dividerName
+  editorDivider.addEventListener('mousedown', (e) => {
+    isDragging = true
     startX = e.clientX
-    startWidths = getWidths()
-
+    startEditorWidth = editorPanel.offsetWidth
+    startPreviewWidth = previewPanel.offsetWidth
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
-
-    if (dividerName === 'sidebar') {
-      sidebarDivider.classList.add('dragging')
-    } else {
-      editorDivider.classList.add('dragging')
-    }
-
+    editorDivider.classList.add('dragging')
     e.preventDefault()
-  }
+  })
 
-  function onMouseMove(e) {
-    if (!activeDivider) return
-
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return
     const deltaX = e.clientX - startX
-
-    if (activeDivider === 'sidebar') {
-      // Resize sidebar, editor takes the difference
-      const newSidebarWidth = Math.max(MIN_SIDEBAR, Math.min(MAX_SIDEBAR, startWidths.sidebar + deltaX))
-      const sidebarDelta = newSidebarWidth - startWidths.sidebar
-      const newEditorWidth = Math.max(MIN_PANEL, startWidths.editor - sidebarDelta)
-
-      sidebar.style.width = `${newSidebarWidth}px`
+    const newEditorWidth = Math.max(MIN_PANEL, startEditorWidth + deltaX)
+    const newPreviewWidth = Math.max(MIN_PANEL, startPreviewWidth - deltaX)
+    if (newEditorWidth >= MIN_PANEL && newPreviewWidth >= MIN_PANEL) {
       editorPanel.style.width = `${newEditorWidth}px`
-    } else if (activeDivider === 'editor') {
-      // Resize editor vs preview
-      const newEditorWidth = Math.max(MIN_PANEL, startWidths.editor + deltaX)
-      const newPreviewWidth = Math.max(MIN_PANEL, startWidths.preview - deltaX)
-
-      // Only apply if both are valid
-      if (newEditorWidth >= MIN_PANEL && newPreviewWidth >= MIN_PANEL) {
-        editorPanel.style.width = `${newEditorWidth}px`
-        previewPanel.style.width = `${newPreviewWidth}px`
-      }
+      previewPanel.style.width = `${newPreviewWidth}px`
     }
-  }
+  })
 
-  function onMouseUp() {
-    if (!activeDivider) return
-
-    sidebarDivider.classList.remove('dragging')
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return
+    isDragging = false
     editorDivider.classList.remove('dragging')
-    activeDivider = null
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
-  }
+  })
 
-  // Event listeners
-  sidebarDivider.addEventListener('mousedown', (e) => startDrag('sidebar', e))
-  editorDivider.addEventListener('mousedown', (e) => startDrag('editor', e))
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
-
-  console.log('[PanelResizer] Initialized')
+  console.log('[PanelResizer] Editor/Preview divider ready')
 })()
 
 // ==========================================
