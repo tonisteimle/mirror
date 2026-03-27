@@ -200,9 +200,12 @@ export class DragDropSystem implements IDragDropSystem {
 
       e.preventDefault()
 
+      console.log('[DragDrop] Native handleDrop called at', { x: e.clientX, y: e.clientY })
+
       // Extract source from the actual drop data (may differ from dragover)
       const jsonData = e.dataTransfer.getData('application/mirror-component')
       if (!jsonData) {
+        console.log('[DragDrop] No JSON data in drop')
         this.visual.clear()
         this.resetState()
         return
@@ -218,14 +221,26 @@ export class DragDropSystem implements IDragDropSystem {
         children: dragData.children,
       }
 
+      console.log('[DragDrop] Drop source:', source)
+      console.log('[DragDrop] Current result BEFORE update:', this.state.currentResult)
+
       // Update indicator one last time
       this.updateDropIndicator({ clientX: e.clientX, clientY: e.clientY })
 
+      console.log('[DragDrop] Current result AFTER update:', this.state.currentResult)
+
       // Execute drop if we have a result
       if (this.state.currentResult) {
+        console.log('[DragDrop] Executing drop with:', {
+          targetId: this.state.currentResult.targetId,
+          placement: this.state.currentResult.placement,
+          insertionIndex: this.state.currentResult.insertionIndex,
+          targetNodeId: this.state.currentResult.target?.nodeId,
+        })
         this.executeDrop(source, this.state.currentResult)
         this.config.onDragEnd?.(source, true)
       } else {
+        console.log('[DragDrop] No currentResult, drop cancelled')
         this.config.onDragEnd?.(source, false)
       }
 
