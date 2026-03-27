@@ -116,15 +116,7 @@ export function getSiblingRects(
  * Detect layout type from computed style
  */
 function detectLayoutType(style: CSSStyleDeclaration): LayoutType {
-  // Check for positioned (absolute/relative children)
-  const position = style.position
-  if (position === 'relative') {
-    // Container is positioned context - check for absolute children or pos flag
-    // For now, we rely on explicit pos class or data attribute
-    return 'flex'
-  }
-
-  // Check display property
+  // Check display property first - this determines if it's a container
   const display = style.display
   if (display === 'flex' || display === 'inline-flex') {
     return 'flex'
@@ -132,6 +124,9 @@ function detectLayoutType(style: CSSStyleDeclaration): LayoutType {
   if (display === 'grid' || display === 'inline-grid') {
     return 'flex' // Treat grid as flex for insertion purposes
   }
+
+  // Note: position:relative alone does NOT make something a flex container
+  // It just establishes a positioning context for absolute children
 
   return 'none'
 }

@@ -56,8 +56,9 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
     // Skip empty lines and comments
     if (!trimmed || trimmed.startsWith('//')) continue
 
-    // Component definition: Name: or Name as Base:
-    const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([A-Z][a-zA-Z0-9_-]*))?:$/)
+    // Component definition: Name: or Name as Base: (with optional inline properties)
+    // Examples: "App:", "Button as button:", "Card: bg $surface, pad $l"
+    const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
       components.push({
         name: match[1],
