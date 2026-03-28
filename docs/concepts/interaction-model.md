@@ -136,32 +136,72 @@ Escape: Menu closed
 
 ## Vollständige Beispiele
 
-### Tabs
+### 1. Dropdown Menu
 
 ```
-Tabs:
-  Tab:
+Dropdown:
+  Menu:
+    hidden
+    open onclick:
+      visible
+      fade-in
+
+  Item:
     pad 12
-    bg #eee
     hover:
-      bg #ddd
+      bg #f5f5f5
+    selected onclick:
+      bg #e0e0e0
+
+Dropdown
+  Button "Optionen"
+  Menu
+    Item "Bearbeiten"
+    Item "Kopieren"
+    Item "Löschen"
+```
+
+### 2. Tabs mit Content
+
+```
+TabBar:
+  Tab:
+    pad 16
+    opacity 0.6
+    hover:
+      opacity 0.8
     selected exclusive onclick:
-      bg #fff
+      opacity 1
       border-bottom 2 blue
 
-Tabs
+TabContent:
+  Panel:
+    hidden
+    active exclusive:
+      visible
+
+TabBar
   Tab "Home"
-  Tab "Products"
-  Tab "Contact"
+  Tab "Produkte"
+  Tab "Kontakt"
+
+TabContent
+  Panel
+    Text "Willkommen..."
+  Panel
+    Text "Unsere Produkte..."
+  Panel
+    Text "Kontaktieren Sie uns..."
 ```
 
-### Modal mit Backdrop
+### 3. Modal mit Backdrop
 
 ```
 Modal:
   hidden
   open:
     visible
+    scale 1
     fade-in
 
 Backdrop:
@@ -169,26 +209,25 @@ Backdrop:
   visible when Modal open:
     opacity 0.5
 
-Button open onclick: Modal open
+CloseButton:
+  onclick:
+    Modal closed
+
+OpenButton:
+  onclick:
+    Modal open
+
+// Instanzen
+Backdrop
+
+Modal
+  Header "Titel"
+  Content "..."
+  CloseButton "Schliessen"
+
+OpenButton "Modal öffnen"
+
 Escape: Modal closed
-```
-
-### Accordion
-
-```
-Accordion:
-  Panel:
-    collapsed: h 0
-    expanded exclusive onclick:
-      h auto
-
-Accordion
-  Panel "Section 1"
-    Content "..."
-  Panel "Section 2"
-    Content "..."
-  Panel "Section 3"
-    Content "..."
 ```
 
 ## System-States vs Custom-States
