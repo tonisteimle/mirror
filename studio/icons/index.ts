@@ -51,6 +51,12 @@ export const COMPONENT_ICONS = {
   /** Grid layout */
   grid: `<rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="8" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect><rect x="13" y="13" width="8" height="8" rx="1"></rect>`,
 
+  /** Sidebar layout */
+  sidebar: `<rect x="3" y="3" width="18" height="18" rx="1"></rect><rect x="4" y="4" width="5" height="16" fill="currentColor" opacity="0.3"></rect>`,
+
+  /** Header/Footer layout */
+  headerFooter: `<rect x="3" y="3" width="18" height="18" rx="1"></rect><rect x="4" y="4" width="16" height="4" fill="currentColor" opacity="0.3"></rect><rect x="4" y="16" width="16" height="4" fill="currentColor" opacity="0.3"></rect>`,
+
   /** Box/Container */
   box: `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>`,
 
