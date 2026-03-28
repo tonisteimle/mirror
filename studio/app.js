@@ -3059,7 +3059,10 @@ const editor = new EditorView({
       // Component Drop: Proper CodeMirror integration for drag & drop from component palette
       Prec.highest(createComponentDropExtension({
         onDrop: (dragData, position, view) => {
-          const code = generateComponentCodeFromDragData(dragData)
+          const code = generateComponentCodeFromDragData(dragData, {
+            componentId: dragData.componentId,
+            filename: currentFile || 'index.mir',
+          })
           insertComponentCode(view, code, position)
         }
       })),
