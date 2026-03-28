@@ -43,7 +43,10 @@ tests/                 # Test Suite
 ├── compiler/          # IR & Backend Tests
 ├── studio/            # Studio Component Tests
 └── e2e/               # Playwright E2E Tests
-docs/generated/        # Auto-generierte Referenz
+
+docs/                  # Dokumentation
+├── concepts/          # Feature-Konzepte (in Entwicklung)
+└── generated/         # Auto-generierte Referenz
 packages/mirror-lang/  # NPM Package
 dist/                  # Build Output
 ```
@@ -90,6 +93,11 @@ npm run validate       # Code validieren (z.B. npm run validate app.mirror)
 
 Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 → Version in `studio/index.html` erhöhen (`?v=N`)
+
+## Konventionen
+
+- **Dateinamen**: Kleinbuchstaben mit Bindestrichen (`interaction-model.md`, nicht `INTERACTION-MODEL.md`)
+- **Konzeptdokumente**: In `docs/concepts/` ablegen
 
 ## DSL Kurzreferenz
 
@@ -327,6 +335,20 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | hover-border | hover-bor | <number> |
 | hover-border-color | hover-boc | <color>, $token |
 | hover-radius | hover-rad | <number> |
+
+### Zag Behavior Properties
+
+> Component-specific behavior properties for Zag components.
+
+*50 components with 195 behavior properties total.*
+
+**Boolean:** addOnBlur, addOnPaste, allowCustomValue, allowDrop, allowDuplicate, allowHalf, allowMouseWheel, autoFocus, autoStart, autoplay, checked, clampValueOnBlur, clearable, closeOnClick, closeOnEscape, closeOnOutsideClick, closeOnScroll, closeOnSelect, collapsible, countdown, deselectable, directory, disabled, draggable, fixedWeeks, indeterminate, interactive, invalid, lazyMount, linear, lockAspectRatio, loop, loopFocus, mask, modal, multiple, open, openOnChange, otp, pauseOnHover, preventInteraction, preventScroll, readOnly, required, resizable, restoreFocus, searchable, selectOnFocus, trapFocus, typeahead, unmountOnExit, visible
+
+**Enum:** activationMode, encoding, errorCorrection, orientation, origin, placement, positioning, selectionMode, submitMode
+
+**Number:** aspectRatio, autoplayInterval, closeDelay, count, duration, gap, interval, length, max, maxFiles, maxTags, maxZoom, min, minStepsBetweenThumbs, minZoom, openDelay, pageSize, scrollHideDelay, siblingCount, slidesPerView, speed, spotlightOffset, spotlightRadius, startOfWeek, step, timeout
+
+**String:** label, locale, name, placeholder
 
 ### Events
 
