@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Grundlagen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #111;
+      --bg-code: #191919;
+      --bg-preview: #0c0c0c;
+      --text: #ccc;
+      --text-bright: #eee;
+      --text-dim: #666;
+      --border: #282828;
+      --accent: #4a9eff;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 48px;
+    }
+
+    header p {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--text-bright);
+      letter-spacing: -0.5px;
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 14px;
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: var(--text-bright);
+    }
+
+    /* Playground */
+    .playground {
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .playground-code {
+      flex: 1;
+      background: var(--bg-code);
+    }
+
+    .playground-code textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 16px;
+      border: none;
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-bright);
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+
+    .playground-preview {
+      flex: 1;
+      background: var(--bg-preview);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .playground-error {
+      color: #e55;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    /* Properties */
+    .props {
+      margin: 24px 0;
+      font-size: 14px;
+    }
+
+    .props div {
+      display: flex;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .props div:last-child {
+      border-bottom: none;
+    }
+
+    .props code {
+      width: 100px;
+      flex-shrink: 0;
+      background: none;
+      padding: 0;
+      color: var(--accent);
+    }
+
+    .props span {
+      color: var(--text-dim);
+    }
+
+    /* Exercise */
+    .exercise {
+      margin: 32px 0;
+      padding: 24px;
+      background: var(--bg-code);
+      border-radius: 6px;
+    }
+
+    .exercise h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-bright);
+      margin-bottom: 12px;
+    }
+
+    .exercise p {
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .exercise .target {
+      background: var(--bg-preview);
+      padding: 20px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Solution */
+    details {
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    summary {
+      color: var(--text-dim);
+      cursor: pointer;
+      outline: none;
+    }
+
+    summary:hover {
+      color: var(--text);
+    }
+
+    details pre {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: var(--bg-preview);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      overflow-x: auto;
+    }
+
+    /* Summary */
+    .summary {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .summary ul {
+      list-style: none;
+    }
+
+    .summary li {
+      padding: 6px 0;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .summary li code {
+      margin-right: 8px;
+    }
+
+    /* Nav */
+    nav {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .playground {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <header>
+      <p>Kapitel 1</p>
+      <h1>Grundlagen</h1>
+    </header>
+
+    <section>
+      <h2>Kontext</h2>
+      <p>Mirror ist eine Sprache für UI-Prototypen. Sie beschreibt Oberflächen – Buttons, Karten, Formulare – in einer kompakten Syntax, die direkt zu HTML kompiliert.</p>
+      <p>Der Code links erzeugt das Ergebnis rechts. Änderungen sind sofort sichtbar.</p>
+    </section>
+
+    <section>
+      <h2>Elemente</h2>
+      <p>Ein Element beginnt mit seinem Typ. <code>Button</code> erzeugt einen Button, <code>Text</code> erzeugt Text.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Text in Anführungszeichen ist der Inhalt des Elements.</p>
+    </section>
+
+    <section>
+      <h2>Eigenschaften</h2>
+      <p>Eigenschaften folgen dem Element. Keine Klammern, keine Semikolons.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Speichern" bg #2563eb col white pad 12 24 rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="props">
+        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
+        <div><code>col</code> <span>Textfarbe</span></div>
+        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
+        <div><code>rad</code> <span>Eckenradius</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Verschachtelung</h2>
+      <p>Einrückung definiert Hierarchie. Eingerückte Elemente sind Kinder des Elements darüber.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a pad 20 rad 8
+  Text "Titel" col white
+  Text "Beschreibung" col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>Frame</code> ist ein Container. Die beiden <code>Text</code>-Elemente sind darin enthalten.</p>
+    </section>
+
+    <section>
+      <h2>Layout</h2>
+      <p>Elemente stapeln sich standardmäßig vertikal. <code>hor</code> ändert die Richtung zu horizontal. <code>gap</code> definiert den Abstand zwischen Kindern.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a pad 20 rad 8 hor gap 12
+  Button "Abbrechen" pad 10 20 rad 4
+  Button "Speichern" bg #2563eb col white pad 10 20 rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="exercise">
+      <h3>Übung</h3>
+      <p>Erstelle diese Karte:</p>
+
+      <div class="target">
+        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; width: 240px;">
+          <div style="color: white; font-size: 16px; font-weight: 500; margin-bottom: 8px;">Projekt erstellen</div>
+          <div style="color: #888; font-size: 14px; margin-bottom: 16px;">Ein neues Projekt anlegen</div>
+          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; width: 100%;">Erstellen</button>
+        </div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <details>
+        <summary>Lösung</summary>
+        <pre>Frame bg #1a1a1a pad 24 rad 8 gap 8 w 240
+  Text "Projekt erstellen" col white weight 500
+  Text "Ein neues Projekt anlegen" col #888 fs 14
+  Button "Erstellen" bg #2563eb col white pad 10 20 rad 6 w full</pre>
+      </details>
+    </div>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Button</code> <code>Text</code> <code>Frame</code> – Elementtypen</li>
+        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Styling</li>
+        <li><code>hor</code> <code>gap</code> – Layout</li>
+        <li>Einrückung – Verschachtelung</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="index.html">← Übersicht</a>
+      <a href="lektion-02.html">Weiter →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const textarea = p.querySelector('textarea');
+      const preview = p.querySelector('.playground-preview');
+
+      function compile() {
+        try {
+          const ast = MirrorLang.parse(textarea.value);
+          if (ast.errors?.length) {
+            preview.innerHTML = `<div class="playground-error">${ast.errors[0].message}</div>`;
+            return;
+          }
+          preview.innerHTML = MirrorLang.generateDOM(ast);
+          preview.querySelectorAll('script').forEach(s => {
+            const n = document.createElement('script');
+            n.textContent = s.textContent;
+            s.replaceWith(n);
+          });
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`;
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        clearTimeout(textarea._t);
+        textarea._t = setTimeout(compile, 100);
+      });
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const s = textarea.selectionStart;
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd);
+          textarea.selectionStart = textarea.selectionEnd = s + 2;
+          compile();
+        }
+      });
+
+      compile();
+    });
+  </script>
+</body>
+</html>

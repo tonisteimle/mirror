@@ -390,71 +390,41 @@ export class ComponentPanel {
   }
 
   /**
-   * Setup the drag image from a rendered element
+   * Setup an invisible drag image.
+   * We use visual indicators (line, highlight) instead of a ghost.
    */
-  private setupDragImage(event: DragEvent, element: HTMLElement, size: { width: number; height: number }): void {
+  private setupDragImage(event: DragEvent, _element: HTMLElement, _size: { width: number; height: number }): void {
+    this.setupInvisibleDragImage(event)
+  }
+
+  /**
+   * Setup an invisible drag image (fallback path)
+   */
+  private setupFallbackDragImage(event: DragEvent, _item: ComponentItem): void {
+    this.setupInvisibleDragImage(event)
+  }
+
+  /**
+   * Create a minimal transparent drag image
+   */
+  private setupInvisibleDragImage(event: DragEvent): void {
     if (!event.dataTransfer) return
 
-    // Create a temporary container for the drag image
+    // Create a 1x1 transparent element
     const dragImage = document.createElement('div')
     dragImage.id = 'component-drag-image'
     Object.assign(dragImage.style, {
       position: 'fixed',
       left: '-9999px',
       top: '-9999px',
+      width: '1px',
+      height: '1px',
+      opacity: '0',
       pointerEvents: 'none',
     })
 
-    // Clone and append the rendered element
-    const clone = element.cloneNode(true) as HTMLElement
-    Object.assign(clone.style, {
-      opacity: '0.85',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    })
-    dragImage.appendChild(clone)
     document.body.appendChild(dragImage)
-
-    // Set drag image centered on cursor
-    event.dataTransfer.setDragImage(dragImage, size.width / 2, size.height / 2)
-
-    // Clean up after a short delay
-    setTimeout(() => dragImage.remove(), 100)
-  }
-
-  /**
-   * Setup a fallback drag image when cache is not available
-   */
-  private setupFallbackDragImage(event: DragEvent, item: ComponentItem): void {
-    if (!event.dataTransfer) return
-
-    const size = getDefaultSizeForItem(item)
-
-    // Create a placeholder element
-    const dragImage = document.createElement('div')
-    dragImage.id = 'component-drag-image-fallback'
-    Object.assign(dragImage.style, {
-      position: 'fixed',
-      left: '-9999px',
-      top: '-9999px',
-      width: `${size.width}px`,
-      height: `${size.height}px`,
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-      border: '2px solid #3b82f6',
-      borderRadius: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '12px',
-      fontFamily: 'system-ui, sans-serif',
-      color: '#3b82f6',
-      fontWeight: '500',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      pointerEvents: 'none',
-    })
-    dragImage.textContent = item.name
-
-    document.body.appendChild(dragImage)
-    event.dataTransfer.setDragImage(dragImage, size.width / 2, size.height / 2)
+    event.dataTransfer.setDragImage(dragImage, 0, 0)
 
     // Clean up after a short delay
     setTimeout(() => dragImage.remove(), 100)

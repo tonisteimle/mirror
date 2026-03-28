@@ -589,41 +589,17 @@ export class DragDropSystem implements IDragDropSystem {
   }
 
   /**
-   * Render a scaled drag preview for canvas elements.
-   * Limits the preview to a maximum size for better UX with large/full-width elements.
+   * Render an invisible drag preview.
+   * We use visual indicators (line, highlight) instead of a ghost.
    */
-  private renderDragPreview(container: HTMLElement, element: HTMLElement): void {
-    const MAX_WIDTH = 200
-    const MAX_HEIGHT = 150
-
-    const rect = element.getBoundingClientRect()
-    const scaleX = rect.width > MAX_WIDTH ? MAX_WIDTH / rect.width : 1
-    const scaleY = rect.height > MAX_HEIGHT ? MAX_HEIGHT / rect.height : 1
-    const scale = Math.min(scaleX, scaleY)
-
-    // Clone the element for the preview
-    const clone = element.cloneNode(true) as HTMLElement
-
-    // Apply scaled dimensions and styling
-    Object.assign(clone.style, {
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      transform: `scale(${scale})`,
-      transformOrigin: 'top left',
-      opacity: '0.85',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      borderRadius: '4px',
-      pointerEvents: 'none',
-      position: 'relative',
-    })
-
-    // Set container size to scaled dimensions
+  private renderDragPreview(container: HTMLElement, _element: HTMLElement): void {
+    // Create a minimal transparent preview (1x1 pixel)
+    // The browser requires some content, but we don't want a visible ghost
     Object.assign(container.style, {
-      width: `${rect.width * scale}px`,
-      height: `${rect.height * scale}px`,
+      width: '1px',
+      height: '1px',
+      opacity: '0',
     })
-
-    container.appendChild(clone)
   }
 
   /**

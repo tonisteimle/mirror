@@ -402,38 +402,27 @@ export class UserComponentsPanel {
   }
 
   /**
-   * Setup a drag image
+   * Setup an invisible drag image.
+   * We use visual indicators (line, highlight) instead of a ghost.
    */
-  private setupFallbackDragImage(event: DragEvent, item: ComponentItem): void {
+  private setupFallbackDragImage(event: DragEvent, _item: ComponentItem): void {
     if (!event.dataTransfer) return
 
-    const size = getDefaultSizeForItem(item)
-
+    // Create a 1x1 transparent element
     const dragImage = document.createElement('div')
     dragImage.id = 'user-component-drag-image'
     Object.assign(dragImage.style, {
       position: 'fixed',
       left: '-9999px',
       top: '-9999px',
-      width: `${size.width}px`,
-      height: `${size.height}px`,
-      backgroundColor: 'rgba(139, 92, 246, 0.15)', // Purple for user components
-      border: '2px solid #8B5CF6',
-      borderRadius: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '12px',
-      fontFamily: 'system-ui, sans-serif',
-      color: '#8B5CF6',
-      fontWeight: '500',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      width: '1px',
+      height: '1px',
+      opacity: '0',
       pointerEvents: 'none',
     })
-    dragImage.textContent = item.name
 
     document.body.appendChild(dragImage)
-    event.dataTransfer.setDragImage(dragImage, size.width / 2, size.height / 2)
+    event.dataTransfer.setDragImage(dragImage, 0, 0)
 
     setTimeout(() => dragImage.remove(), 100)
   }
