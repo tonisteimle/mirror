@@ -15,6 +15,7 @@ import {
   getZagPropsForComponent,
   getZagEventsForComponent,
   getZagItemKeywords,
+  generateKeywordCompletions,
 } from './schema-completions'
 
 export interface Completion {
@@ -89,41 +90,26 @@ export const EASING_COMPLETIONS: Completion[] = [
 // Event names that trigger action context
 export const EVENT_NAMES = SCHEMA_COMPLETIONS.events.map(e => e.label)
 
-// Actions that expect a target
-export const ACTIONS_WITH_TARGET = [
-  'show', 'hide', 'toggle', 'open', 'close', 'select', 'deselect',
-  'highlight', 'activate', 'deactivate', 'focus', 'page'
-]
+// Actions that expect a target - derived from schema
+export const ACTIONS_WITH_TARGET = SCHEMA_COMPLETIONS.actionsWithTarget
 
-// Transition properties
-export const TRANSITION_PROPERTIES = [
-  'all', 'bg', 'background', 'col', 'color', 'opacity', 'transform',
-  'pad', 'padding', 'margin', 'w', 'width', 'h', 'height', 'rad', 'radius'
-]
+// Transition properties - derived from schema
+export const TRANSITION_PROPERTIES = SCHEMA_COMPLETIONS.transitionProperties
 
-// Mirror keywords (reserved, structure, etc.)
+// Mirror keywords - base keywords from schema + additional UI keywords
 export const MIRROR_KEYWORDS: Completion[] = [
-  // Structure
-  { label: 'as', detail: 'inherit from', type: 'keyword' },
-  { label: 'extends', detail: 'inherit from', type: 'keyword' },
-  { label: 'named', detail: 'named instance', type: 'keyword' },
+  // Reserved keywords from schema (as, extends, if, else, each, etc.)
+  ...SCHEMA_COMPLETIONS.keywords,
+
+  // Additional keywords not in schema (import is external)
   { label: 'import', detail: 'import file', type: 'keyword' },
-  // Conditionals
-  { label: 'if', detail: 'condition', type: 'keyword' },
-  { label: 'else', detail: 'else branch', type: 'keyword' },
-  { label: 'then', detail: 'then value', type: 'keyword' },
-  // Data
-  { label: 'each', detail: 'iterate', type: 'keyword' },
-  { label: 'in', detail: 'in collection', type: 'keyword' },
-  { label: 'where', detail: 'filter', type: 'keyword' },
-  { label: 'data', detail: 'data binding', type: 'keyword' },
-  { label: 'selection', detail: 'selection binding', type: 'keyword' },
-  // States
   { label: 'state', detail: 'custom state', type: 'keyword' },
-  // Timing
+
+  // Timing modifiers
   { label: 'debounce', detail: 'delay until idle', type: 'keyword' },
   { label: 'delay', detail: 'delay action', type: 'keyword' },
-  // Animation keywords
+
+  // Animation presets
   { label: 'fade', detail: 'fade animation', type: 'keyword' },
   { label: 'scale', detail: 'scale animation', type: 'keyword' },
   { label: 'slide-up', detail: 'slide up', type: 'keyword' },
@@ -133,6 +119,7 @@ export const MIRROR_KEYWORDS: Completion[] = [
   { label: 'spin', detail: 'spin animation', type: 'keyword' },
   { label: 'pulse', detail: 'pulse animation', type: 'keyword' },
   { label: 'bounce', detail: 'bounce animation', type: 'keyword' },
+
   // Overlay positions
   { label: 'below', detail: 'position below', type: 'keyword' },
   { label: 'above', detail: 'position above', type: 'keyword' },

@@ -369,6 +369,83 @@ export function generateKeyCompletions(): Completion[] {
 }
 
 // ============================================================================
+// Keyword Completions
+// ============================================================================
+
+/**
+ * Generate completions for reserved keywords (as, extends, if, else, etc.)
+ */
+export function generateKeywordCompletions(): Completion[] {
+  return DSL.keywords.reserved.map(keyword => ({
+    label: keyword,
+    detail: `Reserved keyword`,
+    type: 'keyword',
+    boost: 2,
+  }))
+}
+
+// ============================================================================
+// Actions with Targets (derived from schema)
+// ============================================================================
+
+/**
+ * Get all action names that expect a target element
+ */
+export function getActionsWithTarget(): string[] {
+  return Object.entries(DSL.actions)
+    .filter(([_, def]) => def.targets ||
+      // Actions that commonly take element targets
+      ['show', 'hide', 'toggle', 'open', 'close', 'select', 'focus', 'page'].includes(_))
+    .map(([name]) => name)
+}
+
+/**
+ * Get all possible targets for actions
+ */
+export function getAllActionTargets(): string[] {
+  const targets = new Set<string>()
+
+  // Collect targets from schema
+  for (const def of Object.values(DSL.actions)) {
+    if (def.targets) {
+      for (const target of def.targets) {
+        targets.add(target)
+      }
+    }
+  }
+
+  // Add common targets not in schema
+  const commonTargets = ['self', 'all', 'none', 'highlighted', 'selected']
+  for (const target of commonTargets) {
+    targets.add(target)
+  }
+
+  return Array.from(targets)
+}
+
+// ============================================================================
+// Transition Properties (derived from schema)
+// ============================================================================
+
+/**
+ * Get properties that can be transitioned (animatable CSS properties)
+ */
+export function getTransitionProperties(): string[] {
+  const transitionable: string[] = []
+
+  for (const [name, def] of Object.entries(SCHEMA)) {
+    // Properties that generate CSS that can be animated
+    if (def.color || def.numeric || def.keywords?._standalone) {
+      transitionable.push(name)
+      transitionable.push(...def.aliases)
+    }
+  }
+
+  // Add 'all' as a special value
+  return ['all', ...transitionable]
+}
+
+// ============================================================================
 // Combined Completions
 // ============================================================================
 
@@ -388,6 +465,10 @@ export const SCHEMA_COMPLETIONS = {
   systemStates: generateSystemStateCompletions(),
   customStates: generateCustomStateCompletions(),
   keys: generateKeyCompletions(),
+  keywords: generateKeywordCompletions(),
+  // Derived lists for autocomplete context detection
+  actionsWithTarget: getActionsWithTarget(),
+  transitionProperties: getTransitionProperties(),
 }
 
 /**
