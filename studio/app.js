@@ -3303,7 +3303,12 @@ function compile(code) {
   files[currentFile] = code
 
   if (!code.trim()) {
-    preview.innerHTML = ''
+    // Render empty App container for drop target support
+    preview.innerHTML = `<div class="mirror-root" style="width: 100%; height: 100%;">
+      <div data-mirror-id="node-1" data-mirror-root="true" data-mirror-name="App" data-component="App"
+           style="display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 200px;">
+      </div>
+    </div>`
     preview.className = ''
     if (generatedCode) generatedCode.textContent = ''
     if (status) {
@@ -3313,13 +3318,15 @@ function compile(code) {
     // Clear selection and update studio state for empty code
     if (studioSelectionManager) {
       studioSelectionManager.clearSelection()
-      studioSelectionManager.setBreadcrumb([])
+      studioSelectionManager.setBreadcrumb([{ id: 'node-1', name: 'App' }])
     }
     // Clear component palette user components
     const userComponentsList = document.querySelector('.user-components-list')
     if (userComponentsList) {
       userComponentsList.innerHTML = ''
     }
+    // Refresh preview overlay for drop zone support
+    studio.preview?.refresh()
     return
   }
 
