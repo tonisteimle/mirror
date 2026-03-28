@@ -37,13 +37,13 @@ describe('Basic Components with Zag', () => {
 
   describe('Simple Elements (no Zag)', () => {
     it('should include Button component', () => {
-      const button = BASIC_COMPONENTS.find(c => c.id === 'basic-button')
+      const button = BASIC_COMPONENTS.find(c => c.id === 'form-button')
       expect(button).toBeDefined()
       expect(button?.template).toBe('Button')
     })
 
     it('should include Input component', () => {
-      const input = BASIC_COMPONENTS.find(c => c.id === 'basic-input')
+      const input = BASIC_COMPONENTS.find(c => c.id === 'form-input')
       expect(input).toBeDefined()
       expect(input?.template).toBe('Input')
     })
@@ -51,7 +51,7 @@ describe('Basic Components with Zag', () => {
 
   describe('Zag Select Components', () => {
     it('should include Select with slots and items', () => {
-      const select = BASIC_COMPONENTS.find(c => c.id === 'zag-select')
+      const select = BASIC_COMPONENTS.find(c => c.id === 'form-select')
       expect(select).toBeDefined()
       expect(select?.template).toBe('Select')
       expect(select?.children?.find(c => c.template === 'Trigger')?.isSlot).toBe(true)
@@ -62,7 +62,7 @@ describe('Basic Components with Zag', () => {
     })
 
     it('should include Listbox with slots', () => {
-      const listbox = BASIC_COMPONENTS.find(c => c.id === 'zag-listbox')
+      const listbox = BASIC_COMPONENTS.find(c => c.id === 'form-listbox')
       expect(listbox).toBeDefined()
       expect(listbox?.template).toBe('Listbox')
     })
@@ -70,21 +70,21 @@ describe('Basic Components with Zag', () => {
 
   describe('Zag Form Controls', () => {
     it('should include Checkbox with Control and Label slots', () => {
-      const checkbox = BASIC_COMPONENTS.find(c => c.id === 'zag-checkbox')
+      const checkbox = BASIC_COMPONENTS.find(c => c.id === 'form-checkbox')
       expect(checkbox).toBeDefined()
       expect(checkbox?.children?.find(c => c.template === 'Control')?.isSlot).toBe(true)
       expect(checkbox?.children?.find(c => c.template === 'Label')?.isSlot).toBe(true)
     })
 
     it('should include Switch with Track and Thumb slots', () => {
-      const toggle = BASIC_COMPONENTS.find(c => c.id === 'zag-switch')
+      const toggle = BASIC_COMPONENTS.find(c => c.id === 'form-switch')
       expect(toggle).toBeDefined()
       expect(toggle?.children?.find(c => c.template === 'Track')?.isSlot).toBe(true)
       expect(toggle?.children?.find(c => c.template === 'Thumb')?.isSlot).toBe(true)
     })
 
     it('should include Slider with Track, Range, Thumb slots', () => {
-      const slider = BASIC_COMPONENTS.find(c => c.id === 'zag-slider')
+      const slider = BASIC_COMPONENTS.find(c => c.id === 'form-slider')
       expect(slider).toBeDefined()
       expect(slider?.children?.find(c => c.template === 'Track')?.isSlot).toBe(true)
       expect(slider?.children?.find(c => c.template === 'Range')?.isSlot).toBe(true)
@@ -92,7 +92,7 @@ describe('Basic Components with Zag', () => {
     })
 
     it('should include Radio Group with items', () => {
-      const radio = BASIC_COMPONENTS.find(c => c.id === 'zag-radio-group')
+      const radio = BASIC_COMPONENTS.find(c => c.id === 'form-radio-group')
       expect(radio).toBeDefined()
       expect(radio?.children?.filter(c => c.isItem).length).toBe(3)
     })
@@ -100,7 +100,7 @@ describe('Basic Components with Zag', () => {
 
   describe('Zag Overlays', () => {
     it('should include Dialog with Trigger, Backdrop, Content slots', () => {
-      const dialog = BASIC_COMPONENTS.find(c => c.id === 'zag-dialog')
+      const dialog = BASIC_COMPONENTS.find(c => c.id === 'overlay-dialog')
       expect(dialog).toBeDefined()
       expect(dialog?.children?.find(c => c.template === 'Trigger')?.isSlot).toBe(true)
       expect(dialog?.children?.find(c => c.template === 'Backdrop')?.isSlot).toBe(true)
@@ -108,13 +108,13 @@ describe('Basic Components with Zag', () => {
     })
 
     it('should include Tooltip', () => {
-      const tooltip = BASIC_COMPONENTS.find(c => c.id === 'zag-tooltip')
+      const tooltip = BASIC_COMPONENTS.find(c => c.id === 'overlay-tooltip')
       expect(tooltip).toBeDefined()
       expect(tooltip?.template).toBe('Tooltip')
     })
 
     it('should include Popover', () => {
-      const popover = BASIC_COMPONENTS.find(c => c.id === 'zag-popover')
+      const popover = BASIC_COMPONENTS.find(c => c.id === 'overlay-popover')
       expect(popover).toBeDefined()
       expect(popover?.template).toBe('Popover')
     })
@@ -122,7 +122,7 @@ describe('Basic Components with Zag', () => {
 
   describe('Zag Navigation', () => {
     it('should include Tabs with List slot and Tab items', () => {
-      const tabs = BASIC_COMPONENTS.find(c => c.id === 'zag-tabs')
+      const tabs = BASIC_COMPONENTS.find(c => c.id === 'nav-tabs')
       expect(tabs).toBeDefined()
       const list = tabs?.children?.find(c => c.template === 'List')
       expect(list?.isSlot).toBe(true)
@@ -131,7 +131,7 @@ describe('Basic Components with Zag', () => {
     })
 
     it('should include Accordion with items', () => {
-      const accordion = BASIC_COMPONENTS.find(c => c.id === 'zag-accordion')
+      const accordion = BASIC_COMPONENTS.find(c => c.id === 'nav-accordion')
       expect(accordion).toBeDefined()
       expect(accordion?.children?.filter(c => c.isItem).length).toBe(3)
     })
@@ -143,7 +143,7 @@ describe('Basic Components with Zag', () => {
       const panel = new ComponentPanel({ container })
 
       const buildCode = (panel as any).buildComponentCode.bind(panel)
-      const select = BASIC_COMPONENTS.find(c => c.id === 'zag-select')!
+      const select = BASIC_COMPONENTS.find(c => c.id === 'form-select')!
       const code = buildCode(select)
 
       expect(code).toContain('Trigger:')
@@ -158,7 +158,7 @@ describe('Basic Components with Zag', () => {
       const panel = new ComponentPanel({ container })
 
       const buildCode = (panel as any).buildComponentCode.bind(panel)
-      const dialog = BASIC_COMPONENTS.find(c => c.id === 'zag-dialog')!
+      const dialog = BASIC_COMPONENTS.find(c => c.id === 'overlay-dialog')!
       const code = buildCode(dialog)
 
       expect(code).toContain('Trigger:')
@@ -178,9 +178,9 @@ describe('Basic Components with Zag', () => {
       const sections = panel.getSections()
       const sectionNames = sections.map(s => s.name)
 
-      // Panel has Basic and Components sections
+      // Panel has Basic and Form sections
       expect(sectionNames).toContain('Basic')
-      expect(sectionNames).toContain('Components')
+      expect(sectionNames).toContain('Form')
 
       panel.dispose()
     })
@@ -192,8 +192,9 @@ describe('Basic Components with Zag', () => {
       const sections = panel.getSections()
       const allItems = sections.flatMap(s => s.items)
 
-      const zagIds = ['zag-select', 'zag-checkbox', 'zag-switch', 'zag-slider', 'zag-dialog', 'zag-tabs', 'zag-accordion']
-      for (const id of zagIds) {
+      // Component IDs use category-based naming (form-select, nav-tabs, etc.)
+      const componentIds = ['form-select', 'form-checkbox', 'form-switch', 'form-slider', 'overlay-dialog', 'nav-tabs', 'nav-accordion']
+      for (const id of componentIds) {
         expect(allItems.find(i => i.id === id)).toBeDefined()
       }
 

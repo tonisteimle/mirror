@@ -15,26 +15,6 @@ export interface ComponentTemplates {
  */
 export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
-  // LAYOUT COMPONENTS
-  // ============================================================================
-  'layout-shell': {
-    mir: `Shell
-  Header
-    Text "My App"
-  Sidebar
-    Text "Menu"
-  Main
-    Text "Content goes here"`,
-    com: `Shell w full, h full
-  Header
-    Text "My App"
-  Sidebar
-    Text "Menu"
-  Main
-    Text "Content goes here"`,
-  },
-
-  // ============================================================================
   // BASIC PRIMITIVES
   // ============================================================================
   'basic-frame': {

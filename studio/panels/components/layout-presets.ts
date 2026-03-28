@@ -14,39 +14,11 @@
 import type { ComponentItem } from './types'
 
 /**
- * 1. LAYOUT - Shell and layout structures
+ * 1. LAYOUT - Layout structures
+ * Note: Shell was removed - use simple containers with hor/ver instead
  */
 export const LAYOUT_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'layout-shell',
-    name: 'Shell',
-    category: 'Layout',
-    template: 'Shell',
-    icon: 'layout',
-    description: 'App shell with header, sidebar, main',
-    defaultSize: { width: 800, height: 600 },
-    children: [
-      {
-        template: 'Header',
-        // Note: NO isSlot for compound primitives - slots are recognized by name
-        children: [
-          { template: 'Text', textContent: 'My App' },
-        ],
-      },
-      {
-        template: 'Sidebar',
-        children: [
-          { template: 'Text', textContent: 'Menu' },
-        ],
-      },
-      {
-        template: 'Main',
-        children: [
-          { template: 'Text', textContent: 'Content goes here' },
-        ],
-      },
-    ],
-  },
+  // Layout section is now empty - will be hidden if no items
 ]
 
 /**

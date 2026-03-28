@@ -5,6 +5,8 @@
  * Sie kompilieren Mirror-Code und führen ihn in JSDOM aus.
  *
  * Strategie: End-to-End Verifikation des generierten DOM.
+ *
+ * @vitest-environment jsdom
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'

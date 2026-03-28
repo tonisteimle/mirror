@@ -66,11 +66,12 @@ export class ComponentPanel {
   private buildSections(): void {
     this.sections = []
 
-    // 1. Layout section (Shell, etc.) - at the top
-    if (LAYOUT_COMPONENTS.length > 0) {
+    // 1. Layout section - currently empty (Shell removed)
+    // Keeping the check for future layout components
+    if (LAYOUT_COMPONENTS.length > 0 && LAYOUT_COMPONENTS.some(c => c.id)) {
       this.sections.push({
         name: 'Layout',
-        items: [...LAYOUT_COMPONENTS],
+        items: [...LAYOUT_COMPONENTS].filter(c => c.id),
         isExpanded: true,
       })
     }

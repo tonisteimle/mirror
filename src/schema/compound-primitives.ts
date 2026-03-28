@@ -42,186 +42,21 @@ export interface CompoundSlotDef {
 
 /**
  * Registry of all Compound primitive components
+ *
+ * NOTE: Shell was removed - use simple containers with hor/ver instead.
+ * This registry is kept empty for potential future compound primitives.
  */
 export const COMPOUND_PRIMITIVES: Record<string, CompoundPrimitiveDef> = {
-  // ===========================================================================
-  // APP LAYOUTS
-  // ===========================================================================
-  Shell: {
-    slots: ['Header', 'Sidebar', 'Main', 'Footer'],
-    props: ['sidebarWidth', 'sidebarPosition', 'headerHeight', 'footerHeight'],
-    description: 'App shell with header, sidebar, and main content area',
-    nestedSlots: {
-      Header: ['Logo', 'Nav', 'Actions'],
-      Nav: ['NavItem'],
-      Sidebar: ['SidebarHeader', 'SidebarGroup', 'SidebarFooter'],
-      SidebarGroup: ['SidebarItem'],
-    },
-    defaultStyles: {
-      display: 'grid',
-      'grid-template-areas': '"header header" "sidebar main"',
-      'grid-template-columns': '240px 1fr',
-      'grid-template-rows': '56px 1fr',
-      height: '100%',
-      width: '100%',
-    },
-    slotStyles: {
-      Header: {
-        'grid-area': 'header',
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'space-between',
-        gap: '8px',
-        padding: '0 8px',
-        background: '#1a1a1a',
-        'border-bottom': '1px solid #222222',
-      },
-      Sidebar: {
-        'grid-area': 'sidebar',
-        display: 'flex',
-        'flex-direction': 'column',
-        background: '#1a1a1a',
-        'border-right': '1px solid #222222',
-        overflow: 'auto',
-      },
-      Main: {
-        'grid-area': 'main',
-        display: 'flex',
-        'flex-direction': 'column',
-        overflow: 'auto',
-        padding: '8px',
-      },
-      Footer: {
-        'grid-area': 'footer',
-        display: 'flex',
-        'align-items': 'center',
-        padding: '0 8px',
-        background: '#1a1a1a',
-        'border-top': '1px solid #222222',
-      },
-    },
-  },
+  // Empty - Shell was removed
+  // Use Frame with hor/ver/grid for layouts instead
 }
 
 /**
  * Slot mappings for Compound components
+ * NOTE: Shell was removed - this is kept empty for potential future use.
  */
 export const COMPOUND_SLOT_MAPPINGS: Record<string, Record<string, CompoundSlotDef>> = {
-  Shell: {
-    // Top-level slots
-    Header: {
-      element: 'header',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'space-between',
-        gap: '8px',
-      },
-    },
-    Sidebar: {
-      element: 'aside',
-      styles: {
-        display: 'flex',
-        'flex-direction': 'column',
-      },
-    },
-    Main: {
-      element: 'main',
-      styles: {
-        display: 'flex',
-        'flex-direction': 'column',
-        overflow: 'auto',
-      },
-    },
-    Footer: {
-      element: 'footer',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-      },
-    },
-
-    // Header nested slots
-    Logo: {
-      element: 'div',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-        gap: '8px',
-        'font-weight': '600',
-        'font-size': '18px',
-        color: '#e0e0e0',
-      },
-    },
-    Nav: {
-      element: 'nav',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-        gap: '4px',
-      },
-      itemContainer: true,
-      itemType: 'NavItem',
-    },
-    NavItem: {
-      element: 'a',
-      styles: {
-        padding: '8px 12px',
-        'border-radius': '6px',
-        color: '#888888',
-        'text-decoration': 'none',
-        cursor: 'pointer',
-      },
-    },
-    Actions: {
-      element: 'div',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-        gap: '8px',
-      },
-    },
-
-    // Sidebar nested slots
-    SidebarHeader: {
-      element: 'div',
-      styles: {
-        padding: '8px',
-        'font-weight': '600',
-        color: '#e0e0e0',
-        'border-bottom': '1px solid #222222',
-      },
-    },
-    SidebarGroup: {
-      element: 'div',
-      styles: {
-        padding: '8px',
-      },
-      itemContainer: true,
-      itemType: 'SidebarItem',
-    },
-    SidebarItem: {
-      element: 'a',
-      styles: {
-        display: 'flex',
-        'align-items': 'center',
-        gap: '8px',
-        padding: '8px 12px',
-        'border-radius': '6px',
-        color: '#888888',
-        'text-decoration': 'none',
-        cursor: 'pointer',
-      },
-    },
-    SidebarFooter: {
-      element: 'div',
-      styles: {
-        'margin-top': 'auto',
-        padding: '8px',
-        'border-top': '1px solid #222222',
-      },
-    },
-  },
+  // Empty - Shell was removed
 }
 
 // ===========================================================================
