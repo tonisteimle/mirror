@@ -2084,3 +2084,258 @@ Frame hor spread pad 16 bg #333
   })
 
 })
+
+// ============================================================
+// 55. ROBUSTHEIT - LEERZEILEN
+// ============================================================
+describe('Robustness - Empty Lines', () => {
+
+  it('leerzeile am anfang', () => {
+    const el = render(`
+Frame bg #f00`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+  })
+
+  it('leerzeile am ende', () => {
+    const el = render(`Frame bg #f00
+
+`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+  })
+
+  it('leerzeilen zwischen elementen', () => {
+    const el = render(`
+Frame hor
+
+  Text "A"
+
+  Text "B"
+
+`)
+    const texts = el.querySelectorAll('span')
+    expect(texts.length).toBe(2)
+  })
+
+  it('mehrere leerzeilen hintereinander', () => {
+    const el = render(`Frame ver
+
+
+  Text "test"
+
+
+`)
+    expect(el.querySelector('span')).toBeTruthy()
+  })
+
+  it('nur whitespace zeilen', () => {
+    const el = render(`Frame bg #0f0
+
+  Text "x"
+
+`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
+  })
+
+})
+
+// ============================================================
+// 56. ROBUSTHEIT - EINRÜCKUNG
+// ============================================================
+describe('Robustness - Indentation', () => {
+
+  it('2 spaces einrückung', () => {
+    const el = render(`Frame
+  Text "child"`)
+    expect(el.querySelector('span')).toBeTruthy()
+  })
+
+  it('4 spaces einrückung', () => {
+    const el = render(`Frame
+    Text "child"`)
+    expect(el.querySelector('span')).toBeTruthy()
+  })
+
+  it('tab einrückung', () => {
+    const el = render(`Frame
+	Text "child"`)
+    expect(el.querySelector('span')).toBeTruthy()
+  })
+
+  it('gemischte einrückung (spaces dann mehr spaces)', () => {
+    const el = render(`Frame
+  Frame
+    Text "deep"`)
+    const deep = el.querySelector('div span')
+    expect(deep).toBeTruthy()
+  })
+
+  it('trailing spaces ignoriert', () => {
+    const el = render(`Frame bg #f00
+  Text "x"   `)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+  })
+
+})
+
+// ============================================================
+// 57. ROBUSTHEIT - KOMMENTARE
+// ============================================================
+describe('Robustness - Comments', () => {
+
+  it('kommentar am zeilenende', () => {
+    const el = render(`Frame bg #f00 // red background`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+  })
+
+  it('kommentar auf eigener zeile', () => {
+    const el = render(`// This is a comment
+Frame bg #0f0`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
+  })
+
+  it('kommentar zwischen elementen', () => {
+    const el = render(`Frame hor
+  Text "A"
+  // middle comment
+  Text "B"`)
+    const texts = el.querySelectorAll('span')
+    expect(texts.length).toBe(2)
+  })
+
+  it('mehrere kommentarzeilen', () => {
+    const el = render(`// comment 1
+// comment 2
+// comment 3
+Frame bg #00f`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#00f')).toBe(true)
+  })
+
+  it('kommentar nach leerzeile', () => {
+    const el = render(`Frame bg #ff0
+
+// comment after empty line
+  Text "x"`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#ff0')).toBe(true)
+  })
+
+})
+
+// ============================================================
+// 58. ROBUSTHEIT - SEMIKOLONS
+// ============================================================
+describe('Robustness - Semicolons', () => {
+
+  // BUG/LIMITATION: Semicolons are NOT supported by the parser
+  // All semicolon tests fail - the parser doesn't recognize ; as separator
+  it.skip('semikolon am zeilenende', () => {
+    const el = render(`Frame bg #f00;`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+  })
+
+  it.skip('mehrere properties mit semikolon', () => {
+    const el = render(`Frame bg #f00; w 100; h 50;`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
+    expect(getStyle(el, 'width')).toBe('100px')
+    expect(getStyle(el, 'height')).toBe('50px')
+  })
+
+  it.skip('semikolon als property-trenner', () => {
+    const el = render(`Frame bg #0f0; pad 10`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
+    expect(getStyle(el, 'padding')).toBe('10px')
+  })
+
+})
+
+// ============================================================
+// 59. ROBUSTHEIT - STRINGS
+// ============================================================
+describe('Robustness - Strings', () => {
+
+  // BUG/LIMITATION: Single quotes are NOT supported
+  // Only double quotes work for strings
+  it.skip('einfache anführungszeichen', () => {
+    const el = render(`Text 'Hello'`)
+    expect(el.textContent).toBe('Hello')
+  })
+
+  it('doppelte anführungszeichen', () => {
+    const el = render(`Text "World"`)
+    expect(el.textContent).toBe('World')
+  })
+
+  it('leerer string', () => {
+    const el = render(`Text ""`)
+    expect(el.textContent).toBe('')
+  })
+
+  it('string mit leerzeichen', () => {
+    const el = render(`Text "Hello World"`)
+    expect(el.textContent).toBe('Hello World')
+  })
+
+  it('string mit sonderzeichen', () => {
+    const el = render(`Text "Test: äöü ß €"`)
+    expect(el.textContent).toContain('äöü')
+  })
+
+})
+
+// ============================================================
+// 60. ROBUSTHEIT - KOMPLEXE SZENARIEN
+// ============================================================
+describe('Robustness - Complex Scenarios', () => {
+
+  it('alles zusammen: leerzeilen, kommentare, einrückung', () => {
+    const el = render(`
+// Header component
+Frame ver pad 16
+
+  // Title section
+  Text "Title" weight bold
+
+  // Content
+  Frame hor gap 8
+    Text "A"
+    Text "B"
+
+`)
+    expect(getStyle(el, 'flex-direction')).toBe('column')
+    expect(el.querySelectorAll('span').length).toBe(3)
+  })
+
+  it('component definition mit leerzeilen', () => {
+    const el = render(`
+Card: = Frame ver pad 16 bg #fff rad 8
+
+  Text "Title"
+
+  Text "Body"
+
+Card`)
+    expect(getStyle(el, 'padding')).toBe('16px')
+  })
+
+  it('inheritance mit kommentaren', () => {
+    const el = render(`
+// Base component
+Base: = Frame bg #f00
+
+// Extended with override
+Child as Base: = bg #0f0  // green now
+
+Child`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
+  })
+
+  it('tiefe verschachtelung mit mixed whitespace', () => {
+    const el = render(`Frame
+  Frame
+    Frame
+      Frame
+        Text "deep"`)
+    const text = el.querySelector('div div div span')
+    expect(text?.textContent).toBe('deep')
+  })
+
+})

@@ -29,7 +29,9 @@ export interface StudioEvents {
   /** Emitted when selection becomes invalid (e.g., selected node removed) */
   'selection:invalidated': { nodeId: string }
   /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
-  'selection:fallback': { originalNodeId: string; fallbackNodeId: string }
+  'selection:fallback': { requestedId: string; resolvedId: string; reason: string }
+  /** Emitted when a change is applied via ChangeService */
+  'change:applied': { intent: any; oldSource: string; newSource: string }
   /** Emitted when a component definition is selected (e.g., cursor on definition line in .com file) */
   'definition:selected': { componentName: string; origin: 'editor' }
   /** Emitted when an error occurs in state management */

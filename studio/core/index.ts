@@ -9,3 +9,19 @@ export { executor, CommandExecutor, type CommandExecutorOptions, execute, undo, 
 export { StateSelectionAdapter, getStateSelectionAdapter, disposeStateSelectionAdapter, type SelectionSyncHandler } from './selection-adapter'
 export { createStudioContext, createTestContext, getStudioContext, setStudioContext, resetStudioContext, type StudioContext } from './context'
 export { gridSettings, smartGuidesSettings, generalSettings, type GridSettings, type SmartGuidesSettings, type GeneralSettings } from './settings'
+export { changeService, change, ChangeService, type ChangeIntent, type ChangeResult } from './change-service'
+export {
+  runPipeline,
+  defaultPipeline,
+  readStateStep,
+  validateSourceMapStep,
+  validateNodeStep,
+  createModifierStep,
+  executeIntentStep,
+  extractEditorContentStep,
+  applyToEditorStep,
+  emitChangeEventStep,
+  type PipelineStep,
+  type PipelineContext,
+  type PipelineResult,
+} from './change-pipeline'

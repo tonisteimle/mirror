@@ -39,13 +39,12 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── index.html         # Entry Point
 └── styles.css         # Styling
 
-docs/architecture/     # Architektur-Dokumentation
-├── ARCHITECTURE.md    # Übersicht & Datenfluss
-├── MIGRATION-PLAN.md  # Refactoring-Plan
-├── MODULES.md         # Interface-Spezifikationen
-└── TESTING.md         # Test-Strategie
-
-features/              # Feature-Dokumentation & Tests
+tests/                 # Test Suite
+├── compiler/          # IR & Backend Tests
+├── studio/            # Studio Component Tests
+└── e2e/               # Playwright E2E Tests
+docs/generated/        # Auto-generierte Referenz
+packages/mirror-lang/  # NPM Package
 dist/                  # Build Output
 ```
 
@@ -76,14 +75,6 @@ npm run validate       # Code validieren (z.B. npm run validate app.mirror)
 ```
 
 ## Architektur
-
-Siehe `docs/architecture/` für detaillierte Dokumentation:
-
-- **ARCHITECTURE.md** - System-Übersicht, Datenfluss, Module
-- **MIGRATION-PLAN.md** - Schrittweiser Plan zur Modularisierung
-- **MODULES.md** - Interface-Definitionen aller Module
-- **TESTING.md** - Test-Strategie und Beispiele
-- **VALIDATOR.md** - Code-Validator Dokumentation
 
 ### Kern-Konzepte
 
@@ -362,11 +353,11 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 
 <!-- GENERATED:DSL-PROPERTIES:END -->
 
-## Feature-Tests
+## Tests
 
-Implementierte Features mit Tests in `features/`:
-- `autocomplete/` - Property Completions
-- `dropdown/` - Select/Dropdown Komponente
-- `iconpicker/` - Icon Auswahl
-- `import/` - Component Imports
-- `navigation/` - Page Navigation
+Tests in `tests/`:
+- `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten
+- `tests/studio/` - Panels, Pickers, Editor, Sync
+- `tests/e2e/` - Playwright Browser-Tests
+
+Dokumentation: `tests/compiler/regeln.md` (bewiesene Regeln), `tests/compiler/strategie.md` (Teststrategie)

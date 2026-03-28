@@ -57,11 +57,21 @@ export const NON_CSS_PROPERTIES = new Set([
 /**
  * Alignment property names for layout processing.
  * These properties affect flex alignment (justify-content, align-items).
+ * Includes 9-zone shortcuts which also set direction.
  */
 export const ALIGNMENT_PROPERTIES = new Set([
   'left', 'right', 'top', 'bottom',
   'hor-center', 'ver-center', 'center', 'cen',
   'spread',
+  // 9-zone shortcuts (set both alignment AND direction)
+  'top-left', 'tl',
+  'top-center', 'tc',
+  'top-right', 'tr',
+  'center-left', 'cl',
+  'center-right', 'cr',
+  'bottom-left', 'bl',
+  'bottom-center', 'bc',
+  'bottom-right', 'br',
 ])
 
 /**

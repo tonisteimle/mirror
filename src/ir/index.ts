@@ -2196,14 +2196,25 @@ class IRTransformer {
     }
 
     // Handle size property - context-dependent
-    // For text/icon: size = font-size
+    // For text: size = font-size
+    // For icon: size = width/height (icons are sized via dimensions)
     // For frame/box: size = width/height
     if (name === 'size') {
-      // Text and Icon primitives: size means font-size
-      if (primitive === 'text' || primitive === 'icon') {
+      // Text primitives: size means font-size
+      if (primitive === 'text') {
         const val = String(values[0])
         const px = /^\d+$/.test(val) ? `${val}px` : val
         return [{ property: 'font-size', value: px }]
+      }
+
+      // Icon primitives: size means width/height (square)
+      if (primitive === 'icon') {
+        const val = String(values[0])
+        const px = /^\d+$/.test(val) ? `${val}px` : val
+        return [
+          { property: 'width', value: px },
+          { property: 'height', value: px },
+        ]
       }
 
       // Box/Frame primitives: size means width/height

@@ -674,9 +674,85 @@ Select w 200 bg #f00 pad 10
 | zag-navigation-019.test.ts | 13 | ✓ |
 | zag-media-020.test.ts | 13 | ✓ |
 | provocation-021.test.ts | 35 | ✓ |
-| html-output-022.test.ts | 82 | 81 ✓, 1 skipped |
+| html-output-022.test.ts | 210 | ✓ |
+| backlog-023.test.ts | 33 | ✓ |
 
-**gesamt: 1947 tests** (alle bestanden)
+**gesamt: 1810 tests** (alle bestanden)
+
+---
+
+## 19. backlog features
+
+### Icon primitive
+```
+Icon "check"           → span mit default 20x20
+Icon "check" size 32   → 32x32 (überschreibt default)
+Icon "check" col #f00  → farbe
+```
+
+### stacked layout
+```
+Frame stacked          → position: relative
+  Frame                → position: absolute (kinder)
+  Frame                → position: absolute
+```
+
+### align property
+```
+Frame align top      → justify-content: flex-start
+Frame align bottom   → justify-content: flex-end
+Frame align left     → align-items: flex-start
+Frame align right    → align-items: flex-end
+Frame align center   → beide zentriert
+```
+
+### standalone alignment
+```
+Frame left     → align-items: flex-start
+Frame right    → align-items: flex-end
+Frame top      → justify-content: flex-start
+Frame bottom   → justify-content: flex-end
+```
+
+### hor-center / ver-center
+```
+Frame hor-center   → align-items: center
+Frame ver-center   → justify-content: center
+```
+**wichtig:** standalone properties VOR value properties auf gleicher zeile!
+
+### directional margin
+```
+Frame margin left 10    → margin-left: 10px
+Frame margin right 10   → margin-right: 10px
+Frame margin top 10     → margin-top: 10px
+Frame margin bottom 10  → margin-bottom: 10px
+Frame m 20              → margin: 20px (alias)
+```
+
+### pin-center variants
+```
+Frame pos
+  Frame pin-center-x   → left: 50%, translateX(-50%)
+  Frame pin-center-y   → top: 50%, translateY(-50%)
+  Frame pin-center     → left: 50%, top: 50%, translate(-50%, -50%)
+  Frame pcx            → alias für pin-center-x
+  Frame pcy            → alias für pin-center-y
+  Frame pc             → alias für pin-center
+```
+
+### property aliases
+```
+g 10        → gap: 10px
+cen         → center (beide achsen)
+positioned  → pos (position: relative)
+rot 45      → rotate(45deg)
+m 20        → margin: 20px
+```
+
+**test:** `backlog-023.test.ts` (33 tests)
+
+---
 
 ### gelöste bugs (session 5)
 

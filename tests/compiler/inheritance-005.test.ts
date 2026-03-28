@@ -161,6 +161,29 @@ DangerButton
   })
 
   // ============================================================
+  // Test 5.6: Vererbung mit Events
+  // ============================================================
+  test('5.6: Vererbung mit Events', () => {
+    const code = `
+Clickable as Frame:
+  onclick: show Modal
+
+SpecialClickable extends Clickable:
+  bg #f00
+
+SpecialClickable
+`
+    const ast = parse(code)
+    const ir = toIR(ast)
+    const instance = ir.nodes[0]
+
+    // Event sollte vererbt werden
+    expect(instance.events).toBeDefined()
+    expect(instance.events.length).toBeGreaterThan(0)
+    expect(instance.events[0].name).toBe('click')
+  })
+
+  // ============================================================
   // Test 5.7: Vererbungskette (4 Ebenen)
   // ============================================================
   test('5.7: Vererbungskette 4 Ebenen', () => {

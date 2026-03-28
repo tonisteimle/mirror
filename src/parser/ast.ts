@@ -76,6 +76,8 @@ export interface Instance extends BaseNode {
   component: string
   name: string | null         // named instance
   properties: Property[]
+  states?: State[]            // inline states: "hover: bg light"
+  events?: Event[]            // inline events: "onkeydown enter: submit"
   children: (Instance | Slot | Text | ZagNode)[]
   childOverrides?: ChildOverride[]  // inline child overrides: NavItem Icon "home"; Label "Home"
   visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"

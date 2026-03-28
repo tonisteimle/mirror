@@ -1810,6 +1810,16 @@ export class Parser {
         }
       }
 
+      // Event with colon: onclick: action
+      // Events are "on" + event name (onclick, onhover, etc.)
+      // NOT just "on" or "off" which are state names
+      const isEventName = (name: string) => name.startsWith('on') && name.length > 2 && name !== 'on'
+      if (this.check('IDENTIFIER') && this.checkNext('COLON') && isEventName(this.current().value)) {
+        const event = this.parseEvent()
+        if (event) component.events.push(event)
+        continue
+      }
+
       // State or Slot: Name:
       // States are lowercase (hover, focus, active, selected, on, off, etc.)
       // Slots are capitalized (Title, Content, Header, etc.)
@@ -2539,6 +2549,11 @@ export class Parser {
       actions: [],
       line: eventToken.line,
       column: eventToken.column,
+    }
+
+    // Handle onclick: syntax (colon directly after event name)
+    if (this.check('COLON')) {
+      this.advance() // consume the colon
     }
 
     // Check for key modifier: onkeydown escape:

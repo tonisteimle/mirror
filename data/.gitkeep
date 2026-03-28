@@ -1,6 +1,0 @@
-# This directory stores user data
-# - users.json: User accounts
-# - projects/: User projects
-
-# This file ensures the directory is tracked by git
-# The actual data files are ignored for security

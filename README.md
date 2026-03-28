@@ -6,7 +6,7 @@ A design-focused UI language for rapid prototyping. Compiles to pure JavaScript,
 
 ```bash
 npm install
-npm test        # Run 1000+ tests
+npm test        # Run tests
 npm run build   # Build compiler
 npm run studio  # Start visual editor at localhost:5173
 ```
@@ -36,24 +36,21 @@ const reactCode = generateReact(ast)
 
 ```
 Mirror/
-├── src/
-│   ├── parser/           # Lexer & Parser
-│   ├── ir/               # Intermediate Representation
-│   ├── backends/         # Code generators (DOM, React, Static)
-│   └── studio/           # Visual editor components
-├── docs/
-│   └── tutorial.md       # DSL tutorial
-├── features/             # Feature specifications
-├── examples/             # Example Mirror projects
-├── studio/               # Visual editor HTML
-└── CLAUDE.md             # Complete language reference
+├── src/           # Core Compiler
+│   ├── parser/    # Lexer & Parser
+│   ├── ir/        # Intermediate Representation
+│   ├── backends/  # Code generators (DOM, React, Static)
+│   └── schema/    # DSL Schema
+├── studio/        # Visual Editor
+├── tests/         # Test Suite
+├── packages/      # NPM Packages
+│   └── mirror-lang/
+└── CLAUDE.md      # Complete Language Reference
 ```
 
 ## Documentation
 
-- **[CLAUDE.md](./CLAUDE.md)** - Complete language reference
-- **[docs/tutorial.md](./docs/tutorial.md)** - Tutorial with examples
-- **[docs/vision.md](./docs/vision.md)** - v2 architecture and vision
+- **[CLAUDE.md](./CLAUDE.md)** - Complete language reference and DSL syntax
 
 ## Syntax Example
 

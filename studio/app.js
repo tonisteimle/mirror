@@ -37,7 +37,7 @@ import {
   createComponentDropExtension,
   insertComponentCode,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=114'
+} from './dist/index.js?v=115'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()

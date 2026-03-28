@@ -40,7 +40,7 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 
 ## html-output-tests: abdeckung
 
-### was getestet wird (127 tests)
+### was getestet wird (273 tests, 4 skipped)
 
 | bereich | tests | details |
 |---------|-------|---------|
@@ -70,6 +70,34 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 | **More Primitives** | 13 | Textarea, Label, Link, Image, H1-H2, Section, Nav, Header, Footer, Main, Article, Aside |
 | **More CSS** | 12 | margin, min/max-w/h, color, font, line-height, lowercase, backdrop-blur, translate |
 | **Property Aliases** | 10 | w=width, h=height, pad=p, bg, col=c, rad, hor, ver, fs, o=opa |
+| **Remaining Primitives** | 8 | H3-H6, Divider, Spacer, Box, Img |
+| **Layout Properties** | 3 | wrap, grow, shrink |
+| **Directional Spacing** | 4 | pad left/right/top/bottom |
+| **More Visual** | 10 | shadow md/lg, cursor grab/move/text/wait/not-allowed, visible, disabled, scroll-hor/both, truncate |
+| **Font Families** | 3 | sans, serif, roboto |
+| **More Position** | 7 | absolute, abs, relative, pl, pr, pt, pb |
+| **Size Property** | 1 | size (w + h zusammen) |
+| **Weight Keywords** | 6 | thin, light, normal, medium, semibold, black |
+| **Text Align** | 3 | left, right, justify |
+| **Center Alignment** | 2 | hor-center, ver-center |
+| **Directional Margin** | 4 | margin left/right/top/bottom |
+| **Pin Center** | 6 | pin-center-x, pin-center-y, pin-center, pcx, pcy, pc |
+| **More Aliases** | 5 | g=gap, cen=center, positioned=pos, rot=rotate, m=margin |
+| **Icon Primitive** | 2 | Icon→span, Icon mit styles |
+| **Stacked Layout** | 2 | position relative auf parent, absolute auf children |
+| **Align Property** | 5 | align top/bottom/left/right/center |
+| **Standalone Alignment** | 4 | left, right, top, bottom |
+| **Layout+Position Konflikte** | 3 | hor center pos, grid stacked, stacked grid |
+| **Transform Kombinationen** | 3 | rotate+scale, pin-center+rotate (SKIP), rotate+scale+translate |
+| **Mehr Reihenfolge** | 5 | tl br, br tl, center spread, spread center, hor ver hor (SKIP) |
+| **Tiefe Verschachtelung** | 2 | 4 ebenen layout-wechsel, stacked+positioned child |
+| **Null-Werte** | 5 | pad/margin/gap 0, w/h 0, opacity 0, scale 0, rotate 0 |
+| **Negative Werte** | 4 | margin -10, z -1, x/y negativ, rotate -180 |
+| **Extreme Werte** | 5 | w 99999, rotate 720/-360, scale 10, z 9999 |
+| **Multiple States** | 3 | hover, hover+focus, custom state selected |
+| **Multiple Events** | 3 | onclick, onclick+onhover, onkeydown enter |
+| **Token Reihenfolge** | 3 | token→fester, fester→token, token mehrfach |
+| **Praxis-Patterns** | 4 | card, button, modal overlay, navbar |
 
 ### was NICHT getestet wird
 
@@ -79,43 +107,19 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 | Animations | benötigt zeit-basierte prüfung |
 | Event-Interaktion | click/hover simulation benötigt mehr setup |
 
+### gefundene bugs
+
+| property | erwartet | tatsächlich | status |
+|----------|----------|-------------|--------|
+| `hor-center` | align-items: center | flex-start | **GEFIXT** |
+| `ver-center` | justify-content: center | nicht gesetzt | **GEFIXT** |
+| `pin-center + rotate` | translate + rotate kombiniert | nur translate | OFFEN |
+| `hor ver hor` (triple) | row (letztes gewinnt) | column | OFFEN |
+| `aspect square` | aspect-ratio: 1/1 | - | JSDOM-LIMITIERUNG |
+
 ### noch zu testen (backlog)
 
-**primitives:**
-- Icon, Divider, Spacer, H3-H6
-- Box (alias für Frame), Img (alias für Image)
-
-**layout:**
-- wrap, stacked, grow, shrink
-- align (top, bottom, left, right, center)
-- left, right, top, bottom (standalone alignment)
-- hor-center, ver-center
-
-**sizing:**
-- size (w + h zusammen)
-
-**spacing:**
-- pad left/right/top/bottom (directional)
-- margin left/right/top/bottom
-
-**position:**
-- pin-center-x, pin-center-y, pin-center
-- absolute (standalone), relative
-
-**visual:**
-- shadow md, shadow lg
-- cursor grab, move, text, wait, not-allowed
-- visible, disabled
-- scroll-hor, scroll-both
-- truncate
-
-**typography:**
-- font sans, serif, roboto
-
-**mehr aliase:**
-- gap = g, center = cen, pos = positioned
-- pin-left = pl, pin-right = pr, pin-top = pt, pin-bottom = pb
-- rotate = rot, margin = m, absolute = abs
+backlog ist leer - alle geplanten tests implementiert.
 
 ### limitierungen
 

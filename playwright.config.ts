@@ -1,20 +1,21 @@
 import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
-  testDir: './src/__tests__/playwright',
+  testDir: './tests/e2e',
+  testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: 1, // Run sequentially to avoid server issues
+  workers: 1,
   reporter: 'list',
   timeout: 15000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npx serve . -l 3000',
-    url: 'http://localhost:3000',
+    command: 'npm run studio',
+    url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 30000,
   },

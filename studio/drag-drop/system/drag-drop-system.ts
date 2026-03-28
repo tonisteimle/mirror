@@ -14,6 +14,7 @@ import {
 import type {
   DragSource,
   DropResult,
+  DropTarget,
   PaletteItemData,
   Point,
   Rect,
@@ -23,6 +24,7 @@ import type {
   DragDropSystem as IDragDropSystem,
   DragState,
 } from './types'
+import type { ChildRect } from '../strategies/types'
 
 import { StrategyRegistry, createWebflowRegistry } from '../strategies/registry'
 import { VisualSystem, createVisualSystem } from '../visual/system'
@@ -289,7 +291,7 @@ export class DragDropSystem implements IDragDropSystem {
     const elementUnderCursor = document.elementFromPoint(cursor.x, cursor.y) as HTMLElement | null
 
     // Find closest drop target
-    const target = findClosestTarget(elementUnderCursor, this.nodeIdAttr)
+    let target = findClosestTarget(elementUnderCursor, this.nodeIdAttr)
     if (!target) {
       this.visual.hideIndicator()
       this.visual.hideZoneOverlay()
@@ -299,14 +301,14 @@ export class DragDropSystem implements IDragDropSystem {
     }
 
     // Find strategy for this target (Webflow-style: no positioned container handling)
-    const strategy = this.registry.findStrategy(target)
+    let strategy = this.registry.findStrategy(target)
     if (!strategy) {
       this.visual.hideIndicator()
       return
     }
 
     // Get child rects for calculation
-    const childRects = getChildRects(target.element, this.nodeIdAttr)
+    let childRects = getChildRects(target.element, this.nodeIdAttr)
 
     // For non-container targets, use parent's rect for the indicator width
     let containerRect: DOMRect
@@ -317,7 +319,26 @@ export class DragDropSystem implements IDragDropSystem {
     }
 
     // Calculate drop result
-    const calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
+    let calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
+
+    // Check if we should redirect to a sibling container
+    // This handles the case where user drags just below a container (like Card)
+    // and we should insert at the end of that container instead of before the next sibling
+    const redirectResult = this.checkContainerRedirect(cursor, target, calcResult, childRects)
+    if (redirectResult) {
+      target = redirectResult.target
+      strategy = this.registry.findStrategy(target)!
+      childRects = getChildRects(target.element, this.nodeIdAttr)
+      containerRect = getContainerRect(target.element)
+      calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
+      // Force placement to 'after' the last child for container redirect
+      calcResult = {
+        ...calcResult,
+        placement: 'after',
+        targetId: childRects.length > 0 ? childRects[childRects.length - 1].nodeId : target.nodeId,
+        insertionIndex: childRects.length,
+      }
+    }
 
     // Build full drop result
     const dropResult: DropResult = {
@@ -350,6 +371,66 @@ export class DragDropSystem implements IDragDropSystem {
     }
 
     this.visual.hideZoneOverlay()
+  }
+
+  /**
+   * Check if drop should be redirected to a sibling container
+   *
+   * When the user drags just below a container (like Card), we should insert
+   * at the end of that container instead of before the next sibling.
+   *
+   * This provides a more intuitive UX where the "insert after last child"
+   * zone extends slightly beyond the container boundary.
+   */
+  private checkContainerRedirect(
+    cursor: Point,
+    target: DropTarget,
+    calcResult: DropResult,
+    childRects: ChildRect[]
+  ): { target: DropTarget } | null {
+    // Only check for 'before' placement (not first child)
+    if (calcResult.placement !== 'before') return null
+    if (calcResult.insertionIndex === undefined || calcResult.insertionIndex <= 0) return null
+
+    // Find the previous sibling element
+    const prevIndex = calcResult.insertionIndex - 1
+    if (prevIndex < 0 || prevIndex >= childRects.length) return null
+
+    const prevChildRect = childRects[prevIndex]
+    const prevElement = target.element.querySelector(
+      `[${this.nodeIdAttr}="${prevChildRect.nodeId}"]`
+    ) as HTMLElement | null
+    if (!prevElement) return null
+
+    // Check if previous sibling is a flex container
+    const prevStyle = window.getComputedStyle(prevElement)
+    const isFlexContainer =
+      prevStyle.display === 'flex' ||
+      prevStyle.display === 'inline-flex' ||
+      prevStyle.display === 'grid' ||
+      prevStyle.display === 'inline-grid'
+    if (!isFlexContainer) return null
+
+    // Check if cursor is within the redirect threshold below the container
+    const prevRect = prevChildRect.rect
+    const containerBottom = prevRect.y + prevRect.height
+    const redirectThreshold = 30 // pixels below container to still redirect
+
+    // Only redirect if cursor is below the container but within threshold
+    if (cursor.y < containerBottom || cursor.y > containerBottom + redirectThreshold) {
+      return null
+    }
+
+    // Also check cursor is horizontally within the container bounds
+    if (cursor.x < prevRect.x || cursor.x > prevRect.x + prevRect.width) {
+      return null
+    }
+
+    // Create a new target for the previous sibling container
+    const redirectTarget = detectTarget(prevElement, this.nodeIdAttr)
+    if (!redirectTarget || redirectTarget.layoutType !== 'flex') return null
+
+    return { target: redirectTarget }
   }
 
   /**
