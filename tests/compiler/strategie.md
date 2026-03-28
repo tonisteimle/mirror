@@ -34,6 +34,7 @@ sondern: "wie kann ich das kaputt machen?"
 | Schema-Driven Tests | alle schema-elemente automatisch | jede property wird getestet |
 | IR-Tests | zwischenrepräsentation | `node.styles` enthält `width: 100px` |
 | HTML-Output-Tests | echtes DOM (JSDOM) | `el.style.width === '100px'` |
+| Stress-Tests | skalierbarkeit & performance | 500 komponenten, 50 ebenen tief |
 
 die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaScript-Code in JSDOM aus und prüfen das tatsächliche DOM.
 
@@ -336,7 +337,10 @@ tests/compiler/
 ├── zag-media-020.test.ts     ← Avatar, FileUpload, Progress, etc.
 ├── provocation-021.test.ts   ← gezielte bug-suche
 ├── html-output-022.test.ts   ← END-TO-END HTML-OUTPUT (JSDOM)
-└── schema-driven.test.ts     ← AUTO-GENERIERTE TESTS AUS SCHEMA
+├── schema-driven.test.ts     ← AUTO-GENERIERTE TESTS AUS SCHEMA
+├── provocation-024.test.ts   ← SCHEMA-GAP-ANALYSE (46 passing, 5 bugs, 30 skipped)
+├── backlog-023.test.ts       ← backlog tests
+└── stress-scalability.test.ts ← STRESS & PERFORMANCE (35 tests)
 ```
 
 ---
