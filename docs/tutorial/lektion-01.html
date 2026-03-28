@@ -265,27 +265,29 @@
     </header>
 
     <section>
-      <h2>Kontext</h2>
-      <p>Mirror ist eine Sprache für UI-Prototypen. Sie beschreibt Oberflächen – Buttons, Karten, Formulare – in einer kompakten Syntax, die direkt zu HTML kompiliert.</p>
-    </section>
-
-    <section>
       <h2>Elemente</h2>
-      <p>Ein Element beginnt mit seinem Typ. <code>Button</code> erzeugt einen Button, <code>Text</code> erzeugt Text. Der Code erzeugt das Ergebnis darunter – probier es aus:</p>
+      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern"</textarea>
+          <textarea>Text "Hallo Welt"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Text in Anführungszeichen ist der Inhalt des Elements.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Klick mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
     </section>
 
     <section>
       <h2>Eigenschaften</h2>
-      <p>Eigenschaften folgen dem Element, getrennt durch Kommas.</p>
+      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -303,8 +305,33 @@
     </section>
 
     <section>
+      <h2>Container</h2>
+      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8
+  Text "Ich bin im Frame"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Ein Frame kann mehrere Kinder haben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8
+  Text "Titel", col white
+  Text "Beschreibung", col #888
+  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
       <h2>Layout</h2>
-      <p>Elemente in einem Frame stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
+      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -325,24 +352,29 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <div class="props">
+        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
+        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
+      </div>
     </section>
 
     <section>
       <h2>Verschachtelung</h2>
-      <p>Einrückung (2 Leerzeichen) macht ein Element zum Kind des Elements darüber. Frames können weitere Frames enthalten:</p>
+      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
   Text "Karte", col white
   Frame bg #333, pad 12, rad 4, gap 8
-    Text "Verschachtelt", col #888
+    Text "Innerer Bereich", col #888
     Button "Aktion", pad 8 16, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der innere Frame (grau) ist im äusseren Frame (dunkel) verschachtelt.</p>
+      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
     </section>
 
     <div class="exercise">
@@ -376,10 +408,11 @@
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Button</code> <code>Text</code> <code>Frame</code> – Elementtypen</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Styling</li>
+        <li><code>Text</code> <code>Button</code> – Elemente</li>
+        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
+        <li><code>Frame</code> – Container für Kinder</li>
         <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung – Verschachtelung</li>
+        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
       </ul>
     </div>
 
