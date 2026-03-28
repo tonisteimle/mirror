@@ -90,16 +90,17 @@
       border-radius: 6px;
       overflow: hidden;
       display: flex;
+      flex-direction: column;
     }
 
     .playground-code {
-      flex: 1;
       background: var(--bg-code);
+      border-bottom: 1px solid var(--border);
     }
 
     .playground-code textarea {
       width: 100%;
-      min-height: 100px;
+      min-height: 80px;
       padding: 16px;
       border: none;
       background: transparent;
@@ -110,10 +111,12 @@
       resize: none;
       outline: none;
       tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
     }
 
     .playground-preview {
-      flex: 1;
+      min-height: 80px;
       background: var(--bg-preview);
       padding: 16px;
       display: flex;
@@ -251,12 +254,6 @@
       color: var(--text);
     }
 
-    /* Responsive */
-    @media (max-width: 600px) {
-      .playground {
-        flex-direction: column;
-      }
-    }
   </style>
 </head>
 <body>
@@ -289,11 +286,11 @@
 
     <section>
       <h2>Eigenschaften</h2>
-      <p>Eigenschaften folgen dem Element. Keine Klammern, keine Semikolons.</p>
+      <p>Eigenschaften folgen dem Element, getrennt durch Kommas.</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern" bg #2563eb col white pad 12 24 rad 6</textarea>
+          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -312,9 +309,9 @@
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a pad 20 rad 8
-  Text "Titel" col white
-  Text "Beschreibung" col #888</textarea>
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8
+  Text "Titel", col white
+  Text "Beschreibung", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -328,9 +325,9 @@
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a pad 20 rad 8 hor gap 12
-  Button "Abbrechen" pad 10 20 rad 4
-  Button "Speichern" bg #2563eb col white pad 10 20 rad 4</textarea>
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
+  Button "Abbrechen", pad 10 20, rad 4
+  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -357,10 +354,10 @@
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a pad 24 rad 8 gap 8 w 240
-  Text "Projekt erstellen" col white weight 500
-  Text "Ein neues Projekt anlegen" col #888 fs 14
-  Button "Erstellen" bg #2563eb col white pad 10 20 rad 6 w full</pre>
+        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 8, w 240
+  Text "Projekt erstellen", col white, weight 500
+  Text "Ein neues Projekt anlegen", col #888, fs 14
+  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6, w full</pre>
       </details>
     </div>
 
