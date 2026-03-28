@@ -449,7 +449,28 @@ class IRTransformer {
       id: nodeId,
     }
 
+    // Collect styling properties separately (w, h, bg, pad, etc.)
+    const stylingProperties: Property[] = []
+
+    // Machine config property names (not styling)
+    const machineConfigProps = new Set([
+      'placeholder', 'multiple', 'searchable', 'clearable', 'keepOpen', 'disabled',
+      'value', 'defaultValue', 'step', 'allowMouseWheel', 'clampValueOnBlur',
+      'maxTags', 'allowDuplicate', 'submitMode', 'placement', 'offset', 'deselectable',
+      'orientation', 'activationMode', 'loopFocus', 'checked', 'defaultChecked',
+      'indeterminate', 'collapsible', 'label', 'invalid', 'readOnly', 'required',
+      'name', 'src', 'fallback', 'accept', 'maxFiles', 'maxSize', 'allowOversize',
+      'minSize', 'min', 'max', 'count', 'allowHalf', 'dir', 'size', 'length',
+      'blurOnComplete', 'otp', 'type', 'visible', 'defaultVisible',
+    ])
+
     for (const prop of zagNode.properties || []) {
+      // Check if this is a styling property (not a machine config property)
+      if (!machineConfigProps.has(prop.name)) {
+        stylingProperties.push(prop)
+        continue
+      }
+
       switch (prop.name) {
         case 'placeholder':
           machineConfig.placeholder = String(prop.values[0] ?? '')
@@ -794,6 +815,9 @@ class IRTransformer {
         }
       : undefined
 
+    // Transform styling properties to CSS styles
+    const styles = this.transformProperties(stylingProperties, 'div')
+
     // Create IRZagNode
     const irNode: any = {
       id: nodeId,
@@ -801,7 +825,7 @@ class IRTransformer {
       primitive: zagNode.name?.toLowerCase() ?? 'select',
       name: zagNode.name,
       properties: [],
-      styles: [],
+      styles,
       events: [],
       children: [],
       isZagComponent: true,
@@ -1017,8 +1041,15 @@ class IRTransformer {
 
       if (hasExplicitWidth || hasExplicitHeight) {
         // Remove flex-based styles and add explicit dimensions
-        const flexProps = ['flex', 'min-width', 'min-height', 'align-self']
-        const filteredStyles = styles.filter(s => !flexProps.includes(s.property))
+        // BUT keep explicit min-width/min-height values (only remove the automatic '0' values)
+        const filteredStyles = styles.filter(s => {
+          if (s.property === 'flex') return false
+          if (s.property === 'align-self') return false
+          // Only remove min-width: 0 / min-height: 0, keep explicit values
+          if (s.property === 'min-width' && s.value === '0') return false
+          if (s.property === 'min-height' && s.value === '0') return false
+          return true
+        })
         styles.length = 0
         styles.push(...filteredStyles)
 
@@ -1036,9 +1067,19 @@ class IRTransformer {
       ? this.transformStates(resolvedComponent.states)
       : []
 
+    // Add state styles from instance inline states (e.g., "Frame bg #333 hover: bg light")
+    const instanceStateStyles = instance.states?.length
+      ? this.transformStates(instance.states)
+      : []
+
     // Transform events from component definition
     const events = resolvedComponent?.events
       ? this.transformEvents(resolvedComponent.events)
+      : []
+
+    // Transform events from instance inline events (e.g., "Input onkeydown enter: submit")
+    const instanceEvents = instance.events?.length
+      ? this.transformEvents(instance.events)
       : []
 
     // Extract inline states and events from instance children
@@ -1137,13 +1178,15 @@ class IRTransformer {
           const hasMinWidth0 = child.styles.some(s => s.property === 'min-width' && s.value === '0')
           const hasMinHeight0 = child.styles.some(s => s.property === 'min-height' && s.value === '0')
 
-          // Remove flex-related styles
-          const filteredStyles = child.styles.filter(s =>
-            s.property !== 'flex' &&
-            s.property !== 'align-self' &&
-            s.property !== 'min-width' &&
-            s.property !== 'min-height'
-          )
+          // Remove flex-related styles, but keep explicit min-width/min-height values
+          const filteredStyles = child.styles.filter(s => {
+            if (s.property === 'flex') return false
+            if (s.property === 'align-self') return false
+            // Only remove min-width: 0 / min-height: 0, keep explicit values
+            if (s.property === 'min-width' && s.value === '0') return false
+            if (s.property === 'min-height' && s.value === '0') return false
+            return true
+          })
           child.styles.length = 0
           child.styles.push(...filteredStyles)
 
@@ -1162,12 +1205,15 @@ class IRTransformer {
         const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
         if (hasFlex) {
           // Remove flex-related styles (they don't work in grid context)
-          const filteredStyles = child.styles.filter(s =>
-            s.property !== 'flex' &&
-            s.property !== 'align-self' &&
-            s.property !== 'min-width' &&
-            s.property !== 'min-height'
-          )
+          // But keep explicit min-width/min-height values
+          const filteredStyles = child.styles.filter(s => {
+            if (s.property === 'flex') return false
+            if (s.property === 'align-self') return false
+            // Only remove min-width: 0 / min-height: 0, keep explicit values
+            if (s.property === 'min-width' && s.value === '0') return false
+            if (s.property === 'min-height' && s.value === '0') return false
+            return true
+          })
           child.styles.length = 0
           child.styles.push(...filteredStyles)
           // No need to add width/height - grid cells fill their area automatically
@@ -1185,8 +1231,8 @@ class IRTransformer {
       name: instance.component,
       instanceName: instance.name || undefined,
       properties: this.extractHTMLProperties(properties, primitive),
-      styles: [...styles, ...stateStyles, ...inlineStateStyles],
-      events: [...events, ...inlineEvents],
+      styles: [...styles, ...stateStyles, ...instanceStateStyles, ...inlineStateStyles],
+      events: [...events, ...instanceEvents, ...inlineEvents],
       children,
       visibleWhen,
       initialState,
@@ -1690,8 +1736,16 @@ class IRTransformer {
     // Transform context to combine multiple transforms
     const transformContext: { transforms: string[] } = { transforms: [] }
 
-    // Collect alignment values to process together (for context-aware center)
-    const alignmentValues: string[] = []
+    // Check for explicit min/max width/height properties
+    // These should NOT be overwritten by automatic min-width: 0 from w full
+    const hasExplicitMinWidth = properties.some(p => p.name === 'minw' || p.name === 'min-width')
+    const hasExplicitMinHeight = properties.some(p => p.name === 'minh' || p.name === 'min-height')
+    const hasExplicitMaxWidth = properties.some(p => p.name === 'maxw' || p.name === 'max-width')
+    const hasExplicitMaxHeight = properties.some(p => p.name === 'maxh' || p.name === 'max-height')
+
+    // Collect layout values to process together (preserving order for "last wins")
+    // This includes both direction (hor/ver) and alignment (9-zone, center, etc.)
+    const layoutValues: string[] = []
 
     // First pass: collect layout properties into context
     for (const prop of properties) {
@@ -1699,19 +1753,19 @@ class IRTransformer {
       // Boolean property: either [true] or [] (empty values)
       const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
 
-      // Direction properties
+      // Direction properties - collect for order-aware processing
       if ((name === 'horizontal' || name === 'hor') && isBoolean) {
-        layoutContext.direction = 'row'
+        layoutValues.push(name)
         continue
       }
       if ((name === 'vertical' || name === 'ver') && isBoolean) {
-        layoutContext.direction = 'column'
+        layoutValues.push(name)
         continue
       }
 
       // Alignment properties - collect for context-aware processing
       if (ALIGNMENT_PROPERTIES.has(name) && isBoolean) {
-        alignmentValues.push(name)
+        layoutValues.push(name)
         continue
       }
 
@@ -1720,7 +1774,7 @@ class IRTransformer {
         for (const val of prop.values) {
           const alignValue = String(val).toLowerCase()
           if (ALIGNMENT_PROPERTIES.has(alignValue)) {
-            alignmentValues.push(alignValue)
+            layoutValues.push(alignValue)
           }
         }
         continue
@@ -1766,8 +1820,8 @@ class IRTransformer {
       }
     }
 
-    // Apply collected alignments with context-awareness
-    this.applyAlignmentsToContext(alignmentValues, layoutContext)
+    // Apply collected layout values with order-awareness (last wins)
+    this.applyAlignmentsToContext(layoutValues, layoutContext)
 
     // Generate layout styles from context
     const layoutStyles = this.generateLayoutStyles(layoutContext, primitive)
@@ -1800,26 +1854,99 @@ class IRTransformer {
       styles.push(...cssStyles)
     }
 
+    // Remove automatic min-width: 0 / min-height: 0 if explicit values exist
+    // This prevents w full from overwriting explicit minw/minh values
+    // The "last wins" rule should only apply to same-source properties, not automatic additions
+    if (hasExplicitMinWidth || hasExplicitMinHeight) {
+      const filteredStyles = styles.filter(s => {
+        if (s.property === 'min-width' && s.value === '0' && hasExplicitMinWidth) return false
+        if (s.property === 'min-height' && s.value === '0' && hasExplicitMinHeight) return false
+        return true
+      })
+      return filteredStyles
+    }
+
     return styles
   }
 
   /**
-   * Apply alignment values to layout context with context-awareness
+   * Apply layout values to context with order-awareness (last wins)
    *
-   * Key insight: `center` meaning depends on context:
-   * - `top center` → center means horizontal center
-   * - `left center` → center means vertical center
-   * - `center` alone → center both axes
+   * Key insights:
+   * - hor/ver and 9-zone properties all affect direction
+   * - The LAST one in source order wins for direction
+   * - `center` meaning depends on context (top/bottom vs left/right)
    */
   private applyAlignmentsToContext(values: string[], ctx: LayoutContext): void {
     if (values.length === 0) return
 
-    // Check which dimensions are explicitly set
+    // Check which dimensions are explicitly set (for context-aware center)
     const hasVertical = values.some(v => ['top', 'bottom', 'ver-center'].includes(v))
     const hasHorizontal = values.some(v => ['left', 'right', 'hor-center'].includes(v))
 
     for (const name of values) {
       switch (name) {
+        // Direction properties - always override
+        case 'horizontal':
+        case 'hor':
+          ctx.direction = 'row'
+          break
+        case 'vertical':
+        case 'ver':
+          ctx.direction = 'column'
+          break
+
+        // 9-zone properties: set direction + alignment (direction overrides previous)
+        case 'top-left':
+        case 'tl':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-start'
+          ctx.alignItems = 'flex-start'
+          break
+        case 'top-center':
+        case 'tc':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-start'
+          ctx.alignItems = 'center'
+          break
+        case 'top-right':
+        case 'tr':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-start'
+          ctx.alignItems = 'flex-end'
+          break
+        case 'center-left':
+        case 'cl':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'center'
+          ctx.alignItems = 'flex-start'
+          break
+        case 'center-right':
+        case 'cr':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'center'
+          ctx.alignItems = 'flex-end'
+          break
+        case 'bottom-left':
+        case 'bl':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-end'
+          ctx.alignItems = 'flex-start'
+          break
+        case 'bottom-center':
+        case 'bc':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-end'
+          ctx.alignItems = 'center'
+          break
+        case 'bottom-right':
+        case 'br':
+          ctx.direction = 'column'
+          ctx.justifyContent = 'flex-end'
+          ctx.alignItems = 'flex-end'
+          break
+
+        // Original alignment properties
         case 'center':
         case 'cen':
           if (hasVertical && !hasHorizontal) {
@@ -2211,7 +2338,8 @@ class IRTransformer {
     // Absolute positioning: x → left
     if (name === 'x') {
       const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      const px = /^\d+$/.test(val) ? `${val}px` : val
+      // Support negative values: -50 → -50px
+      const px = /^-?\d+$/.test(val) ? `${val}px` : val
       return [
         { property: 'position', value: 'absolute' },
         { property: 'left', value: px },
@@ -2221,7 +2349,8 @@ class IRTransformer {
     // Absolute positioning: y → top
     if (name === 'y') {
       const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      const px = /^\d+$/.test(val) ? `${val}px` : val
+      // Support negative values: -50 → -50px
+      const px = /^-?\d+$/.test(val) ? `${val}px` : val
       return [
         { property: 'position', value: 'absolute' },
         { property: 'top', value: px },
@@ -2249,11 +2378,16 @@ class IRTransformer {
       return [{ property: 'transform', value: `translate(${xPx}, ${yPx})` }]
     }
 
-    // Handle aspect ratio: aspect 16/9, aspect 1, aspect 4/3
+    // Handle aspect ratio: aspect 16/9, aspect 1, aspect 4/3, aspect square, aspect video
     if (name === 'aspect') {
       const val = String(values[0])
-      // Support fraction notation (16/9) or decimal (1.777)
-      return [{ property: 'aspect-ratio', value: val }]
+      // Map keywords to their values
+      const aspectKeywords: Record<string, string> = {
+        square: '1',
+        video: '16/9',
+      }
+      const resolvedVal = aspectKeywords[val] ?? val
+      return [{ property: 'aspect-ratio', value: resolvedVal }]
     }
 
     // Handle backdrop-blur: backdrop-blur 10
@@ -2335,6 +2469,13 @@ class IRTransformer {
       return [{ property: 'overflow', value: 'auto' }]
     }
 
+    // Try schema-based conversion FIRST - handles pin-left, pin-right, etc.
+    // This must come before the PROPERTY_TO_CSS check to support schema-defined properties
+    const schemaResult = simplePropertyToCSS(name, value)
+    if (schemaResult.handled) {
+      return schemaResult.styles
+    }
+
     // Use centralized property mapping from schema
     const cssProperty = PROPERTY_TO_CSS[name]
 
@@ -2405,20 +2546,10 @@ class IRTransformer {
       return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
     }
 
-    // Handle shadow presets - try schema first
+    // Handle shadow presets - fallback for custom values
     if (name === 'shadow') {
-      const schemaResult = schemaPropertyToCSS(name, [value])
-      if (schemaResult.handled) {
-        return schemaResult.styles
-      }
-      // Fallback for custom shadow values
+      // Schema was already tried above, this is just the fallback
       return [{ property: 'box-shadow', value: value }]
-    }
-
-    // Try schema-based conversion for simple properties
-    const schemaResult = simplePropertyToCSS(name, value)
-    if (schemaResult.handled) {
-      return schemaResult.styles
     }
 
     // Fallback: direct mapping with formatting

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ToggleGroup Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: center;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / ToggleGroup
+  </div>
+  <h1>ToggleGroup Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `ToggleGroup
+  Toggle "Left"
+  Toggle "Center"
+  Toggle "Right"`,
+
+        `ToggleGroup
+  Toggle "B"
+  Toggle "I"
+  Toggle "U"`,
+
+        `ToggleGroup
+  Toggle "List"
+  Toggle "Grid"
+  Toggle "Columns"`,
+      ],
+
+      "WITH DEFAULT VALUE": [
+        `ToggleGroup defaultValue "center"
+  Toggle "Left" value "left"
+  Toggle "Center" value "center"
+  Toggle "Right" value "right"`,
+      ],
+
+      "MULTIPLE SELECTION": [
+        `ToggleGroup multiple
+  Toggle "Bold" value "bold"
+  Toggle "Italic" value "italic"
+  Toggle "Underline" value "underline"`,
+      ],
+
+      "ORIENTATION": [
+        `ToggleGroup orientation "horizontal"
+  Toggle "A"
+  Toggle "B"
+  Toggle "C"`,
+
+        `ToggleGroup orientation "vertical"
+  Toggle "Top"
+  Toggle "Middle"
+  Toggle "Bottom"`,
+      ],
+
+      "STATES": [
+        `ToggleGroup disabled
+  Toggle "Disabled A"
+  Toggle "Disabled B"`,
+
+        `ToggleGroup
+  Toggle "Enabled"
+  Toggle "Disabled" disabled
+  Toggle "Also enabled"`,
+      ],
+
+      "STYLING ROOT": [
+        `ToggleGroup
+  Toggle "Option A"
+  Toggle "Option B"
+  Root: pad 8, bg #222, rad 12`,
+
+        `ToggleGroup
+  Toggle "Option A"
+  Toggle "Option B"
+  Root: gap 8, bor 1 #3b82f6, rad 10`,
+
+        `ToggleGroup
+  Toggle "Option A"
+  Toggle "Option B"
+  Root: bg transparent, bor 1 #333`,
+      ],
+
+      "STYLING ITEMS": [
+        `ToggleGroup
+  Toggle "Styled A"
+  Toggle "Styled B"
+  Item: pad 10 16, fs 14`,
+
+        `ToggleGroup
+  Toggle "B"
+  Toggle "I"
+  Toggle "U"
+  Item: rad 4, w 40, h 36`,
+
+        `ToggleGroup
+  Toggle "List"
+  Toggle "Grid"
+  Toggle "Columns"
+  Item: w 40, h 40, rad 8`,
+      ],
+
+      "IN CONTEXT - TEXT EDITOR": [
+        `Box ver, gap 12, w 400
+  Box hor, gap 8
+    ToggleGroup multiple
+      Toggle "B" value "bold"
+      Toggle "I" value "italic"
+      Toggle "U" value "underline"
+      Root: bg #0a0a0a, bor 1 #333
+      Item: w 32, h 32
+    Divider ver, h 24
+    ToggleGroup
+      Toggle "L" value "left"
+      Toggle "C" value "center"
+      Toggle "R" value "right"
+      Root: bg #0a0a0a, bor 1 #333
+      Item: pad 8 12`,
+      ],
+
+      "IN CONTEXT - VIEW SWITCHER": [
+        `Box ver, gap 16, pad 16, bg #111, rad 8
+  Box hor, spread
+    Text "Files" weight bold, fs 16
+    ToggleGroup defaultValue "grid"
+      Toggle "List" value "list"
+      Toggle "Grid" value "grid"
+      Toggle "Cols" value "cols"
+      Root: bg transparent, bor 1 #333
+      Item: w 36, h 36`,
+      ],
+
+      "IN CONTEXT - TOOLBAR": [
+        `Box hor, gap 8, pad 8, bg #111, rad 8
+  ToggleGroup multiple
+    Toggle "B" value "bold"
+    Toggle "I" value "italic"
+    Toggle "U" value "underline"
+    Root: gap 2
+    Item: w 36, h 32, rad 4
+  Box w 1, h 24, bg #333
+  ToggleGroup defaultValue "left"
+    Toggle "L" value "left"
+    Toggle "C" value "center"
+    Toggle "R" value "right"
+    Root: gap 2
+    Item: pad 8 12, rad 4`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

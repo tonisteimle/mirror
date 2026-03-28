@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Collapsible Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 48px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Collapsible
+  </div>
+  <h1>Collapsible Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Collapsible
+  Trigger: Button "Toggle content"
+  Content: Text "This is the collapsible content that can be shown or hidden."`,
+
+        `Collapsible
+  Trigger: Button "Show more"
+  Content: Box ver, gap 8
+    Text "Line 1"
+    Text "Line 2"
+    Text "Line 3"`,
+      ],
+
+      "DEFAULT OPEN": [
+        `Collapsible defaultOpen
+  Trigger: Button "Hide details"
+  Content: Text "This content is visible by default."`,
+      ],
+
+      "DISABLED": [
+        `Collapsible disabled
+  Trigger: Button "Cannot toggle"
+  Content: Text "This will never show."`,
+      ],
+
+      "STYLING TRIGGER": [
+        `Collapsible
+  Trigger: Button "Styled trigger", bg #3b82f6, pad 12 24
+  Content: Text "Content below"`,
+
+        `Collapsible
+  Trigger: Box hor, gap 8, cursor pointer
+    Text "Click to expand"
+    Icon "chevron-down"
+  Content: Text "Expanded content"`,
+      ],
+
+      "STYLING CONTENT": [
+        `Collapsible defaultOpen
+  Trigger: Button "Show details"
+  Content: Box pad 16, bg #1a1a1a, rad 8
+    Text "Styled content box"`,
+
+        `Collapsible defaultOpen
+  Trigger: Button "Info"
+  Content: Box ver, gap 8, pad 12, bor 1 #333, rad 6
+    Text "First paragraph" col #888
+    Text "Second paragraph" col #888`,
+      ],
+
+      "IN CONTEXT - FAQ": [
+        `Box ver, gap 8, w 400
+  Collapsible
+    Trigger: Box hor, spread, pad 12, bg #1a1a1a, rad 6, cursor pointer
+      Text "What is Mirror?" weight 500
+      Icon "chevron-down"
+    Content: Box pad 12
+      Text "Mirror is a DSL for rapid UI prototyping." col #888
+  Collapsible
+    Trigger: Box hor, spread, pad 12, bg #1a1a1a, rad 6, cursor pointer
+      Text "How does it work?" weight 500
+      Icon "chevron-down"
+    Content: Box pad 12
+      Text "It compiles to DOM or React components." col #888`,
+      ],
+
+      "IN CONTEXT - SETTINGS": [
+        `Box ver, gap 12, w 400, pad 16, bg #111, rad 8
+  Text "Settings" weight bold, fs 18
+  Collapsible defaultOpen
+    Trigger: Box hor, spread, cursor pointer
+      Text "General" weight 500
+      Icon "chevron-down"
+    Content: Box ver, gap 8, pad 12 0
+      Box hor, spread
+        Text "Dark mode" fs 14
+        Switch
+      Box hor, spread
+        Text "Notifications" fs 14
+        Switch
+  Divider
+  Collapsible
+    Trigger: Box hor, spread, cursor pointer
+      Text "Advanced" weight 500
+      Icon "chevron-down"
+    Content: Box ver, gap 8, pad 12 0
+      Text "Advanced settings here" col #666`,
+      ],
+
+      "IN CONTEXT - CODE BLOCK": [
+        `Box ver, w 400
+  Collapsible
+    Trigger: Box hor, gap 8, pad 8 12, bg #1e1e1e, rad 6 6 0 0, cursor pointer
+      Icon "code" col #888
+      Text "View code" fs 12, col #888
+    Content: Box pad 12, bg #0d0d0d, rad 0 0 6 6
+      Text "const x = 42;" font mono, fs 12, col #22c55e`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

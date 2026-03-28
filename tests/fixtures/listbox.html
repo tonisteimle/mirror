@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Listbox Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 60px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Listbox
+  </div>
+  <h1>Listbox Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Listbox
+  ListboxItem "Option 1"
+  ListboxItem "Option 2"
+  ListboxItem "Option 3"`,
+      ],
+
+      "WITH DEFAULT VALUE": [
+        `Listbox defaultValue "item-1"
+  ListboxItem "First"
+  ListboxItem "Second (default)"
+  ListboxItem "Third"`,
+      ],
+
+      "MULTIPLE SELECTION": [
+        `Listbox multiple
+  ListboxItem "Apple"
+  ListboxItem "Banana"
+  ListboxItem "Cherry"
+  ListboxItem "Date"`,
+      ],
+
+      "DISABLED ITEMS": [
+        `Listbox
+  ListboxItem "Available"
+  ListboxItem "Disabled" disabled
+  ListboxItem "Also available"`,
+      ],
+
+      "DISABLED LISTBOX": [
+        `Listbox disabled
+  ListboxItem "Item 1"
+  ListboxItem "Item 2"
+  ListboxItem "Item 3"`,
+      ],
+
+      "STYLING ITEM": [
+        `Listbox
+  ListboxItem "Styled Item"
+  ListboxItem "Another Item"
+Item: bg #1a1a1a, rad 8`,
+
+        `Listbox
+  ListboxItem "Custom Border"
+  ListboxItem "Normal Item"
+Item: bor 1 #3b82f6`,
+      ],
+
+      "STYLING ITEM TEXT": [
+        `Listbox
+  ListboxItem "Blue Text"
+  ListboxItem "Normal Text"
+ItemText: col #60a5fa`,
+
+        `Listbox
+  ListboxItem "Large Text"
+  ListboxItem "Normal Text"
+ItemText: fs 16, weight bold`,
+      ],
+
+      "STYLING INDICATOR": [
+        `Listbox defaultValue "item-0"
+  ListboxItem "Green Check"
+  ListboxItem "Normal"
+ItemIndicator: col #22c55e`,
+
+        `Listbox defaultValue "item-0"
+  ListboxItem "Large Check"
+  ListboxItem "Normal"
+ItemIndicator: w 20, h 20`,
+      ],
+
+      "CUSTOM ICONS": [
+        `Listbox icon "star" defaultValue "item-0"
+  ListboxItem "Star Icon"
+  ListboxItem "Also Star"`,
+
+        `Listbox defaultValue "item-0"
+  ListboxItem "Heart" icon "heart"
+  ListboxItem "Star" icon "star"
+  ListboxItem "Circle" icon "circle"`,
+
+        `Listbox icon "circle" defaultValue "item-1"
+  ListboxItem "Default Circle"
+  ListboxItem "Custom Check" icon "check"
+  ListboxItem "Custom Dot" icon "dot"`,
+      ],
+
+      "STYLING CONTENT": [
+        `Listbox
+  ListboxItem "Item 1"
+  ListboxItem "Item 2"
+  ListboxItem "Item 3"
+Content: bg #1a1a1a, pad 8, rad 8`,
+      ],
+
+      "IN CONTEXT - SETTINGS": [
+        `Box ver, gap 0, w 300
+  Text "Select Theme" weight bold, fs 14, pad 12
+  Listbox defaultValue "dark"
+    ListboxItem "Light" value "light"
+    ListboxItem "Dark" value "dark"
+    ListboxItem "System" value "system"
+  Content: bg #111, rad 6`,
+      ],
+
+      "IN CONTEXT - MULTI SELECT": [
+        `Box ver, gap 0, w 300
+  Text "Select Interests" weight bold, fs 14, pad 12
+  Listbox multiple
+    ListboxItem "Technology"
+    ListboxItem "Design"
+    ListboxItem "Music"
+    ListboxItem "Sports"
+    ListboxItem "Travel"
+  Content: bg #111, rad 6, maxh 200, scroll`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

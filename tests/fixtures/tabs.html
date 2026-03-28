@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tabs Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 100px;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Tabs
+  </div>
+  <h1>Tabs Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Tabs defaultValue "home"
+  Tab "Home" value "home"
+    Text "Welcome to the home page"
+  Tab "Profile" value "profile"
+    Text "Your profile settings"
+  Tab "Settings" value "settings"
+    Text "Application settings"`,
+
+        `Tabs value "tab2"
+  Tab "Tab 1" value "tab1"
+    Text "Content 1"
+  Tab "Tab 2" value "tab2"
+    Text "Content 2"
+  Tab "Tab 3" value "tab3"
+    Text "Content 3"`,
+      ],
+
+      "ORIENTATION": [
+        `Tabs orientation "vertical", defaultValue "home"
+  Tab "Home" value "home"
+    Text "Home content"
+  Tab "Profile" value "profile"
+    Text "Profile content"
+  Tab "Settings" value "settings"
+    Text "Settings content"`,
+
+        `Tabs orientation "horizontal", defaultValue "tab1"
+  Tab "First" value "tab1"
+    Text "First tab content"
+  Tab "Second" value "tab2"
+    Text "Second tab content"`,
+      ],
+
+      "ACTIVATION MODE": [
+        `Tabs activationMode "manual", defaultValue "home"
+  Tab "Home" value "home"
+    Text "Use Arrow keys to navigate"
+    Text "Press Enter or Space to select" col #888, fs 12
+  Tab "About" value "about"
+    Text "About page content"
+  Tab "Contact" value "contact"
+    Text "Contact page content"`,
+
+        `Tabs activationMode "automatic", defaultValue "home"
+  Tab "Home" value "home"
+    Text "Automatic: switches on arrow key"
+  Tab "About" value "about"
+    Text "About content"`,
+      ],
+
+      "LOOP FOCUS": [
+        `Tabs loopFocus, defaultValue "a"
+  Tab "A" value "a"
+    Text "Tab A - Press Right arrow at end to loop"
+  Tab "B" value "b"
+    Text "Tab B"
+  Tab "C" value "c"
+    Text "Tab C - Press Right to go back to A"`,
+      ],
+
+      "DESELECTABLE": [
+        `Tabs deselectable, defaultValue "first"
+  Tab "First" value "first"
+    Text "Click this tab again to deselect it"
+  Tab "Second" value "second"
+    Text "Second content"`,
+      ],
+
+      "RICH CONTENT": [
+        `Tabs defaultValue "overview"
+  Tab "Overview" value "overview"
+    Box ver, gap 12
+      Text "Dashboard Overview" weight bold, fs 16
+      Text "Welcome to your dashboard" col #888
+      Button "Get Started"
+  Tab "Analytics" value "analytics"
+    Box ver, gap 8
+      Text "Analytics" weight bold
+      Text "Charts and data here"
+  Tab "Reports" value "reports"
+    Text "Reports content"`,
+
+        `Tabs defaultValue "account"
+  Tab "Account" value "account"
+    Box ver, gap 16
+      Box ver, gap 4
+        Text "Email" fs 12, col #888
+        Text "user@example.com"
+      Box ver, gap 4
+        Text "Plan" fs 12, col #888
+        Text "Pro"
+  Tab "Security" value "security"
+    Box ver, gap 8
+      Text "Two-Factor Authentication" weight medium
+      Text "Add an extra layer of security" col #888, fs 12`,
+      ],
+
+      "MANY TABS": [
+        `Tabs defaultValue "mon"
+  Tab "Mon" value "mon"
+    Text "Monday schedule"
+  Tab "Tue" value "tue"
+    Text "Tuesday schedule"
+  Tab "Wed" value "wed"
+    Text "Wednesday schedule"
+  Tab "Thu" value "thu"
+    Text "Thursday schedule"
+  Tab "Fri" value "fri"
+    Text "Friday schedule"`,
+      ],
+
+      "SLOT CUSTOMIZATION": [
+        `Tabs defaultValue "home"
+  List: gap 48, pad 8
+  Tab "Home" value "home"
+    Text "Custom gap between tabs (48px)"
+  Tab "About" value "about"
+    Text "About content"`,
+
+        `Tabs defaultValue "first"
+  Indicator: bg #22c55e, h 3
+  Tab "Green" value "first"
+    Text "Green indicator (3px height)"
+  Tab "Indicator" value "second"
+    Text "Custom indicator color"`,
+
+        `Tabs defaultValue "a"
+  List: gap 32, border none
+  Indicator: bg #f59e0b
+  Tab "Amber" value "a"
+    Text "No border on list"
+  Tab "Style" value "b"
+    Text "Amber indicator"`,
+
+        `Tabs orientation "vertical", defaultValue "one"
+  List: gap 16, pad 12
+  Indicator: bg #ec4899, w 4
+  Tab "Pink" value "one"
+    Text "Vertical with custom styles"
+  Tab "Style" value "two"
+    Text "Pink indicator (4px width)"`,
+      ],
+
+      "ADVANCED STYLING": [
+        `Tabs defaultValue "a"
+  List: bg #1a1a1a, pad 4, rad 8, gap 4
+  Indicator: bg #4f46e5, rad 6
+  Tab "Rounded" value "a"
+    Text "Rounded indicator with radius"
+  Tab "Style" value "b"
+    Text "Pill-style tabs"`,
+
+        `Tabs defaultValue "first"
+  Indicator: bg transparent, bor 2 #4f46e5, rad 4
+  Tab "Border" value "first"
+    Text "Border instead of fill"
+  Tab "Style" value "second"
+    Text "Outline indicator"`,
+
+        `Tabs defaultValue "a"
+  List: bg #111, pad 6, rad 12, gap 0
+  Trigger: bg transparent, pad 8 16, rad 8
+  Tab "Segmented" value "a"
+    Text "Segmented control style"
+  Tab "Control" value "b"
+    Text "Like iOS"`,
+      ],
+
+      "CUSTOM INDICATOR CONTENT": [
+        `Tabs defaultValue "home"
+  Indicator:
+    Icon "circle" col #4f46e5, fs 8
+  Tab "Home" value "home"
+    Text "Icon indicator"
+  Tab "Profile" value "profile"
+    Text "Custom icon instead of line"`,
+
+        `Tabs defaultValue "a"
+  Indicator: bg #22c55e, rad 50
+    Box w 8, h 8, bg #fff, rad 50
+  Tab "Dot" value "a"
+    Text "Dot indicator"
+  Tab "Style" value "b"
+    Text "Green dot with white center"`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

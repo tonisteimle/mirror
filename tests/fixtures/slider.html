@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Slider Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Slider
+  </div>
+  <h1>Slider Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "BASIC": [
+        `Slider`,
+
+        `Slider defaultValue 50`,
+
+        `Slider label "Volume"`,
+      ],
+
+      "MIN/MAX/STEP": [
+        `Slider min 0, max 10, step 1`,
+
+        `Slider min 0, max 100, step 10, defaultValue 50`,
+
+        `Slider min -50, max 50, defaultValue 0`,
+      ],
+
+      "STATES": [
+        `Slider disabled`,
+
+        `Slider readOnly, defaultValue 75`,
+      ],
+
+      "STYLING ROOT": [
+        `Slider
+  Root: w 300`,
+
+        `Slider
+  Root: pad 16, bg #1a1a1a, rad 8`,
+      ],
+
+      "STYLING TRACK": [
+        `Slider
+  Track: h 12, rad 6`,
+
+        `Slider
+  Track: bg #444, h 4`,
+
+        `Slider
+  Track: bg #222, bor 1 #555`,
+      ],
+
+      "STYLING RANGE": [
+        `Slider defaultValue 60
+  Range: bg #22c55e`,
+
+        `Slider defaultValue 40
+  Range: bg #ef4444`,
+
+        `Slider defaultValue 50
+  Range: bg linear-gradient(90deg, #3b82f6, #8b5cf6)`,
+      ],
+
+      "STYLING THUMB": [
+        `Slider defaultValue 50
+  Thumb: w 24, h 24`,
+
+        `Slider defaultValue 50
+  Thumb: bg #3b82f6, rad 4`,
+
+        `Slider defaultValue 50
+  Thumb: bg #22c55e, bor 2 #fff`,
+
+        `Slider defaultValue 50
+  Thumb: w 16, h 16, bg #fff`,
+      ],
+
+      "WITH VALUE TEXT": [
+        `Slider defaultValue 50
+  ValueText: fs 14, col #888`,
+
+        `Slider defaultValue 25
+  ValueText: weight bold`,
+      ],
+
+      "IN CONTEXT - FORM": [
+        `Box ver, gap 16, w 300
+  Text "Audio Settings" weight bold, fs 14
+  Box ver, gap 8
+    Text "Volume" fs 12, col #888
+    Slider defaultValue 75
+  Box ver, gap 8
+    Text "Bass" fs 12, col #888
+    Slider defaultValue 50
+  Box ver, gap 8
+    Text "Treble" fs 12, col #888
+    Slider defaultValue 50`,
+
+        `Box ver, gap 12, pad 16, bg #111, rad 8
+  Box hor, spread
+    Text "Brightness" fs 12
+    Text "75%" fs 12, col #888
+  Slider defaultValue 75
+    Track: h 6
+    Thumb: w 16, h 16`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

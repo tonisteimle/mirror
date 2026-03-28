@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Progress Component Test</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: #888;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover {
+      color: #aaa;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 6px;
+      align-items: start;
+    }
+
+    .example-code {
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px;
+      background: #0a0a0a;
+      border-radius: 4px;
+    }
+
+    .example-preview {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error {
+      color: #f55;
+      font-size: 11px;
+      padding: 8px;
+      background: #1a0a0a;
+      border-radius: 4px;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 11px;
+      color: #444;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .stats.success { color: #4a4; }
+    .stats.failure { color: #a44; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb">
+    <a href="../index.html">Tests</a> / <a href="./">Components</a> / Progress
+  </div>
+  <h1>Progress Component</h1>
+  <div class="stats" id="stats"></div>
+  <div class="examples" id="examples"></div>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const sections = {
+      "LINEAR PROGRESS - BASIC": [
+        `Progress`,
+
+        `Progress value 50`,
+
+        `Progress value 75`,
+
+        `Progress value 100`,
+
+        `Progress label "Loading"`,
+      ],
+
+      "LINEAR PROGRESS - MIN/MAX": [
+        `Progress min 0, max 10, value 5`,
+
+        `Progress min 0, max 200, value 150`,
+      ],
+
+      "LINEAR PROGRESS - STYLING ROOT": [
+        `Progress value 60
+  Root: w 300`,
+
+        `Progress value 40
+  Root: pad 12, bg #1a1a1a, rad 8`,
+      ],
+
+      "LINEAR PROGRESS - STYLING TRACK": [
+        `Progress value 50
+  Track: h 12, rad 6`,
+
+        `Progress value 50
+  Track: bg #222, h 4`,
+
+        `Progress value 50
+  Track: bg #444, rad 0`,
+      ],
+
+      "LINEAR PROGRESS - STYLING RANGE": [
+        `Progress value 60
+  Range: bg #22c55e`,
+
+        `Progress value 40
+  Range: bg #ef4444`,
+
+        `Progress value 75
+  Range: bg linear-gradient(90deg, #3b82f6, #8b5cf6)`,
+      ],
+
+      "LINEAR PROGRESS - WITH VALUE TEXT": [
+        `Progress value 50
+  ValueText: fs 12, col #888`,
+
+        `Progress value 75
+  ValueText: weight bold`,
+      ],
+
+      "CIRCULAR PROGRESS - BASIC": [
+        `CircularProgress`,
+
+        `CircularProgress value 50`,
+
+        `CircularProgress value 75`,
+
+        `CircularProgress value 100`,
+
+        `CircularProgress label "Loading"`,
+      ],
+
+      "CIRCULAR PROGRESS - STYLING": [
+        `CircularProgress value 60
+  Circle: w 100, h 100`,
+
+        `CircularProgress value 75
+  CircleRange: stroke #22c55e`,
+
+        `CircularProgress value 40
+  CircleRange: stroke #ef4444`,
+      ],
+
+      "CIRCULAR PROGRESS - WITH VALUE TEXT": [
+        `CircularProgress value 65
+  ValueText: fs 18, weight bold`,
+
+        `CircularProgress value 80
+  ValueText: col #3b82f6`,
+      ],
+
+      "IN CONTEXT - DASHBOARD": [
+        `Box ver, gap 16, w 300
+  Text "Upload Progress" weight bold, fs 14
+  Progress value 65
+    Track: h 6
+    Range: bg #22c55e
+  Text "65% complete" fs 12, col #888`,
+
+        `Box hor, gap 24
+  Box ver, gap 8, center
+    CircularProgress value 75
+      ValueText: fs 14
+    Text "CPU" fs 12, col #888
+  Box ver, gap 8, center
+    CircularProgress value 45
+      CircleRange: stroke #ef4444
+      ValueText: fs 14
+    Text "Memory" fs 12, col #888`,
+      ],
+    };
+
+    const { compile } = MirrorLang;
+    const container = document.getElementById('examples');
+    let total = 0;
+    let success = 0;
+    let failed = 0;
+
+    Object.entries(sections).forEach(([sectionName, examples]) => {
+      const heading = document.createElement('h2');
+      heading.textContent = sectionName;
+      container.appendChild(heading);
+
+      examples.forEach(code => {
+        total++;
+        const row = document.createElement('div');
+        row.className = 'example';
+
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'example-code';
+        codeDiv.textContent = code;
+
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'example-preview';
+
+        try {
+          const jsCode = compile(code);
+          const execCode = jsCode.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            previewDiv.appendChild(ui.root);
+          }
+          success++;
+        } catch (err) {
+          previewDiv.innerHTML = `<div class="error">${err.message}</div>`;
+          failed++;
+          console.error('Compilation error:', err);
+        }
+
+        row.appendChild(codeDiv);
+        row.appendChild(previewDiv);
+        container.appendChild(row);
+      });
+    });
+
+    // Update stats
+    const statsEl = document.getElementById('stats');
+    statsEl.textContent = `${success}/${total} passed` + (failed > 0 ? ` (${failed} failed)` : '');
+    statsEl.className = 'stats ' + (failed > 0 ? 'failure' : 'success');
+  </script>
+</body>
+</html>

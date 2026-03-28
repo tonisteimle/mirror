@@ -30,6 +30,22 @@ const ALL_BOOLEAN_PROPERTIES = new Set([
   ...POSITION_BOOLEANS,
 ])
 
+// Keyboard keys for onkeydown/onkeyup events - these are NOT inline states
+const KEYBOARD_KEYS = new Set([
+  'escape', 'enter', 'space', 'tab', 'backspace', 'delete',
+  'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
+  'home', 'end',
+])
+
+// State names for block state parsing (hover:, focus:, etc.)
+const STATE_NAMES = new Set([
+  // System states (CSS pseudo-classes)
+  'hover', 'focus', 'active', 'disabled',
+  // Custom states (data-state attribute)
+  'selected', 'highlighted', 'expanded', 'collapsed',
+  'on', 'off', 'open', 'closed', 'filled', 'valid', 'invalid', 'loading', 'error',
+])
+
 export class Parser {
   private tokens: Token[]
   private pos: number = 0
@@ -659,6 +675,8 @@ export class Parser {
       name: null,
       properties: [],
       children: [],
+      states: [],
+      events: [],
       line: name.line,
       column: name.column,
     }
@@ -674,8 +692,34 @@ export class Parser {
     if (this.hasChildOverrideSyntax()) {
       instance.childOverrides = this.parseChildOverridesFromStart()
     } else {
-      // Parse inline properties and content
-      this.parseInlineProperties(instance.properties)
+      // Parse inline properties, events, and content
+      this.parseInlineProperties(instance.properties, instance.events)
+    }
+
+    // Check for inline states: "Frame bg #333 hover: bg light"
+    // parseInlineProperties stops at lowercase identifier + COLON
+    // Exception: keyboard keys like "enter:" are NOT states
+    while (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+      const name = this.current().value
+      const isLikelyState = name[0] === name[0].toLowerCase() && !KEYBOARD_KEYS.has(name)
+      if (!isLikelyState) break
+
+      const stateName = this.advance()
+      this.advance() // consume :
+
+      const state: State = {
+        type: 'State',
+        name: stateName.value,
+        properties: [],
+        childOverrides: [],
+        line: stateName.line,
+        column: stateName.column,
+      }
+
+      // Parse inline state properties
+      // Pass instance.events to allow event handlers within state blocks
+      this.parseInlineProperties(state.properties, instance.events)
+      instance.states.push(state)
     }
 
     // Check for colon at end of properties
@@ -2043,6 +2087,61 @@ export class Parser {
           continue
         }
 
+        // State block: hover: or selected:
+        if (STATE_NAMES.has(name) && this.checkNext('COLON')) {
+          const stateToken = this.advance()
+          this.advance() // consume colon
+
+          const state: State = {
+            type: 'State',
+            name: stateToken.value,
+            properties: [],
+            childOverrides: [],
+            line: stateToken.line,
+            column: stateToken.column,
+          }
+
+          // Parse inline state properties
+          this.parseInlineProperties(state.properties, instance.events)
+
+          // Parse block properties (indented)
+          this.skipNewlines()
+          if (this.check('INDENT')) {
+            this.advance()
+            while (!this.check('DEDENT') && !this.isAtEnd()) {
+              this.skipNewlines()
+              if (this.check('DEDENT')) break
+
+              // Parse properties on each line
+              if (this.check('IDENTIFIER')) {
+                const propName = this.current().value
+                // Check for child overrides (capitalized names)
+                if (propName[0] === propName[0].toUpperCase()) {
+                  // Child override: ChildName property value
+                  const childName = this.advance().value
+                  const override: ChildOverride = {
+                    type: 'ChildOverride',
+                    childName,
+                    properties: [],
+                    line: this.previous().line,
+                    column: this.previous().column,
+                  }
+                  this.parseInlineProperties(override.properties)
+                  state.childOverrides.push(override)
+                } else {
+                  // Regular property
+                  this.parseInlineProperties(state.properties)
+                }
+              }
+            }
+            if (this.check('DEDENT')) this.advance()
+          }
+
+          if (!instance.states) instance.states = []
+          instance.states.push(state)
+          continue
+        }
+
         // Child instance (including Zag components)
         const child = this.parseInstance(this.advance())
         instance.children.push(child as any)
@@ -2139,7 +2238,7 @@ export class Parser {
     }
   }
 
-  private parseInlineProperties(properties: Property[]): void {
+  private parseInlineProperties(properties: Property[], events?: Event[]): void {
     while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
       if (this.check('COMMA')) {
@@ -2199,6 +2298,23 @@ export class Parser {
       // Property: name value (or boolean property)
       if (this.check('IDENTIFIER')) {
         const identName = this.current().value
+
+        // Check for inline event syntax: "onkeydown enter: submit"
+        // Events start with "on" and use parseEvent for correct key handling
+        if (identName.startsWith('on') && events) {
+          const event = this.parseEvent()
+          if (event) events.push(event)
+          continue
+        }
+
+        // Check for inline state syntax: "hover: bg light"
+        // State names are lowercase (hover, focus, active, selected, etc.)
+        // Exception: keyboard keys like "enter:" are NOT states
+        if (this.checkNext('COLON') && identName[0] === identName[0].toLowerCase() && !KEYBOARD_KEYS.has(identName)) {
+          // This is an inline state - stop here, let parseInstanceBody handle it
+          break
+        }
+
         // Check for boolean properties first - they don't take values
         if (ALL_BOOLEAN_PROPERTIES.has(identName)) {
           const token = this.advance()
@@ -2336,6 +2452,14 @@ export class Parser {
         collectedTokens.push({ type: 'STRING', value: `"${this.advance().value}"` })
       } else if (this.check('IDENTIFIER')) {
         const identValue = this.current().value
+
+        // Check for inline state syntax: "hover:" - stop collecting values
+        // This allows "Frame bg #333 hover: bg light" to work
+        // Exception: keyboard keys like "enter:" are NOT states
+        if (this.checkNext('COLON') && identValue[0] === identValue[0].toLowerCase() && !KEYBOARD_KEYS.has(identValue)) {
+          break
+        }
+
         // Check if this identifier is a property starter (non-boolean property name)
         // If so, it's the start of a new property - stop collecting here
         // This allows "Box h 300 bg #333" to be parsed as two properties without commas
