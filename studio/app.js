@@ -38,7 +38,7 @@ import {
   insertComponentCode,
   insertComponentWithDefinition,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=118'
+} from './dist/index.js?v=119'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()

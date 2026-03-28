@@ -39,6 +39,18 @@ export const LAYOUT_ICONS = {
 // =============================================================================
 
 export const COMPONENT_ICONS = {
+  /** Row - horizontal layout */
+  row: `<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="M15 3v18"></path>`,
+
+  /** Column - vertical layout */
+  column: `<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M21 9H3"></path><path d="M21 15H3"></path>`,
+
+  /** Stack - overlapping layers */
+  stack: `<rect x="3" y="3" width="14" height="14" rx="2"></rect><rect x="7" y="7" width="14" height="14" rx="2"></rect>`,
+
+  /** Grid layout */
+  grid: `<rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="8" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect><rect x="13" y="13" width="8" height="8" rx="1"></rect>`,
+
   /** Box/Container */
   box: `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>`,
 
