@@ -14,11 +14,50 @@
 import type { ComponentItem } from './types'
 
 /**
- * 1. LAYOUT - Layout structures
- * Note: Shell was removed - use simple containers with hor/ver instead
+ * 1. LAYOUT - Simple layout containers
+ * Note: Shell compound primitive was removed - these are simple Frame-based containers
  */
 export const LAYOUT_COMPONENTS: ComponentItem[] = [
-  // Layout section is now empty - will be hidden if no items
+  {
+    id: 'layout-row',
+    name: 'Row',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'hor, gap 8',
+    icon: 'row',
+    description: 'Horizontal container',
+    defaultSize: { width: 200, height: 50 },
+  },
+  {
+    id: 'layout-column',
+    name: 'Column',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'ver, gap 8',
+    icon: 'column',
+    description: 'Vertical container',
+    defaultSize: { width: 100, height: 150 },
+  },
+  {
+    id: 'layout-stack',
+    name: 'Stack',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'stacked',
+    icon: 'stack',
+    description: 'Stacked layers',
+    defaultSize: { width: 100, height: 100 },
+  },
+  {
+    id: 'layout-grid',
+    name: 'Grid',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'grid 3, gap 8',
+    icon: 'grid',
+    description: 'Grid layout',
+    defaultSize: { width: 200, height: 150 },
+  },
 ]
 
 /**
