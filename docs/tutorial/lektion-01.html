@@ -389,17 +389,15 @@
 
       function compile() {
         try {
-          const ast = MirrorLang.parse(textarea.value);
-          if (ast.errors?.length) {
-            preview.innerHTML = `<div class="playground-error">${ast.errors[0].message}</div>`;
-            return;
+          preview.innerHTML = '';
+          const code = MirrorLang.compile(textarea.value);
+          // Strip ES module exports so we can execute with new Function()
+          const execCode = code.replace('export function createUI', 'function createUI');
+          const fn = new Function(execCode + '\nreturn createUI();');
+          const ui = fn();
+          if (ui && ui.root) {
+            preview.appendChild(ui.root);
           }
-          preview.innerHTML = MirrorLang.generateDOM(ast);
-          preview.querySelectorAll('script').forEach(s => {
-            const n = document.createElement('script');
-            n.textContent = s.textContent;
-            s.replaceWith(n);
-          });
         } catch (e) {
           preview.innerHTML = `<div class="playground-error">${e.message}</div>`;
         }
