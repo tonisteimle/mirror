@@ -6,7 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -314,7 +314,9 @@ export class Parser {
     // Animation definition: Name as animation:
     if (this.check('AS')) {
       // Peek to see if this is an animation definition
-      if (this.checkNext('ANIMATION')) {
+      // 'animation' is now a regular IDENTIFIER (not a keyword)
+      const nextToken = this.peekAt(1)
+      if (nextToken && nextToken.type === 'IDENTIFIER' && nextToken.value === 'animation') {
         return this.parseAnimationDefinition(name)
       }
       return this.parseComponentDefinition(name)
@@ -715,6 +717,7 @@ export class Parser {
       // Parse inline state properties
       // Pass instance.events to allow event handlers within state blocks
       this.parseInlineProperties(state.properties, instance.events)
+      if (!instance.states) instance.states = []
       instance.states.push(state)
     }
 
@@ -1764,7 +1767,8 @@ export class Parser {
         }
 
         // Handle initial state (closed, open, etc.) - from schema
-        if (INITIAL_STATES.has(name)) {
+        // Only treat as initial state if NOT followed by colon (state block)
+        if (INITIAL_STATES.has(name) && !this.checkNext('COLON')) {
           const token = this.advance()
           component.initialState = token.value
           continue
@@ -1785,7 +1789,7 @@ export class Parser {
 
         // Known properties that take any identifier value (including PascalCase like "Arial")
         const propertiesWithAnyValue = new Set([
-          'font', 'cursor', 'align', 'weight',
+          'font', 'cursor', 'align', 'weight', 'animation', 'anim',
         ])
 
         // Property line: identifier followed by values (NUMBER, STRING, IDENTIFIER)
@@ -2072,7 +2076,8 @@ export class Parser {
         const name = this.current().value
 
         // Initial state (closed, open) - from schema
-        if (INITIAL_STATES.has(name)) {
+        // Only treat as initial state if NOT followed by colon (state block)
+        if (INITIAL_STATES.has(name) && !this.checkNext('COLON')) {
           const token = this.advance()
           instance.initialState = token.value
           continue
@@ -2130,11 +2135,8 @@ export class Parser {
                   // Child override: ChildName property value
                   const childName = this.advance().value
                   const override: ChildOverride = {
-                    type: 'ChildOverride',
                     childName,
                     properties: [],
-                    line: this.previous().line,
-                    column: this.previous().column,
                   }
                   this.parseInlineProperties(override.properties)
                   state.childOverrides.push(override)

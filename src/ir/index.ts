@@ -51,6 +51,7 @@ import {
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
+import { getCanonicalPropertyName } from '../schema/parser-helpers'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -1633,10 +1634,47 @@ class IRTransformer {
       // If we inherited via primitive name, use the parent's actual primitive
       primitive: inheritFromPrimitive ? resolvedParent.primitive : (component.primitive || resolvedParent.primitive),
       properties: this.mergeProperties(resolvedParent.properties, component.properties),
-      states: [...resolvedParent.states, ...component.states],
+      states: this.mergeStates(resolvedParent.states, component.states),
       events: [...resolvedParent.events, ...component.events],
       children: [...resolvedParent.children, ...component.children],
     }
+  }
+
+  /**
+   * Merge states (child state properties override parent state properties for same state name)
+   *
+   * Example:
+   * - Parent: hover: bg #f00
+   * - Child: hover: bg #00f
+   * - Result: hover: bg #00f (child wins)
+   *
+   * But if parent has focus: and child has hover:, both are kept.
+   */
+  private mergeStates(parentStates: State[], childStates: State[]): State[] {
+    // Create a map of state name -> merged state
+    const stateMap = new Map<string, State>()
+
+    // Add parent states first
+    for (const state of parentStates) {
+      stateMap.set(state.name, { ...state })
+    }
+
+    // Merge child states (child properties override parent)
+    for (const state of childStates) {
+      const existing = stateMap.get(state.name)
+      if (existing) {
+        // Merge properties: child overrides parent
+        stateMap.set(state.name, {
+          ...state,
+          properties: this.mergeProperties(existing.properties, state.properties),
+          childOverrides: [...(existing.childOverrides || []), ...(state.childOverrides || [])],
+        })
+      } else {
+        stateMap.set(state.name, { ...state })
+      }
+    }
+
+    return Array.from(stateMap.values())
   }
 
   /**
@@ -1693,14 +1731,52 @@ class IRTransformer {
 
   /**
    * Merge properties (later values override earlier)
+   *
+   * For directional properties (pad, margin, rad, bor), the key includes direction.
+   * This allows multiple directional values to coexist:
+   * - pad left 10 → key: "pad:left"
+   * - pad right 20 → key: "pad:right"
+   * - pad 10 → key: "pad" (overwrites all directional pads)
    */
   private mergeProperties(base: Property[], overrides: Property[]): Property[] {
     const map = new Map<string, Property>()
+
+    const getPropertyKey = (prop: Property): string => {
+      // Normalize alias to canonical name (e.g., 'bg' -> 'background')
+      // This ensures that 'bg #f00 background #00f' treats them as the same property
+      const name = getCanonicalPropertyName(prop.name)
+      const values = prop.values
+
+      // Check if this is a directional property (use canonical names)
+      const directionalProps = ['padding', 'margin', 'radius', 'border']
+      const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y',
+        'horizontal', 'vertical', 'hor', 'ver', 'tl', 'tr', 'bl', 'br']
+
+      if (directionalProps.includes(name) && values.length >= 2) {
+        const firstVal = String(values[0]).toLowerCase()
+        if (directions.includes(firstVal)) {
+          // Include all direction tokens in the key
+          const dirs: string[] = []
+          for (const v of values) {
+            const val = String(v).toLowerCase()
+            if (directions.includes(val)) {
+              dirs.push(val)
+            } else {
+              break
+            }
+          }
+          return `${name}:${dirs.join(':')}`
+        }
+      }
+
+      return name
+    }
+
     for (const prop of base) {
-      map.set(prop.name, prop)
+      map.set(getPropertyKey(prop), prop)
     }
     for (const prop of overrides) {
-      map.set(prop.name, prop)
+      map.set(getPropertyKey(prop), prop)
     }
     return Array.from(map.values())
   }
@@ -1827,12 +1903,8 @@ class IRTransformer {
     const layoutStyles = this.generateLayoutStyles(layoutContext, primitive)
     styles.push(...layoutStyles)
 
-    // Generate combined transform if any transforms were collected
-    if (transformContext.transforms.length > 0) {
-      styles.push({ property: 'transform', value: transformContext.transforms.join(' ') })
-    }
-
     // Second pass: process non-layout properties
+    // Transform emission moved to AFTER this pass so pin-center-x etc. can add to transformContext
     for (const prop of properties) {
       const name = prop.name
       const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
@@ -1852,6 +1924,12 @@ class IRTransformer {
 
       const cssStyles = this.propertyToCSS(prop, primitive, transformContext)
       styles.push(...cssStyles)
+    }
+
+    // Generate combined transform AFTER second pass
+    // This allows pin-center-x + rotate to combine their transforms
+    if (transformContext.transforms.length > 0) {
+      styles.push({ property: 'transform', value: transformContext.transforms.join(' ') })
     }
 
     // Remove automatic min-width: 0 / min-height: 0 if explicit values exist
@@ -2192,7 +2270,24 @@ class IRTransformer {
 
     // Handle boolean properties (value is true OR empty values array)
     if ((prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0) {
-      return this.booleanPropertyToCSS(name)
+      const styles = this.booleanPropertyToCSS(name)
+
+      // If transformContext exists, extract transform values and add to context
+      // This allows pin-center-x + rotate to combine their transforms
+      if (transformContext) {
+        const nonTransformStyles: IRStyle[] = []
+        for (const style of styles) {
+          if (style.property === 'transform') {
+            // Add to transform context for combining with other transforms
+            transformContext.transforms.push(style.value)
+          } else {
+            nonTransformStyles.push(style)
+          }
+        }
+        return nonTransformStyles
+      }
+
+      return styles
     }
 
     // Handle size property - context-dependent
@@ -2413,6 +2508,26 @@ class IRTransformer {
       const val = String(values[0])
       const px = /^\d+$/.test(val) ? `${val}px` : val
       return [{ property: 'filter', value: `blur(${px})` }]
+    }
+
+    // Handle animation property: animation fade-in, anim bounce
+    if (name === 'animation' || name === 'anim') {
+      const animName = String(values[0])
+      // Map animation keywords to CSS animation values
+      const animationMap: Record<string, string> = {
+        'fade-in': 'mirror-fade-in 0.3s ease forwards',
+        'fade-out': 'mirror-fade-out 0.3s ease forwards',
+        'slide-in': 'mirror-slide-in 0.3s ease forwards',
+        'slide-out': 'mirror-slide-out 0.3s ease forwards',
+        'scale-in': 'mirror-scale-in 0.3s ease forwards',
+        'scale-out': 'mirror-scale-out 0.3s ease forwards',
+        'bounce': 'mirror-bounce 0.5s ease infinite',
+        'pulse': 'mirror-pulse 1s ease infinite',
+        'shake': 'mirror-shake 0.5s ease',
+        'spin': 'mirror-spin 1s linear infinite',
+      }
+      const animValue = animationMap[animName] || animName
+      return [{ property: 'animation', value: animValue }]
     }
 
     // Handle inline hover properties: hover-bg, hover-col, etc.
@@ -2818,6 +2933,10 @@ class IRTransformer {
       }
       if (prop.name === 'material') {
         htmlProps.push({ name: 'data-icon-material', value: true })
+      }
+      // Focusable - makes element keyboard-focusable
+      if (prop.name === 'focusable') {
+        htmlProps.push({ name: 'tabindex', value: '0' })
       }
     }
 
