@@ -88,8 +88,8 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 | **Align Property** | 5 | align top/bottom/left/right/center |
 | **Standalone Alignment** | 4 | left, right, top, bottom |
 | **Layout+Position Konflikte** | 3 | hor center pos, grid stacked, stacked grid |
-| **Transform Kombinationen** | 3 | rotate+scale, pin-center+rotate (SKIP), rotate+scale+translate |
-| **Mehr Reihenfolge** | 5 | tl br, br tl, center spread, spread center, hor ver hor (SKIP) |
+| **Transform Kombinationen** | 3 | rotate+scale, pin-center+rotate, rotate+scale+translate |
+| **Mehr Reihenfolge** | 5 | tl br, br tl, center spread, spread center, hor ver hor |
 | **Tiefe Verschachtelung** | 2 | 4 ebenen layout-wechsel, stacked+positioned child |
 | **Null-Werte** | 5 | pad/margin/gap 0, w/h 0, opacity 0, scale 0, rotate 0 |
 | **Negative Werte** | 4 | margin -10, z -1, x/y negativ, rotate -180 |
@@ -101,8 +101,8 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 | **Robustheit: Leerzeilen** | 5 | anfang, ende, zwischen, mehrfach, whitespace |
 | **Robustheit: Einrückung** | 5 | 2 spaces, 4 spaces, tabs, gemischt, trailing |
 | **Robustheit: Kommentare** | 5 | zeilenende, eigene zeile, zwischen, mehrfach, nach leerzeile |
-| **Robustheit: Semikolons** | 3 | ALLE SKIPPED - nicht unterstützt |
-| **Robustheit: Strings** | 5 | double quotes, leer, leerzeichen, sonderzeichen, single quotes (SKIP) |
+| **Robustheit: Semikolons** | 3 | am zeilenende, mehrere properties, als trenner |
+| **Robustheit: Strings** | 5 | double quotes, single quotes, leer, leerzeichen, sonderzeichen |
 | **Robustheit: Komplex** | 4 | alles zusammen, component def, inheritance, tiefe verschachtelung |
 
 ### was NICHT getestet wird
