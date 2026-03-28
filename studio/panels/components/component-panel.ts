@@ -16,7 +16,15 @@ import type {
   ComponentDragData,
 } from './types'
 import { getComponentIcon } from '../../icons'
-import { BASIC_PRIMITIVES, BASIC_COMPONENTS } from './layout-presets'
+import {
+  LAYOUT_COMPONENTS,
+  BASIC_PRIMITIVES,
+  FORM_COMPONENTS,
+  OVERLAY_COMPONENTS,
+  NAVIGATION_COMPONENTS,
+  MEDIA_COMPONENTS,
+  FEEDBACK_COMPONENTS,
+} from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
@@ -53,12 +61,21 @@ export class ComponentPanel {
   }
 
   /**
-   * Build sections - Basic primitives and Components
+   * Build sections in order: Layout, Basic, Form, Overlay, Navigation, Media, Feedback
    */
   private buildSections(): void {
     this.sections = []
 
-    // Basic section (Frame, Text, Icon, Image)
+    // 1. Layout section (Shell, etc.) - at the top
+    if (LAYOUT_COMPONENTS.length > 0) {
+      this.sections.push({
+        name: 'Layout',
+        items: [...LAYOUT_COMPONENTS],
+        isExpanded: true,
+      })
+    }
+
+    // 2. Basic section (Frame, Text, Icon, Image)
     if (BASIC_PRIMITIVES.length > 0) {
       this.sections.push({
         name: 'Basic',
@@ -67,12 +84,47 @@ export class ComponentPanel {
       })
     }
 
-    // Components section (alphabetically sorted)
-    if (BASIC_COMPONENTS.length > 0) {
-      const sortedComponents = [...BASIC_COMPONENTS].sort((a, b) => a.name.localeCompare(b.name))
+    // 3. Form section (Button, Input, Select, etc.)
+    if (FORM_COMPONENTS.length > 0) {
       this.sections.push({
-        name: 'Components',
-        items: sortedComponents,
+        name: 'Form',
+        items: [...FORM_COMPONENTS],
+        isExpanded: true,
+      })
+    }
+
+    // 4. Overlay section (Dialog, Tooltip, Popover, etc.)
+    if (OVERLAY_COMPONENTS.length > 0) {
+      this.sections.push({
+        name: 'Overlay',
+        items: [...OVERLAY_COMPONENTS],
+        isExpanded: true,
+      })
+    }
+
+    // 5. Navigation section (Tabs, Accordion, Steps, etc.)
+    if (NAVIGATION_COMPONENTS.length > 0) {
+      this.sections.push({
+        name: 'Navigation',
+        items: [...NAVIGATION_COMPONENTS],
+        isExpanded: true,
+      })
+    }
+
+    // 6. Media section (Avatar, File Upload, Carousel)
+    if (MEDIA_COMPONENTS.length > 0) {
+      this.sections.push({
+        name: 'Media',
+        items: [...MEDIA_COMPONENTS],
+        isExpanded: true,
+      })
+    }
+
+    // 7. Feedback section (Progress, Circular Progress)
+    if (FEEDBACK_COMPONENTS.length > 0) {
+      this.sections.push({
+        name: 'Feedback',
+        items: [...FEEDBACK_COMPONENTS],
         isExpanded: true,
       })
     }

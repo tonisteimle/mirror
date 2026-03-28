@@ -1,11 +1,72 @@
 /**
- * Component Panel - Basic primitives and Zag components
+ * Component Panel - Organized by category
+ *
+ * Categories (in display order):
+ * 1. Layout - Shell and layout structures
+ * 2. Basic - Frame, Text, Icon, Image
+ * 3. Form - Input controls
+ * 4. Overlay - Dialogs, tooltips, popovers
+ * 5. Navigation - Tabs, accordion, steps
+ * 6. Media - Avatar, file upload, carousel
+ * 7. Feedback - Progress indicators
  */
 
 import type { ComponentItem } from './types'
 
 /**
- * Basic primitives - Frame, Text, Icon, Image
+ * 1. LAYOUT - Shell and layout structures
+ */
+export const LAYOUT_COMPONENTS: ComponentItem[] = [
+  {
+    id: 'layout-shell',
+    name: 'Shell',
+    category: 'Layout',
+    template: 'Shell',
+    icon: 'layout',
+    description: 'App shell with header, sidebar, main',
+    defaultSize: { width: 800, height: 600 },
+    children: [
+      {
+        template: 'Header',
+        isSlot: true,
+        children: [
+          { template: 'Logo', textContent: 'App' },
+          {
+            template: 'Nav',
+            children: [
+              { template: 'NavItem', textContent: 'Home' },
+              { template: 'NavItem', textContent: 'About' },
+            ],
+          },
+        ],
+      },
+      {
+        template: 'Sidebar',
+        isSlot: true,
+        children: [
+          {
+            template: 'SidebarGroup',
+            textContent: 'Menu',
+            children: [
+              { template: 'SidebarItem', textContent: 'Dashboard' },
+              { template: 'SidebarItem', textContent: 'Settings' },
+            ],
+          },
+        ],
+      },
+      {
+        template: 'Main',
+        isSlot: true,
+        children: [
+          { template: 'Text', textContent: 'Content goes here' },
+        ],
+      },
+    ],
+  },
+]
+
+/**
+ * 2. BASIC - Frame, Text, Icon, Image
  */
 export const BASIC_PRIMITIVES: ComponentItem[] = [
   {
@@ -50,16 +111,13 @@ export const BASIC_PRIMITIVES: ComponentItem[] = [
 ]
 
 /**
- * Interactive components (simple HTML + Zag-powered)
+ * 3. FORM - Input controls and form elements
  */
-export const BASIC_COMPONENTS: ComponentItem[] = [
-  // ============================================================================
-  // SIMPLE HTML ELEMENTS
-  // ============================================================================
+export const FORM_COMPONENTS: ComponentItem[] = [
   {
-    id: 'basic-button',
+    id: 'form-button',
     name: 'Button',
-    category: 'Components',
+    category: 'Form',
     template: 'Button',
     textContent: 'Button',
     icon: 'button',
@@ -67,27 +125,23 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 100, height: 40 },
   },
   {
-    id: 'basic-input',
+    id: 'form-input',
     name: 'Input',
-    category: 'Components',
+    category: 'Form',
     template: 'Input',
     properties: 'placeholder "Enter text..."',
     icon: 'input',
     description: 'Text input field',
     defaultSize: { width: 200, height: 40 },
   },
-
-  // ============================================================================
-  // ZAG: SELECT
-  // ============================================================================
   {
-    id: 'zag-select',
+    id: 'form-select',
     name: 'Select',
-    category: 'Basic',
+    category: 'Form',
     template: 'Select',
     properties: 'placeholder "Choose..."',
     icon: 'select',
-    description: 'Dropdown select (Zag)',
+    description: 'Dropdown select',
     defaultSize: { width: 200, height: 40 },
     children: [
       { template: 'Trigger', isSlot: true, properties: 'pad 12, bg #1e1e2e, rad 6, bor 1 #333' },
@@ -103,17 +157,13 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
       },
     ],
   },
-
-  // ============================================================================
-  // ZAG: FORM CONTROLS (Implemented)
-  // ============================================================================
   {
-    id: 'zag-checkbox',
+    id: 'form-checkbox',
     name: 'Checkbox',
-    category: 'Basic',
+    category: 'Form',
     template: 'Checkbox',
     icon: 'checkbox',
-    description: 'Checkbox (Zag)',
+    description: 'Checkbox',
     defaultSize: { width: 150, height: 24 },
     children: [
       { template: 'Control', isSlot: true, properties: 'w 20, h 20, bor 1 #555, rad 4' },
@@ -121,12 +171,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-switch',
+    id: 'form-switch',
     name: 'Switch',
-    category: 'Basic',
+    category: 'Form',
     template: 'Switch',
     icon: 'toggle',
-    description: 'Toggle switch (Zag)',
+    description: 'Toggle switch',
     defaultSize: { width: 50, height: 28 },
     children: [
       { template: 'Track', isSlot: true, properties: 'w 44, h 24, rad 12, bg #555' },
@@ -134,12 +184,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-slider',
+    id: 'form-slider',
     name: 'Slider',
-    category: 'Basic',
+    category: 'Form',
     template: 'Slider',
     icon: 'slider',
-    description: 'Range slider (Zag)',
+    description: 'Range slider',
     defaultSize: { width: 200, height: 24 },
     children: [
       { template: 'Track', isSlot: true, properties: 'h 4, bg #333, rad 2' },
@@ -148,12 +198,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-radio-group',
+    id: 'form-radio-group',
     name: 'Radio Group',
-    category: 'Basic',
+    category: 'Form',
     template: 'RadioGroup',
     icon: 'radio',
-    description: 'Radio buttons (Zag)',
+    description: 'Radio buttons',
     defaultSize: { width: 150, height: 80 },
     children: [
       { template: 'RadioItem', isItem: true, textContent: 'Option A' },
@@ -162,13 +212,13 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-number-input',
+    id: 'form-number-input',
     name: 'Number Input',
-    category: 'Basic',
+    category: 'Form',
     template: 'NumberInput',
     properties: 'min 0, max 100',
     icon: 'numberInput',
-    description: 'Numeric stepper (Zag)',
+    description: 'Numeric stepper',
     defaultSize: { width: 120, height: 40 },
     children: [
       { template: 'Input', isSlot: true },
@@ -177,25 +227,25 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-pin-input',
+    id: 'form-pin-input',
     name: 'Pin Input',
-    category: 'Basic',
+    category: 'Form',
     template: 'PinInput',
     properties: 'length 6',
     icon: 'pinInput',
-    description: 'Code/PIN entry (Zag)',
+    description: 'Code/PIN entry',
     defaultSize: { width: 240, height: 40 },
     children: [
       { template: 'Input', isSlot: true },
     ],
   },
   {
-    id: 'zag-password-input',
+    id: 'form-password-input',
     name: 'Password Input',
-    category: 'Basic',
+    category: 'Form',
     template: 'PasswordInput',
     icon: 'passwordInput',
-    description: 'Password with visibility toggle (Zag)',
+    description: 'Password with visibility toggle',
     defaultSize: { width: 200, height: 40 },
     children: [
       { template: 'Input', isSlot: true },
@@ -203,12 +253,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-tags-input',
+    id: 'form-tags-input',
     name: 'Tags Input',
-    category: 'Basic',
+    category: 'Form',
     template: 'TagsInput',
     icon: 'tagsInput',
-    description: 'Tag/chip input (Zag)',
+    description: 'Tag/chip input',
     defaultSize: { width: 250, height: 40 },
     children: [
       { template: 'Control', isSlot: true },
@@ -217,13 +267,13 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-editable',
+    id: 'form-editable',
     name: 'Editable',
-    category: 'Basic',
+    category: 'Form',
     template: 'Editable',
     properties: 'defaultValue "Click to edit"',
     icon: 'editable',
-    description: 'Inline edit text (Zag)',
+    description: 'Inline edit text',
     defaultSize: { width: 200, height: 32 },
     children: [
       { template: 'Preview', isSlot: true },
@@ -231,12 +281,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-segmented-control',
+    id: 'form-segmented-control',
     name: 'Segmented Control',
-    category: 'Basic',
+    category: 'Form',
     template: 'SegmentedControl',
     icon: 'segmentedControl',
-    description: 'Button group selector (Zag)',
+    description: 'Button group selector',
     defaultSize: { width: 200, height: 36 },
     children: [
       { template: 'Segment', isItem: true, textContent: 'List' },
@@ -244,12 +294,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-toggle-group',
+    id: 'form-toggle-group',
     name: 'Toggle Group',
-    category: 'Basic',
+    category: 'Form',
     template: 'ToggleGroup',
     icon: 'toggleGroup',
-    description: 'Multi-select toggles (Zag)',
+    description: 'Multi-select toggles',
     defaultSize: { width: 150, height: 36 },
     children: [
       { template: 'Toggle', isItem: true, textContent: 'B' },
@@ -257,17 +307,48 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
       { template: 'Toggle', isItem: true, textContent: 'U' },
     ],
   },
-
-  // ============================================================================
-  // ZAG: OVERLAYS (Implemented)
-  // ============================================================================
   {
-    id: 'zag-dialog',
+    id: 'form-listbox',
+    name: 'Listbox',
+    category: 'Form',
+    template: 'Listbox',
+    icon: 'listbox',
+    description: 'List selection',
+    defaultSize: { width: 200, height: 150 },
+    children: [
+      { template: 'ListItem', isItem: true, textContent: 'Item 1' },
+      { template: 'ListItem', isItem: true, textContent: 'Item 2' },
+      { template: 'ListItem', isItem: true, textContent: 'Item 3' },
+    ],
+  },
+  {
+    id: 'form-date-picker',
+    name: 'Date Picker',
+    category: 'Form',
+    template: 'DatePicker',
+    icon: 'datePicker',
+    description: 'Calendar date picker',
+    defaultSize: { width: 280, height: 300 },
+    children: [
+      { template: 'Control', isSlot: true },
+      { template: 'Input', isSlot: true },
+      { template: 'Trigger', isSlot: true },
+      { template: 'Content', isSlot: true },
+    ],
+  },
+]
+
+/**
+ * 4. OVERLAY - Dialogs, tooltips, popovers
+ */
+export const OVERLAY_COMPONENTS: ComponentItem[] = [
+  {
+    id: 'overlay-dialog',
     name: 'Dialog',
-    category: 'Basic',
+    category: 'Overlay',
     template: 'Dialog',
     icon: 'dialog',
-    description: 'Modal dialog (Zag)',
+    description: 'Modal dialog',
     defaultSize: { width: 400, height: 300 },
     children: [
       { template: 'Trigger', isSlot: true, children: [
@@ -278,12 +359,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-tooltip',
+    id: 'overlay-tooltip',
     name: 'Tooltip',
-    category: 'Basic',
+    category: 'Overlay',
     template: 'Tooltip',
     icon: 'tooltip',
-    description: 'Hover tooltip (Zag)',
+    description: 'Hover tooltip',
     defaultSize: { width: 100, height: 40 },
     children: [
       { template: 'Trigger', isSlot: true, children: [
@@ -295,12 +376,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-popover',
+    id: 'overlay-popover',
     name: 'Popover',
-    category: 'Basic',
+    category: 'Overlay',
     template: 'Popover',
     icon: 'popover',
-    description: 'Click popover (Zag)',
+    description: 'Click popover',
     defaultSize: { width: 200, height: 150 },
     children: [
       { template: 'Trigger', isSlot: true, children: [
@@ -310,12 +391,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-hover-card',
+    id: 'overlay-hover-card',
     name: 'Hover Card',
-    category: 'Basic',
+    category: 'Overlay',
     template: 'HoverCard',
     icon: 'hoverCard',
-    description: 'Hover preview card (Zag)',
+    description: 'Hover preview card',
     defaultSize: { width: 100, height: 40 },
     children: [
       { template: 'Trigger', isSlot: true },
@@ -323,12 +404,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-collapsible',
+    id: 'overlay-collapsible',
     name: 'Collapsible',
-    category: 'Basic',
+    category: 'Overlay',
     template: 'Collapsible',
     icon: 'collapsible',
-    description: 'Expand/collapse content (Zag)',
+    description: 'Expand/collapse content',
     defaultSize: { width: 250, height: 120 },
     children: [
       { template: 'Trigger', isSlot: true, children: [
@@ -339,17 +420,19 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
       ]},
     ],
   },
+]
 
-  // ============================================================================
-  // ZAG: NAVIGATION (Implemented)
-  // ============================================================================
+/**
+ * 5. NAVIGATION - Tabs, accordion, steps
+ */
+export const NAVIGATION_COMPONENTS: ComponentItem[] = [
   {
-    id: 'zag-tabs',
+    id: 'nav-tabs',
     name: 'Tabs',
-    category: 'Basic',
+    category: 'Navigation',
     template: 'Tabs',
     icon: 'tabs',
-    description: 'Tabbed navigation (Zag)',
+    description: 'Tabbed navigation',
     defaultSize: { width: 300, height: 200 },
     children: [
       {
@@ -366,12 +449,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-accordion',
+    id: 'nav-accordion',
     name: 'Accordion',
-    category: 'Basic',
+    category: 'Navigation',
     template: 'Accordion',
     icon: 'accordion',
-    description: 'Collapsible sections (Zag)',
+    description: 'Collapsible sections',
     defaultSize: { width: 300, height: 200 },
     children: [
       { template: 'AccordionItem', isItem: true, textContent: 'Section 1' },
@@ -380,12 +463,12 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-steps',
+    id: 'nav-steps',
     name: 'Steps',
-    category: 'Basic',
+    category: 'Navigation',
     template: 'Steps',
     icon: 'steps',
-    description: 'Wizard steps (Zag)',
+    description: 'Wizard steps',
     defaultSize: { width: 400, height: 60 },
     children: [
       { template: 'Step', isItem: true, textContent: 'Step 1' },
@@ -394,87 +477,52 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-pagination',
+    id: 'nav-pagination',
     name: 'Pagination',
-    category: 'Basic',
+    category: 'Navigation',
     template: 'Pagination',
     properties: 'count 100, pageSize 10',
     icon: 'pagination',
-    description: 'Page navigation (Zag)',
+    description: 'Page navigation',
     defaultSize: { width: 300, height: 40 },
   },
   {
-    id: 'zag-tree-view',
+    id: 'nav-tree-view',
     name: 'Tree View',
-    category: 'Basic',
+    category: 'Navigation',
     template: 'TreeView',
     icon: 'treeView',
-    description: 'Hierarchical tree (Zag)',
+    description: 'Hierarchical tree',
     defaultSize: { width: 250, height: 200 },
     children: [
       { template: 'Branch', isItem: true, textContent: 'Folder' },
       { template: 'TreeItem', isItem: true, textContent: 'File' },
     ],
   },
+]
 
-  // ============================================================================
-  // ZAG: SELECTION (Implemented)
-  // ============================================================================
+/**
+ * 6. MEDIA - Avatar, file upload, carousel
+ */
+export const MEDIA_COMPONENTS: ComponentItem[] = [
   {
-    id: 'zag-listbox',
-    name: 'Listbox',
-    category: 'Basic',
-    template: 'Listbox',
-    icon: 'listbox',
-    description: 'List selection (Zag)',
-    defaultSize: { width: 200, height: 150 },
-    children: [
-      { template: 'ListItem', isItem: true, textContent: 'Item 1' },
-      { template: 'ListItem', isItem: true, textContent: 'Item 2' },
-      { template: 'ListItem', isItem: true, textContent: 'Item 3' },
-    ],
-  },
-
-  // ============================================================================
-  // ZAG: DATE & TIME (Implemented)
-  // ============================================================================
-  {
-    id: 'zag-date-picker',
-    name: 'Date Picker',
-    category: 'Basic',
-    template: 'DatePicker',
-    icon: 'datePicker',
-    description: 'Calendar date picker (Zag)',
-    defaultSize: { width: 280, height: 300 },
-    children: [
-      { template: 'Control', isSlot: true },
-      { template: 'Input', isSlot: true },
-      { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true },
-    ],
-  },
-
-  // ============================================================================
-  // ZAG: MEDIA & FILES (Implemented)
-  // ============================================================================
-  {
-    id: 'zag-avatar',
+    id: 'media-avatar',
     name: 'Avatar',
-    category: 'Basic',
+    category: 'Media',
     template: 'Avatar',
     properties: 'fallback "AB"',
     icon: 'avatar',
-    description: 'User avatar (Zag)',
+    description: 'User avatar',
     defaultSize: { width: 48, height: 48 },
   },
   {
-    id: 'zag-file-upload',
+    id: 'media-file-upload',
     name: 'File Upload',
-    category: 'Basic',
+    category: 'Media',
     template: 'FileUpload',
     properties: 'multiple',
     icon: 'fileUpload',
-    description: 'File drop zone (Zag)',
+    description: 'File drop zone',
     defaultSize: { width: 300, height: 150 },
     children: [
       { template: 'Dropzone', isSlot: true },
@@ -483,31 +531,33 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-carousel',
+    id: 'media-carousel',
     name: 'Carousel',
-    category: 'Basic',
+    category: 'Media',
     template: 'Carousel',
     properties: 'loop',
     icon: 'carousel',
-    description: 'Image slideshow (Zag)',
+    description: 'Image slideshow',
     defaultSize: { width: 400, height: 250 },
     children: [
       { template: 'Slide', isItem: true, textContent: 'Slide 1' },
       { template: 'Slide', isItem: true, textContent: 'Slide 2' },
     ],
   },
+]
 
-  // ============================================================================
-  // ZAG: FEEDBACK (Implemented)
-  // ============================================================================
+/**
+ * 7. FEEDBACK - Progress indicators
+ */
+export const FEEDBACK_COMPONENTS: ComponentItem[] = [
   {
-    id: 'zag-progress',
+    id: 'feedback-progress',
     name: 'Progress',
-    category: 'Basic',
+    category: 'Feedback',
     template: 'Progress',
     properties: 'value 60',
     icon: 'progress',
-    description: 'Progress bar (Zag)',
+    description: 'Progress bar',
     defaultSize: { width: 200, height: 8 },
     children: [
       { template: 'Track', isSlot: true },
@@ -515,13 +565,13 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'zag-circular-progress',
+    id: 'feedback-circular-progress',
     name: 'Circular Progress',
-    category: 'Basic',
+    category: 'Feedback',
     template: 'CircularProgress',
     properties: 'value 75',
     icon: 'circularProgress',
-    description: 'Circular progress (Zag)',
+    description: 'Circular progress',
     defaultSize: { width: 60, height: 60 },
     children: [
       { template: 'Circle', isSlot: true },
@@ -529,4 +579,16 @@ export const BASIC_COMPONENTS: ComponentItem[] = [
       { template: 'ValueText', isSlot: true },
     ],
   },
+]
+
+/**
+ * Legacy export for backwards compatibility
+ * Combines all non-layout, non-basic components
+ */
+export const BASIC_COMPONENTS: ComponentItem[] = [
+  ...FORM_COMPONENTS,
+  ...OVERLAY_COMPONENTS,
+  ...NAVIGATION_COMPONENTS,
+  ...MEDIA_COMPONENTS,
+  ...FEEDBACK_COMPONENTS,
 ]

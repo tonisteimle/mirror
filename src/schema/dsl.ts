@@ -2314,6 +2314,9 @@ export function isPrimitive(name: string): boolean {
     }
   }
 
+  // Check compound primitives (Shell, etc.)
+  if (isCompoundPrimitive(name)) return true
+
   return false
 }
 
