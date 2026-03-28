@@ -3,9 +3,12 @@
  *
  * Provides property sets for the parser based on the DSL schema.
  * This ensures parser property recognition stays in sync with schema.
+ *
+ * IMPORTANT: All constants here are derived from dsl.ts schema.
+ * DO NOT add hardcoded values - add them to dsl.ts instead.
  */
 
-import { SCHEMA, PropertyDef } from './dsl'
+import { SCHEMA, DSL, PropertyDef } from './dsl'
 
 /**
  * Properties that START a new property - used for automatic separation.
@@ -18,21 +21,10 @@ import { SCHEMA, PropertyDef } from './dsl'
  * because they are handled separately in component body parsing.
  */
 export const PROPERTY_STARTERS = new Set<string>([
-  // From schema - properties that take values
+  // ALL from schema - properties that take values (numeric, color, or keywords)
   ...Object.values(SCHEMA)
-    .filter(prop => prop.numeric || prop.color || (prop.keywords && !prop.keywords._standalone))
+    .filter(prop => prop.numeric || prop.color || (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone))
     .flatMap(prop => [prop.name, ...prop.aliases]),
-
-  // Additional properties not in schema (content, HTML attributes, etc.)
-  'content', 'href', 'src', 'placeholder',
-  'icon-size', 'is', 'icon-color', 'ic', 'icon-weight', 'iw',
-  'animation', 'anim',
-  'x-offset', 'y-offset',
-
-  // Hover variants
-  'hover-bg', 'hover-col', 'hover-opacity', 'hover-opa',
-  'hover-scale', 'hover-bor', 'hover-border', 'hover-boc',
-  'hover-border-color', 'hover-rad', 'hover-radius',
 ])
 
 /**
@@ -40,14 +32,10 @@ export const PROPERTY_STARTERS = new Set<string>([
  * These have a _standalone keyword in the schema.
  */
 export const BOOLEAN_PROPERTIES = new Set<string>([
-  // From schema - properties with _standalone keyword
+  // ALL from schema - properties with _standalone keyword
   ...Object.values(SCHEMA)
     .filter(prop => prop.keywords?._standalone)
     .flatMap(prop => [prop.name, ...prop.aliases]),
-
-  // Additional boolean properties not in schema
-  'focusable',
-  'readonly',
 ])
 
 /**
@@ -117,3 +105,134 @@ export function getCanonicalPropertyName(nameOrAlias: string): string {
   }
   return nameOrAlias
 }
+
+// ============================================================================
+// KEYBOARD KEYS - from DSL.keys
+// ============================================================================
+
+/**
+ * Valid keyboard keys for onkeydown/onkeyup events.
+ * These are NOT inline states - they're event modifiers.
+ * Source: DSL.keys in dsl.ts
+ */
+export const KEYBOARD_KEYS = new Set<string>(DSL.keys)
+
+// ============================================================================
+// STATES - from DSL.states
+// ============================================================================
+
+/**
+ * All state names (system + custom).
+ * Source: DSL.states in dsl.ts
+ */
+export const STATE_NAMES = new Set<string>(Object.keys(DSL.states))
+
+/**
+ * System states that map to CSS pseudo-classes (:hover, :focus, etc.)
+ * Source: DSL.states where system === true
+ */
+export const SYSTEM_STATES = new Set<string>(
+  Object.entries(DSL.states)
+    .filter(([_, def]) => def.system)
+    .map(([name]) => name)
+)
+
+/**
+ * Custom states that use data-state attribute.
+ * Source: DSL.states where system !== true
+ */
+export const CUSTOM_STATES = new Set<string>(
+  Object.entries(DSL.states)
+    .filter(([_, def]) => !def.system)
+    .map(([name]) => name)
+)
+
+/**
+ * Initial states for components (open/closed, expanded/collapsed).
+ * These can be set as initial state on component definition.
+ */
+export const INITIAL_STATES = new Set<string>([
+  'open', 'closed', 'expanded', 'collapsed', 'on', 'off',
+])
+
+// ============================================================================
+// DIRECTIONAL PROPERTIES - from SCHEMA[prop].directional
+// ============================================================================
+
+/**
+ * Properties that support directional values (pad left 8, margin x 16, etc.)
+ * Source: Properties with directional config in SCHEMA
+ */
+export const DIRECTIONAL_PROPERTIES = new Set<string>(
+  Object.values(SCHEMA)
+    .filter(prop => prop.directional)
+    .flatMap(prop => [prop.name, ...prop.aliases])
+)
+
+/**
+ * All valid direction keywords across all directional properties.
+ */
+export const DIRECTION_KEYWORDS = new Set<string>(
+  Object.values(SCHEMA)
+    .filter(prop => prop.directional)
+    .flatMap(prop => prop.directional!.directions)
+)
+
+/**
+ * Get valid directions for a specific property.
+ */
+export function getDirectionsForProperty(nameOrAlias: string): string[] {
+  // Find property by name or alias
+  for (const prop of Object.values(SCHEMA)) {
+    if (prop.name === nameOrAlias || prop.aliases.includes(nameOrAlias)) {
+      return prop.directional?.directions ?? []
+    }
+  }
+  return []
+}
+
+/**
+ * Check if a value is a direction keyword for a given property.
+ */
+export function isDirectionForProperty(propertyName: string, value: string): boolean {
+  const directions = getDirectionsForProperty(propertyName)
+  return directions.includes(value)
+}
+
+// ============================================================================
+// ACTIONS - from DSL.actions
+// ============================================================================
+
+/**
+ * All action names.
+ * Source: DSL.actions in dsl.ts
+ */
+export const ACTION_NAMES = new Set<string>(Object.keys(DSL.actions))
+
+/**
+ * Actions that accept targets (highlight next, highlight prev, etc.)
+ */
+export const ACTIONS_WITH_TARGETS = new Map<string, string[]>(
+  Object.entries(DSL.actions)
+    .filter(([_, def]) => def.targets)
+    .map(([name, def]) => [name, def.targets!])
+)
+
+// ============================================================================
+// EVENTS - from DSL.events
+// ============================================================================
+
+/**
+ * All event names.
+ * Source: DSL.events in dsl.ts
+ */
+export const EVENT_NAMES = new Set<string>(Object.keys(DSL.events))
+
+/**
+ * Events that accept key modifiers (onkeydown enter:, onkeyup escape:)
+ */
+export const EVENTS_WITH_KEY = new Set<string>(
+  Object.entries(DSL.events)
+    .filter(([_, def]) => def.acceptsKey)
+    .map(([name]) => name)
+)

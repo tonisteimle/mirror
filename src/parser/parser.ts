@@ -11,6 +11,15 @@ import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
   LAYOUT_BOOLEANS,
+  KEYBOARD_KEYS,
+  STATE_NAMES,
+  SYSTEM_STATES,
+  INITIAL_STATES,
+  DIRECTIONAL_PROPERTIES,
+  DIRECTION_KEYWORDS,
+  isDirectionForProperty,
+  ACTION_NAMES,
+  EVENT_NAMES,
 } from '../schema/parser-helpers'
 import { isPrimitive } from '../schema/dsl'
 import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
@@ -30,21 +39,8 @@ const ALL_BOOLEAN_PROPERTIES = new Set([
   ...POSITION_BOOLEANS,
 ])
 
-// Keyboard keys for onkeydown/onkeyup events - these are NOT inline states
-const KEYBOARD_KEYS = new Set([
-  'escape', 'enter', 'space', 'tab', 'backspace', 'delete',
-  'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
-  'home', 'end',
-])
-
-// State names for block state parsing (hover:, focus:, etc.)
-const STATE_NAMES = new Set([
-  // System states (CSS pseudo-classes)
-  'hover', 'focus', 'active', 'disabled',
-  // Custom states (data-state attribute)
-  'selected', 'highlighted', 'expanded', 'collapsed',
-  'on', 'off', 'open', 'closed', 'filled', 'valid', 'invalid', 'loading', 'error',
-])
+// Note: KEYBOARD_KEYS and STATE_NAMES are now imported from parser-helpers.ts
+// They are derived from the schema (dsl.ts) to ensure consistency.
 
 export class Parser {
   private tokens: Token[]
@@ -1117,9 +1113,8 @@ export class Parser {
       // State block: hover: or selected:
       if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
         const stateName = this.current().value
-        // Check if this looks like a state (common state names)
-        const stateNames = new Set(['hover', 'focus', 'active', 'disabled', 'selected', 'highlighted', 'open', 'closed'])
-        if (stateNames.has(stateName)) {
+        // Check if this looks like a state (from schema)
+        if (STATE_NAMES.has(stateName)) {
           const stateToken = this.advance()
           this.advance() // colon
 
@@ -1654,21 +1649,17 @@ export class Parser {
         continue
       }
 
-      // Initial state: closed, open (sets initialState)
-      const initialStates = new Set(['closed', 'open', 'collapsed', 'expanded'])
+      // Note: INITIAL_STATES and SYSTEM_STATES are imported from parser-helpers.ts
+      // They are derived from the schema (dsl.ts) to ensure consistency.
 
       // Boolean properties (use module-level constant including position booleans)
       const booleanProperties = ALL_BOOLEAN_PROPERTIES
-
-      // System states without colon (hover, focus, active, disabled)
-      // These are recognized when followed by NEWLINE + INDENT
-      const systemStates = new Set(['hover', 'focus', 'active', 'disabled', 'filled'])
 
       if (this.check('IDENTIFIER') && !this.checkNext('COLON') && !this.checkNext('AS')) {
         const name = this.current().value
 
         // System state without colon: hover\n  bg #333
-        if (systemStates.has(name)) {
+        if (SYSTEM_STATES.has(name)) {
           // Check if followed by newline and indent (block state)
           const savedPos = this.pos
           const stateToken = this.advance()
@@ -1772,8 +1763,8 @@ export class Parser {
           }
         }
 
-        // Handle initial state (closed, open, etc.)
-        if (initialStates.has(name)) {
+        // Handle initial state (closed, open, etc.) - from schema
+        if (INITIAL_STATES.has(name)) {
           const token = this.advance()
           component.initialState = token.value
           continue
@@ -1989,12 +1980,10 @@ export class Parser {
 
   private parseInstanceBody(instance: Instance): void {
     // Boolean properties that can appear in instance body
-    const booleanProperties = new Set([
-      'focusable', 'hidden', 'visible', 'disabled', 'clip', 'scroll',
-    ])
+    // Using module-level constant (derived from schema via parser-helpers.ts)
+    const booleanProperties = ALL_BOOLEAN_PROPERTIES
 
-    // Initial states that set initialState
-    const initialStates = new Set(['closed', 'open', 'collapsed', 'expanded'])
+    // Note: INITIAL_STATES is imported from parser-helpers.ts (derived from schema)
 
     while (!this.check('DEDENT') && !this.isAtEnd()) {
       this.skipNewlines()
@@ -2082,8 +2071,8 @@ export class Parser {
       if (this.check('IDENTIFIER')) {
         const name = this.current().value
 
-        // Initial state (closed, open)
-        if (initialStates.has(name)) {
+        // Initial state (closed, open) - from schema
+        if (INITIAL_STATES.has(name)) {
           const token = this.advance()
           instance.initialState = token.value
           continue
@@ -2494,9 +2483,10 @@ export class Parser {
         // Exception: directional keywords (x, y, left, right, top, bottom, etc.) after
         // spacing/border properties should be values, not new properties
         // e.g., "pad x 20" → pad: [x, 20], not pad + x: [20]
+        // Uses schema-derived direction checking from parser-helpers.ts
         const isDirectionValue = (
-          ['x', 'y', 'left', 'right', 'top', 'bottom', 't', 'b', 'l', 'r', 'hor', 'ver', 'horizontal', 'vertical', 'auto'].includes(identValue) &&
-          ['pad', 'padding', 'p', 'margin', 'm', 'bor', 'border'].includes(name.value)
+          DIRECTIONAL_PROPERTIES.has(name.value) &&
+          isDirectionForProperty(name.value, identValue)
         )
         if (PROPERTY_STARTERS.has(identValue) && !isDirectionValue) {
           break
