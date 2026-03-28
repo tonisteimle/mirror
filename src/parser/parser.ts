@@ -6,7 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -15,14 +15,19 @@ import {
   STATE_NAMES,
   SYSTEM_STATES,
   INITIAL_STATES,
+  STATE_MODIFIERS,
   DIRECTIONAL_PROPERTIES,
   DIRECTION_KEYWORDS,
   isDirectionForProperty,
   ACTION_NAMES,
   EVENT_NAMES,
+  ANIMATION_PRESETS,
+  EASING_FUNCTIONS,
+  parseDuration,
 } from '../schema/parser-helpers'
 import { isPrimitive } from '../schema/dsl'
 import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
+import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitives'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -667,6 +672,9 @@ export class Parser {
       return this.parseZagComponent(name)
     }
 
+    // Check if this is a Compound primitive (e.g., Shell)
+    const isCompound = isCompoundPrimitive(name.value)
+
     const instance: Instance = {
       type: 'Instance',
       component: name.value,
@@ -677,6 +685,7 @@ export class Parser {
       events: [],
       line: name.line,
       column: name.column,
+      ...(isCompound && { isCompound: true, compoundType: name.value }),
     }
 
     // Named instance: Component named instanceName
@@ -1767,8 +1776,8 @@ export class Parser {
         }
 
         // Handle initial state (closed, open, etc.) - from schema
-        // Only treat as initial state if NOT followed by colon (state block)
-        if (INITIAL_STATES.has(name) && !this.checkNext('COLON')) {
+        // Only treat as initial state if NOT part of a state block
+        if (INITIAL_STATES.has(name) && !this.isStateBlockStart()) {
           const token = this.advance()
           component.initialState = token.value
           continue
@@ -2075,16 +2084,26 @@ export class Parser {
       if (this.check('IDENTIFIER')) {
         const name = this.current().value
 
+        // Event block: onclick: or inline event: onclick action
+        // Must check BEFORE state block handling
+        if (EVENT_NAMES.has(name)) {
+          if (!instance.events) instance.events = []
+          const event = this.parseEvent()
+          if (event) instance.events.push(event)
+          continue
+        }
+
         // Initial state (closed, open) - from schema
-        // Only treat as initial state if NOT followed by colon (state block)
-        if (INITIAL_STATES.has(name) && !this.checkNext('COLON')) {
+        // Only treat as initial state if NOT part of a state block
+        if (INITIAL_STATES.has(name) && !this.isStateBlockStart()) {
           const token = this.advance()
           instance.initialState = token.value
           continue
         }
 
         // Boolean property (focusable, etc.)
-        if (booleanProperties.has(name)) {
+        // Skip if it looks like a state block (visible when X open:)
+        if (booleanProperties.has(name) && !this.isStateBlockStart()) {
           const token = this.advance()
           instance.properties.push({
             type: 'Property',
@@ -2102,14 +2121,85 @@ export class Parser {
           continue
         }
 
-        // State block: hover: or selected:
-        if (STATE_NAMES.has(name) && this.checkNext('COLON')) {
+        // State block: hover: or selected: or selected onclick: or visible when Menu open:
+        // Allow ANY identifier as state name if followed by state block pattern (when, modifier, trigger)
+        if (this.isStateBlockStart()) {
           const stateToken = this.advance()
+
+          let modifier: 'exclusive' | 'toggle' | 'initial' | undefined
+          let trigger: string | undefined
+          let when: StateDependency | undefined
+
+          // Check for modifier (exclusive, toggle, initial)
+          if (this.check('IDENTIFIER') && STATE_MODIFIERS.has(this.current().value)) {
+            modifier = this.advance().value as 'exclusive' | 'toggle' | 'initial'
+          }
+
+          // Check for 'when' dependency
+          if (this.check('IDENTIFIER') && this.current().value === 'when') {
+            this.advance() // consume 'when'
+            when = this.parseWhenClause()
+          }
+
+          // Check for trigger (event name like onclick, onhover, onkeydown)
+          if (this.check('IDENTIFIER') && EVENT_NAMES.has(this.current().value)) {
+            const eventToken = this.advance()
+            trigger = eventToken.value
+
+            // Check for key (for onkeydown, onkeyup)
+            if ((trigger === 'onkeydown' || trigger === 'onkeyup') && this.check('IDENTIFIER')) {
+              const keyToken = this.current()
+              if (KEYBOARD_KEYS.has(keyToken.value)) {
+                trigger += ' ' + this.advance().value
+              }
+            }
+          }
+
+          // Parse animation config BEFORE colon
+          // Syntax: selected onclick 0.2s ease-out:
+          let animation: StateAnimation | undefined
+
+          // Check for duration (e.g., 0.2s, 200ms)
+          if (this.check('NUMBER') && !this.check('COLON')) {
+            const numToken = this.current()
+            const duration = parseDuration(numToken.value)
+            if (duration !== undefined) {
+              this.advance()
+              animation = { duration }
+
+              // Check for easing after duration (e.g., ease-out)
+              if (this.check('IDENTIFIER') && !this.check('COLON')) {
+                const easingToken = this.current()
+                if (EASING_FUNCTIONS.has(easingToken.value)) {
+                  animation.easing = this.advance().value
+                }
+              }
+            }
+          }
+
           this.advance() // consume colon
+
+          // Check for animation preset AFTER colon on same line
+          // Syntax: selected onclick: bounce
+          if (this.check('IDENTIFIER') && !this.check('NEWLINE') && !this.check('INDENT')) {
+            const presetToken = this.current()
+            if (ANIMATION_PRESETS.has(presetToken.value)) {
+              const preset = this.advance().value
+              if (!animation) {
+                animation = { preset }
+              } else {
+                animation.preset = preset
+              }
+            }
+          }
 
           const state: State = {
             type: 'State',
             name: stateToken.value,
+            modifier,
+            trigger,
+            when,
+            animation,
             properties: [],
             childOverrides: [],
             line: stateToken.line,
@@ -2130,6 +2220,44 @@ export class Parser {
               // Parse properties on each line
               if (this.check('IDENTIFIER')) {
                 const propName = this.current().value
+
+                // Check for enter:/exit: animation pseudo-properties
+                if ((propName === 'enter' || propName === 'exit') && this.checkNext('COLON')) {
+                  const animType = this.advance().value as 'enter' | 'exit'
+                  this.advance() // consume colon
+
+                  // Parse animation value: preset, duration, easing
+                  const anim: StateAnimation = {}
+
+                  // Check for preset (e.g., slide-in, fade-out)
+                  if (this.check('IDENTIFIER')) {
+                    const token = this.current()
+                    if (ANIMATION_PRESETS.has(token.value)) {
+                      anim.preset = this.advance().value
+                    }
+                  }
+
+                  // Check for duration (e.g., 0.2s)
+                  if (this.check('NUMBER')) {
+                    const duration = parseDuration(this.current().value)
+                    if (duration !== undefined) {
+                      this.advance()
+                      anim.duration = duration
+                    }
+                  }
+
+                  // Check for easing (e.g., ease-out)
+                  if (this.check('IDENTIFIER')) {
+                    const token = this.current()
+                    if (EASING_FUNCTIONS.has(token.value)) {
+                      anim.easing = this.advance().value
+                    }
+                  }
+
+                  state[animType] = anim
+                  continue
+                }
+
                 // Check for child overrides (capitalized names)
                 if (propName[0] === propName[0].toUpperCase()) {
                   // Child override: ChildName property value
@@ -2589,13 +2717,37 @@ export class Parser {
       }
     }
 
-    // Parse actions
+    // Parse inline actions
     while (!this.check('NEWLINE') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.isAtEnd()) {
       if (this.check('IDENTIFIER')) {
         const action = this.parseAction()
         if (action) event.actions.push(action)
       } else {
         break
+      }
+    }
+
+    // Parse block actions (multi-line)
+    // onclick:
+    //   Menu open
+    //   Backdrop visible
+    this.skipNewlines()
+    if (this.check('INDENT')) {
+      this.advance() // consume INDENT
+      while (!this.check('DEDENT') && !this.isAtEnd()) {
+        this.skipNewlines()
+        if (this.check('DEDENT')) break
+
+        // Parse Element state on each line
+        if (this.check('IDENTIFIER')) {
+          const action = this.parseAction()
+          if (action) event.actions.push(action)
+        }
+
+        this.skipNewlines()
+      }
+      if (this.check('DEDENT')) {
+        this.advance() // consume DEDENT
       }
     }
 
@@ -2949,6 +3101,139 @@ export class Parser {
   private checkNext(type: TokenType): boolean {
     if (this.pos + 1 >= this.tokens.length) return false
     return this.tokens[this.pos + 1].type === type
+  }
+
+  /**
+   * Parse a 'when' clause for state dependencies
+   * Pattern: Element state [and/or Element state]*
+   * Example: Menu open
+   * Example: Menu open or Sidebar open
+   * Example: Form valid and User loggedIn
+   */
+  private parseWhenClause(): StateDependency {
+    // Parse first dependency
+    const target = this.advance().value // Element name
+    const state = this.advance().value  // state name
+
+    const dependency: StateDependency = {
+      target,
+      state,
+    }
+
+    // Check for chained conditions (and/or)
+    // Note: 'and'/'or' are tokenized as AND/OR types, not IDENTIFIER
+    if (this.check('AND') || this.check('OR')) {
+      const condToken = this.advance()
+      dependency.condition = condToken.value as 'and' | 'or'
+      dependency.next = this.parseWhenClause() // recursive parse
+    }
+
+    return dependency
+  }
+
+  /**
+   * Look ahead to determine if current STATE_NAME starts a state block.
+   * Valid patterns:
+   *   selected:                              → +1 is COLON
+   *   selected onclick:                      → +1 is event, +2 is COLON
+   *   selected exclusive onclick:            → +1 is modifier, +2 is event, +3 is COLON
+   *   selected onkeydown escape:             → +1 is event, +2 is key, +3 is COLON
+   *   selected toggle onkeydown escape:      → +1 is modifier, +2 is event, +3 is key, +4 is COLON
+   *   visible when Menu open:                → +1 is 'when', +2 is Element, +3 is state, +4 is COLON
+   *   visible when Menu open or Sidebar open: → with conditions
+   */
+  private isStateBlockStart(): boolean {
+    let offset = 1
+
+    // Check for modifier (exclusive, toggle, initial)
+    const token1 = this.peekAt(offset)
+    if (token1?.type === 'COLON') return true
+    if (token1?.type === 'IDENTIFIER' && STATE_MODIFIERS.has(token1.value)) {
+      offset++
+    }
+
+    // Check for 'when' keyword (dependency pattern)
+    const tokenWhen = this.peekAt(offset)
+    if (tokenWhen?.type === 'IDENTIFIER' && tokenWhen.value === 'when') {
+      // Skip through the when clause to find the colon
+      // Pattern: when Element state [and/or Element state]* :
+      offset++ // skip 'when'
+
+      // Must have at least one Element + state pair
+      const targetToken = this.peekAt(offset)
+      if (targetToken?.type !== 'IDENTIFIER') return false
+      offset++ // skip Element name
+
+      const stateToken = this.peekAt(offset)
+      if (stateToken?.type !== 'IDENTIFIER') return false
+      offset++ // skip state name
+
+      // Check for additional conditions (and/or)
+      while (true) {
+        const condToken = this.peekAt(offset)
+        if (condToken?.type === 'COLON') return true
+        // Note: 'and'/'or' are tokenized as AND/OR types, not IDENTIFIER
+        if (condToken?.type === 'AND' || condToken?.type === 'OR') {
+          offset++ // skip and/or
+          offset++ // skip Element name
+          offset++ // skip state name
+        } else {
+          break
+        }
+      }
+
+      // Check for animation duration after when clause
+      // Syntax: visible when Menu open 0.3s:
+      const tokenAfterWhen = this.peekAt(offset)
+      if (tokenAfterWhen?.type === 'NUMBER') {
+        const val = tokenAfterWhen.value
+        if (val.endsWith('s') || val.endsWith('ms')) {
+          offset++
+          // Check for easing
+          const easingToken = this.peekAt(offset)
+          if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
+            offset++
+          }
+        }
+      }
+
+      const finalToken = this.peekAt(offset)
+      return finalToken?.type === 'COLON'
+    }
+
+    // Check for event name (onclick, onhover, onkeydown, etc.)
+    const token2 = this.peekAt(offset)
+    if (token2?.type === 'COLON') return true
+    if (token2?.type === 'IDENTIFIER' && EVENT_NAMES.has(token2.value)) {
+      offset++
+      // Check for keyboard key (for onkeydown, onkeyup)
+      if (token2.value === 'onkeydown' || token2.value === 'onkeyup') {
+        const token3 = this.peekAt(offset)
+        if (token3?.type === 'IDENTIFIER' && KEYBOARD_KEYS.has(token3.value)) {
+          offset++
+        }
+      }
+    }
+
+    // Check for animation config (duration and/or easing) after trigger
+    // Syntax: selected onclick 0.2s ease-out:
+    const tokenAfterTrigger = this.peekAt(offset)
+    if (tokenAfterTrigger?.type === 'NUMBER') {
+      // Duration token (e.g., 0.2s, 200ms)
+      const val = tokenAfterTrigger.value
+      if (val.endsWith('s') || val.endsWith('ms')) {
+        offset++
+        // Check for easing after duration
+        const easingToken = this.peekAt(offset)
+        if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
+          offset++
+        }
+      }
+    }
+
+    // Final check: must end with COLON
+    const finalToken = this.peekAt(offset)
+    return finalToken?.type === 'COLON'
   }
 
   private checkAt(offset: number, type: TokenType): boolean {

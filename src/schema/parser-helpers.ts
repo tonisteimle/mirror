@@ -49,7 +49,7 @@ export const LAYOUT_BOOLEANS = new Set<string>([
   // Core layout booleans
   'horizontal', 'hor', 'vertical', 'ver',
   'center', 'cen',
-  'spread', 'wrap', 'stacked',
+  'spread', 'wrap', 'stacked', 'dense',
   'pos', 'positioned',
 
   // Position
@@ -155,6 +155,16 @@ export const INITIAL_STATES = new Set<string>([
   'open', 'closed', 'expanded', 'collapsed', 'on', 'off',
 ])
 
+/**
+ * State modifiers for the interaction model.
+ * - exclusive: only one element in group can have this state
+ * - toggle: same trigger toggles state on/off
+ * - initial: explicitly mark as initial state
+ */
+export const STATE_MODIFIERS = new Set<string>([
+  'exclusive', 'toggle', 'initial',
+])
+
 // ============================================================================
 // DIRECTIONAL PROPERTIES - from SCHEMA[prop].directional
 // ============================================================================
@@ -236,3 +246,37 @@ export const EVENTS_WITH_KEY = new Set<string>(
     .filter(([_, def]) => def.acceptsKey)
     .map(([name]) => name)
 )
+
+// ============================================================================
+// ANIMATIONS - from DSL.animationPresets and DSL.easingFunctions
+// ============================================================================
+
+/**
+ * Animation presets for state transitions.
+ * Source: DSL.animationPresets in dsl.ts
+ */
+export const ANIMATION_PRESETS = new Set<string>(DSL.animationPresets)
+
+/**
+ * Easing functions for animations.
+ * Source: DSL.easingFunctions in dsl.ts
+ */
+export const EASING_FUNCTIONS = new Set<string>(DSL.easingFunctions)
+
+/**
+ * Parse duration string (e.g., "0.2s", "200ms") to seconds.
+ * Returns undefined if not a valid duration.
+ */
+export function parseDuration(value: string): number | undefined {
+  // Check for seconds format: 0.2s, 1s, .5s
+  const secondsMatch = value.match(/^(\d*\.?\d+)s$/)
+  if (secondsMatch) {
+    return parseFloat(secondsMatch[1])
+  }
+  // Check for milliseconds format: 200ms, 1000ms
+  const msMatch = value.match(/^(\d+)ms$/)
+  if (msMatch) {
+    return parseInt(msMatch[1], 10) / 1000
+  }
+  return undefined
+}

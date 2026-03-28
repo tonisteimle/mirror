@@ -10,6 +10,7 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 
 import type {
   DragSource,
@@ -573,10 +574,56 @@ export class DragDropSystem implements IDragDropSystem {
         type: 'canvas' as const,
         nodeId,
       }),
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        setCustomNativeDragPreview({
+          nativeSetDragImage,
+          render: ({ container }) => {
+            this.renderDragPreview(container, element)
+          },
+        })
+      },
     })
 
     this.cleanupFns.push(cleanup)
     return cleanup
+  }
+
+  /**
+   * Render a scaled drag preview for canvas elements.
+   * Limits the preview to a maximum size for better UX with large/full-width elements.
+   */
+  private renderDragPreview(container: HTMLElement, element: HTMLElement): void {
+    const MAX_WIDTH = 200
+    const MAX_HEIGHT = 150
+
+    const rect = element.getBoundingClientRect()
+    const scaleX = rect.width > MAX_WIDTH ? MAX_WIDTH / rect.width : 1
+    const scaleY = rect.height > MAX_HEIGHT ? MAX_HEIGHT / rect.height : 1
+    const scale = Math.min(scaleX, scaleY)
+
+    // Clone the element for the preview
+    const clone = element.cloneNode(true) as HTMLElement
+
+    // Apply scaled dimensions and styling
+    Object.assign(clone.style, {
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      transform: `scale(${scale})`,
+      transformOrigin: 'top left',
+      opacity: '0.85',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      position: 'relative',
+    })
+
+    // Set container size to scaled dimensions
+    Object.assign(container.style, {
+      width: `${rect.width * scale}px`,
+      height: `${rect.height * scale}px`,
+    })
+
+    container.appendChild(clone)
   }
 
   /**
@@ -656,6 +703,14 @@ export class DragDropSystem implements IDragDropSystem {
         type: 'canvas' as const,
         nodeId,
       }),
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        setCustomNativeDragPreview({
+          nativeSetDragImage,
+          render: ({ container }) => {
+            this.renderDragPreview(container, element)
+          },
+        })
+      },
     })
 
     this.cleanupFns.push(cleanup)

@@ -109,6 +109,12 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
   'm': 'margin',
   'gap': 'gap',
   'g': 'gap',
+  'gap-x': 'column-gap',
+  'gx': 'column-gap',
+  'gap-y': 'row-gap',
+  'gy': 'row-gap',
+  'row-height': 'grid-auto-rows',
+  'rh': 'grid-auto-rows',
 
   // Colors
   'background': 'background',
@@ -147,6 +153,10 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
   'scroll-hor': 'overflow-x',
   'scroll-both': 'overflow',
   'clip': 'overflow',
+
+  // Animation
+  'animation': 'animation',
+  'anim': 'animation',
 }
 
 /**

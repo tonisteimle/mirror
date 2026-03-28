@@ -36,6 +36,22 @@ import {
   type ZagSlotDef,
 } from './zag-primitives'
 
+// Import Compound primitives
+import {
+  COMPOUND_PRIMITIVES,
+  COMPOUND_SLOT_MAPPINGS,
+  isCompoundPrimitive,
+  getCompoundPrimitive,
+  getCompoundSlotMappings,
+  getCompoundSlotDef,
+  isCompoundSlot,
+  getAllCompoundSlots,
+  getParentSlot,
+  getAllCompoundPrimitives,
+  type CompoundPrimitiveDef,
+  type CompoundSlotDef,
+} from './compound-primitives'
+
 // Re-export Zag primitives
 export {
   ZAG_PRIMITIVES,
@@ -49,6 +65,22 @@ export {
   getStateSelector,
   type ZagPrimitiveDef,
   type ZagSlotDef,
+}
+
+// Re-export Compound primitives
+export {
+  COMPOUND_PRIMITIVES,
+  COMPOUND_SLOT_MAPPINGS,
+  isCompoundPrimitive,
+  getCompoundPrimitive,
+  getCompoundSlotMappings,
+  getCompoundSlotDef,
+  isCompoundSlot,
+  getAllCompoundSlots,
+  getParentSlot,
+  getAllCompoundPrimitives,
+  type CompoundPrimitiveDef,
+  type CompoundSlotDef,
 }
 
 // ============================================================================
@@ -148,7 +180,7 @@ export const DSL = {
   keywords: {
     reserved: [
       'as', 'extends', 'named', 'each', 'in', 'if', 'else', 'then', 'where',
-      'and', 'or', 'not', 'data', 'keys', 'selection', 'route', 'animation',
+      'and', 'or', 'not', 'data', 'keys', 'selection', 'route',
     ] as const,
   },
 
@@ -269,6 +301,55 @@ export const DSL = {
     'escape', 'enter', 'space', 'tab', 'backspace', 'delete',
     'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
     'home', 'end',
+  ] as const,
+
+  // ---------------------------------------------------------------------------
+  // State Block Syntax
+  // ---------------------------------------------------------------------------
+  // State blocks define visual states with optional triggers and animations.
+  //
+  // SYNTAX:
+  //   state [modifier] [trigger] [animation]:
+  //     properties
+  //     [enter: animation]
+  //     [exit: animation]
+  //
+  // EXAMPLES:
+  //   selected onclick:                    // simple trigger
+  //   selected exclusive onclick:          // with modifier
+  //   selected onclick: bounce             // with preset animation
+  //   selected onclick 0.2s:               // with auto-transition
+  //   selected onclick 0.3s ease-out:      // with duration + easing
+  //   visible when Menu open 0.2s:         // when dependency + animation
+  //
+  // ENTER/EXIT:
+  //   open onclick: scale-in               // enter = scale-in (implicit)
+  //     exit: fade-out                     // exit = fade-out (explicit)
+  //     visible
+  //
+  stateModifiers: {
+    exclusive: { description: 'Only one element in group can have this state' },
+    toggle: { description: 'Same trigger toggles state on/off' },
+    initial: { description: 'Mark as initial state' },
+  } as Record<string, { description: string }>,
+
+  // ---------------------------------------------------------------------------
+  // Animation Presets (for state transitions)
+  // ---------------------------------------------------------------------------
+  animationPresets: [
+    'fade-in', 'fade-out',
+    'slide-in', 'slide-out',
+    'scale-in', 'scale-out',
+    'bounce', 'pulse', 'shake', 'spin',
+  ] as const,
+
+  // ---------------------------------------------------------------------------
+  // Easing Functions
+  // ---------------------------------------------------------------------------
+  easingFunctions: [
+    'linear',
+    'ease', 'ease-in', 'ease-out', 'ease-in-out',
+    'spring', 'bounce',
   ] as const,
 
   // ---------------------------------------------------------------------------
@@ -809,6 +890,69 @@ export const SCHEMA: Record<string, PropertyDef> = {
       ],
       example: 'Box grid 3',
     },
+  },
+
+  dense: {
+    name: 'dense',
+    aliases: [],
+    category: 'layout',
+    description: 'Dense packing mode for CSS Grid',
+
+    keywords: {
+      _standalone: {
+        description: 'Enable dense auto-placement in grid',
+        css: [],  // Handled in layout context, not standalone CSS
+        example: 'Box grid 3 dense',
+      },
+    },
+  },
+
+  'gap-x': {
+    name: 'gap-x',
+    aliases: ['gx'],
+    category: 'layout',
+    description: 'Horizontal gap between grid/flex items (column-gap)',
+
+    numeric: {
+      description: 'Column gap in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'column-gap', value: `${n}px` }],
+      example: 'Box grid 3 gap-x 16',
+    },
+
+    token: true,
+  },
+
+  'gap-y': {
+    name: 'gap-y',
+    aliases: ['gy'],
+    category: 'layout',
+    description: 'Vertical gap between grid/flex items (row-gap)',
+
+    numeric: {
+      description: 'Row gap in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'row-gap', value: `${n}px` }],
+      example: 'Box grid 3 gap-y 24',
+    },
+
+    token: true,
+  },
+
+  'row-height': {
+    name: 'row-height',
+    aliases: ['rh'],
+    category: 'layout',
+    description: 'Height of auto-generated grid rows',
+
+    numeric: {
+      description: 'Row height in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'grid-auto-rows', value: `${n}px` }],
+      example: 'Box grid 3 row-height 100',
+    },
+
+    token: true,
   },
 
   grow: {

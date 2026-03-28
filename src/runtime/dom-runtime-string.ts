@@ -291,6 +291,80 @@ const _runtime = {
     this.setState(el, next)
   },
 
+  // State Machine Functions (Interaction Model)
+  transitionTo(el, stateName, animation) {
+    if (!el?._stateMachine) return
+    const sm = el._stateMachine
+    const prevState = sm.current
+    const newState = sm.states[stateName]
+    if (!newState) return
+    if (prevState === stateName) return
+    sm.current = stateName
+    el.dataset.state = stateName
+    Object.assign(el.style, newState.styles)
+    this.updateVisibility(el)
+    // Note: animation parameter accepted for API compatibility but not executed in string runtime
+  },
+
+  exclusiveTransition(el, stateName, animation) {
+    if (!el?._stateMachine) return
+    const parent = el.parentElement
+    if (parent) {
+      const siblings = parent.querySelectorAll('[data-mirror-id]')
+      siblings.forEach(sibling => {
+        if (sibling !== el && sibling._stateMachine) {
+          const sibSm = sibling._stateMachine
+          if (sibSm.current === stateName) {
+            this.transitionTo(sibling, sibSm.initial)
+          }
+        }
+      })
+    }
+    this.transitionTo(el, stateName)
+  },
+
+  watchStates(el, targetState, initialState, condition, dependencies) {
+    if (!el) return
+    const root = el.closest('[data-mirror-root]') || document.body
+    const targetElements = new Map()
+    for (const dep of dependencies) {
+      const targetEl = root.querySelector(\`[data-name="\${dep.target}"]\`)
+      if (targetEl) targetElements.set(dep.target, targetEl)
+    }
+    const checkCondition = () => {
+      if (condition === 'and') {
+        return dependencies.every(dep => {
+          const targetEl = targetElements.get(dep.target)
+          return targetEl?.dataset.state === dep.state
+        })
+      } else {
+        return dependencies.some(dep => {
+          const targetEl = targetElements.get(dep.target)
+          return targetEl?.dataset.state === dep.state
+        })
+      }
+    }
+    const updateState = () => {
+      if (checkCondition()) {
+        this.transitionTo(el, targetState)
+      } else {
+        this.transitionTo(el, initialState)
+      }
+    }
+    updateState()
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'data-state') {
+          updateState()
+          break
+        }
+      }
+    })
+    for (const targetEl of targetElements.values()) {
+      observer.observe(targetEl, { attributes: true, attributeFilter: ['data-state'] })
+    }
+  },
+
   updateVisibility(el) {
     if (!el) return
     const state = el.dataset.state

@@ -100,6 +100,14 @@
 | ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
 | Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
 
+### Compound Primitives (Layout Components)
+
+> Pre-built layout components for rapid prototyping. Fully customizable.
+
+| Component | Slots | Nested Slots | Description |
+|-----------|-------|--------------|-------------|
+| Shell | Header, Sidebar, Main, Footer | Logo, Nav, Actions, NavItem +4 | App shell with header, sidebar, and main content area |
+
 ### Properties
 
 | Property | Aliases | Werte |
@@ -129,6 +137,10 @@
 | pos | positioned, position | *(standalone)* |
 | stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
+| dense | - | *(standalone)* |
+| gap-x | gx | <number>, $token |
+| gap-y | gy | <number>, $token |
+| row-height | rh | <number>, $token |
 | grow | - | *(standalone)* |
 | shrink | - | *(standalone)* |
 | align | - | top, bottom, left, right, center |
@@ -209,6 +221,20 @@
 | hover-border | hover-bor | <number> |
 | hover-border-color | hover-boc | <color>, $token |
 | hover-radius | hover-rad | <number> |
+
+### Zag Behavior Properties
+
+> Component-specific behavior properties for Zag components.
+
+*50 components with 195 behavior properties total.*
+
+**Boolean:** addOnBlur, addOnPaste, allowCustomValue, allowDrop, allowDuplicate, allowHalf, allowMouseWheel, autoFocus, autoStart, autoplay, checked, clampValueOnBlur, clearable, closeOnClick, closeOnEscape, closeOnOutsideClick, closeOnScroll, closeOnSelect, collapsible, countdown, deselectable, directory, disabled, draggable, fixedWeeks, indeterminate, interactive, invalid, lazyMount, linear, lockAspectRatio, loop, loopFocus, mask, modal, multiple, open, openOnChange, otp, pauseOnHover, preventInteraction, preventScroll, readOnly, required, resizable, restoreFocus, searchable, selectOnFocus, trapFocus, typeahead, unmountOnExit, visible
+
+**Enum:** activationMode, encoding, errorCorrection, orientation, origin, placement, positioning, selectionMode, submitMode
+
+**Number:** aspectRatio, autoplayInterval, closeDelay, count, duration, gap, interval, length, max, maxFiles, maxTags, maxZoom, min, minStepsBetweenThumbs, minZoom, openDelay, pageSize, scrollHideDelay, siblingCount, slidesPerView, speed, spotlightOffset, spotlightRadius, startOfWeek, step, timeout
+
+**String:** label, locale, name, placeholder
 
 ### Events
 

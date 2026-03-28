@@ -14,6 +14,8 @@ import * as path from 'path'
 import { fileURLToPath } from 'url'
 import { DSL, SCHEMA, type PropertyDef } from '../src/schema/dsl'
 import { ZAG_PRIMITIVES } from '../src/schema/zag-primitives'
+import { ZAG_PROP_METADATA, type ZagPropMeta } from '../src/schema/zag-prop-metadata'
+import { COMPOUND_PRIMITIVES } from '../src/schema/compound-primitives'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -70,6 +72,35 @@ function generateZagPrimitivesTable(): string {
 
       lines.push(`| ${compName} | ${def.machine} | ${slotPreview}${slotCount} | ${def.description || ''} |`)
     }
+  }
+
+  return lines.join('\n')
+}
+
+function generateCompoundPrimitivesTable(): string {
+  const lines = [
+    '### Compound Primitives (Layout Components)',
+    '',
+    '> Pre-built layout components for rapid prototyping. Fully customizable.',
+    '',
+    '| Component | Slots | Nested Slots | Description |',
+    '|-----------|-------|--------------|-------------|'
+  ]
+
+  for (const [name, def] of Object.entries(COMPOUND_PRIMITIVES)) {
+    const slots = def.slots.join(', ')
+
+    // Collect all nested slots
+    const nestedSlots: string[] = []
+    if (def.nestedSlots) {
+      for (const children of Object.values(def.nestedSlots)) {
+        nestedSlots.push(...children)
+      }
+    }
+    const nestedPreview = [...new Set(nestedSlots)].slice(0, 4).join(', ')
+    const nestedCount = nestedSlots.length > 4 ? ` +${nestedSlots.length - 4}` : ''
+
+    lines.push(`| ${name} | ${slots} | ${nestedPreview}${nestedCount} | ${def.description || ''} |`)
   }
 
   return lines.join('\n')
@@ -162,6 +193,58 @@ function generateKeysSection(): string {
   ].join('\n')
 }
 
+function generateZagPropertiesSection(): string {
+  const lines = [
+    '### Zag Behavior Properties',
+    '',
+    '> Component-specific behavior properties for Zag components.',
+    '',
+  ]
+
+  // Count total properties
+  let totalProps = 0
+  for (const props of Object.values(ZAG_PROP_METADATA)) {
+    totalProps += Object.keys(props).length
+  }
+  lines.push(`*${Object.keys(ZAG_PROP_METADATA).length} components with ${totalProps} behavior properties total.*`)
+  lines.push('')
+
+  // Generate property summary by type
+  const booleanProps = new Set<string>()
+  const enumProps = new Set<string>()
+  const numericProps = new Set<string>()
+  const stringProps = new Set<string>()
+
+  for (const [component, props] of Object.entries(ZAG_PROP_METADATA)) {
+    for (const [propName, meta] of Object.entries(props)) {
+      switch (meta.type) {
+        case 'boolean':
+          booleanProps.add(propName)
+          break
+        case 'enum':
+          enumProps.add(propName)
+          break
+        case 'number':
+          numericProps.add(propName)
+          break
+        case 'string':
+          stringProps.add(propName)
+          break
+      }
+    }
+  }
+
+  lines.push('**Boolean:** ' + Array.from(booleanProps).sort().join(', '))
+  lines.push('')
+  lines.push('**Enum:** ' + Array.from(enumProps).sort().join(', '))
+  lines.push('')
+  lines.push('**Number:** ' + Array.from(numericProps).sort().join(', '))
+  lines.push('')
+  lines.push('**String:** ' + Array.from(stringProps).sort().join(', '))
+
+  return lines.join('\n')
+}
+
 function generateFullReference(): string {
   return [
     '## DSL Reference (auto-generated)',
@@ -170,7 +253,11 @@ function generateFullReference(): string {
     '',
     generateZagPrimitivesTable(),
     '',
+    generateCompoundPrimitivesTable(),
+    '',
     generatePropertiesTable(),
+    '',
+    generateZagPropertiesSection(),
     '',
     generateEventsTable(),
     '',
@@ -257,6 +344,7 @@ function updateGeneratedDocs(content: string): boolean {
 function printStats(): void {
   const primitiveCount = Object.keys(DSL.primitives).length
   const zagCount = Object.keys(ZAG_PRIMITIVES).length
+  const compoundCount = Object.keys(COMPOUND_PRIMITIVES).length
   const propertyCount = Object.keys(SCHEMA).length
   const aliasCount = Object.values(SCHEMA).reduce((sum, p) => sum + p.aliases.length, 0)
   const eventCount = Object.keys(DSL.events).length
@@ -264,15 +352,24 @@ function printStats(): void {
   const stateCount = Object.keys(DSL.states).length
   const keyCount = DSL.keys.length
 
+  // Zag behavior properties
+  const zagComponentsWithProps = Object.keys(ZAG_PROP_METADATA).length
+  let zagPropCount = 0
+  for (const props of Object.values(ZAG_PROP_METADATA)) {
+    zagPropCount += Object.keys(props).length
+  }
+
   console.log('')
   console.log('Schema Statistics:')
-  console.log(`  Primitives:    ${primitiveCount}`)
-  console.log(`  Zag Components: ${zagCount}`)
-  console.log(`  Properties:    ${propertyCount} (+ ${aliasCount} aliases)`)
-  console.log(`  Events:        ${eventCount}`)
-  console.log(`  Actions:       ${actionCount}`)
-  console.log(`  States:        ${stateCount}`)
-  console.log(`  Keys:          ${keyCount}`)
+  console.log(`  Primitives:      ${primitiveCount}`)
+  console.log(`  Zag Components:  ${zagCount}`)
+  console.log(`  Compound:        ${compoundCount}`)
+  console.log(`  CSS Properties:  ${propertyCount} (+ ${aliasCount} aliases)`)
+  console.log(`  Zag Properties:  ${zagPropCount} (across ${zagComponentsWithProps} components)`)
+  console.log(`  Events:          ${eventCount}`)
+  console.log(`  Actions:         ${actionCount}`)
+  console.log(`  States:          ${stateCount}`)
+  console.log(`  Keys:            ${keyCount}`)
   console.log('')
 }
 

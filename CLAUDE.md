@@ -226,6 +226,14 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
 | Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
 
+### Compound Primitives (Layout Components)
+
+> Pre-built layout components for rapid prototyping. Fully customizable.
+
+| Component | Slots | Nested Slots | Description |
+|-----------|-------|--------------|-------------|
+| Shell | Header, Sidebar, Main, Footer | Logo, Nav, Actions, NavItem +4 | App shell with header, sidebar, and main content area |
+
 ### Properties
 
 | Property | Aliases | Werte |
@@ -255,6 +263,10 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | pos | positioned, position | *(standalone)* |
 | stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
+| dense | - | *(standalone)* |
+| gap-x | gx | <number>, $token |
+| gap-y | gy | <number>, $token |
+| row-height | rh | <number>, $token |
 | grow | - | *(standalone)* |
 | shrink | - | *(standalone)* |
 | align | - | top, bottom, left, right, center |

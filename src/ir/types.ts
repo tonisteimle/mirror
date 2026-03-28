@@ -66,6 +66,7 @@ export interface IRNode {
   selection?: string             // Selection binding: "$selected"
   route?: string                 // Navigation target: "Home"
   navContainer?: string          // ID of parent Nav container (for selected sync)
+  stateMachine?: IRStateMachine  // State machine configuration (interaction model)
   sourcePosition?: SourcePosition              // Source position for bidirectional editing
   propertySourceMaps?: PropertySourceMap[]     // Per-property source positions
   isDefinition?: boolean                       // True if this is a component definition (not instance)
@@ -99,6 +100,86 @@ export interface IRAction {
 export interface IREventModifier {
   type: 'debounce' | 'delay'
   value: number
+}
+
+// ============================================================================
+// State Machine IR Types (Interaction Model)
+// ============================================================================
+
+/**
+ * State machine configuration for an element
+ * Generated from state blocks with triggers and modifiers
+ */
+export interface IRStateMachine {
+  /** Initial state (first defined or explicitly marked) */
+  initial: string
+  /** All defined states with their styles */
+  states: Record<string, IRStateDefinition>
+  /** State transitions triggered by events */
+  transitions: IRStateTransition[]
+}
+
+/**
+ * A single state definition with its visual appearance
+ */
+export interface IRStateDefinition {
+  /** State name (e.g., 'open', 'selected') */
+  name: string
+  /** CSS styles to apply when in this state */
+  styles: IRStyle[]
+  /** Whether this state is marked as initial */
+  isInitial?: boolean
+  /** Animation to play when entering this state */
+  enter?: IRStateAnimation
+  /** Animation to play when exiting this state */
+  exit?: IRStateAnimation
+}
+
+/**
+ * Animation configuration for state transitions
+ */
+export interface IRStateAnimation {
+  /** Preset animation name (e.g., 'fade-in', 'bounce') or custom animation name */
+  preset?: string
+  /** Duration in seconds */
+  duration?: number
+  /** Easing function (e.g., 'ease-out') */
+  easing?: string
+  /** Delay in seconds */
+  delay?: number
+}
+
+/**
+ * A state transition triggered by an event
+ */
+export interface IRStateTransition {
+  /** Target state to transition to */
+  to: string
+  /** Event that triggers this transition (empty for 'when' dependencies) */
+  trigger: string
+  /** Modifier behavior */
+  modifier?: 'exclusive' | 'toggle' | 'initial'
+  /** Key for keyboard triggers (e.g., 'escape') */
+  key?: string
+  /** Dependency condition for 'when' clauses */
+  when?: IRStateDependency
+  /** Animation to play during this transition */
+  animation?: IRStateAnimation
+}
+
+/**
+ * State dependency for 'when' clauses
+ * Example: visible when Menu open or Sidebar open:
+ */
+export interface IRStateDependency {
+  /** Target element name (e.g., 'Menu') */
+  target: string
+  /** State name to check (e.g., 'open') */
+  state: string
+  /** Condition for chaining ('and' or 'or') */
+  condition?: 'and' | 'or'
+  /** Next dependency in chain */
+  next?: IRStateDependency
 }
 
 export interface IRToken {

@@ -85,6 +85,8 @@ export interface Instance extends BaseNode {
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
   route?: string              // navigation target: "route Home" → route: "Home"
   isDefinition?: boolean      // true if ends with : (definition, not rendered)
+  isCompound?: boolean        // true if this is a Compound primitive (Shell, etc.)
+  compoundType?: string       // Compound primitive type (e.g., 'Shell')
 }
 
 export interface Property extends BaseNode {
@@ -113,6 +115,40 @@ export interface State extends BaseNode {
   name: string
   properties: Property[]
   childOverrides: ChildOverride[]
+  // Interaction model fields
+  modifier?: 'exclusive' | 'toggle' | 'initial'
+  trigger?: string                    // 'onclick', 'onkeydown escape', etc.
+  when?: StateDependency              // dependency on another element's state
+  // Animation fields
+  animation?: StateAnimation          // animation on enter (after trigger/colon)
+  enter?: StateAnimation              // explicit enter animation
+  exit?: StateAnimation               // explicit exit animation
+}
+
+/**
+ * Animation configuration for state transitions
+ * Examples:
+ *   bounce                    → { preset: 'bounce' }
+ *   0.2s                      → { duration: 0.2 }
+ *   0.3s ease-out             → { duration: 0.3, easing: 'ease-out' }
+ *   slide-in 0.2s             → { preset: 'slide-in', duration: 0.2 }
+ */
+export interface StateAnimation {
+  preset?: string                     // 'fade-in', 'bounce', custom name, etc.
+  duration?: number                   // duration in seconds
+  easing?: string                     // 'ease-out', 'ease-in-out', etc.
+  delay?: number                      // delay in seconds
+}
+
+/**
+ * Dependency on another element's state
+ * Example: visible when Menu open
+ */
+export interface StateDependency {
+  target: string                      // element name (e.g., 'Menu')
+  state: string                       // state name (e.g., 'open')
+  condition?: 'and' | 'or'            // for chaining
+  next?: StateDependency              // next dependency in chain
 }
 
 export interface ChildOverride {

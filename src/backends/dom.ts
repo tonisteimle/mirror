@@ -7,7 +7,7 @@
 
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode } from '../ir/types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition } from '../ir/types'
 import { isIRZagNode } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
@@ -425,6 +425,11 @@ class DOMGenerator {
     if (node.initialState) {
       this.emit(`${varName}.dataset.state = '${node.initialState}'`)
       this.emit(`${varName}._initialState = '${node.initialState}'`)
+    }
+
+    // State machine configuration (interaction model)
+    if (node.stateMachine) {
+      this.emitStateMachine(varName, node)
     }
 
     // Visible when state condition
@@ -4970,9 +4975,15 @@ class DOMGenerator {
         }
         break
       default:
-        // Unknown action = treat as direct function call
-        // This allows: onclick addTask -> calls addTask()
-        if (!builtinActions.has(action.type)) {
+        // Multi-element trigger: Element state (e.g., Menu open, Backdrop visible)
+        // Detected by PascalCase action type (first char uppercase) with a target
+        const isElementTransition = /^[A-Z]/.test(action.type) && action.target
+        if (isElementTransition) {
+          // Transition the named element to the specified state
+          this.emit(`_runtime.transitionTo(_elements['${action.type}'], '${action.target}')`)
+        } else if (!builtinActions.has(action.type)) {
+          // Unknown action = treat as direct function call
+          // This allows: onclick addTask -> calls addTask()
           const funcName = action.type
           const funcArgs = action.target ? `"${action.target}"` : ''
           this.emit(`if (typeof ${funcName} === 'function') ${funcName}(${funcArgs})`)
@@ -5094,6 +5105,181 @@ class DOMGenerator {
       'delete': 'Delete',
     }
     return mapping[key] || key
+  }
+
+  /**
+   * Emit state machine configuration and event listeners
+   *
+   * Generates:
+   * - State machine config on element (_stateMachine)
+   * - Event listeners for transitions
+   * - Initial state setup
+   */
+  private emitStateMachine(varName: string, node: IRNode): void {
+    const sm = node.stateMachine!
+
+    // Store state machine config
+    this.emit(`${varName}._stateMachine = {`)
+    this.indent++
+    this.emit(`initial: '${sm.initial}',`)
+    this.emit(`current: '${sm.initial}',`)
+
+    // States with their styles and animations
+    this.emit(`states: {`)
+    this.indent++
+    for (const [name, state] of Object.entries(sm.states)) {
+      this.emit(`'${name}': {`)
+      this.indent++
+      this.emit(`styles: {`)
+      this.indent++
+      for (const style of state.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit(`},`)
+      // Enter animation
+      if (state.enter) {
+        this.emit(`enter: ${this.serializeAnimation(state.enter)},`)
+      }
+      // Exit animation
+      if (state.exit) {
+        this.emit(`exit: ${this.serializeAnimation(state.exit)},`)
+      }
+      this.indent--
+      this.emit(`},`)
+    }
+    this.indent--
+    this.emit(`},`)
+
+    // Transitions
+    this.emit(`transitions: [`)
+    this.indent++
+    for (const t of sm.transitions) {
+      const keyPart = t.key ? `, key: '${t.key}'` : ''
+      const modPart = t.modifier ? `, modifier: '${t.modifier}'` : ''
+      const animPart = t.animation ? `, animation: ${this.serializeAnimation(t.animation)}` : ''
+      this.emit(`{ to: '${t.to}', trigger: '${t.trigger}'${keyPart}${modPart}${animPart} },`)
+    }
+    this.indent--
+    this.emit(`],`)
+
+    this.indent--
+    this.emit(`}`)
+
+    // Set initial state
+    this.emit(`${varName}.dataset.state = '${sm.initial}'`)
+
+    // Apply initial state styles
+    this.emit(`Object.assign(${varName}.style, ${varName}._stateMachine.states['${sm.initial}'].styles)`)
+
+    // Generate event listeners for transitions
+    this.emitStateMachineListeners(varName, sm)
+  }
+
+  /**
+   * Emit event listeners for state machine transitions
+   */
+  private emitStateMachineListeners(varName: string, sm: IRStateMachine): void {
+    // Separate trigger-based and when-based transitions
+    const triggerTransitions = sm.transitions.filter(t => t.trigger)
+    const whenTransitions = sm.transitions.filter(t => t.when)
+
+    // Group trigger transitions by trigger type
+    const byTrigger = new Map<string, IRStateTransition[]>()
+    for (const t of triggerTransitions) {
+      const key = t.key ? `${t.trigger}:${t.key}` : t.trigger
+      if (!byTrigger.has(key)) byTrigger.set(key, [])
+      byTrigger.get(key)!.push(t)
+    }
+
+    for (const [triggerKey, transitions] of byTrigger) {
+      const [trigger, key] = triggerKey.split(':')
+      const domEvent = trigger.replace(/^on/, '') // onclick -> click
+
+      this.emit(`${varName}.addEventListener('${domEvent}', (e) => {`)
+      this.indent++
+
+      // For keyboard events, check the key
+      if (key) {
+        this.emit(`if (e.key.toLowerCase() !== '${key}') return`)
+      }
+
+      this.emit(`const sm = ${varName}._stateMachine`)
+      this.emit(`const current = sm.current`)
+
+      // Handle each transition
+      for (const t of transitions) {
+        // Build animation argument if present
+        const animArg = t.animation ? `, ${this.serializeAnimation(t.animation)}` : ''
+
+        if (t.modifier === 'toggle') {
+          // Toggle: if already in this state, go back to initial
+          this.emit(`if (current === '${t.to}') {`)
+          this.indent++
+          this.emit(`_runtime.transitionTo(${varName}, sm.initial)`)
+          this.indent--
+          this.emit(`} else {`)
+          this.indent++
+          this.emit(`_runtime.transitionTo(${varName}, '${t.to}'${animArg})`)
+          this.indent--
+          this.emit(`}`)
+        } else if (t.modifier === 'exclusive') {
+          // Exclusive: deselect siblings first
+          this.emit(`_runtime.exclusiveTransition(${varName}, '${t.to}'${animArg})`)
+        } else {
+          // Normal transition
+          this.emit(`_runtime.transitionTo(${varName}, '${t.to}'${animArg})`)
+        }
+      }
+
+      this.indent--
+      this.emit(`})`)
+    }
+
+    // Emit 'when' dependency watchers
+    for (const t of whenTransitions) {
+      this.emitWhenWatcher(varName, t, sm)
+    }
+  }
+
+  /**
+   * Emit a state watcher for 'when' dependencies
+   * Example: visible when Menu open or Sidebar open:
+   */
+  private emitWhenWatcher(varName: string, transition: IRStateTransition, sm: IRStateMachine): void {
+    if (!transition.when) return
+
+    // Collect all target elements from the dependency chain
+    const targets: Array<{ target: string; state: string }> = []
+    let dep = transition.when
+    let condition = dep.condition || 'or' // Default to 'or' for single condition
+    while (dep) {
+      targets.push({ target: dep.target, state: dep.state })
+      if (dep.condition) condition = dep.condition
+      dep = dep.next as typeof dep
+    }
+
+    // Generate the check function
+    this.emit(`// When dependency: ${transition.to} when ${targets.map(t => `${t.target} ${t.state}`).join(` ${condition} `)}`)
+    this.emit(`_runtime.watchStates(${varName}, '${transition.to}', '${sm.initial}', '${condition}', [`)
+    this.indent++
+    for (const t of targets) {
+      this.emit(`{ target: '${t.target}', state: '${t.state}' },`)
+    }
+    this.indent--
+    this.emit(`])`)
+  }
+
+  /**
+   * Serialize an IRStateAnimation to a JavaScript object literal
+   */
+  private serializeAnimation(anim: import('../ir/types').IRStateAnimation): string {
+    const parts: string[] = []
+    if (anim.preset) parts.push(`preset: '${anim.preset}'`)
+    if (anim.duration !== undefined) parts.push(`duration: ${anim.duration}`)
+    if (anim.easing) parts.push(`easing: '${anim.easing}'`)
+    if (anim.delay !== undefined) parts.push(`delay: ${anim.delay}`)
+    return `{ ${parts.join(', ')} }`
   }
 
   private groupByState(styles: IRStyle[]): Record<string, IRStyle[]> {

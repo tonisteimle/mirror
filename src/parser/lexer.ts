@@ -306,6 +306,14 @@ export class Lexer {
       value += this.advance()
     }
 
+    // Include time unit suffixes (s, ms) for durations
+    if (this.peek() === 's') {
+      value += this.advance()
+    } else if (this.peek() === 'm' && this.peekNext() === 's') {
+      value += this.advance() // m
+      value += this.advance() // s
+    }
+
     // Include fraction notation for aspect ratios (e.g., 16/9, 4/3)
     if (this.peek() === '/' && this.isDigit(this.peekNext())) {
       value += this.advance() // /

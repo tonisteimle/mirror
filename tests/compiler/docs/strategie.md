@@ -338,9 +338,14 @@ tests/compiler/
 ├── provocation-021.test.ts   ← gezielte bug-suche
 ├── html-output-022.test.ts   ← END-TO-END HTML-OUTPUT (JSDOM)
 ├── schema-driven.test.ts     ← AUTO-GENERIERTE TESTS AUS SCHEMA
-├── provocation-024.test.ts   ← SCHEMA-GAP-ANALYSE (46 passing, 5 bugs, 30 skipped)
+├── provocation-024.test.ts   ← SCHEMA-GAP-ANALYSE (61 passing, 20 skipped)
+├── provocation-025.test.ts   ← TESTLÜCKEN-ANALYSE (68 passing, 8 bugs)
 ├── backlog-023.test.ts       ← backlog tests
-└── stress-scalability.test.ts ← STRESS & PERFORMANCE (35 tests)
+├── stress-scalability.test.ts ← STRESS & PERFORMANCE (35 tests)
+├── grid-layout.test.ts       ← GRID-LAYOUT IR-TESTS (30 tests)
+├── grid-layout-provocation.test.ts ← GRID PROVOKATION (22 passing, 1 skipped)
+├── grid-layout-html-output.test.ts ← GRID HTML-OUTPUT JSDOM (35 tests)
+└── grid-layout-stress.test.ts ← GRID STRESS & PERFORMANCE (16 tests)
 ```
 
 ---

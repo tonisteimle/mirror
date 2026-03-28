@@ -32,7 +32,7 @@ import {
   isEach,
   hasContent,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRStateMachine, IRStateDefinition, IRStateTransition } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -51,6 +51,7 @@ import {
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
+import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
 import { getCanonicalPropertyName } from '../schema/parser-helpers'
 
 export type { IR, IRWarning } from './types'
@@ -104,9 +105,22 @@ interface LayoutContext {
   gap: string | null
   isGrid: boolean
   gridColumns: string | null
+  gridAutoFlow: string | null      // 'row' | 'column' | 'dense' | 'row dense' | 'column dense'
+  columnGap: string | null         // For gap-x/gx
+  rowGap: string | null            // For gap-y/gy
+  rowHeight: string | null         // For row-height/rh (grid-auto-rows)
   // Internal alignment tracking (before direction-based mapping)
   _hAlign?: 'start' | 'end' | 'center'
   _vAlign?: 'start' | 'end' | 'center'
+}
+
+/**
+ * Parent layout context passed to children for context-aware property handling
+ * In grid context, x/y/w/h become grid positioning instead of absolute positioning
+ */
+interface ParentLayoutContext {
+  type: 'flex' | 'grid' | 'absolute' | null
+  gridColumns?: number
 }
 
 class IRTransformer {
@@ -979,11 +993,203 @@ class IRTransformer {
     }
   }
 
+  /**
+   * Transform a Compound primitive (Shell, etc.) into an IRNode
+   *
+   * Compound primitives are pre-built layout components with:
+   * - Default CSS Grid/Flex styles from the schema
+   * - Named slots (Header, Sidebar, Main, Footer) with their own default styles
+   * - Nested slots (Logo, Nav, SidebarGroup, etc.)
+   */
+  private transformCompoundPrimitive(
+    instance: Instance,
+    parentId?: string,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRNode {
+    const nodeId = this.generateId()
+    const compoundType = instance.compoundType!
+    const compoundDef = getCompoundPrimitive(compoundType)
+
+    if (!compoundDef) {
+      // Fallback: treat as regular instance
+      return this.transformInstance({ ...instance, isCompound: false }, parentId, false, false, parentLayoutContext)
+    }
+
+    // Start with default styles from schema
+    const styles: IRStyle[] = []
+    if (compoundDef.defaultStyles) {
+      for (const [prop, value] of Object.entries(compoundDef.defaultStyles)) {
+        styles.push({ property: prop, value })
+      }
+    }
+
+    // Only transform user-specified properties if there are any
+    // This prevents transformProperties from adding default flex styles
+    if (instance.properties && instance.properties.length > 0) {
+      const userStyles = this.transformProperties(instance.properties, 'frame', parentLayoutContext)
+      for (const style of userStyles) {
+        // Remove existing style with same property (user overrides default)
+        const existingIndex = styles.findIndex(s => s.property === style.property && !s.state)
+        if (existingIndex !== -1) {
+          styles.splice(existingIndex, 1)
+        }
+        styles.push(style)
+      }
+    }
+
+    // Transform children as compound slots
+    const children: IRNode[] = []
+    for (const child of instance.children || []) {
+      if (isInstance(child)) {
+        const childNode = this.transformCompoundSlot(child, compoundType, nodeId)
+        children.push(childNode)
+      } else if (isText(child)) {
+        children.push(this.createTextNode(child))
+      }
+    }
+
+    // Track source position
+    let sourcePosition: SourcePosition | undefined
+    if (this.includeSourceMap) {
+      sourcePosition = calculateSourcePosition(instance.line, instance.column)
+      this.sourceMapBuilder.addNode(
+        nodeId,
+        instance.component,
+        sourcePosition,
+        { isDefinition: instance.isDefinition || false }
+      )
+    }
+
+    return {
+      id: nodeId,
+      tag: 'div',
+      primitive: 'compound',
+      name: instance.component,
+      instanceName: instance.name || undefined,
+      properties: [],
+      styles,
+      events: [],
+      children,
+      sourcePosition,
+    }
+  }
+
+  /**
+   * Transform a child of a Compound primitive with slot-specific styles
+   */
+  private transformCompoundSlot(
+    child: Instance,
+    compoundType: string,
+    parentId: string
+  ): IRNode {
+    const slotDef = getCompoundSlotDef(compoundType, child.component)
+    const compoundDef = getCompoundPrimitive(compoundType)
+
+    // If this is a known slot, apply default styles
+    if (slotDef) {
+      const nodeId = this.generateId()
+
+      // Start with slot default styles from COMPOUND_SLOT_MAPPINGS
+      const styles: IRStyle[] = []
+      if (slotDef.styles) {
+        for (const [prop, value] of Object.entries(slotDef.styles)) {
+          styles.push({ property: prop, value })
+        }
+      }
+
+      // Also apply slotStyles from the CompoundPrimitiveDef (higher priority)
+      // These include grid-area and other layout-specific styles
+      if (compoundDef?.slotStyles?.[child.component]) {
+        for (const [prop, value] of Object.entries(compoundDef.slotStyles[child.component])) {
+          // Override or add
+          const existingIndex = styles.findIndex(s => s.property === prop)
+          if (existingIndex !== -1) {
+            styles[existingIndex].value = value
+          } else {
+            styles.push({ property: prop, value })
+          }
+        }
+      }
+
+      // Only transform user-specified properties if there are any
+      if (child.properties && child.properties.length > 0) {
+        const userStyles = this.transformProperties(child.properties, 'frame')
+        for (const style of userStyles) {
+          const existingIndex = styles.findIndex(s => s.property === style.property && !s.state)
+          if (existingIndex !== -1) {
+            styles.splice(existingIndex, 1)
+          }
+          styles.push(style)
+        }
+      }
+
+      // Transform children recursively (they might also be compound slots)
+      const slotChildren: IRNode[] = []
+      for (const grandChild of child.children || []) {
+        if (isInstance(grandChild)) {
+          // Check if grandchild is also a compound slot
+          if (isCompoundSlot(compoundType, grandChild.component)) {
+            slotChildren.push(this.transformCompoundSlot(grandChild, compoundType, nodeId))
+          } else {
+            slotChildren.push(this.transformInstance(grandChild, nodeId))
+          }
+        } else if (isText(grandChild)) {
+          slotChildren.push(this.createTextNode(grandChild))
+        }
+      }
+
+      // Track source position
+      let sourcePosition: SourcePosition | undefined
+      if (this.includeSourceMap) {
+        sourcePosition = calculateSourcePosition(child.line, child.column)
+        this.sourceMapBuilder.addNode(
+          nodeId,
+          child.component,
+          sourcePosition,
+          { isDefinition: false }
+        )
+      }
+
+      return {
+        id: nodeId,
+        tag: slotDef.element,
+        primitive: 'compound-slot',
+        name: child.component,
+        instanceName: child.name || undefined,
+        properties: [],
+        styles,
+        events: this.transformEvents(child.events || []),
+        children: slotChildren,
+        sourcePosition,
+      }
+    }
+
+    // Not a known slot - transform as regular instance
+    return this.transformInstance(child, parentId)
+  }
+
+  /**
+   * Create a text node from a Text AST node
+   */
+  private createTextNode(text: Text): IRNode {
+    const nodeId = this.generateId()
+    return {
+      id: nodeId,
+      tag: 'span',
+      primitive: 'text',
+      properties: [{ name: 'content', value: text.content }],
+      styles: [],
+      events: [],
+      children: [],
+    }
+  }
+
   private transformInstance(
     instance: Instance | Each | any,
     parentId?: string,
     isEachTemplate?: boolean,
-    isConditional?: boolean
+    isConditional?: boolean,
+    parentLayoutContext?: ParentLayoutContext
   ): IRNode {
     // Handle Each loops
     if (instance.type === 'Each') {
@@ -1016,6 +1222,11 @@ class IRTransformer {
       return this.transformZagComponent(zagNode)
     }
 
+    // Handle Compound primitives (Shell, etc.)
+    if (instance.isCompound && instance.compoundType) {
+      return this.transformCompoundPrimitive(instance, parentId, parentLayoutContext)
+    }
+
     // Get primitive defaults and convert to Property format
     const primitiveDefaults = this.convertDefaultsToProperties(getPrimitiveDefaults(primitive))
 
@@ -1032,7 +1243,8 @@ class IRTransformer {
     )
 
     // Transform to styles (with intelligent layout merging)
-    const styles = this.transformProperties(properties, primitive)
+    // Pass parent layout context for context-aware property handling (e.g., x/y in grid)
+    const styles = this.transformProperties(properties, primitive, parentLayoutContext)
 
     // For root elements (no parent), convert flex-based "full" to explicit 100%
     // This is needed because "w full, h full" becomes flex styles which don't work at root level
@@ -1073,6 +1285,13 @@ class IRTransformer {
       ? this.transformStates(instance.states)
       : []
 
+    // Build state machine from states with triggers (interaction model)
+    const allStates = [
+      ...(resolvedComponent?.states || []),
+      ...(instance.states || []),
+    ]
+    const stateMachine = this.buildStateMachine(allStates)
+
     // Transform events from component definition
     const events = resolvedComponent?.events
       ? this.transformEvents(resolvedComponent.events)
@@ -1093,13 +1312,34 @@ class IRTransformer {
     // Generate node ID FIRST so we can pass it to children as their parentId
     const nodeId = this.generateId()
 
+    // Determine layout context for children
+    // If this element is a grid container, children get grid context for x/y/w/h
+    const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
+    const isAbsoluteContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
+    let childLayoutContext: ParentLayoutContext | undefined
+    if (isGridContainer) {
+      // Extract grid columns count if it's a simple repeat(N, 1fr)
+      const gridColsStyle = styles.find(s => s.property === 'grid-template-columns')
+      let gridColumns: number | undefined
+      if (gridColsStyle) {
+        const match = gridColsStyle.value.match(/repeat\((\d+),/)
+        if (match) {
+          gridColumns = parseInt(match[1], 10)
+        }
+      }
+      childLayoutContext = { type: 'grid', gridColumns }
+    } else if (isAbsoluteContainer) {
+      childLayoutContext = { type: 'absolute' }
+    }
+
     // Transform children with slot filling (excluding inline states/events)
     // Include both regular children and childOverrides as slot fillers
     // Pass nodeId as parentId so children know their parent in the sourceMap
     const children = this.resolveChildren(
       resolvedComponent?.children || [],
       [...remainingChildren, ...childOverrideInstances],
-      nodeId
+      nodeId,
+      childLayoutContext
     )
 
     // Merge dropdown features from component definition and instance
@@ -1200,7 +1440,7 @@ class IRTransformer {
 
     // Grid container: Remove flex-based styles from children
     // In grid, flex: 1 1 0% has no effect - grid cells fill automatically
-    const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
+    // (reusing isGridContainer from earlier layout context detection)
     if (isGridContainer) {
       for (const child of children) {
         const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
@@ -1239,6 +1479,7 @@ class IRTransformer {
       initialState,
       selection,
       route,
+      stateMachine,
       sourcePosition,
       propertySourceMaps,
       layoutType,
@@ -1327,12 +1568,13 @@ class IRTransformer {
   private resolveChildren(
     componentChildren: (Instance | Slot)[],
     instanceChildren: (Instance | Text | Slot)[],
-    parentId?: string
+    parentId?: string,
+    parentLayoutContext?: ParentLayoutContext
   ): IRNode[] {
     // If no component children (no slot definitions), just transform instance children directly
     // This preserves the original order for simple containers like Box with mixed children
     if (componentChildren.length === 0) {
-      return instanceChildren.map(child => this.transformChild(child, parentId))
+      return instanceChildren.map(child => this.transformChild(child, parentId, parentLayoutContext))
     }
 
     // Build map of instance children by component name (slot fillers)
@@ -1404,7 +1646,7 @@ class IRTransformer {
             // Use instance's content instead of slot default
             // But inherit visibility conditions from slot definition
             for (const filler of fillers) {
-              const node = this.transformChild(filler, parentId)
+              const node = this.transformChild(filler, parentId, parentLayoutContext)
               // Transfer slot's visibleWhen to filler if slot has one
               if (slotVisibleWhen && !node.visibleWhen) {
                 node.visibleWhen = slotVisibleWhen
@@ -1434,9 +1676,9 @@ class IRTransformer {
                 visibleWhen: slotVisibleWhen,
                 initialState: slotInitialState,
               }
-              result.push(this.transformInstance(pseudoInstance, parentId))
+              result.push(this.transformInstance(pseudoInstance, parentId, false, false, parentLayoutContext))
             } else if (slotIsInstance) {
-              result.push(this.transformInstance(slot as Instance, parentId))
+              result.push(this.transformInstance(slot as Instance, parentId, false, false, parentLayoutContext))
             }
           }
         } else if (isSlot(slot)) {
@@ -1445,7 +1687,7 @@ class IRTransformer {
           const fillers = slotFillers.get(slotObj.name)
           if (fillers && fillers.length > 0) {
             for (const filler of fillers) {
-              result.push(this.transformChild(filler, parentId))
+              result.push(this.transformChild(filler, parentId, parentLayoutContext))
             }
             slotFillers.delete(slotObj.name)
           } else {
@@ -1460,13 +1702,13 @@ class IRTransformer {
     // (these are additional children, not slot fillers)
     for (const [_name, fillers] of slotFillers) {
       for (const filler of fillers) {
-        result.push(this.transformChild(filler, parentId))
+        result.push(this.transformChild(filler, parentId, parentLayoutContext))
       }
     }
 
     // Add non-slot children (text nodes)
     for (const child of nonSlotChildren) {
-      result.push(this.transformChild(child, parentId))
+      result.push(this.transformChild(child, parentId, parentLayoutContext))
     }
 
     return result
@@ -1490,7 +1732,7 @@ class IRTransformer {
     }))
   }
 
-  private transformChild(child: Instance | Text | Slot, parentId?: string): IRNode {
+  private transformChild(child: Instance | Text | Slot, parentId?: string, parentLayoutContext?: ParentLayoutContext): IRNode {
     if (isSlot(child)) {
       return this.transformSlotPrimitive(child, parentId)
     }
@@ -1510,7 +1752,7 @@ class IRTransformer {
     if (isZagComponent(child)) {
       return this.transformZagComponent(child)
     }
-    return this.transformInstance(child as Instance, parentId)
+    return this.transformInstance(child as Instance, parentId, false, false, parentLayoutContext)
   }
 
   /**
@@ -1797,7 +2039,7 @@ class IRTransformer {
    * It collects all layout-related properties first, then generates consistent CSS.
    * It also collects transform properties to combine them into a single transform value.
    */
-  private transformProperties(properties: Property[], primitive: string = 'frame'): IRStyle[] {
+  private transformProperties(properties: Property[], primitive: string = 'frame', parentLayoutContext?: ParentLayoutContext): IRStyle[] {
     const styles: IRStyle[] = []
     const layoutContext: LayoutContext = {
       direction: null,
@@ -1807,6 +2049,10 @@ class IRTransformer {
       gap: null,
       isGrid: false,
       gridColumns: null,
+      gridAutoFlow: null,
+      columnGap: null,
+      rowGap: null,
+      rowHeight: null,
     }
 
     // Transform context to combine multiple transforms
@@ -1875,6 +2121,36 @@ class IRTransformer {
         continue
       }
 
+      // Dense (grid auto-flow dense)
+      if (name === 'dense' && isBoolean) {
+        // Will be combined with hor/ver direction in generateLayoutStyles
+        if (layoutContext.gridAutoFlow) {
+          layoutContext.gridAutoFlow = layoutContext.gridAutoFlow + ' dense'
+        } else {
+          layoutContext.gridAutoFlow = 'dense'
+        }
+        continue
+      }
+
+      // Gap-x (column-gap)
+      if ((name === 'gap-x' || name === 'gx') && !isBoolean) {
+        layoutContext.columnGap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        continue
+      }
+
+      // Gap-y (row-gap)
+      if ((name === 'gap-y' || name === 'gy') && !isBoolean) {
+        layoutContext.rowGap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        continue
+      }
+
+      // Row-height (grid-auto-rows) - only handle in grid context
+      // Otherwise let it fall through to schema-based handling
+      if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
+        layoutContext.rowHeight = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        continue
+      }
+
       // Collect transform properties (rotate, scale, translate)
       if (name === 'rotate' || name === 'rot') {
         const deg = String(prop.values[0])
@@ -1916,13 +2192,18 @@ class IRTransformer {
       if (name === 'wrap' && isBoolean) continue
       if ((name === 'gap' || name === 'g') && !isBoolean) continue
       if (name === 'grid') continue
+      if (name === 'dense' && isBoolean) continue
+      if ((name === 'gap-x' || name === 'gx') && !isBoolean) continue
+      if ((name === 'gap-y' || name === 'gy') && !isBoolean) continue
+      // Note: row-height is NOT skipped here - it will be handled by propertyToCSS via schema
+      // In grid context, generateLayoutStyles handles it; outside grid, schema handles it
 
       // Skip transform properties (already handled in first pass)
       if (name === 'rotate' || name === 'rot') continue
       if (name === 'scale') continue
       if (name === 'translate') continue
 
-      const cssStyles = this.propertyToCSS(prop, primitive, transformContext)
+      const cssStyles = this.propertyToCSS(prop, primitive, transformContext, parentLayoutContext)
       styles.push(...cssStyles)
     }
 
@@ -1964,14 +2245,34 @@ class IRTransformer {
 
     for (const name of values) {
       switch (name) {
-        // Direction properties - always override
+        // Direction properties - in grid context, affects grid-auto-flow instead
         case 'horizontal':
         case 'hor':
-          ctx.direction = 'row'
+          if (ctx.isGrid) {
+            // In grid, hor sets grid-auto-flow: row (or combines with dense)
+            const currentFlow = ctx.gridAutoFlow
+            if (currentFlow === 'dense' || currentFlow === 'column dense') {
+              ctx.gridAutoFlow = 'row dense'
+            } else {
+              ctx.gridAutoFlow = 'row'
+            }
+          } else {
+            ctx.direction = 'row'
+          }
           break
         case 'vertical':
         case 'ver':
-          ctx.direction = 'column'
+          if (ctx.isGrid) {
+            // In grid, ver sets grid-auto-flow: column (or combines with dense)
+            const currentFlow = ctx.gridAutoFlow
+            if (currentFlow === 'dense' || currentFlow === 'row dense') {
+              ctx.gridAutoFlow = 'column dense'
+            } else {
+              ctx.gridAutoFlow = 'column'
+            }
+          } else {
+            ctx.direction = 'column'
+          }
           break
 
         // 9-zone properties: set direction + alignment (direction overrides previous)
@@ -2080,7 +2381,21 @@ class IRTransformer {
       if (ctx.gridColumns) {
         styles.push({ property: 'grid-template-columns', value: ctx.gridColumns })
       }
-      if (ctx.gap) {
+      if (ctx.gridAutoFlow) {
+        styles.push({ property: 'grid-auto-flow', value: ctx.gridAutoFlow })
+      }
+      if (ctx.rowHeight) {
+        styles.push({ property: 'grid-auto-rows', value: ctx.rowHeight })
+      }
+      // Handle gaps: specific gaps take precedence over general gap
+      if (ctx.columnGap) {
+        styles.push({ property: 'column-gap', value: ctx.columnGap })
+      }
+      if (ctx.rowGap) {
+        styles.push({ property: 'row-gap', value: ctx.rowGap })
+      }
+      // Use general gap only if no specific gaps are set
+      if (ctx.gap && !ctx.columnGap && !ctx.rowGap) {
         styles.push({ property: 'gap', value: ctx.gap })
       }
       return styles
@@ -2162,8 +2477,15 @@ class IRTransformer {
       styles.push({ property: 'flex-wrap', value: ctx.flexWrap })
     }
 
-    // Add gap
-    if (ctx.gap) {
+    // Add gaps (gap-x and gap-y work in flex too)
+    if (ctx.columnGap) {
+      styles.push({ property: 'column-gap', value: ctx.columnGap })
+    }
+    if (ctx.rowGap) {
+      styles.push({ property: 'row-gap', value: ctx.rowGap })
+    }
+    // Use general gap only if no specific gaps are set
+    if (ctx.gap && !ctx.columnGap && !ctx.rowGap) {
       styles.push({ property: 'gap', value: ctx.gap })
     }
 
@@ -2220,6 +2542,156 @@ class IRTransformer {
   }
 
   /**
+   * Build state machine configuration from states with triggers
+   *
+   * States with triggers (onclick, onkeydown, etc.) are converted to
+   * a state machine with transitions. States without triggers are
+   * handled as pure CSS states (hover, focus, etc.)
+   *
+   * @param states Array of state definitions from AST
+   * @returns State machine configuration or undefined if no triggered states
+   */
+  private buildStateMachine(states: State[]): IRStateMachine | undefined {
+    // Filter states that have triggers or when dependencies (these form the state machine)
+    const interactiveStates = states.filter(s => s.trigger || s.when)
+
+    if (interactiveStates.length === 0) {
+      return undefined
+    }
+
+    // Build state definitions
+    const stateDefinitions: Record<string, IRStateDefinition> = {}
+    const transitions: IRStateTransition[] = []
+
+    // First pass: collect all unique state names and their styles
+    for (const state of states) {
+      if (!stateDefinitions[state.name]) {
+        stateDefinitions[state.name] = {
+          name: state.name,
+          styles: [],
+          isInitial: state.modifier === 'initial',
+        }
+      }
+
+      // Add styles to the state definition
+      for (const prop of state.properties) {
+        const cssStyles = this.propertyToCSS(prop)
+        for (const style of cssStyles) {
+          stateDefinitions[state.name].styles.push(style)
+        }
+      }
+
+      // Add enter/exit animations to state definition
+      if (state.enter) {
+        stateDefinitions[state.name].enter = this.convertStateAnimation(state.enter)
+      }
+      if (state.exit) {
+        stateDefinitions[state.name].exit = this.convertStateAnimation(state.exit)
+      }
+    }
+
+    // Second pass: create transitions from interactive states
+    for (const state of interactiveStates) {
+      // Handle trigger-based transitions
+      if (state.trigger) {
+        // Parse trigger (e.g., "onclick", "onkeydown escape")
+        const triggerParts = state.trigger.split(' ')
+        const trigger = triggerParts[0]
+        const key = triggerParts[1] // for keyboard events
+
+        const transition: IRStateTransition = {
+          to: state.name,
+          trigger,
+          modifier: state.modifier,
+          key,
+        }
+
+        // Add animation to transition if present
+        if (state.animation) {
+          transition.animation = this.convertStateAnimation(state.animation)
+        }
+
+        transitions.push(transition)
+      }
+
+      // Handle 'when' dependency transitions
+      if (state.when) {
+        const transition: IRStateTransition = {
+          to: state.name,
+          trigger: '', // No trigger, it's dependency-based
+          modifier: state.modifier,
+          when: this.convertStateDependency(state.when),
+        }
+
+        // Add animation to transition if present
+        if (state.animation) {
+          transition.animation = this.convertStateAnimation(state.animation)
+        }
+
+        transitions.push(transition)
+      }
+    }
+
+    // Determine initial state
+    // Priority: 1. explicit 'initial' modifier, 2. first state defined
+    let initial = Object.keys(stateDefinitions)[0]
+    for (const [name, def] of Object.entries(stateDefinitions)) {
+      if (def.isInitial) {
+        initial = name
+        break
+      }
+    }
+
+    return {
+      initial,
+      states: stateDefinitions,
+      transitions,
+    }
+  }
+
+  /**
+   * Convert AST StateDependency to IR IRStateDependency
+   */
+  private convertStateDependency(dep: import('../parser/ast').StateDependency): import('./types').IRStateDependency {
+    const result: import('./types').IRStateDependency = {
+      target: dep.target,
+      state: dep.state,
+    }
+
+    if (dep.condition) {
+      result.condition = dep.condition
+    }
+
+    if (dep.next) {
+      result.next = this.convertStateDependency(dep.next)
+    }
+
+    return result
+  }
+
+  /**
+   * Convert AST StateAnimation to IR IRStateAnimation
+   */
+  private convertStateAnimation(anim: import('../parser/ast').StateAnimation): import('./types').IRStateAnimation {
+    const result: import('./types').IRStateAnimation = {}
+
+    if (anim.preset) {
+      result.preset = anim.preset
+    }
+    if (anim.duration !== undefined) {
+      result.duration = anim.duration
+    }
+    if (anim.easing) {
+      result.easing = anim.easing
+    }
+    if (anim.delay !== undefined) {
+      result.delay = anim.delay
+    }
+
+    return result
+  }
+
+  /**
    * Apply state childOverrides to children
    *
    * When a state has childOverrides like:
@@ -2254,8 +2726,9 @@ class IRTransformer {
 
   /**
    * Convert Mirror property to CSS
+   * @param parentLayoutContext - If parent is grid, x/y/w/h generate grid positioning instead of absolute
    */
-  private propertyToCSS(prop: Property, primitive: string = 'frame', transformContext?: { transforms: string[] }): IRStyle[] {
+  private propertyToCSS(prop: Property, primitive: string = 'frame', transformContext?: { transforms: string[] }, parentLayoutContext?: ParentLayoutContext): IRStyle[] {
     const name = prop.name
     const value = this.resolveValue(prop.values, name)
     const values = prop.values
@@ -2441,10 +2914,15 @@ class IRTransformer {
       }
     }
 
-    // Absolute positioning: x → left
+    // Grid positioning: x → grid-column-start (when parent is grid)
+    // Absolute positioning: x → left (default)
     if (name === 'x') {
+      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+      if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
+        return [{ property: 'grid-column-start', value: String(numVal) }]
+      }
+      // Default: absolute positioning
       const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      // Support negative values: -50 → -50px
       const px = /^-?\d+$/.test(val) ? `${val}px` : val
       return [
         { property: 'position', value: 'absolute' },
@@ -2452,15 +2930,40 @@ class IRTransformer {
       ]
     }
 
-    // Absolute positioning: y → top
+    // Grid positioning: y → grid-row-start (when parent is grid)
+    // Absolute positioning: y → top (default)
     if (name === 'y') {
+      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+      if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
+        return [{ property: 'grid-row-start', value: String(numVal) }]
+      }
+      // Default: absolute positioning
       const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      // Support negative values: -50 → -50px
       const px = /^-?\d+$/.test(val) ? `${val}px` : val
       return [
         { property: 'position', value: 'absolute' },
         { property: 'top', value: px },
       ]
+    }
+
+    // Grid span: w (numeric) → grid-column: span N (when parent is grid)
+    if ((name === 'w' || name === 'width') && parentLayoutContext?.type === 'grid') {
+      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+      if (!isNaN(numVal) && numVal > 0) {
+        // In grid context, numeric w means column span
+        return [{ property: 'grid-column', value: `span ${numVal}` }]
+      }
+      // If not numeric, fall through to default handling (hug, full, etc.)
+    }
+
+    // Grid span: h (numeric) → grid-row: span N (when parent is grid)
+    if ((name === 'h' || name === 'height') && parentLayoutContext?.type === 'grid') {
+      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+      if (!isNaN(numVal) && numVal > 0) {
+        // In grid context, numeric h means row span
+        return [{ property: 'grid-row', value: `span ${numVal}` }]
+      }
+      // If not numeric, fall through to default handling (hug, full, etc.)
     }
 
     // Handle rotate: rotate 45 (fallback for states)
@@ -2696,6 +3199,8 @@ class IRTransformer {
       'padding', 'pad', 'p',
       'margin', 'm',
       'gap', 'g',
+      'gap-x', 'gx', 'gap-y', 'gy',
+      'row-height', 'rh',
       'width', 'w', 'height', 'h',
       'min-width', 'minw', 'max-width', 'maxw',
       'min-height', 'minh', 'max-height', 'maxh',

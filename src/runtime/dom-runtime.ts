@@ -39,6 +39,18 @@ export interface MirrorElement extends HTMLElement {
     renderThen: () => DocumentFragment
     renderElse?: () => DocumentFragment
   }
+  // State machine (interaction model)
+  _stateMachine?: {
+    initial: string
+    current: string
+    states: Record<string, { styles: Record<string, string> }>
+    transitions: Array<{
+      to: string
+      trigger: string
+      key?: string
+      modifier?: 'exclusive' | 'toggle' | 'initial'
+    }>
+  }
 }
 
 /**
@@ -503,6 +515,156 @@ export function toggleState(el: MirrorElement | null, state1: string, state2?: s
   setState(el, next)
 }
 
+// ============================================
+// STATE MACHINE FUNCTIONS (Interaction Model)
+// ============================================
+
+/**
+ * Transition element to a new state using its state machine
+ * @param el Element to transition
+ * @param stateName Target state name
+ * @param animation Optional animation configuration
+ */
+export function transitionTo(
+  el: MirrorElement | null,
+  stateName: string,
+  animation?: StateAnimation
+): void {
+  if (!el?._stateMachine) return
+
+  const sm = el._stateMachine
+  const prevStateName = sm.current
+  const prevState = sm.states[prevStateName]
+  const newState = sm.states[stateName]
+
+  if (!newState) return
+  if (prevStateName === stateName) return
+
+  // Update current state
+  sm.current = stateName
+  el.dataset.state = stateName
+
+  // Determine which animation to play
+  // Priority: 1. transition animation, 2. state enter animation, 3. prev state exit animation
+  const anim = animation || newState.enter || prevState?.exit
+
+  if (anim) {
+    // Play animation and apply styles
+    playStateAnimation(el, anim, newState.styles)
+  } else {
+    // No animation, apply styles immediately
+    Object.assign(el.style, newState.styles)
+  }
+
+  // Update visibility of children
+  updateVisibility(el)
+}
+
+/**
+ * Exclusive transition - deselect siblings before transitioning
+ * Used for radio/tab behavior where only one element can be selected
+ * @param el Element to transition
+ * @param stateName Target state name
+ * @param animation Optional animation configuration
+ */
+export function exclusiveTransition(
+  el: MirrorElement | null,
+  stateName: string,
+  animation?: StateAnimation
+): void {
+  if (!el?._stateMachine) return
+
+  // Find siblings with same parent and state machine
+  const parent = el.parentElement
+  if (parent) {
+    const siblings = parent.querySelectorAll('[data-mirror-id]') as NodeListOf<MirrorElement>
+    siblings.forEach(sibling => {
+      if (sibling !== el && sibling._stateMachine) {
+        // Reset sibling to initial state (no animation for deselected siblings)
+        const sibSm = sibling._stateMachine
+        if (sibSm.current === stateName) {
+          transitionTo(sibling, sibSm.initial)
+        }
+      }
+    })
+  }
+
+  // Now transition this element with animation
+  transitionTo(el, stateName, animation)
+}
+
+/**
+ * Watch states of target elements and transition when condition is met
+ * Used for 'when' dependencies (e.g., visible when Menu open or Sidebar open)
+ */
+export function watchStates(
+  el: MirrorElement | null,
+  targetState: string,
+  initialState: string,
+  condition: 'and' | 'or',
+  dependencies: Array<{ target: string; state: string }>
+): void {
+  if (!el) return
+
+  // Find all target elements by name (data-name attribute)
+  const root = el.closest('[data-mirror-root]') || document.body
+  const targetElements: Map<string, MirrorElement> = new Map()
+
+  for (const dep of dependencies) {
+    const targetEl = root.querySelector(`[data-name="${dep.target}"]`) as MirrorElement
+    if (targetEl) {
+      targetElements.set(dep.target, targetEl)
+    }
+  }
+
+  // Check condition function
+  function checkCondition(): boolean {
+    if (condition === 'and') {
+      // All must match
+      return dependencies.every(dep => {
+        const targetEl = targetElements.get(dep.target)
+        return targetEl?.dataset.state === dep.state
+      })
+    } else {
+      // Any must match (or)
+      return dependencies.some(dep => {
+        const targetEl = targetElements.get(dep.target)
+        return targetEl?.dataset.state === dep.state
+      })
+    }
+  }
+
+  // Update state based on condition
+  function updateState(): void {
+    if (checkCondition()) {
+      transitionTo(el, targetState)
+    } else {
+      transitionTo(el, initialState)
+    }
+  }
+
+  // Initial check
+  updateState()
+
+  // Watch for state changes on target elements
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.attributeName === 'data-state') {
+        updateState()
+        break
+      }
+    }
+  })
+
+  // Observe all target elements
+  for (const targetEl of targetElements.values()) {
+    observer.observe(targetEl, {
+      attributes: true,
+      attributeFilter: ['data-state'],
+    })
+  }
+}
+
 /**
  * Update visibility of children based on parent state
  */
@@ -774,6 +936,156 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
 // ============================================
 
 /**
+ * Animation configuration for state transitions
+ */
+export interface StateAnimation {
+  preset?: string
+  duration?: number
+  easing?: string
+  delay?: number
+}
+
+/**
+ * Preset animation keyframes for state transitions
+ */
+const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string }> = {
+  'fade-in': {
+    keyframes: [{ opacity: 0 }, { opacity: 1 }],
+    easing: 'ease-out',
+  },
+  'fade-out': {
+    keyframes: [{ opacity: 1 }, { opacity: 0 }],
+    easing: 'ease-out',
+  },
+  'slide-in': {
+    keyframes: [
+      { transform: 'translateY(-10px)', opacity: 0 },
+      { transform: 'translateY(0)', opacity: 1 },
+    ],
+    easing: 'ease-out',
+  },
+  'slide-out': {
+    keyframes: [
+      { transform: 'translateY(0)', opacity: 1 },
+      { transform: 'translateY(10px)', opacity: 0 },
+    ],
+    easing: 'ease-in',
+  },
+  'scale-in': {
+    keyframes: [
+      { transform: 'scale(0.9)', opacity: 0 },
+      { transform: 'scale(1)', opacity: 1 },
+    ],
+    easing: 'ease-out',
+  },
+  'scale-out': {
+    keyframes: [
+      { transform: 'scale(1)', opacity: 1 },
+      { transform: 'scale(0.9)', opacity: 0 },
+    ],
+    easing: 'ease-in',
+  },
+  'bounce': {
+    keyframes: [
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.1)' },
+      { transform: 'scale(0.95)' },
+      { transform: 'scale(1)' },
+    ],
+    easing: 'ease-out',
+  },
+  'pulse': {
+    keyframes: [
+      { transform: 'scale(1)', opacity: 1 },
+      { transform: 'scale(1.05)', opacity: 0.8 },
+      { transform: 'scale(1)', opacity: 1 },
+    ],
+    easing: 'ease-in-out',
+  },
+  'shake': {
+    keyframes: [
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-5px)' },
+      { transform: 'translateX(5px)' },
+      { transform: 'translateX(-5px)' },
+      { transform: 'translateX(5px)' },
+      { transform: 'translateX(0)' },
+    ],
+    easing: 'ease-in-out',
+  },
+  'spin': {
+    keyframes: [
+      { transform: 'rotate(0deg)' },
+      { transform: 'rotate(360deg)' },
+    ],
+    easing: 'linear',
+  },
+}
+
+/**
+ * Play a state transition animation
+ * @param el The element to animate
+ * @param anim Animation configuration
+ * @param styles The new styles to apply (for CSS transitions)
+ * @returns Promise that resolves when animation completes
+ */
+export function playStateAnimation(
+  el: MirrorElement,
+  anim: StateAnimation,
+  styles?: Record<string, string>
+): Promise<void> {
+  return new Promise((resolve) => {
+    const duration = (anim.duration || 0.3) * 1000
+    const delay = (anim.delay || 0) * 1000
+    const easing = anim.easing || 'ease-out'
+
+    if (anim.preset) {
+      // Preset animation (keyframe-based)
+      const preset = ANIMATION_PRESETS[anim.preset]
+      if (preset) {
+        const animation = el.animate(preset.keyframes, {
+          duration,
+          delay,
+          easing: preset.easing || easing,
+          fill: 'forwards',
+        })
+
+        animation.onfinish = () => {
+          // Apply final styles after animation
+          if (styles) {
+            Object.assign(el.style, styles)
+          }
+          resolve()
+        }
+        return
+      }
+    }
+
+    // CSS transition (duration-based without preset)
+    if (styles && duration > 0) {
+      // Set up transition
+      el.style.transition = `all ${duration}ms ${easing}`
+
+      // Apply new styles (triggers transition)
+      Object.assign(el.style, styles)
+
+      // Clean up after transition
+      setTimeout(() => {
+        el.style.transition = ''
+        resolve()
+      }, duration + delay)
+      return
+    }
+
+    // No animation, just apply styles immediately
+    if (styles) {
+      Object.assign(el.style, styles)
+    }
+    resolve()
+  })
+}
+
+/**
  * Animation registry
  */
 const _animations: Map<string, {
@@ -941,6 +1253,7 @@ export const runtime = {
   registerAnimation,
   getAnimation,
   animate,
+  playStateAnimation,
   setupEnterExitObserver,
 }
 

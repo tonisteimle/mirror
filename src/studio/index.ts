@@ -81,17 +81,18 @@ export {
   ICON_PATHS,
 } from './component-icon-matcher'
 
-export {
-  extractStudioContext,
-  buildReactSystemPrompt,
-  generateFromPrompt,
-  prepareCodeForInsertion,
-  callLLM,
-  extractReactFromResponse,
-  type StudioContext,
-  type GenerationResult,
-  type LLMConfig,
-} from './llm-integration'
+// LLM integration temporarily disabled - needs __tests__/llm module
+// export {
+//   extractStudioContext,
+//   buildReactSystemPrompt,
+//   generateFromPrompt,
+//   prepareCodeForInsertion,
+//   callLLM,
+//   extractReactFromResponse,
+//   type StudioContext,
+//   type GenerationResult,
+//   type LLMConfig,
+// } from './llm-integration'
 
 export {
   parseLine,
