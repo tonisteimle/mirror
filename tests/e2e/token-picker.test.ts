@@ -30,23 +30,6 @@ Button bg $`)
     await expect(page.locator('.token-name').first()).toContainText('$accent.bg')
   })
 
-  // Color picker only shows when space-triggered (not $ triggered)
-  // For color properties, $ trigger shows tokens only
-  test.skip('shows color picker section for color properties', async ({ page }) => {
-    const editor = page.locator('.cm-editor .cm-content')
-
-    await editor.click()
-    await page.keyboard.press('Meta+a')
-    await page.keyboard.type(`Button bg `)
-
-    // Token panel should show color picker section
-    const colorSection = page.locator('#token-panel-picker')
-    await expect(colorSection).toBeVisible()
-
-    // Should have color swatches
-    await expect(page.locator('#token-color-grid .color-swatch').first()).toBeVisible()
-  })
-
   test('hides color picker for spacing properties', async ({ page }) => {
     const editor = page.locator('.cm-editor .cm-content')
 
@@ -87,28 +70,6 @@ Button bg $`)
     // Token should be inserted ($ was already typed as trigger)
     const editorContent = await editor.textContent()
     expect(editorContent).toContain('primary.bg')
-
-    // Panel should be closed
-    await expect(page.locator('#token-panel')).toBeHidden()
-  })
-
-  // Color swatches only available with space trigger, not $ trigger
-  test.skip('inserts color when clicking on swatch', async ({ page }) => {
-    const editor = page.locator('.cm-editor .cm-content')
-
-    await editor.click()
-    await page.keyboard.press('Meta+a')
-    await page.keyboard.type(`Button bg `)
-
-    // Wait for panel
-    await expect(page.locator('#token-panel')).toBeVisible()
-
-    // Click on a color swatch
-    await page.locator('#token-color-grid .color-swatch').first().click()
-
-    // Color should be inserted (hex format)
-    const editorContent = await editor.textContent()
-    expect(editorContent).toMatch(/#[A-F0-9]{6}/i)
 
     // Panel should be closed
     await expect(page.locator('#token-panel')).toBeHidden()

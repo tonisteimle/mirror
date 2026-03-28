@@ -146,20 +146,6 @@ describe('ComponentPanel', () => {
       expect(layoutSection).toBeUndefined()
     })
 
-    // Note: showBasicComponents config is currently not implemented in buildSections
-    it.skip('should hide basic components when disabled', () => {
-      panel = createComponentPanel({
-        container,
-        showBasicComponents: false,
-      })
-
-      const sections = container.querySelectorAll('.component-panel-section')
-      const basicSection = Array.from(sections).find(
-        s => s.querySelector('.component-panel-section-name')?.textContent === 'Basic'
-      )
-
-      expect(basicSection).toBeUndefined()
-    })
   })
 
   describe('search', () => {

@@ -1516,3 +1516,571 @@ describe('Text Align', () => {
   })
 
 })
+
+// ============================================================
+// 36. CENTER ALIGNMENT SHORTCUTS
+// ============================================================
+describe('Center Alignment Shortcuts', () => {
+
+  it('hor-center sets align-items center (flex column)', () => {
+    // Note: standalone properties must come BEFORE value properties on same line
+    const el = render(`Frame hor-center w 100`)
+    expect(getStyle(el, 'display')).toBe('flex')
+    expect(getStyle(el, 'flex-direction')).toBe('column')
+    expect(getStyle(el, 'align-items')).toBe('center')
+  })
+
+  it('ver-center sets justify-content center (flex column)', () => {
+    // Note: standalone properties must come BEFORE value properties on same line
+    const el = render(`Frame ver-center h 100`)
+    expect(getStyle(el, 'display')).toBe('flex')
+    expect(getStyle(el, 'flex-direction')).toBe('column')
+    expect(getStyle(el, 'justify-content')).toBe('center')
+  })
+
+})
+
+// ============================================================
+// 37. DIRECTIONAL MARGIN
+// ============================================================
+describe('Directional Margin', () => {
+
+  it('margin left sets margin-left', () => {
+    const el = render(`Frame margin left 20`)
+    expect(getStyle(el, 'margin-left')).toBe('20px')
+  })
+
+  it('margin right sets margin-right', () => {
+    const el = render(`Frame margin right 15`)
+    expect(getStyle(el, 'margin-right')).toBe('15px')
+  })
+
+  it('margin top sets margin-top', () => {
+    const el = render(`Frame margin top 10`)
+    expect(getStyle(el, 'margin-top')).toBe('10px')
+  })
+
+  it('margin bottom sets margin-bottom', () => {
+    const el = render(`Frame margin bottom 25`)
+    expect(getStyle(el, 'margin-bottom')).toBe('25px')
+  })
+
+})
+
+// ============================================================
+// 38. PIN CENTER PROPERTIES
+// ============================================================
+describe('Pin Center Properties', () => {
+
+  it('pin-center-x centers horizontally', () => {
+    const el = render(`Frame pos pin-center-x`)
+    expect(getStyle(el, 'left')).toBe('50%')
+    expect(getStyle(el, 'transform')).toContain('translateX(-50%)')
+  })
+
+  it('pin-center-y centers vertically', () => {
+    const el = render(`Frame pos pin-center-y`)
+    expect(getStyle(el, 'top')).toBe('50%')
+    expect(getStyle(el, 'transform')).toContain('translateY(-50%)')
+  })
+
+  it('pin-center centers both axes', () => {
+    const el = render(`Frame pos pin-center`)
+    expect(getStyle(el, 'left')).toBe('50%')
+    expect(getStyle(el, 'top')).toBe('50%')
+    expect(getStyle(el, 'transform')).toContain('translate(-50%, -50%)')
+  })
+
+  it('pcx alias works', () => {
+    const el = render(`Frame pos pcx`)
+    expect(getStyle(el, 'left')).toBe('50%')
+  })
+
+  it('pcy alias works', () => {
+    const el = render(`Frame pos pcy`)
+    expect(getStyle(el, 'top')).toBe('50%')
+  })
+
+  it('pc alias works', () => {
+    const el = render(`Frame pos pc`)
+    expect(getStyle(el, 'left')).toBe('50%')
+    expect(getStyle(el, 'top')).toBe('50%')
+  })
+
+})
+
+// ============================================================
+// 39. MORE PROPERTY ALIASES
+// ============================================================
+describe('More Property Aliases', () => {
+
+  it('g = gap alias', () => {
+    const el = render(`Frame hor g 15`)
+    expect(getStyle(el, 'gap')).toBe('15px')
+  })
+
+  it('cen = center alias', () => {
+    const el = render(`Frame hor cen`)
+    expect(getStyle(el, 'justify-content')).toBe('center')
+    expect(getStyle(el, 'align-items')).toBe('center')
+  })
+
+  it('positioned = pos alias', () => {
+    // positioned with x/y makes the element absolutely positioned
+    const el = render(`Frame positioned x 10`)
+    expect(getStyle(el, 'position')).toBe('absolute')
+    expect(getStyle(el, 'left')).toBe('10px')
+  })
+
+  it('rot = rotate alias', () => {
+    const el = render(`Frame rot 45`)
+    expect(getStyle(el, 'transform')).toContain('rotate(45deg)')
+  })
+
+  it('m = margin alias', () => {
+    const el = render(`Frame m 20`)
+    expect(getStyle(el, 'margin')).toBe('20px')
+  })
+
+})
+
+// ============================================================
+// 40. ICON PRIMITIVE
+// ============================================================
+describe('Icon Primitive', () => {
+
+  it('Icon renders as span', () => {
+    const el = render(`Icon "star"`)
+    expect(el.tagName.toLowerCase()).toBe('span')
+  })
+
+  it('Icon can have styles applied', () => {
+    const el = render(`Icon "star" fs 24`)
+    expect(getStyle(el, 'font-size')).toBe('24px')
+  })
+
+})
+
+// ============================================================
+// 41. STACKED LAYOUT
+// ============================================================
+describe('Stacked Layout', () => {
+
+  it('stacked sets position relative on parent', () => {
+    const el = render(`Frame stacked
+  Frame bg #f00`)
+    expect(getStyle(el, 'position')).toBe('relative')
+  })
+
+  it('stacked children are absolutely positioned', () => {
+    const el = render(`Frame stacked
+  Frame bg #f00
+  Frame bg #0f0`)
+    const children = el.querySelectorAll(':scope > div')
+    expect(children.length).toBe(2)
+    // Children in stacked layout should be absolute
+    expect(getStyle(children[0] as HTMLElement, 'position')).toBe('absolute')
+    expect(getStyle(children[1] as HTMLElement, 'position')).toBe('absolute')
+  })
+
+})
+
+// ============================================================
+// 42. ALIGN PROPERTY
+// ============================================================
+describe('Align Property', () => {
+
+  it('align top sets align-items flex-start', () => {
+    const el = render(`Frame hor align top`)
+    expect(getStyle(el, 'align-items')).toBe('flex-start')
+  })
+
+  it('align bottom sets align-items flex-end', () => {
+    const el = render(`Frame hor align bottom`)
+    expect(getStyle(el, 'align-items')).toBe('flex-end')
+  })
+
+  it('align left sets justify-content flex-start (hor)', () => {
+    const el = render(`Frame hor align left`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-start')
+  })
+
+  it('align right sets justify-content flex-end (hor)', () => {
+    const el = render(`Frame hor align right`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-end')
+  })
+
+  it('align center sets both to center', () => {
+    const el = render(`Frame hor align center`)
+    expect(getStyle(el, 'justify-content')).toBe('center')
+    expect(getStyle(el, 'align-items')).toBe('center')
+  })
+
+})
+
+// ============================================================
+// 43. STANDALONE ALIGNMENT
+// ============================================================
+describe('Standalone Alignment', () => {
+
+  it('left sets justify-content flex-start', () => {
+    const el = render(`Frame hor left`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-start')
+  })
+
+  it('right sets justify-content flex-end', () => {
+    const el = render(`Frame hor right`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-end')
+  })
+
+  it('top sets justify-content flex-start (ver)', () => {
+    const el = render(`Frame ver top`)
+    // In vertical layout, top/bottom control justify-content
+    expect(getStyle(el, 'justify-content')).toBe('flex-start')
+  })
+
+  it('bottom sets justify-content flex-end (ver)', () => {
+    const el = render(`Frame ver bottom`)
+    // In vertical layout, top/bottom control justify-content
+    expect(getStyle(el, 'justify-content')).toBe('flex-end')
+  })
+
+})
+
+// ============================================================
+// 44. LAYOUT + POSITION KONFLIKTE
+// ============================================================
+describe('Layout + Position Conflicts', () => {
+
+  it('hor center + pos x - position overrides', () => {
+    const el = render(`Frame hor center pos x 50`)
+    expect(getStyle(el, 'position')).toBe('absolute')
+    expect(getStyle(el, 'left')).toBe('50px')
+  })
+
+  it('grid + stacked - stacked wins (last)', () => {
+    const el = render(`Frame grid 3 stacked`)
+    expect(getStyle(el, 'position')).toBe('relative')
+  })
+
+  it('stacked + grid - grid wins (last)', () => {
+    const el = render(`Frame stacked grid 3`)
+    expect(getStyle(el, 'display')).toBe('grid')
+  })
+
+})
+
+// ============================================================
+// 45. TRANSFORM KOMBINATIONEN
+// ============================================================
+describe('Transform Combinations', () => {
+
+  it('rotate + scale zusammen', () => {
+    const el = render(`Frame rotate 45 scale 1.5`)
+    const transform = getStyle(el, 'transform')
+    expect(transform).toContain('rotate(45deg)')
+    expect(transform).toContain('scale(1.5)')
+  })
+
+  it('rotate + scale + translate', () => {
+    const el = render(`Frame rotate 90 scale 2 translate 10`)
+    const transform = getStyle(el, 'transform')
+    expect(transform).toContain('rotate(90deg)')
+    expect(transform).toContain('scale(2)')
+  })
+
+})
+
+// ============================================================
+// 46. MEHR REIHENFOLGE KONFLIKTE
+// ============================================================
+describe('More Order Conflicts', () => {
+
+  it('tl dann br - br gewinnt', () => {
+    const el = render(`Frame tl br`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-end')
+    expect(getStyle(el, 'align-items')).toBe('flex-end')
+  })
+
+  it('br dann tl - tl gewinnt', () => {
+    const el = render(`Frame br tl`)
+    expect(getStyle(el, 'justify-content')).toBe('flex-start')
+    expect(getStyle(el, 'align-items')).toBe('flex-start')
+  })
+
+  it('center dann spread - spread gewinnt', () => {
+    const el = render(`Frame hor center spread`)
+    expect(getStyle(el, 'justify-content')).toBe('space-between')
+  })
+
+  it('spread dann center - center gewinnt', () => {
+    const el = render(`Frame hor spread center`)
+    expect(getStyle(el, 'justify-content')).toBe('center')
+  })
+
+})
+
+// ============================================================
+// 47. TIEFE VERSCHACHTELUNG (4+ EBENEN)
+// ============================================================
+describe('Deep Nesting 4+ Levels', () => {
+
+  it('4 ebenen layout-wechsel', () => {
+    const el = render(`
+Frame hor
+  Frame ver
+    Frame hor
+      Frame ver
+        Text "deep"`)
+    const l1 = el
+    const l2 = l1.querySelector(':scope > div') as HTMLElement
+    const l3 = l2?.querySelector(':scope > div') as HTMLElement
+    const l4 = l3?.querySelector(':scope > div') as HTMLElement
+
+    expect(getStyle(l1, 'flex-direction')).toBe('row')
+    expect(getStyle(l2, 'flex-direction')).toBe('column')
+    expect(getStyle(l3, 'flex-direction')).toBe('row')
+    expect(getStyle(l4, 'flex-direction')).toBe('column')
+  })
+
+  it('stacked mit positioned child', () => {
+    const el = render(`
+Frame stacked
+  Frame pos x 10 y 20`)
+    const child = el.querySelector(':scope > div') as HTMLElement
+    expect(getStyle(el, 'position')).toBe('relative')
+    expect(getStyle(child, 'position')).toBe('absolute')
+    expect(getStyle(child, 'left')).toBe('10px')
+  })
+
+})
+
+// ============================================================
+// 48. NULL-WERTE
+// ============================================================
+describe('Zero Values', () => {
+
+  it('pad 0 margin 0 gap 0', () => {
+    const el = render(`Frame pad 0 margin 0 gap 0`)
+    expect(getStyle(el, 'padding')).toBe('0px')
+    expect(getStyle(el, 'margin')).toBe('0px')
+    expect(getStyle(el, 'gap')).toBe('0px')
+  })
+
+  it('w 0 h 0', () => {
+    const el = render(`Frame w 0 h 0`)
+    expect(getStyle(el, 'width')).toBe('0px')
+    expect(getStyle(el, 'height')).toBe('0px')
+  })
+
+  it('opacity 0', () => {
+    const el = render(`Frame opacity 0`)
+    expect(getStyle(el, 'opacity')).toBe('0')
+  })
+
+  it('scale 0', () => {
+    const el = render(`Frame scale 0`)
+    expect(getStyle(el, 'transform')).toContain('scale(0)')
+  })
+
+  it('rotate 0', () => {
+    const el = render(`Frame rotate 0`)
+    expect(getStyle(el, 'transform')).toContain('rotate(0deg)')
+  })
+
+})
+
+// ============================================================
+// 49. NEGATIVE WERTE
+// ============================================================
+describe('Negative Values', () => {
+
+  it('margin -10', () => {
+    const el = render(`Frame margin -10`)
+    expect(getStyle(el, 'margin')).toBe('-10px')
+  })
+
+  it('z -1', () => {
+    const el = render(`Frame z -1`)
+    expect(getStyle(el, 'z-index')).toBe('-1')
+  })
+
+  it('x -20 y -30', () => {
+    const el = render(`Frame pos x -20 y -30`)
+    expect(getStyle(el, 'left')).toBe('-20px')
+    expect(getStyle(el, 'top')).toBe('-30px')
+  })
+
+  it('rotate -180', () => {
+    const el = render(`Frame rotate -180`)
+    expect(getStyle(el, 'transform')).toContain('rotate(-180deg)')
+  })
+
+})
+
+// ============================================================
+// 50. EXTREME WERTE
+// ============================================================
+describe('Extreme Values', () => {
+
+  it('w 99999', () => {
+    const el = render(`Frame w 99999`)
+    expect(getStyle(el, 'width')).toBe('99999px')
+  })
+
+  it('rotate 720 (2x360)', () => {
+    const el = render(`Frame rotate 720`)
+    expect(getStyle(el, 'transform')).toContain('rotate(720deg)')
+  })
+
+  it('rotate -360', () => {
+    const el = render(`Frame rotate -360`)
+    expect(getStyle(el, 'transform')).toContain('rotate(-360deg)')
+  })
+
+  it('scale 10', () => {
+    const el = render(`Frame scale 10`)
+    expect(getStyle(el, 'transform')).toContain('scale(10)')
+  })
+
+  it('z 9999', () => {
+    const el = render(`Frame z 9999`)
+    expect(getStyle(el, 'z-index')).toBe('9999')
+  })
+
+})
+
+// ============================================================
+// 51. MULTIPLE STATES
+// ============================================================
+describe('Multiple States', () => {
+
+  it('hover state kompiliert', () => {
+    const el = render(`
+Frame bg #fff
+  hover: bg #f00`)
+    expect(colorMatches(getStyle(el, 'background-color'), '#fff')).toBe(true)
+  })
+
+  it('mehrere states auf einem element', () => {
+    const el = render(`
+Frame bg #fff
+  hover: bg #f00
+  focus: bg #0f0`)
+    expect(el.tagName.toLowerCase()).toBe('div')
+  })
+
+  it('custom state selected', () => {
+    const el = render(`
+Frame
+  state selected: bg #f00 bor 2`)
+    expect(el.tagName.toLowerCase()).toBe('div')
+  })
+
+})
+
+// ============================================================
+// 52. MULTIPLE EVENTS
+// ============================================================
+describe('Multiple Events', () => {
+
+  it('onclick kompiliert', () => {
+    const el = render(`
+Button "Click"
+  onclick: toggle .modal`)
+    expect(el.tagName.toLowerCase()).toBe('button')
+  })
+
+  it('mehrere events auf einem element', () => {
+    const el = render(`
+Button "Action"
+  onclick: show .panel
+  onhover: highlight`)
+    expect(el.tagName.toLowerCase()).toBe('button')
+  })
+
+  it('onkeydown mit key', () => {
+    const el = render(`
+Input
+  onkeydown enter: submit`)
+    expect(el.tagName.toLowerCase()).toBe('input')
+  })
+
+})
+
+// ============================================================
+// 53. TOKEN REIHENFOLGE
+// ============================================================
+describe('Token Order', () => {
+
+  it('token dann fester wert - fester gewinnt', () => {
+    const el = render(`
+$size: 100
+Frame w $size w 200`)
+    expect(getStyle(el, 'width')).toBe('200px')
+  })
+
+  it('fester wert dann token - token gewinnt (as CSS var)', () => {
+    const el = render(`
+$size: 150
+Frame w 100 w $size`)
+    // Tokens are rendered as CSS variables, not resolved values
+    expect(getStyle(el, 'width')).toBe('var(--size)')
+  })
+
+  it('token für mehrere properties (as CSS vars)', () => {
+    const el = render(`
+$space: 16
+Frame pad $space gap $space margin $space`)
+    // Tokens stay as CSS variables
+    expect(getStyle(el, 'padding')).toBe('var(--space)')
+    expect(getStyle(el, 'gap')).toBe('var(--space)')
+    expect(getStyle(el, 'margin')).toBe('var(--space)')
+  })
+
+})
+
+// ============================================================
+// 54. PRAXIS-PATTERNS
+// ============================================================
+describe('Practical Patterns', () => {
+
+  it('card component', () => {
+    const el = render(`
+Frame ver pad 16 gap 12 bg #fff rad 8 shadow md
+  Text "Title" weight bold fs 18
+  Text "Description" col #666`)
+    expect(getStyle(el, 'flex-direction')).toBe('column')
+    expect(getStyle(el, 'padding')).toBe('16px')
+    expect(getStyle(el, 'gap')).toBe('12px')
+    expect(getStyle(el, 'border-radius')).toBe('8px')
+  })
+
+  it('button component', () => {
+    const el = render(`Button "Submit" pad 12 bg #007bff col #fff rad 4 cursor pointer`)
+    expect(getStyle(el, 'padding')).toBe('12px')
+    expect(getStyle(el, 'border-radius')).toBe('4px')
+    expect(getStyle(el, 'cursor')).toBe('pointer')
+  })
+
+  it('modal overlay', () => {
+    // Note: pin-* sets position: absolute, overriding fixed
+    const el = render(`Frame fixed pin-left 0 pin-top 0 w full h full center`)
+    expect(getStyle(el, 'position')).toBe('absolute')
+    expect(getStyle(el, 'left')).toBe('0px')
+    expect(getStyle(el, 'top')).toBe('0px')
+  })
+
+  it('navbar', () => {
+    const el = render(`
+Frame hor spread pad 16 bg #333
+  Text "Logo" col #fff
+  Frame hor gap 24
+    Link "Home"
+    Link "About"`)
+    expect(getStyle(el, 'flex-direction')).toBe('row')
+    expect(getStyle(el, 'justify-content')).toBe('space-between')
+    expect(getStyle(el, 'padding')).toBe('16px')
+  })
+
+})

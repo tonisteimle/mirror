@@ -97,20 +97,6 @@ TextField
     expect(output).toContain("document.createElement('input')")
   })
 
-  // Note: Input placeholder handling via string might not be fully implemented
-  it.skip('input with placeholder as string (placeholder handling not yet implemented)', () => {
-    const input = `
-Email as input:
-  pad 8 12
-
-Email "Enter email"
-`
-    const output = compile(input)
-    expect(output).toContain("document.createElement('input')")
-    expect(output).toContain('placeholder')
-    expect(output).toContain('Enter email')
-  })
-
   it('input with styles', () => {
     const input = `
 Input as input:
@@ -179,19 +165,6 @@ TextArea
     expect(output).toContain("document.createElement('textarea')")
   })
 
-  // Note: Textarea placeholder handling via string might not be fully implemented
-  it.skip('textarea with placeholder (placeholder handling not yet implemented)', () => {
-    const input = `
-Notes as textarea:
-  pad 12
-
-Notes "Enter notes..."
-`
-    const output = compile(input)
-    expect(output).toContain("document.createElement('textarea')")
-    expect(output).toContain('placeholder')
-  })
-
   it('textarea with dimensions', () => {
     const input = `
 Message as textarea:
@@ -214,18 +187,6 @@ Message "Your message..."
 // ============================================
 
 describe('E2E: Image Primitive', () => {
-  it.skip('generates img element with src (src handling not yet implemented)', () => {
-    const input = `
-Img as image:
-
-Img "https://example.com/image.png"
-`
-    const output = compile(input)
-    expect(output).toContain("document.createElement('img')")
-    expect(output).toContain('src')
-    expect(output).toContain('https://example.com/image.png')
-  })
-
   it('image with dimensions', () => {
     // Note: Using MyAvatar instead of Avatar because Avatar is a Zag primitive
     const input = `
