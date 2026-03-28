@@ -54,7 +54,7 @@ Frame
     Text "..."    ← kind des frame
 ```
 
-**test:** `nested-zag-004.test.ts` (3 tests)
+**test:** `nested-zag-004.test.ts` (10 tests)
 
 ---
 
@@ -91,7 +91,7 @@ Child extends Card:
 ```
 → hat BEIDE texte
 
-**test:** `inheritance-005.test.ts` (4 tests)
+**test:** `inheritance-005.test.ts` (10 tests)
 
 ---
 
@@ -654,9 +654,9 @@ Select w 200 bg #f00 pad 10
 |-----------|-------|--------|
 | structure-001.test.ts | 3 | ✓ |
 | zag-002.test.ts | 3 | ✓ |
-| nested-zag-004.test.ts | 3 | ✓ |
+| nested-zag-004.test.ts | 10 | ✓ |
 | properties-003.test.ts | 3 | ✓ |
-| inheritance-005.test.ts | 4 | ✓ |
+| inheritance-005.test.ts | 10 | ✓ |
 | layout-006.test.ts | 14 | ✓ |
 | layout-conflicts-007.test.ts | 5 | ✓ |
 | alignment-008.test.ts | 9 | ✓ |
@@ -677,7 +677,7 @@ Select w 200 bg #f00 pad 10
 | html-output-022.test.ts | 210 | ✓ |
 | backlog-023.test.ts | 33 | ✓ |
 
-**gesamt: 1810 tests** (alle bestanden)
+**gesamt: 523 tests in compiler/** (alle bestanden)
 
 ---
 
@@ -1466,4 +1466,74 @@ Frame bg #f00 // am ende
 | html-output-022.test.ts | 273 | e2e/integration |
 | andere feature tests | ~300 | features |
 
-**gesamt: 1888 tests** (1884 bestanden, 4 übersprungen)
+**gesamt: 3717 tests** (alle bestanden, 6 übersprungen - LLM-Agent-Tests)
+
+---
+
+## gelöste bugs (session 6)
+
+### bug 10: event-vererbung funktioniert nicht
+
+**problem war:**
+```
+Clickable as Frame:
+  onclick: show Modal
+
+SpecialClickable extends Clickable:
+  bg #f00
+
+SpecialClickable
+→ onclick wird NICHT vererbt
+```
+
+**lösung:**
+- parser: event-detection VOR state/slot-detection
+- `onclick:` wurde fälschlich als state geparst
+- präzise prüfung: `on` + mindestens 1 zeichen (nicht `on`/`off`)
+
+**geänderte dateien:**
+- `src/parser/parser.ts` - event-check vor state-check in parseComponentBody
+
+**test:** `inheritance-005.test.ts` - "5.6: Vererbung mit Events"
+
+### bug 11: child override parsing mit semicolons
+
+**problem war:**
+```
+NavItem Icon "home"; Label "Home"
+→ nur 1 child override statt 2
+```
+
+**lösung:**
+- `parseInlineProperties` konsumierte semicolons
+- neuer parameter `stopAtSemicolon` hinzugefügt
+- `parseChildOverridesFromStart` nutzt jetzt `{ stopAtSemicolon: true }`
+
+**geänderte dateien:**
+- `src/parser/parser.ts` - stopAtSemicolon option
+
+**test:** `parser-child-overrides.test.ts` (16 tests)
+
+### feature: single quotes für strings
+
+```
+Text 'Hello World'    ← jetzt gültig
+Text "Hello World"    ← wie immer
+```
+
+**geänderte dateien:**
+- `src/parser/lexer.ts` - scanString() unterstützt beide quote-typen
+
+**test:** `html-output-022.test.ts` - "single quotes"
+
+### feature: semicolons als property-trenner
+
+```
+Frame bg #f00; w 100; pad 16    ← jetzt gültig
+Frame bg #f00, w 100, pad 16    ← wie immer
+```
+
+**design-entscheidung:** Nur PascalCase nach semicolon = child override syntax.
+Lowercase nach semicolon = property separator.
+
+**test:** `html-output-022.test.ts` - "semicolons"

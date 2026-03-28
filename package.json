@@ -26,7 +26,8 @@
     "studio": "npx serve . -p 5173",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
-    "generate": "npx tsx scripts/generate-from-schema.ts"
+    "generate": "npx tsx scripts/generate-from-schema.ts",
+    "generate:check": "npx tsx scripts/generate-from-schema.ts --check"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.76",

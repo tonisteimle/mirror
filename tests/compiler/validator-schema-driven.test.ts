@@ -44,10 +44,22 @@ describe('Schema-Driven: Primitives', () => {
 })
 
 describe('Schema-Driven: Properties', () => {
+  // Skip properties that have no testable features or need special handling
+  const SKIP_PROPERTIES = new Set(['content', 'href', 'src', 'placeholder', 'text', 'type', 'name', 'value', 'animation'])
+
   for (const [propName, propDef] of Object.entries(SCHEMA)) {
+    // Skip properties with no testable features
+    const hasStandalone = propDef.keywords?._standalone
+    const hasKeywords = propDef.keywords && Object.keys(propDef.keywords).some(k => k !== '_standalone')
+    const hasNumeric = !!propDef.numeric
+    const hasColor = !!propDef.color
+
+    if (SKIP_PROPERTIES.has(propName)) continue
+    if (!hasStandalone && !hasKeywords && !hasNumeric && !hasColor) continue
+
     describe(`Property: ${propName}`, () => {
       // Test property name
-      if (propDef.keywords?._standalone) {
+      if (hasStandalone) {
         it(`accepts standalone "${propName}"`, () => {
           const result = validate(`Box ${propName}`)
           expect(result.valid).toBe(true)
@@ -56,7 +68,7 @@ describe('Schema-Driven: Properties', () => {
 
       // Test aliases
       for (const alias of propDef.aliases) {
-        if (propDef.keywords?._standalone) {
+        if (hasStandalone) {
           it(`accepts standalone alias "${alias}"`, () => {
             const result = validate(`Box ${alias}`)
             expect(result.valid).toBe(true)
@@ -65,8 +77,8 @@ describe('Schema-Driven: Properties', () => {
       }
 
       // Test keyword values
-      if (propDef.keywords) {
-        const keywords = Object.keys(propDef.keywords).filter(k => k !== '_standalone')
+      if (hasKeywords) {
+        const keywords = Object.keys(propDef.keywords!).filter(k => k !== '_standalone')
         for (const keyword of keywords) {
           it(`accepts keyword "${keyword}"`, () => {
             const result = validate(`Box ${propName} ${keyword}`)

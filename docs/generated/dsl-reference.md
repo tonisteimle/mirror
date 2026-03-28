@@ -1,137 +1,260 @@
-# Mirror DSL Reference
+# DSL Reference
 
-> **Auto-generated** aus `src/schema/dsl.ts` – nicht manuell editieren!
+> Auto-generated from `src/schema/dsl.ts`. Do not edit manually.
+> Run `npm run generate` to update.
+## DSL Reference (auto-generated)
 
-## Table of Contents
+### Primitives
 
-- [Keywords](#keywords)
-- [Primitives](#primitives)
-- [Properties](#properties)
-- [Events](#events)
-- [Actions](#actions)
-- [States](#states)
-- [Keyboard Keys](#keyboard-keys)
+| Primitive | HTML | Aliases |
+|-----------|------|---------|
+| Frame | `<div>` | Box |
+| Text | `<span>` | - |
+| Button | `<button>` | - |
+| Input | `<input>` | - |
+| Textarea | `<textarea>` | - |
+| Label | `<label>` | - |
+| Image | `<img>` | Img |
+| Icon | `<span>` | - |
+| Link | `<a>` | - |
+| Slot | `<div>` | - |
+| Divider | `<hr>` | - |
+| Spacer | `<div>` | - |
+| Header | `<header>` | - |
+| Nav | `<nav>` | - |
+| Main | `<main>` | - |
+| Section | `<section>` | - |
+| Article | `<article>` | - |
+| Aside | `<aside>` | - |
+| Footer | `<footer>` | - |
+| H1 | `<h1>` | - |
+| H2 | `<h2>` | - |
+| H3 | `<h3>` | - |
+| H4 | `<h4>` | - |
+| H5 | `<h5>` | - |
+| H6 | `<h6>` | - |
 
----
+### Zag Primitives (Behavior Components)
 
-## Keywords
+> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.
 
-Reserved keywords that cannot be used as identifiers:
+| Component | Machine | Slots | Description |
+|-----------|---------|-------|-------------|
+| **Selection & Dropdowns** | | | |
+| Select | select | Trigger, Content, Item +8 | Dropdown select with keyboard navigation |
+| Combobox | combobox | Root, Label, Control +9 | Autocomplete combobox with filtering |
+| Listbox | listbox | Root, Label, Content +5 | Listbox selection |
+| **Menus** | | | |
+| Menu | menu | Trigger, Positioner, Content +5 | Dropdown menu with keyboard navigation |
+| ContextMenu | menu | Trigger, Positioner, Content +4 | Right-click context menu |
+| NestedMenu | menu | Trigger, Positioner, Content +5 | Nested submenu structure |
+| NavigationMenu | navigation-menu | Root, List, Item +5 | Navigation menu with submenus |
+| **Form Controls** | | | |
+| Checkbox | checkbox | Root, Control, Label +2 | Checkbox with label |
+| Switch | switch | Track, Thumb, Label | Toggle switch |
+| RadioGroup | radio-group | Root, Item, ItemControl +4 | Radio button group |
+| Slider | slider | Root, Track, Range +6 | Range slider |
+| RangeSlider | slider | Root, Track, Range +6 | Range slider with two thumbs |
+| AngleSlider | angle-slider | Root, Control, Thumb +4 | Circular angle slider |
+| NumberInput | number-input | Root, Label, Control +4 | Number input with increment/decrement |
+| PinInput | pin-input | Root, Label, Control +2 | PIN/OTP input |
+| PasswordInput | password-input | Root, Label, Control +2 | Password input with visibility toggle |
+| TagsInput | tags-input | Root, Label, Control +6 | Tags/chips input |
+| Editable | editable | Root, Area, Preview +5 | Inline editable text |
+| RatingGroup | rating-group | Root, Label, Control +2 | Star rating input |
+| SegmentedControl | radio-group | Root, Item, ItemText +2 | Segmented control / button group |
+| ToggleGroup | toggle-group | Root, Item | Toggle button group |
+| **Date & Time** | | | |
+| DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
+| DateInput | date-input | Root, Label, Control +2 | Segmented date input |
+| Timer | timer | Root, Area, Control +3 | Timer/stopwatch |
+| **Overlays & Modals** | | | |
+| Dialog | dialog | Trigger, Backdrop, Positioner +4 | Modal dialog |
+| Tooltip | tooltip | Trigger, Positioner, Content +1 | Hover tooltip |
+| Popover | popover | Trigger, Positioner, Content +5 | Click popover |
+| HoverCard | hover-card | Trigger, Positioner, Content +1 | Hover card preview |
+| FloatingPanel | floating-panel | Trigger, Positioner, Content +5 | Draggable floating panel |
+| Tour | tour | Backdrop, Spotlight, Positioner +9 | Guided tour/walkthrough |
+| Presence | presence | Root | Presence animation utility |
+| **Navigation** | | | |
+| Tabs | tabs | Root, List, Trigger +2 | Tabbed navigation |
+| Accordion | accordion | Root, Item, ItemTrigger +2 | Collapsible accordion |
+| Collapsible | collapsible | Root, Trigger, Content | Collapsible section |
+| Steps | steps | Root, List, Item +7 | Step wizard/stepper |
+| Pagination | pagination | Root, PrevTrigger, NextTrigger +2 | Pagination controls |
+| TreeView | tree-view | Root, Tree, Branch +5 | Tree view navigation |
+| **Media & Files** | | | |
+| Avatar | avatar | Root, Image, Fallback | Avatar with fallback |
+| FileUpload | file-upload | Root, Dropzone, Trigger +8 | File upload with drag & drop |
+| ImageCropper | image-cropper | Root, Image, Overlay +9 | Image cropping tool |
+| Carousel | carousel | Root, ItemGroup, Item +6 | Carousel/slider |
+| SignaturePad | signature-pad | Root, Control, Segment +4 | Signature drawing pad |
+| **Feedback & Status** | | | |
+| Progress | progress | Root, Track, Range +5 | Linear progress bar |
+| CircularProgress | progress | Root, Circle, CircleTrack +3 | Circular progress indicator |
+| Toast | toast | Root, Title, Description +2 | Toast notification |
+| Marquee | marquee | Root, Content | Scrolling marquee |
+| **Utility** | | | |
+| Clipboard | clipboard | Root, Label, Control +3 | Clipboard copy utility |
+| QRCode | qr-code | Root, Frame, Pattern +1 | QR code generator |
+| ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
+| Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
 
-```
-as, extends, named, each, in, if, else, then, where, and, or, not, data, keys, selection, route, animation
-```
+### Properties
 
-## Primitives
+| Property | Aliases | Werte |
+|----------|---------|-------|
+| width | w | full, hug, <number>, $token |
+| height | h | full, hug, <number>, $token |
+| size | - | full, hug, <number>, $token |
+| min-width | minw | <number>, $token |
+| max-width | maxw | <number>, $token |
+| min-height | minh | <number>, $token |
+| max-height | maxh | <number>, $token |
+| aspect | - | square, video, <number> |
+| horizontal | hor | *(standalone)* |
+| vertical | ver | *(standalone)* |
+| gap | g | <number>, $token |
+| center | cen | *(standalone)* |
+| spread | - | *(standalone)* |
+| top-left | tl | *(standalone)* |
+| top-center | tc | *(standalone)* |
+| top-right | tr | *(standalone)* |
+| center-left | cl | *(standalone)* |
+| center-right | cr | *(standalone)* |
+| bottom-left | bl | *(standalone)* |
+| bottom-center | bc | *(standalone)* |
+| bottom-right | br | *(standalone)* |
+| wrap | - | *(standalone)* |
+| pos | positioned, position | *(standalone)* |
+| stacked | - | *(standalone)* |
+| grid | - | auto, <number> |
+| grow | - | *(standalone)* |
+| shrink | - | *(standalone)* |
+| align | - | top, bottom, left, right, center |
+| left | - | *(standalone)* |
+| right | - | *(standalone)* |
+| top | - | *(standalone)* |
+| bottom | - | *(standalone)* |
+| hor-center | - | *(standalone)* |
+| ver-center | - | *(standalone)* |
+| padding | pad, p | <number>, $token |
+| margin | m | <number>, $token |
+| background | bg | <color>, $token |
+| color | col, c | <color>, $token |
+| border-color | boc | <color>, $token |
+| border | bor | <number>, $token |
+| radius | rad | <number>, $token |
+| font-size | fs | <number>, $token |
+| weight | - | thin, light, normal, medium, semibold, bold, black, <number> |
+| line | - | <number>, $token |
+| font | - | sans, serif, mono, roboto, $token |
+| text-align | - | left, center, right, justify |
+| italic | - | *(standalone)* |
+| underline | - | *(standalone)* |
+| uppercase | - | *(standalone)* |
+| lowercase | - | *(standalone)* |
+| truncate | - | *(standalone)* |
+| x | - | <number> |
+| y | - | <number> |
+| pin-left | pl | <number> |
+| pin-right | pr | <number> |
+| pin-top | pt | <number> |
+| pin-bottom | pb | <number> |
+| pin-center-x | pcx | *(standalone)* |
+| pin-center-y | pcy | *(standalone)* |
+| pin-center | pc | *(standalone)* |
+| z | - | <number> |
+| absolute | abs | *(standalone)* |
+| fixed | - | *(standalone)* |
+| relative | - | *(standalone)* |
+| rotate | rot | <number> |
+| scale | - | <number> |
+| translate | - | <number> |
+| opacity | o, opa | <number> |
+| shadow | - | sm, md, lg |
+| cursor | - | pointer, grab, move, text, wait, not-allowed |
+| blur | - | <number> |
+| backdrop-blur | blur-bg | <number> |
+| hidden | - | *(standalone)* |
+| visible | - | *(standalone)* |
+| disabled | - | *(standalone)* |
+| scroll | scroll-ver | *(standalone)* |
+| scroll-hor | - | *(standalone)* |
+| scroll-both | - | *(standalone)* |
+| clip | - | *(standalone)* |
+| content | - | - |
+| href | - | - |
+| src | - | - |
+| placeholder | - | - |
+| focusable | - | *(standalone)* |
+| readonly | - | *(standalone)* |
+| type | - | - |
+| name | - | - |
+| value | - | - |
+| checked | - | *(standalone)* |
+| text | - | - |
+| icon-size | is | <number>, $token |
+| icon-color | ic | <color>, $token |
+| icon-weight | iw | <number> |
+| fill | - | *(standalone)* |
+| material | - | *(standalone)* |
+| animation | anim | fade-in, fade-out, slide-in, slide-out, scale-in, scale-out, bounce, pulse, shake, spin |
+| x-offset | - | <number> |
+| y-offset | - | <number> |
+| hover-bg | hover-background | <color>, $token |
+| hover-col | hover-color, hover-c | <color>, $token |
+| hover-opacity | hover-opa, hover-o | <number> |
+| hover-scale | - | <number> |
+| hover-border | hover-bor | <number> |
+| hover-border-color | hover-boc | <color>, $token |
+| hover-radius | hover-rad | <number> |
 
-Built-in component types:
+### Events
 
-| Primitive | HTML Tag | Description |
-|-----------|----------|-------------|
-| Frame (Box) | `<div>` | Container with vertical layout (default) |
-| Text | `<span>` | Text element |
-| Button | `<button>` | Clickable button |
-| Input | `<input>` | Text input field |
-| Textarea | `<textarea>` | Multi-line text input |
-| Label | `<label>` | Form label |
-| Image (Img) | `<img>` | Image element |
-| Icon | `<span>` | Icon element |
-| Link | `<a>` | Anchor link |
-| Slot | `<div>` | Slot placeholder for composition |
-| Divider | `<hr>` | Horizontal divider line |
-| Spacer | `<div>` | Flexible spacer element |
-| Header | `<header>` | Page or section header |
-| Nav | `<nav>` | Navigation section |
-| Main | `<main>` | Main content area |
-| Section | `<section>` | Generic section |
-| Article | `<article>` | Self-contained article |
-| Aside | `<aside>` | Sidebar content |
-| Footer | `<footer>` | Page or section footer |
-| H1 | `<h1>` | Heading level 1 |
-| H2 | `<h2>` | Heading level 2 |
-| H3 | `<h3>` | Heading level 3 |
-| H4 | `<h4>` | Heading level 4 |
-| H5 | `<h5>` | Heading level 5 |
-| H6 | `<h6>` | Heading level 6 |
+| Event | DOM | Key? |
+|-------|-----|------|
+| onclick | click | - |
+| onhover | mouseenter | - |
+| onfocus | focus | - |
+| onblur | blur | - |
+| onchange | change | - |
+| oninput | input | - |
+| onkeydown | keydown | ✓ |
+| onkeyup | keyup | ✓ |
+| onclick-outside | click-outside | - |
+| onload | load | - |
+| onenter | enter | - |
+| onexit | exit | - |
 
-## Properties
+### Actions
 
-See [properties.md](./properties.md) for detailed property documentation.
+| Action | Targets |
+|--------|---------|
+| show | - |
+| hide | - |
+| toggle | - |
+| open | - |
+| close | - |
+| select | - |
+| highlight | next, prev, first, last |
+| activate | - |
+| deactivate | - |
+| page | - |
+| call | - |
+| assign | - |
+| focus | - |
+| blur | - |
+| submit | - |
+| reset | - |
+| navigate | - |
 
-Total: 79 properties
+### States
 
-## Events
+**System:** hover, focus, active, disabled
 
-| Event | DOM Event | Description |
-|-------|-----------|-------------|
-| onclick | click | Click event |
-| onhover | mouseenter | Mouse enter event |
-| onfocus | focus | Focus event |
-| onblur | blur | Blur event |
-| onchange | change | Change event |
-| oninput | input | Input event |
-| onkeydown | keydown | Keydown event (accepts key modifier) |
-| onkeyup | keyup | Keyup event (accepts key modifier) |
-| onclick-outside | click-outside | Click outside element |
-| onload | load | Load event |
-| onenter | enter | Viewport enter (IntersectionObserver) |
-| onexit | exit | Viewport exit (IntersectionObserver) |
+**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error
 
-## Actions
+### Keyboard Keys
 
-| Action | Description | Targets |
-|--------|-------------|---------|
-| show | Show element | - |
-| hide | Hide element | - |
-| toggle | Toggle visibility | - |
-| open | Open (modal, dropdown) | - |
-| close | Close | - |
-| select | Select item | - |
-| highlight | Highlight item | next, prev, first, last |
-| activate | Activate element | - |
-| deactivate | Deactivate element | - |
-| page | Navigate to page | - |
-| call | Call function | - |
-| assign | Assign value | - |
-| focus | Focus element | - |
-| blur | Blur element | - |
-| submit | Submit form | - |
-| reset | Reset form | - |
-| navigate | Navigate to route | - |
-
-## States
-
-### System States (CSS pseudo-classes)
-
-| State | Description |
-|-------|-------------|
-| hover | Mouse hover state |
-| focus | Focus state |
-| active | Active/pressed state |
-| disabled | Disabled state |
-
-### Custom States (data-state attribute)
-
-| State | Description |
-|-------|-------------|
-| selected | Selected state |
-| highlighted | Highlighted state |
-| expanded | Expanded state |
-| collapsed | Collapsed state |
-| on | On state (toggle) |
-| off | Off state (toggle) |
-| open | Open state |
-| closed | Closed state |
-| filled | Filled state (input has value) |
-| valid | Valid state |
-| invalid | Invalid state |
-| loading | Loading state |
-| error | Error state |
-
-## Keyboard Keys
-
-Valid keys for `onkeydown` events:
-
-```
 escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, arrow-right, home, end
-```

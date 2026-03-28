@@ -244,7 +244,7 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | bottom-center | bc | *(standalone)* |
 | bottom-right | br | *(standalone)* |
 | wrap | - | *(standalone)* |
-| pos | positioned | *(standalone)* |
+| pos | positioned, position | *(standalone)* |
 | stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
 | grow | - | *(standalone)* |
@@ -301,6 +301,32 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 | scroll-hor | - | *(standalone)* |
 | scroll-both | - | *(standalone)* |
 | clip | - | *(standalone)* |
+| content | - | - |
+| href | - | - |
+| src | - | - |
+| placeholder | - | - |
+| focusable | - | *(standalone)* |
+| readonly | - | *(standalone)* |
+| type | - | - |
+| name | - | - |
+| value | - | - |
+| checked | - | *(standalone)* |
+| text | - | - |
+| icon-size | is | <number>, $token |
+| icon-color | ic | <color>, $token |
+| icon-weight | iw | <number> |
+| fill | - | *(standalone)* |
+| material | - | *(standalone)* |
+| animation | anim | fade-in, fade-out, slide-in, slide-out, scale-in, scale-out, bounce, pulse, shake, spin |
+| x-offset | - | <number> |
+| y-offset | - | <number> |
+| hover-bg | hover-background | <color>, $token |
+| hover-col | hover-color, hover-c | <color>, $token |
+| hover-opacity | hover-opa, hover-o | <number> |
+| hover-scale | - | <number> |
+| hover-border | hover-bor | <number> |
+| hover-border-color | hover-boc | <color>, $token |
+| hover-radius | hover-rad | <number> |
 
 ### Events
 

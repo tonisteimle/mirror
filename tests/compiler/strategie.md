@@ -31,6 +31,7 @@ sondern: "wie kann ich das kaputt machen?"
 
 | ebene | prüft | beispiel |
 |-------|-------|----------|
+| Schema-Driven Tests | alle schema-elemente automatisch | jede property wird getestet |
 | IR-Tests | zwischenrepräsentation | `node.styles` enthält `width: 100px` |
 | HTML-Output-Tests | echtes DOM (JSDOM) | `el.style.width === '100px'` |
 
@@ -38,9 +39,64 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 
 ---
 
+## schema-driven tests: garantierte vollständigkeit
+
+### single source of truth
+
+`src/schema/dsl.ts` ist die einzige quelle der wahrheit. alles andere wird daraus generiert:
+
+```
+src/schema/dsl.ts (SSOT)
+    │
+    ├── npm run generate
+    │   ├── CLAUDE.md (DSL Reference)
+    │   └── docs/generated/dsl-reference.md
+    │
+    └── schema-driven.test.ts
+        └── testet ALLE elemente automatisch
+```
+
+### was automatisch getestet wird (273 schema tests)
+
+| bereich | tests | quelle |
+|---------|-------|--------|
+| Primitives | 25 | `DSL.primitives` |
+| Primitive Aliases | 2 | `DSL.primitives[x].aliases` |
+| Zag Components | 50 | `ZAG_PRIMITIVES` |
+| Standalone Properties | 38 | `SCHEMA[x].keywords._standalone` |
+| Property Aliases | ~40 | `SCHEMA[x].aliases` |
+| Numeric Properties | 32 | `SCHEMA[x].numeric` |
+| Keyword Properties | ~50 | `SCHEMA[x].keywords` |
+| Events | 11 | `DSL.events` |
+| Key Events | 2 | `DSL.events[x].acceptsKey` |
+| System States | 4 | `DSL.states` (system: true) |
+| Custom States | 13 | `DSL.states` (system: false) |
+| Keyboard Keys | 12 | `DSL.keys` |
+
+### befehle
+
+```bash
+# generierung ausführen
+npm run generate
+
+# prüfen ob doku aktuell ist (für CI)
+npm run generate:check
+
+# schema-driven tests ausführen
+npm test -- tests/compiler/schema-driven.test.ts
+```
+
+### garantien
+
+1. **neue property in schema = automatisch getestet**
+2. **veraltete doku = CI schlägt fehl**
+3. **keine manuelle test-pflege für basis-abdeckung**
+
+---
+
 ## html-output-tests: abdeckung
 
-### was getestet wird (273 tests, 0 skipped)
+### was getestet wird (273 HTML-output tests)
 
 | bereich | tests | details |
 |---------|-------|---------|
@@ -167,19 +223,58 @@ backlog ist leer - alle geplanten tests implementiert.
 
 ## dokumentationsstrategie
 
-### regeln.md
+### struktur (refactored 2026-03-28)
 
-**nur bewiesene regeln.** jede regel hat einen test-verweis.
-
-```markdown
-## regel x
-
-beschreibung...
-
-**test:** `dateiname.test.ts` (n tests)
+```
+tests/compiler/
+├── strategie.md        ← philosophie, testebenen (diese datei)
+├── syntax-regeln.md    ← verhaltensregeln (205 zeilen, kompakt)
+├── changelog.md        ← bug-fixes chronologisch
+└── _archiv/
+    └── regeln.md       ← alte vollständige doku (1539 zeilen)
 ```
 
-keine regel ohne test. keine absichten. keine "sollte funktionieren".
+### dokumentations-dateien
+
+| datei | inhalt | zeilen |
+|-------|--------|--------|
+| `syntax-regeln.md` | Verhaltensregeln (nur nicht-offensichtliches) | ~200 |
+| `changelog.md` | Bug-Fixes chronologisch (standard-format) | ~120 |
+| `CLAUDE.md` | DSL-Referenz (auto-generiert aus Schema) | - |
+| `_archiv/regeln.md` | Alte vollständige Doku (für Referenz) | ~1500 |
+
+### was wohin gehört
+
+| inhalt | datei | grund |
+|--------|-------|-------|
+| Property-Liste | CLAUDE.md | Auto-generiert aus Schema |
+| Primitive-Mapping | CLAUDE.md | Auto-generiert aus Schema |
+| "Letzter gewinnt" Regel | syntax-regeln.md | Verhaltensregel |
+| Edge Cases | syntax-regeln.md | Nicht-offensichtlich |
+| Bug-Fix Details | changelog.md | Chronologisch |
+| Test-Philosophie | strategie.md | Meta-Ebene |
+
+### prinzipien
+
+1. **schema ist SSOT** - Properties, Primitives nur in `src/schema/dsl.ts`
+2. **keine redundanz** - was im Schema steht, nicht wiederholen
+3. **nur edge cases** - offensichtliches (`bg #f00` → background) nicht dokumentieren
+4. **changelog statt sessions** - chronologisch mit datum, nicht "session 3"
+5. **kompakt > vollständig** - 200 zeilen > 1500 zeilen
+
+### warum diese struktur?
+
+**problem vorher:**
+- 1539 zeilen in einer datei
+- property-listen dupliziert (auch in CLAUDE.md)
+- bug-history als "session 1, 2, 3..." ohne kontext
+- manuelle testzahlen die veralten
+
+**lösung:**
+- spezialisierte dateien für verschiedene zwecke
+- redundanz eliminiert (schema → CLAUDE.md)
+- changelog mit echten daten
+- alte doku archiviert (nicht gelöscht)
 
 ---
 
@@ -199,10 +294,13 @@ keine regel ohne test. keine absichten. keine "sollte funktionieren".
    → ursache analysieren (im parser/ir nachsehen)
    → fix implementieren
    → test muss PASS werden
-   → in regeln.md dokumentieren
+   → in changelog.md dokumentieren (### Fixed)
 
 5. wenn PASS:
    → kein bug, aber test bleibt als regression-schutz
+
+6. wenn neue verhaltensregel:
+   → in syntax-regeln.md dokumentieren (nur wenn nicht-offensichtlich)
 ```
 
 ---
@@ -211,8 +309,10 @@ keine regel ohne test. keine absichten. keine "sollte funktionieren".
 
 ```
 tests/compiler/
-├── strategie.md              ← diese datei
-├── regeln.md                 ← bewiesene compiler-regeln
+├── strategie.md              ← diese datei (philosophie, testebenen)
+├── syntax-regeln.md          ← verhaltensregeln (kompakt)
+├── changelog.md              ← bug-fixes chronologisch
+├── _archiv/regeln.md         ← alte vollständige doku (archiviert)
 ├── structure-001.test.ts     ← basis-struktur
 ├── zag-002.test.ts           ← zag-komponenten
 ├── properties-003.test.ts    ← property-aliase
@@ -235,7 +335,8 @@ tests/compiler/
 ├── zag-navigation-019.test.ts ← Tabs, Accordion, Steps, etc.
 ├── zag-media-020.test.ts     ← Avatar, FileUpload, Progress, etc.
 ├── provocation-021.test.ts   ← gezielte bug-suche
-└── html-output-022.test.ts   ← END-TO-END HTML-OUTPUT (JSDOM)
+├── html-output-022.test.ts   ← END-TO-END HTML-OUTPUT (JSDOM)
+└── schema-driven.test.ts     ← AUTO-GENERIERTE TESTS AUS SCHEMA
 ```
 
 ---

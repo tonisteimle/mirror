@@ -84,7 +84,7 @@ export interface PropertyDef {
   /** Kurzformen */
   aliases: string[]
   /** Kategorie für Docs */
-  category: 'sizing' | 'layout' | 'spacing' | 'color' | 'border' | 'typography' | 'effect' | 'position' | 'transform'
+  category: 'sizing' | 'layout' | 'spacing' | 'color' | 'border' | 'typography' | 'effect' | 'position' | 'transform' | 'content' | 'input' | 'icon' | 'animation' | 'state-variant'
   /** Beschreibung */
   description: string
   /** Erlaubte Keyword-Werte */
@@ -756,7 +756,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   pos: {
     name: 'pos',
-    aliases: ['positioned'],
+    aliases: ['positioned', 'position'],
     category: 'layout',
     description: 'Positioned container - children are automatically absolute and can use x/y',
 
@@ -1773,6 +1773,363 @@ export const SCHEMA: Record<string, PropertyDef> = {
         css: [{ property: 'overflow', value: 'hidden' }],
         example: 'Box clip',
       },
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // CONTENT (HTML attributes, not CSS)
+  // ---------------------------------------------------------------------------
+
+  content: {
+    name: 'content',
+    aliases: [],
+    category: 'content',
+    description: 'Text content for elements',
+
+    // Content is handled specially - not CSS
+    keywords: {},
+  },
+
+  href: {
+    name: 'href',
+    aliases: [],
+    category: 'content',
+    description: 'Link URL for anchor elements',
+
+    keywords: {},
+  },
+
+  src: {
+    name: 'src',
+    aliases: [],
+    category: 'content',
+    description: 'Source URL for images',
+
+    keywords: {},
+  },
+
+  placeholder: {
+    name: 'placeholder',
+    aliases: [],
+    category: 'content',
+    description: 'Placeholder text for inputs',
+
+    keywords: {},
+  },
+
+  // ---------------------------------------------------------------------------
+  // INPUT (Form element attributes)
+  // ---------------------------------------------------------------------------
+
+  focusable: {
+    name: 'focusable',
+    aliases: [],
+    category: 'input',
+    description: 'Make element focusable',
+
+    keywords: {
+      _standalone: {
+        description: 'Element can receive focus',
+        css: [],  // Sets tabindex, not CSS
+        example: 'Box focusable',
+      },
+    },
+  },
+
+  readonly: {
+    name: 'readonly',
+    aliases: [],
+    category: 'input',
+    description: 'Make input readonly',
+
+    keywords: {
+      _standalone: {
+        description: 'Input is readonly',
+        css: [],  // Sets attribute, not CSS
+        example: 'Input readonly',
+      },
+    },
+  },
+
+  type: {
+    name: 'type',
+    aliases: [],
+    category: 'input',
+    description: 'Input type (text, password, email, number, etc.)',
+
+    keywords: {},  // Accepts any string value
+  },
+
+  name: {
+    name: 'name',
+    aliases: [],
+    category: 'input',
+    description: 'Form element name attribute',
+
+    keywords: {},  // Accepts any string value
+  },
+
+  value: {
+    name: 'value',
+    aliases: [],
+    category: 'input',
+    description: 'Form element value',
+
+    keywords: {},  // Accepts any value
+  },
+
+  checked: {
+    name: 'checked',
+    aliases: [],
+    category: 'input',
+    description: 'Checkbox/radio checked state',
+
+    keywords: {
+      _standalone: {
+        description: 'Element is checked',
+        css: [],  // Sets attribute, not CSS
+        example: 'Checkbox checked',
+      },
+    },
+  },
+
+  text: {
+    name: 'text',
+    aliases: [],
+    category: 'content',
+    description: 'Text content (alternative to content property)',
+
+    keywords: {},  // Accepts any string value
+  },
+
+  // ---------------------------------------------------------------------------
+  // ICON
+  // ---------------------------------------------------------------------------
+
+  'icon-size': {
+    name: 'icon-size',
+    aliases: ['is'],
+    category: 'icon',
+    description: 'Icon size',
+
+    numeric: {
+      description: 'Icon size in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'font-size', value: `${n}px` }],
+      example: 'Icon icon-size 24',
+    },
+
+    token: true,
+  },
+
+  'icon-color': {
+    name: 'icon-color',
+    aliases: ['ic'],
+    category: 'icon',
+    description: 'Icon color',
+
+    color: {
+      description: 'Icon color',
+      css: (c) => [{ property: 'color', value: c }],
+    },
+
+    token: true,
+  },
+
+  'icon-weight': {
+    name: 'icon-weight',
+    aliases: ['iw'],
+    category: 'icon',
+    description: 'Icon stroke weight',
+
+    numeric: {
+      description: 'Icon weight (100-900)',
+      unit: '',
+      css: (n) => [{ property: 'font-weight', value: String(n) }],
+      example: 'Icon icon-weight 300',
+    },
+  },
+
+  fill: {
+    name: 'fill',
+    aliases: [],
+    category: 'icon',
+    description: 'Filled icon variant',
+
+    keywords: {
+      _standalone: {
+        description: 'Use filled icon variant',
+        css: [],  // Sets data attribute
+        example: 'Icon fill',
+      },
+    },
+  },
+
+  material: {
+    name: 'material',
+    aliases: [],
+    category: 'icon',
+    description: 'Material icon style',
+
+    keywords: {
+      _standalone: {
+        description: 'Use Material icon style',
+        css: [],  // Sets data attribute
+        example: 'Icon material',
+      },
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // ANIMATION
+  // ---------------------------------------------------------------------------
+
+  animation: {
+    name: 'animation',
+    aliases: ['anim'],
+    category: 'animation',
+    description: 'Animation preset or custom animation',
+
+    keywords: {
+      'fade-in': { description: 'Fade in animation', css: [] },
+      'fade-out': { description: 'Fade out animation', css: [] },
+      'slide-in': { description: 'Slide in animation', css: [] },
+      'slide-out': { description: 'Slide out animation', css: [] },
+      'scale-in': { description: 'Scale in animation', css: [] },
+      'scale-out': { description: 'Scale out animation', css: [] },
+      'bounce': { description: 'Bounce animation', css: [] },
+      'pulse': { description: 'Pulse animation', css: [] },
+      'shake': { description: 'Shake animation', css: [] },
+      'spin': { description: 'Spin animation', css: [] },
+    },
+  },
+
+  'x-offset': {
+    name: 'x-offset',
+    aliases: [],
+    category: 'position',
+    description: 'X offset for positioned elements',
+
+    numeric: {
+      description: 'X offset in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'left', value: `${n}px` }],
+      example: 'Box x-offset 10',
+    },
+  },
+
+  'y-offset': {
+    name: 'y-offset',
+    aliases: [],
+    category: 'position',
+    description: 'Y offset for positioned elements',
+
+    numeric: {
+      description: 'Y offset in pixels',
+      unit: 'px',
+      css: (n) => [{ property: 'top', value: `${n}px` }],
+      example: 'Box y-offset 10',
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // STATE VARIANTS (hover-*, focus-*, etc.)
+  // ---------------------------------------------------------------------------
+
+  'hover-bg': {
+    name: 'hover-bg',
+    aliases: ['hover-background'],
+    category: 'state-variant',
+    description: 'Background color on hover',
+
+    color: {
+      description: 'Background color on hover',
+      css: (c) => [{ property: 'background', value: c }],
+    },
+
+    token: true,
+  },
+
+  'hover-col': {
+    name: 'hover-col',
+    aliases: ['hover-color', 'hover-c'],
+    category: 'state-variant',
+    description: 'Text color on hover',
+
+    color: {
+      description: 'Text color on hover',
+      css: (c) => [{ property: 'color', value: c }],
+    },
+
+    token: true,
+  },
+
+  'hover-opacity': {
+    name: 'hover-opacity',
+    aliases: ['hover-opa', 'hover-o'],
+    category: 'state-variant',
+    description: 'Opacity on hover',
+
+    numeric: {
+      description: 'Opacity on hover (0-1)',
+      unit: '',
+      css: (n) => [{ property: 'opacity', value: String(n) }],
+      example: 'Button hover-opacity 0.8',
+    },
+  },
+
+  'hover-scale': {
+    name: 'hover-scale',
+    aliases: [],
+    category: 'state-variant',
+    description: 'Scale on hover',
+
+    numeric: {
+      description: 'Scale factor on hover',
+      css: (n) => [{ property: 'transform', value: `scale(${n})` }],
+      example: 'Button hover-scale 1.05',
+    },
+  },
+
+  'hover-border': {
+    name: 'hover-border',
+    aliases: ['hover-bor'],
+    category: 'state-variant',
+    description: 'Border on hover',
+
+    numeric: {
+      description: 'Border width on hover',
+      unit: 'px',
+      css: (n) => [{ property: 'border-width', value: `${n}px` }],
+      example: 'Button hover-border 2',
+    },
+  },
+
+  'hover-border-color': {
+    name: 'hover-border-color',
+    aliases: ['hover-boc'],
+    category: 'state-variant',
+    description: 'Border color on hover',
+
+    color: {
+      description: 'Border color on hover',
+      css: (c) => [{ property: 'border-color', value: c }],
+    },
+
+    token: true,
+  },
+
+  'hover-radius': {
+    name: 'hover-radius',
+    aliases: ['hover-rad'],
+    category: 'state-variant',
+    description: 'Border radius on hover',
+
+    numeric: {
+      description: 'Border radius on hover',
+      unit: 'px',
+      css: (n) => [{ property: 'border-radius', value: `${n}px` }],
+      example: 'Button hover-radius 8',
     },
   },
 }
