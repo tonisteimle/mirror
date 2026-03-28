@@ -28,35 +28,19 @@ export const LAYOUT_COMPONENTS: ComponentItem[] = [
     children: [
       {
         template: 'Header',
-        isSlot: true,
+        // Note: NO isSlot for compound primitives - slots are recognized by name
         children: [
-          { template: 'Logo', textContent: 'App' },
-          {
-            template: 'Nav',
-            children: [
-              { template: 'NavItem', textContent: 'Home' },
-              { template: 'NavItem', textContent: 'About' },
-            ],
-          },
+          { template: 'Text', textContent: 'My App' },
         ],
       },
       {
         template: 'Sidebar',
-        isSlot: true,
         children: [
-          {
-            template: 'SidebarGroup',
-            textContent: 'Menu',
-            children: [
-              { template: 'SidebarItem', textContent: 'Dashboard' },
-              { template: 'SidebarItem', textContent: 'Settings' },
-            ],
-          },
+          { template: 'Text', textContent: 'Menu' },
         ],
       },
       {
         template: 'Main',
-        isSlot: true,
         children: [
           { template: 'Text', textContent: 'Content goes here' },
         ],
