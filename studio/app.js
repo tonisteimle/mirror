@@ -3055,10 +3055,7 @@ const editor = new EditorView({
       Prec.high(inlineTokenExtension),
       // Inline Prompt Extension (AI code generation via /prompt)
       ...inlinePromptExtension(inlinePromptConfig),
-      // App Lock: "App" is undeletable, auto-indent children
-      Prec.highest(appLockExtension),
-      Prec.high(autoIndentExtension),
-      appLockDecorationPlugin,
+      // Note: App lock removed - implicit root wrapper is now added in compile()
       // Component Drop: Proper CodeMirror integration for drag & drop from component palette
       Prec.highest(createComponentDropExtension({
         onDrop: (dragData, position, view) => {
@@ -3334,16 +3331,27 @@ function compile(code) {
     autoCreateReferencedFiles(code)
 
     // For layout files, prepend all tokens and components
-    // This ensures they are available when rendering
+    // and wrap user code in an implicit full-screen root container
     let resolvedCode = code
     currentPreludeOffset = 0  // Reset prelude offset
     if (fileType === 'layout') {
       const prelude = getPreludeCode(currentFile)
+
+      // Implicit root wrapper - user never sees this in editor
+      const rootWrapper = 'App w full h full'
+
+      // Indent user code to be children of the implicit root
+      const indentedCode = code.split('\n').map(line => line ? '  ' + line : '').join('\n')
+
       if (prelude) {
         const separator = '\n\n// === ' + currentFile + ' ===\n'
-        resolvedCode = prelude + separator + code
+        resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
         // Track the character offset so we can adjust CodeModifier changes for the editor
-        currentPreludeOffset = prelude.length + separator.length
+        // Note: +1 for newline after rootWrapper, user code is indented
+        currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
+      } else {
+        resolvedCode = rootWrapper + '\n' + indentedCode
+        currentPreludeOffset = rootWrapper.length + 1
       }
     }
 
