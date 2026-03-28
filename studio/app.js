@@ -3337,21 +3337,31 @@ function compile(code) {
     if (fileType === 'layout') {
       const prelude = getPreludeCode(currentFile)
 
-      // Implicit root wrapper - user never sees this in editor
-      const rootWrapper = 'App w full h full'
+      // Check if code already starts with "App" (legacy files)
+      const startsWithApp = code.trimStart().startsWith('App')
 
-      // Indent user code to be children of the implicit root
-      const indentedCode = code.split('\n').map(line => line ? '  ' + line : '').join('\n')
-
-      if (prelude) {
-        const separator = '\n\n// === ' + currentFile + ' ===\n'
-        resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
-        // Track the character offset so we can adjust CodeModifier changes for the editor
-        // Note: +1 for newline after rootWrapper, user code is indented
-        currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
+      if (startsWithApp) {
+        // Legacy mode: code already has App wrapper, just prepend prelude
+        if (prelude) {
+          const separator = '\n\n// === ' + currentFile + ' ===\n'
+          resolvedCode = prelude + separator + code
+          currentPreludeOffset = prelude.length + separator.length
+        }
       } else {
-        resolvedCode = rootWrapper + '\n' + indentedCode
-        currentPreludeOffset = rootWrapper.length + 1
+        // New mode: wrap user code in implicit full-screen root
+        const rootWrapper = 'App w full h full'
+
+        // Indent user code to be children of the implicit root
+        const indentedCode = code.split('\n').map(line => line ? '  ' + line : '').join('\n')
+
+        if (prelude) {
+          const separator = '\n\n// === ' + currentFile + ' ===\n'
+          resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
+          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
+        } else {
+          resolvedCode = rootWrapper + '\n' + indentedCode
+          currentPreludeOffset = rootWrapper.length + 1
+        }
       }
     }
 
