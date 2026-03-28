@@ -98,6 +98,7 @@ mkdir -f dist
 cd dist
 lcd $STUDIO_DIR/dist
 put index.js
+put mirror-defaults.css
 
 # Upload compiled JS (the compiler) to /mirror/dist/browser/
 cd /mirror/dist
