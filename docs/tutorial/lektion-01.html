@@ -267,12 +267,11 @@
     <section>
       <h2>Kontext</h2>
       <p>Mirror ist eine Sprache für UI-Prototypen. Sie beschreibt Oberflächen – Buttons, Karten, Formulare – in einer kompakten Syntax, die direkt zu HTML kompiliert.</p>
-      <p>Der Code oben erzeugt das Ergebnis unten. Änderungen sind sofort sichtbar.</p>
     </section>
 
     <section>
       <h2>Elemente</h2>
-      <p>Ein Element beginnt mit seinem Typ. <code>Button</code> erzeugt einen Button, <code>Text</code> erzeugt Text.</p>
+      <p>Ein Element beginnt mit seinem Typ. <code>Button</code> erzeugt einen Button, <code>Text</code> erzeugt Text. Der Code erzeugt das Ergebnis darunter – probier es aus:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -304,24 +303,19 @@
     </section>
 
     <section>
-      <h2>Verschachtelung</h2>
-      <p>Einrückung definiert Hierarchie. Eingerückte Elemente sind Kinder des Elements darüber.</p>
+      <h2>Layout</h2>
+      <p>Elemente in einem Frame stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
   Text "Titel", col white
   Text "Beschreibung", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>Frame</code> ist ein Container. Die beiden <code>Text</code>-Elemente sind darin enthalten.</p>
-    </section>
-
-    <section>
-      <h2>Layout</h2>
-      <p>Elemente stapeln sich standardmäßig vertikal. <code>hor</code> ändert die Richtung zu horizontal. <code>gap</code> definiert den Abstand zwischen Kindern.</p>
+      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -331,6 +325,24 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+    </section>
+
+    <section>
+      <h2>Verschachtelung</h2>
+      <p>Einrückung (2 Leerzeichen) macht ein Element zum Kind des Elements darüber. Frames können weitere Frames enthalten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
+  Text "Karte", col white
+  Frame bg #333, pad 12, rad 4, gap 8
+    Text "Verschachtelt", col #888
+    Button "Aktion", pad 8 16, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der innere Frame (grau) ist im äusseren Frame (dunkel) verschachtelt.</p>
     </section>
 
     <div class="exercise">
@@ -366,7 +378,7 @@
       <ul>
         <li><code>Button</code> <code>Text</code> <code>Frame</code> – Elementtypen</li>
         <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Styling</li>
-        <li><code>hor</code> <code>gap</code> – Layout</li>
+        <li><code>gap</code> <code>hor</code> – Layout</li>
         <li>Einrückung – Verschachtelung</li>
       </ul>
     </div>
