@@ -11,7 +11,7 @@ import type {
   ComponentPanelCallbacks,
   ComponentDragData,
 } from './types'
-import { getComponentIcon } from './icons'
+import { getComponentIcon } from '../../icons'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
 // =============================================================================

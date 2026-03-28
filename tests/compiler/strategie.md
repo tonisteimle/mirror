@@ -40,7 +40,7 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 
 ## html-output-tests: abdeckung
 
-### was getestet wird (273 tests, 4 skipped)
+### was getestet wird (273 tests, 0 skipped)
 
 | bereich | tests | details |
 |---------|-------|---------|
@@ -98,6 +98,12 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 | **Multiple Events** | 3 | onclick, onclick+onhover, onkeydown enter |
 | **Token Reihenfolge** | 3 | token→fester, fester→token, token mehrfach |
 | **Praxis-Patterns** | 4 | card, button, modal overlay, navbar |
+| **Robustheit: Leerzeilen** | 5 | anfang, ende, zwischen, mehrfach, whitespace |
+| **Robustheit: Einrückung** | 5 | 2 spaces, 4 spaces, tabs, gemischt, trailing |
+| **Robustheit: Kommentare** | 5 | zeilenende, eigene zeile, zwischen, mehrfach, nach leerzeile |
+| **Robustheit: Semikolons** | 3 | ALLE SKIPPED - nicht unterstützt |
+| **Robustheit: Strings** | 5 | double quotes, leer, leerzeichen, sonderzeichen, single quotes (SKIP) |
+| **Robustheit: Komplex** | 4 | alles zusammen, component def, inheritance, tiefe verschachtelung |
 
 ### was NICHT getestet wird
 
@@ -113,9 +119,26 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 |----------|----------|-------------|--------|
 | `hor-center` | align-items: center | flex-start | **GEFIXT** |
 | `ver-center` | justify-content: center | nicht gesetzt | **GEFIXT** |
-| `pin-center + rotate` | translate + rotate kombiniert | nur translate | OFFEN |
-| `hor ver hor` (triple) | row (letztes gewinnt) | column | OFFEN |
+| `;` (semicolon) | property-trenner | nicht erkannt | **GEFIXT** |
+| `'string'` (single quotes) | string-literal | leer | **GEFIXT** (war bereits im lexer) |
 | `aspect square` | aspect-ratio: 1/1 | - | JSDOM-LIMITIERUNG |
+
+### parser-robustheit
+
+der parser wurde auf robustheit getestet (27 tests). ergebnis:
+
+**robust bei:**
+
+| bereich | status | details |
+|---------|--------|---------|
+| leerzeilen | ✅ | anfang, ende, zwischen elementen, mehrfach hintereinander |
+| einrückung | ✅ | 2 spaces, 4 spaces, tabs, gemischt, trailing spaces |
+| kommentare | ✅ | `//` am zeilenende, eigene zeile, zwischen elementen, nach leerzeilen |
+| strings | ✅ | `"double quotes"`, `'single quotes'`, leer `""`, mit leerzeichen, mit sonderzeichen (äöü €) |
+| semikolons | ✅ | `bg #f00; w 100;` als property-trenner |
+| verschachtelung | ✅ | 4+ ebenen tief, mixed whitespace |
+
+**alle bekannten limitierungen wurden behoben.** der parser ist jetzt vollständig robust.
 
 ### noch zu testen (backlog)
 

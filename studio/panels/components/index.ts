@@ -24,7 +24,7 @@ export { ComponentsFileSync, createComponentsFileSync } from './components-file-
 export type { ComponentsFileSyncConfig } from './components-file-sync'
 
 // Utilities
-export { getComponentIcon, COMPONENT_ICONS } from './icons'
+export { getComponentIcon, COMPONENT_ICONS } from '../../icons'
 export {
   BASIC_PRIMITIVES,
   BASIC_COMPONENTS,

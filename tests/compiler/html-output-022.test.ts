@@ -2225,21 +2225,19 @@ Frame bg #00f`)
 // ============================================================
 describe('Robustness - Semicolons', () => {
 
-  // BUG/LIMITATION: Semicolons are NOT supported by the parser
-  // All semicolon tests fail - the parser doesn't recognize ; as separator
-  it.skip('semikolon am zeilenende', () => {
+  it('semikolon am zeilenende', () => {
     const el = render(`Frame bg #f00;`)
     expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
   })
 
-  it.skip('mehrere properties mit semikolon', () => {
+  it('mehrere properties mit semikolon', () => {
     const el = render(`Frame bg #f00; w 100; h 50;`)
     expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
     expect(getStyle(el, 'width')).toBe('100px')
     expect(getStyle(el, 'height')).toBe('50px')
   })
 
-  it.skip('semikolon als property-trenner', () => {
+  it('semikolon als property-trenner', () => {
     const el = render(`Frame bg #0f0; pad 10`)
     expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
     expect(getStyle(el, 'padding')).toBe('10px')
@@ -2252,9 +2250,7 @@ describe('Robustness - Semicolons', () => {
 // ============================================================
 describe('Robustness - Strings', () => {
 
-  // BUG/LIMITATION: Single quotes are NOT supported
-  // Only double quotes work for strings
-  it.skip('einfache anführungszeichen', () => {
+  it('einfache anführungszeichen', () => {
     const el = render(`Text 'Hello'`)
     expect(el.textContent).toBe('Hello')
   })

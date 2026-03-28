@@ -478,7 +478,7 @@ export class Parser {
       if (this.check('DEDENT') || this.isAtEnd()) break
 
       // Skip commas
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -549,7 +549,7 @@ export class Parser {
 
     // Parse properties on this line
     while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -852,7 +852,7 @@ export class Parser {
 
     while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -879,8 +879,8 @@ export class Parser {
           const token = this.advance()
           const values: any[] = []
 
-          // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA
-          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.check('COLON') && !this.isAtEnd()) {
+          // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA, SEMICOLON
+          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
             if (this.check('STRING')) {
               values.push(this.advance().value)
             } else if (this.check('NUMBER')) {
@@ -1225,7 +1225,7 @@ export class Parser {
     // Parse item content
     while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
       // Skip commas
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -1454,7 +1454,7 @@ export class Parser {
     // Parse group properties (label)
     while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
       // Skip commas
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -1515,6 +1515,9 @@ export class Parser {
 
   /**
    * Look ahead to check if the current line contains child override syntax (semicolons)
+   * Child override syntax: NavItem Icon "home"; Label "Home"
+   * Property syntax: Frame bg #f00; w 100 (NOT child override)
+   * Difference: Child overrides have PascalCase names after semicolon
    */
   private hasChildOverrideSyntax(): boolean {
     let ahead = 0
@@ -1524,7 +1527,15 @@ export class Parser {
         return false
       }
       if (token.type === 'SEMICOLON') {
-        return true
+        // Check what follows the semicolon
+        const nextToken = this.tokens[this.pos + ahead + 1]
+        if (nextToken && nextToken.type === 'IDENTIFIER') {
+          // If next token is PascalCase (starts with uppercase), it's child override
+          // If lowercase, it's just a property separator
+          const firstChar = nextToken.value[0]
+          return firstChar === firstChar.toUpperCase()
+        }
+        return false
       }
       ahead++
     }
@@ -1561,7 +1572,7 @@ export class Parser {
     if (this.check('IDENTIFIER')) {
       const childName = this.advance()
       const properties: Property[] = []
-      this.parseInlineProperties(properties)
+      this.parseInlineProperties(properties, undefined, { stopAtSemicolon: true })
       overrides.push({
         childName: childName.value,
         properties,
@@ -1580,7 +1591,7 @@ export class Parser {
 
       const childName = this.advance()
       const properties: Property[] = []
-      this.parseInlineProperties(properties)
+      this.parseInlineProperties(properties, undefined, { stopAtSemicolon: true })
 
       overrides.push({
         childName: childName.value,
@@ -1598,7 +1609,7 @@ export class Parser {
       if (this.check('DEDENT') || this.isAtEnd()) break
 
       // Skip commas between properties
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -2172,7 +2183,7 @@ export class Parser {
   private parseInlineChildren(instance: Instance): void {
     while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
       // Skip leading commas
-      if (this.check('COMMA')) {
+      if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
       }
@@ -2248,10 +2259,16 @@ export class Parser {
     }
   }
 
-  private parseInlineProperties(properties: Property[], events?: Event[]): void {
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
-      // Skip commas
+  private parseInlineProperties(properties: Property[], events?: Event[], options?: { stopAtSemicolon?: boolean }): void {
+    const stopAtSemicolon = options?.stopAtSemicolon ?? false
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
+      // Skip commas (and semicolons unless stopAtSemicolon is true)
       if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+      if (this.check('SEMICOLON')) {
+        if (stopAtSemicolon) break
         this.advance()
         continue
       }
@@ -2377,7 +2394,7 @@ export class Parser {
     // JavaScript ternary: condition ? thenValue : elseValue
     const collectedTokens: { type: string; value: string }[] = []
 
-    while (!this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+    while (!this.check('COMMA') && !this.check('SEMICOLON') && !this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
       // Check for ternary operator
       if (this.check('QUESTION')) {
         this.advance() // consume ?
@@ -2581,7 +2598,7 @@ export class Parser {
     }
 
     // Parse actions
-    while (!this.check('NEWLINE') && !this.check('COMMA') && !this.isAtEnd()) {
+    while (!this.check('NEWLINE') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.isAtEnd()) {
       if (this.check('IDENTIFIER')) {
         const action = this.parseAction()
         if (action) event.actions.push(action)

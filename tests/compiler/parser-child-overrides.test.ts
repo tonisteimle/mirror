@@ -38,12 +38,13 @@ describe('Parser: Instance Child Overrides', () => {
   })
 
   it('parses child override with property', () => {
-    const ast = parse('Button icon visible; label hidden')
+    // Note: Child names must be PascalCase to distinguish from property separators
+    const ast = parse('Button Icon visible; Label hidden')
     const overrides = ast.instances[0].childOverrides!
     expect(overrides.length).toBe(2)
-    expect(overrides[0].childName).toBe('icon')
+    expect(overrides[0].childName).toBe('Icon')
     expect(overrides[0].properties[0].name).toBe('visible')
-    expect(overrides[1].childName).toBe('label')
+    expect(overrides[1].childName).toBe('Label')
     expect(overrides[1].properties[0].name).toBe('hidden')
   })
 
@@ -154,18 +155,24 @@ describe('Parser: State Child Overrides', () => {
 // ============================================================================
 
 describe('Parser: Child Override Edge Cases', () => {
-  it('handles empty child override after semicolon', () => {
+  it('trailing semicolon without second override is treated as properties', () => {
+    // Design limitation: Without a second PascalCase identifier after the semicolon,
+    // the parser cannot distinguish child override syntax from property syntax
     const ast = parse('NavItem Icon "home";')
-    const overrides = ast.instances[0].childOverrides!
-    expect(overrides.length).toBe(1) // Only the first one
+    // This is parsed as properties, not child overrides
+    expect(ast.instances[0].childOverrides).toBeUndefined()
+    expect(ast.instances[0].properties.length).toBeGreaterThan(0)
   })
 
-  it('handles lowercase child names', () => {
+  it('lowercase names are treated as properties, not child overrides', () => {
+    // Design decision: Only PascalCase names after semicolon trigger child override syntax
+    // This allows semicolons to work as property separators: Frame bg #f00; w 100
     const ast = parse('Component icon "check"; label "OK"')
-    const overrides = ast.instances[0].childOverrides!
-    expect(overrides.length).toBe(2)
-    expect(overrides[0].childName).toBe('icon')
-    expect(overrides[1].childName).toBe('label')
+    expect(ast.instances[0].childOverrides).toBeUndefined()
+    // Instead, these are parsed as properties
+    const props = ast.instances[0].properties
+    expect(props.some(p => p.name === 'icon')).toBe(true)
+    expect(props.some(p => p.name === 'label')).toBe(true)
   })
 
   it('child overrides work with named instances', () => {

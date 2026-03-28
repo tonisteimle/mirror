@@ -123,8 +123,8 @@ export class Lexer {
       return
     }
 
-    // Strings
-    if (this.peek() === '"') {
+    // Strings (double or single quotes)
+    if (this.peek() === '"' || this.peek() === "'") {
       this.scanString()
       return
     }
@@ -257,13 +257,15 @@ export class Lexer {
   }
 
   private scanString(): void {
+    const quote = this.peek() // Remember which quote type (" or ')
     this.advance() // Opening quote
     let value = ''
 
-    while (!this.isAtEnd() && this.peek() !== '"') {
-      if (this.peek() === '\\' && this.peekNext() === '"') {
+    while (!this.isAtEnd() && this.peek() !== quote) {
+      // Handle escaped quotes
+      if (this.peek() === '\\' && this.peekNext() === quote) {
         this.advance()
-        value += '"'
+        value += quote
       } else {
         value += this.peek()
       }

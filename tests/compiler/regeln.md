@@ -765,3 +765,705 @@ Alle 5 nested-Tests wurden korrigiert und funktionieren jetzt.
 
 **Mehrere Overlays mit Slots:** Test-Syntax war falsch (`Trigger` statt `Trigger:`).
 Slots erfordern einen Doppelpunkt nach dem Namen. Test korrigiert.
+
+---
+
+## 20. lexer regeln
+
+### token-typen
+
+| typ | beispiele |
+|-----|-----------|
+| IDENTIFIER | `Button`, `my-button`, `_private`, `Card2` |
+| KEYWORD | `as`, `extends`, `named`, `each`, `in`, `if`, `else`, `where`, `data`, `keys` |
+| STRING | `"Hello"`, `"Ümläüt"`, `"🎉"` |
+| NUMBER | `42`, `3.14`, `0.5` |
+| HEX_COLOR | `#FFF`, `#3B82F6`, `#00000080` |
+| OPERATORS | `>`, `<`, `>=`, `<=`, `!=`, `==`, `===`, `&&`, `||`, `!` |
+| PUNCTUATION | `:`, `,`, `;`, `.`, `=`, `?`, `(`, `)` |
+
+### strings
+```
+"Hello World"        ← leerzeichen ok
+"Größe: üblich"      ← unicode ok
+"Hello 👋"           ← emoji ok
+"Er sagte: \"Hi\""   ← escaped quotes ok
+""                   ← leerer string ok
+```
+**regel:** nur doppelte anführungszeichen, keine einfachen (`'`)
+
+### kommentare
+```
+// Zeilenkommentar
+Button "Click" // am Ende
+// URL in String ist KEIN Kommentar:
+Link "http://example.com"
+```
+
+### einrückung
+```
+Tab = 4 Spaces
+Gemischte Einrückung erlaubt
+Leerzeilen werden ignoriert
+```
+
+### section headers
+```
+--- Components ---
+--- Phase 2 ---
+-------- Name --------
+```
+
+**test:** `lexer-*.test.ts` (204 tests)
+
+---
+
+## 21. parser syntax
+
+### komponenten-definition
+```
+// Basis
+Card as frame:
+  pad 16
+
+// Vererbung
+DangerButton extends Button:
+  bg danger
+
+// Inline + Block kombiniert
+Card as frame: rad 8
+  pad 16
+  bg surface
+```
+
+### instanz-syntax
+```
+// Einfach
+Button
+
+// Mit Inhalt (wird zu content property)
+Button "Click me"
+
+// Benannt
+Button named saveBtn "Save"
+
+// Mit Properties
+Button pad 8 bg primary
+
+// Verschachtelt
+Card
+  Text "Hello"
+  Button "OK"
+```
+
+### automatische property-trennung
+```
+// Kommas optional wenn Property-Name erkannt
+Box h 300 bg #333 pad 16    ← funktioniert!
+Box h 300, bg #333, pad 16  ← auch OK
+```
+
+**test:** `parser-auto-property-separation.test.ts` (57 tests)
+
+---
+
+## 22. slot-syntax
+
+```
+// Definition mit Name
+Slot "Header"
+Slot "Content"
+Slot "Footer"
+
+// Default (name = "default")
+Slot
+
+// Mit Properties
+Slot "Sidebar" w 200
+
+// In Komponente
+Card as frame:
+  Slot "Header"
+  Slot "Content"
+```
+
+**test:** `parser-slots.test.ts` (16 tests)
+
+---
+
+## 23. event-syntax
+
+### basis-events
+```
+onclick toggle Menu
+onhover highlight
+onfocus show Tooltip
+onblur hide Tooltip
+onchange filter
+oninput search
+```
+
+### keyboard events
+```
+// Mit Key
+onkeydown enter: submit
+onkeydown escape: close
+
+// Keys Block
+keys
+  escape close
+  enter select
+  arrow-down highlight next
+  arrow-up highlight prev
+```
+
+### keyboard keys
+```
+escape, enter, space, tab, backspace, delete
+arrow-up, arrow-down, arrow-left, arrow-right
+home, end
+```
+
+### event modifiers
+```
+oninput debounce 300: filter
+onclick delay 200: submit
+```
+
+### click-outside
+```
+onclick-outside close
+onclick-outside close, deselect
+```
+
+**test:** `parser-events.test.ts` (29 tests)
+
+---
+
+## 24. state-syntax
+
+### system states (CSS pseudo-classes)
+```
+hover:
+  bg primary
+  col white
+
+focus:
+  bor 2 #3B82F6
+
+active:
+  scale 0.98
+
+disabled:
+  opacity 0.5
+```
+
+### custom states
+```
+selected:
+  bg highlight
+
+highlighted:
+  bg #333
+
+expanded:
+  h auto
+
+collapsed:
+  h 0
+```
+
+### inline state
+```
+Button hover: bg primary
+Frame focus: bor 2 blue
+```
+
+**test:** `parser-states.test.ts` (22 tests)
+
+---
+
+## 25. conditional-syntax
+
+### if/else block
+```
+if loggedIn
+  UserProfile
+else
+  LoginButton
+```
+
+### verschachtelt
+```
+if hasData
+  if isLoading
+    Spinner
+  else
+    Content
+```
+
+### komplexe bedingungen
+```
+if user.isAdmin && hasPermission
+  AdminPanel
+
+if count > 0 && status === "active"
+  ActiveItems
+
+if (hasPermission || isOwner)
+  EditButton
+```
+
+### ternary in properties
+```
+Button bg active ? primary : muted
+Icon content done ? "check" : "circle"
+Text col valid ? green : red
+```
+
+**test:** `parser-conditionals.test.ts` (15 tests)
+
+---
+
+## 26. iteration-syntax
+
+### each loop
+```
+each task in tasks
+  Card
+    Text task.title
+    Text task.description
+```
+
+### mit filter
+```
+each task in tasks where done === false
+  TaskItem
+
+each item in items where priority > 3 && !completed
+  HighPriorityItem
+```
+
+### data binding
+```
+TaskList data tasks
+TaskList data tasks where done === false
+```
+
+**test:** `parser-iteration.test.ts` (11 tests)
+
+---
+
+## 27. child override syntax
+
+```
+// Mehrere Kinder überschreiben
+NavItem Icon "home"; Label "Home"
+Card Title "Header"; Content "Body"
+
+// Mit Properties
+ListItem Icon "star" col gold; Text "Favorite"
+```
+
+**test:** `parser-child-overrides.test.ts` (16 tests)
+
+---
+
+## 28. token-definition syntax
+
+### vollständige syntax
+```
+primary: color = #3B82F6
+sm: size = 4
+body: font = "Inter"
+```
+
+### vereinfachte syntax (auto-detect)
+```
+primary: #3B82F6      ← auto: color
+sm: 4                 ← auto: size
+half: 50%             ← auto: size
+body: "Inter"         ← auto: font
+```
+
+### token-typen
+- `color`: hex-werte, farbnamen
+- `size`: zahlen, prozent, dezimal
+- `font`: string-werte
+- `icon`: string-werte
+
+**test:** `parser-tokens.test.ts` (26 tests)
+
+---
+
+## 29. javascript integration
+
+```
+Button as button:
+  onclick increment
+
+let count = 0
+
+function increment() {
+  count++
+  update()
+}
+```
+
+erkannte keywords: `let`, `const`, `var`, `function`, `class`
+
+**test:** `parser-javascript.test.ts` (9 tests)
+
+---
+
+## 30. html element mapping
+
+| primitive | html tag |
+|-----------|----------|
+| Frame, Box | `<div>` |
+| Text | `<span>` |
+| Button | `<button>` |
+| Input | `<input>` |
+| Textarea | `<textarea>` |
+| Label | `<label>` |
+| Image, Img | `<img>` |
+| Icon | `<span>` |
+| Link | `<a>` |
+| Divider | `<hr>` |
+| Spacer | `<div>` |
+| H1 | `<h1>` |
+| H2 | `<h2>` |
+| H3 | `<h3>` |
+| H4 | `<h4>` |
+| H5 | `<h5>` |
+| H6 | `<h6>` |
+| Header | `<header>` |
+| Nav | `<nav>` |
+| Main | `<main>` |
+| Section | `<section>` |
+| Article | `<article>` |
+| Aside | `<aside>` |
+| Footer | `<footer>` |
+
+**test:** `backend-dom.test.ts` (46 tests)
+
+---
+
+## 31. sizing regeln (details)
+
+### full sizing
+```
+w full  → flex: 1 1 0%, min-width: 0
+h full  → flex: 1 1 0%, min-height: 0
+```
+**wichtig:** NICHT `width: 100%`!
+
+### hug sizing
+```
+w hug  → width: fit-content
+h hug  → height: fit-content
+```
+
+### size shorthand
+```
+size 100   → w 100 + h 100
+size hug   → w hug + h hug
+size full  → w full + h full
+```
+
+### kombination hug + full
+```
+Frame ver
+  Box h hug      ← fit-content (header)
+  Box h full     ← flex: 1 (content, füllt rest)
+  Box h hug      ← fit-content (footer)
+```
+
+**test:** `ir-full-sizing.test.ts` (15 tests), `ir-hug-edge-cases.test.ts` (9 tests)
+
+---
+
+## 32. directional properties
+
+### padding richtungen
+```
+pad left 10     → padding-left: 10px
+pad right 10    → padding-right: 10px
+pad top 10      → padding-top: 10px
+pad bottom 10   → padding-bottom: 10px
+pad x 20        → padding-left + padding-right
+pad y 20        → padding-top + padding-bottom
+```
+
+### margin richtungen
+```
+margin left 10   → margin-left: 10px
+margin right 10  → margin-right: 10px
+margin top 10    → margin-top: 10px
+margin bottom 10 → margin-bottom: 10px
+margin x 20      → margin-left + margin-right
+margin y 20      → margin-top + margin-bottom
+```
+
+### border-radius richtungen
+```
+rad tl 8   → border-top-left-radius: 8px
+rad tr 8   → border-top-right-radius: 8px
+rad bl 8   → border-bottom-left-radius: 8px
+rad br 8   → border-bottom-right-radius: 8px
+rad t 8    → top-left + top-right
+rad b 8    → bottom-left + bottom-right
+rad l 8    → top-left + bottom-left
+rad r 8    → top-right + bottom-right
+```
+
+**test:** `html-output-022.test.ts`
+
+---
+
+## 33. property aliases (vollständig)
+
+| lang | kurz | kategorie |
+|------|------|-----------|
+| width | w | sizing |
+| height | h | sizing |
+| min-width | minw | sizing |
+| max-width | maxw | sizing |
+| min-height | minh | sizing |
+| max-height | maxh | sizing |
+| padding | pad, p | spacing |
+| margin | m | spacing |
+| gap | g | layout |
+| background | bg | color |
+| color | col, c | color |
+| border-color | boc | color |
+| border | bor | border |
+| radius | rad | border |
+| font-size | fs | typography |
+| opacity | o, opa | visual |
+| horizontal | hor | layout |
+| vertical | ver | layout |
+| center | cen | alignment |
+| positioned | pos | position |
+| absolute | abs | position |
+| rotate | rot | transform |
+| pin-left | pl | position |
+| pin-right | pr | position |
+| pin-top | pt | position |
+| pin-bottom | pb | position |
+| pin-center-x | pcx | position |
+| pin-center-y | pcy | position |
+| pin-center | pc | position |
+
+**test:** `html-output-022.test.ts`, `backlog-023.test.ts`
+
+---
+
+## 34. error handling
+
+### lexer error recovery
+```
+"Hello        ← unclosed string → weiter parsen
+@test         ← ungültiges zeichen → überspringen
+#GGG          ← ungültige hex → überspringen
+```
+
+### parser error collection
+```javascript
+ast.errors = [
+  { message: 'Expected COLON', line: 5, column: 10 }
+]
+```
+**wichtig:** parser stoppt NICHT bei fehlern, sammelt sie.
+
+### validator error codes
+
+| code | bedeutung |
+|------|-----------|
+| `UNKNOWN_PROPERTY` | property nicht im schema |
+| `UNDEFINED_COMPONENT` | komponente nicht definiert |
+| `UNKNOWN_EVENT` | event nicht im schema |
+| `UNKNOWN_ACTION` | action nicht bekannt |
+| `UNKNOWN_KEY` | keyboard-key ungültig |
+| `UNDEFINED_TOKEN` | token ($name) nicht definiert |
+| `INVALID_VALUE` | wert-format ungültig |
+| `CIRCULAR_REFERENCE` | zirkuläre vererbung |
+| `DUPLICATE_DEFINITION` | doppelte definition |
+
+### quick fix suggestions
+```
+Box backgrund #333
+→ Suggestion: "background" (typo-korrektur)
+
+Buton "Click"
+→ Suggestion: "Button" (typo-korrektur)
+```
+
+**test:** `errors-*.test.ts` (78 tests), `validator-*.test.ts` (92 tests)
+
+---
+
+## 35. sourcemap regeln
+
+### node tracking
+```
+nodeId: eindeutige ID pro node
+parentId: verweis auf eltern-node
+componentName: z.B. 'Box', 'Text'
+instanceName: bei `named` instanzen
+isDefinition: true für komponenten-definition
+isEachTemplate: true für each-loop items
+isConditional: true für if/else blöcke
+```
+
+### position tracking
+```
+property.position = {
+  line: 5,
+  column: 3,
+  endLine: 5,
+  endColumn: 15
+}
+```
+
+### query methods
+```
+getNodeAtLine(line)         → node an zeile
+getNodesByComponent(name)   → alle nodes mit name
+getNodeByInstanceName(name) → node mit instance name
+getChildren(nodeId)         → direkte kinder
+```
+
+**test:** `ir-source-map.test.ts` (44 tests)
+
+---
+
+## 36. validation warnings
+
+### unknown properties
+```
+Box unknownprop 123
+→ Warning: { type: 'unknown-property', property: 'unknownprop' }
+```
+
+### gültige properties (kein warning)
+- sizing: w, h, minw, maxw, minh, maxh, size
+- layout: hor, ver, gap, center, spread, wrap, stacked, grid
+- spacing: pad, margin, p, m
+- colors: bg, col, boc
+- border: bor, rad
+- typography: fs, weight, line, italic, underline
+- position: x, y, z, absolute, fixed, relative
+- transform: rotate, scale, translate
+- effects: opacity, shadow, cursor, blur, hidden
+- scroll: scroll, scroll-hor, scroll-both, clip
+
+### hover-prefix properties
+```
+hover-bg #red     ← gültig (bg ist bekannt)
+hover-unknown 123 ← ungültig (unknown nicht bekannt)
+```
+
+**test:** `ir-validation-warnings.test.ts` (26 tests)
+
+---
+
+## 37. runtime helpers
+
+### state management
+```javascript
+_runtime.setState(el, 'selected', true)
+_runtime.getState(el, 'selected')
+_runtime.updateVisibility(el)
+```
+
+### actions
+```javascript
+_runtime.show(el)
+_runtime.hide(el)
+_runtime.toggle(el)
+_runtime.select(el)
+_runtime.highlight(el)
+_runtime.destroy(el)  // cleanup
+```
+
+### each loop
+```javascript
+_eachConfig = {
+  itemVar: 'task',
+  collection: 'tasks',
+  filter: (item) => !item.done,
+  renderItem: (item) => createTaskElement(item)
+}
+```
+
+### conditional
+```javascript
+_conditionalConfig = {
+  condition: () => loggedIn,
+  renderThen: () => createProfile(),
+  renderElse: () => createLoginButton()
+}
+```
+
+**test:** `backend-dom-javascript.test.ts` (12 tests)
+
+---
+
+## 38. robustheit
+
+### leerzeilen
+```
+Frame bg #f00
+
+  Text "A"
+
+  Text "B"
+
+```
+→ funktioniert korrekt
+
+### einrückung varianten
+```
+// 2 spaces
+Frame
+  Text "child"
+
+// 4 spaces
+Frame
+    Text "child"
+
+// tabs
+Frame
+	Text "child"
+```
+→ alle funktionieren
+
+### kommentare
+```
+// am anfang
+Frame bg #f00 // am ende
+  // zwischen elementen
+  Text "A"
+```
+→ alle ignoriert
+
+**test:** `html-output-022.test.ts` (robustness tests)
+
+---
+
+## testübersicht (aktualisiert)
+
+| testdatei | tests | kategorie |
+|-----------|-------|-----------|
+| lexer-*.test.ts | 204 | lexer |
+| parser-*.test.ts | 440 | parser |
+| ir-*.test.ts | 232 | ir transformation |
+| backend-*.test.ts | 80 | code generation |
+| validator-*.test.ts | 92 | validation |
+| errors-*.test.ts | 78 | error handling |
+| zag-*.test.ts | 88 | zag components |
+| html-output-022.test.ts | 273 | e2e/integration |
+| andere feature tests | ~300 | features |
+
+**gesamt: 1888 tests** (1884 bestanden, 4 übersprungen)

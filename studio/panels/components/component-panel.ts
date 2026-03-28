@@ -15,7 +15,7 @@ import type {
   ComponentPanelCallbacks,
   ComponentDragData,
 } from './types'
-import { getComponentIcon } from './icons'
+import { getComponentIcon } from '../../icons'
 import { BASIC_PRIMITIVES, BASIC_COMPONENTS } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
