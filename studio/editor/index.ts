@@ -45,10 +45,19 @@ export {
   createEditorDropHandler,
   createComponentDropExtension,
   insertComponentCode,
+  insertComponentWithDefinition,
   type EditorDropHandlerConfig,
   type EditorDropPosition,
   type ComponentDropConfig,
 } from './editor-drop-handler'
+
+// Re-export component templates
+export {
+  COMPONENT_DEFINITIONS,
+  getComponentDefinition,
+  hasComponentDefinition,
+  findDefinitionInsertPosition,
+} from '../panels/components/component-templates'
 
 export interface EditorConfig {
   container: HTMLElement

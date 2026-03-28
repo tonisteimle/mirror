@@ -3,11 +3,198 @@
  *
  * .mir = Minimal, ready to use in layouts
  * .com = Full, with all slots and example styling for component definitions
+ *
+ * Component Definition Pattern:
+ * When inserting a Zag component, we also insert its definition at the top
+ * of the file so users can customize slot styling.
  */
 
 export interface ComponentTemplates {
   mir: string
   com: string
+}
+
+/**
+ * Component Definition Templates
+ *
+ * These are inserted at the top of the file (after tokens) when a component
+ * is first used. Users can then customize the slot styling.
+ *
+ * Format: ComponentName:\n  SlotName: properties\n  ...
+ */
+export const COMPONENT_DEFINITIONS: Record<string, string> = {
+  // Select - Dropdown with Trigger, Content, Item slots
+  Select: `Select:
+  Trigger: pad 8 12, bg #27272a, rad 6, col #e4e4e7
+    hover bg #3f3f46
+  Content: bg #27272a, rad 8, pad 4, shadow md
+  Item: pad 8 12, rad 4, col #e4e4e7
+    hover bg #3f3f46`,
+
+  // Checkbox - Control and Label
+  Checkbox: `Checkbox:
+  Control: w 18, h 18, bg #27272a, rad 4, bor 1 #3f3f46
+  Label: col #e4e4e7`,
+
+  // Switch - Track and Thumb
+  Switch: `Switch:
+  Track: w 44, h 24, bg #27272a, rad 12
+  Thumb: w 20, h 20, bg #e4e4e7, rad 10`,
+
+  // Slider - Track, Range, Thumb
+  Slider: `Slider:
+  Track: h 6, bg #27272a, rad 3
+  Range: bg #3b82f6
+  Thumb: w 16, h 16, bg #e4e4e7, rad 8`,
+
+  // RadioGroup - Item and Control
+  RadioGroup: `RadioGroup:
+  Item: gap 8
+  ItemControl: w 18, h 18, bg #27272a, rad 9, bor 1 #3f3f46
+  ItemText: col #e4e4e7`,
+
+  // Dialog - Trigger, Backdrop, Content
+  Dialog: `Dialog:
+  Trigger: pad 8 16, bg #3b82f6, col white, rad 6
+  Backdrop: bg rgba(0,0,0,0.6)
+  Content: bg #27272a, rad 12, pad 24, w 400, shadow lg
+  Title: fs 20, weight bold, col #e4e4e7
+  Description: col #a1a1aa
+  CloseTrigger: bg transparent, col #a1a1aa
+    hover col #e4e4e7`,
+
+  // Tooltip - Trigger, Content
+  Tooltip: `Tooltip:
+  Trigger: cursor pointer
+  Content: bg #18181b, rad 6, pad 8 12, col #e4e4e7, fs 13, shadow md`,
+
+  // Popover - Trigger, Content
+  Popover: `Popover:
+  Trigger: pad 8 16, bg #27272a, rad 6, col #e4e4e7
+  Content: bg #27272a, rad 8, pad 12, w 200, shadow lg
+  CloseTrigger: bg transparent, col #a1a1aa`,
+
+  // Tabs - List, Trigger, Content
+  Tabs: `Tabs:
+  List: bg #27272a, rad 8, pad 4, gap 4
+  Trigger: pad 8 16, rad 6, col #a1a1aa
+    hover col #e4e4e7
+  Content: pad 16`,
+
+  // Accordion - Item, Trigger, Content
+  Accordion: `Accordion:
+  Item: bor-bottom 1 #3f3f46
+  ItemTrigger: pad 12, col #e4e4e7
+    hover bg #27272a
+  ItemContent: pad 12, col #a1a1aa`,
+
+  // Progress - Track, Range
+  Progress: `Progress:
+  Track: h 6, bg #27272a, rad 3
+  Range: bg #3b82f6`,
+
+  // NumberInput - Control, Input, Buttons
+  NumberInput: `NumberInput:
+  Control: bg #27272a, rad 6
+  Input: pad 8, col #e4e4e7, bg transparent
+  IncrementTrigger: pad 4, col #a1a1aa
+    hover col #e4e4e7
+  DecrementTrigger: pad 4, col #a1a1aa
+    hover col #e4e4e7`,
+
+  // TagsInput - Control, Tag, Input
+  TagsInput: `TagsInput:
+  Control: bg #27272a, rad 6, pad 8, gap 4
+  Tag: bg #3f3f46, rad 4, pad 2 8, col #e4e4e7
+  TagDeleteTrigger: col #a1a1aa
+    hover col #ef4444
+  Input: bg transparent, col #e4e4e7`,
+
+  // FileUpload - Dropzone, Trigger
+  FileUpload: `FileUpload:
+  Dropzone: bg #27272a, rad 12, pad 32, bor 2 dashed #3f3f46, center
+    hover bor 2 dashed #3b82f6
+  Trigger: pad 8 16, bg #3b82f6, col white, rad 6`,
+
+  // Collapsible - Trigger, Content
+  Collapsible: `Collapsible:
+  Trigger: pad 12, bg #27272a, rad 8, col #e4e4e7, cursor pointer
+    hover bg #3f3f46
+  Content: pad 16`,
+
+  // Steps - Item, Trigger, Separator
+  Steps: `Steps:
+  Item: gap 8
+  Trigger: w 32, h 32, bg #27272a, rad 16, col #a1a1aa
+  Separator: h 2, bg #27272a`,
+
+  // Pagination - Item, Trigger
+  Pagination: `Pagination:
+  Item: pad 8, bg #27272a, rad 4, col #e4e4e7
+    hover bg #3f3f46
+  PrevTrigger: pad 8, bg #27272a, rad 4
+  NextTrigger: pad 8, bg #27272a, rad 4`,
+}
+
+/**
+ * Get the definition for a component
+ */
+export function getComponentDefinition(componentName: string): string | undefined {
+  return COMPONENT_DEFINITIONS[componentName]
+}
+
+/**
+ * Check if a component definition exists in the code
+ */
+export function hasComponentDefinition(code: string, componentName: string): boolean {
+  // Match "ComponentName:" at the start of a line (with optional whitespace before)
+  const pattern = new RegExp(`^\\s*${componentName}\\s*:`, 'm')
+  return pattern.test(code)
+}
+
+/**
+ * Find the best position to insert a component definition
+ * Returns the line number after which to insert (0 = at start)
+ *
+ * Strategy:
+ * 1. After the last token definition ($name.prop: value)
+ * 2. After the last existing component definition (Name:)
+ * 3. At the start of the file
+ */
+export function findDefinitionInsertPosition(code: string): number {
+  const lines = code.split('\n')
+  let lastTokenLine = 0
+  let lastDefinitionLine = 0
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    // Token definition: starts with $
+    if (line.startsWith('$')) {
+      lastTokenLine = i + 1  // 1-indexed line number
+    }
+    // Component definition: starts with CapitalLetter and ends with :
+    // But NOT a slot (which would be indented)
+    if (/^[A-Z][a-zA-Z0-9]*\s*:/.test(line) && !lines[i].startsWith(' ') && !lines[i].startsWith('\t')) {
+      // Also check the NEXT line to see if this definition has children
+      // If the next non-empty line is indented, count those lines too
+      let endLine = i + 1
+      for (let j = i + 1; j < lines.length; j++) {
+        const nextLine = lines[j]
+        if (!nextLine.trim()) continue  // Skip empty lines
+        if (nextLine.startsWith(' ') || nextLine.startsWith('\t')) {
+          endLine = j + 1  // This line is part of the definition
+        } else {
+          break  // Not indented, end of definition
+        }
+      }
+      lastDefinitionLine = endLine
+    }
+  }
+
+  // Prefer inserting after definitions, then after tokens
+  if (lastDefinitionLine > 0) return lastDefinitionLine
+  if (lastTokenLine > 0) return lastTokenLine
+  return 0
 }
 
 /**
@@ -37,13 +224,13 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // SIMPLE HTML
   // ============================================================================
-  'basic-button': {
+  'form-button': {
     mir: 'Button "Click"',
     com: `Button "Click"
   pad 12 24, bg #3b82f6, col white, rad 6
   hover bg #2563eb`,
   },
-  'basic-input': {
+  'form-input': {
     mir: 'Input placeholder "Enter..."',
     com: `Input placeholder "Enter..."
   pad 12, bg #27272a, bor 1 #3f3f46, rad 6, col white
@@ -53,7 +240,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: SELECT
   // ============================================================================
-  'zag-select': {
+  'form-select': {
     mir: `Select placeholder "Choose..."
   Item "Option A"
   Item "Option B"
@@ -67,20 +254,20 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: FORM CONTROLS
   // ============================================================================
-  'zag-checkbox': {
+  'form-checkbox': {
     mir: 'Checkbox "Label"',
     com: `Checkbox "Accept terms and conditions"
   icon check`,
   },
-  'zag-switch': {
+  'form-switch': {
     mir: 'Switch',
     com: 'Switch defaultChecked',
   },
-  'zag-slider': {
+  'form-slider': {
     mir: 'Slider',
     com: 'Slider min 0, max 100, value 50, step 1',
   },
-  'zag-radio-group': {
+  'form-radio-group': {
     mir: `RadioGroup
   RadioItem "Option A"
   RadioItem "Option B"`,
@@ -89,27 +276,27 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   RadioItem "Option B" value "b"
   RadioItem "Option C" value "c"`,
   },
-  'zag-number-input': {
+  'form-number-input': {
     mir: 'NumberInput',
     com: 'NumberInput min 0, max 100, step 1, value 0',
   },
-  'zag-pin-input': {
+  'form-pin-input': {
     mir: 'PinInput length 4',
     com: 'PinInput length 6, mask, otp',
   },
-  'zag-password-input': {
+  'form-password-input': {
     mir: 'PasswordInput',
     com: 'PasswordInput placeholder "Enter password..."',
   },
-  'zag-tags-input': {
+  'form-tags-input': {
     mir: 'TagsInput',
     com: 'TagsInput placeholder "Add tag...", max 5',
   },
-  'zag-editable': {
+  'form-editable': {
     mir: 'Editable "Click to edit"',
     com: 'Editable "Click to edit", submitMode "enter"',
   },
-  'zag-segmented-control': {
+  'form-segmented-control': {
     mir: `SegmentedControl
   Segment "List"
   Segment "Grid"`,
@@ -118,7 +305,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   Segment "Grid" value "grid"
   Segment "Table" value "table"`,
   },
-  'zag-toggle-group': {
+  'form-toggle-group': {
     mir: `ToggleGroup
   Toggle "B"
   Toggle "I"
@@ -132,7 +319,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: OVERLAYS
   // ============================================================================
-  'zag-dialog': {
+  'overlay-dialog': {
     mir: `Dialog
   Trigger: Button "Open"
   Content: Text "Dialog content"`,
@@ -148,7 +335,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
       CloseTrigger: Button "Cancel", bg transparent, bor 1 #3f3f46
       Button "Confirm", bg #3b82f6`,
   },
-  'zag-tooltip': {
+  'overlay-tooltip': {
     mir: `Tooltip
   Trigger: Text "Hover me"
   Content: Text "Tooltip"`,
@@ -157,7 +344,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   Content: Frame pad 8 12, bg #18181b, rad 6, bor 1 #3f3f46
     Text "Helpful tooltip text", fs 13`,
   },
-  'zag-popover': {
+  'overlay-popover': {
     mir: `Popover
   Trigger: Button "Click"
   Content: Text "Popover content"`,
@@ -169,7 +356,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
     Divider
     CloseTrigger: Button "Close", bg transparent, w full, col #ef4444`,
   },
-  'zag-hover-card': {
+  'overlay-hover-card': {
     mir: `HoverCard
   Trigger: Text "@username"
   Content: Text "User info"`,
@@ -183,7 +370,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
         Text "@johndoe", col #71717a, fs 13
     Text "Software developer and UI enthusiast", col #a1a1aa`,
   },
-  'zag-collapsible': {
+  'overlay-collapsible': {
     mir: `Collapsible
   Trigger: Button "Toggle"
   Content: Text "Hidden content"`,
@@ -198,7 +385,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: NAVIGATION
   // ============================================================================
-  'zag-tabs': {
+  'nav-tabs': {
     mir: `Tabs
   Tab "Tab 1"
     Text "Content 1"
@@ -215,7 +402,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
     Frame pad 16
       Text "Settings content"`,
   },
-  'zag-accordion': {
+  'nav-accordion': {
     mir: `Accordion
   AccordionItem "Section 1"
     Text "Content 1"
@@ -229,7 +416,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   AccordionItem "Is it free?" value "q3"
     Text "Yes, Mirror is open source."`,
   },
-  'zag-steps': {
+  'nav-steps': {
     mir: `Steps
   Step "Step 1"
   Step "Step 2"
@@ -239,11 +426,11 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   Step "Profile" description "Set up your profile"
   Step "Complete" description "You're all set"`,
   },
-  'zag-pagination': {
+  'nav-pagination': {
     mir: 'Pagination count 100',
     com: 'Pagination count 100, pageSize 10, siblingCount 1, page 1',
   },
-  'zag-tree-view': {
+  'nav-tree-view': {
     mir: `TreeView
   Branch "Folder"
     TreeItem "File"
@@ -261,7 +448,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: SELECTION
   // ============================================================================
-  'zag-listbox': {
+  'form-listbox': {
     mir: `Listbox
   ListItem "Item 1"
   ListItem "Item 2"
@@ -276,7 +463,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: DATE & TIME
   // ============================================================================
-  'zag-date-picker': {
+  'form-date-picker': {
     mir: 'DatePicker',
     com: 'DatePicker placeholder "Select date", format "DD.MM.YYYY"',
   },
@@ -284,11 +471,11 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: MEDIA & FILES
   // ============================================================================
-  'zag-avatar': {
+  'media-avatar': {
     mir: 'Avatar "AB"',
     com: 'Avatar "JD", size 48',
   },
-  'zag-file-upload': {
+  'media-file-upload': {
     mir: 'FileUpload',
     com: `FileUpload multiple, maxFiles 5, accept "image/*"
   Dropzone: Frame ver, center, gap 8, pad 32, bg #27272a, rad 12, bor 2 dashed #3f3f46
@@ -297,7 +484,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
     Text "or click to browse", fs 13, col #52525b
   Trigger: Button "Browse Files"`,
   },
-  'zag-carousel': {
+  'media-carousel': {
     mir: `Carousel
   Slide: Frame bg #27272a
   Slide: Frame bg #3f3f46`,
@@ -313,11 +500,11 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
   // ZAG: FEEDBACK
   // ============================================================================
-  'zag-progress': {
+  'feedback-progress': {
     mir: 'Progress value 60',
     com: 'Progress value 60, max 100',
   },
-  'zag-circular-progress': {
+  'feedback-circular-progress': {
     mir: 'CircularProgress value 75',
     com: 'CircularProgress value 75, size 80, trackWidth 8',
   },

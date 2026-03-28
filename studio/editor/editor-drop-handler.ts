@@ -11,6 +11,11 @@
 import { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import type { ComponentDragData } from '../panels/components/types'
+import {
+  getComponentDefinition,
+  hasComponentDefinition,
+  findDefinitionInsertPosition,
+} from '../panels/components/component-templates'
 
 export interface EditorDropPosition {
   /** Line number (1-indexed, or 0 for "before first line") */
@@ -234,6 +239,96 @@ export function insertComponentCode(view: EditorView, code: string, pos: EditorD
     changes: { from: insertPos, to: insertPos, insert: insertText },
     selection: { anchor: insertPos + insertText.length },
   })
+
+  view.focus()
+}
+
+/**
+ * Insert component code WITH its definition (if not already present)
+ *
+ * Component Definition Pattern:
+ * 1. Check if a definition (e.g., "Select:") exists in the code
+ * 2. If not, insert the definition at the top (after tokens)
+ * 3. Insert the instance at the drop position
+ *
+ * @param view - CodeMirror editor view
+ * @param code - Instance code to insert at drop position
+ * @param pos - Drop position for the instance
+ * @param componentName - Name of the component (e.g., "Select")
+ */
+export function insertComponentWithDefinition(
+  view: EditorView,
+  code: string,
+  pos: EditorDropPosition,
+  componentName: string
+): void {
+  const doc = view.state.doc
+  const currentCode = doc.toString()
+
+  // Check if definition is needed
+  const definition = getComponentDefinition(componentName)
+  const needsDefinition = definition && !hasComponentDefinition(currentCode, componentName)
+
+  if (needsDefinition && definition) {
+    // Find where to insert the definition
+    const defPos = findDefinitionInsertPosition(currentCode)
+
+    // Calculate the actual character offset for the definition insertion
+    let defOffset: number
+    if (defPos === 0) {
+      defOffset = 0
+    } else {
+      const defLine = doc.line(defPos)
+      defOffset = defLine.to
+    }
+
+    // Insert definition first (this will shift the instance position)
+    const defText = defPos === 0 ? definition + '\n\n' : '\n\n' + definition
+
+    // Calculate the new instance position after definition insertion
+    const defInsertLength = defText.length
+
+    // Prepare instance insertion
+    const totalLines = doc.lines
+    const baseIndent = ' '.repeat(pos.indent)
+    const lines = code.split('\n')
+    const indentedLines = lines.map(line => {
+      if (!line.trim()) return ''
+      return baseIndent + line
+    }).filter(line => line.trim() !== '' || lines.length === 1)
+    const indentedCode = indentedLines.join('\n')
+
+    // Calculate instance offset
+    let instanceOffset: number
+    if (pos.line === 0) {
+      instanceOffset = 0
+    } else {
+      const lineNumber = Math.max(1, Math.min(pos.line, totalLines))
+      const targetLine = doc.line(lineNumber)
+      instanceOffset = targetLine.to
+    }
+
+    // Adjust instance offset if definition is inserted before it
+    if (defOffset <= instanceOffset) {
+      instanceOffset += defInsertLength
+    }
+
+    const instanceText = pos.line === 0 ? indentedCode + '\n' : '\n' + indentedCode
+
+    // Apply both changes in a single transaction
+    view.dispatch({
+      changes: [
+        { from: defOffset, to: defOffset, insert: defText },
+        { from: instanceOffset + defInsertLength, to: instanceOffset + defInsertLength, insert: instanceText },
+      ],
+      selection: { anchor: instanceOffset + defInsertLength + instanceText.length },
+    })
+
+    console.log(`[ComponentDrop] Inserted definition for ${componentName} and instance`)
+  } else {
+    // Just insert the instance (definition already exists or not needed)
+    insertComponentCode(view, code, pos)
+  }
 
   view.focus()
 }

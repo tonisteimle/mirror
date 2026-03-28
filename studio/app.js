@@ -36,6 +36,7 @@ import {
   // Component Drop Extension (proper CodeMirror integration)
   createComponentDropExtension,
   insertComponentCode,
+  insertComponentWithDefinition,
   generateComponentCodeFromDragData,
 } from './dist/index.js?v=116'
 
@@ -3057,13 +3058,17 @@ const editor = new EditorView({
       ...inlinePromptExtension(inlinePromptConfig),
       // Note: App lock removed - implicit root wrapper is now added in compile()
       // Component Drop: Proper CodeMirror integration for drag & drop from component palette
+      // Uses insertComponentWithDefinition to add component definition at top if needed
       Prec.highest(createComponentDropExtension({
         onDrop: (dragData, position, view) => {
           const code = generateComponentCodeFromDragData(dragData, {
             componentId: dragData.componentId,
             filename: currentFile || 'index.mir',
           })
-          insertComponentCode(view, code, position)
+          // Extract component name from template (e.g., "Select", "Checkbox")
+          const componentName = dragData.componentName || dragData.template || ''
+          // Use insertComponentWithDefinition for Zag components (adds definition if missing)
+          insertComponentWithDefinition(view, code, position, componentName)
         }
       })),
       EditorView.theme({
