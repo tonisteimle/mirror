@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Grundlagen</title>
+  <title>Mirror – Typografie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
       --syn-property: #7fb3a8;
       --syn-component: #8aabbd;
       --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +48,6 @@
     }
 
     header { margin-bottom: 48px; }
-    header p { color: var(--text-dim); font-size: 13px; margin-bottom: 8px; }
     h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); letter-spacing: -0.5px; }
 
     section { margin-bottom: 48px; }
@@ -69,11 +69,12 @@
     .syn-property { color: var(--syn-property); }
     .syn-component { color: var(--syn-component); font-weight: 500; }
     .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
 
     .props { margin: 24px 0; font-size: 14px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 100px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -104,170 +105,185 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 1 von 32</span>
+    <span class="chapter">Kapitel 10 von 32</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Grundlagen</h1>
+      <h1>Typografie</h1>
     </header>
 
     <section>
-      <h2>Elemente</h2>
-      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
+      <h2>Schriftgröße</h2>
+      <p><code>fs</code> (font-size) setzt die Schriftgröße in Pixeln:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Text "Hallo Welt"</textarea>
+          <textarea>Frame gap 8
+  Text "Klein (12px)", col white, fs 12
+  Text "Normal (16px)", col white, fs 16
+  Text "Groß (24px)", col white, fs 24
+  Text "Sehr groß (32px)", col white, fs 32</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
     </section>
 
     <section>
-      <h2>Eigenschaften</h2>
-      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
+      <h2>Schriftgewicht</h2>
+      <p><code>weight</code> steuert die Dicke der Schrift:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>Frame gap 8
+  Text "Thin (100)", col white, weight thin
+  Text "Light (300)", col white, weight light
+  Text "Normal (400)", col white, weight normal
+  Text "Medium (500)", col white, weight medium
+  Text "Semibold (600)", col white, weight semibold
+  Text "Bold (700)", col white, weight bold
+  Text "Black (900)", col white, weight black</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <div class="props">
-        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
-        <div><code>col</code> <span>Textfarbe</span></div>
-        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
-        <div><code>rad</code> <span>Eckenradius</span></div>
+        <div><code>thin</code> <span>100</span></div>
+        <div><code>light</code> <span>300</span></div>
+        <div><code>normal</code> <span>400 (Standard)</span></div>
+        <div><code>medium</code> <span>500</span></div>
+        <div><code>semibold</code> <span>600</span></div>
+        <div><code>bold</code> <span>700</span></div>
+        <div><code>black</code> <span>900</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Container</h2>
-      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
+      <h2>Schriftart</h2>
+      <p><code>font</code> wählt die Schriftfamilie:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Ich bin im Frame"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein Frame kann mehrere Kinder haben:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Titel", col white
-  Text "Beschreibung", col #888
-  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Layout</h2>
-      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Titel", col white
-  Text "Beschreibung", col #888</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
-  Button "Abbrechen", pad 10 20, rad 4
-  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
+          <textarea>Frame gap 12
+  Text "Sans-Serif (Standard)", col white, font sans
+  Text "Serif - Times New Roman", col white, font serif
+  Text "Monospace - Code-Schrift", col white, font mono</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <div class="props">
-        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
-        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
+        <div><code>sans</code> <span>Sans-Serif (Standard)</span></div>
+        <div><code>serif</code> <span>Serifenschrift</span></div>
+        <div><code>mono</code> <span>Monospace / Code</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Verschachtelung</h2>
-      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
+      <h2>Zeilenhöhe</h2>
+      <p><code>line</code> definiert den Zeilenabstand. Wichtig für Fließtext:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Karte", col white
-  Frame bg #333, pad 12, rad 4, gap 8
-    Text "Innerer Bereich", col #888
-    Button "Aktion", pad 8 16, rad 4</textarea>
+          <textarea>Frame gap 24
+  Frame bg #1a1a1a, pad 16, rad 8, w 300
+    Text "Enge Zeilenhöhe (1.2): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.", col white, line 1.2
+  Frame bg #1a1a1a, pad 16, rad 8, w 300
+    Text "Normale Zeilenhöhe (1.5): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.", col white, line 1.5
+  Frame bg #1a1a1a, pad 16, rad 8, w 300
+    Text "Weite Zeilenhöhe (2.0): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.", col white, line 2</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Textausrichtung</h2>
+      <p><code>text-align</code> richtet Text horizontal aus:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame bg #1a1a1a, pad 16, rad 8, w 250
+    Text "Links (Standard)", col white, text-align left
+  Frame bg #1a1a1a, pad 16, rad 8, w 250
+    Text "Zentriert", col white, text-align center
+  Frame bg #1a1a1a, pad 16, rad 8, w 250
+    Text "Rechts", col white, text-align right</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Textstile</h2>
+      <p>Zusätzliche Stiloptionen für Text:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  Text "Kursiv", col white, italic
+  Text "Unterstrichen", col white, underline
+  Text "GROSSBUCHSTABEN", col white, uppercase
+  Text "kleinbuchstaben", col white, lowercase
+  Text "Langer Text der abgeschnitten wird...", col white, truncate, w 200</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
+      <div class="props">
+        <div><code>italic</code> <span>Kursiv</span></div>
+        <div><code>underline</code> <span>Unterstrichen</span></div>
+        <div><code>uppercase</code> <span>GROSSBUCHSTABEN</span></div>
+        <div><code>lowercase</code> <span>kleinbuchstaben</span></div>
+        <div><code>truncate</code> <span>Mit ... abschneiden</span></div>
+      </div>
     </section>
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle diese Karte:</p>
+      <p>Erstelle eine Überschrift mit Untertitel. Die Überschrift soll groß und fett sein, der Untertitel kleiner und gedämpft:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="color: white;">Projekt erstellen</div>
-          <div style="color: #888;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
+        <div style="font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 4px;">
+          <div style="color: white; font-size: 24px; font-weight: 700;">Dashboard</div>
+          <div style="color: #888; font-size: 14px;">Willkommen zurück, Max</div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame</textarea>
+          <textarea>Frame gap 4
+  Text "Dashboard"
+  Text "Willkommen zurück, Max"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
-  Text "Projekt erstellen", col white
-  Text "Ein neues Projekt anlegen", col #888
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
+        <pre>Frame gap 4
+  Text "Dashboard", col white, fs 24, weight bold
+  Text "Willkommen zurück, Max", col #888, fs 14</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Text</code> <code>Button</code> – Elemente</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
-        <li><code>Frame</code> – Container für Kinder</li>
-        <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
+        <li><code>fs N</code> – Schriftgröße in Pixeln</li>
+        <li><code>weight</code> – Schriftdicke (thin bis black)</li>
+        <li><code>font</code> – Schriftfamilie (sans, serif, mono)</li>
+        <li><code>line N</code> – Zeilenhöhe</li>
+        <li><code>text-align</code> – Ausrichtung (left, center, right)</li>
+        <li><code>italic</code> <code>underline</code> <code>uppercase</code> – Textstile</li>
       </ul>
     </div>
 
     <nav>
-      <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Komponenten →</a>
+      <a href="lektion-09.html">← Farben & Borders</a>
+      <a href="lektion-11.html">Effekte →</a>
     </nav>
 
   </main>
@@ -277,9 +293,10 @@
     const patterns = [
       { regex: /\/\/.*$/gm, cls: 'syn-comment' },
       { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|line|text-align|thin|light|normal|medium|semibold|bold|black|sans|serif|mono)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

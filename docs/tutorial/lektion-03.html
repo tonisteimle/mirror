@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Grundlagen</title>
+  <title>Mirror – Design Tokens</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
       --syn-property: #7fb3a8;
       --syn-component: #8aabbd;
       --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,17 +70,18 @@
     .syn-property { color: var(--syn-property); }
     .syn-component { color: var(--syn-component); font-weight: 500; }
     .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
 
     .props { margin: 24px 0; font-size: 14px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 100px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
     .exercise h3 { font-size: 14px; font-weight: 500; color: var(--text-bright); margin-bottom: 12px; }
     .exercise p { margin-bottom: 16px; font-size: 14px; }
-    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; }
+    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; gap: 12px; }
 
     details { margin-top: 16px; font-size: 13px; }
     summary { color: var(--text-dim); cursor: pointer; outline: none; }
@@ -104,170 +106,173 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 1 von 32</span>
+    <span class="chapter">Kapitel 3 von 32</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Grundlagen</h1>
+      <h1>Design Tokens</h1>
     </header>
 
     <section>
-      <h2>Elemente</h2>
-      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
+      <h2>Das Problem</h2>
+      <p>Farben und Werte sind überall verstreut. Willst du das Blau ändern, musst du jeden Hex-Code suchen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Text "Hallo Welt"</textarea>
+          <textarea>Frame gap 8
+  Button "Primary", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Secondary", bg #2563eb, col white, pad 10 20, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
+      <p>Tokens lösen das: Ein Name für jeden Wert, zentral definiert.</p>
     </section>
 
     <section>
-      <h2>Eigenschaften</h2>
-      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
+      <h2>Tokens definieren</h2>
+      <p>Ein Token beginnt mit <code>$</code> und wird mit <code>:</code> definiert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>// Token-Definition
+$primary: #2563eb
+$radius: 6
+
+// Verwendung
+Frame gap 8
+  Button "Primary", bg $primary, col white, pad 10 20, rad $radius
+  Button "Secondary", bg $primary, col white, pad 10 20, rad $radius</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <div class="props">
-        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
-        <div><code>col</code> <span>Textfarbe</span></div>
-        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
-        <div><code>rad</code> <span>Eckenradius</span></div>
-      </div>
+      <p>Ändere <code>$primary</code> oben – beide Buttons ändern sich.</p>
     </section>
 
     <section>
-      <h2>Container</h2>
-      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
+      <h2>Farb-Palette</h2>
+      <p>Definiere eine konsistente Farbpalette für dein Design:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Ich bin im Frame"</textarea>
+          <textarea>// Farben
+$bg: #1a1a1a
+$surface: #252525
+$text: #ffffff
+$muted: #888888
+$accent: #2563eb
+
+// Komponenten mit Tokens
+Card: bg $surface, pad 20, rad 8, gap 8
+
+Card
+  Text "Überschrift", col $text
+  Text "Beschreibung mit gedämpfter Farbe", col $muted
+  Button "Aktion", bg $accent, col white, pad 8 16, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein Frame kann mehrere Kinder haben:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Titel", col white
-  Text "Beschreibung", col #888
-  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Layout</h2>
-      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Titel", col white
-  Text "Beschreibung", col #888</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
-  Button "Abbrechen", pad 10 20, rad 4
-  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <div class="props">
-        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
-        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Verschachtelung</h2>
-      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
+      <h2>Abstände und Größen</h2>
+      <p>Tokens funktionieren auch für Abstände, Radien und Schriftgrößen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Karte", col white
-  Frame bg #333, pad 12, rad 4, gap 8
-    Text "Innerer Bereich", col #888
-    Button "Aktion", pad 8 16, rad 4</textarea>
+          <textarea>// Spacing
+$s: 8
+$m: 16
+$l: 24
+
+// Radius
+$rad: 8
+
+// Typography
+$fs-title: 20
+$fs-body: 14
+
+// Verwendung
+Frame bg #1a1a1a, pad $l, rad $rad, gap $m
+  Text "Titel", fs $fs-title, col white, weight bold
+  Text "Body-Text mit konsistenten Abständen", fs $fs-body, col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+    </section>
 
-      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
+    <section>
+      <h2>Tokens + Komponenten</h2>
+      <p>Kombiniere Tokens mit Komponenten für ein vollständiges Design-System:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+$accent: #2563eb
+$surface: #1a1a1a
+$pad: 16
+$rad: 8
+
+// Komponenten mit Tokens
+Card: bg $surface, pad $pad, rad $rad, gap 8
+Btn: bg $accent, col white, pad 10 20, rad 6
+
+// UI
+Card
+  Text "Design System", col white, weight bold
+  Text "Tokens + Komponenten = Konsistenz", col #888
+  Btn "Los geht's"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle diese Karte:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="color: white;">Projekt erstellen</div>
-          <div style="color: #888;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
-        </div>
-      </div>
+      <p>Refaktoriere diesen Code mit Tokens. Die Farben sollen zentral definiert sein:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame</textarea>
+          <textarea>// Refaktoriere mit Tokens: $bg, $accent, $text, $muted
+
+Frame bg #18181b, pad 24, rad 12, gap 12
+  Text "Dashboard", col #ffffff, fs 20, weight bold
+  Text "Willkommen zurück", col #888888
+  Button "Neues Projekt", bg #2563eb, col #ffffff, pad 12 24, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
-  Text "Projekt erstellen", col white
-  Text "Ein neues Projekt anlegen", col #888
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
+        <pre>$bg: #18181b
+$accent: #2563eb
+$text: #ffffff
+$muted: #888888
+
+Frame bg $bg, pad 24, rad 12, gap 12
+  Text "Dashboard", col $text, fs 20, weight bold
+  Text "Willkommen zurück", col $muted
+  Button "Neues Projekt", bg $accent, col $text, pad 12 24, rad 6</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Text</code> <code>Button</code> – Elemente</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
-        <li><code>Frame</code> – Container für Kinder</li>
-        <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
+        <li><code>$name: wert</code> – Token definieren</li>
+        <li><code>bg $name</code> – Token verwenden</li>
+        <li>Farben, Abstände, Größen – alles tokenisierbar</li>
+        <li>Tokens + Komponenten = Design-System</li>
       </ul>
     </div>
 
     <nav>
-      <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Komponenten →</a>
+      <a href="lektion-02.html">← Komponenten</a>
+      <a href="lektion-04.html">Interaktion →</a>
     </nav>
 
   </main>
@@ -277,6 +282,7 @@
     const patterns = [
       { regex: /\/\/.*$/gm, cls: 'syn-comment' },
       { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
       { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs)\b/g, cls: 'syn-property' },

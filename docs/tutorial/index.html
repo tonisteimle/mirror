@@ -1,352 +1,584 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learn Mirror - Interactive Tutorial</title>
+  <title>Mirror Tutorial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #111;
+      --bg-card: #191919;
+      --text: #ccc;
+      --text-bright: #eee;
+      --text-dim: #666;
+      --border: #282828;
+      --accent: #4a9eff;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    header {
+      margin-bottom: 48px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--text-bright);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 16px;
+    }
+
+    .intro {
+      margin-bottom: 48px;
+    }
+
+    .intro p {
+      color: var(--text);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .comparison {
+      margin-bottom: 56px;
+    }
+
+    .comparison h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-bright);
+      margin-bottom: 16px;
+    }
+
+    .compare-block {
+      background: var(--bg-card);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .compare-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-label .lines {
+      font-weight: 400;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    .compare-block pre {
+      margin: 0;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.5;
+      color: #888;
+      overflow-x: auto;
+    }
+
+    .compare-block.mirror pre {
+      color: var(--text-bright);
+      font-size: 13px;
+    }
+
+    .compare-block.mirror {
+      border: 1px solid #333;
+    }
+
+    .phase {
+      margin-bottom: 40px;
+    }
+
+    .phase-header {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .lessons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lesson-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .lesson-card:hover {
+      border-color: #333;
+      background: #1e1e1e;
+    }
+
+    .lesson-number {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      width: 24px;
+    }
+
+    .lesson-info {
+      flex: 1;
+    }
+
+    .lesson-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-bright);
+      margin-bottom: 2px;
+    }
+
+    .lesson-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .lesson-arrow {
+      color: var(--text-dim);
+      font-size: 16px;
+      transition: color 0.15s;
+    }
+
+    .lesson-card:hover .lesson-arrow {
+      color: var(--accent);
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+  </style>
 </head>
 <body>
-  <nav class="nav">
-    <a href="index.html" class="nav-logo">
-      <div class="logo-icon">M</div>
-      <span>Mirror Tutorial</span>
-    </a>
-    <div class="nav-links">
-      <a href="playground.html" class="nav-link">
-        <span class="material-symbols-rounded">code</span>
-        Playground
+  <main class="page">
+
+    <header>
+      <a href="../../studio/index.html" class="logo">
+        <img src="logo.svg" alt="Mirror" class="logo-icon">
+        <span class="logo-text">Mirror</span>
       </a>
-      <a href="../../docs/generated/reference.html" class="nav-link">
-        <span class="material-symbols-rounded">menu_book</span>
-        Reference
-      </a>
+      <h1>Lerne Mirror</h1>
+      <p class="subtitle">Eine Sprache für UIs – für Designer, nicht nur für Entwickler.</p>
+    </header>
+
+    <div class="intro">
+      <p>HTML und CSS waren nie für Anwendungen gedacht. Deshalb entstanden Frameworks wie React, Vue und Angular. Doch diese richten sich an Entwickler – mit komplexer Syntax, Build-Tools und Boilerplate.</p>
+      <p>Mirror ist anders. Eine Beschreibungssprache, die radikal einfach ist. Tokens definieren Werte, Komponenten nutzen Tokens, Layouts enthalten Komponenten. Kein Overhead, keine Magie.</p>
     </div>
-  </nav>
 
-  <header class="hero">
-    <div class="hero-content">
-      <h1>Learn Mirror</h1>
-      <p class="hero-subtitle">Build beautiful UIs with a simple, intuitive language.<br>No CSS knowledge required.</p>
-      <a href="#chapter-1" class="hero-cta">
-        Start Learning
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-    </div>
-    <div class="hero-visual">
-      <div class="code-preview">
-        <div class="code-side">
-          <pre><code>Card bg #1e1e24, pad 20, rad 12
-  Text "Hello!", fs 24, weight bold
-  Text "Welcome to Mirror", col #888</code></pre>
-        </div>
-        <div class="preview-side">
-          <div style="background: #1e1e24; padding: 20px; border-radius: 12px; font-family: Inter, sans-serif;">
-            <div style="font-size: 24px; font-weight: bold; color: white;">Hello!</div>
-            <div style="color: #888; margin-top: 4px;">Welcome to Mirror</div>
-          </div>
-        </div>
+    <div class="comparison">
+      <h3>Ein Button in React vs. Mirror</h3>
+      <div class="compare-block">
+        <span class="compare-label">React <span class="lines">– 17 Zeilen</span></span>
+        <pre>import React from 'react';
+
+export default function App() {
+  return (
+    &lt;button
+      style={{
+        background: '#2563eb',
+        color: 'white',
+        padding: '12px 24px',
+        borderRadius: '6px',
+        border: 'none'
+      }}
+    &gt;
+      Speichern
+    &lt;/button&gt;
+  );
+}</pre>
+      </div>
+      <div class="compare-block mirror">
+        <span class="compare-label">Mirror <span class="lines">– 1 Zeile</span></span>
+        <pre>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</pre>
       </div>
     </div>
-  </header>
 
-  <main class="content">
-    <section class="intro">
-      <h2>What is Mirror?</h2>
-      <p>Mirror is a design-first language for creating user interfaces. Write simple, readable code and see your designs come to life instantly. Perfect for designers who want to prototype without learning complex frameworks.</p>
-
-      <div class="features">
-        <div class="feature">
-          <div class="feature-icon">
-            <span class="material-symbols-rounded">bolt</span>
+    <section class="phase">
+      <h2 class="phase-header">Phase 1: Grundlagen</h2>
+      <div class="lessons">
+        <a href="lektion-01.html" class="lesson-card">
+          <span class="lesson-number">01</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Erste Schritte</div>
+            <div class="lesson-desc">Elemente, Eigenschaften, Container, Layout</div>
           </div>
-          <h3>Instant Preview</h3>
-          <p>See changes as you type. No build steps, no waiting.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">
-            <span class="material-symbols-rounded">palette</span>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-02.html" class="lesson-card">
+          <span class="lesson-number">02</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Komponenten</div>
+            <div class="lesson-desc">Eigene Bausteine definieren und wiederverwenden</div>
           </div>
-          <h3>Design-Friendly</h3>
-          <p>Intuitive properties like <code>pad</code>, <code>bg</code>, <code>rad</code> that make sense.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">
-            <span class="material-symbols-rounded">widgets</span>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-03.html" class="lesson-card">
+          <span class="lesson-number">03</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Design Tokens</div>
+            <div class="lesson-desc">Farben, Abstände und Schriften zentral verwalten</div>
           </div>
-          <h3>Components</h3>
-          <p>Create reusable components and build design systems.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="chapters">
-      <h2>Chapters</h2>
-
-      <a href="#chapter-1" class="chapter-card" id="chapter-1">
-        <div class="chapter-number">01</div>
-        <div class="chapter-info">
-          <h3>Your First UI</h3>
-          <p>Learn the basics: elements, text, and styling.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-
-      <a href="#chapter-2" class="chapter-card" id="chapter-2">
-        <div class="chapter-number">02</div>
-        <div class="chapter-info">
-          <h3>Layout & Spacing</h3>
-          <p>Arrange elements with flexbox layouts.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-
-      <a href="#chapter-3" class="chapter-card" id="chapter-3">
-        <div class="chapter-number">03</div>
-        <div class="chapter-info">
-          <h3>Colors & Typography</h3>
-          <p>Style your UI with colors, fonts, and effects.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-
-      <a href="#chapter-4" class="chapter-card" id="chapter-4">
-        <div class="chapter-number">04</div>
-        <div class="chapter-info">
-          <h3>Components</h3>
-          <p>Create reusable building blocks.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-
-      <a href="#chapter-5" class="chapter-card" id="chapter-5">
-        <div class="chapter-number">05</div>
-        <div class="chapter-info">
-          <h3>States & Interactions</h3>
-          <p>Add hover effects and interactive states.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-
-      <a href="#chapter-6" class="chapter-card" id="chapter-6">
-        <div class="chapter-number">06</div>
-        <div class="chapter-info">
-          <h3>Design Tokens</h3>
-          <p>Build a consistent design system.</p>
-        </div>
-        <span class="material-symbols-rounded">arrow_forward</span>
-      </a>
-    </section>
-
-    <!-- Chapter 1 Content -->
-    <section class="chapter-content" id="chapter-1-content">
-      <div class="chapter-header">
-        <span class="chapter-label">Chapter 1</span>
-        <h2>Your First UI</h2>
-        <p>Let's create your first Mirror interface. You'll learn how to create elements, add text, and apply basic styling.</p>
-      </div>
-
-      <div class="lesson">
-        <h3>Elements</h3>
-        <p>In Mirror, everything starts with an element. The most basic element is a <code>Frame</code> - think of it as a container or a box.</p>
-
-        <div class="playground-embed" data-code="Frame bg #27272a, pad 20, rad 8
-  Text &quot;Hello, World!&quot;"></div>
-
-        <div class="tip">
-          <span class="material-symbols-rounded">lightbulb</span>
-          <div>
-            <strong>Try it!</strong> Change the text inside the quotes. The preview updates instantly.
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-04.html" class="lesson-card">
+          <span class="lesson-number">04</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Interaktion</div>
+            <div class="lesson-desc">Hover-Effekte und Zustände</div>
           </div>
-        </div>
-      </div>
-
-      <div class="lesson">
-        <h3>Nesting Elements</h3>
-        <p>Elements can contain other elements. Use <strong>indentation</strong> (2 spaces) to show that something is inside another element.</p>
-
-        <div class="playground-embed" data-code="Frame bg #27272a, pad 20, rad 8
-  Text &quot;Title&quot;, fs 20, weight bold
-  Text &quot;This is a subtitle&quot;, col #888"></div>
-
-        <p>Notice how both <code>Text</code> elements are indented inside the <code>Frame</code>. That's how Mirror knows they belong inside.</p>
-      </div>
-
-      <div class="lesson">
-        <h3>Common Properties</h3>
-        <p>Properties change how elements look. Here are the most common ones:</p>
-
-        <table class="props-table">
-          <tr>
-            <td><code>bg</code></td>
-            <td>Background color</td>
-            <td><code>bg #3b82f6</code></td>
-          </tr>
-          <tr>
-            <td><code>col</code></td>
-            <td>Text color</td>
-            <td><code>col white</code></td>
-          </tr>
-          <tr>
-            <td><code>pad</code></td>
-            <td>Padding (inner space)</td>
-            <td><code>pad 16</code></td>
-          </tr>
-          <tr>
-            <td><code>rad</code></td>
-            <td>Border radius (rounded corners)</td>
-            <td><code>rad 8</code></td>
-          </tr>
-          <tr>
-            <td><code>fs</code></td>
-            <td>Font size</td>
-            <td><code>fs 24</code></td>
-          </tr>
-          <tr>
-            <td><code>weight</code></td>
-            <td>Font weight</td>
-            <td><code>weight bold</code></td>
-          </tr>
-        </table>
-
-        <div class="playground-embed" data-code="Frame bg #1e1e24, pad 24, rad 12
-  Text &quot;Styled Card&quot;, fs 24, weight bold, col white
-  Text &quot;With custom styling&quot;, fs 14, col #888"></div>
-      </div>
-
-      <div class="lesson">
-        <h3>Other Elements</h3>
-        <p>Besides <code>Frame</code> and <code>Text</code>, Mirror has many other elements:</p>
-
-        <div class="playground-embed" data-code="Frame bg #18181b, pad 24, gap 16
-
-  // Buttons
-  Button &quot;Click me&quot;, pad 12 20, bg #3b82f6, col white, rad 6
-
-  // Input fields
-  Input placeholder &quot;Type here...&quot;, pad 12, bg #27272a, rad 6, bor 1 #333, col white
-
-  // Images (use any URL)
-  Image src &quot;https://picsum.photos/200/100&quot;, rad 8"></div>
-
-        <div class="tip">
-          <span class="material-symbols-rounded">info</span>
-          <div>
-            Lines starting with <code>//</code> are comments. They help explain your code but don't show up in the preview.
-          </div>
-        </div>
-      </div>
-
-      <div class="lesson">
-        <h3>Practice: Build a Profile Card</h3>
-        <p>Try building this profile card yourself! Use what you've learned about nesting, styling, and properties.</p>
-
-        <div class="playground-embed" data-height="300" data-code="// Try to recreate this!
-Frame bg #27272a, pad 20, rad 12, gap 12, w 280
-
-  // Profile image
-  Frame bg #3b82f6, w 60, h 60, rad 30, center
-    Text &quot;JS&quot;, col white, weight bold, fs 20
-
-  // Info
-  Text &quot;Jane Smith&quot;, fs 18, weight semibold, col white
-  Text &quot;Product Designer&quot;, col #888
-
-  // Button
-  Button &quot;Follow&quot;, pad 10 20, bg #3b82f6, col white, rad 6, w full, center"></div>
-      </div>
-
-      <div class="chapter-nav">
-        <div></div>
-        <a href="#chapter-2-content" class="next-chapter">
-          Next: Layout & Spacing
-          <span class="material-symbols-rounded">arrow_forward</span>
+          <span class="lesson-arrow">→</span>
         </a>
       </div>
     </section>
 
-  </main>
-
-  <footer class="footer">
-    <p>Mirror Tutorial &bull; <a href="playground.html">Open Playground</a> &bull; <a href="../../docs/generated/reference.html">Reference</a></p>
-  </footer>
-
-  <!-- Mirror Compiler -->
-  <script src="../../dist/browser/index.global.js"></script>
-
-  <script>
-    // Initialize playground embeds
-    document.querySelectorAll('.playground-embed').forEach(embed => {
-      const code = embed.dataset.code;
-      const height = embed.dataset.height || '200';
-
-      embed.innerHTML = `
-        <div class="embed-container" style="height: ${height}px">
-          <div class="embed-editor">
-            <textarea spellcheck="false">${code}</textarea>
+    <section class="phase">
+      <h2 class="phase-header">Phase 2: Layout & Sizing</h2>
+      <div class="lessons">
+        <a href="lektion-05.html" class="lesson-card">
+          <span class="lesson-number">05</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Layout-Basics</div>
+            <div class="lesson-desc">hor, ver, gap, center – Elemente anordnen</div>
           </div>
-          <div class="embed-preview"></div>
-        </div>
-      `;
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-06.html" class="lesson-card">
+          <span class="lesson-number">06</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Größen & Abstände</div>
+            <div class="lesson-desc">w, h, hug, full, pad, margin</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-07.html" class="lesson-card">
+          <span class="lesson-number">07</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Flex-Verhalten</div>
+            <div class="lesson-desc">spread, wrap, grow, shrink, align</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-08.html" class="lesson-card">
+          <span class="lesson-number">08</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Grid-Layout</div>
+            <div class="lesson-desc">grid N, dense, gap-x, gap-y</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-      const textarea = embed.querySelector('textarea');
-      const preview = embed.querySelector('.embed-preview');
+    <section class="phase">
+      <h2 class="phase-header">Phase 3: Visuelles Design</h2>
+      <div class="lessons">
+        <a href="lektion-09.html" class="lesson-card">
+          <span class="lesson-number">09</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Farben & Borders</div>
+            <div class="lesson-desc">bg, col, bor, boc, rad – Farbsystem</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-10.html" class="lesson-card">
+          <span class="lesson-number">10</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Typografie</div>
+            <div class="lesson-desc">fs, weight, font, line, text-align</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-11.html" class="lesson-card">
+          <span class="lesson-number">11</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Effekte</div>
+            <div class="lesson-desc">shadow, opacity, blur, backdrop-blur</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-12.html" class="lesson-card">
+          <span class="lesson-number">12</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Icons</div>
+            <div class="lesson-desc">Icon, icon-size, icon-color, fill</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-      function compile() {
-        try {
-          const ast = MirrorLang.parse(textarea.value);
-          if (ast.errors && ast.errors.length > 0) {
-            preview.innerHTML = `<div class="embed-error">${ast.errors[0].message}</div>`;
-            return;
-          }
-          const html = MirrorLang.generateDOM(ast);
-          preview.innerHTML = html;
+    <section class="phase">
+      <h2 class="phase-header">Phase 4: Positionierung</h2>
+      <div class="lessons">
+        <a href="lektion-13.html" class="lesson-card">
+          <span class="lesson-number">13</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Positioned Layout</div>
+            <div class="lesson-desc">pos, stacked, x, y, z</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-14.html" class="lesson-card">
+          <span class="lesson-number">14</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Pinning</div>
+            <div class="lesson-desc">pin-left, pin-right, pin-top, pin-bottom</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-15.html" class="lesson-card">
+          <span class="lesson-number">15</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Overflow & Scroll</div>
+            <div class="lesson-desc">scroll, scroll-hor, clip, hidden</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-          // Execute scripts
-          preview.querySelectorAll('script').forEach(script => {
-            const newScript = document.createElement('script');
-            newScript.textContent = script.textContent;
-            script.parentNode.replaceChild(newScript, script);
-          });
-        } catch (e) {
-          preview.innerHTML = `<div class="embed-error">${e.message}</div>`;
-        }
-      }
+    <section class="phase">
+      <h2 class="phase-header">Phase 5: States & Events</h2>
+      <div class="lessons">
+        <a href="lektion-16.html" class="lesson-card">
+          <span class="lesson-number">16</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Custom States</div>
+            <div class="lesson-desc">state selected, state expanded, state on/off</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-17.html" class="lesson-card">
+          <span class="lesson-number">17</span>
+          <div class="lesson-info">
+            <div class="lesson-title">State-Modifikatoren</div>
+            <div class="lesson-desc">exclusive, toggle, initial</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-18.html" class="lesson-card">
+          <span class="lesson-number">18</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Events</div>
+            <div class="lesson-desc">onclick, onhover, onfocus, onchange</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-19.html" class="lesson-card">
+          <span class="lesson-number">19</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Actions</div>
+            <div class="lesson-desc">show, hide, toggle, open, close, navigate</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-      textarea.addEventListener('input', () => {
-        clearTimeout(textarea._timer);
-        textarea._timer = setTimeout(compile, 150);
-      });
+    <section class="phase">
+      <h2 class="phase-header">Phase 6: Animationen</h2>
+      <div class="lessons">
+        <a href="lektion-20.html" class="lesson-card">
+          <span class="lesson-number">20</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Animation-Presets</div>
+            <div class="lesson-desc">fade-in, slide-in, bounce, pulse, shake</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-21.html" class="lesson-card">
+          <span class="lesson-number">21</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Transitions</div>
+            <div class="lesson-desc">Hover-Animationen, Timing, kombinierte Effekte</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-      // Tab support
-      textarea.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          const start = textarea.selectionStart;
-          textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(textarea.selectionEnd);
-          textarea.selectionStart = textarea.selectionEnd = start + 2;
-          compile();
-        }
-      });
+    <section class="phase">
+      <h2 class="phase-header">Phase 7: Vorgefertigte Komponenten</h2>
+      <div class="lessons">
+        <a href="lektion-22.html" class="lesson-card">
+          <span class="lesson-number">22</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Einführung</div>
+            <div class="lesson-desc">Slots-Konzept, as-Syntax</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-23.html" class="lesson-card">
+          <span class="lesson-number">23</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Select & Combobox</div>
+            <div class="lesson-desc">Dropdowns, Autocomplete, Keyboard-Navigation</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-24.html" class="lesson-card">
+          <span class="lesson-number">24</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Dialog & Popover</div>
+            <div class="lesson-desc">Modale Dialoge, Popovers, Tooltips</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-25.html" class="lesson-card">
+          <span class="lesson-number">25</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Tabs & Accordion</div>
+            <div class="lesson-desc">Tab-Navigation, Collapsibles</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-26.html" class="lesson-card">
+          <span class="lesson-number">26</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Form Controls</div>
+            <div class="lesson-desc">Checkbox, Switch, Slider, RadioGroup</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-27.html" class="lesson-card">
+          <span class="lesson-number">27</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Date & Time</div>
+            <div class="lesson-desc">DatePicker, Timer</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-28.html" class="lesson-card">
+          <span class="lesson-number">28</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Weitere Komponenten</div>
+            <div class="lesson-desc">TreeView, FileUpload, Carousel, Menu</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-      compile();
-    });
+    <section class="phase">
+      <h2 class="phase-header">Phase 8: Design Systems</h2>
+      <div class="lessons">
+        <a href="lektion-29.html" class="lesson-card">
+          <span class="lesson-number">29</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Token-Systeme</div>
+            <div class="lesson-desc">Hierarchische Tokens, Theming, Dark/Light Mode</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-30.html" class="lesson-card">
+          <span class="lesson-number">30</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Component Library</div>
+            <div class="lesson-desc">Eigene Komponenten-Bibliothek aufbauen</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-31.html" class="lesson-card">
+          <span class="lesson-number">31</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Patterns</div>
+            <div class="lesson-desc">Cards, Lists, Forms, Navigation</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+        <a href="lektion-32.html" class="lesson-card">
+          <span class="lesson-number">32</span>
+          <div class="lesson-info">
+            <div class="lesson-title">Komplettes Projekt</div>
+            <div class="lesson-desc">Dashboard von Grund auf bauen</div>
+          </div>
+          <span class="lesson-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        const target = document.querySelector(this.getAttribute('href') + '-content') ||
-                       document.querySelector(this.getAttribute('href'));
-        if (target) {
-          e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    });
-  </script>
+    <footer>
+      <a href="../../studio/index.html">Studio öffnen</a>
+    </footer>
+
+  </main>
 </body>
 </html>

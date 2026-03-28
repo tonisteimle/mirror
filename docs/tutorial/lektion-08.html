@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Grundlagen</title>
+  <title>Mirror – Grid-Layout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
       --syn-property: #7fb3a8;
       --syn-component: #8aabbd;
       --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,17 +70,18 @@
     .syn-property { color: var(--syn-property); }
     .syn-component { color: var(--syn-component); font-weight: 500; }
     .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
 
     .props { margin: 24px 0; font-size: 14px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 100px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
     .exercise h3 { font-size: 14px; font-weight: 500; color: var(--text-bright); margin-bottom: 12px; }
     .exercise p { margin-bottom: 16px; font-size: 14px; }
-    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; }
+    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; gap: 12px; }
 
     details { margin-top: 16px; font-size: 13px; }
     summary { color: var(--text-dim); cursor: pointer; outline: none; }
@@ -104,170 +106,210 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 1 von 32</span>
+    <span class="chapter">Kapitel 8 von 32</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Grundlagen</h1>
+      <h1>Grid-Layout</h1>
     </header>
 
     <section>
-      <h2>Elemente</h2>
-      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
+      <h2>Einfaches Grid</h2>
+      <p><code>grid N</code> erstellt ein Raster mit N Spalten. Kinder füllen die Zellen automatisch:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Text "Hallo Welt"</textarea>
+          <textarea>Frame grid 3, gap 8, bg #1a1a1a, pad 16, rad 8
+  Frame bg #2563eb, h 50, rad 4
+  Frame bg #2563eb, h 50, rad 4
+  Frame bg #2563eb, h 50, rad 4
+  Frame bg #2563eb, h 50, rad 4
+  Frame bg #2563eb, h 50, rad 4
+  Frame bg #2563eb, h 50, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
+      <p>6 Elemente in einem 3-Spalten-Grid = 2 Reihen.</p>
     </section>
 
     <section>
-      <h2>Eigenschaften</h2>
-      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
+      <h2>Auto-Grid</h2>
+      <p><code>grid auto</code> berechnet die Spaltenanzahl automatisch basierend auf der verfügbaren Breite:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>Frame grid auto, gap 8, bg #1a1a1a, pad 16, rad 8, w 350
+  Frame bg #2563eb, h 60, rad 4, minw 80
+  Frame bg #2563eb, h 60, rad 4, minw 80
+  Frame bg #2563eb, h 60, rad 4, minw 80
+  Frame bg #2563eb, h 60, rad 4, minw 80
+  Frame bg #2563eb, h 60, rad 4, minw 80</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die <code>minw</code> bestimmt die minimale Zellenbreite.</p>
+    </section>
+
+    <section>
+      <h2>Gap-X und Gap-Y</h2>
+      <p>Für unterschiedliche Abstände horizontal und vertikal:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 3, gap-x 16, gap-y 8, bg #1a1a1a, pad 16, rad 8
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <div class="props">
-        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
-        <div><code>col</code> <span>Textfarbe</span></div>
-        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
-        <div><code>rad</code> <span>Eckenradius</span></div>
+        <div><code>gap</code> <span>Abstand in beide Richtungen</span></div>
+        <div><code>gap-x</code> <span>Horizontaler Abstand</span></div>
+        <div><code>gap-y</code> <span>Vertikaler Abstand</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Container</h2>
-      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
+      <h2>Dense – Lücken füllen</h2>
+      <p><code>dense</code> füllt Lücken im Grid, wenn Elemente unterschiedliche Größen haben:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Ich bin im Frame"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein Frame kann mehrere Kinder haben:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Titel", col white
-  Text "Beschreibung", col #888
-  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
+          <textarea>Frame grid 3, dense, gap 8, bg #1a1a1a, pad 16, rad 8, w 300
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #ef4444, h 80, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4
+  Frame bg #22c55e, h 40, rad 4
+  Frame bg #2563eb, h 40, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Layout</h2>
-      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
+      <h2>Karten-Grid</h2>
+      <p>Grids sind perfekt für Karten-Layouts:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Titel", col white
-  Text "Beschreibung", col #888</textarea>
+          <textarea>Card: bg #252525, pad 16, rad 8, gap 8
+
+Frame grid 2, gap 12, bg #1a1a1a, pad 16, rad 8
+  Card
+    Text "Projekt A", col white, weight 500
+    Text "3 Dateien", col #888, fs 13
+  Card
+    Text "Projekt B", col white, weight 500
+    Text "7 Dateien", col #888, fs 13
+  Card
+    Text "Projekt C", col white, weight 500
+    Text "12 Dateien", col #888, fs 13
+  Card
+    Text "Projekt D", col white, weight 500
+    Text "5 Dateien", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+    </section>
 
-      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
-  Button "Abbrechen", pad 10 20, rad 4
-  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+    <section>
+      <h2>Grid vs Flex</h2>
+      <p>Wann Grid, wann Flex?</p>
 
       <div class="props">
-        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
-        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
+        <div><code>grid</code> <span>Wenn du ein gleichmäßiges Raster brauchst</span></div>
+        <div><code>hor/ver</code> <span>Wenn Elemente sich an den Inhalt anpassen sollen</span></div>
       </div>
-    </section>
-
-    <section>
-      <h2>Verschachtelung</h2>
-      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Karte", col white
-  Frame bg #333, pad 12, rad 4, gap 8
-    Text "Innerer Bereich", col #888
-    Button "Aktion", pad 8 16, rad 4</textarea>
+          <textarea>// Grid: Alle Zellen gleich groß
+Frame grid 4, gap 8, bg #1a1a1a, pad 12, rad 8
+  Frame bg #2563eb, h 30, rad 4
+  Frame bg #2563eb, h 30, rad 4
+  Frame bg #2563eb, h 30, rad 4
+  Frame bg #2563eb, h 30, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Flex: Größe nach Inhalt
+Frame hor, gap 8, bg #1a1a1a, pad 12, rad 8
+  Button "A", bg #2563eb, col white, pad 8 12, rad 4
+  Button "BB", bg #2563eb, col white, pad 8 12, rad 4
+  Button "CCC", bg #2563eb, col white, pad 8 12, rad 4
+  Button "DDDD", bg #2563eb, col white, pad 8 12, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle diese Karte:</p>
+      <p>Erstelle ein 3-Spalten-Grid mit 6 farbigen Kacheln:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="color: white;">Projekt erstellen</div>
-          <div style="color: #888;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
+        <div style="background: #1a1a1a; padding: 16px; border-radius: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 250px;">
+          <div style="background: #ef4444; height: 50px; border-radius: 4px;"></div>
+          <div style="background: #f97316; height: 50px; border-radius: 4px;"></div>
+          <div style="background: #eab308; height: 50px; border-radius: 4px;"></div>
+          <div style="background: #22c55e; height: 50px; border-radius: 4px;"></div>
+          <div style="background: #3b82f6; height: 50px; border-radius: 4px;"></div>
+          <div style="background: #8b5cf6; height: 50px; border-radius: 4px;"></div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame</textarea>
+          <textarea>Frame
+  Frame bg #ef4444
+  Frame bg #f97316
+  Frame bg #eab308
+  Frame bg #22c55e
+  Frame bg #3b82f6
+  Frame bg #8b5cf6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
-  Text "Projekt erstellen", col white
-  Text "Ein neues Projekt anlegen", col #888
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
+        <pre>Frame grid 3, gap 8, bg #1a1a1a, pad 16, rad 8, w 250
+  Frame bg #ef4444, h 50, rad 4
+  Frame bg #f97316, h 50, rad 4
+  Frame bg #eab308, h 50, rad 4
+  Frame bg #22c55e, h 50, rad 4
+  Frame bg #3b82f6, h 50, rad 4
+  Frame bg #8b5cf6, h 50, rad 4</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Text</code> <code>Button</code> – Elemente</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
-        <li><code>Frame</code> – Container für Kinder</li>
-        <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
+        <li><code>grid N</code> – Grid mit N Spalten</li>
+        <li><code>grid auto</code> – Automatische Spaltenanzahl</li>
+        <li><code>gap-x</code> <code>gap-y</code> – Unterschiedliche Abstände</li>
+        <li><code>dense</code> – Lücken füllen</li>
+        <li>Grid = gleichmäßig, Flex = nach Inhalt</li>
       </ul>
     </div>
 
     <nav>
-      <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Komponenten →</a>
+      <a href="lektion-07.html">← Flex-Verhalten</a>
+      <a href="lektion-09.html">Farben & Borders →</a>
     </nav>
 
   </main>
@@ -277,9 +319,10 @@
     const patterns = [
       { regex: /\/\/.*$/gm, cls: 'syn-comment' },
       { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|tl|tc|tr|cl|cr|bl|bc|br|minw|maxw|minh|maxh|hug|full|grow|shrink|align|dense|auto)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

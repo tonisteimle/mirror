@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Grundlagen</title>
+  <title>Mirror – Größen & Abstände</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
       --syn-property: #7fb3a8;
       --syn-component: #8aabbd;
       --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,17 +70,18 @@
     .syn-property { color: var(--syn-property); }
     .syn-component { color: var(--syn-component); font-weight: 500; }
     .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
 
     .props { margin: 24px 0; font-size: 14px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 100px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
     .exercise h3 { font-size: 14px; font-weight: 500; color: var(--text-bright); margin-bottom: 12px; }
     .exercise p { margin-bottom: 16px; font-size: 14px; }
-    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; }
+    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; gap: 12px; }
 
     details { margin-top: 16px; font-size: 13px; }
     summary { color: var(--text-dim); cursor: pointer; outline: none; }
@@ -104,170 +106,199 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 1 von 32</span>
+    <span class="chapter">Kapitel 6 von 32</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Grundlagen</h1>
+      <h1>Größen & Abstände</h1>
     </header>
 
     <section>
-      <h2>Elemente</h2>
-      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
+      <h2>Feste Größen</h2>
+      <p><code>w</code> und <code>h</code> setzen Breite und Höhe in Pixeln:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Text "Hallo Welt"</textarea>
+          <textarea>Frame bg #2563eb, w 100, h 60, rad 8, center
+  Text "100x60", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
+      <p><code>size</code> setzt Breite und Höhe gleichzeitig (für Quadrate):</p>
+
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Klick mich"</textarea>
+          <textarea>Frame hor, gap 12
+  Frame bg #2563eb, size 40, rad 8
+  Frame bg #2563eb, size 60, rad 8
+  Frame bg #2563eb, size 80, rad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-
-      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
     </section>
 
     <section>
-      <h2>Eigenschaften</h2>
-      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
+      <h2>hug – An Inhalt anpassen</h2>
+      <p><code>hug</code> macht ein Element so groß wie sein Inhalt (plus Padding):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>Frame hor, gap 8
+  Button "Kurz", bg #2563eb, col white, pad 10 16, rad 6, w hug
+  Button "Etwas länger", bg #2563eb, col white, pad 10 16, rad 6, w hug</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>hug</code> ist der Standard für die meisten Elemente.</p>
+    </section>
+
+    <section>
+      <h2>full – Verfügbaren Platz füllen</h2>
+      <p><code>full</code> dehnt das Element auf die volle verfügbare Breite oder Höhe:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 16, rad 8, w 300
+  Button "Volle Breite", bg #2563eb, col white, pad 10, rad 6, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Bei mehreren <code>full</code>-Elementen teilen sie sich den Platz:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, bg #1a1a1a, pad 16, rad 8, gap 8, w 300
+  Button "50%", bg #2563eb, col white, pad 10, rad 6, w full
+  Button "50%", bg #333, col white, pad 10, rad 6, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Padding – Innenabstand</h2>
+      <p><code>pad</code> fügt Innenabstand hinzu. Ein Wert gilt für alle Seiten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 32, rad 8
+  Text "32px Padding rundherum", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Zwei Werte: erst vertikal, dann horizontal:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Unterschiedlich", bg #2563eb, col white, pad 8 32, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit Richtung kannst du einzelne Seiten setzen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad left 40, pad top 8, pad right 8, pad bottom 8, rad 8
+  Text "Links mehr Padding", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Margin – Außenabstand</h2>
+      <p><code>margin</code> fügt Außenabstand hinzu:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 16, rad 8
+  Frame bg #2563eb, pad 12, rad 4
+    Text "Ohne Margin", col white
+  Frame bg #2563eb, pad 12, rad 4, margin top 16
+    Text "Mit margin top 16", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Min/Max-Größen</h2>
+      <p>Begrenze Größen mit <code>minw</code>, <code>maxw</code>, <code>minh</code>, <code>maxh</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  // Mindestens 200px, maximal 300px breit
+  Frame bg #2563eb, pad 12, rad 4, minw 200, maxw 300
+    Text "Begrenzte Breite", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <div class="props">
-        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
-        <div><code>col</code> <span>Textfarbe</span></div>
-        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
-        <div><code>rad</code> <span>Eckenradius</span></div>
+        <div><code>w</code> <span>Breite (Pixel oder hug/full)</span></div>
+        <div><code>h</code> <span>Höhe (Pixel oder hug/full)</span></div>
+        <div><code>size</code> <span>Breite und Höhe gleichzeitig</span></div>
+        <div><code>minw</code> <span>Minimale Breite</span></div>
+        <div><code>maxw</code> <span>Maximale Breite</span></div>
+        <div><code>minh</code> <span>Minimale Höhe</span></div>
+        <div><code>maxh</code> <span>Maximale Höhe</span></div>
       </div>
-    </section>
-
-    <section>
-      <h2>Container</h2>
-      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Ich bin im Frame"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein Frame kann mehrere Kinder haben:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Titel", col white
-  Text "Beschreibung", col #888
-  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Layout</h2>
-      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Titel", col white
-  Text "Beschreibung", col #888</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
-  Button "Abbrechen", pad 10 20, rad 4
-  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <div class="props">
-        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
-        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Verschachtelung</h2>
-      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Karte", col white
-  Frame bg #333, pad 12, rad 4, gap 8
-    Text "Innerer Bereich", col #888
-    Button "Aktion", pad 8 16, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
     </section>
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle diese Karte:</p>
+      <p>Erstelle eine Karte mit 24px Padding, die 250px breit ist. Der Button soll die volle Breite nutzen:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="color: white;">Projekt erstellen</div>
-          <div style="color: #888;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
+        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; width: 250px; display: flex; flex-direction: column; gap: 12px; font-family: Inter, sans-serif;">
+          <div style="color: white; font-weight: 500;">Karte</div>
+          <div style="color: #888; font-size: 14px;">Beschreibungstext</div>
+          <button style="background: #2563eb; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%;">Volle Breite</button>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame</textarea>
+          <textarea>Frame bg #1a1a1a
+  Text "Karte"
+  Text "Beschreibungstext"
+  Button "Volle Breite"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
-  Text "Projekt erstellen", col white
-  Text "Ein neues Projekt anlegen", col #888
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
+        <pre>Frame bg #1a1a1a, pad 24, rad 8, w 250, gap 12
+  Text "Karte", col white, weight 500
+  Text "Beschreibungstext", col #888, fs 14
+  Button "Volle Breite", bg #2563eb, col white, pad 10, rad 6, w full</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Text</code> <code>Button</code> – Elemente</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
-        <li><code>Frame</code> – Container für Kinder</li>
-        <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
+        <li><code>w</code> <code>h</code> <code>size</code> – Feste Größen</li>
+        <li><code>hug</code> – An Inhalt anpassen</li>
+        <li><code>full</code> – Verfügbaren Platz füllen</li>
+        <li><code>pad</code> – Innenabstand</li>
+        <li><code>margin</code> – Außenabstand</li>
+        <li><code>minw</code> <code>maxw</code> – Größenbegrenzungen</li>
       </ul>
     </div>
 
     <nav>
-      <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Komponenten →</a>
+      <a href="lektion-05.html">← Layout-Basics</a>
+      <a href="lektion-07.html">Flex-Verhalten →</a>
     </nav>
 
   </main>
@@ -277,9 +308,10 @@
     const patterns = [
       { regex: /\/\/.*$/gm, cls: 'syn-comment' },
       { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|tl|tc|tr|cl|cr|bl|bc|br|minw|maxw|minh|maxh|hug|full)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

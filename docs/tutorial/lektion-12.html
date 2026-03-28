@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Grundlagen</title>
+  <title>Mirror – Icons</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
       --syn-property: #7fb3a8;
       --syn-component: #8aabbd;
       --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +48,6 @@
     }
 
     header { margin-bottom: 48px; }
-    header p { color: var(--text-dim); font-size: 13px; margin-bottom: 8px; }
     h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); letter-spacing: -0.5px; }
 
     section { margin-bottom: 48px; }
@@ -69,11 +69,12 @@
     .syn-property { color: var(--syn-property); }
     .syn-component { color: var(--syn-component); font-weight: 500; }
     .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
 
     .props { margin: 24px 0; font-size: 14px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 100px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -104,170 +105,198 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 1 von 32</span>
+    <span class="chapter">Kapitel 12 von 32</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Grundlagen</h1>
+      <h1>Icons</h1>
     </header>
 
     <section>
-      <h2>Elemente</h2>
-      <p>Mirror beschreibt UI mit Elementen. <code>Text</code> zeigt Text, <code>Button</code> einen Button. Probier es aus:</p>
+      <h2>Icon-Element</h2>
+      <p><code>Icon</code> zeigt ein Icon an. Der Name folgt in Anführungszeichen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Text "Hallo Welt"</textarea>
+          <textarea>Frame hor, gap 16
+  Icon "home", ic white
+  Icon "settings", ic white
+  Icon "user", ic white
+  Icon "search", ic white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der Text in Anführungszeichen ist der Inhalt.</p>
+      <p>Mirror nutzt Phosphor Icons – eine umfangreiche Icon-Bibliothek mit über 1.000 Icons.</p>
     </section>
 
     <section>
-      <h2>Eigenschaften</h2>
-      <p>Eigenschaften verändern das Aussehen. Sie folgen dem Element, getrennt durch Kommas:</p>
+      <h2>Icon-Größe</h2>
+      <p><code>is</code> (icon-size) setzt die Größe in Pixeln:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <div class="props">
-        <div><code>bg</code> <span>Hintergrundfarbe</span></div>
-        <div><code>col</code> <span>Textfarbe</span></div>
-        <div><code>pad</code> <span>Innenabstand (vertikal horizontal)</span></div>
-        <div><code>rad</code> <span>Eckenradius</span></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Container</h2>
-      <p><code>Frame</code> ist ein Container – eine Box, die andere Elemente enthält. Einrückung (2 Leerzeichen) macht Elemente zu Kindern:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Ich bin im Frame"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein Frame kann mehrere Kinder haben:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8
-  Text "Titel", col white
-  Text "Beschreibung", col #888
-  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 4</textarea>
+          <textarea>Frame hor, gap 16, center
+  Icon "star", ic white, is 16
+  Icon "star", ic white, is 24
+  Icon "star", ic white, is 32
+  Icon "star", ic white, is 48</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Layout</h2>
-      <p>Kinder stapeln sich vertikal. <code>gap</code> definiert den Abstand dazwischen:</p>
+      <h2>Icon-Farbe</h2>
+      <p><code>ic</code> (icon-color) setzt die Farbe:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Titel", col white
-  Text "Beschreibung", col #888</textarea>
+          <textarea>Frame hor, gap 16
+  Icon "heart", ic #ef4444, is 32
+  Icon "heart", ic #f59e0b, is 32
+  Icon "heart", ic #10b981, is 32
+  Icon "heart", ic #2563eb, is 32</textarea>
         </div>
         <div class="playground-preview"></div>
-      </div>
-
-      <p><code>hor</code> ändert die Richtung zu horizontal:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, hor, gap 12
-  Button "Abbrechen", pad 10 20, rad 4
-  Button "Speichern", bg #2563eb, col white, pad 10 20, rad 4</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <div class="props">
-        <div><code>gap</code> <span>Abstand zwischen Kindern</span></div>
-        <div><code>hor</code> <span>Horizontale Anordnung</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Verschachtelung</h2>
-      <p>Frames können weitere Frames enthalten. Tiefere Einrückung = tiefere Verschachtelung:</p>
+      <h2>Gefüllte Icons</h2>
+      <p><code>fill</code> füllt das Icon aus (statt nur Umrisse):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 12
-  Text "Karte", col white
-  Frame bg #333, pad 12, rad 4, gap 8
-    Text "Innerer Bereich", col #888
-    Button "Aktion", pad 8 16, rad 4</textarea>
+          <textarea>Frame hor, gap 24
+  Frame gap 8, center
+    Icon "heart", ic white, is 32
+    Text "Outline", col #888, fs 12
+  Frame gap 8, center
+    Icon "heart", ic white, is 32, fill
+    Text "Filled", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+    </section>
 
-      <p>Der graue Frame ist im dunklen Frame verschachtelt.</p>
+    <section>
+      <h2>Icons in Buttons</h2>
+      <p>Icons funktionieren hervorragend in Buttons:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  Button hor, gap 8, bg #2563eb, col white, pad 12 20, rad 6, cursor pointer
+    Icon "plus", ic white, is 18
+    Text "Neu"
+  Button hor, gap 8, bg #333, col white, pad 12 20, rad 6, cursor pointer
+    Icon "download", ic white, is 18
+    Text "Export"
+  Button bg #333, pad 12, rad 6, cursor pointer
+    Icon "settings", ic white, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Häufige Icons</h2>
+      <p>Einige oft verwendete Icon-Namen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+  Frame hor, gap 16
+    Icon "home", ic white, is 24
+    Icon "user", ic white, is 24
+    Icon "settings", ic white, is 24
+    Icon "search", ic white, is 24
+    Icon "bell", ic white, is 24
+  Frame hor, gap 16
+    Icon "plus", ic white, is 24
+    Icon "minus", ic white, is 24
+    Icon "x", ic white, is 24
+    Icon "check", ic white, is 24
+    Icon "trash", ic white, is 24
+  Frame hor, gap 16
+    Icon "arrow-left", ic white, is 24
+    Icon "arrow-right", ic white, is 24
+    Icon "arrow-up", ic white, is 24
+    Icon "arrow-down", ic white, is 24
+    Icon "chevron-down", ic white, is 24</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle diese Karte:</p>
+      <p>Erstelle eine Navigation mit Icons und Text:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="color: white;">Projekt erstellen</div>
-          <div style="color: #888;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
+        <div style="background: #1a1a1a; padding: 16px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; gap: 24px;">
+          <div style="display: flex; gap: 8px; align-items: center; color: white; cursor: pointer;">
+            <span style="font-size: 20px;">🏠</span>
+            <span>Home</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; color: #888; cursor: pointer;">
+            <span style="font-size: 20px;">👤</span>
+            <span>Profil</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; color: #888; cursor: pointer;">
+            <span style="font-size: 20px;">⚙️</span>
+            <span>Einstellungen</span>
+          </div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame</textarea>
+          <textarea>Frame hor, bg #1a1a1a, pad 16, rad 8, gap 24
+  Frame hor, gap 8
+    Icon "home"
+    Text "Home"
+  Frame hor, gap 8
+    Icon "user"
+    Text "Profil"
+  Frame hor, gap 8
+    Icon "settings"
+    Text "Einstellungen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
-  Text "Projekt erstellen", col white
-  Text "Ein neues Projekt anlegen", col #888
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
+        <pre>Frame hor, bg #1a1a1a, pad 16, rad 8, gap 24
+  Frame hor, gap 8, cursor pointer
+    Icon "home", ic white, is 20
+    Text "Home", col white
+  Frame hor, gap 8, cursor pointer
+    Icon "user", ic #888, is 20
+    Text "Profil", col #888
+  Frame hor, gap 8, cursor pointer
+    Icon "settings", ic #888, is 20
+    Text "Einstellungen", col #888</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>Text</code> <code>Button</code> – Elemente</li>
-        <li><code>bg</code> <code>col</code> <code>pad</code> <code>rad</code> – Eigenschaften</li>
-        <li><code>Frame</code> – Container für Kinder</li>
-        <li><code>gap</code> <code>hor</code> – Layout</li>
-        <li>Einrückung (2 Leerzeichen) – Hierarchie</li>
+        <li><code>Icon "name"</code> – Icon anzeigen</li>
+        <li><code>is N</code> – Icon-Größe</li>
+        <li><code>ic color</code> – Icon-Farbe</li>
+        <li><code>fill</code> – Ausgefülltes Icon</li>
       </ul>
     </div>
 
     <nav>
-      <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Komponenten →</a>
+      <a href="lektion-11.html">← Effekte</a>
+      <a href="lektion-13.html">Positioned Layout →</a>
     </nav>
 
   </main>
@@ -277,9 +306,10 @@
     const patterns = [
       { regex: /\/\/.*$/gm, cls: 'syn-comment' },
       { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|icon-size|icon-color)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
