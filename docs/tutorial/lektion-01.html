@@ -338,10 +338,10 @@
       <p>Erstelle diese Karte:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; width: 240px;">
-          <div style="color: white; font-size: 16px; font-weight: 500; margin-bottom: 8px;">Projekt erstellen</div>
-          <div style="color: #888; font-size: 14px; margin-bottom: 16px;">Ein neues Projekt anlegen</div>
-          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; width: 100%;">Erstellen</button>
+        <div style="background: #1a1a1a; padding: 24px; border-radius: 8px; font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
+          <div style="color: white;">Projekt erstellen</div>
+          <div style="color: #888;">Ein neues Projekt anlegen</div>
+          <button style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Erstellen</button>
         </div>
       </div>
 
@@ -354,10 +354,10 @@
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 8, w 240
-  Text "Projekt erstellen", col white, weight 500
-  Text "Ein neues Projekt anlegen", col #888, fs 14
-  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6, w full</pre>
+        <pre>Frame bg #1a1a1a, pad 24, rad 8, gap 12
+  Text "Projekt erstellen", col white
+  Text "Ein neues Projekt anlegen", col #888
+  Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</pre>
       </details>
     </div>
 
@@ -373,7 +373,7 @@
 
     <nav>
       <a href="index.html">← Übersicht</a>
-      <a href="lektion-02.html">Weiter →</a>
+      <span style="color: var(--text-dim);">Weitere Lektionen folgen</span>
     </nav>
 
   </main>
