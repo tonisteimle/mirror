@@ -6,6 +6,23 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ## 2026-03-28
 
+### Discovered (Schema-Driven Analysis)
+
+Systematische Schema-Analyse (`provocation-024.test.ts`) hat folgende Lücken identifiziert:
+
+**Directional Properties - VERIFIED WORKING:**
+- `pad left 10`, `pad right 20` → ✓ generiert korrektes CSS
+- `pad x 10`, `margin x 20`, `margin y 10` → ✓ Achsen-Syntax funktioniert
+- `rad t 10`, `rad l 10`, `rad r 20` → ✓ Direktionale Radius funktioniert
+- Test: `provocation-024.test.ts` - alle 61 Tests bestehen, 20 skipped (unimplementierte Features)
+
+**Schema-Definiert aber Nicht-Implementiert (20 Tests skipped):**
+- Custom States: `expanded`, `collapsed`, `on`, `off`, `open`, `closed`, `filled`, `valid`, `invalid`, `loading`, `error`
+- State-Variant Props: `hover-bg`, `hover-col`, `hover-opacity`, `hover-scale`, `hover-border`, `hover-border-color`, `hover-radius`
+- Icon Properties: `icon-size`, `icon-color`, `icon-weight`, `fill`, `material`
+- Animation Keywords: `animation fade-in`, `bounce`, `spin`, `pulse`
+- Input Properties: `focusable` (tabindex)
+
 ### Fixed
 - **Event-Vererbung** - `onclick:` wurde fälschlich als State geparst
   - Ursache: Event-Detection kam nach State/Slot-Detection
