@@ -3351,8 +3351,9 @@ function compile(code) {
           currentPreludeOffset = prelude.length + separator.length
         }
       } else {
-        // New mode: wrap user code in implicit full-screen root
-        const rootWrapper = 'App w full h full'
+        // New mode: wrap user code in implicit App root
+        // App is defined in components.com and can be styled there (padding, bg, etc.)
+        const rootWrapper = 'App'
 
         // Indent user code to be children of the implicit root
         const indentedCode = code.split('\n').map(line => line ? '  ' + line : '').join('\n')

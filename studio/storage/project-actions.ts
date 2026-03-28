@@ -13,20 +13,21 @@ import { isTauri } from './providers'
 // =============================================================================
 
 // Used for new projects - includes starter tokens, components, and layout
+// Note: index.mir doesn't need "App" - it's wrapped automatically by the compiler
+// The App component is defined in components.com and can be styled there
 const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `App
-  Title "Welcome to Mirror"
-  Muted "Edit this code to get started"
+  'index.mir': `Title "Welcome to Mirror"
+Muted "Edit this code to get started"
 
-  Card
-    Muted "Your first component"
-    Button "Click Me"
+Card
+  Muted "Your first component"
+  Button "Click Me"
 
-  // Zag Select Component
-  Select placeholder "Choose an option..."
-    Item "Option 1"
-    Item "Option 2"
-    Item "Option 3"`,
+// Zag Select Component
+Select placeholder "Choose an option..."
+  Item "Option 1"
+  Item "Option 2"
+  Item "Option 3"`,
 
   'tokens.tok': `// Theme Tokens
 
