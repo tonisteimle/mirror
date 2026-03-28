@@ -308,8 +308,21 @@ function getFileType(filename) {
 
 /**
  * Find first file in tree
+ * Prioritizes index.mir over other files
  */
 function findFirstFile(tree) {
+  // First pass: look for index.mir
+  for (const item of tree) {
+    if (item.type === 'file' && item.path.endsWith('index.mir')) {
+      return item.path
+    }
+    if (item.type === 'folder' && item.children) {
+      const found = findFirstFile(item.children)
+      if (found && found.endsWith('index.mir')) return found
+    }
+  }
+
+  // Second pass: return any file
   for (const item of tree) {
     if (item.type === 'file') return item.path
     if (item.type === 'folder' && item.children) {
