@@ -91,62 +91,90 @@ Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
 
     <section>
       <h2>Toggle: An/Aus wechseln</h2>
-      <p>Mit <code>toggle</code> wechselt der gleiche Trigger zwischen aktiviert und deaktiviert:</p>
+      <p>Mit <code>toggle</code> wechselt der gleiche Klick zwischen aktiviert und deaktiviert – wie ein Lichtschalter:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame pad 12, rad 6, bg #333, cursor pointer
-    Frame hor, gap 8, center
-      Frame w 18, h 18, rad 4, bor 1, boc #555
-        on:
-          bg #2563eb
-          boc #2563eb
-      Text "Dark Mode", col white, fs 14
-    on toggle onclick:
-      Frame w 18, h 18, bg #2563eb
+          <textarea>// Einfacher Toggle-Button
+Button "Klick mich", pad 12 24, rad 6, bg #333, col white
+  cursor pointer
+  on toggle onclick:
+    bg #2563eb
 
-  Frame pad 12, rad 6, bg #333, cursor pointer
-    Frame hor, gap 8, center
-      Frame w 18, h 18, rad 4, bor 1, boc #555
-        on:
-          bg #2563eb
-          boc #2563eb
-      Text "Notifications", col white, fs 14
-    on toggle onclick:
-      Frame w 18, h 18, bg #2563eb</textarea>
+// Der State "on" wechselt bei jedem Klick:
+// aus → an → aus → an → ...</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Jedes Element kann unabhängig an- und ausgeschaltet werden – wie Checkboxen.</p>
+      <p>Ohne <code>toggle</code> würde der State bei Klick nur aktiviert, nie deaktiviert. <code>toggle</code> macht ihn zum Schalter.</p>
+
+      <p>Im Gegensatz zu <code>exclusive</code> (nur einer aktiv) kann mit <code>toggle</code> jedes Element unabhängig an/aus sein:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  Button "Option A", pad 10 20, rad 6, bg #333, col white, cursor pointer
+    on toggle onclick:
+      bg #2563eb
+  Button "Option B", pad 10 20, rad 6, bg #333, col white, cursor pointer
+    on toggle onclick:
+      bg #2563eb
+  Button "Option C", pad 10 20, rad 6, bg #333, col white, cursor pointer
+    on toggle onclick:
+      bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
     <section>
       <h2>State-Abhängigkeiten (when)</h2>
-      <p>Ein Element kann auf den State eines anderen Elements reagieren:</p>
+      <p>Mit <code>when</code> reagiert ein Element auf den State eines anderen Elements. Das ist deklarativer als Events – du beschreibst die Abhängigkeit, nicht die Aktion:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12
-  // Button triggert Menu's State
-  Button "Menu öffnen", pad 10 20, rad 6, bg #2563eb, col white
-    cursor pointer
-    onclick:
-      Menu open
+  // Dieser Button hat einen toggle State
+  Button "Menu", pad 10 20, rad 6, bg #333, col white, cursor pointer
+    open toggle onclick:
+      bg #2563eb
 
-  // Menu reagiert auf eigenen State
+  // Dieses Menu ist sichtbar WENN Button "open" ist
   Frame bg #1a1a1a, pad 12, rad 8, gap 4
-    closed: hidden
-    open: visible
-    Text "Dashboard", col white, fs 14, pad 8
-    Text "Einstellungen", col white, fs 14, pad 8
-    Text "Logout", col #ef4444, fs 14, pad 8</textarea>
+    hidden
+    visible when Button open:
+      Text "Dashboard", col white, fs 14, pad 8
+      Text "Einstellungen", col white, fs 14, pad 8
+      Text "Logout", col #ef4444, fs 14, pad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Button setzt <code>Menu open</code>. Das Menu definiert <code>closed: hidden</code> und <code>open: visible</code>.</p>
+      <p><code>visible when Button open:</code> bedeutet: "Sei sichtbar, wenn das Element Button im State open ist." Das Menu weiß nichts von Click-Events – es reagiert nur auf den State.</p>
+
+      <p>Das ist mächtiger als es aussieht. Mehrere Elemente können auf denselben State reagieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Toggle", pad 10 20, rad 6, bg #333, col white, cursor pointer
+    active toggle onclick:
+      bg #2563eb
+
+  // Beide reagieren auf Button's State
+  Text "Ich erscheine", col #22c55e
+    hidden
+    visible when Button active:
+
+  Text "Ich verschwinde", col #ef4444
+    visible
+    hidden when Button active:</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Ein State, mehrere Reaktionen. Keine Event-Verkabelung nötig.</p>
     </section>
 
     <section>
