@@ -19,7 +19,7 @@
       <p class="subtitle">States, Trigger und Abhängigkeiten</p>
     </header>
 
-    <p class="intro">Mirror ist deklarativ – auch für Interaktionen. Du beschreibst <strong>Zustände</strong> (States) und <strong>wann</strong> sie eintreten (Trigger). Die Syntax: <code>state [modifier] [trigger]:</code></p>
+    <p class="intro">Mirror ist deklarativ – auch für Interaktionen. Du beschreibst <strong>Zustände</strong> (States) und <strong>wann</strong> sie eintreten (Trigger). Die Syntax: <code>statename [modifier] [trigger]:</code></p>
 
     <section>
       <h2>System-States</h2>
@@ -135,23 +135,23 @@ Button "Klick mich", pad 12 24, rad 6, bg #333, col white
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12
-  // Dieser Button hat einen toggle State
+  // Dieser Button hat einen toggle State "open"
   Button "Menu", pad 10 20, rad 6, bg #333, col white, cursor pointer
     open toggle onclick:
       bg #2563eb
 
-  // Dieses Menu ist sichtbar WENN Button "open" ist
-  Frame bg #1a1a1a, pad 12, rad 8, gap 4
-    hidden
+  // Dieses Frame ist sichtbar WENN Button im State "open" ist
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
     visible when Button open:
-      Text "Dashboard", col white, fs 14, pad 8
-      Text "Einstellungen", col white, fs 14, pad 8
-      Text "Logout", col #ef4444, fs 14, pad 8</textarea>
+      opacity 1
+    Text "Dashboard", col white, fs 14, pad 8
+    Text "Einstellungen", col white, fs 14, pad 8
+    Text "Logout", col #ef4444, fs 14, pad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>visible when Button open:</code> bedeutet: "Sei sichtbar, wenn das Element Button im State open ist." Das Menu weiß nichts von Click-Events – es reagiert nur auf den State.</p>
+      <p><code>visible when Button open:</code> bedeutet: "Wechsle in State visible, wenn Button im State open ist." Der State-Block enthält die Properties für diesen Zustand (hier <code>opacity 1</code>). Die Text-Kinder gehören zum Frame, nicht zum State-Block.</p>
 
       <p>Das ist mächtiger als es aussieht. Mehrere Elemente können auf denselben State reagieren:</p>
 
@@ -163,13 +163,13 @@ Button "Klick mich", pad 12 24, rad 6, bg #333, col white
       bg #2563eb
 
   // Beide reagieren auf Button's State
-  Text "Ich erscheine", col #22c55e
-    hidden
+  Text "Ich erscheine", col #22c55e, hidden
     visible when Button active:
+      opacity 1
 
   Text "Ich verschwinde", col #ef4444
-    visible
-    hidden when Button active:</textarea>
+    hidden when Button active:
+      opacity 0</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -203,14 +203,14 @@ Button "Klick mich", pad 12 24, rad 6, bg #333, col white
 
     <div class="summary">
       <h2>Das Wichtigste</h2>
-      <p><strong>Syntax:</strong> <code>state [modifier] [trigger]:</code></p>
+      <p><strong>Syntax:</strong> <code>statename [modifier] [trigger]:</code> gefolgt von Properties</p>
       <table class="ref-table">
-        <tr><td><code>hover:</code></td><td>System-State (Kurzform)</td></tr>
+        <tr><td><code>hover:</code></td><td>System-State (Kurzform für hover onhover:)</td></tr>
         <tr><td><code>selected onclick:</code></td><td>Custom-State mit Trigger</td></tr>
         <tr><td><code>selected exclusive onclick:</code></td><td>Nur einer aktiv (Radio)</td></tr>
         <tr><td><code>on toggle onclick:</code></td><td>An/Aus wechseln (Checkbox)</td></tr>
-        <tr><td><code>visible when Menu open:</code></td><td>Abhängigkeit</td></tr>
-        <tr><td><code>selected onclick: bounce</code></td><td>Mit Animation</td></tr>
+        <tr><td><code>visible when Menu open:</code></td><td>Abhängigkeit von anderem Element</td></tr>
+        <tr><td><code>selected onclick: bounce</code></td><td>Mit Animation-Preset</td></tr>
       </table>
     </div>
 
