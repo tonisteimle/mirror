@@ -122,8 +122,17 @@ ACTIONS     show, hide, toggle, open, close
             select, highlight, activate, deactivate
             page, call, assign
 
-TOKENS      $name.bg: #hex    → bg $name.bg
-            $name.pad: N      → pad $name.pad
+TOKENS      name.bg: #hex     → bg $name
+            name.pad: N       → pad $name
+
+CONDITIONALS visible when Element state
+             visibleWhen $variable
+
+LOOPS       each item in Items
+            data Items, selection $selected
+
+MODIFIERS   debounce N, delay N
+            enter: anim, exit: anim
 ```
 
 <!-- GENERATED:DSL-PROPERTIES:START -->
@@ -405,7 +414,7 @@ TOKENS      $name.bg: #hex    → bg $name.bg
 
 **System:** hover, focus, active, disabled
 
-**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error
+**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error, dragging
 
 ### Keyboard Keys
 
