@@ -199,20 +199,32 @@ Tabs
     Text "Inhalt 2"
 ```
 
-### 8. Custom States
-States definieren Zustände mit optionalen Modifiern:
-```
-Frame state selected              // Einfacher State
-Frame state selected exclusive    // Nur einer gleichzeitig
-Frame state on initial            // Startet aktiviert
+### 8. States (System & Custom)
+**Syntax:** `state [modifier] [trigger]:`
 
-// State-Styling in eigenem Block:
-Frame state selected, pad 12
-  Text "Item", col #888
-  selected:
-    bg #2563eb
-    Text "Item", col white
+**System-States** (hover, focus, active, disabled) – Trigger ist implizit:
 ```
+Button bg #333, col white
+  hover:                    // Kurzform: hover onhover:
+    bg #2563eb
+  focus:
+    boc #2563eb
+```
+
+**Custom-States** – Trigger muss explizit sein:
+```
+Tab bg #333, col #888
+  selected onclick:         // State "selected" bei Klick
+    bg #2563eb
+    col white
+
+Tab bg #333, col #888
+  selected exclusive onclick:   // Nur einer kann selected sein (Radio)
+    bg #2563eb
+    col white
+```
+
+**Modifiers:** `exclusive` (nur einer), `toggle` (an/aus wechseln), `initial` (Startzustand)
 
 ### 9. Tokens (Design-Variablen)
 Tokens werden mit `$` definiert. **Wichtig:** Bei der Definition MIT Typ-Suffix, bei der Verwendung OHNE Suffix (das Property zeigt den Typ):
@@ -237,50 +249,43 @@ Frame bg $colors.page, pad $space.md, rad $card
 
 **Warum Suffixe?** Sie ermöglichen intelligentes IDE-Autocomplete: Bei `bg $` werden nur `.bg`-Tokens angezeigt, bei `rad $` nur `.rad`-Tokens.
 
-### 10. Events & Actions
-Events enden mit `:`, Actions folgen eingerückt:
+### 10. State-Abhängigkeiten (when)
+Ein Element kann auf den State eines anderen Elements reagieren:
 ```
-Button "Delete"
-  onclick:
-    show ConfirmDialog      // Element anzeigen
+Menu
+  closed:
+    hidden
+  open onclick:
+    visible
 
-Frame state open
-  onclick:
-    toggle self             // self = dieses Element
-  onclick-outside:
-    close self
-```
-Actions: `show`, `hide`, `toggle`, `open`, `close`, `select`, `highlight`, `focus`, `blur`, `submit`, `reset`
-
-### 11. Element-Naming & Targeting
-Elemente werden automatisch nach ihrem Typ oder State benannt:
-```
-Frame state open              // Heißt implizit "Frame" oder wird durch State identifiziert
-Dialog                        // Heißt "Dialog"
-  Trigger                     // Heißt "Trigger"
-  Content                     // Heißt "Content"
-
-// Targeting in Actions:
-onclick:
-  show Dialog                 // Zeigt das Dialog-Element
-  toggle Dropdown             // Toggled Element mit state "Dropdown"
-  close self                  // self = aktuelles Element
-```
-
-### 12. Hover/Focus Styling-Blocks
-Zustands-Blöcke für bedingtes Styling:
-```
-Button "Hover me", bg #333, col white
-  hover:
-    bg #2563eb
-    col white
-    scale 1.05
-  focus:
-    boc #2563eb
-  active:
-    bg #1d4ed8
-  disabled:
+Backdrop
+  hidden
+  visible when Menu open:     // Sichtbar wenn Menu im State "open"
     opacity 0.5
+```
+
+### 11. Multi-Element State-Änderungen
+Ein Trigger kann mehrere States gleichzeitig setzen:
+```
+MenuButton
+  onclick:
+    Menu open
+    Backdrop visible
+    Sidebar collapsed
+```
+
+### 12. Animationen in States
+Animationen können beim State-Übergang ausgelöst werden:
+```
+Modal
+  closed: hidden
+  open onclick: scale-in      // Preset-Animation
+    visible
+
+Card
+  highlighted onhover 0.2s:   // Auto-Transition (Duration)
+    scale 1.02
+    shadow md
 ```
 
 ### 13. String-Content (Text & Buttons)
@@ -328,15 +333,18 @@ SPACING     pad N, pad left N, margin N
 COLOR       bg #hex, col #hex, boc #hex
 BORDER      bor 1 #333, rad 8
 
-STATES      hover, focus, active, disabled
-            state selected, state highlighted, state on/off
+STATES      hover:, focus:, active:, disabled:     (System-States)
+            selected onclick:                      (Custom mit Trigger)
+            selected exclusive onclick:            (Exclusive/Radio)
+            open toggle onclick:                   (Toggle an/aus)
+            visible when Menu open:                (Abhängigkeit)
 
-EVENTS      onclick, onhover, onfocus, onblur, onchange, oninput
-            onkeydown enter: action
+TRIGGERS    onclick, onhover, onfocus, onblur, onchange, oninput
+            onkeydown escape:, onkeydown enter:
 
-ACTIONS     show, hide, toggle, open, close
-            select, highlight, activate, deactivate
-            page, call, assign
+ANIMATION   selected onclick: bounce              (Preset)
+            selected onclick 0.2s:                (Duration)
+            selected onclick 0.3s ease-out:       (Duration + Easing)
 
 TOKENS      $name.bg: #hex    → bg $name     (Definition MIT Suffix)
             $name.pad: N      → pad $name    (Verwendung OHNE Suffix)

@@ -16,170 +16,173 @@
 
     <header>
       <h1>Interaktion</h1>
-      <p class="subtitle">Hover, States und Events</p>
+      <p class="subtitle">States, Trigger und Abhängigkeiten</p>
     </header>
 
-    <p class="intro">UIs müssen auf Benutzer reagieren. In Mirror gibt es dafür drei Mechanismen: <code>hover:</code> für Maus-Effekte, <code>state</code> für eigene Zustände (an/aus, selektiert, etc.), und Events wie <code>onclick:</code> für explizite Aktionen.</p>
+    <p class="intro">Mirror ist deklarativ – auch für Interaktionen. Du beschreibst <strong>Zustände</strong> (States) und <strong>wann</strong> sie eintreten (Trigger). Die Syntax: <code>state [modifier] [trigger]:</code></p>
 
     <section>
-      <h2>Hover-Effekte</h2>
-      <p>Der <code>hover:</code>-Block definiert Styles, die aktiv werden, wenn die Maus über dem Element ist:</p>
+      <h2>System-States</h2>
+      <p>Für <code>hover</code>, <code>focus</code>, <code>active</code> und <code>disabled</code> ist der Trigger implizit – du brauchst nur den State-Namen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Hover mich", pad 12 24, rad 6, bg #333, col white
   cursor pointer
-  hover:
+  hover:              // = hover onhover:
     bg #2563eb
-    scale 1.02</textarea>
+    scale 1.02
+  active:
+    bg #1d4ed8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p><code>hover:</code> ist die Kurzform für <code>hover onhover:</code>. Der State <code>hover</code> wird automatisch bei Mouse-Enter aktiviert und bei Mouse-Leave deaktiviert.</p>
     </section>
 
     <section>
-      <h2>Custom States</h2>
-      <p>Mit <code>state</code> definierst du eigene Zustände. Elemente mit einem State sind automatisch klickbar – ein Klick wechselt den Zustand. Der <code>selected:</code>-Block definiert das Styling im aktiven Zustand:</p>
+      <h2>Custom States mit Trigger</h2>
+      <p>Für eigene States musst du den Trigger explizit angeben. Der häufigste: <code>onclick</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// selected wird bei Klick aktiviert
+Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
+  Text "Klick mich"
+  selected onclick:
+    bg #2563eb
+    col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Ein Klick aktiviert den State <code>selected</code>. Die Properties im Block (<code>bg #2563eb</code>, <code>col white</code>) werden angewendet.</p>
+    </section>
+
+    <section>
+      <h2>Exclusive: Radio-Verhalten</h2>
+      <p>Mit <code>exclusive</code> kann nur ein Element in einer Gruppe den State haben – wie Radio-Buttons:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8
-  Frame state selected exclusive, pad 12 20, rad 6
-    bg #333, col #888, cursor pointer
+  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
     Text "Option A"
-    selected:
+    selected exclusive onclick:
       bg #2563eb
       col white
-  Frame state selected exclusive, pad 12 20, rad 6
-    bg #333, col #888, cursor pointer
+  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
     Text "Option B"
-    selected:
+    selected exclusive onclick:
       bg #2563eb
       col white
-  Frame state selected exclusive, pad 12 20, rad 6
-    bg #333, col #888, cursor pointer
+  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
     Text "Option C"
-    selected:
+    selected exclusive onclick:
       bg #2563eb
       col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>exclusive</code> bedeutet: Nur eines kann gleichzeitig aktiv sein – wie Radio-Buttons.</p>
+      <p>Klickst du auf "Option B", wird automatisch "Option A" deselektiert. Kein manuelles Aufräumen nötig.</p>
     </section>
 
     <section>
-      <h2>Toggle State</h2>
-      <p>Ohne <code>exclusive</code> kann jedes Element unabhängig an- und ausgeschaltet werden – wie Checkboxen. Der State-Name (hier <code>on</code>) wird zum Block-Namen für das Styling:</p>
+      <h2>Toggle: An/Aus wechseln</h2>
+      <p>Mit <code>toggle</code> wechselt der gleiche Trigger zwischen aktiviert und deaktiviert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 8
-  Frame state on, pad 12, rad 6, bg #333, cursor pointer
+          <textarea>Frame hor, gap 12
+  Frame pad 12, rad 6, bg #333, cursor pointer
     Frame hor, gap 8, center
       Frame w 18, h 18, rad 4, bor 1, boc #555
         on:
           bg #2563eb
           boc #2563eb
       Text "Dark Mode", col white, fs 14
-  Frame state on, pad 12, rad 6, bg #333, cursor pointer
+    on toggle onclick:
+      Frame w 18, h 18, bg #2563eb
+
+  Frame pad 12, rad 6, bg #333, cursor pointer
     Frame hor, gap 8, center
       Frame w 18, h 18, rad 4, bor 1, boc #555
         on:
           bg #2563eb
           boc #2563eb
-      Text "Notifications", col white, fs 14</textarea>
+      Text "Notifications", col white, fs 14
+    on toggle onclick:
+      Frame w 18, h 18, bg #2563eb</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p>Jedes Element kann unabhängig an- und ausgeschaltet werden – wie Checkboxen.</p>
     </section>
 
     <section>
-      <h2>Events & Actions</h2>
-      <p>Events enden mit <code>:</code>, Actions folgen eingerückt:</p>
+      <h2>State-Abhängigkeiten (when)</h2>
+      <p>Ein Element kann auf den State eines anderen Elements reagieren:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12
-  Button "Dialog öffnen", pad 12 20, rad 6, bg #2563eb, col white
+  // Button triggert Menu's State
+  Button "Menu öffnen", pad 10 20, rad 6, bg #2563eb, col white
     cursor pointer
     onclick:
-      show TheDialog
+      Menu open
 
-  Frame state open, hidden, bg #1a1a1a, pad 20, rad 8, gap 12
-    name "TheDialog"
-    Text "Ich bin ein Dialog!", col white
-    Button "Schließen", pad 8 16, rad 6, bg #333, col white
-      cursor pointer
-      onclick:
-        hide TheDialog</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Toggle Action</h2>
-      <p><code>toggle</code> schaltet zwischen sichtbar und versteckt um:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 12
-  Button pad 10 20, rad 6, bg #333, col white, cursor pointer
-    Frame hor, gap 8, center
-      Icon "menu", ic white, is 16
-      Text "Menu"
-    onclick:
-      toggle TheMenu
-
-  Frame state open, hidden, bg #1a1a1a, pad 12, rad 8, gap 4
-    name "TheMenu"
+  // Menu reagiert auf eigenen State
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4
+    closed: hidden
+    open: visible
     Text "Dashboard", col white, fs 14, pad 8
     Text "Einstellungen", col white, fs 14, pad 8
     Text "Logout", col #ef4444, fs 14, pad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p>Der Button setzt <code>Menu open</code>. Das Menu definiert <code>closed: hidden</code> und <code>open: visible</code>.</p>
     </section>
 
     <section>
-      <h2>Kombiniertes Beispiel</h2>
-      <p>Hover, States und Events zusammen:</p>
+      <h2>Animationen</h2>
+      <p>State-Übergänge können animiert werden – mit Preset oder Duration:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 16, rad 8, gap 12
-  Text "Einstellungen", col white, fs 16, weight 500
+          <textarea>Frame hor, gap 12
+  // Preset-Animation
+  Button "Bounce", pad 12 24, rad 6, bg #333, col white, cursor pointer
+    selected onclick: bounce
+      bg #2563eb
 
-  Frame gap 8
-    Frame state on, hor, spread, pad 12, rad 6, bg #252525, cursor pointer
-      Text "Push-Benachrichtigungen", col white, fs 14
-      Frame w 40, h 22, rad 11, bg #333
-        on:
-          bg #2563eb
-        Frame w 18, h 18, rad 9, bg white, margin 2
-          on:
-            margin 2 2 2 20
-
-    Frame state on, hor, spread, pad 12, rad 6, bg #252525, cursor pointer
-      Text "Dark Mode", col white, fs 14
-      Frame w 40, h 22, rad 11, bg #2563eb
-        Frame w 18, h 18, rad 9, bg white, margin 2 2 2 20</textarea>
+  // Duration (Auto-Transition)
+  Button "Smooth", pad 12 24, rad 6, bg #333, col white, cursor pointer
+    selected onclick 0.2s:
+      bg #2563eb
+      scale 1.05</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p><code>selected onclick: bounce</code> spielt die Bounce-Animation beim Aktivieren. <code>0.2s</code> animiert alle Properties mit 200ms Transition.</p>
     </section>
 
     <div class="summary">
       <h2>Das Wichtigste</h2>
+      <p><strong>Syntax:</strong> <code>state [modifier] [trigger]:</code></p>
       <table class="ref-table">
-        <tr><td><code>hover:</code></td><td>Hover-Styling Block</td></tr>
-        <tr><td><code>state name</code></td><td>Custom State definieren</td></tr>
-        <tr><td><code>state name exclusive</code></td><td>Nur einer aktiv (Radio)</td></tr>
-        <tr><td><code>selected:</code></td><td>State-Styling Block</td></tr>
-        <tr><td><code>onclick:</code></td><td>Click-Event</td></tr>
-        <tr><td><code>toggle Element</code></td><td>State umschalten</td></tr>
+        <tr><td><code>hover:</code></td><td>System-State (Kurzform)</td></tr>
+        <tr><td><code>selected onclick:</code></td><td>Custom-State mit Trigger</td></tr>
+        <tr><td><code>selected exclusive onclick:</code></td><td>Nur einer aktiv (Radio)</td></tr>
+        <tr><td><code>on toggle onclick:</code></td><td>An/Aus wechseln (Checkbox)</td></tr>
+        <tr><td><code>visible when Menu open:</code></td><td>Abhängigkeit</td></tr>
+        <tr><td><code>selected onclick: bounce</code></td><td>Mit Animation</td></tr>
       </table>
     </div>
 
@@ -198,9 +201,9 @@
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em|s|ms)?\b/g, cls: 'syn-number' },
       { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as|on|exclusive)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|closed|as|on|off|exclusive|initial|when|bounce|fade-in|fade-out|scale-in|scale-out)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 
