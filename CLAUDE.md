@@ -178,6 +178,82 @@ spacing.pad: 16
 Button bg $primary, col $primary, pad $spacing
 ```
 
+### 8. Events & Actions
+Events enden mit `:`, Actions folgen eingerückt:
+```
+Button "Delete"
+  onclick:
+    show ConfirmDialog      // Element anzeigen
+
+Frame state open
+  onclick:
+    toggle self             // self = dieses Element
+  onclick-outside:
+    close self
+```
+Actions: `show`, `hide`, `toggle`, `open`, `close`, `select`, `highlight`, `focus`, `blur`, `submit`, `reset`
+
+### 9. Element-Naming & Targeting
+Elemente werden automatisch nach ihrem Typ oder State benannt:
+```
+Frame state open              // Heißt implizit "Frame" oder wird durch State identifiziert
+Dialog                        // Heißt "Dialog"
+  Trigger                     // Heißt "Trigger"
+  Content                     // Heißt "Content"
+
+// Targeting in Actions:
+onclick:
+  show Dialog                 // Zeigt das Dialog-Element
+  toggle Dropdown             // Toggled Element mit state "Dropdown"
+  close self                  // self = aktuelles Element
+```
+
+### 10. Hover/Focus Styling-Blocks
+Zustands-Blöcke für bedingtes Styling:
+```
+Button "Hover me", bg #333, col white
+  hover:
+    bg #2563eb
+    col white
+    scale 1.05
+  focus:
+    boc #2563eb
+  active:
+    bg #1d4ed8
+  disabled:
+    opacity 0.5
+```
+
+### 11. String-Content (Text & Buttons)
+Text-Inhalt kann inline oder als Kind definiert werden:
+```
+// Inline (kurz)
+Text "Hello World"
+Button "Click me"
+
+// Als Kind (für komplexere Fälle)
+Button
+  "Click me"
+  Icon "arrow-right"
+
+// Dynamisch mit Variablen
+Text $userName
+Text "Hello, " + $name + "!"
+```
+
+### 12. Icons (Lucide)
+Icons verwenden Lucide-Namen mit `ic` (color) und `is` (size):
+```
+Icon "check", ic #10b981, is 20
+Icon "x", ic red, is 16
+Icon "arrow-right", ic white, is 14
+
+// In Buttons
+Button "Save", bg #2563eb
+  Icon "save", ic white, is 16
+```
+Verfügbar: Alle [Lucide Icons](https://lucide.dev/icons/) (z.B. `check`, `x`, `arrow-right`, `settings`, `user`, `mail`, `search`, etc.)
+
 ---
 
 ## DSL Kurzreferenz
