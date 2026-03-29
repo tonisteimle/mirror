@@ -117,10 +117,12 @@ interface LayoutContext {
 /**
  * Parent layout context passed to children for context-aware property handling
  * In grid context, x/y/w/h become grid positioning instead of absolute positioning
+ * In flex context, direction determines how w full / h full behave
  */
 interface ParentLayoutContext {
   type: 'flex' | 'grid' | 'absolute' | null
   gridColumns?: number
+  flexDirection?: 'row' | 'column'  // For w full / h full: determines main vs cross axis
 }
 
 class IRTransformer {
@@ -1314,8 +1316,10 @@ class IRTransformer {
 
     // Determine layout context for children
     // If this element is a grid container, children get grid context for x/y/w/h
+    // For flex containers, track direction so w full / h full can use appropriate strategy
     const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
     const isAbsoluteContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
+    const isHorizontal = properties.some(p => p.name === 'hor' || p.name === 'horizontal')
     let childLayoutContext: ParentLayoutContext | undefined
     if (isGridContainer) {
       // Extract grid columns count if it's a simple repeat(N, 1fr)
@@ -1330,6 +1334,9 @@ class IRTransformer {
       childLayoutContext = { type: 'grid', gridColumns }
     } else if (isAbsoluteContainer) {
       childLayoutContext = { type: 'absolute' }
+    } else {
+      // Flex container (default) - track direction for w full / h full
+      childLayoutContext = { type: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }
     }
 
     // Transform children with slot filling (excluding inline states/events)
@@ -1620,17 +1627,20 @@ class IRTransformer {
           let slotName: string
           let slotVisibleWhen: string | undefined
           let slotInitialState: string | undefined
+          let slotProperties: Property[] = []
 
           if (slotIsInstance) {
             const instSlot = slot as Instance
             slotName = instSlot.component
             slotVisibleWhen = instSlot.visibleWhen
             slotInitialState = instSlot.initialState
+            slotProperties = instSlot.properties || []
           } else {
             const compSlot = slot as ComponentDefinition
             slotName = compSlot.name
             slotVisibleWhen = compSlot.visibleWhen
             slotInitialState = compSlot.initialState
+            slotProperties = compSlot.properties || []
           }
 
           // Skip Component definitions that are templates (have sibling instances using them)
@@ -1644,9 +1654,11 @@ class IRTransformer {
           const fillers = slotFillers.get(slotName)
           if (fillers && fillers.length > 0) {
             // Use instance's content instead of slot default
-            // But inherit visibility conditions from slot definition
+            // Inherit styles and visibility conditions from slot definition
             for (const filler of fillers) {
-              const node = this.transformChild(filler, parentId, parentLayoutContext)
+              // Merge slot properties with filler properties (filler wins on conflict)
+              const mergedFiller = this.mergeSlotPropertiesIntoFiller(filler, slotProperties)
+              const node = this.transformChild(mergedFiller, parentId, parentLayoutContext)
               // Transfer slot's visibleWhen to filler if slot has one
               if (slotVisibleWhen && !node.visibleWhen) {
                 node.visibleWhen = slotVisibleWhen
@@ -1687,7 +1699,9 @@ class IRTransformer {
           const fillers = slotFillers.get(slotObj.name)
           if (fillers && fillers.length > 0) {
             for (const filler of fillers) {
-              result.push(this.transformChild(filler, parentId, parentLayoutContext))
+              // Merge slot properties into filler (slot provides defaults)
+              const mergedFiller = this.mergeSlotPropertiesIntoFiller(filler, slotObj.properties || [])
+              result.push(this.transformChild(mergedFiller, parentId, parentLayoutContext))
             }
             slotFillers.delete(slotObj.name)
           } else {
@@ -1730,6 +1744,55 @@ class IRTransformer {
       line: override.properties[0]?.line || 0,
       column: override.properties[0]?.column || 0,
     }))
+  }
+
+  /**
+   * Merge slot properties into a filler element.
+   * Slot properties provide defaults, filler properties override them.
+   *
+   * Example:
+   *   Slot definition: Title: fs 16, weight 500, col white
+   *   Filler: Title "Hello", col red
+   *   Result: fs 16, weight 500, col red (filler's col wins)
+   */
+  private mergeSlotPropertiesIntoFiller(
+    filler: Instance | Text,
+    slotProperties: Property[]
+  ): Instance | Text {
+    // If no slot properties, return filler as-is
+    if (slotProperties.length === 0) {
+      return filler
+    }
+
+    // Text nodes need to be wrapped or converted to Instance
+    if (isText(filler) || hasContent(filler)) {
+      const text = filler as Text
+      // Create an Instance that acts as a styled text container
+      return {
+        type: 'Instance',
+        component: 'Text',
+        name: null,
+        properties: [...slotProperties, { name: 'content', value: text.content, line: text.line, column: text.column }],
+        children: [],
+        line: text.line,
+        column: text.column,
+      } as Instance
+    }
+
+    // For Instance fillers, merge properties (filler wins on conflict)
+    const fillerInstance = filler as Instance
+    const fillerPropNames = new Set(fillerInstance.properties.map(p => p.name))
+
+    // Add slot properties that aren't overridden by filler
+    const mergedProperties = [
+      ...slotProperties.filter(p => !fillerPropNames.has(p.name)),
+      ...fillerInstance.properties,
+    ]
+
+    return {
+      ...fillerInstance,
+      properties: mergedProperties,
+    }
   }
 
   private transformChild(child: Instance | Text | Slot, parentId?: string, parentLayoutContext?: ParentLayoutContext): IRNode {
@@ -2459,6 +2522,9 @@ class IRTransformer {
       }
       if (vAlign) {
         ctx.alignItems = alignValue(vAlign)
+      } else if (!ctx.alignItems) {
+        // Default for horizontal layouts: top-aligned (flex-start)
+        ctx.alignItems = 'flex-start'
       }
     }
 
@@ -3098,6 +3164,39 @@ class IRTransformer {
       return [{ property: 'overflow', value: 'auto' }]
     }
 
+    // Handle width/height 'full' with context-awareness BEFORE schema
+    // This must come before schema check because schema defines 'full' unconditionally
+    // But we need to know the parent's flex direction to choose the right CSS strategy:
+    // - Main axis (w in row, h in column): use flex: 1 to fill available space
+    // - Cross axis (w in column, h in row): use explicit 100% dimension
+    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
+      const isWidth = name === 'width' || name === 'w'
+      const parentDirection = parentLayoutContext?.flexDirection || 'column'
+      const isMainAxis = (isWidth && parentDirection === 'row') || (!isWidth && parentDirection === 'column')
+
+      if (isMainAxis) {
+        // Main axis: use flex: 1 to grow and fill available space
+        return [
+          { property: 'flex', value: '1 1 0%' },
+          { property: isWidth ? 'min-width' : 'min-height', value: '0' },
+          { property: 'align-self', value: 'stretch' },
+        ]
+      } else {
+        // Cross axis: fill parent dimension, use min-height/width: 0 to allow shrinking below content
+        return [
+          { property: isWidth ? 'width' : 'height', value: '100%' },
+          { property: isWidth ? 'min-width' : 'min-height', value: '0' },
+          { property: 'align-self', value: 'stretch' },
+          { property: 'overflow', value: 'hidden' },
+        ]
+      }
+    }
+
+    // Handle width/height 'hug' before schema
+    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'hug') {
+      return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
+    }
+
     // Try schema-based conversion FIRST - handles pin-left, pin-right, etc.
     // This must come before the PROPERTY_TO_CSS check to support schema-defined properties
     const schemaResult = simplePropertyToCSS(name, value)
@@ -3153,26 +3252,6 @@ class IRTransformer {
       }
 
       return [{ property: 'display', value: 'grid' }]
-    }
-
-    // Handle width/height special values
-    // 'full' means fill remaining space in flex container
-    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
-      const isWidth = name === 'width' || name === 'w'
-      // Use flex: 1 1 0% for proper flex fill behavior
-      // Do NOT set explicit width/height: 100% as that would ignore parent padding
-      // align-self: stretch ensures cross-axis fill even when parent has center alignment
-      return [
-        { property: 'flex', value: '1 1 0%' },
-        // min-width/height: 0 allows shrinking below content size
-        { property: isWidth ? 'min-width' : 'min-height', value: '0' },
-        // Ensure cross-axis stretch even if parent has align-items: center
-        { property: 'align-self', value: 'stretch' },
-      ]
-    }
-
-    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'hug') {
-      return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
     }
 
     // Handle shadow presets - fallback for custom values

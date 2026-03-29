@@ -955,20 +955,8 @@ export const SCHEMA: Record<string, PropertyDef> = {
     token: true,
   },
 
-  grow: {
-    name: 'grow',
-    aliases: [],
-    category: 'layout',
-    description: 'Flex grow',
-
-    keywords: {
-      _standalone: {
-        description: 'Allow element to grow',
-        css: [{ property: 'flex-grow', value: '1' }],
-        example: 'Box grow',
-      },
-    },
-  },
+  // NOTE: 'grow' was removed - use 'w full' or 'h full' instead
+  // full is context-aware and automatically uses flex-grow on the main axis
 
   shrink: {
     name: 'shrink',

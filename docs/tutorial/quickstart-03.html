@@ -149,34 +149,37 @@ Frame bg $colors.card, pad $space.lg, rad 8, gap 16
     </section>
 
     <section>
-      <h2>Tokens in Komponenten</h2>
-      <p>Die Kombination von Tokens und Komponenten ergibt ein vollständiges Design System:</p>
+      <h2>Die drei Stufen: Tokens → Komponenten → Instanzen</h2>
+      <p>Ein vollständiges Design System hat drei Ebenen. Am Ende sind die Instanzen komplett sauber – keine Farben, keine Abstände, nur Inhalt:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Tokens (Definition MIT Suffix)
+          <textarea>// 1. TOKENS – Werte zentral definieren
 $primary.bg: #2563eb
 $primary.col: white
 $card.bg: #1a1a1a
 $card.rad: 8
+$space.pad: 16
 
-// Komponenten nutzen Tokens (OHNE Suffix)
-Card: bg $card, rad $card, pad 16, gap 12
+// 2. KOMPONENTEN – Tokens verwenden
+Card: bg $card, rad $card, pad $space, gap 12
   Title: col white, fs 16, weight 500
   Desc: col #888, fs 14
 
 Btn: bg $primary, col $primary, pad 10 20, rad 6, cursor pointer
 
-// Verwendung
+// 3. INSTANZEN – nur noch Inhalt, kein Styling!
 Card
   Title "Design System"
   Desc "Tokens + Komponenten = Konsistenz"
   Frame hor, gap 8
-    Btn "Primär"
-    Button "Sekundär", pad 10 20, rad 6, bg #333, col white</textarea>
+    Btn "Speichern"
+    Btn "Abbrechen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p>Der Vorteil: Instanzen sind lesbar wie ein Dokument. Alle Design-Entscheidungen stecken in Tokens und Komponenten – änderst du dort etwas, wirkt es überall.</p>
     </section>
 
     <div class="summary">

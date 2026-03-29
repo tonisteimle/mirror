@@ -202,6 +202,107 @@ export function findDefinitionInsertPosition(code: string): number {
  */
 export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   // ============================================================================
+  // LAYOUT CONTAINERS
+  // ============================================================================
+  'layout-row': {
+    mir: `Frame hor, gap 8
+  Text "Item 1"
+  Text "Item 2"
+  Text "Item 3"`,
+    com: `Frame hor, gap 16, pad 16, bg #27272a, rad 8
+  Frame pad 16, bg #3f3f46, rad 4
+    Text "Column 1"
+  Frame pad 16, bg #3f3f46, rad 4
+    Text "Column 2"
+  Frame pad 16, bg #3f3f46, rad 4
+    Text "Column 3"`,
+  },
+  'layout-column': {
+    mir: `Frame ver, gap 8
+  Text "Item 1"
+  Text "Item 2"
+  Text "Item 3"`,
+    com: `Frame ver, gap 16, pad 16, bg #27272a, rad 8
+  Frame pad 16, bg #3f3f46, rad 4, w full
+    Text "Row 1"
+  Frame pad 16, bg #3f3f46, rad 4, w full
+    Text "Row 2"
+  Frame pad 16, bg #3f3f46, rad 4, w full
+    Text "Row 3"`,
+  },
+  'layout-stack': {
+    mir: `Frame stacked, w 200, h 150
+  Frame w full, h full, bg #3b82f6, rad 8
+  Frame w 150, h 100, bg #27272a, rad 8, center
+    Text "Overlay"`,
+    com: `Frame stacked, w 300, h 200
+  Image w full, h full, fit cover, rad 8
+  Frame w full, h full, bg rgba(0,0,0,0.5), rad 8
+  Frame ver, gap 8, center
+    Text "Stacked Title", fs 24, weight bold, col white
+    Text "Subtitle text", col #e4e4e7`,
+  },
+  'layout-grid': {
+    mir: `Frame grid 2, gap 8
+  Text "Cell 1"
+  Text "Cell 2"
+  Text "Cell 3"
+  Text "Cell 4"`,
+    com: `Frame grid 3, gap 16, pad 16, bg #27272a, rad 8
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "1"
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "2"
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "3"
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "4"
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "5"
+  Frame pad 16, bg #3f3f46, rad 4, center
+    Text "6"`,
+  },
+  'layout-sidebar': {
+    mir: `SidebarLayout
+  Sidebar
+    Text "Navigation", weight bold, col #e4e4e7
+    Text "Dashboard", col #a1a1aa
+    Text "Projects", col #a1a1aa
+    Text "Settings", col #a1a1aa
+  Main
+    Text "Main Content", fs 18, weight bold
+    Text "Your content goes here", col #a1a1aa`,
+    com: `// Sidebar Layout Komponente
+SidebarLayout: hor, w full, h 400
+  Sidebar: w 220, h full, bg #18181b, pad 16, gap 16
+  Main: grow, h full, pad 24, bg #27272a
+
+// Navigation Item
+NavItem: hor, gap 8, pad 8 12, rad 6, cursor pointer, col #a1a1aa
+  hover:
+    bg #27272a
+    col #e4e4e7`,
+  },
+  'layout-header-footer': {
+    mir: `PageLayout
+  Header
+    Text "Brand", weight bold, col white
+    Frame hor, gap 16
+      Text "Link 1", col #a1a1aa
+      Text "Link 2", col #a1a1aa
+  Main
+    Text "Main Content", fs 18, weight bold
+    Text "Your content goes here", col #a1a1aa
+  Footer
+    Text "© 2024 Company", col #71717a, fs 13`,
+    com: `// Page Layout Komponente
+PageLayout: ver, w full, h 400
+  Header: hor, w full, h 56, bg #18181b, pad 0 24, spread
+  Main: ver, w full, grow, pad 24, bg #27272a, gap 16
+  Footer: hor, w full, h 48, bg #18181b, pad 0 24, center`,
+  },
+
+  // ============================================================================
   // BASIC PRIMITIVES
   // ============================================================================
   'basic-frame': {

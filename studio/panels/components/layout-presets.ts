@@ -63,29 +63,18 @@ export const LAYOUT_COMPONENTS: ComponentItem[] = [
     name: 'Sidebar',
     category: 'Layout',
     template: 'Frame',
-    properties: 'hor, w full, h full',
     icon: 'sidebar',
-    description: 'Sidebar layout',
+    description: 'Sidebar with navigation',
     defaultSize: { width: 300, height: 200 },
-    children: [
-      { template: 'Frame', properties: 'w 200, h full, bg #1e1e2e', textContent: 'Sidebar' },
-      { template: 'Frame', properties: 'grow, h full', textContent: 'Content' },
-    ],
   },
   {
     id: 'layout-header-footer',
     name: 'Header/Footer',
     category: 'Layout',
     template: 'Frame',
-    properties: 'ver, w full, h full',
     icon: 'headerFooter',
-    description: 'Header and footer layout',
+    description: 'Page with header and footer',
     defaultSize: { width: 300, height: 200 },
-    children: [
-      { template: 'Frame', properties: 'w full, h 48, bg #1e1e2e', textContent: 'Header' },
-      { template: 'Frame', properties: 'w full, grow', textContent: 'Content' },
-      { template: 'Frame', properties: 'w full, h 48, bg #1e1e2e', textContent: 'Footer' },
-    ],
   },
 ]
 

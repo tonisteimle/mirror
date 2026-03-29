@@ -131,7 +131,46 @@ PrimaryBtn "Save"
 PrimaryBtn "Cancel", bg #666
 ```
 
-### 4. Vererbung (`as`)
+### 4. Komponenten mit Slots (WICHTIG!)
+**Das zentrale Pattern für wiederverwendbare Layouts.** Kinder-Definitionen (mit `:`) werden automatisch zu benannten Slots:
+```
+// Definition - Kinder mit : definieren Slots
+SidebarLayout: w full, h full, hor
+  Sidebar: w 240, h full, pad 16, bg #1a1a1a
+  Main: w full, h full, pad 24
+
+// Verwendung - Slots OHNE : befüllen!
+SidebarLayout
+  Sidebar
+    Text "Navigation"
+    Button "Home"
+  Main
+    Text "Content Area"
+```
+
+Weiteres Beispiel:
+```
+// Definition
+Card: bg #1a1a1a, rad 12, pad 16, gap 12
+  Header: fs 18, weight bold
+  Body: col #888
+  Footer: hor, spread
+
+// Verwendung (OHNE :)
+Card
+  Header "Titel"
+  Body "Beschreibung hier..."
+  Footer
+    Button "Abbrechen"
+    Button "OK"
+```
+
+**Wichtig:**
+- Definition: `:` nach dem Namen
+- Verwendung: KEIN `:` - nur der Slot-Name
+- Slots haben semantische Namen (Sidebar, Main, Header, Body, Footer, etc.)
+
+### 5. Vererbung (`as`)
 Eine Komponente kann von einer anderen erben:
 ```
 BaseCard: = Frame bg #1a1a1a, rad 12, pad 16
@@ -140,18 +179,27 @@ ClickableCard as BaseCard: = cursor pointer
     bg #252525
 ```
 
-### 5. Slots (bei Zag-Komponenten)
-Zag-Komponenten haben vordefinierte Slots die befüllt werden:
+### 7. Vorgefertigte Komponenten (Dialog, Tabs, etc.)
+Komplexe UI-Komponenten haben vordefinierte Slots die befüllt werden:
 ```
 Dialog
-  Trigger                          // Slot: Auslöser
+  Trigger
     Button "Open Dialog"
-  Backdrop bg rgba(0,0,0,0.5)      // Slot: Hintergrund
-  Content w 400, rad 12            // Slot: Inhalt
+  Backdrop bg rgba(0,0,0,0.5)
+  Content w 400, rad 12
     Text "Dialog Content"
+
+Tabs
+  List
+    Trigger "Tab 1"
+    Trigger "Tab 2"
+  Content
+    Text "Inhalt 1"
+  Content
+    Text "Inhalt 2"
 ```
 
-### 6. Custom States
+### 8. Custom States
 States definieren Zustände mit optionalen Modifiern:
 ```
 Frame state selected              // Einfacher State
@@ -166,19 +214,30 @@ Frame state selected, pad 12
     Text "Item", col white
 ```
 
-### 7. Tokens (Design-Variablen)
-Definition ohne `$`, Verwendung mit `$` (ohne Property-Suffix):
+### 9. Tokens (Design-Variablen)
+Tokens werden mit `$` definiert. **Wichtig:** Bei der Definition MIT Typ-Suffix, bei der Verwendung OHNE Suffix (das Property zeigt den Typ):
 ```
-// Definition
-primary.bg: #2563eb
-primary.col: white
-spacing.pad: 16
+// Definition: MIT Typ-Suffix (.bg, .col, .rad, .pad, .boc, etc.)
+$primary.bg: #2563eb
+$primary.col: white
+$card.bg: #1a1a1a
+$card.rad: 8
+$spacing.pad: 16
 
-// Verwendung
+// Hierarchische Tokens (Gruppe.Variante.Typ)
+$colors.page.bg: #111
+$colors.accent.bg: #2563eb
+$space.md.pad: 16
+
+// Verwendung: OHNE Typ-Suffix
+// Das Property (bg, col, rad, pad) zeigt bereits den erwarteten Typ
 Button bg $primary, col $primary, pad $spacing
+Frame bg $colors.page, pad $space.md, rad $card
 ```
 
-### 8. Events & Actions
+**Warum Suffixe?** Sie ermöglichen intelligentes IDE-Autocomplete: Bei `bg $` werden nur `.bg`-Tokens angezeigt, bei `rad $` nur `.rad`-Tokens.
+
+### 10. Events & Actions
 Events enden mit `:`, Actions folgen eingerückt:
 ```
 Button "Delete"
@@ -193,7 +252,7 @@ Frame state open
 ```
 Actions: `show`, `hide`, `toggle`, `open`, `close`, `select`, `highlight`, `focus`, `blur`, `submit`, `reset`
 
-### 9. Element-Naming & Targeting
+### 11. Element-Naming & Targeting
 Elemente werden automatisch nach ihrem Typ oder State benannt:
 ```
 Frame state open              // Heißt implizit "Frame" oder wird durch State identifiziert
@@ -208,7 +267,7 @@ onclick:
   close self                  // self = aktuelles Element
 ```
 
-### 10. Hover/Focus Styling-Blocks
+### 12. Hover/Focus Styling-Blocks
 Zustands-Blöcke für bedingtes Styling:
 ```
 Button "Hover me", bg #333, col white
@@ -224,7 +283,7 @@ Button "Hover me", bg #333, col white
     opacity 0.5
 ```
 
-### 11. String-Content (Text & Buttons)
+### 13. String-Content (Text & Buttons)
 Text-Inhalt kann inline oder als Kind definiert werden:
 ```
 // Inline (kurz)
@@ -241,7 +300,7 @@ Text $userName
 Text "Hello, " + $name + "!"
 ```
 
-### 12. Icons (Lucide)
+### 14. Icons (Lucide)
 Icons verwenden Lucide-Namen mit `ic` (color) und `is` (size):
 ```
 Icon "check", ic #10b981, is 20
@@ -279,8 +338,8 @@ ACTIONS     show, hide, toggle, open, close
             select, highlight, activate, deactivate
             page, call, assign
 
-TOKENS      name.bg: #hex     → bg $name
-            name.pad: N       → pad $name
+TOKENS      $name.bg: #hex    → bg $name     (Definition MIT Suffix)
+            $name.pad: N      → pad $name    (Verwendung OHNE Suffix)
 
 CONDITIONALS visible when Element state
              visibleWhen $variable
@@ -394,11 +453,8 @@ MODIFIERS   debounce N, delay N
 
 ### Compound Primitives (Layout Components)
 
-> Pre-built layout components for rapid prototyping. Fully customizable.
-
-| Component | Slots | Nested Slots | Description |
-|-----------|-------|--------------|-------------|
-| Shell | Header, Sidebar, Main, Footer | Logo, Nav, Actions, NavItem +4 | App shell with header, sidebar, and main content area |
+> Layout-Komponenten werden als eigene Komponenten mit Slots definiert (siehe "Komponenten mit Slots").
+> Beispiele: SidebarLayout, PageLayout, Card mit Header/Body/Footer.
 
 ### Properties
 
@@ -433,7 +489,6 @@ MODIFIERS   debounce N, delay N
 | gap-x | gx | <number>, $token |
 | gap-y | gy | <number>, $token |
 | row-height | rh | <number>, $token |
-| grow | - | *(standalone)* |
 | shrink | - | *(standalone)* |
 | align | - | top, bottom, left, right, center |
 | left | - | *(standalone)* |
