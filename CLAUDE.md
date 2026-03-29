@@ -99,6 +99,87 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 - **Dateinamen**: Kleinbuchstaben mit Bindestrichen (`interaction-model.md`, nicht `INTERACTION-MODEL.md`)
 - **Konzeptdokumente**: In `docs/concepts/` ablegen
 
+## DSL Grundkonzepte
+
+### 1. Primitives & Properties
+Primitives sind die Basis-Elemente (Frame, Text, Button, Input, Icon, etc.). Properties folgen dem Element, getrennt durch Kommas:
+```
+Frame w 200, h 100, bg #1a1a1a, rad 8
+Text "Hello", col white, fs 16, weight bold
+Button "Click", pad 12 24, bg #2563eb, col white
+```
+
+### 2. Hierarchie durch Einrückung
+Kinder werden durch 2 Leerzeichen Einrückung definiert:
+```
+Frame pad 20, gap 12
+  Text "Title", fs 18
+  Text "Subtitle", col #888
+  Frame hor, gap 8
+    Button "OK"
+    Button "Cancel"
+```
+
+### 3. Komponenten-Definition (`:` = Definition)
+Eine Komponente fasst wiederverwendbare Styles zusammen. Der Name endet mit `:`:
+```
+// Definition
+PrimaryBtn: = Button pad 12 24, bg #2563eb, col white, rad 8
+
+// Verwendung (ohne :)
+PrimaryBtn "Save"
+PrimaryBtn "Cancel", bg #666
+```
+
+### 4. Vererbung (`as`)
+Eine Komponente kann von einer anderen erben:
+```
+BaseCard: = Frame bg #1a1a1a, rad 12, pad 16
+ClickableCard as BaseCard: = cursor pointer
+  hover:
+    bg #252525
+```
+
+### 5. Slots (bei Zag-Komponenten)
+Zag-Komponenten haben vordefinierte Slots die befüllt werden:
+```
+Dialog
+  Trigger                          // Slot: Auslöser
+    Button "Open Dialog"
+  Backdrop bg rgba(0,0,0,0.5)      // Slot: Hintergrund
+  Content w 400, rad 12            // Slot: Inhalt
+    Text "Dialog Content"
+```
+
+### 6. Custom States
+States definieren Zustände mit optionalen Modifiern:
+```
+Frame state selected              // Einfacher State
+Frame state selected exclusive    // Nur einer gleichzeitig
+Frame state on initial            // Startet aktiviert
+
+// State-Styling in eigenem Block:
+Frame state selected, pad 12
+  Text "Item", col #888
+  selected:
+    bg #2563eb
+    Text "Item", col white
+```
+
+### 7. Tokens (Design-Variablen)
+Definition ohne `$`, Verwendung mit `$` (ohne Property-Suffix):
+```
+// Definition
+primary.bg: #2563eb
+primary.col: white
+spacing.pad: 16
+
+// Verwendung
+Button bg $primary, col $primary, pad $spacing
+```
+
+---
+
 ## DSL Kurzreferenz
 
 ```
