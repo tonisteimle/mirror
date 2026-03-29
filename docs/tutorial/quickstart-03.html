@@ -98,54 +98,66 @@ FeatureCard
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Definition: Token MIT Suffix
+          <textarea>// 1. TOKENS – Definition MIT Suffix
 $primary.bg: #2563eb
 $primary.col: white
 $card.bg: #1a1a1a
 $card.rad: 8
-$spacing.pad: 16
 
-// Verwendung: Token OHNE Suffix
-// Das Property (bg, col, rad, pad) zeigt den Typ
-Frame bg $card, rad $card, pad $spacing, gap 12
-  Text "Mit Tokens", col white
-  Button "Primary", bg $primary, col $primary, pad 10 20, rad 6</textarea>
+// 2. KOMPONENTEN – Tokens verwenden (OHNE Suffix)
+Card: bg $card, rad $card, pad 16, gap 8
+  Title: col white, fs 16, weight 500
+
+Btn: bg $primary, col $primary, pad 10 20, rad 6
+
+// 3. INSTANZEN – sauber, nur Inhalt
+Card
+  Title "Mit Tokens"
+  Btn "Primary"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><strong>Warum Suffixe?</strong> Sie ermöglichen intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix. Bei <code>rad $</code> nur <code>.rad</code> Tokens. So findest du schnell den richtigen Wert.</p>
+      <p><strong>Warum Suffixe?</strong> Sie ermöglichen intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix. Bei <code>rad $</code> nur <code>.rad</code> Tokens.</p>
     </section>
 
     <section>
-      <h2>Token-Hierarchie</h2>
-      <p>Mit Punktnotation organisierst du Tokens in logische Gruppen. Der letzte Teil ist immer der Typ-Suffix:</p>
+      <h2>Semantische Tokens</h2>
+      <p>Tokens können andere Tokens referenzieren. Das ermöglicht eine saubere Trennung zwischen Rohwerten und ihrer Bedeutung:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Farb-Tokens (Gruppe.Variante.Typ)
-$colors.page.bg: #111
-$colors.card.bg: #1a1a1a
-$colors.card.boc: #333
-$colors.text.col: #ccc
-$colors.accent.bg: #2563eb
+          <textarea>// 1. PRIMITIVE – Rohwerte
+$blue.bg: #2563eb
+$red.bg: #ef4444
+$gray.bg: #1a1a1a
+$gray.col: #888
 
-// Spacing-Tokens
-$space.sm.pad: 8
-$space.md.pad: 16
-$space.lg.pad: 24
+// 2. SEMANTISCH – Bedeutung zuweisen
+$primary.bg: $blue
+$danger.bg: $red
+$card.bg: $gray
 
-// Verwendung (ohne Typ-Suffix)
-Frame bg $colors.card, pad $space.lg, rad 8, gap 16
-  bor 1, boc $colors.card
-  Text "Token-System", col white, fs 16
-  Text "Konsistentes Design", col $colors.text, fs 14
-  Button "Aktion", bg $colors.accent, col white, pad $space.sm 16, rad 6</textarea>
+// 3. KOMPONENTEN – semantische Tokens verwenden
+Card: bg $card, rad 8, pad 16, gap 8
+  Title: col white, fs 16, weight 500
+  Desc: col $gray, fs 14
+
+Btn: bg $primary, col white, pad 10 20, rad 6
+DangerBtn: bg $danger, col white, pad 10 20, rad 6
+
+// 4. INSTANZEN
+Card
+  Title "Semantische Tokens"
+  Desc "Primitive → Semantisch → Komponente"
+  Frame hor, gap 8
+    Btn "Speichern"
+    DangerBtn "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Die Struktur <code>$gruppe.variante.typ</code> hält dein Design System übersichtlich. Bei der Verwendung fällt der Typ-Suffix weg.</p>
+      <p>Der Vorteil: Änderst du <code>$blue</code>, wirkt es überall wo <code>$primary</code> verwendet wird. Oder du weist <code>$primary</code> eine andere Farbe zu – ohne jede Komponente anzufassen.</p>
     </section>
 
     <section>
@@ -183,15 +195,13 @@ Card
     </section>
 
     <div class="summary">
-      <h2>Zusammenfassung</h2>
-      <ul>
-        <li><code>Child as Parent:</code> – Vererbung von Komponenten</li>
-        <li><code>$name.bg: #fff</code> – Token definieren (MIT Typ-Suffix)</li>
-        <li><code>bg $name</code> – Token verwenden (OHNE Suffix)</li>
-        <li>Suffixe: <code>.bg</code>, <code>.col</code>, <code>.rad</code>, <code>.pad</code>, <code>.boc</code> etc.</li>
-        <li>Suffixe steuern IDE-Autocomplete nach Property-Typ</li>
-        <li>Hierarchie: <code>$colors.card.bg</code> → <code>bg $colors.card</code></li>
-      </ul>
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><td><code>Child as Parent:</code></td><td>Vererbung – Varianten einer Komponente</td></tr>
+        <tr><td><code>$blue.bg: #2563eb</code></td><td>Primitiver Token – Rohwert</td></tr>
+        <tr><td><code>$primary.bg: $blue</code></td><td>Semantischer Token – referenziert anderen Token</td></tr>
+        <tr><td><code>bg $primary</code></td><td>Token verwenden (ohne Suffix)</td></tr>
+      </table>
     </div>
 
     <nav>
