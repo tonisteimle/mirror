@@ -272,8 +272,9 @@ details pre {
 }
 .ref-table tr:last-child td { border-bottom: none; }
 .ref-table td:first-child {
-  width: 60px;
-  padding-right: 12px;
+  width: auto;
+  white-space: nowrap;
+  padding-right: 24px;
 }
 .ref-table td:first-child code {
   background: #2563eb22;
