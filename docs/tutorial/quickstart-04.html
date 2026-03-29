@@ -48,8 +48,7 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// selected wird bei Klick aktiviert
-Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
-  Text "Klick mich"
+Button "Klick mich", pad 12 20, rad 6, bg #333, col #888, cursor pointer
   selected onclick:
     bg #2563eb
     col white</textarea>
@@ -67,18 +66,15 @@ Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8
-  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    Text "Option A"
+  Button "Option A", pad 12 20, rad 6, bg #333, col #888, cursor pointer
     selected exclusive onclick:
       bg #2563eb
       col white
-  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    Text "Option B"
+  Button "Option B", pad 12 20, rad 6, bg #333, col #888, cursor pointer
     selected exclusive onclick:
       bg #2563eb
       col white
-  Frame pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    Text "Option C"
+  Button "Option C", pad 12 20, rad 6, bg #333, col #888, cursor pointer
     selected exclusive onclick:
       bg #2563eb
       col white</textarea>
