@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Vererbung & Tokens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Vererbung & Tokens</h1>
+      <p class="subtitle">Varianten erstellen und Werte zentral verwalten</p>
+    </header>
+
+    <p class="intro">Dieses Kapitel zeigt zwei Konzepte für skalierbare UIs: Mit <code>as</code> erstellst du Varianten einer Komponente (z.B. PrimaryBtn, DangerBtn). Mit Tokens definierst du Werte zentral und verwendest sie überall.</p>
+
+    <section>
+      <h2>Das Problem: Ähnliche Komponenten</h2>
+      <p>Du hast einen Button definiert und brauchst nun Varianten – Primary, Danger, Ghost. Ohne Vererbung müsstest du alles kopieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Ohne Vererbung: Alles wiederholen
+PrimaryBtn: pad 10 20, rad 6, cursor pointer, bg #2563eb, col white
+DangerBtn: pad 10 20, rad 6, cursor pointer, bg #ef4444, col white
+GhostBtn: pad 10 20, rad 6, cursor pointer, bg transparent, col #888, bor 1, boc #333
+
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  DangerBtn "Löschen"
+  GhostBtn "Abbrechen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das Problem: <code>pad 10 20, rad 6, cursor pointer</code> wird dreimal wiederholt. Änderst du das Padding, musst du es überall anpassen.</p>
+    </section>
+
+    <section>
+      <h2>Vererbung mit as</h2>
+      <p>Mit <code>as</code> erbst du von einer Basis-Komponente und überschreibst nur das, was sich unterscheidet:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Button
+Btn: pad 10 20, rad 6, cursor pointer
+
+// Varianten erben mit "as"
+PrimaryBtn as Btn: bg #2563eb, col white
+DangerBtn as Btn: bg #ef4444, col white
+GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
+
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  DangerBtn "Löschen"
+  GhostBtn "Abbrechen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Vererbung mit Slots</h2>
+      <p>Auch Komponenten mit Slots können vererbt werden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Card
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: fs 16, weight 500, col white
+  Body: col #888, fs 14
+
+// Feature-Card erbt und erweitert
+FeatureCard as Card: bor 1, boc #333
+  Icon: margin 0 0 8 0
+
+// Verwendung
+FeatureCard
+  Icon
+    Icon "zap", ic #f59e0b, is 24
+  Title "Schnell"
+  Body "Kompiliert in Millisekunden"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Design Tokens definieren</h2>
+      <p>Tokens sind zentrale Werte für konsistentes Design. Bei der <strong>Definition</strong> gibst du einen Suffix an (<code>.bg</code>, <code>.col</code>, <code>.rad</code>), bei der <strong>Verwendung</strong> nicht – das Property sagt bereits, welcher Typ erwartet wird:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Definition: Token MIT Suffix
+$primary.bg: #2563eb
+$primary.col: white
+$card.bg: #1a1a1a
+$card.rad: 8
+$spacing.pad: 16
+
+// Verwendung: Token OHNE Suffix
+// Das Property (bg, col, rad, pad) zeigt den Typ
+Frame bg $card, rad $card, pad $spacing, gap 12
+  Text "Mit Tokens", col white
+  Button "Primary", bg $primary, col $primary, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Warum Suffixe?</strong> Sie ermöglichen intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix. Bei <code>rad $</code> nur <code>.rad</code> Tokens. So findest du schnell den richtigen Wert.</p>
+    </section>
+
+    <section>
+      <h2>Token-Hierarchie</h2>
+      <p>Mit Punktnotation organisierst du Tokens in logische Gruppen. Der letzte Teil ist immer der Typ-Suffix:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Farb-Tokens (Gruppe.Variante.Typ)
+$colors.page.bg: #111
+$colors.card.bg: #1a1a1a
+$colors.card.boc: #333
+$colors.text.col: #ccc
+$colors.accent.bg: #2563eb
+
+// Spacing-Tokens
+$space.sm.pad: 8
+$space.md.pad: 16
+$space.lg.pad: 24
+
+// Verwendung (ohne Typ-Suffix)
+Frame bg $colors.card, pad $space.lg, rad 8, gap 16
+  bor 1, boc $colors.card
+  Text "Token-System", col white, fs 16
+  Text "Konsistentes Design", col $colors.text, fs 14
+  Button "Aktion", bg $colors.accent, col white, pad $space.sm 16, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Struktur <code>$gruppe.variante.typ</code> hält dein Design System übersichtlich. Bei der Verwendung fällt der Typ-Suffix weg.</p>
+    </section>
+
+    <section>
+      <h2>Tokens in Komponenten</h2>
+      <p>Die Kombination von Tokens und Komponenten ergibt ein vollständiges Design System:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens (Definition MIT Suffix)
+$primary.bg: #2563eb
+$primary.col: white
+$card.bg: #1a1a1a
+$card.rad: 8
+
+// Komponenten nutzen Tokens (OHNE Suffix)
+Card: bg $card, rad $card, pad 16, gap 12
+  Title: col white, fs 16, weight 500
+  Desc: col #888, fs 14
+
+Btn: bg $primary, col $primary, pad 10 20, rad 6, cursor pointer
+
+// Verwendung
+Card
+  Title "Design System"
+  Desc "Tokens + Komponenten = Konsistenz"
+  Frame hor, gap 8
+    Btn "Primär"
+    Button "Sekundär", pad 10 20, rad 6, bg #333, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Child as Parent:</code> – Vererbung von Komponenten</li>
+        <li><code>$name.bg: #fff</code> – Token definieren (MIT Typ-Suffix)</li>
+        <li><code>bg $name</code> – Token verwenden (OHNE Suffix)</li>
+        <li>Suffixe: <code>.bg</code>, <code>.col</code>, <code>.rad</code>, <code>.pad</code>, <code>.boc</code> etc.</li>
+        <li>Suffixe steuern IDE-Autocomplete nach Property-Typ</li>
+        <li>Hierarchie: <code>$colors.card.bg</code> → <code>bg $colors.card</code></li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="quickstart-02.html">← Komponenten</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="quickstart-04.html">Interaktion →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

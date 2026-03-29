@@ -63,7 +63,7 @@ Wie Elemente angeordnet und dimensioniert werden.
 |---|-------|---------|
 | 05 | Layout-Basics | `hor`, `ver`, `gap`, `center` – Elemente anordnen |
 | 06 | Größen & Abstände | `w`, `h`, `hug`, `full`, `pad`, `margin` |
-| 07 | Flex-Verhalten | `spread`, `wrap`, `grow`, `shrink`, `align` |
+| 07 | Flex-Verhalten | `spread`, `wrap`, `shrink`, `align` |
 | 08 | Grid-Layout | `grid N`, `dense`, `gap-x`, `gap-y`, `row-height` |
 
 **Lernziel:** Jedes Layout umsetzen können – von simplen Listen bis zu komplexen Grids.

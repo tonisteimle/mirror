@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Overlays</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Overlays</h1>
+      <p class="subtitle">Dialog, Popover, Tooltip und Menu</p>
+    </header>
+
+    <section>
+      <h2>Tooltip</h2>
+      <p>Zeigt Hilfetext bei Hover:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16
+  Tooltip
+    Trigger
+      Button "Hover me", bg #2563eb, col white, pad 10 20, rad 6
+    Content bg #1a1a1a, pad 8 12, rad 6, shadow md
+      Text "Das ist ein Tooltip!", col white, fs 12
+
+  Tooltip
+    Trigger
+      Icon "info", ic #888, is 20, cursor pointer
+    Content bg #1a1a1a, pad 8 12, rad 6, shadow md
+      Text "Mehr Informationen", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Popover</h2>
+      <p>Öffnet bei Klick und zeigt reicheren Inhalt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger
+    Button "Optionen", bg #1a1a1a, col white, pad 10 20, rad 6
+      Icon "chevron-down", ic #888, is 16, margin 0 0 0 8
+
+  Content bg #1a1a1a, pad 16, rad 8, shadow lg, w 200, gap 12
+    Text "Einstellungen", col white, fs 14, weight 600
+    Frame gap 8
+      Frame hor, spread
+        Text "Dark Mode", col #888, fs 13
+        Switch
+      Frame hor, spread
+        Text "Notifications", col #888, fs 13
+        Switch
+    Button "Speichern", bg #2563eb, col white, pad 8 16, rad 6, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>HoverCard</h2>
+      <p>Wie Popover, aber öffnet bei Hover:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard
+  Trigger
+    Frame hor, gap 8, cursor pointer
+      Frame w 32, h 32, bg #2563eb, rad 99, center
+        Text "TS", col white, fs 11, weight 500
+      Text "@toni", col #2563eb, fs 14
+
+  Content bg #1a1a1a, pad 16, rad 12, shadow lg, w 240, gap 12
+    Frame hor, gap 12
+      Frame w 48, h 48, bg #2563eb, rad 99, center
+        Text "TS", col white, fs 16, weight 500
+      Frame gap 2
+        Text "Toni Steimle", col white, fs 14, weight 500
+        Text "@toni", col #888, fs 12
+    Text "Building Mirror – DSL for rapid UI prototyping.", col #888, fs 13
+    Frame hor, gap 16
+      Frame hor, gap 4
+        Text "123", col white, fs 13, weight 500
+        Text "Following", col #888, fs 13
+      Frame hor, gap 4
+        Text "456", col white, fs 13, weight 500
+        Text "Followers", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Menu</h2>
+      <p>Dropdown-Menu für Aktionen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Menu
+  Trigger
+    Button bg #1a1a1a, pad 10, rad 6
+      Icon "more-vertical", ic #888, is 18
+
+  Content bg #1a1a1a, rad 8, shadow lg, w 180, pad 4
+    Item "Edit", pad 10 12, rad 4, col white, fs 13, cursor pointer
+      hover:
+        bg #2a2a2a
+    Item "Duplicate", pad 10 12, rad 4, col white, fs 13, cursor pointer
+      hover:
+        bg #2a2a2a
+    Item "Archive", pad 10 12, rad 4, col white, fs 13, cursor pointer
+      hover:
+        bg #2a2a2a
+    Separator h 1, bg #333, margin 4 0
+    Item "Delete", pad 10 12, rad 4, col #ef4444, fs 13, cursor pointer
+      hover:
+        bg #2a2a2a</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ContextMenu</h2>
+      <p>Öffnet bei Rechtsklick:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ContextMenu
+  Trigger
+    Frame w 280, h 100, bg #1a1a1a, rad 8, center, cursor default
+      Text "Rechtsklick hier", col #888, fs 13
+
+  Content bg #1a1a1a, rad 8, shadow lg, w 180, pad 4
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "copy", ic #888, is 14
+      Text "Copy"
+      hover:
+        bg #2a2a2a
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "scissors", ic #888, is 14
+      Text "Cut"
+      hover:
+        bg #2a2a2a
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "clipboard", ic #888, is 14
+      Text "Paste"
+      hover:
+        bg #2a2a2a</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dialog</h2>
+      <p>Modales Fenster für wichtige Aktionen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger
+    Button "Löschen", bg #ef4444, col white, pad 10 20, rad 6
+
+  Backdrop bg rgba(0,0,0,0.6)
+
+  Content bg #1a1a1a, pad 24, rad 12, w 320, gap 16
+    Frame gap 8
+      Text "Projekt löschen?", col white, fs 18, weight 600
+      Text "Diese Aktion kann nicht rückgängig gemacht werden.", col #888, fs 13
+
+    Frame hor, gap 8, spread
+      CloseTrigger
+        Button "Abbrechen", bg #333, col white, pad 10 20, rad 6
+      Button "Löschen", bg #ef4444, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dialog mit Form</h2>
+      <p>Dialog mit Eingabefeldern:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger
+    Button "Neues Projekt", bg #2563eb, col white, pad 10 20, rad 6
+      Icon "plus", ic white, is 16, margin 0 0 0 8
+
+  Backdrop bg rgba(0,0,0,0.6)
+
+  Content bg #1a1a1a, pad 24, rad 12, w 380, gap 20
+    Frame gap 4
+      Text "Neues Projekt erstellen", col white, fs 18, weight 600
+      Text "Gib deinem Projekt einen Namen.", col #888, fs 13
+
+    Frame gap 12
+      Frame gap 4
+        Text "Projektname", col #888, fs 12
+        Input placeholder "z.B. Dashboard Redesign", bg #111, bor 1, boc #333, col white, pad 12, rad 6, w full
+      Frame gap 4
+        Text "Beschreibung", col #888, fs 12
+        Textarea placeholder "Optional...", bg #111, bor 1, boc #333, col white, pad 12, rad 6, w full, h 80
+
+    Frame hor, gap 8, right
+      CloseTrigger
+        Button "Abbrechen", bg #333, col white, pad 10 20, rad 6
+      Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: User Menu</h2>
+      <p>Typisches Benutzer-Dropdown:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Menu
+  Trigger
+    Frame hor, gap 10, bg #1a1a1a, pad 8 12, rad 8, cursor pointer
+      Frame w 32, h 32, bg #2563eb, rad 99, center
+        Text "TS", col white, fs 11, weight 500
+      Frame gap 1
+        Text "Toni Steimle", col white, fs 13
+        Text "Pro Plan", col #888, fs 11
+      Icon "chevron-down", ic #666, is 16
+
+  Content bg #1a1a1a, rad 8, shadow lg, w 200, pad 4
+    Frame pad 12, gap 2, bor 0, boc #333
+      Text "toni@example.com", col #888, fs 12
+    Separator h 1, bg #333, margin 4 0
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "user", ic #888, is 14
+      Text "Profile"
+      hover:
+        bg #2a2a2a
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "settings", ic #888, is 14
+      Text "Settings"
+      hover:
+        bg #2a2a2a
+    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
+      Icon "credit-card", ic #888, is 14
+      Text "Billing"
+      hover:
+        bg #2a2a2a
+    Separator h 1, bg #333, margin 4 0
+    Item hor, gap 8, pad 10 12, rad 4, col #ef4444, fs 13, cursor pointer
+      Icon "log-out", ic #ef4444, is 14
+      Text "Sign out"
+      hover:
+        bg #2a2a2a</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Tooltip</code> – Hilfetext bei Hover</li>
+        <li><code>Popover</code> – Reicherer Inhalt bei Klick</li>
+        <li><code>HoverCard</code> – Vorschau bei Hover</li>
+        <li><code>Menu</code> – Dropdown-Aktionen</li>
+        <li><code>ContextMenu</code> – Rechtsklick-Menu</li>
+        <li><code>Dialog</code> – Modales Fenster</li>
+        <li><code>Trigger, Content, Backdrop</code> – Gemeinsame Slots</li>
+        <li><code>CloseTrigger</code> – Schließt den Dialog</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="08-navigation.html">← Navigation</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="10-states.html">States →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

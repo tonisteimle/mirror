@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Warum Mirror?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Warum Mirror?</h1>
+      <p class="subtitle">Eine Sprache für UIs – für Designer, nicht nur für Entwickler.</p>
+    </header>
+
+    <section>
+      <h2>Das Problem</h2>
+      <p>HTML und CSS waren nie für Anwendungen gedacht. Sie wurden für Dokumente entwickelt – Text mit Links und Formatierung.</p>
+      <p>Deshalb entstanden Frameworks wie React, Vue und Angular. Sie lösen echte Probleme: Komponentisierung, State-Management, reaktive Updates.</p>
+      <p>Aber sie richten sich an Entwickler – mit komplexer Syntax, Build-Tools und Boilerplate. Ein einfacher Button braucht 15+ Zeilen Code.</p>
+    </section>
+
+    <section>
+      <h2>Die Lösung</h2>
+      <p>Mirror ist eine Beschreibungssprache, die radikal einfach ist:</p>
+      <ul style="color: #888; margin: 16px 0; padding-left: 24px;">
+        <li style="margin-bottom: 8px;"><strong style="color: white;">Tokens</strong> definieren Werte (Farben, Abstände, Schriften)</li>
+        <li style="margin-bottom: 8px;"><strong style="color: white;">Komponenten</strong> nutzen Tokens und sind wiederverwendbar</li>
+        <li style="margin-bottom: 8px;"><strong style="color: white;">Layouts</strong> enthalten Komponenten mit klarer Hierarchie</li>
+      </ul>
+      <p>Kein Overhead, keine Magie. Was du schreibst, ist was du siehst.</p>
+    </section>
+
+    <section>
+      <h2>Der Unterschied</h2>
+
+      <div style="margin: 24px 0;">
+        <div style="background: #191919; border-radius: 8px; overflow: hidden; margin-bottom: 12px;">
+          <span style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 12px; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #282828;">React <span style="font-weight: 400; font-size: 11px; opacity: 0.7;">– 17 Zeilen</span></span>
+          <pre style="margin: 0; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: #888; overflow-x: auto;">import React from 'react';
+
+export default function App() {
+  return (
+    &lt;button
+      style={{
+        background: '#2563eb',
+        color: 'white',
+        padding: '12px 24px',
+        borderRadius: '6px',
+        border: 'none'
+      }}
+    &gt;
+      Speichern
+    &lt;/button&gt;
+  );
+}</pre>
+        </div>
+        <div style="background: #191919; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+          <span style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 12px; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #282828;">Mirror <span style="font-weight: 400; font-size: 11px; opacity: 0.7;">– 1 Zeile</span></span>
+          <pre style="margin: 0; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; color: #eee; overflow-x: auto;">Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Für wen?</h2>
+      <p><strong style="color: white;">Designer</strong>, die ihre Ideen schnell umsetzen wollen, ohne auf Entwickler warten zu müssen.</p>
+      <p><strong style="color: white;">Entwickler</strong>, die Prototypen in Minuten statt Stunden bauen wollen.</p>
+      <p><strong style="color: white;">Teams</strong>, die eine gemeinsame Sprache für UI suchen – verständlich für alle.</p>
+    </section>
+
+    <section>
+      <h2>Bereit?</h2>
+      <p>In 15 kompakten Tutorials lernst du alles, was du brauchst. Jedes Tutorial hat interaktive Beispiele – du kannst den Code direkt bearbeiten und das Ergebnis live sehen.</p>
+    </section>
+
+    <nav>
+      <span class="prev"></span>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="quickstart-01.html">Quickstart →</a>
+    </nav>
+
+  </main>
+</body>
+</html>

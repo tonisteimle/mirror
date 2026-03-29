@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Elemente & Hierarchie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <main class="page">
+
+    <header>
+      <h1>Elemente & Hierarchie</h1>
+      <p class="subtitle">Die Grundbausteine jeder Mirror-Oberfläche</p>
+    </header>
+
+    <p class="intro">In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstellst, sie mit Properties gestaltest und durch Einrückung verschachtelst.</p>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Die Grundsyntax</h2>
+      <p>Ein Mirror-Element besteht aus dem <strong>Element-Namen</strong>, optionalem <strong>Text-Inhalt</strong> in Anführungszeichen, und <strong>Properties</strong> getrennt durch Kommas:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Lies das so: <em>Ein Button mit Text "Speichern", blauem Hintergrund, weißer Schrift, Padding 12/24 und Radius 6.</em></p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Primitives</h2>
+      <p>Primitives sind die Grundelemente von Mirror. Es gibt über 50 davon – hier die Basis-Elemente für den Einstieg:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, pad 16, bg #1a1a1a, rad 8
+  Text "Eine Überschrift", col white, fs 18
+  Text "Normaler Text darunter", col #888
+  Button "Klick mich", bg #2563eb, col white, pad 10 20, rad 6
+  Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>Frame</code></td><td>Container – das zentrale Layout-Element</td></tr>
+        <tr><td><code>Text</code></td><td>Textinhalt</td></tr>
+        <tr><td><code>Image</code></td><td>Bild</td></tr>
+        <tr><td><code>Icon</code></td><td>Icon (Lucide oder Material)</td></tr>
+        <tr><td><code>Button</code></td><td>Klickbarer Button</td></tr>
+        <tr><td><code>Input</code></td><td>Einzeiliges Eingabefeld</td></tr>
+        <tr><td><code>Link</code></td><td>Anklickbarer Link</td></tr>
+      </table>
+
+      <p class="note">Weitere Primitives: <code>Textarea</code>, <code>Label</code>, <code>Divider</code>, <code>Spacer</code>, semantische Elemente (<code>Header</code>, <code>Nav</code>, <code>Main</code>, <code>Section</code>, <code>Footer</code>, <code>H1</code>–<code>H6</code>) und über 50 Zag-Komponenten (<code>Dialog</code>, <code>Tabs</code>, <code>Menu</code>, <code>Select</code>, etc.).</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Styling-Properties</h2>
+      <p>Properties steuern das Aussehen. Zahlen sind Pixel, <code>#hex</code> sind Farben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+
+  // Farben: bg = Hintergrund, col = Textfarbe
+  Text "Farbiger Text", bg #2563eb, col white, pad 8 16, rad 4
+
+  // Abstände: pad = innen, margin = außen
+  Text "Mit Padding", pad 16, bg #333, col white, rad 4
+
+  // Größen: w = Breite, h = Höhe (in Pixel)
+  Frame w 200, h 50, bg #10b981, rad 4, center
+    Text "200 x 50", col white
+
+  // Ecken: rad = Radius
+  Frame hor, gap 8
+    Frame w 50, h 50, bg #f59e0b, rad 0
+    Frame w 50, h 50, bg #f59e0b, rad 8
+    Frame w 50, h 50, bg #f59e0b, rad 25</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>bg</code></td><td>Hintergrundfarbe</td><td><code>bg #2563eb</code></td></tr>
+        <tr><td><code>col</code></td><td>Textfarbe</td><td><code>col white</code></td></tr>
+        <tr><td><code>pad</code></td><td>Innenabstand (Padding)</td><td><code>pad 12</code> oder <code>pad 12 24</code></td></tr>
+        <tr><td><code>margin</code></td><td>Außenabstand</td><td><code>margin 16</code></td></tr>
+        <tr><td><code>w</code> / <code>h</code></td><td>Breite / Höhe</td><td><code>w 200, h 100</code></td></tr>
+        <tr><td><code>rad</code></td><td>Eckenradius</td><td><code>rad 8</code></td></tr>
+        <tr><td><code>fs</code></td><td>Schriftgröße</td><td><code>fs 18</code></td></tr>
+      </table>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Hierarchie durch Einrückung</h2>
+      <p>Kinder-Elemente werden mit <strong>2 Leerzeichen</strong> eingerückt. So entsteht die Struktur:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Eltern-Element
+Frame bg #1a1a1a, pad 20, rad 8, gap 12
+
+  // Kind 1: Text
+  Text "Titel", col white, fs 18, weight bold
+
+  // Kind 2: Text
+  Text "Untertitel", col #888
+
+  // Kind 3: Frame mit eigenen Kindern
+  Frame hor, gap 8
+    Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
+    Button "OK", pad 10 20, rad 6, bg #2563eb, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>Frame</code> ist der wichtigste Container. Er ordnet seine Kinder standardmäßig <strong>vertikal</strong> an. Mit <code>hor</code> wird horizontal angeordnet.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Layout-Properties (Vorschau)</h2>
+      <p>Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im <a href="05-layout.html">Layout-Kapitel</a>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+
+  // hor = horizontal anordnen
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
+    Frame w 40, h 40, bg #2563eb, rad 4
+    Frame w 40, h 40, bg #10b981, rad 4
+    Frame w 40, h 40, bg #f59e0b, rad 4
+
+  // center = horizontal und vertikal zentrieren
+  Frame w 200, h 60, bg #1a1a1a, rad 6, center
+    Text "Zentriert", col white
+
+  // spread = Kinder an den Rändern verteilen
+  Frame hor, spread, w 300, bg #1a1a1a, pad 12, rad 6
+    Text "Links", col white
+    Text "Rechts", col white
+
+  // gap = Abstand zwischen Kindern
+  Frame hor, gap 24, bg #1a1a1a, pad 12, rad 6
+    Text "A", col white
+    Text "B", col white
+    Text "C", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>hor</code></td><td>Kinder horizontal anordnen</td></tr>
+        <tr><td><code>ver</code></td><td>Kinder vertikal anordnen (Standard)</td></tr>
+        <tr><td><code>gap</code></td><td>Abstand zwischen Kindern</td></tr>
+        <tr><td><code>center</code></td><td>Kinder zentrieren (beide Achsen)</td></tr>
+        <tr><td><code>spread</code></td><td>Kinder an Rändern verteilen</td></tr>
+        <tr><td><code>wrap</code></td><td>Kinder umbrechen wenn kein Platz</td></tr>
+      </table>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Icons</h2>
+      <p>Icons kommen von <a href="https://lucide.dev/icons/" target="_blank">Lucide</a> (Standard) oder <a href="https://fonts.google.com/icons" target="_blank">Material Icons</a>. Der Name kommt in Anführungszeichen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+
+  // Lucide Icons (Standard)
+  Frame hor, gap 16
+    Icon "check", ic #10b981, is 24
+    Icon "x", ic #ef4444, is 24
+    Icon "settings", ic #888, is 24
+    Icon "user", ic #2563eb, is 24
+
+  // fill = ausgefüllte Variante
+  Frame hor, gap 16
+    Icon "heart", ic #ef4444, is 24
+    Icon "heart", ic #ef4444, is 24, fill
+
+  // material = Material Icons statt Lucide
+  Frame hor, gap 16
+    Icon "star", ic #f59e0b, is 24, material
+    Icon "star", ic #f59e0b, is 24, material, fill
+
+  // Icons in Buttons
+  Button pad 10 16, rad 6, bg #2563eb, col white
+    Frame hor, gap 8, center
+      Icon "save", ic white, is 16
+      Text "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>is</code></td><td>Icon-Größe in Pixel</td><td><code>is 24</code></td></tr>
+        <tr><td><code>ic</code></td><td>Icon-Farbe</td><td><code>ic #2563eb</code></td></tr>
+        <tr><td><code>iw</code></td><td>Strichstärke</td><td><code>iw 1.5</code></td></tr>
+        <tr><td><code>fill</code></td><td>Ausgefüllte Variante</td><td><code>Icon "heart", fill</code></td></tr>
+        <tr><td><code>material</code></td><td>Material Icons verwenden</td><td><code>Icon "star", material</code></td></tr>
+      </table>
+    </section>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praxisbeispiel: Card</h2>
+      <p>Kombiniere alles zu einer typischen UI-Komponente:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
+
+  // Header mit Icon
+  Frame hor, gap 12, center
+    Icon "user", ic #2563eb, is 32
+    Frame gap 2
+      Text "Max Mustermann", col white, fs 16, weight semibold
+      Text "Software Engineer", col #888, fs 13
+
+  // Beschreibung
+  Text "Arbeitet an spannenden Projekten.", col #aaa, fs 14
+
+  // Action-Buttons
+  Frame hor, gap 8
+    Button pad 10 16, rad 6, bg #2563eb, col white
+      Frame hor, gap 6, center
+        Icon "mail", ic white, is 14
+        Text "Nachricht"
+    Button "Folgen", pad 10 16, rad 6, bg #333, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><strong>Syntax:</strong> <code>Element "Text", property value, property value</code></li>
+        <li><strong>Primitives:</strong> <code>Frame</code>, <code>Text</code>, <code>Button</code>, <code>Input</code>, <code>Icon</code>, <code>Image</code></li>
+        <li><strong>Styling:</strong> <code>bg</code>, <code>col</code>, <code>pad</code>, <code>rad</code>, <code>w</code>, <code>h</code>, <code>fs</code></li>
+        <li><strong>Layout:</strong> <code>hor</code>, <code>ver</code>, <code>gap</code>, <code>center</code>, <code>spread</code></li>
+        <li><strong>Icons:</strong> <code>ic</code>, <code>is</code>, <code>fill</code>, <code>material</code></li>
+        <li><strong>Hierarchie:</strong> 2 Leerzeichen Einrückung = Kind-Element</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="00-intro.html">&larr; Intro</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="quickstart-02.html">Komponenten &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|iw|scale|name|full|fill|material|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Positioning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Positioning</h1>
+      <p class="subtitle">Elemente frei positionieren und überlagern</p>
+    </header>
+
+    <section>
+      <h2>Stacked Layout</h2>
+      <p><code>stacked</code> stapelt Kinder übereinander (wie position: relative + absolute):</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 120, stacked, rad 8, clip
+  // Hintergrundbild
+  Frame w full, h full, bg #2563eb
+
+  // Overlay unten
+  Frame w full, h 40, bg rgba(0,0,0,0.6), bottom, pad 0 12, cl
+    Text "Bildtitel", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>clip</code> schneidet überstehende Inhalte ab.</p>
+    </section>
+
+    <section>
+      <h2>Positionierung in Stacked</h2>
+      <p>Kinder werden mit Richtungs-Properties positioniert:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
+  // Ecken
+  Frame w 30, h 30, bg #ef4444, rad 4, top, left
+  Frame w 30, h 30, bg #f59e0b, rad 4, top, right
+  Frame w 30, h 30, bg #10b981, rad 4, bottom, left
+  Frame w 30, h 30, bg #2563eb, rad 4, bottom, right
+
+  // Mitte
+  Frame w 40, h 40, bg white, rad 99, center</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pinning mit Abstand</h2>
+      <p>Pin-Properties positionieren mit exaktem Abstand vom Rand:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 240, h 140, stacked, bg #1a1a1a, rad 8
+  // 12px vom Rand
+  Frame bg #2563eb, pad 8 12, rad 4, pt 12, pl 12
+    Text "top-left", col white, fs 11
+
+  // 12px von rechts und unten
+  Frame bg #10b981, pad 8 12, rad 4, pb 12, pr 12
+    Text "bottom-right", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>pt</code></td><td>pin-top</td></tr>
+        <tr><td><code>pb</code></td><td>pin-bottom</td></tr>
+        <tr><td><code>pl</code></td><td>pin-left</td></tr>
+        <tr><td><code>pr</code></td><td>pin-right</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Zentrierung mit Pin</h2>
+      <p><code>pc</code> (pin-center) zentriert ein Element. Kombinierbar mit einzelnen Pins:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 240, h 120, stacked, bg #1a1a1a, rad 8
+  // Komplett zentriert
+  Frame bg #2563eb, pad 8 16, rad 4, pc
+    Text "Zentriert", col white, fs 12
+
+  // Horizontal zentriert, oben gepinnt
+  Frame bg #333, pad 4 12, rad 4, pcx, pt 8
+    Text "oben mitte", col #888, fs 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>pc</code></td><td>pin-center (beide Achsen)</td></tr>
+        <tr><td><code>pcx</code></td><td>horizontal zentriert</td></tr>
+        <tr><td><code>pcy</code></td><td>vertikal zentriert</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Z-Index</h2>
+      <p><code>z N</code> kontrolliert die Stapelreihenfolge:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 100, stacked, bg #1a1a1a, rad 8
+  Frame w 80, h 80, bg #ef4444, rad 8, pl 20, pcy, z 1
+  Frame w 80, h 80, bg #f59e0b, rad 8, pl 50, pcy, z 2
+  Frame w 80, h 80, bg #10b981, rad 8, pl 80, pcy, z 3</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Höherer z-Wert = weiter vorne.</p>
+    </section>
+
+    <section>
+      <h2>X/Y Offset</h2>
+      <p><code>x</code> und <code>y</code> verschieben relativ zur Position:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 100, stacked, bg #1a1a1a, rad 8
+  // Normal positioniert
+  Frame w 60, h 60, bg #333, rad 8, center
+
+  // Mit Offset verschoben
+  Frame w 60, h 60, bg #2563eb, rad 8, center, x 30, y -10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Notification Badge</h2>
+      <p>Ein typisches Pattern für Badges auf Icons:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 24
+  // Icon mit Badge
+  Frame stacked
+    Frame w 44, h 44, bg #1a1a1a, rad 8, center
+      Icon "bell", ic #888, is 22
+    Frame w 18, h 18, bg #ef4444, rad 99, pt -4, pr -4, center
+      Text "3", col white, fs 10, weight 600
+
+  // Avatar mit Status
+  Frame stacked
+    Frame w 44, h 44, bg #2563eb, rad 99, center
+      Text "TS", col white, fs 14, weight 500
+    Frame w 14, h 14, bg #10b981, rad 99, pb 0, pr 0, bor 2, boc #111</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Image Card</h2>
+      <p>Overlay-Text auf einem Bild:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 260, h 160, stacked, rad 12, clip, cursor pointer
+  // "Bild" Hintergrund
+  Frame w full, h full, bg linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+
+  // Gradient Overlay
+  Frame w full, h full, bg linear-gradient(transparent 40%, rgba(0,0,0,0.8))
+
+  // Content unten
+  Frame w full, pb 16, pl 16, pr 16, bottom, gap 4
+    Text "Projekt Alpha", col white, fs 16, weight 600
+    Text "Design System", col rgba(255,255,255,0.7), fs 12
+
+  // Badge oben rechts
+  Frame bg rgba(0,0,0,0.5), pad 4 10, rad 99, pt 12, pr 12
+    Text "Neu", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Floating Action Button</h2>
+      <p>Ein Button der unten rechts schwebt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w full, h 180, stacked, bg #0a0a0a, rad 8
+  // Content
+  Frame w full, h full, pad 20, gap 8
+    Text "Hauptinhalt", col white, fs 16
+    Text "Hier steht der Content der Seite.", col #666, fs 13
+
+  // FAB
+  Frame w 56, h 56, bg #2563eb, rad 99, pb 16, pr 16, center, cursor pointer, shadow lg
+    Icon "plus", ic white, is 24
+    hover:
+      bg #3b82f6
+      scale 1.05</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>stacked</code> – Kinder übereinander stapeln</li>
+        <li><code>top, bottom, left, right</code> – Grundausrichtung</li>
+        <li><code>pt, pb, pl, pr</code> – Pin mit Abstand</li>
+        <li><code>pc, pcx, pcy</code> – Zentrierung</li>
+        <li><code>z N</code> – Stapelreihenfolge</li>
+        <li><code>x, y</code> – Offset-Verschiebung</li>
+        <li><code>clip</code> – Überstehende Inhalte abschneiden</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="05-layout.html">← Layout</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="07-styling.html">Styling →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|tl|tc|tr|cl|cr|bl|bc|br|stacked|pos|pt|pb|pl|pr|pc|pcx|pcy|x|y|z|abs|fixed|relative)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

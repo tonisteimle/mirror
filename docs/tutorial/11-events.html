@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Events</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Events</h1>
+      <p class="subtitle">Klicks, Tastatur und andere Interaktionen</p>
+    </header>
+
+    <section>
+      <h2>Click Events</h2>
+      <p>Das häufigste Event – reagiert auf Klicks:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  Button "Klick mich", bg #2563eb, col white, pad 12 24, rad 6
+    onclick:
+      show Toast
+
+  // Toast erscheint bei Klick
+  Frame name Toast, hidden, bg #1a1a1a, pad 12 20, rad 8, shadow lg
+    Text "Button geklickt!", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Toggle & Close</h2>
+      <p>Toggle wechselt zwischen Zuständen, close schließt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Toggle Panel", bg #1a1a1a, col white, pad 10 20, rad 6
+    onclick:
+      toggle Panel
+
+  Frame name Panel, state open initial, bg #1a1a1a, pad 16, rad 8, gap 8
+    Frame hor, spread
+      Text "Panel Inhalt", col white, fs 14
+      Button bg transparent, pad 4
+        Icon "x", ic #888, is 18
+        onclick:
+          close Panel
+    Text "Dieses Panel kann geöffnet und geschlossen werden.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Hover Events</h2>
+      <p><code>onhover</code> reagiert auf Maus-Hover:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame hor, gap 8
+    Frame w 60, h 60, bg #1a1a1a, rad 8, center, cursor pointer
+      Icon "image", ic #888, is 24
+      onhover:
+        show Preview
+    Frame w 60, h 60, bg #1a1a1a, rad 8, center, cursor pointer
+      Icon "file", ic #888, is 24
+      onhover:
+        hide Preview
+
+  Frame name Preview, bg #1a1a1a, pad 16, rad 8
+    Text "Hover über das Bild-Icon!", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Focus & Blur</h2>
+      <p>Events für Fokus-Management:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Input placeholder "Klick hier zum Fokussieren"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 250
+    onfocus:
+      show Hint
+    onblur:
+      hide Hint
+
+  Frame name Hint, hidden, bg #2563eb22, bor 1, boc #2563eb, pad 12, rad 6
+    Text "Tipp: Gib deinen Namen ein", col #2563eb, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Keyboard Events</h2>
+      <p>Reagiere auf Tastatureingaben mit spezifischen Keys:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Input placeholder "Enter drücken zum Senden"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 250
+    onkeydown enter:
+      show Success
+
+  Input placeholder "Escape drücken zum Abbrechen"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 250
+    onkeydown escape:
+      show Cancelled
+
+  Frame name Success, hidden, bg #10b98122, pad 12, rad 6
+    Text "Gesendet!", col #10b981, fs 13
+  Frame name Cancelled, hidden, bg #ef444422, pad 12, rad 6
+    Text "Abgebrochen!", col #ef4444, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Verfügbare Keys: <code>enter</code>, <code>escape</code>, <code>space</code>, <code>tab</code>, <code>backspace</code>, <code>delete</code>, <code>arrow-up/down/left/right</code></p>
+    </section>
+
+    <section>
+      <h2>Click Outside</h2>
+      <p>Schließe Elemente beim Klick außerhalb:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Dropdown öffnen", bg #1a1a1a, col white, pad 10 20, rad 6
+    onclick:
+      toggle Dropdown
+
+  Frame name Dropdown, state open, hidden, bg #1a1a1a, pad 8, rad 8, shadow lg, w 180
+    Frame pad 10, rad 4, cursor pointer
+      Text "Option 1", col white, fs 13
+      hover:
+        bg #2a2a2a
+    Frame pad 10, rad 4, cursor pointer
+      Text "Option 2", col white, fs 13
+      hover:
+        bg #2a2a2a
+    Frame pad 10, rad 4, cursor pointer
+      Text "Option 3", col white, fs 13
+      hover:
+        bg #2a2a2a
+    onclick-outside:
+      hide Dropdown</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Change & Input</h2>
+      <p>Reagiere auf Wertänderungen in Formularen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+  Frame gap 8
+    Text "Checkbox", col #888, fs 12
+    Frame hor, gap 12
+      Checkbox
+        onchange:
+          toggle Status
+      Frame name Status, hidden, bg #10b98122, pad 4 8, rad 4
+        Text "Aktiviert", col #10b981, fs 12
+
+  Frame gap 8
+    Text "Eingabe", col #888, fs 12
+    Input placeholder "Tippe etwas..."
+      bg #1a1a1a, bor 1, boc #333, col white, pad 10, rad 6, w 200
+      oninput:
+        show Typing
+
+  Frame name Typing, hidden, bg #1a1a1a, pad 8 12, rad 6
+    Text "Du tippst gerade...", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Multiple Actions</h2>
+      <p>Ein Event kann mehrere Actions ausführen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Alles anzeigen", bg #2563eb, col white, pad 12 24, rad 6
+    onclick:
+      show Box1
+      show Box2
+      show Box3
+
+  Button "Alles verstecken", bg #333, col white, pad 12 24, rad 6
+    onclick:
+      hide Box1
+      hide Box2
+      hide Box3
+
+  Frame hor, gap 8
+    Frame name Box1, hidden, w 60, h 60, bg #ef4444, rad 8
+    Frame name Box2, hidden, w 60, h 60, bg #f59e0b, rad 8
+    Frame name Box3, hidden, w 60, h 60, bg #10b981, rad 8</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Self Reference</h2>
+      <p><code>self</code> referenziert das eigene Element:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  // Selbst togglen
+  Frame state active, w 60, h 60, bg #1a1a1a, rad 8, center, cursor pointer
+    Icon "star", ic #888, is 24
+    active:
+      bg #f59e0b
+      Icon "star", ic white
+    onclick:
+      toggle self
+
+  // Selbst verstecken
+  Frame w 60, h 60, bg #ef4444, rad 8, center, cursor pointer
+    Icon "x", ic white, is 20
+    onclick:
+      hide self
+
+  // Selbst selektieren
+  Frame state selected exclusive, w 60, h 60, bg #1a1a1a, rad 8, center, cursor pointer
+    Text "A", col #888, fs 16
+    selected:
+      bg #2563eb
+      Text "A", col white
+    onclick:
+      select self
+
+  Frame state selected exclusive, w 60, h 60, bg #1a1a1a, rad 8, center, cursor pointer
+    Text "B", col #888, fs 16
+    selected:
+      bg #2563eb
+      Text "B", col white
+    onclick:
+      select self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Search Input</h2>
+      <p>Suchfeld mit Keyboard-Shortcut und Clear-Button:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, stacked
+  Frame hor, bg #1a1a1a, pad 12, rad 8, gap 8
+    Icon "search", ic #666, is 18
+    Input name SearchInput, placeholder "Suchen... (Enter zum Bestätigen)"
+      bg transparent, col white, w full, bor 0
+      onkeydown enter:
+        show Results
+      onkeydown escape:
+        hide Results
+    Button bg transparent, pad 4
+      Icon "x", ic #666, is 16
+      onclick:
+        hide Results
+
+  Frame name Results, hidden, bg #1a1a1a, pad 8, rad 8, mt 8, shadow lg, gap 2
+    Frame pad 10, rad 4, cursor pointer
+      Text "Ergebnis 1", col white, fs 13
+      hover:
+        bg #2a2a2a
+    Frame pad 10, rad 4, cursor pointer
+      Text "Ergebnis 2", col white, fs 13
+      hover:
+        bg #2a2a2a
+    Frame pad 10, rad 4, cursor pointer
+      Text "Ergebnis 3", col white, fs 13
+      hover:
+        bg #2a2a2a</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Notification System</h2>
+      <p>Verschiedene Notification-Typen die erscheinen und verschwinden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame hor, gap 8
+    Button "Success", bg #10b981, col white, pad 10 16, rad 6
+      onclick:
+        show SuccessToast
+    Button "Error", bg #ef4444, col white, pad 10 16, rad 6
+      onclick:
+        show ErrorToast
+    Button "Info", bg #2563eb, col white, pad 10 16, rad 6
+      onclick:
+        show InfoToast
+
+  // Toasts
+  Frame name SuccessToast, hidden, hor, gap 12, bg #10b98122, bor 1, boc #10b981, pad 12 16, rad 8
+    Icon "check-circle", ic #10b981, is 20
+    Text "Erfolgreich gespeichert!", col #10b981, fs 13
+    Button bg transparent, pad 4
+      Icon "x", ic #10b981, is 16
+      onclick:
+        hide SuccessToast
+
+  Frame name ErrorToast, hidden, hor, gap 12, bg #ef444422, bor 1, boc #ef4444, pad 12 16, rad 8
+    Icon "alert-circle", ic #ef4444, is 20
+    Text "Ein Fehler ist aufgetreten!", col #ef4444, fs 13
+    Button bg transparent, pad 4
+      Icon "x", ic #ef4444, is 16
+      onclick:
+        hide ErrorToast
+
+  Frame name InfoToast, hidden, hor, gap 12, bg #2563eb22, bor 1, boc #2563eb, pad 12 16, rad 8
+    Icon "info", ic #2563eb, is 20
+    Text "Neue Updates verfügbar.", col #2563eb, fs 13
+    Button bg transparent, pad 4
+      Icon "x", ic #2563eb, is 16
+      onclick:
+        hide InfoToast</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>onclick:</code> – Klick-Event</li>
+        <li><code>onhover:</code> – Maus-Hover</li>
+        <li><code>onfocus:</code> / <code>onblur:</code> – Fokus-Events</li>
+        <li><code>onkeydown KEY:</code> – Tastatur (enter, escape, etc.)</li>
+        <li><code>onclick-outside:</code> – Klick außerhalb</li>
+        <li><code>onchange:</code> / <code>oninput:</code> – Wertänderungen</li>
+        <li><code>show</code>, <code>hide</code>, <code>toggle</code> – Sichtbarkeit</li>
+        <li><code>open</code>, <code>close</code>, <code>select</code> – State-Actions</li>
+        <li><code>self</code> – Referenz auf eigenes Element</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="10-states.html">← States</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="12-animation.html">Animation →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|initial|exclusive|mt)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onclick-outside|selected|state|show|hide|toggle|open|close|select|as|when|self|enter|escape|space|tab)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

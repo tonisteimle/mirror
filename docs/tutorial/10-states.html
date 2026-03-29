@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – States</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>States</h1>
+      <p class="subtitle">Interaktive Zustände für UI-Elemente</p>
+    </header>
+
+    <section>
+      <h2>Hover State</h2>
+      <p>Ändert Styling wenn die Maus über dem Element ist:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  Button "Hover me", bg #1a1a1a, col white, pad 12 24, rad 6
+    hover:
+      bg #2563eb
+      scale 1.02
+
+  Frame w 80, h 80, bg #1a1a1a, rad 8, center, cursor pointer
+    Icon "heart", ic #888, is 24
+    hover:
+      bg #2a2a2a
+      Icon "heart", ic #ef4444</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Focus & Active</h2>
+      <p>Focus für Tastatur-Navigation, Active beim Klicken:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  // Input mit Focus-Ring
+  Input placeholder "Klick zum Fokussieren"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 250
+    focus:
+      boc #2563eb
+      shadow 0 0 0 3px rgba(37,99,235,0.3)
+
+  // Button mit Active-State
+  Button "Drück mich", bg #2563eb, col white, pad 12 24, rad 6
+    active:
+      bg #1d4ed8
+      scale 0.98</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Disabled State</h2>
+      <p>Deaktivierte Elemente:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  Button "Aktiv", bg #2563eb, col white, pad 12 24, rad 6
+  Button "Disabled", bg #2563eb, col white, pad 12 24, rad 6, disabled
+    disabled:
+      opacity 0.5
+      cursor not-allowed</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Custom States</h2>
+      <p>Eigene States mit <code>state</code> definieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  // Einfacher Toggle
+  Frame state on, w 50, h 50, bg #1a1a1a, rad 8, center, cursor pointer
+    Icon "star", ic #888, is 20
+    on:
+      bg #f59e0b
+      Icon "star", ic white
+    onclick:
+      toggle self
+
+  // Selektierbare Karten
+  Frame state selected, bg #1a1a1a, pad 16, rad 8, gap 4, cursor pointer, bor 2, boc transparent
+    Text "Option A", col white, fs 14
+    Text "Klick zum Auswählen", col #888, fs 12
+    selected:
+      boc #2563eb
+      bg #2563eb22
+    onclick:
+      toggle self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Initial State</h2>
+      <p><code>state on initial</code> startet im aktiven Zustand:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  // Startet AUS
+  Frame state active, w 50, h 50, bg #1a1a1a, rad 8, center, cursor pointer
+    Text "Off", col #888, fs 11
+    active:
+      bg #10b981
+      Text "On", col white
+    onclick:
+      toggle self
+
+  // Startet AN
+  Frame state active initial, w 50, h 50, bg #1a1a1a, rad 8, center, cursor pointer
+    Text "Off", col #888, fs 11
+    active:
+      bg #10b981
+      Text "On", col white
+    onclick:
+      toggle self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Exclusive States</h2>
+      <p><code>exclusive</code> erlaubt nur einen aktiven State in der Gruppe:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+  Frame state selected exclusive initial, pad 10 20, rad 6, cursor pointer
+    Text "Day", col #888, fs 13
+    selected:
+      bg #2563eb
+      Text "Day", col white
+    onclick:
+      select self
+
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Week", col #888, fs 13
+    selected:
+      bg #2563eb
+      Text "Week", col white
+    onclick:
+      select self
+
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Month", col #888, fs 13
+    selected:
+      bg #2563eb
+      Text "Month", col white
+    onclick:
+      select self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>State Dependencies</h2>
+      <p>Elemente können auf States anderer Elemente reagieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  // Toggle Button
+  Frame name toggle, state on, hor, gap 8, bg #1a1a1a, pad 12 16, rad 8, cursor pointer
+    Icon "eye", ic #888, is 18
+    Text "Details anzeigen", col #888, fs 13
+    on:
+      Icon "eye", ic #2563eb
+      Text "Details anzeigen", col #2563eb
+    onclick:
+      toggle self
+
+  // Content der auf den Toggle reagiert
+  Frame bg #1a1a1a, pad 16, rad 8, hidden
+    visible when toggle on
+    Text "Hier sind die Details!", col white, fs 14
+    Text "Diese werden ein- und ausgeblendet.", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Selection List</h2>
+      <p>Eine Liste mit selektierbaren Items:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Item: state selected exclusive, hor, spread, pad 12, rad 6, cursor pointer, bor 1, boc transparent
+  selected:
+    bg #2563eb22
+    boc #2563eb
+  onclick:
+    select self
+
+Frame w 280, bg #1a1a1a, pad 8, rad 12, gap 2
+  Text "Wähle ein Projekt", col #888, fs 11, uppercase, pad 8 4
+
+  Item initial
+    Frame hor, gap 10
+      Icon "folder", ic #888, is 18
+      Text "Dashboard", col white, fs 13
+    Icon "check", ic #2563eb, is 16, hidden
+      visible when self selected
+
+  Item
+    Frame hor, gap 10
+      Icon "folder", ic #888, is 18
+      Text "Landing Page", col white, fs 13
+    Icon "check", ic #2563eb, is 16, hidden
+      visible when self selected
+
+  Item
+    Frame hor, gap 10
+      Icon "folder", ic #888, is 18
+      Text "Mobile App", col white, fs 13
+    Icon "check", ic #2563eb, is 16, hidden
+      visible when self selected</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Toggle Panel</h2>
+      <p>Ein- und ausklappbares Panel:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame name panel, state open initial, w 280, bg #1a1a1a, rad 12, clip
+  // Header - immer sichtbar
+  Frame hor, spread, pad 16, cursor pointer
+    Text "Erweiterte Optionen", col white, fs 14
+    Icon "chevron-down", ic #888, is 18
+    onclick:
+      toggle panel
+
+  // Content - nur wenn open
+  Frame pad 0 16 16 16, gap 12, hidden
+    visible when panel open
+    Frame hor, spread
+      Text "Option A", col #888, fs 13
+      Switch
+    Frame hor, spread
+      Text "Option B", col #888, fs 13
+      Switch
+    Frame hor, spread
+      Text "Option C", col #888, fs 13
+      Switch</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>hover:</code> – Maus über Element</li>
+        <li><code>focus:</code> – Element fokussiert</li>
+        <li><code>active:</code> – Element wird geklickt</li>
+        <li><code>disabled</code> – Element deaktiviert</li>
+        <li><code>state NAME</code> – Custom State definieren</li>
+        <li><code>state NAME initial</code> – Startet aktiv</li>
+        <li><code>exclusive</code> – Nur einer in Gruppe aktiv</li>
+        <li><code>visible when X state</code> – Sichtbar wenn State aktiv</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="09-overlays.html">← Overlays</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="11-events.html">Events →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|initial|exclusive)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as|when|self)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Daten</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Daten</h1>
+      <p class="subtitle">Listen, Schleifen und dynamische Inhalte</p>
+    </header>
+
+    <section>
+      <h2>Each Loop</h2>
+      <p>Iteriere über eine Liste von Items:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  each item in ["Apple", "Banana", "Cherry"]
+    Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
+      Icon "circle", ic #10b981, is 8
+      Text item, col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Object Properties</h2>
+      <p>Zugriff auf Objekt-Eigenschaften:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  each user in [{ name: "Anna", role: "Admin" }, { name: "Ben", role: "User" }, { name: "Clara", role: "Editor" }]
+    Frame hor, spread, bg #1a1a1a, pad 12, rad 6
+      Frame hor, gap 10
+        Frame w 32, h 32, bg #2563eb, rad 99, center
+          Text user.name[0], col white, fs 12
+        Text user.name, col white, fs 13
+      Frame bg #333, pad 4 10, rad 4
+        Text user.role, col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Index Zugriff</h2>
+      <p>Mit <code>index</code> den aktuellen Index nutzen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 4
+  each item, index in ["Erster", "Zweiter", "Dritter"]
+    Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+      Frame w 24, h 24, bg #2563eb, rad 4, center
+        Text index + 1, col white, fs 11
+      Text item, col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Nested Loops</h2>
+      <p>Verschachtelte Schleifen für komplexe Strukturen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  each category in [{ name: "Früchte", items: ["Apfel", "Birne"] }, { name: "Gemüse", items: ["Karotte", "Brokkoli"] }]
+    Frame bg #1a1a1a, pad 12, rad 8, gap 8
+      Text category.name, col white, fs 14, weight 500
+      Frame gap 4
+        each item in category.items
+          Frame hor, gap 6, pad 8, bg #252525, rad 4
+            Icon "chevron-right", ic #666, is 12
+            Text item, col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Conditional Rendering</h2>
+      <p><code>visible when</code> zeigt Elemente basierend auf States:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame hor, gap 8
+    Button name ShowAll, state active initial, "Alle", pad 8 16, rad 6, bg #1a1a1a, col #888
+      active:
+        bg #2563eb
+        col white
+      onclick:
+        select self
+    Button name ShowActive, state active exclusive, "Aktiv", pad 8 16, rad 6, bg #1a1a1a, col #888
+      active:
+        bg #2563eb
+        col white
+      onclick:
+        select self
+
+  Frame gap 4
+    Frame hor, gap 8, bg #1a1a1a, pad 10, rad 6
+      Icon "check-circle", ic #10b981, is 16
+      Text "Aufgabe erledigt", col white, fs 13
+    Frame hor, gap 8, bg #1a1a1a, pad 10, rad 6
+      visible when ShowAll active
+      Icon "circle", ic #666, is 16
+      Text "Noch zu tun", col #888, fs 13
+    Frame hor, gap 8, bg #1a1a1a, pad 10, rad 6
+      Icon "check-circle", ic #10b981, is 16
+      Text "Review abgeschlossen", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Data Binding</h2>
+      <p>Tokens als Datenquellen nutzen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Token-Definitionen
+userName: "Max Mustermann"
+userEmail: "max@example.com"
+userPlan: "Pro"
+
+Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 280
+  Frame hor, gap 12
+    Frame w 48, h 48, bg #2563eb, rad 99, center
+      Text "MM", col white, fs 16
+    Frame gap 2
+      Text $userName, col white, fs 14, weight 500
+      Text $userEmail, col #888, fs 12
+
+  Frame hor, spread, pad 12, bg #252525, rad 8
+    Text "Plan", col #888, fs 12
+    Frame bg #10b98122, pad 4 10, rad 4
+      Text $userPlan, col #10b981, fs 12, weight 500</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Computed Values</h2>
+      <p>Werte kombinieren und berechnen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Daten
+itemCount: 3
+itemPrice: 29
+
+Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
+  Text "Warenkorb", col white, fs 16, weight 600
+
+  Frame hor, spread, pad 12, bg #252525, rad 6
+    Text "Anzahl", col #888, fs 13
+    Text $itemCount + " Stück", col white, fs 13
+
+  Frame hor, spread, pad 12, bg #252525, rad 6
+    Text "Preis/Stück", col #888, fs 13
+    Text "€" + $itemPrice, col white, fs 13
+
+  Divider h 1, bg #333
+
+  Frame hor, spread
+    Text "Gesamt", col white, fs 14, weight 500
+    Text "€" + ($itemCount * $itemPrice), col #10b981, fs 16, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Produkt-Grid</h2>
+      <p>Ein Grid von Produktkarten aus Daten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 2, gap 12
+  each product in [{ name: "Kopfhörer", price: 199, color: "#2563eb" }, { name: "Keyboard", price: 149, color: "#10b981" }, { name: "Maus", price: 79, color: "#f59e0b" }, { name: "Monitor", price: 399, color: "#ef4444" }]
+    Frame bg #1a1a1a, rad 12, clip, cursor pointer
+      Frame w full, h 80, bg product.color, center
+        Icon "package", ic white, is 32
+      Frame pad 12, gap 4
+        Text product.name, col white, fs 14, weight 500
+        Text "€" + product.price, col #888, fs 13
+      hover:
+        scale 1.02</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Task Liste</h2>
+      <p>Interaktive Task-Liste mit Status:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, bg #1a1a1a, pad 16, rad 12, gap 12
+  Frame hor, spread
+    Text "Aufgaben", col white, fs 16, weight 600
+    Frame bg #2563eb, pad 4 10, rad 99
+      Text "4", col white, fs 11
+
+  Frame gap 6
+    each task in [{ text: "Design Review", done: true }, { text: "Code schreiben", done: false }, { text: "Tests hinzufügen", done: false }, { text: "Deployment", done: false }]
+      Frame state selected, hor, gap 10, pad 10, rad 6, cursor pointer
+        Frame w 20, h 20, bor 2, boc #444, rad 4, center
+          Icon "check", ic #2563eb, is 14, hidden
+            visible when self selected
+        Text task.text, col #888, fs 13
+        selected:
+          Frame w 20, h 20, bg #2563eb, bor 0, rad 4
+          Text task.text, col white
+        onclick:
+          toggle self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Statistik Dashboard</h2>
+      <p>Dashboard mit dynamischen Daten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame hor, gap 12
+    each stat in [{ label: "Besucher", value: "12.4k", change: "+12%", up: true }, { label: "Umsatz", value: "€8.2k", change: "+8%", up: true }, { label: "Bounce", value: "24%", change: "-3%", up: false }]
+      Frame w full, bg #1a1a1a, pad 16, rad 12, gap 8
+        Text stat.label, col #888, fs 11, uppercase
+        Text stat.value, col white, fs 24, weight 600
+        Frame hor, gap 4
+          Icon "trending-up", ic #10b981, is 14
+          Text stat.change, col #10b981, fs 12
+
+  Frame bg #1a1a1a, pad 16, rad 12, gap 12
+    Text "Top Seiten", col white, fs 14, weight 500
+    each page in [{ name: "/home", views: 4521 }, { name: "/products", views: 2834 }, { name: "/about", views: 1203 }]
+      Frame hor, spread, pad 8, bg #252525, rad 6
+        Text page.name, col #888, fs 12, font mono
+        Text page.views + " views", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>each item in [...]</code> – Über Liste iterieren</li>
+        <li><code>each item, index in [...]</code> – Mit Index</li>
+        <li><code>item.property</code> – Objekteigenschaften</li>
+        <li><code>visible when X state</code> – Bedingtes Anzeigen</li>
+        <li><code>name: value</code> – Token definieren</li>
+        <li><code>$tokenName</code> – Token verwenden</li>
+        <li><code>"Text " + $var</code> – Werte kombinieren</li>
+        <li><code>$a * $b</code> – Berechnungen</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="12-animation.html">← Animation</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="14-forms.html">Formulare →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|mono)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|onclick|state|show|hide|toggle|select|as|when|self|each|in|visible|index|initial|exclusive)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

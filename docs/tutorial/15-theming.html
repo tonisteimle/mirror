@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Theming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Theming</h1>
+      <p class="subtitle">Design Tokens und wiederverwendbare Stile</p>
+    </header>
+
+    <section>
+      <h2>Design Tokens</h2>
+      <p>Definiere Werte einmal, nutze sie überall:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Token-Definitionen
+primary: #2563eb
+secondary: #10b981
+surface: #1a1a1a
+text: #ffffff
+muted: #888888
+
+Frame gap 12
+  Button "Primary", bg $primary, col $text, pad 12 24, rad 6
+  Button "Secondary", bg $secondary, col $text, pad 12 24, rad 6
+  Frame bg $surface, pad 16, rad 8
+    Text "Surface mit Text", col $text, fs 14
+    Text "Und Muted Text", col $muted, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Nested Tokens</h2>
+      <p>Tokens können verschachtelt werden mit Punkt-Notation:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Verschachtelte Tokens
+color.primary: #2563eb
+color.success: #10b981
+color.warning: #f59e0b
+color.danger: #ef4444
+
+spacing.sm: 8
+spacing.md: 16
+spacing.lg: 24
+
+Frame gap $spacing.md
+  Frame hor, gap $spacing.sm
+    Frame w 40, h 40, bg $color.primary, rad 6
+    Frame w 40, h 40, bg $color.success, rad 6
+    Frame w 40, h 40, bg $color.warning, rad 6
+    Frame w 40, h 40, bg $color.danger, rad 6
+
+  Frame bg #1a1a1a, pad $spacing.lg, rad 8
+    Text "Large Padding mit Token", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Komponenten-Tokens</h2>
+      <p>Tokens für spezifische Komponenten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Button Tokens
+btn.bg: #2563eb
+btn.col: white
+btn.pad: 12
+btn.rad: 8
+
+// Card Tokens
+card.bg: #1a1a1a
+card.pad: 20
+card.rad: 12
+
+Frame gap 16
+  Button "Styled Button", bg $btn, col $btn, pad $btn, rad $btn
+
+  Frame bg $card, pad $card, rad $card, gap 8
+    Text "Card Title", col white, fs 16, weight 600
+    Text "Card content with consistent styling.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Komponenten-Definition</h2>
+      <p>Wiederverwendbare Komponenten mit <code>:</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Komponenten-Definitionen
+PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
+  hover:
+    bg #3b82f6
+
+SecondaryBtn: = Button bg #333, col white, pad 12 24, rad 6
+  hover:
+    bg #444
+
+Card: = Frame bg #1a1a1a, pad 20, rad 12
+
+// Verwendung
+Frame gap 12
+  Frame hor, gap 8
+    PrimaryBtn "Speichern"
+    SecondaryBtn "Abbrechen"
+
+  Card
+    Text "Wiederverwendbare Card", col white, fs 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Komponenten mit Slots</h2>
+      <p>Definiere Layout-Strukturen mit benannten Slots:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Card mit Slots definieren
+InfoCard: bg #1a1a1a, pad 16, rad 12, gap 12
+  CardIcon: w 40, h 40, rad 8, center
+  CardContent: gap 4
+    CardTitle: col white, fs 14, weight 500
+    CardDescription: col #888, fs 12
+
+// Verwendung
+Frame gap 12
+  InfoCard
+    CardIcon bg #2563eb22
+      Icon "code", ic #2563eb, is 20
+    CardContent
+      CardTitle "Development"
+      CardDescription "Build amazing applications"
+
+  InfoCard
+    CardIcon bg #10b98122
+      Icon "palette", ic #10b981, is 20
+    CardContent
+      CardTitle "Design"
+      CardDescription "Create beautiful interfaces"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Vererbung mit as</h2>
+      <p>Komponenten können von anderen erben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Komponente
+BaseBtn: = Button pad 12 24, rad 6, weight 500
+
+// Erweiterte Versionen
+PrimaryBtn as BaseBtn: = bg #2563eb, col white
+  hover:
+    bg #3b82f6
+
+DangerBtn as BaseBtn: = bg #ef4444, col white
+  hover:
+    bg #f87171
+
+GhostBtn as BaseBtn: = bg transparent, col #888, bor 1, boc #333
+  hover:
+    bg #1a1a1a
+    col white
+
+Frame hor, gap 8
+  PrimaryBtn "Primary"
+  DangerBtn "Danger"
+  GhostBtn "Ghost"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Color Palette</h2>
+      <p>Ein konsistentes Farbsystem:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Farb-Palette
+gray.50: #fafafa
+gray.100: #f4f4f5
+gray.200: #e4e4e7
+gray.300: #d4d4d8
+gray.400: #a1a1aa
+gray.500: #71717a
+gray.600: #52525b
+gray.700: #3f3f46
+gray.800: #27272a
+gray.900: #18181b
+
+blue.500: #3b82f6
+blue.600: #2563eb
+
+Frame gap 8
+  Frame hor, gap 4
+    Frame w 40, h 40, bg $gray.900, rad 4
+    Frame w 40, h 40, bg $gray.800, rad 4
+    Frame w 40, h 40, bg $gray.700, rad 4
+    Frame w 40, h 40, bg $gray.600, rad 4
+    Frame w 40, h 40, bg $gray.500, rad 4
+
+  Frame hor, gap 4
+    Frame w 40, h 40, bg $gray.400, rad 4
+    Frame w 40, h 40, bg $gray.300, rad 4
+    Frame w 40, h 40, bg $gray.200, rad 4
+    Frame w 40, h 40, bg $gray.100, rad 4
+    Frame w 40, h 40, bg $gray.50, rad 4
+
+  Frame hor, gap 4
+    Frame w 40, h 40, bg $blue.600, rad 4
+    Frame w 40, h 40, bg $blue.500, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Button System</h2>
+      <p>Konsistentes Button-System mit Varianten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Button System Tokens
+btn.size.sm: 8 14
+btn.size.md: 10 20
+btn.size.lg: 14 28
+btn.rad: 6
+
+// Basis
+Btn: = Button rad $btn, weight 500
+
+// Größen
+BtnSm as Btn: = pad $btn.size.sm, fs 12
+BtnMd as Btn: = pad $btn.size.md, fs 13
+BtnLg as Btn: = pad $btn.size.lg, fs 14
+
+// Varianten
+BtnPrimary: = bg #2563eb, col white
+  hover:
+    bg #3b82f6
+BtnOutline: = bg transparent, col #2563eb, bor 1, boc #2563eb
+  hover:
+    bg #2563eb22
+
+Frame gap 16
+  Frame gap 8
+    Text "Größen", col #888, fs 12, uppercase
+    Frame hor, gap 8
+      BtnSm BtnPrimary "Small"
+      BtnMd BtnPrimary "Medium"
+      BtnLg BtnPrimary "Large"
+
+  Frame gap 8
+    Text "Varianten", col #888, fs 12, uppercase
+    Frame hor, gap 8
+      BtnMd BtnPrimary "Primary"
+      BtnMd BtnOutline "Outline"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Spacing System</h2>
+      <p>Konsistentes Spacing mit Tokens:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Spacing System (8px Grid)
+space.1: 4
+space.2: 8
+space.3: 12
+space.4: 16
+space.5: 20
+space.6: 24
+space.8: 32
+space.10: 40
+
+// Radius System
+rad.sm: 4
+rad.md: 8
+rad.lg: 12
+rad.xl: 16
+
+Frame gap $space.4
+  Text "Spacing Demo", col white, fs 16, weight 600
+
+  Frame hor, gap $space.2
+    Frame w 60, h 60, bg #2563eb, rad $rad.sm, center
+      Text "sm", col white, fs 10
+    Frame w 60, h 60, bg #2563eb, rad $rad.md, center
+      Text "md", col white, fs 10
+    Frame w 60, h 60, bg #2563eb, rad $rad.lg, center
+      Text "lg", col white, fs 10
+    Frame w 60, h 60, bg #2563eb, rad $rad.xl, center
+      Text "xl", col white, fs 10
+
+  Frame bg #1a1a1a, pad $space.6, rad $rad.lg, gap $space.3
+    Text "Card mit System-Tokens", col white, fs 14
+    Text "Konsistentes Spacing", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praktisch: Complete Theme</h2>
+      <p>Ein vollständiges Theme-System:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Theme Tokens
+theme.bg: #0a0a0a
+theme.surface: #1a1a1a
+theme.border: #333
+theme.text: #ffffff
+theme.muted: #888888
+theme.primary: #2563eb
+theme.success: #10b981
+
+// Komponenten
+Card: = Frame bg $theme.surface, rad 12, bor 1, boc $theme.border
+CardHeader: = Frame pad 16 16 12 16
+CardBody: = Frame pad 0 16 16 16
+CardTitle: = Text col $theme.text, fs 16, weight 600
+CardDesc: = Text col $theme.muted, fs 13
+
+PrimaryBtn: = Button bg $theme.primary, col $theme.text, pad 10 20, rad 6
+  hover:
+    opacity 0.9
+
+// Verwendung
+Frame bg $theme, pad 20, rad 16, gap 16
+  Card w 280
+    CardHeader
+      CardTitle "Projekt erstellen"
+      CardDesc "Neues Projekt anlegen"
+    CardBody gap 12
+      Input placeholder "Projektname"
+        bg $theme, bor 1, boc $theme.border, col $theme.text, pad 10, rad 6, w full
+      PrimaryBtn "Erstellen", w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>name: value</code> – Token definieren</li>
+        <li><code>$name</code> – Token verwenden</li>
+        <li><code>name.sub: value</code> – Verschachtelte Tokens</li>
+        <li><code>Name: = ...</code> – Komponente definieren</li>
+        <li><code>Name</code> – Komponente verwenden</li>
+        <li><code>Child as Parent:</code> – Vererbung</li>
+        <li>Slots mit <code>SlotName:</code> definieren</li>
+        <li>Design-System: Farben, Spacing, Radii, Typography</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="14-forms.html">← Formulare</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next"></span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|transparent)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

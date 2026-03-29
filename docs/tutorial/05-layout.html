@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Layout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Layout</h1>
+      <p class="subtitle">Elemente anordnen mit Flex und Grid</p>
+    </header>
+
+    <section>
+      <h2>Das Prinzip</h2>
+      <p>Das Layout-System in CSS ist über Jahrzehnte gewachsen – von <code>float</code> über <code>inline-block</code> zu <code>flexbox</code> und <code>grid</code>. Selbst erfahrene Entwickler müssen regelmäßig nachschlagen, welche Kombination von Properties zum gewünschten Ergebnis führt.</p>
+
+      <p>Mirror reduziert Layout auf drei Kernkonzepte:</p>
+
+      <p><strong style="color: var(--text-bright);">Richtung:</strong> Kinder fließen vertikal (Standard) oder horizontal (<code>hor</code>).</p>
+
+      <p><strong style="color: var(--text-bright);">Größe:</strong> Breite und Höhe (<code>w</code>, <code>h</code>) können ein fester Wert sein (<code>w 200</code>), sich dem Inhalt anpassen (<code>hug</code>), oder den verfügbaren Platz füllen (<code>full</code>).</p>
+
+      <p><strong style="color: var(--text-bright);">Ausrichtung:</strong> Kinder werden mit <code>center</code> zentriert, mit <code>spread</code> verteilt, oder an einer von 9 Positionen platziert.</p>
+
+      <p>Dazu kommen zwei Werkzeuge für spezielle Fälle: <code>wrap</code> für Zeilenumbruch und <code>grid N</code> für gleichmäßige Spalten.</p>
+    </section>
+
+    <section>
+      <h2>Vertikales Layout (Standard)</h2>
+      <p>Menschen lesen von oben nach unten. Formulare, Listen, Artikel – fast alles folgt diesem Muster. Deshalb sind Frames in Mirror standardmäßig vertikal: Kinder werden untereinander angeordnet.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  Text "Zeile 1", col white
+  Text "Zeile 2", col white
+  Text "Zeile 3", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>gap</code> definiert den Abstand zwischen den Kindern – konsistent und ohne individuelle Margins.</p>
+    </section>
+
+    <section>
+      <h2>Horizontales Layout</h2>
+      <p>Navigation, Toolbars, Button-Gruppen – vieles muss nebeneinander stehen. Mit <code>hor</code> wechselst du die Richtung:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, bg #1a1a1a, pad 16, rad 8, gap 12
+  Frame w 60, h 60, bg #2563eb, rad 6, center
+    Text "1", col white
+  Frame w 60, h 60, bg #10b981, rad 6, center
+    Text "2", col white
+  Frame w 60, h 60, bg #f59e0b, rad 6, center
+    Text "3", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Vertikale und horizontale Frames lassen sich beliebig verschachteln – so entstehen komplexe Layouts aus einfachen Bausteinen.</p>
+    </section>
+
+    <section>
+      <h2>Größen</h2>
+      <p>Bei Layout-Größen gibt es drei grundsätzliche Fragen: Wie breit soll es sein? So breit wie nötig (Inhalt bestimmt), so breit wie möglich (Platz füllen), oder exakt X Pixel? Mirror bietet für jede Antwort ein Schlüsselwort:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
+  // Fester Wert in Pixeln
+  Frame w 120, h 40, bg #f59e0b, rad 4, center
+    Text "w 120", col white, fs 12
+
+  // hug = nur so groß wie der Inhalt
+  Frame w hug, h 40, bg #10b981, rad 4, center, pad 0 16
+    Text "w hug", col white, fs 12
+
+  // full = verfügbaren Platz füllen
+  Frame w full, h 40, bg #2563eb, rad 4, center
+    Text "w full", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>full</code> ist besonders mächtig in Kombination mit fixen Elementen – es füllt genau den verbleibenden Raum:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, w 350, bg #1a1a1a, pad 12, rad 8
+  Frame w 60, h 40, bg #333, rad 4, center
+    Text "Fix", col #888, fs 11
+  Frame w full, h 40, bg #2563eb, rad 4, center
+    Text "Flex", col white, fs 11
+  Frame w 60, h 40, bg #333, rad 4, center
+    Text "Fix", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Zentrieren</h2>
+      <p>Zentrieren war in CSS lange umständlich – <code>margin: auto</code>, <code>transform: translate(-50%)</code>, <code>align-items</code> plus <code>justify-content</code>. In Mirror reicht ein Wort: <code>center</code> zentriert Kinder auf beiden Achsen gleichzeitig.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 120, bg #1a1a1a, rad 8, center
+  Frame bg #2563eb, pad 12 24, rad 6
+    Text "Zentriert", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Manchmal willst du nur eine Achse zentrieren – etwa Text vertikal zentriert, aber links ausgerichtet. Dafür gibt es <code>hor-center</code> (nur horizontal) und <code>ver-center</code> (nur vertikal).</p>
+    </section>
+
+    <section>
+      <h2>Verteilen mit spread</h2>
+      <p>Header haben links ein Logo, rechts einen Button. Footers haben Copyright links, Links rechts. Dieses Muster – Elemente an die Ränder drücken – ist so häufig, dass Mirror dafür <code>spread</code> hat:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Typische Header-Struktur
+Frame hor, spread, bg #1a1a1a, pad 12 16, rad 8
+  Text "Logo", col white, weight 600
+  Frame hor, gap 16
+    Text "Home", col #888
+    Text "About", col #888
+    Text "Contact", col #888
+  Button "Login", pad 8 16, bg #2563eb, col white, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>spread</code> entspricht dem CSS <code>justify-content: space-between</code> – aber in einem Wort.</p>
+    </section>
+
+    <section>
+      <h2>9 Positionen</h2>
+      <p>Stell dir den Container als 3×3 Raster vor: oben/mitte/unten und links/mitte/rechts. Die Kombination ergibt 9 mögliche Positionen. Die Kürzel sind intuitiv: <code>t</code> = top, <code>b</code> = bottom, <code>l</code> = left, <code>r</code> = right, <code>c</code> = center.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  // 9 Positionen
+  Frame w 80, h 80, bg #1a1a1a, rad 6, tl
+    Text "tl", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, tc
+    Text "tc", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, tr
+    Text "tr", col #888, fs 11
+
+Frame hor, gap 8, margin 8 0 0 0
+  Frame w 80, h 80, bg #1a1a1a, rad 6, cl
+    Text "cl", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, center
+    Text "center", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, cr
+    Text "cr", col #888, fs 11
+
+Frame hor, gap 8, margin 8 0 0 0
+  Frame w 80, h 80, bg #1a1a1a, rad 6, bl
+    Text "bl", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, bc
+    Text "bc", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 6, br
+    Text "br", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>tl</code></td><td>top-left</td></tr>
+        <tr><td><code>tc</code></td><td>top-center</td></tr>
+        <tr><td><code>tr</code></td><td>top-right</td></tr>
+        <tr><td><code>cl</code></td><td>center-left</td></tr>
+        <tr><td><code>center</code></td><td>center (beide Achsen)</td></tr>
+        <tr><td><code>cr</code></td><td>center-right</td></tr>
+        <tr><td><code>bl</code></td><td>bottom-left</td></tr>
+        <tr><td><code>bc</code></td><td>bottom-center</td></tr>
+        <tr><td><code>br</code></td><td>bottom-right</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Wrap</h2>
+      <p>Was passiert, wenn mehr Elemente da sind als in eine Zeile passen? Standardmäßig werden sie gestaucht oder laufen über. Mit <code>wrap</code> brechen sie stattdessen in die nächste Zeile um – perfekt für Tag-Listen, Bildergalerien oder Filter-Chips.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 280
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "1", col white, fs 12
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "2", col white, fs 12
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "3", col white, fs 12
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "4", col white, fs 12
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "5", col white, fs 12
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "6", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Ändere die Breite des Containers im Code – die Elemente passen sich automatisch an.</p>
+    </section>
+
+    <section>
+      <h2>Grid</h2>
+      <p>Manchmal reicht Flex nicht: Du willst exakt 3 Spalten, gleichmäßig verteilt, egal wie viele Elemente. Dafür gibt es <code>grid N</code> – es erstellt ein Raster mit N gleichbreiten Spalten.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 3, gap 8, bg #1a1a1a, pad 16, rad 8
+  Frame h 50, bg #2563eb, rad 4, center
+    Text "1", col white
+  Frame h 50, bg #2563eb, rad 4, center
+    Text "2", col white
+  Frame h 50, bg #2563eb, rad 4, center
+    Text "3", col white
+  Frame h 50, bg #10b981, rad 4, center
+    Text "4", col white
+  Frame h 50, bg #10b981, rad 4, center
+    Text "5", col white
+  Frame h 50, bg #10b981, rad 4, center
+    Text "6", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Kinder werden automatisch auf die Spalten verteilt. Passen nicht alle in eine Zeile, beginnt die nächste. Anders als bei <code>wrap</code> sind die Spalten immer gleich breit.</p>
+    </section>
+
+    <section>
+      <h2>Praktisch: Card Grid</h2>
+      <p>Grid eignet sich besonders für gleichförmige Inhalte wie Dashboards oder Galerien:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 2, gap 12
+  Frame bg #1a1a1a, pad 16, rad 8, gap 4
+    Text "Dashboard", col white, fs 14, weight 600
+    Text "Übersicht und Statistiken", col #888, fs 12
+  Frame bg #1a1a1a, pad 16, rad 8, gap 4
+    Text "Projekte", col white, fs 14, weight 600
+    Text "Alle laufenden Projekte", col #888, fs 12
+  Frame bg #1a1a1a, pad 16, rad 8, gap 4
+    Text "Team", col white, fs 14, weight 600
+    Text "Mitglieder verwalten", col #888, fs 12
+  Frame bg #1a1a1a, pad 16, rad 8, gap 4
+    Text "Settings", col white, fs 14, weight 600
+    Text "Einstellungen anpassen", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Tipp: Die Wiederholung lässt sich mit Komponenten vermeiden – mehr dazu im Quickstart.</p>
+    </section>
+
+    <section>
+      <h2>Praktisches Beispiel: App Layout</h2>
+      <p>Zum Abschluss ein komplettes App-Layout: eine fixe Sidebar links, der Hauptbereich füllt den Rest. Horizontal angeordnet (<code>hor</code>), die Sidebar hat eine feste Breite (<code>w 160</code>), der Main-Bereich füllt den verfügbaren Platz (<code>w full</code>).</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w full, h 200, hor
+  // Sidebar
+  Frame w 160, h full, bg #1a1a1a, pad 16, gap 4
+    Text "Navigation", col #666, fs 11, uppercase, margin 0 0 8 0
+    Text "Dashboard", col white, fs 13
+    Text "Projekte", col #888, fs 13
+    Text "Team", col #888, fs 13
+    Text "Settings", col #888, fs 13
+
+  // Main Content
+  Frame w full, h full, bg #111, pad 20
+    Text "Dashboard", col white, fs 20, weight 500, margin 0 0 16 0
+    Frame hor, gap 12
+      Frame w full, h 80, bg #1a1a1a, rad 8, center
+        Text "Widget 1", col #888
+      Frame w full, h 80, bg #1a1a1a, rad 8, center
+        Text "Widget 2", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Beachte, wie <code>w full</code> sowohl im Main-Bereich als auch bei den Widgets funktioniert – auf verschiedenen Verschachtelungsebenen füllt es jeweils den verfügbaren Raum.</p>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>hor</code> – Horizontal anordnen</li>
+        <li><code>gap N</code> – Abstand zwischen Kindern</li>
+        <li><code>center</code>, <code>spread</code> – Ausrichtung</li>
+        <li><code>tl</code> bis <code>br</code> – 9 Positionen</li>
+        <li><code>w 200</code>, <code>hug</code>, <code>full</code> – Größen</li>
+        <li><code>wrap</code> – Umbruch bei Überlauf</li>
+        <li><code>grid N</code> – N-spaltiges Grid</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a class="prev" href="quickstart-04.html">← Interaktion</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="06-positioning.html">Positioning →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|hug|shrink|tl|tc|tr|cl|cr|bl|bc|br|dense)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>
