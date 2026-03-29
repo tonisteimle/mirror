@@ -104,7 +104,7 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 2 von 32</span>
+    <span class="chapter">Kapitel 2 von 50</span>
   </nav>
 
   <main class="page">
@@ -205,6 +205,31 @@ Card
       </div>
     </section>
 
+    <section>
+      <h2>Vererbung mit as</h2>
+      <p>Eine Komponente kann von einer anderen erben. <code>as</code> übernimmt alle Properties:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Komponente
+Btn: pad 10 20, rad 6
+
+// Varianten erben mit "as"
+PrimaryBtn as Btn: bg #2563eb, col white
+DangerBtn as Btn: bg #ef4444, col white
+GhostBtn as Btn: bg transparent, col #888
+
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  DangerBtn "Löschen"
+  GhostBtn "Abbrechen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>PrimaryBtn as Btn:</code> erbt <code>pad</code> und <code>rad</code> von <code>Btn</code>, fügt eigene Farben hinzu.</p>
+    </section>
+
     <div class="exercise">
       <h3>Übung</h3>
       <p>Erstelle Komponenten für diese zwei Karten:</p>
@@ -256,6 +281,7 @@ Frame hor, gap 12
       <ul>
         <li><code>Name:</code> – Komponente definieren</li>
         <li><code>Name "text"</code> – Komponente verwenden</li>
+        <li><code>Child as Parent:</code> – Von Komponente erben</li>
         <li>Properties können überschrieben werden</li>
         <li>Gute Namen = lesbarer Code</li>
       </ul>
