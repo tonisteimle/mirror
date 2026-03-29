@@ -123,37 +123,29 @@ Card
 
     <section>
       <h2>Semantische Tokens</h2>
-      <p>Tokens können andere Tokens referenzieren. Damit trennst du <strong>Rohwerte</strong> (welche Farben existieren) von ihrer <strong>Bedeutung</strong> (wofür sie stehen).</p>
-
-      <p><strong>Primitive Tokens</strong> definieren Rohwerte – die Farben deiner Palette:</p>
-      <pre><code>$blue.bg: #2563eb
-$red.bg: #ef4444</code></pre>
-
-      <p><strong>Semantische Tokens</strong> geben diesen Werten Bedeutung – sie referenzieren primitive Tokens mit <code>$</code>:</p>
-      <pre><code>$primary.bg: $blue    // "primary" bedeutet aktuell "blue"
-$danger.bg: $red      // "danger" bedeutet aktuell "red"</code></pre>
-
-      <p>Komponenten verwenden nur semantische Tokens. Sie wissen nicht, welche konkrete Farbe dahinter steckt:</p>
+      <p>Tokens können andere Tokens referenzieren. Damit trennst du <strong>Rohwerte</strong> (welche Farben existieren) von ihrer <strong>Bedeutung</strong> (wofür sie stehen):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// PRIMITIVE – Rohwerte (Palette)
+          <textarea>// 1. PRIMITIVE – Rohwerte (deine Farbpalette)
 $blue.bg: #2563eb
 $red.bg: #ef4444
 $gray.bg: #1a1a1a
 
-// SEMANTISCH – Bedeutung zuweisen
-$primary.bg: $blue
-$danger.bg: $red
+// 2. SEMANTISCH – Bedeutung zuweisen
+// Diese Tokens referenzieren primitive mit $
+$primary.bg: $blue    // "primary" = aktuell "blue"
+$danger.bg: $red      // "danger" = aktuell "red"
 $card.bg: $gray
 
-// KOMPONENTEN – nur semantische Tokens
+// 3. KOMPONENTEN – nur semantische Tokens
+// Sie wissen nicht, welche Farbe dahinter steckt
 Btn: bg $primary, col white, pad 10 20, rad 6
 DangerBtn: bg $danger, col white, pad 10 20, rad 6
 Card: bg $card, rad 8, pad 16, gap 8
   Title: col white, fs 16, weight 500
 
-// INSTANZEN
+// 4. INSTANZEN
 Card
   Title "Semantische Tokens"
   Frame hor, gap 8
@@ -163,9 +155,7 @@ Card
         <div class="playground-preview"></div>
       </div>
 
-      <div class="note">
-        <strong>Warum das wichtig ist:</strong> Willst du die Primary-Farbe ändern, änderst du nur <code>$primary.bg: $green</code>. Alle Buttons, Links und Akzente passen sich an – ohne dass du eine einzige Komponente anfassen musst. Das ist die Basis für Theming und Rebranding.
-      </div>
+      <p>Willst du die Primary-Farbe ändern, änderst du nur <code>$primary.bg: $green</code>. Alle Buttons passen sich an – ohne dass du eine Komponente anfassen musst. Das ist die Basis für Theming.</p>
     </section>
 
     <section>
