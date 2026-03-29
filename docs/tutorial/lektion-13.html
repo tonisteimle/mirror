@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Positioned Layout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -105,117 +105,155 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 13 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Positioned Layout</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
+      <h2>Stacked Layout</h2>
+      <p>Standardmäßig werden Kinder untereinander (<code>ver</code>) oder nebeneinander (<code>hor</code>) angeordnet. Mit <code>stacked</code> liegen alle Kinder übereinander:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
+          <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
+  Frame w full, h full, bg #2563eb, rad 8
+  Frame w 120, h 80, bg #10b981, rad 8
+  Frame w 60, h 40, bg #f59e0b, rad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <p>Alle drei Frames liegen übereinander. Das zuletzt definierte Element liegt oben.</p>
+    </section>
+
+    <section>
+      <h2>Position mit x und y</h2>
+      <p><code>x</code> und <code>y</code> verschieben ein Element relativ zu seiner normalen Position:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
+  Frame w 60, h 60, bg #2563eb, rad 8
+  Frame w 60, h 60, bg #10b981, rad 8, x 40, y 40
+  Frame w 60, h 60, bg #f59e0b, rad 8, x 80, y 80</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Z-Index</h2>
+      <p><code>z</code> kontrolliert die Stapel-Reihenfolge. Höhere Werte liegen weiter oben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
+  Frame w 80, h 80, bg #2563eb, rad 8, x 20, y 20, z 3
+  Frame w 80, h 80, bg #10b981, rad 8, x 50, y 40, z 1
+  Frame w 80, h 80, bg #f59e0b, rad 8, x 80, y 20, z 2</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Blau (<code>z 3</code>) liegt ganz oben, dann Orange (<code>z 2</code>), dann Grün (<code>z 1</code>).</p>
+    </section>
+
+    <section>
+      <h2>Positioned Container</h2>
+      <p><code>pos</code> macht einen Container zum Bezugspunkt für absolut positionierte Kinder:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 250, h 150, pos, bg #1a1a1a, rad 8, pad 16
+  Text "Container mit pos", col white
+  Frame w 40, h 40, bg #ef4444, rad 8, absolute, x 10, y 10
+  Frame w 40, h 40, bg #2563eb, rad 8, absolute, x 200, y 100</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die roten und blauen Frames sind <code>absolute</code> positioniert relativ zum Container mit <code>pos</code>.</p>
+    </section>
+
+    <section>
+      <h2>Absolute vs. Fixed vs. Relative</h2>
+      <p>Drei Positionierungs-Modi:</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>relative</code><span>Verschiebt relativ zur normalen Position</span></div>
+        <div><code>absolute</code><span>Positioniert relativ zum nächsten pos-Container</span></div>
+        <div><code>fixed</code><span>Positioniert relativ zum Viewport (bleibt beim Scrollen)</span></div>
       </div>
-    </section>
-
-    <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>Frame w 250, h 120, pos, bg #1a1a1a, rad 8
+  // Relative: verschiebt sich von normaler Position
+  Frame hor, gap 8, relative, x 20, y 10
+    Frame w 40, h 40, bg #2563eb, rad 8
+    Text "relative", col #888, fs 12
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+  // Absolute: Position relativ zum Container
+  Frame w 50, h 30, bg #10b981, rad 6, absolute, x 180, y 70
+    Text "abs", col white, fs 11</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Praxisbeispiel: Badge auf Avatar</h2>
+      <p>Ein häufiger Anwendungsfall – ein Badge (Notification-Punkt) auf einem Avatar:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame pos
+  // Avatar
+  Frame w 64, h 64, bg #333, rad 32
+    Icon "user", ic white, is 32
+  // Badge
+  Frame w 20, h 20, bg #ef4444, rad 10, absolute, x 48, y 0, center
+    Text "3", col white, fs 11, weight bold</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Praxisbeispiel: Overlay</h2>
+      <p>Ein halbtransparentes Overlay über einem Bild:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame w 200, h 120, stacked, rad 8, clip
+  // Hintergrund (simuliert ein Bild)
+  Frame w full, h full, bg #2563eb
+  // Overlay
+  Frame w full, h full, bg rgba(0,0,0,0.5)
+  // Text oben drauf
+  Frame w full, h full, center
+    Text "Overlay", col white, weight bold</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Transformation: Rotate</h2>
+      <p><code>rotate</code> dreht ein Element um einen Winkel (in Grad):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
-
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+          <textarea>Frame hor, gap 24, center
+  Frame w 60, h 60, bg #2563eb, rad 8, rotate 0
+  Frame w 60, h 60, bg #10b981, rad 8, rotate 15
+  Frame w 60, h 60, bg #f59e0b, rad 8, rotate 45
+  Frame w 60, h 60, bg #ef4444, rad 8, rotate 90</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +261,53 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle eine Card mit einem "NEU"-Badge in der oberen rechten Ecke:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
+        <div style="position: relative; width: 200px; background: #1a1a1a; border-radius: 12px; padding: 20px; font-family: Inter, sans-serif;">
+          <div style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold;">NEU</div>
+          <div style="color: white; font-weight: 500; margin-bottom: 8px;">Produkt</div>
+          <div style="color: #888; font-size: 13px;">Eine tolle Beschreibung</div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 200, bg #1a1a1a, rad 12, pad 20
+  Text "Produkt", col white, weight 500
+  Text "Eine tolle Beschreibung"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 200, bg #1a1a1a, rad 12, pad 20, pos
+  Text "Produkt", col white, weight 500
+  Text "Eine tolle Beschreibung", col #888, fs 14
+  // Badge
+  Frame bg #ef4444, pad 4 10, rad 12, absolute, x 160, y -8
+    Text "NEU", col white, fs 11, weight bold</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>stacked</code> – Kinder übereinander stapeln</li>
+        <li><code>pos</code> – Container für absolute Positionierung</li>
+        <li><code>x N</code>, <code>y N</code> – Position verschieben</li>
+        <li><code>z N</code> – Stapel-Reihenfolge (höher = weiter oben)</li>
+        <li><code>absolute</code> – Relativ zum pos-Container</li>
+        <li><code>fixed</code> – Relativ zum Viewport</li>
+        <li><code>relative</code> – Relativ zur normalen Position</li>
+        <li><code>rotate N</code> – Element drehen (Grad)</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-12.html">← Icons</a>
+      <a href="lektion-14.html">Pinning →</a>
     </nav>
 
   </main>
@@ -280,9 +319,8 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|absolute|fixed|relative|x|y|z|rotate)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

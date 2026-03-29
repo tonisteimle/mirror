@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Conditionals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 180px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,266 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 29 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Conditionals</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Conditionals ermöglichen bedingte Anzeige von UI-Elementen basierend auf Daten oder Zuständen.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>if condition</code><span>Zeigt Element wenn wahr</span></div>
+        <div><code>else</code><span>Alternative wenn falsch</span></div>
+        <div><code>visibleWhen condition</code><span>Inline-Sichtbarkeit</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>If / Else</h2>
+      <p>Die <code>if</code>/<code>else</code>-Syntax für bedingte Blöcke:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
+          <textarea>$isLoggedIn: true
+
+Frame gap 12
+  if $isLoggedIn
+    Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+      Frame w 36, h 36, bg #2563eb, rad 18, center
+        Text "M", col white
+      Frame gap 2
+        Text "Max Mustermann", col white, weight 500
+        Text "max@example.com", col #888, fs 12
+      Button pad 8 12, bg #333, col white, rad 6, cursor pointer
+        "Logout"
+  else
+    Frame pad 16, bg #1a1a1a, rad 8, center
+      Button pad 12 24, bg #2563eb, col white, rad 8, cursor pointer
+        "Anmelden"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
+      <p>Ändere <code>$isLoggedIn</code> zu <code>false</code> um den else-Block zu sehen.</p>
+    </section>
+
+    <section>
+      <h2>Bedingungen mit Daten</h2>
+      <p>Conditionals können auf Daten-Properties prüfen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+          <textarea>User:
+  name: "Anna"
+  role: "admin"
+  notifications: 5
+
+Frame gap 12
+  // Admin-Badge nur für Admins
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+    Frame w 40, h 40, bg #2563eb, rad 20, center
+      Text "A", col white
+    Frame gap 4
+      Frame hor, gap 8
+        Text User.name, col white, weight 500
+        if User.role == "admin"
+          Frame pad 2 8, bg #ef4444, rad 4
+            Text "Admin", col white, fs 10
+
+      Text User.role, col #888, fs 12
+
+  // Notification Badge nur wenn > 0
+  Frame hor, gap 8, pad 12, bg #1a1a1a, rad 8, pos
+    Icon "bell", ic white, is 24
+    if User.notifications > 0
+      Frame w 20, h 20, bg #ef4444, rad 10, absolute, x 28, y 8, center
+        Text User.notifications, col white, fs 10, weight bold</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>VisibleWhen</h2>
+      <p><code>visibleWhen</code> ist eine kompaktere Syntax für bedingte Sichtbarkeit:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>$showDetails: true
+$hasError: false
+$isLoading: false
+
+Frame gap 12
+  // Toggle für Details
+  Frame state on initial, hor, gap 8, pad 10, bg #1a1a1a, rad 6, cursor pointer
+    Frame w 18, h 18, bg #333, rad 4, center
+      Icon "check", ic transparent, is 12
+    Text "Details anzeigen", col white, fs 14
+    on:
+      Frame bg #2563eb
+        Icon "check", ic white, is 12
+
+  // Details nur wenn Toggle on
+  Frame pad 12, bg #252525, rad 8
+    visibleWhen $showDetails
+    Text "Hier sind die Details...", col #888, fs 13
+    Text "Mehr Informationen hier.", col #888, fs 13
+
+  // Error-Box
+  Frame pad 12, bg #ef4444, rad 8
+    visibleWhen $hasError
+    Text "Ein Fehler ist aufgetreten!", col white
+
+  // Loading-Spinner
+  Frame hor, gap 8, center
+    visibleWhen $isLoading
+    Icon "loader-2", ic #2563eb, is 20, anim spin
+    Text "Lädt...", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Verschachtelte Conditionals</h2>
+      <p>Conditionals können verschachtelt werden für komplexe Logik:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>User:
+  isLoggedIn: true
+  isPremium: true
+  trialDays: 0
+
+Frame gap 12, bg #1a1a1a, rad 8, pad 16
+  if User.isLoggedIn
+    Text "Willkommen zurück!", col white, weight 500
+
+    if User.isPremium
+      Frame hor, gap 8, pad 8, bg #f59e0b, rad 6
+        Icon "star", ic white, is 16, fill
+        Text "Premium-Mitglied", col white, fs 13
+    else
+      if User.trialDays > 0
+        Frame pad 8, bg #2563eb, rad 6
+          Text User.trialDays + " Tage Testversion übrig", col white, fs 13
+      else
+        Frame gap 8
+          Text "Kostenlose Version", col #888, fs 13
+          Button pad 8 16, bg #2563eb, col white, rad 6, cursor pointer
+            "Upgrade auf Premium"
+  else
+    Frame center, pad 20
+      Text "Bitte anmelden", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Praxisbeispiel: Leerer Zustand</h2>
+      <p>Eine Liste mit "Leer"-Zustand wenn keine Einträge:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Tasks:
+  // Leere Liste simulieren
+  // - title: "Task 1"
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+Frame w 240, bg #1a1a1a, rad 8, pad 12, gap 8
+  Text "Meine Aufgaben", col white, weight 500
+
+  if Tasks.length > 0
+    each task in Tasks
+      Frame hor, gap 10, pad 10, bg #252525, rad 6
+        Frame w 18, h 18, bor 2, boc #555, rad 4
+        Text task.title, col white, fs 14
+  else
+    Frame center, pad 32, gap 12
+      Icon "clipboard", ic #555, is 40
+      Text "Keine Aufgaben", col #666, fs 14
+      Text "Erstelle deine erste Aufgabe", col #555, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Status-Badge</h2>
+      <p>Verschiedene Status-Anzeigen basierend auf Daten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Orders:
+  - id: 1, name: "Bestellung #1", status: "pending"
+  - id: 2, name: "Bestellung #2", status: "shipped"
+  - id: 3, name: "Bestellung #3", status: "delivered"
+  - id: 4, name: "Bestellung #4", status: "cancelled"
+
+Frame w 280, gap 8
+  each order in Orders
+    Frame hor, spread, pad 12, bg #1a1a1a, rad 8
+      Text order.name, col white, fs 14
+
+      if order.status == "pending"
+        Frame pad 4 10, bg #f59e0b, rad 12
+          Text "Ausstehend", col white, fs 11
+
+      if order.status == "shipped"
+        Frame pad 4 10, bg #2563eb, rad 12
+          Text "Versendet", col white, fs 11
+
+      if order.status == "delivered"
+        Frame pad 4 10, bg #10b981, rad 12
+          Text "Geliefert", col white, fs 11
+
+      if order.status == "cancelled"
+        Frame pad 4 10, bg #ef4444, rad 12
+          Text "Storniert", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Form-Validierung</h2>
+      <p>Fehlermeldungen basierend auf Validierungs-Status:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Form:
+  email: ""
+  emailError: "Bitte gültige E-Mail eingeben"
+  password: ""
+  passwordError: "Mindestens 8 Zeichen"
+  hasEmailError: true
+  hasPasswordError: false
+
+Frame w 260, gap 16, bg #1a1a1a, rad 12, pad 20
+  Frame gap 8
+    Text "E-Mail", col #888, fs 12
+    Input w full, pad 10, bg #252525, col white, rad 6, bor 1
+      boc #ef4444
+      visibleWhen Form.hasEmailError
+    Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+      visibleWhen not Form.hasEmailError
+    if Form.hasEmailError
+      Text Form.emailError, col #ef4444, fs 11
+
+  Frame gap 8
+    Text "Passwort", col #888, fs 12
+    Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+    if Form.hasPasswordError
+      Text Form.passwordError, col #ef4444, fs 11
+
+  Button w full, pad 12, bg #2563eb, col white, rad 8, cursor pointer
+    "Anmelden"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +372,79 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle eine Warenkorb-Anzeige mit Preis und "Leer"-Zustand:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Cart:
+  items:
+    - name: "Laptop", price: 999
+    - name: "Mouse", price: 49
+  total: 1048
+
+Frame w 240, bg #1a1a1a, rad 8, pad 16, gap 12
+  Frame hor, spread
+    Text "Warenkorb", col white, weight 500
+    Frame pad 4 10, bg #2563eb, rad 12
+      Text Cart.items.length, col white, fs 11
+
+  each item in Cart.items
+    Frame hor, spread, pad 8
+      Text item.name, col white, fs 13
+      Text item.price + " €", col #888, fs 13
+
+  Frame hor, spread, pad 8, bor 1 0 0 0, boc #333
+    Text "Gesamt", col white, weight 500
+    Text Cart.total + " €", col #10b981, weight 500</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Cart:
+  items:
+    - name: "Laptop", price: 999
+    - name: "Mouse", price: 49
+  total: 1048
+
+Frame w 240, bg #1a1a1a, rad 8, pad 16, gap 12
+  Frame hor, spread
+    Text "Warenkorb", col white, weight 500
+    if Cart.items.length > 0
+      Frame pad 4 10, bg #2563eb, rad 12
+        Text Cart.items.length, col white, fs 11
+
+  if Cart.items.length > 0
+    each item in Cart.items
+      Frame hor, spread, pad 8
+        Text item.name, col white, fs 13
+        Text item.price + " €", col #888, fs 13
+
+    Frame hor, spread, pad 8, bor 1 0 0 0, boc #333
+      Text "Gesamt", col white, weight 500
+      Text Cart.total + " €", col #10b981, weight 500
+  else
+    Frame center, pad 24, gap 8
+      Icon "shopping-cart", ic #555, is 32
+      Text "Warenkorb ist leer", col #666, fs 13</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>if condition</code> – Bedingte Anzeige</li>
+        <li><code>else</code> – Alternative wenn falsch</li>
+        <li><code>visibleWhen condition</code> – Inline-Sichtbarkeit</li>
+        <li>Vergleiche: <code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code></li>
+        <li>Ideal für: Leere Zustände, Rollen, Status, Validierung</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-28.html">← Data Binding</a>
+      <a href="lektion-30.html">Slots →</a>
     </nav>
 
   </main>
@@ -280,10 +456,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink|absolute|anim)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|data|selection|value|if|else|visibleWhen|not|true|false|spin)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

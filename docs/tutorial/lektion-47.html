@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Component Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <style>
+    :root { --bg: #111; --bg-code: #191919; --bg-preview: #0c0c0c; --text: #ccc; --text-bright: #eee; --text-dim: #666; --border: #282828; --accent: #4a9eff; --font: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; }
+    .page { max-width: 720px; margin: 0 auto; padding: 60px 32px 100px; }
+    h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); margin-bottom: 48px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 16px; text-transform: uppercase; }
+    p { margin-bottom: 16px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; color: var(--text-bright); }
+    .playground { margin: 20px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .playground-code { background: var(--bg-code); border-bottom: 1px solid var(--border); position: relative; }
+    .playground-code pre { margin: 0; padding: 16px; font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; pointer-events: none; }
+    .playground-code textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 16px; border: none; background: transparent; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: transparent; caret-color: var(--text-bright); resize: none; outline: none; }
+    .playground-preview { min-height: 120px; background: var(--bg-preview); padding: 16px; display: flex; align-items: center; justify-content: center; }
+    .playground-error { color: #e55; font-family: var(--mono); font-size: 12px; }
+    .props { margin: 24px 0; font-size: 13px; }
+    .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .props code { width: 160px; flex-shrink: 0; background: none; color: var(--accent); }
+    .props span { color: var(--text-dim); }
+    .summary { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .summary ul { list-style: none; }
+    .summary li { padding: 6px 0; font-size: 13px; }
+    .summary li code { margin-right: 8px; }
+    nav { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; }
+    nav a { color: var(--text-dim); text-decoration: none; }
+    .topnav { max-width: 720px; margin: 0 auto; padding: 20px 32px; display: flex; justify-content: space-between; font-size: 13px; }
+    .topnav a, .topnav span { color: var(--text-dim); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="topnav"><a href="index.html">← Übersicht</a><span>Kapitel 47 von 50</span></nav>
+
+  <main class="page">
+    <h1>Component Library</h1>
+
+    <section>
+      <h2>Überblick</h2>
+      <p>Eine Component Library ist eine Sammlung wiederverwendbarer UI-Bausteine. Tokens sorgen für Konsistenz, Komponenten für Wiederverwendung.</p>
+      <div class="props">
+        <div><code>Name: =</code><span>Komponenten-Definition</span></div>
+        <div><code>Slot</code><span>Flexibler Inhalt</span></div>
+        <div><code>as</code><span>Vererbung/Varianten</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Button-System</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+primary.bg: #2563eb
+primary-hover.bg: #1d4ed8
+secondary.bg: #27272a
+secondary-hover.bg: #3f3f46
+danger.bg: #ef4444
+danger-hover.bg: #dc2626
+text.col: #ffffff
+btn.pad: 12
+btn.rad: 8
+
+// Base Button
+BaseButton: = Button pad $btn 20, rad $btn, fs 14, weight 500, cursor pointer
+
+// Varianten
+PrimaryButton as BaseButton: = bg $primary, col $text
+  hover:
+    bg $primary-hover
+
+SecondaryButton as BaseButton: = bg $secondary, col $text
+  hover:
+    bg $secondary-hover
+
+DangerButton as BaseButton: = bg $danger, col $text
+  hover:
+    bg $danger-hover
+
+// Verwendung
+Frame hor, gap 12
+  PrimaryButton "Speichern"
+  SecondaryButton "Abbrechen"
+  DangerButton "Löschen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Input-System</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+input.bg: #1a1a1a
+input-focus.boc: #2563eb
+border.boc: #333333
+text.col: #ffffff
+label.col: #888888
+input.pad: 12
+input.rad: 8
+
+// Input-Komponente
+TextInput: = Frame gap 6
+  Label col $label, fs 12
+    Slot "label"
+  Input w 240, pad $input, bg $input, col $text, rad $input, bor 1, boc $border
+    focus:
+      boc $input-focus
+
+// Verwendung
+Frame gap 16
+  TextInput
+    Label "E-Mail"
+    Input placeholder "name@example.com"
+  TextInput
+    Label "Passwort"
+    Input type password, placeholder "••••••••"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Card-System</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+card.bg: #1a1a1a
+border.boc: #333333
+card.pad: 20
+card.rad: 12
+md.gap: 12
+
+// Card mit Slots
+Card: = Frame bg $card, pad $card, rad $card, bor 1, boc $border, gap $md
+  Slot "header"
+  Slot "content"
+  Slot "footer"
+
+// Verwendung
+Frame hor, gap 16
+  Card w 200
+    Frame slot header, gap 4
+      Text "Projekt A", col #fff, fs 16, weight 600
+      Text "In Bearbeitung", col #888, fs 12
+    Frame slot content
+      Text "Dashboard-Redesign", col #888, fs 14
+    Frame slot footer, hor, spread
+      Text "3 Tasks", col #666, fs 12
+      Frame hor, gap 4
+        Frame w 20, h 20, bg #2563eb, rad 10, center
+          Text "A", col #fff, fs 9
+        Frame w 20, h 20, bg #10b981, rad 10, center
+          Text "B", col #fff, fs 9
+
+  Card w 200
+    Frame slot header, gap 4
+      Text "Projekt B", col #fff, fs 16, weight 600
+      Text "Fertig", col #10b981, fs 12
+    Frame slot content
+      Text "API-Integration", col #888, fs 14
+    Frame slot footer, hor, spread
+      Text "5 Tasks", col #666, fs 12
+      Icon "check-circle", ic #10b981, is 18</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Badge-System</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+success.bg: #10b98120
+success.col: #10b981
+warning.bg: #f59e0b20
+warning.col: #f59e0b
+error.bg: #ef444420
+error.col: #ef4444
+info.bg: #2563eb20
+info.col: #2563eb
+neutral.bg: #27272a
+neutral.col: #888888
+badge.pad: 4
+badge.rad: 12
+
+// Base Badge
+Badge: = Frame pad $badge 10, rad $badge, fs 12
+
+// Varianten
+SuccessBadge as Badge: = bg $success, col $success
+WarningBadge as Badge: = bg $warning, col $warning
+ErrorBadge as Badge: = bg $error, col $error
+InfoBadge as Badge: = bg $info, col $info
+NeutralBadge as Badge: = bg $neutral, col $neutral
+
+// Verwendung
+Frame gap 12
+  Frame hor, gap 8
+    SuccessBadge "Aktiv"
+    WarningBadge "Ausstehend"
+    ErrorBadge "Fehler"
+    InfoBadge "Neu"
+    NeutralBadge "Archiviert"
+
+  // In Kontext
+  Frame hor, gap 12, pad 16, bg #1a1a1a, rad 8
+    Frame w 40, h 40, bg #2563eb, rad 20, center
+      Text "M", col #fff
+    Frame gap 2, grow
+      Frame hor, gap 8
+        Text "Max Mustermann", col #fff, fs 14, weight 500
+        SuccessBadge "Online"
+      Text "Frontend Developer", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>IconButton-System</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+ghost-hover.bg: #252525
+filled.bg: #252525
+filled-hover.bg: #333333
+primary.bg: #2563eb
+primary-hover.bg: #1d4ed8
+iconbtn.rad: 8
+
+// Base
+IconButton: = Frame w 40, h 40, rad $iconbtn, center, cursor pointer
+
+// Varianten
+IconButtonGhost as IconButton: = bg transparent
+  hover:
+    bg $ghost-hover
+
+IconButtonFilled as IconButton: = bg $filled
+  hover:
+    bg $filled-hover
+
+IconButtonPrimary as IconButton: = bg $primary
+  hover:
+    bg $primary-hover
+
+// Verwendung
+Frame gap 16
+  Frame hor, gap 8
+    IconButtonGhost
+      Icon "home", ic #888, is 20
+    IconButtonGhost
+      Icon "search", ic #888, is 20
+    IconButtonGhost
+      Icon "bell", ic #888, is 20
+
+  Frame hor, gap 8
+    IconButtonFilled
+      Icon "plus", ic #fff, is 20
+    IconButtonFilled
+      Icon "edit", ic #fff, is 20
+    IconButtonFilled
+      Icon "trash", ic #ef4444, is 20
+
+  Frame hor, gap 8
+    IconButtonPrimary
+      Icon "check", ic #fff, is 20
+    IconButtonPrimary
+      Icon "send", ic #fff, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Mini Library</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// === TOKENS ===
+primary.bg: #2563eb
+success.bg: #10b981
+card.bg: #1a1a1a
+input.bg: #252525
+text.col: #ffffff
+muted.col: #888888
+border.boc: #333333
+md.pad: 12
+md.rad: 8
+lg.rad: 12
+
+// === KOMPONENTEN ===
+PrimaryBtn: = Button pad $md 16, bg $primary, col #fff, rad $md, fs 14
+SecondaryBtn: = Button pad $md 16, bg $input, col #fff, rad $md, fs 14
+TextInput: = Input w full, pad 10, bg $input, col #fff, rad $md
+CardBox: = Frame bg $card, pad 16, rad $lg, bor 1, boc $border
+Avatar: = Frame rad 20, center
+StatusBadge: = Frame pad 4 8, rad 4, fs 11
+
+// === ANWENDUNG ===
+CardBox w 280, gap 16
+  Frame hor, gap 12
+    Avatar w 48, h 48, bg $primary
+      Text "M", col #fff, fs 16
+    Frame gap 2, grow
+      Text "Neues Projekt", col $text, fs 16, weight 500
+      Text "Details eingeben", col $muted, fs 13
+
+  Frame gap 12
+    Frame gap 4
+      Text "Projektname", col $muted, fs 12
+      TextInput placeholder "z.B. Dashboard"
+    Frame gap 4
+      Text "Status", col $muted, fs 12
+      Frame hor, gap 8
+        StatusBadge bg #10b98120, col $success
+          "Aktiv"
+        StatusBadge bg #f59e0b20, col #f59e0b
+          "Entwurf"
+
+  Frame hor, gap 8
+    SecondaryBtn "Abbrechen", grow
+    PrimaryBtn "Erstellen", grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Name: =</code> – Komponenten-Definition</li>
+        <li><code>as BaseComponent</code> – Varianten durch Vererbung</li>
+        <li><code>Slot</code> – Flexible Inhalte</li>
+        <li>Tokens + Komponenten = Konsistenz</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="lektion-46.html">← Token-Systeme</a>
+      <a href="lektion-48.html">Patterns →</a>
+    </nav>
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns=[{regex:/\/\/.*$/gm,cls:'syn-comment'},{regex:/\"[^\"]*\"/g,cls:'syn-string'},{regex:/#[0-9A-Fa-f]{3,8}\b/g,cls:'syn-hex'},{regex:/\b\d+(\.\d+)?\b/g,cls:'syn-number'},{regex:/\$[\w-]+/g,cls:'syn-token'},{regex:/\b(pad|bg|col|gap|rad|bor|boc|w|h|fs|weight|center|hor|spread|cursor|grow|slot|placeholder|type|transparent)\b/g,cls:'syn-property'},{regex:/\b(hover|focus|as)\b/g,cls:'syn-keyword'},{regex:/\b[A-Z][a-zA-Z0-9]*\b/g,cls:'syn-component'}];function highlight(t){let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;');const m=[];for(const p of patterns){p.regex.lastIndex=0;let x;while((x=p.regex.exec(t))!==null)m.push({from:x.index,to:x.index+x[0].length,cls:p.cls,text:x[0]})}m.sort((a,b)=>a.from-b.from);const f=[];let e=0;for(const x of m)if(x.from>=e){f.push(x);e=x.to}let r='',p=0;for(const x of f){if(x.from>p)r+=h.slice(p,x.from);r+=`<span class="${x.cls}">${x.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>`;p=x.to}return r+h.slice(p)}document.querySelectorAll('.playground[data-playground]').forEach(p=>{const c=p.querySelector('.playground-code'),t=p.querySelector('textarea'),v=p.querySelector('.playground-preview'),pre=document.createElement('pre');c.insertBefore(pre,t);function u(){pre.innerHTML=highlight(t.value)}function x(){try{v.innerHTML='';v.classList.add('mirror-root');const code=MirrorLang.compile(t.value);const fn=new Function(code.replace('export function createUI','function createUI')+'\nreturn createUI();');const ui=fn();if(ui?.root)v.appendChild(ui.root)}catch(e){v.innerHTML=`<div class="playground-error">${e.message}</div>`}}t.addEventListener('input',()=>{u();clearTimeout(t._t);t._t=setTimeout(x,100)});t.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=t.selectionStart;t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+2;u();x()}});u();x()})
+  </script>
+</body>
+</html>

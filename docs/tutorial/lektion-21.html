@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Transitions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 140px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,231 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 21 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Transitions</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Hover-Transitions</h2>
+      <p>Die einfachste Art, Animationen zu nutzen, sind Hover-Effekte. Die Änderungen im <code>hover:</code> Block werden automatisch sanft animiert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+  Button pad 12 24, bg #2563eb, col white, rad 8, cursor pointer
+    hover:
+      bg #1d4ed8
+    "Hover mich"
+
+  Button pad 12 24, bg #333, col white, rad 8, cursor pointer
+    hover:
+      bg #2563eb
+      scale 1.05
+    "Mit Scale"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Fahre mit der Maus über die Buttons – die Farb- und Größenänderungen werden sanft animiert.</p>
+    </section>
+
+    <section>
+      <h2>Hover-Properties</h2>
+      <p>Es gibt spezielle Hover-Properties für schnelle Effekte:</p>
+
+      <div class="props">
+        <div><code>hover-bg</code><span>Hintergrund bei Hover</span></div>
+        <div><code>hover-col</code><span>Textfarbe bei Hover</span></div>
+        <div><code>hover-opacity</code><span>Transparenz bei Hover</span></div>
+        <div><code>hover-scale</code><span>Skalierung bei Hover</span></div>
+        <div><code>hover-bor</code><span>Border bei Hover</span></div>
+        <div><code>hover-boc</code><span>Border-Farbe bei Hover</span></div>
+        <div><code>hover-rad</code><span>Radius bei Hover</span></div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  Frame w 60, h 60, bg #333, rad 8, cursor pointer, hover-bg #2563eb
+  Frame w 60, h 60, bg #333, rad 8, cursor pointer, hover-scale 1.1
+  Frame w 60, h 60, bg #333, rad 8, cursor pointer, hover-opacity 0.5
+  Frame w 60, h 60, bg #333, rad 30, cursor pointer, hover-rad 8</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Kombinierte Hover-Effekte</h2>
+      <p>Mehrere Properties können gleichzeitig animiert werden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame hor, gap 16
+  Frame w 100, h 80, bg #1a1a1a, rad 8, center, cursor pointer, bor 1, boc #333
+    Text "Card", col #888
+    hover:
+      bg #252525
+      boc #2563eb
+      scale 1.02
+      shadow lg
+      Text "Card", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Praxisbeispiel: Button-Varianten</h2>
+      <p>Verschiedene Button-Stile mit Hover-Effekten:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame hor, gap 12
+  // Primary
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+    hover:
+      bg #1d4ed8
+    "Primary"
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  // Secondary
+  Button pad 12 20, bg transparent, col white, rad 8, cursor pointer, bor 1, boc #555
+    hover:
+      bg #333
+      boc #888
+    "Secondary"
+
+  // Ghost
+  Button pad 12 20, bg transparent, col #888, rad 8, cursor pointer
+    hover:
+      bg rgba(255,255,255,0.1)
+      col white
+    "Ghost"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Navigation Items</h2>
+      <p>Eine Navigation mit animierten Hover-Zuständen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+  Frame hor, gap 8, pad 10 16, bg #2563eb, rad 6
+    Icon "home", ic white, is 18
+    Text "Home", col white, fs 14
+  Frame hor, gap 8, pad 10 16, rad 6, cursor pointer
+    Icon "folder", ic #888, is 18
+    Text "Projekte", col #888, fs 14
+    hover:
+      bg #333
+      Icon "folder", ic white
+      Text "Projekte", col white
+  Frame hor, gap 8, pad 10 16, rad 6, cursor pointer
+    Icon "settings", ic #888, is 18
+    Text "Settings", col #888, fs 14
+    hover:
+      bg #333
+      Icon "settings", ic white
+      Text "Settings", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Icon Buttons</h2>
+      <p>Icons mit Farb-Transition bei Hover:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16
+  Frame w 44, h 44, bg #1a1a1a, rad 22, center, cursor pointer
+    Icon "mail", ic #888, is 22
+    hover:
+      bg #2563eb
+      Icon "mail", ic white
+  Frame w 44, h 44, bg #1a1a1a, rad 22, center, cursor pointer
+    Icon "globe", ic #888, is 22
+    hover:
+      bg #333
+      Icon "globe", ic white
+  Frame w 44, h 44, bg #1a1a1a, rad 22, center, cursor pointer
+    Icon "link", ic #888, is 22
+    hover:
+      bg #0077b5
+      Icon "link", ic white
+  Frame w 44, h 44, bg #1a1a1a, rad 22, center, cursor pointer
+    Icon "share-2", ic #888, is 22
+    hover:
+      bg #ff0000
+      Icon "share-2", ic white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Card mit Overlay</h2>
+      <p>Eine Card, bei der bei Hover ein Overlay erscheint:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 150, stacked, rad 12, clip, cursor pointer
+  // Background
+  Frame w full, h full, bg #2563eb
+    Frame w full, h full, center
+      Icon "image", ic rgba(255,255,255,0.3), is 48
+
+  // Overlay (erscheint bei Hover)
+  Frame w full, h full, bg rgba(0,0,0,0), center
+    Text "Details", col transparent
+    hover:
+      bg rgba(0,0,0,0.5)
+      Text "Details", col white, weight 500</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: List Items</h2>
+      <p>Listenelemente mit subtilen Hover-Effekten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 250, bg #1a1a1a, rad 8, pad 4
+  Frame hor, gap 12, pad 12, rad 6, cursor pointer
+    Frame w 36, h 36, bg #333, rad 18, center
+      Icon "user", ic #888, is 18
+    Frame gap 2
+      Text "Anna Müller", col white, fs 14
+      Text "Online", col #10b981, fs 11
+    hover:
+      bg #252525
+  Frame hor, gap 12, pad 12, rad 6, cursor pointer
+    Frame w 36, h 36, bg #333, rad 18, center
+      Icon "user", ic #888, is 18
+    Frame gap 2
+      Text "Max Schmidt", col white, fs 14
+      Text "Offline", col #666, fs 11
+    hover:
+      bg #252525
+  Frame hor, gap 12, pad 12, rad 6, cursor pointer
+    Frame w 36, h 36, bg #333, rad 18, center
+      Icon "user", ic #888, is 18
+    Frame gap 2
+      Text "Lisa Weber", col white, fs 14
+      Text "Beschäftigt", col #f59e0b, fs 11
+    hover:
+      bg #252525</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +337,58 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle einen Favoriten-Button, der bei Hover gelb wird und bei Klick den "on" State aktiviert:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
+        <div style="font-family: Inter, sans-serif;">
+          <button style="display: flex; gap: 8px; align-items: center; background: #333; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; color: #888; transition: all 0.2s;">
+            <span style="font-size: 18px;">☆</span>
+            <span>Favorit</span>
+          </button>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame state on, hor, gap 8, pad 10 20, bg #333, rad 8, cursor pointer
+  Icon "star", ic #888, is 18
+  Text "Favorit", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame state on, hor, gap 8, pad 10 20, bg #333, rad 8, cursor pointer
+  Icon "star", ic #888, is 18
+  Text "Favorit", col #888
+  hover:
+    bg #444
+    Icon "star", ic #f59e0b
+    Text "Favorit", col #f59e0b
+  on:
+    bg #f59e0b
+    Icon "star", ic white, fill
+    Text "Favorit", col white</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>hover:</code> – Block für Hover-Änderungen (automatisch animiert)</li>
+        <li><code>hover-bg</code> – Kurzform für Hintergrund-Transition</li>
+        <li><code>hover-col</code> – Kurzform für Textfarben-Transition</li>
+        <li><code>hover-scale</code> – Kurzform für Skalierungs-Transition</li>
+        <li><code>hover-opacity</code> – Kurzform für Transparenz-Transition</li>
+        <li>Mehrere Properties können gleichzeitig animiert werden</li>
+        <li>Transitions funktionieren auch mit States</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-20.html">← Animation Presets</a>
+      <a href="lektion-22.html">State Dependencies →</a>
     </nav>
 
   </main>
@@ -280,10 +400,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|placeholder|grow|absolute|anim|hover-bg|hover-col|hover-opacity|hover-scale|hover-bor|hover-boc|hover-rad)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

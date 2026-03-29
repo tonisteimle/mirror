@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Vererbung</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 200px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,271 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 31 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Vererbung</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Mit Vererbung erstellst du Varianten von Komponenten. Die Kind-Komponente erbt alle Eigenschaften der Eltern-Komponente und kann diese überschreiben oder erweitern.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>Child as Parent: =</code><span>Erbt von Parent</span></div>
+        <div><code>override property</code><span>Überschreibt eine Eigenschaft</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Grundsyntax</h2>
+      <p>Mit <code>as</code> erbt eine Komponente von einer anderen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>// Basis-Komponente
+BaseButton: = Button pad 10 20, rad 6, cursor pointer
+  col white
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
+// Varianten durch Vererbung
+PrimaryButton as BaseButton: = bg #2563eb
+  hover:
+    bg #1d4ed8
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
+SecondaryButton as BaseButton: = bg #374151
+  hover:
+    bg #4b5563
 
-    <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+DangerButton as BaseButton: = bg #ef4444
+  hover:
+    bg #dc2626
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+// Verwendung
+Frame hor, gap 8
+  PrimaryButton "Speichern"
+  SecondaryButton "Abbrechen"
+  DangerButton "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Mehrere Ebenen</h2>
+      <p>Vererbung kann über mehrere Ebenen gehen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>// Basis
+Box: = Frame rad 8, pad 16
+
+// Erste Ebene
+Card as Box: = bg #1a1a1a, gap 12
+
+// Zweite Ebene
+InfoCard as Card: = bor 1, boc #2563eb
+
+AlertCard as Card: = bor 1, boc #ef4444
+
+// Verwendung
+Frame hor, gap 12
+  InfoCard
+    Text "Info", col #2563eb, weight 500
+    Text "Alles funktioniert.", col #888, fs 13
+
+  AlertCard
+    Text "Warnung", col #ef4444, weight 500
+    Text "Bitte überprüfen.", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Eigenschaften überschreiben</h2>
+      <p>Kind-Komponenten können Eigenschaften der Eltern überschreiben:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>// Basis mit Default-Größe
+Avatar: = Frame w 40, h 40, rad 20, bg #2563eb, center
+  Text "?", col white, fs 14
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+// Varianten mit anderen Größen
+SmallAvatar as Avatar: = w 28, h 28, rad 14
+  Text "?", col white, fs 11
+
+LargeAvatar as Avatar: = w 56, h 56, rad 28
+  Text "?", col white, fs 18
+
+// Verwendung
+Frame hor, gap 12, center
+  SmallAvatar
+    Text "S", col white
+  Avatar
+    Text "M", col white
+  LargeAvatar
+    Text "L", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>States vererben</h2>
+      <p>Auch States werden vererbt und können erweitert werden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis mit Hover-State
+Chip: = Frame hor, gap 6, pad 6 12, bg #252525, rad 16, cursor pointer
+  hover:
+    bg #333
+
+// Variante mit zusätzlichem Selected-State
+SelectableChip as Chip: = state selected
+  selected:
+    bg #2563eb
+    hover:
+      bg #1d4ed8
+
+// Verwendung
+Frame hor, gap 8
+  Chip
+    Text "Normal", col white, fs 13
+  SelectableChip
+    Text "Auswählbar", col white, fs 13
+  SelectableChip
+    Text "Auch auswählbar", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Button-System</h2>
+      <p>Ein vollständiges Button-System mit Vererbung:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Button
+Btn: = Button pad 10 20, rad 8, cursor pointer, fs 14, weight 500
+  hover:
+    opacity 0.9
+
+// Größen-Varianten
+BtnSm as Btn: = pad 6 12, rad 6, fs 12
+BtnLg as Btn: = pad 14 28, rad 10, fs 16
+
+// Farb-Varianten
+BtnPrimary as Btn: = bg #2563eb, col white
+BtnSecondary as Btn: = bg transparent, col white, bor 1, boc #555
+BtnGhost as Btn: = bg transparent, col #888
+  hover:
+    col white, bg #252525
+
+// Kombiniert
+BtnPrimarySm as BtnSm: = bg #2563eb, col white
+BtnPrimaryLg as BtnLg: = bg #2563eb, col white
+
+// Showcase
+Frame gap 12
+  Frame hor, gap 8
+    BtnPrimarySm "Klein"
+    BtnPrimary "Normal"
+    BtnPrimaryLg "Groß"
+  Frame hor, gap 8
+    BtnPrimary "Primary"
+    BtnSecondary "Secondary"
+    BtnGhost "Ghost"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Input-Varianten</h2>
+      <p>Verschiedene Input-Typen basierend auf einer Basis:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Input
+BaseInput: = Input w full, pad 12, bg #1a1a1a, col white, rad 8, bor 1, boc #333
+  focus:
+    boc #2563eb
+
+// Varianten
+SearchInput as BaseInput: = pad 12 12 12 40
+  // Icon wird separat positioniert
+
+ErrorInput as BaseInput: = boc #ef4444
+  focus:
+    boc #ef4444
+
+DisabledInput as BaseInput: = bg #252525, col #666, cursor not-allowed
+
+// Showcase
+Frame w 250, gap 12
+  Frame pos
+    SearchInput
+      placeholder "Suchen..."
+    Icon "search", ic #888, is 18, absolute, x 12, y 13
+
+  BaseInput
+    placeholder "Normales Feld"
+
+  ErrorInput
+    placeholder "Fehler-Zustand"
+
+  DisabledInput
+    placeholder "Deaktiviert"
+    disabled</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Card-Varianten</h2>
+      <p>Verschiedene Card-Typen für unterschiedliche Inhalte:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Card
+Card: = Frame bg #1a1a1a, rad 12, clip
+
+// Content Card mit Padding
+ContentCard as Card: = pad 20, gap 12
+
+// Media Card mit Bild-Bereich
+MediaCard as Card: = gap 0
+  // Kinder definieren die Struktur
+
+// Interactive Card
+ClickableCard as Card: = cursor pointer
+  hover:
+    bg #252525
+
+// Showcase
+Frame hor, gap 12
+  ContentCard w 160
+    Text "Content Card", col white, weight 500
+    Text "Einfacher Inhalt mit Padding.", col #888, fs 13
+
+  MediaCard w 160
+    Frame h 80, bg #2563eb, center
+      Icon "image", ic white, is 24
+    Frame pad 12, gap 4
+      Text "Media Card", col white, weight 500
+      Text "Mit Bild-Bereich", col #888, fs 12
+
+  ClickableCard w 160, pad 20, gap 8
+    Icon "arrow-right", ic #2563eb, is 20
+    Text "Klickbar", col white, weight 500
+    Text "Hover-Effekt aktiv", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +377,66 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle ein Badge-System mit Basis und Farbvarianten (Success, Warning, Error):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>// Basis-Badge
+Badge: = Frame pad 4 10, rad 12
+  Text "Badge", col white, fs 11, weight 500
+
+// Erstelle Varianten hier...
+
+// Test
+Frame hor, gap 8
+  Badge "Default"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>// Basis-Badge
+Badge: = Frame pad 4 10, rad 12, bg #374151
+  Text "Badge", col white, fs 11, weight 500
+
+// Farbvarianten
+SuccessBadge as Badge: = bg #10b981
+WarningBadge as Badge: = bg #f59e0b
+ErrorBadge as Badge: = bg #ef4444
+InfoBadge as Badge: = bg #2563eb
+
+// Mit Outline-Variante
+OutlineBadge as Badge: = bg transparent, bor 1, boc #555
+  Text "Badge", col #888
+
+// Test
+Frame gap 12
+  Frame hor, gap 8
+    Badge "Default"
+    SuccessBadge "Success"
+    WarningBadge "Warning"
+    ErrorBadge "Error"
+    InfoBadge "Info"
+  Frame hor, gap 8
+    OutlineBadge "Outline"</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>Child as Parent: =</code> – Erbt von Eltern-Komponente</li>
+        <li>Alle Properties werden vererbt</li>
+        <li>Kind kann Properties überschreiben</li>
+        <li>States werden mitvererbt</li>
+        <li>Ideal für: Button-Systeme, Input-Varianten, Cards</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-30.html">← Slots</a>
+      <a href="lektion-32.html">Named Instances →</a>
     </nav>
 
   </main>
@@ -280,10 +448,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink|placeholder|absolute)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|data|selection|value|if|else|visibleWhen|not|true|false|slot|as)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

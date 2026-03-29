@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Overflow & Scroll</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -105,117 +105,181 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 15 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Overflow & Scroll</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
+      <h2>Überlaufendes Content</h2>
+      <p>Wenn Inhalte größer sind als ihr Container, gibt es verschiedene Möglichkeiten damit umzugehen:</p>
+
+      <div class="props">
+        <div><code>clip</code><span>Überlauf abschneiden (kein Scroll)</span></div>
+        <div><code>hidden</code><span>Wie clip, versteckt Überlauf komplett</span></div>
+        <div><code>visible</code><span>Überlauf sichtbar (default)</span></div>
+        <div><code>scroll</code><span>Vertikales Scrollen erlauben</span></div>
+        <div><code>scroll-hor</code><span>Horizontales Scrollen erlauben</span></div>
+        <div><code>scroll-both</code><span>Beide Richtungen erlauben</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Clip – Abschneiden</h2>
+      <p><code>clip</code> schneidet überlaufende Inhalte ab. Wichtig für abgerundete Ecken:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
+  // Ohne clip – Ecken überlaufen
+  Frame w 100, h 80, bg #1a1a1a, rad 12
+    Frame w full, h 40, bg #2563eb
+
+  // Mit clip – sauber abgeschnitten
+  Frame w 100, h 80, bg #1a1a1a, rad 12, clip
+    Frame w full, h 40, bg #2563eb</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
-      </div>
+      <p>Beachte wie der blaue Bereich links über die Ecken hinausragt, rechts aber sauber abgeschnitten wird.</p>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Hidden</h2>
+      <p><code>hidden</code> versteckt überlaufende Inhalte komplett:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>Frame hor, gap 24
+  // Visible (default) – Text überläuft
+  Frame w 80, h 40, bg #1a1a1a, rad 6, pad 8
+    Text "Ein sehr langer Text der überläuft", col white, fs 12
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+  // Hidden – Text abgeschnitten
+  Frame w 80, h 40, bg #1a1a1a, rad 6, pad 8, hidden
+    Text "Ein sehr langer Text der überläuft", col white, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Vertikales Scrollen</h2>
+      <p><code>scroll</code> (Alias: <code>scroll-ver</code>) erlaubt vertikales Scrollen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame w 200, h 150, bg #1a1a1a, rad 8, pad 12, scroll
+  Text "Item 1", col white, pad 8, bg #333, rad 4
+  Text "Item 2", col white, pad 8, bg #333, rad 4
+  Text "Item 3", col white, pad 8, bg #333, rad 4
+  Text "Item 4", col white, pad 8, bg #333, rad 4
+  Text "Item 5", col white, pad 8, bg #333, rad 4
+  Text "Item 6", col white, pad 8, bg #333, rad 4
+  Text "Item 7", col white, pad 8, bg #333, rad 4
+  Text "Item 8", col white, pad 8, bg #333, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Scrolle im Container, um mehr Items zu sehen.</p>
+    </section>
+
+    <section>
+      <h2>Horizontales Scrollen</h2>
+      <p><code>scroll-hor</code> erlaubt horizontales Scrollen – ideal für Karussells:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 280, bg #1a1a1a, rad 8, pad 12, scroll-hor
+  Frame hor, gap 12
+    Frame w 100, h 80, bg #2563eb, rad 8, center, shrink
+      Text "Slide 1", col white
+    Frame w 100, h 80, bg #10b981, rad 8, center, shrink
+      Text "Slide 2", col white
+    Frame w 100, h 80, bg #f59e0b, rad 8, center, shrink
+      Text "Slide 3", col white
+    Frame w 100, h 80, bg #ef4444, rad 8, center, shrink
+      Text "Slide 4", col white
+    Frame w 100, h 80, bg #8b5cf6, rad 8, center, shrink
+      Text "Slide 5", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Beide Richtungen</h2>
+      <p><code>scroll-both</code> erlaubt Scrollen in beide Richtungen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame w 200, h 150, bg #1a1a1a, rad 8, pad 12, scroll-both
+  Frame w 400, h 300, bg #333, rad 8, center
+    Text "Großer Bereich", col white
+    Text "400 x 300 px", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Praxisbeispiel: Chat-Fenster</h2>
+      <p>Ein typisches Chat-Layout mit scrollbarem Nachrichtenbereich:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame w 280, h 250, bg #1a1a1a, rad 12, clip
+  // Header
+  Frame w full, pad 12, bg #252525, hor, spread
+    Text "Chat", col white, weight 500
+    Icon "x", ic #888, is 18
+  // Messages (scrollbar)
+  Frame w full, h 150, pad 12, gap 8, scroll
+    Frame bg #333, pad 10, rad 8
+      Text "Hey, wie geht's?", col white, fs 13
+    Frame bg #2563eb, pad 10, rad 8
+      Text "Mir geht's gut, danke!", col white, fs 13
+    Frame bg #333, pad 10, rad 8
+      Text "Hast du Zeit für einen Kaffee?", col white, fs 13
+    Frame bg #2563eb, pad 10, rad 8
+      Text "Klar, um 15 Uhr?", col white, fs 13
+    Frame bg #333, pad 10, rad 8
+      Text "Perfekt!", col white, fs 13
+  // Input
+  Frame w full, pad 12, bg #252525, hor, gap 8
+    Input w full, bg #333, col white, pad 8, rad 6, placeholder "Nachricht..."
+    Icon "send", ic #2563eb, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+    <section>
+      <h2>Praxisbeispiel: Tab-Leiste</h2>
+      <p>Eine horizontale Tab-Leiste mit vielen Tabs:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, bg #1a1a1a, rad 8, pad 4, scroll-hor
+  Frame hor, gap 4
+    Frame pad 10 16, bg #2563eb, rad 6, shrink
+      Text "Dashboard", col white, fs 13
+    Frame pad 10 16, rad 6, cursor pointer, shrink
+      Text "Projekte", col #888, fs 13
+    Frame pad 10 16, rad 6, cursor pointer, shrink
+      Text "Aufgaben", col #888, fs 13
+    Frame pad 10 16, rad 6, cursor pointer, shrink
+      Text "Kalender", col #888, fs 13
+    Frame pad 10 16, rad 6, cursor pointer, shrink
+      Text "Berichte", col #888, fs 13
+    Frame pad 10 16, rad 6, cursor pointer, shrink
+      Text "Einstellungen", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +287,87 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle eine Kontaktliste mit scrollbarem Bereich und fixem Header:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
+        <div style="width: 220px; height: 200px; background: #1a1a1a; border-radius: 12px; overflow: hidden; font-family: Inter, sans-serif;">
+          <div style="padding: 12px 16px; background: #252525; color: white; font-weight: 500; font-size: 13px;">Kontakte</div>
+          <div style="height: 156px; overflow-y: auto; padding: 8px;">
+            <div style="padding: 10px 12px; color: white; font-size: 13px; display: flex; gap: 10px; align-items: center; background: #333; border-radius: 6px; margin-bottom: 6px;">
+              <span>👤</span> Anna Müller
+            </div>
+            <div style="padding: 10px 12px; color: white; font-size: 13px; display: flex; gap: 10px; align-items: center; background: #333; border-radius: 6px; margin-bottom: 6px;">
+              <span>👤</span> Bob Schmidt
+            </div>
+            <div style="padding: 10px 12px; color: white; font-size: 13px; display: flex; gap: 10px; align-items: center; background: #333; border-radius: 6px; margin-bottom: 6px;">
+              <span>👤</span> Clara Weber
+            </div>
+            <div style="padding: 10px 12px; color: white; font-size: 13px; display: flex; gap: 10px; align-items: center; background: #333; border-radius: 6px; margin-bottom: 6px;">
+              <span>👤</span> David Fischer
+            </div>
+            <div style="padding: 10px 12px; color: white; font-size: 13px; display: flex; gap: 10px; align-items: center; background: #333; border-radius: 6px;">
+              <span>👤</span> Eva Bauer
+            </div>
           </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 220, h 200, bg #1a1a1a, rad 12
+  // Header
+  Frame pad 12 16, bg #252525
+    Text "Kontakte", col white, weight 500, fs 14
+  // Liste
+  Frame gap 6
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user"
+      Text "Anna Müller"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 220, h 200, bg #1a1a1a, rad 12, clip
+  // Header
+  Frame w full, pad 12 16, bg #252525
+    Text "Kontakte", col white, weight 500, fs 14
+  // Scrollbare Liste
+  Frame w full, h 156, pad 8, gap 6, scroll
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user", ic white, is 16
+      Text "Anna Müller", col white, fs 13
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user", ic white, is 16
+      Text "Bob Schmidt", col white, fs 13
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user", ic white, is 16
+      Text "Clara Weber", col white, fs 13
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user", ic white, is 16
+      Text "David Fischer", col white, fs 13
+    Frame hor, gap 10, pad 10 12, bg #333, rad 6
+      Icon "user", ic white, is 16
+      Text "Eva Bauer", col white, fs 13</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>clip</code> – Überlauf abschneiden (wichtig für radius)</li>
+        <li><code>hidden</code> – Überlauf komplett verstecken</li>
+        <li><code>visible</code> – Überlauf sichtbar (default)</li>
+        <li><code>scroll</code> – Vertikales Scrollen</li>
+        <li><code>scroll-hor</code> – Horizontales Scrollen</li>
+        <li><code>scroll-both</code> – Scrollen in beide Richtungen</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-14.html">← Pinning</a>
+      <a href="lektion-16.html">Custom States →</a>
     </nav>
 
   </main>
@@ -280,9 +379,8 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|scroll-ver|scroll-hor|scroll-both|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|absolute|fixed|relative|x|y|z|rotate|placeholder|shrink)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

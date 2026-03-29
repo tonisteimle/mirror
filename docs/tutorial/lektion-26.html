@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Each-Loops</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 220px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,204 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 26 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Each-Loops</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Mit <code>each</code> iterierst du über Daten-Collections und erzeugst für jedes Element UI-Komponenten. Das ist die Grundlage für dynamische Listen, Grids und Tabellen.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>each item in Collection</code><span>Iteriert über Collection</span></div>
+        <div><code>each item, index in Collection</code><span>Mit Index-Variable</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Grundsyntax</h2>
+      <p>Die <code>each</code>-Syntax erstellt für jedes Element in der Collection ein UI-Element:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
+          <textarea>// Daten definieren
+Users:
+  - name: "Anna", role: "Designer"
+  - name: "Max", role: "Developer"
+  - name: "Lisa", role: "Manager"
+
+// Über Daten iterieren
+Frame gap 8
+  each user in Users
+    Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+      Frame w 36, h 36, bg #333, rad 18, center
+        Icon "user", ic #888, is 18
+      Frame gap 2
+        Text user.name, col white, weight 500
+        Text user.role, col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <p><code>user</code> ist die Loop-Variable, die auf jedes Element in <code>Users</code> zugreift.</p>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Zugriff auf Properties</h2>
+      <p>Mit Punkt-Notation greifst du auf Properties der Loop-Variable zu:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
+          <textarea>Products:
+  - name: "Laptop", price: 999, inStock: true
+  - name: "Phone", price: 699, inStock: true
+  - name: "Tablet", price: 449, inStock: false
 
-    <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+Frame gap 8
+  each product in Products
+    Frame hor, spread, pad 12, bg #1a1a1a, rad 8
+      Frame gap 2
+        Text product.name, col white, weight 500
+        Text product.price + " €", col #10b981, fs 14
+      Frame pad 4 8, bg #333, rad 4
+        Text "Auf Lager", col #888, fs 11</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Mit Index</h2>
+      <p>Der optionale Index gibt dir Zugriff auf die Position des Elements (beginnend bei 0):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Steps:
+  - title: "Anmelden"
+  - title: "Profil ausfüllen"
+  - title: "Bestätigen"
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+Frame gap 8
+  each step, index in Steps
+    Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+      Frame w 28, h 28, bg #2563eb, rad 14, center
+        Text index + 1, col white, fs 12, weight bold
+      Text step.title, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Grid mit Each</h2>
+      <p><code>each</code> funktioniert hervorragend mit Grid-Layouts:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Colors:
+  - hex: "#ef4444", name: "Red"
+  - hex: "#f59e0b", name: "Orange"
+  - hex: "#10b981", name: "Green"
+  - hex: "#2563eb", name: "Blue"
+  - hex: "#8b5cf6", name: "Purple"
+  - hex: "#ec4899", name: "Pink"
+
+Frame grid 3, gap 8
+  each color in Colors
+    Frame h 60, rad 8, center, cursor pointer
+      bg color.hex
+      Text color.name, col white, fs 12
+      hover:
+        scale 1.05</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Verschachtelte Loops</h2>
+      <p>Loops können verschachtelt werden für komplexere Datenstrukturen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Categories:
+  - name: "Früchte"
+    items:
+      - "Apfel"
+      - "Banane"
+      - "Orange"
+  - name: "Gemüse"
+    items:
+      - "Karotte"
+      - "Brokkoli"
+
+Frame gap 16
+  each category in Categories
+    Frame gap 8
+      Text category.name, col white, weight 500, fs 14
+      Frame gap 4
+        each item in category.items
+          Frame hor, gap 8, pad 8 12, bg #1a1a1a, rad 6
+            Icon "circle", ic #10b981, is 8, fill
+            Text item, col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Kontaktliste</h2>
+      <p>Eine typische Kontaktliste mit Avatar und Status:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Contacts:
+  - name: "Anna Müller", status: "online", avatar: "A"
+  - name: "Max Schmidt", status: "offline", avatar: "M"
+  - name: "Lisa Weber", status: "busy", avatar: "L"
+  - name: "Tom Fischer", status: "online", avatar: "T"
+
+Frame w 240, bg #1a1a1a, rad 8, pad 8, gap 4
+  each contact in Contacts
+    Frame hor, gap 12, pad 10, rad 6, cursor pointer
+      Frame w 36, h 36, bg #2563eb, rad 18, center
+        Text contact.avatar, col white, weight 500
+      Frame gap 2, grow
+        Text contact.name, col white, fs 14
+        Text contact.status, col #888, fs 11
+      hover:
+        bg #252525</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Produkt-Grid</h2>
+      <p>Ein Produktkatalog als Grid:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Products:
+  - name: "Laptop Pro", price: "1.299 €", badge: "Neu"
+  - name: "Wireless Mouse", price: "49 €", badge: ""
+  - name: "USB-C Hub", price: "79 €", badge: "Sale"
+  - name: "Monitor 27\"", price: "399 €", badge: ""
+
+Frame grid 2, gap 12
+  each product in Products
+    Frame bg #1a1a1a, rad 8, pad 12, gap 8, pos
+      Frame h 60, bg #252525, rad 6, center
+        Icon "package", ic #888, is 24
+      Text product.name, col white, fs 13, weight 500
+      Text product.price, col #10b981, fs 14
+      Frame bg #ef4444, pad 2 6, rad 4, pt 8, pr 8
+        Text "Neu", col white, fs 10</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +310,75 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle eine Task-Liste mit Checkboxen:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
+        <div style="width: 240px; background: #1a1a1a; border-radius: 8px; padding: 12px; font-family: Inter, sans-serif;">
+          <div style="display: flex; gap: 10px; padding: 10px; cursor: pointer;">
+            <div style="width: 18px; height: 18px; border: 2px solid #555; border-radius: 4px;"></div>
+            <span style="color: white; font-size: 13px;">E-Mails checken</span>
           </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
+          <div style="display: flex; gap: 10px; padding: 10px; cursor: pointer;">
+            <div style="width: 18px; height: 18px; background: #2563eb; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">✓</div>
+            <span style="color: #888; font-size: 13px; text-decoration: line-through;">Meeting vorbereiten</span>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 10px; cursor: pointer;">
+            <div style="width: 18px; height: 18px; border: 2px solid #555; border-radius: 4px;"></div>
+            <span style="color: white; font-size: 13px;">Report schreiben</span>
+          </div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Tasks:
+  - title: "E-Mails checken", done: false
+  - title: "Meeting vorbereiten", done: true
+  - title: "Report schreiben", done: false
+
+Frame w 240, bg #1a1a1a, rad 8, pad 12
+  each task in Tasks
+    Frame hor, gap 10, pad 10, cursor pointer
+      Frame w 18, h 18, bor 2, boc #555, rad 4
+      Text task.title, col white, fs 14</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Tasks:
+  - title: "E-Mails checken", done: false
+  - title: "Meeting vorbereiten", done: true
+  - title: "Report schreiben", done: false
+
+Frame w 240, bg #1a1a1a, rad 8, pad 12
+  each task in Tasks
+    Frame state on, hor, gap 10, pad 10, cursor pointer
+      Frame w 18, h 18, bor 2, boc #555, rad 4, center
+      Text task.title, col white, fs 14
+      on:
+        Frame w 18, h 18, bg #2563eb, rad 4
+          Icon "check", ic white, is 12
+        Text task.title, col #888, fs 14
+          // Hinweis: text-decoration nicht in Mirror</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>each item in Collection</code> – Iteration über Daten</li>
+        <li><code>each item, index in Collection</code> – Mit Index</li>
+        <li><code>item.property</code> – Zugriff auf Properties</li>
+        <li>Verschachtelung möglich für komplexe Daten</li>
+        <li>Funktioniert mit allen Layouts (ver, hor, grid)</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-25.html">← Event Modifiers</a>
+      <a href="lektion-27.html">Filter & Where →</a>
     </nav>
 
   </main>
@@ -280,10 +390,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

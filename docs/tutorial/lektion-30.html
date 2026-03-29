@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Slots</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 180px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,210 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 30 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Slots</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Slots ermöglichen flexible Komponenten, bei denen Teile des Inhalts von außen eingefügt werden können. Das ist die Grundlage für wiederverwendbare Layout-Komponenten.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>Slot</code><span>Platzhalter für eingefügten Inhalt</span></div>
+        <div><code>Slot "name"</code><span>Benannter Slot</span></div>
+        <div><code>slot "name"</code><span>Inhalt für benannten Slot</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Default Slot</h2>
+      <p>Ein einfacher <code>Slot</code> nimmt alle Kinder auf, die beim Verwenden der Komponente übergeben werden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>// Komponente mit Slot definieren
+Card: = Frame bg #1a1a1a, pad 20, rad 8, gap 12
+  Slot
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
-
+// Komponente verwenden
 Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  Text "Titel", col white, weight 500
+  Text "Beschreibung der Karte", col #888
+  Button "Aktion", bg #2563eb, col white, pad 8 16, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Alles was in <code>Card</code> geschrieben wird, erscheint an der Stelle des <code>Slot</code>.</p>
+    </section>
+
+    <section>
+      <h2>Benannte Slots</h2>
+      <p>Mit benannten Slots kannst du mehrere Bereiche definieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Komponente mit benannten Slots
+Dialog: = Frame w 280, bg #1a1a1a, rad 12, clip
+  Frame pad 20, gap 8
+    Slot "header"
+  Frame pad 20, bg #151515
+    Slot "content"
+  Frame hor, gap 8, pad 16, spread
+    Slot "actions"
+
+// Verwendung mit slot-Zuweisung
+Dialog
+  slot "header"
+    Text "Bestätigung", col white, weight 500
+    Text "Möchtest du fortfahren?", col #888, fs 14
+  slot "content"
+    Text "Diese Aktion kann nicht rückgängig gemacht werden.", col #888, fs 13
+  slot "actions"
+    Button "Abbrechen", pad 8 16, rad 6, col #888
+    Button "Bestätigen", bg #ef4444, col white, pad 8 16, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Default Content</h2>
+      <p>Slots können Default-Inhalt haben, der angezeigt wird, wenn nichts übergeben wird:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Button mit Default-Icon
+IconButton: = Frame hor, gap 8, pad 10 16, bg #2563eb, rad 8, center, cursor pointer
+  Slot "icon"
+    Icon "star", ic white, is 16
+  Slot "label"
+    Text "Button", col white
+  hover:
+    bg #1d4ed8
+
+// Mit Default
+IconButton
+
+// Mit eigenem Icon
+IconButton
+  slot "icon"
+    Icon "heart", ic white, is 16, fill
+  slot "label"
+    Text "Favorit", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Layout-Komponente</h2>
+      <p>Eine Page-Layout-Komponente mit Header, Content und Footer:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>PageLayout: = Frame w 300, h 200, bg #111, gap 0
+  Frame hor, spread, pad 12, bg #1a1a1a, bor 0 0 1 0, boc #333
+    Slot "header"
+  Frame grow, pad 16, scroll
+    Slot "content"
+  Frame hor, center, pad 8, bg #1a1a1a, bor 1 0 0 0, boc #333
+    Slot "footer"
+
+PageLayout
+  slot "header"
+    Text "Dashboard", col white, weight 500
+    Frame hor, gap 8
+      Icon "bell", ic #888, is 18
+      Icon "settings", ic #888, is 18
+  slot "content"
+    Frame gap 12
+      Text "Willkommen zurück!", col white
+      Text "Hier ist deine Übersicht.", col #888, fs 13
+  slot "footer"
+    Text "© 2024 MyApp", col #666, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: List-Item</h2>
+      <p>Ein flexibles List-Item mit Slots für verschiedene Bereiche:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ListItem: = Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8, cursor pointer
+  Slot "leading"
+  Frame grow, gap 2
+    Slot "content"
+  Slot "trailing"
+  hover:
+    bg #252525
+
+Frame w 280, gap 8
+  ListItem
+    slot "leading"
+      Frame w 40, h 40, bg #2563eb, rad 20, center
+        Text "A", col white
+    slot "content"
+      Text "Anna Müller", col white, weight 500
+      Text "anna@example.com", col #888, fs 12
+    slot "trailing"
+      Icon "chevron-right", ic #666, is 18
+
+  ListItem
+    slot "leading"
+      Frame w 40, h 40, bg #10b981, rad 20, center
+        Icon "check", ic white, is 18
+    slot "content"
+      Text "Aufgabe erledigt", col white, weight 500
+      Text "Vor 2 Stunden", col #888, fs 12
+    slot "trailing"
+      Frame w 8, h 8, bg #10b981, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Modal</h2>
+      <p>Eine wiederverwendbare Modal-Komponente:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Modal: = Frame w 320, bg #1a1a1a, rad 12, shadow lg, clip
+  Frame hor, spread, pad 16, bor 0 0 1 0, boc #333
+    Slot "title"
+    Frame w 28, h 28, rad 6, center, cursor pointer
+      Icon "x", ic #888, is 16
+      hover:
+        bg #333
+  Frame pad 20
+    Slot "body"
+  Frame hor, gap 8, pad 16, bor 1 0 0 0, boc #333, spread
+    Slot "footer"
+
+Modal
+  slot "title"
+    Text "Neues Projekt", col white, weight 500
+  slot "body"
+    Frame gap 12
+      Frame gap 4
+        Text "Projektname", col #888, fs 12
+        Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+          placeholder "Mein Projekt"
+      Frame gap 4
+        Text "Beschreibung", col #888, fs 12
+        Textarea w full, h 60, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+  slot "footer"
+    Button "Abbrechen", pad 8 16, rad 6, col #888
+    Button "Erstellen", bg #2563eb, col white, pad 8 16, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +316,70 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle eine Alert-Komponente mit Slots für Icon, Nachricht und Aktion:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>// Erstelle eine Alert-Komponente
+Alert: = Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+  Slot
+
+// Teste sie
+Alert
+  Icon "info", ic #2563eb, is 20
+  Text "Dies ist eine Information.", col white, fs 14</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Alert: = Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+  Frame w 24, center
+    Slot "icon"
+  Frame grow
+    Slot "message"
+  Slot "action"
+
+Frame gap 8
+  Alert
+    slot "icon"
+      Icon "info", ic #2563eb, is 20
+    slot "message"
+      Text "Neue Updates verfügbar.", col white, fs 14
+    slot "action"
+      Button "Update", bg #2563eb, col white, pad 6 12, rad 4, fs 12
+
+  Alert
+    slot "icon"
+      Icon "check-circle", ic #10b981, is 20
+    slot "message"
+      Text "Erfolgreich gespeichert!", col white, fs 14
+
+  Alert
+    slot "icon"
+      Icon "alert-triangle", ic #f59e0b, is 20
+    slot "message"
+      Text "Speicher fast voll.", col white, fs 14
+    slot "action"
+      Text "Bereinigen", col #f59e0b, fs 12, cursor pointer</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>Slot</code> – Platzhalter für Kinder-Elemente</li>
+        <li><code>Slot "name"</code> – Benannter Platzhalter</li>
+        <li><code>slot "name"</code> – Zuweisung zu benanntem Slot</li>
+        <li>Default-Inhalt möglich als Fallback</li>
+        <li>Ideal für: Layouts, Dialoge, Listen, wiederverwendbare UI</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-29.html">← Conditionals</a>
+      <a href="lektion-31.html">Vererbung →</a>
     </nav>
 
   </main>
@@ -280,10 +391,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|data|selection|value|if|else|visibleWhen|not|true|false|slot)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

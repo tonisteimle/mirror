@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Pinning</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 140px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,148 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 14 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Pinning</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Pin zu den Kanten</h2>
+      <p>Pin-Properties heften Elemente an bestimmte Kanten eines <code>pos</code>-Containers. Der Wert ist der Abstand zur Kante:</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>pin-left N</code><span>Abstand zur linken Kante (Alias: pl)</span></div>
+        <div><code>pin-right N</code><span>Abstand zur rechten Kante (Alias: pr)</span></div>
+        <div><code>pin-top N</code><span>Abstand zur oberen Kante (Alias: pt)</span></div>
+        <div><code>pin-bottom N</code><span>Abstand zur unteren Kante (Alias: pb)</span></div>
       </div>
-    </section>
-
-    <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+          <textarea>Frame w 250, h 150, pos, bg #1a1a1a, rad 8
+  Frame w 40, h 40, bg #2563eb, rad 6, pin-left 10, pin-top 10
+  Frame w 40, h 40, bg #10b981, rad 6, pin-right 10, pin-top 10
+  Frame w 40, h 40, bg #f59e0b, rad 6, pin-left 10, pin-bottom 10
+  Frame w 40, h 40, bg #ef4444, rad 6, pin-right 10, pin-bottom 10</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Kurzschreibweise</h2>
+      <p>Die Aliase <code>pl</code>, <code>pr</code>, <code>pt</code>, <code>pb</code> sind kürzer:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame w 200, h 120, pos, bg #1a1a1a, rad 8
+  Text "oben links", col white, fs 12, pl 12, pt 12
+  Text "unten rechts", col white, fs 12, pr 12, pb 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Zentriertes Pinning</h2>
+      <p>Mit <code>pin-center-x</code>, <code>pin-center-y</code> oder <code>pin-center</code> zentrierst du Elemente:</p>
+
+      <div class="props">
+        <div><code>pin-center-x</code><span>Horizontal zentriert (Alias: pcx)</span></div>
+        <div><code>pin-center-y</code><span>Vertikal zentriert (Alias: pcy)</span></div>
+        <div><code>pin-center</code><span>Beides (Alias: pc)</span></div>
+      </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame w 250, h 150, pos, bg #1a1a1a, rad 8
+  // Horizontal zentriert, oben
+  Frame w 80, h 30, bg #2563eb, rad 6, pcx, pt 10, center
+    Text "pcx", col white, fs 11
+  // Vertikal zentriert, links
+  Frame w 60, h 30, bg #10b981, rad 6, pcy, pl 10, center
+    Text "pcy", col white, fs 11
+  // Komplett zentriert
+  Frame w 60, h 40, bg #f59e0b, rad 6, pc, center
+    Text "pc", col white, fs 11</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Kombinationen</h2>
+      <p>Pin-Werte lassen sich kombinieren. Zwei gegenüberliegende Pins strecken das Element:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame w 250, h 150, pos, bg #1a1a1a, rad 8
+  // Volle Breite, fixe Höhe oben
+  Frame h 40, bg #2563eb, rad 6, pl 10, pr 10, pt 10, center
+    Text "pl + pr = stretch", col white, fs 12
+  // Volle Höhe, fixe Breite rechts
+  Frame w 40, bg #10b981, rad 6, pt 60, pb 10, pr 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+      <p>Wenn <code>pin-left</code> und <code>pin-right</code> beide gesetzt sind, wird das Element gestreckt.</p>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Toolbar</h2>
+      <p>Eine Toolbar mit linken und rechten Aktionen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 50, pos, bg #1a1a1a, rad 8
+  // Links
+  Frame hor, gap 8, pl 12, pcy
+    Icon "arrow-left", ic white, is 20
+    Text "Zurück", col white, fs 14
+  // Mitte
+  Text "Titel", col white, weight 500, pc
+  // Rechts
+  Frame hor, gap 12, pr 12, pcy
+    Icon "search", ic #888, is 20
+    Icon "menu", ic #888, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Floating Action Button</h2>
+      <p>Ein FAB (Floating Action Button) unten rechts:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 200, pos, bg #1a1a1a, rad 8
+  Text "Content Area", col #666, pc
+  // FAB
+  Frame w 56, h 56, bg #2563eb, rad 28, pr 16, pb 16, center, cursor pointer, shadow lg
+    Icon "plus", ic white, is 24</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Close Button</h2>
+      <p>Ein X-Button in der Ecke einer Card:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 250, pos, bg #1a1a1a, rad 12, pad 20
+  Text "Notification", col white, weight 500
+  Text "Dies ist eine wichtige Nachricht.", col #888, fs 14
+  // Close Button
+  Frame w 28, h 28, bg #333, rad 14, pt 8, pr 8, center, cursor pointer
+    Icon "x", ic #888, is 16</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +254,56 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle eine Card mit einem Status-Badge unten links und einem Menu-Icon oben rechts:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
+        <div style="position: relative; width: 220px; height: 140px; background: #1a1a1a; border-radius: 12px; padding: 20px; font-family: Inter, sans-serif;">
+          <div style="position: absolute; top: 12px; right: 12px; cursor: pointer;">⋯</div>
+          <div style="color: white; font-weight: 500;">Projekt Alpha</div>
+          <div style="color: #888; font-size: 13px; margin-top: 4px;">In Bearbeitung</div>
+          <div style="position: absolute; bottom: 12px; left: 12px; background: #10b981; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px;">Aktiv</div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 220, h 140, bg #1a1a1a, rad 12, pad 20
+  Text "Projekt Alpha", col white, weight 500
+  Text "In Bearbeitung", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 220, h 140, pos, bg #1a1a1a, rad 12, pad 20
+  Text "Projekt Alpha", col white, weight 500
+  Text "In Bearbeitung", col #888, fs 13
+  // Menu Icon oben rechts
+  Icon "more-horizontal", ic #888, is 20, pt 12, pr 12, cursor pointer
+  // Status Badge unten links
+  Frame bg #10b981, pad 4 10, rad 12, pb 12, pl 12
+    Text "Aktiv", col white, fs 11</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>pin-left N</code> / <code>pl N</code> – Abstand zur linken Kante</li>
+        <li><code>pin-right N</code> / <code>pr N</code> – Abstand zur rechten Kante</li>
+        <li><code>pin-top N</code> / <code>pt N</code> – Abstand zur oberen Kante</li>
+        <li><code>pin-bottom N</code> / <code>pb N</code> – Abstand zur unteren Kante</li>
+        <li><code>pin-center-x</code> / <code>pcx</code> – Horizontal zentriert</li>
+        <li><code>pin-center-y</code> / <code>pcy</code> – Vertikal zentriert</li>
+        <li><code>pin-center</code> / <code>pc</code> – Komplett zentriert</li>
+        <li>Zwei gegenüberliegende Pins = Element wird gestreckt</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-13.html">← Positioned Layout</a>
+      <a href="lektion-15.html">Overflow & Scroll →</a>
     </nav>
 
   </main>
@@ -280,9 +315,8 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|absolute|fixed|relative|x|y|z|rotate|pin-left|pin-right|pin-top|pin-bottom|pin-center|pin-center-x|pin-center-y|pl|pr|pt|pb|pc|pcx|pcy)\b/g, cls: 'syn-property' },
       { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]

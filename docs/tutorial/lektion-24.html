@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Keyboard Events</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 180px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,242 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 24 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Keyboard Events</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Keyboard Events ermöglichen die Steuerung per Tastatur. Das ist essentiell für Accessibility und Power-User.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>onkeydown key:</code><span>Bei Tastendruck</span></div>
+        <div><code>onkeyup key:</code><span>Bei Tastenfreigabe</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Verfügbare Tasten</h2>
+      <p>Mirror unterstützt alle gängigen Tasten:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
+      <div class="props">
+        <div><code>escape</code><span>Escape-Taste</span></div>
+        <div><code>enter</code><span>Enter-Taste</span></div>
+        <div><code>space</code><span>Leertaste</span></div>
+        <div><code>tab</code><span>Tab-Taste</span></div>
+        <div><code>backspace</code><span>Backspace-Taste</span></div>
+        <div><code>delete</code><span>Delete-Taste</span></div>
+        <div><code>arrow-up</code><span>Pfeil nach oben</span></div>
+        <div><code>arrow-down</code><span>Pfeil nach unten</span></div>
+        <div><code>arrow-left</code><span>Pfeil nach links</span></div>
+        <div><code>arrow-right</code><span>Pfeil nach rechts</span></div>
+        <div><code>home</code><span>Home-Taste</span></div>
+        <div><code>end</code><span>End-Taste</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Escape zum Schließen</h2>
+      <p>Ein klassisches Pattern – Dialog mit Escape schließen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
+          <textarea>Frame w 300, h 160, stacked, bg #0c0c0c
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Dialog
+    "Dialog öffnen"
 
-    <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+  Frame w full, h full, bg rgba(0,0,0,0.5)
+    visible when Dialog open
+    onclick:
+      close Dialog
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+  Frame state open, w 220, bg #1a1a1a, rad 12, pad 20, shadow lg, pc, z 10
+    onkeydown escape:
+      close Dialog
+    focusable
+    Text "Dialog", col white, weight 500
+    Text "Drücke ESC zum Schließen", col #888, fs 13
+    Button pad 8 16, bg #333, col white, rad 6, cursor pointer
+      onclick:
+        close Dialog
+      "Schließen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Enter zum Bestätigen</h2>
+      <p>Eingabefelder mit Enter bestätigen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame gap 12
+  Input w 220, pad 12, bg #1a1a1a, col white, rad 8
+    placeholder "Suchen..."
+    onkeydown enter:
+      submit SearchForm
+    focus:
+      boc #2563eb
+  Text "Enter drücken zum Suchen", col #666, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+    <section>
+      <h2>Pfeil-Navigation</h2>
+      <p>Navigation in Listen mit Pfeiltasten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, bg #1a1a1a, rad 8, pad 4, gap 2, focusable
+  onkeydown arrow-down:
+    highlight next
+  onkeydown arrow-up:
+    highlight prev
+  onkeydown home:
+    highlight first
+  onkeydown end:
+    highlight last
+
+  Frame state highlighted initial, pad 10 12, rad 4, cursor pointer
+    Text "Option 1", col white, fs 14
+    highlighted:
+      bg #2563eb
+  Frame state highlighted, pad 10 12, rad 4, cursor pointer
+    Text "Option 2", col white, fs 14
+    highlighted:
+      bg #2563eb
+  Frame state highlighted, pad 10 12, rad 4, cursor pointer
+    Text "Option 3", col white, fs 14
+    highlighted:
+      bg #2563eb
+  Frame state highlighted, pad 10 12, rad 4, cursor pointer
+    Text "Option 4", col white, fs 14
+    highlighted:
+      bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Klicke in die Liste und navigiere mit den Pfeiltasten.</p>
+    </section>
+
+    <section>
+      <h2>Space zum Toggl en</h2>
+      <p>Checkboxen und Toggles mit Leertaste steuern:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  Frame state on, hor, gap 10, pad 10, cursor pointer, focusable
+    onkeydown space:
+      toggle self
+    Frame w 20, h 20, bg #333, rad 4, center
+      Icon "check", ic transparent, is 14
+    Text "Mit Leertaste toggeln", col white, fs 14
+    on:
+      Frame w 20, h 20, bg #2563eb, rad 4
+        Icon "check", ic white, is 14
+    focus:
+      bor 2, boc #2563eb, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Autocomplete</h2>
+      <p>Ein Suchfeld mit Tastatur-Navigation:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 250, pos
+  Input w full, pad 12, bg #1a1a1a, col white, rad 8
+    placeholder "Suchen..."
+    onfocus:
+      open Dropdown
+    onkeydown escape:
+      close Dropdown
+    onkeydown arrow-down:
+      highlight next
+    onkeydown arrow-up:
+      highlight prev
+    onkeydown enter:
+      select highlighted
+      close Dropdown
+    focus:
+      boc #2563eb
+
+  Frame w full, bg #252525, rad 8, pad 4, shadow lg, pt 50, z 10
+    visible when Dropdown open
+    Frame state highlighted initial, pad 10 12, rad 4, cursor pointer
+      Text "Apple", col white, fs 14
+      highlighted:
+        bg #333
+    Frame state highlighted, pad 10 12, rad 4, cursor pointer
+      Text "Banana", col white, fs 14
+      highlighted:
+        bg #333
+    Frame state highlighted, pad 10 12, rad 4, cursor pointer
+      Text "Cherry", col white, fs 14
+      highlighted:
+        bg #333</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Tabs mit Tastatur</h2>
+      <p>Tab-Navigation mit Pfeiltasten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 280, bg #1a1a1a, rad 8, clip
+  // Tab Header
+  Frame hor, bg #252525, focusable
+    onkeydown arrow-right:
+      highlight next
+    onkeydown arrow-left:
+      highlight prev
+    onkeydown enter:
+      select highlighted
+
+    Frame state selected exclusive initial, state highlighted, pad 12 20
+      cursor pointer
+      Text "Tab 1", col #888
+      selected:
+        bg #1a1a1a
+        Text "Tab 1", col white
+      highlighted:
+        bor 0 0 2 0, boc #2563eb
+    Frame state selected exclusive, state highlighted, pad 12 20, cursor pointer
+      Text "Tab 2", col #888
+      selected:
+        bg #1a1a1a
+        Text "Tab 2", col white
+      highlighted:
+        bor 0 0 2 0, boc #2563eb
+    Frame state selected exclusive, state highlighted, pad 12 20, cursor pointer
+      Text "Tab 3", col #888
+      selected:
+        bg #1a1a1a
+        Text "Tab 3", col white
+      highlighted:
+        bor 0 0 2 0, boc #2563eb
+
+  // Content
+  Frame pad 20
+    Text "Navigiere mit Pfeiltasten, Enter zum Auswählen", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +348,75 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle ein Modal, das mit Escape geschlossen und mit Enter bestätigt werden kann:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 300, h 160, stacked, bg #0c0c0c
+  Button pad 12 20, bg #ef4444, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Dialog
+    "Löschen"
+
+  Frame w 220, bg #1a1a1a, rad 12, pad 20, pc
+    visible when Dialog open
+    Text "Wirklich löschen?", col white, weight 500
+    Frame hor, gap 8
+      Button pad 8 12, bg #333, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Abbrechen"
+      Button pad 8 12, bg #ef4444, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 300, h 160, stacked, bg #0c0c0c
+  Button pad 12 20, bg #ef4444, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Dialog
+    "Löschen"
+
+  Frame w 220, bg #1a1a1a, rad 12, pad 20, pc, focusable
+    visible when Dialog open
+    onkeydown escape:
+      close Dialog
+    onkeydown enter:
+      close Dialog
+    Text "Wirklich löschen?", col white, weight 500
+    Frame hor, gap 8
+      Button pad 8 12, bg #333, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Abbrechen"
+      Button pad 8 12, bg #ef4444, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Löschen"</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>onkeydown key:</code> – Reagiert auf Tastendruck</li>
+        <li><code>escape</code> – Zum Schließen von Dialogen</li>
+        <li><code>enter</code> – Zum Bestätigen</li>
+        <li><code>space</code> – Zum Toggeln</li>
+        <li><code>arrow-up/down</code> – Für Listen-Navigation</li>
+        <li><code>home/end</code> – Zum Anfang/Ende springen</li>
+        <li><code>focusable</code> – Macht Element fokussierbar</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-23.html">← Enter/Exit Animationen</a>
+      <a href="lektion-25.html">Event Modifiers →</a>
     </nav>
 
   </main>
@@ -280,10 +428,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|z|pc|focusable|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover|onfocus|onkeydown|onkeyup|when|enter|escape|space|tab|arrow-up|arrow-down|arrow-left|arrow-right|home|end|highlight|next|prev|first|last|select|submit|close)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

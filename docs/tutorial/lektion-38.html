@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Zag: Tabs & Accordion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <style>
+    :root { --bg: #111; --bg-code: #191919; --bg-preview: #0c0c0c; --text: #ccc; --text-bright: #eee; --text-dim: #666; --border: #282828; --accent: #4a9eff; --font: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; }
+    .page { max-width: 720px; margin: 0 auto; padding: 60px 32px 100px; }
+    h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); margin-bottom: 48px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 16px; text-transform: uppercase; }
+    p { margin-bottom: 16px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; color: var(--text-bright); }
+    .playground { margin: 20px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .playground-code { background: var(--bg-code); border-bottom: 1px solid var(--border); position: relative; }
+    .playground-code pre { margin: 0; padding: 16px; font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; pointer-events: none; }
+    .playground-code textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 16px; border: none; background: transparent; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: transparent; caret-color: var(--text-bright); resize: none; outline: none; }
+    .playground-preview { min-height: 120px; background: var(--bg-preview); padding: 16px; display: flex; align-items: flex-start; justify-content: center; }
+    .playground-error { color: #e55; font-family: var(--mono); font-size: 12px; }
+    .props { margin: 24px 0; font-size: 13px; }
+    .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .props code { width: 180px; flex-shrink: 0; background: none; color: var(--accent); }
+    .props span { color: var(--text-dim); }
+    .summary { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .summary ul { list-style: none; }
+    .summary li { padding: 6px 0; font-size: 13px; }
+    .summary li code { margin-right: 8px; }
+    nav { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; }
+    nav a { color: var(--text-dim); text-decoration: none; }
+    .topnav { max-width: 720px; margin: 0 auto; padding: 20px 32px; display: flex; justify-content: space-between; font-size: 13px; }
+    .topnav a, .topnav span { color: var(--text-dim); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="topnav"><a href="index.html">← Übersicht</a><span>Kapitel 38 von 50</span></nav>
+
+  <main class="page">
+    <h1>Zag: Tabs & Accordion</h1>
+
+    <section>
+      <h2>Überblick</h2>
+      <p><code>Tabs</code> zeigt Inhalte in Reitern, <code>Accordion</code> in aufklappbaren Sektionen. Beide unterstützen Keyboard-Navigation.</p>
+      <div class="props">
+        <div><code>Tabs</code><span>Tab-Navigation</span></div>
+        <div><code>Accordion</code><span>Aufklappbare Sektionen</span></div>
+        <div><code>List, Trigger, Content</code><span>Slots</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tabs Grundlagen</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs w 300
+  List bg #1a1a1a, rad 8 8 0 0
+    Trigger pad 12 20, cursor pointer
+      Text "Übersicht", col #888, fs 14
+      selected:
+        Text "Übersicht", col white, fs 14, weight 500
+        bor 0 0 2 0, boc #2563eb
+    Trigger pad 12 20, cursor pointer
+      Text "Details", col #888, fs 14
+      selected:
+        Text "Details", col white, fs 14, weight 500
+        bor 0 0 2 0, boc #2563eb
+    Trigger pad 12 20, cursor pointer
+      Text "Settings", col #888, fs 14
+      selected:
+        Text "Settings", col white, fs 14, weight 500
+        bor 0 0 2 0, boc #2563eb
+  Content pad 20, bg #151515, rad 0 0 8 8
+    Text "Übersicht-Inhalt hier...", col #888, fs 14
+  Content pad 20, bg #151515, rad 0 0 8 8
+    Text "Detail-Informationen...", col #888, fs 14
+  Content pad 20, bg #151515, rad 0 0 8 8
+    Text "Einstellungen...", col #888, fs 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tabs mit Icons</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs w 320
+  List hor, bg #1a1a1a, rad 8 8 0 0, gap 0
+    Trigger pad 12 16, cursor pointer, grow, center
+      Frame hor, gap 8
+        Icon "home", ic #888, is 16
+        Text "Home", col #888, fs 13
+      selected:
+        Frame hor, gap 8
+          Icon "home", ic #2563eb, is 16
+          Text "Home", col white, fs 13
+        bg #252525
+    Trigger pad 12 16, cursor pointer, grow, center
+      Frame hor, gap 8
+        Icon "user", ic #888, is 16
+        Text "Profil", col #888, fs 13
+      selected:
+        Frame hor, gap 8
+          Icon "user", ic #2563eb, is 16
+          Text "Profil", col white, fs 13
+        bg #252525
+    Trigger pad 12 16, cursor pointer, grow, center
+      Frame hor, gap 8
+        Icon "settings", ic #888, is 16
+        Text "Settings", col #888, fs 13
+      selected:
+        Frame hor, gap 8
+          Icon "settings", ic #2563eb, is 16
+          Text "Settings", col white, fs 13
+        bg #252525
+  Content pad 20, bg #151515
+    Text "Home-Bereich", col white
+  Content pad 20, bg #151515
+    Text "Profil-Bereich", col white
+  Content pad 20, bg #151515
+    Text "Settings-Bereich", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Accordion</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion w 300
+  Item bg #1a1a1a, rad 8, margin 0 0 8 0
+    ItemTrigger pad 16, cursor pointer
+      Frame hor, spread
+        Text "Was ist Mirror?", col white, fs 14, weight 500
+        Icon "chevron-down", ic #888, is 16
+      expanded:
+        Icon "chevron-up", ic #888, is 16
+    ItemContent pad 0 16 16 16
+      Text "Mirror ist eine DSL für rapid UI prototyping.", col #888, fs 13
+
+  Item bg #1a1a1a, rad 8, margin 0 0 8 0
+    ItemTrigger pad 16, cursor pointer
+      Frame hor, spread
+        Text "Wie installiere ich es?", col white, fs 14, weight 500
+        Icon "chevron-down", ic #888, is 16
+    ItemContent pad 0 16 16 16
+      Text "npm install mirror-lang", col #888, fs 13
+
+  Item bg #1a1a1a, rad 8
+    ItemTrigger pad 16, cursor pointer
+      Frame hor, spread
+        Text "Gibt es Dokumentation?", col white, fs 14, weight 500
+        Icon "chevron-down", ic #888, is 16
+    ItemContent pad 0 16 16 16
+      Text "Ja, unter docs.mirror-lang.dev", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Settings Panel</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, bg #1a1a1a, rad 12
+  Tabs
+    List hor, bor 0 0 1 0, boc #333
+      Trigger pad 14 20, cursor pointer
+        Text "Allgemein", col #888, fs 13
+        selected:
+          Text "Allgemein", col white, fs 13, weight 500
+      Trigger pad 14 20, cursor pointer
+        Text "Sicherheit", col #888, fs 13
+        selected:
+          Text "Sicherheit", col white, fs 13, weight 500
+      Trigger pad 14 20, cursor pointer
+        Text "Benachricht.", col #888, fs 13
+        selected:
+          Text "Benachricht.", col white, fs 13, weight 500
+    Content pad 16, gap 12
+      Frame hor, spread
+        Frame gap 2
+          Text "Dunkelmodus", col white, fs 14
+          Text "Dunkles Theme verwenden", col #888, fs 12
+        Switch
+          Track w 40, h 22, bg #333, rad 11
+          Thumb w 18, h 18, bg white, rad 9
+    Content pad 16, gap 12
+      Frame hor, spread
+        Frame gap 2
+          Text "2FA", col white, fs 14
+          Text "Zwei-Faktor-Auth", col #888, fs 12
+        Switch
+          Track w 40, h 22, bg #333, rad 11
+          Thumb w 18, h 18, bg white, rad 9
+    Content pad 16, gap 12
+      Frame hor, spread
+        Frame gap 2
+          Text "E-Mail", col white, fs 14
+          Text "E-Mail Benachrichtigungen", col #888, fs 12
+        Switch
+          Track w 40, h 22, bg #10b981, rad 11
+          Thumb w 18, h 18, bg white, rad 9</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Tabs</code> – Tab-Navigation mit List, Trigger, Content</li>
+        <li><code>Accordion</code> – Aufklappbar mit Item, ItemTrigger, ItemContent</li>
+        <li>Keyboard: Pfeiltasten navigieren, Enter aktiviert</li>
+        <li><code>selected:</code> / <code>expanded:</code> für Zustands-Styles</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="lektion-37.html">← Dialog & Popover</a>
+      <a href="lektion-39.html">Checkbox, Switch, Radio →</a>
+    </nav>
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|bg|col|gap|rad|bor|boc|w|h|fs|is|ic|margin|center|hor|spread|grow|cursor)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|selected|expanded|focus)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+    function highlight(t){let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;');const m=[];for(const p of patterns){p.regex.lastIndex=0;let x;while((x=p.regex.exec(t))!==null)m.push({from:x.index,to:x.index+x[0].length,cls:p.cls,text:x[0]})}m.sort((a,b)=>a.from-b.from);const f=[];let e=0;for(const x of m)if(x.from>=e){f.push(x);e=x.to}let r='',p=0;for(const x of f){if(x.from>p)r+=h.slice(p,x.from);r+=`<span class="${x.cls}">${x.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>`;p=x.to}return r+h.slice(p)}
+    document.querySelectorAll('.playground[data-playground]').forEach(p=>{const c=p.querySelector('.playground-code'),t=p.querySelector('textarea'),v=p.querySelector('.playground-preview'),pre=document.createElement('pre');c.insertBefore(pre,t);function u(){pre.innerHTML=highlight(t.value)}function x(){try{v.innerHTML='';v.classList.add('mirror-root');const code=MirrorLang.compile(t.value);const fn=new Function(code.replace('export function createUI','function createUI')+'\nreturn createUI();');const ui=fn();if(ui?.root)v.appendChild(ui.root)}catch(e){v.innerHTML=`<div class="playground-error">${e.message}</div>`}}t.addEventListener('input',()=>{u();clearTimeout(t._t);t._t=setTimeout(x,100)});t.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=t.selectionStart;t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+2;u();x()}});u();x()})
+  </script>
+</body>
+</html>

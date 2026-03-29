@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Zag: Tooltip & HoverCard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <style>
+    :root { --bg: #111; --bg-code: #191919; --bg-preview: #0c0c0c; --text: #ccc; --text-bright: #eee; --text-dim: #666; --border: #282828; --accent: #4a9eff; --font: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; }
+    .page { max-width: 720px; margin: 0 auto; padding: 60px 32px 100px; }
+    h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); margin-bottom: 48px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 16px; text-transform: uppercase; }
+    p { margin-bottom: 16px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; color: var(--text-bright); }
+    .playground { margin: 20px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .playground-code { background: var(--bg-code); border-bottom: 1px solid var(--border); position: relative; }
+    .playground-code pre { margin: 0; padding: 16px; font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; pointer-events: none; }
+    .playground-code textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 16px; border: none; background: transparent; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: transparent; caret-color: var(--text-bright); resize: none; outline: none; }
+    .playground-preview { min-height: 150px; background: var(--bg-preview); padding: 16px; display: flex; align-items: center; justify-content: center; }
+    .playground-error { color: #e55; font-family: var(--mono); font-size: 12px; }
+    .props { margin: 24px 0; font-size: 13px; }
+    .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .props code { width: 160px; flex-shrink: 0; background: none; color: var(--accent); }
+    .props span { color: var(--text-dim); }
+    .summary { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .summary ul { list-style: none; }
+    .summary li { padding: 6px 0; font-size: 13px; }
+    .summary li code { margin-right: 8px; }
+    nav { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; }
+    nav a { color: var(--text-dim); text-decoration: none; }
+    .topnav { max-width: 720px; margin: 0 auto; padding: 20px 32px; display: flex; justify-content: space-between; font-size: 13px; }
+    .topnav a, .topnav span { color: var(--text-dim); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="topnav"><a href="index.html">← Übersicht</a><span>Kapitel 43 von 50</span></nav>
+
+  <main class="page">
+    <h1>Zag: Tooltip & HoverCard</h1>
+
+    <section>
+      <h2>Überblick</h2>
+      <p><code>Tooltip</code> für kurze Hinweise, <code>HoverCard</code> für reichhaltige Vorschauen bei Hover.</p>
+      <div class="props">
+        <div><code>Tooltip</code><span>Kurzer Hinweistext</span></div>
+        <div><code>HoverCard</code><span>Reichhaltige Vorschau</span></div>
+        <div><code>placement</code><span>Position (top, bottom, left, right)</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tooltip</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16
+  Tooltip
+    Trigger
+      Button pad 10 16, bg #2563eb, col white, rad 8, cursor pointer
+        Icon "save", ic white, is 16
+    Content bg #333, pad 8 12, rad 6, shadow lg
+      Text "Speichern (⌘S)", col white, fs 12
+
+  Tooltip placement bottom
+    Trigger
+      Button pad 10 16, bg #1a1a1a, col white, rad 8, cursor pointer
+        Icon "trash", ic #ef4444, is 16
+    Content bg #333, pad 8 12, rad 6, shadow lg
+      Text "Löschen", col white, fs 12
+
+  Tooltip placement right
+    Trigger
+      Frame w 36, h 36, bg #1a1a1a, rad 8, center, cursor pointer
+        Icon "info", ic #888, is 18
+    Content bg #333, pad 8 12, rad 6, shadow lg
+      Text "Mehr Informationen", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tooltip mit Arrow</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  Tooltip
+    Trigger
+      Frame w 40, h 40, bg #1a1a1a, rad 8, center, cursor pointer
+        Icon "home", ic white, is 18
+    Content bg #252525, rad 6, shadow lg
+      Arrow bg #252525
+      Frame pad 8 12
+        Text "Startseite", col white, fs 12
+
+  Tooltip
+    Trigger
+      Frame w 40, h 40, bg #1a1a1a, rad 8, center, cursor pointer
+        Icon "settings", ic white, is 18
+    Content bg #252525, rad 6, shadow lg
+      Arrow bg #252525
+      Frame pad 8 12
+        Text "Einstellungen", col white, fs 12
+
+  Tooltip
+    Trigger
+      Frame w 40, h 40, bg #1a1a1a, rad 8, center, cursor pointer
+        Icon "user", ic white, is 18
+    Content bg #252525, rad 6, shadow lg
+      Arrow bg #252525
+      Frame pad 8 12
+        Text "Profil", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>HoverCard</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard
+  Trigger
+    Frame hor, gap 8, cursor pointer
+      Frame w 32, h 32, bg #2563eb, rad 16, center
+        Text "M", col white, fs 12
+      Text "@max_dev", col #2563eb, fs 14
+  Content w 280, bg #1a1a1a, rad 12, bor 1, boc #333, shadow lg
+    Frame pad 16, gap 12
+      Frame hor, gap 12
+        Frame w 48, h 48, bg #2563eb, rad 24, center
+          Text "M", col white, fs 16
+        Frame gap 2
+          Text "Max Mustermann", col white, weight 500
+          Text "@max_dev", col #888, fs 13
+      Text "Full-stack Developer. Building cool stuff with Mirror.", col #888, fs 13
+      Frame hor, gap 16
+        Frame hor, gap 4
+          Text "1.2k", col white, fs 13, weight 500
+          Text "Followers", col #888, fs 13
+        Frame hor, gap 4
+          Text "420", col white, fs 13, weight 500
+          Text "Following", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Icon-Toolbar</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 2, pad 4, bg #1a1a1a, rad 8
+  Tooltip
+    Trigger
+      Frame w 36, h 36, rad 6, center, cursor pointer
+        Icon "bold", ic #888, is 16
+        hover:
+          bg #252525
+    Content bg #333, pad 6 10, rad 4
+      Text "Fett (⌘B)", col white, fs 11
+
+  Tooltip
+    Trigger
+      Frame w 36, h 36, rad 6, center, cursor pointer
+        Icon "italic", ic #888, is 16
+        hover:
+          bg #252525
+    Content bg #333, pad 6 10, rad 4
+      Text "Kursiv (⌘I)", col white, fs 11
+
+  Tooltip
+    Trigger
+      Frame w 36, h 36, rad 6, center, cursor pointer
+        Icon "underline", ic #888, is 16
+        hover:
+          bg #252525
+    Content bg #333, pad 6 10, rad 4
+      Text "Unterstrichen (⌘U)", col white, fs 11
+
+  Frame w 1, h 20, bg #333, margin 0 4
+
+  Tooltip
+    Trigger
+      Frame w 36, h 36, rad 6, center, cursor pointer
+        Icon "list", ic #888, is 16
+        hover:
+          bg #252525
+    Content bg #333, pad 6 10, rad 4
+      Text "Liste", col white, fs 11
+
+  Tooltip
+    Trigger
+      Frame w 36, h 36, rad 6, center, cursor pointer
+        Icon "link", ic #888, is 16
+        hover:
+          bg #252525
+    Content bg #333, pad 6 10, rad 4
+      Text "Link einfügen (⌘K)", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: User-Liste mit HoverCard</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 280, bg #1a1a1a, rad 8, pad 8, gap 4
+  HoverCard
+    Trigger
+      Frame hor, gap 12, pad 10, rad 6, cursor pointer
+        Frame w 36, h 36, bg #10b981, rad 18, center
+          Text "A", col white
+        Frame gap 2
+          Text "Anna Müller", col white, fs 14
+          Text "Design Lead", col #888, fs 12
+        hover:
+          bg #252525
+    Content w 240, bg #1a1a1a, rad 10, bor 1, boc #333, shadow lg
+      Frame pad 12, gap 10
+        Frame hor, gap 10
+          Frame w 40, h 40, bg #10b981, rad 20, center
+            Text "A", col white
+          Frame gap 2
+            Text "Anna Müller", col white, weight 500, fs 14
+            Text "anna@example.com", col #888, fs 11
+        Text "Design Lead bei TechCorp. Liebt minimalistisches UI.", col #888, fs 12
+
+  HoverCard
+    Trigger
+      Frame hor, gap 12, pad 10, rad 6, cursor pointer
+        Frame w 36, h 36, bg #2563eb, rad 18, center
+          Text "M", col white
+        Frame gap 2
+          Text "Max Schmidt", col white, fs 14
+          Text "Developer", col #888, fs 12
+        hover:
+          bg #252525
+    Content w 240, bg #1a1a1a, rad 10, bor 1, boc #333, shadow lg
+      Frame pad 12, gap 10
+        Frame hor, gap 10
+          Frame w 40, h 40, bg #2563eb, rad 20, center
+            Text "M", col white
+          Frame gap 2
+            Text "Max Schmidt", col white, weight 500, fs 14
+            Text "max@example.com", col #888, fs 11
+        Text "Full-Stack Developer. TypeScript & Rust enthusiast.", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Tooltip</code> – Trigger, Content für kurze Hinweise</li>
+        <li><code>HoverCard</code> – Reichhaltige Hover-Vorschauen</li>
+        <li><code>Arrow</code> – Pfeil zur Triggerposition</li>
+        <li><code>placement</code> – top, bottom, left, right</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="lektion-42.html">← Menu & ContextMenu</a>
+      <a href="lektion-44.html">FileUpload & Avatar →</a>
+    </nav>
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns=[{regex:/\/\/.*$/gm,cls:'syn-comment'},{regex:/"[^"]*"/g,cls:'syn-string'},{regex:/#[0-9A-Fa-f]{3,8}\b/g,cls:'syn-hex'},{regex:/\b\d+(\.\d+)?\b/g,cls:'syn-number'},{regex:/\b(pad|bg|col|gap|rad|bor|boc|w|h|fs|is|ic|center|hor|spread|cursor|shadow|margin|placement)\b/g,cls:'syn-property'},{regex:/\b(hover|focus|top|bottom|left|right)\b/g,cls:'syn-keyword'},{regex:/\b[A-Z][a-zA-Z0-9]*\b/g,cls:'syn-component'}];function highlight(t){let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;');const m=[];for(const p of patterns){p.regex.lastIndex=0;let x;while((x=p.regex.exec(t))!==null)m.push({from:x.index,to:x.index+x[0].length,cls:p.cls,text:x[0]})}m.sort((a,b)=>a.from-b.from);const f=[];let e=0;for(const x of m)if(x.from>=e){f.push(x);e=x.to}let r='',p=0;for(const x of f){if(x.from>p)r+=h.slice(p,x.from);r+=`<span class="${x.cls}">${x.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>`;p=x.to}return r+h.slice(p)}document.querySelectorAll('.playground[data-playground]').forEach(p=>{const c=p.querySelector('.playground-code'),t=p.querySelector('textarea'),v=p.querySelector('.playground-preview'),pre=document.createElement('pre');c.insertBefore(pre,t);function u(){pre.innerHTML=highlight(t.value)}function x(){try{v.innerHTML='';v.classList.add('mirror-root');const code=MirrorLang.compile(t.value);const fn=new Function(code.replace('export function createUI','function createUI')+'\nreturn createUI();');const ui=fn();if(ui?.root)v.appendChild(ui.root)}catch(e){v.innerHTML=`<div class="playground-error">${e.message}</div>`}}t.addEventListener('input',()=>{u();clearTimeout(t._t);t._t=setTimeout(x,100)});t.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=t.selectionStart;t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+2;u();x()}});u();x()})
+  </script>
+</body>
+</html>

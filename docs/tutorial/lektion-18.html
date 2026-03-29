@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Events</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 150px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,185 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 18 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Events</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Events reagieren auf Benutzerinteraktionen. Sie werden als Properties mit einem Doppelpunkt definiert:</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>onclick:</code><span>Beim Klicken</span></div>
+        <div><code>onhover:</code><span>Beim Darüberfahren</span></div>
+        <div><code>onfocus:</code><span>Beim Fokussieren</span></div>
+        <div><code>onblur:</code><span>Beim Verlieren des Fokus</span></div>
+        <div><code>onchange:</code><span>Bei Wertänderung (Input)</span></div>
+        <div><code>oninput:</code><span>Bei jeder Eingabe</span></div>
+        <div><code>onclick-outside:</code><span>Klick außerhalb des Elements</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Onclick</h2>
+      <p><code>onclick:</code> führt eine Action aus, wenn das Element geklickt wird:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
+          <textarea>Frame gap 16
+  Button pad 12 24, bg #2563eb, col white, rad 8, cursor pointer
+    onclick:
+      toggle self
+    "Klick mich"
+  Text "Klicke den Button!", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
+      <p>Hinweis: <code>toggle self</code> ist eine Action, die wir in der nächsten Lektion genauer behandeln.</p>
+    </section>
+
+    <section>
+      <h2>Onhover</h2>
+      <p><code>onhover:</code> reagiert auf Mausbewegungen über das Element:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+          <textarea>Frame w 200, h 120, bg #1a1a1a, rad 8, center
+  Text "Hover über mich", col #888
+  onhover:
+    show Tooltip
+
+Frame stacked
+  Frame w 200, bg #333, pad 8 12, rad 6, hidden
+    Text "Tooltip erscheint!", col white, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Onfocus und Onblur</h2>
+      <p><code>onfocus:</code> und <code>onblur:</code> reagieren auf Fokus-Änderungen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Input w 200, pad 12, bg #1a1a1a, col white, rad 8
+    placeholder "Klicke hier..."
+    focus:
+      boc #2563eb
+      bg #0d1117
+  Text "Klicke in das Input-Feld", col #666, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Onchange und Oninput</h2>
+      <p><code>oninput:</code> reagiert auf jede Eingabe, <code>onchange:</code> erst beim Verlassen des Feldes:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+  Frame gap 8
+    Text "oninput (reagiert sofort):", col #888, fs 12
+    Input w 200, pad 12, bg #1a1a1a, col white, rad 8, bor 1, boc #333
+      oninput:
+        highlight self
+  Frame gap 8
+    Text "onchange (reagiert bei Blur):", col #888, fs 12
+    Input w 200, pad 12, bg #1a1a1a, col white, rad 8, bor 1, boc #333
+      onchange:
+        highlight self</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Keyboard Events</h2>
+      <p><code>onkeydown:</code> und <code>onkeyup:</code> reagieren auf Tastenanschläge. Du kannst spezifische Tasten angeben:</p>
+
+      <div class="props">
+        <div><code>onkeydown enter:</code><span>Bei Enter-Taste</span></div>
+        <div><code>onkeydown escape:</code><span>Bei Escape-Taste</span></div>
+        <div><code>onkeydown space:</code><span>Bei Leertaste</span></div>
+        <div><code>onkeydown tab:</code><span>Bei Tab-Taste</span></div>
+        <div><code>onkeydown arrow-up:</code><span>Bei Pfeil nach oben</span></div>
+        <div><code>onkeydown arrow-down:</code><span>Bei Pfeil nach unten</span></div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Input w 220, pad 12, bg #1a1a1a, col white, rad 8
+    placeholder "Drücke Enter..."
+    onkeydown enter:
+      submit self
+    focus:
+      boc #2563eb
+  Text "Enter drücken zum Absenden", col #666, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Onclick-outside</h2>
+      <p><code>onclick-outside:</code> reagiert auf Klicks außerhalb des Elements – perfekt für Dropdowns:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 150, bg #1a1a1a, rad 8, pad 16
+  Frame state open, w full, pos
+    Button w full, pad 12, bg #333, col white, rad 8, hor, spread
+      cursor pointer
+      Text "Dropdown"
+      Icon "chevron-down", ic #888, is 16
+      onclick:
+        toggle self
+    // Dropdown Menu
+    Frame w full, bg #252525, rad 8, pad 4, shadow lg, pt 48, hidden
+      Frame pad 10, rad 4, cursor pointer
+        Text "Option 1", col white, fs 14
+        hover:
+          bg #333
+      Frame pad 10, rad 4, cursor pointer
+        Text "Option 2", col white, fs 14
+        hover:
+          bg #333</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Event mit Action kombiniert</h2>
+      <p>Events werden oft mit Actions kombiniert. Die Syntax ist <code>event: action target</code>:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
-
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  Frame state open
+    Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+      onclick:
+        open Dialog
+      "Dialog öffnen"
+  // Dialog (normalerweise hidden)
+  Frame w 200, bg #1a1a1a, rad 12, pad 20, shadow lg
+    Text "Dialog geöffnet!", col white, weight 500
+    Text "Klicke auf Close", col #888, fs 13
+    Button pad 8 16, bg #333, col white, rad 6, cursor pointer
+      onclick:
+        close Dialog
+      "Close"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +291,55 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle ein Suchfeld, das bei Fokus den Rahmen blau färbt und bei Enter eine Such-Action ausführt:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
+        <div style="font-family: Inter, sans-serif;">
+          <div style="display: flex; gap: 8px; align-items: center; background: #1a1a1a; padding: 12px 16px; border-radius: 8px; border: 1px solid #333;">
+            <span style="font-size: 16px;">🔍</span>
+            <input type="text" placeholder="Suchen..." style="background: transparent; border: none; color: white; outline: none; font-size: 13px;">
           </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame hor, gap 8, bg #1a1a1a, pad 12 16, rad 8, bor 1, boc #333
+  Icon "search", ic #888, is 18
+  Input bg transparent, col white, bor 0, placeholder "Suchen..."</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame hor, gap 8, bg #1a1a1a, pad 12 16, rad 8, bor 1, boc #333
+  Icon "search", ic #888, is 18
+  Input bg transparent, col white, bor 0, placeholder "Suchen..."
+    focus:
+      boc #2563eb
+    onkeydown enter:
+      submit self</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>onclick:</code> – Bei Klick</li>
+        <li><code>onhover:</code> – Bei Hover</li>
+        <li><code>onfocus:</code> – Bei Fokus</li>
+        <li><code>onblur:</code> – Bei Fokus-Verlust</li>
+        <li><code>onchange:</code> – Bei Wertänderung (nach Blur)</li>
+        <li><code>oninput:</code> – Bei jeder Eingabe</li>
+        <li><code>onkeydown key:</code> – Bei Tastendruck</li>
+        <li><code>onclick-outside:</code> – Klick außerhalb</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-17.html">← State-Modifikatoren</a>
+      <a href="lektion-19.html">Actions →</a>
     </nav>
 
   </main>
@@ -280,10 +351,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|placeholder|pt)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|onclick-outside|show|hide|submit|highlight|enter|escape|space|tab|arrow-up|arrow-down)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

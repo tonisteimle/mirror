@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Enter/Exit Animationen</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 160px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,236 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 23 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Enter/Exit Animationen</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Enter- und Exit-Animationen spielen beim Erscheinen und Verschwinden von Elementen ab. Sie machen State-Übergänge flüssiger und professioneller.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>enter: animation</code><span>Animation beim Erscheinen</span></div>
+        <div><code>exit: animation</code><span>Animation beim Verschwinden</span></div>
+        <div><code>onenter:</code><span>Event wenn Element erscheint</span></div>
+        <div><code>onexit:</code><span>Event wenn Element verschwindet</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Enter Animation</h2>
+      <p><code>enter:</code> definiert eine Animation, die beim Erscheinen abgespielt wird:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>Frame gap 16
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+    onclick:
+      toggle Message
+    "Toggle Nachricht"
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+  Frame state open, pad 16, bg #10b981, rad 8
+    enter: fade-in
+    Text "Ich erscheine sanft!", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Exit Animation</h2>
+      <p><code>exit:</code> definiert eine Animation beim Verschwinden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame gap 16
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+    onclick:
+      toggle Notification
+    "Toggle Notification"
+
+  Frame state open initial, pad 16, bg #f59e0b, rad 8
+    enter: slide-in
+    exit: fade-out
+    Text "Ich gleite rein und fade aus!", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Enter + Exit kombiniert</h2>
+      <p>Unterschiedliche Animationen für Enter und Exit:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame gap 16
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+    onclick:
+      toggle Modal
+    "Modal öffnen"
+
+  Frame state open, w 220, bg #1a1a1a, rad 12, pad 20, shadow lg
+    enter: scale-in
+    exit: scale-out
+    Text "Modal Titel", col white, weight 500
+    Text "Mit scale Animationen.", col #888, fs 13
+    Button pad 8 16, bg #333, col white, rad 6, cursor pointer
+      onclick:
+        close Modal
+      "Schließen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Verfügbare Animationen</h2>
+      <p>Alle Animation-Presets funktionieren mit enter/exit:</p>
+
+      <div class="props">
+        <div><code>fade-in / fade-out</code><span>Ein-/Ausblenden</span></div>
+        <div><code>slide-in / slide-out</code><span>Herein-/Herausgleiten</span></div>
+        <div><code>scale-in / scale-out</code><span>Herein-/Herauszoomen</span></div>
+        <div><code>bounce</code><span>Hüpfend erscheinen</span></div>
+      </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame gap 12
+  Frame hor, gap 8
+    Button pad 8 12, bg #333, col white, rad 6, fs 12, cursor pointer
+      onclick:
+        toggle Box1
+      "fade"
+    Button pad 8 12, bg #333, col white, rad 6, fs 12, cursor pointer
+      onclick:
+        toggle Box2
+      "slide"
+    Button pad 8 12, bg #333, col white, rad 6, fs 12, cursor pointer
+      onclick:
+        toggle Box3
+      "scale"
+    Button pad 8 12, bg #333, col white, rad 6, fs 12, cursor pointer
+      onclick:
+        toggle Box4
+      "bounce"
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  Frame hor, gap 12
+    Frame state open initial, w 60, h 60, bg #2563eb, rad 8
+      enter: fade-in
+      exit: fade-out
+    Frame state open initial, w 60, h 60, bg #10b981, rad 8
+      enter: slide-in
+      exit: slide-out
+    Frame state open initial, w 60, h 60, bg #f59e0b, rad 8
+      enter: scale-in
+      exit: scale-out
+    Frame state open initial, w 60, h 60, bg #ef4444, rad 8
+      enter: bounce</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Toast Notification</h2>
+      <p>Ein Toast, der einblendet und nach einer Weile ausblendet:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+  Button pad 12 20, bg #10b981, col white, rad 8, cursor pointer
+    onclick:
+      show Toast
+    "Erfolg anzeigen"
+
+  Frame state open, w 280, hor, gap 12, bg #1a1a1a, pad 12 16, rad 8, shadow lg
+    enter: slide-in
+    exit: fade-out
+    Frame w 32, h 32, bg #10b981, rad 16, center
+      Icon "check", ic white, is 16
+    Frame gap 2, grow
+      Text "Erfolgreich!", col white, weight 500, fs 14
+      Text "Aktion wurde ausgeführt.", col #888, fs 12
+    Frame cursor pointer
+      onclick:
+        hide Toast
+      Icon "x", ic #666, is 16
+      hover:
+        Icon "x", ic white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Dropdown Menu</h2>
+      <p>Ein Dropdown mit flüssiger Animation:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, pos
+  // Trigger
+  Frame state open, hor, spread, pad 12, bg #1a1a1a, rad 8, cursor pointer
+    Text "Optionen", col white
+    Icon "chevron-down", ic #888, is 16
+    open:
+      bor 1, boc #2563eb
+      Icon "chevron-up", ic #888, is 16
+
+  // Menu
+  Frame w full, bg #252525, rad 8, pad 4, shadow lg, pt 50, z 10
+    visible when Trigger open
+    enter: fade-in
+    exit: fade-out
+    Frame pad 10 12, rad 4, cursor pointer
+      Text "Bearbeiten", col white, fs 14
+      hover:
+        bg #333
+    Frame pad 10 12, rad 4, cursor pointer
+      Text "Duplizieren", col white, fs 14
+      hover:
+        bg #333
+    Frame pad 10 12, rad 4, cursor pointer
+      Text "Löschen", col #ef4444, fs 14
+      hover:
+        bg #333</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Sidebar</h2>
+      <p>Eine Sidebar, die von links hereinscrollt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 200, hor, bg #0c0c0c, clip
+  // Sidebar
+  Frame state open initial, w 120, h full, bg #1a1a1a, pad 16, gap 8
+    enter: slide-in
+    exit: slide-out
+    Text "Navigation", col #888, fs 11, uppercase
+    Text "Home", col white, cursor pointer
+    Text "Projekte", col #888, cursor pointer
+    Text "Settings", col #888, cursor pointer
+
+  // Main Content
+  Frame grow, pad 16
+    Frame hor, gap 12
+      Frame cursor pointer
+        onclick:
+          toggle Sidebar
+        Icon "list", ic white, is 20
+      Text "Main Content", col white
+    Text "Klicke das Icon um die Sidebar zu toggeln.", col #666, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +342,85 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle eine Bestätigungs-Dialog mit Backdrop, wobei der Backdrop fade-in/out und das Modal scale-in/out macht:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 300, h 180, stacked, bg #0c0c0c
+  // Trigger
+  Button pad 12 20, bg #ef4444, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Dialog
+    "Löschen"
+
+  // Backdrop
+  Frame w full, h full, bg rgba(0,0,0,0.5)
+    visible when Dialog open
+
+  // Dialog
+  Frame w 200, bg #1a1a1a, rad 12, pad 20, pc
+    visible when Dialog open
+    Text "Wirklich löschen?", col white
+    Frame hor, gap 8
+      Button pad 8 12, bg #333, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Abbrechen"
+      Button pad 8 12, bg #ef4444, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 300, h 180, stacked, bg #0c0c0c
+  // Trigger
+  Button pad 12 20, bg #ef4444, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Dialog
+    "Löschen"
+
+  // Backdrop
+  Frame w full, h full, bg rgba(0,0,0,0.5)
+    visible when Dialog open
+    enter: fade-in
+    exit: fade-out
+
+  // Dialog
+  Frame w 200, bg #1a1a1a, rad 12, pad 20, pc, z 10
+    visible when Dialog open
+    enter: scale-in
+    exit: scale-out
+    Text "Wirklich löschen?", col white
+    Frame hor, gap 8
+      Button pad 8 12, bg #333, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Abbrechen"
+      Button pad 8 12, bg #ef4444, col white, rad 6, cursor pointer
+        onclick:
+          close Dialog
+        "Löschen"</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>enter: animation</code> – Animation beim Erscheinen</li>
+        <li><code>exit: animation</code> – Animation beim Verschwinden</li>
+        <li>Funktioniert mit: fade-in/out, slide-in/out, scale-in/out, bounce</li>
+        <li>Kombinierbar mit <code>visible when</code></li>
+        <li>Ideal für: Modals, Dropdowns, Toasts, Sidebars</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-22.html">← State Dependencies</a>
+      <a href="lektion-24.html">Keyboard Events →</a>
     </nav>
 
   </main>
@@ -280,10 +432,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|z|pc)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover|when|or|and|enter|exit|fade-in|fade-out|slide-in|slide-out|scale-in|scale-out|bounce|show|hide|close)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

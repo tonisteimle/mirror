@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Zag: Dialog & Popover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <style>
+    :root { --bg: #111; --bg-code: #191919; --bg-preview: #0c0c0c; --text: #ccc; --text-bright: #eee; --text-dim: #666; --border: #282828; --accent: #4a9eff; --font: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; }
+    .page { max-width: 720px; margin: 0 auto; padding: 60px 32px 100px; }
+    header { margin-bottom: 48px; }
+    h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); }
+    section { margin-bottom: 48px; }
+    h2 { font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 16px; text-transform: uppercase; }
+    p { margin-bottom: 16px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; color: var(--text-bright); }
+    .playground { margin: 20px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .playground-code { background: var(--bg-code); border-bottom: 1px solid var(--border); position: relative; }
+    .playground-code pre { margin: 0; padding: 16px; font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; pointer-events: none; }
+    .playground-code textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 16px; border: none; background: transparent; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: transparent; caret-color: var(--text-bright); resize: none; outline: none; }
+    .playground-preview { min-height: 150px; background: var(--bg-preview); padding: 16px; display: flex; align-items: center; justify-content: center; }
+    .playground-error { color: #e55; font-family: var(--mono); font-size: 12px; }
+    .props { margin: 24px 0; font-size: 13px; }
+    .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .props code { width: 180px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props span { color: var(--text-dim); }
+    .summary { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .summary ul { list-style: none; }
+    .summary li { padding: 6px 0; font-size: 13px; }
+    .summary li code { margin-right: 8px; }
+    nav { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; }
+    nav a { color: var(--text-dim); text-decoration: none; }
+    nav a:hover { color: var(--text); }
+    .topnav { max-width: 720px; margin: 0 auto; padding: 20px 32px; display: flex; justify-content: space-between; font-size: 13px; }
+    .topnav a { color: var(--text-dim); text-decoration: none; }
+    .topnav span { color: var(--text-dim); }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">← Übersicht</a>
+    <span>Kapitel 37 von 50</span>
+  </nav>
+
+  <main class="page">
+    <header>
+      <h1>Zag: Dialog & Popover</h1>
+    </header>
+
+    <section>
+      <h2>Überblick</h2>
+      <p><code>Dialog</code> zeigt modale Inhalte, <code>Popover</code> zeigt kontextuelle Informationen. Beide unterstützen Focus-Trapping und Escape zum Schließen.</p>
+
+      <div class="props">
+        <div><code>Dialog</code><span>Modales Overlay</span></div>
+        <div><code>Popover</code><span>Kontextuelles Popup</span></div>
+        <div><code>Trigger, Content</code><span>Slots für Auslöser und Inhalt</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dialog Grundlagen</h2>
+      <p>Ein modaler Dialog mit Backdrop:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger
+    Button "Dialog öffnen", pad 12 20, bg #2563eb, col white, rad 8
+  Backdrop bg rgba(0,0,0,0.5)
+  Content w 320, bg #1a1a1a, rad 12, shadow lg
+    Frame pad 20, gap 16
+      Frame hor, spread
+        Text "Bestätigung", col white, weight 500, fs 18
+        Frame w 28, h 28, rad 6, center, cursor pointer
+          Icon "x", ic #888, is 16
+          hover:
+            bg #333
+      Text "Möchtest du diese Aktion wirklich durchführen?", col #888, fs 14
+      Frame hor, gap 8, spread
+        Button "Abbrechen", pad 10 16, rad 6, col #888, cursor pointer
+        Button "Bestätigen", pad 10 16, bg #2563eb, col white, rad 6, cursor pointer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dialog mit Formular</h2>
+      <p>Ein Dialog für Dateneingabe:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger
+    Button "Neuer Eintrag", pad 10 16, bg #10b981, col white, rad 8
+      Icon "plus", ic white, is 16
+  Backdrop bg rgba(0,0,0,0.6)
+  Content w 340, bg #1a1a1a, rad 12, shadow lg
+    Frame pad 20, gap 16
+      Text "Neuen Eintrag erstellen", col white, weight 500, fs 18
+      Frame gap 12
+        Frame gap 4
+          Text "Titel", col #888, fs 12
+          Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+            placeholder "Titel eingeben..."
+        Frame gap 4
+          Text "Beschreibung", col #888, fs 12
+          Textarea w full, h 80, pad 10, bg #252525, col white, rad 6
+            placeholder "Beschreibung..."
+      Frame hor, gap 8, spread
+        Button "Abbrechen", pad 10 16, rad 6, col #888, cursor pointer
+        Button "Speichern", pad 10 16, bg #10b981, col white, rad 6, cursor pointer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Popover</h2>
+      <p>Ein Popover für kontextuelle Aktionen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger
+    Button "Mehr", pad 8, bg #1a1a1a, rad 6, cursor pointer
+      Icon "more-horizontal", ic white, is 18
+  Content bg #1a1a1a, rad 8, bor 1, boc #333, shadow lg
+    Frame pad 4, gap 2
+      Frame hor, gap 10, pad 10, rad 6, cursor pointer
+        Icon "edit", ic #888, is 16
+        Text "Bearbeiten", col white, fs 14
+        hover:
+          bg #252525
+      Frame hor, gap 10, pad 10, rad 6, cursor pointer
+        Icon "copy", ic #888, is 16
+        Text "Kopieren", col white, fs 14
+        hover:
+          bg #252525
+      Frame h 1, bg #333, margin 4 0
+      Frame hor, gap 10, pad 10, rad 6, cursor pointer
+        Icon "trash", ic #ef4444, is 16
+        Text "Löschen", col #ef4444, fs 14
+        hover:
+          bg #252525</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Bestätigungs-Dialog</h2>
+      <p>Ein Lösch-Dialog mit Warnung:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger
+    Button "Löschen", pad 10 16, bg #ef4444, col white, rad 8, cursor pointer
+      Icon "trash", ic white, is 16
+  Backdrop bg rgba(0,0,0,0.6)
+  Content w 360, bg #1a1a1a, rad 12, shadow lg
+    Frame pad 20, gap 16
+      Frame center, gap 12
+        Frame w 56, h 56, bg #ef4444, rad 28, center, opacity 0.2
+        Icon "alert-triangle", ic #ef4444, is 28, absolute
+      Frame gap 8, center
+        Text "Eintrag löschen?", col white, weight 500, fs 18
+        Text "Diese Aktion kann nicht rückgängig gemacht werden."
+          col #888, fs 14, center
+      Frame hor, gap 8
+        Button "Abbrechen", pad 12, grow, rad 8, col #888, cursor pointer
+          bor 1, boc #333
+        Button "Löschen", pad 12, grow, bg #ef4444, col white, rad 8, cursor pointer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: User-Info Popover</h2>
+      <p>Ein Popover mit Benutzer-Details:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger
+    Frame hor, gap 10, pad 8, rad 8, cursor pointer
+      Frame w 32, h 32, bg #2563eb, rad 16, center
+        Text "M", col white, fs 12
+      Text "Max", col white, fs 14
+      hover:
+        bg #1a1a1a
+  Content w 240, bg #1a1a1a, rad 12, bor 1, boc #333, shadow lg
+    Frame pad 16, gap 12
+      Frame hor, gap 12
+        Frame w 48, h 48, bg #2563eb, rad 24, center
+          Text "M", col white, fs 16
+        Frame gap 2
+          Text "Max Mustermann", col white, weight 500
+          Text "Developer", col #888, fs 12
+      Frame gap 8
+        Frame hor, gap 8
+          Icon "mail", ic #888, is 14
+          Text "max@example.com", col #888, fs 12
+        Frame hor, gap 8
+          Icon "map-pin", ic #888, is 14
+          Text "Berlin, DE", col #888, fs 12
+      Button "Profil anzeigen", w full, pad 10, bg #252525, col white, rad 6
+        hover:
+          bg #333</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>Dialog</code> – Modales Overlay mit Backdrop</li>
+        <li><code>Popover</code> – Kontextuelles Popup</li>
+        <li><code>Trigger</code> – Element das öffnet</li>
+        <li><code>Backdrop</code> – Hintergrund-Overlay</li>
+        <li><code>Content</code> – Der eigentliche Inhalt</li>
+        <li>Escape schließt automatisch</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="lektion-36.html">← Select & Combobox</a>
+      <a href="lektion-38.html">Tabs & Accordion →</a>
+    </nav>
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|bg|col|gap|rad|bor|boc|w|h|fs|is|ic|margin|center|hor|spread|grow|shadow|cursor|opacity|absolute)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|each|in|placeholder)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) { p.regex.lastIndex = 0; let m; while ((m = p.regex.exec(text)) !== null) matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] }) }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []; let lastEnd = 0
+      for (const m of matches) if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      let result = '', pos = 0
+      for (const m of filtered) { if (m.from > pos) result += html.slice(pos, m.from); result += `<span class="${m.cls}">${m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>`; pos = m.to }
+      return result + html.slice(pos)
+    }
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code'), textarea = p.querySelector('textarea'), preview = p.querySelector('.playground-preview'), pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+      function compile() { try { preview.innerHTML = ''; preview.classList.add('mirror-root'); const code = MirrorLang.compile(textarea.value); const fn = new Function(code.replace('export function createUI', 'function createUI') + '\nreturn createUI();'); const ui = fn(); if (ui?.root) preview.appendChild(ui.root) } catch (e) { preview.innerHTML = `<div class="playground-error">${e.message}</div>` } }
+      textarea.addEventListener('input', () => { updateHighlight(); clearTimeout(textarea._t); textarea._t = setTimeout(compile, 100) })
+      textarea.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const s = textarea.selectionStart; textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd); textarea.selectionStart = textarea.selectionEnd = s + 2; updateHighlight(); compile() } })
+      updateHighlight(); compile()
+    })
+  </script>
+</body>
+</html>

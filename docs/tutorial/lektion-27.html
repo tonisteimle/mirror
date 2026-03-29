@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Filter & Where</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 260px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); font-size: 13px; }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,214 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 27 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Filter & Where</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Mit <code>where</code> filterst du Daten direkt im Loop. Nur Elemente, die die Bedingung erfüllen, werden gerendert.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>each item in Collection where condition</code><span>Gefilterte Iteration</span></div>
+        <div><code>item.property == value</code><span>Gleichheit prüfen</span></div>
+        <div><code>item.property != value</code><span>Ungleichheit prüfen</span></div>
+        <div><code>item.property > value</code><span>Größer als</span></div>
+        <div><code>condition and condition</code><span>Beide müssen wahr sein</span></div>
+        <div><code>condition or condition</code><span>Mindestens eine wahr</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Grundsyntax</h2>
+      <p>Die <code>where</code>-Klausel filtert die Collection:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>Tasks:
+  - title: "E-Mails checken", done: false
+  - title: "Meeting vorbereiten", done: true
+  - title: "Report schreiben", done: false
+  - title: "Präsentation erstellen", done: true
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
+Frame gap 16
+  Frame gap 8
+    Text "Offen", col #888, fs 12, uppercase
+    each task in Tasks where task.done == false
+      Frame pad 10, bg #1a1a1a, rad 6
+        Text task.title, col white, fs 14
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+  Frame gap 8
+    Text "Erledigt", col #888, fs 12, uppercase
+    each task in Tasks where task.done == true
+      Frame pad 10, bg #1a1a1a, rad 6
+        Text task.title, col #888, fs 14</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Vergleichsoperatoren</h2>
+      <p>Verschiedene Vergleiche für unterschiedliche Filterungen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Products:
+  - name: "Laptop", price: 1299
+  - name: "Mouse", price: 49
+  - name: "Keyboard", price: 129
+  - name: "Monitor", price: 399
+  - name: "Webcam", price: 79
+
+Frame gap 16
+  Frame gap 8
+    Text "Unter 100 €", col #10b981, fs 12, weight 500
+    each product in Products where product.price < 100
+      Frame hor, spread, pad 8, bg #1a1a1a, rad 6
+        Text product.name, col white, fs 13
+        Text product.price + " €", col #888, fs 13
+
+  Frame gap 8
+    Text "100 € und mehr", col #f59e0b, fs 12, weight 500
+    each product in Products where product.price >= 100
+      Frame hor, spread, pad 8, bg #1a1a1a, rad 6
+        Text product.name, col white, fs 13
+        Text product.price + " €", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>String-Vergleiche</h2>
+      <p>Filter nach Text-Properties:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Users:
+  - name: "Anna", role: "admin"
+  - name: "Max", role: "user"
+  - name: "Lisa", role: "admin"
+  - name: "Tom", role: "user"
+  - name: "Eva", role: "moderator"
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+Frame gap 16
+  Frame gap 8
+    Text "Admins", col #ef4444, fs 12, weight 500
+    Frame hor, gap 8
+      each user in Users where user.role == "admin"
+        Frame pad 6 12, bg #ef4444, rad 12
+          Text user.name, col white, fs 12
+
+  Frame gap 8
+    Text "Normale User", col #2563eb, fs 12, weight 500
+    Frame hor, gap 8
+      each user in Users where user.role == "user"
+        Frame pad 6 12, bg #2563eb, rad 12
+          Text user.name, col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kombinierte Bedingungen</h2>
+      <p>Mit <code>and</code> und <code>or</code> kombinierst du Bedingungen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Products:
+  - name: "Laptop Pro", price: 1299, inStock: true
+  - name: "Budget Laptop", price: 499, inStock: false
+  - name: "Mouse", price: 29, inStock: true
+  - name: "Keyboard", price: 89, inStock: true
+  - name: "Monitor", price: 299, inStock: false
+
+Frame gap 8
+  Text "Verfügbar unter 100 €", col #10b981, fs 12, weight 500
+  each product in Products where product.inStock == true and product.price < 100
+    Frame hor, spread, pad 10, bg #1a1a1a, rad 6
+      Text product.name, col white, fs 13
+      Frame hor, gap 8
+        Text product.price + " €", col #10b981, fs 13
+        Frame w 8, h 8, bg #10b981, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Notification-Filter</h2>
+      <p>Notifications nach Typ filtern:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Notifications:
+  - type: "error", message: "Upload fehlgeschlagen"
+  - type: "success", message: "Datei gespeichert"
+  - type: "warning", message: "Speicher fast voll"
+  - type: "success", message: "Profil aktualisiert"
+  - type: "error", message: "Verbindung verloren"
+
+Frame w 280, gap 8
+  each notif in Notifications where notif.type == "error"
+    Frame hor, gap 10, pad 10, bg #1a1a1a, rad 6, bor 0 0 0 3, boc #ef4444
+      Icon "x-circle", ic #ef4444, is 18
+      Text notif.message, col white, fs 13
+
+  each notif in Notifications where notif.type == "success"
+    Frame hor, gap 10, pad 10, bg #1a1a1a, rad 6, bor 0 0 0 3, boc #10b981
+      Icon "check-circle", ic #10b981, is 18
+      Text notif.message, col white, fs 13
+
+  each notif in Notifications where notif.type == "warning"
+    Frame hor, gap 10, pad 10, bg #1a1a1a, rad 6, bor 0 0 0 3, boc #f59e0b
+      Icon "alert-triangle", ic #f59e0b, is 18
+      Text notif.message, col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Aktive User</h2>
+      <p>Eine User-Liste mit Online-Filter:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Team:
+  - name: "Anna", status: "online", avatar: "A"
+  - name: "Max", status: "offline", avatar: "M"
+  - name: "Lisa", status: "online", avatar: "L"
+  - name: "Tom", status: "away", avatar: "T"
+  - name: "Eva", status: "online", avatar: "E"
+
+Frame w 200, bg #1a1a1a, rad 8, pad 12, gap 12
+  Frame gap 8
+    Frame hor, gap 6
+      Frame w 8, h 8, bg #10b981, rad 4
+      Text "Online", col #888, fs 11
+    each user in Team where user.status == "online"
+      Frame hor, gap 10
+        Frame w 28, h 28, bg #2563eb, rad 14, center
+          Text user.avatar, col white, fs 11
+        Text user.name, col white, fs 13
+
+  Frame gap 8
+    Frame hor, gap 6
+      Frame w 8, h 8, bg #888, rad 4
+      Text "Offline / Away", col #888, fs 11
+    each user in Team where user.status != "online"
+      Frame hor, gap 10
+        Frame w 28, h 28, bg #333, rad 14, center
+          Text user.avatar, col #888, fs 11
+        Text user.name, col #666, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +320,64 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle einen Produkt-Filter der teure Produkte (über 500€) markiert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Products:
+  - name: "Laptop", price: 999
+  - name: "Mouse", price: 49
+  - name: "Monitor", price: 599
+  - name: "Keyboard", price: 129
+
+Frame w 240, gap 8
+  each product in Products
+    Frame hor, spread, pad 10, bg #1a1a1a, rad 6
+      Text product.name, col white, fs 13
+      Text product.price + " €", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Products:
+  - name: "Laptop", price: 999
+  - name: "Mouse", price: 49
+  - name: "Monitor", price: 599
+  - name: "Keyboard", price: 129
+
+Frame w 240, gap 12
+  Frame gap 4
+    Text "Premium (>500€)", col #f59e0b, fs 11, weight 500
+    each product in Products where product.price > 500
+      Frame hor, spread, pad 10, bg #1a1a1a, rad 6, bor 1, boc #f59e0b
+        Text product.name, col white, fs 13
+        Text product.price + " €", col #f59e0b, fs 13
+
+  Frame gap 4
+    Text "Standard", col #888, fs 11, weight 500
+    each product in Products where product.price <= 500
+      Frame hor, spread, pad 10, bg #1a1a1a, rad 6
+        Text product.name, col white, fs 13
+        Text product.price + " €", col #888, fs 13</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>where condition</code> – Filtert die Iteration</li>
+        <li><code>==</code>, <code>!=</code> – Gleichheit/Ungleichheit</li>
+        <li><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code> – Vergleiche</li>
+        <li><code>and</code> – Beide Bedingungen müssen wahr sein</li>
+        <li><code>or</code> – Eine Bedingung muss wahr sein</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-26.html">← Each-Loops</a>
+      <a href="lektion-28.html">Data Binding →</a>
     </nav>
 
   </main>
@@ -280,10 +389,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|true|false)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

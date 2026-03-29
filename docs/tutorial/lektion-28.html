@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Data Binding</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 200px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,206 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 28 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Data Binding</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>Data Binding verbindet UI-Elemente mit Daten. Änderungen an den Daten aktualisieren automatisch die UI – und umgekehrt.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>data Collection</code><span>Bindet Komponente an Daten</span></div>
+        <div><code>selection $variable</code><span>Speichert ausgewähltes Element</span></div>
+        <div><code>value $variable</code><span>Bindet Input-Wert an Variable</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Data Property</h2>
+      <p><code>data</code> verbindet eine Komponente mit einer Daten-Collection:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+          <textarea>Users:
+  - id: 1, name: "Anna", email: "anna@example.com"
+  - id: 2, name: "Max", email: "max@example.com"
+  - id: 3, name: "Lisa", email: "lisa@example.com"
 
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+// Liste mit data binding
+Frame w 240, bg #1a1a1a, rad 8, pad 8, data Users
+  each user in Users
+    Frame hor, gap 12, pad 10, rad 6, cursor pointer
+      Frame w 32, h 32, bg #2563eb, rad 16, center
+        Text user.name[0], col white, fs 12
+      Frame gap 2
+        Text user.name, col white, fs 14
+        Text user.email, col #888, fs 11
+      hover:
+        bg #252525</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Selection</h2>
+      <p><code>selection</code> speichert das aktuell ausgewählte Element in einer Variable:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Countries:
+  - code: "de", name: "Deutschland"
+  - code: "at", name: "Österreich"
+  - code: "ch", name: "Schweiz"
+
+Frame gap 16
+  // Liste mit Selection
+  Frame w 200, bg #1a1a1a, rad 8, pad 4
+    data Countries, selection $selectedCountry
+    each country in Countries
+      Frame state selected, pad 10, rad 6, cursor pointer
+        Text country.name, col #888, fs 14
+        selected:
+          bg #2563eb
+          Text country.name, col white
+
+  // Anzeige der Auswahl
+  Frame pad 12, bg #252525, rad 8
+    Text "Ausgewählt:", col #888, fs 12
+    Text $selectedCountry.name, col white, weight 500</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Value Binding</h2>
+      <p><code>value</code> bindet Input-Felder an Variablen für Zwei-Wege-Binding:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
+          <textarea>Frame gap 16
+  Frame gap 8
+    Text "Name eingeben:", col #888, fs 13
+    Input w 200, pad 12, bg #1a1a1a, col white, rad 8, bor 1, boc #333
+      value $userName
+      placeholder "Dein Name..."
+      focus:
+        boc #2563eb
 
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  Frame pad 12, bg #252525, rad 8
+    Text "Hallo, ", col #888
+    Text $userName, col white, weight 500
+    Text "!", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Master-Detail</h2>
+      <p>Ein klassisches Master-Detail-Pattern mit Liste und Detail-Ansicht:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Products:
+  - id: 1, name: "MacBook Pro", price: 2499, desc: "Leistungsstarkes Notebook"
+  - id: 2, name: "iPad Pro", price: 1199, desc: "Vielseitiges Tablet"
+  - id: 3, name: "AirPods Pro", price: 279, desc: "Kabellose Kopfhörer"
+
+Frame hor, gap 16
+  // Master (Liste)
+  Frame w 160, bg #1a1a1a, rad 8, pad 4, data Products, selection $selected
+    each product in Products
+      Frame state selected, pad 10, rad 6, cursor pointer
+        Text product.name, col #888, fs 13
+        selected:
+          bg #2563eb
+          Text product.name, col white
+
+  // Detail
+  Frame w 180, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text $selected.name, col white, weight 500
+    Text $selected.price + " €", col #10b981, fs 18
+    Text $selected.desc, col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Formular</h2>
+      <p>Ein Formular mit mehreren gebundenen Feldern:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 280, bg #1a1a1a, rad 12, pad 20, gap 16
+  Text "Profil bearbeiten", col white, weight 500
+
+  Frame gap 12
+    Frame gap 4
+      Text "Name", col #888, fs 12
+      Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+        value $name
+        placeholder "Max Mustermann"
+        focus:
+          boc #2563eb
+
+    Frame gap 4
+      Text "E-Mail", col #888, fs 12
+      Input w full, pad 10, bg #252525, col white, rad 6, bor 1, boc #333
+        value $email
+        placeholder "max@example.com"
+        focus:
+          boc #2563eb
+
+    Frame gap 4
+      Text "Bio", col #888, fs 12
+      Textarea w full, h 60, pad 10, bg #252525, col white, rad 6
+        value $bio
+        placeholder "Erzähle etwas über dich..."
+        focus:
+          boc #2563eb
+
+  Button w full, pad 12, bg #2563eb, col white, rad 8, cursor pointer
+    "Speichern"
+    hover:
+      bg #1d4ed8</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Tabs mit Content</h2>
+      <p>Tab-Navigation mit data-gesteuertem Content:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs:
+  - id: "overview", title: "Übersicht", content: "Willkommen! Dies ist die Übersicht."
+  - id: "features", title: "Features", content: "Hier sind unsere Features aufgelistet."
+  - id: "pricing", title: "Preise", content: "Unsere Preispläne im Überblick."
+
+Frame w 300, bg #1a1a1a, rad 8, clip, data Tabs, selection $activeTab
+  // Tab Headers
+  Frame hor, bg #252525
+    each tab in Tabs
+      Frame state selected exclusive, pad 12 16, cursor pointer
+        Text tab.title, col #888, fs 13
+        selected:
+          bg #1a1a1a
+          Text tab.title, col white
+
+  // Tab Content
+  Frame pad 20
+    Text $activeTab.content, col #888, fs 14</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +312,71 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle einen Farbwähler mit Vorschau der ausgewählten Farbe:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
+          <textarea>Colors:
+  - name: "Rot", hex: "#ef4444"
+  - name: "Grün", hex: "#10b981"
+  - name: "Blau", hex: "#2563eb"
+  - name: "Lila", hex: "#8b5cf6"
+
+Frame gap 12
+  // Farbliste
   Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+    each color in Colors
+      Frame w 40, h 40, rad 8, cursor pointer
+        bg color.hex
+
+  // Vorschau
+  Frame pad 12, bg #1a1a1a, rad 8
+    Text "Ausgewählt:", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Colors:
+  - name: "Rot", hex: "#ef4444"
+  - name: "Grün", hex: "#10b981"
+  - name: "Blau", hex: "#2563eb"
+  - name: "Lila", hex: "#8b5cf6"
+
+Frame gap 12, data Colors, selection $color
+  // Farbliste
+  Frame hor, gap 8
+    each color in Colors
+      Frame state selected exclusive, w 40, h 40, rad 8, cursor pointer
+        bg color.hex
+        selected:
+          bor 3, boc white
+
+  // Vorschau
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8
+    Frame w 40, h 40, rad 8
+      bg $color.hex
+    Frame gap 2
+      Text $color.name, col white, weight 500
+      Text $color.hex, col #888, fs 12</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>data Collection</code> – Bindet an Daten-Collection</li>
+        <li><code>selection $variable</code> – Speichert Auswahl</li>
+        <li><code>value $variable</code> – Zwei-Wege-Binding für Inputs</li>
+        <li><code>$variable.property</code> – Zugriff auf Auswahl-Properties</li>
+        <li>Ideal für: Listen, Formulare, Master-Detail</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-27.html">← Filter & Where</a>
+      <a href="lektion-29.html">Conditionals →</a>
     </nav>
 
   </main>
@@ -280,10 +388,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|data|selection|value)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

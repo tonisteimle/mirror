@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Custom Animations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <style>
+    :root {
+      --bg: #111;
+      --bg-code: #191919;
+      --bg-preview: #0c0c0c;
+      --text: #ccc;
+      --text-bright: #eee;
+      --text-dim: #666;
+      --border: #282828;
+      --accent: #4a9eff;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --syn-comment: #5c6370;
+      --syn-string: #a88fb0;
+      --syn-hex: #a88fb0;
+      --syn-number: #c9a87c;
+      --syn-property: #7fb3a8;
+      --syn-component: #8aabbd;
+      --syn-keyword: #7a9ec2;
+      --syn-token: #c9a87c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 32px 100px;
+    }
+
+    header { margin-bottom: 48px; }
+    h1 { font-size: 28px; font-weight: 500; color: var(--text-bright); letter-spacing: -0.5px; }
+
+    section { margin-bottom: 48px; }
+    h2 { font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.3px; }
+    p { margin-bottom: 16px; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; color: var(--text-bright); }
+
+    .playground { margin: 20px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
+    .playground-code { background: var(--bg-code); border-bottom: 1px solid var(--border); position: relative; }
+    .playground-code pre { margin: 0; padding: 16px; font-family: var(--mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; pointer-events: none; }
+    .playground-code textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 16px; border: none; background: transparent; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: transparent; caret-color: var(--text-bright); resize: none; outline: none; tab-size: 2; white-space: pre-wrap; word-wrap: break-word; overflow: hidden; }
+    .playground-preview { min-height: 80px; background: var(--bg-preview); padding: 16px; display: flex; align-items: center; justify-content: center; }
+    .playground-error { color: #e55; font-family: var(--mono); font-size: 12px; }
+
+    .syn-comment { color: var(--syn-comment); font-style: italic; }
+    .syn-string { color: var(--syn-string); }
+    .syn-hex { color: var(--syn-hex); }
+    .syn-number { color: var(--syn-number); }
+    .syn-property { color: var(--syn-property); }
+    .syn-component { color: var(--syn-component); font-weight: 500; }
+    .syn-keyword { color: var(--syn-keyword); }
+    .syn-token { color: var(--syn-token); }
+
+    .props { margin: 24px 0; font-size: 13px; }
+    .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .props div:last-child { border-bottom: none; }
+    .props code { width: 200px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props span { color: var(--text-dim); }
+
+    .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
+    .exercise h3 { font-size: 13px; font-weight: 500; color: var(--text-bright); margin-bottom: 12px; }
+    .exercise p { margin-bottom: 16px; font-size: 13px; }
+    .exercise .target { background: var(--bg-preview); padding: 20px; border-radius: 4px; margin-bottom: 16px; display: flex; justify-content: center; }
+
+    details { margin-top: 16px; font-size: 13px; }
+    summary { color: var(--text-dim); cursor: pointer; outline: none; }
+    summary:hover { color: var(--text); }
+    details pre { margin-top: 12px; padding: 12px 16px; background: var(--bg-preview); border-radius: 4px; font-family: var(--mono); font-size: 13px; color: var(--text); overflow-x: auto; }
+
+    .summary { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .summary ul { list-style: none; }
+    .summary li { padding: 6px 0; font-size: 13px; color: var(--text); }
+    .summary li code { margin-right: 8px; }
+
+    nav { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px; }
+    nav a { color: var(--text-dim); text-decoration: none; }
+    nav a:hover { color: var(--text); }
+
+    .topnav { max-width: 720px; margin: 0 auto; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .topnav .back { color: var(--text-dim); text-decoration: none; }
+    .topnav .back:hover { color: var(--text); }
+    .topnav .chapter { color: var(--text-dim); }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html" class="back">← Übersicht</a>
+    <span class="chapter">Kapitel 33 von 50</span>
+  </nav>
+
+  <main class="page">
+
+    <header>
+      <h1>Custom Animations</h1>
+    </header>
+
+    <section>
+      <h2>Überblick</h2>
+      <p>Neben den eingebauten Animation-Presets kannst du eigene Animationen definieren. Diese kombinieren Transformationen, Timing und Easing für präzise Kontrolle.</p>
+
+      <div class="props">
+        <div><code>anim preset</code><span>Eingebaute Animation</span></div>
+        <div><code>enter: anim</code><span>Animation beim Erscheinen</span></div>
+        <div><code>exit: anim</code><span>Animation beim Verschwinden</span></div>
+        <div><code>hover: scale, opacity</code><span>Hover-Transition</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Animation Presets</h2>
+      <p>Mirror bietet eingebaute Animationen für häufige Anwendungsfälle:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16, wrap
+  // Fade
+  Frame w 60, h 60, bg #2563eb, rad 8, center, anim fade-in
+    Text "fade", col white, fs 10
+
+  // Slide
+  Frame w 60, h 60, bg #10b981, rad 8, center, anim slide-in
+    Text "slide", col white, fs 10
+
+  // Scale
+  Frame w 60, h 60, bg #f59e0b, rad 8, center, anim scale-in
+    Text "scale", col white, fs 10
+
+  // Bounce
+  Frame w 60, h 60, bg #ef4444, rad 8, center, anim bounce
+    Text "bounce", col white, fs 10
+
+  // Pulse
+  Frame w 60, h 60, bg #8b5cf6, rad 8, center, anim pulse
+    Text "pulse", col white, fs 10
+
+  // Shake
+  Frame w 60, h 60, bg #ec4899, rad 8, center, anim shake
+    Text "shake", col white, fs 10
+
+  // Spin
+  Frame w 60, h 60, bg #06b6d4, rad 8, center, anim spin
+    Text "spin", col white, fs 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Hover-Animationen</h2>
+      <p>Smooth Transitions bei Hover-Interaktionen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  // Scale on Hover
+  Frame w 80, h 80, bg #2563eb, rad 8, center, cursor pointer
+    Text "Scale", col white, fs 12
+    hover:
+      scale 1.1
+
+  // Opacity Change
+  Frame w 80, h 80, bg #10b981, rad 8, center, cursor pointer, opacity 0.7
+    Text "Opacity", col white, fs 12
+    hover:
+      opacity 1
+
+  // Combined
+  Frame w 80, h 80, bg #f59e0b, rad 8, center, cursor pointer
+    Text "Both", col white, fs 12
+    hover:
+      scale 1.05
+      opacity 0.9
+
+  // Rotate
+  Frame w 80, h 80, bg #ef4444, rad 8, center, cursor pointer
+    Icon "star", ic white, is 24
+    hover:
+      rotate 180</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Enter/Exit Animationen</h2>
+      <p>Animationen beim Ein- und Ausblenden von Elementen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16
+  // Toggle Button
+  Frame state on initial, hor, gap 8, pad 10 16, bg #2563eb, rad 8
+    cursor pointer
+    Text "Anzeigen", col white
+    on:
+      Text "Ausblenden", col white
+
+  // Animierter Content
+  Frame pad 20, bg #1a1a1a, rad 8
+    visibleWhen $showContent
+    enter: anim fade-in
+    exit: anim fade-out
+    Frame gap 8
+      Text "Animierter Inhalt", col white, weight 500
+      Text "Dieser Bereich wird mit Animation ein- und ausgeblendet.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Animierte Cards</h2>
+      <p>Cards mit gestaffelten Animationen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  Frame w 120, bg #1a1a1a, rad 8, pad 16, gap 8, cursor pointer, anim fade-in
+    Frame w 40, h 40, bg #2563eb, rad 8, center
+      Icon "zap", ic white, is 20
+    Text "Schnell", col white, weight 500
+    Text "Blitzschnelle Performance", col #888, fs 11
+    hover:
+      scale 1.02
+      bg #252525
+
+  Frame w 120, bg #1a1a1a, rad 8, pad 16, gap 8, cursor pointer, anim fade-in
+    Frame w 40, h 40, bg #10b981, rad 8, center
+      Icon "shield", ic white, is 20
+    Text "Sicher", col white, weight 500
+    Text "Enterprise-grade Sicherheit", col #888, fs 11
+    hover:
+      scale 1.02
+      bg #252525
+
+  Frame w 120, bg #1a1a1a, rad 8, pad 16, gap 8, cursor pointer, anim fade-in
+    Frame w 40, h 40, bg #f59e0b, rad 8, center
+      Icon "heart", ic white, is 20
+    Text "Einfach", col white, weight 500
+    Text "Intuitive Bedienung", col #888, fs 11
+    hover:
+      scale 1.02
+      bg #252525</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Loading States</h2>
+      <p>Verschiedene Lade-Animationen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 24
+  // Spinner
+  Frame center, gap 8
+    Icon "loader-2", ic #2563eb, is 32, anim spin
+    Text "Spinner", col #888, fs 11
+
+  // Pulse Dots
+  Frame center, gap 8
+    Frame hor, gap 4
+      Frame w 8, h 8, bg #2563eb, rad 4, anim pulse
+      Frame w 8, h 8, bg #2563eb, rad 4, anim pulse
+      Frame w 8, h 8, bg #2563eb, rad 4, anim pulse
+    Text "Dots", col #888, fs 11
+
+  // Bounce Loading
+  Frame center, gap 8
+    Frame hor, gap 4
+      Frame w 8, h 24, bg #2563eb, rad 4, anim bounce
+      Frame w 8, h 24, bg #2563eb, rad 4, anim bounce
+      Frame w 8, h 24, bg #2563eb, rad 4, anim bounce
+    Text "Bounce", col #888, fs 11
+
+  // Skeleton
+  Frame center, gap 8
+    Frame w 80, h 12, bg #333, rad 6, anim pulse
+    Text "Skeleton", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Notification Toast</h2>
+      <p>Animierte Benachrichtigungen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  // Success Toast
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8, bor 0 0 0 3, boc #10b981
+    anim slide-in
+    Icon "check-circle", ic #10b981, is 20
+    Frame grow, gap 2
+      Text "Erfolgreich!", col white, weight 500, fs 14
+      Text "Deine Änderungen wurden gespeichert.", col #888, fs 12
+    Icon "x", ic #666, is 16, cursor pointer
+      hover:
+        ic white
+
+  // Error Toast
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8, bor 0 0 0 3, boc #ef4444
+    anim shake
+    Icon "x-circle", ic #ef4444, is 20
+    Frame grow, gap 2
+      Text "Fehler!", col white, weight 500, fs 14
+      Text "Etwas ist schiefgelaufen.", col #888, fs 12
+    Icon "x", ic #666, is 16, cursor pointer
+
+  // Info Toast
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 8, bor 0 0 0 3, boc #2563eb
+    anim fade-in
+    Icon "info", ic #2563eb, is 20
+    Frame grow, gap 2
+      Text "Hinweis", col white, weight 500, fs 14
+      Text "Neue Version verfügbar.", col #888, fs 12
+    Button "Update", bg #2563eb, col white, pad 6 12, rad 6, fs 12, cursor pointer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Interaktive Buttons</h2>
+      <p>Buttons mit verschiedenen Hover-Effekten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Frame hor, gap 8
+    // Lift Effect
+    Button "Lift", pad 12 24, bg #2563eb, col white, rad 8, cursor pointer
+      hover:
+        scale 1.02
+        shadow lg
+
+    // Glow Effect
+    Button "Glow", pad 12 24, bg #10b981, col white, rad 8, cursor pointer
+      hover:
+        shadow lg
+
+    // Press Effect
+    Button "Press", pad 12 24, bg #f59e0b, col white, rad 8, cursor pointer
+      hover:
+        scale 0.98
+      active:
+        scale 0.95
+
+  Frame hor, gap 8
+    // Icon Rotate
+    Frame hor, gap 8, pad 12 20, bg #1a1a1a, rad 8, cursor pointer
+      Icon "settings", ic white, is 18
+      Text "Settings", col white
+      hover:
+        bg #252525
+        Icon "settings", ic white, is 18, rotate 90
+
+    // Arrow Move
+    Frame hor, gap 8, pad 12 20, bg #1a1a1a, rad 8, cursor pointer
+      Text "Weiter", col white
+      Icon "arrow-right", ic white, is 18
+      hover:
+        bg #252525</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Animierte Liste</h2>
+      <p>Listen-Items mit Eingangs-Animation:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Items:
+  - icon: "inbox", title: "Posteingang", count: 12
+  - icon: "send", title: "Gesendet", count: 0
+  - icon: "file", title: "Entwürfe", count: 3
+  - icon: "archive", title: "Archiv", count: 156
+  - icon: "trash", title: "Papierkorb", count: 8
+
+Frame w 220, bg #1a1a1a, rad 8, pad 8, gap 4
+  each item in Items
+    Frame hor, gap 12, pad 10 12, rad 6, cursor pointer, anim fade-in
+      Icon item.icon, ic #888, is 18
+      Text item.title, col white, fs 14, grow
+      Frame pad 2 8, bg #333, rad 10
+        visibleWhen item.count > 0
+        Text item.count, col #888, fs 11
+      hover:
+        bg #252525
+        Icon item.icon, ic white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <div class="exercise">
+      <h3>Übung</h3>
+      <p>Erstelle eine animierte Feature-Card mit Hover-Effekt und Icon-Animation:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Feature Card mit Animation
+Frame w 180, bg #1a1a1a, rad 12, pad 20, gap 12, cursor pointer
+  Frame w 48, h 48, bg #2563eb, rad 12, center
+    Icon "rocket", ic white, is 24
+  Text "Feature", col white, weight 500
+  Text "Beschreibung des Features hier.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <details>
+        <summary>Lösung</summary>
+        <pre>// Feature Card mit Animation
+Frame w 180, bg #1a1a1a, rad 12, pad 20, gap 12, cursor pointer, anim fade-in
+  Frame w 48, h 48, bg #2563eb, rad 12, center
+    Icon "rocket", ic white, is 24
+  Text "Schnellstart", col white, weight 500
+  Text "In Sekunden einsatzbereit.", col #888, fs 13
+  hover:
+    scale 1.02
+    bg #252525
+    Frame w 48, h 48, bg #1d4ed8, rad 12, center
+      Icon "rocket", ic white, is 24, anim bounce
+
+// Mehrere Cards
+Frame hor, gap 12
+  Frame w 140, bg #1a1a1a, rad 12, pad 16, gap 10, cursor pointer, anim slide-in
+    Frame w 40, h 40, bg #10b981, rad 10, center
+      Icon "check", ic white, is 20
+    Text "Einfach", col white, weight 500, fs 14
+    Text "Intuitive UI", col #888, fs 12
+    hover:
+      scale 1.03
+      shadow lg
+
+  Frame w 140, bg #1a1a1a, rad 12, pad 16, gap 10, cursor pointer, anim slide-in
+    Frame w 40, h 40, bg #f59e0b, rad 10, center
+      Icon "zap", ic white, is 20
+    Text "Schnell", col white, weight 500, fs 14
+    Text "Blitzschnell", col #888, fs 12
+    hover:
+      scale 1.03
+      shadow lg</pre>
+      </details>
+    </div>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul>
+        <li><code>anim preset</code> – fade-in, slide-in, scale-in, bounce, pulse, shake, spin</li>
+        <li><code>hover: scale, opacity</code> – Hover-Transitions</li>
+        <li><code>enter: anim</code> – Animation beim Erscheinen</li>
+        <li><code>exit: anim</code> – Animation beim Verschwinden</li>
+        <li>Kombinierbar für komplexe Effekte</li>
+      </ul>
+    </div>
+
+    <nav>
+      <a href="lektion-32.html">← Named Instances</a>
+      <a href="lektion-34.html">Routing →</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script>
+    const patterns = [
+      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+      { regex: /"[^"]*"/g, cls: 'syn-string' },
+      { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
+      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|shrink|placeholder|absolute|type|anim|rotate)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|each|in|where|and|or|data|selection|value|if|else|visibleWhen|not|true|false|slot|as|spin|fade-in|fade-out|slide-in|slide-out|scale-in|scale-out|bounce|pulse|shake|enter|exit)\b/g, cls: 'syn-keyword' },
+      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+    ]
+
+    function highlight(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      const matches = []
+      for (const p of patterns) {
+        p.regex.lastIndex = 0
+        let m
+        while ((m = p.regex.exec(text)) !== null) {
+          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+        }
+      }
+      matches.sort((a, b) => a.from - b.from)
+      const filtered = []
+      let lastEnd = 0
+      for (const m of matches) {
+        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+      }
+      let result = '', pos = 0
+      for (const m of filtered) {
+        if (m.from > pos) result += html.slice(pos, m.from)
+        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        result += `<span class="${m.cls}">${escaped}</span>`
+        pos = m.to
+      }
+      return result + html.slice(pos)
+    }
+
+    document.querySelectorAll('.playground[data-playground]').forEach(p => {
+      const codeContainer = p.querySelector('.playground-code')
+      const textarea = p.querySelector('textarea')
+      const preview = p.querySelector('.playground-preview')
+      const pre = document.createElement('pre')
+      codeContainer.insertBefore(pre, textarea)
+
+      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+      function compile() {
+        try {
+          preview.innerHTML = ''
+          preview.classList.add('mirror-root')
+          const code = MirrorLang.compile(textarea.value)
+          const execCode = code.replace('export function createUI', 'function createUI')
+          const fn = new Function(execCode + '\nreturn createUI();')
+          const ui = fn()
+          if (ui && ui.root) preview.appendChild(ui.root)
+        } catch (e) {
+          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+        }
+      }
+
+      textarea.addEventListener('input', () => {
+        updateHighlight()
+        clearTimeout(textarea._t)
+        textarea._t = setTimeout(compile, 100)
+      })
+
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault()
+          const s = textarea.selectionStart
+          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+          textarea.selectionStart = textarea.selectionEnd = s + 2
+          updateHighlight()
+          compile()
+        }
+      })
+
+      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+      updateHighlight()
+      compile()
+    })
+  </script>
+</body>
+</html>

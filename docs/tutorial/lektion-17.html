@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – State-Modifikatoren</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 140px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,192 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 17 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>State-Modifikatoren</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <h2>Überblick</h2>
+      <p>State-Modifikatoren steuern, wie sich States verhalten: ob sie sich gegenseitig ausschließen, toggeln oder initial aktiv sind.</p>
 
       <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
+        <div><code>exclusive</code><span>Nur einer in der Gruppe kann aktiv sein</span></div>
+        <div><code>toggle</code><span>Klick schaltet State um (an/aus)</span></div>
+        <div><code>initial</code><span>State ist beim Start aktiv</span></div>
       </div>
     </section>
 
     <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
+      <h2>Exclusive Selection</h2>
+      <p><code>exclusive</code> macht eine Gruppe zu einer exklusiven Auswahl – nur ein Element kann gleichzeitig aktiv sein:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Tab 1", col #888
+    selected:
+      bg #2563eb
+      Text "Tab 1", col white
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Tab 2", col #888
+    selected:
+      bg #2563eb
+      Text "Tab 2", col white
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Tab 3", col #888
+    selected:
+      bg #2563eb
+      Text "Tab 3", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Klicke auf verschiedene Tabs – immer nur einer ist aktiv.</p>
+    </section>
+
+    <section>
+      <h2>Initial State</h2>
+      <p><code>initial</code> aktiviert einen State beim Start:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+  // Erster Tab ist initial selected
+  Frame state selected exclusive initial, pad 10 20, rad 6, cursor pointer
+    Text "Home", col #888
+    selected:
+      bg #2563eb
+      Text "Home", col white
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Produkte", col #888
+    selected:
+      bg #2563eb
+      Text "Produkte", col white
+  Frame state selected exclusive, pad 10 20, rad 6, cursor pointer
+    Text "Kontakt", col #888
+    selected:
+      bg #2563eb
+      Text "Kontakt", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Toggle Verhalten</h2>
+      <p><code>toggle</code> macht explizit klar, dass ein State umgeschaltet werden kann. Bei <code>state on</code> ist das Standard:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+  // Toggle ohne Modifier (standard bei on/off)
+  Frame state on, hor, gap 8, pad 10 16, bg #333, rad 8, cursor pointer
+    Icon "bell", ic #888, is 18
+    Text "Benachrichtigungen", col #888, fs 14
+    on:
+      Icon "bell", ic #2563eb, is 18, fill
+      Text "Benachrichtigungen", col #2563eb</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Praxisbeispiel: Segmented Control</h2>
+      <p>Eine typische Segmented Control mit exklusiver Auswahl:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame hor, bg #252525, rad 8, pad 4
+  Frame state selected exclusive initial, pad 8 16, rad 6, cursor pointer
+    Text "Tag", col #888, fs 13
+    selected:
+      bg #333
+      Text "Tag", col white
+  Frame state selected exclusive, pad 8 16, rad 6, cursor pointer
+    Text "Woche", col #888, fs 13
+    selected:
+      bg #333
+      Text "Woche", col white
+  Frame state selected exclusive, pad 8 16, rad 6, cursor pointer
+    Text "Monat", col #888, fs 13
+    selected:
+      bg #333
+      Text "Monat", col white
+  Frame state selected exclusive, pad 8 16, rad 6, cursor pointer
+    Text "Jahr", col #888, fs 13
+    selected:
+      bg #333
+      Text "Jahr", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Praxisbeispiel: Checkbox-Gruppe</h2>
+      <p>Mehrere unabhängige Toggles (nicht exclusive):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
+          <textarea>Frame gap 8
+  Frame state on initial, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg #333, rad 4, center
+      Icon "check", ic transparent, is 14
+    Text "E-Mail-Benachrichtigungen", col white, fs 14
+    on:
+      Frame w 20, h 20, bg #2563eb, rad 4
+        Icon "check", ic white, is 14
+  Frame state on, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg #333, rad 4, center
+      Icon "check", ic transparent, is 14
+    Text "Push-Benachrichtigungen", col white, fs 14
+    on:
+      Frame w 20, h 20, bg #2563eb, rad 4
+        Icon "check", ic white, is 14
+  Frame state on, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg #333, rad 4, center
+      Icon "check", ic transparent, is 14
+    Text "SMS-Benachrichtigungen", col white, fs 14
+    on:
+      Frame w 20, h 20, bg #2563eb, rad 4
+        Icon "check", ic white, is 14</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
+      <h2>Praxisbeispiel: Radio-Gruppe</h2>
+      <p>Exklusive Auswahl mit Radio-Style:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
-
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+          <textarea>Frame gap 8
+  Frame state selected exclusive initial, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg transparent, bor 2, boc #555, rad 10, center
+    Text "Klein", col white, fs 14
+    selected:
+      Frame w 20, h 20, bg transparent, bor 2, boc #2563eb, rad 10
+        Frame w 10, h 10, bg #2563eb, rad 5
+  Frame state selected exclusive, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg transparent, bor 2, boc #555, rad 10, center
+    Text "Mittel", col white, fs 14
+    selected:
+      Frame w 20, h 20, bg transparent, bor 2, boc #2563eb, rad 10
+        Frame w 10, h 10, bg #2563eb, rad 5
+  Frame state selected exclusive, hor, gap 10, pad 10, cursor pointer
+    Frame w 20, h 20, bg transparent, bor 2, boc #555, rad 10, center
+    Text "Groß", col white, fs 14
+    selected:
+      Frame w 20, h 20, bg transparent, bor 2, boc #2563eb, rad 10
+        Frame w 10, h 10, bg #2563eb, rad 5</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +298,61 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
+      <p>Erstelle eine Farb-Auswahl mit 4 Farben, wobei nur eine Farbe gleichzeitig ausgewählt sein kann und die erste initial ausgewählt ist:</p>
 
       <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
+        <div style="font-family: Inter, sans-serif; display: flex; gap: 12px;">
+          <div style="width: 40px; height: 40px; background: #ef4444; border-radius: 8px; border: 3px solid white; cursor: pointer;"></div>
+          <div style="width: 40px; height: 40px; background: #f59e0b; border-radius: 8px; cursor: pointer;"></div>
+          <div style="width: 40px; height: 40px; background: #10b981; border-radius: 8px; cursor: pointer;"></div>
+          <div style="width: 40px; height: 40px; background: #2563eb; border-radius: 8px; cursor: pointer;"></div>
         </div>
       </div>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame hor, gap 12
+  Frame w 40, h 40, bg #ef4444, rad 8, cursor pointer
+  Frame w 40, h 40, bg #f59e0b, rad 8, cursor pointer
+  Frame w 40, h 40, bg #10b981, rad 8, cursor pointer
+  Frame w 40, h 40, bg #2563eb, rad 8, cursor pointer</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame hor, gap 12
+  Frame state selected exclusive initial, w 40, h 40, bg #ef4444, rad 8, cursor pointer
+    selected:
+      bor 3, boc white
+  Frame state selected exclusive, w 40, h 40, bg #f59e0b, rad 8, cursor pointer
+    selected:
+      bor 3, boc white
+  Frame state selected exclusive, w 40, h 40, bg #10b981, rad 8, cursor pointer
+    selected:
+      bor 3, boc white
+  Frame state selected exclusive, w 40, h 40, bg #2563eb, rad 8, cursor pointer
+    selected:
+      bor 3, boc white</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>exclusive</code> – Nur einer in der Gruppe aktiv</li>
+        <li><code>initial</code> – State beim Start aktiv</li>
+        <li><code>toggle</code> – Explizites Toggle-Verhalten</li>
+        <li>Tabs: <code>state selected exclusive</code></li>
+        <li>Checkboxen: <code>state on</code> (unabhängig)</li>
+        <li>Radios: <code>state selected exclusive</code></li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-16.html">← Custom States</a>
+      <a href="lektion-18.html">Events →</a>
     </nav>
 
   </main>
@@ -280,10 +364,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 

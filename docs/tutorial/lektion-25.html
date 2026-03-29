@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Effekte</title>
+  <title>Mirror – Event Modifiers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -74,7 +74,7 @@
     .props { margin: 24px 0; font-size: 13px; }
     .props div { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .props div:last-child { border-bottom: none; }
-    .props code { width: 120px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
+    .props code { width: 180px; flex-shrink: 0; background: none; padding: 0; color: var(--accent); }
     .props span { color: var(--text-dim); }
 
     .exercise { margin: 32px 0; padding: 24px; background: var(--bg-code); border-radius: 6px; }
@@ -105,117 +105,217 @@
 <body>
   <nav class="topnav">
     <a href="index.html" class="back">← Übersicht</a>
-    <span class="chapter">Kapitel 11 von 32</span>
+    <span class="chapter">Kapitel 25 von 50</span>
   </nav>
 
   <main class="page">
 
     <header>
-      <h1>Effekte</h1>
+      <h1>Event Modifiers</h1>
     </header>
 
     <section>
-      <h2>Schatten</h2>
-      <p><code>shadow</code> fügt einen Schlagschatten hinzu. Es gibt drei Presets:</p>
+      <h2>Überblick</h2>
+      <p>Event Modifiers verändern, wie Events verarbeitet werden – zum Beispiel mit Verzögerung oder Debouncing.</p>
+
+      <div class="props">
+        <div><code>debounce N</code><span>Wartet N ms nach letztem Event</span></div>
+        <div><code>delay N</code><span>Verzögert Ausführung um N ms</span></div>
+        <div><code>onclick-outside:</code><span>Klick außerhalb des Elements</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Debounce</h2>
+      <p><code>debounce</code> wartet, bis der Benutzer aufhört zu tippen, bevor die Action ausgeführt wird:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Text "Ohne Debounce:", col #888, fs 13
+  Input w 220, pad 10, bg #1a1a1a, col white, rad 8
+    placeholder "Tippe hier..."
+    oninput:
+      highlight self
+    focus:
+      boc #2563eb
+
+  Text "Mit Debounce 500ms:", col #888, fs 13
+  Input w 220, pad 10, bg #1a1a1a, col white, rad 8
+    placeholder "Tippe hier..."
+    oninput debounce 500:
+      highlight self
+    focus:
+      boc #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Debounce ist ideal für Suchen – die Anfrage wird erst gesendet, wenn der Benutzer kurz pausiert.</p>
+    </section>
+
+    <section>
+      <h2>Delay</h2>
+      <p><code>delay</code> verzögert die Ausführung um eine bestimmte Zeit:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer
+    onclick delay 500:
+      toggle Message
+    "Mit 500ms Verzögerung"
+
+  Frame state open, pad 16, bg #10b981, rad 8
+    Text "Erscheint verzögert!", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Click Outside</h2>
+      <p><code>onclick-outside:</code> erkennt Klicks außerhalb des Elements – perfekt für Dropdowns:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, h 180, bg #0c0c0c, pad 16
+  Frame state open, w 200, pos
+    // Trigger
+    Frame hor, spread, pad 12, bg #1a1a1a, rad 8, cursor pointer
+      onclick:
+        toggle self
+      Text "Dropdown", col white
+      Icon "chevron-down", ic #888, is 16
+      open:
+        Icon "chevron-up", ic #888, is 16
+
+    // Menu
+    Frame w full, bg #252525, rad 8, pad 4, shadow lg, pt 50, z 10
+      visible when Trigger open
+      onclick-outside:
+        close Trigger
+      Frame pad 10 12, rad 4, cursor pointer
+        Text "Option 1", col white, fs 14
+        hover:
+          bg #333
+      Frame pad 10 12, rad 4, cursor pointer
+        Text "Option 2", col white, fs 14
+        hover:
+          bg #333
+      Frame pad 10 12, rad 4, cursor pointer
+        Text "Option 3", col white, fs 14
+        hover:
+          bg #333</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Klicke außerhalb des Menüs, um es zu schließen.</p>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Live-Suche</h2>
+      <p>Eine Suche mit Debounce, die nur nach Tipp-Pause sucht:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 280, gap 12
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 8, bor 1, boc #333
+    Icon "search", ic #888, is 18
+    Input grow, bg transparent, col white, bor 0, placeholder "Suchen..."
+      oninput debounce 300:
+        show Results
+      focus:
+        boc #2563eb
+
+  Frame pad 12, bg #252525, rad 8
+    visible when Results open
+    Text "Suche läuft...", col #888, fs 13
+    Text "Ergebnisse erscheinen hier", col #666, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Praxisbeispiel: Tooltip mit Verzögerung</h2>
+      <p>Tooltips, die erst nach kurzer Hover-Zeit erscheinen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 24
-  Frame bg #1a1a1a, pad 24, rad 8, shadow sm
-    Text "Small", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow md
-    Text "Medium", col white
-  Frame bg #1a1a1a, pad 24, rad 8, shadow lg
-    Text "Large", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+  Frame pos
+    Button pad 12 20, bg #333, col white, rad 8, cursor pointer
+      onhover delay 500:
+        show Tooltip1
+      "Hover mich"
+    Frame pad 8 12, bg #1a1a1a, rad 6, shadow lg, abs, y -40, hidden
+      Text "Tooltip nach 500ms", col white, fs 12
 
-      <div class="props">
-        <div><code>shadow sm</code> <span>Kleiner Schatten</span></div>
-        <div><code>shadow md</code> <span>Mittlerer Schatten</span></div>
-        <div><code>shadow lg</code> <span>Großer Schatten</span></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Transparenz</h2>
-      <p><code>opacity</code> macht Elemente transparent. 1 = voll sichtbar, 0 = unsichtbar:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 1
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.7
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.4
-  Frame bg #2563eb, w 60, h 60, rad 8, opacity 0.2</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Transparenz ist nützlich für Hover-Effekte und deaktivierte Elemente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Button "Deaktiviert", bg #2563eb, col white, pad 12 24, rad 6, opacity 0.5, cursor not-allowed</textarea>
+  Frame pos
+    Button pad 12 20, bg #333, col white, rad 8, cursor pointer
+      onhover:
+        show Tooltip2
+      "Sofort"
+    Frame pad 8 12, bg #1a1a1a, rad 6, shadow lg, abs, y -40, hidden
+      Text "Sofort sichtbar", col white, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Blur</h2>
-      <p><code>blur</code> macht ein Element unscharf:</p>
+      <h2>Praxisbeispiel: Modal mit Click-Outside</h2>
+      <p>Ein Modal, das bei Klick auf den Backdrop schließt:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Frame bg #2563eb, w 80, h 80, rad 8
-    Text "0", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 2
-    Text "2", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 4
-    Text "4", col white
-  Frame bg #2563eb, w 80, h 80, rad 8, blur 8
-    Text "8", col white</textarea>
+          <textarea>Frame w 300, h 180, stacked, bg #0c0c0c
+  Button pad 12 20, bg #2563eb, col white, rad 8, cursor pointer, pc
+    onclick:
+      open Modal
+    "Modal öffnen"
+
+  // Backdrop
+  Frame w full, h full, bg rgba(0,0,0,0.5)
+    visible when Modal open
+    onclick:
+      close Modal
+    enter: fade-in
+    exit: fade-out
+
+  // Modal Content
+  Frame w 220, bg #1a1a1a, rad 12, pad 20, shadow lg, pc, z 10
+    visible when Modal open
+    onclick-outside:
+      close Modal
+    enter: scale-in
+    exit: scale-out
+    Text "Modal", col white, weight 500
+    Text "Klicke außerhalb zum Schließen", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Backdrop Blur</h2>
-      <p><code>backdrop-blur</code> (oder <code>blur-bg</code>) macht den Hintergrund hinter dem Element unscharf. Perfekt für Glaseffekte:</p>
+      <h2>Kombinierte Modifier</h2>
+      <p>Modifier können kombiniert werden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame stacked, w 300, h 150
-  // Hintergrund mit Farben
-  Frame hor, w full, h full
-    Frame bg #2563eb, w full, h full
-    Frame bg #10b981, w full, h full
-    Frame bg #f59e0b, w full, h full
-  // Glaseffekt-Karte
-  Frame bg rgba(0,0,0,0.3), backdrop-blur 10, pad 20, rad 12, center
-    Text "Glaseffekt", col white, weight bold</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
+          <textarea>Frame gap 12
+  Text "Debounce 300ms + Delay 200ms:", col #888, fs 13
+  Input w 240, pad 10, bg #1a1a1a, col white, rad 8
+    placeholder "Tippe und warte..."
+    oninput debounce 300 delay 200:
+      show Feedback
+    focus:
+      boc #2563eb
 
-    <section>
-      <h2>Kombinierte Effekte</h2>
-      <p>Effekte lassen sich kombinieren für komplexe Designs:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 24, rad 12, shadow lg, gap 12
-
-Card
-  Text "Premium Feature", col white, fs 18, weight bold
-  Text "Unlock advanced capabilities with our premium plan.", col #888, fs 14
-  Button "Upgrade", bg #2563eb, col white, pad 10 20, rad 6, cursor pointer
-    hover bg #3b82f6, scale 1.02</textarea>
+  Frame state open, pad 12, bg #10b981, rad 8
+    Text "Action ausgeführt!", col white, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -223,52 +323,66 @@ Card
 
     <div class="exercise">
       <h3>Übung</h3>
-      <p>Erstelle eine Karte mit mittlerem Schatten und einem halbtransparenten Badge:</p>
-
-      <div class="target">
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); font-family: Inter, sans-serif; display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: white; font-weight: 500;">Projekt Alpha</span>
-            <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; opacity: 0.8;">Neu</span>
-          </div>
-          <div style="color: #888; font-size: 13px;">Aktiv seit 3 Tagen</div>
-        </div>
-      </div>
+      <p>Erstelle ein Suchfeld mit Icon, das nach 300ms Debounce eine Ergebnis-Liste zeigt:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame bg #1a1a1a, pad 20, rad 12
-  Frame hor, gap 8
-    Text "Projekt Alpha"
-    Text "Neu"
-  Text "Aktiv seit 3 Tagen"</textarea>
+          <textarea>Frame w 260, gap 8
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 8
+    Icon "search", ic #888, is 18
+    Input grow, bg transparent, col white, bor 0, placeholder "Suchen..."
+
+  Frame pad 12, bg #252525, rad 8
+    Text "Ergebnis 1", col white, fs 13
+    Text "Ergebnis 2", col white, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <details>
         <summary>Lösung</summary>
-        <pre>Frame bg #1a1a1a, pad 20, rad 12, shadow md, gap 12
-  Frame hor, gap 8, center
-    Text "Projekt Alpha", col white, weight 500
-    Text "Neu", bg #2563eb, col white, pad 2 8, rad 4, fs 12, opacity 0.8
-  Text "Aktiv seit 3 Tagen", col #888, fs 14</pre>
+        <pre>Frame w 260, gap 8
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 8, bor 1, boc #333
+    Icon "search", ic #888, is 18
+    Input grow, bg transparent, col white, bor 0, placeholder "Suchen..."
+      oninput debounce 300:
+        show Results
+      focus:
+        boc #2563eb
+
+  Frame pad 12, bg #252525, rad 8
+    visible when Results open
+    enter: fade-in
+    Frame pad 8, rad 4, cursor pointer
+      Text "Ergebnis 1", col white, fs 13
+      hover:
+        bg #333
+    Frame pad 8, rad 4, cursor pointer
+      Text "Ergebnis 2", col white, fs 13
+      hover:
+        bg #333
+    Frame pad 8, rad 4, cursor pointer
+      Text "Ergebnis 3", col white, fs 13
+      hover:
+        bg #333</pre>
       </details>
     </div>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <ul>
-        <li><code>shadow sm/md/lg</code> – Schlagschatten</li>
-        <li><code>opacity N</code> – Transparenz (0-1)</li>
-        <li><code>blur N</code> – Element unscharf</li>
-        <li><code>backdrop-blur N</code> – Hintergrund unscharf</li>
+        <li><code>debounce N</code> – Wartet N ms nach letztem Event</li>
+        <li><code>delay N</code> – Verzögert Ausführung um N ms</li>
+        <li><code>onclick-outside:</code> – Klick außerhalb des Elements</li>
+        <li>Debounce ideal für: Suche, Auto-Save, Validierung</li>
+        <li>Delay ideal für: Tooltips, Animationssequenzen</li>
+        <li>Click-Outside ideal für: Dropdowns, Modals, Popover</li>
       </ul>
     </div>
 
     <nav>
-      <a href="lektion-10.html">← Typografie</a>
-      <a href="lektion-12.html">Icons →</a>
+      <a href="lektion-24.html">← Keyboard Events</a>
+      <a href="lektion-26.html">Each-Loops →</a>
     </nav>
 
   </main>
@@ -280,10 +394,9 @@ Card
       { regex: /"[^"]*"/g, cls: 'syn-string' },
       { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, cls: 'syn-token' },
       { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /rgba?\([^)]+\)/g, cls: 'syn-hex' },
       { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|placeholder|blur|backdrop-blur|blur-bg|stacked|sm|md|lg|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover)\b/g, cls: 'syn-keyword' },
+      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|scale|is|ic|fill|pos|stacked|transparent|grow|z|pc|absolute|placeholder)\b/g, cls: 'syn-property' },
+      { regex: /\b(hover|focus|active|disabled|state|selected|expanded|collapsed|on|off|open|closed|highlighted|exclusive|toggle|initial|onclick|onhover|oninput|onclick-outside|when|debounce|delay|show|hide|close|enter|exit|fade-in|fade-out|scale-in|scale-out)\b/g, cls: 'syn-keyword' },
       { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
     ]
 
