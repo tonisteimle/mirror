@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -290,9 +290,9 @@ Frame w 280, bg #1a1a1a, pad 8, rad 12, gap 2
     </div>
 
     <nav>
-      <a class="prev" href="09-overlays.html">← Overlays</a>
+      <a class="prev" href="10-overlays.html">← Overlays</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="11-events.html">Events →</a>
+      <a class="next" href="12-events.html">Events →</a>
     </nav>
 
   </main>
@@ -345,17 +345,33 @@ Frame w 280, bg #1a1a1a, pad 8, rad 12, gap 2
 
       function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
 
+      // Use Shadow DOM to scope CSS per playground
+      let shadow = preview.shadowRoot
+      if (!shadow) {
+        shadow = preview.attachShadow({ mode: 'open' })
+      }
+
       function compile() {
         try {
-          preview.innerHTML = ''
-          preview.classList.add('mirror-root')
+          shadow.innerHTML = ''
+
+          // Inject mirror-defaults.css into Shadow DOM
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.href = '../../assets/mirror-defaults.css'
+          shadow.appendChild(link)
+          
           const code = MirrorLang.compile(textarea.value)
           const execCode = code.replace('export function createUI', 'function createUI')
           const fn = new Function(execCode + '\nreturn createUI();')
           const ui = fn()
-          if (ui && ui.root) preview.appendChild(ui.root)
+          if (ui && ui.root) {
+            // Add mirror-root class to the root element
+            ui.root.classList.add('mirror-root')
+            shadow.appendChild(ui.root)
+          }
         } catch (e) {
-          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
         }
       }
 

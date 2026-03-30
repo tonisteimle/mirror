@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
 
     <header>
       <h1>Layout</h1>
-      <p class="subtitle">Elemente anordnen mit Flex und Grid</p>
+      <p class="subtitle">Elemente anordnen mit Flexbox</p>
     </header>
 
     <section>
@@ -31,7 +31,7 @@
 
       <p><strong style="color: var(--text-bright);">Ausrichtung:</strong> Kinder werden mit <code>center</code> zentriert, mit <code>spread</code> verteilt, oder an einer von 9 Positionen platziert.</p>
 
-      <p>Dazu kommen zwei Werkzeuge für spezielle Fälle: <code>wrap</code> für Zeilenumbruch und <code>grid N</code> für gleichmäßige Spalten.</p>
+      <p>Dazu kommt <code>wrap</code> für Zeilenumbruch bei Überlauf. Für komplexere Layouts gibt es ein eigenes Kapitel zu Grid.</p>
     </section>
 
     <section>
@@ -220,58 +220,6 @@ Frame hor, gap 8, margin 8 0 0 0
     </section>
 
     <section>
-      <h2>Grid</h2>
-      <p>Manchmal reicht Flex nicht: Du willst exakt 3 Spalten, gleichmäßig verteilt, egal wie viele Elemente. Dafür gibt es <code>grid N</code> – es erstellt ein Raster mit N gleichbreiten Spalten.</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame grid 3, gap 8, bg #1a1a1a, pad 16, rad 8
-  Frame h 50, bg #2563eb, rad 4, center
-    Text "1", col white
-  Frame h 50, bg #2563eb, rad 4, center
-    Text "2", col white
-  Frame h 50, bg #2563eb, rad 4, center
-    Text "3", col white
-  Frame h 50, bg #10b981, rad 4, center
-    Text "4", col white
-  Frame h 50, bg #10b981, rad 4, center
-    Text "5", col white
-  Frame h 50, bg #10b981, rad 4, center
-    Text "6", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Kinder werden automatisch auf die Spalten verteilt. Passen nicht alle in eine Zeile, beginnt die nächste. Anders als bei <code>wrap</code> sind die Spalten immer gleich breit.</p>
-    </section>
-
-    <section>
-      <h2>Praktisch: Card Grid</h2>
-      <p>Grid eignet sich besonders für gleichförmige Inhalte wie Dashboards oder Galerien:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame grid 2, gap 12
-  Frame bg #1a1a1a, pad 16, rad 8, gap 4
-    Text "Dashboard", col white, fs 14, weight 600
-    Text "Übersicht und Statistiken", col #888, fs 12
-  Frame bg #1a1a1a, pad 16, rad 8, gap 4
-    Text "Projekte", col white, fs 14, weight 600
-    Text "Alle laufenden Projekte", col #888, fs 12
-  Frame bg #1a1a1a, pad 16, rad 8, gap 4
-    Text "Team", col white, fs 14, weight 600
-    Text "Mitglieder verwalten", col #888, fs 12
-  Frame bg #1a1a1a, pad 16, rad 8, gap 4
-    Text "Settings", col white, fs 14, weight 600
-    Text "Einstellungen anpassen", col #888, fs 12</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Tipp: Die Wiederholung lässt sich mit Komponenten vermeiden – mehr dazu im Quickstart.</p>
-    </section>
-
-    <section>
       <h2>Praktisches Beispiel: App Layout</h2>
       <p>Zum Abschluss ein komplettes App-Layout: eine fixe Sidebar links, der Hauptbereich füllt den Rest. Horizontal angeordnet (<code>hor</code>), die Sidebar hat eine feste Breite (<code>w 160</code>), der Main-Bereich füllt den verfügbaren Platz (<code>w full</code>).</p>
 
@@ -310,14 +258,13 @@ Frame hor, gap 8, margin 8 0 0 0
         <li><code>tl</code> bis <code>br</code> – 9 Positionen</li>
         <li><code>w 200</code>, <code>hug</code>, <code>full</code> – Größen</li>
         <li><code>wrap</code> – Umbruch bei Überlauf</li>
-        <li><code>grid N</code> – N-spaltiges Grid</li>
       </ul>
     </div>
 
     <nav>
       <a class="prev" href="quickstart-04.html">← Interaktion</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="06-positioning.html">Positioning →</a>
+      <a class="next" href="06-grid.html">Grid →</a>
     </nav>
 
   </main>
@@ -370,17 +317,33 @@ Frame hor, gap 8, margin 8 0 0 0
 
       function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
 
+      // Use Shadow DOM to scope CSS per playground
+      let shadow = preview.shadowRoot
+      if (!shadow) {
+        shadow = preview.attachShadow({ mode: 'open' })
+      }
+
       function compile() {
         try {
-          preview.innerHTML = ''
-          preview.classList.add('mirror-root')
+          shadow.innerHTML = ''
+
+          // Inject mirror-defaults.css into Shadow DOM
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.href = '../../assets/mirror-defaults.css'
+          shadow.appendChild(link)
+          
           const code = MirrorLang.compile(textarea.value)
           const execCode = code.replace('export function createUI', 'function createUI')
           const fn = new Function(execCode + '\nreturn createUI();')
           const ui = fn()
-          if (ui && ui.root) preview.appendChild(ui.root)
+          if (ui && ui.root) {
+            // Add mirror-root class to the root element
+            ui.root.classList.add('mirror-root')
+            shadow.appendChild(ui.root)
+          }
         } catch (e) {
-          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
         }
       }
 
