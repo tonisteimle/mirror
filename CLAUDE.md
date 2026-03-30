@@ -5,7 +5,7 @@ DSL für rapid UI prototyping. Kompiliert zu DOM oder React.
 ## Projekt-Übersicht
 
 ```
-src/                    # Core Compiler (TypeScript)
+compiler/               # Core Compiler (TypeScript)
 ├── parser/            # Lexer & Parser → AST
 ├── ir/                # AST → IR Transformation
 ├── backends/          # IR → DOM/React Code
@@ -61,11 +61,11 @@ dist/                  # Build Output
 | `studio/modules/compiler/` | Compiler Wrapper |
 | `studio/pickers/` | Color, Token, Icon, Animation Picker |
 | `studio/panels/` | Property, Tree, Files Panel |
-| `src/ir/index.ts` | IR-Transformation, SourceMap |
-| `src/backends/dom.ts` | DOM Code-Generator |
-| `src/studio/code-modifier.ts` | Code-Änderungen |
-| `src/schema/dsl.ts` | DSL Schema (Single Source of Truth) |
-| `src/validator/index.ts` | Code Validator API |
+| `compiler/ir/index.ts` | IR-Transformation, SourceMap |
+| `compiler/backends/dom.ts` | DOM Code-Generator |
+| `compiler/studio/code-modifier.ts` | Code-Änderungen |
+| `compiler/schema/dsl.ts` | DSL Schema (Single Source of Truth) |
+| `compiler/validator/index.ts` | Code Validator API |
 
 ## Commands
 
@@ -201,44 +201,109 @@ Tabs
 
 ### 8. States (Zustände)
 
-**Konzept:** States beschreiben wie ein Element in verschiedenen Zuständen aussieht.
+**Konzept:** States beschreiben wie ein Element aussieht. Events rufen Funktionen auf.
 
-**State definieren** (ohne Trigger):
+**Prinzipien:**
+- Base = Default-Startzustand (wenn nichts angegeben)
+- So wenig States wie nötig – Base zählt mit
+- Definitionsreihenfolge = Ausführungsreihenfolge
+- Erster definierter State = Initial (bei cycle)
+
+**System-States** (hover, focus, active) – kein Trigger nötig:
 ```
-// Komponente mit zwei Zuständen: Normal und Selected
-Btn: pad 12 24, bg #333, col #888
-  selected:
+Btn: pad 12 24, bg #333, col white, cursor pointer
+  hover:
+    bg #2563eb
+    scale 1.02
+```
+
+**Custom States definieren:**
+```
+Btn: pad 12 24, bg #333, col white, cursor pointer
+  on:
+    bg #2563eb
+
+Btn "Normal"                // startet in Base
+Btn "Aktiv", on             // startet in "on"
+```
+
+**Events rufen Funktionen auf (mit Klammern):**
+```
+Btn: pad 12 24, bg #333, col white, cursor pointer
+  on:
+    bg #2563eb
+  onclick: toggle()         // Eingebaute Funktion
+```
+
+**Eingebaute Funktionen:**
+- `toggle()` – Base ↔ State (kein extra "off" nötig)
+- `cycle()` – States in Definitionsreihenfolge
+- `exclusive()` – Nur einer in Gruppe aktiv
+
+**Eingebaute + eigene Logik kombinieren:**
+```javascript
+function handleClick(element) {
+  element.toggle()        // eingebautes Toggle
+  analytics.track()       // eigene Logik
+  sidebar.state = 'open'  // andere Elemente
+}
+```
+Simpel → `onclick: toggle()`. Komplex → eigene Funktion, darin `element.toggle()`.
+
+**Explizite Reihenfolge** (nur wenn nötig):
+```
+onclick: cycle(done, doing, todo)    // umgekehrte Reihenfolge
+onclick: toggle(on, off)             // explizit beide States
+```
+
+**Cycle-Beispiel:**
+```
+StatusBtn: pad 12 24, col white, cursor pointer
+  todo:
+    bg #333
+    Icon "circle"
+  doing:
+    bg #f59e0b
+    Icon "clock"
+  done:
+    bg #10b981
+    Icon "check"
+  onclick: cycle()
+
+StatusBtn "Task"            // startet in "todo" (erster = Initial)
+StatusBtn "Task", doing     // startet in "doing"
+```
+
+**Exclusive-Beispiel (Tabs):**
+```
+Tab: pad 12 20, bg #333, col #888, cursor pointer
+  active:
     bg #2563eb
     col white
-```
+  onclick: exclusive()
 
-**Instanz mit State starten:**
+Frame hor, gap 4
+  Tab "Home"
+  Tab "Projekte", active    // startet aktiv
+  Tab "Settings"
 ```
-Btn "Normal"              // Startet im Normalzustand
-Btn "Aktiv" selected      // Startet im selected-Zustand
-```
+Gruppierung: Geschwister des gleichen Komponententyps bilden automatisch eine Gruppe.
 
-**Trigger hinzufügen** (wann der State ausgelöst wird):
+**States mit unterschiedlichen Kindern** (wie Figma Variants):
 ```
-Btn: pad 12 24, bg #333, col #888
-  selected onclick:       // Bei Klick → selected
-    bg #2563eb
-    col white
+Panel: bg #1a1a1a, rad 8, clip
+  closed:
+    Frame hor, spread, pad 16
+      Text "Mehr"
+      Icon "chevron-down"
+  open:
+    Frame hor, spread, pad 16
+      Text "Weniger"
+      Icon "chevron-up"
+    Frame pad 16
+      Text "Versteckter Inhalt"
+  onclick: cycle()
 ```
-
-**System-States** (hover, focus, active, disabled) – Trigger ist implizit:
-```
-Button bg #333, col white
-  hover:                  // System weiß wann Maus darüber
-    bg #2563eb
-  focus:
-    boc #2563eb
-```
-
-**Modifiers:**
-- `toggle` – Hin und zurück wechseln: `on toggle onclick:`
-- `exclusive` – Nur einer aktiv (Radio): `selected exclusive onclick:`
-- `initial` – Expliziter Startzustand: `selected initial onclick:`
 
 ### 9. Tokens (Design-Variablen)
 Tokens werden mit `$` definiert. **Wichtig:** Bei der Definition MIT Typ-Suffix, bei der Verwendung OHNE Suffix (das Property zeigt den Typ):
@@ -263,30 +328,64 @@ Frame bg $colors.page, pad $space.md, rad $card
 
 **Warum Suffixe?** Sie ermöglichen intelligentes IDE-Autocomplete: Bei `bg $` werden nur `.bg`-Tokens angezeigt, bei `rad $` nur `.rad`-Tokens.
 
-### 10. State-Abhängigkeiten (when)
+### 10. State-Referenzen
 Ein Element kann auf den State eines anderen Elements reagieren:
 ```
-Menu
-  closed:
-    hidden
-  open onclick:
+Button name MenuBtn, pad 10 20, rad 6, bg #333, col white
+  open:
+    bg #2563eb
+  onclick: toggle()
+
+Frame bg #1a1a1a, pad 12, rad 8, hidden
+  MenuBtn.open:         // Wenn MenuBtn in "open" → sichtbar
     visible
-
-Backdrop
-  hidden
-  visible when Menu open:     // Sichtbar wenn Menu im State "open"
-    opacity 0.5
+  Text "Menü-Inhalt"
 ```
 
-### 11. Multi-Element State-Änderungen
-Ein Trigger kann mehrere States gleichzeitig setzen:
+`ElementName.state:` reagiert auf den State eines anderen Elements. Base-Styles gelten wenn kein State matcht.
+
+### 11. JavaScript Integration
+Events rufen immer Funktionen auf – eingebaute oder eigene:
+
 ```
-MenuButton
-  onclick:
-    Menu open
-    Backdrop visible
-    Sidebar collapsed
+Button name saveBtn, pad 12 24, bg #2563eb, col white
+  loading:
+    bg #666
+    "Wird gespeichert..."
+  success:
+    bg #10b981
+    "Gespeichert!"
+  onclick: save()
 ```
+
+```javascript
+async function save(element) {
+  element.state = 'loading'
+  await fetch('/api/save')
+  element.state = 'success'
+  setTimeout(() => element.state = 'base', 2000)
+}
+```
+
+**Mirror übergibt automatisch das Element** – wie in VB/Delphi.
+
+**Andere Elemente steuern:**
+```javascript
+function openMenu(element) {
+  menuBtn.state = 'open'
+  sidebar.state = 'expanded'
+  backdrop.state = 'visible'
+}
+```
+
+**Eingebaute Funktionen:**
+- `toggle()` – Wechsel zwischen Base und State
+- `cycle()` – Mehrere States durchlaufen
+- `exclusive()` – Nur einer in Gruppe aktiv
+
+**Aufgabenteilung wie VB/Delphi:**
+- **Mirror:** UI und States deklarativ definieren
+- **Funktionen:** Eingebaute für Standard-Patterns, eigene für Logik
 
 ### 12. Animationen in States
 Animationen können beim State-Übergang ausgelöst werden:
@@ -347,20 +446,24 @@ SPACING     pad N, pad left N, margin N
 COLOR       bg #hex, col #hex, boc #hex
 BORDER      bor 1 #333, rad 8
 
-STATES      selected:                              (State definieren)
-            Btn selected                           (Instanz mit State starten)
-            selected onclick:                      (State mit Trigger)
-            hover:, focus:, active:, disabled:     (System-States)
-            selected exclusive onclick:            (Exclusive/Radio)
-            on toggle onclick:                     (Toggle an/aus)
-            visible when Menu open:                (Abhängigkeit)
+STATES      on:, open:, loading:                   (Custom States definieren)
+            hover:, focus:, active:                (System-States, kein Trigger)
+            Btn "Text", on                         (Instanz im State starten)
+            Base = Default-Start                   (wenn nichts angegeben)
+            Erster State = Initial                 (bei cycle)
+            Definitionsreihenfolge = Ausführung
+
+EVENTS      onclick: toggle()                      (Base ↔ State)
+            onclick: cycle()                       (States in Reihenfolge)
+            onclick: cycle(c, b, a)                (Explizite Reihenfolge)
+            onclick: exclusive()                   (Nur einer in Gruppe)
+            onclick: save()                        (Eigene Funktion)
+
+REFERENZ    name MenuBtn                           (Element benennen)
+            MenuBtn.open:                          (Auf State reagieren)
 
 TRIGGERS    onclick, onhover, onfocus, onblur, onchange, oninput
             onkeydown escape:, onkeydown enter:
-
-ANIMATION   selected onclick: bounce              (Preset)
-            selected onclick 0.2s:                (Duration)
-            selected onclick 0.3s ease-out:       (Duration + Easing)
 
 TOKENS      $name.bg: #hex    → bg $name     (Definition MIT Suffix)
             $name.pad: N      → pad $name    (Verwendung OHNE Suffix)
@@ -650,14 +753,16 @@ MODIFIERS   debounce N, delay N
 
 **System-States** (impliziter Trigger): hover, focus, active, disabled
 
-**Custom-States** (beliebige Namen möglich): selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error, dragging, ...
+**Custom-States** (beliebige Namen möglich): on, open, closed, active, selected, expanded, collapsed, loading, error, valid, invalid, ...
 
 **Syntax:**
-- `selected:` – State definieren (ohne Trigger)
-- `Btn selected` – Instanz im State starten
-- `selected onclick:` – State mit Trigger
-- `on toggle onclick:` – Toggle-Verhalten
-- `selected exclusive onclick:` – Radio-Verhalten
+- `on:` / `open:` / `loading:` – Custom States definieren
+- `hover:` / `focus:` / `active:` – System-States (kein Trigger)
+- `Btn "Text", on` – Instanz im State starten
+- `onclick: toggle()` – Eingebaute Funktion (toggle, cycle, exclusive)
+- `onclick: save()` – Eigene JavaScript-Funktion
+- `name MenuBtn` – Element benennen
+- `MenuBtn.open:` – Auf State reagieren
 
 ### Keyboard Keys
 

@@ -7,8 +7,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .code-block {
+      margin: 16px 0;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .code-block pre {
+      margin: 0;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: var(--text);
+    }
+    .code-block .syn-comment { color: var(--syn-comment); font-style: italic; }
+    .code-block .syn-string { color: var(--syn-string); }
+    .code-block .syn-hex { color: var(--syn-hex); }
+    .code-block .syn-number { color: var(--syn-number); }
+    .code-block .syn-property { color: var(--syn-property); }
+    .code-block .syn-component { color: var(--syn-component); font-weight: 500; }
+    .code-block .syn-keyword { color: var(--syn-keyword); }
+  </style>
 </head>
 <body>
 
@@ -19,213 +44,188 @@
       <p class="subtitle">States und Trigger</p>
     </header>
 
+    <div class="note">
+      Diese Seite zeigt die geplante State-Syntax. Interaktive Playgrounds folgen nach der Implementierung.
+    </div>
+
     <section>
-      <h2>Was ist ein State?</h2>
-      <p>In Mirror haben User Interfaces <strong>Zustände</strong> (States). Eine Interaktion kann zu einer Zustandsänderung führen. Du beschreibst, wie ein Element in jedem Zustand aussieht – das System kümmert sich um die Übergänge.</p>
+      <h2>Hover</h2>
+      <p>Der einfachste State. Das System weiß automatisch, wann die Maus über einem Element ist:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Btn</span>: <span class="syn-property">pad</span> <span class="syn-number">12</span> <span class="syn-number">24</span>, <span class="syn-property">rad</span> <span class="syn-number">6</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>, <span class="syn-property">col</span> white, <span class="syn-property">cursor</span> pointer
+  <span class="syn-keyword">hover</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+    <span class="syn-property">scale</span> <span class="syn-number">1.02</span>
+
+<span class="syn-component">Btn</span> <span class="syn-string">"Hover mich"</span></pre>
+      </div>
+
+      <p><code>hover:</code> definiert die Styles wenn die Maus darüber ist. Weitere System-States: <code>focus:</code> und <code>active:</code>.</p>
     </section>
 
     <section>
-      <h2>Komponente mit State definieren</h2>
-      <p>Nehmen wir an, ein Button hat zwei Zustände: <strong>Normal</strong> und <strong>Selected</strong>. In der Komponenten-Definition beschreibst du beide Zustände:</p>
+      <h2>Toggle</h2>
+      <p>Mit <code>toggle()</code> wechselt jeder Klick zwischen Base und einem State:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>// Komponente mit zwei Zuständen
-Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
-  selected:
-    bg #2563eb
-    col white
+      <div class="code-block">
+        <pre><span class="syn-component">Btn</span>: <span class="syn-property">pad</span> <span class="syn-number">12</span> <span class="syn-number">24</span>, <span class="syn-property">rad</span> <span class="syn-number">6</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>, <span class="syn-property">col</span> white, <span class="syn-property">cursor</span> pointer
+  <span class="syn-keyword">on</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+  <span class="syn-keyword">onclick</span>: toggle()
 
-// Instanz (startet im Normalzustand)
-Btn "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+<span class="syn-component">Btn</span> <span class="syn-string">"An/Aus"</span></pre>
       </div>
 
-      <p>Der <code>selected:</code> Block beschreibt, wie der Button im Zustand "selected" aussieht. Die Properties außerhalb (<code>bg #333, col #888</code>) gelten für den Normalzustand.</p>
+      <p>Klick-Reihenfolge: Base → on → Base → ... <strong>Base ist der Normalzustand</strong> – kein extra "off" State nötig.</p>
+
+      <h3>Instanz im State starten</h3>
+      <p>Der State wird wie ein Flag angegeben:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Btn</span> <span class="syn-string">"Normal"</span>              <span class="syn-comment">// startet in Base</span>
+<span class="syn-component">Btn</span> <span class="syn-string">"Bereits aktiv"</span>, <span class="syn-keyword">on</span>   <span class="syn-comment">// startet in "on"</span></pre>
+      </div>
+
+      <h3>Praktisch: Toggle Switch</h3>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Switch</span>: <span class="syn-property">w</span> <span class="syn-number">44</span>, <span class="syn-property">h</span> <span class="syn-number">24</span>, <span class="syn-property">rad</span> <span class="syn-number">12</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>, <span class="syn-property">cursor</span> pointer
+  <span class="syn-component">Frame</span> <span class="syn-property">w</span> <span class="syn-number">20</span>, <span class="syn-property">h</span> <span class="syn-number">20</span>, <span class="syn-property">rad</span> <span class="syn-number">10</span>, <span class="syn-property">bg</span> white, <span class="syn-property">margin</span> <span class="syn-number">2</span>
+  <span class="syn-keyword">on</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+    <span class="syn-component">Frame</span> <span class="syn-property">w</span> <span class="syn-number">20</span>, <span class="syn-property">h</span> <span class="syn-number">20</span>, <span class="syn-property">rad</span> <span class="syn-number">10</span>, <span class="syn-property">bg</span> white, <span class="syn-property">margin</span> <span class="syn-number">2</span> <span class="syn-number">2</span> <span class="syn-number">2</span> <span class="syn-number">22</span>
+  <span class="syn-keyword">onclick</span>: toggle()
+
+<span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> <span class="syn-number">16</span>, <span class="syn-property">bg</span> <span class="syn-hex">#1a1a1a</span>, <span class="syn-property">pad</span> <span class="syn-number">16</span>, <span class="syn-property">rad</span> <span class="syn-number">8</span>
+  <span class="syn-component">Text</span> <span class="syn-string">"Dark Mode"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> <span class="syn-number">14</span>
+  <span class="syn-component">Switch</span></pre>
+      </div>
+
+      <p>Der State kann andere Kinder haben als die Base – wie Figma Variants.</p>
     </section>
 
     <section>
-      <h2>Instanz mit State starten</h2>
-      <p>Du kannst eine Instanz direkt in einem bestimmten Zustand starten – schreib einfach den State-Namen dazu:</p>
+      <h2>Cycle</h2>
+      <p>Für mehr als zwei States verwendet man <code>cycle()</code>:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
-  selected:
-    bg #2563eb
-    col white
+      <div class="code-block">
+        <pre><span class="syn-component">StatusBtn</span>: <span class="syn-property">pad</span> <span class="syn-number">12</span> <span class="syn-number">24</span>, <span class="syn-property">rad</span> <span class="syn-number">6</span>, <span class="syn-property">col</span> white, <span class="syn-property">cursor</span> pointer
+  <span class="syn-keyword">todo</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#333</span>
+    <span class="syn-component">Icon</span> <span class="syn-string">"circle"</span>, <span class="syn-property">ic</span> white, <span class="syn-property">is</span> <span class="syn-number">14</span>
+  <span class="syn-keyword">doing</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#f59e0b</span>
+    <span class="syn-component">Icon</span> <span class="syn-string">"clock"</span>, <span class="syn-property">ic</span> white, <span class="syn-property">is</span> <span class="syn-number">14</span>
+  <span class="syn-keyword">done</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#10b981</span>
+    <span class="syn-component">Icon</span> <span class="syn-string">"check"</span>, <span class="syn-property">ic</span> white, <span class="syn-property">is</span> <span class="syn-number">14</span>
+  <span class="syn-keyword">onclick</span>: cycle()
 
-Frame hor, gap 8
-  Btn "Normal"
-  Btn "Ausgewählt" selected</textarea>
-        </div>
-        <div class="playground-preview"></div>
+<span class="syn-component">StatusBtn</span> <span class="syn-string">"Task 1"</span></pre>
       </div>
 
-      <p><code>Btn "Ausgewählt" selected</code> startet den Button direkt im <code>selected</code> Zustand. Das funktioniert mit jedem State, den du in der Komponente definiert hast.</p>
+      <p>Klick-Reihenfolge: todo → doing → done → todo → ... <strong>Erster definierter State = Initial.</strong> Definitionsreihenfolge = Ausführungsreihenfolge.</p>
     </section>
 
     <section>
-      <h2>Trigger: Zustand auslösen</h2>
-      <p>Bisher haben wir States nur definiert, aber nicht gesagt, <strong>wann</strong> sie ausgelöst werden. Das geht mit einem Trigger – schreib ihn einfach hinter den State-Namen:</p>
+      <h2>Exclusive</h2>
+      <p>Bei Tabs soll immer nur <strong>einer</strong> aktiv sein. <code>exclusive()</code> macht das automatisch:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
-  selected onclick:
-    bg #2563eb
-    col white
+      <div class="code-block">
+        <pre><span class="syn-component">Tab</span>: <span class="syn-property">pad</span> <span class="syn-number">12</span> <span class="syn-number">20</span>, <span class="syn-property">rad</span> <span class="syn-number">6</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>, <span class="syn-property">col</span> <span class="syn-hex">#888</span>, <span class="syn-property">cursor</span> pointer
+  <span class="syn-keyword">active</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+    <span class="syn-property">col</span> white
+  <span class="syn-keyword">onclick</span>: exclusive()
 
-Btn "Klick mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+<span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> <span class="syn-number">4</span>, <span class="syn-property">bg</span> <span class="syn-hex">#1a1a1a</span>, <span class="syn-property">pad</span> <span class="syn-number">4</span>, <span class="syn-property">rad</span> <span class="syn-number">8</span>
+  <span class="syn-component">Tab</span> <span class="syn-string">"Home"</span>
+  <span class="syn-component">Tab</span> <span class="syn-string">"Projekte"</span>, <span class="syn-keyword">active</span>
+  <span class="syn-component">Tab</span> <span class="syn-string">"Settings"</span></pre>
       </div>
 
-      <p><code>selected onclick:</code> bedeutet: "Wenn geklickt wird, wechsle in den State <code>selected</code>." Klick auf den Button – er wechselt in den ausgewählten Zustand.</p>
+      <p>Klickst du einen Tab, wird er <code>active</code> – alle anderen automatisch zurück zu Base.</p>
+
+      <p><strong>Gruppierung:</strong> Geschwister des gleichen Komponententyps bilden automatisch eine Gruppe.</p>
     </section>
 
     <section>
-      <h2>Toggle: Hin und zurück</h2>
-      <p>Im vorherigen Beispiel bleibt der Button nach dem Klick für immer <code>selected</code>. Meistens willst du aber, dass ein weiterer Klick den State wieder aufhebt – wie ein Lichtschalter:</p>
+      <h2>Auf andere Elemente reagieren</h2>
+      <p>Ein Element kann auf den State eines anderen reagieren. Gib dem Element einen Namen:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  on toggle onclick:
-    bg #2563eb
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> <span class="syn-number">12</span>
+  <span class="syn-component">Button</span> <span class="syn-property">name</span> <span class="syn-component">MenuBtn</span>, <span class="syn-property">pad</span> <span class="syn-number">10</span> <span class="syn-number">20</span>, <span class="syn-property">rad</span> <span class="syn-number">6</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>, <span class="syn-property">col</span> white
+    <span class="syn-keyword">open</span>:
+      <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+    <span class="syn-keyword">onclick</span>: toggle()
 
-Btn "An/Aus"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+  <span class="syn-component">Frame</span> <span class="syn-property">bg</span> <span class="syn-hex">#1a1a1a</span>, <span class="syn-property">pad</span> <span class="syn-number">12</span>, <span class="syn-property">rad</span> <span class="syn-number">8</span>, <span class="syn-property">gap</span> <span class="syn-number">4</span>, <span class="syn-property">hidden</span>
+    <span class="syn-component">MenuBtn</span>.<span class="syn-keyword">open</span>:
+      <span class="syn-property">visible</span>
+    <span class="syn-component">Text</span> <span class="syn-string">"Dashboard"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> <span class="syn-number">14</span>, <span class="syn-property">pad</span> <span class="syn-number">8</span>
+    <span class="syn-component">Text</span> <span class="syn-string">"Einstellungen"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> <span class="syn-number">14</span>, <span class="syn-property">pad</span> <span class="syn-number">8</span></pre>
       </div>
 
-      <p><code>toggle</code> macht den Unterschied: Jeder Klick wechselt zwischen <code>on</code> und nicht-<code>on</code>. Ohne <code>toggle</code> würde der State nur aktiviert, nie deaktiviert.</p>
+      <p><code>MenuBtn.open:</code> bedeutet: "Wenn MenuBtn in <code>open</code> ist, wende diese Styles an."</p>
     </section>
 
     <section>
-      <h2>Hover: Eingebauter State</h2>
-      <p><code>hover:</code> ist ein eingebauter State – du brauchst keinen Trigger, das System weiß automatisch, wann die Maus über dem Element ist:</p>
+      <h2>Eigene Funktionen</h2>
+      <p>Für komplexe Logik schreibst du eigene JavaScript-Funktionen:</p>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover:
-    bg #2563eb
-    scale 1.02
+      <div class="code-block">
+        <pre><span class="syn-component">Btn</span>: <span class="syn-property">pad</span> <span class="syn-number">12</span> <span class="syn-number">24</span>, <span class="syn-property">bg</span> <span class="syn-hex">#333</span>
+  <span class="syn-keyword">on</span>:
+    <span class="syn-property">bg</span> <span class="syn-hex">#2563eb</span>
+  <span class="syn-keyword">onclick</span>: handleClick()
 
-Btn "Hover mich"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+<span class="syn-keyword">function</span> handleClick(element) {
+  element.toggle()        <span class="syn-comment">// eingebautes Toggle</span>
+  analytics.track()       <span class="syn-comment">// eigene Logik</span>
+  sidebar.state = <span class="syn-string">'open'</span>  <span class="syn-comment">// andere Elemente</span>
+}</pre>
       </div>
 
-      <p>Eingebaute States: <code>hover</code>, <code>focus</code>, <code>active</code>, <code>disabled</code>. Für eigene States brauchst du Trigger.</p>
+      <p><strong>Regel:</strong> Simpel → <code>onclick: toggle()</code>. Komplex → eigene Funktion, darin <code>element.toggle()</code>.</p>
+      <p>Für API-Calls, Timer, Validation → siehe <a href="12-javascript.html">JavaScript Integration</a>.</p>
     </section>
 
     <section>
-      <h2>Exclusive: Nur einer aktiv</h2>
-      <p>Bei Radio-Buttons oder Tabs soll immer nur <strong>einer</strong> ausgewählt sein. Klickst du auf einen anderen, wird der vorherige automatisch deselektiert:</p>
+      <h2>Praktisch: Accordion</h2>
 
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 12 20, rad 6, bg #333, col #888, cursor pointer
-  selected exclusive onclick:
-    bg #2563eb
-    col white
+      <div class="code-block">
+        <pre><span class="syn-component">Panel</span>: <span class="syn-property">bg</span> <span class="syn-hex">#1a1a1a</span>, <span class="syn-property">rad</span> <span class="syn-number">8</span>, <span class="syn-property">clip</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">pad</span> <span class="syn-number">16</span>, <span class="syn-property">cursor</span> pointer
+    <span class="syn-component">Text</span> <span class="syn-string">"Mehr anzeigen"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> <span class="syn-number">14</span>
+    <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, <span class="syn-property">ic</span> <span class="syn-hex">#888</span>, <span class="syn-property">is</span> <span class="syn-number">18</span>
+  <span class="syn-keyword">open</span>:
+    <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">pad</span> <span class="syn-number">16</span>, <span class="syn-property">cursor</span> pointer
+      <span class="syn-component">Text</span> <span class="syn-string">"Weniger anzeigen"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> <span class="syn-number">14</span>
+      <span class="syn-component">Icon</span> <span class="syn-string">"chevron-up"</span>, <span class="syn-property">ic</span> <span class="syn-hex">#888</span>, <span class="syn-property">is</span> <span class="syn-number">18</span>
+    <span class="syn-component">Frame</span> <span class="syn-property">pad</span> <span class="syn-number">0</span> <span class="syn-number">16</span> <span class="syn-number">16</span> <span class="syn-number">16</span>, <span class="syn-property">gap</span> <span class="syn-number">8</span>
+      <span class="syn-component">Text</span> <span class="syn-string">"Hier ist der versteckte Inhalt."</span>, <span class="syn-property">col</span> <span class="syn-hex">#888</span>, <span class="syn-property">fs</span> <span class="syn-number">13</span>
+  <span class="syn-keyword">onclick</span>: toggle()
 
-Frame hor, gap 8
-  Btn "Option A"
-  Btn "Option B"
-  Btn "Option C"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+<span class="syn-component">Panel</span></pre>
       </div>
-
-      <p><code>exclusive</code> sorgt dafür, dass nur ein Element den State haben kann. Du beschreibst nur das Verhalten – das System kümmert sich um das Aufräumen.</p>
-    </section>
-
-    <section>
-      <h2>Toggle vs. Exclusive</h2>
-      <p>Mit <code>toggle</code> (ohne <code>exclusive</code>) kann jedes Element unabhängig an- oder ausgeschaltet werden – wie Checkboxen:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn: pad 10 20, rad 6, bg #333, col white, cursor pointer
-  on toggle onclick:
-    bg #2563eb
-
-Frame gap 8
-  Btn "Feature A"
-  Btn "Feature B"
-  Btn "Feature C"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <table class="ref-table">
-        <tr><td><code>exclusive</code></td><td>Nur einer kann aktiv sein (Radio)</td></tr>
-        <tr><td><code>toggle</code></td><td>Jeder kann unabhängig an/aus sein (Checkbox)</td></tr>
-      </table>
-    </section>
-
-    <section>
-      <h2>State durch anderes Element auslösen</h2>
-      <p>Manchmal soll ein Element auf den State eines <strong>anderen</strong> Elements reagieren. Ein Menü erscheint, wenn ein Button aktiv ist:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 12
-  Button "Menu", pad 10 20, rad 6, bg #333, col white, cursor pointer
-    open toggle onclick:
-      bg #2563eb
-
-  Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
-    visible when Button open:
-    Text "Dashboard", col white, fs 14, pad 8
-    Text "Einstellungen", col white, fs 14, pad 8
-    Text "Logout", col #ef4444, fs 14, pad 8</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><code>visible when Button open:</code> bedeutet: "Sei sichtbar, wenn der Button im State <code>open</code> ist." Das Frame reagiert automatisch auf den State des Buttons.</p>
-    </section>
-
-    <section>
-      <h2>Praktisch: Toggle Switch</h2>
-      <p>Ein klassischer Toggle-Switch kombiniert mehrere Konzepte. Der äußere Container hat den State, die inneren Elemente reagieren darauf:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor, gap 16, bg #1a1a1a, pad 16, rad 8
-  Text "Dark Mode", col white, fs 14
-
-  Frame w 44, h 24, rad 12, bg #333, cursor pointer
-    on toggle onclick:
-      bg #2563eb
-
-    // Der Knob bewegt sich je nach State
-    Frame w 20, h 20, rad 10, bg white, margin 2
-      on:
-        margin 2 2 2 22</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Der innere Knob hat einen <code>on:</code> Block – er reagiert auf den State des Parent-Elements. Wenn das Parent <code>on</code> ist, ändert sich das Margin und der Knob rutscht nach rechts.</p>
     </section>
 
     <div class="summary">
       <h2>Das Wichtigste</h2>
       <table class="ref-table">
-        <tr><td><code>selected:</code></td><td>State definieren (ohne Trigger)</td></tr>
-        <tr><td><code>Btn selected</code></td><td>Instanz im State starten</td></tr>
-        <tr><td><code>selected onclick:</code></td><td>State mit Trigger</td></tr>
-        <tr><td><code>toggle</code></td><td>Hin und zurück wechseln</td></tr>
-        <tr><td><code>exclusive</code></td><td>Nur einer aktiv (Radio-Verhalten)</td></tr>
-        <tr><td><code>hover:</code></td><td>Eingebauter State (Maus darüber)</td></tr>
-        <tr><td><code>visible when X open:</code></td><td>Auf State eines anderen Elements reagieren</td></tr>
+        <tr><td><code>hover:</code></td><td>System-State (auch: focus, active)</td></tr>
+        <tr><td><code>on:</code></td><td>Custom State definieren</td></tr>
+        <tr><td><code>Btn "Text", on</code></td><td>Instanz im State starten</td></tr>
+        <tr><td><code>onclick: toggle()</code></td><td>Base ↔ State</td></tr>
+        <tr><td><code>onclick: cycle()</code></td><td>States in Definitionsreihenfolge</td></tr>
+        <tr><td><code>onclick: exclusive()</code></td><td>Nur einer aktiv in Gruppe</td></tr>
+        <tr><td><code>onclick: myFn()</code></td><td>Eigene Funktion</td></tr>
+        <tr><td><code>element.toggle()</code></td><td>In JS: eingebautes Toggle</td></tr>
+        <tr><td><code>MenuBtn.open:</code></td><td>Auf State reagieren</td></tr>
       </table>
+      <p style="margin-top: 12px; color: var(--text-dim); font-size: 12px;"><strong>Prinzipien:</strong> Base = Default-Start · Erster State = Initial · Simpel → eingebaut, Komplex → eigene Funktion</p>
     </div>
 
     <nav>
@@ -236,104 +236,5 @@ Frame gap 8
 
   </main>
 
-  <script src="../../dist/browser/index.global.js"></script>
-  <script>
-    const patterns = [
-      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
-      { regex: /"[^"]*"/g, cls: 'syn-string' },
-      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
-      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /\b\d+(\.\d+)?(%|px|rem|em|s|ms)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|closed|as|on|off|exclusive|initial|when|bounce|fade-in|fade-out|scale-in|scale-out)\b/g, cls: 'syn-keyword' },
-      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
-    ]
-
-    function highlight(text) {
-      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      const matches = []
-      for (const p of patterns) {
-        p.regex.lastIndex = 0
-        let m
-        while ((m = p.regex.exec(text)) !== null) {
-          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
-        }
-      }
-      matches.sort((a, b) => a.from - b.from)
-      const filtered = []
-      let lastEnd = 0
-      for (const m of matches) {
-        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
-      }
-      let result = '', pos = 0
-      for (const m of filtered) {
-        if (m.from > pos) result += html.slice(pos, m.from)
-        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        result += `<span class="${m.cls}">${escaped}</span>`
-        pos = m.to
-      }
-      return result + html.slice(pos)
-    }
-
-    document.querySelectorAll('.playground[data-playground]').forEach(p => {
-      const codeContainer = p.querySelector('.playground-code')
-      const textarea = p.querySelector('textarea')
-      const preview = p.querySelector('.playground-preview')
-      const pre = document.createElement('pre')
-      codeContainer.insertBefore(pre, textarea)
-
-      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
-
-      // Use Shadow DOM to scope CSS per playground
-      let shadow = preview.shadowRoot
-      if (!shadow) {
-        shadow = preview.attachShadow({ mode: 'open' })
-      }
-
-      function compile() {
-        try {
-          shadow.innerHTML = ''
-
-          // Inject mirror-defaults.css into Shadow DOM
-          const link = document.createElement('link')
-          link.rel = 'stylesheet'
-          link.href = '../../assets/mirror-defaults.css'
-          shadow.appendChild(link)
-          const code = MirrorLang.compile(textarea.value)
-          const execCode = code.replace('export function createUI', 'function createUI')
-          const fn = new Function(execCode + '\nreturn createUI();')
-          const ui = fn()
-          if (ui && ui.root) {
-            // Add mirror-root class to the root element
-            ui.root.classList.add('mirror-root')
-            shadow.appendChild(ui.root)
-          }
-        } catch (e) {
-          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
-        }
-      }
-
-      textarea.addEventListener('input', () => {
-        updateHighlight()
-        clearTimeout(textarea._t)
-        textarea._t = setTimeout(compile, 100)
-      })
-
-      textarea.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault()
-          const s = textarea.selectionStart
-          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
-          textarea.selectionStart = textarea.selectionEnd = s + 2
-          updateHighlight()
-          compile()
-        }
-      })
-
-      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
-      updateHighlight()
-      compile()
-    })
-  </script>
 </body>
 </html>
