@@ -14,7 +14,6 @@ import {
   KEYBOARD_KEYS,
   STATE_NAMES,
   SYSTEM_STATES,
-  INITIAL_STATES,
   STATE_MODIFIERS,
   DIRECTIONAL_PROPERTIES,
   DIRECTION_KEYWORDS,
@@ -752,6 +751,29 @@ export class Parser {
       instance.properties.splice(routeIndex, 1)
     }
 
+    // Extract initial state from properties
+    // A property with empty values and lowercase name that isn't a known property/keyword is an initial state
+    // Example: Button "Click" selected → "selected" becomes initialState
+    const initialStateIndex = instance.properties.findIndex(p => {
+      const name = p.name
+      return (
+        p.values.length === 0 &&
+        name[0] === name[0].toLowerCase() &&
+        !PROPERTY_STARTERS.has(name) &&
+        !ALL_BOOLEAN_PROPERTIES.has(name) &&
+        !EVENT_NAMES.has(name) &&
+        !STATE_MODIFIERS.has(name) &&
+        name !== 'when' &&
+        name !== 'as' &&
+        name !== 'content'
+      )
+    })
+    if (initialStateIndex !== -1) {
+      const stateProp = instance.properties[initialStateIndex]
+      instance.initialState = stateProp.name
+      instance.properties.splice(initialStateIndex, 1)
+    }
+
     // Skip newline before checking for indented children
     this.skipNewlines()
 
@@ -830,6 +852,27 @@ export class Parser {
 
     // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
     this.parseZagInlineProperties(zagNode)
+
+    // Extract initial state from properties (same logic as for regular instances)
+    const initialStateIndex = zagNode.properties.findIndex(p => {
+      const name = p.name
+      return (
+        p.values.length === 0 &&
+        name[0] === name[0].toLowerCase() &&
+        !PROPERTY_STARTERS.has(name) &&
+        !ALL_BOOLEAN_PROPERTIES.has(name) &&
+        !EVENT_NAMES.has(name) &&
+        !STATE_MODIFIERS.has(name) &&
+        name !== 'when' &&
+        name !== 'as' &&
+        name !== 'content'
+      )
+    })
+    if (initialStateIndex !== -1) {
+      const stateProp = zagNode.properties[initialStateIndex]
+      zagNode.initialState = stateProp.name
+      zagNode.properties.splice(initialStateIndex, 1)
+    }
 
     // Check for colon at end of line - this marks it as a DEFINITION, not an instance
     // Select placeholder "...":  → Definition (not rendered)
@@ -1661,8 +1704,8 @@ export class Parser {
         continue
       }
 
-      // Note: INITIAL_STATES and SYSTEM_STATES are imported from parser-helpers.ts
-      // They are derived from the schema (dsl.ts) to ensure consistency.
+      // Note: SYSTEM_STATES is imported from parser-helpers.ts
+      // It is derived from the schema (dsl.ts) to ensure consistency.
 
       // Boolean properties (use module-level constant including position booleans)
       const booleanProperties = ALL_BOOLEAN_PROPERTIES
@@ -1773,14 +1816,6 @@ export class Parser {
             // Not a valid state, restore position
             this.pos = savedPos
           }
-        }
-
-        // Handle initial state (closed, open, etc.) - from schema
-        // Only treat as initial state if NOT part of a state block
-        if (INITIAL_STATES.has(name) && !this.isStateBlockStart()) {
-          const token = this.advance()
-          component.initialState = token.value
-          continue
         }
 
         // Handle boolean properties (no value)
@@ -1996,8 +2031,6 @@ export class Parser {
     // Using module-level constant (derived from schema via parser-helpers.ts)
     const booleanProperties = ALL_BOOLEAN_PROPERTIES
 
-    // Note: INITIAL_STATES is imported from parser-helpers.ts (derived from schema)
-
     while (!this.check('DEDENT') && !this.isAtEnd()) {
       this.skipNewlines()
 
@@ -2090,14 +2123,6 @@ export class Parser {
           if (!instance.events) instance.events = []
           const event = this.parseEvent()
           if (event) instance.events.push(event)
-          continue
-        }
-
-        // Initial state (closed, open) - from schema
-        // Only treat as initial state if NOT part of a state block
-        if (INITIAL_STATES.has(name) && !this.isStateBlockStart()) {
-          const token = this.advance()
-          instance.initialState = token.value
           continue
         }
 
@@ -2279,6 +2304,23 @@ export class Parser {
 
           if (!instance.states) instance.states = []
           instance.states.push(state)
+          continue
+        }
+
+        // Initial state: any lowercase identifier that isn't a known keyword
+        // This allows setting states defined in components: Button selected, Dialog closed
+        // Must be lowercase (PascalCase = child component) and not a known property/event/modifier
+        if (
+          name[0] === name[0].toLowerCase() &&
+          !EVENT_NAMES.has(name) &&
+          !booleanProperties.has(name) &&
+          !PROPERTY_STARTERS.has(name) &&
+          !STATE_MODIFIERS.has(name) &&
+          name !== 'when' &&
+          name !== 'as'
+        ) {
+          const token = this.advance()
+          instance.initialState = token.value
           continue
         }
 

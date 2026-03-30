@@ -148,14 +148,6 @@ export const CUSTOM_STATES = new Set<string>(
 )
 
 /**
- * Initial states for components (open/closed, expanded/collapsed).
- * These can be set as initial state on component definition.
- */
-export const INITIAL_STATES = new Set<string>([
-  'open', 'closed', 'expanded', 'collapsed', 'on', 'off',
-])
-
-/**
  * State modifiers for the interaction model.
  * - exclusive: only one element in group can have this state
  * - toggle: same trigger toggles state on/off

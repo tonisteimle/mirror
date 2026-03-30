@@ -199,32 +199,46 @@ Tabs
     Text "Inhalt 2"
 ```
 
-### 8. States (System & Custom)
-**Syntax:** `state [modifier] [trigger]:`
+### 8. States (Zustände)
+
+**Konzept:** States beschreiben wie ein Element in verschiedenen Zuständen aussieht.
+
+**State definieren** (ohne Trigger):
+```
+// Komponente mit zwei Zuständen: Normal und Selected
+Btn: pad 12 24, bg #333, col #888
+  selected:
+    bg #2563eb
+    col white
+```
+
+**Instanz mit State starten:**
+```
+Btn "Normal"              // Startet im Normalzustand
+Btn "Aktiv" selected      // Startet im selected-Zustand
+```
+
+**Trigger hinzufügen** (wann der State ausgelöst wird):
+```
+Btn: pad 12 24, bg #333, col #888
+  selected onclick:       // Bei Klick → selected
+    bg #2563eb
+    col white
+```
 
 **System-States** (hover, focus, active, disabled) – Trigger ist implizit:
 ```
 Button bg #333, col white
-  hover:                    // Kurzform: hover onhover:
+  hover:                  // System weiß wann Maus darüber
     bg #2563eb
   focus:
     boc #2563eb
 ```
 
-**Custom-States** – Trigger muss explizit sein:
-```
-Tab bg #333, col #888
-  selected onclick:         // State "selected" bei Klick
-    bg #2563eb
-    col white
-
-Tab bg #333, col #888
-  selected exclusive onclick:   // Nur einer kann selected sein (Radio)
-    bg #2563eb
-    col white
-```
-
-**Modifiers:** `exclusive` (nur einer), `toggle` (an/aus wechseln), `initial` (Startzustand)
+**Modifiers:**
+- `toggle` – Hin und zurück wechseln: `on toggle onclick:`
+- `exclusive` – Nur einer aktiv (Radio): `selected exclusive onclick:`
+- `initial` – Expliziter Startzustand: `selected initial onclick:`
 
 ### 9. Tokens (Design-Variablen)
 Tokens werden mit `$` definiert. **Wichtig:** Bei der Definition MIT Typ-Suffix, bei der Verwendung OHNE Suffix (das Property zeigt den Typ):
@@ -333,10 +347,12 @@ SPACING     pad N, pad left N, margin N
 COLOR       bg #hex, col #hex, boc #hex
 BORDER      bor 1 #333, rad 8
 
-STATES      hover:, focus:, active:, disabled:     (System-States)
-            selected onclick:                      (Custom mit Trigger)
+STATES      selected:                              (State definieren)
+            Btn selected                           (Instanz mit State starten)
+            selected onclick:                      (State mit Trigger)
+            hover:, focus:, active:, disabled:     (System-States)
             selected exclusive onclick:            (Exclusive/Radio)
-            open toggle onclick:                   (Toggle an/aus)
+            on toggle onclick:                     (Toggle an/aus)
             visible when Menu open:                (Abhängigkeit)
 
 TRIGGERS    onclick, onhover, onfocus, onblur, onchange, oninput
@@ -632,9 +648,16 @@ MODIFIERS   debounce N, delay N
 
 ### States
 
-**System:** hover, focus, active, disabled
+**System-States** (impliziter Trigger): hover, focus, active, disabled
 
-**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error, dragging
+**Custom-States** (beliebige Namen möglich): selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error, dragging, ...
+
+**Syntax:**
+- `selected:` – State definieren (ohne Trigger)
+- `Btn selected` – Instanz im State starten
+- `selected onclick:` – State mit Trigger
+- `on toggle onclick:` – Toggle-Verhalten
+- `selected exclusive onclick:` – Radio-Verhalten
 
 ### Keyboard Keys
 

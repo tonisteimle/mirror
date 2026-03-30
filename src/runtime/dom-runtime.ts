@@ -540,9 +540,31 @@ export function transitionTo(
   if (!newState) return
   if (prevStateName === stateName) return
 
+  // Store base styles on first transition (for toggle back to default)
+  if (!el._baseStyles) {
+    el._baseStyles = {}
+    // Collect all properties that can be changed by any state
+    const stateProps = new Set<string>()
+    for (const state of Object.values(sm.states)) {
+      for (const style of state.styles) {
+        stateProps.add(style.property)
+      }
+    }
+    // Store current values as base
+    for (const prop of stateProps) {
+      el._baseStyles[prop] = (el.style as unknown as Record<string, string>)[prop] || ''
+    }
+  }
+
   // Update current state
   sm.current = stateName
   el.dataset.state = stateName
+
+  // Restore base styles before applying new state
+  // This ensures toggling back to 'default' properly resets styles
+  if (el._baseStyles) {
+    Object.assign(el.style, el._baseStyles)
+  }
 
   // Determine which animation to play
   // Priority: 1. transition animation, 2. state enter animation, 3. prev state exit animation

@@ -299,8 +299,26 @@ const _runtime = {
     const newState = sm.states[stateName]
     if (!newState) return
     if (prevState === stateName) return
+    // Store base styles on first transition
+    if (!el._baseStyles) {
+      el._baseStyles = {}
+      const stateProps = new Set()
+      for (const state of Object.values(sm.states)) {
+        // styles is an object like { 'background': '#2563eb' }
+        for (const prop of Object.keys(state.styles || {})) {
+          stateProps.add(prop)
+        }
+      }
+      for (const prop of stateProps) {
+        el._baseStyles[prop] = el.style[prop] || ''
+      }
+    }
     sm.current = stateName
     el.dataset.state = stateName
+    // Restore base styles before applying new state
+    if (el._baseStyles) {
+      Object.assign(el.style, el._baseStyles)
+    }
     Object.assign(el.style, newState.styles)
     this.updateVisibility(el)
     // Note: animation parameter accepted for API compatibility but not executed in string runtime

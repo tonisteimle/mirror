@@ -36,7 +36,10 @@ Tab
     const node = ir.nodes[0]
 
     expect(node.stateMachine).toBeDefined()
-    expect(node.stateMachine!.initial).toBe('selected')
+    // When all states have triggers, initial is 'default' (implicit state)
+    expect(node.stateMachine!.initial).toBe('default')
+    expect(node.stateMachine!.states['default']).toBeDefined()
+    expect(node.stateMachine!.states['default'].styles).toHaveLength(0)
     expect(node.stateMachine!.states['selected']).toBeDefined()
     expect(node.stateMachine!.states['selected'].styles).toHaveLength(1)
     expect(node.stateMachine!.transitions).toHaveLength(1)

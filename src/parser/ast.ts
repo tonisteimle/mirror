@@ -271,6 +271,8 @@ export interface ZagNode extends BaseNode {
   events: Event[]
   /** True if this is a definition (ends with :), not an instance */
   isDefinition?: boolean
+  /** Initial state (e.g., closed, open, expanded) */
+  initialState?: string
 }
 
 /**

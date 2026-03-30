@@ -2699,12 +2699,33 @@ class IRTransformer {
     }
 
     // Determine initial state
-    // Priority: 1. explicit 'initial' modifier, 2. first state defined
-    let initial = Object.keys(stateDefinitions)[0]
+    // Priority: 1. explicit 'initial' modifier, 2. state without trigger, 3. implicit 'default'
+    let initial: string | undefined
+
+    // First check for explicit 'initial' modifier
     for (const [name, def] of Object.entries(stateDefinitions)) {
       if (def.isInitial) {
         initial = name
         break
+      }
+    }
+
+    // If no explicit initial, check for a state without trigger (natural starting state)
+    if (!initial) {
+      const statesWithoutTriggers = states.filter(s => !s.trigger && !s.when)
+      if (statesWithoutTriggers.length > 0) {
+        initial = statesWithoutTriggers[0].name
+      }
+    }
+
+    // If all states have triggers, create implicit 'default' state
+    // This allows toggle patterns like "on toggle onclick:" to start in "off" state
+    if (!initial) {
+      initial = 'default'
+      stateDefinitions['default'] = {
+        name: 'default',
+        styles: [], // No styles - uses base element styles
+        isInitial: true,
       }
     }
 

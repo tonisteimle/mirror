@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../dist/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -16,130 +16,171 @@
 
     <header>
       <h1>Interaktion</h1>
-      <p class="subtitle">States, Trigger und Abhängigkeiten</p>
+      <p class="subtitle">States und Trigger</p>
     </header>
 
-    <p class="intro">Mirror ist deklarativ – auch für Interaktionen. Du beschreibst <strong>Zustände</strong> (States) und <strong>wann</strong> sie eintreten (Trigger). Die Syntax: <code>statename [modifier] [trigger]:</code></p>
+    <section>
+      <h2>Was ist ein State?</h2>
+      <p>In Mirror haben User Interfaces <strong>Zustände</strong> (States). Eine Interaktion kann zu einer Zustandsänderung führen. Du beschreibst, wie ein Element in jedem Zustand aussieht – das System kümmert sich um die Übergänge.</p>
+    </section>
 
     <section>
-      <h2>System-States</h2>
-      <p>Für <code>hover</code>, <code>focus</code>, <code>active</code> und <code>disabled</code> ist der Trigger implizit – du brauchst nur den State-Namen:</p>
+      <h2>Komponente mit State definieren</h2>
+      <p>Nehmen wir an, ein Button hat zwei Zustände: <strong>Normal</strong> und <strong>Selected</strong>. In der Komponenten-Definition beschreibst du beide Zustände:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Hover mich", pad 12 24, rad 6, bg #333, col white
-  cursor pointer
-  hover:              // = hover onhover:
+          <textarea>// Komponente mit zwei Zuständen
+Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
+  selected:
     bg #2563eb
-    scale 1.02
-  active:
-    bg #1d4ed8</textarea>
+    col white
+
+// Instanz (startet im Normalzustand)
+Btn "Klick mich"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>hover:</code> ist die Kurzform für <code>hover onhover:</code>. Der State <code>hover</code> wird automatisch bei Mouse-Enter aktiviert und bei Mouse-Leave deaktiviert.</p>
+      <p>Der <code>selected:</code> Block beschreibt, wie der Button im Zustand "selected" aussieht. Die Properties außerhalb (<code>bg #333, col #888</code>) gelten für den Normalzustand.</p>
     </section>
 
     <section>
-      <h2>Custom States mit Trigger</h2>
-      <p>Für eigene States musst du den Trigger explizit angeben. Der häufigste: <code>onclick</code>:</p>
+      <h2>Instanz mit State starten</h2>
+      <p>Du kannst eine Instanz direkt in einem bestimmten Zustand starten – schreib einfach den State-Namen dazu:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// selected wird bei Klick aktiviert
-Button "Klick mich", pad 12 20, rad 6, bg #333, col #888, cursor pointer
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
+  selected:
+    bg #2563eb
+    col white
+
+Frame hor, gap 8
+  Btn "Normal"
+  Btn "Ausgewählt" selected</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>Btn "Ausgewählt" selected</code> startet den Button direkt im <code>selected</code> Zustand. Das funktioniert mit jedem State, den du in der Komponente definiert hast.</p>
+    </section>
+
+    <section>
+      <h2>Trigger: Zustand auslösen</h2>
+      <p>Bisher haben wir States nur definiert, aber nicht gesagt, <strong>wann</strong> sie ausgelöst werden. Das geht mit einem Trigger – schreib ihn einfach hinter den State-Namen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col #888, cursor pointer
   selected onclick:
     bg #2563eb
-    col white</textarea>
+    col white
+
+Btn "Klick mich"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Ein Klick aktiviert den State <code>selected</code>. Die Properties im Block (<code>bg #2563eb</code>, <code>col white</code>) werden angewendet.</p>
+      <p><code>selected onclick:</code> bedeutet: "Wenn geklickt wird, wechsle in den State <code>selected</code>." Klick auf den Button – er wechselt in den ausgewählten Zustand.</p>
     </section>
 
     <section>
-      <h2>Exclusive: Radio-Verhalten</h2>
-      <p>Mit <code>exclusive</code> kann nur ein Element in einer Gruppe den State haben – wie Radio-Buttons:</p>
+      <h2>Toggle: Hin und zurück</h2>
+      <p>Im vorherigen Beispiel bleibt der Button nach dem Klick für immer <code>selected</code>. Meistens willst du aber, dass ein weiterer Klick den State wieder aufhebt – wie ein Lichtschalter:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 8
-  Button "Option A", pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    selected exclusive onclick:
-      bg #2563eb
-      col white
-  Button "Option B", pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    selected exclusive onclick:
-      bg #2563eb
-      col white
-  Button "Option C", pad 12 20, rad 6, bg #333, col #888, cursor pointer
-    selected exclusive onclick:
-      bg #2563eb
-      col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Klickst du auf "Option B", wird automatisch "Option A" deselektiert. Kein manuelles Aufräumen nötig.</p>
-    </section>
-
-    <section>
-      <h2>Toggle: An/Aus wechseln</h2>
-      <p>Mit <code>toggle</code> wechselt der gleiche Klick zwischen aktiviert und deaktiviert – wie ein Lichtschalter:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>// Einfacher Toggle-Button
-Button "Klick mich", pad 12 24, rad 6, bg #333, col white
-  cursor pointer
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
   on toggle onclick:
     bg #2563eb
 
-// Der State "on" wechselt bei jedem Klick:
-// aus → an → aus → an → ...</textarea>
+Btn "An/Aus"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Ohne <code>toggle</code> würde der State bei Klick nur aktiviert, nie deaktiviert. <code>toggle</code> macht ihn zum Schalter.</p>
-
-      <p>Im Gegensatz zu <code>exclusive</code> (nur einer aktiv) kann mit <code>toggle</code> jedes Element unabhängig an/aus sein:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 8
-  Button "Option A", pad 10 20, rad 6, bg #333, col white, cursor pointer
-    on toggle onclick:
-      bg #2563eb
-  Button "Option B", pad 10 20, rad 6, bg #333, col white, cursor pointer
-    on toggle onclick:
-      bg #2563eb
-  Button "Option C", pad 10 20, rad 6, bg #333, col white, cursor pointer
-    on toggle onclick:
-      bg #2563eb</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <p><code>toggle</code> macht den Unterschied: Jeder Klick wechselt zwischen <code>on</code> und nicht-<code>on</code>. Ohne <code>toggle</code> würde der State nur aktiviert, nie deaktiviert.</p>
     </section>
 
     <section>
-      <h2>State-Abhängigkeiten (when)</h2>
-      <p>Mit <code>when</code> reagiert ein Element auf den State eines anderen Elements. Das ist deklarativer als Events – du beschreibst die Abhängigkeit, nicht die Aktion:</p>
+      <h2>Hover: Eingebauter State</h2>
+      <p><code>hover:</code> ist ein eingebauter State – du brauchst keinen Trigger, das System weiß automatisch, wann die Maus über dem Element ist:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover:
+    bg #2563eb
+    scale 1.02
+
+Btn "Hover mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Eingebaute States: <code>hover</code>, <code>focus</code>, <code>active</code>, <code>disabled</code>. Für eigene States brauchst du Trigger.</p>
+    </section>
+
+    <section>
+      <h2>Exclusive: Nur einer aktiv</h2>
+      <p>Bei Radio-Buttons oder Tabs soll immer nur <strong>einer</strong> ausgewählt sein. Klickst du auf einen anderen, wird der vorherige automatisch deselektiert:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 20, rad 6, bg #333, col #888, cursor pointer
+  selected exclusive onclick:
+    bg #2563eb
+    col white
+
+Frame hor, gap 8
+  Btn "Option A"
+  Btn "Option B"
+  Btn "Option C"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>exclusive</code> sorgt dafür, dass nur ein Element den State haben kann. Du beschreibst nur das Verhalten – das System kümmert sich um das Aufräumen.</p>
+    </section>
+
+    <section>
+      <h2>Toggle vs. Exclusive</h2>
+      <p>Mit <code>toggle</code> (ohne <code>exclusive</code>) kann jedes Element unabhängig an- oder ausgeschaltet werden – wie Checkboxen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 10 20, rad 6, bg #333, col white, cursor pointer
+  on toggle onclick:
+    bg #2563eb
+
+Frame gap 8
+  Btn "Feature A"
+  Btn "Feature B"
+  Btn "Feature C"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><td><code>exclusive</code></td><td>Nur einer kann aktiv sein (Radio)</td></tr>
+        <tr><td><code>toggle</code></td><td>Jeder kann unabhängig an/aus sein (Checkbox)</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>State durch anderes Element auslösen</h2>
+      <p>Manchmal soll ein Element auf den State eines <strong>anderen</strong> Elements reagieren. Ein Menü erscheint, wenn ein Button aktiv ist:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12
-  // Dieser Button hat einen toggle State "open"
   Button "Menu", pad 10 20, rad 6, bg #333, col white, cursor pointer
     open toggle onclick:
       bg #2563eb
 
-  // Dieses Frame ist sichtbar WENN Button im State "open" ist
   Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
     visible when Button open:
-      opacity 1
     Text "Dashboard", col white, fs 14, pad 8
     Text "Einstellungen", col white, fs 14, pad 8
     Text "Logout", col #ef4444, fs 14, pad 8</textarea>
@@ -147,66 +188,43 @@ Button "Klick mich", pad 12 24, rad 6, bg #333, col white
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>visible when Button open:</code> bedeutet: "Wechsle in State visible, wenn Button im State open ist." Der State-Block enthält die Properties für diesen Zustand (hier <code>opacity 1</code>). Die Text-Kinder gehören zum Frame, nicht zum State-Block.</p>
-
-      <p>Das ist mächtiger als es aussieht. Mehrere Elemente können auf denselben State reagieren:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 12
-  Button "Toggle", pad 10 20, rad 6, bg #333, col white, cursor pointer
-    active toggle onclick:
-      bg #2563eb
-
-  // Beide reagieren auf Button's State
-  Text "Ich erscheine", col #22c55e, hidden
-    visible when Button active:
-      opacity 1
-
-  Text "Ich verschwinde", col #ef4444
-    hidden when Button active:
-      opacity 0</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Ein State, mehrere Reaktionen. Keine Event-Verkabelung nötig.</p>
+      <p><code>visible when Button open:</code> bedeutet: "Sei sichtbar, wenn der Button im State <code>open</code> ist." Das Frame reagiert automatisch auf den State des Buttons.</p>
     </section>
 
     <section>
-      <h2>Animationen</h2>
-      <p>State-Übergänge können animiert werden – mit Preset oder Duration:</p>
+      <h2>Praktisch: Toggle Switch</h2>
+      <p>Ein klassischer Toggle-Switch kombiniert mehrere Konzepte. Der äußere Container hat den State, die inneren Elemente reagieren darauf:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12
-  // Preset-Animation
-  Button "Bounce", pad 12 24, rad 6, bg #333, col white, cursor pointer
-    selected onclick: bounce
+          <textarea>Frame hor, gap 16, bg #1a1a1a, pad 16, rad 8
+  Text "Dark Mode", col white, fs 14
+
+  Frame w 44, h 24, rad 12, bg #333, cursor pointer
+    on toggle onclick:
       bg #2563eb
 
-  // Duration (Auto-Transition)
-  Button "Smooth", pad 12 24, rad 6, bg #333, col white, cursor pointer
-    selected onclick 0.2s:
-      bg #2563eb
-      scale 1.05</textarea>
+    // Der Knob bewegt sich je nach State
+    Frame w 20, h 20, rad 10, bg white, margin 2
+      on:
+        margin 2 2 2 22</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>selected onclick: bounce</code> spielt die Bounce-Animation beim Aktivieren. <code>0.2s</code> animiert alle Properties mit 200ms Transition.</p>
+      <p>Der innere Knob hat einen <code>on:</code> Block – er reagiert auf den State des Parent-Elements. Wenn das Parent <code>on</code> ist, ändert sich das Margin und der Knob rutscht nach rechts.</p>
     </section>
 
     <div class="summary">
       <h2>Das Wichtigste</h2>
-      <p><strong>Syntax:</strong> <code>statename [modifier] [trigger]:</code> gefolgt von Properties</p>
       <table class="ref-table">
-        <tr><td><code>hover:</code></td><td>System-State (Kurzform für hover onhover:)</td></tr>
-        <tr><td><code>selected onclick:</code></td><td>Custom-State mit Trigger</td></tr>
-        <tr><td><code>selected exclusive onclick:</code></td><td>Nur einer aktiv (Radio)</td></tr>
-        <tr><td><code>on toggle onclick:</code></td><td>An/Aus wechseln (Checkbox)</td></tr>
-        <tr><td><code>visible when Menu open:</code></td><td>Abhängigkeit von anderem Element</td></tr>
-        <tr><td><code>selected onclick: bounce</code></td><td>Mit Animation-Preset</td></tr>
+        <tr><td><code>selected:</code></td><td>State definieren (ohne Trigger)</td></tr>
+        <tr><td><code>Btn selected</code></td><td>Instanz im State starten</td></tr>
+        <tr><td><code>selected onclick:</code></td><td>State mit Trigger</td></tr>
+        <tr><td><code>toggle</code></td><td>Hin und zurück wechseln</td></tr>
+        <tr><td><code>exclusive</code></td><td>Nur einer aktiv (Radio-Verhalten)</td></tr>
+        <tr><td><code>hover:</code></td><td>Eingebauter State (Maus darüber)</td></tr>
+        <tr><td><code>visible when X open:</code></td><td>Auf State eines anderen Elements reagieren</td></tr>
       </table>
     </div>
 
@@ -266,17 +284,32 @@ Button "Klick mich", pad 12 24, rad 6, bg #333, col white
 
       function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
 
+      // Use Shadow DOM to scope CSS per playground
+      let shadow = preview.shadowRoot
+      if (!shadow) {
+        shadow = preview.attachShadow({ mode: 'open' })
+      }
+
       function compile() {
         try {
-          preview.innerHTML = ''
-          preview.classList.add('mirror-root')
+          shadow.innerHTML = ''
+
+          // Inject mirror-defaults.css into Shadow DOM
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.href = '../../assets/mirror-defaults.css'
+          shadow.appendChild(link)
           const code = MirrorLang.compile(textarea.value)
           const execCode = code.replace('export function createUI', 'function createUI')
           const fn = new Function(execCode + '\nreturn createUI();')
           const ui = fn()
-          if (ui && ui.root) preview.appendChild(ui.root)
+          if (ui && ui.root) {
+            // Add mirror-root class to the root element
+            ui.root.classList.add('mirror-root')
+            shadow.appendChild(ui.root)
+          }
         } catch (e) {
-          preview.innerHTML = `<div class="playground-error">${e.message}</div>`
+          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
         }
       }
 

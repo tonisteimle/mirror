@@ -308,7 +308,15 @@ export const DSL = {
   // ---------------------------------------------------------------------------
   // State blocks define visual states with optional triggers and animations.
   //
-  // SYNTAX:
+  // DEFINING STATES:
+  //   selected:                            // state without trigger
+  //     bg #2563eb
+  //
+  // INSTANCE WITH STATE:
+  //   Btn "Normal"                         // starts in default state
+  //   Btn "Active" selected                // starts in selected state
+  //
+  // SYNTAX WITH TRIGGER:
   //   state [modifier] [trigger] [animation]:
   //     properties
   //     [enter: animation]
@@ -316,7 +324,8 @@ export const DSL = {
   //
   // EXAMPLES:
   //   selected onclick:                    // simple trigger
-  //   selected exclusive onclick:          // with modifier
+  //   selected exclusive onclick:          // with modifier (radio)
+  //   on toggle onclick:                   // toggle behavior
   //   selected onclick: bounce             // with preset animation
   //   selected onclick 0.2s:               // with auto-transition
   //   selected onclick 0.3s ease-out:      // with duration + easing
