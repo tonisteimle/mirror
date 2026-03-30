@@ -106,9 +106,6 @@
       min-width: 44px;
       flex-shrink: 0;
     }
-    .card-num.qs {
-      color: #2563eb;
-    }
     .card-content {
       flex: 1;
       min-width: 0;
@@ -175,10 +172,10 @@
     </a>
 
     <section class="section">
-      <h2 class="section-title">Quickstart</h2>
+      <h2 class="section-title">Grundlagen</h2>
       <div class="grid">
-        <a href="quickstart-01.html" class="card">
-          <span class="card-num qs">Q1</span>
+        <a href="01-elemente.html" class="card">
+          <span class="card-num">01</span>
           <div class="card-content">
             <div class="card-title">Elemente</div>
             <div class="card-desc">Die Grundbausteine: Frame, Text, Button und wie Properties funktionieren</div>
@@ -189,8 +186,8 @@
             </div>
           </div>
         </a>
-        <a href="quickstart-02.html" class="card">
-          <span class="card-num qs">Q2</span>
+        <a href="02-komponenten.html" class="card">
+          <span class="card-num">02</span>
           <div class="card-content">
             <div class="card-title">Komponenten</div>
             <div class="card-desc">Eigene wiederverwendbare UI-Bausteine definieren und nutzen</div>
@@ -201,26 +198,26 @@
             </div>
           </div>
         </a>
-        <a href="quickstart-03.html" class="card">
-          <span class="card-num qs">Q3</span>
+        <a href="03-tokens.html" class="card">
+          <span class="card-num">03</span>
           <div class="card-content">
-            <div class="card-title">Vererbung & Tokens</div>
-            <div class="card-desc">Komponenten-Varianten erstellen und Werte zentral verwalten</div>
+            <div class="card-title">Tokens</div>
+            <div class="card-desc">Vererbung und Design-Tokens für konsistente Werte</div>
             <div class="card-tags">
               <span class="card-tag">as</span>
               <span class="card-tag">Design-Tokens</span>
             </div>
           </div>
         </a>
-        <a href="quickstart-04.html" class="card">
-          <span class="card-num qs">Q4</span>
+        <a href="04-states.html" class="card">
+          <span class="card-num">04</span>
           <div class="card-content">
-            <div class="card-title">Interaktion</div>
-            <div class="card-desc">Hover-Effekte, benutzerdefinierte States und Event-Handling</div>
+            <div class="card-title">States</div>
+            <div class="card-desc">Hover, Toggle, Cycle und das State-System</div>
             <div class="card-tags">
-              <span class="card-tag">Hover</span>
-              <span class="card-tag">States</span>
-              <span class="card-tag">Events</span>
+              <span class="card-tag">hover</span>
+              <span class="card-tag">toggle()</span>
+              <span class="card-tag">cycle()</span>
             </div>
           </div>
         </a>
@@ -228,16 +225,17 @@
     </section>
 
     <section class="section">
-      <h2 class="section-title">Layout & Design</h2>
+      <h2 class="section-title">Layout</h2>
       <div class="grid">
         <a href="05-layout.html" class="card">
           <span class="card-num">05</span>
           <div class="card-content">
-            <div class="card-title">Layout</div>
+            <div class="card-title">Flex Layout</div>
             <div class="card-desc">Flexbox-Layouts und Ausrichtung von Elementen</div>
             <div class="card-tags">
-              <span class="card-tag">Flex</span>
-              <span class="card-tag">Ausrichtung</span>
+              <span class="card-tag">hor</span>
+              <span class="card-tag">gap</span>
+              <span class="card-tag">spread</span>
             </div>
           </div>
         </a>
@@ -245,9 +243,9 @@
           <span class="card-num">06</span>
           <div class="card-content">
             <div class="card-title">Grid Layout</div>
-            <div class="card-desc">Constraint-basierte Layouts mit Spalten, Zeilen und expliziter Platzierung</div>
+            <div class="card-desc">Constraint-basierte Layouts mit Spalten und Zeilen</div>
             <div class="card-tags">
-              <span class="card-tag">Grid</span>
+              <span class="card-tag">grid</span>
               <span class="card-tag">Page-Layouts</span>
             </div>
           </div>
@@ -256,11 +254,11 @@
           <span class="card-num">07</span>
           <div class="card-content">
             <div class="card-title">Positioning</div>
-            <div class="card-desc">Elemente frei positionieren mit Stacked-Layouts und Pins</div>
+            <div class="card-desc">Elemente frei positionieren mit Stacked und Pins</div>
             <div class="card-tags">
-              <span class="card-tag">Stacked</span>
-              <span class="card-tag">Pinning</span>
-              <span class="card-tag">Z-Index</span>
+              <span class="card-tag">stacked</span>
+              <span class="card-tag">pin</span>
+              <span class="card-tag">z</span>
             </div>
           </div>
         </a>
@@ -268,11 +266,11 @@
           <span class="card-num">08</span>
           <div class="card-content">
             <div class="card-title">Styling</div>
-            <div class="card-desc">Farben, Schriften, Schatten und visuelle Effekte gestalten</div>
+            <div class="card-desc">Farben, Schriften, Schatten und visuelle Effekte</div>
             <div class="card-tags">
-              <span class="card-tag">Farben</span>
-              <span class="card-tag">Typografie</span>
-              <span class="card-tag">Effekte</span>
+              <span class="card-tag">bg</span>
+              <span class="card-tag">col</span>
+              <span class="card-tag">shadow</span>
             </div>
           </div>
         </a>
@@ -286,11 +284,10 @@
           <span class="card-num">09</span>
           <div class="card-content">
             <div class="card-title">Navigation</div>
-            <div class="card-desc">Tabbed Interfaces, Akkordeons und ausklappbare Bereiche</div>
+            <div class="card-desc">Tabs, Akkordeons und ausklappbare Bereiche</div>
             <div class="card-tags">
               <span class="card-tag">Tabs</span>
               <span class="card-tag">Accordion</span>
-              <span class="card-tag">Collapsible</span>
             </div>
           </div>
         </a>
@@ -298,23 +295,11 @@
           <span class="card-num">10</span>
           <div class="card-content">
             <div class="card-title">Overlays</div>
-            <div class="card-desc">Modale Dialoge, Popovers und Dropdown-Menüs erstellen</div>
+            <div class="card-desc">Modale Dialoge, Popovers und Dropdown-Menüs</div>
             <div class="card-tags">
               <span class="card-tag">Dialog</span>
               <span class="card-tag">Popover</span>
               <span class="card-tag">Menu</span>
-            </div>
-          </div>
-        </a>
-        <a href="15-forms.html" class="card">
-          <span class="card-num">15</span>
-          <div class="card-content">
-            <div class="card-title">Formulare</div>
-            <div class="card-desc">Eingabefelder, Dropdowns, Slider und andere Form-Controls</div>
-            <div class="card-tags">
-              <span class="card-tag">Input</span>
-              <span class="card-tag">Select</span>
-              <span class="card-tag">Slider</span>
             </div>
           </div>
         </a>
@@ -324,39 +309,27 @@
     <section class="section">
       <h2 class="section-title">Interaktion</h2>
       <div class="grid">
-        <a href="11-states.html" class="card">
+        <a href="11-events.html" class="card">
           <span class="card-num">11</span>
           <div class="card-content">
-            <div class="card-title">States</div>
-            <div class="card-desc">Eigene Zustände definieren und zwischen ihnen wechseln</div>
+            <div class="card-title">Events</div>
+            <div class="card-desc">Keyboard, Focus, Click-Outside und Animationen</div>
             <div class="card-tags">
-              <span class="card-tag">Custom States</span>
-              <span class="card-tag">Exclusive</span>
-              <span class="card-tag">Initial</span>
+              <span class="card-tag">onkeydown</span>
+              <span class="card-tag">onfocus</span>
+              <span class="card-tag">Animation</span>
             </div>
           </div>
         </a>
-        <a href="12-events.html" class="card">
+        <a href="12-javascript.html" class="card">
           <span class="card-num">12</span>
           <div class="card-content">
-            <div class="card-title">Events</div>
-            <div class="card-desc">Click-Handler, Keyboard-Events und Action-System</div>
+            <div class="card-title">JavaScript</div>
+            <div class="card-desc">Eigene Funktionen, Element-Zugriff und API-Calls</div>
             <div class="card-tags">
-              <span class="card-tag">Click</span>
-              <span class="card-tag">Keyboard</span>
-              <span class="card-tag">Actions</span>
-            </div>
-          </div>
-        </a>
-        <a href="13-animation.html" class="card">
-          <span class="card-num">13</span>
-          <div class="card-content">
-            <div class="card-title">Animation</div>
-            <div class="card-desc">Animationspresets und sanfte Übergänge zwischen Zuständen</div>
-            <div class="card-tags">
-              <span class="card-tag">Presets</span>
-              <span class="card-tag">Transitions</span>
-              <span class="card-tag">Enter/Exit</span>
+              <span class="card-tag">name</span>
+              <span class="card-tag">element.toggle()</span>
+              <span class="card-tag">API</span>
             </div>
           </div>
         </a>
@@ -366,23 +339,35 @@
     <section class="section">
       <h2 class="section-title">Fortgeschritten</h2>
       <div class="grid">
-        <a href="14-data.html" class="card">
-          <span class="card-num">14</span>
+        <a href="13-data.html" class="card">
+          <span class="card-num">13</span>
           <div class="card-content">
             <div class="card-title">Daten</div>
-            <div class="card-desc">Listen rendern, Loops verwenden und Daten an Elemente binden</div>
+            <div class="card-desc">Listen rendern, Loops und Daten-Binding</div>
             <div class="card-tags">
-              <span class="card-tag">Listen</span>
+              <span class="card-tag">each</span>
               <span class="card-tag">Loops</span>
               <span class="card-tag">Binding</span>
             </div>
           </div>
         </a>
-        <a href="16-theming.html" class="card">
-          <span class="card-num">16</span>
+        <a href="14-forms.html" class="card">
+          <span class="card-num">14</span>
+          <div class="card-content">
+            <div class="card-title">Formulare</div>
+            <div class="card-desc">Eingabefelder, Dropdowns und Slider</div>
+            <div class="card-tags">
+              <span class="card-tag">Input</span>
+              <span class="card-tag">Select</span>
+              <span class="card-tag">Slider</span>
+            </div>
+          </div>
+        </a>
+        <a href="15-theming.html" class="card">
+          <span class="card-num">15</span>
           <div class="card-content">
             <div class="card-title">Theming</div>
-            <div class="card-desc">Systematische Token-Strukturen für skalierbare Design Systems</div>
+            <div class="card-desc">Token-Strukturen für skalierbare Design Systems</div>
             <div class="card-tags">
               <span class="card-tag">Token-System</span>
               <span class="card-tag">Design Systems</span>
