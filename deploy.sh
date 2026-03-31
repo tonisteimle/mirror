@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #######################################
-# Deploy Script für Mirror Studio
+# Deploy Script für Mirror Studio + Tutorial
 # Hostpoint.ch (Static only - localStorage)
 #
 # Usage:
-#   ./deploy.sh           - Deployed Studio
+#   ./deploy.sh           - Deployed Studio + Tutorial
 #######################################
 
 # Konfiguration
@@ -16,10 +16,48 @@ FTP_PASS="In2meinftp!!"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STUDIO_DIR="$PROJECT_DIR/studio"
 DIST_DIR="$PROJECT_DIR/dist"
+TUTORIAL_DIR="$PROJECT_DIR/docs/tutorial"
+ASSETS_DIR="$PROJECT_DIR/assets"
+TEMP_DIR="$PROJECT_DIR/.deploy-temp"
 
 #######################################
 # Funktionen
 #######################################
+
+prepare_tutorial() {
+    echo ""
+    echo "📝 Preparing tutorial files..."
+
+    # Clean and create temp directory
+    rm -rf "$TEMP_DIR"
+    mkdir -p "$TEMP_DIR/tutorial"
+
+    # Copy tutorial files
+    cp "$TUTORIAL_DIR"/*.html "$TEMP_DIR/tutorial/"
+    cp "$TUTORIAL_DIR"/*.css "$TEMP_DIR/tutorial/"
+    cp "$TUTORIAL_DIR"/*.js "$TEMP_DIR/tutorial/"
+
+    # Transform paths in HTML files:
+    # ../../assets/ -> ../assets/
+    # ../../dist/ -> ../dist/
+    # ../../studio/ -> ../
+    for file in "$TEMP_DIR/tutorial"/*.html; do
+        sed -i '' 's|../../assets/|../assets/|g' "$file"
+        sed -i '' 's|../../dist/|../dist/|g' "$file"
+        sed -i '' 's|../../studio/|../|g' "$file"
+    done
+
+    # Transform paths in JS files (tutorial.js uses ../../studio/)
+    for file in "$TEMP_DIR/tutorial"/*.js; do
+        sed -i '' 's|../../studio/|../|g' "$file"
+    done
+
+    echo "✅ Tutorial files prepared"
+}
+
+cleanup_temp() {
+    rm -rf "$TEMP_DIR"
+}
 
 push_to_github() {
     echo ""
@@ -68,10 +106,13 @@ build_compiler() {
 
 deploy_studio() {
     echo ""
-    echo "🚀 Deploying Studio..."
+    echo "🚀 Deploying Studio + Tutorial..."
 
     # Build first
     build_compiler
+
+    # Prepare tutorial files with transformed paths
+    prepare_tutorial
 
     lftp <<EOF
 set ftp:ssl-allow no
@@ -82,6 +123,8 @@ open -u $FTP_USER,$FTP_PASS $FTP_HOST
 mkdir -f mirror
 mkdir -f mirror/dist
 mkdir -f mirror/dist/browser
+mkdir -f mirror/tutorial
+mkdir -f mirror/assets
 
 # Upload studio files to /mirror/
 cd mirror
@@ -107,10 +150,29 @@ cd browser
 lcd $DIST_DIR/browser
 put index.global.js
 
+# Upload assets (CSS defaults)
+cd /mirror
+mkdir -f assets
+cd assets
+lcd $ASSETS_DIR
+put mirror-defaults.css
+
+# Upload tutorial files (from temp with transformed paths)
+cd /mirror
+mkdir -f tutorial
+cd tutorial
+lcd $TEMP_DIR/tutorial
+mput *.html
+mput *.css
+mput *.js
+
 quit
 EOF
 
-    echo "✅ Studio deployed!"
+    # Cleanup temp files
+    cleanup_temp
+
+    echo "✅ Studio + Tutorial deployed!"
 }
 
 #######################################
@@ -132,6 +194,7 @@ deploy_studio
 
 echo ""
 echo "═══════════════════════════════════"
-echo "🌐 Mirror Studio: http://ux-strategy.ch/mirror/"
+echo "🌐 Mirror Studio:   http://ux-strategy.ch/mirror/"
+echo "📚 Mirror Tutorial: http://ux-strategy.ch/mirror/tutorial/"
 echo "═══════════════════════════════════"
 echo ""

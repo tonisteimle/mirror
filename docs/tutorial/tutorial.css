@@ -4,7 +4,7 @@
   --bg: #111;
   --bg-code: #191919;
   --bg-preview: #0c0c0c;
-  --text: #ccc;
+  --text: #a0a0a0;
   --text-bright: #eee;
   --text-dim: #666;
   --border: #282828;
@@ -142,6 +142,34 @@ a:hover { text-decoration: underline; }
   font-size: 12px;
 }
 
+/* Studio Button */
+.studio-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  z-index: 10;
+}
+.studio-btn svg {
+  display: block;
+}
+.studio-btn:hover {
+  color: var(--text-bright);
+  border-color: var(--text-dim);
+  background: var(--border);
+}
+
 /* Syntax Highlighting */
 .syn-comment { color: var(--syn-comment); font-style: italic; }
 .syn-string { color: var(--syn-string); }
@@ -151,6 +179,32 @@ a:hover { text-decoration: underline; }
 .syn-component { color: var(--syn-component); font-weight: 500; }
 .syn-keyword { color: var(--syn-keyword); }
 .syn-token { color: var(--syn-token); }
+
+/* Static Code Block (non-interactive, e.g. for JavaScript examples) */
+.code-block {
+  margin: 16px 0;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.code-block pre {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--text);
+}
+.code-block .syn-comment { color: var(--syn-comment); font-style: italic; }
+.code-block .syn-string { color: var(--syn-string); }
+.code-block .syn-hex { color: var(--syn-hex); }
+.code-block .syn-number { color: var(--syn-number); }
+.code-block .syn-property { color: var(--syn-property); }
+.code-block .syn-component { color: var(--syn-component); font-weight: 500; }
+.code-block .syn-keyword { color: var(--syn-keyword); }
 
 /* Note/Callout Box */
 .note {

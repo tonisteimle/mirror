@@ -1,0 +1,129 @@
+/**
+ * Tutorial Playground System
+ *
+ * Provides syntax highlighting, live compilation, and "Open in Studio" button
+ * for all tutorial playground elements.
+ */
+
+// Syntax highlighting patterns
+const patterns = [
+  { regex: /\/\/.*$/gm, cls: 'syn-comment' },
+  { regex: /"[^"]*"/g, cls: 'syn-string' },
+  { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
+  { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
+  { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
+  { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder)\b/g, cls: 'syn-property' },
+  { regex: /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|oninput|onchange|onkeydown|onclick-outside|selected|state|show|hide|toggle|cycle|exclusive|open|close|as|on|todo|doing|done|loading|valid|invalid|error|loaded|default)\b/g, cls: 'syn-keyword' },
+  { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
+]
+
+function highlight(text) {
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const matches = []
+  for (const p of patterns) {
+    p.regex.lastIndex = 0
+    let m
+    while ((m = p.regex.exec(text)) !== null) {
+      matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
+    }
+  }
+  matches.sort((a, b) => a.from - b.from)
+  const filtered = []
+  let lastEnd = 0
+  for (const m of matches) {
+    if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+  }
+  let result = '', pos = 0
+  for (const m of filtered) {
+    if (m.from > pos) result += html.slice(pos, m.from)
+    const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    result += `<span class="${m.cls}">${escaped}</span>`
+    pos = m.to
+  }
+  return result + html.slice(pos)
+}
+
+/**
+ * Initialize all playgrounds on the page
+ */
+function initializePlaygrounds() {
+  document.querySelectorAll('.playground[data-playground]').forEach(p => {
+    const codeContainer = p.querySelector('.playground-code')
+    const textarea = p.querySelector('textarea')
+    const preview = p.querySelector('.playground-preview')
+    const pre = document.createElement('pre')
+    codeContainer.insertBefore(pre, textarea)
+
+    // Add "Open in Studio" button with icon
+    const studioBtn = document.createElement('button')
+    studioBtn.className = 'studio-btn'
+    studioBtn.title = 'Im Studio öffnen'
+    // External link icon (Lucide)
+    studioBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+    studioBtn.onclick = () => {
+      const code = encodeURIComponent(textarea.value)
+      window.open(`../../studio/?code=${code}`, '_blank')
+    }
+    codeContainer.appendChild(studioBtn)
+
+    function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+
+    // Use Shadow DOM to scope CSS per playground
+    let shadow = preview.shadowRoot
+    if (!shadow) {
+      shadow = preview.attachShadow({ mode: 'open' })
+    }
+
+    function compile() {
+      try {
+        shadow.innerHTML = ''
+
+        // Inject mirror-defaults.css into Shadow DOM
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = '../../assets/mirror-defaults.css'
+        shadow.appendChild(link)
+
+        const code = MirrorLang.compile(textarea.value)
+        const execCode = code.replace('export function createUI', 'function createUI')
+        const fn = new Function(execCode + '\nreturn createUI();')
+        const ui = fn()
+        if (ui && ui.root) {
+          // Add mirror-root class to the root element
+          ui.root.classList.add('mirror-root')
+          shadow.appendChild(ui.root)
+        }
+      } catch (e) {
+        shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
+      }
+    }
+
+    textarea.addEventListener('input', () => {
+      updateHighlight()
+      clearTimeout(textarea._t)
+      textarea._t = setTimeout(compile, 100)
+    })
+
+    textarea.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        const s = textarea.selectionStart
+        textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+        textarea.selectionStart = textarea.selectionEnd = s + 2
+        updateHighlight()
+        compile()
+      }
+    })
+
+    textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+    updateHighlight()
+    compile()
+  })
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePlaygrounds)
+} else {
+  initializePlaygrounds()
+}

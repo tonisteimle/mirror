@@ -16,27 +16,52 @@
 
     <header>
       <h1>Overlays</h1>
-      <p class="subtitle">Dialog, Popover, Tooltip und Menu</p>
+      <p class="subtitle">Tooltip, Popover, HoverCard und Dialog</p>
     </header>
 
     <section>
+      <p>Overlays sind Elemente, die über dem normalen Content erscheinen. Alle folgen dem gleichen Muster: <code>Trigger:</code> definiert das auslösende Element, <code>Content:</code> den Overlay-Inhalt.</p>
+
+      <p><strong>Tooltip</strong> zeigt kurze Hinweise bei Hover. <strong>Popover</strong> öffnet bei Klick und zeigt reicheren Inhalt. <strong>HoverCard</strong> ist wie Popover, aber öffnet bei Hover. <strong>Dialog</strong> ist ein modales Fenster, das den Rest der Seite blockiert.</p>
+    </section>
+
+    <section>
       <h2>Tooltip</h2>
-      <p>Zeigt Hilfetext bei Hover:</p>
+      <p>Tooltips zeigen kurze Hilfetexte bei Hover. Der <code>Trigger:</code> ist das Element, über das man hovert – der <code>Content:</code> erscheint dann daneben:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16
-  Tooltip
-    Trigger
-      Button "Hover me", bg #2563eb, col white, pad 10 20, rad 6
-    Content bg #1a1a1a, pad 8 12, rad 6, shadow md
-      Text "Das ist ein Tooltip!", col white, fs 12
+          <textarea>Tooltip
+  Trigger: Button "Hover me"
+  Content: Text "This is a tooltip"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-  Tooltip
-    Trigger
-      Icon "info", ic #888, is 20, cursor pointer
-    Content bg #1a1a1a, pad 8 12, rad 6, shadow md
-      Text "Mehr Informationen", col white, fs 12</textarea>
+      <p>Mit <code>positioning</code> bestimmst du, wo der Tooltip erscheint. Mit <code>openDelay</code> und <code>closeDelay</code> steuerst du die Verzögerung in Millisekunden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Box hor, gap 16
+  Tooltip positioning "top"
+    Trigger: Button "Top"
+    Content: Text "Tooltip on top"
+  Tooltip positioning "bottom", openDelay 500
+    Trigger: Button "Delayed"
+    Content: Text "Shows after 500ms"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Content kann auch gestylt werden – du kannst beliebige Elemente verwenden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip
+  Trigger: Button "Multi-line"
+  Content: Box ver, gap 4, pad 8
+    Text "Title" weight bold
+    Text "Description here" col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -44,25 +69,47 @@
 
     <section>
       <h2>Popover</h2>
-      <p>Öffnet bei Klick und zeigt reicheren Inhalt:</p>
+      <p>Popovers öffnen bei Klick und bleiben offen, bis man außerhalb klickt oder Escape drückt. Sie eignen sich für reicheren Inhalt wie Formulare oder Listen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Popover
-  Trigger
-    Button "Optionen", bg #1a1a1a, col white, pad 10 20, rad 6
-      Icon "chevron-down", ic #888, is 16, margin 0 0 0 8
+  Trigger: Button "Open Popover"
+  Content: Box ver, gap 8
+    Text "Title" weight bold
+    Text "Some description text"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-  Content bg #1a1a1a, pad 16, rad 8, shadow lg, w 200, gap 12
-    Text "Einstellungen", col white, fs 14, weight 600
-    Frame gap 8
-      Frame hor, spread
-        Text "Dark Mode", col #888, fs 13
-        Switch
-      Frame hor, spread
-        Text "Notifications", col #888, fs 13
-        Switch
-    Button "Speichern", bg #2563eb, col white, pad 8 16, rad 6, w full</textarea>
+      <p>Mit <code>CloseTrigger:</code> kannst du einen expliziten Schließen-Button einbauen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger: Button "Open"
+  Content: Box ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
+    Box hor, spread
+      Text "Popover Title" weight bold
+      CloseTrigger: Button "X" bg transparent, col #666
+    Text "Content goes here"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>positioning</code> funktioniert wie bei Tooltip. Mit <code>closeOnEscape</code> und <code>closeOnInteractOutside</code> steuerst du das Schließ-Verhalten:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover positioning "bottom", closeOnEscape
+  Trigger: Button "Settings"
+  Content: Box ver, gap 8, pad 12, bg #1a1a1a, rad 8, w 180
+    Box hor, spread
+      Text "Notifications"
+      Switch
+    Box hor, spread
+      Text "Dark mode"
+      Switch</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -70,94 +117,31 @@
 
     <section>
       <h2>HoverCard</h2>
-      <p>Wie Popover, aber öffnet bei Hover:</p>
+      <p>HoverCard ist wie Popover, aber öffnet bei Hover statt Klick. Das ist nützlich für Vorschauen von Links oder User-Profilen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>HoverCard
-  Trigger
-    Frame hor, gap 8, cursor pointer
-      Frame w 32, h 32, bg #2563eb, rad 99, center
-        Text "TS", col white, fs 11, weight 500
-      Text "@toni", col #2563eb, fs 14
-
-  Content bg #1a1a1a, pad 16, rad 12, shadow lg, w 240, gap 12
-    Frame hor, gap 12
-      Frame w 48, h 48, bg #2563eb, rad 99, center
-        Text "TS", col white, fs 16, weight 500
-      Frame gap 2
-        Text "Toni Steimle", col white, fs 14, weight 500
-        Text "@toni", col #888, fs 12
-    Text "Building Mirror – DSL for rapid UI prototyping.", col #888, fs 13
-    Frame hor, gap 16
-      Frame hor, gap 4
-        Text "123", col white, fs 13, weight 500
-        Text "Following", col #888, fs 13
-      Frame hor, gap 4
-        Text "456", col white, fs 13, weight 500
-        Text "Followers", col #888, fs 13</textarea>
+  Trigger: Text "Hover over me" underline, cursor pointer
+  Content: Text "HoverCard content"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-    </section>
 
-    <section>
-      <h2>Menu</h2>
-      <p>Dropdown-Menu für Aktionen:</p>
+      <p>Ein typisches Beispiel ist eine User-Vorschau bei Hover über einen @-Mention:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Menu
-  Trigger
-    Button bg #1a1a1a, pad 10, rad 6
-      Icon "more-vertical", ic #888, is 18
-
-  Content bg #1a1a1a, rad 8, shadow lg, w 180, pad 4
-    Item "Edit", pad 10 12, rad 4, col white, fs 13, cursor pointer
-      hover:
-        bg #2a2a2a
-    Item "Duplicate", pad 10 12, rad 4, col white, fs 13, cursor pointer
-      hover:
-        bg #2a2a2a
-    Item "Archive", pad 10 12, rad 4, col white, fs 13, cursor pointer
-      hover:
-        bg #2a2a2a
-    Separator h 1, bg #333, margin 4 0
-    Item "Delete", pad 10 12, rad 4, col #ef4444, fs 13, cursor pointer
-      hover:
-        bg #2a2a2a</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>ContextMenu</h2>
-      <p>Öffnet bei Rechtsklick:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>ContextMenu
-  Trigger
-    Frame w 280, h 100, bg #1a1a1a, rad 8, center, cursor default
-      Text "Rechtsklick hier", col #888, fs 13
-
-  Content bg #1a1a1a, rad 8, shadow lg, w 180, pad 4
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "copy", ic #888, is 14
-      Text "Copy"
-      hover:
-        bg #2a2a2a
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "scissors", ic #888, is 14
-      Text "Cut"
-      hover:
-        bg #2a2a2a
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "clipboard", ic #888, is 14
-      Text "Paste"
-      hover:
-        bg #2a2a2a</textarea>
+          <textarea>HoverCard positioning "bottom"
+  Trigger: Text "@johndoe" col #3b82f6, underline, cursor pointer
+  Content: Box ver, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
+    Box hor, gap 12
+      Box w 48, h 48, bg #3b82f6, rad 99, center
+        Text "JD" col white, weight 500
+      Box ver
+        Text "John Doe" weight 600
+        Text "@johndoe" col #666, fs 14
+    Text "Software engineer building great tools." col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -165,106 +149,117 @@
 
     <section>
       <h2>Dialog</h2>
-      <p>Modales Fenster für wichtige Aktionen:</p>
+      <p>Dialoge sind modale Fenster – sie blockieren die Interaktion mit dem Rest der Seite. Neben <code>Trigger:</code> und <code>Content:</code> gibt es <code>Backdrop:</code> für den Hintergrund:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Dialog
-  Trigger
-    Button "Löschen", bg #ef4444, col white, pad 10 20, rad 6
+  Trigger: Button "Open Dialog"
+  Content: Box ver, gap 8, pad 16, bg #1a1a1a, rad 12
+    Text "Dialog Title" weight bold, fs 18
+    Text "This is the dialog content."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-  Backdrop bg rgba(0,0,0,0.6)
+      <p>Mit <code>CloseTrigger:</code> baust du Schließen-Buttons ein. Diese können überall im Content platziert werden:</p>
 
-  Content bg #1a1a1a, pad 24, rad 12, w 320, gap 16
-    Frame gap 8
-      Text "Projekt löschen?", col white, fs 18, weight 600
-      Text "Diese Aktion kann nicht rückgängig gemacht werden.", col #888, fs 13
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Open"
+  Content: Box ver, gap 12, pad 24, bg #1a1a1a, rad 12, w 320
+    Box hor, spread
+      Text "Settings" weight bold, fs 18
+      CloseTrigger: Button "X" bg transparent
+    Text "Dialog content here"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-    Frame hor, gap 8, spread
-      CloseTrigger
-        Button "Abbrechen", bg #333, col white, pad 10 20, rad 6
-      Button "Löschen", bg #ef4444, col white, pad 10 20, rad 6</textarea>
+      <p>Mit <code>Backdrop:</code> kannst du den Overlay-Hintergrund stylen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Custom backdrop"
+  Backdrop: bg rgba(0,0,100,0.5)
+  Content: Box pad 24, bg #1a1a1a, rad 12
+    Text "Dialog with blue backdrop"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Dialog mit Form</h2>
-      <p>Dialog mit Eingabefeldern:</p>
+      <h2>Praktisch: Confirm Dialog</h2>
+      <p>Ein typischer Bestätigungs-Dialog mit zwei Buttons:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Dialog
-  Trigger
-    Button "Neues Projekt", bg #2563eb, col white, pad 10 20, rad 6
-      Icon "plus", ic white, is 16, margin 0 0 0 8
-
-  Backdrop bg rgba(0,0,0,0.6)
-
-  Content bg #1a1a1a, pad 24, rad 12, w 380, gap 20
-    Frame gap 4
-      Text "Neues Projekt erstellen", col white, fs 18, weight 600
-      Text "Gib deinem Projekt einen Namen.", col #888, fs 13
-
-    Frame gap 12
-      Frame gap 4
-        Text "Projektname", col #888, fs 12
-        Input placeholder "z.B. Dashboard Redesign", bg #111, bor 1, boc #333, col white, pad 12, rad 6, w full
-      Frame gap 4
-        Text "Beschreibung", col #888, fs 12
-        Textarea placeholder "Optional...", bg #111, bor 1, boc #333, col white, pad 12, rad 6, w full, h 80
-
-    Frame hor, gap 8, right
-      CloseTrigger
-        Button "Abbrechen", bg #333, col white, pad 10 20, rad 6
-      Button "Erstellen", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+  Trigger: Button "Delete item" bg #ef4444
+  Content: Box ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 380
+    Box hor, gap 12
+      Box w 40, h 40, rad 99, bg rgba(239,68,68,0.2), center
+        Icon "trash" col #ef4444
+      Box ver
+        Text "Delete Item" weight bold, fs 16
+        Text "This action cannot be undone." col #888, fs 14
+    Box hor, gap 8
+      CloseTrigger: Button "Cancel" grow
+      Button "Delete" bg #ef4444, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Praktisch: User Menu</h2>
-      <p>Typisches Benutzer-Dropdown:</p>
+      <h2>Praktisch: Form Dialog</h2>
+      <p>Ein Dialog mit Eingabefeldern:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Menu
-  Trigger
-    Frame hor, gap 10, bg #1a1a1a, pad 8 12, rad 8, cursor pointer
-      Frame w 32, h 32, bg #2563eb, rad 99, center
-        Text "TS", col white, fs 11, weight 500
-      Frame gap 1
-        Text "Toni Steimle", col white, fs 13
-        Text "Pro Plan", col #888, fs 11
-      Icon "chevron-down", ic #666, is 16
+          <textarea>Dialog
+  Trigger: Button "Create new"
+  Content: Box ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 400
+    Box hor, spread
+      Text "Create Project" weight bold, fs 18
+      CloseTrigger: Button "X" bg transparent, col #666
+    Box ver, gap 12
+      Box ver, gap 4
+        Label "Project Name"
+        Input placeholder "Enter project name"
+      Box ver, gap 4
+        Label "Description"
+        Textarea placeholder "Enter description" h 80
+    Box hor, gap 8
+      CloseTrigger: Button "Cancel" grow
+      Button "Create" bg #3b82f6, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
 
-  Content bg #1a1a1a, rad 8, shadow lg, w 200, pad 4
-    Frame pad 12, gap 2, bor 0, boc #333
-      Text "toni@example.com", col #888, fs 12
-    Separator h 1, bg #333, margin 4 0
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "user", ic #888, is 14
-      Text "Profile"
-      hover:
-        bg #2a2a2a
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "settings", ic #888, is 14
-      Text "Settings"
-      hover:
-        bg #2a2a2a
-    Item hor, gap 8, pad 10 12, rad 4, col white, fs 13, cursor pointer
-      Icon "credit-card", ic #888, is 14
-      Text "Billing"
-      hover:
-        bg #2a2a2a
-    Separator h 1, bg #333, margin 4 0
-    Item hor, gap 8, pad 10 12, rad 4, col #ef4444, fs 13, cursor pointer
-      Icon "log-out", ic #ef4444, is 14
-      Text "Sign out"
-      hover:
-        bg #2a2a2a</textarea>
+    <section>
+      <h2>Praktisch: Icon Toolbar</h2>
+      <p>Tooltips für eine Icon-Leiste:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Box hor, gap 8
+  Tooltip positioning "bottom"
+    Trigger: Box pad 8, rad 4, bg #222, cursor pointer
+      Icon "home"
+    Content: Text "Home" fs 12
+  Tooltip positioning "bottom"
+    Trigger: Box pad 8, rad 4, bg #222, cursor pointer
+      Icon "settings"
+    Content: Text "Settings" fs 12
+  Tooltip positioning "bottom"
+    Trigger: Box pad 8, rad 4, bg #222, cursor pointer
+      Icon "user"
+    Content: Text "Profile" fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -272,125 +267,26 @@
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
-      <ul>
-        <li><code>Tooltip</code> – Hilfetext bei Hover</li>
-        <li><code>Popover</code> – Reicherer Inhalt bei Klick</li>
-        <li><code>HoverCard</code> – Vorschau bei Hover</li>
-        <li><code>Menu</code> – Dropdown-Aktionen</li>
-        <li><code>ContextMenu</code> – Rechtsklick-Menu</li>
-        <li><code>Dialog</code> – Modales Fenster</li>
-        <li><code>Trigger, Content, Backdrop</code> – Gemeinsame Slots</li>
-        <li><code>CloseTrigger</code> – Schließt den Dialog</li>
-      </ul>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Auslöser</th><th>Anwendung</th></tr>
+        <tr><td><code>Tooltip</code></td><td>Hover</td><td>Kurze Hilfetexte</td></tr>
+        <tr><td><code>Popover</code></td><td>Klick</td><td>Reicherer Inhalt, Menüs</td></tr>
+        <tr><td><code>HoverCard</code></td><td>Hover</td><td>Vorschauen, User-Profile</td></tr>
+        <tr><td><code>Dialog</code></td><td>Klick</td><td>Modale Fenster, Formulare</td></tr>
+      </table>
+      <p style="margin-top: 16px;"><strong>Slots:</strong> <code>Trigger:</code>, <code>Content:</code>, <code>Backdrop:</code> (Dialog), <code>CloseTrigger:</code><br>
+         <strong>Optionen:</strong> <code>positioning</code>, <code>openDelay</code>, <code>closeDelay</code>, <code>closeOnEscape</code></p>
     </div>
 
     <nav>
       <a class="prev" href="09-navigation.html">← Navigation</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="11-events.html">Events →</a>
+      <a class="next" href="11-data.html">Daten →</a>
     </nav>
 
   </main>
 
   <script src="../../dist/browser/index.global.js"></script>
-  <script>
-    const patterns = [
-      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
-      { regex: /"[^"]*"/g, cls: 'syn-string' },
-      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
-      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
-      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
-    ]
-
-    function highlight(text) {
-      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      const matches = []
-      for (const p of patterns) {
-        p.regex.lastIndex = 0
-        let m
-        while ((m = p.regex.exec(text)) !== null) {
-          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
-        }
-      }
-      matches.sort((a, b) => a.from - b.from)
-      const filtered = []
-      let lastEnd = 0
-      for (const m of matches) {
-        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
-      }
-      let result = '', pos = 0
-      for (const m of filtered) {
-        if (m.from > pos) result += html.slice(pos, m.from)
-        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        result += `<span class="${m.cls}">${escaped}</span>`
-        pos = m.to
-      }
-      return result + html.slice(pos)
-    }
-
-    document.querySelectorAll('.playground[data-playground]').forEach(p => {
-      const codeContainer = p.querySelector('.playground-code')
-      const textarea = p.querySelector('textarea')
-      const preview = p.querySelector('.playground-preview')
-      const pre = document.createElement('pre')
-      codeContainer.insertBefore(pre, textarea)
-
-      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
-
-      // Use Shadow DOM to scope CSS per playground
-      let shadow = preview.shadowRoot
-      if (!shadow) {
-        shadow = preview.attachShadow({ mode: 'open' })
-      }
-
-      function compile() {
-        try {
-          shadow.innerHTML = ''
-
-          // Inject mirror-defaults.css into Shadow DOM
-          const link = document.createElement('link')
-          link.rel = 'stylesheet'
-          link.href = '../../assets/mirror-defaults.css'
-          shadow.appendChild(link)
-          
-          const code = MirrorLang.compile(textarea.value)
-          const execCode = code.replace('export function createUI', 'function createUI')
-          const fn = new Function(execCode + '\nreturn createUI();')
-          const ui = fn()
-          if (ui && ui.root) {
-            // Add mirror-root class to the root element
-            ui.root.classList.add('mirror-root')
-            shadow.appendChild(ui.root)
-          }
-        } catch (e) {
-          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
-        }
-      }
-
-      textarea.addEventListener('input', () => {
-        updateHighlight()
-        clearTimeout(textarea._t)
-        textarea._t = setTimeout(compile, 100)
-      })
-
-      textarea.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault()
-          const s = textarea.selectionStart
-          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
-          textarea.selectionStart = textarea.selectionEnd = s + 2
-          updateHighlight()
-          compile()
-        }
-      })
-
-      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
-      updateHighlight()
-      compile()
-    })
-  </script>
+  <script src="tutorial.js"></script>
 </body>
 </html>

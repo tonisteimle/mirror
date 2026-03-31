@@ -107,6 +107,24 @@ const files = {}
 const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
 let currentFile = 'index.mir'
 
+// ============================================
+// Playground Mode (URL parameter ?code=)
+// ============================================
+let isPlaygroundMode = false
+const urlParams = new URLSearchParams(window.location.search)
+const playgroundCode = urlParams.get('code')
+if (playgroundCode) {
+  try {
+    const decodedCode = decodeURIComponent(playgroundCode)
+    files['playground.mir'] = decodedCode
+    currentFile = 'playground.mir'
+    isPlaygroundMode = true
+    console.log('[App] Playground mode activated')
+  } catch (e) {
+    console.error('[App] Failed to decode playground code:', e)
+  }
+}
+
 // Check if running in Tauri desktop app
 function isTauriDesktop() {
   return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
@@ -117,7 +135,10 @@ async function loadProjects() {
   // Server mode: desktop-files.js handles loading from server
   // Don't load defaults here - wait for server content
   console.log('[App] Waiting for server content (via desktop-files.js)')
-  currentFile = 'index.mir'
+  // Don't override currentFile in playground mode
+  if (!isPlaygroundMode) {
+    currentFile = 'index.mir'
+  }
 }
 
 // Legacy project functions removed - desktop app uses folder-based file management via desktop-files.js
@@ -4143,6 +4164,11 @@ function initStudio() {
   const explorerComponentsContainer = document.getElementById('explorer-components-container')
   const explorerUserComponentsContainer = document.getElementById('explorer-user-components-container')
 
+  // Hide explorer panel in playground mode
+  if (isPlaygroundMode && explorerPanelContainer) {
+    explorerPanelContainer.style.display = 'none'
+  }
+
   // ============================================
   // NEW ARCHITECTURE: Initialize new studio
   // ============================================
@@ -4156,10 +4182,11 @@ function initStudio() {
       editor: editor,
       previewContainer: previewContainer,
       propertyPanelContainer: propertyPanelContainer,
-      explorerPanelContainer: explorerPanelContainer,
-      fileTreeContainer: fileTreeContainer,
-      explorerComponentsContainer: explorerComponentsContainer,
-      explorerUserComponentsContainer: explorerUserComponentsContainer,
+      // Don't pass explorer containers in playground mode
+      explorerPanelContainer: isPlaygroundMode ? undefined : explorerPanelContainer,
+      fileTreeContainer: isPlaygroundMode ? undefined : fileTreeContainer,
+      explorerComponentsContainer: isPlaygroundMode ? undefined : explorerComponentsContainer,
+      explorerUserComponentsContainer: isPlaygroundMode ? undefined : explorerUserComponentsContainer,
       chatPanelContainer: chatPanelContainer,
       agentApiKey: agentApiKey,
       initialSource: files[currentFile] || '',
@@ -6267,35 +6294,39 @@ compile(initialCode)
 // File Management Integration
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
-import('./dist/index.js').then(module => {
-  // Initialize with callback to load files into editor
-  module.initDesktopFiles({
-    onFileSelect: (filePath, content) => {
-      console.log('[DesktopFiles] Loading file into editor:', filePath)
-      // Update currentFile for appLockExtension
-      currentFile = filePath
-      // Update editor content
-      const transaction = editor.state.update({
-        changes: {
-          from: 0,
-          to: editor.state.doc.length,
-          insert: content
-        },
-        annotations: [fileSwitchAnnotation.of(true)]
-      })
-      editor.dispatch(transaction)
-      // Recompile
-      compile(content)
-    },
-    onFileChange: (filePath, content) => {
-      console.log('[DesktopFiles] File changed:', filePath)
-    }
-  })
-  console.log('[App] File management initialized')
+if (!isPlaygroundMode) {
+  import('./dist/index.js').then(module => {
+    // Initialize with callback to load files into editor
+    module.initDesktopFiles({
+      onFileSelect: (filePath, content) => {
+        console.log('[DesktopFiles] Loading file into editor:', filePath)
+        // Update currentFile for appLockExtension
+        currentFile = filePath
+        // Update editor content
+        const transaction = editor.state.update({
+          changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: content
+          },
+          annotations: [fileSwitchAnnotation.of(true)]
+        })
+        editor.dispatch(transaction)
+        // Recompile
+        compile(content)
+      },
+      onFileChange: (filePath, content) => {
+        console.log('[DesktopFiles] File changed:', filePath)
+      }
+    })
+    console.log('[App] File management initialized')
 
-}).catch(err => {
-  console.error('[App] Failed to load studio bundle:', err)
-})
+  }).catch(err => {
+    console.error('[App] Failed to load studio bundle:', err)
+  })
+} else {
+  console.log('[App] Playground mode - skipping file management')
+}
 
 // ==========================================
 // Desktop Menu Event Handler (Tauri)

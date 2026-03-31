@@ -20,74 +20,56 @@
     </header>
 
     <section>
+      <p>Drei Komponenten für unterschiedliche Szenarien: <strong>Tabs</strong> wechseln zwischen Ansichten – nur eine ist sichtbar. <strong>Accordion</strong> hat mehrere aufklappbare Bereiche. <strong>Collapsible</strong> ist ein einzelner Toggle.</p>
+
+      <p>Tabs und Accordion folgen dem gleichen Muster: Du definierst Items mit einem Label, die Kinder werden automatisch zum Content. Collapsible funktioniert anders – hier legst du Trigger und Content explizit fest.</p>
+    </section>
+
+    <section>
       <h2>Tabs</h2>
-      <p>Tab-Navigation mit automatischem State-Management:</p>
+      <p>Ein <code>Tab</code> braucht zwei Dinge: ein Label (der Text im Tab-Header) und einen <code>value</code> (die ID). Mit <code>defaultValue</code> auf dem <code>Tabs</code>-Container bestimmst du, welcher Tab beim Start aktiv ist:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tabs w 350
-  List hor, gap 0, bg #1a1a1a, rad 8 8 0 0, pad 4
-    Trigger "Übersicht", pad 10 20, col #888, rad 6
-    Trigger "Projekte", pad 10 20, col #888, rad 6
-    Trigger "Settings", pad 10 20, col #888, rad 6
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Hier steht der Übersicht-Inhalt.", col #ccc
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Hier sind deine Projekte.", col #ccc
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Einstellungen verwalten.", col #ccc</textarea>
+          <textarea>Tabs defaultValue "home"
+  Tab "Home" value "home"
+    Text "Welcome to the home page"
+  Tab "Profile" value "profile"
+    Text "Your profile settings"
+  Tab "Settings" value "settings"
+    Text "Application settings"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Die <code>Content</code>-Bereiche entsprechen der Reihenfolge der <code>Trigger</code>.</p>
-    </section>
+      <p>Die Kinder jedes Tabs werden zum Panel-Content. Das erste Tab muss nicht "home" heißen – der <code>value</code> ist nur eine ID, die mit <code>defaultValue</code> übereinstimmen muss.</p>
 
-    <section>
-      <h2>Tabs mit Icons</h2>
-      <p>Tabs können auch Icons enthalten:</p>
+      <p>Mit <code>orientation "vertical"</code> ordnest du die Tabs seitlich an. Das ist nützlich für Settings-Panels oder Sidebars:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tabs w 350
-  List hor, gap 4, bg #1a1a1a, pad 8, rad 8 8 0 0
-    Trigger pad 10 16, col #888, rad 6, gap 6
-      Icon "home", is 16
-      Text "Home"
-    Trigger pad 10 16, col #888, rad 6, gap 6
-      Icon "folder", is 16
-      Text "Files"
-    Trigger pad 10 16, col #888, rad 6, gap 6
-      Icon "settings", is 16
-      Text "Settings"
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Willkommen zurück!", col white, fs 16
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Deine Dateien", col white, fs 16
-  Content bg #1a1a1a, pad 20, rad 0 0 8 8
-    Text "Einstellungen", col white, fs 16</textarea>
+          <textarea>Tabs orientation "vertical", defaultValue "general"
+  Tab "General" value "general"
+    Text "Allgemeine Einstellungen"
+  Tab "Account" value "account"
+    Text "Account verwalten"
+  Tab "Privacy" value "privacy"
+    Text "Datenschutz"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-    </section>
 
-    <section>
-      <h2>Vertikale Tabs</h2>
-      <p>Tabs können auch vertikal angeordnet werden:</p>
+      <p>Für Custom-Styling gibt es zwei Slots: <code>List:</code> ist der Container um alle Tab-Header. <code>Indicator:</code> ist die Linie oder Fläche, die den aktiven Tab markiert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tabs w 350, hor
-  List gap 2, bg #1a1a1a, pad 8, rad 8 0 0 8, w 120
-    Trigger "General", pad 10 16, col #888, rad 6, w full
-    Trigger "Account", pad 10 16, col #888, rad 6, w full
-    Trigger "Privacy", pad 10 16, col #888, rad 6, w full
-  Content bg #1a1a1a, pad 20, rad 0 8 8 0, w full
-    Text "Allgemeine Einstellungen", col white
-  Content bg #1a1a1a, pad 20, rad 0 8 8 0, w full
-    Text "Account-Einstellungen", col white
-  Content bg #1a1a1a, pad 20, rad 0 8 8 0, w full
-    Text "Datenschutz-Einstellungen", col white</textarea>
+          <textarea>Tabs defaultValue "a"
+  List: bg #1a1a1a, pad 4, rad 8, gap 4
+  Indicator: bg #4f46e5, rad 6
+  Tab "Dashboard" value "a"
+    Text "Dashboard content"
+  Tab "Analytics" value "b"
+    Text "Analytics content"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -95,29 +77,48 @@
 
     <section>
       <h2>Accordion</h2>
-      <p>Auf- und zuklappbare Bereiche:</p>
+      <p>Accordion funktioniert ähnlich wie Tabs: <code>AccordionItem</code> bekommt ein Label, die Kinder werden zum aufklappbaren Content. Der Unterschied: Mehrere Sections können existieren, und das Auf/Zuklappen passiert durch Klick auf den Header:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Accordion w 350, gap 8
-  Item bg #1a1a1a, rad 8
-    ItemTrigger hor, spread, pad 16, cursor pointer
-      Text "Was ist Mirror?", col white, fs 14
-      Icon "chevron-down", ic #888, is 18
-    ItemContent pad 0 16 16 16
-      Text "Mirror ist eine DSL für rapid UI prototyping.", col #888, fs 13
-  Item bg #1a1a1a, rad 8
-    ItemTrigger hor, spread, pad 16, cursor pointer
-      Text "Wie installiere ich es?", col white, fs 14
-      Icon "chevron-down", ic #888, is 18
-    ItemContent pad 0 16 16 16
-      Text "npm install mirror-lang", col #888, fs 13, font mono
-  Item bg #1a1a1a, rad 8
-    ItemTrigger hor, spread, pad 16, cursor pointer
-      Text "Ist es kostenlos?", col white, fs 14
-      Icon "chevron-down", ic #888, is 18
-    ItemContent pad 0 16 16 16
-      Text "Ja, Mirror ist Open Source.", col #888, fs 13</textarea>
+          <textarea>Accordion
+  AccordionItem "Section 1"
+    Text "Content for section 1"
+  AccordionItem "Section 2"
+    Text "Content for section 2"
+  AccordionItem "Section 3"
+    Text "Content for section 3"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Standardmäßig kann nur ein Item offen sein – klickst du ein anderes, schließt sich das vorherige. Mit <code>multiple</code> können mehrere gleichzeitig offen bleiben. Das <code>icon</code>-Property ändert das Chevron zu einem anderen Icon:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion multiple, icon "plus"
+  AccordionItem "Was ist Mirror?"
+    Text "Eine DSL für rapid UI prototyping."
+  AccordionItem "Wie installiere ich es?"
+    Text "npm install mirror-lang"
+  AccordionItem "Open Source?"
+    Text "Ja, MIT Lizenz."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Styling-Slots heißen <code>Item:</code> (der ganze Bereich), <code>ItemTrigger:</code> (der klickbare Header) und <code>ItemContent:</code> (der aufklappbare Inhalt). Diese Styles gelten für alle Items:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion
+  Item: bg #1a1a1a, rad 8, margin 0 0 4 0
+  ItemTrigger: pad 16
+  ItemContent: pad 0 16 16 16, col #888
+  AccordionItem "Styled Section"
+    Text "Content with custom padding"
+  AccordionItem "Another Section"
+    Text "Same styling applied"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -125,112 +126,77 @@
 
     <section>
       <h2>Collapsible</h2>
-      <p>Ein einzelner aufklappbarer Bereich:</p>
+      <p>Collapsible ist für einen einzelnen auf/zuklappbaren Bereich. Anders als bei Tabs und Accordion definierst du hier <code>Trigger:</code> und <code>Content:</code> explizit als Slots – das gibt dir volle Kontrolle über beide Teile:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Collapsible w 350
-  Trigger hor, spread, bg #1a1a1a, pad 16, rad 8, cursor pointer
-    Frame hor, gap 12
-      Icon "filter", ic #888, is 18
-      Text "Filter", col white, fs 14
-    Icon "chevron-down", ic #888, is 18
-  Content bg #1a1a1a, pad 16, rad 0 0 8 8, gap 12, margin -8 0 0 0
-    Frame hor, spread
-      Text "Status", col #888, fs 13
-      Text "Aktiv", col white, fs 13
-    Frame hor, spread
-      Text "Kategorie", col #888, fs 13
-      Text "Alle", col white, fs 13
-    Frame hor, spread
-      Text "Sortierung", col #888, fs 13
-      Text "Datum", col white, fs 13</textarea>
+          <textarea>Collapsible
+  Trigger: Button "Toggle content"
+  Content: Text "Hidden content revealed."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Trigger muss kein Button sein – du kannst beliebige Elemente verwenden. Mit <code>defaultOpen</code> startet der Bereich ausgeklappt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Collapsible defaultOpen
+  Trigger: Box hor, spread, pad 12, bg #1a1a1a, rad 8, cursor pointer
+    Text "Filter" weight 500
+    Icon "chevron-down"
+  Content: Box ver, gap 8, pad 12, bg #1a1a1a, rad 0 0 8 8
+    Text "Status: Aktiv" col #888
+    Text "Kategorie: Alle" col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
     </section>
 
     <section>
-      <h2>Praktisch: Settings Panel</h2>
-      <p>Ein typisches Settings-Layout mit Accordion:</p>
+      <h2>Praktische Beispiele</h2>
+      <p>Ein typisches FAQ mit gestyltem Accordion – die Border trennt die Items visuell:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame w 320, bg #111, pad 16, rad 12, gap 4
-  Text "Einstellungen", col white, fs 18, weight 600, margin 0 0 12 0
-
-  Accordion gap 2
-    Item
-      ItemTrigger hor, spread, pad 12, rad 6, cursor pointer
-        Frame hor, gap 10
-          Icon "user", ic #888, is 18
-          Text "Profil", col white, fs 13
-        Icon "chevron-right", ic #666, is 16
-      ItemContent pad 8 12 12 40, gap 8
-        Text "Name ändern", col #888, fs 12
-        Text "Avatar ändern", col #888, fs 12
-        Text "Bio bearbeiten", col #888, fs 12
-
-    Item
-      ItemTrigger hor, spread, pad 12, rad 6, cursor pointer
-        Frame hor, gap 10
-          Icon "bell", ic #888, is 18
-          Text "Benachrichtigungen", col white, fs 13
-        Icon "chevron-right", ic #666, is 16
-      ItemContent pad 8 12 12 40, gap 8
-        Text "E-Mail Benachrichtigungen", col #888, fs 12
-        Text "Push Notifications", col #888, fs 12
-
-    Item
-      ItemTrigger hor, spread, pad 12, rad 6, cursor pointer
-        Frame hor, gap 10
-          Icon "shield", ic #888, is 18
-          Text "Sicherheit", col white, fs 13
-        Icon "chevron-right", ic #666, is 16
-      ItemContent pad 8 12 12 40, gap 8
-        Text "Passwort ändern", col #888, fs 12
-        Text "2FA aktivieren", col #888, fs 12</textarea>
+          <textarea>Accordion
+  Item: bor 0 0 1 0, boc #222
+  ItemTrigger: pad 16
+  ItemContent: pad 0 16 16 16, col #888
+  AccordionItem "What is Mirror?"
+    Text "A DSL for rapid UI prototyping that compiles to DOM or React."
+  AccordionItem "How do I get started?"
+    Text "Install via npm and start writing components."
+  AccordionItem "Is it production ready?"
+    Text "Designed for prototyping, usable in production with care."</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-    </section>
 
-    <section>
-      <h2>Praktisch: Dashboard Tabs</h2>
-      <p>Dashboard mit Tab-Navigation und echtem Content:</p>
+      <p>Ein Settings-Panel mit mehreren Collapsible-Sections. Jede Section hat ihren eigenen Trigger und Content:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame w 380, bg #0a0a0a, rad 12, clip
-  Tabs
-    List hor, bg #111, pad 4, gap 2
-      Trigger "Overview", pad 10 16, col #888, rad 6, fs 13
-      Trigger "Analytics", pad 10 16, col #888, rad 6, fs 13
-      Trigger "Reports", pad 10 16, col #888, rad 6, fs 13
-
-    Content pad 16, gap 12
-      Frame hor, gap 12
-        Frame w full, bg #1a1a1a, pad 16, rad 8, gap 4
-          Text "Users", col #888, fs 11, uppercase
-          Text "1,234", col white, fs 24, weight 600
-        Frame w full, bg #1a1a1a, pad 16, rad 8, gap 4
-          Text "Revenue", col #888, fs 11, uppercase
-          Text "$12.4k", col white, fs 24, weight 600
-
-    Content pad 16, gap 8
-      Text "Analytics Dashboard", col white, fs 16, weight 500
-      Frame h 60, bg #1a1a1a, rad 8, center
-        Text "Chart placeholder", col #666
-
-    Content pad 16, gap 8
-      Text "Reports", col white, fs 16, weight 500
-      Frame gap 4
-        Frame hor, spread, pad 12, bg #1a1a1a, rad 6
-          Text "Q1 Report", col #ccc, fs 13
-          Icon "download", ic #888, is 16
-        Frame hor, spread, pad 12, bg #1a1a1a, rad 6
-          Text "Q2 Report", col #ccc, fs 13
-          Icon "download", ic #888, is 16</textarea>
+          <textarea>Box ver, w 350, pad 16, bg #111, rad 8, gap 12
+  Text "Settings" weight bold, fs 18
+  Collapsible defaultOpen
+    Trigger: Box hor, spread, cursor pointer
+      Text "General" weight 500
+      Icon "chevron-down"
+    Content: Box ver, gap 8, pad 8 0
+      Box hor, spread
+        Text "Dark mode" fs 14
+        Switch
+      Box hor, spread
+        Text "Notifications" fs 14
+        Switch
+  Divider
+  Collapsible
+    Trigger: Box hor, spread, cursor pointer
+      Text "Advanced" weight 500
+      Icon "chevron-down"
+    Content: Box pad 8 0
+      Text "Advanced settings here" col #666</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -238,15 +204,15 @@
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
-      <ul>
-        <li><code>Tabs</code> – Tab-Container</li>
-        <li><code>List</code> – Container für Tab-Trigger</li>
-        <li><code>Trigger</code> – Klickbarer Tab</li>
-        <li><code>Content</code> – Tab-Inhalt</li>
-        <li><code>Accordion</code> – Mehrere aufklappbare Items</li>
-        <li><code>Item, ItemTrigger, ItemContent</code> – Accordion-Slots</li>
-        <li><code>Collapsible</code> – Einzelner aufklappbarer Bereich</li>
-      </ul>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Pattern</th><th>Anwendung</th></tr>
+        <tr><td><code>Tabs</code> + <code>Tab</code></td><td>Label + Kinder → Content</td><td>Zwischen Ansichten wechseln</td></tr>
+        <tr><td><code>Accordion</code> + <code>AccordionItem</code></td><td>Label + Kinder → Content</td><td>Mehrere aufklappbare Bereiche</td></tr>
+        <tr><td><code>Collapsible</code></td><td><code>Trigger:</code> + <code>Content:</code></td><td>Ein einzelner Toggle</td></tr>
+      </table>
+      <p style="margin-top: 16px;"><strong>Tabs:</strong> <code>defaultValue</code>, <code>orientation</code> · Slots: <code>List:</code>, <code>Indicator:</code><br>
+         <strong>Accordion:</strong> <code>multiple</code>, <code>icon</code> · Slots: <code>Item:</code>, <code>ItemTrigger:</code>, <code>ItemContent:</code><br>
+         <strong>Collapsible:</strong> <code>defaultOpen</code></p>
     </div>
 
     <nav>
@@ -258,104 +224,6 @@
   </main>
 
   <script src="../../dist/browser/index.global.js"></script>
-  <script>
-    const patterns = [
-      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
-      { regex: /"[^"]*"/g, cls: 'syn-string' },
-      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
-      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|disabled|onclick|onhover|selected|state|show|hide|toggle|open|close|as)\b/g, cls: 'syn-keyword' },
-      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
-    ]
-
-    function highlight(text) {
-      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      const matches = []
-      for (const p of patterns) {
-        p.regex.lastIndex = 0
-        let m
-        while ((m = p.regex.exec(text)) !== null) {
-          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
-        }
-      }
-      matches.sort((a, b) => a.from - b.from)
-      const filtered = []
-      let lastEnd = 0
-      for (const m of matches) {
-        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
-      }
-      let result = '', pos = 0
-      for (const m of filtered) {
-        if (m.from > pos) result += html.slice(pos, m.from)
-        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        result += `<span class="${m.cls}">${escaped}</span>`
-        pos = m.to
-      }
-      return result + html.slice(pos)
-    }
-
-    document.querySelectorAll('.playground[data-playground]').forEach(p => {
-      const codeContainer = p.querySelector('.playground-code')
-      const textarea = p.querySelector('textarea')
-      const preview = p.querySelector('.playground-preview')
-      const pre = document.createElement('pre')
-      codeContainer.insertBefore(pre, textarea)
-
-      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
-
-      // Use Shadow DOM to scope CSS per playground
-      let shadow = preview.shadowRoot
-      if (!shadow) {
-        shadow = preview.attachShadow({ mode: 'open' })
-      }
-
-      function compile() {
-        try {
-          shadow.innerHTML = ''
-
-          // Inject mirror-defaults.css into Shadow DOM
-          const link = document.createElement('link')
-          link.rel = 'stylesheet'
-          link.href = '../../assets/mirror-defaults.css'
-          shadow.appendChild(link)
-          
-          const code = MirrorLang.compile(textarea.value)
-          const execCode = code.replace('export function createUI', 'function createUI')
-          const fn = new Function(execCode + '\nreturn createUI();')
-          const ui = fn()
-          if (ui && ui.root) {
-            // Add mirror-root class to the root element
-            ui.root.classList.add('mirror-root')
-            shadow.appendChild(ui.root)
-          }
-        } catch (e) {
-          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
-        }
-      }
-
-      textarea.addEventListener('input', () => {
-        updateHighlight()
-        clearTimeout(textarea._t)
-        textarea._t = setTimeout(compile, 100)
-      })
-
-      textarea.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault()
-          const s = textarea.selectionStart
-          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
-          textarea.selectionStart = textarea.selectionEnd = s + 2
-          updateHighlight()
-          compile()
-        }
-      })
-
-      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
-      updateHighlight()
-      compile()
-    })
-  </script>
+  <script src="tutorial.js"></script>
 </body>
 </html>

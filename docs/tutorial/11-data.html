@@ -20,8 +20,14 @@
     </header>
 
     <section>
+      <p>Statische UIs sind selten – meist zeigst du Daten an, die sich ändern können. Mirror bietet drei Mechanismen dafür: <strong>Each-Loops</strong> für Listen, <strong>Tokens</strong> für benannte Werte, und <strong>Conditional Rendering</strong> für zustandsabhängige Anzeige.</p>
+
+      <p>Der wichtigste davon ist <code>each</code> – damit iterierst du über Arrays und erzeugst für jedes Element UI-Komponenten. Die Daten können Strings, Zahlen oder Objekte sein.</p>
+    </section>
+
+    <section>
       <h2>Each Loop</h2>
-      <p>Iteriere über eine Liste von Items:</p>
+      <p>Mit <code>each item in [...]</code> iterierst du über eine Liste. Die Variable <code>item</code> enthält das aktuelle Element und kann in Kind-Elementen verwendet werden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -37,7 +43,7 @@
 
     <section>
       <h2>Object Properties</h2>
-      <p>Zugriff auf Objekt-Eigenschaften:</p>
+      <p>Oft sind Listen-Elemente keine einfachen Strings, sondern Objekte mit mehreren Eigenschaften. Mit Punkt-Notation greifst du auf die Properties zu – <code>user.name</code>, <code>user.role</code>, etc. Mit <code>[0]</code> kannst du auf einzelne Zeichen zugreifen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -57,7 +63,7 @@
 
     <section>
       <h2>Index Zugriff</h2>
-      <p>Mit <code>index</code> den aktuellen Index nutzen:</p>
+      <p>Manchmal brauchst du die Position des Elements in der Liste – für Nummerierung, Zebra-Striping oder spezielle Behandlung des ersten/letzten Elements. Mit <code>each item, index in [...]</code> hast du zusätzlich den Index (beginnend bei 0):</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -74,7 +80,7 @@
 
     <section>
       <h2>Nested Loops</h2>
-      <p>Verschachtelte Schleifen für komplexe Strukturen:</p>
+      <p>Hierarchische Daten – wie Kategorien mit Items oder Gruppen mit Mitgliedern – erfordern verschachtelte Schleifen. Der innere Loop hat Zugriff auf Variablen des äußeren:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -94,7 +100,7 @@
 
     <section>
       <h2>Conditional Rendering</h2>
-      <p><code>visible when</code> zeigt Elemente basierend auf States:</p>
+      <p>Nicht alles soll immer sichtbar sein – manche Elemente erscheinen nur unter bestimmten Bedingungen. Mit <code>visible when Element state</code> reagiert ein Element auf den State eines anderen. Hier ein Filter, der Items ein-/ausblendet:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -130,8 +136,8 @@
     </section>
 
     <section>
-      <h2>Data Binding</h2>
-      <p>Tokens als Datenquellen nutzen:</p>
+      <h2>Tokens für Daten</h2>
+      <p>Tokens sind nicht nur für Design-Variablen – sie eignen sich auch für Daten. Definiere einen Token mit <code>name: value</code> und verwende ihn mit <code>$name</code>. Die Daten bleiben zentral an einer Stelle:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -158,8 +164,8 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 280
     </section>
 
     <section>
-      <h2>Computed Values</h2>
-      <p>Werte kombinieren und berechnen:</p>
+      <h2>Berechnungen</h2>
+      <p>Tokens können miteinander verrechnet werden. String-Konkatenation mit <code>+</code>, Mathematik mit <code>* / - +</code>. Klammern gruppieren Operationen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -190,14 +196,14 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
 
     <section>
       <h2>Praktisch: Produkt-Grid</h2>
-      <p>Ein Grid von Produktkarten aus Daten:</p>
+      <p>Ein häufiges Pattern: Produktkarten aus einer Datenliste generieren. Mit <code>grid</code> und <code>each</code> kombiniert entsteht ein responsives Produktgitter:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame grid 2, gap 12
-  each product in [{ name: "Kopfhörer", price: 199, color: "#2563eb" }, { name: "Keyboard", price: 149, color: "#10b981" }, { name: "Maus", price: 79, color: "#f59e0b" }, { name: "Monitor", price: 399, color: "#ef4444" }]
+  each product in [{ name: "Kopfhörer", price: 199 }, { name: "Keyboard", price: 149 }, { name: "Maus", price: 79 }, { name: "Monitor", price: 399 }]
     Frame bg #1a1a1a, rad 12, clip, cursor pointer
-      Frame w full, h 80, bg product.color, center
+      Frame w full, h 80, bg #2563eb, center
         Icon "package", ic white, is 32
       Frame pad 12, gap 4
         Text product.name, col white, fs 14, weight 500
@@ -211,7 +217,7 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
 
     <section>
       <h2>Praktisch: Task Liste</h2>
-      <p>Interaktive Task-Liste mit Status:</p>
+      <p>Eine interaktive Todo-Liste kombiniert Loops mit States. Jedes Task-Item hat seinen eigenen <code>selected</code>-State, der bei Klick getoggelt wird:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -240,7 +246,7 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
 
     <section>
       <h2>Praktisch: Statistik Dashboard</h2>
-      <p>Dashboard mit dynamischen Daten:</p>
+      <p>Ein Dashboard zeigt KPIs und Tabellen aus Daten. Hier werden Stat-Karten und eine Seitenliste jeweils aus Arrays generiert:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -267,125 +273,28 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
-      <ul>
-        <li><code>each item in [...]</code> – Über Liste iterieren</li>
-        <li><code>each item, index in [...]</code> – Mit Index</li>
-        <li><code>item.property</code> – Objekteigenschaften</li>
-        <li><code>visible when X state</code> – Bedingtes Anzeigen</li>
-        <li><code>name: value</code> – Token definieren</li>
-        <li><code>$tokenName</code> – Token verwenden</li>
-        <li><code>"Text " + $var</code> – Werte kombinieren</li>
-        <li><code>$a * $b</code> – Berechnungen</li>
-      </ul>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
+        <tr><td><code>each item in [...]</code></td><td>Über Liste iterieren</td></tr>
+        <tr><td><code>each item, index in [...]</code></td><td>Mit Index iterieren (beginnt bei 0)</td></tr>
+        <tr><td><code>item.property</code></td><td>Auf Objekteigenschaft zugreifen</td></tr>
+        <tr><td><code>visible when X state</code></td><td>Bedingtes Anzeigen basierend auf State</td></tr>
+        <tr><td><code>name: value</code></td><td>Token/Variable definieren</td></tr>
+        <tr><td><code>$tokenName</code></td><td>Token-Wert verwenden</td></tr>
+        <tr><td><code>"Text " + $var</code></td><td>String-Konkatenation</td></tr>
+        <tr><td><code>$a * $b</code></td><td>Mathematische Berechnungen</td></tr>
+      </table>
     </div>
 
     <nav>
-      <a class="prev" href="12-javascript.html">← JavaScript</a>
+      <a class="prev" href="10-overlays.html">← Overlays</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="14-forms.html">Formulare →</a>
+      <a class="next" href="12-forms.html">Formulare →</a>
     </nav>
 
   </main>
 
   <script src="../../dist/browser/index.global.js"></script>
-  <script>
-    const patterns = [
-      { regex: /\/\/.*$/gm, cls: 'syn-comment' },
-      { regex: /"[^"]*"/g, cls: 'syn-string' },
-      { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
-      { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
-      { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-      { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|mono)\b/g, cls: 'syn-property' },
-      { regex: /\b(hover|focus|active|onclick|state|show|hide|toggle|select|as|when|self|each|in|visible|index|initial|exclusive)\b/g, cls: 'syn-keyword' },
-      { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
-    ]
-
-    function highlight(text) {
-      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      const matches = []
-      for (const p of patterns) {
-        p.regex.lastIndex = 0
-        let m
-        while ((m = p.regex.exec(text)) !== null) {
-          matches.push({ from: m.index, to: m.index + m[0].length, cls: p.cls, text: m[0] })
-        }
-      }
-      matches.sort((a, b) => a.from - b.from)
-      const filtered = []
-      let lastEnd = 0
-      for (const m of matches) {
-        if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
-      }
-      let result = '', pos = 0
-      for (const m of filtered) {
-        if (m.from > pos) result += html.slice(pos, m.from)
-        const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        result += `<span class="${m.cls}">${escaped}</span>`
-        pos = m.to
-      }
-      return result + html.slice(pos)
-    }
-
-    document.querySelectorAll('.playground[data-playground]').forEach(p => {
-      const codeContainer = p.querySelector('.playground-code')
-      const textarea = p.querySelector('textarea')
-      const preview = p.querySelector('.playground-preview')
-      const pre = document.createElement('pre')
-      codeContainer.insertBefore(pre, textarea)
-
-      function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
-
-      // Use Shadow DOM to scope CSS per playground
-      let shadow = preview.shadowRoot
-      if (!shadow) {
-        shadow = preview.attachShadow({ mode: 'open' })
-      }
-
-      function compile() {
-        try {
-          shadow.innerHTML = ''
-
-          // Inject mirror-defaults.css into Shadow DOM
-          const link = document.createElement('link')
-          link.rel = 'stylesheet'
-          link.href = '../../assets/mirror-defaults.css'
-          shadow.appendChild(link)
-          
-          const code = MirrorLang.compile(textarea.value)
-          const execCode = code.replace('export function createUI', 'function createUI')
-          const fn = new Function(execCode + '\nreturn createUI();')
-          const ui = fn()
-          if (ui && ui.root) {
-            // Add mirror-root class to the root element
-            ui.root.classList.add('mirror-root')
-            shadow.appendChild(ui.root)
-          }
-        } catch (e) {
-          shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
-        }
-      }
-
-      textarea.addEventListener('input', () => {
-        updateHighlight()
-        clearTimeout(textarea._t)
-        textarea._t = setTimeout(compile, 100)
-      })
-
-      textarea.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault()
-          const s = textarea.selectionStart
-          textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
-          textarea.selectionStart = textarea.selectionEnd = s + 2
-          updateHighlight()
-          compile()
-        }
-      })
-
-      textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
-      updateHighlight()
-      compile()
-    })
-  </script>
+  <script src="tutorial.js"></script>
 </body>
 </html>
