@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Interaktion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Interaktion</h1>
+      <p class="subtitle">Wie Elemente auf Benutzer reagieren</p>
+    </header>
+
+    <p class="intro">Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Aussehen ändern können – bei Hover, bei Klick, oder wenn etwas anderes passiert. Das Konzept dahinter: <strong>States</strong>.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Das Konzept: States</h2>
+      <p>Ein <strong>State</strong> beschreibt, wie ein Element in einem bestimmten Zustand aussieht. Ein Button kann zum Beispiel diese States haben:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Base</strong> – der Normalzustand (grauer Hintergrund)</li>
+        <li><strong>hover</strong> – wenn die Maus darüber ist (hellerer Hintergrund)</li>
+        <li><strong>on</strong> – wenn er aktiviert wurde (blauer Hintergrund)</li>
+      </ul>
+      <p>In Mirror trennen wir klar:</p>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>on:</code></td><td><strong>State</strong> – definiert das Aussehen</td></tr>
+        <tr><td><code>toggle()</code></td><td><strong>Funktion</strong> – was bei Klick passiert</td></tr>
+      </table>
+
+      <p>States beschreiben Styles, Funktionen definieren Aktionen. Klick ist der Default-Event – du schreibst einfach die Funktion als Property.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>System-States: hover, focus, active</h2>
+      <p>Manche States werden automatisch vom Browser ausgelöst – du musst keinen Trigger definieren. Der Browser weiß selbst, wann die Maus über einem Element ist:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover:
+    bg #2563eb
+    scale 1.02
+
+Btn "Hover mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der <code>hover:</code> State definiert nur das Aussehen. Der Browser kümmert sich darum, wann dieser State aktiv wird (Maus drüber) und wann nicht (Maus weg).</p>
+      <p class="note"><strong>System-States:</strong> <code>hover:</code> (Maus darüber), <code>focus:</code> (Tastatur-Fokus), <code>active:</code> (während Klick gedrückt). Diese brauchen keinen Event-Trigger.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Custom States und toggle()</h2>
+      <p>Für eigene Interaktionen definierst du <strong>Custom States</strong>. Anders als System-States werden diese nicht automatisch ausgelöst – du brauchst eine Funktion die sie auslöst:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  on:
+    bg #2563eb
+
+Btn "An/Aus"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Hier passieren zwei Dinge:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>on:</code> definiert einen State namens "on" mit blauem Hintergrund</li>
+        <li><code>toggle()</code> wechselt bei Klick zwischen Base und dem State</li>
+      </ul>
+      <p><strong>Base</strong> ist der Normalzustand – die Styles, die du direkt am Element definierst (hier: <code>bg #333</code>). Du brauchst keinen extra "off" State.</p>
+      <h3>Im State starten</h3>
+      <p>Manchmal soll ein Element bereits im aktivierten State starten. Dafür gibst du den State-Namen bei der Instanz an:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  on:
+    bg #2563eb
+
+Frame hor, gap 12
+  Btn "Normal"
+  Btn "Bereits aktiv", on</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der zweite Button startet im <code>on</code> State (blauer Hintergrund). Ein Klick schaltet ihn auf Base zurück.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>States können alles ändern</h2>
+      <p>Bisher haben States nur Styles geändert (Farben, Größen). Aber States können auch <strong>komplett andere Kinder</strong> haben – wie Figma Variants:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ExpandBtn: pad 12, bg #333, col white, rad 6, hor, gap 8, cursor pointer, toggle()
+  "Mehr zeigen"
+  Icon "chevron-down", ic white, is 16
+  open:
+    "Weniger zeigen"
+    Icon "chevron-up", ic white, is 16
+
+ExpandBtn</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im <code>open</code>-State wird <em>alles</em> ausgetauscht: anderer Text, anderes Icon.</p>
+      <p class="note"><strong>Wie Figma Variants:</strong> Jeder State kann eine komplett andere Version der Komponente sein – nicht nur andere Farben, sondern andere Inhalte, andere Struktur.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mehrere States</h2>
+      <p>Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. <code>toggle()</code> erkennt das automatisch und cyclet durch alle States:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
+  todo:
+    bg #333
+    Icon "circle", ic white, is 14
+  doing:
+    bg #f59e0b
+    Icon "clock", ic white, is 14
+  done:
+    bg #10b981
+    Icon "check", ic white, is 14
+
+StatusBtn "Task 1"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>toggle()</code> erkennt automatisch wie viele States du hast:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>1 State</strong> → binärer Wechsel: default ↔ state</li>
+        <li><strong>2+ States</strong> → Cycle: todo → doing → done → todo → ...</li>
+      </ul>
+      <p class="note"><strong>Wichtig:</strong> Der <em>erste</em> definierte State ist der Startzustand. Die Reihenfolge der Definition bestimmt die Cycle-Reihenfolge.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Nur einer aktiv: exclusive()</h2>
+      <p>Bei Tabs oder Radio-Buttons soll immer nur <em>ein</em> Element aktiv sein. Wenn du eines aktivierst, werden alle anderen automatisch deaktiviert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tab: pad 12 20, rad 6, bg #333, col #888, cursor pointer, exclusive()
+  active:
+    bg #2563eb
+    col white
+
+Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+  Tab "Home"
+  Tab "Projekte", active
+  Tab "Settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>exclusive()</code> macht zwei Dinge: Es aktiviert das geklickte Element und deaktiviert alle Geschwister des gleichen Typs.</p>
+      <p><strong>Gruppierung:</strong> Mirror erkennt automatisch, welche Elemente zusammengehören – alle <code>Tab</code>-Instanzen mit dem gleichen Parent bilden eine Gruppe.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Auf andere Elemente reagieren</h2>
+      <p>Manchmal soll ein Element sein Aussehen ändern, wenn ein <em>anderes</em> Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.</p>
+      <p>Dafür brauchst du zwei Dinge:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Gib dem steuernden Element einen <strong>Namen</strong> mit <code>name</code></li>
+        <li>Referenziere diesen Namen mit <code>Name.state:</code></li>
+      </ul>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
+    open:
+      bg #2563eb
+
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
+    MenuBtn.open:
+      visible
+    Text "Dashboard", col white, fs 14, pad 8
+    Text "Einstellungen", col white, fs 14, pad 8</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>MenuBtn.open:</code> bedeutet: "Wenn das Element namens MenuBtn im State 'open' ist, wende diese Styles an." Das Menü startet <code>hidden</code> und wird sichtbar, sobald der Button aktiviert wird.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Accordion</h2>
+      <p>Ein Accordion zeigt im geschlossenen Zustand nur einen Header, im offenen Zustand auch den Inhalt:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Panel: bg #1a1a1a, rad 8, clip, toggle()
+  Frame hor, spread, pad 16, cursor pointer
+    Text "Mehr anzeigen", col white, fs 14
+    Icon "chevron-down", ic #888, is 18
+  open:
+    Frame hor, spread, pad 16, cursor pointer
+      Text "Weniger anzeigen", col white, fs 14
+      Icon "chevron-up", ic #888, is 18
+    Frame pad 0 16 16 16, gap 8
+      Text "Hier ist der versteckte Inhalt.", col #888, fs 13
+
+Panel</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Base-State zeigt "Mehr anzeigen" mit Pfeil nach unten. Der <code>open</code>-State zeigt "Weniger anzeigen" mit Pfeil nach oben plus den zusätzlichen Inhalt.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Weitere Events</h2>
+      <p>Klick ist der Default – du schreibst einfach die Funktion. Für andere Events wie Tastatureingaben gibt es Shorthands:</p>
+      <h3>Tastatur: onenter, onescape</h3>
+      <p>Mit <code>onenter</code> oder <code>onescape</code> reagierst du auf Tastatureingaben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SearchStatus: col #888, fs 12, name Status
+  "Tippe und drücke Enter..."
+  searching:
+    col #2563eb
+    "Suche läuft..."
+
+SearchBox: hor, gap 8, bg #1a1a1a, pad 12, rad 8
+  Icon "search", ic #888, is 18
+  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, name SearchInput, onenter toggle()
+    searching:
+      bg #252525
+
+Frame gap 12
+  SearchBox
+  SearchStatus
+    SearchInput.searching:
+      searching</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Event</th><th>Beschreibung</th></tr>
+        <tr><td><code>onenter</code></td><td>Enter/Return-Taste</td></tr>
+        <tr><td><code>onescape</code></td><td>Escape-Taste</td></tr>
+        <tr><td><code>onspace</code></td><td>Leertaste</td></tr>
+        <tr><td><code>onkeydown arrow-up</code></td><td>Pfeiltaste hoch</td></tr>
+        <tr><td><code>onkeydown arrow-down</code></td><td>Pfeiltaste runter</td></tr>
+      </table>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <p>States definieren das Aussehen, Funktionen definieren Aktionen.</p>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>hover:</code></td><td>System-State (automatisch bei Maus-Hover)</td></tr>
+        <tr><td><code>on:</code></td><td>Custom State (visueller Block)</td></tr>
+        <tr><td><code>toggle()</code></td><td>Bei Klick State wechseln</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Nur dieser aktiv (Geschwister aus)</td></tr>
+        <tr><td><code>onenter search()</code></td><td>Bei Enter-Taste</td></tr>
+        <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State "on"</td></tr>
+        <tr><td><code>name MenuBtn</code></td><td>Element benennen</td></tr>
+        <tr><td><code>MenuBtn.open:</code></td><td>Styles wenn MenuBtn in "open"</td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="05-styling.html">&larr; 05-styling</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="07-functions.html">07-functions &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

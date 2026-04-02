@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Eingebaute Funktionen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Eingebaute Funktionen</h1>
+      <p class="subtitle">Standard-Interaktionen ohne JavaScript</p>
+    </header>
+
+    <p class="intro">In <a href="06-states.html">Kapitel 6</a> hast du <code>toggle()</code> und <code>exclusive()</code> kennengelernt. Mirror bietet weitere <strong>eingebaute Funktionen</strong> für typische UI-Patterns. Funktionen werden als Property geschrieben – Klick ist der Default-Event.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Übersicht</h2>
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>toggle()</code></td><td>State wechseln (binär oder cycle)</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Nur einer aktiv, Geschwister deaktivieren</td></tr>
+        <tr><td><code>show(Element)</code></td><td>Element einblenden</td></tr>
+        <tr><td><code>hide(Element)</code></td><td>Element ausblenden</td></tr>
+      </table>
+
+      <p class="note">Für Overlays (Dialoge, Dropdowns, Tooltips) siehe <a href="09-overlays.html">Kapitel 9: Overlays</a>. Für Navigation siehe <a href="08-navigation.html">Kapitel 8: Navigation</a>.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>show() und hide()</h2>
+      <p>Mit <code>show(Element)</code> und <code>hide(Element)</code> steuerst du die Sichtbarkeit anderer Elemente:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Button "Info anzeigen", pad 10 20, bg #2563eb, col white, rad 6, show(InfoBox)
+
+  Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
+    Text "Hier sind weitere Informationen.", col #ccc, fs 14
+    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(InfoBox)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Wichtig:</strong> Das Ziel-Element braucht einen <code>name</code>, damit du es referenzieren kannst.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Aufklappbares Menü</h2>
+      <p>Ein typisches Pattern: Button zeigt Menü, Schließen-Button versteckt es wieder:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  Button "Menü öffnen", pad 10 20, bg #333, col white, rad 6, show(Menu)
+
+  Frame name Menu, hidden, bg #1a1a1a, pad 8, rad 8, gap 2, w 180
+    Button "Profil", pad 10 16, bg transparent, col white, rad 4, w full
+      hover:
+        bg #333
+    Button "Einstellungen", pad 10 16, bg transparent, col white, rad 4, w full
+      hover:
+        bg #333
+    Divider bg #333, margin 4 0
+    Button "Schließen", pad 10 16, bg #333, col white, rad 4, w full, hide(Menu)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mehrere Aktionen</h2>
+      <p>Manchmal brauchst du mehrere Aktionen bei einem Klick. Der Button soll sein Aussehen ändern UND ein Panel zeigen. Dafür kombinierst du mehrere Funktionen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8
+  Button "Filter", name FilterBtn, pad 10 20, bg #333, col white, rad 6, toggle(), show(FilterPanel)
+    open:
+      bg #2563eb
+
+  Frame name FilterPanel, hidden, bg #1a1a1a, pad 16, rad 8, gap 12
+    Text "Filter-Optionen", col white, fs 14, weight 500
+    Frame gap 8
+      Button "Aktiv", pad 8 12, bg #252525, col white, rad 4
+      Button "Archiviert", pad 8 12, bg #252525, col white, rad 4
+    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(FilterPanel), toggle(FilterBtn)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note">Mehrere Funktionen werden nacheinander ausgeführt: <code>toggle(), show(Panel)</code></p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Eigene JavaScript-Funktionen</h2>
+      <p>Die eingebauten Funktionen decken Standard-Patterns ab. Für API-Calls, Validierung oder komplexe Logik schreibst du eigene Funktionen. Die Klammern <code>()</code> zeigen: Das ist ein Funktionsaufruf – egal ob eingebaut oder eigenes JavaScript:</p>
+      <div class="code-block">
+        <pre><span class="syn-comment">// Mirror-Code</span>
+<span class="syn-component">SaveBtn</span>: = Button <span class="syn-property">pad</span> 12 24, <span class="syn-property">bg</span> #333, <span class="syn-property">col</span> white, <span class="syn-property">rad</span> 6, save()
+  loading:
+    <span class="syn-property">bg</span> #666
+    <span class="syn-string">"Wird gespeichert..."</span>
+  success:
+    <span class="syn-property">bg</span> #10b981
+    <span class="syn-string">"Gespeichert!"</span>
+
+<span class="syn-component">SaveBtn</span> <span class="syn-string">"Speichern"</span></pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// JavaScript</span>
+<span class="syn-keyword">async function</span> save(element) {
+  element.state = <span class="syn-string">'loading'</span>
+  <span class="syn-keyword">const</span> response = <span class="syn-keyword">await</span> fetch(<span class="syn-string">'/api/save'</span>)
+  element.state = response.ok ? <span class="syn-string">'success'</span> : <span class="syn-string">'base'</span>
+}</pre>
+      </div>
+
+      <p><strong>Faustregel:</strong> Eingebaute Funktion wenn möglich, eigene Funktion wenn nötig.</p>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beispiel</th></tr>
+        <tr><td><code>toggle()</code></td><td><code>Button "X", toggle()</code></td></tr>
+        <tr><td><code>exclusive()</code></td><td><code>Tab "Home", exclusive()</code></td></tr>
+        <tr><td><code>show(Name)</code></td><td><code>Button "Open", show(Menu)</code></td></tr>
+        <tr><td><code>hide(Name)</code></td><td><code>Button "Close", hide(Menu)</code></td></tr>
+        <tr><td><code>eigene()</code></td><td><code>Button "Save", save()</code></td></tr>
+        <tr><td>Mehrere</td><td><code>Button "X", toggle(), show(Y)</code></td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="06-states.html">&larr; 06-states</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="08-navigation.html">08-navigation &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>
