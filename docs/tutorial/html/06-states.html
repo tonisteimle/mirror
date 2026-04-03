@@ -140,10 +140,8 @@ ExpandBtn</textarea>
       <p>Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. <code>toggle()</code> erkennt das automatisch und cyclet durch alle States:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
-  todo:
-    bg #333
-    Icon "circle", ic white, is 14
+          <textarea>StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
+  Icon "circle", ic white, is 14
   doing:
     bg #f59e0b
     Icon "clock", ic white, is 14
@@ -151,17 +149,18 @@ ExpandBtn</textarea>
     bg #10b981
     Icon "check", ic white, is 14
 
-StatusBtn "Task 1"</textarea>
+StatusBtn</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>toggle()</code> erkennt automatisch wie viele States du hast:</p>
+      <p>Der Base-State zeigt das "Todo"-Aussehen (grau mit Kreis). <code>toggle()</code> cyclet durch:</p>
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li><strong>1 State</strong> → binärer Wechsel: default ↔ state</li>
-        <li><strong>2+ States</strong> → Cycle: todo → doing → done → todo → ...</li>
+        <li>Klick 1: Base → doing (orange mit Uhr)</li>
+        <li>Klick 2: doing → done (grün mit Haken)</li>
+        <li>Klick 3: done → Base (zurück zum Anfang)</li>
       </ul>
-      <p class="note"><strong>Wichtig:</strong> Der <em>erste</em> definierte State ist der Startzustand. Die Reihenfolge der Definition bestimmt die Cycle-Reihenfolge.</p>
+      <p class="note">Der Base-State ist der Normalzustand. Bei mehreren Custom States bestimmt die Reihenfolge der Definition die Cycle-Reihenfolge.</p>
 
     </section>
 
@@ -253,19 +252,19 @@ Panel</textarea>
       <p>Mit <code>onkeyenter</code> oder <code>onkeyescape</code> reagierst du auf Tastatureingaben:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>SearchStatus: col #888, fs 12, name Status
+          <textarea>SearchStatus: col #888, fs 13
   "Tippe und drücke Enter..."
   searching:
     col #2563eb
     "Suche läuft..."
 
-SearchBox: hor, gap 8, bg #1a1a1a, pad 12, rad 8
-  Icon "search", ic #888, is 18
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, name SearchInput, onkeyenter toggle()
+SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
+  Icon "search", ic #666, is 16
+  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onkeyenter toggle()
     searching:
       bg #252525
 
-Frame gap 12
+Frame gap 8
   SearchBox
   SearchStatus
     SearchInput.searching:
@@ -293,7 +292,7 @@ Frame gap 12
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: = Button pad 12 24, rad 6, bg #333, col white, cursor pointer
+          <textarea>Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
     bg #444
 

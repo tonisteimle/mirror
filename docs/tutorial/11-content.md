@@ -2,7 +2,7 @@
 title: Content Management
 subtitle: Markdown-Inhalte und redaktionelle Texte
 prev: 10-variablen
-next: 12-abfragen
+next: 12-bedingungen
 ---
 
 Für redaktionelle Inhalte wie Artikel, Blog-Posts oder Dokumentation bietet Mirror Markdown-Unterstützung. Die Syntax ist überall gleich: inline in `.mir`-Dateien, in `.data`-Dateien oder als externe `.md`-Dateien.

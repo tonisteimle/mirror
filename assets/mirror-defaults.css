@@ -59,8 +59,8 @@
 
   /* Typography */
   --m-font: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --m-font-size: 14px;
-  --m-font-size-sm: 12px;
+  --m-font-size: 13px;
+  --m-font-size-sm: 11px;
   --m-line-height: 1.5;
 }
 

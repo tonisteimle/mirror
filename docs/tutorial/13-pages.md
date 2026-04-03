@@ -1,8 +1,8 @@
 ---
 title: Seiten
 subtitle: Apps mit mehreren Dateien
-prev: 17-bedingungen
-next: 19-fehler
+prev: 12-bedingungen
+next: 14-fehler
 ---
 
 Du kennst bereits Tabs – mehrere Inhalte, einer ist sichtbar. Für größere Apps funktioniert das gleiche Prinzip mit Dateien.
@@ -120,7 +120,7 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Title: col white, fs 16, weight 500
   Body: col #888, fs 14
 
-PrimaryBtn: = Button bg #2563eb, col white, pad 10 20, rad 6
+PrimaryBtn as Button: bg #2563eb, col white, pad 10 20, rad 6
 ```
 
 ```mirror

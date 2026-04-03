@@ -9,14 +9,10 @@ import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn } from '../ir/types'
 import { isIRZagNode, isIRTable } from '../ir/types'
-import { getTypeRenderer, getTypeRendererStyles, getValueFormatter } from '../schema/type-renderers'
-import type { InferredDataType } from '../schema/table-types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
 import { mergeDataFiles, serializeDataForJS } from '../parser/data-parser'
-import type { QueryFile } from '../parser/query-types'
-import { serializeQueriesForJS } from '../parser/query-parser'
 
 /**
  * Escape a string for safe inclusion in JavaScript code
@@ -38,8 +34,6 @@ function escapeJSString(s: string): string {
 export interface GenerateDOMOptions {
   /** Parsed .data files to include in output */
   dataFiles?: DataFile[]
-  /** Parsed .query files to include in output */
-  queryFiles?: QueryFile[]
 }
 
 /**
@@ -59,7 +53,7 @@ export interface GenerateDOMOptions {
  */
 export function generateDOM(ast: AST, options?: GenerateDOMOptions): string {
   const ir = toIR(ast)
-  const generator = new DOMGenerator(ir, ast.javascript, ast.tokens, options?.dataFiles, options?.queryFiles)
+  const generator = new DOMGenerator(ir, ast.javascript, ast.tokens, options?.dataFiles)
   return generator.generate()
 }
 
@@ -68,7 +62,6 @@ class DOMGenerator {
   private javascript?: JavaScriptBlock
   private astTokens: TokenDefinition[]
   private dataFiles?: DataFile[]
-  private queryFiles?: QueryFile[]
   private indent = 0
   private lines: string[] = []
   // Deferred when watchers - emitted after DOM is built
@@ -76,12 +69,11 @@ class DOMGenerator {
   // Token lookup map for resolving token-to-token references
   private tokenMap: Map<string, string | number> = new Map()
 
-  constructor(ir: IR, javascript?: JavaScriptBlock, astTokens: TokenDefinition[] = [], dataFiles?: DataFile[], queryFiles?: QueryFile[]) {
+  constructor(ir: IR, javascript?: JavaScriptBlock, astTokens: TokenDefinition[] = [], dataFiles?: DataFile[]) {
     this.ir = ir
     this.javascript = javascript
     this.astTokens = astTokens
     this.dataFiles = dataFiles
-    this.queryFiles = queryFiles
     // Build token lookup map (skip tokens without values, e.g., data objects)
     for (const token of astTokens) {
       if (token.value !== undefined) {
@@ -629,21 +621,10 @@ class DOMGenerator {
   }
 
   /**
-   * Generate computed queries from .query files
-   *
-   * Queries are serialized as functions that return derived collections:
-   *   __queries.TaskBoard = function() { return $get('tasks').map(...) }
+   * Generate computed queries (feature removed)
    */
   private emitQueries(): void {
-    if (!this.queryFiles || this.queryFiles.length === 0) return
-
-    const queriesJS = serializeQueriesForJS(this.queryFiles)
-    if (!queriesJS) return
-
-    // Emit each line of the serialized queries
-    for (const line of queriesJS.split('\n')) {
-      this.emit(line)
-    }
+    // Query files feature has been removed - this is now a no-op
   }
 
   private emitCreateUI(): void {
@@ -1485,13 +1466,6 @@ class DOMGenerator {
       this.emit(`width: '${col.width}px',`)
       this.emit(`flex: 'none',`)
     }
-    // Apply type-specific styles
-    const rendererStyles = getTypeRendererStyles(col.inferredType)
-    for (const [prop, value] of Object.entries(rendererStyles)) {
-      // Convert CSS property to camelCase
-      const camelProp = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
-      this.emit(`${camelProp}: '${value}',`)
-    }
     this.indent--
     this.emit(`})`)
 
@@ -1501,11 +1475,13 @@ class DOMGenerator {
       this.emit(`// Custom cell template for ${col.field}`)
       this.emit(`${cellVar}.textContent = ${rowVar}.${col.field}`)
     } else {
-      // Type-specific value rendering
-      const valueExpr = getValueFormatter(col.inferredType, `${rowVar}.${col.field}`, {
-        prefix: col.prefix,
-        suffix: col.suffix,
-      })
+      // Simple value rendering
+      const formatValue = (expr: string) => {
+        if (col.prefix && col.suffix) return `'${col.prefix}' + ${expr} + '${col.suffix}'`
+        if (col.prefix) return `'${col.prefix}' + ${expr}`
+        if (col.suffix) return `${expr} + '${col.suffix}'`
+        return expr
+      }
 
       switch (col.inferredType) {
         case 'boolean':
@@ -1522,29 +1498,12 @@ class DOMGenerator {
           this.emit(`} catch { ${cellVar}.textContent = ${rowVar}.${col.field} || '' }`)
           break
 
-        case 'relation':
-          this.emit(`${cellVar}.textContent = ${rowVar}.${col.field}?.name ?? ${rowVar}.${col.field} ?? ''`)
-          this.emit(`${cellVar}.style.color = 'var(--primary, #2563eb)'`)
-          break
-
         case 'array':
           this.emit(`${cellVar}.textContent = Array.isArray(${rowVar}.${col.field}) ? ${rowVar}.${col.field}.join(', ') : ''`)
           break
 
-        case 'number':
-          if (col.prefix || col.suffix) {
-            this.emit(`${cellVar}.textContent = ${valueExpr}`)
-          } else {
-            this.emit(`${cellVar}.textContent = ${rowVar}.${col.field}`)
-          }
-          break
-
         default:
-          if (col.prefix || col.suffix) {
-            this.emit(`${cellVar}.textContent = ${valueExpr}`)
-          } else {
-            this.emit(`${cellVar}.textContent = String(${rowVar}.${col.field} ?? '')`)
-          }
+          this.emit(`${cellVar}.textContent = ${formatValue(`String(${rowVar}.${col.field} ?? '')`)}`)
       }
     }
 
@@ -1987,6 +1946,7 @@ class DOMGenerator {
             } else if (propName === 'hor' || propName === 'horizontal') {
               this.emit(`${itemVar}.style.display = 'flex'`)
               this.emit(`${itemVar}.style.flexDirection = 'row'`)
+              this.emit(`${itemVar}.style.alignItems = 'center'`)
             } else if (propName === 'gap' || propName === 'g') {
               const gapValue = prop.values[0]
               this.emit(`${itemVar}.style.gap = '${gapValue}px'`)

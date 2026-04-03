@@ -1,8 +1,8 @@
 ---
 title: Bedingte Anzeige
 subtitle: Elemente basierend auf Bedingungen ein- und ausblenden
-prev: 16-forms
-next: 18-pages
+prev: 11-content
+next: 13-pages
 ---
 
 Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mirror bietet zwei Syntaxen: **Block Conditionals** für ganze Elemente und **Inline Conditionals** für Property-Werte.

@@ -91,15 +91,15 @@ Frame hor, gap 8, wrap
 
     <!-- ============================================================ -->
     <section>
-      <h2>Primitives erweitern mit =</h2>
-      <p>Wenn deine Komponente ein <strong>Primitive erweitert</strong> (Button, Input, Text, etc.), schreibst du <code>= Primitive</code> nach dem Doppelpunkt:</p>
+      <h2>Primitives erweitern mit as</h2>
+      <p>Wenn deine Komponente ein <strong>Primitive erweitert</strong> (Button, Input, Text, etc.), schreibst du <code>as Primitive</code> vor dem Doppelpunkt:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Erweitert das Button-Primitive
-PrimaryBtn: = Button pad 12 24, rad 6, bg #2563eb, col white
+PrimaryBtn as Button: pad 12 24, rad 6, bg #2563eb, col white
 
 // Erweitert das Input-Primitive
-SearchInput: = Input bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
+SearchInput as Input: bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
 
 Frame gap 12
   PrimaryBtn "Speichern"
@@ -108,15 +108,15 @@ Frame gap 12
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das <code>=</code> sagt: "Diese Komponente <em>ist</em> ein Button/Input/etc." Ohne <code>=</code> wäre es nur ein Container mit Properties.</p>
-      <h3>Wann = und wann nicht?</h3>
+      <p>Das <code>as Button</code> sagt: "Diese Komponente <em>ist</em> ein Button." Ohne <code>as</code> wäre es nur ein Container (Frame) mit Properties.</p>
+      <h3>Wann as und wann nicht?</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th><th>Beispiel</th></tr>
-        <tr><td><code>Name: = Primitive ...</code></td><td>Erweitert ein Primitive</td><td><code>Btn: = Button pad 12</code></td></tr>
+        <tr><td><code>Name as Primitive: ...</code></td><td>Erweitert ein Primitive</td><td><code>Btn as Button: pad 12</code></td></tr>
         <tr><td><code>Name: ...</code></td><td>Container mit Properties</td><td><code>Card: bg #1a1a1a, pad 16</code></td></tr>
       </table>
 
-      <p class="note"><strong>Faustregel:</strong> Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann <code>= Primitive</code>. Für Layout-Container (Cards, Panels) brauchst du kein <code>=</code>.</p>
+      <p class="note"><strong>Faustregel:</strong> Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann <code>as Primitive</code>. Für Layout-Container (Cards, Panels) brauchst du kein <code>as</code>.</p>
 
     </section>
 
@@ -265,7 +265,7 @@ Card
         <tr><td><code>Btn "OK"</code></td><td>Komponente verwenden</td></tr>
         <tr><td><code>Title:</code></td><td>Slot definieren (in Komponente)</td></tr>
         <tr><td><code>Title "Text"</code></td><td>Slot befüllen (bei Verwendung)</td></tr>
-        <tr><td><code>Btn: = Button ...</code></td><td>Primitive erweitern</td></tr>
+        <tr><td><code>Btn as Button: ...</code></td><td>Primitive erweitern</td></tr>
       </table>
 
     </div>

@@ -16,14 +16,16 @@
 
     <header>
       <h1>Was ist Mirror?</h1>
-      <p class="subtitle">Eine Beschreibungssprache für User Interfaces</p>
+      <p class="subtitle">Die Sprache für AI-unterstütztes UI-Design</p>
     </header>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Der Code ist das Design</h2>
-      <p>In Mirror beschreibst du, was du siehst:</p>
+      <h2>Die Zukunft des Designs</h2>
+      <p>Die Zukunft liegt im AI-unterstützten Design. AI generiert Code – aber heutige Programmiersprachen sind für Designer nicht lesbar. Kleine Änderungen werden zum Pain. Du bist abhängig von Entwicklern oder musst hoffen, dass die AI versteht was du meinst.</p>
+      <p><strong>Mirror löst dieses Problem.</strong></p>
+      <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können. AI generiert, du verfeinerst. Ohne Framework-Wissen, ohne Build-Tools, ohne Abhängigkeiten.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
@@ -31,8 +33,7 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist ein blauer Button mit weißem Text, Padding 12/24, Radius 6. Kein Import. Kein Export. Keine Konfiguration. Was du schreibst, erscheint auf dem Bildschirm.</p>
-      <p>Mirror kompiliert zu HTML, DOM oder React. Du baust keine Mockups – du baust funktionierende Prototypen.</p>
+      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2563eb</code> → <code>bg #10b981</code> und der Button ist grün. Keine Magie, keine versteckten Dateien.</p>
     </section>
 
 
@@ -92,7 +93,7 @@
 
       <div class="code-block">
         <pre><span class=<span class="syn-string">"syn-comment"</span>>// Nachher: Eine wiederverwendbare Komponente</span>
-<span class="syn-component">PrimaryBtn</span>: = Button <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12 24, <span class="syn-property">rad</span> 6
+<span class="syn-component">PrimaryBtn</span> as Button: <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12 24, <span class="syn-property">rad</span> 6
 
 <span class="syn-component">PrimaryBtn</span> <span class="syn-string">"Speichern"</span>
 <span class="syn-component">PrimaryBtn</span> <span class="syn-string">"Senden"</span>
@@ -197,14 +198,17 @@ ExpandBtn</textarea>
 
     <!-- ============================================================ -->
     <section>
-      <h2>Zusammenarbeit mit AI</h2>
-      <p>Mirror ist einfach genug, dass AI es versteht und generiert. Aber auch einfach genug, dass Menschen es lesen und anpassen können.</p>
-      <p>Das bedeutet:</p>
-      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li>AI kann komplexe Layouts erstellen</li>
-        <li>Du kannst Details selbst ändern – eine Farbe, einen Abstand, einen Text</li>
-        <li>Der Code dokumentiert Design-Entscheidungen, die Mensch und AI verstehen</li>
-      </ul>
+      <h2>Mensch + AI = besseres Design</h2>
+      <p>Mirror wurde für die Zusammenarbeit mit AI entwickelt:</p>
+      <div class="code-block">
+        <pre>Du: "Erstelle eine Card mit Avatar, Name und Rolle"
+AI: generiert Mirror-Code
+Du: "Der Avatar soll größer sein"
+AI: ändert `is 24` → `is 32`
+Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
+      </div>
+
+      <p><strong>Das ist der entscheidende Unterschied:</strong> Du bist nicht ausgeliefert. Du verstehst was die AI generiert hat. Du kannst selbst eingreifen – eine Farbe ändern, einen Abstand anpassen, ein Element verschieben. Der Code gehört dir.</p>
     </section>
 
 

@@ -622,6 +622,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
         css: [
           { property: 'display', value: 'flex' },
           { property: 'flex-direction', value: 'row' },
+          { property: 'align-items', value: 'center' },
         ],
         example: 'Box hor',
       },

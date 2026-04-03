@@ -1,7 +1,7 @@
 ---
 title: Häufige Fehler
 subtitle: Was nicht funktioniert und warum
-prev: 18-pages
+prev: 13-pages
 ---
 
 Dieses Kapitel zeigt typische Fehler und ihre Korrektur. Jeder Fehler hat ein "Falsch"-Beispiel, ein "Richtig"-Beispiel und eine kurze Erklärung.
@@ -168,7 +168,7 @@ PrimaryBtn: pad 12, bg #2563eb
 
 **Warum:** Ohne Doppelpunkt wäre es eine Verwendung, keine Definition. Die Komponente würde nicht erstellt.
 
-### = bei Primitive-Erweiterung vergessen
+### as bei Primitive-Erweiterung vergessen
 
 ```mirror-static
 // FALSCH
@@ -177,35 +177,35 @@ PrimaryBtn: Button pad 12, bg #2563eb
 
 ```mirror-static
 // RICHTIG
-PrimaryBtn: = Button pad 12, bg #2563eb
+PrimaryBtn as Button: pad 12, bg #2563eb
 ```
 
-**Warum:** Wenn eine Komponente ein Primitive erweitert (Button, Frame, Text, etc.), braucht es das `=` Zeichen. Bei Slot-Komponenten ohne Primitive-Basis ist kein `=` nötig.
+**Warum:** Wenn eine Komponente ein Primitive erweitert (Button, Input, Text, etc.), schreibst du `as Primitive` vor dem Doppelpunkt. Bei Container-Komponenten ohne Primitive-Basis ist kein `as` nötig.
 
-### = mit Slots mischen
+### as mit Slots mischen
 
 ```mirror-static
-// FALSCH – = Button UND Slots geht nicht!
-NavItem: = Button hor, gap 10, pad 12
+// FALSCH – as Button UND Slots geht nicht!
+NavItem as Button: hor, gap 10, pad 12
   Icon: is 18
   Label: col white
 ```
 
 ```mirror-static
-// RICHTIG – Entweder = Primitive OHNE Slots:
-NavItem: = Button hor, gap 10, pad 12
+// RICHTIG – Entweder as Primitive OHNE Slots:
+NavItem as Button: hor, gap 10, pad 12
   Icon "home", is 18
   Text "Label"
 ```
 
 ```mirror-static
-// ODER Slots OHNE = Primitive:
+// ODER Slots OHNE as Primitive:
 NavItem: hor, gap 10, pad 12
   ItemIcon: is 18
   ItemLabel: col white
 ```
 
-**Warum:** `= Primitive` erweitert ein Element – Kinder sind dann normale Elemente, keine Slots. Slots (mit `:`) nur bei Container-Komponenten ohne `=`.
+**Warum:** `as Primitive` erweitert ein Element – Kinder sind dann normale Elemente, keine Slots. Slots (mit `:`) nur bei Container-Komponenten ohne `as`.
 
 ## States
 

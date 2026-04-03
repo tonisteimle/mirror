@@ -95,7 +95,7 @@ Die eingebauten Funktionen decken Standard-Patterns ab. Für API-Calls, Validier
 
 ```mirror-static
 // Mirror-Code
-SaveBtn: = Button pad 12 24, bg #333, col white, rad 6, save()
+SaveBtn as Button: pad 12 24, bg #333, col white, rad 6, save()
   loading:
     bg #666
     "Wird gespeichert..."

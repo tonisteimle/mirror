@@ -18,10 +18,6 @@ export type { ReadFileFn, ListFilesFn, ProjectFiles } from './preprocessor'
 export { parseDataFile, parseDataFiles, mergeDataFiles, serializeDataForJS } from './parser/data-parser'
 export type { DataFile, DataEntry, DataAttribute, DataMarkdownBlock, DataParseError, DataValue } from './parser/data-types'
 
-// Query parser for .query files
-export { parseQueryFile, parseQueryFiles, serializeQueriesForJS } from './parser/query-parser'
-export type { QueryFile, QueryDefinition, QueryField, QueryParseError } from './parser/query-types'
-
 export type { AST, Node } from './parser/ast'
 export type { IR, SourcePosition, PropertySourceMap, IRZagNode, IRSlot, IRItem } from './ir/types'
 
@@ -37,15 +33,12 @@ import { generateDOM } from './backends/dom'
 import { combineProjectFiles, combineProjectFilesWithData, ReadFileFn, ListFilesFn } from './preprocessor'
 import { parseDataFiles, mergeDataFiles } from './parser/data-parser'
 import type { DataFile } from './parser/data-types'
-import type { QueryFile } from './parser/query-types'
 
 export interface CompileOptions {
   /** For simple single-file compilation (no project structure) */
   code?: string
   /** Optional parsed data files to include in output */
   dataFiles?: DataFile[]
-  /** Optional parsed query files to include in output */
-  queryFiles?: QueryFile[]
 }
 
 export interface CompileProjectOptions {
@@ -62,9 +55,9 @@ export interface CompileProjectOptions {
  * @param options - Optional compile options (dataFiles)
  * @returns Generated JavaScript code
  */
-export function compile(code: string, options?: { dataFiles?: DataFile[]; queryFiles?: QueryFile[] }): string {
+export function compile(code: string, options?: { dataFiles?: DataFile[] }): string {
   const ast = parse(code)
-  return generateDOM(ast, { dataFiles: options?.dataFiles, queryFiles: options?.queryFiles })
+  return generateDOM(ast, { dataFiles: options?.dataFiles })
 }
 
 /**

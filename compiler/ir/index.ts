@@ -3000,8 +3000,8 @@ class IRTransformer {
       if (vAlign) {
         ctx.alignItems = alignValue(vAlign)
       } else if (!ctx.alignItems) {
-        // Default for horizontal layouts: top-aligned (flex-start)
-        ctx.alignItems = 'flex-start'
+        // Default for horizontal layouts: vertically centered
+        ctx.alignItems = 'center'
       }
     }
 

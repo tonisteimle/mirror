@@ -106,10 +106,8 @@ Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-Sta
 Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. `toggle()` erkennt das automatisch und cyclet durch alle States:
 
 ```mirror
-StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
-  todo:
-    bg #333
-    Icon "circle", ic white, is 14
+StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
+  Icon "circle", ic white, is 14
   doing:
     bg #f59e0b
     Icon "clock", ic white, is 14
@@ -117,15 +115,16 @@ StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
     bg #10b981
     Icon "check", ic white, is 14
 
-StatusBtn "Task 1"
+StatusBtn
 ```
 
-`toggle()` erkennt automatisch wie viele States du hast:
+Der Base-State zeigt das "Todo"-Aussehen (grau mit Kreis). `toggle()` cyclet durch:
 
-- **1 State** → binärer Wechsel: default ↔ state
-- **2+ States** → Cycle: todo → doing → done → todo → ...
+- Klick 1: Base → doing (orange mit Uhr)
+- Klick 2: doing → done (grün mit Haken)
+- Klick 3: done → Base (zurück zum Anfang)
 
-> **Note:** **Wichtig:** Der _erste_ definierte State ist der Startzustand. Die Reihenfolge der Definition bestimmt die Cycle-Reihenfolge.
+> **Note:** Der Base-State ist der Normalzustand. Bei mehreren Custom States bestimmt die Reihenfolge der Definition die Cycle-Reihenfolge.
 
 ## Nur einer aktiv: exclusive()
 
@@ -201,19 +200,19 @@ Klick ist der Default – du schreibst einfach die Funktion. Für andere Events 
 Mit `onkeyenter` oder `onkeyescape` reagierst du auf Tastatureingaben:
 
 ```mirror
-SearchStatus: col #888, fs 12, name Status
+SearchStatus: col #888, fs 13
   "Tippe und drücke Enter..."
   searching:
     col #2563eb
     "Suche läuft..."
 
-SearchBox: hor, gap 8, bg #1a1a1a, pad 12, rad 8
-  Icon "search", ic #888, is 18
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, name SearchInput, onkeyenter toggle()
+SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
+  Icon "search", ic #666, is 16
+  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onkeyenter toggle()
     searching:
       bg #252525
 
-Frame gap 12
+Frame gap 8
   SearchBox
   SearchStatus
     SearchInput.searching:
@@ -239,7 +238,7 @@ Für andere Tasten verwendest du die vollständige Syntax:
 | `onkeydown tab:` | Tab-Taste |
 
 ```mirror
-Btn: = Button pad 12 24, rad 6, bg #333, col white, cursor pointer
+Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
     bg #444
 

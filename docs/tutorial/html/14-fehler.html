@@ -177,7 +177,7 @@ $spacing.<span class="syn-property">pad</span>: 16</pre>
       </div>
 
       <p><strong>Warum:</strong> Ohne Doppelpunkt wäre es eine Verwendung, keine Definition. Die Komponente würde nicht erstellt.</p>
-      <h3>= bei Primitive-Erweiterung vergessen</h3>
+      <h3>as bei Primitive-Erweiterung vergessen</h3>
       <div class="code-block">
         <pre><span class=<span class="syn-string">"syn-comment"</span>>// FALSCH</span>
 <span class="syn-component">PrimaryBtn</span>: Button <span class="syn-property">pad</span> 12, <span class="syn-property">bg</span> #2563eb</pre>
@@ -185,33 +185,33 @@ $spacing.<span class="syn-property">pad</span>: 16</pre>
 
       <div class="code-block">
         <pre><span class=<span class="syn-string">"syn-comment"</span>>// RICHTIG</span>
-<span class="syn-component">PrimaryBtn</span>: = Button <span class="syn-property">pad</span> 12, <span class="syn-property">bg</span> #2563eb</pre>
+<span class="syn-component">PrimaryBtn</span> as Button: <span class="syn-property">pad</span> 12, <span class="syn-property">bg</span> #2563eb</pre>
       </div>
 
-      <p><strong>Warum:</strong> Wenn eine Komponente ein Primitive erweitert (Button, Frame, Text, etc.), braucht es das <code>=</code> Zeichen. Bei Slot-Komponenten ohne Primitive-Basis ist kein <code>=</code> nötig.</p>
-      <h3>= mit Slots mischen</h3>
+      <p><strong>Warum:</strong> Wenn eine Komponente ein Primitive erweitert (Button, Input, Text, etc.), schreibst du <code>as Primitive</code> vor dem Doppelpunkt. Bei Container-Komponenten ohne Primitive-Basis ist kein <code>as</code> nötig.</p>
+      <h3>as mit Slots mischen</h3>
       <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// FALSCH – = Button UND Slots geht nicht!</span>
-<span class="syn-component">NavItem</span>: = Button <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 10, <span class="syn-property">pad</span> 12
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// FALSCH – as Button UND Slots geht nicht!</span>
+<span class="syn-component">NavItem</span> as Button: <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 10, <span class="syn-property">pad</span> 12
   <span class="syn-component">Icon</span>: is 18
   <span class="syn-component">Label</span>: <span class="syn-property">col</span> white</pre>
       </div>
 
       <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// RICHTIG – Entweder = Primitive OHNE Slots:</span>
-<span class="syn-component">NavItem</span>: = Button <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 10, <span class="syn-property">pad</span> 12
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// RICHTIG – Entweder as Primitive OHNE Slots:</span>
+<span class="syn-component">NavItem</span> as Button: <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 10, <span class="syn-property">pad</span> 12
   <span class="syn-component">Icon</span> <span class="syn-string">"home"</span>, is 18
   <span class="syn-component">Text</span> <span class="syn-string">"Label"</span></pre>
       </div>
 
       <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// ODER Slots OHNE = Primitive:</span>
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// ODER Slots OHNE as Primitive:</span>
 <span class="syn-component">NavItem</span>: <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 10, <span class="syn-property">pad</span> 12
   <span class="syn-component">ItemIcon</span>: is 18
   <span class="syn-component">ItemLabel</span>: <span class="syn-property">col</span> white</pre>
       </div>
 
-      <p><strong>Warum:</strong> <code>= Primitive</code> erweitert ein Element – Kinder sind dann normale Elemente, keine Slots. Slots (mit <code>:</code>) nur bei Container-Komponenten ohne <code>=</code>.</p>
+      <p><strong>Warum:</strong> <code>as Primitive</code> erweitert ein Element – Kinder sind dann normale Elemente, keine Slots. Slots (mit <code>:</code>) nur bei Container-Komponenten ohne <code>as</code>.</p>
     </section>
 
 
@@ -436,7 +436,7 @@ $spacing.<span class="syn-property">pad</span>: 16</pre>
 
 
     <nav>
-      <a class="prev" href="18-pages.html">&larr; 18-pages</a>
+      <a class="prev" href="13-pages.html">&larr; 13-pages</a>
       <a class="index" href="index.html">Übersicht</a>
       <span class="next"></span>
     </nav>

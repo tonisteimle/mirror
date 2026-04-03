@@ -166,7 +166,7 @@ Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
 
 ```mirror
 // Nachher: Eine wiederverwendbare Komponente
-PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
+PrimaryBtn as Button: bg #2563eb, col white, pad 12 24, rad 6
 
 PrimaryBtn "Speichern"
 PrimaryBtn "Senden"
@@ -1408,10 +1408,8 @@ Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-Sta
 Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. `toggle()` erkennt das automatisch und cyclet durch alle States:
 
 ```mirror
-StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
-  todo:
-    bg #333
-    Icon "circle", ic white, is 14
+StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
+  Icon "circle", ic white, is 14
   doing:
     bg #f59e0b
     Icon "clock", ic white, is 14
@@ -1419,15 +1417,16 @@ StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
     bg #10b981
     Icon "check", ic white, is 14
 
-StatusBtn "Task 1"
+StatusBtn
 ```
 
-`toggle()` erkennt automatisch wie viele States du hast:
+Der Base-State zeigt das "Todo"-Aussehen (grau mit Kreis). `toggle()` cyclet durch:
 
-- **1 State** → binärer Wechsel: default ↔ state
-- **2+ States** → Cycle: todo → doing → done → todo → ...
+- Klick 1: Base → doing (orange mit Uhr)
+- Klick 2: doing → done (grün mit Haken)
+- Klick 3: done → Base (zurück zum Anfang)
 
-> **Note:** **Wichtig:** Der _erste_ definierte State ist der Startzustand. Die Reihenfolge der Definition bestimmt die Cycle-Reihenfolge.
+> **Note:** Der Base-State ist der Normalzustand. Bei mehreren Custom States bestimmt die Reihenfolge der Definition die Cycle-Reihenfolge.
 
 ## Nur einer aktiv: exclusive()
 
@@ -3084,7 +3083,7 @@ settings.mirror    ← Inhalt für "Settings"
 ```mirror
 // components.mirror
 Card: bg #1a1a1a, pad 16, rad 8
-PrimaryBtn: = Button bg #2563eb, col white, pad 10 20, rad 6
+PrimaryBtn as Button: bg #2563eb, col white, pad 10 20, rad 6
 ```
 
 ```mirror
@@ -3271,7 +3270,7 @@ PrimaryBtn: pad 12, bg #2563eb
 
 **Warum:** Ohne Doppelpunkt wäre es eine Verwendung, keine Definition. Die Komponente würde nicht erstellt.
 
-### = bei Primitive-Erweiterung vergessen
+### as bei Primitive-Erweiterung vergessen
 
 ```mirror
 // FALSCH
@@ -3280,10 +3279,10 @@ PrimaryBtn: Button pad 12, bg #2563eb
 
 ```mirror
 // RICHTIG
-PrimaryBtn: = Button pad 12, bg #2563eb
+PrimaryBtn as Button: pad 12, bg #2563eb
 ```
 
-**Warum:** Wenn eine Komponente ein Primitive erweitert (Button, Frame, Text, etc.), braucht es das `=` Zeichen. Bei Slot-Komponenten ohne Primitive-Basis ist kein `=` nötig.
+**Warum:** Wenn eine Komponente ein Primitive erweitert (Button, Input, Text, etc.), schreibst du `as Primitive` vor dem Doppelpunkt. Bei Container-Komponenten ohne Primitive-Basis ist kein `as` nötig.
 
 ## States
 

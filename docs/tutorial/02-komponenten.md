@@ -58,32 +58,32 @@ Frame hor, gap 8, wrap
 
 `Btn "Grau", bg #333` überschreibt nur die Hintergrundfarbe. Padding, Radius und Textfarbe kommen weiterhin von der Definition.
 
-## Primitives erweitern mit =
+## Primitives erweitern mit as
 
-Wenn deine Komponente ein **Primitive erweitert** (Button, Input, Text, etc.), schreibst du `= Primitive` nach dem Doppelpunkt:
+Wenn deine Komponente ein **Primitive erweitert** (Button, Input, Text, etc.), schreibst du `as Primitive` vor dem Doppelpunkt:
 
 ```mirror
 // Erweitert das Button-Primitive
-PrimaryBtn: = Button pad 12 24, rad 6, bg #2563eb, col white
+PrimaryBtn as Button: pad 12 24, rad 6, bg #2563eb, col white
 
 // Erweitert das Input-Primitive
-SearchInput: = Input bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
+SearchInput as Input: bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
 
 Frame gap 12
   PrimaryBtn "Speichern"
   SearchInput placeholder "Suche..."
 ```
 
-Das `=` sagt: "Diese Komponente *ist* ein Button/Input/etc." Ohne `=` wäre es nur ein Container mit Properties.
+Das `as Button` sagt: "Diese Komponente *ist* ein Button." Ohne `as` wäre es nur ein Container (Frame) mit Properties.
 
-### Wann = und wann nicht?
+### Wann as und wann nicht?
 
 | Syntax | Bedeutung | Beispiel |
 |--------|-----------|----------|
-| `Name: = Primitive ...` | Erweitert ein Primitive | `Btn: = Button pad 12` |
+| `Name as Primitive: ...` | Erweitert ein Primitive | `Btn as Button: pad 12` |
 | `Name: ...` | Container mit Properties | `Card: bg #1a1a1a, pad 16` |
 
-> **Faustregel:** Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann `= Primitive`. Für Layout-Container (Cards, Panels) brauchst du kein `=`.
+> **Faustregel:** Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann `as Primitive`. Für Layout-Container (Cards, Panels) brauchst du kein `as`.
 
 ## Komponenten mit Kindern
 
@@ -207,4 +207,4 @@ Der Vorteil: Die gesamte Formatierung ist in der Definition. Bei der Verwendung 
 | `Btn "OK"` | Komponente verwenden |
 | `Title:` | Slot definieren (in Komponente) |
 | `Title "Text"` | Slot befüllen (bei Verwendung) |
-| `Btn: = Button ...` | Primitive erweitern |
+| `Btn as Button: ...` | Primitive erweitern |

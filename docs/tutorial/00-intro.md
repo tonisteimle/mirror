@@ -66,7 +66,7 @@ Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
 
 ```mirror-static
 // Nachher: Eine wiederverwendbare Komponente
-PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
+PrimaryBtn as Button: bg #2563eb, col white, pad 12 24, rad 6
 
 PrimaryBtn "Speichern"
 PrimaryBtn "Senden"
