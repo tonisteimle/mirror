@@ -1,6 +1,22 @@
 # Mirror
 
-DSL für rapid UI prototyping. Kompiliert zu DOM oder React.
+**Die Sprache für AI-unterstütztes UI-Design.**
+
+Mirror ist eine DSL, die AI versteht *und* Menschen lesen können. AI generiert Code, Designer verfeinern ihn – ohne Framework-Wissen, ohne Build-Tools.
+
+## Vision
+
+Die Zukunft liegt im AI-unterstützten Design. AI generiert Code – aber heutige Programmiersprachen sind für Designer nicht lesbar. Mirror löst dieses Problem:
+
+- **Lesbar**: Kurze, eindeutige Syntax (`bg #2563eb`, `pad 12`, `hor`)
+- **Veränderbar**: Designer können AI-generierten Code selbst anpassen
+- **Kompilierbar**: Echte Prototypen, nicht nur Mockups (DOM oder React)
+
+```mirror
+Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
+```
+
+Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern.
 
 ## Projekt-Übersicht
 
