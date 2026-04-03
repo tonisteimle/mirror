@@ -1,95 +1,76 @@
 ---
-title: Vererbung & Tokens
-subtitle: Varianten erstellen und Werte zentral verwalten
+title: Design Tokens
+subtitle: Werte zentral definieren und überall verwenden
 prev: 02-komponenten
 next: 04-layout
 ---
 
-Dieses Kapitel zeigt zwei Konzepte für skalierbare UIs: Mit `as` erstellst du Varianten einer Komponente (z.B. PrimaryBtn, DangerBtn). Mit Tokens definierst du Werte zentral und verwendest sie überall.
+Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du **Werte** abstrahierst: Farben, Abstände, Radien. Statt `#2563eb` überall zu wiederholen, definierst du es einmal als Token.
 
-## Das Problem: Ähnliche Komponenten
+## Das Problem: Magische Werte
 
-Du hast einen Button definiert und brauchst nun Varianten – Primary, Danger, Ghost. Ohne Vererbung müsstest du alles kopieren:
+Schau dir diesen Code an – die Farbe `#2563eb` taucht überall auf:
 
 ```mirror
-// Ohne Vererbung: Alles wiederholen
-PrimaryBtn: pad 10 20, rad 6, cursor pointer, bg #2563eb, col white
-DangerBtn: pad 10 20, rad 6, cursor pointer, bg #ef4444, col white
-GhostBtn: pad 10 20, rad 6, cursor pointer, bg transparent, col #888, bor 1, boc #333
+Btn: pad 10 20, rad 6, bg #2563eb, col white
+Link: col #2563eb, underline
+Badge: bg #2563eb, col white, pad 4 8, rad 4, fs 12
+
+Frame gap 12
+  Btn "Speichern"
+  Link "Mehr erfahren"
+  Badge "Neu"
+```
+
+Was passiert, wenn du die Primärfarbe ändern willst? Du musst jede Stelle finden und anpassen. Bei großen Projekten ist das fehleranfällig.
+
+## Tokens definieren
+
+Ein Token ist ein Name für einen Wert. Die Syntax: `$name.suffix: wert`
+
+```mirror
+// Token definieren
+$primary.bg: #2563eb
+
+// Token verwenden (ohne Suffix!)
+Btn: bg $primary, col white, pad 10 20, rad 6
 
 Frame hor, gap 8
-  PrimaryBtn "Speichern"
-  DangerBtn "Löschen"
-  GhostBtn "Abbrechen"
+  Btn "Speichern"
+  Btn "Senden"
+  Btn "Weiter"
 ```
 
-Das Problem: `pad 10 20, rad 6, cursor pointer` wird dreimal wiederholt. Änderst du das Padding, musst du es überall anpassen.
+Bei der **Definition** schreibst du den Suffix (`.bg`), bei der **Verwendung** nicht. Das Property (`bg`) zeigt bereits, welcher Typ gemeint ist.
 
-## Vererbung mit as
+## Warum Suffixe?
 
-Mit `as` erbst du von einer Basis-Komponente und überschreibst nur das, was sich unterscheidet:
+Der Suffix sagt, wofür der Token gedacht ist:
 
-```mirror
-// Basis-Button
-Btn: pad 10 20, rad 6, cursor pointer
+| Suffix | Bedeutung | Beispiel |
+|--------|-----------|----------|
+| `.bg` | Hintergrundfarbe | `$primary.bg: #2563eb` |
+| `.col` | Textfarbe | `$muted.col: #888` |
+| `.boc` | Border-Farbe | `$border.boc: #333` |
+| `.rad` | Radius | `$card.rad: 8` |
+| `.pad` | Padding | `$space.pad: 16` |
+| `.gap` | Abstand | `$space.gap: 12` |
 
-// Varianten erben mit "as"
-PrimaryBtn as Btn: bg #2563eb, col white
-DangerBtn as Btn: bg #ef4444, col white
-GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
-
-Frame hor, gap 8
-  PrimaryBtn "Speichern"
-  DangerBtn "Löschen"
-  GhostBtn "Abbrechen"
-```
-
-## Vererbung mit Slots
-
-Auch Komponenten mit Slots können vererbt werden:
+Das ermöglicht intelligentes Autocomplete: Tippst du `bg $`, zeigt die IDE nur Tokens mit `.bg` Suffix.
 
 ```mirror
-// Basis-Card
-Card: bg #1a1a1a, pad 16, rad 8, gap 8
-  Title: fs 16, weight 500, col white
-  Body: col #888, fs 14
-
-// Feature-Card erbt und erweitert
-FeatureCard as Card: bor 1, boc #333
-  Icon: margin 0 0 8 0
-
-// Verwendung
-FeatureCard
-  Icon
-    Icon "zap", ic #f59e0b, is 24
-  Title "Schnell"
-  Body "Kompiliert in Millisekunden"
-```
-
-## Design Tokens definieren
-
-Tokens sind zentrale Werte für konsistentes Design. Bei der **Definition** gibst du einen Suffix an (`.bg`, `.col`, `.rad`), bei der **Verwendung** nicht – das Property sagt bereits, welcher Typ erwartet wird:
-
-```mirror
-// 1. TOKENS – Definition MIT Suffix
-$btn.bg: #2563eb
-$btn.col: white
+$primary.bg: #2563eb
+$primary.col: white
 $card.bg: #1a1a1a
 $card.rad: 8
 
-// 2. KOMPONENTEN – Tokens verwenden (OHNE Suffix)
-Card: bg $card, rad $card, pad 16, gap 8
-  Title: col white, fs 16, weight 500
+// Jeder Token am richtigen Property
+Btn: bg $primary, col $primary, pad 10 20, rad 6
+Card: bg $card, rad $card, pad 16
 
-Btn: bg $btn, col $btn, pad 10 20, rad 6
-
-// 3. INSTANZEN – sauber, nur Inhalt
 Card
-  Title "Mit Tokens"
-  Btn "Primary"
+  Btn "In der Card"
 ```
-
-**Warum Suffixe?** Sie ermöglichen intelligentes Autocomplete: Tippst du `bg $`, zeigt die IDE nur Tokens mit `.bg` Suffix. Bei `rad $` nur `.rad` Tokens.
 
 ## Semantische Tokens
 
@@ -160,7 +141,10 @@ Der Vorteil: Instanzen sind lesbar wie ein Dokument. Alle Design-Entscheidungen 
 
 | Syntax | Bedeutung |
 |--------|-----------|
-| `Child as Parent:` | Vererbung – Varianten einer Komponente |
-| `$blue.bg: #2563eb` | Primitiver Token – Rohwert |
-| `$primary.bg: $blue` | Semantischer Token – referenziert anderen Token |
+| `$primary.bg: #2563eb` | Token definieren (mit Suffix) |
 | `bg $primary` | Token verwenden (ohne Suffix) |
+| `$primary.bg: $blue` | Semantischer Token (referenziert anderen) |
+
+**Drei Stufen:** Tokens → Komponenten → Instanzen
+
+Tokens abstrahieren Werte, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.

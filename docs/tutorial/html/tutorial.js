@@ -81,7 +81,7 @@ function initializePlaygrounds() {
         // Inject mirror-defaults.css into Shadow DOM
         const link = document.createElement('link')
         link.rel = 'stylesheet'
-        link.href = '../../assets/mirror-defaults.css'
+        link.href = '../../../assets/mirror-defaults.css'
         shadow.appendChild(link)
 
         const code = MirrorLang.compile(textarea.value)
@@ -121,9 +121,118 @@ function initializePlaygrounds() {
   })
 }
 
+/**
+ * Tutorial Sidebar Navigation
+ *
+ * Creates a responsive sidebar that appears on wide screens.
+ * The navigation structure is defined here and injected into the DOM.
+ */
+
+const tutorialNavigation = [
+  {
+    section: 'Start',
+    items: [
+      { num: '00', title: 'Intro', file: '00-intro.html' },
+    ]
+  },
+  {
+    section: 'Grundlagen',
+    items: [
+      { num: '01', title: 'Elemente', file: '01-elemente.html' },
+      { num: '02', title: 'Komponenten', file: '02-komponenten.html' },
+      { num: '03', title: 'Tokens', file: '03-tokens.html' },
+      { num: '04', title: 'Layout', file: '04-layout.html' },
+      { num: '05', title: 'Styling', file: '05-styling.html' },
+    ]
+  },
+  {
+    section: 'Interaktion',
+    items: [
+      { num: '06', title: 'States', file: '06-states.html' },
+      { num: '07', title: 'Functions', file: '07-functions.html' },
+      { num: '08', title: 'Navigation', file: '08-navigation.html' },
+      { num: '09', title: 'Overlays', file: '09-overlays.html' },
+    ]
+  },
+  {
+    section: 'Daten',
+    items: [
+      { num: '10', title: 'Variablen', file: '10-variablen.html' },
+      { num: '11', title: 'Content', file: '11-content.html' },
+      { num: '12', title: 'Bedingungen', file: '12-bedingungen.html' },
+      { num: '13', title: 'Pages', file: '13-pages.html' },
+    ]
+  },
+  {
+    section: 'Referenz',
+    items: [
+      { num: '14', title: 'Häufige Fehler', file: '14-fehler.html' },
+    ]
+  },
+]
+
+function createTutorialSidebar() {
+  // Don't create sidebar on index page
+  const currentFile = window.location.pathname.split('/').pop() || 'index.html'
+  if (currentFile === 'index.html' || currentFile === 'playground.html') return
+
+  // Create sidebar element
+  const sidebar = document.createElement('aside')
+  sidebar.className = 'tutorial-sidebar'
+
+  // Header with logo
+  const header = document.createElement('div')
+  header.className = 'tutorial-sidebar-header'
+  header.innerHTML = `
+    <a href="index.html">
+      <img src="logo.svg" alt="Mirror">
+      <span>Tutorial</span>
+    </a>
+  `
+  sidebar.appendChild(header)
+
+  // Create navigation sections
+  for (const section of tutorialNavigation) {
+    const sectionEl = document.createElement('div')
+    sectionEl.className = 'tutorial-sidebar-section'
+
+    const titleEl = document.createElement('div')
+    titleEl.className = 'tutorial-sidebar-section-title'
+    titleEl.textContent = section.section
+    sectionEl.appendChild(titleEl)
+
+    for (const item of section.items) {
+      const link = document.createElement('a')
+      link.className = 'tutorial-sidebar-link'
+      link.href = item.file
+
+      // Mark current page as active
+      if (currentFile === item.file) {
+        link.classList.add('active')
+      }
+
+      link.innerHTML = `
+        <span class="tutorial-sidebar-link-num">${item.num}</span>
+        <span>${item.title}</span>
+      `
+      sectionEl.appendChild(link)
+    }
+
+    sidebar.appendChild(sectionEl)
+  }
+
+  // Add sidebar to page
+  document.body.insertBefore(sidebar, document.body.firstChild)
+  document.body.classList.add('has-sidebar')
+}
+
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializePlaygrounds)
+  document.addEventListener('DOMContentLoaded', () => {
+    initializePlaygrounds()
+    createTutorialSidebar()
+  })
 } else {
   initializePlaygrounds()
+  createTutorialSidebar()
 }

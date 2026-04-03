@@ -1,7 +1,7 @@
 ---
 title: Häufige Fehler
 subtitle: Was nicht funktioniert und warum
-prev: 13-pages
+prev: 14-pages
 ---
 
 Dieses Kapitel zeigt typische Fehler und ihre Korrektur. Jeder Fehler hat ein "Falsch"-Beispiel, ein "Richtig"-Beispiel und eine kurze Erklärung.
@@ -88,34 +88,18 @@ Frame pad 16
 
 ## Tokens
 
-### Token ohne $ definieren
-
-```mirror-static
-// FALSCH
-primary: #2563eb
-card.bg: #1a1a1a
-```
-
-```mirror-static
-// RICHTIG
-$primary.bg: #2563eb
-$card.bg: #1a1a1a
-```
-
-**Warum:** Tokens beginnen immer mit `$`. Ohne `$` wäre es keine Token-Definition.
-
 ### Token ohne Suffix definieren
 
 ```mirror-static
 // FALSCH
-$primary: #2563eb
-$spacing: 16
+primary: #2563eb
+spacing: 16
 ```
 
 ```mirror-static
 // RICHTIG
-$primary.bg: #2563eb
-$spacing.pad: 16
+primary.bg: #2563eb
+spacing.pad: 16
 ```
 
 **Warum:** Der Suffix (`.bg`, `.col`, `.pad`, `.rad`, etc.) gibt den Typ an. Das ermöglicht intelligentes Autocomplete – bei `bg $` werden nur `.bg`-Tokens vorgeschlagen.
@@ -133,6 +117,20 @@ Frame bg $primary, pad $spacing
 ```
 
 **Warum:** Bei der Verwendung wird der Suffix weggelassen. Das Property (`bg`, `pad`) zeigt bereits den Typ.
+
+### Token ohne $ verwenden
+
+```mirror-static
+// FALSCH
+Frame bg primary, pad spacing
+```
+
+```mirror-static
+// RICHTIG
+Frame bg $primary, pad $spacing
+```
+
+**Warum:** Bei der Verwendung muss `$` vor dem Token-Namen stehen. Das `$` bedeutet "hole den Wert".
 
 ## Komponenten
 
@@ -419,11 +417,12 @@ Vor dem Testen prüfen:
 
 - [ ] Kommas nach Strings?
 - [ ] Keine Einheiten (px, em)?
-- [ ] Tokens mit $ und Suffix definiert?
-- [ ] Tokens ohne Suffix verwendet?
+- [ ] Tokens mit Suffix definiert? (`primary.bg:`, nicht `primary:`)
+- [ ] Tokens mit `$` verwendet? (`$primary`, nicht `primary`)
+- [ ] Tokens ohne Suffix verwendet? (`$primary`, nicht `$primary.bg`)
 - [ ] Komponenten-Definition mit `:`?
 - [ ] Komponenten-Verwendung ohne `:`?
-- [ ] `= Primitive` ohne Slots? (keine `:` bei Kindern)
+- [ ] `as Primitive` ohne Slots? (keine `:` bei Kindern)
 - [ ] States mit `:` definiert?
 - [ ] Funktionen mit `()` aufgerufen?
 - [ ] Icon-Namen in Anführungszeichen?

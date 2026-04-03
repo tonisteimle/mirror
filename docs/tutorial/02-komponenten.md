@@ -5,7 +5,7 @@ prev: 01-elemente
 next: 03-tokens
 ---
 
-In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: Mit `:` definierst du eine Komponente, ohne `:` verwendest du sie. Mit Slots machst du Bereiche einer Komponente von außen befüllbar.
+In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: **Mit `:` definierst du, ohne `:` verwendest du.** Diese Regel gilt überall – für Komponenten, für Variationen, für Kind-Komponenten.
 
 ## Das Problem: Wiederholung
 
@@ -58,39 +58,94 @@ Frame hor, gap 8, wrap
 
 `Btn "Grau", bg #333` überschreibt nur die Hintergrundfarbe. Padding, Radius und Textfarbe kommen weiterhin von der Definition.
 
-## Primitives erweitern mit as
+## Kinder hinzufügen
 
-Wenn deine Komponente ein **Primitive erweitert** (Button, Input, Text, etc.), schreibst du `as Primitive` vor dem Doppelpunkt:
+Bei der Verwendung kannst du einer Komponente auch Kinder hinzufügen. Die Komponente wird zum Container für beliebige Inhalte:
 
 ```mirror
-// Erweitert das Button-Primitive
-PrimaryBtn as Button: pad 12 24, rad 6, bg #2563eb, col white
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
 
-// Erweitert das Input-Primitive
-SearchInput as Input: bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
-
-Frame gap 12
-  PrimaryBtn "Speichern"
-  SearchInput placeholder "Suche..."
+Card
+  Text "Titel", col white, fs 16, weight 500
+  Text "Beschreibung", col #888, fs 14
+  Button "Aktion", pad 8 16, rad 6, bg #2563eb, col white
 ```
 
-Das `as Button` sagt: "Diese Komponente *ist* ein Button." Ohne `as` wäre es nur ein Container (Frame) mit Properties.
+`Card:` definiert nur den Container (Hintergrund, Padding, Radius, Gap). Bei der Verwendung fügst du beliebige Kinder hinzu – Text, Buttons, weitere Frames, was immer du brauchst.
 
-### Wann as und wann nicht?
+Das kombiniert beides: Die Komponente liefert das Grundgerüst, du lieferst den Inhalt.
 
-| Syntax | Bedeutung | Beispiel |
-|--------|-----------|----------|
-| `Name as Primitive: ...` | Erweitert ein Primitive | `Btn as Button: pad 12` |
-| `Name: ...` | Container mit Properties | `Card: bg #1a1a1a, pad 16` |
+## Variationen als Komponenten
 
-> **Faustregel:** Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann `as Primitive`. Für Layout-Container (Cards, Panels) brauchst du kein `as`.
-
-## Komponenten mit Kindern
-
-Eine Komponente kann auch Kinder enthalten – aber dann haben alle Instanzen denselben Inhalt:
+Du hast gesehen, wie du Properties bei der Verwendung überschreibst (`Btn "Rot", bg #333`). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?
 
 ```mirror
-// Karte mit festem Inhalt
+Btn: pad 10 20, rad 6, bg #2563eb, col white
+
+// Immer wieder dieselbe Überschreibung...
+Frame hor, gap 8
+  Btn "Löschen", bg #ef4444
+  Btn "Entfernen", bg #ef4444
+  Btn "Abbrechen", bg #ef4444
+```
+
+Jetzt wiederholst du dich wieder – `bg #ef4444` steht dreimal. Änderst du die Farbe, musst du es überall anpassen.
+
+### Lösung: Variationen zu Komponenten machen
+
+Mit `as` machst du eine Variation selbst zur Komponente. Sie erbt alles von der Basis und fügt nur das Unterschiedliche hinzu:
+
+```mirror
+// Basis-Button
+Btn: pad 10 20, rad 6, cursor pointer
+
+// Variationen als eigene Komponenten
+PrimaryBtn as Btn: bg #2563eb, col white
+DangerBtn as Btn: bg #ef4444, col white
+GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
+
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  DangerBtn "Löschen"
+  GhostBtn "Abbrechen"
+```
+
+`DangerBtn as Btn:` bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben `pad 10 20, rad 6, cursor pointer` von `Btn`.
+
+Der Vorteil: Änderst du das Padding in `Btn`, wirkt es in allen Varianten. Änderst du die Farbe in `DangerBtn`, wirkt es überall wo `DangerBtn` verwendet wird.
+
+> **Tipp:** Du kannst auch direkt von Primitives erben. `PrimaryBtn as Button: bg #2563eb` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
+
+| Syntax | Bedeutung |
+|--------|-----------|
+| `DangerBtn as Btn:` | DangerBtn erbt von Btn |
+| `PrimaryBtn as Button:` | Von Primitive erben |
+| `DangerBtn "Text"` | DangerBtn verwenden |
+
+## Komplexe Komponenten
+
+Bisher waren unsere Komponenten einfach: Ein Element mit Properties (`Btn: pad 10 20, bg #2563eb`). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:
+
+```mirror
+Footer: w full, pad 20, bg #0a0a0a, hor, spread
+  Text "© 2024 Meine App", col #666, fs 12
+  Frame hor, gap 16
+    Text "Impressum", col #888, fs 12
+    Text "Datenschutz", col #888, fs 12
+    Text "Kontakt", col #888, fs 12
+
+Frame gap 200, bg #1a1a1a
+  Text "Seiteninhalt...", col white, pad 20
+  Footer
+```
+
+`Footer:` enthält mehrere Elemente: Copyright-Text links, Links rechts. Bei der Verwendung schreibst du nur `Footer` – die gesamte Struktur wird eingefügt.
+
+### Das Problem: Fester Inhalt
+
+Was aber, wenn du den Inhalt variieren möchtest? Zum Beispiel eine Card, die auf jeder Seite einen anderen Titel zeigt:
+
+```mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Projekt Alpha", fs 16, weight 500, col white
   Text "Beschreibung des Projekts.", col #888, fs 14
@@ -101,19 +156,19 @@ Frame hor, gap 12
   Card
 ```
 
-Das Problem: Alle drei Karten zeigen "Projekt Alpha". Wie gibst du jeder Karte einen eigenen Titel? Dafür brauchst du **Slots**.
+Alle drei Karten zeigen "Projekt Alpha". Der Inhalt ist fest in der Definition – du kannst ihn bei der Verwendung nicht ändern.
 
-## Slots: Variable Bereiche
+## Komponenten in Komponenten
 
-Wenn du Kinder **mit `:`** definierst, werden sie zu **Slots** – Platzhalter, die du bei der Verwendung befüllst:
+Die Lösung: Definiere Kind-Komponenten innerhalb der Eltern-Komponente. Es gilt dieselbe Regel wie immer – **mit `:` definierst du, ohne `:` verwendest du**:
 
 ```mirror
-// Title: und Desc: sind Slots (mit :)
+// Card definiert zwei Kind-Komponenten: Title: und Desc:
 Card: bg #1a1a1a, pad 16, rad 8, gap 8, w 200
   Title: fs 16, weight 500, col white
   Desc: col #888, fs 14
 
-// Bei Verwendung: Slots befüllen (ohne :)
+// Bei Verwendung: Kind-Komponenten befüllen (ohne :)
 Frame hor, gap 12
   Card
     Title "Projekt Alpha"
@@ -123,16 +178,18 @@ Frame hor, gap 12
     Desc "Ein anderes Projekt."
 ```
 
-`Title:` in der Definition erstellt einen Slot mit vordefinierten Styles (Schriftgröße, Farbe). Bei der Verwendung befüllst du diesen Slot mit `Title "Text"` – ohne Doppelpunkt.
+`Title:` und `Desc:` sind Komponenten-Definitionen innerhalb von `Card:`. Sie haben eigene Styles (Schriftgröße, Farbe). Bei der Verwendung schreibst du `Title "Text"` und `Desc "Text"` – ohne Doppelpunkt, wie bei jeder Komponenten-Verwendung.
+
+**Es ist dieselbe Regel, nur verschachtelt.**
 
 | Syntax | Bedeutung |
 |--------|-----------|
-| `Slot:` in Definition | Slot anlegen mit Default-Styles |
-| `Slot` bei Verwendung | Slot mit Inhalt befüllen |
+| `Title:` in Definition | Kind-Komponente definieren |
+| `Title "Text"` bei Verwendung | Kind-Komponente befüllen |
 
-## Slots mit mehreren Elementen
+## Kind-Komponenten mit mehreren Elementen
 
-Ein Slot kann auch mehrere Kinder aufnehmen. Das ist nützlich für Bereiche wie "Content" oder "Actions":
+Eine Kind-Komponente kann auch mehrere Kinder aufnehmen. Das ist nützlich für Bereiche wie "Content" oder "Actions":
 
 ```mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 12
@@ -147,19 +204,19 @@ Card
     Button "Profil", pad 8 16, rad 6, bg #333, col white
 ```
 
-Der `Content:` Slot definiert nur `gap 8`. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.
+`Content:` definiert nur `gap 8`. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.
 
-## Layouts mit Slots
+## Layouts
 
-Das Slot-Pattern ist besonders mächtig für App-Layouts. Du definierst die Struktur (Sidebar links, Main rechts), und befüllst die Bereiche bei der Verwendung mit beliebigem Inhalt:
+Das Prinzip funktioniert genauso für App-Layouts. Du definierst die Struktur (Sidebar links, Main rechts), und befüllst die Bereiche bei der Verwendung:
 
 ```mirror
-// Layout-Definition: Sidebar und Main sind Slots
+// Layout mit Kind-Komponenten: Sidebar und Main
 AppShell: w full, h 180, hor
   Sidebar: w 140, h full, bg #1a1a1a, pad 12, gap 8
   Main: w full, h full, bg #0c0c0c, pad 20
 
-// Verwendung: Slots mit Inhalt befüllen
+// Verwendung: Kind-Komponenten befüllen
 AppShell
   Sidebar
     Text "Navigation", col #888, fs 11, uppercase
@@ -169,7 +226,7 @@ AppShell
     Text "Hauptinhalt", col white, fs 18
 ```
 
-`AppShell` definiert das Grundgerüst: horizontal (`hor`), Sidebar 140px breit, Main füllt den Rest (`w full`). Die Slots `Sidebar:` und `Main:` legen Hintergrund und Padding fest – der eigentliche Inhalt kommt bei der Verwendung.
+`AppShell:` definiert das Grundgerüst: horizontal (`hor`), Sidebar 140px breit, Main füllt den Rest (`w full`). `Sidebar:` und `Main:` sind Kind-Komponenten mit eigenem Styling – der Inhalt kommt bei der Verwendung.
 
 ## Praxisbeispiel: Card-Komponente
 
@@ -205,6 +262,8 @@ Der Vorteil: Die gesamte Formatierung ist in der Definition. Bei der Verwendung 
 |--------|-----------|
 | `Btn:` | Komponente definieren |
 | `Btn "OK"` | Komponente verwenden |
-| `Title:` | Slot definieren (in Komponente) |
-| `Title "Text"` | Slot befüllen (bei Verwendung) |
-| `Btn as Button: ...` | Primitive erweitern |
+| `Btn "OK", bg #333` | Properties überschreiben |
+| `Card` + Kinder | Kinder hinzufügen |
+| `Title:` in Komponente | Kind-Komponente definieren |
+| `Title "Text"` | Kind-Komponente befüllen |
+| `DangerBtn as Btn:` | Variation als Komponente |

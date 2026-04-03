@@ -1,8 +1,8 @@
 ---
 title: Bedingte Anzeige
 subtitle: Elemente basierend auf Bedingungen ein- und ausblenden
-prev: 11-content
-next: 13-pages
+prev: 12-tabellen
+next: 14-pages
 ---
 
 Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mirror bietet zwei Syntaxen: **Block Conditionals** für ganze Elemente und **Inline Conditionals** für Property-Werte.
@@ -12,7 +12,7 @@ Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mir
 Mit `if` zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:
 
 ```mirror
-$loggedIn: true
+loggedIn: true
 
 if loggedIn
   Text "Willkommen zurück!", col white
@@ -23,7 +23,7 @@ if loggedIn
 Mit `else` definierst du eine Alternative:
 
 ```mirror
-$loggedIn: false
+loggedIn: false
 
 if loggedIn
   Text "Willkommen zurück!", col white
@@ -36,7 +36,7 @@ else
 Ein `if`-Block kann mehrere Kinder haben:
 
 ```mirror
-$showDetails: true
+showDetails: true
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Produkt", col white, fs 16, weight 500
@@ -53,8 +53,8 @@ Du kannst JavaScript-Ausdrücke verwenden:
 ### Logische Operatoren
 
 ```mirror
-$isAdmin: true
-$hasPermission: true
+isAdmin: true
+hasPermission: true
 
 if isAdmin && hasPermission
   Frame bg #1a1a1a, pad 16, rad 8
@@ -65,7 +65,7 @@ if isAdmin && hasPermission
 ### Vergleiche
 
 ```mirror
-$count: 5
+count: 5
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   if count > 0
@@ -77,7 +77,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
 ### Negation
 
 ```mirror
-$disabled: false
+disabled: false
 
 if !disabled
   Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6
@@ -86,8 +86,10 @@ if !disabled
 ### Kombiniert
 
 ```mirror
-$user.role: "admin"
-$feature.enabled: true
+user:
+  role: "admin"
+feature:
+  enabled: true
 
 if user.role === "admin" && feature.enabled
   Text "Feature aktiv", col #10b981
@@ -98,8 +100,8 @@ if user.role === "admin" && feature.enabled
 `if`-Blöcke können verschachtelt werden:
 
 ```mirror
-$hasData: true
-$isLoading: false
+hasData: true
+isLoading: false
 
 if hasData
   if isLoading
@@ -117,10 +119,10 @@ else
 Conditionals und Loops arbeiten zusammen:
 
 ```mirror
-$tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }, { title: "Task 3", done: true }]
+tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }, { title: "Task 3", done: true }]
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
-  each task in tasks
+  each task in $tasks
     Frame hor, gap 8, pad 8, bg #252525, rad 4
       if task.done
         Icon "check", ic #10b981, is 16
@@ -134,7 +136,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
 Für einzelne Property-Werte gibt es die Kurzschreibweise mit `?` und `:`:
 
 ```mirror
-$active: true
+active: true
 
 Button "Status", bg active ? #2563eb : #333, col white, pad 10 20, rad 6
 ```
@@ -144,9 +146,9 @@ Das entspricht: "Wenn `active` wahr ist, nimm `#2563eb`, sonst `#333`."
 ### Weitere Beispiele
 
 ```mirror
-$visible: true
-$done: false
-$count: 3
+visible: true
+done: false
+count: 3
 
 Frame gap 12
   // Opacity basierend auf Sichtbarkeit
@@ -164,9 +166,9 @@ Frame gap 12
 ### Mit Variablen
 
 ```mirror
-$theme: "dark"
-$primary.bg: #2563eb
-$muted.bg: #333
+theme: "dark"
+primary.bg: #2563eb
+muted.bg: #333
 
 Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, rad 6
 ```
@@ -187,11 +189,11 @@ Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, 
 Ein typisches Pattern - zeige Inhalt oder "Empty State":
 
 ```mirror
-$items: []
+items: []
 
 Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280, center
   if items.length > 0
-    each item in items
+    each item in $items
       Text item, col white
   else
     Icon "inbox", ic #444, is 48
@@ -202,8 +204,8 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280, center
 ## Praktisch: Ladeindikator
 
 ```mirror
-$loading: true
-$data: "Inhalt geladen"
+loading: true
+data: "Inhalt geladen"
 
 Frame bg #1a1a1a, pad 20, rad 12, w 200, center
   if loading
@@ -211,15 +213,16 @@ Frame bg #1a1a1a, pad 20, rad 12, w 200, center
       Icon "loader", ic #888, is 18
       Text "Lädt...", col #888
   else
-    Text data, col white
+    Text $data, col white
 ```
 
 ## Praktisch: Benutzer-Status
 
 ```mirror
-$user.loggedIn: true
-$user.name: "Max"
-$user.avatar: ""
+user:
+  loggedIn: true
+  name: "Max"
+  avatar: ""
 
 Frame hor, gap 12, bg #1a1a1a, pad 12, rad 8
   if user.loggedIn

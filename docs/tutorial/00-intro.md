@@ -174,8 +174,8 @@ Die folgenden Kapitel führen durch alle Konzepte:
 | 04-05 | **Layout & Styling** – Flex, Grid, Farben, Effekte |
 | 06-07 | **Interaktion** – States, Events, Functions |
 | 08-09 | **Navigation** – Tabs, Accordion, Overlays |
-| 10-11 | **Daten** – Content, Bedingungen |
-| 12-13 | **Fortgeschritten** – Formulare, Theming |
-| 14 | **Referenz** – Häufige Fehler und Checkliste |
+| 10-12 | **Daten** – Variablen, Content, Tabellen |
+| 13-14 | **Struktur** – Bedingungen, Seiten |
+| 15 | **Referenz** – Häufige Fehler und Checkliste |
 
 Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.

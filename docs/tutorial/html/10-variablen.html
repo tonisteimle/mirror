@@ -19,17 +19,17 @@
       <p class="subtitle">Dynamische Werte und strukturierte Daten</p>
     </header>
 
-    <p class="intro">Mit <code>$</code> definierst du Variablen – einfache Werte oder strukturierte Datenobjekte. Die Syntax ist überall gleich: in <code>.mir</code>-Dateien oder in externen <code>.data</code>-Dateien.</p>
+    <p class="intro">Variablen und Daten werden mit <code>name:</code> definiert und mit <code>$name</code> verwendet. Die Syntax ist überall gleich: in <code>.mir</code>-Dateien oder in externen <code>.data</code>-Dateien.</p>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Einfache Variablen</h2>
-      <p>Eine Variable beginnt mit <code>$</code>, gefolgt vom Namen und Wert:</p>
+      <p>Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht <code>$</code> davor:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$name: "Max"
-$count: 42
+          <textarea>name: "Max"
+count: 42
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Name: " + $name, col white
@@ -38,6 +38,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Die Regel:</strong> Definition ohne <code>$</code>, Verwendung mit <code>$</code>.</p>
     </section>
 
 
@@ -47,8 +48,8 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
       <p>Variablen können direkt oder in Expressions verwendet werden:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$firstName: "Max"
-$lastName: "Mustermann"
+          <textarea>firstName: "Max"
+lastName: "Mustermann"
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text $firstName, col white, fs 18
@@ -66,8 +67,8 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
       <h2>Arithmetik</h2>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$price: 29
-$quantity: 3
+          <textarea>price: 29
+quantity: 3
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Preis: $" + $price, col white
@@ -111,7 +112,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
       <p>Arrays mit strukturierten Daten:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$users: [
+          <textarea>users: [
   { name: "Max", role: "Admin" },
   { name: "Anna", role: "User" },
   { name: "Tom", role: "User" }
@@ -134,7 +135,7 @@ each user in $users
       <p>Für strukturierte Daten mit mehreren Attributen: Definiere ein Datenobjekt mit Einrückung:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$user:
+          <textarea>user:
   name: "Max Mustermann"
   email: "max@example.com"
   active: true
@@ -151,7 +152,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
       <p>Datenobjekte unterstützen verschiedene Werttypen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$profile:
+          <textarea>profile:
   name: "Max"
   age: 25
   premium: true
@@ -173,6 +174,40 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
         <tr><td>Array</td><td><code>tags: [a, b, c]</code></td></tr>
       </table>
 
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Verschachtelte Datenobjekte</h2>
+      <p>Datenobjekte können beliebig tief verschachtelt werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>method:
+  name: "Agile"
+  steps:
+    planning:
+      title: "Sprint Planning"
+      duration: "2h"
+    standup:
+      title: "Daily Standup"
+      duration: "15min"
+    retro:
+      title: "Retrospektive"
+      duration: "1h"
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text $method.name, col white, fs 18, weight 600
+  Frame gap 4, margin 8 0 0 0
+    each step in $method.steps
+      Frame hor, gap 8
+        Text step.title, col white
+        Text step.duration, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: <code>$method.steps.planning.title</code></p>
     </section>
 
 
@@ -224,7 +259,7 @@ anna:
     <!-- ============================================================ -->
     <section>
       <h2>Relationen</h2>
-      <p>Daten können auf andere Daten verweisen. Eine Referenz ist einfach ein Pfad mit <code>$</code>:</p>
+      <p>Daten können auf andere Daten verweisen. Eine Referenz ist ein Pfad mit <code>$</code>:</p>
       <div class="code-block">
         <pre>// data/users.data
 
@@ -286,7 +321,7 @@ website:
       <h2>Praktisch: Produktliste</h2>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$products: [
+          <textarea>products: [
   { name: "Basic", price: 9, features: "5 Users" },
   { name: "Pro", price: 29, features: "Unlimited" },
   { name: "Enterprise", price: 99, features: "Custom" }
@@ -308,11 +343,13 @@ Frame hor, gap 12
       <h2>Zusammenfassung</h2>
       <table class="ref-table">
         <tr><th>Konzept</th><th>Syntax</th></tr>
-        <tr><td>Variable definieren</td><td><code>$name: "Wert"</code></td></tr>
-        <tr><td>Datenobjekt</td><td><code>$user:</code> + Einrückung</td></tr>
+        <tr><td>Variable definieren</td><td><code>name: "Wert"</code></td></tr>
+        <tr><td>Datenobjekt</td><td><code>user:</code> + Einrückung</td></tr>
+        <tr><td>Verschachtelt</td><td><code>steps:</code> + eingerückte Objekte</td></tr>
         <tr><td>Attribut</td><td><code>  name: "Max"</code></td></tr>
         <tr><td>Variable verwenden</td><td><code>$name</code></td></tr>
         <tr><td>Attribut verwenden</td><td><code>$user.name</code></td></tr>
+        <tr><td>Verschachtelt verwenden</td><td><code>$method.steps.planning.title</code></td></tr>
         <tr><td>Concatenation</td><td><code>"Hallo " + $name</code></td></tr>
         <tr><td>Arithmetik</td><td><code>$a * $b</code></td></tr>
         <tr><td>Array</td><td><code>["a", "b", "c"]</code></td></tr>
@@ -325,7 +362,7 @@ Frame hor, gap 12
         <tr><td>Durch Relation</td><td><code>$tasks.task1.assignee.name</code></td></tr>
       </table>
 
-      <p><strong>Eine Syntax, zwei Orte:</strong> Die Syntax für Datenobjekte ist identisch – ob inline in <code>.mir</code> oder ausgelagert in <code>.data</code>.</p>
+      <p><strong>Die Regel:</strong> Definition mit <code>name:</code>, Verwendung mit <code>$name</code>.</p>
     </div>
 
 

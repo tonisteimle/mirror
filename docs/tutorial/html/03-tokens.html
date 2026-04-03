@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Vererbung & Tokens</title>
+  <title>Mirror – Design Tokens</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -15,116 +15,91 @@
   <main class="page">
 
     <header>
-      <h1>Vererbung & Tokens</h1>
-      <p class="subtitle">Varianten erstellen und Werte zentral verwalten</p>
+      <h1>Design Tokens</h1>
+      <p class="subtitle">Werte zentral definieren und überall verwenden</p>
     </header>
 
-    <p class="intro">Dieses Kapitel zeigt zwei Konzepte für skalierbare UIs: Mit <code>as</code> erstellst du Varianten einer Komponente (z.B. PrimaryBtn, DangerBtn). Mit Tokens definierst du Werte zentral und verwendest sie überall.</p>
+    <p class="intro">Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du <strong>Werte</strong> abstrahierst: Farben, Abstände, Radien. Statt <code>#2563eb</code> überall zu wiederholen, definierst du es einmal als Token.</p>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Das Problem: Ähnliche Komponenten</h2>
-      <p>Du hast einen Button definiert und brauchst nun Varianten – Primary, Danger, Ghost. Ohne Vererbung müsstest du alles kopieren:</p>
+      <h2>Das Problem: Magische Werte</h2>
+      <p>Schau dir diesen Code an – die Farbe <code>#2563eb</code> taucht überall auf:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Ohne Vererbung: Alles wiederholen
-PrimaryBtn: pad 10 20, rad 6, cursor pointer, bg #2563eb, col white
-DangerBtn: pad 10 20, rad 6, cursor pointer, bg #ef4444, col white
-GhostBtn: pad 10 20, rad 6, cursor pointer, bg transparent, col #888, bor 1, boc #333
+          <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
+Link: col #2563eb, underline
+Badge: bg #2563eb, col white, pad 4 8, rad 4, fs 12
+
+Frame gap 12
+  Btn "Speichern"
+  Link "Mehr erfahren"
+  Badge "Neu"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Was passiert, wenn du die Primärfarbe ändern willst? Du musst jede Stelle finden und anpassen. Bei großen Projekten ist das fehleranfällig.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tokens definieren</h2>
+      <p>Ein Token ist ein Name für einen Wert. Die Syntax: <code>$name.suffix: wert</code></p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Token definieren
+$primary.bg: #2563eb
+
+// Token verwenden (ohne Suffix!)
+Btn: bg $primary, col white, pad 10 20, rad 6
 
 Frame hor, gap 8
-  PrimaryBtn "Speichern"
-  DangerBtn "Löschen"
-  GhostBtn "Abbrechen"</textarea>
+  Btn "Speichern"
+  Btn "Senden"
+  Btn "Weiter"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das Problem: <code>pad 10 20, rad 6, cursor pointer</code> wird dreimal wiederholt. Änderst du das Padding, musst du es überall anpassen.</p>
+      <p>Bei der <strong>Definition</strong> schreibst du den Suffix (<code>.bg</code>), bei der <strong>Verwendung</strong> nicht. Das Property (<code>bg</code>) zeigt bereits, welcher Typ gemeint ist.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Vererbung mit as</h2>
-      <p>Mit <code>as</code> erbst du von einer Basis-Komponente und überschreibst nur das, was sich unterscheidet:</p>
+      <h2>Warum Suffixe?</h2>
+      <p>Der Suffix sagt, wofür der Token gedacht ist:</p>
+      <table class="ref-table">
+        <tr><th>Suffix</th><th>Bedeutung</th><th>Beispiel</th></tr>
+        <tr><td><code>.bg</code></td><td>Hintergrundfarbe</td><td><code>$primary.bg: #2563eb</code></td></tr>
+        <tr><td><code>.col</code></td><td>Textfarbe</td><td><code>$muted.col: #888</code></td></tr>
+        <tr><td><code>.boc</code></td><td>Border-Farbe</td><td><code>$border.boc: #333</code></td></tr>
+        <tr><td><code>.rad</code></td><td>Radius</td><td><code>$card.rad: 8</code></td></tr>
+        <tr><td><code>.pad</code></td><td>Padding</td><td><code>$space.pad: 16</code></td></tr>
+        <tr><td><code>.gap</code></td><td>Abstand</td><td><code>$space.gap: 12</code></td></tr>
+      </table>
+
+      <p>Das ermöglicht intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Basis-Button
-Btn: pad 10 20, rad 6, cursor pointer
-
-// Varianten erben mit "as"
-PrimaryBtn as Btn: bg #2563eb, col white
-DangerBtn as Btn: bg #ef4444, col white
-GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
-
-Frame hor, gap 8
-  PrimaryBtn "Speichern"
-  DangerBtn "Löschen"
-  GhostBtn "Abbrechen"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Vererbung mit Slots</h2>
-      <p>Auch Komponenten mit Slots können vererbt werden:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>// Basis-Card
-Card: bg #1a1a1a, pad 16, rad 8, gap 8
-  Title: fs 16, weight 500, col white
-  Body: col #888, fs 14
-
-// Feature-Card erbt und erweitert
-FeatureCard as Card: bor 1, boc #333
-  Icon: margin 0 0 8 0
-
-// Verwendung
-FeatureCard
-  Icon
-    Icon "zap", ic #f59e0b, is 24
-  Title "Schnell"
-  Body "Kompiliert in Millisekunden"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Design Tokens definieren</h2>
-      <p>Tokens sind zentrale Werte für konsistentes Design. Bei der <strong>Definition</strong> gibst du einen Suffix an (<code>.bg</code>, <code>.col</code>, <code>.rad</code>), bei der <strong>Verwendung</strong> nicht – das Property sagt bereits, welcher Typ erwartet wird:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>// 1. TOKENS – Definition MIT Suffix
-$btn.bg: #2563eb
-$btn.col: white
+          <textarea>$primary.bg: #2563eb
+$primary.col: white
 $card.bg: #1a1a1a
 $card.rad: 8
 
-// 2. KOMPONENTEN – Tokens verwenden (OHNE Suffix)
-Card: bg $card, rad $card, pad 16, gap 8
-  Title: col white, fs 16, weight 500
+// Jeder Token am richtigen Property
+Btn: bg $primary, col $primary, pad 10 20, rad 6
+Card: bg $card, rad $card, pad 16
 
-Btn: bg $btn, col $btn, pad 10 20, rad 6
-
-// 3. INSTANZEN – sauber, nur Inhalt
 Card
-  Title "Mit Tokens"
-  Btn "Primary"</textarea>
+  Btn "In der Card"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><strong>Warum Suffixe?</strong> Sie ermöglichen intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix. Bei <code>rad $</code> nur <code>.rad</code> Tokens.</p>
     </section>
 
 
@@ -204,12 +179,13 @@ Card
       <h2>Das Wichtigste</h2>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>Child as Parent:</code></td><td>Vererbung – Varianten einer Komponente</td></tr>
-        <tr><td><code>$blue.bg: #2563eb</code></td><td>Primitiver Token – Rohwert</td></tr>
-        <tr><td><code>$primary.bg: $blue</code></td><td>Semantischer Token – referenziert anderen Token</td></tr>
+        <tr><td><code>$primary.bg: #2563eb</code></td><td>Token definieren (mit Suffix)</td></tr>
         <tr><td><code>bg $primary</code></td><td>Token verwenden (ohne Suffix)</td></tr>
+        <tr><td><code>$primary.bg: $blue</code></td><td>Semantischer Token (referenziert anderen)</td></tr>
       </table>
 
+      <p><strong>Drei Stufen:</strong> Tokens → Komponenten → Instanzen</p>
+      <p>Tokens abstrahieren Werte, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.</p>
     </div>
 
 

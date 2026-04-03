@@ -1,8 +1,8 @@
 ---
 title: Seiten
 subtitle: Apps mit mehreren Dateien
-prev: 12-bedingungen
-next: 14-fehler
+prev: 13-bedingungen
+next: 15-fehler
 ---
 
 Du kennst bereits Tabs – mehrere Inhalte, einer ist sichtbar. Für größere Apps funktioniert das gleiche Prinzip mit Dateien.
@@ -101,7 +101,7 @@ Wenn du zwischen Tabs/Seiten wechselst und zurückkehrst, bleibt der Zustand erh
 
 ```mirror
 // settings.mirror
-$notifications: true
+notifications: true
 
 Frame gap 16, pad 20
   Text "Einstellungen", fs 24, weight bold

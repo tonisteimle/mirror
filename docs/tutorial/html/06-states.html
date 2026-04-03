@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Interaktion</title>
+  <title>Mirror – States</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -15,8 +15,8 @@
   <main class="page">
 
     <header>
-      <h1>Interaktion</h1>
-      <p class="subtitle">Wie Elemente auf Benutzer reagieren</p>
+      <h1>States</h1>
+      <p class="subtitle">Wie Elemente ihr Aussehen ändern</p>
     </header>
 
     <p class="intro">Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Aussehen ändern können – bei Hover, bei Klick, oder wenn etwas anderes passiert. Das Konzept dahinter: <strong>States</strong>.</p>
@@ -25,20 +25,31 @@
     <!-- ============================================================ -->
     <section>
       <h2>Das Konzept: States</h2>
-      <p>Ein <strong>State</strong> beschreibt, wie ein Element in einem bestimmten Zustand aussieht. Ein Button kann zum Beispiel diese States haben:</p>
+      <p>Ein <strong>State</strong> beschreibt, wie ein Element in einem bestimmten Zustand aussieht:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  on:
+    bg #2563eb
+
+Btn "Klick mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Button startet grau (<code>bg #333</code>). Bei Klick wird er blau (<code>bg #2563eb</code>). Nochmal klicken – wieder grau.</p>
+      <p>Was passiert hier?</p>
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li><strong>Base</strong> – der Normalzustand (grauer Hintergrund)</li>
-        <li><strong>hover</strong> – wenn die Maus darüber ist (hellerer Hintergrund)</li>
-        <li><strong>on</strong> – wenn er aktiviert wurde (blauer Hintergrund)</li>
+        <li><code>on:</code> definiert einen <strong>State</strong> – das Aussehen im aktivierten Zustand</li>
+        <li><code>toggle()</code> ist eine <strong>Funktion</strong> – sie wechselt bei Klick zwischen Base und <code>on</code></li>
       </ul>
-      <p>In Mirror trennen wir klar:</p>
+      <p><strong>Base</strong> ist der Normalzustand – die Styles direkt am Element (hier: <code>bg #333</code>). States wie <code>on:</code> überschreiben diese Styles, wenn sie aktiv sind.</p>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>on:</code></td><td><strong>State</strong> – definiert das Aussehen</td></tr>
-        <tr><td><code>toggle()</code></td><td><strong>Funktion</strong> – was bei Klick passiert</td></tr>
+        <tr><td><code>on:</code></td><td>State – definiert das Aussehen</td></tr>
+        <tr><td><code>toggle()</code></td><td>Funktion – wechselt den State</td></tr>
       </table>
 
-      <p>States beschreiben Styles, Funktionen definieren Aktionen. Klick ist der Default-Event – du schreibst einfach die Funktion als Property.</p>
     </section>
 
 
@@ -140,8 +151,10 @@ ExpandBtn</textarea>
       <p>Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. <code>toggle()</code> erkennt das automatisch und cyclet durch alle States:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
-  Icon "circle", ic white, is 14
+          <textarea>StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
+  todo:
+    bg #333
+    Icon "circle", ic white, is 14
   doing:
     bg #f59e0b
     Icon "clock", ic white, is 14
@@ -154,13 +167,13 @@ StatusBtn</textarea>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Base-State zeigt das "Todo"-Aussehen (grau mit Kreis). <code>toggle()</code> cyclet durch:</p>
+      <p><code>toggle()</code> cyclet durch alle definierten States:</p>
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li>Klick 1: Base → doing (orange mit Uhr)</li>
+        <li>Klick 1: todo → doing (orange mit Uhr)</li>
         <li>Klick 2: doing → done (grün mit Haken)</li>
-        <li>Klick 3: done → Base (zurück zum Anfang)</li>
+        <li>Klick 3: done → todo (zurück zum Anfang)</li>
       </ul>
-      <p class="note">Der Base-State ist der Normalzustand. Bei mehreren Custom States bestimmt die Reihenfolge der Definition die Cycle-Reihenfolge.</p>
+      <p class="note">Die Reihenfolge der State-Definitionen bestimmt die Cycle-Reihenfolge. Der erste State (<code>todo</code>) ist der Startzustand.</p>
 
     </section>
 
@@ -248,8 +261,8 @@ Panel</textarea>
     <section>
       <h2>Weitere Events</h2>
       <p>Klick ist der Default – du schreibst einfach die Funktion. Für andere Events wie Tastatureingaben gibt es Shorthands:</p>
-      <h3>Tastatur: onkeyenter, onkeyescape</h3>
-      <p>Mit <code>onkeyenter</code> oder <code>onkeyescape</code> reagierst du auf Tastatureingaben:</p>
+      <h3>Tastatur: onenter, onescape</h3>
+      <p>Mit <code>onenter</code> oder <code>onescape</code> reagierst du auf Tastatureingaben:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>SearchStatus: col #888, fs 13
@@ -260,7 +273,7 @@ Panel</textarea>
 
 SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
   Icon "search", ic #666, is 16
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onkeyenter toggle()
+  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onenter toggle()
     searching:
       bg #252525
 
@@ -276,18 +289,17 @@ Frame gap 8
       <h3>Keyboard-Shorthands</h3>
       <p>Für häufige Tasten gibt es Kurzformen:</p>
       <table class="ref-table">
-        <tr><th>Shorthand</th><th>Entspricht</th><th>Beschreibung</th></tr>
-        <tr><td><code>onkeyenter</code></td><td><code>onkeydown enter:</code></td><td>Enter/Return-Taste</td></tr>
-        <tr><td><code>onkeyescape</code></td><td><code>onkeydown escape:</code></td><td>Escape-Taste</td></tr>
-        <tr><td><code>onkeyspace</code></td><td><code>onkeydown space:</code></td><td>Leertaste</td></tr>
+        <tr><th>Shorthand</th><th>Beschreibung</th></tr>
+        <tr><td><code>onenter</code></td><td>Enter/Return-Taste</td></tr>
+        <tr><td><code>onescape</code></td><td>Escape-Taste</td></tr>
+        <tr><td><code>onspace</code></td><td>Leertaste</td></tr>
       </table>
 
-      <p>Für andere Tasten verwendest du die vollständige Syntax:</p>
+      <p>Für andere Tasten verwendest du <code>onkeydown</code>:</p>
       <table class="ref-table">
         <tr><th>Event</th><th>Beschreibung</th></tr>
-        <tr><td><code>onkeydown arrow-up:</code></td><td>Pfeiltaste hoch</td></tr>
-        <tr><td><code>onkeydown arrow-down:</code></td><td>Pfeiltaste runter</td></tr>
-        <tr><td><code>onkeydown tab:</code></td><td>Tab-Taste</td></tr>
+        <tr><td><code>onkeydown arrow-up</code></td><td>Pfeiltaste hoch</td></tr>
+        <tr><td><code>onkeydown arrow-down</code></td><td>Pfeiltaste runter</td></tr>
       </table>
 
       <div class="playground" data-playground>
@@ -297,10 +309,10 @@ Frame gap 8
     bg #444
 
 Frame gap 8
-  Btn "Enter drücken", onkeyenter toggle()
+  Btn "Enter drücken", onenter toggle()
     on:
       bg #2563eb
-  Btn "Escape drücken", onkeyescape toggle()
+  Btn "Escape drücken", onescape toggle()
     on:
       bg #ef4444</textarea>
         </div>
@@ -318,7 +330,7 @@ Frame gap 8
         <tr><td><code>on:</code></td><td>Custom State (visueller Block)</td></tr>
         <tr><td><code>toggle()</code></td><td>Bei Klick State wechseln</td></tr>
         <tr><td><code>exclusive()</code></td><td>Nur dieser aktiv (Geschwister aus)</td></tr>
-        <tr><td><code>onkeyenter search()</code></td><td>Bei Enter-Taste</td></tr>
+        <tr><td><code>onenter search()</code></td><td>Bei Enter-Taste</td></tr>
         <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State "on"</td></tr>
         <tr><td><code>name MenuBtn</code></td><td>Element benennen</td></tr>
         <tr><td><code>MenuBtn.open:</code></td><td>Styles wenn MenuBtn in "open"</td></tr>

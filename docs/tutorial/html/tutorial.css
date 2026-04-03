@@ -370,3 +370,106 @@ details pre {
   background: transparent;
   border-radius: 0;
 }
+
+/* ============================================
+   Sidebar Navigation (appears on wide screens)
+   ============================================ */
+
+.tutorial-sidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #0a0a0a;
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.tutorial-sidebar-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tutorial-sidebar-header a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.tutorial-sidebar-header img {
+  width: 24px;
+  height: 24px;
+}
+
+.tutorial-sidebar-header span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tutorial-sidebar-section {
+  margin-bottom: 20px;
+}
+
+.tutorial-sidebar-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 20px;
+  margin-bottom: 8px;
+}
+
+.tutorial-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tutorial-sidebar-link:hover {
+  color: var(--text);
+  background: #151515;
+  text-decoration: none;
+}
+
+.tutorial-sidebar-link.active {
+  color: var(--accent);
+  background: #2563eb15;
+}
+
+.tutorial-sidebar-link-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #444;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.tutorial-sidebar-link.active .tutorial-sidebar-link-num {
+  color: var(--accent);
+}
+
+/* Show sidebar on wide screens */
+@media (min-width: 1100px) {
+  .tutorial-sidebar {
+    display: block;
+  }
+
+  /* Shift main content to the right */
+  body.has-sidebar .page {
+    margin-left: 240px;
+    max-width: calc(720px + 60px);
+  }
+}

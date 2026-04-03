@@ -19,7 +19,7 @@
       <p class="subtitle">Styles einmal definieren, überall verwenden</p>
     </header>
 
-    <p class="intro">In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: Mit <code>:</code> definierst du eine Komponente, ohne <code>:</code> verwendest du sie. Mit Slots machst du Bereiche einer Komponente von außen befüllbar.</p>
+    <p class="intro">In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: <strong>Mit <code>:</code> definierst du, ohne <code>:</code> verwendest du.</strong> Diese Regel gilt überall – für Komponenten, für Variationen, für Kind-Komponenten.</p>
 
 
     <!-- ============================================================ -->
@@ -91,44 +91,103 @@ Frame hor, gap 8, wrap
 
     <!-- ============================================================ -->
     <section>
-      <h2>Primitives erweitern mit as</h2>
-      <p>Wenn deine Komponente ein <strong>Primitive erweitert</strong> (Button, Input, Text, etc.), schreibst du <code>as Primitive</code> vor dem Doppelpunkt:</p>
+      <h2>Kinder hinzufügen</h2>
+      <p>Bei der Verwendung kannst du einer Komponente auch Kinder hinzufügen. Die Komponente wird zum Container für beliebige Inhalte:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Erweitert das Button-Primitive
-PrimaryBtn as Button: pad 12 24, rad 6, bg #2563eb, col white
+          <textarea>Card: bg #1a1a1a, pad 16, rad 8, gap 8
 
-// Erweitert das Input-Primitive
-SearchInput as Input: bg #1a1a1a, col white, pad 12, rad 8, bor 1, boc #333
-
-Frame gap 12
-  PrimaryBtn "Speichern"
-  SearchInput placeholder "Suche..."</textarea>
+Card
+  Text "Titel", col white, fs 16, weight 500
+  Text "Beschreibung", col #888, fs 14
+  Button "Aktion", pad 8 16, rad 6, bg #2563eb, col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das <code>as Button</code> sagt: "Diese Komponente <em>ist</em> ein Button." Ohne <code>as</code> wäre es nur ein Container (Frame) mit Properties.</p>
-      <h3>Wann as und wann nicht?</h3>
-      <table class="ref-table">
-        <tr><th>Syntax</th><th>Bedeutung</th><th>Beispiel</th></tr>
-        <tr><td><code>Name as Primitive: ...</code></td><td>Erweitert ein Primitive</td><td><code>Btn as Button: pad 12</code></td></tr>
-        <tr><td><code>Name: ...</code></td><td>Container mit Properties</td><td><code>Card: bg #1a1a1a, pad 16</code></td></tr>
-      </table>
+      <p><code>Card:</code> definiert nur den Container (Hintergrund, Padding, Radius, Gap). Bei der Verwendung fügst du beliebige Kinder hinzu – Text, Buttons, weitere Frames, was immer du brauchst.</p>
+      <p>Das kombiniert beides: Die Komponente liefert das Grundgerüst, du lieferst den Inhalt.</p>
+    </section>
 
-      <p class="note"><strong>Faustregel:</strong> Wenn deine Komponente klickbar sein soll (Button), Eingaben entgegen nimmt (Input, Textarea), oder einen Link darstellt (Link) – dann <code>as Primitive</code>. Für Layout-Container (Cards, Panels) brauchst du kein <code>as</code>.</p>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Variationen als Komponenten</h2>
+      <p>Du hast gesehen, wie du Properties bei der Verwendung überschreibst (<code>Btn "Rot", bg #333</code>). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
+
+// Immer wieder dieselbe Überschreibung...
+Frame hor, gap 8
+  Btn "Löschen", bg #ef4444
+  Btn "Entfernen", bg #ef4444
+  Btn "Abbrechen", bg #ef4444</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Jetzt wiederholst du dich wieder – <code>bg #ef4444</code> steht dreimal. Änderst du die Farbe, musst du es überall anpassen.</p>
+      <h3>Lösung: Variationen zu Komponenten machen</h3>
+      <p>Mit <code>as</code> machst du eine Variation selbst zur Komponente. Sie erbt alles von der Basis und fügt nur das Unterschiedliche hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Basis-Button
+Btn: pad 10 20, rad 6, cursor pointer
+
+// Variationen als eigene Komponenten
+PrimaryBtn as Btn: bg #2563eb, col white
+DangerBtn as Btn: bg #ef4444, col white
+GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
+
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  DangerBtn "Löschen"
+  GhostBtn "Abbrechen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>DangerBtn as Btn:</code> bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben <code>pad 10 20, rad 6, cursor pointer</code> von <code>Btn</code>.</p>
+      <p>Der Vorteil: Änderst du das Padding in <code>Btn</code>, wirkt es in allen Varianten. Änderst du die Farbe in <code>DangerBtn</code>, wirkt es überall wo <code>DangerBtn</code> verwendet wird.</p>
+      <p class="note"><strong>Tipp:</strong> Du kannst auch direkt von Primitives erben. <code>PrimaryBtn as Button: bg #2563eb</code> erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.</p>
+
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>DangerBtn as Btn:</code></td><td>DangerBtn erbt von Btn</td></tr>
+        <tr><td><code>PrimaryBtn as Button:</code></td><td>Von Primitive erben</td></tr>
+        <tr><td><code>DangerBtn "Text"</code></td><td>DangerBtn verwenden</td></tr>
+      </table>
 
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Komponenten mit Kindern</h2>
-      <p>Eine Komponente kann auch Kinder enthalten – aber dann haben alle Instanzen denselben Inhalt:</p>
+      <h2>Komplexe Komponenten</h2>
+      <p>Bisher waren unsere Komponenten einfach: Ein Element mit Properties (<code>Btn: pad 10 20, bg #2563eb</code>). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Karte mit festem Inhalt
-Card: bg #1a1a1a, pad 16, rad 8, gap 8
+          <textarea>Footer: w full, pad 20, bg #0a0a0a, hor, spread
+  Text "© 2024 Meine App", col #666, fs 12
+  Frame hor, gap 16
+    Text "Impressum", col #888, fs 12
+    Text "Datenschutz", col #888, fs 12
+    Text "Kontakt", col #888, fs 12
+
+Frame gap 200, bg #1a1a1a
+  Text "Seiteninhalt...", col white, pad 20
+  Footer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>Footer:</code> enthält mehrere Elemente: Copyright-Text links, Links rechts. Bei der Verwendung schreibst du nur <code>Footer</code> – die gesamte Struktur wird eingefügt.</p>
+      <h3>Das Problem: Fester Inhalt</h3>
+      <p>Was aber, wenn du den Inhalt variieren möchtest? Zum Beispiel eine Card, die auf jeder Seite einen anderen Titel zeigt:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Projekt Alpha", fs 16, weight 500, col white
   Text "Beschreibung des Projekts.", col #888, fs 14
 
@@ -140,22 +199,22 @@ Frame hor, gap 12
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das Problem: Alle drei Karten zeigen "Projekt Alpha". Wie gibst du jeder Karte einen eigenen Titel? Dafür brauchst du <strong>Slots</strong>.</p>
+      <p>Alle drei Karten zeigen "Projekt Alpha". Der Inhalt ist fest in der Definition – du kannst ihn bei der Verwendung nicht ändern.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Slots: Variable Bereiche</h2>
-      <p>Wenn du Kinder <strong>mit <code>:</code></strong> definierst, werden sie zu <strong>Slots</strong> – Platzhalter, die du bei der Verwendung befüllst:</p>
+      <h2>Komponenten in Komponenten</h2>
+      <p>Die Lösung: Definiere Kind-Komponenten innerhalb der Eltern-Komponente. Es gilt dieselbe Regel wie immer – <strong>mit <code>:</code> definierst du, ohne <code>:</code> verwendest du</strong>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Title: und Desc: sind Slots (mit :)
+          <textarea>// Card definiert zwei Kind-Komponenten: Title: und Desc:
 Card: bg #1a1a1a, pad 16, rad 8, gap 8, w 200
   Title: fs 16, weight 500, col white
   Desc: col #888, fs 14
 
-// Bei Verwendung: Slots befüllen (ohne :)
+// Bei Verwendung: Kind-Komponenten befüllen (ohne :)
 Frame hor, gap 12
   Card
     Title "Projekt Alpha"
@@ -167,11 +226,12 @@ Frame hor, gap 12
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>Title:</code> in der Definition erstellt einen Slot mit vordefinierten Styles (Schriftgröße, Farbe). Bei der Verwendung befüllst du diesen Slot mit <code>Title "Text"</code> – ohne Doppelpunkt.</p>
+      <p><code>Title:</code> und <code>Desc:</code> sind Komponenten-Definitionen innerhalb von <code>Card:</code>. Sie haben eigene Styles (Schriftgröße, Farbe). Bei der Verwendung schreibst du <code>Title "Text"</code> und <code>Desc "Text"</code> – ohne Doppelpunkt, wie bei jeder Komponenten-Verwendung.</p>
+      <p><strong>Es ist dieselbe Regel, nur verschachtelt.</strong></p>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>Slot:</code> in Definition</td><td>Slot anlegen mit Default-Styles</td></tr>
-        <tr><td><code>Slot</code> bei Verwendung</td><td>Slot mit Inhalt befüllen</td></tr>
+        <tr><td><code>Title:</code> in Definition</td><td>Kind-Komponente definieren</td></tr>
+        <tr><td><code>Title "Text"</code> bei Verwendung</td><td>Kind-Komponente befüllen</td></tr>
       </table>
 
     </section>
@@ -179,8 +239,8 @@ Frame hor, gap 12
 
     <!-- ============================================================ -->
     <section>
-      <h2>Slots mit mehreren Elementen</h2>
-      <p>Ein Slot kann auch mehrere Kinder aufnehmen. Das ist nützlich für Bereiche wie "Content" oder "Actions":</p>
+      <h2>Kind-Komponenten mit mehreren Elementen</h2>
+      <p>Eine Kind-Komponente kann auch mehrere Kinder aufnehmen. Das ist nützlich für Bereiche wie "Content" oder "Actions":</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Card: bg #1a1a1a, pad 16, rad 8, gap 12
@@ -197,22 +257,22 @@ Card
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der <code>Content:</code> Slot definiert nur <code>gap 8</code>. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.</p>
+      <p><code>Content:</code> definiert nur <code>gap 8</code>. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Layouts mit Slots</h2>
-      <p>Das Slot-Pattern ist besonders mächtig für App-Layouts. Du definierst die Struktur (Sidebar links, Main rechts), und befüllst die Bereiche bei der Verwendung mit beliebigem Inhalt:</p>
+      <h2>Layouts</h2>
+      <p>Das Prinzip funktioniert genauso für App-Layouts. Du definierst die Struktur (Sidebar links, Main rechts), und befüllst die Bereiche bei der Verwendung:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Layout-Definition: Sidebar und Main sind Slots
+          <textarea>// Layout mit Kind-Komponenten: Sidebar und Main
 AppShell: w full, h 180, hor
   Sidebar: w 140, h full, bg #1a1a1a, pad 12, gap 8
   Main: w full, h full, bg #0c0c0c, pad 20
 
-// Verwendung: Slots mit Inhalt befüllen
+// Verwendung: Kind-Komponenten befüllen
 AppShell
   Sidebar
     Text "Navigation", col #888, fs 11, uppercase
@@ -224,7 +284,7 @@ AppShell
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>AppShell</code> definiert das Grundgerüst: horizontal (<code>hor</code>), Sidebar 140px breit, Main füllt den Rest (<code>w full</code>). Die Slots <code>Sidebar:</code> und <code>Main:</code> legen Hintergrund und Padding fest – der eigentliche Inhalt kommt bei der Verwendung.</p>
+      <p><code>AppShell:</code> definiert das Grundgerüst: horizontal (<code>hor</code>), Sidebar 140px breit, Main füllt den Rest (<code>w full</code>). <code>Sidebar:</code> und <code>Main:</code> sind Kind-Komponenten mit eigenem Styling – der Inhalt kommt bei der Verwendung.</p>
     </section>
 
 
@@ -263,9 +323,11 @@ Card
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
         <tr><td><code>Btn:</code></td><td>Komponente definieren</td></tr>
         <tr><td><code>Btn "OK"</code></td><td>Komponente verwenden</td></tr>
-        <tr><td><code>Title:</code></td><td>Slot definieren (in Komponente)</td></tr>
-        <tr><td><code>Title "Text"</code></td><td>Slot befüllen (bei Verwendung)</td></tr>
-        <tr><td><code>Btn as Button: ...</code></td><td>Primitive erweitern</td></tr>
+        <tr><td><code>Btn "OK", bg #333</code></td><td>Properties überschreiben</td></tr>
+        <tr><td><code>Card</code> + Kinder</td><td>Kinder hinzufügen</td></tr>
+        <tr><td><code>Title:</code> in Komponente</td><td>Kind-Komponente definieren</td></tr>
+        <tr><td><code>Title "Text"</code></td><td>Kind-Komponente befüllen</td></tr>
+        <tr><td><code>DangerBtn as Btn:</code></td><td>Variation als Komponente</td></tr>
       </table>
 
     </div>

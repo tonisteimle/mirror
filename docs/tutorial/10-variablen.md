@@ -5,28 +5,30 @@ prev: 09-overlays
 next: 11-content
 ---
 
-Mit `$` definierst du Variablen – einfache Werte oder strukturierte Datenobjekte. Die Syntax ist überall gleich: in `.mir`-Dateien oder in externen `.data`-Dateien.
+Variablen und Daten werden mit `name:` definiert und mit `$name` verwendet. Die Syntax ist überall gleich: in `.mir`-Dateien oder in externen `.data`-Dateien.
 
 ## Einfache Variablen
 
-Eine Variable beginnt mit `$`, gefolgt vom Namen und Wert:
+Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht `$` davor:
 
 ```mirror
-$name: "Max"
-$count: 42
+name: "Max"
+count: 42
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Name: " + $name, col white
   Text "Count: " + $count, col #888
 ```
 
+**Die Regel:** Definition ohne `$`, Verwendung mit `$`.
+
 ## In Text verwenden
 
 Variablen können direkt oder in Expressions verwendet werden:
 
 ```mirror
-$firstName: "Max"
-$lastName: "Mustermann"
+firstName: "Max"
+lastName: "Mustermann"
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text $firstName, col white, fs 18
@@ -37,8 +39,8 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 ## Arithmetik
 
 ```mirror
-$price: 29
-$quantity: 3
+price: 29
+quantity: 3
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Preis: $" + $price, col white
@@ -68,7 +70,7 @@ each item, index in ["Erster", "Zweiter", "Dritter"]
 Arrays mit strukturierten Daten:
 
 ```mirror
-$users: [
+users: [
   { name: "Max", role: "Admin" },
   { name: "Anna", role: "User" },
   { name: "Tom", role: "User" }
@@ -85,7 +87,7 @@ each user in $users
 Für strukturierte Daten mit mehreren Attributen: Definiere ein Datenobjekt mit Einrückung:
 
 ```mirror
-$user:
+user:
   name: "Max Mustermann"
   email: "max@example.com"
   active: true
@@ -101,7 +103,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 Datenobjekte unterstützen verschiedene Werttypen:
 
 ```mirror
-$profile:
+profile:
   name: "Max"
   age: 25
   premium: true
@@ -119,6 +121,35 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 | Zahl | `age: 25` |
 | Boolean | `active: true` |
 | Array | `tags: [a, b, c]` |
+
+## Verschachtelte Datenobjekte
+
+Datenobjekte können beliebig tief verschachtelt werden:
+
+```mirror
+method:
+  name: "Agile"
+  steps:
+    planning:
+      title: "Sprint Planning"
+      duration: "2h"
+    standup:
+      title: "Daily Standup"
+      duration: "15min"
+    retro:
+      title: "Retrospektive"
+      duration: "1h"
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text $method.name, col white, fs 18, weight 600
+  Frame gap 4, margin 8 0 0 0
+    each step in $method.steps
+      Frame hor, gap 8
+        Text step.title, col white
+        Text step.duration, col #888
+```
+
+Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: `$method.steps.planning.title`
 
 ## Externe Daten: .data-Dateien
 
@@ -162,7 +193,7 @@ each customer in $customers
 
 ## Relationen
 
-Daten können auf andere Daten verweisen. Eine Referenz ist einfach ein Pfad mit `$`:
+Daten können auf andere Daten verweisen. Eine Referenz ist ein Pfad mit `$`:
 
 ```
 // data/users.data
@@ -224,7 +255,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 ## Praktisch: Produktliste
 
 ```mirror
-$products: [
+products: [
   { name: "Basic", price: 9, features: "5 Users" },
   { name: "Pro", price: 29, features: "Unlimited" },
   { name: "Enterprise", price: 99, features: "Custom" }
@@ -244,11 +275,13 @@ Frame hor, gap 12
 
 | Konzept | Syntax |
 |---------|--------|
-| Variable definieren | `$name: "Wert"` |
-| Datenobjekt | `$user:` + Einrückung |
+| Variable definieren | `name: "Wert"` |
+| Datenobjekt | `user:` + Einrückung |
+| Verschachtelt | `steps:` + eingerückte Objekte |
 | Attribut | `  name: "Max"` |
 | Variable verwenden | `$name` |
 | Attribut verwenden | `$user.name` |
+| Verschachtelt verwenden | `$method.steps.planning.title` |
 | Concatenation | `"Hallo " + $name` |
 | Arithmetik | `$a * $b` |
 | Array | `["a", "b", "c"]` |
@@ -260,4 +293,4 @@ Frame hor, gap 12
 | Relation (N:N) | `members: $users.toni, $users.anna` |
 | Durch Relation | `$tasks.task1.assignee.name` |
 
-**Eine Syntax, zwei Orte:** Die Syntax für Datenobjekte ist identisch – ob inline in `.mir` oder ausgelagert in `.data`.
+**Die Regel:** Definition mit `name:`, Verwendung mit `$name`.

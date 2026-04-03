@@ -1,6 +1,6 @@
 ---
-title: Interaktion
-subtitle: Wie Elemente auf Benutzer reagieren
+title: States
+subtitle: Wie Elemente ihr Aussehen ändern
 prev: 05-styling
 next: 07-functions
 ---
@@ -9,20 +9,29 @@ Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Ausseh
 
 ## Das Konzept: States
 
-Ein **State** beschreibt, wie ein Element in einem bestimmten Zustand aussieht. Ein Button kann zum Beispiel diese States haben:
+Ein **State** beschreibt, wie ein Element in einem bestimmten Zustand aussieht:
 
-- **Base** – der Normalzustand (grauer Hintergrund)
-- **hover** – wenn die Maus darüber ist (hellerer Hintergrund)
-- **on** – wenn er aktiviert wurde (blauer Hintergrund)
+```mirror
+Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  on:
+    bg #2563eb
 
-In Mirror trennen wir klar:
+Btn "Klick mich"
+```
+
+Der Button startet grau (`bg #333`). Bei Klick wird er blau (`bg #2563eb`). Nochmal klicken – wieder grau.
+
+Was passiert hier?
+
+- `on:` definiert einen **State** – das Aussehen im aktivierten Zustand
+- `toggle()` ist eine **Funktion** – sie wechselt bei Klick zwischen Base und `on`
+
+**Base** ist der Normalzustand – die Styles direkt am Element (hier: `bg #333`). States wie `on:` überschreiben diese Styles, wenn sie aktiv sind.
 
 | Syntax | Bedeutung |
 |--------|-----------|
-| `on:` | **State** – definiert das Aussehen |
-| `toggle()` | **Funktion** – was bei Klick passiert |
-
-States beschreiben Styles, Funktionen definieren Aktionen. Klick ist der Default-Event – du schreibst einfach die Funktion als Property.
+| `on:` | State – definiert das Aussehen |
+| `toggle()` | Funktion – wechselt den State |
 
 ## System-States: hover, focus, active
 
@@ -106,8 +115,10 @@ Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-Sta
 Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. `toggle()` erkennt das automatisch und cyclet durch alle States:
 
 ```mirror
-StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
-  Icon "circle", ic white, is 14
+StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
+  todo:
+    bg #333
+    Icon "circle", ic white, is 14
   doing:
     bg #f59e0b
     Icon "clock", ic white, is 14
@@ -118,13 +129,13 @@ StatusBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, tog
 StatusBtn
 ```
 
-Der Base-State zeigt das "Todo"-Aussehen (grau mit Kreis). `toggle()` cyclet durch:
+`toggle()` cyclet durch alle definierten States:
 
-- Klick 1: Base → doing (orange mit Uhr)
+- Klick 1: todo → doing (orange mit Uhr)
 - Klick 2: doing → done (grün mit Haken)
-- Klick 3: done → Base (zurück zum Anfang)
+- Klick 3: done → todo (zurück zum Anfang)
 
-> **Note:** Der Base-State ist der Normalzustand. Bei mehreren Custom States bestimmt die Reihenfolge der Definition die Cycle-Reihenfolge.
+> **Note:** Die Reihenfolge der State-Definitionen bestimmt die Cycle-Reihenfolge. Der erste State (`todo`) ist der Startzustand.
 
 ## Nur einer aktiv: exclusive()
 
@@ -195,9 +206,9 @@ Der Base-State zeigt "Mehr anzeigen" mit Pfeil nach unten. Der `open`-State zeig
 
 Klick ist der Default – du schreibst einfach die Funktion. Für andere Events wie Tastatureingaben gibt es Shorthands:
 
-### Tastatur: onkeyenter, onkeyescape
+### Tastatur: onenter, onescape
 
-Mit `onkeyenter` oder `onkeyescape` reagierst du auf Tastatureingaben:
+Mit `onenter` oder `onescape` reagierst du auf Tastatureingaben:
 
 ```mirror
 SearchStatus: col #888, fs 13
@@ -208,7 +219,7 @@ SearchStatus: col #888, fs 13
 
 SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
   Icon "search", ic #666, is 16
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onkeyenter toggle()
+  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onenter toggle()
     searching:
       bg #252525
 
@@ -223,19 +234,18 @@ Frame gap 8
 
 Für häufige Tasten gibt es Kurzformen:
 
-| Shorthand | Entspricht | Beschreibung |
-|-----------|------------|--------------|
-| `onkeyenter` | `onkeydown enter:` | Enter/Return-Taste |
-| `onkeyescape` | `onkeydown escape:` | Escape-Taste |
-| `onkeyspace` | `onkeydown space:` | Leertaste |
+| Shorthand | Beschreibung |
+|-----------|--------------|
+| `onenter` | Enter/Return-Taste |
+| `onescape` | Escape-Taste |
+| `onspace` | Leertaste |
 
-Für andere Tasten verwendest du die vollständige Syntax:
+Für andere Tasten verwendest du `onkeydown`:
 
 | Event | Beschreibung |
 |-------|--------------|
-| `onkeydown arrow-up:` | Pfeiltaste hoch |
-| `onkeydown arrow-down:` | Pfeiltaste runter |
-| `onkeydown tab:` | Tab-Taste |
+| `onkeydown arrow-up` | Pfeiltaste hoch |
+| `onkeydown arrow-down` | Pfeiltaste runter |
 
 ```mirror
 Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
@@ -243,10 +253,10 @@ Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
     bg #444
 
 Frame gap 8
-  Btn "Enter drücken", onkeyenter toggle()
+  Btn "Enter drücken", onenter toggle()
     on:
       bg #2563eb
-  Btn "Escape drücken", onkeyescape toggle()
+  Btn "Escape drücken", onescape toggle()
     on:
       bg #ef4444
 ```
@@ -263,7 +273,7 @@ States definieren das Aussehen, Funktionen definieren Aktionen.
 | `on:` | Custom State (visueller Block) |
 | `toggle()` | Bei Klick State wechseln |
 | `exclusive()` | Nur dieser aktiv (Geschwister aus) |
-| `onkeyenter search()` | Bei Enter-Taste |
+| `onenter search()` | Bei Enter-Taste |
 | `Btn "Text", on` | Instanz startet im State "on" |
 | `name MenuBtn` | Element benennen |
 | `MenuBtn.open:` | Styles wenn MenuBtn in "open" |

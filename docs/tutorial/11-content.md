@@ -2,7 +2,7 @@
 title: Content Management
 subtitle: Markdown-Inhalte und redaktionelle Texte
 prev: 10-variablen
-next: 12-bedingungen
+next: 12-tabellen
 ---
 
 Für redaktionelle Inhalte wie Artikel, Blog-Posts oder Dokumentation bietet Mirror Markdown-Unterstützung. Die Syntax ist überall gleich: inline in `.mir`-Dateien, in `.data`-Dateien oder als externe `.md`-Dateien.
@@ -12,7 +12,7 @@ Für redaktionelle Inhalte wie Artikel, Blog-Posts oder Dokumentation bietet Mir
 Mit `@blockname` und Einrückung definierst du Markdown-Inhalte direkt im Mirror-Code:
 
 ```mirror
-$article:
+article:
   title: "Willkommen"
   author: "Max"
   @intro
