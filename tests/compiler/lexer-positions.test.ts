@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize, Token } from '../../src/parser/lexer'
+import { tokenize, Token } from '../../compiler/parser/lexer'
 
 // Helper: Get all tokens
 function allTokens(source: string): Token[] {

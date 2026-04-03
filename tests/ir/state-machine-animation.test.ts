@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse, toIR } from '../../src'
-import type { IRStateMachine, IRStateAnimation } from '../../src/ir/types'
+import { parse, toIR } from '../../compiler'
+import type { IRStateMachine, IRStateAnimation } from '../../compiler/ir/types'
 
 describe('State Machine Animation IR', () => {
   describe('Transition animations', () => {

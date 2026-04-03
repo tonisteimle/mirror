@@ -11,8 +11,8 @@
 
 import { state, actions } from './state'
 import { events } from './events'
-import { CodeModifier, createCodeModifier } from '../../src/studio/code-modifier'
-import type { SourceMap } from '../../src/ir/source-map'
+import { CodeModifier, createCodeModifier } from '../../compiler/studio/code-modifier'
+import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ChangeIntent } from './change-types'
 
 // ============================================================================

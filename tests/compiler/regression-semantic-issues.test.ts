@@ -5,8 +5,8 @@
  * technisch korrekt, aber für User verwirrend sein könnte.
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Design Issues', () => {
 
@@ -30,7 +30,7 @@ describe('Design Issues', () => {
   // ============================================================
   describe('ISSUE 1: w full / h full Semantik', () => {
 
-    test('w full in ver: Setzt flex UND align-self', () => {
+    test('w full in ver: Setzt NUR align-self: stretch (cross-axis)', () => {
       const ir = toIR(parse(`
 Frame ver h 400
   Frame h 50
@@ -38,15 +38,16 @@ Frame ver h 400
 `))
       const fullChild = ir.nodes[0].children[1]
 
-      // Aktuelles Verhalten:
-      expect(getStyle(fullChild, 'flex')).toBe('1 1 0%')
+      // NEUES VERHALTEN: w full ist Cross-Axis in vertical parent
+      // → align-self: stretch, NICHT flex
+      expect(getStyle(fullChild, 'flex')).toBeUndefined()
       expect(getStyle(fullChild, 'align-self')).toBe('stretch')
 
-      // Das bedeutet: Kind wächst VERTIKAL (flex) und horizontal (stretch)
-      // User wollte vielleicht nur horizontal wachsen?
+      // Kind wächst NUR horizontal (stretch), nicht vertikal
+      // Das ist das intuitive Verhalten!
     })
 
-    test('h full in hor: Setzt flex UND align-self', () => {
+    test('h full in hor: Setzt NUR align-self: stretch (cross-axis)', () => {
       const ir = toIR(parse(`
 Frame hor w 400
   Frame w 50
@@ -54,12 +55,13 @@ Frame hor w 400
 `))
       const fullChild = ir.nodes[0].children[1]
 
-      // Aktuelles Verhalten:
-      expect(getStyle(fullChild, 'flex')).toBe('1 1 0%')
+      // NEUES VERHALTEN: h full ist Cross-Axis in horizontal parent
+      // → align-self: stretch, NICHT flex
+      expect(getStyle(fullChild, 'flex')).toBeUndefined()
       expect(getStyle(fullChild, 'align-self')).toBe('stretch')
 
-      // Das bedeutet: Kind wächst HORIZONTAL (flex) und vertikal (stretch)
-      // User wollte vielleicht nur vertikal wachsen?
+      // Kind wächst NUR vertikal (stretch), nicht horizontal
+      // Das ist das intuitive Verhalten!
     })
 
     test('KORREKT: w full in hor = horizontal füllen', () => {

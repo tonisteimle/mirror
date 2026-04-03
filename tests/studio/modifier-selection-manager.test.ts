@@ -10,7 +10,7 @@ import {
   type SelectionListener,
   type BreadcrumbItem,
   type BreadcrumbListener,
-} from '../../src/studio/selection-manager'
+} from '../../compiler/studio/selection-manager'
 
 // ===========================================
 // SELECTION MANAGER CLASS

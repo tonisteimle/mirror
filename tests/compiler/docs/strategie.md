@@ -44,7 +44,7 @@ die html-output-tests (`html-output-022.test.ts`) führen den generierten JavaSc
 
 ### single source of truth
 
-`src/schema/dsl.ts` ist die einzige quelle der wahrheit. alles andere wird daraus generiert:
+`compiler/schema/dsl.ts` ist die einzige quelle der wahrheit. alles andere wird daraus generiert:
 
 ```
 src/schema/dsl.ts (SSOT)
@@ -257,7 +257,7 @@ tests/compiler/
 
 ### prinzipien
 
-1. **schema ist SSOT** - Properties, Primitives nur in `src/schema/dsl.ts`
+1. **schema ist SSOT** - Properties, Primitives nur in `compiler/schema/dsl.ts`
 2. **keine redundanz** - was im Schema steht, nicht wiederholen
 3. **nur edge cases** - offensichtliches (`bg #f00` → background) nicht dokumentieren
 4. **changelog statt sessions** - chronologisch mit datum, nicht "session 3"

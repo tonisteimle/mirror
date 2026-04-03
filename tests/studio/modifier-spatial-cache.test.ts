@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { SpatialCache, createSpatialCache } from '../../src/studio/spatial-cache'
+import { SpatialCache, createSpatialCache } from '../../compiler/studio/spatial-cache'
 
 // ===========================================
 // TEST HELPERS

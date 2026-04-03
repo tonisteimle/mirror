@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier } from '../../src/studio/code-modifier'
-import { SourceMapBuilder } from '../../src/ir/source-map'
+import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { SourceMapBuilder } from '../../compiler/ir/source-map'
 
 // Helper to create SourceMap from source
 function createSourceMap(config: {

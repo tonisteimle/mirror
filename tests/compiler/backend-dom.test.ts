@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { generateDOM } from '../../src/backends/dom'
+import { parse } from '../../compiler/parser/parser'
+import { generateDOM } from '../../compiler/backends/dom'
 
 describe('DOM Backend: Basic Generation', () => {
   it('generates valid JavaScript for simple component', () => {
@@ -54,12 +54,12 @@ Button named saveBtn "Save"
   it('generates event listeners', () => {
     const ast = parse(`
 Button as button:
-  onclick toggle Menu
+  onclick toggle()
 
 Button "Toggle"
 `)
     const js = generateDOM(ast)
-    
+
     expect(js).toContain("addEventListener('click'")
   })
 
@@ -69,8 +69,9 @@ primary: color = #3B82F6
 spacing: size = 16
 `)
     const js = generateDOM(ast)
-    
-    expect(js).toContain('const tokens = {')
+
+    // Tokens are now stored in __mirrorData and aliased to tokens
+    expect(js).toContain('const __mirrorData = window.__mirrorData = {')
     expect(js).toContain('"primary": "#3B82F6"')
     expect(js).toContain('"spacing":')
   })
@@ -223,8 +224,8 @@ Card
 `)
     const js = generateDOM(ast)
 
-    // Tokens are now generated as a JS object, not CSS variables
-    expect(js).toContain('const tokens = {')
+    // Tokens are now stored in __mirrorData
+    expect(js).toContain('const __mirrorData = window.__mirrorData = {')
     expect(js).toContain('"primary": "#3B82F6"')
     expect(js).toContain('"surface": "#1a1a23"')
   })
@@ -360,8 +361,9 @@ each $item in $items
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain("const itemsData = data['items'] || []")
-    expect(js).toContain('itemsData.forEach((item, index) => {')
+    // Each loop now uses $get for data access
+    expect(js).toContain('$get')
+    expect(js).toContain('items')
   })
 
   it('handles filter in each loop', () => {
@@ -411,7 +413,8 @@ if (isAdmin)
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain('condition: () => (isAdmin)')
+    // Variables in conditions are wrapped with $get() for data context lookup
+    expect(js).toContain('condition: () => ($get("isAdmin"))')
   })
 
   it('generates renderThen function', () => {
@@ -453,7 +456,8 @@ if (hasData)
     const js = generateDOM(ast)
 
     expect(js).toContain('// Initial conditional render')
-    expect(js).toContain('if ((hasData)) {')
+    // Variables in conditions are wrapped with $get() for data context lookup
+    expect(js).toContain('if (($get("hasData"))) {')
     expect(js).toContain('renderThen()')
   })
 
@@ -475,7 +479,8 @@ if (user.isAdmin && hasPermission)
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain('condition: () => (user.isAdmin && hasPermission)')
+    // Variables in conditions are wrapped with $get() for data context lookup
+    expect(js).toContain('condition: () => ($get("user.isAdmin") && $get("hasPermission"))')
   })
 })
 

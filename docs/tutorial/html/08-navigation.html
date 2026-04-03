@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Navigation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Navigation</h1>
+      <p class="subtitle">Tabs, Accordion, Collapsible und SideNav</p>
+    </header>
+
+    <p class="intro">Vier Komponenten für unterschiedliche Szenarien: <strong>Tabs</strong> wechseln zwischen Ansichten. <strong>Accordion</strong> hat mehrere aufklappbare Bereiche. <strong>Collapsible</strong> ist ein einzelner Toggle. <strong>SideNav</strong> ist eine vollständige Sidebar-Navigation.</p>
+
+      <p>Tabs und Accordion folgen dem gleichen Muster: Du definierst Items mit einem Label, die Kinder werden automatisch zum Content. Collapsible funktioniert anders – hier legst du Trigger und Content explizit fest. SideNav kombiniert Navigation mit View-Switching.</p>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabs</h2>
+      <p>Ein <code>Tab</code> braucht zwei Dinge: ein Label (der Text im Tab-Header) und einen <code>value</code> (die ID). Mit <code>defaultValue</code> auf dem <code>Tabs</code>-Container bestimmst du, welcher Tab beim Start aktiv ist:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "home"
+  Tab "Home", value "home"
+    Text "Welcome to the home page"
+  Tab "Profile", value "profile"
+    Text "Your profile settings"
+  Tab "Settings", value "settings"
+    Text "Application settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Kinder jedes Tabs werden zum Panel-Content. Das erste Tab muss nicht "home" heißen – der <code>value</code> ist nur eine ID, die mit <code>defaultValue</code> übereinstimmen muss.</p>
+      <p>Für Custom-Styling gibt es zwei Slots: <code>List:</code> ist der Container um alle Tab-Header. <code>Indicator:</code> ist die Linie oder Fläche, die den aktiven Tab markiert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "a"
+  List: bg #1a1a1a, pad 4, rad 8, gap 4
+  Indicator: bg #4f46e5, rad 6
+  Tab "Dashboard", value "a"
+    Text "Dashboard content"
+  Tab "Analytics", value "b"
+    Text "Analytics content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Accordion</h2>
+      <p>Accordion funktioniert ähnlich wie Tabs: <code>AccordionItem</code> bekommt ein Label, die Kinder werden zum aufklappbaren Content. Der Unterschied: Mehrere Sections können existieren, und das Auf/Zuklappen passiert durch Klick auf den Header:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion
+  AccordionItem "Section 1"
+    Text "Content for section 1"
+  AccordionItem "Section 2"
+    Text "Content for section 2"
+  AccordionItem "Section 3"
+    Text "Content for section 3"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Standardmäßig kann nur ein Item offen sein – klickst du ein anderes, schließt sich das vorherige. Mit <code>multiple</code> können mehrere gleichzeitig offen bleiben. Das <code>icon</code>-Property ändert das Chevron zu einem anderen Icon:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion multiple, icon "plus"
+  AccordionItem "Was ist Mirror?"
+    Text "Eine DSL für rapid UI prototyping."
+  AccordionItem "Wie installiere ich es?"
+    Text "npm install mirror-lang"
+  AccordionItem "Open Source?"
+    Text "Ja, MIT Lizenz."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Styling-Slots heißen <code>Item:</code> (der ganze Bereich), <code>ItemTrigger:</code> (der klickbare Header) und <code>ItemContent:</code> (der aufklappbare Inhalt). Diese Styles gelten für alle Items:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion
+  Item: bg #1a1a1a, rad 8, margin 0 0 4 0
+  ItemTrigger: pad 16
+  ItemContent: pad 0 16 16 16, col #888
+  AccordionItem "Styled Section"
+    Text "Content with custom padding"
+  AccordionItem "Another Section"
+    Text "Same styling applied"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Collapsible</h2>
+      <p>Collapsible ist für einen einzelnen auf/zuklappbaren Bereich. Anders als bei Tabs und Accordion definierst du hier <code>Trigger:</code> und <code>Content:</code> explizit als Slots – das gibt dir volle Kontrolle über beide Teile:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Collapsible
+  Trigger: Button "Toggle content"
+  Content: Text "Hidden content revealed."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Trigger muss kein Button sein – du kannst beliebige Elemente verwenden. Mit <code>defaultOpen</code> startet der Bereich ausgeklappt:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Collapsible defaultOpen
+  Trigger: Frame hor, spread, pad 12, bg #1a1a1a, rad 8, cursor pointer
+    Text "Filter", weight 500
+    Icon "chevron-down"
+  Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 0 0 8 8
+    Text "Status: Aktiv", col #888
+    Text "Kategorie: Alle", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>SideNav</h2>
+      <p>SideNav ist eine vollständige Sidebar-Navigation mit Tastatursteuerung, aufklappbaren Gruppen und automatischer View-Verlinkung.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, h 200
+  SideNav defaultValue "dashboard", w 180
+    NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
+    NavItem "Projects", icon "folder", value "projects", navigate(ProjectsView)
+    NavItem "Settings", icon "settings", value "settings", navigate(SettingsView)
+
+  Frame w full, pad 16
+    DashboardView: Frame name DashboardView
+      Text "Dashboard Content", col white
+    ProjectsView: Frame name ProjectsView, hidden
+      Text "Projects Content", col white
+    SettingsView: Frame name SettingsView, hidden
+      Text "Settings Content", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>NavGroup</code> gruppierst du Items. Mit <code>collapsible</code> werden Gruppen auf-/zuklappbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 200
+  Header:
+    Frame pad 12
+      Text "My App", fs 14, weight bold
+
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Messages", icon "mail", value "messages", badge "3"
+
+  NavGroup "Settings", collapsible, defaultOpen
+    NavItem "Account", icon "user", value "account"
+    NavItem "Security", icon "shield", value "security"
+
+  Footer:
+    Frame pad 12
+      Text "v1.0.0", col #666, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Im <code>collapsed</code> Mode werden nur Icons angezeigt:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", collapsed, w 56
+  NavItem icon "home", value "dashboard"
+  NavItem icon "folder", value "projects"
+  NavItem icon "settings", value "settings"
+  NavItem icon "user", value "profile"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Styling mit Slots – <code>Item:</code> styled alle NavItems, <code>Group:</code> die Gruppen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 220
+  Root: bg #0a0a0a, bor 0 1 0 0, boc #1a1a1a
+  Item: pad 10 14, rad 6, margin 2 8, col #888
+  ItemBadge: bg #ef4444, col white, pad 2 6, rad 99, fs 10
+  GroupLabel: pad 8 14, col #444, fs 10, uppercase
+
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Messages", icon "mail", value "messages", badge "5"
+  NavGroup "Admin"
+    NavItem "Users", icon "users", value "users"
+    NavItem "Logs", icon "file-text", value "logs"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Tastatursteuerung</h3>
+      <table class="ref-table">
+        <tr><th>Taste</th><th>Aktion</th></tr>
+        <tr><td><code>ArrowDown/Up</code></td><td>Nächstes/Vorheriges Item</td></tr>
+        <tr><td><code>ArrowRight/Left</code></td><td>Gruppe öffnen/schließen</td></tr>
+        <tr><td><code>Enter/Space</code></td><td>Item aktivieren</td></tr>
+        <tr><td><code>Home/End</code></td><td>Erstes/Letztes Item</td></tr>
+      </table>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Pattern</th><th>Anwendung</th></tr>
+        <tr><td><code>Tabs</code> + <code>Tab</code></td><td>Label + Kinder → Content</td><td>Zwischen Ansichten wechseln</td></tr>
+        <tr><td><code>Accordion</code> + <code>AccordionItem</code></td><td>Label + Kinder → Content</td><td>Mehrere aufklappbare Bereiche</td></tr>
+        <tr><td><code>Collapsible</code></td><td><code>Trigger:</code> + <code>Content:</code></td><td>Ein einzelner Toggle</td></tr>
+        <tr><td><code>SideNav</code> + <code>NavItem/NavGroup</code></td><td>Items mit <code>navigate()</code></td><td>Sidebar-Navigation</td></tr>
+      </table>
+
+      <p><strong>Tabs:</strong> <code>defaultValue</code> · Slots: <code>List:</code>, <code>Indicator:</code></p>
+      <p><strong>Accordion:</strong> <code>multiple</code>, <code>icon</code> · Slots: <code>Item:</code>, <code>ItemTrigger:</code>, <code>ItemContent:</code></p>
+      <p><strong>Collapsible:</strong> <code>defaultOpen</code></p>
+      <p><strong>SideNav:</strong> <code>defaultValue</code>, <code>collapsed</code> · Slots: <code>Root:</code>, <code>Header:</code>, <code>Footer:</code>, <code>Item:</code>, <code>Group:</code></p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="07-functions.html">&larr; Functions</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="09-overlays.html">Overlays &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js?v=3"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

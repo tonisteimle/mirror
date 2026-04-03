@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 // ============================================================================
 // MINIMAL DOCUMENTS
@@ -239,6 +239,7 @@ Card
   })
 
   it('parses form with inputs', () => {
+    // Use LoginForm to avoid collision with Zag Form component
     const ast = parse(`Input as input:
   w full
   pad 12
@@ -248,11 +249,11 @@ Card
   focus:
     bor 1 primary
 
-Form as frame:
+LoginForm as frame:
   ver
   gap 16
 
-Form
+LoginForm
   Input named emailInput "Email"
   Input named passwordInput "Password"
   Button "Submit"`)

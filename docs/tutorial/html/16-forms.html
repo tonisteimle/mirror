@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Formulare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Formulare</h1>
+      <p class="subtitle">Daten erfassen, bearbeiten und speichern</p>
+    </header>
+
+    <p class="intro">Formulare verbinden UI mit Daten. Mit Two-Way Binding ändern Inputs direkt die Daten, mit Methoden speicherst du sie.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Two-Way Binding</h2>
+      <p>Ein Input mit <code>value $variable</code> ist bidirektional gebunden – Änderungen im Input aktualisieren die Variable sofort:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$name: "Max"
+
+Frame gap 12, w 280
+  Input value $name, placeholder "Dein Name"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Text "Hallo, " + $name + "!", col white, fs 16</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Tippe in das Input – der Text aktualisiert sich live.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Binding an Datenobjekte</h2>
+      <p>Binde Inputs direkt an Felder eines Datenobjekts:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$user:
+  name: "Max Mustermann"
+  email: "max@example.com"
+  bio: ""
+
+Frame gap 16, w 300
+
+  Frame gap 4
+    Text "Name", col #888, fs 12
+    Input value $user.name
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Frame gap 4
+    Text "E-Mail", col #888, fs 12
+    Input value $user.email, type email
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Frame gap 4
+    Text "Bio", col #888, fs 12
+    Textarea value $user.bio, placeholder "Über dich..."
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full, h 80
+
+  // Live-Vorschau
+  Frame bg #252525, pad 16, rad 8, gap 4
+    Text $user.name, col white, weight 500
+    Text $user.email, col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Alle Inputs ändern dasselbe <code>$user</code>-Objekt. Die Vorschau zeigt die aktuellen Werte.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Binding an Collection-Einträge</h2>
+      <p>Bearbeite Einträge aus <code>.data</code>-Dateien:</p>
+      <div class="code-block">
+        <pre>// data/users.data
+
+toni:
+  name: Toni Steimle
+  email: toni@example.com
+  role: Lead</pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 16, <span class="syn-property">w</span> 300
+
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+    <span class="syn-component">Text</span> <span class="syn-string">"Name"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+    <span class="syn-component">Input</span> value $users.toni.<span class="syn-property">name</span>
+      <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+    <span class="syn-component">Text</span> <span class="syn-string">"E-Mail"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+    <span class="syn-component">Input</span> value $users.toni.email
+      <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+    <span class="syn-component">Text</span> <span class="syn-string">"Rolle"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+    <span class="syn-component">Select</span> value $users.toni.role
+      <span class="syn-component">Trigger</span> <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">w</span> full
+        <span class="syn-component">ValueText</span> <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+        <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, ic #666, is 16
+      <span class="syn-component">Content</span> <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">rad</span> 8, <span class="syn-property">pad</span> 4, shadow lg
+        <span class="syn-component">Item</span> <span class="syn-string">"Lead"</span>
+        <span class="syn-component">Item</span> <span class="syn-string">"Dev"</span>
+        <span class="syn-component">Item</span> <span class="syn-string">"Design"</span></pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Form Elemente</h2>
+      <h3>Input</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, w 280
+
+  // Text Input
+  Input placeholder "Name", value $form.name
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+    focus:
+      boc #2563eb
+
+  // E-Mail
+  Input placeholder "E-Mail", type email, value $form.email
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  // Passwort
+  Input placeholder "Passwort", type password, value $form.password
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  // Zahl
+  Input placeholder "Alter", type number, value $form.age
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Textarea</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$form:
+  message: ""
+
+Frame gap 4, w 280
+  Text "Nachricht", col #888, fs 12
+  Textarea value $form.message, placeholder "Schreibe eine Nachricht..."
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full, h 100
+    focus:
+      boc #2563eb
+  Text ($form.message).length + " Zeichen", col #666, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Checkbox</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$settings:
+  newsletter: false
+  terms: false
+
+Frame gap 12
+
+  Checkbox checked $settings.newsletter
+    Root hor, gap 10, cursor pointer
+      Control w 20, h 20, bor 2, boc #444, rad 4
+      Label "Newsletter abonnieren", col white, fs 13
+
+  Checkbox checked $settings.terms
+    Root hor, gap 10, cursor pointer
+      Control w 20, h 20, bor 2, boc #444, rad 4
+      Label "AGB akzeptieren", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Switch</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$prefs:
+  darkMode: true
+  notifications: false
+
+Frame gap 12
+
+  Switch checked $prefs.darkMode
+    Root hor, gap 12
+      Track w 44, h 24, rad 99, pad 2
+      Label "Dark Mode", col white, fs 13
+
+  Switch checked $prefs.notifications
+    Root hor, gap 12
+      Track w 44, h 24, rad 99, pad 2
+      Label "Notifications", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>RadioGroup</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$billing:
+  plan: "monthly"
+
+RadioGroup value $billing.plan
+  Root gap 10
+
+    Item value "monthly"
+      ItemControl w 20, h 20, bor 2, boc #444, rad 99
+      ItemText "Monatlich – €9/Monat", col white, fs 13, margin 0 0 0 10
+
+    Item value "yearly"
+      ItemControl w 20, h 20, bor 2, boc #444, rad 99
+      ItemText "Jährlich – €99/Jahr (spare 17%)", col white, fs 13, margin 0 0 0 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Select</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$task:
+  assignee: ""
+
+Frame gap 4, w 240
+  Text "Zuständig", col #888, fs 12
+  Select value $task.assignee
+    Trigger bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, hor, spread, w full
+      ValueText col white, fs 13
+      Icon "chevron-down", ic #666, is 16
+    Content bg #1a1a1a, bor 1, boc #333, rad 8, pad 4, shadow lg
+      each user in $users
+        Item user.name, value user</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Slider</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$audio:
+  volume: 75
+
+Frame gap 8, w 280
+  Slider value $audio.volume, min 0, max 100
+    Root gap 8
+      Label hor, spread
+        Text "Lautstärke", col white, fs 13
+        ValueText col #888, fs 12
+      Track h 6, bg #333, rad 99
+        Range bg #2563eb, rad 99
+        Thumb w 18, h 18, bg white, rad 99, shadow md</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Formulare absenden</h2>
+      <p>Mit <code>onsubmit</code> rufst du eine Methode auf:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$newTask:
+  title: ""
+  aufwand: 0
+  assignee: ""
+
+Frame gap 16, w 300
+
+  Frame gap 4
+    Text "Titel", col #888, fs 12
+    Input value $newTask.title, placeholder "Task-Titel"
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Frame gap 4
+    Text "Aufwand (Stunden)", col #888, fs 12
+    Input value $newTask.aufwand, type number
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Frame gap 4
+    Text "Zuständig", col #888, fs 12
+    Select value $newTask.assignee
+      Trigger bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, hor, spread, w full
+        ValueText col white, fs 13
+        Icon "chevron-down", ic #666, is 16
+      Content bg #1a1a1a, bor 1, boc #333, rad 8, pad 4, shadow lg
+        each user in $users
+          Item user.name, value user
+
+  Button "Task erstellen", bg #2563eb, col white, pad 14, rad 8, w full, createTask()
+    hover:
+      bg #3b82f6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Methode:</p>
+      <div class="code-block">
+        <pre>function createTask()
+  // Neuen Task zur Collection hinzufügen
+  $tasks.add({
+    title: $newTask.title,
+    aufwand: $newTask.aufwand,
+    assignee: $newTask.assignee,
+    done: false
+  })
+
+  // Formular zurücksetzen
+  $newTask.title = ""
+  $newTask.aufwand = 0
+  $newTask.assignee = ""</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Validierung</h2>
+      <p>Zeige Fehler basierend auf Bedingungen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$form:
+  email: ""
+  password: ""
+
+Frame gap 16, w 300
+
+  Frame gap 4
+    Text "E-Mail", col #888, fs 12
+    Input value $form.email, type email
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+      $form.email != "" and not isValidEmail($form.email):
+        boc #ef4444
+    if $form.email != "" and not isValidEmail($form.email)
+      Text "Ungültige E-Mail-Adresse", col #ef4444, fs 11
+
+  Frame gap 4
+    Text "Passwort", col #888, fs 12
+    Input value $form.password, type password
+      bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+      ($form.password).length &gt; 0 and ($form.password).length &lt; 8:
+        boc #ef4444
+    if ($form.password).length &gt; 0 and ($form.password).length &lt; 8
+      Text "Mindestens 8 Zeichen", col #ef4444, fs 11
+
+  Button "Registrieren", pad 14, rad 8, w full, register()
+    isValidEmail($form.email) and ($form.password).length &gt;= 8:
+      bg #2563eb
+      col white
+    else:
+      bg #333
+      col #666
+      cursor not-allowed</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: User bearbeiten</h2>
+      <p>Ein komplettes Bearbeitungsformular:</p>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Aktuell ausgewählter User</span>
+$selectedUser: $users.toni
+
+<span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 24, <span class="syn-property">pad</span> 24
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// User-Liste</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">w</span> 200
+    <span class="syn-component">Text</span> <span class="syn-string">"Users"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12, uppercase
+    each user in $users
+      <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 12, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 8, <span class="syn-property">cursor</span> pointer, selectUser(user)
+        user == $selectedUser:
+          <span class="syn-property">bg</span> #2563eb
+        else:
+          <span class="syn-property">bg</span> #1a1a1a
+        <span class="syn-component">Frame</span> <span class="syn-property">w</span> 32, <span class="syn-property">h</span> 32, <span class="syn-property">bg</span> #333, <span class="syn-property">rad</span> 99, <span class="syn-property">center</span>
+          <span class="syn-component">Text</span> user.<span class="syn-property">name</span>.charAt(0), <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 12, <span class="syn-property">weight</span> 600
+        <span class="syn-component">Text</span> user.<span class="syn-property">name</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Edit Form</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 16, <span class="syn-property">w</span> 300
+    <span class="syn-component">Text</span> <span class="syn-string">"Bearbeiten"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12, uppercase
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"Name"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Input</span> value $selectedUser.<span class="syn-property">name</span>
+        <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"E-Mail"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Input</span> value $selectedUser.email
+        <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"Rolle"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Select</span> value $selectedUser.role
+        <span class="syn-component">Trigger</span> <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">w</span> full
+          <span class="syn-component">ValueText</span> <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+          <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, ic #666, is 16
+        <span class="syn-component">Content</span> <span class="syn-property">bg</span> #1a1a1a, bor 1, boc #333, <span class="syn-property">rad</span> 8, <span class="syn-property">pad</span> 4, shadow lg
+          <span class="syn-component">Item</span> <span class="syn-string">"Lead"</span>
+          <span class="syn-component">Item</span> <span class="syn-string">"Dev"</span>
+          <span class="syn-component">Item</span> <span class="syn-string">"Design"</span>
+
+    <span class="syn-component">Button</span> <span class="syn-string">"Speichern"</span>, <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 14, <span class="syn-property">rad</span> 8, <span class="syn-property">w</span> full, saveUser()</pre>
+      </div>
+
+      <div class="code-block">
+        <pre>function selectUser(user)
+  $selectedUser = user
+
+function saveUser()
+  // Änderungen sind bereits durch Two-Way Binding gespeichert
+  // Hier könntest du zusätzlich an einen Server senden
+  log("User gespeichert: " + $selectedUser.name)</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Task erstellen</h2>
+      <p>Formular mit Relation zu anderen Collections:</p>
+      <div class="code-block">
+        <pre>$newTask:
+  title: <span class="syn-string">""</span>
+  aufwand: 8
+  priority: 1
+  assignee: null
+  project: null
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 20, <span class="syn-property">w</span> 340, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 24, <span class="syn-property">rad</span> 12
+
+  <span class="syn-component">Text</span> <span class="syn-string">"Neuer Task"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600
+
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 16
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"Titel"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Input</span> value $newTask.title, <span class="syn-property">placeholder</span> <span class="syn-string">"Was soll erledigt werden?"</span>
+        <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+        <span class="syn-keyword">focus:</span>
+          boc #2563eb
+
+    <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 12
+      <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4, grow
+        <span class="syn-component">Text</span> <span class="syn-string">"Aufwand (<span class="syn-property">h</span>)"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+        <span class="syn-component">Input</span> value $newTask.aufwand, type number
+          <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">w</span> full
+
+      <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4, grow
+        <span class="syn-component">Text</span> <span class="syn-string">"Priorität"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+        <span class="syn-component">Select</span> value $newTask.priority
+          <span class="syn-component">Trigger</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">w</span> full
+            <span class="syn-component">ValueText</span> <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+            <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, ic #666, is 16
+          <span class="syn-component">Content</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">rad</span> 8, <span class="syn-property">pad</span> 4, shadow lg
+            <span class="syn-component">Item</span> <span class="syn-string">"1 - Niedrig"</span>, value 1
+            <span class="syn-component">Item</span> <span class="syn-string">"2 - Mittel"</span>, value 2
+            <span class="syn-component">Item</span> <span class="syn-string">"3 - Hoch"</span>, value 3
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"Zuständig"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Select</span> value $newTask.assignee
+        <span class="syn-component">Trigger</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">w</span> full
+          <span class="syn-component">ValueText</span> <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+          <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, ic #666, is 16
+        <span class="syn-component">Content</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">rad</span> 8, <span class="syn-property">pad</span> 4, shadow lg
+          each user in $users
+            <span class="syn-component">Item</span> user.<span class="syn-property">name</span>, value user
+
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+      <span class="syn-component">Text</span> <span class="syn-string">"Projekt"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Select</span> value $newTask.project
+        <span class="syn-component">Trigger</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">w</span> full
+          <span class="syn-component">ValueText</span> <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 13
+          <span class="syn-component">Icon</span> <span class="syn-string">"chevron-down"</span>, ic #666, is 16
+        <span class="syn-component">Content</span> <span class="syn-property">bg</span> #111, bor 1, boc #333, <span class="syn-property">rad</span> 8, <span class="syn-property">pad</span> 4, shadow lg
+          each project in $projects
+            <span class="syn-component">Item</span> project.<span class="syn-property">name</span>, value project
+
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 8
+    <span class="syn-component">Button</span> <span class="syn-string">"Abbrechen"</span>, <span class="syn-property">bg</span> #333, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, grow, resetForm()
+    <span class="syn-component">Button</span> <span class="syn-string">"Erstellen"</span>, <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, grow, createTask()
+      $newTask.title == <span class="syn-string">""</span>:
+        <span class="syn-property">bg</span> #333
+        <span class="syn-property">col</span> #666</pre>
+      </div>
+
+      <div class="code-block">
+        <pre>function resetForm()
+  $newTask.title = ""
+  $newTask.aufwand = 8
+  $newTask.priority = 1
+  $newTask.assignee = null
+  $newTask.project = null
+
+function createTask()
+  if $newTask.title == ""
+    return
+
+  $tasks.add({
+    title: $newTask.title,
+    aufwand: $newTask.aufwand,
+    priority: $newTask.priority,
+    assignee: $newTask.assignee,
+    project: $newTask.project,
+    done: false
+  })
+
+  resetForm()</pre>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Two-Way Binding</td><td><code>Input value $variable</code></td></tr>
+        <tr><td>Objekt-Feld</td><td><code>Input value $user.email</code></td></tr>
+        <tr><td>Collection-Eintrag</td><td><code>Input value $users.toni.name</code></td></tr>
+        <tr><td>Checkbox Binding</td><td><code>Checkbox checked $settings.newsletter</code></td></tr>
+        <tr><td>Select Binding</td><td><code>Select value $task.assignee</code></td></tr>
+        <tr><td>Items aus Collection</td><td><code>each user in $users</code> → <code>Item user.name, value user</code></td></tr>
+        <tr><td>Submit</td><td><code>Button "Speichern", saveUser()</code></td></tr>
+        <tr><td>Validierung</td><td>Bedingte Styles + if-Blöcke</td></tr>
+        <tr><td>Hinzufügen</td><td><code>$collection.add({...})</code></td></tr>
+        <tr><td>Zurücksetzen</td><td>Felder auf Startwerte setzen</td></tr>
+      </table>
+
+      <p><strong>Formulare + Datenmodell = echte Apps.</strong> Two-Way Binding macht die Verbindung automatisch.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="15-crud.html">&larr; CRUD</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="17-bedingungen.html">Bedingungen &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize, Token, TokenType } from '../../src/parser/lexer'
+import { tokenize, Token, TokenType } from '../../compiler/parser/lexer'
 
 // Helper: Get tokens without EOF
 function tokens(source: string): Token[] {
@@ -444,9 +444,17 @@ describe('Lexer: Punctuation', () => {
   })
 
   it('skips unknown characters', () => {
-    // @ is unknown and should be skipped
+    // ~ is unknown and should be skipped
+    expectTokens('a ~ b', [
+      ['IDENTIFIER', 'a'],
+      ['IDENTIFIER', 'b'],
+    ])
+  })
+
+  it('tokenizes @ as AT', () => {
     expectTokens('a @ b', [
       ['IDENTIFIER', 'a'],
+      ['AT', '@'],
       ['IDENTIFIER', 'b'],
     ])
   })
@@ -514,15 +522,28 @@ describe('Lexer: Combined Tokens', () => {
     ])
   })
 
-  it('parses event syntax', () => {
-    expectTokens('onclick toggle Menu', [
+  it('parses event syntax with function call', () => {
+    expectTokens('onclick toggle(Menu)', [
       ['IDENTIFIER', 'onclick'],
       ['IDENTIFIER', 'toggle'],
+      ['LPAREN', '('],
       ['IDENTIFIER', 'Menu'],
+      ['RPAREN', ')'],
     ])
   })
 
   it('parses keyboard event syntax', () => {
+    expectTokens('onkeydown escape: close()', [
+      ['IDENTIFIER', 'onkeydown'],
+      ['IDENTIFIER', 'escape'],
+      ['COLON', ':'],
+      ['IDENTIFIER', 'close'],
+      ['LPAREN', '('],
+      ['RPAREN', ')'],
+    ])
+  })
+
+  it('parses keyboard event legacy syntax', () => {
     expectTokens('onkeydown escape: close', [
       ['IDENTIFIER', 'onkeydown'],
       ['IDENTIFIER', 'escape'],

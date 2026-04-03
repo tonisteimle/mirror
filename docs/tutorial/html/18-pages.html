@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Seiten</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Seiten</h1>
+      <p class="subtitle">Apps mit mehreren Dateien</p>
+    </header>
+
+    <p class="intro">Du kennst bereits Tabs – mehrere Inhalte, einer ist sichtbar. Für größere Apps funktioniert das gleiche Prinzip mit Dateien.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabs: Inline-Content</h2>
+      <p>Bei Tabs definierst du den Inhalt direkt als Kinder:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "home"
+  Tab "Home", value "home"
+    Text "Willkommen zuhause"
+  Tab "Settings", value "settings"
+    Text "Hier sind die Einstellungen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das funktioniert gut für kleine Bereiche.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabs: Content aus Dateien</h2>
+      <p>Bei größeren Apps wird der Inhalt unübersichtlich. Dann lagerst du ihn in separate Dateien aus:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "home"
+  Tab "Home", value "home"
+  Tab "Settings", value "settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// home.mirror
+Frame gap 16, pad 20
+  Text "Willkommen zuhause", fs 24, weight bold
+  Text "Das ist die Startseite."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// settings.mirror
+Frame gap 16, pad 20
+  Text "Einstellungen", fs 24, weight bold
+  Switch "Dark Mode"
+  Switch "Benachrichtigungen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Die Regel:</strong> Hat ein Tab Kinder → Inhalt inline. Hat es keine Kinder → Inhalt aus Datei.</p>
+      <p>Der Dateiname wird vom <code>value</code> abgeleitet: <code>value "settings"</code> → <code>settings.mirror</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Navigation mit SideNav</h2>
+      <p>Das gleiche Prinzip funktioniert mit SideNav:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, w full, h full
+  SideNav defaultValue "dashboard", w 200
+    Item "Dashboard", icon "home", value "dashboard"
+    Item "Projekte", icon "folder", value "projects"
+    Item "Einstellungen", icon "settings", value "settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="code-block">
+        <pre>dashboard.mirror   ← Inhalt für "Dashboard"
+projects.mirror    ← Inhalt für "Projekte"
+settings.mirror    ← Inhalt für "Einstellungen"</pre>
+      </div>
+
+      <p>Die Navigation bleibt, nur der Content-Bereich wechselt – genau wie bei Tabs.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Dateistruktur</h2>
+      <p>Eine typische App:</p>
+      <div class="code-block">
+        <pre>app.mirror           ← Shell mit Navigation
+dashboard.mirror     ← Dashboard-Inhalt
+projects.mirror      ← Projekte-Inhalt
+settings.mirror      ← Einstellungen-Inhalt</pre>
+      </div>
+
+      <p><code>app.mirror</code> ist der Einstiegspunkt und enthält die Navigation. Die anderen Dateien enthalten nur den jeweiligen Seiteninhalt.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mischen: Inline und Dateien</h2>
+      <p>Du kannst beides kombinieren:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "overview"
+  Tab "Übersicht", value "overview"
+    Text "Kurze Übersicht hier"    // ← inline, weil kurz
+  Tab "Details", value "details"   // ← aus details.mirror, weil umfangreich
+  Tab "Statistik", value "stats"   // ← aus stats.mirror</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>State bleibt erhalten</h2>
+      <p>Wenn du zwischen Tabs/Seiten wechselst und zurückkehrst, bleibt der Zustand erhalten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// settings.mirror
+$notifications: true
+
+Frame gap 16, pad 20
+  Text "Einstellungen", fs 24, weight bold
+  Switch "Benachrichtigungen", checked $notifications</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Du schaltest Benachrichtigungen aus, wechselst zu Dashboard, kommst zurück – der Switch ist noch aus.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Komponenten teilen</h2>
+      <p>Gemeinsame Komponenten definierst du in einer eigenen Datei:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// components.mirror
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: col white, fs 16, weight 500
+  Body: col #888, fs 14
+
+PrimaryBtn: = Button bg #2563eb, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// dashboard.mirror
+use components
+
+Frame gap 16
+  Card
+    Title "Willkommen"
+    Body "Schön dass du da bist."
+  PrimaryBtn "Los geht's"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>use dateiname</code> importierst du Komponenten-Definitionen.</p>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Situation</th><th>Syntax</th></tr>
+        <tr><td>Tab mit Inline-Content</td><td><code>Tab "Name"</code> + Kinder</td></tr>
+        <tr><td>Tab mit Datei-Content</td><td><code>Tab "Name", value "x"</code> (keine Kinder) → x.mirror</td></tr>
+        <tr><td>Komponenten importieren</td><td><code>use components</code></td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Tabs und Navigation funktionieren gleich – ob der Inhalt inline oder in Dateien ist. Keine Kinder = Datei laden.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="17-bedingungen.html">&larr; Bedingungen</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="19-fehler.html">Fehler &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

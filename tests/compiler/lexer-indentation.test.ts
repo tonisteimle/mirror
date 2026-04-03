@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize, Token, TokenType } from '../../src/parser/lexer'
+import { tokenize, Token, TokenType } from '../../compiler/parser/lexer'
 
 // Helper: Get structural tokens (INDENT, DEDENT, NEWLINE, EOF)
 function structuralTokens(source: string): Token[] {

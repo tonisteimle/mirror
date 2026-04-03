@@ -1,6 +1,6 @@
 # DSL Reference
 
-> Auto-generated from `src/schema/dsl.ts`. Do not edit manually.
+> Auto-generated from `compiler/schema/dsl.ts`. Do not edit manually.
 > Run `npm run generate` to update.
 ## DSL Reference (auto-generated)
 
@@ -152,8 +152,8 @@
 | ver-center | - | *(standalone)* |
 | padding | pad, p | <number>, $token |
 | margin | m | <number>, $token |
-| background | bg | <color>, $token |
-| color | col, c | <color>, $token |
+| background | bg | <color>, $token, grad #a #b, grad-ver #a #b, grad N #a #b |
+| color | col, c | <color>, $token, grad #a #b, grad-ver #a #b |
 | border-color | boc | <color>, $token |
 | border | bor | <number>, $token |
 | radius | rad | <number>, $token |
@@ -169,13 +169,6 @@
 | truncate | - | *(standalone)* |
 | x | - | <number> |
 | y | - | <number> |
-| pin-left | pl | <number> |
-| pin-right | pr | <number> |
-| pin-top | pt | <number> |
-| pin-bottom | pb | <number> |
-| pin-center-x | pcx | *(standalone)* |
-| pin-center-y | pcy | *(standalone)* |
-| pin-center | pc | *(standalone)* |
 | z | - | <number> |
 | absolute | abs | *(standalone)* |
 | fixed | - | *(standalone)* |

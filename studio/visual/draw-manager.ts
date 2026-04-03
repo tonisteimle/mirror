@@ -6,9 +6,9 @@
  */
 
 import type { ComponentItem } from '../panels/components/types'
-import type { CodeModifier, ModificationResult } from '../../src/studio/code-modifier'
-import type { SourceMap } from '../../src/ir/source-map'
-import { detectLayout } from '../../src/studio/utils/layout-detection'
+import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
+import type { SourceMap } from '../../compiler/ir/source-map'
+import { detectLayout } from '../../compiler/studio/utils/layout-detection'
 import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'
 import { GuideRenderer } from './smart-guides/guide-renderer'

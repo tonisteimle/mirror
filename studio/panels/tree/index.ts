@@ -4,7 +4,7 @@
  * Displays AST as a navigable tree structure.
  */
 
-import type { AST, Instance, ComponentDefinition, Slot } from '../../../src/parser/ast'
+import type { AST, Instance, ComponentDefinition, Slot } from '../../../compiler/parser/ast'
 
 export interface TreeNode {
   id: string

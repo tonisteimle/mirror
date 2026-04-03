@@ -4,8 +4,8 @@
  * Status: Alle Tests sollten PASSING sein
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Gelöste Bugs', () => {
 
@@ -23,35 +23,39 @@ describe('Gelöste Bugs', () => {
   // LÖSUNG: Alle direction-relevanten Properties (hor, ver, 9-zone)
   // werden jetzt in der Source-Reihenfolge verarbeitet.
   // ============================================================
-  describe('BUG 1 GELÖST: 9-Zone + hor/ver Reihenfolge', () => {
+  // DESIGN UPDATE: hor + 9-zone ist konzeptuell inkompatibel
+  // 9-zone impliziert column direction, hor/ver sind explizite Richtungen
+  // Bei Konflikt: explizite Richtung (hor/ver) gewinnt
+  // ============================================================
+  describe('DESIGN: 9-Zone + hor/ver Konfliktauflösung', () => {
 
-    test('tc hor = row (hor ist letzter, gewinnt)', () => {
+    test('tc hor = row (hor ist explizite Richtung)', () => {
       const ir = toIR(parse(`Frame tc hor`))
       const direction = getStyle(ir.nodes[0], 'flex-direction')
 
-      // hor kommt NACH tc → row gewinnt
+      // hor ist explizite Richtungsangabe → row
       expect(direction).toBe('row')
     })
 
-    test('hor tc = column (tc ist letzter, gewinnt)', () => {
+    test('hor tc = row (hor ist explizite Richtung, 9-zone inkompatibel)', () => {
       const ir = toIR(parse(`Frame hor tc`))
       const direction = getStyle(ir.nodes[0], 'flex-direction')
 
-      // tc kommt NACH hor → column gewinnt
-      expect(direction).toBe('column')
+      // hor + 9-zone ist konzeptuell inkompatibel
+      // explizite Richtung hor gewinnt → row
+      expect(direction).toBe('row')
     })
 
-    test('KONSISTENZ: Letzter gewinnt immer', () => {
+    test('hor/ver hat Priorität über 9-zone', () => {
       const ir1 = toIR(parse(`Frame tc hor`))
       const ir2 = toIR(parse(`Frame hor tc`))
 
       const dir1 = getStyle(ir1.nodes[0], 'flex-direction')
       const dir2 = getStyle(ir2.nodes[0], 'flex-direction')
 
-      // tc hor → hor ist letzter → row
-      // hor tc → tc ist letzter → column
+      // In beiden Fällen gewinnt hor (explizite Richtung)
       expect(dir1).toBe('row')
-      expect(dir2).toBe('column')
+      expect(dir2).toBe('row')
     })
 
   })

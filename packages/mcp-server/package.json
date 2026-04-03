@@ -1,0 +1,28 @@
+{
+  "name": "@anthropic/mirror-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP Server for Mirror Studio - Claude Code Integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mirror-mcp-server": "dist/index.js",
+    "mirror-bridge": "dist/standalone-bridge.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

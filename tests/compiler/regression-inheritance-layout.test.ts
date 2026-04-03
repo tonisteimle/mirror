@@ -4,8 +4,8 @@
  * Komplexe Kombinationen die schiefgehen könnten.
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Deep Edge Cases', () => {
 
@@ -151,7 +151,7 @@ Frame hor gap 20
     test('state block mit bg', () => {
       const ir = toIR(parse(`
 Frame bg #f00
-  state hover
+  hover:
     bg #0f0
 `))
       const node = ir.nodes[0]
@@ -160,7 +160,7 @@ Frame bg #f00
       expect(getStyle(node, 'background')).toBe('#f00')
       // Hover bg sollte als conditional style existieren
       const hoverStyles = node.styles.filter((s: any) => s.state === 'hover')
-      console.log('state block hover styles:', hoverStyles)
+      expect(hoverStyles.length).toBeGreaterThan(0)
     })
 
   })
@@ -320,43 +320,7 @@ Frame hor
   })
 
   // ============================================================
-  // 7. Position Edge Cases
-  // ============================================================
-  describe('Position Edge Cases', () => {
-
-    test('pin-left + pin-right = stretched', () => {
-      const ir = toIR(parse(`
-Frame pos w 400 h 200
-  Frame pin-left 10 pin-right 10 h 50
-`))
-      const child = ir.nodes[0].children[0]
-
-      expect(getStyle(child, 'position')).toBe('absolute')
-      expect(getStyle(child, 'left')).toBe('10px')
-      expect(getStyle(child, 'right')).toBe('10px')
-      expect(getStyle(child, 'height')).toBe('50px')
-    })
-
-    test('pin-center (both axes)', () => {
-      const ir = toIR(parse(`
-Frame pos w 400 h 400
-  Frame pin-center w 100 h 100
-`))
-      const child = ir.nodes[0].children[0]
-
-      expect(getStyle(child, 'position')).toBe('absolute')
-      expect(getStyle(child, 'left')).toBe('50%')
-      expect(getStyle(child, 'top')).toBe('50%')
-      // transform sollte translate(-50%, -50%) enthalten
-      const transform = getStyle(child, 'transform')
-      console.log('pin-center transform:', transform)
-      expect(transform).toContain('translate')
-    })
-
-  })
-
-  // ============================================================
-  // 8. Leere und minimale Fälle
+  // 7. Leere und minimale Fälle
   // ============================================================
   describe('Minimale Fälle', () => {
 

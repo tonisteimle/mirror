@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { generateDOM } from '../../src/backends/dom'
+import { parse } from '../../compiler/parser/parser'
+import { generateDOM } from '../../compiler/backends/dom'
 
 let container: HTMLDivElement
 
@@ -28,7 +28,9 @@ function renderMirror(code: string): HTMLElement {
   const fn = new Function(domCode + '\nreturn createUI();')
   const ui = fn()
   container.appendChild(ui.root)
-  return ui.root.children[0] as HTMLElement
+  // Skip the <style> element - find first non-style child
+  const children = Array.from(ui.root.children) as HTMLElement[]
+  return children.find(el => el.tagName.toLowerCase() !== 'style') as HTMLElement
 }
 
 function getStyle(el: HTMLElement, prop: string): string {

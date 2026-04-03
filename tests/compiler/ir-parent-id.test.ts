@@ -6,37 +6,37 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('SourceMap parentId propagation', () => {
   it('should set parentId for direct children of App', () => {
     const code = `
 App bg #18181b, pad 20
-  rect w 100, h 200, bg #FCC419
+  Frame w 100, h 200, bg #FCC419
 `
     const ast = parse(code)
     const { sourceMap } = toIR(ast, true)
 
     // Find the App node (root)
     const allNodes = sourceMap.getAllNodeIds()
-    expect(allNodes.length).toBe(2) // App + rect
+    expect(allNodes.length).toBe(2) // App + Frame
 
-    // Find the rect node
-    const rectNode = Array.from(allNodes)
+    // Find the Frame node
+    const frameNode = Array.from(allNodes)
       .map(id => sourceMap.getNodeById(id))
-      .find(node => node?.componentName === 'rect')
+      .find(node => node?.componentName === 'Frame')
 
-    expect(rectNode).toBeDefined()
-    expect(rectNode?.parentId).toBeDefined()
+    expect(frameNode).toBeDefined()
+    expect(frameNode?.parentId).toBeDefined()
 
-    // rect's parentId should match App's nodeId
+    // Frame's parentId should match App's nodeId
     const appNode = Array.from(allNodes)
       .map(id => sourceMap.getNodeById(id))
       .find(node => node?.componentName === 'App')
 
     expect(appNode).toBeDefined()
-    expect(rectNode?.parentId).toBe(appNode?.nodeId)
+    expect(frameNode?.parentId).toBe(appNode?.nodeId)
   })
 
   it('should set parentId for nested children', () => {

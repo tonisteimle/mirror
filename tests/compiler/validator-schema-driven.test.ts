@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest'
-import { validate } from '../../src/validator/index'
-import { clearRulesCache } from '../../src/validator/generator'
-import { DSL, SCHEMA } from '../../src/schema/dsl'
+import { validate } from '../../compiler/validator/index'
+import { clearRulesCache } from '../../compiler/validator/generator'
+import { DSL, SCHEMA } from '../../compiler/schema/dsl'
 
 // Clear cache before tests to ensure fresh rules
 beforeAll(() => {
@@ -144,18 +144,18 @@ describe('Schema-Driven: Properties', () => {
 })
 
 describe('Schema-Driven: Events', () => {
-  // Events use syntax without colon: onclick toggle Target
+  // Events use function call syntax: onclick toggle(Target)
   for (const [eventName, eventDef] of Object.entries(DSL.events)) {
     it(`accepts event "${eventName}"`, () => {
-      const code = `MyButton as Button:\n  ${eventName} toggle Target`
+      const code = `MyButton as Button:\n  ${eventName} toggle(Target)`
       const result = validate(code)
       expect(result.valid).toBe(true)
     })
 
     if (eventDef.acceptsKey) {
       it(`accepts event "${eventName}" with key modifier`, () => {
-        // Keyboard events use colon after key: onkeydown enter: submit
-        const code = `MyInput as Input:\n  ${eventName} enter: submit`
+        // Keyboard events use colon after key: onkeydown enter: submit()
+        const code = `MyInput as Input:\n  ${eventName} enter: submit()`
         const result = validate(code)
         expect(result.valid).toBe(true)
       })
@@ -164,13 +164,13 @@ describe('Schema-Driven: Events', () => {
 })
 
 describe('Schema-Driven: Actions', () => {
-  // Actions are part of events: onclick actionName Target
+  // Actions use function call syntax: onclick actionName(Target)
   for (const [actionName, actionDef] of Object.entries(DSL.actions)) {
     it(`accepts action "${actionName}"`, () => {
       // If action has specific targets, use the first valid one
       // Otherwise use a generic target
       const target = actionDef.targets ? actionDef.targets[0] : 'Target'
-      const code = `MyButton as Button:\n  onclick ${actionName} ${target}`
+      const code = `MyButton as Button:\n  onclick ${actionName}(${target})`
       const result = validate(code)
       expect(result.valid).toBe(true)
     })
@@ -178,7 +178,7 @@ describe('Schema-Driven: Actions', () => {
     if (actionDef.targets) {
       for (const target of actionDef.targets) {
         it(`accepts action "${actionName}" with target "${target}"`, () => {
-          const code = `MyButton as Button:\n  onclick ${actionName} ${target}`
+          const code = `MyButton as Button:\n  onclick ${actionName}(${target})`
           const result = validate(code)
           expect(result.valid).toBe(true)
         })

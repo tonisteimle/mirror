@@ -41,7 +41,7 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ### Code Generation
 
-- `src/backends/dom.ts` - Animation-Daten in State-Machine-Config
+- `compiler/backends/dom.ts` - Animation-Daten in State-Machine-Config
   - `serializeAnimation()` - Serialisiert Animation-Objekte
   - State-Definitionen mit `enter`/`exit` Animationen
   - Transition-Config mit `animation` Property
@@ -50,7 +50,7 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ### Runtime
 
-- `src/runtime/dom-runtime.ts` - Animation-Playback
+- `compiler/runtime/dom-runtime.ts` - Animation-Playback
   - `StateAnimation` Interface (preset, duration, easing, delay)
   - `ANIMATION_PRESETS` - 10 Keyframe-Definitionen (fade-in/out, slide-in/out, scale-in/out, bounce, pulse, shake, spin)
   - `playStateAnimation()` - Web Animations API Integration
@@ -142,23 +142,23 @@ Systematische Analyse nach Strategie-Ansatz (`provocation-025.test.ts`) - 76 Tes
 - `pin-center-x rotate 45` → rotate überschreibt translate statt zu kombinieren
 - `pin-center scale 1.5` → scale überschreibt translate statt zu kombinieren
 - Ursache: Transform-Werte werden nicht gemerged
-- Betrifft: `src/ir/index.ts` - Transform-Handling
+- Betrifft: `compiler/ir/index.ts` - Transform-Handling
 
 **State Vererbung - BUG (2 Tests failed):**
 - `Parent hover: bg #f00` + `Child hover: bg #00f` → Parent gewinnt statt Child
 - Focus-State von Parent wird bei Child-Override nicht erhalten
 - Ursache: State-Merging in Vererbung fehlerhaft
-- Betrifft: `src/ir/index.ts` - `resolveComponent` / `mergeProperties`
+- Betrifft: `compiler/ir/index.ts` - `resolveComponent` / `mergeProperties`
 
 **Alias Reihenfolge - BUG (1 Test failed):**
 - `bg #f00 background #00f` → erster gewinnt statt letzter
 - Ursache: Alias nicht als gleiche Property erkannt bei Merging
-- Betrifft: `src/ir/index.ts` - Property-Key-Generierung
+- Betrifft: `compiler/ir/index.ts` - Property-Key-Generierung
 
 **Text-Align - BUG (1 Test failed):**
 - `Text text-align center` → text-align wird nicht gesetzt
 - Ursache: Property wird auf Text-Primitive nicht transformiert
-- Betrifft: `src/ir/index.ts` - `propertyToCSS`
+- Betrifft: `compiler/ir/index.ts` - `propertyToCSS`
 
 **Truncate + Sizing - BUG (2 Tests failed):**
 - `Text truncate w 100` → width nicht gesetzt (nur overflow)
@@ -206,7 +206,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ### Fixed
 - **Event-Vererbung** - `onclick:` wurde fälschlich als State geparst
   - Ursache: Event-Detection kam nach State/Slot-Detection
-  - Fix: `src/parser/parser.ts` - Event-Check vor State-Check
+  - Fix: `compiler/parser/parser.ts` - Event-Check vor State-Check
   - Test: `inheritance-005.test.ts` - "5.6: Vererbung mit Events"
 
 - **Child Override Parsing** - Semicolons wurden von `parseInlineProperties` konsumiert
@@ -216,7 +216,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 
 ### Added
 - **Single Quotes** - Strings können jetzt mit `'` oder `"` geschrieben werden
-  - Fix: `src/parser/lexer.ts` - `scanString()` unterstützt beide Quote-Typen
+  - Fix: `compiler/parser/lexer.ts` - `scanString()` unterstützt beide Quote-Typen
   - Test: `html-output-022.test.ts` - "single quotes"
 
 - **Semicolons als Property-Trenner** - `Frame bg #f00; w 100`

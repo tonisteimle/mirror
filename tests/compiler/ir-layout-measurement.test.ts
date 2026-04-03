@@ -11,8 +11,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { generateDOM } from '../../src/backends/dom'
+import { parse } from '../../compiler/parser/parser'
+import { generateDOM } from '../../compiler/backends/dom'
 
 // Container for mounting test elements
 let container: HTMLDivElement
@@ -50,8 +50,9 @@ function renderMirror(code: string): HTMLElement {
   // Mount to container
   container.appendChild(ui.root)
 
-  // Return the first actual component (skip mirror-root wrapper)
-  return ui.root.children[0] as HTMLElement
+  // Return the first actual component (skip mirror-root wrapper and style element)
+  const children = Array.from(ui.root.children) as HTMLElement[]
+  return children.find(el => el.tagName.toLowerCase() !== 'style') as HTMLElement
 }
 
 /**
@@ -390,7 +391,8 @@ Row
     const child = root.children[0] as HTMLElement
 
     expect(getStyle(child, 'height')).toBe('50px')
-    expect(getStyle(child, 'flex')).toBe('1 1 0%')
+    // w full in horizontal parent → flex: 1 0 0% (flex-shrink: 0 because of fixed h)
+    expect(getStyle(child, 'flex')).toBe('1 0 0%')
     expect(getStyle(child, 'min-width')).toBe('0px')
   })
 
@@ -486,9 +488,9 @@ Row
     })
   })
 
-  describe('h full in wrong direction', () => {
+  describe('full on cross-axis', () => {
 
-    it('h full in horizontal container still uses flex', () => {
+    it('h full in horizontal container → align-self: stretch (cross-axis)', () => {
       const root = renderMirror(`
 Row: w 300, h 100, hor
 
@@ -498,13 +500,12 @@ Row:
 
 Row
 `)
-      // h full should still generate flex, but in row direction
-      // it will try to fill height (cross-axis)
+      // h full in horizontal container is cross-axis → align-self: stretch
       const flexChild = root.children[1] as HTMLElement
-      expect(getStyle(flexChild, 'flex')).toBe('1 1 0%')
+      expect(getStyle(flexChild, 'align-self')).toBe('stretch')
     })
 
-    it('w full in vertical container still uses flex', () => {
+    it('w full in vertical container → align-self: stretch (cross-axis)', () => {
       const root = renderMirror(`
 Container: w 300, h 300
 
@@ -514,10 +515,9 @@ Container:
 
 Container
 `)
-      // w full should still generate flex, but in column direction
-      // it will try to fill width (cross-axis)
+      // w full in vertical container is cross-axis → align-self: stretch
       const flexChild = root.children[1] as HTMLElement
-      expect(getStyle(flexChild, 'flex')).toBe('1 1 0%')
+      expect(getStyle(flexChild, 'align-self')).toBe('stretch')
     })
   })
 })
@@ -827,7 +827,8 @@ Row
     const child = root.children[0] as HTMLElement
 
     // w full should override the w 50 from SmallBox definition
-    expect(getStyle(child, 'flex')).toBe('1 1 0%')
+    // flex: 1 0 0% (flex-shrink: 0 because SmallBox has fixed h 50)
+    expect(getStyle(child, 'flex')).toBe('1 0 0%')
     // Should NOT have width: 50px
     expect(getStyle(child, 'width')).not.toBe('50px')
   })

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Bedingte Anzeige</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Bedingte Anzeige</h1>
+      <p class="subtitle">Elemente basierend auf Bedingungen ein- und ausblenden</p>
+    </header>
+
+    <p class="intro">Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mirror bietet zwei Syntaxen: <strong>Block Conditionals</strong> für ganze Elemente und <strong>Inline Conditionals</strong> für Property-Werte.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Block Conditionals: if / else</h2>
+      <p>Mit <code>if</code> zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$loggedIn: true
+
+if loggedIn
+  Text "Willkommen zurück!", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>if / else</h3>
+      <p>Mit <code>else</code> definierst du eine Alternative:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$loggedIn: false
+
+if loggedIn
+  Text "Willkommen zurück!", col white
+else
+  Button "Anmelden", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mehrere Elemente</h3>
+      <p>Ein <code>if</code>-Block kann mehrere Kinder haben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$showDetails: true
+
+Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  Text "Produkt", col white, fs 16, weight 500
+  if showDetails
+    Text "Beschreibung des Produkts", col #888, fs 13
+    Text "Preis: €29", col #10b981, fs 14
+    Button "Kaufen", bg #2563eb, col white, pad 8 16, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Komplexe Bedingungen</h2>
+      <p>Du kannst JavaScript-Ausdrücke verwenden:</p>
+      <h3>Logische Operatoren</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$isAdmin: true
+$hasPermission: true
+
+if isAdmin &amp;&amp; hasPermission
+  Frame bg #1a1a1a, pad 16, rad 8
+    Text "Admin Panel", col white, fs 16, weight 500
+    Text "Voller Zugriff", col #10b981, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Vergleiche</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$count: 5
+
+Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  if count &gt; 0
+    Text count + " Artikel im Warenkorb", col white
+  else
+    Text "Warenkorb ist leer", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Negation</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$disabled: false
+
+if !disabled
+  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kombiniert</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$user.role: "admin"
+$feature.enabled: true
+
+if user.role === "admin" &amp;&amp; feature.enabled
+  Text "Feature aktiv", col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Verschachtelte Bedingungen</h2>
+      <p><code>if</code>-Blöcke können verschachtelt werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$hasData: true
+$isLoading: false
+
+if hasData
+  if isLoading
+    Frame hor, gap 8, center
+      Icon "loader", ic #888, is 16
+      Text "Lädt...", col #888
+  else
+    Text "Daten geladen!", col #10b981
+else
+  Text "Keine Daten", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>if mit each kombinieren</h2>
+      <p>Conditionals und Loops arbeiten zusammen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }, { title: "Task 3", done: true }]
+
+Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  each task in tasks
+    Frame hor, gap 8, pad 8, bg #252525, rad 4
+      if task.done
+        Icon "check", ic #10b981, is 16
+      else
+        Icon "circle", ic #666, is 16
+      Text task.title, col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Inline Conditionals (Ternary)</h2>
+      <p>Für einzelne Property-Werte gibt es die Kurzschreibweise mit <code>?</code> und <code>:</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$active: true
+
+Button "Status", bg active ? #2563eb : #333, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das entspricht: "Wenn <code>active</code> wahr ist, nimm <code>#2563eb</code>, sonst <code>#333</code>."</p>
+      <h3>Weitere Beispiele</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$visible: true
+$done: false
+$count: 3
+
+Frame gap 12
+  // Opacity basierend auf Sichtbarkeit
+  Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
+
+  // Icon basierend auf Status
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
+    Icon done ? "check" : "circle", ic done ? #10b981 : #666, is 18
+    Text "Aufgabe", col white
+
+  // Text basierend auf Anzahl
+  Text count &gt; 0 ? count + " Einträge" : "Keine Einträge", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Variablen</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$theme: "dark"
+$primary.bg: #2563eb
+$muted.bg: #333
+
+Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Block vs. Inline</h2>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Verwendung</th></tr>
+        <tr><td><code>if</code> / <code>else</code> Block</td><td>Ganze Elemente ein-/ausblenden</td></tr>
+        <tr><td><code>condition ? a : b</code></td><td>Einzelne Property-Werte</td></tr>
+      </table>
+
+      <p><strong>Faustregel:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Soll ein Element komplett erscheinen/verschwinden? → <code>if</code> Block</li>
+        <li>Soll nur eine Farbe, Größe, Icon wechseln? → Ternary</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Leerer Zustand</h2>
+      <p>Ein typisches Pattern - zeige Inhalt oder "Empty State":</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$items: []
+
+Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280, center
+  if items.length &gt; 0
+    each item in items
+      Text item, col white
+  else
+    Icon "inbox", ic #444, is 48
+    Text "Keine Einträge", col #666, fs 14
+    Text "Füge deinen ersten Eintrag hinzu", col #444, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Ladeindikator</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$loading: true
+$data: "Inhalt geladen"
+
+Frame bg #1a1a1a, pad 20, rad 12, w 200, center
+  if loading
+    Frame hor, gap 8
+      Icon "loader", ic #888, is 18
+      Text "Lädt...", col #888
+  else
+    Text data, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Benutzer-Status</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$user.loggedIn: true
+$user.name: "Max"
+$user.avatar: ""
+
+Frame hor, gap 12, bg #1a1a1a, pad 12, rad 8
+  if user.loggedIn
+    Frame hor, gap 10
+      Frame w 36, h 36, rad 99, bg #2563eb, center
+        Text user.avatar ? user.avatar : user.name[0], col white, fs 14
+      Frame gap 2
+        Text user.name, col white, fs 14, weight 500
+        Text "Online", col #10b981, fs 11
+  else
+    Button "Anmelden", bg #2563eb, col white, pad 8 16, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td><code>if bedingung</code></td><td><code>if loggedIn</code></td></tr>
+        <tr><td><code>if ... else</code></td><td><code>if count > 0 ... else</code></td></tr>
+        <tr><td><code>&&</code>, `\</td><td>\</td><td><code>, </code>!`</td><td><code>if isAdmin && hasAccess</code></td></tr>
+        <tr><td><code>===</code>, <code>></code>, <code><</code></td><td><code>if status === "active"</code></td></tr>
+        <tr><td>Ternary</td><td><code>bg active ? #2563eb : #333</code></td></tr>
+      </table>
+
+      <p><strong>Block Conditionals</strong> für Elemente, <strong>Inline Conditionals</strong> für Properties.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="16-forms.html">&larr; Formulare</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="18-pages.html">18-pages &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

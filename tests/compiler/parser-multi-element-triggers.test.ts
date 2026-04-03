@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/parser'
+import { parse } from '../../compiler/parser/parser'
 
 describe('Multi-Element Triggers', () => {
   it('parses multi-element trigger with block syntax', () => {
@@ -27,9 +27,9 @@ MenuButton
     expect(event.actions[1].target).toBe('visible')
   })
 
-  it('parses single action on same line', () => {
+  it('parses single action with function call syntax', () => {
     const code = `
-Button onclick toggle Menu
+Button onclick toggle(Menu)
 `
     const ast = parse(code)
     const button = ast.instances[0]
@@ -39,13 +39,14 @@ Button onclick toggle Menu
     expect(event.name).toBe('onclick')
     expect(event.actions).toHaveLength(1)
     expect(event.actions[0].name).toBe('toggle')
-    expect(event.actions[0].target).toBe('Menu')
+    expect(event.actions[0].isFunctionCall).toBe(true)
+    expect(event.actions[0].args).toContain('Menu')
   })
 
-  it('parses inline event syntax', () => {
+  it('parses inline event with function call syntax', () => {
     const code = `
 Button
-  onclick show Toast
+  onclick show(Toast)
 `
     const ast = parse(code)
     const button = ast.instances[0]
@@ -55,7 +56,8 @@ Button
     expect(event.name).toBe('onclick')
     expect(event.actions).toHaveLength(1)
     expect(event.actions[0].name).toBe('show')
-    expect(event.actions[0].target).toBe('Toast')
+    expect(event.actions[0].isFunctionCall).toBe(true)
+    expect(event.actions[0].args).toContain('Toast')
   })
 
   it('parses three element triggers', () => {

@@ -8,7 +8,7 @@
 import { state, actions, events } from '../core'
 import { InlineEditSession, createInlineEditSession } from './inline-edit-session'
 import { isEditableType, type InlineEditConfig, type InlineEditResult } from './types'
-import type { SourceMap } from '../../src/ir/source-map'
+import type { SourceMap } from '../../compiler/ir/source-map'
 
 export class InlineEditController {
   private container: HTMLElement

@@ -93,7 +93,7 @@ Card
     Text "Hello World"
 
 // Benannte Instanzen
-Button named saveBtn "Save"
+Button name saveBtn "Save"
 
 // States
 Button as button:

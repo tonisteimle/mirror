@@ -5,14 +5,14 @@
  * to update the source code.
  */
 
-import type { BreadcrumbItem } from '../../src/studio/selection-manager'
-import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
-import type { CodeModifier, ModificationResult, FilesAccess } from '../../src/studio/code-modifier'
+import type { BreadcrumbItem } from '../../compiler/studio/selection-manager'
+import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../compiler/studio/property-extractor'
+import type { CodeModifier, ModificationResult, FilesAccess } from '../../compiler/studio/code-modifier'
 import { PROPERTY_ICONS, LAYOUT_ICONS, getLayoutIcon } from '../icons'
 
 // Alias for backwards compatibility
 const PROPERTY_ICON_PATHS = PROPERTY_ICONS
-import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
+import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
 import { state, events } from '../core'
 import TomSelect from 'tom-select'
 

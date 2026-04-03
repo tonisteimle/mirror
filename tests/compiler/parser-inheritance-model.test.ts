@@ -6,8 +6,8 @@
  * - Kinder werden ZUSAMMENGEFÜGT (nicht ersetzt!)
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Vererbung (extends)', () => {
 
@@ -166,7 +166,7 @@ DangerButton
   test('5.6: Vererbung mit Events', () => {
     const code = `
 Clickable as Frame:
-  onclick: show Modal
+  onclick show(Modal)
 
 SpecialClickable extends Clickable:
   bg #f00

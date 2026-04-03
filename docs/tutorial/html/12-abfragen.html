@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Abfragen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Abfragen</h1>
+      <p class="subtitle">Filtern, Sortieren und Aggregieren von Daten</p>
+    </header>
+
+    <p class="intro">Daten abfragen ohne SQL. Mit <code>where</code> filterst du, mit <code>by</code> sortierst du, mit <code>.count</code> und <code>.sum</code> aggregierst du.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Filter mit where</h2>
+      <p>Filtere Daten mit <code>where</code> und einer Bedingung:</p>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Alle erledigten Tasks</span>
+each task in $tasks where done == true
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Alle Tasks mit hohem Aufwand</span>
+each task in $tasks where aufwand &gt; 10
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">margin</span> 0 0 4 0
+    <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white
+    <span class="syn-component">Text</span> task.aufwand + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> #888</pre>
+      </div>
+
+      <h3>Vergleiche</h3>
+      <table class="ref-table">
+        <tr><th>Operator</th><th>Bedeutung</th><th>Beispiel</th></tr>
+        <tr><td><code>==</code></td><td>gleich</td><td><code>status == "open"</code></td></tr>
+        <tr><td><code>!=</code></td><td>ungleich</td><td><code>status != "done"</code></td></tr>
+        <tr><td><code>></code></td><td>größer</td><td><code>aufwand > 10</code></td></tr>
+        <tr><td><code><</code></td><td>kleiner</td><td><code>priority < 3</code></td></tr>
+        <tr><td><code>>=</code></td><td>größer gleich</td><td><code>age >= 18</code></td></tr>
+        <tr><td><code><=</code></td><td>kleiner gleich</td><td><code>price <= 100</code></td></tr>
+      </table>
+
+      <h3>Kombinieren mit and/or</h3>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Offene Tasks mit hoher Priorität</span>
+each task in $tasks where done == false and priority &gt; 5
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> #ef4444, <span class="syn-property">pad</span> 4
+
+<span class=<span class="syn-string">"syn-comment"</span>>// Tasks von Toni oder Anna</span>
+each task in $tasks where assignee == $users.toni or assignee == $users.anna
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+      <h3>Filter auf Relationen</h3>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Alle Tasks eines bestimmten Users</span>
+each task in $tasks where assignee == $users.toni
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4
+
+<span class=<span class="syn-string">"syn-comment"</span>>// Alle Tasks eines Projekts</span>
+each task in $tasks where project == $projects.website
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sortieren mit by</h2>
+      <p>Sortiere Daten mit <code>by</code>:</p>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Nach Datum aufsteigend</span>
+each task in $tasks by dueDate
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4
+
+<span class=<span class="syn-string">"syn-comment"</span>>// Nach Priorität absteigend</span>
+each task in $tasks by priority desc
+  <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+      <h3>Kombiniert: Filter + Sortierung</h3>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Offene Tasks, sortiert nach Aufwand</span>
+each task in $tasks where done == false by aufwand desc
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">margin</span> 0 0 4 0
+    <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white
+    <span class="syn-component">Text</span> task.aufwand + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> #f59e0b</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Zählen mit .count</h2>
+      <div class="code-block">
+        <pre>$taskCount: ($tasks).count
+$openCount: ($tasks where done == false).count
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> <span class="syn-string">"Alle Tasks: "</span> + $taskCount, <span class="syn-property">col</span> white
+  <span class="syn-component">Text</span> <span class="syn-string">"Offen: "</span> + $openCount, <span class="syn-property">col</span> #f59e0b</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Aggregieren</h2>
+      <h3>Summe mit .sum</h3>
+      <div class="code-block">
+        <pre>$totalHours: ($tasks).sum(aufwand)
+$openHours: ($tasks where done == false).sum(aufwand)
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> <span class="syn-string">"Gesamtaufwand: "</span> + $totalHours + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> white
+  <span class="syn-component">Text</span> <span class="syn-string">"Noch offen: "</span> + $openHours + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> #f59e0b</pre>
+      </div>
+
+      <h3>Durchschnitt mit .avg</h3>
+      <div class="code-block">
+        <pre>$avgHours: ($tasks).avg(aufwand)
+
+<span class="syn-component">Frame</span> <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> <span class="syn-string">"Durchschnitt: "</span> + $avgHours.toFixed(1) + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> white</pre>
+      </div>
+
+      <h3>Min/Max</h3>
+      <div class="code-block">
+        <pre>$minPrice: ($products).min(price)
+$maxPrice: ($products).max(price)
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> <span class="syn-string">"Günstigster: $"</span> + $minPrice, <span class="syn-property">col</span> #10b981
+  <span class="syn-component">Text</span> <span class="syn-string">"Teuerster: $"</span> + $maxPrice, <span class="syn-property">col</span> #ef4444</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Weitere Hilfsfunktionen</h2>
+      <h3>.first und .last</h3>
+      <div class="code-block">
+        <pre>$firstTask: ($tasks by createdAt).first
+$lastTask: ($tasks by createdAt).last
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> <span class="syn-string">"Ältester: "</span> + $firstTask.title, <span class="syn-property">col</span> white
+  <span class="syn-component">Text</span> <span class="syn-string">"Neuester: "</span> + $lastTask.title, <span class="syn-property">col</span> #888</pre>
+      </div>
+
+      <h3>.unique</h3>
+      <p>Eindeutige Werte eines Felds:</p>
+      <div class="code-block">
+        <pre>each status in ($tasks).unique(status)
+  <span class="syn-component">Text</span> status, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+      <h3>.any, .all, .none</h3>
+      <p>Existenz prüfen:</p>
+      <div class="code-block">
+        <pre>$hasOpen: ($tasks).any(done == false)
+$allDone: ($tasks).all(done == true)
+$noneOverdue: ($tasks).none(overdue == true)
+
+<span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> $hasOpen ? <span class="syn-string">"Es gibt offene Tasks"</span> : <span class="syn-string">"Alles erledigt"</span>, <span class="syn-property">col</span> white</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Gruppieren mit grouped by</h2>
+      <div class="code-block">
+        <pre>$byStatus: ($tasks) grouped by status
+
+each group in $byStatus
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">margin</span> 0 0 16 0
+    <span class="syn-component">Text</span> group.key, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12, uppercase
+    each task in group.items
+      <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 4</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Dashboard Stats</h2>
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 16
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Stat Card: Total</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 20, <span class="syn-property">rad</span> 12, <span class="syn-property">gap</span> 4, <span class="syn-property">w</span> 120, <span class="syn-property">center</span>
+    <span class="syn-component">Text</span> ($tasks).count, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 32, <span class="syn-property">weight</span> 700
+    <span class="syn-component">Text</span> <span class="syn-string">"Tasks"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Stat Card: Offen</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 20, <span class="syn-property">rad</span> 12, <span class="syn-property">gap</span> 4, <span class="syn-property">w</span> 120, <span class="syn-property">center</span>
+    <span class="syn-component">Text</span> ($tasks where done == false).count, <span class="syn-property">col</span> #f59e0b, <span class="syn-property">fs</span> 32, <span class="syn-property">weight</span> 700
+    <span class="syn-component">Text</span> <span class="syn-string">"Offen"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Stat Card: Stunden</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 20, <span class="syn-property">rad</span> 12, <span class="syn-property">gap</span> 4, <span class="syn-property">w</span> 120, <span class="syn-property">center</span>
+    <span class="syn-component">Text</span> ($tasks).sum(aufwand), <span class="syn-property">col</span> #2563eb, <span class="syn-property">fs</span> 32, <span class="syn-property">weight</span> 700
+    <span class="syn-component">Text</span> <span class="syn-string">"Stunden"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Gefilterte Liste</h2>
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 16
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Header mit Stats</span>
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>
+    <span class="syn-component">Text</span> <span class="syn-string">"Offene Tasks"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600
+    <span class="syn-component">Text</span> ($tasks where done == false).count + <span class="syn-string">" Tasks"</span>, <span class="syn-property">col</span> #888
+
+  <span class=<span class="syn-string">"syn-comment"</span>>// Gefilterte, sortierte Liste</span>
+  each task in $tasks where done == false by priority desc
+    <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8, <span class="syn-property">margin</span> 0 0 8 0
+      <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4
+        <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+        <span class="syn-component">Text</span> task.assignee.<span class="syn-property">name</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 12
+        <span class="syn-component">Text</span> task.aufwand + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> #888
+        <span class="syn-component">Frame</span> <span class="syn-property">pad</span> 4 8, <span class="syn-property">bg</span> #f59e0b, <span class="syn-property">rad</span> 4
+          <span class="syn-component">Text</span> <span class="syn-string">"P"</span> + task.priority, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 11, <span class="syn-property">weight</span> 600</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Queries: Abgeleitete Tabellen</h2>
+      <p>Wenn Abfragen komplex werden oder an mehreren Stellen verwendet werden, lagere sie in <code>.query</code>-Dateien aus. Eine Query ist wie eine berechnete Collection.</p>
+      <h3>Query definieren</h3>
+      <div class="code-block">
+        <pre>// queries/dashboard.query
+
+// Offene Tasks mit aufgelösten Joins
+OpenTasks:
+  each task in $tasks where done == false by priority desc
+    title: task.title
+    userName: task.assignee.name        // Join aufgelöst
+    projectName: task.project.name      // Join aufgelöst
+    hoursLeft: task.aufwand - task.logged
+    isUrgent: task.priority &gt; 5
+
+// Projekt-Statistiken
+ProjectStats:
+  each project in $projects where status == "active"
+    name: project.name
+    lead: project.lead.name
+    totalTasks: ($tasks where project == project).count
+    openTasks: ($tasks where project == project and done == false).count
+    progress: (totalTasks - openTasks) / totalTasks</pre>
+      </div>
+
+      <h3>Query verwenden</h3>
+      <p>Im UI ist die Query eine normale Collection – keine Joins, keine Berechnungen:</p>
+      <div class="code-block">
+        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Einfach wie jede andere Collection</span>
+each task in $OpenTasks
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 8, <span class="syn-property">margin</span> 0 0 4 0
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
+      <span class="syn-component">Text</span> task.title, <span class="syn-property">col</span> white
+      <span class="syn-component">Text</span> task.userName, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+    if task.isUrgent
+      <span class="syn-component">Icon</span> <span class="syn-string">"alert-circle"</span>, ic #ef4444, is 16</pre>
+      </div>
+
+      <h3>Warum Queries?</h3>
+      <table class="ref-table">
+        <tr><th>Inline Abfrage</th><th>Query-Datei</th></tr>
+        <tr><td><code>task.assignee.name</code> im UI</td><td><code>userName</code> als Feld</td></tr>
+        <tr><td>Berechnung überall</td><td>Berechnung einmal</td></tr>
+        <tr><td>UI kennt Datenstruktur</td><td>UI sieht flache Tabelle</td></tr>
+        <tr><td>Copy-Paste von Logik</td><td>Wiederverwendbar</td></tr>
+      </table>
+
+      <p><strong>Queries abstrahieren Komplexität.</strong> Der UI-Code bleibt lesbar.</p>
+      <h3>Praktisch: Dashboard mit Queries</h3>
+      <div class="code-block">
+        <pre>// queries/team.query
+
+TeamWorkload:
+  each user in $users
+    name: user.name
+    avatar: user.avatar
+    role: user.role
+    tasks: ($tasks where assignee == user).count
+    open: ($tasks where assignee == user and done == false).count
+    hours: ($tasks where assignee == user).sum(aufwand)</pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 16
+
+  <span class="syn-component">Text</span> <span class="syn-string">"Team Workload"</span>, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600, <span class="syn-property">col</span> white
+
+  each member in $TeamWorkload
+    <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8, <span class="syn-property">margin</span> 0 0 8 0
+      <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 12
+        <span class="syn-component">Frame</span> <span class="syn-property">w</span> 40, <span class="syn-property">h</span> 40, <span class="syn-property">bg</span> #2563eb, <span class="syn-property">rad</span> 99, <span class="syn-property">center</span>
+          <span class="syn-component">Text</span> member.<span class="syn-property">name</span>.charAt(0), <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 600
+        <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
+          <span class="syn-component">Text</span> member.<span class="syn-property">name</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+          <span class="syn-component">Text</span> member.role, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+      <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 16
+        <span class="syn-component">Frame</span> <span class="syn-property">center</span>
+          <span class="syn-component">Text</span> member.tasks, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600
+          <span class="syn-component">Text</span> <span class="syn-string">"Tasks"</span>, <span class="syn-property">col</span> #666, <span class="syn-property">fs</span> 10
+        <span class="syn-component">Frame</span> <span class="syn-property">center</span>
+          <span class="syn-component">Text</span> member.open, <span class="syn-property">col</span> #f59e0b, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600
+          <span class="syn-component">Text</span> <span class="syn-string">"Offen"</span>, <span class="syn-property">col</span> #666, <span class="syn-property">fs</span> 10
+        <span class="syn-component">Frame</span> <span class="syn-property">center</span>
+          <span class="syn-component">Text</span> member.hours + <span class="syn-string">"<span class="syn-property">h</span>"</span>, <span class="syn-property">col</span> #2563eb, <span class="syn-property">fs</span> 18, <span class="syn-property">weight</span> 600
+          <span class="syn-component">Text</span> <span class="syn-string">"Stunden"</span>, <span class="syn-property">col</span> #666, <span class="syn-property">fs</span> 10</pre>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Filtern</td><td><code>$tasks where done == true</code></td></tr>
+        <tr><td>Kombinieren</td><td><code>where a == 1 and b == 2</code></td></tr>
+        <tr><td>Sortieren</td><td><code>$tasks by dueDate</code></td></tr>
+        <tr><td>Absteigend</td><td><code>$tasks by priority desc</code></td></tr>
+        <tr><td>Filter + Sort</td><td><code>$tasks where done == false by dueDate</code></td></tr>
+        <tr><td>Zählen</td><td><code>($tasks).count</code></td></tr>
+        <tr><td>Summe</td><td><code>($tasks).sum(aufwand)</code></td></tr>
+        <tr><td>Durchschnitt</td><td><code>($tasks).avg(aufwand)</code></td></tr>
+        <tr><td>Min/Max</td><td><code>($tasks).min(price)</code>, <code>.max(price)</code></td></tr>
+        <tr><td>Erstes/Letztes</td><td><code>($tasks).first</code>, <code>.last</code></td></tr>
+        <tr><td>Eindeutige</td><td><code>($tasks).unique(status)</code></td></tr>
+        <tr><td>Existenz</td><td><code>.any()</code>, <code>.all()</code>, <code>.none()</code></td></tr>
+        <tr><td>Gruppieren</td><td><code>($tasks) grouped by status</code></td></tr>
+        <tr><td><strong>Query-Datei</strong></td><td><code>.query</code> mit <code>QueryName:</code></td></tr>
+        <tr><td><strong>Query-Feld</strong></td><td><code>fieldName: expression</code></td></tr>
+        <tr><td><strong>Query verwenden</strong></td><td><code>each item in $QueryName</code></td></tr>
+      </table>
+
+      <p><strong>Daten abfragen ohne SQL.</strong> Inline für einfache Fälle, Query-Dateien für komplexe Abfragen.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="11-content.html">&larr; Content</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="13-methoden.html">Methoden &rarr;</a>
+    </nav>
+
+  </main>
+
+</body>
+</html>

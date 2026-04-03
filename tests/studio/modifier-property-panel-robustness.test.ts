@@ -17,12 +17,12 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { PropertyExtractor } from '../../src/studio/property-extractor'
-import { CodeModifier } from '../../src/studio/code-modifier'
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { PropertyExtractor } from '../../compiler/studio/property-extractor'
+import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 import type { AST } from '../../parser/ast'
-import type { SourceMap } from '../../src/ir/source-map'
+import type { SourceMap } from '../../compiler/ir/source-map'
 
 // =============================================================================
 // TEST HELPERS

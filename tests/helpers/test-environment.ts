@@ -8,10 +8,10 @@
  * den Properties im Code (x, y, w, h).
  */
 
-import { parse } from '../../src/parser'
-import { toIR, type IRResult } from '../../src/ir'
-import { createCodeModifier, type CodeModifier } from '../../src/studio/code-modifier'
-import type { SourceMap, NodeMapping } from '../../src/ir/source-map'
+import { parse } from '../../compiler/parser'
+import { toIR, type IRResult } from '../../compiler/ir'
+import { createCodeModifier, type CodeModifier } from '../../compiler/studio/code-modifier'
+import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
 import type { Point, Rect } from '../../studio/visual/models/drag-state'
 
 // ============================================================================

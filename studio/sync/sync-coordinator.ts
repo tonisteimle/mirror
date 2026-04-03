@@ -16,7 +16,7 @@
 
 import { state, actions, events } from '../core'
 import type { SelectionOrigin } from '../core/state'
-import type { SourceMap } from '../../src/ir/source-map'
+import type { SourceMap } from '../../compiler/ir/source-map'
 import { LineOffsetService } from './line-offset-service'
 
 export interface SyncTargets {

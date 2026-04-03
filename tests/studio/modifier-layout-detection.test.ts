@@ -12,7 +12,7 @@ import {
   isAbsoluteLayoutContainer,
   clientToContainer,
   type LayoutInfo,
-} from '../../src/studio/utils/layout-detection'
+} from '../../compiler/studio/utils/layout-detection'
 
 // ===========================================
 // TEST HELPERS

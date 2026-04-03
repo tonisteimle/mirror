@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 // ============================================================================
 // MISSING COLONS (collects errors instead of throwing)

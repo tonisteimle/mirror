@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Variablen & Daten</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Variablen & Daten</h1>
+      <p class="subtitle">Dynamische Werte und strukturierte Daten</p>
+    </header>
+
+    <p class="intro">Mit <code>$</code> definierst du Variablen – einfache Werte oder strukturierte Datenobjekte. Die Syntax ist überall gleich: in <code>.mir</code>-Dateien oder in externen <code>.data</code>-Dateien.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Einfache Variablen</h2>
+      <p>Eine Variable beginnt mit <code>$</code>, gefolgt vom Namen und Wert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$name: "Max"
+$count: 42
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Name: " + $name, col white
+  Text "Count: " + $count, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>In Text verwenden</h2>
+      <p>Variablen können direkt oder in Expressions verwendet werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$firstName: "Max"
+$lastName: "Mustermann"
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text $firstName, col white, fs 18
+  Text $firstName + " " + $lastName, col #888
+  Text "Hallo, " + $firstName + "!", col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Arithmetik</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$price: 29
+$quantity: 3
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Preis: $" + $price, col white
+  Text "Menge: " + $quantity, col #888
+  Text "Total: $" + ($price * $quantity), col #10b981, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Arrays und each</h2>
+      <p>Iteriere über Listen mit <code>each</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>each color in ["Rot", "Grün", "Blau"]
+  Frame bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+    Text color, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit Index:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>each item, index in ["Erster", "Zweiter", "Dritter"]
+  Text (index + 1) + ". " + item, col white, pad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Objekt-Arrays</h2>
+      <p>Arrays mit strukturierten Daten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$users: [
+  { name: "Max", role: "Admin" },
+  { name: "Anna", role: "User" },
+  { name: "Tom", role: "User" }
+]
+
+each user in $users
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+    Text user.name, col white, weight 500
+    Text user.role, col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Datenobjekte</h2>
+      <p>Für strukturierte Daten mit mehreren Attributen: Definiere ein Datenobjekt mit Einrückung:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$user:
+  name: "Max Mustermann"
+  email: "max@example.com"
+  active: true
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text $user.name, col white, weight 500
+  Text $user.email, col #888
+  Text $user.active ? "Aktiv" : "Inaktiv", col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Attribut-Typen</h3>
+      <p>Datenobjekte unterstützen verschiedene Werttypen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$profile:
+  name: "Max"
+  age: 25
+  premium: true
+  tags: [admin, developer, tester]
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text $profile.name, col white
+  Text "Alter: " + $profile.age, col #888
+  Text $profile.premium ? "Premium" : "Free", col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Typ</th><th>Beispiel</th></tr>
+        <tr><td>String</td><td><code>name: "Max"</code></td></tr>
+        <tr><td>Zahl</td><td><code>age: 25</code></td></tr>
+        <tr><td>Boolean</td><td><code>active: true</code></td></tr>
+        <tr><td>Array</td><td><code>tags: [a, b, c]</code></td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Externe Daten: .data-Dateien</h2>
+      <p>Für größere Datenmengen oder Wiederverwendung: Daten in <code>.data</code>-Dateien auslagern. <strong>Die Syntax ist identisch</strong> – nur in einer separaten Datei:</p>
+      <div class="code-block">
+        <pre>// data/customers.data
+
+max:
+  name: Max Mustermann
+  email: max@example.com
+  plan: Pro
+
+anna:
+  name: Anna Schmidt
+  email: anna@example.com
+  plan: Basic</pre>
+      </div>
+
+      <p>In Mirror mit <code>$dateiname.eintrag.attribut</code> zugreifen:</p>
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> $customers.max.<span class="syn-property">name</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+  <span class="syn-component">Text</span> $customers.max.email, <span class="syn-property">col</span> #888
+  <span class="syn-component">Text</span> $customers.max.plan, <span class="syn-property">col</span> #2563eb</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Über Einträge iterieren</h2>
+      <p>Mit <code>each</code> über alle Einträge einer <code>.data</code>-Datei:</p>
+      <div class="code-block">
+        <pre>each customer in $customers
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">margin</span> 0 0 4 0
+    <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
+      <span class="syn-component">Text</span> customer.<span class="syn-property">name</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+      <span class="syn-component">Text</span> customer.email, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
+    <span class="syn-component">Text</span> customer.plan, <span class="syn-property">col</span> #2563eb, <span class="syn-property">fs</span> 12</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Relationen</h2>
+      <p>Daten können auf andere Daten verweisen. Eine Referenz ist einfach ein Pfad mit <code>$</code>:</p>
+      <div class="code-block">
+        <pre>// data/users.data
+
+toni:
+  name: Toni Steimle
+  role: Lead
+
+anna:
+  name: Anna Schmidt
+  role: Design</pre>
+      </div>
+
+      <div class="code-block">
+        <pre>// data/tasks.data
+
+task1:
+  title: Design Review
+  assignee: $users.toni
+
+task2:
+  title: Wireframes
+  assignee: $users.anna</pre>
+      </div>
+
+      <p><strong>Zugriff durch die Relation:</strong></p>
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> $tasks.task1.title, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+  <span class="syn-component">Text</span> <span class="syn-string">"Zuständig: "</span> + $tasks.task1.assignee.<span class="syn-property">name</span>, <span class="syn-property">col</span> #888</pre>
+      </div>
+
+      <p><code>$tasks.task1.assignee</code> ist der User <code>$users.toni</code>. Mit <code>.name</code> greifst du auf dessen Attribute zu.</p>
+      <h3>N-zu-N Relationen</h3>
+      <p>Für viele-zu-viele Beziehungen: Arrays von Referenzen:</p>
+      <div class="code-block">
+        <pre>// data/projects.data
+
+website:
+  name: Website Relaunch
+  members: $users.toni, $users.anna
+  lead: $users.toni</pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
+  <span class="syn-component">Text</span> $projects.website.<span class="syn-property">name</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
+  <span class="syn-component">Text</span> <span class="syn-string">"Lead: "</span> + $projects.website.lead.<span class="syn-property">name</span>, <span class="syn-property">col</span> #888
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4, <span class="syn-property">margin</span> 8 0 0 0
+    <span class="syn-component">Text</span> <span class="syn-string">"Team:"</span>, <span class="syn-property">col</span> #666, <span class="syn-property">fs</span> 12
+    each member in $projects.website.members
+      <span class="syn-component">Text</span> <span class="syn-string">"• "</span> + member.<span class="syn-property">name</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 13</pre>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Produktliste</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$products: [
+  { name: "Basic", price: 9, features: "5 Users" },
+  { name: "Pro", price: 29, features: "Unlimited" },
+  { name: "Enterprise", price: 99, features: "Custom" }
+]
+
+Frame hor, gap 12
+  each product in $products
+    Frame bg #1a1a1a, pad 20, rad 12, gap 8, w 140, center
+      Text product.name, col white, fs 16, weight 600
+      Text "$" + product.price, col #2563eb, fs 24, weight 700
+      Text product.features, col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Variable definieren</td><td><code>$name: "Wert"</code></td></tr>
+        <tr><td>Datenobjekt</td><td><code>$user:</code> + Einrückung</td></tr>
+        <tr><td>Attribut</td><td><code>  name: "Max"</code></td></tr>
+        <tr><td>Variable verwenden</td><td><code>$name</code></td></tr>
+        <tr><td>Attribut verwenden</td><td><code>$user.name</code></td></tr>
+        <tr><td>Concatenation</td><td><code>"Hallo " + $name</code></td></tr>
+        <tr><td>Arithmetik</td><td><code>$a * $b</code></td></tr>
+        <tr><td>Array</td><td><code>["a", "b", "c"]</code></td></tr>
+        <tr><td>Objekt-Array</td><td><code>[{ key: "value" }]</code></td></tr>
+        <tr><td>Iteration</td><td><code>each item in $list</code></td></tr>
+        <tr><td>Mit Index</td><td><code>each item, index in $list</code></td></tr>
+        <tr><td>.data-Datei</td><td><code>$datei.eintrag.attribut</code></td></tr>
+        <tr><td>Relation (N:1)</td><td><code>assignee: $users.toni</code></td></tr>
+        <tr><td>Relation (N:N)</td><td><code>members: $users.toni, $users.anna</code></td></tr>
+        <tr><td>Durch Relation</td><td><code>$tasks.task1.assignee.name</code></td></tr>
+      </table>
+
+      <p><strong>Eine Syntax, zwei Orte:</strong> Die Syntax für Datenobjekte ist identisch – ob inline in <code>.mir</code> oder ausgelagert in <code>.data</code>.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="09-overlays.html">&larr; Overlays</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="11-content.html">Content &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

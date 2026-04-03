@@ -166,7 +166,7 @@ Modal as frame:
   hidden
 
 Button as button:
-  onclick show Modal
+  onclick show(Modal)
 
 Button "Open"
 Modal
@@ -340,7 +340,7 @@ describe('E2E: Toggle with Dropdown States', () => {
   const input = `
 Dropdown as frame:
   closed
-  onclick toggle
+  onclick toggle()
 
 Dropdown
 `
@@ -409,14 +409,14 @@ $selected: "Select..."
 Item as frame:
   pad 8 12
   cursor pointer
-  onhover highlight
-  onclick select
+  onhover highlight()
+  onclick select()
   highlighted:
     bg #333
 
 Dropdown as frame:
   closed
-  onclick-outside close
+  onclick-outside close()
 
 Dropdown named dropdown1
   - Item "Option 1"

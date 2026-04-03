@@ -15,7 +15,7 @@ import {
   isMultiValueProperty,
   type ParsedLine,
   type ParsedProperty,
-} from '../../src/studio/line-property-parser'
+} from '../../compiler/studio/line-property-parser'
 
 // ===========================================
 // PARSE LINE

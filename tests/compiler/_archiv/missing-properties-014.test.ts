@@ -11,8 +11,8 @@
  * - typography (italic, underline, uppercase)
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../../compiler/parser'
+import { toIR } from '../../../compiler/ir'
 
 describe('Missing Properties', () => {
 
@@ -268,11 +268,13 @@ describe('Missing Properties', () => {
     })
 
     test('visible', () => {
+      // visible removes display:none (sets display: ''), not visibility
       const ir = toIR(parse(`Frame visible`))
       const node = ir.nodes[0]
-      const visibility = getStyle(node, 'visibility')
-      console.log('visible:', visibility)
-      expect(visibility).toBe('visible')
+      const display = getStyle(node, 'display')
+      console.log('visible display:', display)
+      // visible removes display:none, so display should be '' or undefined (not 'none')
+      expect(display).not.toBe('none')
     })
 
     test('disabled', () => {

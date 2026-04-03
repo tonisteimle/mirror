@@ -11,11 +11,11 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { DSL, SCHEMA, type PropertyDef } from '../../src/schema/dsl'
-import { ZAG_PRIMITIVES } from '../../src/schema/zag-primitives'
-import { ZAG_PROP_METADATA } from '../../src/schema/zag-prop-metadata'
-import { parse } from '../../src/parser/parser'
-import { toIR } from '../../src/ir'
+import { DSL, SCHEMA, type PropertyDef } from '../../../compiler/schema/dsl'
+import { ZAG_PRIMITIVES } from '../../../compiler/schema/zag-primitives'
+import { ZAG_PROP_METADATA } from '../../../compiler/schema/zag-prop-metadata'
+import { parse } from '../../../compiler/parser/parser'
+import { toIR } from '../../../compiler/ir'
 
 // ============================================================================
 // Helper Functions
@@ -367,7 +367,8 @@ describe('Schema: CSS Output Verification', () => {
   // ---------------------------------------------------------------------------
   describe('Standalone Boolean CSS', () => {
     // Skip properties where IR handles CSS differently
-    const SKIP_STANDALONE_CSS = new Set(['hidden'])
+    // visible: schema says display: '', but Frame has display: flex by default
+    const SKIP_STANDALONE_CSS = new Set(['hidden', 'visible'])
 
     const standaloneWithCSS = Object.entries(SCHEMA)
       .filter(([name, def]) =>
@@ -434,8 +435,9 @@ describe('Schema: CSS Output Verification', () => {
   // ---------------------------------------------------------------------------
   describe('Numeric CSS', () => {
     // Skip properties that have complex CSS generation or state-variant handling
+    // x, y: schema says transform: translate, but IR uses position: absolute + left/top
     const SKIP_NUMERIC_CSS = new Set([
-      'translate', 'x-offset', 'y-offset',
+      'translate', 'x-offset', 'y-offset', 'x', 'y',
       // Hover variants are handled differently (state CSS)
       'hover-opacity', 'hover-scale', 'hover-border', 'hover-radius'
     ])
@@ -703,7 +705,8 @@ describe('Schema: Completeness Validation', () => {
   })
 
   it('expected action count', () => {
-    expect(Object.keys(DSL.actions).length).toBe(17)
+    // 17 original + 7 overlay + 4 scroll + 4 value + 1 clipboard = 33
+    expect(Object.keys(DSL.actions).length).toBe(33)
   })
 
   it('expected state count', () => {

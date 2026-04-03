@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { TreePanel, createTreePanel, type TreeNode } from '../../studio/panels/tree/index'
-import type { AST, Instance, ComponentDefinition } from '../../src/parser/ast'
+import type { AST, Instance, ComponentDefinition } from '../../compiler/parser/ast'
 
 describe('TreePanel', () => {
   let panel: TreePanel

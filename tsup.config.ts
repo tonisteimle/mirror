@@ -3,14 +3,14 @@ import { defineConfig } from 'tsup'
 export default defineConfig([
   // ESM build for Node.js
   {
-    entry: ['src/index.ts'],
+    entry: ['compiler/index.ts'],
     format: ['esm'],
     dts: true,
     clean: true,
   },
   // IIFE build for browsers
   {
-    entry: ['src/index.ts'],
+    entry: ['compiler/index.ts'],
     format: ['iife'],
     globalName: 'MirrorLang',
     outDir: 'dist/browser',

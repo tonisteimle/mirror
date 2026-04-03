@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { validateStructure, validateAndFix, formatErrors } from '../../studio/agent/validator'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 // ============================================
 // TEST: Validator catches known-bad code

@@ -3,9 +3,9 @@
  */
 
 import type { Command } from './commands'
-import type { AST } from '../../src/parser/ast'
-import type { IR } from '../../src/ir/types'
-import type { SourceMap } from '../../src/ir/source-map'
+import type { AST } from '../../compiler/parser/ast'
+import type { IR } from '../../compiler/ir/types'
+import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ComponentDragData } from '../panels/components/types'
 import type { DropZone } from '../visual/models/drop-zone'
 

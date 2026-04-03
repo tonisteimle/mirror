@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize, Token } from '../../src/parser/lexer'
+import { tokenize, Token } from '../../compiler/parser/lexer'
 
 // Helper: Get tokens without structural tokens
 function tokens(source: string): Token[] {

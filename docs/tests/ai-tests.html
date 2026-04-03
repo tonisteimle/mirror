@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror AI Tests</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="../tutorial/tutorial.css">
+  <style>
+    .test-case {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      border-radius: 12px;
+      background: #1a1a1a;
+    }
+    .test-case.passed {
+      border-left: 4px solid #10b981;
+    }
+    .test-case.failed {
+      border-left: 4px solid #ef4444;
+    }
+    .prompt {
+      background: #111;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .prompt p {
+      margin: 0.5rem 0 0 0;
+      color: #888;
+      font-style: italic;
+    }
+    .errors, .warnings {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+    }
+    .errors {
+      background: #ef444422;
+      border: 1px solid #ef4444;
+    }
+    .warnings {
+      background: #f59e0b22;
+      border: 1px solid #f59e0b;
+    }
+    .errors ul, .warnings ul {
+      margin: 0.5rem 0 0 1.5rem;
+      padding: 0;
+    }
+    .summary-box {
+      background: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .summary-box .score {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #10b981;
+    }
+    .timestamp {
+      color: #666;
+      font-size: 0.875rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>AI System Prompt Tests</h1>
+      <p class="subtitle">Visuelle Prüfung der Claude-generierten Mirror-Ausgaben</p>
+    </header>
+
+    <div class="summary-box">
+      <div class="score">5/5</div>
+      <p>Tests bestanden</p>
+    </div>
+
+    
+    <section class="test-case passed">
+      <h2>✅ Sidebar-Navigation</h2>
+
+      <div class="prompt">
+        <strong>Prompt:</strong>
+        <p>Baue mir eine Seiten-Navigation bestehend aus Gruppen und Navigationseinträgen mit Icons und Text als Liste</p>
+      </div>
+
+      
+      
+        <div class="warnings">
+          <strong>Warnungen:</strong>
+          <ul><li>Icon möglicherweise ohne Anführungszeichen</li></ul>
+        </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+$nav.bg: #0f0f0f
+$nav.item.bg: transparent
+$nav.item.active.bg: #1a1a1a
+$nav.group.col: #666
+$nav.item.col: #888
+$nav.item.active.col: white
+
+// Components
+NavGroup: gap 4, margin 0 0 16 0
+  GroupLabel: fs 11, col $nav.group, uppercase, weight 500, pad 0 12, margin 0 0 4 0
+
+NavItem: hor, gap 10, pad 10 12, rad 6, bg $nav.item, col $nav.item, cursor pointer
+  ItemIcon: is 18, ic #666
+  ItemText: fs 13
+  hover:
+    bg #1a1a1a
+    col white
+  active:
+    bg $nav.item.active
+    col $nav.item.active
+    ItemIcon ic #2563eb
+
+// Layout
+Frame w 220, h full, bg $nav, pad 12, gap 4
+
+  NavGroup
+    GroupLabel &quot;Dashboard&quot;
+    NavItem active
+      ItemIcon
+        Icon &quot;layout-dashboard&quot;
+      ItemText &quot;Übersicht&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;bar-chart-2&quot;
+      ItemText &quot;Analytics&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;activity&quot;
+      ItemText &quot;Berichte&quot;
+
+  NavGroup
+    GroupLabel &quot;Verwaltung&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;users&quot;
+      ItemText &quot;Benutzer&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;folder&quot;
+      ItemText &quot;Projekte&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;file-text&quot;
+      ItemText &quot;Dokumente&quot;
+
+  NavGroup
+    GroupLabel &quot;Einstellungen&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;settings&quot;
+      ItemText &quot;Allgemein&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;shield&quot;
+      ItemText &quot;Sicherheit&quot;
+    NavItem
+      ItemIcon
+        Icon &quot;bell&quot;
+      ItemText &quot;Benachrichtigungen&quot;</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section class="test-case passed">
+      <h2>✅ Login-Formular</h2>
+
+      <div class="prompt">
+        <strong>Prompt:</strong>
+        <p>Erstelle ein dunkles Login-Formular mit E-Mail und Passwort Feldern, einem Anmelden Button und einem Passwort vergessen Link</p>
+      </div>
+
+      
+      
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 360, bg #111, pad 32, rad 16, gap 24
+
+  // Header
+  Frame gap 8, center
+    Text &quot;Willkommen zurück&quot;, col white, fs 24, weight bold
+    Text &quot;Melde dich mit deinem Konto an&quot;, col #888, fs 14
+
+  // Form Fields
+  Frame gap 16
+
+    // E-Mail
+    Frame gap 6
+      Text &quot;E-Mail&quot;, col #888, fs 12
+      Input placeholder &quot;email@example.com&quot;, type email
+        bg #1a1a1a, bor 1, boc #333, col white, pad 14, rad 8, w full
+        focus:
+          boc #2563eb
+
+    // Passwort
+    Frame gap 6
+      Frame hor, spread
+        Text &quot;Passwort&quot;, col #888, fs 12
+        Text &quot;Passwort vergessen?&quot;, col #2563eb, fs 12, cursor pointer
+          hover:
+            underline
+      Input placeholder &quot;••••••••&quot;, type password
+        bg #1a1a1a, bor 1, boc #333, col white, pad 14, rad 8, w full
+        focus:
+          boc #2563eb
+
+  // Submit Button
+  Button &quot;Anmelden&quot;, bg #2563eb, col white, pad 14, rad 8, w full, weight 500, cursor pointer
+    hover:
+      bg #3b82f6
+
+  // Footer
+  Frame hor, center, gap 6
+    Text &quot;Noch kein Konto?&quot;, col #888, fs 13
+    Text &quot;Registrieren&quot;, col #2563eb, fs 13, cursor pointer
+      hover:
+        underline</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section class="test-case passed">
+      <h2>✅ Interaktive Cards</h2>
+
+      <div class="prompt">
+        <strong>Prompt:</strong>
+        <p>Erstelle drei Projekt-Cards die man anklicken kann. Die angeklickte Card soll hervorgehoben sein (exclusive). Jede Card hat Titel und Beschreibung.</p>
+      </div>
+
+      
+      
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ProjectCard: bg #1a1a1a, pad 20, rad 12, gap 8, cursor pointer, bor 2, boc transparent
+  Title: col white, fs 16, weight 600
+  Desc: col #888, fs 14
+  selected:
+    boc #2563eb
+    bg #1a1a2e
+  hover:
+    bg #252525
+  onclick: exclusive()
+
+Frame gap 12
+  ProjectCard
+    Title &quot;Website Redesign&quot;
+    Desc &quot;Komplette Überarbeitung der Firmenwebsite&quot;
+  ProjectCard selected
+    Title &quot;Mobile App&quot;
+    Desc &quot;Native App für iOS und Android&quot;
+  ProjectCard
+    Title &quot;Dashboard&quot;
+    Desc &quot;Analytics Dashboard für das Marketing-Team&quot;</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section class="test-case passed">
+      <h2>✅ Dashboard Stats</h2>
+
+      <div class="prompt">
+        <strong>Prompt:</strong>
+        <p>Erstelle eine Zeile mit 4 Statistik-Cards für ein Dashboard. Jede Card hat ein Icon, einen Wert und ein Label.</p>
+      </div>
+
+      
+      
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16
+
+  StatCard: bg #1a1a1a, rad 12, pad 20, gap 12, w 180
+    IconBox: w 44, h 44, rad 10, center
+    Value: col white, fs 28, weight bold
+    Label: col #888, fs 13
+
+  StatCard
+    IconBox bg #2563eb22
+      Icon &quot;users&quot;, ic #2563eb, is 22
+    Value &quot;1,234&quot;
+    Label &quot;Total Users&quot;
+
+  StatCard
+    IconBox bg #10b98122
+      Icon &quot;dollar-sign&quot;, ic #10b981, is 22
+    Value &quot;$12.4k&quot;
+    Label &quot;Revenue&quot;
+
+  StatCard
+    IconBox bg #f59e0b22
+      Icon &quot;shopping-cart&quot;, ic #f59e0b, is 22
+    Value &quot;456&quot;
+    Label &quot;Orders&quot;
+
+  StatCard
+    IconBox bg #8b5cf622
+      Icon &quot;trending-up&quot;, ic #8b5cf6, is 22
+    Value &quot;+12%&quot;
+    Label &quot;Growth&quot;</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+    <section class="test-case passed">
+      <h2>✅ User Profile Card</h2>
+
+      <div class="prompt">
+        <strong>Prompt:</strong>
+        <p>Erstelle eine User-Profile-Card mit Avatar, Name, Rolle, Bio und Social-Links als Icons</p>
+      </div>
+
+      
+      
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$card.bg: #1a1a1a
+$card.rad: 12
+$primary.bg: #2563eb
+$text.col: #ffffff
+$muted.col: #888888
+
+ProfileCard: bg $card, rad $card, pad 24, gap 16, w 320
+  AvatarSection: center, gap 12
+  InfoSection: center, gap 4
+  BioSection: center
+  SocialSection: hor, center, gap 16
+
+ProfileCard
+  AvatarSection
+    Frame w 80, h 80, bg $primary, rad 99, center
+      Text &quot;TS&quot;, col $text, fs 24, weight bold
+  InfoSection
+    Text &quot;Toni Steimle&quot;, col $text, fs 20, weight semibold
+    Text &quot;Senior Designer&quot;, col $muted, fs 14
+  BioSection
+    Text &quot;Passionate about creating beautiful user experiences and design systems.&quot;, col $muted, fs 13, text-align center
+  SocialSection
+    Frame w 40, h 40, bg #252525, rad 8, center, cursor pointer
+      hover:
+        bg #333
+      Icon &quot;twitter&quot;, ic $muted, is 20
+    Frame w 40, h 40, bg #252525, rad 8, center, cursor pointer
+      hover:
+        bg #333
+      Icon &quot;linkedin&quot;, ic $muted, is 20
+    Frame w 40, h 40, bg #252525, rad 8, center, cursor pointer
+      hover:
+        bg #333
+      Icon &quot;github&quot;, ic $muted, is 20
+    Frame w 40, h 40, bg #252525, rad 8, center, cursor pointer
+      hover:
+        bg #333
+      Icon &quot;mail&quot;, ic $muted, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <p class="timestamp">Generiert: 2026-04-01 08:49:38</p>
+
+    <nav>
+      <a class="index" href="../tutorial/index.html">← Zurück zum Tutorial</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="../tutorial/tutorial.js"></script>
+</body>
+</html>

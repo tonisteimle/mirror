@@ -3,8 +3,8 @@
  */
 
 import { state, actions } from './state'
-import type { SourceMap } from '../../src/ir/source-map'
-import { CodeModifier, type CodeChange, type AddChildOptions } from '../../src/studio/code-modifier'
+import type { SourceMap } from '../../compiler/ir/source-map'
+import { CodeModifier, type CodeChange, type AddChildOptions } from '../../compiler/studio/code-modifier'
 
 export interface Command {
   readonly type: string

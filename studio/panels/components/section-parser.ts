@@ -5,7 +5,7 @@
  * user-defined component sections in the panel.
  */
 
-import type { AST, ComponentDefinition } from '../../../src/parser/ast'
+import type { AST, ComponentDefinition } from '../../../compiler/parser/ast'
 import type { ComponentItem, ComponentSection } from './types'
 
 /**

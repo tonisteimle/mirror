@@ -14,8 +14,8 @@ import type {
   ExecutionResult,
   CodeExecutor as ICodeExecutor,
 } from '../types'
-import type { CodeModifier } from '../../../src/studio/code-modifier'
-import type { SourceMap } from '../../../src/ir/source-map'
+import type { CodeModifier } from '../../../compiler/studio/code-modifier'
+import type { SourceMap } from '../../../compiler/ir/source-map'
 import { getComponentTemplate, getFileType, addComponentToComFile } from '../../panels/components'
 
 /**

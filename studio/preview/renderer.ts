@@ -4,7 +4,7 @@
  * Orchestrates rendering for different preview modes.
  */
 
-import type { AST, TokenDefinition, ComponentDefinition } from '../../src/parser/ast'
+import type { AST, TokenDefinition, ComponentDefinition } from '../../compiler/parser/ast'
 
 export type PreviewMode = 'tokens' | 'component' | 'layout'
 

@@ -2,8 +2,8 @@
  * Aggressive Test 004: Verschachtelte Zag-Komponenten
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Verschachtelte Zag', () => {
 
@@ -297,13 +297,14 @@ Frame
     const outer = ir.nodes[0]
     const inner = outer.children[0]
 
-    // Each-Loop wird zu item-Node transformiert
+    // Each-Loop wird zu node mit each-property transformiert
     expect(inner.children.length).toBe(1)
     const eachNode = inner.children[0] as any
 
-    // Das Kind des each ist ein Text
-    expect(eachNode.children.length).toBe(1)
-    expect(eachNode.children[0].primitive).toBe('text')
+    // Das Template des each enthält ein Text
+    expect(eachNode.each).toBeDefined()
+    expect(eachNode.each.template.length).toBe(1)
+    expect(eachNode.each.template[0].tag).toBe('span') // Text wird zu span
   })
 
 })

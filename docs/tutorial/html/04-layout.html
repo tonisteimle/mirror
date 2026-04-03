@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Layout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Layout</h1>
+      <p class="subtitle">Flex, Grid und Positionierung</p>
+    </header>
+
+    <p class="intro">Mirror bietet drei Layout-Systeme: <strong>Flex</strong> für fließende Layouts (Navigation, Cards), <strong>Grid</strong> für strukturierte Raster (Dashboards, Page-Layouts), und <strong>Stacked</strong> für überlagerte Elemente (Badges, Overlays).</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Flex Layout</h2>
+      <h3>Richtung: hor und ver</h3>
+      <p>Standardmäßig fließen Kinder vertikal (untereinander). Mit <code>hor</code> wechselst du auf horizontal:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  // Vertikal (Standard)
+  Frame bg #1a1a1a, pad 16, rad 8, gap 8
+    Text "Zeile 1", col white
+    Text "Zeile 2", col white
+    Text "Zeile 3", col white
+
+  // Horizontal
+  Frame hor, bg #1a1a1a, pad 16, rad 8, gap 12
+    Frame w 50, h 50, bg #2563eb, rad 6, center
+      Text "1", col white
+    Frame w 50, h 50, bg #10b981, rad 6, center
+      Text "2", col white
+    Frame w 50, h 50, bg #f59e0b, rad 6, center
+      Text "3", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Größen: w und h</h3>
+      <p>Drei Optionen für Breite und Höhe:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
+  // Fester Wert in Pixeln
+  Frame w 120, h 40, bg #f59e0b, rad 4, center
+    Text "w 120", col white, fs 12
+
+  // hug = nur so groß wie der Inhalt
+  Frame w hug, h 40, bg #10b981, rad 4, center, pad 0 16
+    Text "w hug", col white, fs 12
+
+  // full = verfügbaren Platz füllen
+  Frame w full, h 40, bg #2563eb, rad 4, center
+    Text "w full", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Zentrieren und Verteilen</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  // center – beide Achsen
+  Frame w 200, h 80, bg #1a1a1a, rad 8, center
+    Text "center", col white
+
+  // spread – an die Ränder
+  Frame hor, spread, bg #1a1a1a, pad 16, rad 8
+    Text "Links", col white
+    Text "Rechts", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>9 Positionen</h3>
+      <p>Kinder an einer von 9 Positionen platzieren:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8
+  Frame w 70, h 70, bg #1a1a1a, rad 6, tl
+    Text "tl", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, tc
+    Text "tc", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, tr
+    Text "tr", col #888, fs 11
+
+Frame hor, gap 8, margin 8 0 0 0
+  Frame w 70, h 70, bg #1a1a1a, rad 6, cl
+    Text "cl", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, center
+    Text "cen", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, cr
+    Text "cr", col #888, fs 11
+
+Frame hor, gap 8, margin 8 0 0 0
+  Frame w 70, h 70, bg #1a1a1a, rad 6, bl
+    Text "bl", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, bc
+    Text "bc", col #888, fs 11
+  Frame w 70, h 70, bg #1a1a1a, rad 6, br
+    Text "br", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Wrap</h3>
+      <p>Bei Überlauf in die nächste Zeile umbrechen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "1", col white
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "2", col white
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "3", col white
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "4", col white
+  Frame w 60, h 40, bg #2563eb, rad 4, center
+    Text "5", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Grid Layout</h2>
+      <p>Grid ist für strukturierte Raster. Du definierst Spalten, Elemente werden in Zellen platziert.</p>
+      <h3>Grid aktivieren</h3>
+      <p>Mit <code>grid N</code> aktivierst du ein N-Spalten-Grid:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 12, gap 8, bg #111, pad 16, rad 8
+  // w = Spalten-Span (nicht Pixel!)
+  Frame w 12, h 40, bg #2563eb, rad 4, center
+    Text "w 12 (volle Breite)", col white, fs 12
+  Frame w 6, h 40, bg #10b981, rad 4, center
+    Text "w 6", col white, fs 12
+  Frame w 6, h 40, bg #10b981, rad 4, center
+    Text "w 6", col white, fs 12
+  Frame w 4, h 40, bg #f59e0b, rad 4, center
+    Text "w 4", col white, fs 12
+  Frame w 4, h 40, bg #f59e0b, rad 4, center
+    Text "w 4", col white, fs 12
+  Frame w 4, h 40, bg #f59e0b, rad 4, center
+    Text "w 4", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Explizite Platzierung</h3>
+      <p>Mit <code>x</code> und <code>y</code> platzierst du Elemente exakt (1-indexed):</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
+  Frame x 1, y 1, w 12, h 2, bg #2563eb, rad 4, center
+    Text "Hero", col white, fs 12
+
+  Frame x 1, y 3, w 3, h 3, bg #10b981, rad 4, center
+    Text "Sidebar", col white, fs 12
+
+  Frame x 4, y 3, w 9, h 3, bg #333, rad 4, center
+    Text "Content", col white, fs 12
+
+  Frame x 1, y 6, w 12, h 1, bg #1a1a1a, rad 4, center
+    Text "Footer", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Grid als Komponente</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Layout-Komponente
+Dashboard: grid 12, gap 12, row-height 25, h 200
+  Header: x 1, y 1, w 12, h 2, bg #1a1a1a, rad 6, pad 0 16, hor, spread, ver-center
+  Nav: x 1, y 3, w 2, h 5, bg #1a1a1a, rad 6, pad 12, gap 4
+  Main: x 3, y 3, w 10, h 5, grid 2, gap 12
+
+Widget: bg #252525, rad 6, pad 12, gap 4
+  Title: col white, fs 13, weight 500
+  Value: col #2563eb, fs 24, weight 600
+
+// Verwendung
+Dashboard
+  Header
+    Text "Dashboard", col white, weight 500
+    Text "Admin", col #888, fs 12
+  Nav
+    Text "Menu", col #666, fs 10, uppercase
+    Text "Overview", col white, fs 12
+    Text "Users", col #888, fs 12
+  Main
+    Widget
+      Title "Users"
+      Value "1,234"
+    Widget
+      Title "Revenue"
+      Value "$12.4k"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Stacked Layout</h2>
+      <p><code>stacked</code> stapelt Kinder übereinander. Positionierung mit <code>x</code> und <code>y</code> – wie in Figma:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
+  // Vier Ecken
+  Frame x 0, y 0, w 30, h 30, bg #ef4444, rad 4
+  Frame x 170, y 0, w 30, h 30, bg #f59e0b, rad 4
+  Frame x 0, y 120, w 30, h 30, bg #10b981, rad 4
+  Frame x 170, y 120, w 30, h 30, bg #2563eb, rad 4
+
+  // Mitte
+  Frame x 80, y 55, w 40, h 40, bg white, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Praktisch: Badge auf Icon</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 24
+  // Icon mit Badge
+  Frame w 44, h 44, stacked
+    Frame x 0, y 0, w 44, h 44, bg #1a1a1a, rad 8, center
+      Icon "bell", ic #888, is 22
+    Frame x 30, y -4, w 18, h 18, bg #ef4444, rad 99, center
+      Text "3", col white, fs 10, weight 600
+
+  // Avatar mit Status
+  Frame w 44, h 44, stacked
+    Frame x 0, y 0, w 44, h 44, bg #2563eb, rad 99, center
+      Text "TS", col white, fs 14, weight 500
+    Frame x 30, y 30, w 14, h 14, bg #10b981, rad 99, bor 2, boc #111</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>System</th><th>Verwendung</th></tr>
+        <tr><td><strong>Flex</strong></td><td>Fließende Layouts (Navigation, Cards)</td></tr>
+        <tr><td><strong>Grid</strong></td><td>Strukturierte Raster (Dashboards)</td></tr>
+        <tr><td><strong>Stacked</strong></td><td>Überlagerungen (Badges, Overlays)</td></tr>
+      </table>
+
+      <p><strong>Flex:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>hor</code>, <code>ver</code> – Richtung</li>
+        <li><code>gap N</code> – Abstand</li>
+        <li><code>center</code>, <code>spread</code> – Ausrichtung</li>
+        <li><code>tl</code> bis <code>br</code> – 9 Positionen</li>
+        <li><code>w/h</code>: Pixel, <code>hug</code>, <code>full</code></li>
+        <li><code>wrap</code> – Zeilenumbruch</li>
+      </ul>
+      <p><strong>Grid:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>grid 12</code> – 12-Spalten-Grid</li>
+        <li><code>w 4</code>, <code>h 2</code> – Spalten/Zeilen-Span</li>
+        <li><code>x 1, y 1</code> – Position (1-indexed)</li>
+        <li><code>row-height 40</code> – Zeilenhöhe</li>
+      </ul>
+      <p><strong>Stacked:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>stacked</code> – Kinder übereinander</li>
+        <li><code>x</code>, <code>y</code> – Position (wie Figma)</li>
+        <li><code>w</code>, <code>h</code> – Größe</li>
+        <li><code>z N</code> – Stapelreihenfolge</li>
+      </ul>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="03-tokens.html">&larr; Tokens</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="05-styling.html">Styling &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

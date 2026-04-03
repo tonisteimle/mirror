@@ -1,6 +1,6 @@
 # Mirror DSL Properties
 
-> **Auto-generated** aus `src/schema/dsl.ts` – nicht manuell editieren!
+> **Auto-generated** aus `compiler/schema/dsl.ts` – nicht manuell editieren!
 
 ## Übersicht
 
@@ -521,21 +521,39 @@ Box margin 16
 
 ### background (`bg`)
 
-Background color
+Background color or gradient
 
 | Wert | Beschreibung | CSS |
 |------|--------------|-----|
 | `<color>` | Hex color or token | `background: <color>` |
 | `$token` | Design Token | *(Token-Wert)* |
+| `grad #a #b` | Horizontal gradient | `background: linear-gradient(90deg, #a, #b)` |
+| `grad-ver #a #b` | Vertical gradient | `background: linear-gradient(180deg, #a, #b)` |
+| `grad N #a #b` | Angled gradient | `background: linear-gradient(Ndeg, #a, #b)` |
+
+**Beispiele:**
+```mirror
+Frame bg grad #2563eb #7c3aed
+Frame bg grad-ver #f59e0b #ef4444
+Frame bg grad 135 #10b981 #2563eb #7c3aed
+```
 
 ### color (`col`, `c`)
 
-Text color
+Text color or gradient
 
 | Wert | Beschreibung | CSS |
 |------|--------------|-----|
 | `<color>` | Hex color or token | `color: <color>` |
 | `$token` | Design Token | *(Token-Wert)* |
+| `grad #a #b` | Horizontal text gradient | `background-clip: text` workaround |
+| `grad-ver #a #b` | Vertical text gradient | `background-clip: text` workaround |
+
+**Beispiele:**
+```mirror
+Text col grad #2563eb #7c3aed
+Text col grad-ver #f59e0b #ef4444
+```
 
 ### border-color (`boc`)
 
@@ -741,82 +759,6 @@ Y position (top) - sets position: absolute
 ```mirror
 Box y 50
 ```
-
-### pin-left (`pl`)
-
-Pin to left edge with offset
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| `<number>` | Distance from left edge in pixels | `pin-left: Npx` |
-
-**Beispiele:**
-```mirror
-Box pin-left 20
-```
-
-### pin-right (`pr`)
-
-Pin to right edge with offset
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| `<number>` | Distance from right edge in pixels | `pin-right: Npx` |
-
-**Beispiele:**
-```mirror
-Box pin-right 20
-```
-
-### pin-top (`pt`)
-
-Pin to top edge with offset
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| `<number>` | Distance from top edge in pixels | `pin-top: Npx` |
-
-**Beispiele:**
-```mirror
-Box pin-top 20
-```
-
-### pin-bottom (`pb`)
-
-Pin to bottom edge with offset
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| `<number>` | Distance from bottom edge in pixels | `pin-bottom: Npx` |
-
-**Beispiele:**
-```mirror
-Box pin-bottom 20
-```
-
-### pin-center-x (`pcx`)
-
-Center horizontally within parent
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| *(standalone)* | Center horizontally | `position: absolute`, `left: 50%`, `transform: translateX(-50%)` |
-
-### pin-center-y (`pcy`)
-
-Center vertically within parent
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| *(standalone)* | Center vertically | `position: absolute`, `top: 50%`, `transform: translateY(-50%)` |
-
-### pin-center (`pc`)
-
-Center both horizontally and vertically
-
-| Wert | Beschreibung | CSS |
-|------|--------------|-----|
-| *(standalone)* | Center in both directions | `position: absolute`, `left: 50%`, `top: 50%`, `transform: translate(-50%, -50%)` |
 
 ### z
 

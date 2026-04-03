@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 // ============================================================================
 // BASIC TOKEN DEFINITIONS
@@ -25,7 +25,7 @@ describe('Parser: Token Definitions', () => {
     expect(ast.tokens.length).toBe(1)
     expect(ast.tokens[0].name).toBe('sm')
     expect(ast.tokens[0].tokenType).toBe('size')
-    expect(ast.tokens[0].value).toBe('4')
+    expect(ast.tokens[0].value).toBe(4)
   })
 
   it('parses font token', () => {
@@ -63,7 +63,7 @@ lg: size = 16`)
 
   it('parses token with number value', () => {
     const ast = parse('gap: size = 16')
-    expect(ast.tokens[0].value).toBe('16')
+    expect(ast.tokens[0].value).toBe(16)
   })
 
   it('parses token with string color name', () => {
@@ -120,7 +120,7 @@ b: color = #222`)
 
   it('preserves decimal in size', () => {
     const ast = parse('ratio: size = 1.5')
-    expect(ast.tokens[0].value).toBe('1.5')
+    expect(ast.tokens[0].value).toBe(1.5)
   })
 })
 
@@ -179,7 +179,7 @@ describe('Parser: Simplified Token Syntax', () => {
     expect(ast.tokens.length).toBe(1)
     expect(ast.tokens[0].name).toBe('sm')
     expect(ast.tokens[0].tokenType).toBe('size')
-    expect(ast.tokens[0].value).toBe('4')
+    expect(ast.tokens[0].value).toBe(4)
   })
 
   it('parses font token without type', () => {
@@ -207,7 +207,8 @@ lg: 16`)
     expect(ast.tokens.length).toBe(1)
     expect(ast.tokens[0].name).toBe('half')
     expect(ast.tokens[0].tokenType).toBe('size')
-    expect(ast.tokens[0].value).toBe('50%')
+    // Parser returns number for percentage, unit is stored separately or inferred
+    expect(ast.tokens[0].value).toBe(50)
   })
 
   it('mixes simplified and legacy syntax', () => {

@@ -9,7 +9,7 @@ import { EditorController, createEditorController, setEditorController, EditorDr
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
-import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../src/studio'
+import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
 import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
@@ -18,10 +18,10 @@ import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
 import { initUserSettings } from './storage/user-settings'
-import type { AST } from '../src/parser/ast'
-import type { IR } from '../src/ir/types'
-import type { SourceMap } from '../src/ir/source-map'
-import type { CodeChange } from '../src/studio/code-modifier'
+import type { AST } from '../compiler/parser/ast'
+import type { IR } from '../compiler/ir/types'
+import type { SourceMap } from '../compiler/ir/source-map'
+import type { CodeChange } from '../compiler/studio/code-modifier'
 
 export interface BootstrapConfig {
   editor: any

@@ -6,7 +6,7 @@
 
 import type { CompletionContext, CompletionResult, Completion as CMCompletion } from '@codemirror/autocomplete'
 import { getAutocompleteEngine, type Completion } from './index'
-import { COMPONENT_TEMPLATES, adjustTemplateIndentation } from '../../src/schema/component-templates'
+import { COMPONENT_TEMPLATES, adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
 /**
  * Map our completion types to CodeMirror completion types

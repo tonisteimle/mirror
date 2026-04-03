@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { compile } from '../../src'
+import { compile } from '../../compiler'
 
 describe('State Animation Code Generation', () => {
   describe('State machine config with animations', () => {

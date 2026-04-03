@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
-import { toIR, type IRResult } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR, type IRResult } from '../../compiler/ir'
 
 describe('IR Validation Warnings', () => {
   /**
@@ -28,10 +28,10 @@ describe('IR Validation Warnings', () => {
     })
 
     it('emits warning for multiple unknown properties', () => {
-      // Using separate lines to ensure separate properties
+      // Using unknown properties with values (standalone identifiers are parsed as initialState)
       const result = getIRWithWarnings(`
-        Box foo
-        Box bar
+        Box foo 123
+        Box bar 456
       `)
       expect(result.warnings.length).toBeGreaterThanOrEqual(2)
       const propNames = result.warnings.map(w => w.property)

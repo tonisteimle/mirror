@@ -10,8 +10,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
-import type { Instance, State } from '../../src/parser/ast'
+import { parse } from '../../compiler/parser'
+import type { Instance, State } from '../../compiler/parser/ast'
 
 describe('State Animation Parsing', () => {
   describe('Animation preset after colon', () => {

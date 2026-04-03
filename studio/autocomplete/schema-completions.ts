@@ -10,7 +10,7 @@
  * - ZAG_PRIMITIVES from src/schema/zag-primitives.ts
  */
 
-import { DSL, SCHEMA, ZAG_PRIMITIVES, type PropertyDef } from '../../src/schema/dsl'
+import { DSL, SCHEMA, ZAG_PRIMITIVES, type PropertyDef } from '../../compiler/schema/dsl'
 import type { Completion } from './index'
 
 // ============================================================================

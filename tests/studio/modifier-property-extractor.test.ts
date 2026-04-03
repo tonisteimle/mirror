@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { PropertyExtractor, createPropertyExtractor, type ExtractedProperty } from '../../src/studio/property-extractor'
-import { SourceMap, SourceMapBuilder } from '../../src/ir/source-map'
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { PropertyExtractor, createPropertyExtractor, type ExtractedProperty } from '../../compiler/studio/property-extractor'
+import { SourceMap, SourceMapBuilder } from '../../compiler/ir/source-map'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 import type { AST } from '../../parser/ast'
 
 // Helper to create test context from source code

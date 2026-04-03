@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize, Token } from '../../src/parser/lexer'
+import { tokenize, Token } from '../../compiler/parser/lexer'
 
 // Helper
 function tokens(source: string): Token[] {
@@ -231,16 +231,18 @@ describe('Lexer: Boundary Conditions', () => {
 describe('Lexer: Error Resilience', () => {
   it('unknown characters are skipped', () => {
     const result = tokens('A @ B')
-    expect(result.length).toBe(2)
+    // @ is now a valid token (AT), so we get 3 tokens: A, @, B
+    expect(result.length).toBe(3)
     expect(result[0].value).toBe('A')
-    expect(result[1].value).toBe('B')
+    expect(result[1].type).toBe('AT')
+    expect(result[2].value).toBe('B')
   })
 
   it('multiple unknown characters', () => {
     const result = tokens('A @#$%^ B')
-    // Note: # triggers scanNumber, $ starts variable scan
-    // So we get: A, #, $, B (4 tokens)
-    expect(result.length).toBe(4)
+    // @ is AT token, # triggers scanNumber, $ starts variable scan
+    // So we get: A, @, #, $, B (5 tokens)
+    expect(result.length).toBe(5)
   })
 
   it('brackets are skipped', () => {
@@ -283,9 +285,10 @@ describe('Lexer: Special Sequences', () => {
 
   it('arrow-like sequence', () => {
     const result = tokens('->')
-    // - is unknown/skipped, > is now a valid GT token
-    expect(result.length).toBe(1)
-    expect(result[0].type).toBe('GT')
+    // - is tokenized separately, > is a GT token
+    expect(result.length).toBe(2)
+    expect(result[0].type).toBe('MINUS')
+    expect(result[1].type).toBe('GT')
   })
 
   it('comparison operators', () => {

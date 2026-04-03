@@ -1,0 +1,12 @@
+// Test Mirror File
+$primary.bg: #2563eb
+$card.bg: #1a1a1a
+
+Card: bg $card, pad 16, rad 8, gap 8
+  Title: col white, fs 16, weight 500
+  Desc: col #888, fs 14
+
+Card
+  Title "Hello World"
+  Desc "This is a test file for MCP integration."
+  Button "Click me", bg $primary, col white, pad 12 24, rad 6

@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier, type FilesAccess } from '../../src/studio/code-modifier'
-import { SourceMapBuilder, type SourceMap } from '../../src/ir/source-map'
+import { CodeModifier, type FilesAccess } from '../../compiler/studio/code-modifier'
+import { SourceMapBuilder, type SourceMap } from '../../compiler/ir/source-map'
 
 /**
  * Helper to create a simple SourceMap for testing

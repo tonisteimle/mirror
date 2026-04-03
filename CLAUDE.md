@@ -270,8 +270,12 @@ Die folgenden Kapitel führen durch alle Konzepte:
 | 05 | **Styling** – Farben, Typografie, Effekte |
 | 06-07 | **Interaktion** – States, Events, Functions |
 | 08-09 | **Navigation** – Tabs, Accordion, Overlays |
-| 10-12 | **Fortgeschritten** – Daten, Formulare, Theming |
-| 13 | **Referenz** – Häufige Fehler und Checkliste |
+| 10-11 | **Daten** – Variablen, Content |
+| 12-13 | **Abfragen** – Filter, Sortierung, Methoden |
+| 14-15 | **Tabellen** – Tables, CRUD |
+| 16-17 | **Formulare** – Inputs, Bedingungen |
+| 18 | **Seiten** – Apps mit mehreren Dateien |
+| 19 | **Referenz** – Häufige Fehler |
 
 Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.
 
@@ -1365,16 +1369,20 @@ Hier passieren zwei Dinge:
 Manchmal soll ein Element bereits im aktivierten State starten. Dafür gibst du den State-Namen bei der Instanz an:
 
 ```mirror
-Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+FavBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
+  Icon "heart", ic #888, is 16
+  "Merken"
   on:
     bg #2563eb
+    Icon "heart", ic white, is 16, fill
+    "Gemerkt"
 
 Frame hor, gap 12
-  Btn "Normal"
-  Btn "Bereits aktiv", on
+  FavBtn
+  FavBtn on
 ```
 
-Der zweite Button startet im `on` State (blauer Hintergrund). Ein Klick schaltet ihn auf Base zurück.
+Der zweite Button startet im `on` State. Beide Buttons sind unabhängig – jeder toggelt für sich. Für "nur einer aktiv" siehe `exclusive()`.
 
 ## States können alles ändern
 
@@ -1981,6 +1989,126 @@ Frame ver, w 350, pad 16, bg #111, rad 8, gap 12
 ```
 
 
+## SideNav
+
+SideNav ist eine vollständige Sidebar-Navigation mit Tastatursteuerung, aufklappbaren Gruppen und automatischer View-Verlinkung.
+
+### Basis
+
+```mirror
+Frame hor, h full
+  SideNav defaultValue "dashboard"
+    NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
+    NavItem "Projects", icon "folder", value "projects", navigate(ProjectsView)
+    NavItem "Settings", icon "settings", value "settings", navigate(SettingsView)
+
+  Frame w full, pad 24
+    DashboardView: Frame name DashboardView
+      Text "Dashboard Content"
+    ProjectsView: Frame name ProjectsView, hidden
+      Text "Projects Content"
+    SettingsView: Frame name SettingsView, hidden
+      Text "Settings Content"
+```
+
+### Mit Header, Footer und Gruppen
+
+```mirror
+SideNav defaultValue "dashboard", w 240
+  Header:
+    Frame pad 16
+      Text "My App", fs 18, weight bold
+
+  NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
+  NavItem "Messages", icon "mail", value "messages", navigate(MessagesView), badge "3"
+
+  NavGroup "Analytics"
+    NavItem "Reports", icon "bar-chart", value "reports", navigate(ReportsView)
+    NavItem "Insights", icon "lightbulb", value "insights", navigate(InsightsView)
+
+  NavGroup "Settings", collapsible, defaultOpen
+    NavItem "Account", icon "user", value "account", navigate(AccountView)
+    NavItem "Security", icon "shield", value "security", navigate(SecurityView)
+
+  Footer:
+    Frame pad 16
+      Text "v1.0.0", col #666, fs 12
+```
+
+### Collapsed Mode (nur Icons)
+
+```mirror
+SideNav defaultValue "dashboard", collapsed, w 64
+  NavItem icon "home", value "dashboard", navigate(DashboardView)
+  NavItem icon "folder", value "projects", navigate(ProjectsView)
+  NavItem icon "settings", value "settings", navigate(SettingsView)
+```
+
+### Styling
+
+```mirror
+SideNav defaultValue "dashboard"
+  Root: bg #0a0a0a, bor 0 1 0 0, boc #1a1a1a
+  Item: pad 12 16, rad 8, margin 2 8, col #888
+    selected:
+      bg #1a1a1a
+      col white
+    hover:
+      bg #151515
+  ItemIcon: is 20, ic #666
+  ItemBadge: bg #ef4444, col white, pad 2 8, rad 99, fs 11
+  Group: margin 16 0 0 0
+  GroupLabel: pad 8 16, col #444, fs 11, uppercase
+
+  NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
+  NavGroup "Admin"
+    NavItem "Users", icon "users", value "users", navigate(UsersView)
+```
+
+### Props & Slots
+
+| SideNav Props | Beschreibung |
+|---------------|--------------|
+| `defaultValue` | Welches Item beim Start aktiv |
+| `collapsed` | Nur Icons anzeigen |
+| `w` | Breite (default: 240) |
+
+| NavItem Props | Beschreibung |
+|---------------|--------------|
+| `value` | Eindeutige ID (required) |
+| `icon` | Icon-Name (Lucide) |
+| `badge` | Badge-Text |
+| `navigate(View)` | Welches Element anzeigen |
+| `disabled` | Deaktiviert |
+
+| NavGroup Props | Beschreibung |
+|----------------|--------------|
+| `collapsible` | Aufklappbar |
+| `defaultOpen` | Startet offen |
+
+| Slots | Beschreibung |
+|-------|--------------|
+| `Root:` | Container |
+| `Header:` | Header-Bereich |
+| `Footer:` | Footer-Bereich |
+| `Item:` | Alle NavItems |
+| `ItemIcon:` | Icons |
+| `ItemBadge:` | Badges |
+| `Group:` | NavGroup Container |
+| `GroupLabel:` | Gruppen-Überschrift |
+
+### Tastatursteuerung
+
+| Taste | Aktion |
+|-------|--------|
+| `ArrowDown` | Nächstes Item |
+| `ArrowUp` | Vorheriges Item |
+| `ArrowRight` | Gruppe öffnen |
+| `ArrowLeft` | Gruppe schließen |
+| `Enter/Space` | Item aktivieren |
+| `Home/End` | Erstes/Letztes Item |
+
+
 ## Zusammenfassung
 
 | Komponente | Pattern | Anwendung |
@@ -1988,12 +2116,15 @@ Frame ver, w 350, pad 16, bg #111, rad 8, gap 12
 | `Tabs` + `Tab` | Label + Kinder → Content | Zwischen Ansichten wechseln |
 | `Accordion` + `AccordionItem` | Label + Kinder → Content | Mehrere aufklappbare Bereiche |
 | `Collapsible` | `Trigger:` + `Content:` | Ein einzelner Toggle |
+| `SideNav` + `NavItem/NavGroup` | Items mit navigate() | Sidebar-Navigation |
 
 **Tabs:** `defaultValue` · Elemente: `List:`, `Trigger:`, `Indicator:`, `Content:`
 
 **Accordion:** `multiple`, `icon` · Elemente: `Item:`, `ItemTrigger:`, `ItemContent:`
 
 **Collapsible:** `defaultOpen`
+
+**SideNav:** `defaultValue`, `collapsed` · Elemente: `Root:`, `Header:`, `Footer:`, `Item:`, `Group:`
 
 ### 09-overlays: Overlays
 
@@ -2207,524 +2338,773 @@ Frame hor, gap 8
 
 **Optionen:** `positioning`, `openDelay`, `closeDelay`, `closeOnEscape`
 
-### 10-data: Daten
+### 10-variablen: Variablen & Daten
 
+Mit `$` definierst du Variablen – lokal im Code oder in externen `.data`-Dateien.
 
-Mirror trennt UI von Daten. Mit `$` greifst du auf Variablen zu – egal ob Token, YAML-Datei oder JavaScript. Eine Syntax für alle Datenquellen.
-
-## $-Variablen
-
-Das `$`-Zeichen bedeutet: "Hole den Wert dieser Variable". Die Variable kann aus drei Quellen stammen:
-
-### Tokens (in Mirror)
-
-Für schnelle Prototypen definierst du Werte direkt in Mirror:
+## Lokale Variablen
 
 ```mirror
-$userName: "Max Mustermann"
-$userPlan: "Pro"
+$name: "Max"
+$count: 42
 
-Frame bg #1a1a1a, pad 16, rad 8, gap 8
-  Text $userName, col white, fs 14
-  Text $userPlan, col #10b981, fs 12
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Name: " + $name, col white
+  Text "Count: " + $count, col #888
 ```
 
-### YAML-Dateien
-
-Für strukturierte Daten nutzt du YAML. Dateien im `data/`-Ordner sind automatisch verfügbar:
-
-```yaml
-# data/users.yaml
-- name: Anna
-  role: Admin
-- name: Ben
-  role: User
-```
+## Arrays und each
 
 ```mirror
-// $users enthält das Array aus der YAML-Datei
+each color in ["Rot", "Grün", "Blau"]
+  Frame bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+    Text color, col white
+```
+
+## Objekt-Arrays
+
+```mirror
+$users: [
+  { name: "Max", role: "Admin" },
+  { name: "Anna", role: "User" }
+]
+
 each user in $users
-  Text user.name, col white
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+    Text user.name, col white, weight 500
+    Text user.role, col #888, fs 12
 ```
 
-### JavaScript
+## Externe .data-Dateien
 
-Jede JS-Variable ist mit `$` erreichbar:
-
-```javascript
-const currentUser = { name: "Max", plan: "Pro" }
-const products = await fetch('/api/products').json()
 ```
+// data/customers.data
+
+max:
+name: Max Mustermann
+email: max@example.com
+
+anna:
+name: Anna Schmidt
+email: anna@example.com
+```
+
+In Mirror: `$dateiname.eintrag.attribut`
 
 ```mirror
-Text $currentUser.name
-each item in $products
-  Text item.title
+Text $customers.max.name
+each customer in $customers
+  Text customer.name
 ```
-
-**Pragmatisch:** Wer will, kann alles in JS definieren. Funktioniert genauso.
-
-## Each-Loops
-
-Mit `each` iterierst du über Arrays:
-
-```mirror
-Frame gap 8
-  each item in ["Apple", "Banana", "Cherry"]
-    Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
-      Icon "circle", ic #10b981, is 8
-      Text item, col white, fs 13
-```
-
-### Objekte
-
-Bei Objekten greifst du mit Punkt-Notation auf Properties zu:
-
-```mirror
-Frame gap 8
-  each user in [{ name: "Anna", role: "Admin" }, { name: "Ben", role: "User" }]
-    Frame hor, spread, bg #1a1a1a, pad 12, rad 6
-      Text user.name, col white, fs 13
-      Text user.role, col #888, fs 11
-```
-
-### Index
-
-Mit `with index` hast du zusätzlich die Position (ab 0):
-
-```mirror
-Frame gap 4
-  each item in ["Erster", "Zweiter", "Dritter"] with index
-    Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
-      Frame w 24, h 24, bg #2563eb, rad 4, center
-        Text index + 1, col white, fs 11
-      Text item, col white, fs 13
-```
-
-### Verschachtelt
-
-Der innere Loop hat Zugriff auf Variablen des äußeren:
-
-```mirror
-Frame gap 12
-  each category in [{ name: "Früchte", items: ["Apfel", "Birne"] }, { name: "Gemüse", items: ["Karotte", "Brokkoli"] }]
-    Frame bg #1a1a1a, pad 12, rad 8, gap 8
-      Text category.name, col white, fs 14, weight 500
-      each item in category.items
-        Text item, col #888, fs 12
-```
-
-## Berechnungen
-
-Variablen lassen sich verrechnen:
-
-```mirror
-$count: 3
-$price: 29
-
-Frame bg #1a1a1a, pad 16, rad 8, gap 8
-  Text $count + " Artikel", col white
-  Text "Summe: €" + ($count * $price), col #10b981
-```
-
-- **String:** `$name + " ist da"`
-- **Mathematik:** `$a + $b`, `$a * $b`, `$a - $b`, `$a / $b`
-- **Klammern:** `($a + $b) * $c`
-
-## Praktisch: Produkt-Grid
-
-```mirror
-Frame grid 2, gap 12
-  each product in [{ name: "Kopfhörer", price: 199 }, { name: "Keyboard", price: 149 }, { name: "Maus", price: 79 }, { name: "Monitor", price: 399 }]
-    Frame bg #1a1a1a, rad 12, clip, cursor pointer
-      Frame w full, h 80, bg #2563eb, center
-        Icon "package", ic white, is 32
-      Frame pad 12, gap 4
-        Text product.name, col white, fs 14, weight 500
-        Text "€" + product.price, col #888, fs 13
-      hover:
-        scale 1.02
-```
-
 
 ## Zusammenfassung
 
 | Konzept | Syntax |
 |---------|--------|
-| Token definieren | `$name: value` |
-| Variable nutzen | `$name` |
-| YAML-Daten | `data/file.yaml` → `$file` |
-| JS-Variable | `const x = ...` → `$x` |
-| Liste iterieren | `each item in [...]` |
-| Mit Index | `each item in [...] with index` |
-| Property | `item.name` |
-| Berechnung | `$a + $b`, `$a * $b` |
+| Variable definieren | `$name: "Wert"` |
+| Array | `["a", "b", "c"]` |
+| Objekt-Array | `[{ key: "value" }]` |
+| Iteration | `each item in $list` |
+| .data-Datei | `$datei.eintrag.attribut` |
 
-### 11-forms: Formulare
+### 11-content: Content Management
 
+Für redaktionelle Inhalte: Markdown in `.data`-Dateien oder externe `.md`-Dateien.
 
-## Text Input
+## Markdown-Blöcke
 
-Einfache Texteingabe mit Styling:
+```
+// data/articles.data
+
+welcome:
+title: Willkommen
+
+@body
+# Überschrift
+
+Text mit **Formatierung**.
+```
+
+In Mirror: `$articles.welcome.body`
+
+## Externe Markdown-Dateien
+
+```
+welcome:
+title: Willkommen
+body: @welcome-body
+```
+
+Die Datei `content/welcome-body.md` enthält reines Markdown.
+
+## Markdown stylen
 
 ```mirror
+#: fs 32, weight 900, col white
+##: fs 24, weight 700, col white
+**: weight bold
+*: italic
+```
+
+## Das Prinzip
+
+| Datei | Inhalt | Wer |
+|-------|--------|-----|
+| `.data` | Struktur + Markdown | Entwickler |
+| `.md` | Reines Markdown | Content-Autoren |
+| `.mir` | Layout, Komponenten | Designer |
+
+### 12-abfragen: Abfragen
+
+Daten abfragen ohne SQL. Mit `where` filterst du, mit `by` sortierst du, mit `.count` und `.sum` aggregierst du.
+
+## Filter mit where
+
+```mirror
+// Alle erledigten Tasks
+each task in $tasks where done == true
+  Text task.title, col white, pad 4
+
+// Alle Tasks mit hohem Aufwand
+each task in $tasks where aufwand > 10
+  Frame hor, spread, bg #1a1a1a, pad 12, rad 6
+    Text task.title, col white
+    Text task.aufwand + "h", col #888
+```
+
+### Vergleiche
+
+| Operator | Bedeutung | Beispiel |
+|----------|-----------|----------|
+| `==` | gleich | `status == "open"` |
+| `!=` | ungleich | `status != "done"` |
+| `>` | größer | `aufwand > 10` |
+| `<` | kleiner | `priority < 3` |
+| `>=` | größer gleich | `age >= 18` |
+| `<=` | kleiner gleich | `price <= 100` |
+
+### Kombinieren mit and/or
+
+```mirror
+// Offene Tasks mit hoher Priorität
+each task in $tasks where done == false and priority > 5
+  Text task.title, col #ef4444, pad 4
+
+// Tasks von Toni oder Anna
+each task in $tasks where assignee == $users.toni or assignee == $users.anna
+  Text task.title, col white, pad 4
+```
+
+## Sortieren mit by
+
+```mirror
+// Nach Datum aufsteigend
+each task in $tasks by dueDate
+  Text task.title, col white, pad 4
+
+// Nach Priorität absteigend
+each task in $tasks by priority desc
+  Text task.title, col white, pad 4
+
+// Kombiniert: Filter + Sortierung
+each task in $tasks where done == false by aufwand desc
+  Frame hor, spread, bg #1a1a1a, pad 12, rad 6
+    Text task.title, col white
+    Text task.aufwand + "h", col #f59e0b
+```
+
+## Aggregieren
+
+```mirror
+// Zählen
+$taskCount: ($tasks).count
+$openCount: ($tasks where done == false).count
+
+// Summe
+$totalHours: ($tasks).sum(aufwand)
+
+// Durchschnitt
+$avgHours: ($tasks).avg(aufwand)
+
+// Min/Max
+$minPrice: ($products).min(price)
+$maxPrice: ($products).max(price)
+
+// First/Last
+$firstTask: ($tasks by createdAt).first
+$lastTask: ($tasks by createdAt).last
+```
+
+## Gruppieren
+
+```mirror
+$byStatus: ($tasks) grouped by status
+
+each group in $byStatus
+  Frame gap 8, margin 0 0 16 0
+    Text group.key, col #888, fs 12, uppercase
+    each task in group.items
+      Text task.title, col white, pad 4
+```
+
+## Zusammenfassung
+
+| Konzept | Syntax |
+|---------|--------|
+| Filtern | `$tasks where done == true` |
+| Kombinieren | `where a == 1 and b == 2` |
+| Sortieren | `$tasks by dueDate` |
+| Absteigend | `$tasks by priority desc` |
+| Zählen | `($tasks).count` |
+| Summe | `($tasks).sum(aufwand)` |
+| Durchschnitt | `($tasks).avg(aufwand)` |
+| Gruppieren | `($tasks) grouped by status` |
+
+### 13-methoden: Methoden
+
+Eigene Funktionen auf Daten. Methoden gehören zu einer Collection und werden separat definiert.
+
+## Methoden deklarieren
+
+Am Anfang einer `.data`-Datei:
+
+```
+// data/projects.data
+
+Gesamtaufwand()
+Fortschritt()
+OffeneTasks()
+
+website:
+  name: Website Relaunch
+  status: active
+```
+
+## Methoden definieren
+
+```
+function projects.Gesamtaufwand(project)
+  tasks = $tasks where project == project
+  return tasks.sum(aufwand)
+
+function projects.Fortschritt(project)
+  tasks = $tasks where project == project
+  done = tasks where done == true
+  if tasks.count == 0
+    return 0
+  return done.count / tasks.count
+```
+
+## Methoden aufrufen
+
+```mirror
+each project in $projects where status == "active"
+  Frame bg #1a1a1a, pad 20, rad 12, gap 12
+    Text project.name, col white, fs 18, weight 600
+    Frame hor, gap 24
+      Frame gap 4
+        Text "Aufwand", col #666, fs 12
+        Text project.Gesamtaufwand() + "h", col white, fs 20
+      Frame gap 4
+        Text "Fortschritt", col #666, fs 12
+        Text (project.Fortschritt() * 100).toFixed(0) + "%", col white, fs 20
+```
+
+## Die Funktions-Syntax
+
+Mirror-Funktionen sind wie JavaScript – nur sauberer:
+
+| JavaScript | Mirror |
+|------------|--------|
+| `for (const x of items) { }` | `each x in items` |
+| `if (cond) { }` | `if cond` |
+| `const x = ...` | `x = ...` |
+| Keine `{ }` | Einrückung |
+
+## Zusammenfassung
+
+| Konzept | Syntax |
+|---------|--------|
+| Methode deklarieren | `Gesamtaufwand()` (am Anfang der .data) |
+| Methode definieren | `function collection.name(param)` |
+| Methode aufrufen | `$projects.website.Gesamtaufwand()` |
+| Lokale Variable | `tasks = ...` (kein $) |
+| Globale Daten | `$tasks`, `$users` (mit $) |
+
+### 14-tables: Tabellen
+
+Tabellen für Business-Anwendungen. Zero Config wenn möglich, volle Kontrolle wenn nötig.
+
+## Die einfachste Tabelle
+
+```mirror
+Table $tasks
+```
+
+Mirror erkennt Felder, inferiert Typen, wählt passendes Rendering.
+
+## Typ-Inferenz
+
+| Wert | Erkannter Typ | Table-Rendering |
+|------|---------------|-----------------|
+| `"text"` | String | Links, Text |
+| `123` | Number | Rechts, summierbar |
+| `true/false` | Boolean | Checkbox-Icon |
+| `$ref` | Relation | Zeigt `.name` |
+| `2024-02-15` | Date | Formatiert |
+
+## Query-Integration
+
+```mirror
+// Gefiltert
+Table $tasks where done == false
+
+// Sortiert
+Table $tasks by priority desc
+
+// Gruppiert
+Table $tasks grouped by status
+```
+
+## Spalten anpassen
+
+```mirror
+Table $tasks
+  Column titel, w 250
+  Column aufwand, suffix "h"
+  Column priority, hidden
+  Column done, label "Erledigt"
+```
+
+## Custom Cells
+
+```mirror
+Table $users
+  Column "User"
+    Cell:
+      Frame hor, gap 12
+        Frame w 36, h 36, bg #333, rad 99, center
+          Text row.name.charAt(0), col white, weight 600
+        Frame gap 2
+          Text row.name, col white, weight 500
+          Text row.email, col #888, fs 12
+```
+
+## Selection
+
+```mirror
+// Single Selection
+Table $tasks, select()
+
+// Multi Selection
+Table $tasks, select(multi)
+```
+
+## Zusammenfassung
+
+| Konzept | Syntax |
+|---------|--------|
+| Einfache Table | `Table $data` |
+| Mit Query | `Table $data where x by y` |
+| Selection | `Table $data, select()` |
+| Column Override | `Column field, w 200, suffix "h"` |
+| Custom Cell | `Cell:` mit `row.field` |
+
+### 15-crud: Daten bearbeiten
+
+Create, Read, Update, Delete mit UI-Binding. Das Schlüsselkonzept ist `$collection.current`.
+
+## Das Kernkonzept: current
+
+Jede Collection hat einen Cursor – den Eintrag, mit dem der User arbeitet:
+
+```mirror
+$tasks.current          // Der aktive Task
+$users.current          // Der aktive User
+```
+
+UI-Elemente setzen diesen Cursor automatisch:
+
+```mirror
+Table $tasks                    // Klick setzt $tasks.current
+each task in $tasks, select()   // Klick setzt $tasks.current
+Form $tasks                     // Arbeitet mit $tasks.current
+```
+
+## Form: Daten bearbeiten
+
+`Form $collection` bindet automatisch an `$collection.current`:
+
+```mirror
+Form $tasks, w 320
+  Field title
+  Field description, multiline
+  Field aufwand
+  Field done
+
+  Actions:
+    Button "Speichern", save()
+    Button "Verwerfen", revert()
+```
+
+Form erkennt Feldtypen automatisch:
+
+| Datentyp | Generiertes UI |
+|----------|----------------|
+| String | Input |
+| Number | NumberInput |
+| Boolean | Switch |
+| Relation | Select mit Optionen |
+
+## Create: Neue Einträge
+
+```mirror
+Button "Neuer Task", create($tasks)
+
+// Mit Initialwerten
+Button "Task hinzufügen", create($tasks, {
+  project: $projects.current,
+  priority: 2
+})
+```
+
+## Delete: Einträge löschen
+
+```mirror
+Button "Löschen", delete($tasks.current)
+
+// Mit Bestätigung
+Button "Löschen", delete($tasks.current, confirm: "Task wirklich löschen?")
+```
+
+## Zusammenfassung
+
+| Konzept | Syntax |
+|---------|--------|
+| Cursor | `$collection.current` |
+| Table setzt Cursor | `Table $tasks` |
+| Form bindet an Cursor | `Form $tasks` |
+| Field | `Field name` |
+| Create | `create($tasks)`, `create($tasks, {...})` |
+| Save | `save()` in Form |
+| Delete | `delete($tasks.current)` |
+
+### 16-forms: Formulare
+
+Formulare verbinden UI mit Daten. Two-Way Binding macht die Verbindung automatisch.
+
+## Two-Way Binding
+
+Ein Input mit `value $variable` ist bidirektional gebunden:
+
+```mirror
+$name: "Max"
+
 Frame gap 12, w 280
+  Input value $name, placeholder "Dein Name"
+    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+  Text "Hallo, " + $name + "!", col white, fs 16
+```
+
+Tippe in das Input – der Text aktualisiert sich live.
+
+## Binding an Datenobjekte
+
+```mirror
+$user:
+  name: "Max Mustermann"
+  email: "max@example.com"
+
+Frame gap 16, w 300
   Frame gap 4
     Text "Name", col #888, fs 12
-    Input placeholder "Dein Name"
+    Input value $user.name
       bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
-      focus:
-        boc #2563eb
 
   Frame gap 4
     Text "E-Mail", col #888, fs 12
-    Input placeholder "email@example.com", type email
+    Input value $user.email, type email
       bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
-      focus:
-        boc #2563eb
 ```
 
-## Textarea
+## Form Elemente
 
-Mehrzeiliges Textfeld:
+### Input
 
 ```mirror
-Frame gap 4, w 280
-  Text "Nachricht", col #888, fs 12
-  Textarea placeholder "Schreibe eine Nachricht..."
-    bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full, h 100
-    focus:
-      boc #2563eb
+Input placeholder "Name", value $form.name
+  bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+Input placeholder "E-Mail", type email, value $form.email
+Input placeholder "Passwort", type password, value $form.password
+Input placeholder "Alter", type number, value $form.age
 ```
 
-## Checkbox
-
-Checkbox mit Zag-Integration:
+### Textarea
 
 ```mirror
-Frame gap 12
-  Checkbox
-    Root hor, gap 10, cursor pointer
-      Control w 20, h 20, bor 2, boc #444, rad 4
-      Label "Newsletter abonnieren", col white, fs 13
-
-  Checkbox checked
-    Root hor, gap 10, cursor pointer
-      Control w 20, h 20, bor 2, boc #444, rad 4
-      Label "AGB akzeptieren", col white, fs 13
-
-  Checkbox disabled
-    Root hor, gap 10, cursor not-allowed, opacity 0.5
-      Control w 20, h 20, bor 2, boc #444, rad 4
-      Label "Deaktiviert", col #888, fs 13
+Textarea value $form.message, placeholder "Nachricht..."
+  bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full, h 100
 ```
 
-## Switch
-
-Toggle-Switch für Ein/Aus-Zustände:
+### Checkbox
 
 ```mirror
-Frame gap 12
-  Switch
-    Root hor, gap 12
-      Track w 44, h 24, bg #333, rad 99, pad 2
-        Thumb w 20, h 20, bg white, rad 99
-      Label "Dark Mode", col white, fs 13
-
-  Switch checked
-    Root hor, gap 12
-      Track w 44, h 24, bg #2563eb, rad 99, pad 2
-        Thumb w 20, h 20, bg white, rad 99
-      Label "Notifications", col white, fs 13
+Checkbox checked $settings.newsletter
+  Root hor, gap 10, cursor pointer
+    Control w 20, h 20, bor 2, boc #444, rad 4
+    Label "Newsletter abonnieren", col white, fs 13
 ```
 
-## Radio Group
-
-Gruppe von Radio-Buttons:
+### Switch
 
 ```mirror
-RadioGroup value "monthly"
+Switch checked $prefs.darkMode
+  Root hor, gap 12
+    Track w 44, h 24, rad 99, pad 2
+    Label "Dark Mode", col white, fs 13
+```
+
+### RadioGroup
+
+```mirror
+RadioGroup value $billing.plan
   Root gap 10
-    Label "Abrechnungszeitraum", col white, fs 14, weight 500, margin 0 0 4 0
-
     Item value "monthly"
       ItemControl w 20, h 20, bor 2, boc #444, rad 99
-      ItemText "Monatlich - €9/Monat", col white, fs 13, margin 0 0 0 10
+      ItemText "Monatlich – €9/Monat", col white, fs 13
 
     Item value "yearly"
       ItemControl w 20, h 20, bor 2, boc #444, rad 99
-      ItemText "Jährlich - €99/Jahr", col white, fs 13, margin 0 0 0 10
+      ItemText "Jährlich – €99/Jahr", col white, fs 13
 ```
 
-## Select Dropdown
-
-Dropdown-Auswahl mit Zag:
+### Select
 
 ```mirror
-Frame gap 4, w 240
-  Text "Land", col #888, fs 12
-  Select
-    Trigger bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, hor, spread
-      ValueText "Land auswählen", col #888, fs 13
-      Icon "chevron-down", ic #666, is 16
-    Content bg #1a1a1a, bor 1, boc #333, rad 8, pad 4, shadow lg
-      Item "Deutschland", pad 10, rad 4, col white, fs 13, cursor pointer
-        hover:
-          bg #2a2a2a
-      Item "Österreich", pad 10, rad 4, col white, fs 13, cursor pointer
-        hover:
-          bg #2a2a2a
-      Item "Schweiz", pad 10, rad 4, col white, fs 13, cursor pointer
-        hover:
-          bg #2a2a2a
+Select value $task.assignee
+  Trigger bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, hor, spread, w full
+    ValueText col white, fs 13
+    Icon "chevron-down", ic #666, is 16
+  Content bg #1a1a1a, rad 8, pad 4, shadow lg
+    each user in $users
+      Item user.name, value user
 ```
 
-## Slider
-
-Wertauswahl mit Slider:
+### Slider
 
 ```mirror
-Frame gap 16, w 280
-  Slider value 50, min 0, max 100
-    Root gap 8
-      Label hor, spread
-        Text "Lautstärke", col white, fs 13
-        ValueText col #888, fs 12
-      Track h 6, bg #333, rad 99
-        Range bg #2563eb, rad 99
-        Thumb w 18, h 18, bg white, rad 99, shadow md
+Slider value $audio.volume, min 0, max 100
+  Root gap 8
+    Label hor, spread
+      Text "Lautstärke", col white, fs 13
+      ValueText col #888, fs 12
+    Track h 6, bg #333, rad 99
+      Range bg #2563eb, rad 99
+      Thumb w 18, h 18, bg white, rad 99
 ```
 
-## Praktisch: Login Form
+## Formulare absenden
 
 ```mirror
-Frame w 320, bg #1a1a1a, pad 24, rad 16, gap 20
-  Frame gap 4, center
-    Text "Willkommen zurück", col white, fs 20, weight 600
-    Text "Melde dich mit deinem Konto an", col #888, fs 13
-
-  Frame gap 16
-    Frame gap 4
-      Text "E-Mail", col #888, fs 12
-      Input placeholder "email@example.com", type email
-        bg #111, bor 1, boc #333, col white, pad 12, rad 8, w full
-        focus:
-          boc #2563eb
-
-    Frame gap 4
-      Frame hor, spread
-        Text "Passwort", col #888, fs 12
-        Text "Vergessen?", col #2563eb, fs 12, cursor pointer
-      Input placeholder "••••••••", type password
-        bg #111, bor 1, boc #333, col white, pad 12, rad 8, w full
-        focus:
-          boc #2563eb
-
-    Checkbox
-      Root hor, gap 8
-        Control w 18, h 18, bor 2, boc #444, rad 4
-        Label "Angemeldet bleiben", col #888, fs 12
-
-  Button "Anmelden", bg #2563eb, col white, pad 14, rad 8, w full, weight 500
-    hover:
-      bg #3b82f6
-
-  Frame hor, center, gap 4
-    Text "Noch kein Konto?", col #888, fs 13
-    Text "Registrieren", col #2563eb, fs 13, cursor pointer
+Button "Task erstellen", bg #2563eb, col white, pad 14, rad 8, createTask()
 ```
 
+```
+function createTask()
+  $tasks.add({
+    title: $newTask.title,
+    aufwand: $newTask.aufwand,
+    done: false
+  })
+  // Formular zurücksetzen
+  $newTask.title = ""
+  $newTask.aufwand = 0
+```
 
 ## Zusammenfassung
 
-- `Input` – Texteingabe (type: text, email, password)
-- `Textarea` – Mehrzeiliger Text
-- `Checkbox` – Ankreuzfeld (Root, Control, Label)
-- `Switch` – Toggle (Track, Thumb, Label)
-- `RadioGroup` – Radio-Buttons (Item, ItemControl, ItemText)
-- `Select` – Dropdown (Trigger, Content, Item)
-- `Slider` – Wertebereich (Track, Range, Thumb)
+| Konzept | Syntax |
+|---------|--------|
+| Two-Way Binding | `Input value $variable` |
+| Objekt-Feld | `Input value $user.email` |
+| Checkbox Binding | `Checkbox checked $settings.newsletter` |
+| Select Binding | `Select value $task.assignee` |
+| Submit | `Button "Speichern", saveUser()` |
+| Hinzufügen | `$collection.add({...})` |
 
-### 12-theming: Theming
+### 17-bedingungen: Bedingte Anzeige
 
+Elemente basierend auf Bedingungen ein- und ausblenden. **Block Conditionals** für ganze Elemente, **Inline Conditionals** für Property-Werte.
 
-## Design Tokens
-
-Definiere Werte einmal, nutze sie überall:
-
-```mirror
-// Token-Definitionen
-$primary.bg: #2563eb
-$secondary.bg: #10b981
-$surface.bg: #1a1a1a
-$text.col: #ffffff
-$muted.col: #888888
-
-Frame gap 12
-  Button "Primary", bg $primary, col $text, pad 12 24, rad 6
-  Button "Secondary", bg $secondary, col $text, pad 12 24, rad 6
-  Frame bg $surface, pad 16, rad 8
-    Text "Surface mit Text", col $text, fs 14
-    Text "Und Muted Text", col $muted, fs 12
-```
-
-## Nested Tokens
-
-Tokens können verschachtelt werden mit Punkt-Notation:
+## Block Conditionals: if / else
 
 ```mirror
-// Verschachtelte Tokens
-$color.primary.bg: #2563eb
-$color.success.bg: #10b981
-$color.warning.bg: #f59e0b
-$color.danger.bg: #ef4444
+$loggedIn: true
 
-$spacing.sm.pad: 8
-$spacing.md.pad: 16
-$spacing.lg.pad: 24
-
-Frame gap $spacing.md
-  Frame hor, gap $spacing.sm
-    Frame w 40, h 40, bg $color.primary, rad 6
-    Frame w 40, h 40, bg $color.success, rad 6
-    Frame w 40, h 40, bg $color.warning, rad 6
-    Frame w 40, h 40, bg $color.danger, rad 6
-
-  Frame bg #1a1a1a, pad $spacing.lg, rad 8
-    Text "Large Padding mit Token", col white, fs 13
+if loggedIn
+  Text "Willkommen zurück!", col white
 ```
 
-## Komponenten-Definition
-
-Wiederverwendbare Komponenten mit `:`:
+### if / else
 
 ```mirror
-// Komponenten-Definitionen
-PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
-  hover:
-    bg #3b82f6
+$loggedIn: false
 
-SecondaryBtn: = Button bg #333, col white, pad 12 24, rad 6
-  hover:
-    bg #444
-
-Card: = Frame bg #1a1a1a, pad 20, rad 12
-
-// Verwendung
-Frame gap 12
-  Frame hor, gap 8
-    PrimaryBtn "Speichern"
-    SecondaryBtn "Abbrechen"
-
-  Card
-    Text "Wiederverwendbare Card", col white, fs 14
+if loggedIn
+  Text "Willkommen zurück!", col white
+else
+  Button "Anmelden", bg #2563eb, col white, pad 10 20, rad 6
 ```
 
-## Komponenten mit Slots
-
-Definiere Layout-Strukturen mit benannten Slots:
+### Mehrere Elemente
 
 ```mirror
-// Card mit Slots definieren
-InfoCard: bg #1a1a1a, pad 16, rad 12, gap 12
-  CardIcon: w 40, h 40, rad 8, center
-  CardContent: gap 4
-    CardTitle: col white, fs 14, weight 500
-    CardDescription: col #888, fs 12
+$showDetails: true
 
-// Verwendung
-Frame gap 12
-  InfoCard
-    CardIcon bg #2563eb22
-      Icon "code", ic #2563eb, is 20
-    CardContent
-      CardTitle "Development"
-      CardDescription "Build amazing applications"
-
-  InfoCard
-    CardIcon bg #10b98122
-      Icon "palette", ic #10b981, is 20
-    CardContent
-      CardTitle "Design"
-      CardDescription "Create beautiful interfaces"
+Frame bg #1a1a1a, pad 16, rad 8, gap 8
+  Text "Produkt", col white, fs 16, weight 500
+  if showDetails
+    Text "Beschreibung des Produkts", col #888, fs 13
+    Text "Preis: €29", col #10b981, fs 14
+    Button "Kaufen", bg #2563eb, col white, pad 8 16, rad 4
 ```
 
-## Vererbung mit as
-
-Komponenten können von anderen erben:
+## Komplexe Bedingungen
 
 ```mirror
-// Basis-Komponente
-BaseBtn: = Button pad 12 24, rad 6, weight 500
+// Logische Operatoren
+if isAdmin && hasPermission
+  Text "Admin Panel", col white
 
-// Erweiterte Versionen
-PrimaryBtn as BaseBtn: = bg #2563eb, col white
-  hover:
-    bg #3b82f6
+// Vergleiche
+if count > 0
+  Text count + " Artikel im Warenkorb", col white
+else
+  Text "Warenkorb ist leer", col #888
 
-DangerBtn as BaseBtn: = bg #ef4444, col white
-  hover:
-    bg #f87171
-
-GhostBtn as BaseBtn: = bg transparent, col #888, bor 1, boc #333
-  hover:
-    bg #1a1a1a
-    col white
-
-Frame hor, gap 8
-  PrimaryBtn "Primary"
-  DangerBtn "Danger"
-  GhostBtn "Ghost"
+// Negation
+if !disabled
+  Button "Absenden", bg #2563eb, col white
 ```
 
-## Praktisch: Complete Theme
-
-Ein vollständiges Theme-System:
+## if mit each kombinieren
 
 ```mirror
-// Theme Tokens
-$theme.bg: #0a0a0a
-$theme.surface.bg: #1a1a1a
-$theme.border.boc: #333
-$theme.text.col: #ffffff
-$theme.muted.col: #888888
-$theme.primary.bg: #2563eb
-
-// Komponenten
-Card: = Frame bg $theme.surface, rad 12, bor 1, boc $theme.border
-CardHeader: = Frame pad 16 16 12 16
-CardBody: = Frame pad 0 16 16 16
-CardTitle: = Text col $theme.text, fs 16, weight 600
-CardDesc: = Text col $theme.muted, fs 13
-
-PrimaryBtn: = Button bg $theme.primary, col $theme.text, pad 10 20, rad 6
-  hover:
-    opacity 0.9
-
-// Verwendung
-Frame bg $theme, pad 20, rad 16, gap 16
-  Card w 280
-    CardHeader
-      CardTitle "Projekt erstellen"
-      CardDesc "Neues Projekt anlegen"
-    CardBody gap 12
-      Input placeholder "Projektname"
-        bg $theme, bor 1, boc $theme.border, col $theme.text, pad 10, rad 6, w full
-      PrimaryBtn "Erstellen", w full
+each task in tasks
+  Frame hor, gap 8, pad 8, bg #252525, rad 4
+    if task.done
+      Icon "check", ic #10b981, is 16
+    else
+      Icon "circle", ic #666, is 16
+    Text task.title, col white, fs 13
 ```
 
+## Inline Conditionals (Ternary)
+
+Für einzelne Property-Werte:
+
+```mirror
+$active: true
+
+Button "Status", bg active ? #2563eb : #333, col white, pad 10 20, rad 6
+```
+
+```mirror
+// Opacity basierend auf Sichtbarkeit
+Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
+
+// Icon basierend auf Status
+Icon done ? "check" : "circle", ic done ? #10b981 : #666, is 18
+
+// Text basierend auf Anzahl
+Text count > 0 ? count + " Einträge" : "Keine Einträge", col #888
+```
+
+## Block vs. Inline
+
+| Syntax | Verwendung |
+|--------|------------|
+| `if` / `else` Block | Ganze Elemente ein-/ausblenden |
+| `condition ? a : b` | Einzelne Property-Werte |
+
+**Faustregel:** Element komplett erscheinen/verschwinden? → `if` Block. Nur Farbe/Größe wechseln? → Ternary.
 
 ## Zusammenfassung
 
-- `$name.suffix: value` – Token definieren (z.B. `$primary.bg: #2563eb`)
-- `$name` – Token verwenden (z.B. `bg $primary`)
-- `$group.name.suffix: value` – Verschachtelte Tokens
-- `Name: = ...` – Komponente definieren
-- `Name` – Komponente verwenden
-- `Child as Parent:` – Vererbung
-- Slots mit `SlotName:` definieren
+| Syntax | Beispiel |
+|--------|----------|
+| `if bedingung` | `if loggedIn` |
+| `if ... else` | `if count > 0 ... else` |
+| `&&`, `\|\|`, `!` | `if isAdmin && hasAccess` |
+| Ternary | `bg active ? #2563eb : #333` |
 
-### 13-fehler: Häufige Fehler
+### 18-pages: Seiten
+
+
+Du kennst bereits Tabs – mehrere Inhalte, einer ist sichtbar. Für größere Apps funktioniert das gleiche Prinzip mit Dateien.
+
+## Tabs: Inline vs. Datei
+
+```mirror
+// Inline-Content (hat Kinder)
+Tabs defaultValue "home"
+  Tab "Home", value "home"
+    Text "Willkommen zuhause"
+  Tab "Settings", value "settings"
+    Text "Einstellungen"
+
+// Datei-Content (keine Kinder)
+Tabs defaultValue "home"
+  Tab "Home", value "home"       // → home.mirror
+  Tab "Settings", value "settings" // → settings.mirror
+```
+
+**Die Regel:** Hat ein Tab Kinder → Inhalt inline. Keine Kinder → Inhalt aus Datei (vom `value` abgeleitet).
+
+## Navigation mit SideNav
+
+```mirror
+Frame hor, w full, h full
+  SideNav defaultValue "dashboard", w 200
+    Item "Dashboard", icon "home", value "dashboard"
+    Item "Projekte", icon "folder", value "projects"
+    Item "Settings", icon "settings", value "settings"
+```
+
+```
+dashboard.mirror   ← Inhalt für "Dashboard"
+projects.mirror    ← Inhalt für "Projekte"
+settings.mirror    ← Inhalt für "Settings"
+```
+
+## Komponenten teilen
+
+```mirror
+// components.mirror
+Card: bg #1a1a1a, pad 16, rad 8
+PrimaryBtn: = Button bg #2563eb, col white, pad 10 20, rad 6
+```
+
+```mirror
+// dashboard.mirror
+use components
+
+Card
+  Text "Willkommen"
+  PrimaryBtn "Los geht's"
+```
+
+## Zusammenfassung
+
+| Situation | Syntax |
+|-----------|--------|
+| Tab mit Inline-Content | `Tab "Name"` + Kinder |
+| Tab mit Datei-Content | `Tab "Name", value "x"` (keine Kinder) → x.mirror |
+| Komponenten importieren | `use components` |
+
+### 19-fehler: Häufige Fehler
 
 
 Dieses Kapitel zeigt typische Fehler und ihre Korrektur. Jeder Fehler hat ein "Falsch"-Beispiel, ein "Richtig"-Beispiel und eine kurze Erklärung.

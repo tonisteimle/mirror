@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { compile } from '../../src'
+import { compile } from '../../compiler'
 
 describe('State Machine Code Generation', () => {
   it('generates state machine config for state with trigger', () => {
@@ -18,8 +18,9 @@ Tab
 
     // Should contain state machine configuration
     expect(output).toContain('_stateMachine')
-    expect(output).toContain("initial: 'selected'")
-    expect(output).toContain("current: 'selected'")
+    // New behavior: initial state is always 'default'
+    expect(output).toContain("initial: 'default'")
+    expect(output).toContain("current: 'default'")
     expect(output).toContain("'selected': {")
     expect(output).toContain("'background': '#fff'")
   })

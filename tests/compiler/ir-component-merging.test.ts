@@ -8,8 +8,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 // Helper to get styles from first node
 function getNodeStyles(code: string) {

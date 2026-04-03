@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['tests/**/*.test.ts'],
-    exclude: ['tests/e2e/**'],
+    exclude: ['tests/e2e/**', 'tests/**/_archiv/**'],
     testTimeout: 5000,
     setupFiles: ['./tests/utils/setup.ts'],
     environmentMatchGlobs: [
@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/parser/**/*.ts', 'src/ir/**/*.ts', 'src/backends/**/*.ts'],
+      include: ['compiler/parser/**/*.ts', 'compiler/ir/**/*.ts', 'compiler/backends/**/*.ts'],
       exclude: ['tests/**'],
       thresholds: {
         lines: 80,

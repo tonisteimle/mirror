@@ -220,8 +220,8 @@ Frame tc hor    → column (FALSCH!)
 "letzter gewinnt" funktioniert korrekt.
 
 **geänderte dateien:**
-- `src/schema/ir-helpers.ts` - 9-zone zu ALIGNMENT_PROPERTIES
-- `src/ir/index.ts` - layout-properties in reihenfolge verarbeiten
+- `compiler/schema/ir-helpers.ts` - 9-zone zu ALIGNMENT_PROPERTIES
+- `compiler/ir/index.ts` - layout-properties in reihenfolge verarbeiten
 
 **test:** `bugs-found.test.ts`
 
@@ -383,7 +383,7 @@ flex-basierten styles zu prozentualen styles nicht mehr entfernt.
 nur das automatische `min-width: 0` von `w full` wird entfernt.
 
 **geänderte dateien:**
-- `src/ir/index.ts` - 3 stellen wo flex-styles gefiltert werden
+- `compiler/ir/index.ts` - 3 stellen wo flex-styles gefiltert werden
 
 ### bug 3: aspect video gibt 'video' statt '16/9'
 
@@ -396,7 +396,7 @@ Frame aspect video  → aspect-ratio: video (falsch!)
 **lösung:** keyword-mapping für aspect hinzugefügt (video → 16/9, square → 1).
 
 **geänderte dateien:**
-- `src/ir/index.ts` - aspect handler
+- `compiler/ir/index.ts` - aspect handler
 
 ### bug 4: pin-left/pin-right werden nicht generiert
 
@@ -409,7 +409,7 @@ Frame pin-left 10  → kein left: 10px
 aufgerufen, damit properties wie `pin-left` korrekt verarbeitet werden.
 
 **geänderte dateien:**
-- `src/ir/index.ts` - propertyToCSS reihenfolge geändert
+- `compiler/ir/index.ts` - propertyToCSS reihenfolge geändert
 
 ---
 
@@ -485,7 +485,7 @@ Frame x -50  → left: -50 (FALSCH!)
 **lösung:** regex für x/y geändert von `/^\d+$/` zu `/^-?\d+$/` um negative werte zu unterstützen.
 
 **geänderte dateien:**
-- `src/ir/index.ts` - x und y handler
+- `compiler/ir/index.ts` - x und y handler
 
 ---
 
@@ -560,8 +560,8 @@ Frame bg #333 hover: bg light  → hover-state wird ignoriert
    - neben `resolvedComponent.states` und `inlineStateStyles`
 
 **geänderte dateien:**
-- `src/parser/parser.ts` - inline state parsing
-- `src/ir/index.ts` - `instanceStateStyles` hinzugefügt
+- `compiler/parser/parser.ts` - inline state parsing
+- `compiler/ir/index.ts` - `instanceStateStyles` hinzugefügt
 
 **test:** `token-usage-013.test.ts` - "Inline hover State wird erkannt"
 
@@ -583,9 +583,9 @@ Input onkeydown enter: submit  → parser crash oder falsches parsing
 3. **IR:** `instance.events` wird jetzt auch transformiert
 
 **geänderte dateien:**
-- `src/parser/ast.ts` - events/states felder zu Instance
-- `src/parser/parser.ts` - KEYBOARD_KEYS, event parsing in parseInlineProperties
-- `src/ir/index.ts` - instanceEvents hinzugefügt
+- `compiler/parser/ast.ts` - events/states felder zu Instance
+- `compiler/parser/parser.ts` - KEYBOARD_KEYS, event parsing in parseInlineProperties
+- `compiler/ir/index.ts` - instanceEvents hinzugefügt
 
 **test:** `provocation-021.test.ts` - "onkeydown enter - Tastatur-Event"
 
@@ -605,7 +605,7 @@ Frame bg #333
 - states werden korrekt mit inline und block properties geparst
 
 **geänderte dateien:**
-- `src/parser/parser.ts` - STATE_NAMES, state block parsing in parseInstanceBody
+- `compiler/parser/parser.ts` - STATE_NAMES, state block parsing in parseInstanceBody
 
 **test:** `token-usage-013.test.ts` - "Block hover State wird erkannt"
 
@@ -640,7 +640,7 @@ Select w 200 bg #f00 pad 10
 - alle anderen props (w, h, bg, pad, rad, etc.) werden zu CSS transformiert
 
 **geänderte dateien:**
-- `src/ir/index.ts` - styling-properties in transformZagComponent
+- `compiler/ir/index.ts` - styling-properties in transformZagComponent
 
 **tests:**
 - `zag-selection-015.test.ts` - "Select + Layout" tests
@@ -1492,7 +1492,7 @@ SpecialClickable
 - präzise prüfung: `on` + mindestens 1 zeichen (nicht `on`/`off`)
 
 **geänderte dateien:**
-- `src/parser/parser.ts` - event-check vor state-check in parseComponentBody
+- `compiler/parser/parser.ts` - event-check vor state-check in parseComponentBody
 
 **test:** `inheritance-005.test.ts` - "5.6: Vererbung mit Events"
 
@@ -1510,7 +1510,7 @@ NavItem Icon "home"; Label "Home"
 - `parseChildOverridesFromStart` nutzt jetzt `{ stopAtSemicolon: true }`
 
 **geänderte dateien:**
-- `src/parser/parser.ts` - stopAtSemicolon option
+- `compiler/parser/parser.ts` - stopAtSemicolon option
 
 **test:** `parser-child-overrides.test.ts` (16 tests)
 
@@ -1522,7 +1522,7 @@ Text "Hello World"    ← wie immer
 ```
 
 **geänderte dateien:**
-- `src/parser/lexer.ts` - scanString() unterstützt beide quote-typen
+- `compiler/parser/lexer.ts` - scanString() unterstützt beide quote-typen
 
 **test:** `html-output-022.test.ts` - "single quotes"
 

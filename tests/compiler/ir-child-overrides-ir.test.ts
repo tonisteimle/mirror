@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser/parser'
+import { toIR } from '../../compiler/ir'
 
 // ============================================================================
 // INSTANCE CHILD OVERRIDES → IR

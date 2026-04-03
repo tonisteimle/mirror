@@ -9,8 +9,8 @@ import {
   toProblemPanelItems,
   toStatusBarInfo,
   getQuickFixes,
-} from '../../src/validator/studio-integration'
-import { validate } from '../../src/validator/index'
+} from '../../compiler/validator/studio-integration'
+import { validate } from '../../compiler/validator/index'
 
 describe('DebouncedValidator', () => {
   beforeEach(() => {

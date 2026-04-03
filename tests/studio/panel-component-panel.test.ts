@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { ComponentPanel, createComponentPanel } from '../../studio/panels/components/component-panel'
 import { LAYOUT_PRESETS, BASIC_COMPONENTS, BASIC_PRIMITIVES, type ComponentDragData } from '../../studio/panels/components'
 import { parseComponentSections } from '../../studio/panels/components/section-parser'
-import type { AST } from '../../src/parser/ast'
+import type { AST } from '../../compiler/parser/ast'
 
 // Mock DataTransfer for jsdom
 class MockDataTransfer {

@@ -8,8 +8,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier } from '../../src/studio/code-modifier'
-import { SourceMap, SourceMapBuilder } from '../../src/ir/source-map'
+import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { SourceMap, SourceMapBuilder } from '../../compiler/ir/source-map'
 
 // ============================================================================
 // TEST HELPERS

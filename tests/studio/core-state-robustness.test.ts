@@ -10,9 +10,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { state, actions, selectors } from '../../studio/core/state'
 import { events } from '../../studio/core/events'
-import type { SourceMap } from '../../src/ir/source-map'
-import type { AST } from '../../src/parser/ast'
-import type { IR } from '../../src/ir/types'
+import type { SourceMap } from '../../compiler/ir/source-map'
+import type { AST } from '../../compiler/parser/ast'
+import type { IR } from '../../compiler/ir/types'
 
 // Mock SourceMap with hierarchy support
 interface MockNodeConfig {

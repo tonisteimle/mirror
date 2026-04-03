@@ -614,7 +614,7 @@ describe('Core: Interaktionen', () => {
     it('registriert onclick Event', () => {
       const { jsCode } = compileAndExecute(`
 Button as button:
-  onclick show Modal
+  onclick show(Modal)
 
 Modal as frame:
   hidden
@@ -628,7 +628,7 @@ Modal
     it('onclick mit mehreren Actions', () => {
       const { jsCode } = compileAndExecute(`
 Item as frame:
-  onclick select, highlight
+  onclick select()
 
 Item "Click"
 `)
@@ -641,7 +641,7 @@ Item "Click"
     it('registriert onhover Event', () => {
       const { jsCode } = compileAndExecute(`
 Item as frame:
-  onhover highlight
+  onhover highlight()
 
 Item "Hover"
 `)
@@ -653,7 +653,7 @@ Item "Hover"
     it('registriert onclick-outside Event', () => {
       const { jsCode } = compileAndExecute(`
 Dropdown as frame:
-  onclick-outside close
+  onclick-outside close()
 
 Dropdown
 `)
@@ -677,9 +677,9 @@ Input
     it('verschiedene Keyboard-Keys', () => {
       const { jsCode } = compileAndExecute(`
 List as frame:
-  onkeydown escape: close
-  onkeydown arrow-down: highlight next
-  onkeydown arrow-up: highlight prev
+  onkeydown escape: close()
+  onkeydown arrow-down: highlight(next)
+  onkeydown arrow-up: highlight(prev)
 
 List
 `)
@@ -693,7 +693,7 @@ List
     it('toggle Action', () => {
       const { jsCode } = compileAndExecute(`
 Button as button:
-  onclick toggle Menu
+  onclick toggle(Menu)
 
 Menu as frame:
   closed
@@ -707,10 +707,10 @@ Menu
     it('show/hide Actions', () => {
       const { jsCode } = compileAndExecute(`
 ShowBtn as button:
-  onclick show Modal
+  onclick show(Modal)
 
 HideBtn as button:
-  onclick hide Modal
+  onclick hide(Modal)
 
 Modal as frame:
   hidden
@@ -726,7 +726,7 @@ Modal
     it('select Action', () => {
       const { jsCode } = compileAndExecute(`
 Option as frame:
-  onclick select
+  onclick select()
 
 Option "Option 1"
 `)
@@ -736,7 +736,7 @@ Option "Option 1"
     it('highlight Action', () => {
       const { jsCode } = compileAndExecute(`
 Item as frame:
-  onhover highlight
+  onhover highlight()
 
 Item "Item"
 `)
@@ -746,7 +746,7 @@ Item "Item"
     it('activate/deactivate Actions', () => {
       const { jsCode } = compileAndExecute(`
 Tab as frame:
-  onclick activate, deactivate-siblings
+  onclick activate()
 
 Tab "Tab 1"
 `)
@@ -1071,7 +1071,7 @@ ModalFooter as frame:
   gap 8
 
 CloseBtn as button:
-  onclick hide Overlay
+  onclick hide(Overlay)
 
 Overlay named modal
   Modal
@@ -1159,7 +1159,7 @@ Header as frame:
   spread
   pad 16
   cursor pointer
-  onclick toggle Content
+  onclick toggle(Content)
 
 Content as frame:
   collapsed

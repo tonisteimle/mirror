@@ -36,7 +36,7 @@ const reactCode = generateReact(ast)
 
 ```
 Mirror/
-├── src/           # Core Compiler
+├── compiler/           # Core Compiler
 │   ├── parser/    # Lexer & Parser
 │   ├── ir/        # Intermediate Representation
 │   ├── backends/  # Code generators (DOM, React, Static)

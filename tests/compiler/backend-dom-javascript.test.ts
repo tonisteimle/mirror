@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { generateDOM } from '../../src/backends/dom'
+import { parse } from '../../compiler/parser/parser'
+import { generateDOM } from '../../compiler/backends/dom'
 
 describe('DOM Backend: JavaScript Integration', () => {
   it('generates initialization block when JavaScript is present', () => {
@@ -156,10 +156,10 @@ function search() {
 })
 
 describe('DOM Backend: Event-to-Function Integration (Phase 4)', () => {
-  it('treats unknown action as function call', () => {
+  it('treats custom function as function call with element argument', () => {
     const ast = parse(`
 AddButton as button:
-  onclick addTask
+  onclick: addTask()
 
 AddButton "Add"
 
@@ -167,15 +167,15 @@ let tasks = []
 `)
     const code = generateDOM(ast)
 
-    // Should generate function call for 'addTask'
+    // Should generate function call for 'addTask' with element as first argument
     expect(code).toContain('addTask')
-    expect(code).toContain("if (typeof addTask === 'function') addTask()")
+    expect(code).toContain("if (typeof addTask === 'function') addTask(node_1)")
   })
 
-  it('passes target as argument to function', () => {
+  it('passes additional arguments to function', () => {
     const ast = parse(`
 MyButton as button:
-  onclick handleClick myArg
+  onclick: handleClick("myArg")
 
 MyButton "Click"
 
@@ -183,14 +183,14 @@ let x = 0
 `)
     const code = generateDOM(ast)
 
-    // Should pass target as string argument
-    expect(code).toContain('handleClick("myArg")')
+    // Should pass element and then the string argument
+    expect(code).toContain("handleClick(node_1, 'myArg')")
   })
 
   it('still supports explicit call action', () => {
     const ast = parse(`
 ActionButton as button:
-  onclick call doSomething
+  onclick: doSomething()
 
 ActionButton "Do It"
 
@@ -205,7 +205,7 @@ let done = false
   it('does not confuse built-in actions with function calls', () => {
     const ast = parse(`
 ToggleButton as button:
-  onclick toggle self
+  onclick: toggle()
 
 ToggleButton "Toggle"
 
@@ -213,8 +213,8 @@ let x = 0
 `)
     const code = generateDOM(ast)
 
-    // Should use runtime.toggle, not call toggle()
-    expect(code).toContain('_runtime.toggle')
+    // Should use runtime state machine toggle, not call user's toggle()
+    expect(code).toContain('stateMachineToggle')
     expect(code).not.toContain("if (typeof toggle === 'function')")
   })
 })

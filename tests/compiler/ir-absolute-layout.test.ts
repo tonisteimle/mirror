@@ -8,8 +8,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Absolute Layout', () => {
   describe('stacked container', () => {
@@ -182,6 +182,104 @@ Canvas
       expect(node.styles.find(s => s.property === 'left')?.value).toBe('100px')
       expect(node.styles.find(s => s.property === 'top')?.value).toBe('50px')
       expect(node.styles.find(s => s.property === 'z-index')?.value).toBe('10')
+    })
+  })
+
+  describe('stacked with directional positioning (tutorial pattern)', () => {
+    it('bottom positions child at bottom of stacked container', () => {
+      const code = `
+Frame stacked, w 200, h 150
+  Frame w 100, h 40, bg blue, bottom
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const child = ir.nodes[0].children[0]
+      expect(child.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(child.styles.find(s => s.property === 'bottom')?.value).toBe('0')
+    })
+
+    it('top, left positions child at top-left corner', () => {
+      const code = `
+Frame stacked, w 200, h 150
+  Frame w 30, h 30, bg red, top, left
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const child = ir.nodes[0].children[0]
+      expect(child.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(child.styles.find(s => s.property === 'top')?.value).toBe('0')
+      expect(child.styles.find(s => s.property === 'left')?.value).toBe('0')
+    })
+
+    it('bottom, right positions child at bottom-right corner', () => {
+      const code = `
+Frame stacked, w 200, h 150
+  Frame w 30, h 30, bg blue, bottom, right
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const child = ir.nodes[0].children[0]
+      expect(child.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(child.styles.find(s => s.property === 'bottom')?.value).toBe('0')
+      expect(child.styles.find(s => s.property === 'right')?.value).toBe('0')
+    })
+
+    it('center positions child at center using transform', () => {
+      const code = `
+Frame stacked, w 200, h 150
+  Frame w 40, h 40, bg white, center
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const child = ir.nodes[0].children[0]
+      expect(child.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(child.styles.find(s => s.property === 'top')?.value).toBe('50%')
+      expect(child.styles.find(s => s.property === 'left')?.value).toBe('50%')
+      expect(child.styles.find(s => s.property === 'transform')?.value).toBe('translate(-50%, -50%)')
+    })
+
+    it('w full, h full fills the stacked container', () => {
+      const code = `
+Frame stacked, w 200, h 150
+  Frame w full, h full, bg blue
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const child = ir.nodes[0].children[0]
+      expect(child.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(child.styles.find(s => s.property === 'width')?.value).toBe('100%')
+      expect(child.styles.find(s => s.property === 'height')?.value).toBe('100%')
+    })
+
+    it('tutorial pattern: stacked with gradient background and overlay', () => {
+      const code = `
+Frame w 200, h 120, stacked, rad 8, clip
+  Frame w full, h full, bg linear-gradient(135deg, #2563eb, #7c3aed)
+  Frame w full, h 40, bg rgba(0,0,0,0.6), bottom, pad 0 12
+    Text "Bildtitel", col white
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const container = ir.nodes[0]
+      expect(container.styles.find(s => s.property === 'position')?.value).toBe('relative')
+
+      // Background fills container
+      const background = container.children[0]
+      expect(background.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(background.styles.find(s => s.property === 'width')?.value).toBe('100%')
+      expect(background.styles.find(s => s.property === 'height')?.value).toBe('100%')
+
+      // Overlay at bottom
+      const overlay = container.children[1]
+      expect(overlay.styles.find(s => s.property === 'position')?.value).toBe('absolute')
+      expect(overlay.styles.find(s => s.property === 'width')?.value).toBe('100%')
+      expect(overlay.styles.find(s => s.property === 'bottom')?.value).toBe('0')
     })
   })
 })

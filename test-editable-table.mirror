@@ -1,0 +1,14 @@
+$tasks: [
+  { title: "Design Review", status: "todo" },
+  { title: "Code Review", status: "doing" },
+  { title: "Testing", status: "done" }
+]
+
+Frame pad 20, gap 16
+  Text "Editierbare Tabelle", fs 18, weight bold, col white
+
+  Table $tasks
+    Row:
+      Frame hor, gap 12, pad 8
+        Input value row.title, w 200, bg #1a1a1a, col white, pad 8, rad 4, bor 1, boc #333
+        Text row.status, col #888

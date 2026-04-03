@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Tabellen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Tabellen</h1>
+      <p class="subtitle">Daten anzeigen, sortieren und auswählen</p>
+    </header>
+
+    <p class="intro">Tabellen sind der Standard für Business-Anwendungen. Mirror macht sie einfach: Zero Config wenn möglich, volle Kontrolle wenn nötig.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Die einfachste Tabelle</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das wars. Mirror:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Erkennt die Felder aus den Daten</li>
+        <li>Inferiert den Typ jedes Feldes (String, Number, Boolean, ...)</li>
+        <li>Wählt das passende Rendering pro Typ</li>
+        <li>Macht Header klickbar für Sortierung</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Typ-Inferenz</h2>
+      <p>Mirror erkennt Datentypen aus den <strong>Werten</strong>, nicht aus Feldnamen:</p>
+      <div class="code-block">
+        <pre>task1:
+  titel: "Design Review"       // String (wegen "...")
+  aufwand: 8                   // Number (wegen Zahl)
+  erledigt: false              // Boolean (wegen true/false)
+  verantwortlich: $users.toni  // Relation (wegen $...)
+  deadline: 2024-02-15         // Date (wegen Format)
+  tags: [urgent, design]       // Array (wegen [...])</pre>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Wert</th><th>Erkannter Typ</th><th>Table-Rendering</th></tr>
+        <tr><td><code>"text"</code></td><td>String</td><td>Links, Text</td></tr>
+        <tr><td><code>123</code></td><td>Number</td><td>Rechts, summierbar</td></tr>
+        <tr><td><code>true/false</code></td><td>Boolean</td><td>Checkbox-Icon</td></tr>
+        <tr><td><code>$ref</code></td><td>Relation</td><td>Zeigt <code>.name</code></td></tr>
+        <tr><td><code>2024-02-15</code></td><td>Date</td><td>Formatiert</td></tr>
+        <tr><td><code>[a, b]</code></td><td>Array</td><td>Als Tags</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Type Renderer</h2>
+      <p>Wie sieht jeder Typ aus? Das definierst du zentral mit Type-Renderer-Komponenten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// String: Standard-Text
+StringCell: Text col white, truncate
+
+// Number: Rechtsbündig
+NumberCell: Text col white, align right
+
+// Boolean: Check oder X
+BooleanCell: Icon is 16
+  true:
+    "check", ic #10b981
+  false:
+    "x", ic #666
+
+// Date: Deutsches Format
+DateCell: Text col #888, format "DD.MM.YYYY"
+
+// Relation: Name des referenzierten Objekts
+RelationCell: Text col #2563eb, show .name</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Diese Komponenten gelten für <strong>alle</strong> Tables. Definiere sie einmal, nutze sie überall.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Table-Styling</h2>
+      <p>Auch die Table-Struktur selbst ist über Komponenten steuerbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Header-Zeile
+TableHeader: Frame hor, bg #1a1a1a, pad 12, bor 0 0 1 0, boc #333
+  HeaderCell: Text weight 500, col #888, uppercase, fs 11
+
+// Daten-Zeilen
+TableRow: Frame hor, pad 12, bor 0 0 1 0, boc #222
+  hover:
+    bg #252525
+  selected:
+    bg #2563eb22</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Query-Integration</h2>
+      <p>Tables nutzen die vorhandene Query-Syntax:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Gefiltert
+Table $tasks where done == false
+
+// Sortiert
+Table $tasks by priority desc
+
+// Kombiniert
+Table $tasks where done == false by dueDate
+
+// Gruppiert
+Table $tasks grouped by status</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Query bestimmt <strong>welche</strong> Daten angezeigt werden. Die Table bestimmt <strong>wie</strong>.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Spalten anpassen</h2>
+      <p>Wenn du vom Default abweichen willst:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks
+  Column titel, w 250           // Breite setzen
+  Column aufwand, suffix "h"    // Suffix hinzufügen
+  Column priority, hidden       // Ausblenden
+  Column done, label "Erledigt" // Label ändern</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Verfügbare Column-Optionen</h3>
+      <table class="ref-table">
+        <tr><th>Option</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>w</code></td><td>Spaltenbreite</td><td><code>w 200</code></td></tr>
+        <tr><td><code>label</code></td><td>Header-Text</td><td><code>label "Titel"</code></td></tr>
+        <tr><td><code>suffix</code></td><td>Nach dem Wert</td><td><code>suffix "h"</code></td></tr>
+        <tr><td><code>prefix</code></td><td>Vor dem Wert</td><td><code>prefix "$"</code></td></tr>
+        <tr><td><code>align</code></td><td>Ausrichtung</td><td><code>align right</code></td></tr>
+        <tr><td><code>sortable</code></td><td>Sortierbar</td><td><code>sortable</code></td></tr>
+        <tr><td><code>filterable</code></td><td>Filterbar</td><td><code>filterable</code></td></tr>
+        <tr><td><code>hidden</code></td><td>Ausblenden</td><td><code>hidden</code></td></tr>
+        <tr><td><code>sum</code></td><td>Summe im Footer</td><td><code>sum</code></td></tr>
+        <tr><td><code>avg</code></td><td>Durchschnitt im Footer</td><td><code>avg</code></td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Custom Cells</h2>
+      <p>Für komplexe Layouts – mehrere Felder in einer Spalte:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $users
+  Column "User"
+    Cell:
+      Frame hor, gap 12
+        Frame w 36, h 36, bg #333, rad 99, center
+          Text row.name.charAt(0), col white, weight 600
+        Frame gap 2
+          Text row.name, col white, weight 500
+          Text row.email, col #888, fs 12
+
+  Column "Role"
+    Cell:
+      RoleBadge row.role
+
+  Column "Tasks"
+    Cell:
+      Text row.TaskCount(), col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Im <code>Cell:</code>-Block hast du Zugriff auf <code>row</code> – das aktuelle Datenobjekt der Zeile.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Selection</h2>
+      <h3>Single Selection</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks, select()
+
+// Anderswo: auf $selected zugreifen
+if $selected
+  Text "Ausgewählt: " + $selected.titel</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Multi Selection</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks, select(multi)
+
+// $selection ist ein Array
+Text $selection.length + " ausgewählt"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Row-Klick</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks
+  TableRow:
+    onclick selectTask(row)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Master-Detail</h2>
+      <p>Das klassische Pattern: Liste links, Details rechts.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 0, h full
+
+  // Master: Table
+  Table $tasks where done == false, select(), w 500
+    Column titel
+    Column status
+    Column priority
+
+  // Detail: Reagiert auf $selected
+  Frame w 400, pad 24, bg #0a0a0a
+
+    if $selected
+      Frame gap 20
+        // Header
+        Text $selected.titel, col white, fs 24, weight 600
+        Text $selected.beschreibung, col #888
+
+        Divider
+
+        // Details
+        Frame gap 12
+          Frame hor, spread
+            Text "Status", col #666
+            StatusBadge $selected.status
+          Frame hor, spread
+            Text "Priorität", col #666
+            Text $selected.priority
+          Frame hor, spread
+            Text "Aufwand", col #666
+            Text $selected.aufwand + "h"
+          Frame hor, spread
+            Text "Zuständig", col #666
+            Text $selected.assignee.name
+
+        // Actions
+        Frame hor, gap 8, margin 20 0 0 0
+          Button "Bearbeiten", pad 12 20, bg #2563eb, col white, rad 6
+          Button "Löschen", pad 12 20, bg #333, col white, rad 6
+
+    else
+      Frame center, h full
+        Text "Task auswählen", col #666</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sortierung</h2>
+      <h3>Automatisch</h3>
+      <p>Header sind standardmäßig klickbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks
+  Column titel, sortable     // Klick togglet Sortierung
+  Column priority, sortable
+  Column aufwand             // Nicht sortierbar</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Initial sortiert</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks by priority desc
+  Column titel, sortable
+  Column priority, sortable  // Startet mit desc-Indikator</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Filterung</h2>
+      <h3>Spalten-Filter</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks
+  Column status, filterable   // Dropdown im Header
+  Column assignee, filterable</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Externer Filter</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$statusFilter: "all"
+
+Frame gap 16
+  // Filter UI
+  Frame hor, gap 8
+    FilterChip "Alle", value "all", selected $statusFilter
+    FilterChip "Offen", value "open", selected $statusFilter
+    FilterChip "Erledigt", value "done", selected $statusFilter
+
+  // Table mit dynamischem Filter
+  Table $tasks where ($statusFilter == "all" or status == $statusFilter)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Gruppierung</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks grouped by status</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit Custom Group Header:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks grouped by project
+  Group:
+    Frame hor, spread, pad 12, bg #1a1a1a
+      Frame hor, gap 8
+        Text group.key.name, col white, weight 500
+        Text group.items.count + " Tasks", col #666, fs 12
+      Text group.items.sum(aufwand) + "h", col #888
+
+  Column titel
+  Column assignee.name
+  Column aufwand, suffix "h"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>group.key</code> ist der Gruppierungs-Wert, <code>group.items</code> sind die Einträge der Gruppe.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Aggregationen</h2>
+      <p>Footer mit Summen und Durchschnitten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table $tasks
+  Column titel
+  Column aufwand, sum    // Zeigt Summe im Footer
+  Column priority, avg   // Zeigt Durchschnitt im Footer
+
+  Footer:
+    Frame hor, pad 12, bg #1a1a1a, spread
+      Text "Gesamt"
+      Text $tasks.sum(aufwand) + " Stunden", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Pagination</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Feste Seitengröße
+Table $tasks, pageSize 20
+
+// Infinite Scroll
+Table $tasks, infinite</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Task-Board</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 24
+
+  // Header mit Stats
+  Frame hor, spread
+    Text "Tasks", col white, fs 24, weight 600
+    Frame hor, gap 16
+      StatBadge ($tasks).count, "Total"
+      StatBadge ($tasks where done == false).count, "Offen", col #f59e0b
+
+  // Gefilterte, sortierte Table
+  Table $tasks where done == false by priority desc, select()
+    Column titel, w 280, sortable
+    Column status, w 100, filterable
+      Cell:
+        StatusBadge row.status
+    Column assignee, w 140
+      Cell:
+        Frame hor, gap 8
+          Avatar row.assignee, size 24
+          Text row.assignee.name, col #888
+    Column aufwand, w 80, suffix "h", sum, align right
+    Column priority, w 60, sortable
+      Cell:
+        PriorityBadge row.priority</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: User-Verwaltung</h2>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 0, h 400
+
+  // User-Liste
+  Table $users, select(), w 400
+    Column "User"
+      Cell:
+        Frame hor, gap 12
+          Frame w 40, h 40, bg #2563eb, rad 99, center
+            Text row.name.charAt(0), col white, weight 600
+          Frame gap 2
+            Text row.name, col white, weight 500
+            Text row.role, col #888, fs 12
+    Column "Tasks"
+      Cell:
+        Text row.TaskCount()
+    Column "Stunden"
+      Cell:
+        Text row.Workload() + "h"
+
+  // Edit Form
+  Frame w 350, pad 24, bg #0a0a0a
+    if $selected
+      Text "Bearbeiten", col #888, fs 12, uppercase, margin 0 0 16 0
+
+      Frame gap 16
+        Frame gap 4
+          Text "Name", col #888, fs 12
+          Input value $selected.name
+            bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+        Frame gap 4
+          Text "E-Mail", col #888, fs 12
+          Input value $selected.email
+            bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w full
+
+        Frame gap 4
+          Text "Rolle", col #888, fs 12
+          Select value $selected.role
+            Trigger bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, w full
+            Content bg #1a1a1a, rad 8, pad 4
+              Item "Lead"
+              Item "Dev"
+              Item "Design"
+
+        Button "Speichern", bg #2563eb, col white, pad 14, rad 8, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Einfache Table</td><td><code>Table $data</code></td></tr>
+        <tr><td>Mit Query</td><td><code>Table $data where x by y</code></td></tr>
+        <tr><td>Gruppiert</td><td><code>Table $data grouped by field</code></td></tr>
+        <tr><td>Selection</td><td><code>Table $data, select()</code></td></tr>
+        <tr><td>Multi-Select</td><td><code>Table $data, select(multi)</code></td></tr>
+        <tr><td>Column Override</td><td><code>Column field, w 200, suffix "h"</code></td></tr>
+        <tr><td>Custom Cell</td><td><code>Cell:</code> mit <code>row.field</code></td></tr>
+        <tr><td>Sortierbar</td><td><code>Column field, sortable</code></td></tr>
+        <tr><td>Filterbar</td><td><code>Column field, filterable</code></td></tr>
+        <tr><td>Aggregation</td><td><code>Column field, sum</code> oder <code>avg</code></td></tr>
+        <tr><td>Type Renderer</td><td><code>StringCell:</code>, <code>NumberCell:</code>, etc.</td></tr>
+      </table>
+
+      <p><strong>Zero Config by Default, Full Control when Needed.</strong></p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="13-methoden.html">&larr; Methoden</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="15-crud.html">CRUD &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

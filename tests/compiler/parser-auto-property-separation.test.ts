@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser/index'
+import { parse } from '../../compiler/parser/index'
 
 // Helper to get properties from first child of first component
 function getProps(code: string) {

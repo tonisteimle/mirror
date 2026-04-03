@@ -108,6 +108,163 @@ const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'compon
 let currentFile = 'index.mir'
 
 // ============================================
+// YAML Parser for Auto-Loading
+// ============================================
+
+/**
+ * Simple YAML parser for data files
+ * Supports: strings, numbers, booleans, arrays, objects
+ */
+function parseYAML(text) {
+  const lines = text.split('\n')
+  const result = {}
+  let currentArray = null
+  let currentKey = ''
+  let currentIndent = 0
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('#')) continue
+
+    // Array item
+    if (trimmed.startsWith('- ')) {
+      const value = trimmed.slice(2).trim()
+
+      // Object in array: - key: value
+      if (value.includes(': ')) {
+        const obj = {}
+        // Parse inline object properties
+        const parts = value.split(', ')
+        for (const part of parts) {
+          const colonIdx = part.indexOf(': ')
+          if (colonIdx > 0) {
+            const k = part.slice(0, colonIdx).trim()
+            const v = parseYAMLValue(part.slice(colonIdx + 2).trim())
+            obj[k] = v
+          }
+        }
+
+        if (!currentArray) {
+          currentArray = []
+          if (currentKey) result[currentKey] = currentArray
+        }
+        currentArray.push(obj)
+      } else {
+        // Simple array item
+        if (!currentArray) {
+          currentArray = []
+          if (currentKey) result[currentKey] = currentArray
+        }
+        currentArray.push(parseYAMLValue(value))
+      }
+      continue
+    }
+
+    // Key-value pair
+    const colonIdx = trimmed.indexOf(':')
+    if (colonIdx > 0) {
+      const key = trimmed.slice(0, colonIdx).trim()
+      const value = trimmed.slice(colonIdx + 1).trim()
+
+      const indent = line.length - line.trimStart().length
+
+      if (indent === 0) {
+        // Top-level key
+        currentKey = key
+        currentArray = null
+        currentIndent = indent
+
+        if (value) {
+          result[key] = parseYAMLValue(value)
+        }
+      } else if (indent > currentIndent && currentArray) {
+        // Nested property in array object
+        const lastItem = currentArray[currentArray.length - 1]
+        if (typeof lastItem === 'object' && lastItem !== null) {
+          lastItem[key] = parseYAMLValue(value)
+        }
+      }
+    }
+  }
+
+  // If entire file is just an array
+  if (currentArray && Object.keys(result).length === 0) {
+    return currentArray
+  }
+
+  return result
+}
+
+/**
+ * Parse a YAML value (string, number, boolean, null)
+ */
+function parseYAMLValue(value) {
+  // Remove quotes
+  if ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1)
+  }
+
+  // Boolean
+  if (value === 'true') return true
+  if (value === 'false') return false
+
+  // Null
+  if (value === 'null' || value === '~') return null
+
+  // Number
+  const num = Number(value)
+  if (!isNaN(num) && value !== '') return num
+
+  return value
+}
+
+/**
+ * Collect all YAML data files and parse them
+ * Returns an object with filename (without extension) as keys
+ */
+function collectYAMLData() {
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  const yamlData = {}
+
+  for (const filename of Object.keys(allFiles)) {
+    const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
+    if (ext === '.yaml' || ext === '.yml') {
+      const content = allFiles[filename]
+      if (content && content.trim()) {
+        // Use filename without extension as the data key
+        const name = filename.replace(/\.ya?ml$/i, '').replace(/^.*[\/\\]/, '')
+        try {
+          yamlData[name] = parseYAML(content)
+          console.log(`[YAML] Loaded ${name}:`, yamlData[name])
+        } catch (e) {
+          console.warn(`[YAML] Failed to parse ${filename}:`, e)
+        }
+      }
+    }
+  }
+
+  return yamlData
+}
+
+/**
+ * Generate JavaScript code to inject YAML data into __mirrorData
+ */
+function generateYAMLDataInjection() {
+  const yamlData = collectYAMLData()
+  if (Object.keys(yamlData).length === 0) return ''
+
+  // Generate assignment statements to merge into __mirrorData
+  let code = '\n// Auto-loaded YAML data\n'
+  for (const [name, data] of Object.entries(yamlData)) {
+    code += `__mirrorData["${name}"] = ${JSON.stringify(data)};\n`
+  }
+  return code
+}
+
+// ============================================
 // Playground Mode (URL parameter ?code=)
 // ============================================
 let isPlaygroundMode = false
@@ -620,6 +777,7 @@ function getFileType(filename) {
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
   if (ext === '.tok') return 'tokens'
   if (ext === '.com') return 'component'
+  if (ext === '.yaml' || ext === '.yml') return 'data'
   if (ext === '.mir' || ext === '.mirror') return 'layout'
 
   // Fall back to detection from content
@@ -3376,8 +3534,18 @@ function compile(code) {
       // Check if code already starts with "App" (legacy files)
       const startsWithApp = code.trimStart().startsWith('App')
 
-      if (startsWithApp) {
-        // Legacy mode: code already has App wrapper, just prepend prelude
+      // Check if code contains component definitions at root level (lines ending with ":" at indent 0)
+      // These should NOT be wrapped in App, as they would become slot definitions instead
+      const hasRootComponentDefs = code.split('\n').some(line => {
+        const trimmed = line.trim()
+        // Component definition: starts with capital letter, ends with ":"
+        // But not a state like "hover:" or "focus:" (lowercase)
+        return trimmed.match(/^[A-Z][a-zA-Z0-9]*:/) && !line.startsWith(' ') && !line.startsWith('\t')
+      })
+
+      if (startsWithApp || hasRootComponentDefs) {
+        // Don't wrap: code already has App wrapper OR contains component definitions
+        // Component definitions at root level would become slot definitions if wrapped
         if (prelude) {
           const separator = '\n\n// === ' + currentFile + ' ===\n'
           resolvedCode = prelude + separator + code
@@ -3486,17 +3654,36 @@ function compile(code) {
 
       const hasAutoInit = finalJsCode.includes('// Auto-initialization')
 
+      // Inject YAML data into __mirrorData before UI creation
+      const yamlInjection = generateYAMLDataInjection()
+
       let ui
       if (hasAutoInit) {
-        const execCode = finalJsCode
+        let execCode = finalJsCode
           .replace('export function createUI', 'function createUI')
           .replace('document.body.appendChild(_ui.root)', '')
+
+        // Inject YAML data after __mirrorData is defined (search for end of object + newline)
+        if (yamlInjection) {
+          execCode = execCode.replace(
+            /(__mirrorData = \{[\s\S]*?\n\})/,
+            (match) => match + yamlInjection
+          )
+        }
 
         const fn = new Function(execCode + '\nreturn _ui;')
         ui = fn()
       } else {
-        const execCode = finalJsCode
+        let execCode = finalJsCode
           .replace('export function createUI', 'function createUI')
+
+        // Inject YAML data after __mirrorData is defined (search for end of object + newline)
+        if (yamlInjection) {
+          execCode = execCode.replace(
+            /(__mirrorData = \{[\s\S]*?\n\})/,
+            (match) => match + yamlInjection
+          )
+        }
 
         const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
         ui = fn()

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { tokenize } from '../../src/parser/lexer'
+import { tokenize } from '../../compiler/parser/lexer'
 
 // ============================================================================
 // UNCLOSED STRINGS

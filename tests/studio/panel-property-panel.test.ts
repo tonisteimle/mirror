@@ -6,9 +6,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { PropertyPanel, createPropertyPanel, type SelectionProvider } from '../../studio/panels/property-panel'
-import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../src/studio/property-extractor'
-import type { CodeModifier, ModificationResult } from '../../src/studio/code-modifier'
-import type { BreadcrumbItem } from '../../src/studio/selection-manager'
+import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../compiler/studio/property-extractor'
+import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
+import type { BreadcrumbItem } from '../../compiler/studio/selection-manager'
 
 // Mock SelectionProvider
 function createMockSelectionProvider(): SelectionProvider & {

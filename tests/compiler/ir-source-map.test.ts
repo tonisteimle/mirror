@@ -9,7 +9,7 @@ import {
   calculateSourcePosition,
   calculatePropertyPosition,
   type NodeMapping,
-} from '../../src/ir/source-map'
+} from '../../compiler/ir/source-map'
 
 // ===========================================
 // SOURCEMAP CLASS

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 // ============================================================================
 // SYSTEM STATES
@@ -204,7 +204,7 @@ describe('Parser: State Edge Cases', () => {
     const ast = parse(`Button as button:
   hover:
     bg light
-  onclick toggle`)
+  onclick toggle()`)
     expect(ast.components[0].states.length).toBe(1)
     expect(ast.components[0].events.length).toBe(1)
   })

@@ -2,8 +2,8 @@
  * Debug: Was produzieren die 9-Zone Alignments wirklich?
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../../compiler/parser'
+import { toIR } from '../../../compiler/ir'
 
 describe('9-Zone Debug', () => {
 

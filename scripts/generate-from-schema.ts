@@ -12,10 +12,10 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
-import { DSL, SCHEMA, type PropertyDef } from '../src/schema/dsl'
-import { ZAG_PRIMITIVES } from '../src/schema/zag-primitives'
-import { ZAG_PROP_METADATA, type ZagPropMeta } from '../src/schema/zag-prop-metadata'
-import { COMPOUND_PRIMITIVES } from '../src/schema/compound-primitives'
+import { DSL, SCHEMA, type PropertyDef } from '../compiler/schema/dsl'
+import { ZAG_PRIMITIVES } from '../compiler/schema/zag-primitives'
+import { ZAG_PROP_METADATA, type ZagPropMeta } from '../compiler/schema/zag-prop-metadata'
+import { COMPOUND_PRIMITIVES } from '../compiler/schema/compound-primitives'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

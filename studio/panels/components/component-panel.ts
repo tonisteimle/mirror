@@ -7,7 +7,7 @@
  * - User-defined components from the current file
  */
 
-import type { AST } from '../../../src/parser/ast'
+import type { AST } from '../../../compiler/parser/ast'
 import type {
   ComponentItem,
   ComponentSection,

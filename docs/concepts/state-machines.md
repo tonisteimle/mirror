@@ -60,7 +60,9 @@ Btn: pad 12 24, rad 6, bg #333, col white
 
 ### toggle()
 
-Wechselt zwischen Base und dem definierten State:
+**Eine Funktion für alles:** toggle() erkennt automatisch wie viele States du hast.
+
+**1 State → binär:**
 
 ```
 Btn: pad 12 24, bg #333, col white
@@ -71,9 +73,7 @@ Btn: pad 12 24, bg #333, col white
 
 Base ↔ on. Kein extra "off" State nötig – Base ist off.
 
-### cycle()
-
-Durchläuft mehrere States in Definitionsreihenfolge:
+**2+ States → cycle:**
 
 ```
 StatusBtn: pad 12 24, col white
@@ -86,7 +86,7 @@ StatusBtn: pad 12 24, col white
   done:
     bg #10b981
     Icon "check"
-  onclick: cycle()
+  onclick: toggle()
 ```
 
 Reihenfolge: todo → doing → done → todo → ...
@@ -100,11 +100,11 @@ StatusBtn "Task", doing    // startet in "doing"
 
 ### Explizite Reihenfolge
 
-Parameter nur wenn nötig (andere Reihenfolge, andere States, anderer Start):
+Parameter nur wenn nötig (andere Reihenfolge, andere States):
 
 ```
-onclick: cycle(done, doing, todo)    // umgekehrte Reihenfolge
-onclick: toggle(on, off)             // explizit beide States
+onclick: toggle(done, doing, todo)   // umgekehrte Reihenfolge
+onclick: toggle(on, off)             // explizit welche States
 ```
 
 ### exclusive()
@@ -176,8 +176,7 @@ function handleClick(element) {
 ### Verfügbare Methoden
 
 ```javascript
-element.toggle()      // Base ↔ State
-element.cycle()       // Nächster State
+element.toggle()      // 1 State: binär, 2+ States: cycle
 element.state = 'x'   // State direkt setzen
 element.state         // Aktuellen State lesen
 ```
@@ -226,7 +225,7 @@ Panel: bg #1a1a1a, rad 8, clip
       Icon "chevron-up"
     Frame pad 16
       Text "Versteckter Inhalt"
-  onclick: cycle()
+  onclick: toggle()
 ```
 
 ## Zusammenfassung
@@ -236,11 +235,10 @@ Panel: bg #1a1a1a, rad 8, clip
 | `on:` | Custom State definieren |
 | `hover:` | System-State (kein Trigger nötig) |
 | `Btn "Text", on` | Instanz im State starten |
-| `onclick: toggle()` | Base ↔ erster State |
-| `onclick: cycle()` | States in Definitionsreihenfolge |
+| `onclick: toggle()` | 1 State: binär, 2+ States: cycle |
 | `onclick: exclusive()` | Nur einer in Gruppe aktiv |
 | `onclick: save()` | Eigene Funktion |
-| `element.toggle()` | In JS: eingebautes Toggle |
+| `element.toggle()` | In JS: toggle/cycle |
 | `element.state = 'x'` | In JS: State setzen |
 | `MenuBtn.open:` | Auf State reagieren |
 

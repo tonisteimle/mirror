@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 // Helper to get styles from first child
 function getStyles(code: string) {
@@ -79,9 +79,23 @@ Container
   })
 
   describe('Width full', () => {
-    it('generates flex: 1 1 0% for w full', () => {
+    // In vertical parent (default), w full is cross-axis → align-self: stretch
+    it('generates align-self: stretch for w full in vertical parent', () => {
       const styles = getStyles(`
 Container:
+  Box w full
+
+Container
+`)
+      const alignSelf = findStyle(styles, 'align-self')
+      expect(alignSelf).toBeDefined()
+      expect(alignSelf.value).toBe('stretch')
+    })
+
+    // In horizontal parent, w full is main-axis → flex: 1 1 0%
+    it('generates flex: 1 1 0% for w full in horizontal parent', () => {
+      const styles = getStyles(`
+Container: hor
   Box w full
 
 Container
@@ -91,9 +105,9 @@ Container
       expect(flex.value).toBe('1 1 0%')
     })
 
-    it('generates min-width: 0 for w full', () => {
+    it('generates min-width: 0 for w full in horizontal parent', () => {
       const styles = getStyles(`
-Container:
+Container: hor
   Box w full
 
 Container
@@ -114,9 +128,9 @@ Container
       expect(width).toBeUndefined()
     })
 
-    it('works with width full (long form)', () => {
+    it('works with width full (long form) in horizontal parent', () => {
       const styles = getStyles(`
-Container:
+Container: hor
   Box width full
 
 Container
@@ -201,9 +215,27 @@ Container
       expect(minHeight.value).toBe('0')
     })
 
-    it('combines w full with fixed h', () => {
+    it('combines w full with fixed h in vertical parent', () => {
+      // In vertical parent, w full is cross-axis → align-self: stretch
       const styles = getStyles(`
 Container:
+  Box w full h 100
+
+Container
+`)
+      const height = findStyle(styles, 'height')
+      const alignSelf = findStyle(styles, 'align-self')
+
+      expect(height).toBeDefined()
+      expect(height.value).toBe('100px')
+      expect(alignSelf).toBeDefined()
+      expect(alignSelf.value).toBe('stretch')
+    })
+
+    it('combines w full with fixed h in horizontal parent', () => {
+      // In horizontal parent, w full is main-axis → flex: 1 1 0%
+      const styles = getStyles(`
+Container: hor
   Box w full h 100
 
 Container

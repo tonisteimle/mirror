@@ -20,7 +20,7 @@ import {
 } from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
-import { isAbsoluteLayoutContainer } from '../../src/studio/utils/layout-detection'
+import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
 
 export interface KeyboardHandlerConfig {
   container: HTMLElement

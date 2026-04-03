@@ -53,10 +53,11 @@ export interface StorageProject {
 export const FILE_EXTENSIONS = {
   layout: ['.mir', '.mirror'],
   tokens: ['.tok', '.tokens'],
-  component: ['.com', '.components']
+  component: ['.com', '.components'],
+  data: ['.yaml', '.yml']
 } as const
 
-export type MirrorFileType = 'layout' | 'tokens' | 'component' | 'unknown'
+export type MirrorFileType = 'layout' | 'tokens' | 'component' | 'data' | 'unknown'
 
 /**
  * Ermittelt den Dateityp anhand der Extension

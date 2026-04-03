@@ -8,8 +8,8 @@
  * - NumberInput increment/decrement fehlen
  */
 
-import { parse } from '../../src/parser'
-import { toIR } from '../../src/ir'
+import { parse } from '../../compiler/parser'
+import { toIR } from '../../compiler/ir'
 
 describe('Zag Forms', () => {
 

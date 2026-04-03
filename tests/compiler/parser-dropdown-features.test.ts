@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parse } from '../../src/parser'
+import { parse } from '../../compiler/parser'
 
 describe('Parser: State-based Visibility', () => {
   it('parses if (open) as visibleWhen on component', () => {

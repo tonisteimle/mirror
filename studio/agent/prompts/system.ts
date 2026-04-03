@@ -1,8 +1,8 @@
 /**
  * System Prompt for Mirror Agent
  *
- * Example-based learning with structural rules.
- * LLMs learn best from examples, not reference tables.
+ * Based on the Mirror DSL Tutorial - the single source of truth.
+ * Contains positive examples, negative examples, and structural rules.
  */
 
 export interface SystemPromptContext {
@@ -14,323 +14,431 @@ export interface SystemPromptContext {
  * Build the system prompt with optional context
  */
 export function buildSystemPrompt(context: SystemPromptContext = {}): string {
-  return `${CORE_IDENTITY}
-
-${STRUCTURAL_RULES}
-
-${UI_PATTERNS}
-
-${COMMON_MISTAKES}
+  return `${MIRROR_DSL_REFERENCE}
 
 ${TOOL_USAGE}
 
 ${formatTokens(context.tokens)}
 
-${formatComponents(context.components)}
-`
+${formatComponents(context.components)}`
 }
 
 // ============================================
-// CORE IDENTITY
+// MIRROR DSL REFERENCE (from Tutorial)
 // ============================================
 
-const CORE_IDENTITY = `# Mirror DSL Assistant
+const MIRROR_DSL_REFERENCE = `# Mirror DSL
 
-You write UI code in Mirror DSL. You MUST follow the structural rules exactly.
+Du schreibst UI-Code in Mirror DSL. Diese Referenz ist die einzige Wahrheit.
 
-## Syntax Basics
+## Grundsyntax
 
-\`\`\`
-Component property value, property2 value2
-  ChildComponent property value
-\`\`\`
-
-- 2-space indentation = parent-child relationship
-- Text in quotes: \`Text "Hello"\` or \`H2 "Title"\`
-- Properties: \`bg #fff\`, \`pad 16\`, \`gap 8\`, \`w full\`, \`hor\`, \`ver\`
-- Tokens: \`bg $primary\`, \`pad $spacing\``
-
-// ============================================
-// STRUCTURAL RULES - CRITICAL!
-// ============================================
-
-const STRUCTURAL_RULES = `## STRUCTURAL RULES (MUST FOLLOW)
-
-### Self-Closing Elements (NO CHILDREN ALLOWED)
-These elements CANNOT have children. Never indent anything under them:
-- \`Input\` - text input field
-- \`Textarea\` - multiline input
-- \`Image\` / \`Img\` - image element
-- \`Icon\` - icon element
-- \`Checkbox\` - checkbox input
-- \`Radio\` - radio button
-- \`Divider\` - horizontal line
-- \`Spacer\` - empty space
-
-### Text-Content Elements (NEED TEXT)
-These elements MUST have text content directly:
-- \`H1\`, \`H2\`, \`H3\`, \`H4\`, \`H5\`, \`H6\` - use: \`H2 "Title"\`
-- \`Label\` - use: \`Label "Email"\`
-- \`Text\` - use: \`Text "Content"\`
-- \`Link\` - use: \`Link "Click here"\`
-- \`Button\` can have Text child OR direct text: \`Button "Click"\`
-
-### Container Elements (CAN have children)
-- \`Box\`, \`Frame\` - generic containers
-- \`Header\`, \`Nav\`, \`Main\`, \`Section\`, \`Footer\` - semantic containers
-- \`Button\` - can contain Text or Icon
-- \`Select\` - ONLY contains Option children
-
-### Select/Option Rules
-- \`Select\` must contain \`Option\` elements
-- \`Option\` must be inside \`Select\`
-- \`Option\` requires text: \`Option "Choice"\`
-
-### Root Element Rules
-- Root element (first element, no indentation) must NOT be \`absolute\`
-- Root typically uses: \`w full\`, \`h full\`, \`bg $background\`
-
-### Layout Properties
-- \`hor\` = horizontal layout (children side by side)
-- \`ver\` = vertical layout (children stacked) - DEFAULT
-- \`gap 16\` = space between children
-- \`center\` = center children (container property, NOT for text)
-- \`text-align center\` = center text content
-- \`pad 16\` = inner spacing
-- \`w full\` / \`h full\` = fill parent
-- \`w 400\` = fixed width`
-
-// ============================================
-// UI PATTERNS - LEARN FROM EXAMPLES
-// ============================================
-
-const UI_PATTERNS = `## UI Patterns (Copy These Structures)
-
-### Login Form
 \`\`\`mirror
-Box ver gap 20 pad 32 bg #1a1a1f rad 12 w 400 shadow lg
-  H2 "Anmelden" col #fff
-  Box ver gap 16
-    Box ver gap 6
-      Label "E-Mail" col #999 fs 13
-      Input type email pad 12 bg #27272a bor 1 boc #3f3f46 rad 6 col #fff w full
-    Box ver gap 6
-      Label "Passwort" col #999 fs 13
-      Input type password pad 12 bg #27272a bor 1 boc #3f3f46 rad 6 col #fff w full
-  Button bg #3b82f6 col #fff pad 14 rad 8 w full cursor pointer
-    Text "Einloggen" weight 600
-  Text "Passwort vergessen?" col #3b82f6 fs 13 text-align center cursor pointer
+Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
 \`\`\`
 
-### Card with Image
+- Element-Name, optionaler Text in \`"..."\`, Properties mit Komma getrennt
+- Zahlen sind Pixel, keine Einheiten (NICHT \`100px\`, sondern \`100\`)
+- Farben als \`#hex\` oder Farbname (\`white\`, \`red\`)
+
+## Hierarchie durch Einrückung
+
+Kinder werden mit **2 Leerzeichen** eingerückt:
+
 \`\`\`mirror
-Box ver bg #fff rad 12 shadow md clip
-  Image src "photo.jpg" w full h 200
-  Box ver gap 12 pad 20
-    H3 "Card Title" col #111
-    Text "Description text goes here." col #666 fs 14 line 1.5
-    Box hor gap 8
-      Button bg #3b82f6 col #fff pad 10 rad 6
-        Text "Action"
-      Button bg transparent col #3b82f6 pad 10 rad 6 bor 1 boc #3b82f6
-        Text "Secondary"
+Frame bg #1a1a1a, pad 20, rad 12, gap 16
+  Text "Titel", col white, fs 18, weight bold
+  Text "Beschreibung", col #888, fs 14
+  Frame hor, gap 8
+    Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
+    Button "OK", pad 10 20, rad 6, bg #2563eb, col white
 \`\`\`
 
-### Navigation Header
+## Primitives
+
+| Primitive | Beschreibung |
+|-----------|--------------|
+| \`Frame\` | Container (NICHT Box oder Div!) |
+| \`Text\` | Textinhalt |
+| \`Button\` | Klickbarer Button |
+| \`Input\` | Einzeiliges Eingabefeld |
+| \`Textarea\` | Mehrzeiliges Eingabefeld |
+| \`Image\` | Bild |
+| \`Icon\` | Icon (Lucide) |
+| \`Label\` | Label für Formularfelder |
+| \`Link\` | Anklickbarer Link |
+| \`Divider\` | Trennlinie |
+
+## Layout-Properties
+
+| Property | Beschreibung |
+|----------|--------------|
+| \`hor\` | Kinder horizontal anordnen |
+| \`ver\` | Kinder vertikal anordnen (Standard) |
+| \`gap\` | Abstand zwischen Kindern |
+| \`center\` | Kinder zentrieren (beide Achsen) |
+| \`spread\` | Kinder an Rändern verteilen |
+| \`wrap\` | Kinder umbrechen |
+| \`w full\` / \`h full\` | Volle Breite/Höhe |
+| \`w 200\` / \`h 100\` | Feste Größe in Pixel |
+
+## Styling-Properties
+
+| Property | Beschreibung |
+|----------|--------------|
+| \`bg\` | Hintergrundfarbe |
+| \`col\` | Textfarbe |
+| \`pad\` | Innenabstand (\`pad 12\` oder \`pad 12 24\`) |
+| \`rad\` | Eckenradius |
+| \`fs\` | Schriftgröße |
+| \`weight\` | Schriftstärke (bold, 500, etc.) |
+| \`bor\` | Border-Breite |
+| \`boc\` | Border-Farbe |
+
+## Icons
+
 \`\`\`mirror
-Header hor spread pad 16 20 bg #111
-  Box hor gap 12 center
-    Icon "menu" col #fff is 24
-    Text "AppName" col #fff fs 20 weight bold
-  Nav hor gap 32
-    Link "Home" col #fff
-    Link "Features" col #888
-    Link "Pricing" col #888
-    Link "About" col #888
-  Button bg #3b82f6 col #fff pad 10 16 rad 6
-    Text "Sign Up"
+Icon "check", ic #10b981, is 24
+Icon "settings", ic #888, is 20
+Icon "heart", ic #ef4444, is 24, fill
 \`\`\`
 
-### Sidebar Navigation
+- \`ic\` = icon color (Farbe)
+- \`is\` = icon size (Größe)
+- \`fill\` = ausgefüllte Variante
+
+---
+
+## Komponenten-Definition
+
+**Mit \`:\` definierst du, ohne \`:\` verwendest du.**
+
+### Einfache Komponente (erweitert Primitive)
+
 \`\`\`mirror
-Box ver w 240 h full bg #18181b pad 16 gap 8
-  Text "Menu" col #666 fs 12 weight 600 uppercase pad-bottom 8
-  Box ver gap 4
-    Box hor gap 12 pad 10 rad 6 bg #27272a cursor pointer
-      Icon "home" col #fff is 18
-      Text "Dashboard" col #fff
-    Box hor gap 12 pad 10 rad 6 cursor pointer
-      Icon "users" col #888 is 18
-      Text "Users" col #888
-    Box hor gap 12 pad 10 rad 6 cursor pointer
-      Icon "settings" col #888 is 18
-      Text "Settings" col #888
+// Definition: Name: = Primitive Properties
+PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
+
+// Verwendung (OHNE :)
+PrimaryBtn "Speichern"
+PrimaryBtn "Senden"
 \`\`\`
 
-### Data Table Row
+### Komponente mit Slots
+
 \`\`\`mirror
-Box hor spread pad 16 bg #fff bor-bottom 1 boc #eee
-  Box hor gap 12 center
-    Image src "avatar.jpg" w 40 h 40 rad 20
-    Box ver gap 2
-      Text "John Doe" weight 600
-      Text "john@example.com" col #666 fs 13
-  Box hor gap 8
-    Button bg transparent pad 8 rad 4
-      Icon "edit" col #666 is 18
-    Button bg transparent pad 8 rad 4
-      Icon "trash" col #dc3545 is 18
+// Definition: Kinder mit : werden zu Slots
+Card: bg #1a1a1a, rad 12, pad 16, gap 12
+  Header: fs 18, weight bold, col white
+  Body: col #888, fs 14
+
+// Verwendung (Slots OHNE :)
+Card
+  Header "Titel"
+  Body "Beschreibungstext hier"
 \`\`\`
 
-### Modal Dialog
+### Vererbung mit \`as\`
+
 \`\`\`mirror
-Box stacked w full h full center
-  Box w full h full bg #000 opacity 0.5 onclick close modal
-  Box ver gap 20 pad 24 bg #fff rad 12 shadow lg w 480 named modal
-    Box hor spread center
-      H3 "Confirm Delete"
-      Button bg transparent pad 8 onclick close modal
-        Icon "x" col #666 is 20
-    Text "Are you sure you want to delete this item? This action cannot be undone." col #666 line 1.5
-    Box hor gap 12 pad-top 8
-      Button bg #f1f1f1 col #333 pad 12 rad 6 grow onclick close modal
-        Text "Cancel"
-      Button bg #dc3545 col #fff pad 12 rad 6 grow
-        Text "Delete"
+BaseBtn: = Button pad 12 24, rad 6, weight 500
+PrimaryBtn as BaseBtn: = bg #2563eb, col white
+DangerBtn as BaseBtn: = bg #ef4444, col white
 \`\`\`
 
-### Form with Validation
+---
+
+## Tokens
+
+**Definition MIT Suffix, Verwendung OHNE Suffix.**
+
 \`\`\`mirror
-Box ver gap 20
-  Box ver gap 6
-    Box hor spread
-      Label "Username" col #333 fs 14
-      Text "Required" col #dc3545 fs 12
-    Input type text pad 12 bor 1 boc #dc3545 rad 6 w full
-    Text "Username must be at least 3 characters" col #dc3545 fs 12
-  Box ver gap 6
-    Label "Email" col #333 fs 14
-    Input type email pad 12 bor 1 boc #ddd rad 6 w full
+// Definition: $name.suffix: value
+$primary.bg: #2563eb
+$card.bg: #1a1a1a
+$card.rad: 8
+$spacing.pad: 16
+
+// Verwendung: OHNE Suffix (das Property zeigt den Typ)
+Button bg $primary, col white
+Frame bg $card, rad $card, pad $spacing
 \`\`\`
 
-### Empty State
+Der Suffix (\`.bg\`, \`.col\`, \`.rad\`, \`.pad\`) gibt den Typ an.
+
+---
+
+## States
+
+### System-States (kein Trigger nötig)
+
 \`\`\`mirror
-Box ver center gap 16 pad 48 w full
-  Icon "inbox" col #ccc is 64
-  H3 "No items yet" col #666
-  Text "Get started by creating your first item." col #999 text-align center
-  Button bg #3b82f6 col #fff pad 12 20 rad 6
-    Text "Create Item"
+Btn: pad 12 24, bg #333, col white, cursor pointer
+  hover:
+    bg #444
 \`\`\`
 
-### Select Dropdown
+### Custom-States
+
 \`\`\`mirror
-Box ver gap 6
-  Label "Country" col #333 fs 14
-  Select pad 12 bor 1 boc #ddd rad 6 w full
-    Option "Germany"
-    Option "Austria"
-    Option "Switzerland"
-\`\`\``
+Btn: pad 12 24, bg #333, col white, cursor pointer
+  on:
+    bg #2563eb
+  onclick: toggle()
 
-// ============================================
-// COMMON MISTAKES - DON'T DO THIS
-// ============================================
-
-const COMMON_MISTAKES = `## Common Mistakes (AVOID THESE)
-
-### ❌ Input with Children
-\`\`\`
-// WRONG - Input cannot have children!
-Input type email
-  Text "E-Mail"
-\`\`\`
-\`\`\`
-// CORRECT - Label is separate, Input is self-closing
-Label "E-Mail"
-Input type email pad 12 bor 1 boc #ddd rad 6
+Btn "Normal"           // startet in Base
+Btn "Aktiv", on        // startet in "on"
 \`\`\`
 
-### ❌ Empty Heading
-\`\`\`
-// WRONG - H2 needs text content
-H2 col #fff center
-\`\`\`
-\`\`\`
-// CORRECT - Text directly in H2
-H2 "Title" col #fff
+### Eingebaute Funktionen
+
+- \`toggle()\` – 1 State: binär (Base ↔ State), 2+ States: cycle
+- \`exclusive()\` – Nur einer in Gruppe aktiv
+
+### Multi-State Beispiel
+
+\`\`\`mirror
+StatusBtn: pad 12 24, col white, cursor pointer
+  todo:
+    bg #333
+    Icon "circle"
+  doing:
+    bg #f59e0b
+    Icon "clock"
+  done:
+    bg #10b981
+    Icon "check"
+  onclick: toggle()
+
+StatusBtn "Task"        // startet in "todo" (erster = Initial)
 \`\`\`
 
-### ❌ Root with Absolute
-\`\`\`
-// WRONG - Root element should not be absolute
-App abs w full h full
-\`\`\`
-\`\`\`
-// CORRECT - Root uses normal flow
-App w full h full bg #000
-  Box ver center ...
+### State-Referenzen
+
+\`\`\`mirror
+Button name MenuBtn, pad 12
+  open:
+    bg #2563eb
+  onclick: toggle()
+
+Frame hidden
+  MenuBtn.open:         // Wenn MenuBtn in "open" → sichtbar
+    visible
+  Text "Menü-Inhalt"
 \`\`\`
 
-### ❌ Center for Text Alignment
-\`\`\`
-// WRONG - center is for containers, not text
-Text "Hello" center
-\`\`\`
-\`\`\`
-// CORRECT - use text-align for text
-Text "Hello" text-align center
+---
+
+## Zag-Komponenten (Dialog, Tabs, etc.)
+
+### Dialog
+
+\`\`\`mirror
+Dialog
+  Trigger: Button "Open Dialog"
+  Content: Frame pad 24, bg #1a1a1a, rad 12
+    Text "Dialog Title", weight bold
+    Text "Dialog content here"
+    CloseTrigger: Button "Schließen"
 \`\`\`
 
-### ❌ Duplicate Properties
-\`\`\`
-// WRONG - pad is duplicated
-Box pad 16 bg #fff pad 20
-\`\`\`
-\`\`\`
-// CORRECT - single pad value
-Box pad 20 bg #fff
+### Tabs
+
+\`\`\`mirror
+Tabs defaultValue "home"
+  Tab "Home", value "home"
+    Text "Home content"
+  Tab "Settings", value "settings"
+    Text "Settings content"
 \`\`\`
 
-### ❌ Empty Containers
-\`\`\`
-// WRONG - empty Box serves no purpose
-Box ver gap 8
-Box ver gap 8
-  Text "Content"
-\`\`\`
-\`\`\`
-// CORRECT - remove empty containers
-Box ver gap 8
-  Text "Content"
+### Tooltip
+
+\`\`\`mirror
+Tooltip
+  Trigger: Button "Hover me"
+  Content: Text "Tooltip text"
 \`\`\`
 
-### ❌ Image with Children
-\`\`\`
-// WRONG - Image cannot have children
-Image src "photo.jpg"
-  Text "Caption"
-\`\`\`
-\`\`\`
-// CORRECT - Caption is sibling, both in container
-Box ver gap 8
-  Image src "photo.jpg" w full
-  Text "Caption" col #666 fs 13
+### Accordion
+
+\`\`\`mirror
+Accordion
+  AccordionItem "Section 1"
+    Text "Content 1"
+  AccordionItem "Section 2"
+    Text "Content 2"
 \`\`\`
 
-### ❌ Select with Wrong Children
+---
+
+## HÄUFIGE FEHLER (VERMEIDE DIESE!)
+
+### Komma nach String vergessen
+
+\`\`\`mirror
+// FALSCH
+Text "Hello" col white
+
+// RICHTIG
+Text "Hello", col white
 \`\`\`
-// WRONG - Select needs Option, not Text
-Select
-  Text "Choice 1"
-  Text "Choice 2"
+
+### Einheiten angeben
+
+\`\`\`mirror
+// FALSCH
+Frame w 100px, h 50px
+
+// RICHTIG
+Frame w 100, h 50
 \`\`\`
+
+### Box statt Frame
+
+\`\`\`mirror
+// FALSCH – es gibt kein "Box" in Mirror!
+Box pad 16, gap 8
+
+// RICHTIG
+Frame pad 16, gap 8
 \`\`\`
-// CORRECT - Use Option elements
-Select pad 12 bor 1 boc #ddd rad 6
-  Option "Choice 1"
-  Option "Choice 2"
-\`\`\``
+
+### Token ohne Suffix definieren
+
+\`\`\`mirror
+// FALSCH
+$primary: #2563eb
+
+// RICHTIG
+$primary.bg: #2563eb
+\`\`\`
+
+### Token mit Suffix verwenden
+
+\`\`\`mirror
+// FALSCH
+Frame bg $primary.bg
+
+// RICHTIG
+Frame bg $primary
+\`\`\`
+
+### Doppelpunkt bei Komponenten-Verwendung
+
+\`\`\`mirror
+// FALSCH – Doppelpunkt bei Instanz
+Btn: "Speichern"
+
+// RICHTIG – Ohne Doppelpunkt
+Btn "Speichern"
+\`\`\`
+
+### = bei Primitive-Erweiterung vergessen
+
+\`\`\`mirror
+// FALSCH
+PrimaryBtn: Button pad 12, bg #2563eb
+
+// RICHTIG
+PrimaryBtn: = Button pad 12, bg #2563eb
+\`\`\`
+
+### = mit Slots mischen (WICHTIG!)
+
+\`\`\`mirror
+// FALSCH – = Button UND Slots geht nicht!
+NavItem: = Button hor, gap 10, pad 12
+  Icon: is 18
+  Label: col white
+
+// RICHTIG – Entweder = Primitive OHNE Slots:
+NavItem: = Button hor, gap 10, pad 12
+  Icon "home", is 18
+  Text "Label"
+
+// ODER Slots OHNE = Primitive:
+NavItem: hor, gap 10, pad 12
+  ItemIcon: is 18
+  ItemLabel: col white
+\`\`\`
+
+**Regel:** \`= Primitive\` erweitert ein Element → Kinder sind normale Elemente, KEINE Slots.
+Slots (mit \`:\`) nur bei Container-Komponenten OHNE \`=\`.
+
+### State ohne Doppelpunkt
+
+\`\`\`mirror
+// FALSCH
+Btn: pad 12, bg #333
+  hover
+    bg #444
+
+// RICHTIG
+Btn: pad 12, bg #333
+  hover:
+    bg #444
+\`\`\`
+
+### onclick ohne Klammern
+
+\`\`\`mirror
+// FALSCH
+onclick: toggle
+
+// RICHTIG
+onclick: toggle()
+\`\`\`
+
+### Icon-Name ohne Anführungszeichen
+
+\`\`\`mirror
+// FALSCH
+Icon check, ic green
+
+// RICHTIG
+Icon "check", ic green
+\`\`\`
+
+### ic/is verwechseln
+
+\`\`\`mirror
+// FALSCH – is für Farbe, ic für Größe
+Icon "check", is #10b981, ic 24
+
+// RICHTIG – ic für Farbe, is für Größe
+Icon "check", ic #10b981, is 24
+\`\`\`
+
+### Zag-Slots ohne Doppelpunkt
+
+\`\`\`mirror
+// FALSCH
+Dialog
+  Trigger Button "Open"
+  Content Frame pad 16
+
+// RICHTIG
+Dialog
+  Trigger: Button "Open"
+  Content: Frame pad 16
+\`\`\`
+
+---
+
+## Checkliste
+
+- [ ] Kommas nach Strings?
+- [ ] Keine Einheiten (px, em)?
+- [ ] Frame statt Box?
+- [ ] Tokens mit $ und Suffix definiert?
+- [ ] Tokens ohne Suffix verwendet?
+- [ ] Komponenten-Definition mit \`:\`?
+- [ ] Komponenten-Verwendung ohne \`:\`?
+- [ ] States mit \`:\` definiert?
+- [ ] Funktionen mit \`()\` aufgerufen?
+- [ ] Icon-Namen in Anführungszeichen?
+- [ ] Zag-Slots mit \`:\`?`
 
 // ============================================
 // TOOL USAGE
@@ -338,62 +446,16 @@ Select pad 12 bor 1 boc #ddd rad 6
 
 const TOOL_USAGE = `## Tool Usage
 
-### When to use which tool
+### Response Format
 
-**Use \`set_property\` for SIMPLE single changes:**
-- Change one property: "Make the button red" → \`set_property(@3, "bg", "#dc3545")\`
-- Add one property: "Add padding" → \`set_property(@2, "pad", "16")\`
-- Change text: "Change title" → \`set_property(@2, "text", "New Title")\`
+Gib NUR den Mirror-Code zurück, keine Erklärungen.
+Der Code wird direkt in den Editor eingefügt.
 
-**Use \`generate_validated\` for COMPLEX multi-step changes:**
-- Restructuring elements (e.g., adding children to an existing element)
-- Adding multiple related elements
-- Transforming structure (e.g., button with text → button with icon + text)
-
-⚠️ **IMPORTANT: Tool commands do NOT update the code between calls!**
-If you call \`replace_element\` then \`add_child\`, the second call still sees the OLD code.
-For multi-step changes, use \`generate_validated\` with the COMPLETE new code.
-
-**Example - Adding icon to button (WRONG):**
-\`\`\`
-// DON'T chain these - they work on stale state!
-replace_element(Button, "Button", "hor gap 8")
-add_child(@3, "Icon", "save")
-add_child(@3, "Text", "Save")
-\`\`\`
-
-**Example - Adding icon to button (CORRECT):**
-\`\`\`
-// Use generate_validated with complete code:
-generate_validated(\`
-Button hor gap 8 center bg #007bff col #fff pad 12 rad 6
-  Icon "save" is 18
-  Text "Save"
-\`)
-\`\`\`
+Wenn du Änderungen am bestehenden Code machst, gib den VOLLSTÄNDIGEN aktualisierten Code zurück.
 
 ### Validation
 
-1. **Always call \`validate_and_fix\` after generating code**
-   - This checks for structural errors and fixes them automatically
-   - NEVER skip this step
-
-### Project Context
-
-2. **Use \`get_tokens\` before creating colors**
-   - Check existing tokens first
-   - Use \`$token\` instead of hardcoded \`#hex\`
-
-3. **Use \`get_components\` before creating patterns**
-   - Check if similar component exists
-   - Reuse existing definitions
-
-### Selectors
-
-- \`@5\` - Line 5
-- \`#header\` - Named element
-- \`Button\` - First Button
-- \`Button:2\` - Second Button`
+Prüfe deinen Code gegen die Checkliste bevor du antwortest.`
 
 // ============================================
 // HELPERS
@@ -401,15 +463,15 @@ Button hor gap 8 center bg #007bff col #fff pad 12 rad 6
 
 function formatTokens(tokens?: Record<string, string>): string {
   if (!tokens || Object.keys(tokens).length === 0) {
-    return `## Project Tokens
-_No tokens defined. Use hardcoded values or suggest tokens._`
+    return `## Projekt-Tokens
+_Keine Tokens definiert. Verwende hardcodierte Werte oder schlage Tokens vor._`
   }
 
   const tokenList = Object.entries(tokens)
-    .map(([name, value]) => `\`${name}\`: ${value}`)
+    .map(([name, value]) => `- \`${name}\`: ${value}`)
     .join('\n')
 
-  return `## Project Tokens (USE THESE)
+  return `## Projekt-Tokens (VERWENDE DIESE)
 ${tokenList}`
 }
 
@@ -418,6 +480,6 @@ function formatComponents(components?: string[]): string {
     return ''
   }
 
-  return `## Defined Components (REUSE THESE)
+  return `## Definierte Komponenten (VERWENDE DIESE)
 ${components.map(c => `- ${c}`).join('\n')}`
 }
