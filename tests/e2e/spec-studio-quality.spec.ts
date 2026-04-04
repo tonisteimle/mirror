@@ -1,14 +1,33 @@
 /**
  * Spec Studio Quality Tests
  *
- * Tests that the LLM generates apps that match the Mirror specification.
- *
  * Two aspects:
- * 1. Code Quality: Is the generated HTML valid and functional?
- * 2. Spec Compliance: Does the app contain all specified elements?
+ * 1. Aspekt 2: Generiert das LLM sauberen Mirror-Code? (Validierung durch Compiler)
+ * 2. Aspekt 1: Entspricht die App der Spezifikation? (Alle Elemente vorhanden)
  */
 
 import { test, expect } from '@playwright/test'
+import { parse, toIR } from '../../compiler'
+
+/**
+ * Validate Mirror code by parsing and converting to IR
+ * Returns errors if the code is invalid
+ */
+function validateMirrorCode(code: string): { valid: boolean; errors: string[] } {
+  try {
+    const ast = parse(code)
+    if (ast.errors && ast.errors.length > 0) {
+      return { valid: false, errors: ast.errors.map(e => e.message || String(e)) }
+    }
+    const ir = toIR(ast)
+    if (ir.errors && ir.errors.length > 0) {
+      return { valid: false, errors: ir.errors.map(e => e.message || String(e)) }
+    }
+    return { valid: true, errors: [] }
+  } catch (e) {
+    return { valid: false, errors: [String(e)] }
+  }
+}
 
 const BASE_URL = 'http://localhost:3333'
 
@@ -115,6 +134,14 @@ test.describe('Spec Studio Quality', () => {
       // 1. Check Mirror Spec was generated
       expect(result.cleanSpec).toBeTruthy()
       console.log('Mirror Spec length:', result.cleanSpec.length)
+
+      // ASPEKT 2: Ist der generierte Mirror-Code valide?
+      const validation = validateMirrorCode(result.cleanSpec)
+      if (!validation.valid) {
+        console.log('Validation errors:', validation.errors)
+      }
+      expect(validation.errors).toHaveLength(0)
+      console.log('✓ Mirror code is valid (no parser/IR errors)')
 
       for (const expected of testCase.expectedInSpec) {
         expect(result.cleanSpec).toContain(expected)
