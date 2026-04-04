@@ -46,6 +46,8 @@ export interface MirrorElement extends HTMLElement {
     states: Record<string, {
       styles: Record<string, string>
       children?: () => HTMLElement[]  // Factory function to create state children
+      enter?: StateAnimation  // Animation when entering this state
+      exit?: StateAnimation   // Animation when leaving this state
     }>
     transitions: Array<{
       to: string
@@ -70,6 +72,38 @@ export const PROP_MAP: Record<string, string> = {
   'w': 'width',
   'h': 'height',
   'opacity': 'opacity',
+}
+
+// ============================================
+// FRAME BATCHING
+// ============================================
+
+/**
+ * Track whether we're currently inside a requestAnimationFrame callback.
+ * When true, state transitions should execute immediately to avoid
+ * one-frame delay for watched/dependent elements.
+ */
+let _insideFrameCallback = false
+
+/**
+ * Execute a function inside a frame callback, or immediately if already in one.
+ * This ensures all related state changes happen in the same frame.
+ */
+function batchInFrame(fn: () => void): void {
+  if (_insideFrameCallback) {
+    // Already inside a frame - execute immediately
+    fn()
+  } else {
+    // Schedule for next frame
+    requestAnimationFrame(() => {
+      _insideFrameCallback = true
+      try {
+        fn()
+      } finally {
+        _insideFrameCallback = false
+      }
+    })
+  }
 }
 
 // ============================================
@@ -250,9 +284,12 @@ export function toggle(el: MirrorElement | null): void {
  */
 export function show(el: MirrorElement | null): void {
   if (!el) return
-  el.hidden = false
-  // Restore saved display value or clear inline style
-  el.style.display = el._savedDisplay || ''
+  // Batch visibility changes in a single frame
+  batchInFrame(() => {
+    // Restore saved display value or clear inline style
+    el.style.display = el._savedDisplay || ''
+    el.hidden = false
+  })
 }
 
 /**
@@ -264,8 +301,11 @@ export function hide(el: MirrorElement | null): void {
   if (el.style.display !== 'none') {
     el._savedDisplay = el.style.display
   }
-  el.hidden = true
-  el.style.display = 'none'
+  // Batch visibility changes in a single frame
+  batchInFrame(() => {
+    el.style.display = 'none'
+    el.hidden = true
+  })
 }
 
 /**
@@ -1490,14 +1530,18 @@ export function transitionTo(
   if (!newState) return
   if (prevStateName === stateName) return
 
+  // Prevent concurrent transitions - if already transitioning, skip
+  if ((el as any)._isTransitioning) return
+  (el as any)._isTransitioning = true
+
   // Store base styles on first transition (for toggle back to default)
   if (!el._baseStyles) {
     el._baseStyles = {}
     // Collect all properties that can be changed by any state
     const stateProps = new Set<string>()
     for (const state of Object.values(sm.states)) {
-      for (const style of state.styles) {
-        stateProps.add(style.property)
+      for (const property of Object.keys(state.styles)) {
+        stateProps.add(property)
       }
     }
     // Store current values as base
@@ -1515,61 +1559,73 @@ export function transitionTo(
     }
   }
 
-  // Update current state
+  // Update internal state immediately (for state queries within same call)
   sm.current = stateName
-  el.dataset.state = stateName
-
-  // Restore base styles before applying new state
-  // This ensures toggling back to 'default' properly resets styles
-  if (el._baseStyles) {
-    Object.assign(el.style, el._baseStyles)
-  }
-
-  // Swap children if state has children defined (like Figma Variants)
-  if (newState.children) {
-    // Remove current children
-    while (el.firstChild) {
-      el.removeChild(el.firstChild)
-    }
-    // Add state children (created fresh via factory function)
-    const stateChildren = newState.children()
-    for (const child of stateChildren) {
-      el.appendChild(child)
-    }
-  } else if (el._baseChildren && prevState?.children) {
-    // Previous state had children, restore base children
-    while (el.firstChild) {
-      el.removeChild(el.firstChild)
-    }
-    // Re-create base children (we need to clone them since originals may be reused)
-    for (const child of el._baseChildren) {
-      el.appendChild(child.cloneNode(true))
-    }
-  }
 
   // Determine which animation to play
   // Priority: 1. transition animation, 2. state enter animation, 3. prev state exit animation
   const anim = animation || newState.enter || prevState?.exit
 
-  if (anim) {
-    // Play animation and apply styles
-    playStateAnimation(el, anim, newState.styles)
-  } else {
-    // No animation, apply styles immediately
-    Object.assign(el.style, newState.styles)
-  }
+  // Batch all DOM changes in a single frame to prevent flickering
+  // Uses batchInFrame to ensure chained transitions (from MutationObservers)
+  // all execute in the same frame instead of being delayed
+  batchInFrame(() => {
+    // 1. Update data-state attribute (triggers MutationObservers on watching elements)
+    // This must happen inside the frame so watchers see changes at the same time
+    el.dataset.state = stateName
 
-  // Handle visibility states specially
-  if (stateName === 'visible') {
-    el.style.display = (el as any)._baseDisplay || 'flex'
-    el.hidden = false
-  } else if (prevStateName === 'visible' && sm.states['visible']) {
-    el.style.display = 'none'
-    el.hidden = true
-  }
+    // 2. Handle visibility states (before any style changes)
+    if (stateName === 'visible') {
+      el.style.display = (el as any)._baseDisplay || 'flex'
+      el.hidden = false
+    }
 
-  // Update visibility of children
-  updateVisibility(el)
+    // 3. Restore base styles before applying new state
+    // This ensures toggling back to 'default' properly resets styles
+    if (el._baseStyles) {
+      Object.assign(el.style, el._baseStyles)
+    }
+
+    // 4. Swap children if state has children defined (like Figma Variants)
+    // Use DocumentFragment for efficient batch DOM updates
+    if (newState.children) {
+      const fragment = document.createDocumentFragment()
+      const stateChildren = newState.children()
+      for (const child of stateChildren) {
+        fragment.appendChild(child)
+      }
+      // Clear and append in one operation
+      el.replaceChildren(fragment)
+    } else if (el._baseChildren && prevState?.children) {
+      // Previous state had children, restore base children
+      const fragment = document.createDocumentFragment()
+      for (const child of el._baseChildren) {
+        fragment.appendChild(child.cloneNode(true))
+      }
+      el.replaceChildren(fragment)
+    }
+
+    // 5. Apply new styles (with or without animation)
+    if (anim) {
+      // Play animation and apply styles
+      playStateAnimation(el, anim, newState.styles).then(() => {
+        (el as any)._isTransitioning = false
+      })
+    } else {
+      // No animation, apply styles immediately
+      Object.assign(el.style, newState.styles as Partial<CSSStyleDeclaration>)
+      ;(el as any)._isTransitioning = false
+    }
+
+    // 6. Handle visibility when leaving visible state (after styles applied)
+    if (prevStateName === 'visible' && sm.states['visible'] && stateName !== 'visible') {
+      el.style.display = 'none'
+      el.hidden = true
+    }
+
+    // 7. Update visibility of children (last, after all changes)
+    updateVisibility(el)
+  })
 }
 
 /**
@@ -1919,8 +1975,19 @@ export function destroy(el: MirrorElement | null): void {
 // ICONS
 // ============================================
 
+/** SVG cache to avoid repeated CDN fetches */
+const iconCache = new Map<string, string>()
+
+/** Pending icon requests to avoid duplicate fetches */
+const pendingIconRequests = new Map<string, Promise<string | null>>()
+
 /**
- * Load Lucide icon from CDN
+ * Fallback icon SVG (simple square with X)
+ */
+const FALLBACK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>`
+
+/**
+ * Load Lucide icon from CDN with caching
  */
 export async function loadIcon(el: MirrorElement, iconName: string): Promise<void> {
   if (!el || !iconName) return
@@ -1928,32 +1995,86 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
   const size = el.dataset.iconSize || '16'
   const color = el.dataset.iconColor || 'currentColor'
   const strokeWidth = el.dataset.iconWeight || '2'
+  const isFilled = el.dataset.iconFill === 'true'
 
+  // Check cache first
+  let svgText = iconCache.get(iconName)
+
+  if (!svgText) {
+    // Check if there's already a pending request
+    let pending = pendingIconRequests.get(iconName)
+
+    if (!pending) {
+      // Start new fetch
+      pending = fetchIcon(iconName)
+      pendingIconRequests.set(iconName, pending)
+    }
+
+    svgText = await pending ?? undefined
+
+    // Clean up pending request
+    pendingIconRequests.delete(iconName)
+
+    if (!svgText) {
+      // Use fallback icon
+      console.warn(`Icon "${iconName}" not found, using fallback`)
+      svgText = FALLBACK_ICON
+    }
+  }
+
+  // Apply SVG
+  el.innerHTML = svgText
+
+  const svg = el.querySelector('svg')
+  if (svg) {
+    svg.style.width = size + 'px'
+    svg.style.height = size + 'px'
+    svg.style.color = color
+    svg.style.display = 'block'
+
+    // Apply fill mode (converts stroke icons to filled)
+    if (isFilled) {
+      svg.setAttribute('fill', 'currentColor')
+      svg.setAttribute('stroke', 'none')
+    } else {
+      svg.setAttribute('stroke-width', strokeWidth)
+    }
+  }
+}
+
+/**
+ * Fetch icon from CDN and cache it
+ */
+async function fetchIcon(iconName: string): Promise<string | null> {
   try {
     const url = `https://unpkg.com/lucide-static/icons/${iconName}.svg`
     const res = await fetch(url)
 
     if (!res.ok) {
-      console.warn(`Icon "${iconName}" not found`)
-      el.textContent = iconName
-      return
+      return null
     }
 
     const svgText = await res.text()
-    el.innerHTML = svgText
 
-    const svg = el.querySelector('svg')
-    if (svg) {
-      svg.style.width = size + 'px'
-      svg.style.height = size + 'px'
-      svg.style.color = color
-      svg.setAttribute('stroke-width', strokeWidth)
-      svg.style.display = 'block'
-    }
+    // Cache the result
+    iconCache.set(iconName, svgText)
+
+    return svgText
   } catch (err) {
     console.warn(`Failed to load icon "${iconName}":`, err)
-    el.textContent = iconName
+    return null
   }
+}
+
+/**
+ * Preload icons into cache (for commonly used icons)
+ */
+export function preloadIcons(iconNames: string[]): void {
+  iconNames.forEach(name => {
+    if (!iconCache.has(name)) {
+      fetchIcon(name)
+    }
+  })
 }
 
 // ============================================
@@ -2390,6 +2511,7 @@ export const runtime = {
   updateBoundElements,
   destroy,
   loadIcon,
+  preloadIcons,
   setReadFileCallback,
   registerAnimation,
   getAnimation,

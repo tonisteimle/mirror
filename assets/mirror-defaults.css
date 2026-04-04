@@ -21,7 +21,7 @@
   --m-primary-active: #1d4ed8;
 
   /* Colors - Page Background */
-  --m-bg: #0f0f0f;
+  --m-bg: #0a0a0a;
 
   /* Colors - Surface (controls) */
   --m-surface: #1a1a1a;
@@ -70,6 +70,39 @@
    ======================================== */
 
 .mirror-root {
+  /* Define CSS variables on .mirror-root for Shadow DOM compatibility */
+  --m-primary: #3b82f6;
+  --m-primary-hover: #2563eb;
+  --m-primary-active: #1d4ed8;
+  --m-bg: #0a0a0a;
+  --m-surface: #1a1a1a;
+  --m-surface-hover: #222222;
+  --m-surface-active: #2a2a2a;
+  --m-surface-selected: #333333;
+  --m-text: #e0e0e0;
+  --m-text-muted: #888888;
+  --m-text-placeholder: #555555;
+  --m-error: #ef4444;
+  --m-success: #22c55e;
+  --m-warning: #f59e0b;
+  --m-spacing: 4px;
+  --m-gap: 8px;
+  --m-pad: 8px;
+  --m-pad-x: 12px;
+  --m-pad-y: 8px;
+  --m-control-h: 36px;
+  --m-item-h: 32px;
+  --m-icon: 16px;
+  --m-radius: 6px;
+  --m-radius-sm: 4px;
+  --m-radius-lg: 8px;
+  --m-border: 1px;
+  --m-font: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --m-font-size: 13px;
+  --m-font-size-sm: 11px;
+  --m-line-height: 1.5;
+
+  /* Apply base styles */
   font-family: var(--m-font);
   font-size: var(--m-font-size);
   line-height: var(--m-line-height);
@@ -605,6 +638,7 @@
 .mirror-root [data-component="Frame"] {
   display: flex;
   flex-direction: column;
+  width: fit-content;  /* hug content by default, use "w full" to stretch */
 }
 
 /* ----- Slot ----- */
@@ -2110,4 +2144,38 @@
 
 [hidden] {
   display: none !important;
+}
+
+
+/* ========================================
+   7. Custom Scrollbars (Dark Theme)
+   ======================================== */
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.mirror-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mirror-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mirror-root ::-webkit-scrollbar-thumb {
+  background: var(--m-surface-active);
+  border-radius: 4px;
+}
+
+.mirror-root ::-webkit-scrollbar-thumb:hover {
+  background: var(--m-text-placeholder);
+}
+
+.mirror-root ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+.mirror-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--m-surface-active) transparent;
 }
