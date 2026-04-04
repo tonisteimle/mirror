@@ -64,11 +64,16 @@ async function handleGenerate() {
     if (result.success) {
       console.log('Generated successfully')
 
-      // Write clean spec to editor - the studio will auto-render it
+      // 1. Write clean spec to editor
       if (result.cleanSpec) {
         setEditorCode(result.cleanSpec)
-        // Studio re-renders automatically when code changes
         console.log('Clean spec written to editor')
+      }
+
+      // 2. Load generated app in preview
+      if (result.htmlApp) {
+        reloadPreview()
+        console.log('Generated app loaded in preview')
       }
 
     } else {

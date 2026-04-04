@@ -50,58 +50,20 @@ async function callClaude(userInput) {
   return new Promise((resolve, reject) => {
     const languageDefinition = getMirrorLanguageDefinition()
 
-    const prompt = `Du bist Spec Studio - ein Tool das ungefähre Mirror-Spezifikationen zu sauberem, vollständigem Mirror-Code vervollständigt.
+    const prompt = `Du bist Spec Studio - ein Tool das Mirror-Spezifikationen in laufende Apps verwandelt.
 
 ## Deine Aufgabe
 
-Der User schreibt Mirror-Code - oft unvollständig oder mit ungefährer Syntax:
-- Hierarchie stimmt, aber Properties fehlen
-- Komponenten-Namen sind korrekt, aber Styling fehlt
-- Grobe Struktur ist da, Details fehlen
-
-Du gibst **NUR sauberen Mirror-Code** zurück. Das Studio kompiliert diesen dann automatisch.
-
-## Dein Baukasten (Zag-Komponenten)
-
-Verwende diese fertigen Komponenten - sie haben bereits Accessibility & Keyboard-Navigation eingebaut:
-
-### Navigation
-- \`Tabs\` mit \`Tab "Label", value "id"\` - Tab-Navigation
-- \`Accordion\` mit \`AccordionItem "Label"\` - Aufklappbare Sektionen
-- \`Collapsible\` mit \`Trigger:\` und \`Content:\` - Einzelner Toggle
-
-### Formulare
-- \`Switch\` mit \`Track\`, \`Thumb\`, \`Label\` - Toggle-Switch
-- \`Checkbox\` mit \`Root\`, \`Control\`, \`Label\` - Checkbox
-- \`RadioGroup\` mit \`Item\`, \`ItemControl\`, \`ItemText\` - Radio-Buttons
-- \`Slider\` mit \`Track\`, \`Range\`, \`Thumb\` - Schieberegler
-- \`Select\` mit \`Trigger\`, \`Content\`, \`Item\` - Dropdown
-
-### Overlays
-- \`Dialog\` mit \`Trigger:\`, \`Content:\`, \`Backdrop:\` - Modal
-- \`Tooltip\` mit \`Trigger:\`, \`Content:\` - Hover-Tooltip
-- \`Popover\` mit \`Trigger:\`, \`Content:\` - Klick-Popover
-
-### Primitives
-Frame, Text, Button, Input, Textarea, Icon, Image, Link, Divider, H1-H6
-
-### Properties (Kurzform)
-- Layout: \`hor\`, \`ver\`, \`gap N\`, \`center\`, \`spread\`, \`wrap\`
-- Größe: \`w N\`, \`h N\`, \`full\`, \`hug\`
-- Spacing: \`pad N\` oder \`pad Y X\`, \`margin N\`
-- Farbe: \`bg #hex\`, \`col #hex\`, \`boc #hex\`
-- Border: \`bor N\`, \`rad N\`
-- Text: \`fs N\`, \`weight bold/500\`, \`italic\`, \`underline\`
-- Icons: \`Icon "name", ic #hex, is N\`
-
-### Tokens
-\`$name.suffix: value\` - z.B. \`$primary.bg: #2563eb\`, \`$card.rad: 8\`
+Der User schreibt Mirror-Code als Spezifikation - oft unvollständig oder ungefähr.
+Du erzeugst ZWEI Outputs:
+1. **Saubere Mirror-Spec** - die bereinigte, vollständige Spezifikation
+2. **Laufende App** - funktionierendes HTML/CSS/JS
 
 ## Mirror Sprachreferenz
 
 ${languageDefinition}
 
-## User Input
+## User Input (Spezifikation)
 
 \`\`\`
 ${userInput}
@@ -109,29 +71,37 @@ ${userInput}
 
 ## Dein Output
 
-Antworte NUR mit dem sauberen Mirror-Code, keine Erklärungen:
+Antworte mit BEIDEN Teilen, getrennt durch Marker:
 
+===MIRROR===
 \`\`\`mirror
-// Tokens
-$primary.bg: #2563eb
-...
-
-// Komponenten (falls sinnvoll)
-ComponentName: properties
-  ...
-
-// Verwendung
-Frame ...
-  ...
+// Saubere, vollständige Mirror-Spezifikation
+// Tokens, Komponenten, Verwendung
 \`\`\`
 
-## Regeln
+===HTML===
+\`\`\`html
+<!DOCTYPE html>
+<html>
+<!-- Vollständige, laufende App -->
+<!-- CSS im <style>, JS im <script> -->
+</html>
+\`\`\`
 
-1. **Tokens hinzufügen** wenn sinnvoll (dark theme = dunkle Farben)
-2. **Zag-Komponenten nutzen** - Tabs, Switch, Accordion, Slider, Dialog etc.
+## Regeln für die Mirror-Spec
+
+1. **Tokens definieren** - Farben, Abstände, Radien als $name.suffix
+2. **Hierarchie beibehalten** - die User-Struktur ist die Basis
 3. **Properties vervollständigen** - gap, pad, rad, bg, col etc.
-4. **Hierarchie beibehalten** - die User-Struktur ist die Basis
-5. **Valide Mirror-Syntax** - Einrückung mit 2 Spaces, Kommas zwischen Properties`
+4. **Valide Syntax** - 2 Spaces Einrückung, Kommas zwischen Properties
+
+## Regeln für die HTML-App
+
+1. **Vollständig lauffähig** - alles in einer Datei (HTML + CSS + JS)
+2. **Interaktiv** - Tabs wechseln, Switches togglen, Accordions auf/zu
+3. **Exakt wie spezifiziert** - alle Elemente aus der Spec müssen vorhanden sein
+4. **Modernes CSS** - Flexbox, Grid, CSS Variables
+5. **Vanilla JS** - keine Frameworks, einfaches DOM-Handling`
 
     console.log('→ Calling Claude CLI...')
     console.log('→ Prompt length:', prompt.length, 'chars')
@@ -170,21 +140,43 @@ Frame ...
 
     claude.on('close', (code) => {
       if (code === 0) {
-        // Parse den Mirror-Code Block
-        const mirrorMatch = output.match(/```mirror\n([\s\S]*?)```/)
+        // Parse beide Teile
+        const mirrorMatch = output.match(/===MIRROR===[\s\S]*?```mirror\n([\s\S]*?)```/)
+        const htmlMatch = output.match(/===HTML===[\s\S]*?```html\n([\s\S]*?)```/)
 
-        if (mirrorMatch) {
+        if (mirrorMatch && htmlMatch) {
           const cleanSpec = mirrorMatch[1].trim()
-          console.log('← Generated: clean Mirror spec')
+          const htmlApp = htmlMatch[1].trim()
+
+          // HTML-App in Datei schreiben
+          fs.writeFileSync(OUTPUT_FILE, htmlApp)
+          console.log('← Generated: Mirror spec + HTML app')
+          console.log('← Written to:', OUTPUT_FILE)
+
+          resolve({ success: true, cleanSpec, htmlApp })
+        } else if (mirrorMatch) {
+          // Nur Mirror-Spec gefunden
+          const cleanSpec = mirrorMatch[1].trim()
+          console.log('← Generated: Mirror spec only (no HTML)')
           resolve({ success: true, cleanSpec })
         } else {
-          // Fallback: Vielleicht ohne Code-Block
-          const cleanOutput = output.trim()
-          if (cleanOutput.includes('$') || cleanOutput.includes('Frame') || cleanOutput.includes('Tabs')) {
-            console.log('← Generated: Mirror spec (no code block)')
-            resolve({ success: true, cleanSpec: cleanOutput })
+          // Fallback: Vielleicht ohne Marker
+          const fallbackMirror = output.match(/```mirror\n([\s\S]*?)```/)
+          const fallbackHtml = output.match(/```html\n([\s\S]*?)```/)
+
+          if (fallbackMirror) {
+            const cleanSpec = fallbackMirror[1].trim()
+            if (fallbackHtml) {
+              const htmlApp = fallbackHtml[1].trim()
+              fs.writeFileSync(OUTPUT_FILE, htmlApp)
+              console.log('← Generated: Mirror spec + HTML app (no markers)')
+              resolve({ success: true, cleanSpec, htmlApp })
+            } else {
+              console.log('← Generated: Mirror spec only (no markers)')
+              resolve({ success: true, cleanSpec })
+            }
           } else {
-            reject(new Error('Konnte Mirror-Code nicht parsen'))
+            reject(new Error('Konnte Output nicht parsen'))
           }
         }
       } else {
@@ -228,7 +220,8 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify({
           success: true,
-          cleanSpec: result.cleanSpec
+          cleanSpec: result.cleanSpec,
+          htmlApp: result.htmlApp || null
         }))
       } catch (e) {
         console.error('Error:', e.message)
