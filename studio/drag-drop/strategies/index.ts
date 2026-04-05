@@ -4,11 +4,11 @@
  * Webflow-style drop strategies and registry.
  */
 
-// Types
-export type { DropStrategy, ChildRect, StrategyRegistry } from './types'
+// Types (exclude StrategyRegistry - exported from registry as class)
+export type { DropStrategy, ChildRect, StrategyRegistry as IStrategyRegistry } from './types'
 
 // Strategies
-export { FlexWithChildrenStrategy, calculateInsertionLineRect } from './flex-with-children'
+export { FlexWithChildrenStrategy } from './flex-with-children'
 export { NonContainerStrategy } from './non-container'
 export { SimpleInsideStrategy } from './simple-inside'
 

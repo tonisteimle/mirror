@@ -1,87 +1,15 @@
 /**
- * Icon Data - Common icons with SVG paths
+ * Icon Data - Lucide icons for layout and common patterns
+ *
+ * These are local SVG definitions for commonly used icons.
+ * Additional icons are loaded from CDN via IconPicker.
  */
 
 import type { IconDefinition } from './types'
 
-// Basic icon set (subset of Material Icons)
+// Lucide Icons (stroke-based) - commonly used in Mirror
 export const ICONS: IconDefinition[] = [
-  // Navigation
-  { name: 'arrow-back', path: 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z', category: 'navigation', tags: ['back', 'left', 'previous'] },
-  { name: 'arrow-forward', path: 'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z', category: 'navigation', tags: ['forward', 'right', 'next'] },
-  { name: 'arrow-up', path: 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8z', category: 'navigation', tags: ['up', 'top'] },
-  { name: 'arrow-down', path: 'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8z', category: 'navigation', tags: ['down', 'bottom'] },
-  { name: 'menu', path: 'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z', category: 'navigation', tags: ['hamburger', 'bars'] },
-  { name: 'close', path: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z', category: 'navigation', tags: ['x', 'cancel', 'remove'] },
-  { name: 'check', path: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z', category: 'navigation', tags: ['done', 'ok', 'yes'] },
-  { name: 'more-vert', path: 'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z', category: 'navigation', tags: ['dots', 'options', 'menu'] },
-  { name: 'more-horiz', path: 'M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z', category: 'navigation', tags: ['dots', 'options'] },
-  { name: 'expand-more', path: 'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z', category: 'navigation', tags: ['chevron', 'down', 'dropdown'] },
-  { name: 'expand-less', path: 'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z', category: 'navigation', tags: ['chevron', 'up'] },
-  { name: 'chevron-left', path: 'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', category: 'navigation', tags: ['left', 'back'] },
-  { name: 'chevron-right', path: 'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z', category: 'navigation', tags: ['right', 'forward'] },
-
-  // Action
-  { name: 'search', path: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z', category: 'action', tags: ['find', 'magnify'] },
-  { name: 'home', path: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z', category: 'action', tags: ['house'] },
-  { name: 'settings', path: 'M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z', category: 'action', tags: ['gear', 'cog', 'preferences'] },
-  { name: 'delete', path: 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z', category: 'action', tags: ['trash', 'remove'] },
-  { name: 'add', path: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z', category: 'action', tags: ['plus', 'new', 'create'] },
-  { name: 'edit', path: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z', category: 'action', tags: ['pencil', 'modify', 'write'] },
-  { name: 'copy', path: 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z', category: 'action', tags: ['duplicate', 'clone'] },
-  { name: 'save', path: 'M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z', category: 'action', tags: ['disk', 'floppy'] },
-  { name: 'download', path: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z', category: 'action', tags: ['export'] },
-  { name: 'upload', path: 'M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z', category: 'action', tags: ['import'] },
-  { name: 'share', path: 'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z', category: 'action', tags: ['send'] },
-  { name: 'refresh', path: 'M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z', category: 'action', tags: ['reload', 'sync'] },
-  { name: 'undo', path: 'M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z', category: 'action', tags: ['back', 'revert'] },
-  { name: 'redo', path: 'M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z', category: 'action', tags: ['forward'] },
-
-  // Content
-  { name: 'content-copy', path: 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z', category: 'content', tags: ['copy', 'duplicate'] },
-  { name: 'content-paste', path: 'M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z', category: 'content', tags: ['paste', 'clipboard'] },
-  { name: 'link', path: 'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z', category: 'content', tags: ['url', 'chain'] },
-  { name: 'flag', path: 'M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z', category: 'content', tags: ['report', 'mark'] },
-  { name: 'inbox', path: 'M19 3H4.99c-1.11 0-1.98.89-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z', category: 'content', tags: ['mail', 'email'] },
-
-  // Media
-  { name: 'play', path: 'M8 5v14l11-7z', category: 'media', tags: ['start', 'video'] },
-  { name: 'pause', path: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', category: 'media', tags: ['stop'] },
-  { name: 'stop', path: 'M6 6h12v12H6z', category: 'media', tags: [] },
-  { name: 'skip-next', path: 'M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z', category: 'media', tags: ['forward', 'next'] },
-  { name: 'skip-previous', path: 'M6 6h2v12H6zm3.5 6l8.5 6V6z', category: 'media', tags: ['back', 'previous'] },
-  { name: 'volume-up', path: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z', category: 'media', tags: ['sound', 'audio', 'speaker'] },
-  { name: 'volume-off', path: 'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z', category: 'media', tags: ['mute', 'silent'] },
-  { name: 'image', path: 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z', category: 'media', tags: ['photo', 'picture'] },
-  { name: 'camera', path: 'M9.4 10.5l4.77-8.26C13.47 2.09 12.75 2 12 2c-2.4 0-4.6.85-6.32 2.25l3.66 6.35.06-.1zM21.54 9c-.92-2.92-3.15-5.26-6-6.34L11.88 9h9.66zm.26 1h-7.49l.29.5 4.76 8.25C21 16.97 22 14.61 22 12c0-.69-.07-1.35-.2-2zM8.54 12l-3.9-6.75C3.01 7.03 2 9.39 2 12c0 .69.07 1.35.2 2h7.49l-1.15-2zm-6.08 3c.92 2.92 3.15 5.26 6 6.34L12.12 15H2.46zm11.27 0l-3.9 6.76c.7.15 1.42.24 2.17.24 2.4 0 4.6-.85 6.32-2.25l-3.66-6.35-.93 1.6z', category: 'media', tags: ['photo'] },
-
-  // Social
-  { name: 'person', path: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z', category: 'social', tags: ['user', 'account', 'profile'] },
-  { name: 'people', path: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z', category: 'social', tags: ['users', 'group', 'team'] },
-  { name: 'notifications', path: 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z', category: 'social', tags: ['bell', 'alert'] },
-  { name: 'message', path: 'M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z', category: 'social', tags: ['chat', 'comment', 'text'] },
-  { name: 'email', path: 'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z', category: 'social', tags: ['mail', 'envelope'] },
-  { name: 'favorite', path: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', category: 'social', tags: ['heart', 'love', 'like'] },
-  { name: 'star', path: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z', category: 'social', tags: ['rate', 'favorite'] },
-  { name: 'thumb-up', path: 'M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z', category: 'social', tags: ['like', 'approve'] },
-
-  // File
-  { name: 'folder', path: 'M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z', category: 'file', tags: ['directory'] },
-  { name: 'folder-open', path: 'M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z', category: 'file', tags: ['directory', 'open'] },
-  { name: 'file', path: 'M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z', category: 'file', tags: ['document', 'paper'] },
-  { name: 'attachment', path: 'M2 12.5C2 9.46 4.46 7 7.5 7H18c2.21 0 4 1.79 4 4s-1.79 4-4 4H9.5C8.12 15 7 13.88 7 12.5S8.12 10 9.5 10H17v2H9.41c-.55 0-.55 1 0 1H18c1.1 0 2-.9 2-2s-.9-2-2-2H7.5C5.57 9 4 10.57 4 12.5S5.57 16 7.5 16H17v2H7.5C4.46 18 2 15.54 2 12.5z', category: 'file', tags: ['clip', 'paperclip'] },
-  { name: 'cloud', path: 'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z', category: 'file', tags: ['storage', 'online'] },
-  { name: 'cloud-upload', path: 'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z', category: 'file', tags: ['upload', 'storage'] },
-  { name: 'cloud-download', path: 'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z', category: 'file', tags: ['download', 'storage'] },
-
-  // Toggle
-  { name: 'visibility', path: 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z', category: 'toggle', tags: ['show', 'eye', 'view'] },
-  { name: 'visibility-off', path: 'M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z', category: 'toggle', tags: ['hide', 'eye'] },
-  { name: 'lock', path: 'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z', category: 'toggle', tags: ['security', 'locked', 'private'] },
-  { name: 'lock-open', path: 'M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z', category: 'toggle', tags: ['security', 'unlocked'] },
-
-  // Layout - Lucide Icons (stroke-based)
-  // Direction
+  // Direction & Layout
   { name: 'rows-3', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M21 9H3"/><path d="M21 15H3"/>', style: 'stroke', category: 'layout', tags: ['vertical', 'stack', 'column', 'vstack', 'rows'] },
   { name: 'columns-3', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>', style: 'stroke', category: 'layout', tags: ['horizontal', 'stack', 'row', 'hstack', 'columns'] },
   { name: 'grid-2x2', path: '', svg: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>', style: 'stroke', category: 'layout', tags: ['grid', '2x2', 'tiles', 'gallery'] },
@@ -111,6 +39,65 @@ export const ICONS: IconDefinition[] = [
   { name: 'gallery-horizontal', path: '', svg: '<path d="M2 3v18"/><rect width="12" height="18" x="6" y="3" rx="2"/><path d="M22 3v18"/>', style: 'stroke', category: 'layout', tags: ['carousel', 'slider', 'gallery'] },
   { name: 'list', path: '', svg: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>', style: 'stroke', category: 'layout', tags: ['list', 'rows', 'items'] },
   { name: 'text-cursor-input', path: '', svg: '<path d="M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1 3-3h1"/><path d="M13 20h-1a3 3 0 0 1-3-3 3 3 0 0 1-3 3H5"/><path d="M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1"/><path d="M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7"/><path d="M9 7v10"/>', style: 'stroke', category: 'layout', tags: ['form', 'input', 'field'] },
+
+  // Common Actions (Lucide versions)
+  { name: 'check', path: '', svg: '<path d="M20 6 9 17l-5-5"/>', style: 'stroke', category: 'action', tags: ['done', 'ok', 'yes', 'confirm'] },
+  { name: 'x', path: '', svg: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', style: 'stroke', category: 'action', tags: ['close', 'cancel', 'remove', 'delete'] },
+  { name: 'plus', path: '', svg: '<path d="M5 12h14"/><path d="M12 5v14"/>', style: 'stroke', category: 'action', tags: ['add', 'new', 'create'] },
+  { name: 'minus', path: '', svg: '<path d="M5 12h14"/>', style: 'stroke', category: 'action', tags: ['remove', 'subtract'] },
+  { name: 'search', path: '', svg: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', style: 'stroke', category: 'action', tags: ['find', 'magnify'] },
+  { name: 'settings', path: '', svg: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>', style: 'stroke', category: 'action', tags: ['gear', 'cog', 'preferences'] },
+  { name: 'trash-2', path: '', svg: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>', style: 'stroke', category: 'action', tags: ['delete', 'remove'] },
+  { name: 'edit', path: '', svg: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>', style: 'stroke', category: 'action', tags: ['pencil', 'modify', 'write'] },
+  { name: 'copy', path: '', svg: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>', style: 'stroke', category: 'action', tags: ['duplicate', 'clone'] },
+  { name: 'save', path: '', svg: '<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>', style: 'stroke', category: 'action', tags: ['disk', 'floppy'] },
+  { name: 'download', path: '', svg: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>', style: 'stroke', category: 'action', tags: ['export'] },
+  { name: 'upload', path: '', svg: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>', style: 'stroke', category: 'action', tags: ['import'] },
+  { name: 'refresh-cw', path: '', svg: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>', style: 'stroke', category: 'action', tags: ['reload', 'sync'] },
+
+  // Navigation
+  { name: 'chevron-down', path: '', svg: '<path d="m6 9 6 6 6-6"/>', style: 'stroke', category: 'navigation', tags: ['expand', 'dropdown', 'down'] },
+  { name: 'chevron-up', path: '', svg: '<path d="m18 15-6-6-6 6"/>', style: 'stroke', category: 'navigation', tags: ['collapse', 'up'] },
+  { name: 'chevron-left', path: '', svg: '<path d="m15 18-6-6 6-6"/>', style: 'stroke', category: 'navigation', tags: ['back', 'left', 'previous'] },
+  { name: 'chevron-right', path: '', svg: '<path d="m9 18 6-6-6-6"/>', style: 'stroke', category: 'navigation', tags: ['forward', 'right', 'next'] },
+  { name: 'arrow-left', path: '', svg: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>', style: 'stroke', category: 'navigation', tags: ['back', 'left'] },
+  { name: 'arrow-right', path: '', svg: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>', style: 'stroke', category: 'navigation', tags: ['forward', 'right'] },
+  { name: 'arrow-up', path: '', svg: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>', style: 'stroke', category: 'navigation', tags: ['up', 'top'] },
+  { name: 'arrow-down', path: '', svg: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>', style: 'stroke', category: 'navigation', tags: ['down', 'bottom'] },
+  { name: 'menu', path: '', svg: '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>', style: 'stroke', category: 'navigation', tags: ['hamburger', 'bars'] },
+  { name: 'more-vertical', path: '', svg: '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>', style: 'stroke', category: 'navigation', tags: ['dots', 'options', 'menu'] },
+  { name: 'more-horizontal', path: '', svg: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>', style: 'stroke', category: 'navigation', tags: ['dots', 'options'] },
+  { name: 'home', path: '', svg: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', style: 'stroke', category: 'navigation', tags: ['house'] },
+  { name: 'external-link', path: '', svg: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>', style: 'stroke', category: 'navigation', tags: ['link', 'open', 'new-tab'] },
+
+  // Content
+  { name: 'file', path: '', svg: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>', style: 'stroke', category: 'content', tags: ['document', 'paper'] },
+  { name: 'folder', path: '', svg: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>', style: 'stroke', category: 'content', tags: ['directory'] },
+  { name: 'image', path: '', svg: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>', style: 'stroke', category: 'content', tags: ['photo', 'picture'] },
+  { name: 'link', path: '', svg: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>', style: 'stroke', category: 'content', tags: ['url', 'chain'] },
+  { name: 'paperclip', path: '', svg: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>', style: 'stroke', category: 'content', tags: ['attachment', 'clip'] },
+
+  // Social & User
+  { name: 'user', path: '', svg: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', style: 'stroke', category: 'social', tags: ['person', 'account', 'profile'] },
+  { name: 'users', path: '', svg: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', style: 'stroke', category: 'social', tags: ['people', 'group', 'team'] },
+  { name: 'bell', path: '', svg: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>', style: 'stroke', category: 'social', tags: ['notification', 'alert'] },
+  { name: 'mail', path: '', svg: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>', style: 'stroke', category: 'social', tags: ['email', 'envelope'] },
+  { name: 'message-circle', path: '', svg: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>', style: 'stroke', category: 'social', tags: ['chat', 'comment'] },
+  { name: 'heart', path: '', svg: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', style: 'stroke', category: 'social', tags: ['favorite', 'love', 'like'] },
+  { name: 'star', path: '', svg: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>', style: 'stroke', category: 'social', tags: ['rate', 'favorite'] },
+  { name: 'share', path: '', svg: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>', style: 'stroke', category: 'social', tags: ['send'] },
+
+  // Media
+  { name: 'play', path: '', svg: '<polygon points="6 3 20 12 6 21 6 3"/>', style: 'stroke', category: 'media', tags: ['start', 'video'] },
+  { name: 'pause', path: '', svg: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>', style: 'stroke', category: 'media', tags: ['stop'] },
+  { name: 'volume-2', path: '', svg: '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>', style: 'stroke', category: 'media', tags: ['sound', 'audio', 'speaker'] },
+  { name: 'volume-x', path: '', svg: '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>', style: 'stroke', category: 'media', tags: ['mute', 'silent'] },
+
+  // Toggle
+  { name: 'eye', path: '', svg: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>', style: 'stroke', category: 'toggle', tags: ['show', 'view', 'visibility'] },
+  { name: 'eye-off', path: '', svg: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>', style: 'stroke', category: 'toggle', tags: ['hide', 'hidden'] },
+  { name: 'lock', path: '', svg: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', style: 'stroke', category: 'toggle', tags: ['security', 'locked', 'private'] },
+  { name: 'unlock', path: '', svg: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>', style: 'stroke', category: 'toggle', tags: ['security', 'unlocked'] },
 ]
 
 /**

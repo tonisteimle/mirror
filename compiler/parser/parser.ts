@@ -6,7 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, DataReference, DataReferenceArray } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -23,6 +23,7 @@ import {
   ANIMATION_PRESETS,
   EASING_FUNCTIONS,
   parseDuration,
+  isValidProperty,
 } from '../schema/parser-helpers'
 import { isPrimitive, getEvent } from '../schema/dsl'
 import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
@@ -109,16 +110,56 @@ export class Parser {
 
       // Token definition: name: value (simplified syntax)
       // e.g., primary: #3B82F6 or spacing: 16 or font: "Inter"
+      // Also handles legacy: $name: value (without .)
+      // Note: Excludes names with . which are handled by other rules
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
+          !this.peekAt(0)?.value.includes('.') &&
           (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING'))) {
         const token = this.parseTokenDefinition(currentSection)
         if (token) program.tokens.push(token)
         continue
       }
 
-      // Token definition with suffix (lexer produces single token): $name.suffix: value
-      // e.g., $primary.bg: #2563eb or $card.rad: 12 or $btn.col: white
-      // The lexer combines $name.suffix into one IDENTIFIER token
+      // Token definition with suffix (single token): name.suffix: value
+      // e.g., primary.bg: #2563eb or card.rad: 12 or btn.col: white
+      // The lexer combines name.suffix into one IDENTIFIER token
+      // Note: No $ prefix at definition - $ is only used when referencing
+      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
+          this.peekAt(0)?.value.includes('.') &&
+          !this.peekAt(0)?.value.startsWith('$') &&
+          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.checkAt(2, 'IDENTIFIER'))) {
+        const token = this.parseTokenWithSuffixSingleToken(currentSection)
+        if (token) program.tokens.push(token)
+        continue
+      }
+
+      // Token definition with suffix (legacy: separate tokens): name.suffix: value
+      // This handles cases where lexer might produce separate tokens
+      if (this.check('IDENTIFIER') && this.checkNext('DOT') &&
+          !this.peekAt(0)?.value.startsWith('$') &&
+          this.checkAt(2, 'IDENTIFIER') && this.checkAt(3, 'COLON') &&
+          (this.checkAt(4, 'NUMBER') || this.checkAt(4, 'STRING') || this.checkAt(4, 'IDENTIFIER'))) {
+        const token = this.parseTokenWithSuffix(currentSection)
+        if (token) program.tokens.push(token)
+        continue
+      }
+
+      // Token reference: name.suffix: $other (token referencing another token)
+      // e.g., accent.bg: $primary or surface.bg: $grey-800
+      // Left side has no $, right side has $ (it's a reference)
+      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
+          this.checkAt(2, 'IDENTIFIER') &&
+          this.peekAt(0)?.value.includes('.') &&
+          !this.peekAt(0)?.value.startsWith('$') &&
+          this.peekAt(2)?.value.startsWith('$') &&
+          (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))) {
+        const token = this.parseTokenReference(currentSection)
+        if (token) program.tokens.push(token)
+        continue
+      }
+
+      // Legacy token definition with $ prefix (still supported for backwards compatibility)
+      // e.g., $primary.bg: #2563eb
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           this.peekAt(0)?.value.startsWith('$') &&
           this.peekAt(0)?.value.includes('.') &&
@@ -128,19 +169,7 @@ export class Parser {
         continue
       }
 
-      // Token definition with suffix (legacy: separate tokens): $name.suffix: value
-      // This handles cases where lexer might produce separate tokens
-      if (this.check('IDENTIFIER') && this.checkNext('DOT') &&
-          this.peekAt(0)?.value.startsWith('$') &&
-          this.checkAt(2, 'IDENTIFIER') && this.checkAt(3, 'COLON') &&
-          (this.checkAt(4, 'NUMBER') || this.checkAt(4, 'STRING') || this.checkAt(4, 'IDENTIFIER'))) {
-        const token = this.parseTokenWithSuffix(currentSection)
-        if (token) program.tokens.push(token)
-        continue
-      }
-
-      // Token reference: $name: $other (token referencing another token)
-      // e.g., $accent.bg: $primary or $surface.bg: $grey-800
+      // Legacy token reference with $ on both sides
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           this.checkAt(2, 'IDENTIFIER') &&
           this.peekAt(0)?.value.startsWith('$') &&
@@ -160,23 +189,49 @@ export class Parser {
         continue
       }
 
-      // Data object definition: $name: followed by INDENT (or NEWLINE then INDENT)
-      // e.g., $post:
-      //         title: "Mein Artikel"
-      //         author: "Max"
-      //         @intro
-      //           Markdown content here.
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.peekAt(0)?.value.startsWith('$')) {
-        // Look ahead past COLON to see if there's an INDENT
-        let lookAhead = 2
-        while (this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) {
-          lookAhead++
-        }
-        if (this.checkAt(lookAhead, 'INDENT')) {
-          const dataObj = this.parseDataObject(currentSection)
-          if (dataObj) program.tokens.push(dataObj)
-          continue
+      // Data object OR Property Set definition
+      // Both start with: name: (lowercase IDENTIFIER without .)
+      //
+      // Data object: name: followed by INDENT
+      //   user:
+      //     name: "Max"
+      //
+      // Property Set (mixin): name: followed by properties on same line
+      //   standardtext: fs 14, col #888, weight 500
+      //
+      // Note: No $ prefix at definition - $ is only used when referencing
+      // Important: Names with . are regular tokens, not data objects or property sets
+      // e.g., $primary.bg: #2563eb is a token, not a data object
+      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+        const name = this.peekAt(0)?.value
+        // Strip $ prefix for checking - the name after $ must not contain .
+        const nameWithoutDollar = name?.startsWith('$') ? name.slice(1) : name
+        const hasNoDot = !nameWithoutDollar?.includes('.')
+        const isLowercase = nameWithoutDollar && nameWithoutDollar[0] === nameWithoutDollar[0].toLowerCase() && hasNoDot
+
+        if (isLowercase) {
+          // Look ahead past COLON to determine type
+          let lookAhead = 2
+          while (this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) {
+            lookAhead++
+          }
+
+          if (this.checkAt(lookAhead, 'INDENT')) {
+            // Data object: has INDENT → nested attributes
+            const dataObj = this.parseDataObject(currentSection)
+            if (dataObj) program.tokens.push(dataObj)
+            continue
+          }
+
+          // Check for Property Set: name: propertyName value, ...
+          // Property Set has a valid property name after the colon (not followed by another colon or equals)
+          // Note: If position 3 is EQUALS, it's legacy syntax: name: type = value
+          const afterColon = this.peekAt(2)?.value
+          if (afterColon && isValidProperty(afterColon) && !this.checkAt(3, 'COLON') && !this.checkAt(3, 'EQUALS')) {
+            const propSet = this.parsePropertySet(currentSection)
+            if (propSet) program.tokens.push(propSet)
+            continue
+          }
         }
       }
 
@@ -313,17 +368,22 @@ export class Parser {
     }
   }
 
-  // Token with suffix (single token from lexer): $name.suffix: value
-  // e.g., $primary.bg: #2563eb or $card.rad: 12 or $btn.col: white
-  // The lexer combines $name.suffix into one IDENTIFIER token
+  // Token with suffix (single token from lexer): name.suffix: value
+  // e.g., primary.bg: #2563eb or card.rad: 12 or btn.col: white
+  // Also supports legacy syntax: $primary.bg: #2563eb
+  // The name is stored WITHOUT $ - $ is only used when referencing
   private parseTokenWithSuffixSingleToken(section?: string): TokenDefinition | null {
-    const nameToken = this.advance() // $primary.bg (single token)
+    const nameToken = this.advance() // primary.bg or $primary.bg (single token)
     this.advance() // :
     const value = this.advance() // value (NUMBER, STRING, or IDENTIFIER like "white")
 
-    const fullName = nameToken.value // Already includes the suffix
+    // Remove $ prefix if present (for backwards compatibility)
+    let fullName = nameToken.value
+    if (fullName.startsWith('$')) {
+      fullName = fullName.slice(1)
+    }
 
-    // Extract suffix from name (e.g., "bg" from "$primary.bg")
+    // Extract suffix from name (e.g., "bg" from "primary.bg")
     const dotIndex = fullName.lastIndexOf('.')
     const suffix = dotIndex > 0 ? fullName.slice(dotIndex + 1) : ''
 
@@ -346,17 +406,23 @@ export class Parser {
     }
   }
 
-  // Token with suffix (legacy: separate tokens): $name.suffix: value
-  // e.g., $primary.bg: #2563eb or $card.rad: 12
+  // Token with suffix (legacy: separate tokens): name.suffix: value
+  // e.g., primary.bg: #2563eb or $primary.bg: #2563eb
   private parseTokenWithSuffix(section?: string): TokenDefinition | null {
-    const baseName = this.advance() // $primary
+    const baseName = this.advance() // primary or $primary
     this.advance() // .
     const suffix = this.advance() // bg
     this.advance() // :
     const value = this.advance() // value (NUMBER or STRING)
 
-    // Combine name with suffix: $primary.bg
-    const fullName = `${baseName.value}.${suffix.value}`
+    // Remove $ prefix if present (for backwards compatibility)
+    let baseNameValue = baseName.value
+    if (baseNameValue.startsWith('$')) {
+      baseNameValue = baseNameValue.slice(1)
+    }
+
+    // Combine name with suffix: primary.bg
+    const fullName = `${baseNameValue}.${suffix.value}`
 
     // Infer type from suffix
     let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
@@ -377,30 +443,38 @@ export class Parser {
     }
   }
 
-  // Token reference: $name: $other (token referencing another token)
+  // Token reference: name.suffix: $other (token referencing another token)
+  // e.g., accent.bg: $primary or $accent.bg: $primary (legacy)
+  // Left side stored WITHOUT $, right side keeps $ (it's a reference)
   private parseTokenReference(section?: string): TokenDefinition | null {
-    const name = this.advance() // identifier (e.g., $accent.bg)
+    const nameToken = this.advance() // identifier (e.g., accent.bg or $accent.bg)
     this.advance() // :
     const value = this.advance() // identifier (e.g., $primary)
 
+    // Remove $ prefix from name if present (for backwards compatibility)
+    let name = nameToken.value
+    if (name.startsWith('$')) {
+      name = name.slice(1)
+    }
+
     // Infer type from token name suffix
     let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-    if (name.value.includes('.pad') || name.value.includes('.gap') || name.value.includes('.margin')) {
+    if (name.includes('.pad') || name.includes('.gap') || name.includes('.margin')) {
       tokenType = 'size'
-    } else if (name.value.includes('.rad')) {
+    } else if (name.includes('.rad')) {
       tokenType = 'size'
-    } else if (name.value.includes('.font')) {
+    } else if (name.includes('.font')) {
       tokenType = 'font'
     }
 
     return {
       type: 'Token',
-      name: name.value,
+      name: name,
       tokenType,
       value: value.value,
       section,
-      line: name.line,
-      column: name.column,
+      line: nameToken.line,
+      column: nameToken.column,
     }
   }
 
@@ -574,18 +648,25 @@ export class Parser {
   /**
    * Parse a data object definition
    *
-   * Syntax:
-   *   $post:
+   * Syntax (new - without $):
+   *   post:
    *     title: "Mein Artikel"
    *     author: "Max"
-   *     tags: [a, b, c]
-   *     @intro
-   *       Kurze **Markdown** Einleitung.
-   *     body: @external-file
+   *
+   * Syntax (legacy - with $, still supported):
+   *   $post:
+   *     title: "Mein Artikel"
    */
   private parseDataObject(section?: string): TokenDefinition | null {
-    const nameToken = this.advance() // $post
+    const nameToken = this.advance() // post or $post
     this.advance() // :
+
+    // Remove $ prefix if present (for backwards compatibility)
+    // The name is stored without $ - $ is only used when referencing
+    let name = nameToken.value
+    if (name.startsWith('$')) {
+      name = name.slice(1)
+    }
 
     // Skip newlines if any, then expect INDENT
     while (this.check('NEWLINE')) {
@@ -634,7 +715,7 @@ export class Parser {
 
     return {
       type: 'Token',
-      name: nameToken.value,
+      name: name,
       attributes,
       blocks,
       section,
@@ -645,14 +726,64 @@ export class Parser {
 
   /**
    * Parse a single data attribute: key: value
+   *
+   * Can be nested:
+   *   steps:
+   *     planning:
+   *       title: "Sprint Planning"
    */
   private parseDataAttribute(): DataAttribute | null {
     const keyToken = this.advance() // key
     const line = keyToken.line
     this.advance() // :
 
-    // Parse value - can be string, number, boolean, array, or external reference
-    let value: string | number | boolean | string[]
+    // Check for nested object: NEWLINE followed by INDENT
+    // Look ahead past any newlines to check for INDENT
+    let lookAhead = 0
+    while (this.checkAt(lookAhead, 'NEWLINE')) {
+      lookAhead++
+    }
+
+    if (this.checkAt(lookAhead, 'INDENT')) {
+      // Skip newlines
+      while (this.check('NEWLINE')) {
+        this.advance()
+      }
+      // Consume INDENT
+      this.advance()
+
+      // Parse nested attributes recursively
+      const children: DataAttribute[] = []
+
+      while (!this.isAtEnd() && !this.check('DEDENT')) {
+        this.skipNewlines()
+        if (this.check('DEDENT') || this.isAtEnd()) break
+
+        // Check for nested attribute: key: ...
+        if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+          const nestedAttr = this.parseDataAttribute()
+          if (nestedAttr) children.push(nestedAttr)
+          continue
+        }
+
+        // Skip unknown content
+        this.advance()
+      }
+
+      // Consume DEDENT
+      if (this.check('DEDENT')) {
+        this.advance()
+      }
+
+      return {
+        key: keyToken.value,
+        children,
+        line,
+      }
+    }
+
+    // Parse simple value - can be string, number, boolean, array, reference, or external reference
+    let value: string | number | boolean | string[] | DataReference | DataReferenceArray
 
     if (this.check('STRING')) {
       value = this.advance().value
@@ -680,6 +811,42 @@ export class Parser {
         value = true
       } else if (identValue === 'false') {
         value = false
+      } else if (identValue.startsWith('$') && identValue.includes('.')) {
+        // Reference: $collection.entry
+        const ref = this.parseDataReference(identValue)
+        if (ref) {
+          // Check for multiple references (comma-separated)
+          const refs: DataReference[] = [ref]
+          while (this.check('COMMA')) {
+            const savedPos = this.pos
+            this.advance() // consume comma
+            if (this.check('IDENTIFIER')) {
+              const nextIdent = this.current().value
+              if (nextIdent.startsWith('$') && nextIdent.includes('.')) {
+                this.advance() // consume identifier
+                const nextRef = this.parseDataReference(nextIdent)
+                if (nextRef) {
+                  refs.push(nextRef)
+                }
+              } else {
+                // Not a reference, revert
+                this.pos = savedPos
+                break
+              }
+            } else {
+              // Not an identifier, revert
+              this.pos = savedPos
+              break
+            }
+          }
+          if (refs.length === 1) {
+            value = refs[0]
+          } else {
+            value = { kind: 'referenceArray' as const, references: refs }
+          }
+        } else {
+          value = identValue
+        }
       } else {
         value = identValue
       }
@@ -724,6 +891,29 @@ export class Parser {
     }
 
     return items
+  }
+
+  /**
+   * Parse a data reference from string: $collection.entry
+   * Returns DataReference or null if invalid format
+   */
+  private parseDataReference(value: string): DataReference | null {
+    // Remove $ prefix
+    const withoutDollar = value.slice(1)
+    const dotIndex = withoutDollar.indexOf('.')
+    if (dotIndex === -1) {
+      return null
+    }
+    const collection = withoutDollar.slice(0, dotIndex)
+    const entry = withoutDollar.slice(dotIndex + 1)
+    if (!collection || !entry) {
+      return null
+    }
+    return {
+      kind: 'reference',
+      collection,
+      entry,
+    }
   }
 
   /**
@@ -816,6 +1006,65 @@ export class Parser {
       name: blockName,
       content: contentLines.join('\n'),
       line,
+    }
+  }
+
+  /**
+   * Parse a property set (mixin/stylesheet)
+   *
+   * Syntax:
+   *   standardtext: fs 14, col #888, weight 500
+   *   cardstyle: bg #1a1a1a, pad 16, rad 8, gap 8
+   *
+   * Property sets are reusable property combinations that can be
+   * spread onto elements using $name syntax:
+   *   Text "Hello", $standardtext
+   *   Frame $cardstyle
+   */
+  private parsePropertySet(section?: string): TokenDefinition | null {
+    const nameToken = this.advance() // name
+    const line = nameToken.line
+    const column = nameToken.column
+    this.advance() // :
+
+    // Remove $ prefix if present (for backwards compatibility)
+    let name = nameToken.value
+    if (name.startsWith('$')) {
+      name = name.slice(1)
+    }
+
+    // Parse properties on the same line until NEWLINE or EOF
+    const properties: Property[] = []
+
+    while (!this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF')) {
+      // Skip comma separators
+      if (this.check('COMMA')) {
+        this.advance()
+        continue
+      }
+
+      // Parse next property
+      const prop = this.parseProperty()
+      if (prop) {
+        properties.push(prop)
+      } else {
+        // Skip unknown token
+        this.advance()
+      }
+    }
+
+    // Skip trailing newline if present
+    if (this.check('NEWLINE')) {
+      this.advance()
+    }
+
+    return {
+      type: 'Token',
+      name,
+      properties,
+      section,
+      line,
+      column,
     }
   }
 

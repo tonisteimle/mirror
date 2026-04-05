@@ -45,6 +45,12 @@ export const COMPONENT_ICONS = {
   /** Column - vertical layout */
   column: `<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M21 9H3"></path><path d="M21 15H3"></path>`,
 
+  /** Horizontal layout (alias for row) */
+  horizontal: `<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="M15 3v18"></path>`,
+
+  /** Vertical layout (alias for column) */
+  vertical: `<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M21 9H3"></path><path d="M21 15H3"></path>`,
+
   /** Stack - overlapping layers */
   stack: `<rect x="3" y="3" width="14" height="14" rx="2"></rect><rect x="7" y="7" width="14" height="14" rx="2"></rect>`,
 
@@ -356,10 +362,12 @@ export function getLayoutIcon(name: LayoutIconName, className?: string): string 
 
 /**
  * Get component icon SVG (24x24, stroke-based)
+ * Falls back to 'box' icon if the requested icon doesn't exist
  */
-export function getComponentIcon(name: ComponentIconName, className?: string): string {
+export function getComponentIcon(name: string, className?: string): string {
   const classAttr = className ? ` class="${className}"` : ''
-  return `<svg${classAttr} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${COMPONENT_ICONS[name]}</svg>`
+  const iconPath = COMPONENT_ICONS[name as ComponentIconName] ?? COMPONENT_ICONS.box
+  return `<svg${classAttr} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>`
 }
 
 /**

@@ -83,7 +83,7 @@ export function isMirrorFile(filename: string): boolean {
 // Provider Interface
 // =============================================================================
 
-export type ProviderType = 'tauri' | 'server' | 'demo' | 'localstorage'
+export type ProviderType = 'tauri' | 'localstorage' | 'demo'
 
 /**
  * Storage Provider Interface

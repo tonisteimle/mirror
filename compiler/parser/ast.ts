@@ -41,7 +41,7 @@ export interface Program extends BaseNode {
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
   animations: AnimationDefinition[]  // Animation definitions
-  instances: (Instance | Slot | TableNode)[]
+  instances: (Instance | Slot | TableNode | Each)[]
   javascript?: JavaScriptBlock  // JavaScript code at end of file
   schema?: SchemaDefinition  // Schema definition for data collections
   errors: ParseError[]
@@ -105,15 +105,43 @@ export interface TokenDefinition extends BaseNode {
   // Data object fields (when value is not present)
   attributes?: DataAttribute[]  // key-value pairs
   blocks?: DataBlock[]  // @blockname markdown content
+  // Property Set fields (mixin/stylesheet)
+  // e.g., standardtext: fs 14, col #888, weight 500
+  properties?: Property[]  // reusable property combinations
 }
 
 /**
  * Data attribute within a data object
  * e.g., title: "Mein Artikel"
+ *
+ * Can be nested:
+ *   steps:
+ *     planning:
+ *       title: "Sprint Planning"
  */
+/**
+ * A reference to another data entry (e.g., "$users.toni")
+ */
+export interface DataReference {
+  kind: 'reference'
+  collection: string
+  entry: string
+}
+
+/**
+ * An array of references (e.g., "$users.toni, $users.anna")
+ */
+export interface DataReferenceArray {
+  kind: 'referenceArray'
+  references: DataReference[]
+}
+
 export interface DataAttribute {
   key: string
-  value: string | number | boolean | string[]
+  /** Simple value - undefined if this is a nested object */
+  value?: string | number | boolean | string[] | DataReference | DataReferenceArray
+  /** Nested attributes - present if this is a nested object */
+  children?: DataAttribute[]
   line: number
 }
 

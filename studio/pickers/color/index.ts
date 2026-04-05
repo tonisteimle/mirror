@@ -582,7 +582,7 @@ export function hideGlobalColorPicker(): void {
  * Check if global color picker is visible
  */
 export function isGlobalColorPickerVisible(): boolean {
-  return globalColorPicker !== null && globalColorPicker.isVisible()
+  return globalColorPicker !== null && (globalColorPicker as unknown as { isOpen: boolean }).isOpen
 }
 
 /**

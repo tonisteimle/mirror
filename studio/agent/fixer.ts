@@ -346,7 +346,7 @@ export class FixerService {
 
       // Resolve any pending promise to prevent memory leaks
       if (resolveNext) {
-        resolveNext(null)
+        (resolveNext as (value: AgentOutput | null) => void)(null)
         resolveNext = null
       }
 

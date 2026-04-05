@@ -377,10 +377,15 @@ function generatePage(mdPath: string, outputPath: string): void {
   navHtml += '    </nav>';
 
   // Build scripts
+  // tutorial.js is always needed (for sidebar navigation)
+  // index.global.js (compiler) is only needed for playgrounds
   let scriptsHtml = '';
   if (hasPlaygrounds) {
     scriptsHtml = `
   <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>`;
+  } else {
+    scriptsHtml = `
   <script src="tutorial.js"></script>`;
   }
 
@@ -431,15 +436,12 @@ function getPrevTitle(filename: string): string {
     '07-functions': 'Functions',
     '08-navigation': 'Navigation',
     '09-overlays': 'Overlays',
-    '10-variablen': 'Variablen',
+    '10-variablen': 'Daten & Content',
     '11-content': 'Content',
-    '12-abfragen': 'Abfragen',
-    '13-methoden': 'Methoden',
-    '14-tables': 'Tabellen',
-    '15-crud': 'CRUD',
-    '16-forms': 'Formulare',
-    '17-bedingungen': 'Bedingungen',
-    '19-fehler': 'Fehler'
+    '12-tabellen': 'Tabellen',
+    '13-bedingungen': 'Bedingungen',
+    '14-pages': 'Seiten',
+    '15-fehler': 'Fehler'
   };
   return titles[filename] || filename;
 }
@@ -456,15 +458,12 @@ function getNextTitle(filename: string): string {
     '07-functions': 'Functions',
     '08-navigation': 'Navigation',
     '09-overlays': 'Overlays',
-    '10-variablen': 'Variablen',
+    '10-variablen': 'Daten & Content',
     '11-content': 'Content',
-    '12-abfragen': 'Abfragen',
-    '13-methoden': 'Methoden',
-    '14-tables': 'Tabellen',
-    '15-crud': 'CRUD',
-    '16-forms': 'Formulare',
-    '17-bedingungen': 'Bedingungen',
-    '19-fehler': 'Fehler',
+    '12-tabellen': 'Tabellen',
+    '13-bedingungen': 'Bedingungen',
+    '14-pages': 'Seiten',
+    '15-fehler': 'Fehler',
     'playground': 'Playground'
   };
   return titles[filename] || filename;

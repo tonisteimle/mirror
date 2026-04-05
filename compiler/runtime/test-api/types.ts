@@ -4,10 +4,10 @@
  * Shared types for all Test API modules.
  */
 
-import type { MirrorElement } from '../dom-runtime'
+import type { MirrorElement, OverlayPosition, PositionOptions } from '../dom-runtime'
 
-// Re-export MirrorElement for convenience
-export type { MirrorElement }
+// Re-export types for convenience
+export type { MirrorElement, OverlayPosition, PositionOptions }
 
 // ============================================
 // RUNTIME INTERFACE
@@ -34,7 +34,7 @@ export interface RuntimeFunctions {
   unhighlight?: (el: MirrorElement) => void
 
   // Overlays & Positioning
-  showAt?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, position?: string, options?: { offset?: number; flip?: boolean; align?: string }) => void
+  showAt?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, position?: OverlayPosition, options?: PositionOptions) => void
   showBelow?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
   showAbove?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
   showLeft?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void

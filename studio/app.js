@@ -3483,6 +3483,14 @@ function getPreludeCode(excludeFile) {
 
 // Compile and render
 function compile(code) {
+  // Skip compilation if preview is showing LLM-generated content
+  // This preserves the generated HTML app in Spec Studio mode
+  const previewEl = document.getElementById('preview')
+  if (previewEl?.dataset.generatedMode === 'true') {
+    console.log('[Spec Studio] Skipping compile - showing generated content')
+    return
+  }
+
   // Update files with current code so renderComponentState can access it
   files[currentFile] = code
 

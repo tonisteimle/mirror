@@ -450,12 +450,12 @@ export class GhostRenderer {
   // --------------------------------------------------------------------------
 
   private getMirror(): MirrorCompiler | null {
-    if (typeof window !== 'undefined' && (window as Record<string, unknown>).Mirror) {
-      return (window as Record<string, unknown>).Mirror as MirrorCompiler
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Mirror) {
+      return (window as unknown as Record<string, unknown>).Mirror as MirrorCompiler
     }
     // Fallback to MirrorLang
-    if (typeof window !== 'undefined' && (window as Record<string, unknown>).MirrorLang) {
-      return (window as Record<string, unknown>).MirrorLang as MirrorCompiler
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).MirrorLang) {
+      return (window as unknown as Record<string, unknown>).MirrorLang as MirrorCompiler
     }
     return null
   }

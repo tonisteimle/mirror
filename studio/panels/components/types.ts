@@ -22,6 +22,11 @@ export type ComponentIcon =
   | 'card'
   | 'list'
   | 'custom'
+  // Layout icons
+  | 'row'
+  | 'column'
+  | 'sidebar'
+  | 'headerFooter'
   // Behavior components (Zag)
   | 'select'
   | 'accordion'
@@ -147,6 +152,10 @@ export interface ComponentPanelConfig {
   showLayoutPresets?: boolean
   /** Whether to show basic components (default: true) */
   showBasicComponents?: boolean
+  /** Whether to show the tab bar (default: false) */
+  showTabBar?: boolean
+  /** Default active tab */
+  defaultTab?: 'basic' | 'all'
 }
 
 /**

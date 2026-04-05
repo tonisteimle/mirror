@@ -44,10 +44,10 @@ export class KeyboardHandler {
    * Initialize keyboard listeners
    */
   init(): void {
-    const handler = this.handleKeyDown.bind(this)
-    this.config.container.addEventListener('keydown', handler as EventListener)
+    const handler = this.handleKeyDown.bind(this) as unknown as EventListener
+    this.config.container.addEventListener('keydown', handler)
     this.cleanup = () => {
-      this.config.container.removeEventListener('keydown', handler as EventListener)
+      this.config.container.removeEventListener('keydown', handler)
     }
   }
 

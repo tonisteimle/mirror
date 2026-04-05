@@ -444,11 +444,12 @@ export class DrawManager {
       )
 
       if (result.success) {
-        console.log('[DrawManager] Component created:', result.nodeId)
+        console.log('[DrawManager] Component created successfully')
 
         this.onDrawComplete?.({
           success: true,
-          nodeId: result.nodeId,
+          // nodeId will be available after recompilation
+          nodeId: undefined,
           properties: { x, y, w, h },
           modificationResult: result,
         })
@@ -585,7 +586,7 @@ export class DrawManager {
   private showError(message: string): void {
     console.warn('[DrawManager]', message)
     // Emit error event for centralized notification handling
-    events.emit('draw:error', { message })
+    events.emit('draw:error', { error: message })
   }
 
   /**
@@ -602,7 +603,7 @@ export class DrawManager {
     this.renderer.hide()
 
     // Hide guides
-    this.guideRenderer.hide()
+    this.guideRenderer.clear()
 
     // Clear state
     this.drawState = null

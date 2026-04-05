@@ -4,9 +4,76 @@
  * Handles the workflow: User Prompt → LLM (React) → Mirror → Editor
  */
 
-import type { EditorContext } from '../__tests__/llm/types'
-import { SYSTEM_PROMPTS, buildEditorContextPrompt } from '../__tests__/llm/types'
-import { ReactToMirrorConverter } from '../__tests__/llm/react-to-mirror'
+// =============================================================================
+// Types (inline definitions - originally from __tests__/llm/types)
+// =============================================================================
+
+export interface EditorContext {
+  cursorLine: number
+  cursorColumn?: number
+  selectedNodeId?: string
+  selectedNodeName?: string
+  ancestors?: string[]
+  insideComponent?: string
+  surroundingCode?: {
+    before: string
+    after: string
+  }
+}
+
+/**
+ * Build context prompt for the editor state
+ */
+function buildEditorContextPrompt(context: EditorContext): string {
+  let prompt = ''
+  if (context.insideComponent) {
+    prompt += `Currently inside component: ${context.insideComponent}\n`
+  }
+  if (context.selectedNodeName) {
+    prompt += `Selected element: ${context.selectedNodeName}\n`
+  }
+  if (context.surroundingCode?.before) {
+    prompt += `Code before cursor:\n${context.surroundingCode.before}\n`
+  }
+  return prompt
+}
+
+/**
+ * Simple React to Mirror converter (placeholder implementation)
+ * TODO: Import from proper converter module when available
+ */
+class ReactToMirrorConverter {
+  convert(reactCode: string): { mirror?: string; errors?: string[] } {
+    // Basic conversion - strip JSX syntax
+    // This is a placeholder; the real implementation should be more sophisticated
+    try {
+      // Remove function wrapper
+      let code = reactCode
+        .replace(/function\s+\w+\s*\(\)\s*\{/, '')
+        .replace(/return\s*\(/, '')
+        .replace(/\)\s*\}\s*$/, '')
+        .trim()
+
+      // Very basic JSX to Mirror conversion
+      code = code
+        .replace(/<div/g, 'Frame')
+        .replace(/<span/g, 'Text')
+        .replace(/<button/g, 'Button')
+        .replace(/<\/\w+>/g, '')
+        .replace(/>/g, '')
+        .replace(/style=\{\{([^}]+)\}\}/g, (_, styles) => {
+          // Convert inline styles
+          return styles
+            .replace(/['"](\w+)['"]/g, '$1')
+            .replace(/,\s*/g, ', ')
+        })
+
+      return { mirror: code }
+    } catch (error) {
+      return { errors: [(error as Error).message] }
+    }
+  }
+}
 
 // =============================================================================
 // Types

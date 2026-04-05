@@ -6,8 +6,14 @@ import type { Command } from './commands'
 import type { AST } from '../../compiler/parser/ast'
 import type { IR } from '../../compiler/ir/types'
 import type { SourceMap } from '../../compiler/ir/source-map'
-import type { ComponentDragData } from '../panels/components/types'
-import type { DropZone } from '../visual/models/drop-zone'
+import type { ComponentDragData, ComponentChild } from '../panels/components/types'
+
+// DropZone type - inline definition (module not yet implemented)
+export interface DropZone {
+  nodeId: string
+  position: 'before' | 'after' | 'inside'
+  element?: HTMLElement
+}
 
 export interface ParseError {
   message: string
@@ -116,13 +122,23 @@ export interface StudioEvents {
   /** Inline text editing ended */
   'inline-edit:ended': { nodeId: string; originalText: string; newText: string; saved: boolean }
   /** Explorer view changed */
-  'explorer:view-changed': { view: 'files' | 'components' }
+  'explorer:view-changed': { view: 'files' | 'components' | 'userComponents' }
   /** Component panel tab changed */
   'components:tab-changed': { tab: 'basic' | 'all' }
   /** Component added to project from All tab */
   'components:added-to-project': { componentName: string }
   /** Component dropped into editor */
-  'component:editor-dropped': { data: any; position: { line: number; column: number; offset: number } }
+  'component:editor-dropped': { data: ComponentDragData; position: { line: number; column: number; offset: number } }
+  /** User settings loaded */
+  'userSettings:loaded': { settings: Record<string, unknown> }
+  /** Preview rendered */
+  'preview:rendered': { success: boolean }
+  /** Layout inference events */
+  'layout-inference:detected': { groups: unknown[] }
+  'layout-inference:converted': { group: unknown; newSource?: string }
+  'layout-inference:error': { group?: unknown; error?: string }
+  /** Draw events */
+  'draw:error': { error: string; context?: string }
 }
 
 /** Component Panel item (simplified for event typing) */
@@ -132,6 +148,14 @@ export interface ComponentPanelItem {
   template: string
   properties?: string
   textContent?: string
+  /** Category for grouping */
+  category?: string
+  /** Icon type */
+  icon?: string
+  /** Child components for layout templates */
+  children?: ComponentChild[]
+  /** Default size for drag preview */
+  defaultSize?: { width: number; height: number }
 }
 
 type EventHandler<T> = (payload: T) => void

@@ -4,14 +4,14 @@
 
 export interface IconDefinition {
   name: string
-  path: string           // SVG path data (for fill-based icons)
+  path: string           // SVG path data (legacy, empty for Lucide)
   category: string
   tags: string[]
   viewBox?: string
-  /** For stroke-based icons (like Lucide): complete SVG inner content */
+  /** SVG inner content (paths, rects, circles, etc.) */
   svg?: string
-  /** Icon style: 'fill' (default, Material) or 'stroke' (Lucide) */
-  style?: 'fill' | 'stroke'
+  /** Icon style: 'stroke' (Lucide default) */
+  style?: 'stroke'
 }
 
 export interface IconCategory {

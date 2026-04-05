@@ -7,6 +7,18 @@
 import type { EditorView, ViewUpdate } from '@codemirror/view'
 import type { BasePicker } from '../../pickers'
 
+/**
+ * Minimal picker interface for custom pickers that don't extend BasePicker
+ */
+export interface MinimalPicker {
+  showAt(x: number, y: number): void
+  hide?(): void
+  filter?(text: string): void
+  getValue?(): string
+  getSelectedValue?(): string | null
+  navigate?(direction: 'up' | 'down' | 'left' | 'right'): void
+}
+
 // ============================================
 // Trigger Types
 // ============================================
@@ -85,7 +97,7 @@ export interface TriggerState {
   /** Start position of the trigger */
   startPos: number | null
   /** The picker instance */
-  picker: BasePicker | null
+  picker: TriggerPicker | null
   /** Additional context data */
   context: TriggerContext | null
   /** The trigger config that activated this state */
@@ -103,13 +115,16 @@ export interface KeyboardConfig {
   columns?: number
 }
 
+/** Type for pickers that can be used in triggers */
+export type TriggerPicker = BasePicker | MinimalPicker
+
 export interface TriggerConfig {
   /** Unique identifier for the trigger */
   id: string
   /** The trigger definition */
   trigger: TriggerDefinition
-  /** Picker instance or factory function */
-  picker: BasePicker | (() => BasePicker)
+  /** Picker instance or factory function (supports full BasePicker or MinimalPicker) */
+  picker: TriggerPicker | (() => TriggerPicker)
   /** Callback when a value is selected */
   onSelect: (value: string, context: TriggerContext, view: EditorView) => void
   /** Whether to filter picker items as user types */

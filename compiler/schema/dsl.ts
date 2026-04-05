@@ -2018,21 +2018,6 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
-  material: {
-    name: 'material',
-    aliases: [],
-    category: 'icon',
-    description: 'Material icon style',
-
-    keywords: {
-      _standalone: {
-        description: 'Use Material icon style',
-        css: [],  // Sets data attribute
-        example: 'Icon material',
-      },
-    },
-  },
-
   // ---------------------------------------------------------------------------
   // ANIMATION
   // ---------------------------------------------------------------------------

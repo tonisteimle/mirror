@@ -168,7 +168,7 @@ class StateCollector {
     if (!state.sourceMap) return
 
     // Find node at line
-    const entry = state.sourceMap.findByLine(line)
+    const entry = state.sourceMap.getNodeAtLine(line)
     if (entry) {
       events.emit('selection:changed', {
         nodeId: entry.nodeId,
@@ -182,18 +182,14 @@ class StateCollector {
       return null
     }
 
-    const entry = state.sourceMap.findByNodeId(state.selection.nodeId)
+    const entry = state.sourceMap.getNodeById(state.selection.nodeId)
     if (!entry) return null
 
-    const node = state.ast?.body.find(
-      (n) => 'id' in n && n.id === state.selection.nodeId
-    )
-
     return {
-      line: entry.line,
-      column: entry.column,
-      elementType: entry.type || null,
-      elementName: entry.name || null,
+      line: entry.position.line,
+      column: entry.position.column,
+      elementType: entry.componentName || null,
+      elementName: entry.instanceName || null,
       content: null, // Would need to parse the line
       properties: {},
       states: [],
@@ -203,14 +199,12 @@ class StateCollector {
   private extractTokens(ast: AST): MCPToken[] {
     const tokens: MCPToken[] = []
 
-    for (const node of ast.body) {
-      if (node.type === 'Token') {
-        tokens.push({
-          name: node.name,
-          value: String(node.value),
-          line: node.line,
-        })
-      }
+    for (const token of ast.tokens) {
+      tokens.push({
+        name: token.name,
+        value: String(token.value ?? ''),
+        line: token.line,
+      })
     }
 
     return tokens
@@ -222,11 +216,13 @@ class StateCollector {
     const processDefinition = (def: ComponentDefinition) => {
       const slots: string[] = []
 
-      // Extract slots from children
+      // Extract slots from children (nested component definitions)
       if (def.children) {
         for (const child of def.children) {
-          if (child.type === 'ComponentDefinition') {
-            slots.push(child.name)
+          // Type guard: check if this is actually a ComponentDefinition at runtime
+          const childAny = child as unknown as { type: string; name?: string }
+          if (childAny.type === 'ComponentDefinition' && childAny.name) {
+            slots.push(childAny.name)
           }
         }
       }
@@ -241,17 +237,16 @@ class StateCollector {
       // Process nested definitions
       if (def.children) {
         for (const child of def.children) {
-          if (child.type === 'ComponentDefinition') {
-            processDefinition(child)
+          const childAny = child as unknown as { type: string }
+          if (childAny.type === 'ComponentDefinition') {
+            processDefinition(child as unknown as ComponentDefinition)
           }
         }
       }
     }
 
-    for (const node of ast.body) {
-      if (node.type === 'ComponentDefinition') {
-        processDefinition(node)
-      }
+    for (const comp of ast.components) {
+      processDefinition(comp)
     }
 
     return components

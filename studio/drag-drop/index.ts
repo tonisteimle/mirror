@@ -32,7 +32,6 @@ export {
   SimpleInsideStrategy,
   StrategyRegistry,
   createWebflowRegistry,
-  calculateInsertionLineRect,
 } from './strategies'
 
 export type { DropStrategy, ChildRect } from './strategies'

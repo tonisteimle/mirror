@@ -91,7 +91,7 @@ export interface ContextCollectorConfig {
   getSelection: () => { from: number; to: number; text: string } | null
 }
 
-interface HistoryEntry {
+export interface HistoryEntry {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
@@ -199,28 +199,17 @@ export class ContextCollector {
 
       // Get parent (with validation)
       let parentNode = null
-      if (typeof sourceMap.getParentId === 'function') {
-        const parentId = sourceMap.getParentId(nodeId)
-        if (parentId) {
-          parentNode = sourceMap.getNodeById(parentId)
-        }
+      if (typeof sourceMap.getParent === 'function') {
+        parentNode = sourceMap.getParent(nodeId)
       }
 
       // Get siblings (with validation)
       const siblings: string[] = []
-      if (parentNode && typeof sourceMap.getChildIds === 'function') {
-        const parentId = sourceMap.getParentId(nodeId)
-        if (parentId) {
-          const siblingIds = sourceMap.getChildIds(parentId)
-          if (Array.isArray(siblingIds)) {
-            for (const sibId of siblingIds) {
-              if (sibId !== nodeId) {
-                const sib = sourceMap.getNodeById(sibId)
-                if (sib && sib.type) {
-                  siblings.push(sib.type)
-                }
-              }
-            }
+      if (typeof sourceMap.getSiblings === 'function') {
+        const siblingNodes = sourceMap.getSiblings(nodeId)
+        for (const sib of siblingNodes) {
+          if (sib.componentName) {
+            siblings.push(sib.componentName)
           }
         }
       }
@@ -244,13 +233,13 @@ export class ContextCollector {
 
       return {
         currentNode: {
-          type: node.type || 'unknown',
-          name: node.name || node.type || 'unknown',
+          type: node.componentName || 'unknown',
+          name: node.instanceName || node.componentName || 'unknown',
           line: node.position.line
         },
         parentNode: parentNode ? {
-          type: parentNode.type || 'unknown',
-          name: parentNode.name || parentNode.type || 'unknown',
+          type: parentNode.componentName || 'unknown',
+          name: parentNode.instanceName || parentNode.componentName || 'unknown',
           // Use 1 as minimum valid line number instead of 0
           line: parentNode.position?.line ?? 1
         } : null,

@@ -578,6 +578,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     getCodeModifier: () => {
       const source = state.get().source
       const sourceMap = state.get().sourceMap
+      if (!sourceMap) {
+        throw new Error('SourceMap not available')
+      }
       return new CodeModifier(source, sourceMap)
     },
     sourceMap: () => state.get().sourceMap,
@@ -722,7 +725,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     events.on('component:insert-requested', ({ item }) => {
       // Try DrawManager first, fallback to editor insert
       if (studio.drawManager && studio.preview) {
-        studio.drawManager.enterDrawMode(item)
+        // Convert ComponentPanelItem to ComponentItem with defaults
+        const componentItem = {
+          ...item,
+          category: item.category ?? 'custom',
+          icon: (item.icon ?? 'box') as import('./panels/components/types').ComponentIcon,
+        }
+        studio.drawManager.enterDrawMode(componentItem)
       } else if (studio.editor) {
         // Insert at cursor in editor (use template based on file type)
         const currentFile = getCurrentFileCallback?.() || 'index.mir'

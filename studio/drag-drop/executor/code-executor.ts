@@ -31,8 +31,8 @@ export interface CodeExecutorDependencies {
   /** Get prelude character offset (to extract editor content after modification) */
   getPreludeOffset: () => number
 
-  /** Get current source map */
-  getSourceMap: () => SourceMap
+  /** Get current source map (may be null before first compile) */
+  getSourceMap: () => SourceMap | null
 
   /** Apply code change to editor */
   applyChange: (newSource: string) => void
@@ -72,6 +72,13 @@ export class CodeExecutor implements ICodeExecutor {
       console.log('[CodeExecutor] resolvedSource length:', resolvedSource.length)
       console.log('[CodeExecutor] preludeOffset:', preludeOffset)
 
+      if (!sourceMap) {
+        return {
+          success: false,
+          error: 'SourceMap not available - compile first',
+        }
+      }
+
       const modifier = this.deps.createModifier(resolvedSource, sourceMap)
 
       let modResult
@@ -94,9 +101,10 @@ export class CodeExecutor implements ICodeExecutor {
       }
 
       // Extract editor content (after prelude) from modified source
+      const newSource = modResult.newSource ?? ''
       const newEditorContent = preludeOffset > 0
-        ? modResult.newSource.substring(preludeOffset)
-        : modResult.newSource
+        ? newSource.substring(preludeOffset)
+        : newSource
 
       // Apply the change (editor content only)
       console.log('[CodeExecutor] Applying change, new editor content length:', newEditorContent.length)
@@ -136,6 +144,14 @@ export class CodeExecutor implements ICodeExecutor {
       const resolvedSource = this.deps.getResolvedSource()
       const preludeOffset = this.deps.getPreludeOffset()
       const sourceMap = this.deps.getSourceMap()
+
+      if (!sourceMap) {
+        return {
+          success: false,
+          error: 'SourceMap not available - compile first',
+        }
+      }
+
       const modifier = this.deps.createModifier(resolvedSource, sourceMap)
 
       let modResult

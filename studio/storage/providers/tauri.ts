@@ -8,10 +8,10 @@ import type { StorageProvider, StorageProject, StorageItem } from '../types'
 import { isMirrorFile } from '../types'
 
 // =============================================================================
-// TauriBridge Type (global verfügbar)
+// TauriBridge Storage Type
 // =============================================================================
 
-interface TauriBridge {
+interface TauriBridgeStorage {
   fs: {
     readFile(path: string): Promise<string>
     writeFile(path: string, content: string): Promise<void>
@@ -33,13 +33,6 @@ interface TauriBridge {
   }
 }
 
-declare global {
-  interface Window {
-    TauriBridge?: TauriBridge
-    __TAURI_INTERNALS__?: unknown
-  }
-}
-
 // =============================================================================
 // Tauri Provider
 // =============================================================================
@@ -50,13 +43,15 @@ export class TauriProvider implements StorageProvider {
   readonly supportsNativeDialogs = true
 
   private basePath: string | null = null
-  private bridge: TauriBridge
+  private bridge: TauriBridgeStorage
 
   constructor() {
-    if (!window.TauriBridge) {
+    // TauriBridge exposes storage APIs (fs, dialog, etc.)
+    const bridge = (window as unknown as { TauriBridge?: TauriBridgeStorage }).TauriBridge
+    if (!bridge) {
       throw new Error('TauriBridge not available')
     }
-    this.bridge = window.TauriBridge
+    this.bridge = bridge
   }
 
   // ===========================================================================
@@ -307,5 +302,5 @@ App bg #18181b, pad 24
  * Prüft ob Tauri verfügbar ist
  */
 export function isTauri(): boolean {
-  return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
+  return typeof window !== 'undefined' && (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ !== undefined
 }

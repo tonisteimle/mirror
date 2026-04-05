@@ -8,10 +8,14 @@
 export {
   PropertyPanel,
   createPropertyPanel,
-  type PropertyPanelConfig,
-  type PropertyPanelCallbacks,
-  type ExtractedElement,
+  type PropertyPanelOptions,
+  type SelectionProvider,
+  type OnCodeChangeCallback,
+  type GetAllSourceCallback,
 } from './property-panel'
+
+// Re-export ExtractedElement from compiler
+export type { ExtractedElement } from '../../compiler/studio/property-extractor'
 
 // Tree Panel
 export {

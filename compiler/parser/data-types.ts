@@ -47,12 +47,19 @@ export interface DataEntry {
 
 /**
  * A key-value attribute (e.g., "title: Hello World")
+ *
+ * Can be nested:
+ *   steps:
+ *     planning:
+ *       title: "Sprint Planning"
  */
 export interface DataAttribute {
   /** Attribute key */
   key: string
-  /** Attribute value - can be string, number, boolean, or array */
-  value: DataValue
+  /** Simple value - undefined if this is a nested object */
+  value?: DataValue
+  /** Nested attributes - present if this is a nested object */
+  children?: DataAttribute[]
   /** Source line for error reporting */
   line: number
 }

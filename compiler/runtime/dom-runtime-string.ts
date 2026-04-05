@@ -9245,34 +9245,72 @@ const _runtime = {
     if (defaultOpen) open()
   },
 
-  // Icon loading
+  // Icon cache and loading
+  _iconCache: new Map(),
+  _pendingIcons: new Map(),
+  _fallbackIcon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
     const size = el.dataset.iconSize || '16'
     const color = el.dataset.iconColor || 'currentColor'
     const strokeWidth = el.dataset.iconWeight || '2'
+    const isFilled = el.dataset.iconFill === 'true'
+
+    // Check cache first
+    let svgText = this._iconCache.get(iconName)
+
+    if (!svgText) {
+      // Check pending request
+      let pending = this._pendingIcons.get(iconName)
+      if (!pending) {
+        pending = this._fetchIcon(iconName)
+        this._pendingIcons.set(iconName, pending)
+      }
+      svgText = await pending
+      this._pendingIcons.delete(iconName)
+      if (!svgText) {
+        console.warn(\`Icon "\${iconName}" not found, using fallback\`)
+        svgText = this._fallbackIcon
+      }
+    }
+
+    el.innerHTML = svgText
+    const svg = el.querySelector('svg')
+    if (svg) {
+      svg.style.width = size + 'px'
+      svg.style.height = size + 'px'
+      svg.style.color = color
+      svg.style.display = 'block'
+      if (isFilled) {
+        svg.setAttribute('fill', 'currentColor')
+        svg.setAttribute('stroke', 'none')
+      } else {
+        svg.setAttribute('stroke-width', strokeWidth)
+      }
+    }
+  },
+
+  async _fetchIcon(iconName) {
     try {
       const url = \`https://unpkg.com/lucide-static/icons/\${iconName}.svg\`
       const res = await fetch(url)
-      if (!res.ok) {
-        console.warn(\`Icon "\${iconName}" not found\`)
-        el.textContent = iconName
-        return
-      }
+      if (!res.ok) return null
       const svgText = await res.text()
-      el.innerHTML = svgText
-      const svg = el.querySelector('svg')
-      if (svg) {
-        svg.style.width = size + 'px'
-        svg.style.height = size + 'px'
-        svg.style.color = color
-        svg.setAttribute('stroke-width', strokeWidth)
-        svg.style.display = 'block'
-      }
+      this._iconCache.set(iconName, svgText)
+      return svgText
     } catch (err) {
       console.warn(\`Failed to load icon "\${iconName}":\`, err)
-      el.textContent = iconName
+      return null
     }
+  },
+
+  preloadIcons(names) {
+    names.forEach(name => {
+      if (!this._iconCache.has(name)) {
+        this._fetchIcon(name)
+      }
+    })
   },
 
   // Animation registry

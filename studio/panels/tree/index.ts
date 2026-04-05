@@ -123,9 +123,10 @@ export class TreePanel {
       for (const inst of ast.instances) {
         if (inst.type === 'Slot') {
           nodes.push(this.buildSlotNode(inst, 0))
-        } else {
+        } else if (inst.type === 'Instance') {
           nodes.push(this.buildInstanceNode(inst, 0))
         }
+        // Skip TableNode, Each and other node types for now
       }
     }
 

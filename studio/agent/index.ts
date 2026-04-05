@@ -42,7 +42,7 @@ export { validateTools } from './tools/validate'
 export { validateStructure, validateAndFix, formatErrors } from './validator'
 export type { ValidationError, ValidationResult } from './validator'
 export { AgentCommandHandler, createCommandHandler } from './command-handler'
-export type { CommandHandlerConfig, CommandResult } from './command-handler'
+export type { CommandHandlerConfig, AgentCommandResult } from './command-handler'
 export { VisualFeedbackManager, getVisualFeedbackManager, createVisualFeedbackManager } from './visual-feedback'
 
 // Phase 4: Intelligence

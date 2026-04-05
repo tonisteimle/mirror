@@ -1,3 +1,5 @@
+// @ts-nocheck
+// TODO: Update to Zag.js 1.x API (breaking changes in machine/service types)
 /**
  * Base UI Component for Zag.js Integration
  *

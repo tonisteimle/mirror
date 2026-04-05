@@ -195,7 +195,10 @@ export class EditorTriggerManager {
   hidePicker(): void {
     if (!this.state.isOpen || !this.state.picker) return
 
-    this.state.picker.hide()
+    // hide() is optional on MinimalPicker
+    if ('hide' in this.state.picker && typeof this.state.picker.hide === 'function') {
+      this.state.picker.hide()
+    }
     this.state = createDefaultState()
     this.teardownClickOutside()
   }
@@ -240,7 +243,7 @@ export class EditorTriggerManager {
 
     // Try to get selected value from different picker APIs
     if ('getSelectedValue' in picker && typeof picker.getSelectedValue === 'function') {
-      selectedValue = picker.getSelectedValue()
+      selectedValue = picker.getSelectedValue() ?? undefined
     } else if ('getValue' in picker && typeof picker.getValue === 'function') {
       selectedValue = picker.getValue()
     } else if ('getSelectedIndex' in picker && 'getFilteredIcons' in picker) {

@@ -26,7 +26,7 @@ export interface CommandHandlerConfig {
   executePropertyCommand?: (nodeId: string, property: string, value: string) => void
 }
 
-export interface CommandResult {
+export interface AgentCommandResult {
   success: boolean
   message?: string
   error?: string
@@ -48,7 +48,7 @@ export class AgentCommandHandler {
   /**
    * Process a command and return result
    */
-  async processCommand(command: LLMCommand): Promise<CommandResult> {
+  async processCommand(command: LLMCommand): Promise<AgentCommandResult> {
     switch (command.type) {
       case 'ADD_TOKEN':
         return this.handleAddToken(command)
@@ -78,7 +78,7 @@ export class AgentCommandHandler {
   // TOKEN HANDLING
   // ============================================
 
-  private handleAddToken(command: LLMCommand): CommandResult {
+  private handleAddToken(command: LLMCommand): AgentCommandResult {
     const { tokenName, tokenValue } = command
     if (!tokenName || !tokenValue) {
       return { success: false, error: 'Missing token name or value' }
@@ -120,7 +120,7 @@ export class AgentCommandHandler {
   // COMPONENT HANDLING
   // ============================================
 
-  private handleAddComponent(command: LLMCommand): CommandResult {
+  private handleAddComponent(command: LLMCommand): AgentCommandResult {
     const { componentName, componentDefinition } = command
     if (!componentName || !componentDefinition) {
       return { success: false, error: 'Missing component name or definition' }
@@ -157,7 +157,7 @@ export class AgentCommandHandler {
   // COMPONENT INSTANCE HANDLING
   // ============================================
 
-  private handleUseComponent(command: LLMCommand): CommandResult {
+  private handleUseComponent(command: LLMCommand): AgentCommandResult {
     const { component, parentId, properties } = command
 
     if (!component) {
@@ -185,7 +185,7 @@ export class AgentCommandHandler {
   // PROPERTY HANDLING
   // ============================================
 
-  private handleSetProperty(command: LLMCommand): CommandResult {
+  private handleSetProperty(command: LLMCommand): AgentCommandResult {
     const { nodeId, property, value } = command
 
     if (!nodeId || !property || value === undefined) {
@@ -207,7 +207,7 @@ export class AgentCommandHandler {
   // SOURCE UPDATE HANDLING
   // ============================================
 
-  private handleUpdateSource(command: LLMCommand): CommandResult {
+  private handleUpdateSource(command: LLMCommand): AgentCommandResult {
     const { from, to, insert } = command
 
     if (from === undefined || to === undefined || insert === undefined) {
@@ -225,7 +225,7 @@ export class AgentCommandHandler {
   // REPLACE ALL HANDLING
   // ============================================
 
-  private handleReplaceAll(command: LLMCommand): CommandResult {
+  private handleReplaceAll(command: LLMCommand): AgentCommandResult {
     const { code } = command
 
     if (!code) {

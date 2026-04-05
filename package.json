@@ -92,6 +92,8 @@
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "@playwright/test": "^1.58.2",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/node": "^25.5.2",
     "esbuild": "^0.27.3",
     "jsdom": "^28.1.0",
     "serve": "^14.2.6",

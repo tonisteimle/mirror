@@ -73,7 +73,7 @@ export {
 export {
   SnapIntegration,
   createSnapIntegration,
-  type SnapIntegrationConfig,
+  type SnapConfig as SnapIntegrationConfig,
 } from './snap-integration'
 
 // Pure Models (coordinate utilities)

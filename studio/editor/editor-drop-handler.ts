@@ -452,13 +452,3 @@ export class EditorDropHandler {
 export function createEditorDropHandler(config: EditorDropHandlerConfig): EditorDropHandler {
   return new EditorDropHandler(config)
 }
-
-// Type augmentation for events
-declare module '../core/events' {
-  interface StudioEvents {
-    'component:editor-dropped': {
-      data: ComponentDragData
-      position: EditorDropPosition
-    }
-  }
-}

@@ -423,7 +423,7 @@ export const properties: PropertyDefinition[] = [
     aliases: [],
     type: 'boolean',
     category: 'icon',
-    description: 'Filled icon (Material only)',
+    description: 'Filled icon variant',
   },
 
   // ============================================

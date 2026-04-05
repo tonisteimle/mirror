@@ -17,14 +17,14 @@ export {
   type TreeViewCallbacks,
 } from './tree-view'
 
-// ContextMenu
+// ContextMenu (Zag-based - use ZagContextMenu prefix to avoid conflict with preview/context-menu)
 export {
   ZagContextMenu,
-  createContextMenu,
+  createContextMenu as createZagContextMenu,
   type MenuItem,
   type MenuSeparator,
   type MenuEntry,
-  type ContextMenuConfig,
+  type ContextMenuConfig as ZagContextMenuConfig,
   type ContextMenuCallbacks,
 } from './context-menu'
 

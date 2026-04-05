@@ -4,12 +4,14 @@
  * Automatische Erkennung und Erstellung des richtigen Providers.
  */
 
-import type { StorageProvider } from '../types'
+import type { StorageProvider, ProviderType } from '../types'
 import { TauriProvider, isTauri } from './tauri'
 import { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
+import { DemoProvider } from './demo'
 
 export { TauriProvider, isTauri } from './tauri'
 export { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
+export { DemoProvider } from './demo'
 
 /**
  * Erkennt automatisch den verfügbaren Provider
@@ -38,12 +40,14 @@ export async function detectProvider(): Promise<StorageProvider> {
 /**
  * Erstellt einen spezifischen Provider
  */
-export function createProvider(type: 'tauri' | 'localstorage'): StorageProvider {
+export function createProvider(type: ProviderType): StorageProvider {
   switch (type) {
     case 'tauri':
       return new TauriProvider()
     case 'localstorage':
       return new LocalStorageProvider()
+    case 'demo':
+      return new DemoProvider()
     default:
       throw new Error(`Unknown provider type: ${type}`)
   }

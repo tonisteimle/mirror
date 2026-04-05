@@ -381,7 +381,9 @@ export function mergeDataFiles(files: DataFile[]): Record<string, Record<string,
 
       // Add attributes
       for (const attr of entry.attributes) {
-        entryData[attr.key] = attr.value
+        if (attr.value !== undefined) {
+          entryData[attr.key] = attr.value
+        }
       }
 
       // Add blocks
