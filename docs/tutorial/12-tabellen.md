@@ -110,8 +110,8 @@ $users: [
 ]
 
 Table $users
-  Row: hor, spread, pad 12 16, bg #1a1a1a, rad 6
-    Frame hor, gap 12
+  Row: hor, spread, ver-center, pad 12 16, bg #1a1a1a, rad 6
+    Frame hor, gap 12, ver-center
       Frame w 36, h 36, bg #2563eb, rad 99, center
         Text row.name[0], col white, fs 14
       Frame gap 2
@@ -173,7 +173,7 @@ $products: [
 
 Frame bg #111, pad 16, rad 12, gap 12
   // Header
-  Frame hor, gap 12, pad 8 12
+  Frame hor, gap 12, ver-center, pad 8 12
     Text "Produkt", col #888, fs 12, w 150
     Text "Preis", col #888, fs 12, w 80
     Text "Lager", col #888, fs 12, w 60
@@ -184,7 +184,7 @@ Frame bg #111, pad 16, rad 12, gap 12
       Input value row.name, bg transparent, col white, bor 0, w 150, pad 4
         focus:
           bg #252525
-      Frame hor, w 80
+      Frame hor, ver-center, w 80
         Text "€", col #888, fs 14
         Input value row.price, bg transparent, col white, bor 0, w 60, pad 4, type number
           focus:

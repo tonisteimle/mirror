@@ -115,7 +115,7 @@ Frame gap 16
     Text "Zentriert", col white
 
   // spread = Kinder an den Rändern verteilen
-  Frame hor, spread, w 300, bg #1a1a1a, pad 12, rad 6
+  Frame hor, spread, ver-center, w 300, bg #1a1a1a, pad 12, rad 6
     Text "Links", col white
     Text "Rechts", col white
 

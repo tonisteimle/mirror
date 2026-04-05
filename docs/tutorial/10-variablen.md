@@ -184,7 +184,7 @@ Mit `each` über alle Einträge einer `.data`-Datei:
 
 ```mirror-static
 each customer in $customers
-  Frame hor, spread, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, spread, ver-center, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
     Frame gap 2
       Text customer.name, col white, weight 500
       Text customer.email, col #888, fs 12

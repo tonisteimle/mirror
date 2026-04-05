@@ -327,7 +327,7 @@ Frame gap 12, pad 16, bg #1a1a1a, rad 8
 | `Frame` | Container – das zentrale Layout-Element |
 | `Text` | Textinhalt |
 | `Image` | Bild |
-| `Icon` | Icon (Lucide oder Material) |
+| `Icon` | Icon (Lucide) |
 | `Button` | Klickbarer Button |
 | `Input` | Einzeiliges Eingabefeld |
 | `Link` | Anklickbarer Link |
@@ -430,12 +430,12 @@ Frame gap 16
 
 ## Icons
 
-Icons kommen von [Lucide](https://lucide.dev/icons/) (Standard) oder [Material Icons](https://fonts.google.com/icons). Der Name kommt in Anführungszeichen:
+Icons kommen von [Lucide](https://lucide.dev/icons/). Der Name kommt in Anführungszeichen:
 
 ```mirror
 Frame gap 16
 
-  // Lucide Icons (Standard)
+  // Lucide Icons
   Frame hor, gap 16
     Icon "check", ic #10b981, is 24
     Icon "x", ic #ef4444, is 24
@@ -446,11 +446,6 @@ Frame gap 16
   Frame hor, gap 16
     Icon "heart", ic #ef4444, is 24
     Icon "heart", ic #ef4444, is 24, fill
-
-  // material = Material Icons statt Lucide
-  Frame hor, gap 16
-    Icon "star", ic #f59e0b, is 24, material
-    Icon "star", ic #f59e0b, is 24, material, fill
 
   // Icons in Buttons
   Button pad 10 16, rad 6, bg #2563eb, col white
@@ -465,7 +460,6 @@ Frame gap 16
 | `ic` | Icon-Farbe | `ic #2563eb` |
 | `iw` | Strichstärke | `iw 1.5` |
 | `fill` | Ausgefüllte Variante | `Icon "heart", fill` |
-| `material` | Material Icons verwenden | `Icon "star", material` |
 
 ## Praxisbeispiel: Card
 
@@ -841,7 +835,9 @@ Mirror bietet drei Layout-Systeme: **Flex** für fließende Layouts (Navigation,
 
 ### Richtung: hor und ver
 
-Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du auf horizontal:
+Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du auf horizontal.
+
+> **Wichtig – Defaults:** Sowohl `hor` als auch `ver` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (`flex-start`). Bei `ver` = oben, bei `hor` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit `center` (beide Achsen) oder `ver-center` (nur vertikal).
 
 ```mirror
 Frame gap 12
@@ -888,11 +884,22 @@ Frame gap 12
   Frame w 200, h 80, bg #1a1a1a, rad 8, center
     Text "center", col white
 
-  // spread – an die Ränder
-  Frame hor, spread, bg #1a1a1a, pad 16, rad 8
+  // ver-center – nur vertikal (nützlich bei hor + spread)
+  Frame hor, spread, ver-center, bg #1a1a1a, pad 16, rad 8
     Text "Links", col white
     Text "Rechts", col white
+
+  // hor-center – nur horizontal
+  Frame w 200, h 60, bg #1a1a1a, rad 8, hor-center
+    Text "nur horizontal", col white
 ```
+
+| Ausrichtung | Beschreibung |
+|-------------|--------------|
+| `center` | Beide Achsen zentrieren |
+| `ver-center` | Nur vertikal zentrieren (bei `hor`) |
+| `hor-center` | Nur horizontal zentrieren (bei `ver`) |
+| `spread` | Kinder an Rändern verteilen |
 
 ### 9 Positionen
 
@@ -991,7 +998,7 @@ Frame grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
 ```mirror
 // Layout-Komponente
 Dashboard: grid 12, gap 12, row-height 25, h 200
-  Header: x 1, y 1, w 12, h 2, bg #1a1a1a, rad 6, pad 0 16, hor, spread, center
+  Header: x 1, y 1, w 12, h 2, bg #1a1a1a, rad 6, pad 0 16, hor, spread, ver-center
   Nav: x 1, y 3, w 2, h 5, bg #1a1a1a, rad 6, pad 12, gap 4
   Main: x 3, y 3, w 10, h 5, grid 2, gap 12
 
@@ -1061,9 +1068,12 @@ Frame hor, gap 24
 | **Stacked** | Überlagerungen (Badges, Overlays) |
 
 **Flex:**
-- `hor`, `ver` – Richtung
+- `hor`, `ver` – Richtung (beide: `flex-start` als Default)
 - `gap N` – Abstand
-- `center`, `spread` – Ausrichtung
+- `center` – beide Achsen zentrieren
+- `ver-center` – nur vertikal zentrieren
+- `hor-center` – nur horizontal zentrieren
+- `spread` – Kinder an Rändern verteilen
 - `tl` bis `br` – 9 Positionen
 - `w/h`: Pixel, `hug`, `full`
 - `wrap` – Zeilenumbruch
@@ -3720,7 +3730,6 @@ Vor dem Testen prüfen:
 | icon-color | ic | <color>, $token |
 | icon-weight | iw | <number> |
 | fill | - | *(standalone)* |
-| material | - | *(standalone)* |
 | animation | anim | fade-in, fade-out, slide-in, slide-out, scale-in, scale-out, bounce, pulse, shake, spin |
 | x-offset | - | <number> |
 | y-offset | - | <number> |

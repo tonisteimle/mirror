@@ -171,24 +171,23 @@ Frame w 400 h 400
   // ============================================================
   describe('ISSUE 3: Leere Frames', () => {
 
-    test('Frame ohne Inhalt hat keine Größe', () => {
+    test('Frame ohne Inhalt hat fit-content (hug default)', () => {
       const ir = toIR(parse(`Frame`))
 
-      // Keine explizite Größe
-      expect(getStyle(ir.nodes[0], 'width')).toBeUndefined()
+      // Default: hug content (fit-content)
+      // This prevents the "everything is full-width" problem
+      expect(getStyle(ir.nodes[0], 'width')).toBe('fit-content')
       expect(getStyle(ir.nodes[0], 'height')).toBeUndefined()
-
-      // In CSS: 0x0 ohne Inhalt
     })
 
     test('Frame mit bg aber ohne Größe', () => {
       const ir = toIR(parse(`Frame bg #f00`))
 
-      // Hat Hintergrund aber keine Größe
+      // Hat Hintergrund, width = fit-content (hug default)
       expect(getStyle(ir.nodes[0], 'background')).toBe('#f00')
-      expect(getStyle(ir.nodes[0], 'width')).toBeUndefined()
+      expect(getStyle(ir.nodes[0], 'width')).toBe('fit-content')
 
-      // In CSS: roter Hintergrund, aber 0x0 = nicht sichtbar
+      // In CSS: will only be as big as content (collapses if empty)
     })
 
   })

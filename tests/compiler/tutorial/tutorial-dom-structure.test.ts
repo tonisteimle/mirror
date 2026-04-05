@@ -76,6 +76,7 @@ function checkChildOrder(el: Element, expectedOrder: string[]): { ok: boolean; a
 // Skip list for examples that use advanced features not fully implemented
 // These use custom functions, undefined data, or advanced syntax
 const SKIP_EXAMPLES: Record<string, number[]> = {
+  '06 - states': [10, 11], // Uses IntersectionObserver (not available in JSDOM)
   '14 - tables': [20], // Uses $users, $selected, select(), custom methods
   '16 - forms': [11],  // Uses isValidEmail(), 'and not' syntax, register()
 }

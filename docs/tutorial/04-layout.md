@@ -11,7 +11,9 @@ Mirror bietet drei Layout-Systeme: **Flex** für fließende Layouts (Navigation,
 
 ### Richtung: hor und ver
 
-Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du auf horizontal:
+Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du auf horizontal.
+
+> **Wichtig – Defaults:** Sowohl `hor` als auch `ver` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (`flex-start`). Bei `ver` = oben, bei `hor` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit `center` (beide Achsen) oder `ver-center` (nur vertikal).
 
 ```mirror
 Frame gap 12
@@ -58,11 +60,22 @@ Frame gap 12
   Frame w 200, h 80, bg #1a1a1a, rad 8, center
     Text "center", col white
 
-  // spread – an die Ränder
-  Frame hor, spread, bg #1a1a1a, pad 16, rad 8
+  // ver-center – nur vertikal (nützlich bei hor + spread)
+  Frame hor, spread, ver-center, bg #1a1a1a, pad 16, rad 8
     Text "Links", col white
     Text "Rechts", col white
+
+  // hor-center – nur horizontal
+  Frame w 200, h 60, bg #1a1a1a, rad 8, hor-center
+    Text "nur horizontal", col white
 ```
+
+| Ausrichtung | Beschreibung |
+|-------------|--------------|
+| `center` | Beide Achsen zentrieren |
+| `ver-center` | Nur vertikal zentrieren (bei `hor`) |
+| `hor-center` | Nur horizontal zentrieren (bei `ver`) |
+| `spread` | Kinder an Rändern verteilen |
 
 ### 9 Positionen
 
@@ -232,9 +245,12 @@ Frame hor, gap 24
 | **Stacked** | Überlagerungen (Badges, Overlays) |
 
 **Flex:**
-- `hor`, `ver` – Richtung
+- `hor`, `ver` – Richtung (beide: `flex-start` als Default)
 - `gap N` – Abstand
-- `center`, `spread` – Ausrichtung
+- `center` – beide Achsen zentrieren
+- `ver-center` – nur vertikal zentrieren
+- `hor-center` – nur horizontal zentrieren
+- `spread` – Kinder an Rändern verteilen
 - `tl` bis `br` – 9 Positionen
 - `w/h`: Pixel, `hug`, `full`
 - `wrap` – Zeilenumbruch

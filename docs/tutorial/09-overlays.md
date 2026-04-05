@@ -59,7 +59,7 @@ Mit `CloseTrigger:` kannst du einen expliziten Schließen-Button einbauen:
 Popover
   Trigger: Button "Open"
   Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
-    Frame hor, spread
+    Frame hor, spread, ver-center
       Text "Popover Title", weight bold
       CloseTrigger: Button "X", bg transparent, col #666
     Text "Content goes here"
@@ -71,10 +71,10 @@ Popover
 Popover positioning "bottom", closeOnEscape
   Trigger: Button "Settings"
   Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 8, w 180
-    Frame hor, spread
+    Frame hor, spread, ver-center
       Text "Notifications"
       Switch
-    Frame hor, spread
+    Frame hor, spread, ver-center
       Text "Dark mode"
       Switch
 ```
@@ -95,7 +95,7 @@ Ein typisches Beispiel ist eine User-Vorschau bei Hover über einen @-Mention:
 HoverCard positioning "bottom"
   Trigger: Text "@johndoe", col #3b82f6, underline, cursor pointer
   Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
-    Frame hor, gap 12
+    Frame hor, gap 12, ver-center
       Frame w 48, h 48, bg #3b82f6, rad 99, center
         Text "JD", col white, weight 500
       Frame ver
@@ -122,7 +122,7 @@ Mit `CloseTrigger:` baust du Schließen-Buttons ein. Diese können überall im C
 Dialog
   Trigger: Button "Open"
   Content: Frame ver, gap 12, pad 24, bg #1a1a1a, rad 12, w 320
-    Frame hor, spread
+    Frame hor, spread, ver-center
       Text "Settings", weight bold, fs 18
       CloseTrigger: Button "X", bg transparent
     Text "Dialog content here"
@@ -146,7 +146,7 @@ Ein typischer Bestätigungs-Dialog mit zwei Buttons:
 Dialog
   Trigger: Button "Delete item", bg #ef4444
   Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 380
-    Frame hor, gap 12
+    Frame hor, gap 12, ver-center
       Frame w 40, h 40, rad 99, bg rgba(239,68,68,0.2), center
         Icon "trash", col #ef4444
       Frame ver
@@ -165,7 +165,7 @@ Ein Dialog mit Eingabefeldern:
 Dialog
   Trigger: Button "Create new"
   Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 400
-    Frame hor, spread
+    Frame hor, spread, ver-center
       Text "Create Project", weight bold, fs 18
       CloseTrigger: Button "X", bg transparent, col #666
     Frame ver, gap 12

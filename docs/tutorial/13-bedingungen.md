@@ -123,7 +123,7 @@ tasks: [{ title: "Task 1", done: true }, { title: "Task 2", done: false }, { tit
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   each task in $tasks
-    Frame hor, gap 8, pad 8, bg #252525, rad 4
+    Frame hor, gap 8, ver-center, pad 8, bg #252525, rad 4
       if task.done
         Icon "check", ic #10b981, is 16
       else
@@ -155,7 +155,7 @@ Frame gap 12
   Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
 
   // Icon basierend auf Status
-  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
+  Frame hor, gap 8, ver-center, bg #1a1a1a, pad 12, rad 6
     Icon done ? "check" : "circle", ic done ? #10b981 : #666, is 18
     Text "Aufgabe", col white
 
@@ -209,7 +209,7 @@ data: "Inhalt geladen"
 
 Frame bg #1a1a1a, pad 20, rad 12, w 200, center
   if loading
-    Frame hor, gap 8
+    Frame hor, gap 8, ver-center
       Icon "loader", ic #888, is 18
       Text "Lädt...", col #888
   else
@@ -224,9 +224,9 @@ user:
   name: "Max"
   avatar: ""
 
-Frame hor, gap 12, bg #1a1a1a, pad 12, rad 8
+Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
   if user.loggedIn
-    Frame hor, gap 10
+    Frame hor, gap 10, ver-center
       Frame w 36, h 36, rad 99, bg #2563eb, center
         Text user.avatar ? user.avatar : user.name[0], col white, fs 14
       Frame gap 2

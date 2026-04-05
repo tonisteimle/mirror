@@ -129,7 +129,7 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'height': 'fit-content',
   },
 
-  // Alignment - center
+  // Alignment - center (BOTH axes)
   'Frame center': {
     'display': 'flex',
     'justify-content': 'center',
@@ -139,6 +139,28 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'display': 'flex',
     'flex-direction': 'row',
     'justify-content': 'center',
+    'align-items': 'center',
+  },
+
+  // Alignment - hor-center (horizontal only)
+  'Frame hor-center': {
+    'display': 'flex',
+    'align-items': 'center',
+  },
+  'Frame hor, hor-center': {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'justify-content': 'center',
+  },
+
+  // Alignment - ver-center (vertical only)
+  'Frame ver-center': {
+    'display': 'flex',
+    'justify-content': 'center',
+  },
+  'Frame hor, ver-center': {
+    'display': 'flex',
+    'flex-direction': 'row',
     'align-items': 'center',
   },
 
@@ -630,6 +652,22 @@ export function lookupExpectedCSS(code: string): Record<string, string> {
     else if (trimmed === 'center') {
       result['justify-content'] = 'center'
       result['align-items'] = 'center'
+    } else if (trimmed === 'hor-center') {
+      // In column: align-items = center (cross-axis)
+      // In row: justify-content = center (main-axis)
+      if (result['flex-direction'] === 'row') {
+        result['justify-content'] = 'center'
+      } else {
+        result['align-items'] = 'center'
+      }
+    } else if (trimmed === 'ver-center') {
+      // In column: justify-content = center (main-axis)
+      // In row: align-items = center (cross-axis)
+      if (result['flex-direction'] === 'row') {
+        result['align-items'] = 'center'
+      } else {
+        result['justify-content'] = 'center'
+      }
     } else if (trimmed === 'spread') {
       result['justify-content'] = 'space-between'
     } else if (trimmed === 'tl') {

@@ -57,6 +57,10 @@ import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES, getItemKeywords, getZagPrimitive } from '../schema/zag-primitives'
 import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
+import {
+  isContainer as isContainerPrimitive,
+  FLEX_DEFAULTS,
+} from '../schema/layout-defaults'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -122,6 +126,9 @@ interface LayoutContext {
   // Internal alignment tracking (before direction-based mapping)
   _hAlign?: 'start' | 'end' | 'center'
   _vAlign?: 'start' | 'end' | 'center'
+  // Track if width/height were explicitly set (for hug-by-default behavior)
+  hasExplicitWidth?: boolean
+  hasExplicitHeight?: boolean
 }
 
 /**
@@ -2600,6 +2607,13 @@ class IRTransformer {
     const hasExplicitMaxWidth = properties.some(p => p.name === 'maxw' || p.name === 'max-width')
     const hasExplicitMaxHeight = properties.some(p => p.name === 'maxh' || p.name === 'max-height')
 
+    // Check for explicit width/height properties (for hug-by-default behavior)
+    // When no width is set, containers should hug their content (fit-content)
+    const hasExplicitWidth = properties.some(p => p.name === 'w' || p.name === 'width' || p.name === 'size')
+    const hasExplicitHeight = properties.some(p => p.name === 'h' || p.name === 'height' || p.name === 'size')
+    layoutContext.hasExplicitWidth = hasExplicitWidth
+    layoutContext.hasExplicitHeight = hasExplicitHeight
+
     // Collect layout values to process together (preserving order for "last wins")
     // This includes both direction (hor/ver) and alignment (9-zone, center, etc.)
     const layoutValues: string[] = []
@@ -2944,12 +2958,7 @@ class IRTransformer {
     // Determine final direction
     // Non-container primitives should NOT get default flex layout
     const primitiveLower = primitive?.toLowerCase() || ''
-    const nonContainerPrimitives = new Set([
-      'text', 'span', 'input', 'textarea', 'button', 'img', 'image', 'icon',
-      'label', 'link', 'a', 'option', 'divider', 'hr', 'spacer', 'h1', 'h2',
-      'h3', 'h4', 'h5', 'h6', 'checkbox', 'radio', 'slot', 'zagslot'
-    ])
-    const isContainer = !nonContainerPrimitives.has(primitiveLower)
+    const isContainer = isContainerPrimitive(primitiveLower)
     const direction = ctx.direction || (isContainer ? 'column' : null)
 
     // If no layout properties were set and not a container, skip flex styles
@@ -2971,6 +2980,12 @@ class IRTransformer {
     const finalDirection = direction || 'column'
     styles.push({ property: 'flex-direction', value: finalDirection })
 
+    // Hug content by default: elements should fit their content unless explicit width is set
+    // This prevents the common "everything is full-width" problem in flex layouts
+    if (!ctx.hasExplicitWidth) {
+      styles.push({ property: 'width', value: 'fit-content' })
+    }
+
     // Map horizontal/vertical alignment to justify-content/align-items based on direction
     const hAlign = ctx._hAlign
     const vAlign = ctx._vAlign
@@ -2986,8 +3001,8 @@ class IRTransformer {
       if (hAlign) {
         ctx.alignItems = alignValue(hAlign)
       } else if (!ctx.alignItems) {
-        // Default for vertical layouts: left-aligned (flex-start)
-        ctx.alignItems = 'flex-start'
+        // SYMMETRIC: Both column and row default to flex-start
+        ctx.alignItems = FLEX_DEFAULTS.column.alignItems
       }
       if (vAlign) {
         ctx.justifyContent = alignValue(vAlign)
@@ -3000,8 +3015,9 @@ class IRTransformer {
       if (vAlign) {
         ctx.alignItems = alignValue(vAlign)
       } else if (!ctx.alignItems) {
-        // Default for horizontal layouts: vertically centered
-        ctx.alignItems = 'center'
+        // SYMMETRIC: Both column and row default to flex-start
+        // Use `center` explicitly for vertical centering in horizontal layouts
+        ctx.alignItems = FLEX_DEFAULTS.row.alignItems
       }
     }
 
@@ -4273,9 +4289,6 @@ class IRTransformer {
       }
       if (prop.name === 'fill') {
         htmlProps.push({ name: 'data-icon-fill', value: true })
-      }
-      if (prop.name === 'material') {
-        htmlProps.push({ name: 'data-icon-material', value: true })
       }
       // Focusable - makes element keyboard-focusable
       if (prop.name === 'focusable') {

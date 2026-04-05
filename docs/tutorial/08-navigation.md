@@ -90,7 +90,7 @@ Der Trigger muss kein Button sein – du kannst beliebige Elemente verwenden. Mi
 
 ```mirror
 Collapsible defaultOpen
-  Trigger: Frame hor, spread, pad 12, bg #1a1a1a, rad 8, cursor pointer
+  Trigger: Frame hor, spread, ver-center, pad 12, bg #1a1a1a, rad 8, cursor pointer
     Text "Filter", weight 500
     Icon "chevron-down"
   Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 0 0 8 8

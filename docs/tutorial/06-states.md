@@ -187,11 +187,11 @@ Ein Accordion zeigt im geschlossenen Zustand nur einen Header, im offenen Zustan
 
 ```mirror
 Panel: bg #1a1a1a, rad 8, clip, toggle()
-  Frame hor, spread, pad 16, cursor pointer
+  Frame hor, spread, ver-center, pad 16, cursor pointer
     Text "Mehr anzeigen", col white, fs 14
     Icon "chevron-down", ic #888, is 18
   open:
-    Frame hor, spread, pad 16, cursor pointer
+    Frame hor, spread, ver-center, pad 16, cursor pointer
       Text "Weniger anzeigen", col white, fs 14
       Icon "chevron-up", ic #888, is 18
     Frame pad 0 16 16 16, gap 8

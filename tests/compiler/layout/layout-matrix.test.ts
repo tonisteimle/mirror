@@ -265,6 +265,30 @@ describe('Layout Matrix: Direction (Deep)', () => {
     expect(styles['align-items']).toBe('flex-start')
   })
 
+  // REGRESSION: Frame hor used to have align-items: center
+  // This was asymmetric with Frame ver which had flex-start
+  // Now BOTH default to flex-start for consistency
+  it('REGRESSION: Frame hor does NOT auto-center vertically', () => {
+    const styles = getRootStyles('Frame hor')
+    // MUST be flex-start, NOT center
+    expect(styles['align-items']).toBe('flex-start')
+    expect(styles['align-items']).not.toBe('center')
+  })
+
+  it('REGRESSION: Frame ver and Frame hor have SAME align-items default', () => {
+    const verStyles = getRootStyles('Frame ver')
+    const horStyles = getRootStyles('Frame hor')
+    // Both should have the same default
+    expect(verStyles['align-items']).toBe(horStyles['align-items'])
+    expect(verStyles['align-items']).toBe('flex-start')
+  })
+
+  it('Frame hor, center → explicit centering still works', () => {
+    const styles = getRootStyles('Frame hor, center')
+    expect(styles['align-items']).toBe('center')
+    expect(styles['justify-content']).toBe('center')
+  })
+
   it('ver → explicit flex column', () => {
     const styles = getRootStyles('Frame ver')
     expect(styles['display']).toBe('flex')
@@ -302,6 +326,45 @@ describe('Layout Matrix: 9-Zone Alignment (Deep)', () => {
       expect(styles['align-items']).toBe(align)
     })
   }
+})
+
+describe('Layout Matrix: Single-Axis Center (Deep)', () => {
+  // hor-center in column layout = align-items: center (horizontal centering)
+  it('hor-center in column → align-items: center only', () => {
+    const styles = getRootStyles('Frame hor-center')
+    expect(styles['align-items']).toBe('center')
+    expect(styles['justify-content']).toBeUndefined()
+  })
+
+  // hor-center in row layout = justify-content: center (horizontal centering)
+  it('hor-center in row → justify-content: center only', () => {
+    const styles = getRootStyles('Frame hor, hor-center')
+    expect(styles['justify-content']).toBe('center')
+    // align-items should be flex-start (default), not center
+    expect(styles['align-items']).toBe('flex-start')
+  })
+
+  // ver-center in column layout = justify-content: center (vertical centering)
+  it('ver-center in column → justify-content: center only', () => {
+    const styles = getRootStyles('Frame ver-center')
+    expect(styles['justify-content']).toBe('center')
+    // align-items should be flex-start (default), not center
+    expect(styles['align-items']).toBe('flex-start')
+  })
+
+  // ver-center in row layout = align-items: center (vertical centering)
+  it('ver-center in row → align-items: center only', () => {
+    const styles = getRootStyles('Frame hor, ver-center')
+    expect(styles['align-items']).toBe('center')
+    expect(styles['justify-content']).toBeUndefined()
+  })
+
+  // Combining hor-center + ver-center = same as center
+  it('hor-center + ver-center = center (both axes)', () => {
+    const styles = getRootStyles('Frame hor-center, ver-center')
+    expect(styles['justify-content']).toBe('center')
+    expect(styles['align-items']).toBe('center')
+  })
 })
 
 describe('Layout Matrix: Sizing (Deep)', () => {
