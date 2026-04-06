@@ -16,13 +16,13 @@
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
 | **10-eingabe.html** | 30 | 92 | ✅ Fertig |
 | **11-navigation.html** | 20 | 84 | ✅ Fertig |
+| **12-overlays.html** | 27 | 54 | ✅ Fertig |
 | **13-anzeige.html** | 43 | 44 | ✅ Fertig |
 
 ### Noch zu testen
 
 - 08-daten.html
 - 09-seiten.html
-- 12-overlays.html (Dialog, Tooltip, Popover)
 
 ---
 
@@ -179,6 +179,19 @@ playground-nav-pagination.spec.ts     - Pagination (Playground 14-16)
 playground-nav-treeview.spec.ts       - TreeView (Playground 17-19)
 ```
 
+### 12-overlays.html (54 Tests)
+
+```
+playground-overlays-tooltip.spec.ts      - Tooltip: Basic, Positioning, Multi-line (Playground 0-2)
+playground-overlays-popover.spec.ts      - Popover: Basic, CloseTrigger, Settings (Playground 3-5)
+playground-overlays-hovercard.spec.ts    - HoverCard: Basic, User Profile (Playground 6-7)
+playground-overlays-dialog.spec.ts       - Dialog: Basic, Close, Backdrop, Confirm, Form (Playground 8-12)
+playground-overlays-menu.spec.ts         - Menu: Icon Toolbar, Basic, Groups, ContextMenu, NestedMenu (Playground 13-17)
+playground-overlays-floatingpanel.spec.ts - FloatingPanel: Draggable, Fixed, Resizable (Playground 18-20)
+playground-overlays-tour.spec.ts         - Tour: Basic, Compact, Progress (Playground 21-23)
+playground-overlays-presence.spec.ts     - Presence: Toggle, Slide, List Items (Playground 24-26)
+```
+
 ### 13-anzeige.html (44 Tests)
 
 ```
@@ -220,6 +233,9 @@ npx playwright test tests/e2e/playground-styling-*.spec.ts
 # Nur Anzeige (Tables, Media, Feedback, Utility)
 npx playwright test tests/e2e/playground-anzeige-*.spec.ts
 
+# Nur Overlays (Tooltip, Popover, Dialog, Menu, FloatingPanel, Tour, Presence)
+npx playwright test tests/e2e/playground-overlays-*.spec.ts
+
 # Mit neuen Screenshots
 npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 ```
@@ -230,4 +246,3 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 1. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
 2. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
-3. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
