@@ -29,9 +29,10 @@
       <p>Tooltips zeigen kurze Hilfetexte bei Hover. Der <code>Trigger:</code> ist das Element, über das man hovert – der <code>Content:</code> erscheint dann daneben:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tooltip
-  Trigger: Button "Hover me"
-  Content: Text "This is a tooltip"</textarea>
+          <textarea>Frame h 100, center
+  Tooltip positioning "bottom"
+    Trigger: Button "Hover me"
+    Content: Text "This is a tooltip"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -39,13 +40,14 @@
       <p>Mit <code>positioning</code> bestimmst du, wo der Tooltip erscheint. Mit <code>openDelay</code> und <code>closeDelay</code> steuerst du die Verzögerung in Millisekunden:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
-  Tooltip positioning "top"
-    Trigger: Button "Top"
-    Content: Text "Tooltip on top"
-  Tooltip positioning "bottom", openDelay 500
-    Trigger: Button "Delayed"
-    Content: Text "Shows after 500ms"</textarea>
+          <textarea>Frame h 120, center
+  Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
+    Tooltip positioning "top"
+      Trigger: Button "Top"
+      Content: Text "Tooltip on top"
+    Tooltip positioning "bottom", openDelay 500
+      Trigger: Button "Delayed"
+      Content: Text "Shows after 500ms"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -53,11 +55,12 @@
       <p>Der Content kann auch gestylt werden – du kannst beliebige Elemente verwenden:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tooltip
-  Trigger: Button "Multi-line"
-  Content: Frame ver, gap 4, pad 8
-    Text "Title", weight bold
-    Text "Description here", col #888, fs 12</textarea>
+          <textarea>Frame h 120, center
+  Tooltip positioning "bottom"
+    Trigger: Button "Multi-line"
+    Content: Frame ver, gap 4, pad 8
+      Text "Title", weight bold
+      Text "Description here", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -93,11 +96,12 @@
       <p>Popovers öffnen bei Klick und bleiben offen, bis man außerhalb klickt oder Escape drückt. Sie eignen sich für reicheren Inhalt wie Formulare oder Listen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Popover
-  Trigger: Button "Open Popover"
-  Content: Frame ver, gap 8
-    Text "Title", weight bold
-    Text "Some description text"</textarea>
+          <textarea>Frame h 150, center
+  Popover positioning "bottom"
+    Trigger: Button "Open Popover"
+    Content: Frame ver, gap 8
+      Text "Title", weight bold
+      Text "Some description text"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -105,13 +109,14 @@
       <p>Mit <code>CloseTrigger:</code> kannst du einen expliziten Schließen-Button einbauen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Popover
-  Trigger: Button "Open"
-  Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
-    Frame hor, spread, ver-center
-      Text "Popover Title", weight bold
-      CloseTrigger: Button "X", bg transparent, col #666
-    Text "Content goes here"</textarea>
+          <textarea>Frame h 160, center
+  Popover positioning "bottom"
+    Trigger: Button "Open"
+    Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
+      Frame hor, spread, ver-center
+        Text "Popover Title", weight bold
+        CloseTrigger: Button "X", bg transparent, col #666
+      Text "Content goes here"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -119,15 +124,16 @@
       <p><code>positioning</code> funktioniert wie bei Tooltip. Mit <code>closeOnEscape</code> und <code>closeOnInteractOutside</code> steuerst du das Schließ-Verhalten:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Popover positioning "bottom", closeOnEscape
-  Trigger: Button "Settings"
-  Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 8, w 180
-    Frame hor, spread, ver-center
-      Text "Notifications"
-      Switch
-    Frame hor, spread, ver-center
-      Text "Dark mode"
-      Switch</textarea>
+          <textarea>Frame h 160, center
+  Popover positioning "bottom", closeOnEscape
+    Trigger: Button "Settings"
+    Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 8, w 180
+      Frame hor, spread, ver-center
+        Text "Notifications"
+        Switch
+      Frame hor, spread, ver-center
+        Text "Dark mode"
+        Switch</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -166,9 +172,10 @@
       <p>HoverCard ist wie Popover, aber öffnet bei Hover statt Klick. Das ist nützlich für Vorschauen von Links oder User-Profilen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>HoverCard
-  Trigger: Text "Hover over me", underline, cursor pointer
-  Content: Text "HoverCard content"</textarea>
+          <textarea>Frame h 100, center
+  HoverCard positioning "bottom"
+    Trigger: Text "Hover over me", underline, cursor pointer
+    Content: Text "HoverCard content"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -176,16 +183,17 @@
       <p>Ein typisches Beispiel ist eine User-Vorschau bei Hover über einen @-Mention:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>HoverCard positioning "bottom"
-  Trigger: Text "@johndoe", col #3b82f6, underline, cursor pointer
-  Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
-    Frame hor, gap 12, ver-center
-      Frame w 48, h 48, bg #3b82f6, rad 99, center
-        Text "JD", col white, weight 500
-      Frame ver
-        Text "John Doe", weight 600
-        Text "@johndoe", col #666, fs 14
-    Text "Software engineer building great tools.", col #888, fs 13</textarea>
+          <textarea>Frame h 180, center
+  HoverCard positioning "bottom"
+    Trigger: Text "@johndoe", col #3b82f6, underline, cursor pointer
+    Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
+      Frame hor, gap 12, ver-center
+        Frame w 48, h 48, bg #3b82f6, rad 99, center
+          Text "JD", col white, weight 500
+        Frame ver
+          Text "John Doe", weight 600
+          Text "@johndoe", col #666, fs 14
+      Text "Software engineer building great tools.", col #888, fs 13</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -340,19 +348,20 @@
       <p>Tooltips für eine Icon-Leiste:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Tooltip positioning "bottom"
-    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-      Icon "home"
-    Content: Text "Home", fs 12
-  Tooltip positioning "bottom"
-    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-      Icon "settings"
-    Content: Text "Settings", fs 12
-  Tooltip positioning "bottom"
-    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-      Icon "user"
-    Content: Text "Profile", fs 12</textarea>
+          <textarea>Frame h 100, center
+  Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+    Tooltip positioning "bottom"
+      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+        Icon "home"
+      Content: Text "Home", fs 12
+    Tooltip positioning "bottom"
+      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+        Icon "settings"
+      Content: Text "Settings", fs 12
+    Tooltip positioning "bottom"
+      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+        Icon "user"
+      Content: Text "Profile", fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -366,31 +375,32 @@
       <p>Dropdown-Menü mit Tastaturnavigation – öffnet bei Klick auf den Trigger.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Menu
-  Trigger: Button "Aktionen", pad 10 20, bg #333, col white, rad 6
-    Frame hor, gap 8, ver-center
-      Text "Aktionen"
-      Icon "chevron-down", ic white, is 14
-  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "edit", ic #888, is 14
-        Text "Bearbeiten"
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "copy", ic #888, is 14
-        Text "Duplizieren"
-    Separator: Frame h 1, bg #333, margin 4 0
-    Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
-      hover:
-        bg #331a1a
-      Frame hor, gap 10, ver-center
-        Icon "trash", ic #ef4444, is 14
-        Text "Löschen"</textarea>
+          <textarea>Frame h 220, tl, pad 16
+  Menu positioning "bottom"
+    Trigger: Button "Aktionen", pad 10 20, bg #333, col white, rad 6
+      Frame hor, gap 8, ver-center
+        Text "Aktionen"
+        Icon "chevron-down", ic white, is 14
+    Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "edit", ic #888, is 14
+          Text "Bearbeiten"
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "copy", ic #888, is 14
+          Text "Duplizieren"
+      Separator: Frame h 1, bg #333, margin 4 0
+      Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
+        hover:
+          bg #331a1a
+        Frame hor, gap 10, ver-center
+          Icon "trash", ic #ef4444, is 14
+          Text "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -398,42 +408,43 @@
       <h3>Mit Gruppen</h3>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Menu
-  Trigger: Button "Datei", pad 8 16, bg #252525, col white, rad 4
-  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
-    ItemGroup:
-      ItemGroupLabel: Text "Dokument", col #666, fs 11, pad 8 12, uppercase
-      Item: Frame pad 10 12, rad 4, col white, cursor pointer
-        hover:
-          bg #333
-        Frame hor, spread, ver-center
+          <textarea>Frame h 320, tl, pad 16
+  Menu positioning "bottom"
+    Trigger: Button "Datei", pad 8 16, bg #252525, col white, rad 4
+    Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
+      ItemGroup:
+        ItemGroupLabel: Text "Dokument", col #666, fs 11, pad 8 12, uppercase
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
+          Frame hor, spread, ver-center
+            Frame hor, gap 8, ver-center
+              Icon "file-plus", ic #888, is 14
+              Text "Neu"
+            Text "⌘N", col #555, fs 11
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
+          Frame hor, spread, ver-center
+            Frame hor, gap 8, ver-center
+              Icon "folder-open", ic #888, is 14
+              Text "Öffnen"
+            Text "⌘O", col #555, fs 11
+      Separator: Frame h 1, bg #333, margin 4 0
+      ItemGroup:
+        ItemGroupLabel: Text "Export", col #666, fs 11, pad 8 12, uppercase
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
           Frame hor, gap 8, ver-center
-            Icon "file-plus", ic #888, is 14
-            Text "Neu"
-          Text "⌘N", col #555, fs 11
-      Item: Frame pad 10 12, rad 4, col white, cursor pointer
-        hover:
-          bg #333
-        Frame hor, spread, ver-center
+            Icon "download", ic #888, is 14
+            Text "Als PDF"
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
           Frame hor, gap 8, ver-center
-            Icon "folder-open", ic #888, is 14
-            Text "Öffnen"
-          Text "⌘O", col #555, fs 11
-    Separator: Frame h 1, bg #333, margin 4 0
-    ItemGroup:
-      ItemGroupLabel: Text "Export", col #666, fs 11, pad 8 12, uppercase
-      Item: Frame pad 10 12, rad 4, col white, cursor pointer
-        hover:
-          bg #333
-        Frame hor, gap 8, ver-center
-          Icon "download", ic #888, is 14
-          Text "Als PDF"
-      Item: Frame pad 10 12, rad 4, col white, cursor pointer
-        hover:
-          bg #333
-        Frame hor, gap 8, ver-center
-          Icon "image", ic #888, is 14
-          Text "Als PNG"</textarea>
+            Icon "image", ic #888, is 14
+            Text "Als PNG"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -469,36 +480,37 @@
       <p>Kontextmenü das bei Rechtsklick erscheint.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>ContextMenu
-  Trigger: Frame w 300, h 120, bg #1a1a1a, rad 8, center, cursor context-menu
-    Text "Rechtsklick für Kontextmenü", col #888
+          <textarea>Frame h 200, center
+  ContextMenu
+    Trigger: Frame w 300, h 80, bg #1a1a1a, rad 8, center, cursor context-menu
+      Text "Rechtsklick für Kontextmenü", col #888
 
-  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "copy", ic #888, is 14
-        Text "Kopieren"
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "scissors", ic #888, is 14
-        Text "Ausschneiden"
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "clipboard", ic #888, is 14
-        Text "Einfügen"
-    Separator: Frame h 1, bg #333, margin 4 0
-    Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
-      hover:
-        bg #331a1a
-      Frame hor, gap 10, ver-center
-        Icon "trash", ic #ef4444, is 14
-        Text "Löschen"</textarea>
+    Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "copy", ic #888, is 14
+          Text "Kopieren"
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "scissors", ic #888, is 14
+          Text "Ausschneiden"
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "clipboard", ic #888, is 14
+          Text "Einfügen"
+      Separator: Frame h 1, bg #333, margin 4 0
+      Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
+        hover:
+          bg #331a1a
+        Frame hor, gap 10, ver-center
+          Icon "trash", ic #ef4444, is 14
+          Text "Löschen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -514,54 +526,55 @@
       <p>Menü mit verschachtelten Untermenüs.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>NestedMenu
-  Trigger: Button "Menü", pad 10 20, bg #333, col white, rad 6
+          <textarea>Frame h 260, tl, pad 16
+  NestedMenu positioning "bottom"
+    Trigger: Button "Menü", pad 10 20, bg #333, col white, rad 6
 
-  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "file", ic #888, is 14
-        Text "Neu"
-
-    Submenu:
-      SubmenuTrigger: Frame pad 10 12, rad 4, col white, cursor pointer
+    Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
         hover:
           bg #333
-        Frame hor, spread, ver-center
-          Frame hor, gap 10, ver-center
-            Icon "share", ic #888, is 14
-            Text "Teilen"
-          Icon "chevron-right", ic #666, is 14
+        Frame hor, gap 10, ver-center
+          Icon "file", ic #888, is 14
+          Text "Neu"
 
-      SubmenuContent: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 160
-        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      Submenu:
+        SubmenuTrigger: Frame pad 10 12, rad 4, col white, cursor pointer
           hover:
             bg #333
-          Frame hor, gap 10, ver-center
-            Icon "mail", ic #888, is 14
-            Text "Per E-Mail"
-        Item: Frame pad 10 12, rad 4, col white, cursor pointer
-          hover:
-            bg #333
-          Frame hor, gap 10, ver-center
-            Icon "link", ic #888, is 14
-            Text "Link kopieren"
-        Item: Frame pad 10 12, rad 4, col white, cursor pointer
-          hover:
-            bg #333
-          Frame hor, gap 10, ver-center
-            Icon "twitter", ic #888, is 14
-            Text "Twitter"
+          Frame hor, spread, ver-center
+            Frame hor, gap 10, ver-center
+              Icon "share", ic #888, is 14
+              Text "Teilen"
+            Icon "chevron-right", ic #666, is 14
 
-    Separator: Frame h 1, bg #333, margin 4 0
-    Item: Frame pad 10 12, rad 4, col white, cursor pointer
-      hover:
-        bg #333
-      Frame hor, gap 10, ver-center
-        Icon "settings", ic #888, is 14
-        Text "Einstellungen"</textarea>
+        SubmenuContent: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 160
+          Item: Frame pad 10 12, rad 4, col white, cursor pointer
+            hover:
+              bg #333
+            Frame hor, gap 10, ver-center
+              Icon "mail", ic #888, is 14
+              Text "Per E-Mail"
+          Item: Frame pad 10 12, rad 4, col white, cursor pointer
+            hover:
+              bg #333
+            Frame hor, gap 10, ver-center
+              Icon "link", ic #888, is 14
+              Text "Link kopieren"
+          Item: Frame pad 10 12, rad 4, col white, cursor pointer
+            hover:
+              bg #333
+            Frame hor, gap 10, ver-center
+              Icon "twitter", ic #888, is 14
+              Text "Twitter"
+
+      Separator: Frame h 1, bg #333, margin 4 0
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 10, ver-center
+          Icon "settings", ic #888, is 14
+          Text "Einstellungen"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -583,22 +596,23 @@
       <p>Verschiebbares und skalierbares Panel – ideal für Tool-Paletten, Inspektoren oder Chat-Widgets.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>FloatingPanel draggable, resizable
-  Trigger: Button "Panel öffnen", pad 10 20, bg #2563eb, col white, rad 6
-  Content: Frame w 300, h 200, bg #1a1a1a, rad 12, shadow lg, clip
-    Header: Frame hor, spread, ver-center, pad 12 16, bg #252525, cursor grab
-      DragTrigger: Frame hor, gap 8, ver-center
-        Icon "grip-vertical", ic #666, is 14
-        Text "Tool-Palette", col white, weight 500
-      CloseTrigger: Frame pad 4, rad 4, cursor pointer
-        hover:
-          bg #333
-        Icon "x", ic #888, is 14
-    Body: Frame pad 16, gap 8
-      Text "Panel-Inhalt hier", col #888
-      Button "Aktion", pad 8 16, bg #333, col white, rad 4
-    ResizeTrigger: absolute, bottom 4, right 4, cursor nwse-resize
-      Icon "grip", ic #444, is 12</textarea>
+          <textarea>Frame h 280, tl, pad 16
+  FloatingPanel draggable, resizable
+    Trigger: Button "Panel öffnen", pad 10 20, bg #2563eb, col white, rad 6
+    Content: Frame w 300, h 200, bg #1a1a1a, rad 12, shadow lg, clip
+      Header: Frame hor, spread, ver-center, pad 12 16, bg #252525, cursor grab
+        DragTrigger: Frame hor, gap 8, ver-center
+          Icon "grip-vertical", ic #666, is 14
+          Text "Tool-Palette", col white, weight 500
+        CloseTrigger: Frame pad 4, rad 4, cursor pointer
+          hover:
+            bg #333
+          Icon "x", ic #888, is 14
+      Body: Frame pad 16, gap 8
+        Text "Panel-Inhalt hier", col #888
+        Button "Aktion", pad 8 16, bg #333, col white, rad 4
+      ResizeTrigger: absolute, bottom 4, right 4, cursor nwse-resize
+        Icon "grip", ic #444, is 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -606,19 +620,20 @@
       <h3>Mit fester Position</h3>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>FloatingPanel defaultPosition "{ x: 100, y: 50 }", draggable
-  Trigger: Button "Inspector", pad 8 16, bg #333, col white, rad 4
-  Content: Frame w 250, bg #1a1a1a, rad 8, shadow lg
-    Header: Frame hor, spread, pad 12, bg #252525, rad 8 8 0 0, cursor grab
-      DragTrigger: Text "Inspector", col white, fs 13, weight 500
-      CloseTrigger: Icon "x", ic #666, is 14, cursor pointer
-    Body: Frame pad 12, gap 8
-      Frame gap 4
-        Text "Position", col #666, fs 11
-        Text "x: 120, y: 340", col white, fs 12, font mono
-      Frame gap 4
-        Text "Size", col #666, fs 11
-        Text "200 × 150", col white, fs 12, font mono</textarea>
+          <textarea>Frame h 200, tl, pad 16
+  FloatingPanel defaultPosition "{ x: 100, y: 50 }", draggable
+    Trigger: Button "Inspector", pad 8 16, bg #333, col white, rad 4
+    Content: Frame w 250, bg #1a1a1a, rad 8, shadow lg
+      Header: Frame hor, spread, pad 12, bg #252525, rad 8 8 0 0, cursor grab
+        DragTrigger: Text "Inspector", col white, fs 13, weight 500
+        CloseTrigger: Icon "x", ic #666, is 14, cursor pointer
+      Body: Frame pad 12, gap 8
+        Frame gap 4
+          Text "Position", col #666, fs 11
+          Text "x: 120, y: 340", col white, fs 12, font mono
+        Frame gap 4
+          Text "Size", col #666, fs 11
+          Text "200 × 150", col white, fs 12, font mono</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -626,14 +641,15 @@
       <h3>Skalierbar mit Limits</h3>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>FloatingPanel resizable, minSize "{ width: 200, height: 150 }", maxSize "{ width: 500, height: 400 }"
-  Trigger: Button "Notes", pad 8 16, bg #333, col white, rad 4
-  Content: Frame w 280, h 200, bg #1a1a1a, rad 8, shadow lg
-    Header: Frame pad 12, bg #252525, rad 8 8 0 0
-      Text "Notizen", col white, weight 500
-    Body: Frame pad 12, h full
-      Textarea placeholder "Notizen hier...", w full, h full, bg #252525, col white, bor 0, rad 4
-    ResizeTrigger: absolute, bottom 0, right 0, w 16, h 16, cursor nwse-resize</textarea>
+          <textarea>Frame h 280, tl, pad 16
+  FloatingPanel resizable, minSize "{ width: 200, height: 150 }", maxSize "{ width: 500, height: 400 }"
+    Trigger: Button "Notes", pad 8 16, bg #333, col white, rad 4
+    Content: Frame w 280, h 200, bg #1a1a1a, rad 8, shadow lg
+      Header: Frame pad 12, bg #252525, rad 8 8 0 0
+        Text "Notizen", col white, weight 500
+      Body: Frame pad 12, h full
+        Textarea placeholder "Notizen hier...", w full, h full, bg #252525, col white, bor 0, rad 4
+      ResizeTrigger: absolute, bottom 0, right 0, w 16, h 16, cursor nwse-resize</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>

@@ -6,6 +6,10 @@
 
 | Datei | Playgrounds | Tests | Status |
 |-------|-------------|-------|--------|
+| **00-intro.html** | 7 | 18 | ✅ Fertig |
+| **01-elemente.html** | 7 | 17 | ✅ Fertig |
+| **02-komponenten.html** | 12 | 24 | ✅ Fertig |
+| **03-tokens.html** | 5 | 10 | ✅ Fertig |
 | **04-layout.html** | 10 | 35 | ✅ Fertig |
 | **05-styling.html** | 13 | 47 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
@@ -16,10 +20,6 @@
 
 ### Noch zu testen
 
-- 00-intro.html
-- 01-elemente.html
-- 02-komponenten.html
-- 03-tokens.html
 - 08-daten.html
 - 09-seiten.html
 - 12-overlays.html (Dialog, Tooltip, Popover)
@@ -86,6 +86,30 @@ await page.evaluate((idx) => {
 ---
 
 ## Test-Dateien
+
+### 00-intro.html (18 Tests)
+
+```
+playground-intro.spec.ts              - Intro: Button, User Card, Hierarchie, Komponente, Tokens, States (Playground 0-6)
+```
+
+### 01-elemente.html (17 Tests)
+
+```
+playground-elemente.spec.ts           - Elemente: Grundsyntax, Primitives, Styling, Hierarchie, Layout, Icons, Card (Playground 0-6)
+```
+
+### 02-komponenten.html (24 Tests)
+
+```
+playground-komponenten.spec.ts        - Komponenten: Definition, Override, Children, Variationen, Layouts (Playground 0-11)
+```
+
+### 03-tokens.html (10 Tests)
+
+```
+playground-tokens.spec.ts             - Tokens: Magische Werte, Definition, Typen, Semantisch, Drei Stufen (Playground 0-4)
+```
 
 ### 06-states.html (91 Tests)
 
@@ -178,6 +202,9 @@ npx playwright test tests/e2e/playground-*toggle*.spec.ts tests/e2e/playground-*
 # Nur Functions
 npx playwright test tests/e2e/playground-fn-*.spec.ts
 
+# Nur Grundlagen (Intro, Elemente, Komponenten, Tokens)
+npx playwright test tests/e2e/playground-intro.spec.ts tests/e2e/playground-elemente.spec.ts tests/e2e/playground-komponenten.spec.ts tests/e2e/playground-tokens.spec.ts
+
 # Nur Navigation
 npx playwright test tests/e2e/playground-nav-*.spec.ts
 
@@ -201,7 +228,6 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 ## Nächste Schritte
 
-1. **Grundlagen (00-03)** - Intro, Elemente, Komponenten, Tokens
-2. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
-3. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
-4. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
+1. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
+2. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
+3. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
