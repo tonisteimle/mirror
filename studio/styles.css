@@ -3698,21 +3698,22 @@
     .pp-content .pp-prop-label {
       font-size: var(--font-xs);
       color: var(--text-secondary);
-      padding: 6px 8px 6px 0;
+      padding: 0 4px 0 0;
       white-space: nowrap;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
+      min-height: 24px;
     }
 
     .pp-content .pp-row-content,
     .pp-content .pp-prop-content {
       display: flex;
-      gap: 4px;
+      gap: 2px;
       align-items: center;
-      padding: 4px 0;
+      padding: 0;
       border-bottom: 1px solid var(--border-subtle);
-      min-height: 28px;
+      min-height: 24px;
     }
 
     /* Last row in section - no border */
@@ -4061,21 +4062,18 @@
     .pp-content input.pp-v2-input,
     .pp-content input[type="text"] {
       flex: 1;
-      min-width: 40px;
-      height: 22px !important;
-      min-height: 22px !important;
-      max-height: 22px !important;
+      min-width: 0;
+      height: 100% !important;
       box-sizing: border-box !important;
-      background: var(--bg-input);
+      background: transparent;
       border: none;
-      border-radius: var(--radius-sm);
-      padding: 0 6px;
+      border-radius: 0;
+      padding: 0;
       margin: 0;
       color: var(--text-muted);
       font-size: var(--font-xs);
       font-family: var(--font-mono);
       text-align: left;
-      line-height: var(--leading-normal);
     }
 
     .pp-content .pp-input:focus,
