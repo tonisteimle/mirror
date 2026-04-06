@@ -258,7 +258,13 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Props und Slots wie Slider, aber <code>value</code> ist ein Array <code>[min, max]</code>.</p>
+      <p>Props und Slots wie <a href="#slider">Slider</a>, aber <code>value</code> ist ein Array <code>[min, max]</code>.</p>
+
+      <h3>Props</h3>
+      <p>Siehe <a href="#slider">Slider Props</a> – identisch, nur <code>value</code>/<code>defaultValue</code> als <code>[number, number]</code>.</p>
+
+      <h3>Slots</h3>
+      <p>Siehe <a href="#slider">Slider Slots</a> – identisch.</p>
     </section>
 
 
@@ -755,10 +761,166 @@
       <h3>Props</h3>
       <table class="ref-table">
         <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string | string[]</td><td>Ausgewählter Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string | string[]</td><td>Startwert</td></tr>
         <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
         <tr><td><code>multiple</code></td><td>boolean</td><td>Mehrfachauswahl</td></tr>
         <tr><td><code>searchable</code></td><td>boolean</td><td>Suche aktivieren</td></tr>
+        <tr><td><code>clearable</code></td><td>boolean</td><td>Löschen-Button anzeigen</td></tr>
         <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Auswahl schließen</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Positionierung des Dropdowns</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Der klickbare Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Dropdown-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelne Option</td></tr>
+        <tr><td><code>ItemIndicator:</code></td><td>Häkchen bei Auswahl</td></tr>
+        <tr><td><code>Group:</code></td><td>Optionen-Gruppe</td></tr>
+        <tr><td><code>GroupLabel:</code></td><td>Gruppen-Überschrift</td></tr>
+        <tr><td><code>Input:</code></td><td>Suchfeld (bei searchable)</td></tr>
+        <tr><td><code>ClearButton:</code></td><td>Auswahl löschen</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Dropdown geöffnet</td></tr>
+        <tr><td><code>selected:</code></td><td>Item ausgewählt</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert (Tastatur)</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Combobox</h2>
+      <p>Ein Select mit Suchfeld – Autocomplete für große Datensätze.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Combobox placeholder "Suche..."
+  Root: gap 4
+  Label: col #888, fs 12
+    "Sprache wählen"
+  Control: hor, bg #1a1a1a, bor 1, boc #333, rad 8
+  Input: w full, bg transparent, col white, pad 12, bor 0
+  Trigger: pad 12, col #666, cursor pointer
+    Icon "chevron-down", is 16
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg, w full
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+    selected:
+      bg #2563eb
+
+  Option "JavaScript", value "js"
+  Option "TypeScript", value "ts"
+  Option "Python", value "py"
+  Option "Rust", value "rust"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string | string[]</td><td>Ausgewählter Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string | string[]</td><td>Startwert</td></tr>
+        <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
+        <tr><td><code>allowCustomValue</code></td><td>boolean</td><td>Eigene Werte erlaubt</td></tr>
+        <tr><td><code>openOnChange</code></td><td>boolean</td><td>Bei Eingabe öffnen</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>readOnly</code></td><td>boolean</td><td>Nur Anzeige</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Input + Trigger Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Suchfeld</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Dropdown-Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Dropdown-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelne Option</td></tr>
+        <tr><td><code>ItemText:</code></td><td>Option-Text</td></tr>
+        <tr><td><code>ItemIndicator:</code></td><td>Häkchen bei Auswahl</td></tr>
+        <tr><td><code>Empty:</code></td><td>Keine Ergebnisse</td></tr>
+        <tr><td><code>ClearTrigger:</code></td><td>Eingabe löschen</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Dropdown geöffnet</td></tr>
+        <tr><td><code>selected:</code></td><td>Item ausgewählt</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Listbox</h2>
+      <p>Alle Optionen sind sichtbar – ideal für wenige Auswahlmöglichkeiten.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Listbox defaultValue "medium"
+  Root: gap 4
+  Label: col #888, fs 12
+    "Größe wählen"
+  Content: bg #1a1a1a, rad 8, pad 4, gap 2
+  Item: hor, spread, ver-center, pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+    selected:
+      bg #2563eb
+  ItemIndicator: col white
+    Icon "check", is 16
+
+  ListboxItem "Klein", value "small"
+  ListboxItem "Mittel", value "medium"
+  ListboxItem "Groß", value "large"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string | string[]</td><td>Ausgewählter Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string | string[]</td><td>Startwert</td></tr>
+        <tr><td><code>multiple</code></td><td>boolean</td><td>Mehrfachauswahl</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Content:</code></td><td>Listen-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelne Option</td></tr>
+        <tr><td><code>ItemText:</code></td><td>Option-Text</td></tr>
+        <tr><td><code>ItemIndicator:</code></td><td>Häkchen bei Auswahl</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Optionen-Gruppe</td></tr>
+        <tr><td><code>ItemGroupLabel:</code></td><td>Gruppen-Überschrift</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>selected:</code></td><td>Item ausgewählt</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
       </table>
     </section>
 
@@ -786,6 +948,215 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Klick schließen</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Positionierung</td></tr>
+        <tr><td><code>typeahead</code></td><td>boolean</td><td>Tippen zum Suchen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Der auslösende Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Menü-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Menüpunkt</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Gruppe von Items</td></tr>
+        <tr><td><code>ItemGroupLabel:</code></td><td>Gruppen-Überschrift</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennlinie</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Trigger</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Menü geöffnet</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>ContextMenu</h2>
+      <p>Rechtsklick-Menü für kontextbezogene Aktionen.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ContextMenu
+  Trigger: Frame w 200, h 100, bg #1a1a1a, rad 8, center
+    Text "Rechtsklick hier", col #888, fs 14
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg, w 180
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+  Separator: h 1, bg #333, margin 4 0
+
+  Item "Kopieren"
+    Icon "copy", ic #888, is 16, margin 0 8 0 0
+  Item "Einfügen"
+    Icon "clipboard", ic #888, is 16, margin 0 8 0 0
+  Separator
+  Item "Löschen", col #ef4444
+    Icon "trash", ic #ef4444, is 16, margin 0 8 0 0</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Klick schließen</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Positionierung</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Bereich für Rechtsklick</td></tr>
+        <tr><td><code>Content:</code></td><td>Menü-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Menüpunkt</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Gruppe von Items</td></tr>
+        <tr><td><code>ItemGroupLabel:</code></td><td>Gruppen-Überschrift</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennlinie</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Menü geöffnet</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>NestedMenu</h2>
+      <p>Menü mit Untermenüs – für komplexe Navigationsstrukturen.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>NestedMenu
+  Trigger: Button "Datei", pad 10 16, bg #1a1a1a, col white, rad 6
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg, w 180
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+  SubmenuTrigger: pad 10 12, rad 4, col white, cursor pointer, hor, spread
+    hover:
+      bg #333
+  SubmenuContent: bg #1a1a1a, rad 8, pad 4, shadow lg, w 160
+  Separator: h 1, bg #333, margin 4 0
+
+  Item "Neu"
+  Submenu
+    SubmenuTrigger "Öffnen"
+      Icon "chevron-right", is 14
+    SubmenuContent
+      Item "Datei"
+      Item "Ordner"
+      Item "Projekt"
+  Separator
+  Item "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Klick schließen</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Positionierung</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Auslösender Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Menü-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Menüpunkt</td></tr>
+        <tr><td><code>Submenu:</code></td><td>Untermenü-Container</td></tr>
+        <tr><td><code>SubmenuTrigger:</code></td><td>Untermenü-Auslöser</td></tr>
+        <tr><td><code>SubmenuContent:</code></td><td>Untermenü-Inhalt</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennlinie</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Menü geöffnet</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>NavigationMenu</h2>
+      <p>Horizontale Navigation mit Dropdown-Panels – typisch für Website-Header.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>NavigationMenu
+  Root: hor, bg #1a1a1a, pad 8, rad 8
+  List: hor, gap 4
+  Trigger: pad 10 16, rad 6, col white, cursor pointer
+    hover:
+      bg #333
+  Content: bg #1a1a1a, rad 8, pad 16, shadow lg, w 300
+
+  NavMenuItem value "products"
+    Trigger "Produkte"
+    Content
+      Text "Unsere Produkte", col white, weight 500, margin 0 0 8 0
+      Text "Entdecke unser Sortiment", col #888, fs 13
+  NavMenuItem value "resources"
+    Trigger "Ressourcen"
+    Content
+      Text "Ressourcen", col white, weight 500, margin 0 0 8 0
+      Text "Dokumentation, Tutorials und mehr", col #888, fs 13
+  NavMenuItem value "pricing"
+    Trigger "Preise"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Aktives Item</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Initial aktives Item</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>List:</code></td><td>Item-Liste</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelnes Nav-Item</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Klickbarer Tab</td></tr>
+        <tr><td><code>Content:</code></td><td>Dropdown-Panel</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Aktiv-Indikator</td></tr>
+        <tr><td><code>Viewport:</code></td><td>Content-Container</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Panel geöffnet</td></tr>
+        <tr><td><code>active:</code></td><td>Item aktiv</td></tr>
+        <tr><td><code>highlighted:</code></td><td>Item fokussiert</td></tr>
+      </table>
     </section>
 
 
@@ -826,10 +1197,45 @@
       <h3>Props</h3>
       <table class="ref-table">
         <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Date | Date[]</td><td>Ausgewähltes Datum</td></tr>
+        <tr><td><code>defaultValue</code></td><td>Date | Date[]</td><td>Startwert</td></tr>
         <tr><td><code>selectionMode</code></td><td>"single" | "range"</td><td>Auswahlmodus</td></tr>
         <tr><td><code>min</code></td><td>Date</td><td>Frühestes Datum</td></tr>
         <tr><td><code>max</code></td><td>Date</td><td>Spätestes Datum</td></tr>
         <tr><td><code>locale</code></td><td>string</td><td>Sprache (z.B. "de-DE")</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>readOnly</code></td><td>boolean</td><td>Nur Anzeige</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Auswahl schließen</td></tr>
+        <tr><td><code>fixedWeeks</code></td><td>boolean</td><td>Immer 6 Wochen anzeigen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Input-Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Eingabefeld</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Kalender-Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Kalender-Dropdown</td></tr>
+        <tr><td><code>ViewControl:</code></td><td>Monat/Jahr Navigation</td></tr>
+        <tr><td><code>PrevTrigger:</code></td><td>Vorheriger Monat</td></tr>
+        <tr><td><code>NextTrigger:</code></td><td>Nächster Monat</td></tr>
+        <tr><td><code>ViewTrigger:</code></td><td>Ansicht wechseln</td></tr>
+        <tr><td><code>Table:</code></td><td>Kalender-Tabelle</td></tr>
+        <tr><td><code>TableCellTrigger:</code></td><td>Einzelner Tag</td></tr>
+        <tr><td><code>MonthSelect:</code></td><td>Monat-Dropdown</td></tr>
+        <tr><td><code>YearSelect:</code></td><td>Jahr-Dropdown</td></tr>
+        <tr><td><code>ClearTrigger:</code></td><td>Auswahl löschen</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Kalender geöffnet</td></tr>
+        <tr><td><code>selected:</code></td><td>Tag ausgewählt</td></tr>
+        <tr><td><code>today:</code></td><td>Heutiger Tag</td></tr>
+        <tr><td><code>disabled:</code></td><td>Tag nicht wählbar</td></tr>
       </table>
     </section>
 
@@ -861,6 +1267,83 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>defaultValue</code></td><td>number</td><td>Startwert in Millisekunden</td></tr>
+        <tr><td><code>countdown</code></td><td>boolean</td><td>Countdown statt Stoppuhr</td></tr>
+        <tr><td><code>autoStart</code></td><td>boolean</td><td>Automatisch starten</td></tr>
+        <tr><td><code>interval</code></td><td>number</td><td>Update-Intervall in ms</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Area:</code></td><td>Zeit-Anzeige Container</td></tr>
+        <tr><td><code>Segment:</code></td><td>Einzelnes Zeit-Segment (Std/Min/Sek)</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennzeichen (:)</td></tr>
+        <tr><td><code>Control:</code></td><td>Button-Container</td></tr>
+        <tr><td><code>ActionTrigger:</code></td><td>Start/Pause/Reset Button</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>running:</code></td><td>Timer läuft</td></tr>
+        <tr><td><code>paused:</code></td><td>Timer pausiert</td></tr>
+        <tr><td><code>complete:</code></td><td>Countdown beendet</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>DateInput</h2>
+      <p>Segmentierte Datumseingabe – jedes Segment (Tag, Monat, Jahr) einzeln editierbar.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>DateInput
+  Root: gap 4
+  Label: col #888, fs 12
+    "Geburtsdatum"
+  Control: hor, bg #1a1a1a, bor 1, boc #333, rad 8, pad 12, gap 0
+  Segment: col white, pad 2 4, rad 4
+    focus:
+      bg #2563eb
+  Separator: col #666, pad 0 4
+    "/"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Date</td><td>Ausgewähltes Datum</td></tr>
+        <tr><td><code>defaultValue</code></td><td>Date</td><td>Startwert</td></tr>
+        <tr><td><code>locale</code></td><td>string</td><td>Sprache (z.B. "de-DE")</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>readOnly</code></td><td>boolean</td><td>Nur Anzeige</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Segment-Container</td></tr>
+        <tr><td><code>Segment:</code></td><td>Einzelnes Segment (Tag/Monat/Jahr)</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennzeichen (/)</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>focus:</code></td><td>Segment fokussiert</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
     </section>
 
 
