@@ -21,11 +21,13 @@
 
     <p class="intro">Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du <strong>Werte</strong> abstrahierst: Farben, Abstände, Radien. Statt <code>#2563eb</code> überall zu wiederholen, definierst du es einmal als Token.</p>
 
+    <p>Das Konzept ist einfach: Ein <strong>Token</strong> ist ein Name für einen Wert. Statt einer "magischen Zahl" wie <code>#2563eb</code> schreibst du <code>$primary</code> – einen Namen, der die <em>Bedeutung</em> beschreibt, nicht den konkreten Wert.</p>
+
 
     <!-- ============================================================ -->
     <section>
       <h2>Das Problem: Magische Werte</h2>
-      <p>Schau dir diesen Code an – die Farbe <code>#2563eb</code> taucht überall auf:</p>
+      <p>Schau dir diesen Code an – die Farbe <code>#2563eb</code> taucht dreimal auf:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
@@ -40,14 +42,20 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
         <div class="playground-preview"></div>
       </div>
 
-      <p>Was passiert, wenn du die Primärfarbe ändern willst? Du musst jede Stelle finden und anpassen. Bei großen Projekten ist das fehleranfällig.</p>
+      <div class="note">
+        <strong>Das Problem:</strong> Was passiert, wenn du die Primärfarbe ändern willst? Du musst jede Stelle finden und anpassen. Bei großen Projekten ist das fehleranfällig – und du verlierst Zeit mit Suchen statt Gestalten.
+      </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Tokens definieren</h2>
-      <p>Ein Token ist ein Name für einen Wert. Die Syntax: <code>$name.suffix: wert</code></p>
+      <p>Ein Token ist ein Name für einen Wert. Die Syntax hat zwei Teile:</p>
+      <ul>
+        <li><strong>Definition:</strong> <code>$name.suffix: wert</code> – mit Suffix</li>
+        <li><strong>Verwendung:</strong> <code>bg $name</code> – ohne Suffix</li>
+      </ul>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Token definieren
@@ -64,7 +72,16 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
         <div class="playground-preview"></div>
       </div>
 
-      <p>Bei der <strong>Definition</strong> schreibst du den Suffix (<code>.bg</code>), bei der <strong>Verwendung</strong> nicht. Das Property (<code>bg</code>) zeigt bereits, welcher Typ gemeint ist.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>$primary.bg: #2563eb</code> – definiert einen Token namens "primary" für Hintergrundfarben</li>
+        <li><code>bg $primary</code> – verwendet den Token (ohne <code>.bg</code>, weil <code>bg</code> schon sagt, dass es eine Hintergrundfarbe ist)</li>
+        <li>Änderst du jetzt <code>$primary.bg</code> auf <code>#10b981</code>, werden alle drei Buttons grün</li>
+      </ul>
+
+      <div class="note">
+        <strong>Die Regel:</strong> Bei der Definition schreibst du den Suffix (<code>.bg</code>), bei der Verwendung nicht. Das Property (<code>bg</code>) zeigt bereits, welcher Typ gemeint ist.
+      </div>
     </section>
 
 
@@ -82,7 +99,11 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
         <tr><td><code>.gap</code></td><td>Abstand</td><td><code>$space.gap: 12</code></td></tr>
       </table>
 
-      <p>Das ermöglicht intelligentes Autocomplete: Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix.</p>
+      <div class="note">
+        <strong>Warum das hilft:</strong> Das ermöglicht intelligentes Autocomplete. Tippst du <code>bg $</code>, zeigt die IDE nur Tokens mit <code>.bg</code> Suffix. So siehst du sofort, welche Tokens für Hintergrundfarben gedacht sind.
+      </div>
+
+      <p>Hier ein Beispiel mit mehreren Token-Typen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>$primary.bg: #2563eb
@@ -100,13 +121,25 @@ Card
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>$primary.bg</code> und <code>$primary.col</code> – zwei Tokens mit dem gleichen Namen aber unterschiedlichen Suffixen</li>
+        <li><code>$card.bg</code> und <code>$card.rad</code> – Tokens für die Card: Hintergrund und Radius</li>
+        <li>Bei <code>bg $primary</code> wird automatisch <code>$primary.bg</code> verwendet</li>
+        <li>Bei <code>rad $card</code> wird automatisch <code>$card.rad</code> verwendet</li>
+      </ul>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Semantische Tokens</h2>
-      <p>Tokens können andere Tokens referenzieren. Damit trennst du <strong>Rohwerte</strong> (welche Farben existieren) von ihrer <strong>Bedeutung</strong> (wofür sie stehen):</p>
+      <p>Jetzt wird es interessant: Tokens können <em>andere Tokens referenzieren</em>. Damit trennst du zwei Ebenen:</p>
+      <ul>
+        <li><strong>Primitive Tokens</strong> – die Rohwerte deiner Farbpalette (<code>$blue</code>, <code>$red</code>)</li>
+        <li><strong>Semantische Tokens</strong> – die Bedeutung (<code>$primary</code>, <code>$danger</code>)</li>
+      </ul>
+      <p>Warum das wichtig ist? Deine Komponenten verwenden nur semantische Tokens. Sie wissen nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// 1. PRIMITIVE – Rohwerte (deine Farbpalette)
@@ -137,14 +170,29 @@ Card
         <div class="playground-preview"></div>
       </div>
 
-      <p>Willst du die Primary-Farbe ändern, änderst du nur <code>$primary.bg: $green</code>. Alle Buttons passen sich an – ohne dass du eine Komponente anfassen musst. Das ist die Basis für Theming.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Zeile 1-3:</strong> Primitive Tokens definieren die Farbpalette – das sind die "echten" Hex-Werte</li>
+        <li><strong>Zeile 6-8:</strong> Semantische Tokens referenzieren Primitive mit <code>$</code> – sie sagen nur "primary bedeutet aktuell blue"</li>
+        <li><strong>Zeile 11-12:</strong> Komponenten verwenden nur semantische Tokens – sie kennen keine konkreten Farben</li>
+      </ul>
+
+      <div class="note">
+        <strong>Der Vorteil:</strong> Willst du die Primary-Farbe ändern, änderst du nur <code>$primary.bg: $green</code>. Alle Buttons passen sich automatisch an – ohne dass du eine einzige Komponente anfassen musst. Das ist die Basis für Theming.
+      </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Die drei Stufen: Tokens → Komponenten → Instanzen</h2>
-      <p>Ein vollständiges Design System hat drei Ebenen. Am Ende sind die Instanzen komplett sauber – keine Farben, keine Abstände, nur Inhalt:</p>
+      <p>Jetzt siehst du das große Bild: Ein vollständiges Design System hat drei Ebenen, die aufeinander aufbauen:</p>
+      <ol>
+        <li><strong>Tokens</strong> – definieren Werte zentral (Farben, Abstände, Radien)</li>
+        <li><strong>Komponenten</strong> – verwenden Tokens für ihr Styling</li>
+        <li><strong>Instanzen</strong> – enthalten nur noch Inhalt, kein Styling</li>
+      </ol>
+      <p>Am Ende sind die Instanzen komplett sauber – du siehst nur noch, <em>was</em> angezeigt wird, nicht <em>wie</em>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// 1. TOKENS – Werte zentral definieren
@@ -172,7 +220,16 @@ Card
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Vorteil: Instanzen sind lesbar wie ein Dokument. Alle Design-Entscheidungen stecken in Tokens und Komponenten – änderst du dort etwas, wirkt es überall.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Stufe 1 (Tokens):</strong> Definiert alle Werte an einer Stelle – Farben, Radien, Abstände</li>
+        <li><strong>Stufe 2 (Komponenten):</strong> <code>Card</code> und <code>Btn</code> verwenden nur Tokens, keine Hex-Werte</li>
+        <li><strong>Stufe 3 (Instanzen):</strong> Nur noch Inhalt! <code>Title "Design System"</code> – keine einzige Style-Property</li>
+      </ul>
+
+      <div class="note">
+        <strong>Das Ergebnis:</strong> Instanzen sind lesbar wie ein Dokument. Du siehst sofort die Struktur: Eine Card mit Titel, Beschreibung und zwei Buttons. Alle Design-Entscheidungen stecken in den oberen Ebenen.
+      </div>
     </section>
 
     <div class="summary">

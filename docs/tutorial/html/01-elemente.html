@@ -33,6 +33,16 @@
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Button</code> – der Element-Typ</li>
+        <li><code>"Speichern"</code> – der sichtbare Text</li>
+        <li><code>bg #2563eb</code> – Hintergrundfarbe (Hex)</li>
+        <li><code>col white</code> – Textfarbe</li>
+        <li><code>pad 12 24</code> – Padding: 12px oben/unten, 24px links/rechts</li>
+        <li><code>rad 6</code> – Eckenradius von 6px</li>
+      </ul>
+
       <p>Lies das so: <em>Ein Button mit Text "Speichern", blauem Hintergrund, weißer Schrift, Padding 12/24 und Radius 6.</em></p>
     </section>
 
@@ -132,7 +142,17 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>Frame</code> ist der wichtigste Container. Er ordnet seine Kinder standardmäßig <strong>vertikal</strong> an. Mit <code>hor</code> wird horizontal angeordnet.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Der äußere <code>Frame</code> ist das Eltern-Element mit dunklem Hintergrund</li>
+        <li>Zwei <code>Text</code>-Elemente sind direkte Kinder (eingerückt mit 2 Leerzeichen)</li>
+        <li>Ein innerer <code>Frame hor</code> enthält selbst zwei Buttons als Kinder</li>
+        <li>Die Hierarchie ist beliebig tief verschachtelbar</li>
+      </ul>
+
+      <div class="note">
+        <strong>Wichtig:</strong> <code>Frame</code> ist der wichtigste Container. Er ordnet seine Kinder standardmäßig <strong>vertikal</strong> an. Mit <code>hor</code> wird horizontal angeordnet.
+      </div>
     </section>
 
 
@@ -250,6 +270,17 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Die äußere <code>Frame</code> ist die Card mit fester Breite, Hintergrund und Padding</li>
+        <li>Der Header kombiniert ein Icon mit zwei Text-Zeilen horizontal (<code>hor</code>)</li>
+        <li>Die Buttons im Footer sind ebenfalls horizontal angeordnet</li>
+        <li>Alles was du gelernt hast – Primitives, Properties, Hierarchie – kommt zusammen</li>
+      </ul>
+
+      <div class="note">
+        <strong>Nächster Schritt:</strong> Im nächsten Kapitel lernst du, wie du solche Cards als wiederverwendbare <strong>Komponenten</strong> definierst – damit du sie nicht jedes Mal neu schreiben musst.
+      </div>
     </section>
 
     <div class="summary">

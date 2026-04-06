@@ -19,11 +19,13 @@
       <p class="subtitle">Farben, Typografie, Borders und Effekte</p>
     </header>
 
+    <p class="intro">In den vorherigen Kapiteln hast du Layout und Struktur kennengelernt. Dieses Kapitel zeigt alle <strong>visuellen Properties</strong> – von Farben über Typografie bis zu Effekten. Es ist als Referenz gedacht: Schau hier nach, wenn du wissen willst, wie ein bestimmter Effekt funktioniert.</p>
+
 
     <!-- ============================================================ -->
     <section>
       <h2>Farben</h2>
-      <p>Hex-Farben, benannte Farben und rgba:</p>
+      <p>Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (<code>#2563eb</code>), aber auch benannte Farben und rgba sind möglich:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
@@ -44,13 +46,24 @@
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>#2563eb</code> – Hex-Farbe (6 Zeichen für RGB)</li>
+        <li><code>white</code>, <code>black</code> – benannte CSS-Farben funktionieren direkt</li>
+        <li><code>rgba(37,99,235,0.5)</code> – Farbe mit 50% Transparenz</li>
+        <li><code>#2563eb88</code> – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)</li>
+      </ul>
+
+      <div class="note">
+        <strong>Tipp:</strong> Für transparente Farben ist <code>#rrggbbaa</code> kürzer als <code>rgba()</code>. Die letzten zwei Hex-Zeichen geben die Transparenz an: <code>ff</code> = 100% sichtbar, <code>00</code> = unsichtbar.
+      </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Gradients</h2>
-      <p>Farbverläufe mit <code>grad</code>:</p>
+      <p>Farbverläufe machen UIs lebendiger. In Mirror verwendest du <code>grad</code> für horizontale Verläufe, <code>grad-ver</code> für vertikale, oder <code>grad N</code> für einen bestimmten Winkel:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
@@ -69,7 +82,15 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Text-Gradients funktionieren genauso mit <code>col</code>:</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>grad #a #b</code> – horizontaler Verlauf von links nach rechts</li>
+        <li><code>grad-ver #a #b</code> – vertikaler Verlauf von oben nach unten</li>
+        <li><code>grad 45 #a #b</code> – Verlauf im 45°-Winkel</li>
+        <li><code>grad #a #b #c</code> – Verlauf mit drei Farben (funktioniert auch mit mehr)</li>
+      </ul>
+
+      <p>Das funktioniert auch für Text – ersetze einfach <code>bg</code> durch <code>col</code>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 8
@@ -85,7 +106,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Borders</h2>
-      <p><code>bor</code> für Breite, <code>boc</code> für Farbe:</p>
+      <p>Borders bestehen aus zwei Properties: <code>bor</code> (Breite in Pixel) und <code>boc</code> (Farbe). Beide zusammen ergeben den sichtbaren Rahmen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
@@ -104,6 +125,9 @@
         <div class="playground-preview"></div>
       </div>
 
+      <div class="note">
+        <strong>Praxis-Tipp:</strong> Ein subtiler 1px-Border (<code>bor 1, boc #333</code>) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
+      </div>
     </section>
 
 
@@ -133,7 +157,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Typografie: Größe & Gewicht</h2>
-      <p><code>fs</code> für Schriftgröße, <code>weight</code> für Dicke:</p>
+      <p>Die zwei wichtigsten Typografie-Properties sind <code>fs</code> (font-size, in Pixel) und <code>weight</code> (Schriftdicke). Eine klare Hierarchie entsteht durch die Kombination beider:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 4, bg #1a1a1a, pad 16, rad 8
@@ -146,6 +170,12 @@
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Größe und Farbe schaffen Hierarchie: Größer + heller = wichtiger</li>
+        <li><code>weight</code> akzeptiert Zahlen (100-900) oder Namen (<code>bold</code>, <code>semibold</code>, etc.)</li>
+        <li><code>uppercase</code> bei Captions ist ein gängiges Pattern für Labels und Kategorien</li>
+      </ul>
     </section>
 
 
@@ -188,7 +218,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Shadows</h2>
-      <p>Vordefinierte Schatten-Stufen:</p>
+      <p>Schatten erzeugen Tiefe und Hierarchie. Mirror bietet drei vordefinierte Stufen – von subtil bis auffällig:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 16, pad 20, bg #0a0a0a
@@ -202,6 +232,9 @@
         <div class="playground-preview"></div>
       </div>
 
+      <div class="note">
+        <strong>Wann welche Stufe?</strong> <code>sm</code> für subtile Erhöhung (Cards), <code>md</code> für schwebende Elemente (Dropdowns), <code>lg</code> für modale Dialoge die Aufmerksamkeit brauchen.
+      </div>
     </section>
 
 
@@ -252,7 +285,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Praktisch: Button Varianten</h2>
-      <p>Verschiedene Button-Stile:</p>
+      <p>Jetzt siehst du, wie die einzelnen Properties zusammenspielen. Hier sind sechs typische Button-Varianten, die du in fast jedem Design System findest:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
@@ -275,13 +308,21 @@
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Filled:</strong> Volle Hintergrundfarbe – für primäre Aktionen</li>
+        <li><strong>Outline:</strong> Nur Border, kein Hintergrund – für sekundäre Aktionen</li>
+        <li><strong>Subtle:</strong> Transparenter Hintergrund mit <code>bg #2563eb22</code> (22 = 13% Opacity)</li>
+        <li><strong>Ghost:</strong> Nur Text, kein visueller Container – für tertiäre Aktionen</li>
+        <li><strong>Link:</strong> Mit <code>underline</code> – für Inline-Navigation</li>
+      </ul>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Praktisch: Card Styles</h2>
-      <p>Verschiedene Card-Designs:</p>
+      <p>Cards sind Container für zusammengehörige Inhalte. Hier drei typische Varianten, die sich durch ihre visuelle "Erhöhung" unterscheiden:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
@@ -303,6 +344,16 @@
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Elevated:</strong> Hintergrund + Schatten – die Card "schwebt" über der Oberfläche</li>
+        <li><strong>Bordered:</strong> Kein Hintergrund, nur Border – flacher, weniger dominant</li>
+        <li><strong>Gradient:</strong> Farbverlauf im 135°-Winkel – für besondere Hervorhebung</li>
+      </ul>
+
+      <div class="note">
+        <strong>Design-Tipp:</strong> Mische nicht zu viele Card-Styles in einem Design. Wähle einen Hauptstil und verwende die anderen sparsam für besondere Hervorhebung.
+      </div>
     </section>
 
     <div class="summary">

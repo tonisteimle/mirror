@@ -49,6 +49,13 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Der erste Frame stapelt Text-Elemente vertikal (Standard-Verhalten)</li>
+        <li>Der zweite Frame mit <code>hor</code> legt die Boxen nebeneinander</li>
+        <li><code>gap</code> definiert den Abstand zwischen den Kindern – ob vertikal oder horizontal</li>
+      </ul>
+
       <h3>Größen: w und h</h3>
       <p>Drei Optionen für Breite und Höhe:</p>
       <div class="playground" data-playground>
@@ -67,6 +74,17 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Text "w full", col white, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>w 120</code> – feste Breite in Pixel</li>
+        <li><code>w hug</code> – schrumpft auf die Größe des Inhalts (wie Shrink-to-fit)</li>
+        <li><code>w full</code> – dehnt sich auf den verfügbaren Platz aus (wie 100%)</li>
+      </ul>
+
+      <div class="note">
+        <strong>Merke:</strong> <code>full</code> ist der häufigste Fall – Elemente füllen standardmäßig den verfügbaren Platz. <code>hug</code> brauchst du, wenn ein Element nur so groß wie nötig sein soll.
       </div>
 
       <h3>Zentrieren und Verteilen</h3>
@@ -152,9 +170,10 @@ Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
     <!-- ============================================================ -->
     <section>
       <h2>Grid Layout</h2>
-      <p>Grid ist für strukturierte Raster. Du definierst Spalten, Elemente werden in Zellen platziert.</p>
+      <p>Grid ist das zweite Layout-System – ideal für strukturierte Raster wie Dashboards oder Seitenlayouts. Der entscheidende Unterschied zu Flex: Du definierst ein festes Spaltenraster, und Elemente werden in Zellen platziert.</p>
+
       <h3>Grid aktivieren</h3>
-      <p>Mit <code>grid N</code> aktivierst du ein N-Spalten-Grid:</p>
+      <p>Mit <code>grid N</code> aktivierst du ein N-Spalten-Grid. Wichtig: Im Grid-Kontext bedeutet <code>w</code> nicht mehr Pixel, sondern <strong>Spalten-Span</strong>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame grid 12, gap 8, bg #111, pad 16, rad 8
@@ -173,6 +192,18 @@ Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
     Text "w 4", col white, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>grid 12</code> – teilt den Container in 12 gleich breite Spalten</li>
+        <li><code>w 12</code> – das Element spannt alle 12 Spalten (volle Breite)</li>
+        <li><code>w 6</code> – das Element spannt 6 Spalten (halbe Breite)</li>
+        <li><code>w 4</code> – das Element spannt 4 Spalten (ein Drittel)</li>
+      </ul>
+
+      <div class="note">
+        <strong>Achtung:</strong> Im Grid-Kontext hat <code>w</code> eine andere Bedeutung! <code>w 200</code> würde 200 Spalten bedeuten – nicht 200 Pixel. Das ist ein häufiger Fehler.
       </div>
 
       <h3>Explizite Platzierung</h3>
@@ -234,7 +265,7 @@ Dashboard
     <!-- ============================================================ -->
     <section>
       <h2>Stacked Layout</h2>
-      <p><code>stacked</code> stapelt Kinder übereinander. Positionierung mit <code>x</code> und <code>y</code> – wie in Figma:</p>
+      <p>Das dritte Layout-System ist <code>stacked</code> – es stapelt alle Kinder übereinander an derselben Position. Das ist ideal für Overlays, Badges oder absolut positionierte Elemente. Die Positionierung erfolgt mit <code>x</code> und <code>y</code> in Pixel – genau wie in Figma:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
@@ -250,7 +281,16 @@ Dashboard
         <div class="playground-preview"></div>
       </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>stacked</code> – alle Kinder werden übereinander gestapelt</li>
+        <li><code>x 0, y 0</code> – Position von oben-links des Containers</li>
+        <li><code>x 170, y 0</code> – 170px vom linken Rand, 0px vom oberen Rand</li>
+        <li>Anders als bei Grid sind <code>x</code> und <code>y</code> hier echte Pixel-Werte</li>
+      </ul>
+
       <h3>Praktisch: Badge auf Icon</h3>
+      <p>Das typische Anwendungsbeispiel für <code>stacked</code>: Ein Badge oder Status-Indikator über einem Icon:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Badge-Komponente
