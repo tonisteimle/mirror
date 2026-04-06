@@ -47,6 +47,8 @@ export interface PaletteDragSimulation {
   defaultSize?: { width: number; height: number }
   properties?: string
   textContent?: string
+  /** Component ID for template lookup (e.g., 'Button', 'Input'). Required for testing template-based insertion. */
+  componentId?: string
 }
 
 export interface DragSimulationResult {
@@ -61,6 +63,7 @@ export interface DragSimulationResult {
     properties?: string
     textContent?: string
     defaultSize?: { width: number; height: number }
+    componentId?: string
   }
   targetNodeId: string
   placement: 'absolute' | 'before' | 'after' | 'inside'
@@ -523,7 +526,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
    * Simulate a palette drag (new component from palette)
    */
   function simulatePaletteDrag(drag: PaletteDragSimulation): DragSimulationResult {
-    const { componentName, to, defaultSize, properties, textContent } = drag
+    const { componentName, to, defaultSize, properties, textContent, componentId } = drag
 
     // Find drop target
     const dropTarget = findDropTarget(to)
@@ -538,6 +541,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
           properties,
           textContent,
           defaultSize,
+          componentId,
         },
         targetNodeId: elements[0]?.nodeId || 'root',
         placement: 'inside',
@@ -563,6 +567,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
         properties,
         textContent,
         defaultSize,
+        componentId,
       },
       targetNodeId: container.nodeId,
       placement,
