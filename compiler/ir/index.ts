@@ -1063,8 +1063,9 @@ class IRTransformer {
    * - Data source reference ($collection)
    * - Query clauses (where, by, grouped by)
    * - Column definitions (inferred + overrides)
-   * - Slots (Header, Row, Footer, Group)
+   * - Slots (Header, Row, Footer, Group, SortIcon, SortAsc, SortDesc, Paginator)
    * - Selection mode
+   * - Sticky header
    */
   private transformTable(table: TableNode): IRTable {
     const nodeId = this.generateId()
@@ -1072,6 +1073,10 @@ class IRTransformer {
     // Extract selection mode from properties
     const selectionModeProp = table.properties.find(p => p.name === 'selectionMode')
     const selectionMode = selectionModeProp?.values[0] as 'single' | 'multi' | undefined
+
+    // Extract pageSize from properties
+    const pageSizeProp = table.properties.find(p => p.name === 'pageSize')
+    const pageSize = pageSizeProp?.values[0] ? parseInt(String(pageSizeProp.values[0]), 10) : undefined
 
     // Transform column definitions
     const columns: IRTableColumn[] = (table.columns || []).map(col => this.transformTableColumn(col))
@@ -1094,6 +1099,47 @@ class IRTransformer {
       : undefined
     const groupSlot = table.groupSlot
       ? this.transformTableSlotChildren(table.groupSlot)
+      : undefined
+    const groupSlotStyles = table.groupSlot
+      ? this.transformTableSlotStyles(table.groupSlot)
+      : undefined
+
+    // Transform sort icon slots
+    const sortIconSlot = table.sortIconSlot
+      ? this.transformTableSlotChildren(table.sortIconSlot)
+      : undefined
+    const sortAscSlot = table.sortAscSlot
+      ? this.transformTableSlotChildren(table.sortAscSlot)
+      : undefined
+    const sortDescSlot = table.sortDescSlot
+      ? this.transformTableSlotChildren(table.sortDescSlot)
+      : undefined
+
+    // Transform paginator slot
+    const paginatorSlot = table.paginatorSlot
+      ? this.transformTableSlotChildren(table.paginatorSlot)
+      : undefined
+    const paginatorSlotStyles = table.paginatorSlot
+      ? this.transformTableSlotStyles(table.paginatorSlot)
+      : undefined
+    // Handle paginator sub-slots (children and styles)
+    const paginatorPrevSlot = (table.paginatorSlot as any)?.prevSlot
+      ? this.transformTableSlotChildren((table.paginatorSlot as any).prevSlot)
+      : undefined
+    const paginatorPrevSlotStyles = (table.paginatorSlot as any)?.prevSlot
+      ? this.transformTableSlotStyles((table.paginatorSlot as any).prevSlot)
+      : undefined
+    const paginatorNextSlot = (table.paginatorSlot as any)?.nextSlot
+      ? this.transformTableSlotChildren((table.paginatorSlot as any).nextSlot)
+      : undefined
+    const paginatorNextSlotStyles = (table.paginatorSlot as any)?.nextSlot
+      ? this.transformTableSlotStyles((table.paginatorSlot as any).nextSlot)
+      : undefined
+    const paginatorPageInfoSlot = (table.paginatorSlot as any)?.pageInfoSlot
+      ? this.transformTableSlotChildren((table.paginatorSlot as any).pageInfoSlot)
+      : undefined
+    const paginatorPageInfoSlotStyles = (table.paginatorSlot as any)?.pageInfoSlot
+      ? this.transformTableSlotStyles((table.paginatorSlot as any).pageInfoSlot)
       : undefined
 
     // Build source position
@@ -1123,12 +1169,26 @@ class IRTransformer {
       groupBy: table.groupBy,
       columns,
       selectionMode,
+      pageSize,
+      stickyHeader: table.stickyHeader,
       headerSlot,
       rowSlot,
       rowSlotStyles,
       footerSlot,
       groupSlot,
+      groupSlotStyles,
       staticRows,
+      sortIconSlot,
+      sortAscSlot,
+      sortDescSlot,
+      paginatorSlot,
+      paginatorSlotStyles,
+      paginatorPrevSlot,
+      paginatorPrevSlotStyles,
+      paginatorNextSlot,
+      paginatorNextSlotStyles,
+      paginatorPageInfoSlot,
+      paginatorPageInfoSlotStyles,
       properties: [],
       styles: [],
       events: [],
@@ -1161,6 +1221,7 @@ class IRTransformer {
       suffix: col.suffix,
       align: col.align as 'left' | 'right' | 'center' | undefined,
       sortable: col.sortable,
+      sortDesc: col.sortDesc,
       filterable: col.filterable,
       hidden: col.hidden,
       aggregation: col.aggregation as 'sum' | 'avg' | 'count' | undefined,

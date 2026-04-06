@@ -1265,6 +1265,12 @@ class DOMGenerator {
         this.emitTableSelection(tableVar, dataVar, node)
         this.emit('')
       }
+
+      // Pagination
+      if (node.pageSize) {
+        this.emitTablePagination(tableVar, dataVar, node)
+        this.emit('')
+      }
     }
 
     this.emit(`${parentVar}.appendChild(${tableVar})`)
@@ -1346,6 +1352,12 @@ class DOMGenerator {
       this.emit(`background: 'var(--surface-elevated, #252525)',`)
       this.emit(`padding: '12px',`)
       this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+      // Sticky header support
+      if (node.stickyHeader) {
+        this.emit(`position: 'sticky',`)
+        this.emit(`top: '0',`)
+        this.emit(`zIndex: '10',`)
+      }
       this.indent--
       this.emit(`})`)
 
@@ -1354,13 +1366,15 @@ class DOMGenerator {
         const cellVar = `${tableVar}_hc_${this.sanitizeVarName(col.field)}`
         this.emit(`const ${cellVar} = document.createElement('div')`)
         this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
-        this.emit(`${cellVar}.textContent = "${col.label}"`)
         this.emit(`${cellVar}.dataset.field = "${col.field}"`)
 
-        // Header cell styles
+        // Header cell styles - use flex for alignment with sort icon
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
         this.emit(`flex: '1',`)
+        this.emit(`display: 'flex',`)
+        this.emit(`alignItems: 'center',`)
+        this.emit(`gap: '4px',`)
         this.emit(`fontWeight: '500',`)
         this.emit(`color: 'var(--text-muted, #888)',`)
         this.emit(`fontSize: '11px',`)
@@ -1370,17 +1384,87 @@ class DOMGenerator {
           this.emit(`flex: 'none',`)
         }
         if (col.align === 'right') {
-          this.emit(`textAlign: 'right',`)
+          this.emit(`justifyContent: 'flex-end',`)
         } else if (col.align === 'center') {
-          this.emit(`textAlign: 'center',`)
+          this.emit(`justifyContent: 'center',`)
         }
         this.indent--
         this.emit(`})`)
 
-        // Sortable column
+        // Add label text in a span
+        const labelVar = `${cellVar}_label`
+        this.emit(`const ${labelVar} = document.createElement('span')`)
+        this.emit(`${labelVar}.textContent = "${col.label}"`)
+        this.emit(`${cellVar}.appendChild(${labelVar})`)
+
+        // Sortable column - add sort icon and click handler
         if (col.sortable) {
           this.emit(`${cellVar}.dataset.sortable = 'true'`)
           this.emit(`${cellVar}.style.cursor = 'pointer'`)
+
+          // Create sort icon container
+          const sortIconVar = `${cellVar}_sortIcon`
+          this.emit(`const ${sortIconVar} = document.createElement('span')`)
+          this.emit(`${sortIconVar}.className = 'mirror-sort-icon'`)
+          this.emit(`${sortIconVar}.dataset.field = '${col.field}'`)
+          this.emit(`${sortIconVar}.style.display = 'inline-flex'`)
+          this.emit(`${sortIconVar}.style.alignItems = 'center'`)
+          this.emit(`${sortIconVar}.style.opacity = '0.5'`)
+          this.emit(`${sortIconVar}.style.transition = 'opacity 0.15s'`)
+
+          // Custom sort icons or default SVG
+          if (node.sortAscSlot && node.sortAscSlot.length > 0 && node.sortDescSlot && node.sortDescSlot.length > 0) {
+            // Custom asc/desc icons - render both, show/hide via runtime
+            const ascVar = `${sortIconVar}_asc`
+            const descVar = `${sortIconVar}_desc`
+            this.emit(`const ${ascVar} = document.createElement('span')`)
+            this.emit(`${ascVar}.className = 'mirror-sort-asc'`)
+            this.emit(`${ascVar}.style.display = 'none'`)
+            for (const child of node.sortAscSlot) {
+              this.emitNode(child, ascVar)
+            }
+            this.emit(`const ${descVar} = document.createElement('span')`)
+            this.emit(`${descVar}.className = 'mirror-sort-desc'`)
+            this.emit(`${descVar}.style.display = 'none'`)
+            for (const child of node.sortDescSlot) {
+              this.emitNode(child, descVar)
+            }
+            // Default icon (shown when not sorted)
+            this.emit(`const ${sortIconVar}_default = document.createElement('span')`)
+            this.emit(`${sortIconVar}_default.className = 'mirror-sort-default'`)
+            if (node.sortIconSlot && node.sortIconSlot.length > 0) {
+              for (const child of node.sortIconSlot) {
+                this.emitNode(child, `${sortIconVar}_default`)
+              }
+            } else {
+              this.emit(`${sortIconVar}_default.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>'`)
+            }
+            this.emit(`${sortIconVar}.appendChild(${ascVar})`)
+            this.emit(`${sortIconVar}.appendChild(${descVar})`)
+            this.emit(`${sortIconVar}.appendChild(${sortIconVar}_default)`)
+            this.emit(`${sortIconVar}.dataset.hasCustomIcons = 'true'`)
+          } else if (node.sortIconSlot && node.sortIconSlot.length > 0) {
+            // Single custom icon for all states
+            for (const child of node.sortIconSlot) {
+              this.emitNode(child, sortIconVar)
+            }
+          } else {
+            // Default sort icon SVG (chevron-up/down combined)
+            this.emit(`${sortIconVar}.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>'`)
+          }
+
+          this.emit(`${cellVar}.appendChild(${sortIconVar})`)
+
+          // Click handler for sorting
+          this.emit(`${cellVar}.addEventListener('click', () => {`)
+          this.indent++
+          this.emit(`if (typeof _runtime !== 'undefined' && _runtime.tableSort) {`)
+          this.indent++
+          this.emit(`_runtime.tableSort(${tableVar}, '${col.field}')`)
+          this.indent--
+          this.emit(`}`)
+          this.indent--
+          this.emit(`})`)
         }
 
         this.emit(`${headerVar}.appendChild(${cellVar})`)
@@ -1619,6 +1703,7 @@ class DOMGenerator {
 
     this.emit(`const ${cellVar} = document.createElement('div')`)
     this.emit(`${cellVar}.className = 'mirror-table-cell'`)
+    this.emit(`${cellVar}.dataset.field = '${col.field}'`)
 
     // Cell styles
     this.emit(`Object.assign(${cellVar}.style, {`)
@@ -1700,16 +1785,42 @@ class DOMGenerator {
     this.emit(`// Group header`)
     this.emit(`const groupHeader = document.createElement('div')`)
     this.emit(`groupHeader.className = 'mirror-table-group-header'`)
-    this.emit(`Object.assign(groupHeader.style, {`)
-    this.indent++
-    this.emit(`display: 'flex',`)
-    this.emit(`justifyContent: 'space-between',`)
-    this.emit(`padding: '12px',`)
-    this.emit(`background: 'var(--surface-elevated, #252525)',`)
-    this.emit(`borderBottom: '1px solid var(--border, #333)',`)
-    this.indent--
-    this.emit(`})`)
-    this.emit(`groupHeader.innerHTML = \`<span style="font-weight:500;color:var(--text,white)">\${key?.name ?? key}</span><span style="color:var(--text-muted,#888);font-size:12px">\${items.length}</span>\``)
+
+    // Apply groupSlot styles if defined, otherwise use defaults
+    if (node.groupSlotStyles && node.groupSlotStyles.length > 0) {
+      this.emit(`Object.assign(groupHeader.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`) // Base flex display
+      for (const style of node.groupSlotStyles) {
+        this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+      }
+      this.indent--
+      this.emit(`})`)
+    } else {
+      this.emit(`Object.assign(groupHeader.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`justifyContent: 'space-between',`)
+      this.emit(`padding: '12px',`)
+      this.emit(`background: 'var(--surface-elevated, #252525)',`)
+      this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+      this.indent--
+      this.emit(`})`)
+    }
+
+    // Render groupSlot content if defined, otherwise use default HTML
+    if (node.groupSlot && node.groupSlot.length > 0) {
+      // Custom group slot content - render children with group context
+      // Make 'group' object available with key and count
+      this.emit(`const group = { key: key?.name ?? key, count: items.length }`)
+      for (const child of node.groupSlot) {
+        this.emitTableGroupSlotNode(child, 'groupHeader')
+      }
+    } else {
+      // Default group header content
+      this.emit(`groupHeader.innerHTML = \`<span style="font-weight:500;color:var(--text,white)">\${key?.name ?? key}</span><span style="color:var(--text-muted,#888);font-size:12px">\${items.length}</span>\``)
+    }
+
     this.emit(`${tableVar}_body.appendChild(groupHeader)`)
     this.emit('')
 
@@ -1725,6 +1836,53 @@ class DOMGenerator {
     this.emit(`})`)
 
     this.emit(`${tableVar}.appendChild(${tableVar}_body)`)
+  }
+
+  /**
+   * Emit a node inside a table group slot with group context (group.key, group.count)
+   */
+  private emitTableGroupSlotNode(node: IRNode, parentVar: string): void {
+    // Similar to emitNode but with special handling for group.key and group.count references
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`const ${varName} = document.createElement('${node.tag || 'div'}')`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+
+    // Apply styles
+    if (node.styles && node.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of node.styles) {
+        this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+      }
+      this.indent--
+      this.emit(`})`)
+    }
+
+    // Handle text content with group.key and group.count references
+    const textProp = node.properties.find(p => p.name === 'textContent')
+    if (textProp && typeof textProp.value === 'string') {
+      const content = textProp.value
+      // Check for group references
+      if (content.includes('group.key') || content.includes('group.count')) {
+        const jsContent = content
+          .replace(/group\.key/g, '${group.key}')
+          .replace(/group\.count/g, '${group.count}')
+        this.emit(`${varName}.textContent = \`${jsContent}\``)
+      } else {
+        this.emit(`${varName}.textContent = ${JSON.stringify(content)}`)
+      }
+    }
+
+    // Process children recursively
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        this.emitTableGroupSlotNode(child, varName)
+      }
+    }
+
+    this.emit(`${parentVar}.appendChild(${varName})`)
   }
 
   /**
@@ -1836,6 +1994,152 @@ class DOMGenerator {
       this.indent--
       this.emit(`})`)
     }
+  }
+
+  /**
+   * Generate pagination controls for table
+   */
+  private emitTablePagination(tableVar: string, dataVar: string, node: IRTable): void {
+    const pageSize = node.pageSize || 10
+    const pagVar = `${tableVar}_paginator`
+
+    this.emit(`// Pagination`)
+    this.emit(`const ${pagVar} = document.createElement('div')`)
+    this.emit(`${pagVar}.className = 'mirror-table-paginator'`)
+    this.emit(`${pagVar}.dataset.pageSize = '${pageSize}'`)
+    this.emit(`${pagVar}.dataset.currentPage = '1'`)
+    this.emit(`${pagVar}.dataset.totalItems = ${dataVar}.length`)
+
+    // Apply paginator slot styles if defined, otherwise use defaults
+    if (node.paginatorSlotStyles && node.paginatorSlotStyles.length > 0) {
+      this.emit(`Object.assign(${pagVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      for (const style of node.paginatorSlotStyles) {
+        this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+      }
+      this.indent--
+      this.emit(`})`)
+    } else {
+      this.emit(`Object.assign(${pagVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`justifyContent: 'space-between',`)
+      this.emit(`alignItems: 'center',`)
+      this.emit(`padding: '12px',`)
+      this.emit(`borderTop: '1px solid var(--border, #333)',`)
+      this.emit(`color: 'var(--text-muted, #888)',`)
+      this.emit(`fontSize: '13px',`)
+      this.indent--
+      this.emit(`})`)
+    }
+
+    // Render custom paginator content or default
+    if (node.paginatorSlot && node.paginatorSlot.length > 0) {
+      // Custom paginator content
+      for (const child of node.paginatorSlot) {
+        this.emitNode(child, pagVar)
+      }
+    } else {
+      // Default paginator UI (with optional custom styles from sub-slots)
+      // Prev button
+      const prevVar = `${pagVar}_prev`
+      this.emit(`const ${prevVar} = document.createElement('button')`)
+      this.emit(`${prevVar}.className = 'mirror-paginator-prev'`)
+      this.emit(`${prevVar}.textContent = '← Prev'`)
+      this.emit(`Object.assign(${prevVar}.style, {`)
+      this.indent++
+      // Default styles
+      this.emit(`padding: '6px 12px',`)
+      this.emit(`background: 'var(--surface-elevated, #252525)',`)
+      this.emit(`border: '1px solid var(--border, #333)',`)
+      this.emit(`borderRadius: '4px',`)
+      this.emit(`color: 'var(--text, white)',`)
+      this.emit(`cursor: 'pointer',`)
+      this.emit(`fontSize: '12px',`)
+      // Apply custom styles from Prev: slot if defined
+      if (node.paginatorPrevSlotStyles && node.paginatorPrevSlotStyles.length > 0) {
+        for (const style of node.paginatorPrevSlotStyles) {
+          this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+        }
+      }
+      this.indent--
+      this.emit(`})`)
+      this.emit(`${prevVar}.addEventListener('click', () => {`)
+      this.indent++
+      this.emit(`if (typeof _runtime !== 'undefined' && _runtime.tablePrev) {`)
+      this.indent++
+      this.emit(`_runtime.tablePrev(${tableVar})`)
+      this.indent--
+      this.emit(`}`)
+      this.indent--
+      this.emit(`})`)
+
+      // Page info
+      const infoVar = `${pagVar}_info`
+      this.emit(`const ${infoVar} = document.createElement('span')`)
+      this.emit(`${infoVar}.className = 'mirror-paginator-info'`)
+      // Apply custom styles from PageInfo: slot if defined
+      if (node.paginatorPageInfoSlotStyles && node.paginatorPageInfoSlotStyles.length > 0) {
+        this.emit(`Object.assign(${infoVar}.style, {`)
+        this.indent++
+        for (const style of node.paginatorPageInfoSlotStyles) {
+          this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+        }
+        this.indent--
+        this.emit(`})`)
+      }
+      this.emit(`${infoVar}.textContent = 'Page 1 of ' + Math.ceil(${dataVar}.length / ${pageSize})`)
+
+      // Next button
+      const nextVar = `${pagVar}_next`
+      this.emit(`const ${nextVar} = document.createElement('button')`)
+      this.emit(`${nextVar}.className = 'mirror-paginator-next'`)
+      this.emit(`${nextVar}.textContent = 'Next →'`)
+      this.emit(`Object.assign(${nextVar}.style, {`)
+      this.indent++
+      // Default styles
+      this.emit(`padding: '6px 12px',`)
+      this.emit(`background: 'var(--surface-elevated, #252525)',`)
+      this.emit(`border: '1px solid var(--border, #333)',`)
+      this.emit(`borderRadius: '4px',`)
+      this.emit(`color: 'var(--text, white)',`)
+      this.emit(`cursor: 'pointer',`)
+      this.emit(`fontSize: '12px',`)
+      // Apply custom styles from Next: slot if defined
+      if (node.paginatorNextSlotStyles && node.paginatorNextSlotStyles.length > 0) {
+        for (const style of node.paginatorNextSlotStyles) {
+          this.emit(`${style.property}: ${JSON.stringify(style.value)},`)
+        }
+      }
+      this.indent--
+      this.emit(`})`)
+      this.emit(`${nextVar}.addEventListener('click', () => {`)
+      this.indent++
+      this.emit(`if (typeof _runtime !== 'undefined' && _runtime.tableNext) {`)
+      this.indent++
+      this.emit(`_runtime.tableNext(${tableVar})`)
+      this.indent--
+      this.emit(`}`)
+      this.indent--
+      this.emit(`})`)
+
+      this.emit(`${pagVar}.appendChild(${prevVar})`)
+      this.emit(`${pagVar}.appendChild(${infoVar})`)
+      this.emit(`${pagVar}.appendChild(${nextVar})`)
+    }
+
+    this.emit(`${tableVar}.appendChild(${pagVar})`)
+
+    // Store page state on the table element
+    this.emit(`${tableVar}._pageState = { current: 1, size: ${pageSize}, total: ${dataVar}.length }`)
+
+    // Initialize page visibility (hide rows beyond first page)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime._updateTablePage) {`)
+    this.indent++
+    this.emit(`_runtime._updateTablePage(${tableVar})`)
+    this.indent--
+    this.emit(`}`)
   }
 
   private emitZagComponent(node: IRZagNode, parentVar: string): void {

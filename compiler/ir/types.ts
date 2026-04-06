@@ -442,6 +442,8 @@ export interface IRTableColumn {
   inferredType: InferredDataType
   /** Enable sorting for this column */
   sortable?: boolean
+  /** Initial sort direction is descending */
+  sortDesc?: boolean
   /** Enable filtering for this column */
   filterable?: boolean
   /** Hide this column */
@@ -480,6 +482,8 @@ export interface IRTable extends IRNode {
   pageSize?: number
   /** Enable infinite scroll */
   infinite?: boolean
+  /** Enable sticky header */
+  stickyHeader?: boolean
   /** Custom header slot */
   headerSlot?: IRNode[]
   /** Custom row slot */
@@ -490,8 +494,32 @@ export interface IRTable extends IRNode {
   footerSlot?: IRNode[]
   /** Custom group header slot */
   groupSlot?: IRNode[]
+  /** Group slot styles (from Group: properties) */
+  groupSlotStyles?: IRStyle[]
   /** Static rows for manual tables (when no dataSource) */
   staticRows?: IRTableStaticRow[]
+  /** Custom sort icon slot (applies to all sortable columns) */
+  sortIconSlot?: IRNode[]
+  /** Custom ascending sort icon slot */
+  sortAscSlot?: IRNode[]
+  /** Custom descending sort icon slot */
+  sortDescSlot?: IRNode[]
+  /** Custom paginator slot */
+  paginatorSlot?: IRNode[]
+  /** Paginator slot styles */
+  paginatorSlotStyles?: IRStyle[]
+  /** Custom previous page button slot */
+  paginatorPrevSlot?: IRNode[]
+  /** Previous button slot styles */
+  paginatorPrevSlotStyles?: IRStyle[]
+  /** Custom next page button slot */
+  paginatorNextSlot?: IRNode[]
+  /** Next button slot styles */
+  paginatorNextSlotStyles?: IRStyle[]
+  /** Custom page info slot */
+  paginatorPageInfoSlot?: IRNode[]
+  /** Page info slot styles */
+  paginatorPageInfoSlotStyles?: IRStyle[]
 }
 
 /**

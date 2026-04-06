@@ -525,6 +525,8 @@ export interface TableNode extends BaseNode {
   orderDesc?: boolean
   /** Field to group by */
   groupBy?: string
+  /** Enable sticky header */
+  stickyHeader?: boolean
   /** Table-level properties (e.g., select, pageSize) */
   properties: Property[]
   /** Column definitions/overrides */
@@ -539,6 +541,20 @@ export interface TableNode extends BaseNode {
   groupSlot?: TableSlotNode
   /** Static rows for manual tables (when no dataSource) */
   staticRows?: TableStaticRowNode[]
+  /** Custom sort icon slot (for all sortable columns) */
+  sortIconSlot?: TableSlotNode
+  /** Custom ascending sort icon slot */
+  sortAscSlot?: TableSlotNode
+  /** Custom descending sort icon slot */
+  sortDescSlot?: TableSlotNode
+  /** Custom paginator slot */
+  paginatorSlot?: TableSlotNode
+  /** Custom previous page button slot */
+  paginatorPrevSlot?: TableSlotNode
+  /** Custom next page button slot */
+  paginatorNextSlot?: TableSlotNode
+  /** Custom page info slot */
+  paginatorPageInfoSlot?: TableSlotNode
 }
 
 /**
@@ -601,6 +617,8 @@ export interface TableColumnNode extends BaseNode {
   align?: 'left' | 'right' | 'center'
   /** Enable sorting for this column */
   sortable?: boolean
+  /** Initial sort direction is descending */
+  sortDesc?: boolean
   /** Enable filtering for this column */
   filterable?: boolean
   /** Hide this column */

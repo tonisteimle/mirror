@@ -299,6 +299,13 @@ const CATEGORY_MAP: Record<string, string> = {
   shadow: 'visual',
   cursor: 'visual',
   z: 'visual',
+  hidden: 'visual',
+  visible: 'visual',
+  disabled: 'visual',
+  scroll: 'visual',
+  'scroll-ver': 'visual',
+  'scroll-hor': 'visual',
+  clip: 'visual',
 }
 
 /** Category name for Zag behavior properties */

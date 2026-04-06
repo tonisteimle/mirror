@@ -299,6 +299,150 @@ const _runtime = {
   },
 
   // ============================================
+  // TABLE FUNCTIONS (Built-in)
+  // ============================================
+
+  /**
+   * Sort table by field
+   * Toggles between ascending and descending on repeated clicks
+   */
+  tableSort(table, field) {
+    if (!table) return
+
+    // Initialize or get sort state
+    const state = table._sortState || { field: null, desc: false }
+
+    // Toggle direction if same field, otherwise reset to ascending
+    if (state.field === field) {
+      state.desc = !state.desc
+    } else {
+      state.field = field
+      state.desc = false
+    }
+    table._sortState = state
+
+    // Update sort icons visual state
+    table.querySelectorAll('.mirror-sort-icon').forEach(icon => {
+      const isActive = icon.dataset.field === field
+      icon.style.opacity = isActive ? '1' : '0.5'
+
+      // Check for custom icons
+      if (icon.dataset.hasCustomIcons === 'true') {
+        const ascIcon = icon.querySelector('.mirror-sort-asc')
+        const descIcon = icon.querySelector('.mirror-sort-desc')
+        const defaultIcon = icon.querySelector('.mirror-sort-default')
+
+        if (isActive) {
+          if (defaultIcon) defaultIcon.style.display = 'none'
+          if (state.desc) {
+            if (ascIcon) ascIcon.style.display = 'none'
+            if (descIcon) descIcon.style.display = ''
+          } else {
+            if (ascIcon) ascIcon.style.display = ''
+            if (descIcon) descIcon.style.display = 'none'
+          }
+        } else {
+          // Reset to default
+          if (ascIcon) ascIcon.style.display = 'none'
+          if (descIcon) descIcon.style.display = 'none'
+          if (defaultIcon) defaultIcon.style.display = ''
+        }
+      } else {
+        // Update icon direction with default SVGs
+        if (isActive) {
+          if (state.desc) {
+            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>'
+          } else {
+            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14l5-5 5 5"/></svg>'
+          }
+        } else {
+          // Reset to default double chevron
+          icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>'
+        }
+      }
+    })
+
+    // Re-sort the table body
+    const body = table.querySelector('.mirror-table-body')
+    if (!body) return
+
+    const rows = Array.from(body.querySelectorAll('.mirror-table-row'))
+    rows.sort((a, b) => {
+      const aVal = a.dataset[field] || a.querySelector('[data-field="' + field + '"]')?.textContent || ''
+      const bVal = b.dataset[field] || b.querySelector('[data-field="' + field + '"]')?.textContent || ''
+
+      // Try numeric comparison first
+      const aNum = parseFloat(aVal)
+      const bNum = parseFloat(bVal)
+
+      let cmp
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        cmp = aNum - bNum
+      } else {
+        cmp = aVal.localeCompare(bVal)
+      }
+
+      return state.desc ? -cmp : cmp
+    })
+
+    // Re-append sorted rows
+    rows.forEach(row => body.appendChild(row))
+  },
+
+  /**
+   * Go to previous page in paginated table
+   */
+  tablePrev(table) {
+    if (!table || !table._pageState) return
+
+    const state = table._pageState
+    if (state.current > 1) {
+      state.current--
+      this._updateTablePage(table)
+    }
+  },
+
+  /**
+   * Go to next page in paginated table
+   */
+  tableNext(table) {
+    if (!table || !table._pageState) return
+
+    const state = table._pageState
+    const totalPages = Math.ceil(state.total / state.size)
+    if (state.current < totalPages) {
+      state.current++
+      this._updateTablePage(table)
+    }
+  },
+
+  /**
+   * Update table to show current page
+   */
+  _updateTablePage(table) {
+    if (!table || !table._pageState) return
+
+    const state = table._pageState
+    const body = table.querySelector('.mirror-table-body')
+    if (!body) return
+
+    const rows = Array.from(body.querySelectorAll('.mirror-table-row'))
+    const start = (state.current - 1) * state.size
+    const end = start + state.size
+
+    rows.forEach((row, index) => {
+      row.style.display = (index >= start && index < end) ? '' : 'none'
+    })
+
+    // Update page info
+    const totalPages = Math.ceil(state.total / state.size)
+    const pageInfo = table.querySelector('.mirror-paginator-info')
+    if (pageInfo) {
+      pageInfo.textContent = 'Page ' + state.current + ' of ' + totalPages
+    }
+  },
+
+  // ============================================
   // VALUE FUNCTIONS (Built-in)
   // ============================================
 

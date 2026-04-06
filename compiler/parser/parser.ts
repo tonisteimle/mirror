@@ -1681,6 +1681,14 @@ export class Parser {
       }
     }
 
+    // Extract stickyHeader flag from properties
+    const stickyHeaderProp = table.properties.find(p => p.name === 'stickyHeader')
+    if (stickyHeaderProp) {
+      table.stickyHeader = true
+      // Remove from properties array (it's a direct flag, not a style property)
+      table.properties = table.properties.filter(p => p.name !== 'stickyHeader')
+    }
+
     // Parse children (Column, Header:, Row:, Footer:, Group:)
     if (this.check('INDENT')) {
       this.advance()
@@ -1826,6 +1834,22 @@ export class Parser {
           this.advance() // Group
           this.advance() // :
           table.groupSlot = this.parseTableSlot('Group')
+        } else if (name === 'SortIcon' && this.checkNext('COLON')) {
+          this.advance() // SortIcon
+          this.advance() // :
+          table.sortIconSlot = this.parseTableSlot('SortIcon')
+        } else if (name === 'SortAsc' && this.checkNext('COLON')) {
+          this.advance() // SortAsc
+          this.advance() // :
+          table.sortAscSlot = this.parseTableSlot('SortAsc')
+        } else if (name === 'SortDesc' && this.checkNext('COLON')) {
+          this.advance() // SortDesc
+          this.advance() // :
+          table.sortDescSlot = this.parseTableSlot('SortDesc')
+        } else if (name === 'Paginator' && this.checkNext('COLON')) {
+          this.advance() // Paginator
+          this.advance() // :
+          table.paginatorSlot = this.parseTablePaginatorSlot()
         } else {
           // Unknown, skip
           this.advance()
@@ -1839,6 +1863,75 @@ export class Parser {
     if (this.check('DEDENT')) {
       this.advance()
     }
+  }
+
+  /**
+   * Parse Paginator: slot with sub-slots (Prev:, Next:, PageInfo:)
+   */
+  private parseTablePaginatorSlot(): TableSlotNode {
+    const startToken = this.previous()
+    const slot: TableSlotNode = {
+      name: 'Paginator',
+      properties: [],
+      children: [],
+      sourcePosition: {
+        line: startToken?.line ?? 0,
+        column: startToken?.column ?? 0,
+        endLine: startToken?.line ?? 0,
+        endColumn: startToken?.column ?? 0,
+      },
+    }
+
+    // Parse inline properties
+    this.parseInlineProperties(slot.properties)
+
+    // Check for 'table' in case we need to access parent node to store sub-slots
+    // For now, we just parse the slot normally and handle sub-slots inside
+
+    if (this.check('INDENT')) {
+      this.advance()
+      while (!this.check('DEDENT') && !this.isAtEnd()) {
+        if (this.check('NEWLINE')) {
+          this.advance()
+          continue
+        }
+
+        if (this.check('IDENTIFIER')) {
+          const subName = this.current().value
+
+          if (subName === 'Prev' && this.checkNext('COLON')) {
+            this.advance() // Prev
+            this.advance() // :
+            // Store in slot's children with a marker
+            const prevSlot = this.parseTableSlot('Prev')
+            ;(slot as any).prevSlot = prevSlot
+          } else if (subName === 'Next' && this.checkNext('COLON')) {
+            this.advance() // Next
+            this.advance() // :
+            const nextSlot = this.parseTableSlot('Next')
+            ;(slot as any).nextSlot = nextSlot
+          } else if (subName === 'PageInfo' && this.checkNext('COLON')) {
+            this.advance() // PageInfo
+            this.advance() // :
+            const pageInfoSlot = this.parseTableSlot('PageInfo')
+            ;(slot as any).pageInfoSlot = pageInfoSlot
+          } else {
+            // Regular child element
+            const child = this.parseInstance(this.advance())
+            if (child.type !== 'ZagComponent' && child.type !== 'Table') {
+              slot.children.push(child as Instance | Slot)
+            }
+          }
+        } else {
+          this.advance()
+        }
+      }
+      if (this.check('DEDENT')) {
+        this.advance()
+      }
+    }
+
+    return slot
   }
 
   /**
@@ -2006,6 +2099,10 @@ export class Parser {
             break
           case 'sortable':
             column.sortable = true
+            break
+          case 'desc':
+            // desc flag for initial descending sort
+            column.sortDesc = true
             break
           case 'filterable':
             column.filterable = true

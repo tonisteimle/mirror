@@ -31,6 +31,37 @@
 // TYPES
 // =============================================================================
 
+/**
+ * Extended HTMLElement with Mirror runtime properties
+ * Used for state management, visibility, and event handlers
+ */
+export interface MirrorElement extends HTMLElement {
+  /** State-specific styles: { hover: { background: '#333' }, selected: {...} } */
+  _stateStyles?: Record<string, Record<string, string>>
+  /** Base styles saved before applying state styles */
+  _baseStyles?: Record<string, string>
+  /** Saved display value before hiding */
+  _savedDisplay?: string
+  /** Click outside handler for cleanup */
+  _clickOutsideHandler?: (e: Event) => void
+}
+
+/**
+ * Window with Mirror runtime functions
+ */
+interface WindowWithMirrorFunctions extends Window {
+  [key: string]: unknown
+}
+
+/**
+ * Internal type for CSS to Mirror conversion with temporary properties
+ */
+interface CSSConversionProps extends Partial<MirrorProps> {
+  _justifyCenter?: boolean
+  _alignCenter?: boolean
+  [key: `_${string}`]: string | number | boolean | undefined
+}
+
 /** Mirror property names - exactly as in Mirror DSL */
 export interface MirrorProps {
   // Layout
@@ -534,9 +565,10 @@ function renderNode(node: MirrorNode): HTMLElement {
 
   // Apply states
   if (node.props.states) {
-    (el as any)._stateStyles = {}
+    const mirrorEl = el as MirrorElement
+    mirrorEl._stateStyles = {}
     for (const [stateName, stateProps] of Object.entries(node.props.states)) {
-      (el as any)._stateStyles[stateName] = propsToCSS(stateProps)
+      mirrorEl._stateStyles[stateName] = propsToCSS(stateProps)
     }
   }
 
@@ -581,9 +613,10 @@ function renderComponent(node: MirrorNode, def: ComponentDef): HTMLElement {
 
   // States
   if (mergedProps.states) {
-    (el as any)._stateStyles = {}
+    const mirrorEl = el as MirrorElement
+    mirrorEl._stateStyles = {}
     for (const [stateName, stateProps] of Object.entries(mergedProps.states)) {
-      (el as any)._stateStyles[stateName] = propsToCSS(stateProps)
+      mirrorEl._stateStyles[stateName] = propsToCSS(stateProps)
     }
   }
 
@@ -851,13 +884,13 @@ function normalizeActions(actions: Action | Action[]): string[] {
 
 function attachEvent(el: HTMLElement, eventName: string, actions: string[]): void {
   if (eventName === 'click-outside') {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: Event) => {
       if (!el.contains(e.target as Node)) {
         executeActions(el, actions)
       }
     }
     document.addEventListener('click', handler)
-    ;(el as any)._clickOutsideHandler = handler
+    ;(el as MirrorElement)._clickOutsideHandler = handler
     return
   }
 
@@ -960,12 +993,12 @@ function executeAction(el: HTMLElement, action: string): void {
       (targetEl || el)?.focus()
       break
     case 'call':
-      const fn = (window as any)[target]
+      const fn = (window as WindowWithMirrorFunctions)[target]
       if (typeof fn === 'function') fn(...args)
       break
     default:
       // Unknown action = try as function call
-      const func = (window as any)[type]
+      const func = (window as WindowWithMirrorFunctions)[type]
       if (typeof func === 'function') func(target, ...args)
   }
 }
@@ -1000,14 +1033,14 @@ const runtime = {
     if (!el) return
     el.hidden = false
     // Restore saved display value or clear inline style
-    el.style.display = (el as any)._savedDisplay || ''
+    el.style.display = (el as MirrorElement)._savedDisplay || ''
   },
 
   hide(el: HTMLElement | null) {
     if (!el) return
     // Save current display before hiding (unless already hidden)
     if (el.style.display !== 'none') {
-      (el as any)._savedDisplay = el.style.display
+      (el as MirrorElement)._savedDisplay = el.style.display
     }
     el.hidden = true
     el.style.display = 'none'
@@ -1091,8 +1124,8 @@ const runtime = {
     const items: HTMLElement[] = []
     const walk = (el: HTMLElement) => {
       for (const child of Array.from(el.children)) {
-        const htmlChild = child as HTMLElement
-        if ((htmlChild as any)._stateStyles?.highlighted || htmlChild.style.cursor === 'pointer') {
+        const htmlChild = child as MirrorElement
+        if (htmlChild._stateStyles?.highlighted || htmlChild.style.cursor === 'pointer') {
           items.push(htmlChild)
         } else {
           walk(htmlChild)
@@ -1124,28 +1157,29 @@ const runtime = {
 
   setState(el: HTMLElement, stateName: string) {
     if (!el) return
+    const mirrorEl = el as MirrorElement
 
     // Store base styles
-    if (!(el as any)._baseStyles && (el as any)._stateStyles) {
-      (el as any)._baseStyles = {}
+    if (!mirrorEl._baseStyles && mirrorEl._stateStyles) {
+      mirrorEl._baseStyles = {}
       const props = new Set<string>()
-      for (const state of Object.values((el as any)._stateStyles)) {
-        for (const p of Object.keys(state as object)) props.add(p)
+      for (const state of Object.values(mirrorEl._stateStyles)) {
+        for (const p of Object.keys(state)) props.add(p)
       }
       for (const p of Array.from(props)) {
-        (el as any)._baseStyles[p] = (el.style as any)[p] || ''
+        mirrorEl._baseStyles[p] = (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
       }
     }
 
     // Restore base
-    if ((el as any)._baseStyles) {
-      Object.assign(el.style, (el as any)._baseStyles)
+    if (mirrorEl._baseStyles) {
+      Object.assign(el.style, mirrorEl._baseStyles)
     }
 
     // Apply new state
     el.dataset.state = stateName
-    if ((el as any)._stateStyles?.[stateName]) {
-      Object.assign(el.style, (el as any)._stateStyles[stateName])
+    if (mirrorEl._stateStyles?.[stateName]) {
+      Object.assign(el.style, mirrorEl._stateStyles[stateName])
     }
 
     // Update child visibility
@@ -1153,23 +1187,25 @@ const runtime = {
   },
 
   applyState(el: HTMLElement, state: string) {
-    if (!(el as any)._stateStyles?.[state]) return
+    const mirrorEl = el as MirrorElement
+    if (!mirrorEl._stateStyles?.[state]) return
 
     // Store base first time
-    if (!(el as any)._baseStyles) {
-      (el as any)._baseStyles = {}
-      const props = Object.keys((el as any)._stateStyles[state])
+    if (!mirrorEl._baseStyles) {
+      mirrorEl._baseStyles = {}
+      const props = Object.keys(mirrorEl._stateStyles[state])
       for (const p of props) {
-        (el as any)._baseStyles[p] = (el.style as any)[p] || ''
+        mirrorEl._baseStyles[p] = (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
       }
     }
 
-    Object.assign(el.style, (el as any)._stateStyles[state])
+    Object.assign(el.style, mirrorEl._stateStyles[state])
   },
 
   removeState(el: HTMLElement, _state: string) {
-    if (!(el as any)._baseStyles) return
-    Object.assign(el.style, (el as any)._baseStyles)
+    const mirrorEl = el as MirrorElement
+    if (!mirrorEl._baseStyles) return
+    Object.assign(el.style, mirrorEl._baseStyles)
   },
 
   updateVisibility(el: HTMLElement) {
@@ -1473,8 +1509,9 @@ function collectNamed(el: HTMLElement, map: Map<string, HTMLElement>): void {
 }
 
 function cleanup(el: HTMLElement): void {
-  if ((el as any)._clickOutsideHandler) {
-    document.removeEventListener('click', (el as any)._clickOutsideHandler)
+  const mirrorEl = el as MirrorElement
+  if (mirrorEl._clickOutsideHandler) {
+    document.removeEventListener('click', mirrorEl._clickOutsideHandler)
   }
   for (const child of Array.from(el.children)) {
     cleanup(child as HTMLElement)
@@ -1816,7 +1853,7 @@ function parseStyleString(styleStr: string): Record<string, string> {
  * Convert CSS style properties to M() props
  */
 function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps> {
-  const mirrorProps: Partial<MirrorProps> = {}
+  const mirrorProps: CSSConversionProps = {}
 
   for (const [cssProp, value] of Object.entries(cssProps)) {
     switch (cssProp) {
@@ -1868,7 +1905,7 @@ function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps
         // Convert to margin array if possible
         if (value.endsWith('px')) {
           // Store as side-specific for now
-          (mirrorProps as any)[`_${cssProp}`] = parseInt(value)
+          mirrorProps[`_${cssProp}`] = parseInt(value)
         }
         break
 
@@ -1898,7 +1935,7 @@ function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps
       case 'justify-content':
         if (value === 'center') {
           // Will combine with align-items check
-          (mirrorProps as any)._justifyCenter = true
+          mirrorProps._justifyCenter = true
         } else if (value === 'space-between') {
           mirrorProps.spread = true
         }
@@ -1906,7 +1943,7 @@ function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps
 
       case 'align-items':
         if (value === 'center') {
-          (mirrorProps as any)._alignCenter = true
+          mirrorProps._alignCenter = true
         }
         break
 
@@ -1974,10 +2011,10 @@ function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps
   }
 
   // Combine justify-content: center + align-items: center → center: true
-  if ((mirrorProps as any)._justifyCenter && (mirrorProps as any)._alignCenter) {
+  if (mirrorProps._justifyCenter && mirrorProps._alignCenter) {
     mirrorProps.center = true
-    delete (mirrorProps as any)._justifyCenter
-    delete (mirrorProps as any)._alignCenter
+    delete mirrorProps._justifyCenter
+    delete mirrorProps._alignCenter
   }
 
   return mirrorProps
