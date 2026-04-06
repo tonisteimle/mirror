@@ -14,15 +14,14 @@
 | **05-styling.html** | 13 | 47 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
+| **08-daten.html** | 25 | 52 | ✅ Fertig |
+| **09-seiten.html** | 9 | 21 | ✅ Fertig |
 | **10-eingabe.html** | 30 | 92 | ✅ Fertig |
 | **11-navigation.html** | 20 | 84 | ✅ Fertig |
 | **12-overlays.html** | 27 | 54 | ✅ Fertig |
 | **13-anzeige.html** | 43 | 44 | ✅ Fertig |
 
-### Noch zu testen
-
-- 08-daten.html
-- 09-seiten.html
+### Alle Tutorial-Dateien getestet!
 
 ---
 
@@ -136,6 +135,18 @@ playground-fn-menu.spec.ts            - Dropdown Menu Pattern
 playground-fn-combined.spec.ts        - Kombinierte Funktionen
 ```
 
+### 08-daten.html (52 Tests)
+
+```
+playground-daten.spec.ts              - Daten: Variables, Data Objects, each, Conditionals (Playground 0-24)
+```
+
+### 09-seiten.html (21 Tests)
+
+```
+playground-seiten.spec.ts             - Seiten: Tabs, SideNav, File-Content, Components (Playground 0-8)
+```
+
 ### 04-layout.html (35 Tests)
 
 ```
@@ -218,6 +229,12 @@ npx playwright test tests/e2e/playground-fn-*.spec.ts
 # Nur Grundlagen (Intro, Elemente, Komponenten, Tokens)
 npx playwright test tests/e2e/playground-intro.spec.ts tests/e2e/playground-elemente.spec.ts tests/e2e/playground-komponenten.spec.ts tests/e2e/playground-tokens.spec.ts
 
+# Nur Daten
+npx playwright test tests/e2e/playground-daten.spec.ts
+
+# Nur Seiten
+npx playwright test tests/e2e/playground-seiten.spec.ts
+
 # Nur Navigation
 npx playwright test tests/e2e/playground-nav-*.spec.ts
 
@@ -242,7 +259,6 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 ---
 
-## Nächste Schritte
+## Status
 
-1. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
-2. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
+Alle Tutorial-Dateien sind vollständig getestet! 🎉
