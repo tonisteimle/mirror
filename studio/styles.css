@@ -3517,16 +3517,8 @@
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
       margin-bottom: 10px;
-      padding: 8px 0;
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    /* First section label: no top border (already has one above) */
-    .pp-content .section:first-child .section-label,
-    .pp-content .pp-section:first-child .pp-label {
-      border-top: none;
-      padding-top: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-default);
     }
 
     /* Section expand/collapse button */

@@ -1,10 +1,10 @@
 /**
- * E2E Tests für 13-anzeige.html - Utility
- * Playgrounds 38-42: Clipboard, QRCode, ScrollArea, Splitter
+ * E2E Tests for 12-overlays.html - Popover
+ * Playgrounds 3-5: Basic Popover, CloseTrigger, Settings
  */
 import { test, expect, Page } from '@playwright/test'
 
-const TUTORIAL_URL = '/docs/tutorial/13-anzeige.html'
+const TUTORIAL_URL = '/docs/tutorial/12-overlays.html'
 
 async function setupPage(page: Page): Promise<void> {
   await page.goto(TUTORIAL_URL, { waitUntil: 'networkidle' })
@@ -18,12 +18,12 @@ async function setupPage(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// Playground 38: Clipboard
+// Playground 3: Basic Popover
 // =============================================================================
-test.describe('Playground 38: Clipboard', () => {
-  const PLAYGROUND_INDEX = 38
+test.describe('Playground 3: Basic Popover', () => {
+  const PLAYGROUND_INDEX = 3
 
-  test('renders clipboard with input and copy button', async ({ page }) => {
+  test('renders popover trigger button', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -32,18 +32,14 @@ test.describe('Playground 38: Clipboard', () => {
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
 
-      // Search in entire root
-      const input = root?.querySelector('input')
-      const hasIcon = root?.querySelectorAll('svg').length > 0
-
       return {
-        hasInput: input !== null,
-        hasIcon,
+        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    // Clipboard should have some UI elements
+    expect(structure.text).toContain('Open Popover')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -51,53 +47,17 @@ test.describe('Playground 38: Clipboard', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('clipboard.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('popover-basic.png')
   })
 })
 
 // =============================================================================
-// Playground 39: QRCode
+// Playground 4: Popover with CloseTrigger
 // =============================================================================
-test.describe('Playground 39: QRCode', () => {
-  const PLAYGROUND_INDEX = 39
+test.describe('Playground 4: Popover with CloseTrigger', () => {
+  const PLAYGROUND_INDEX = 4
 
-  test('renders QR codes', async ({ page }) => {
-    await setupPage(page)
-
-    const structure = await page.evaluate((idx) => {
-      const playgrounds = document.querySelectorAll('[data-playground]')
-      const preview = playgrounds[idx]?.querySelector('.playground-preview')
-      const shadow = preview?.shadowRoot
-      const root = shadow?.querySelector('.mirror-root')
-
-      // QR codes use SVG
-      const svgCount = root?.querySelectorAll('svg').length || 0
-
-      return {
-        svgCount,
-        childCount: root?.children?.length || 0
-      }
-    }, PLAYGROUND_INDEX)
-
-    // QRCode should have SVG elements
-    expect(structure.childCount).toBeGreaterThan(0)
-  })
-
-  test('visual regression', async ({ page }) => {
-    await setupPage(page)
-
-    const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('qrcode.png')
-  })
-})
-
-// =============================================================================
-// Playground 40: ScrollArea
-// =============================================================================
-test.describe('Playground 40: ScrollArea', () => {
-  const PLAYGROUND_INDEX = 40
-
-  test('renders scrollable content', async ({ page }) => {
+  test('renders popover trigger', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -112,7 +72,7 @@ test.describe('Playground 40: ScrollArea', () => {
       }
     }, PLAYGROUND_INDEX)
 
-    // ScrollArea should have content
+    expect(structure.text).toContain('Open')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -120,17 +80,17 @@ test.describe('Playground 40: ScrollArea', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('scroll-area.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('popover-closetrigger.png')
   })
 })
 
 // =============================================================================
-// Playground 42: Splitter
+// Playground 5: Popover Settings
 // =============================================================================
-test.describe('Playground 42: Splitter', () => {
-  const PLAYGROUND_INDEX = 42
+test.describe('Playground 5: Popover Settings', () => {
+  const PLAYGROUND_INDEX = 5
 
-  test('renders splitter with panels', async ({ page }) => {
+  test('renders settings popover trigger', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -145,7 +105,7 @@ test.describe('Playground 42: Splitter', () => {
       }
     }, PLAYGROUND_INDEX)
 
-    // Splitter should have content
+    expect(structure.text).toContain('Settings')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -153,6 +113,6 @@ test.describe('Playground 42: Splitter', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('splitter.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('popover-settings.png')
   })
 })

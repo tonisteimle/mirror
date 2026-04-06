@@ -1,10 +1,10 @@
 /**
- * E2E Tests für 13-anzeige.html - Utility
- * Playgrounds 38-42: Clipboard, QRCode, ScrollArea, Splitter
+ * E2E Tests for 12-overlays.html - Dialog
+ * Playgrounds 8-12: Basic Dialog, Close, Backdrop, Confirm, Form
  */
 import { test, expect, Page } from '@playwright/test'
 
-const TUTORIAL_URL = '/docs/tutorial/13-anzeige.html'
+const TUTORIAL_URL = '/docs/tutorial/12-overlays.html'
 
 async function setupPage(page: Page): Promise<void> {
   await page.goto(TUTORIAL_URL, { waitUntil: 'networkidle' })
@@ -18,12 +18,12 @@ async function setupPage(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// Playground 38: Clipboard
+// Playground 8: Basic Dialog
 // =============================================================================
-test.describe('Playground 38: Clipboard', () => {
-  const PLAYGROUND_INDEX = 38
+test.describe('Playground 8: Basic Dialog', () => {
+  const PLAYGROUND_INDEX = 8
 
-  test('renders clipboard with input and copy button', async ({ page }) => {
+  test('renders dialog trigger button', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -32,18 +32,14 @@ test.describe('Playground 38: Clipboard', () => {
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
 
-      // Search in entire root
-      const input = root?.querySelector('input')
-      const hasIcon = root?.querySelectorAll('svg').length > 0
-
       return {
-        hasInput: input !== null,
-        hasIcon,
+        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    // Clipboard should have some UI elements
+    expect(structure.text).toContain('Open Dialog')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -51,53 +47,17 @@ test.describe('Playground 38: Clipboard', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('clipboard.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('dialog-basic.png')
   })
 })
 
 // =============================================================================
-// Playground 39: QRCode
+// Playground 9: Dialog with CloseTrigger
 // =============================================================================
-test.describe('Playground 39: QRCode', () => {
-  const PLAYGROUND_INDEX = 39
+test.describe('Playground 9: Dialog with CloseTrigger', () => {
+  const PLAYGROUND_INDEX = 9
 
-  test('renders QR codes', async ({ page }) => {
-    await setupPage(page)
-
-    const structure = await page.evaluate((idx) => {
-      const playgrounds = document.querySelectorAll('[data-playground]')
-      const preview = playgrounds[idx]?.querySelector('.playground-preview')
-      const shadow = preview?.shadowRoot
-      const root = shadow?.querySelector('.mirror-root')
-
-      // QR codes use SVG
-      const svgCount = root?.querySelectorAll('svg').length || 0
-
-      return {
-        svgCount,
-        childCount: root?.children?.length || 0
-      }
-    }, PLAYGROUND_INDEX)
-
-    // QRCode should have SVG elements
-    expect(structure.childCount).toBeGreaterThan(0)
-  })
-
-  test('visual regression', async ({ page }) => {
-    await setupPage(page)
-
-    const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('qrcode.png')
-  })
-})
-
-// =============================================================================
-// Playground 40: ScrollArea
-// =============================================================================
-test.describe('Playground 40: ScrollArea', () => {
-  const PLAYGROUND_INDEX = 40
-
-  test('renders scrollable content', async ({ page }) => {
+  test('renders dialog trigger', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -112,7 +72,7 @@ test.describe('Playground 40: ScrollArea', () => {
       }
     }, PLAYGROUND_INDEX)
 
-    // ScrollArea should have content
+    expect(structure.text).toContain('Open')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -120,17 +80,17 @@ test.describe('Playground 40: ScrollArea', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('scroll-area.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('dialog-closetrigger.png')
   })
 })
 
 // =============================================================================
-// Playground 42: Splitter
+// Playground 10: Dialog Custom Backdrop
 // =============================================================================
-test.describe('Playground 42: Splitter', () => {
-  const PLAYGROUND_INDEX = 42
+test.describe('Playground 10: Dialog Custom Backdrop', () => {
+  const PLAYGROUND_INDEX = 10
 
-  test('renders splitter with panels', async ({ page }) => {
+  test('renders dialog with custom backdrop trigger', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -145,7 +105,7 @@ test.describe('Playground 42: Splitter', () => {
       }
     }, PLAYGROUND_INDEX)
 
-    // Splitter should have content
+    expect(structure.text).toContain('Custom backdrop')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -153,6 +113,72 @@ test.describe('Playground 42: Splitter', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('splitter.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('dialog-backdrop.png')
+  })
+})
+
+// =============================================================================
+// Playground 11: Confirm Dialog
+// =============================================================================
+test.describe('Playground 11: Confirm Dialog', () => {
+  const PLAYGROUND_INDEX = 11
+
+  test('renders delete confirmation trigger', async ({ page }) => {
+    await setupPage(page)
+
+    const structure = await page.evaluate((idx) => {
+      const playgrounds = document.querySelectorAll('[data-playground]')
+      const preview = playgrounds[idx]?.querySelector('.playground-preview')
+      const shadow = preview?.shadowRoot
+      const root = shadow?.querySelector('.mirror-root')
+
+      return {
+        text: root?.textContent || '',
+        childCount: root?.children?.length || 0
+      }
+    }, PLAYGROUND_INDEX)
+
+    expect(structure.text).toContain('Delete')
+    expect(structure.childCount).toBeGreaterThan(0)
+  })
+
+  test('visual regression', async ({ page }) => {
+    await setupPage(page)
+
+    const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('dialog-confirm.png')
+  })
+})
+
+// =============================================================================
+// Playground 12: Form Dialog
+// =============================================================================
+test.describe('Playground 12: Form Dialog', () => {
+  const PLAYGROUND_INDEX = 12
+
+  test('renders form dialog trigger', async ({ page }) => {
+    await setupPage(page)
+
+    const structure = await page.evaluate((idx) => {
+      const playgrounds = document.querySelectorAll('[data-playground]')
+      const preview = playgrounds[idx]?.querySelector('.playground-preview')
+      const shadow = preview?.shadowRoot
+      const root = shadow?.querySelector('.mirror-root')
+
+      return {
+        text: root?.textContent || '',
+        childCount: root?.children?.length || 0
+      }
+    }, PLAYGROUND_INDEX)
+
+    expect(structure.text).toContain('Create')
+    expect(structure.childCount).toBeGreaterThan(0)
+  })
+
+  test('visual regression', async ({ page }) => {
+    await setupPage(page)
+
+    const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('dialog-form.png')
   })
 })

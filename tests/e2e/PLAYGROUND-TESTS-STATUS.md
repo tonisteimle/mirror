@@ -12,6 +12,7 @@
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
 | **10-eingabe.html** | 30 | 92 | ✅ Fertig |
 | **11-navigation.html** | 20 | 84 | ✅ Fertig |
+| **13-anzeige.html** | 43 | 44 | ✅ Fertig |
 
 ### Noch zu testen
 
@@ -22,7 +23,6 @@
 - 08-daten.html
 - 09-seiten.html
 - 12-overlays.html (Dialog, Tooltip, Popover)
-- 13-anzeige.html
 
 ---
 
@@ -155,6 +155,15 @@ playground-nav-pagination.spec.ts     - Pagination (Playground 14-16)
 playground-nav-treeview.spec.ts       - TreeView (Playground 17-19)
 ```
 
+### 13-anzeige.html (44 Tests)
+
+```
+playground-anzeige-tables.spec.ts     - Tabellen: statisch, datengebunden, Row-Template (Playground 0-5)
+playground-anzeige-media.spec.ts      - Media: Avatar, FileUpload, Carousel, SignaturePad (Playground 25-31)
+playground-anzeige-feedback.spec.ts   - Feedback: Progress, CircularProgress, Toast, Marquee (Playground 32-37)
+playground-anzeige-utility.spec.ts    - Utility: Clipboard, QRCode, ScrollArea, Splitter (Playground 38-42)
+```
+
 ---
 
 ## Ausführung
@@ -181,6 +190,9 @@ npx playwright test tests/e2e/playground-layout-*.spec.ts
 # Nur Styling
 npx playwright test tests/e2e/playground-styling-*.spec.ts
 
+# Nur Anzeige (Tables, Media, Feedback, Utility)
+npx playwright test tests/e2e/playground-anzeige-*.spec.ts
+
 # Mit neuen Screenshots
 npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 ```
@@ -193,4 +205,3 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 2. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
 3. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
 4. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
-5. **Anzeige (13-anzeige.html)** - Avatar, Progress, Carousel, etc.

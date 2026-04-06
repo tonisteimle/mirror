@@ -1,10 +1,10 @@
 /**
- * E2E Tests für 13-anzeige.html - Utility
- * Playgrounds 38-42: Clipboard, QRCode, ScrollArea, Splitter
+ * E2E Tests for 12-overlays.html - Presence
+ * Playgrounds 24-26: Toggle, Slide Animation, List Items
  */
 import { test, expect, Page } from '@playwright/test'
 
-const TUTORIAL_URL = '/docs/tutorial/13-anzeige.html'
+const TUTORIAL_URL = '/docs/tutorial/12-overlays.html'
 
 async function setupPage(page: Page): Promise<void> {
   await page.goto(TUTORIAL_URL, { waitUntil: 'networkidle' })
@@ -18,12 +18,12 @@ async function setupPage(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// Playground 38: Clipboard
+// Playground 24: Presence Toggle
 // =============================================================================
-test.describe('Playground 38: Clipboard', () => {
-  const PLAYGROUND_INDEX = 38
+test.describe('Playground 24: Presence Toggle', () => {
+  const PLAYGROUND_INDEX = 24
 
-  test('renders clipboard with input and copy button', async ({ page }) => {
+  test('renders presence with toggle button', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -32,18 +32,14 @@ test.describe('Playground 38: Clipboard', () => {
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
 
-      // Search in entire root
-      const input = root?.querySelector('input')
-      const hasIcon = root?.querySelectorAll('svg').length > 0
-
       return {
-        hasInput: input !== null,
-        hasIcon,
+        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    // Clipboard should have some UI elements
+    expect(structure.text).toContain('Toggle')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -51,17 +47,17 @@ test.describe('Playground 38: Clipboard', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('clipboard.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('presence-toggle.png')
   })
 })
 
 // =============================================================================
-// Playground 39: QRCode
+// Playground 25: Presence Slide Animation
 // =============================================================================
-test.describe('Playground 39: QRCode', () => {
-  const PLAYGROUND_INDEX = 39
+test.describe('Playground 25: Presence Slide Animation', () => {
+  const PLAYGROUND_INDEX = 25
 
-  test('renders QR codes', async ({ page }) => {
+  test('renders presence with slide animation', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -70,16 +66,14 @@ test.describe('Playground 39: QRCode', () => {
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
 
-      // QR codes use SVG
-      const svgCount = root?.querySelectorAll('svg').length || 0
-
       return {
-        svgCount,
+        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    // QRCode should have SVG elements
+    expect(structure.text).toContain('Panel')
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -87,17 +81,17 @@ test.describe('Playground 39: QRCode', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('qrcode.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('presence-slide.png')
   })
 })
 
 // =============================================================================
-// Playground 40: ScrollArea
+// Playground 26: Presence List Items
 // =============================================================================
-test.describe('Playground 40: ScrollArea', () => {
-  const PLAYGROUND_INDEX = 40
+test.describe('Playground 26: Presence List Items', () => {
+  const PLAYGROUND_INDEX = 26
 
-  test('renders scrollable content', async ({ page }) => {
+  test('renders presence with list items', async ({ page }) => {
     await setupPage(page)
 
     const structure = await page.evaluate((idx) => {
@@ -112,7 +106,7 @@ test.describe('Playground 40: ScrollArea', () => {
       }
     }, PLAYGROUND_INDEX)
 
-    // ScrollArea should have content
+    // List items A, B, C
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -120,39 +114,6 @@ test.describe('Playground 40: ScrollArea', () => {
     await setupPage(page)
 
     const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('scroll-area.png')
-  })
-})
-
-// =============================================================================
-// Playground 42: Splitter
-// =============================================================================
-test.describe('Playground 42: Splitter', () => {
-  const PLAYGROUND_INDEX = 42
-
-  test('renders splitter with panels', async ({ page }) => {
-    await setupPage(page)
-
-    const structure = await page.evaluate((idx) => {
-      const playgrounds = document.querySelectorAll('[data-playground]')
-      const preview = playgrounds[idx]?.querySelector('.playground-preview')
-      const shadow = preview?.shadowRoot
-      const root = shadow?.querySelector('.mirror-root')
-
-      return {
-        text: root?.textContent || '',
-        childCount: root?.children?.length || 0
-      }
-    }, PLAYGROUND_INDEX)
-
-    // Splitter should have content
-    expect(structure.childCount).toBeGreaterThan(0)
-  })
-
-  test('visual regression', async ({ page }) => {
-    await setupPage(page)
-
-    const playground = page.locator('[data-playground]').nth(PLAYGROUND_INDEX)
-    await expect(playground.locator('.playground-preview')).toHaveScreenshot('splitter.png')
+    await expect(playground.locator('.playground-preview')).toHaveScreenshot('presence-list.png')
   })
 })
