@@ -6,6 +6,7 @@
  */
 
 import type { EventHandlerMap } from '../types'
+import { escapeHtml } from '../utils'
 
 /**
  * Toggle option configuration
@@ -37,20 +38,6 @@ export interface ToggleGroupConfig {
   single?: boolean
   /** Additional CSS class */
   className?: string
-}
-
-/**
- * Escape HTML characters
- */
-function escapeHtml(str: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }
-  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
@@ -110,7 +97,7 @@ export function renderSingleToggle(config: {
 
   const titleAttr = title ? `title="${escapeHtml(title)}"` : ''
 
-  return `<button class="toggle-btn single ${active ? 'active' : ''}" ${dataStr} ${titleAttr}>${icon}</button>`
+  return `<button class="pp-toggle-btn single ${active ? 'active' : ''}" ${dataStr} ${titleAttr}>${icon}</button>`
 }
 
 /**

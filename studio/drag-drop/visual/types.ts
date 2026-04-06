@@ -1,5 +1,5 @@
 /**
- * Visual System Types - Webflow Style
+ * Visual System Types
  */
 
 import type { VisualHint } from '../types'
@@ -35,6 +35,8 @@ export interface VisualSystem {
     indicatorRect: { x: number; y: number; width: number; height: number } | null
     parentOutlineVisible: boolean
     parentOutlineRect: { x: number; y: number; width: number; height: number } | null
+    ghostVisible: boolean
+    ghostRect: { x: number; y: number; width: number; height: number } | null
   }
 }
 
@@ -44,4 +46,5 @@ export interface VisualSystem {
 export const VISUAL_IDS = {
   indicator: 'mirror-drop-indicator',
   parentOutline: 'mirror-drop-parent-outline',
+  ghost: 'mirror-drop-ghost',
 } as const

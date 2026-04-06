@@ -26,3 +26,10 @@ export {
   validateSpacingValue,
   type ValidationResult
 } from './validation'
+
+export {
+  resolveColorToken,
+  resolveSpacingToken,
+  resolveToken,
+  isTokenRef
+} from './tokens'

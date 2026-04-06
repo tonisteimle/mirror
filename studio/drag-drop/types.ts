@@ -44,6 +44,9 @@ export interface DragSource {
   // Canvas source
   nodeId?: string
   element?: HTMLElement
+
+  // Size for ghost indicator (used in absolute positioning)
+  size?: Size
 }
 
 export interface ComponentChild {
@@ -95,13 +98,15 @@ export interface DropResult {
   insertionIndex?: number
   /** True if this drop would result in no change (element stays in place) */
   isNoOp?: boolean
+  /** Ghost size for absolute positioning visual hint */
+  ghostSize?: Size
 }
 
 // ============================================================================
 // Visual Hints
 // ============================================================================
 
-export type VisualHintType = 'line' | 'zone' | 'outline'
+export type VisualHintType = 'line' | 'zone' | 'outline' | 'ghost'
 
 export interface VisualHint {
   type: VisualHintType
@@ -109,6 +114,8 @@ export interface VisualHint {
   direction?: 'horizontal' | 'vertical'
   zone?: AlignmentZone
   guides?: SnapGuide[]
+  /** For ghost type: the size of the ghost element */
+  ghostSize?: Size
 }
 
 // ============================================================================

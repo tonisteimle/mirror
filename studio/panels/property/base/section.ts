@@ -113,8 +113,8 @@ export abstract class BaseSection {
     const className = ['section', this.config.className, extraClass].filter(Boolean).join(' ')
     return `
       <div class="${className}">
-        <div class="section-label">${this.config.label}</div>
-        <div class="section-content">
+        <div class="pp-section-label">${this.config.label}</div>
+        <div class="pp-section-content">
           ${content}
         </div>
       </div>
@@ -128,7 +128,7 @@ export abstract class BaseSection {
     const className = ['section', this.config.className, expanded ? 'expanded' : ''].filter(Boolean).join(' ')
     return `
       <div class="${className}">
-        <div class="section-label">
+        <div class="pp-section-label">
           ${this.config.label}
           <button class="section-expand-btn" data-section-toggle>
             <svg class="icon icon-collapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -139,7 +139,7 @@ export abstract class BaseSection {
             </svg>
           </button>
         </div>
-        <div class="section-content">
+        <div class="pp-section-content">
           ${content}
         </div>
       </div>
@@ -153,8 +153,8 @@ export abstract class BaseSection {
     const className = ['prop-row', extraClass].filter(Boolean).join(' ')
     return `
       <div class="${className}">
-        <span class="prop-label">${label}</span>
-        <div class="prop-content">
+        <span class="pp-row-label">${label}</span>
+        <div class="pp-row-content">
           ${content}
         </div>
       </div>

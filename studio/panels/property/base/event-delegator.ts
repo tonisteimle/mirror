@@ -144,7 +144,12 @@ export class EventDelegator {
       for (const { selector, handler } of eventHandlers) {
         const matchingElement = this.findMatchingElement(target, selector)
         if (matchingElement) {
-          handler(e, matchingElement)
+          try {
+            handler(e, matchingElement)
+          } catch (error) {
+            console.error(`[EventDelegator] Handler error for "${selector}" on "${eventType}":`, error)
+            // Continue with other handlers - don't break the loop
+          }
           // Don't break - allow multiple handlers to match
         }
       }

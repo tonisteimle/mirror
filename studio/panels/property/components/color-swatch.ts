@@ -6,6 +6,7 @@
  */
 
 import type { EventHandlerMap } from '../types'
+import { escapeHtml } from '../utils'
 
 /**
  * ColorSwatch configuration
@@ -21,20 +22,6 @@ export interface ColorSwatchConfig {
   size?: 'small' | 'normal' | 'large'
   /** Additional data attributes */
   dataAttrs?: Record<string, string>
-}
-
-/**
- * Escape HTML characters
- */
-function escapeHtml(str: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }
-  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
@@ -141,7 +128,7 @@ export function renderColorRow(config: {
   const inputHtml = showInput ? `
     <input
       type="text"
-      class="prop-input color-input"
+      class="pp-input color-input"
       autocomplete="off"
       value="${escapeHtml(value)}"
       data-prop="${property}"
@@ -151,9 +138,9 @@ export function renderColorRow(config: {
   ` : ''
 
   return `
-    <div class="prop-row">
-      <span class="prop-label">${escapeHtml(label)}</span>
-      <div class="prop-content color-group">
+    <div class="pp-row">
+      <span class="pp-row-label">${escapeHtml(label)}</span>
+      <div class="pp-row-content color-group">
         ${swatchHtml}
         ${tokens.length > 0 ? `<div class="color-tokens">${tokenButtons}</div>` : ''}
         ${inputHtml}

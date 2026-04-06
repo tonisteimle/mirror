@@ -8,9 +8,9 @@ import type { Point, DragSource, DropTarget, DropResult, VisualHint, Rect } from
  * Drop Strategy Interface
  *
  * Each strategy handles a specific type of drop target:
+ * - AbsolutePositionStrategy: Positioned container (absolute x/y)
  * - FlexWithChildrenStrategy: Flex container with children (before/after)
- * - EmptyFlexStrategy: Empty flex container (9-zone alignment)
- * - PositionedStrategy: Positioned container (absolute x/y)
+ * - SimpleInsideStrategy: Empty flex container (insert as child)
  * - NonContainerStrategy: Non-container elements (before/after as sibling)
  */
 export interface DropStrategy {

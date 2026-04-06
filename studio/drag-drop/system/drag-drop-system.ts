@@ -38,6 +38,12 @@ import {
 
 const DEFAULT_NODE_ID_ATTR = 'data-mirror-id'
 
+/** Debounce delay for mode transitions (flex ↔ absolute) */
+const MODE_TRANSITION_DEBOUNCE_MS = 80
+
+/** Current drop mode */
+type DropMode = 'flex' | 'absolute'
+
 export class DragDropSystem implements IDragDropSystem {
   private config: DragDropConfig
   private registry: StrategyRegistry
@@ -48,6 +54,11 @@ export class DragDropSystem implements IDragDropSystem {
   private monitorCleanup: (() => void) | null = null
   private dropTargetCleanup: (() => void) | null = null
   private nodeIdAttr: string
+
+  // Mode debouncing state
+  private currentMode: DropMode | null = null
+  private lastStableModel: { result: DropResult; mode: DropMode } | null = null
+  private modeTransitionTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(config: DragDropConfig) {
     this.config = config
@@ -281,6 +292,49 @@ export class DragDropSystem implements IDragDropSystem {
   }
 
   /**
+   * Determine the drop mode based on target layout type
+   */
+  private getDropMode(target: DropTarget): DropMode {
+    return target.layoutType === 'positioned' ? 'absolute' : 'flex'
+  }
+
+  /**
+   * Handle mode transition with debouncing
+   * Returns true if we should use the stable model, false to use new model
+   */
+  private handleModeTransition(newMode: DropMode, newResult: DropResult): boolean {
+    // Same mode - no transition needed
+    if (this.currentMode === newMode) {
+      this.clearModeTransitionTimer()
+      this.lastStableModel = { result: newResult, mode: newMode }
+      return false
+    }
+
+    // Mode changed - start debounce timer
+    if (!this.modeTransitionTimer) {
+      this.modeTransitionTimer = setTimeout(() => {
+        // Timer fired - commit to new mode
+        this.currentMode = newMode
+        this.lastStableModel = { result: newResult, mode: newMode }
+        this.modeTransitionTimer = null
+      }, MODE_TRANSITION_DEBOUNCE_MS)
+    }
+
+    // During transition, use last stable model if available
+    return this.lastStableModel !== null
+  }
+
+  /**
+   * Clear the mode transition timer
+   */
+  private clearModeTransitionTimer(): void {
+    if (this.modeTransitionTimer) {
+      clearTimeout(this.modeTransitionTimer)
+      this.modeTransitionTimer = null
+    }
+  }
+
+  /**
    * Update drop indicator based on cursor position
    */
   private updateDropIndicator(input: { clientX: number; clientY: number }): void {
@@ -298,6 +352,9 @@ export class DragDropSystem implements IDragDropSystem {
       this.visual.hideZoneOverlay()
       this.state.currentTarget = null
       this.state.currentResult = null
+      this.clearModeTransitionTimer()
+      this.currentMode = null
+      this.lastStableModel = null
       return
     }
 
@@ -351,17 +408,35 @@ export class DragDropSystem implements IDragDropSystem {
       zone: calcResult.zone,
     }
 
-    this.state.currentTarget = target
-    this.state.currentResult = dropResult
+    // Handle mode transition with debouncing
+    const newMode = this.getDropMode(target)
+    const useStableModel = this.handleModeTransition(newMode, dropResult)
 
-    // Get visual hint and show indicator (Webflow-style: no zone overlay)
-    const visualHint = strategy.getVisualHint(calcResult, childRects, domRectToRect(containerRect))
+    // Use stable model during mode transition to prevent flicker
+    const effectiveResult = useStableModel && this.lastStableModel
+      ? this.lastStableModel.result
+      : dropResult
+
+    this.state.currentTarget = effectiveResult.target
+    this.state.currentResult = effectiveResult
+
+    // Initialize mode on first calculation
+    if (this.currentMode === null) {
+      this.currentMode = newMode
+      this.lastStableModel = { result: dropResult, mode: newMode }
+    }
+
+    // Get visual hint and show indicator
+    const visualHint = strategy.getVisualHint(effectiveResult, childRects, domRectToRect(containerRect))
 
     // If no visual hint (no-op position), hide indicator but keep result for drop
     if (visualHint) {
       this.visual.showIndicator(visualHint)
-      // Show parent outline for before/after placements
-      if (calcResult.placement === 'before' || calcResult.placement === 'after') {
+      // Show parent outline for before/after placements and absolute mode
+      if (effectiveResult.placement === 'before' || effectiveResult.placement === 'after') {
+        this.visual.showParentOutline(domRectToRect(containerRect))
+      } else if (effectiveResult.placement === 'absolute') {
+        // For absolute mode, show container outline (handled by ghost indicator)
         this.visual.showParentOutline(domRectToRect(containerRect))
       } else {
         this.visual.hideParentOutline()
@@ -645,6 +720,11 @@ export class DragDropSystem implements IDragDropSystem {
       isAltKeyPressed: this.state.isAltKeyPressed,
     }
     this.dropExecuted = false
+
+    // Reset mode transition state
+    this.clearModeTransitionTimer()
+    this.currentMode = null
+    this.lastStableModel = null
   }
 
   /**
@@ -653,6 +733,7 @@ export class DragDropSystem implements IDragDropSystem {
   dispose(): void {
     this.monitorCleanup?.()
     this.dropTargetCleanup?.()
+    this.clearModeTransitionTimer()
 
     for (const cleanup of this.cleanupFns) {
       cleanup()

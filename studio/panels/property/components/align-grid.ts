@@ -6,6 +6,7 @@
  */
 
 import type { EventHandlerMap, AlignPosition } from '../types'
+import { escapeHtml } from '../utils'
 
 /**
  * Alignment state for the grid
@@ -41,20 +42,6 @@ export const ALIGN_TO_PROPERTY: Record<AlignPosition, string[]> = {
   'bottom-left': ['bottom', 'left'],
   'bottom-center': ['bottom', 'hor-center'],
   'bottom-right': ['bottom', 'right']
-}
-
-/**
- * Escape HTML characters
- */
-function escapeHtml(str: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }
-  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
@@ -96,14 +83,14 @@ export function renderAlignGrid(state: AlignmentState): string {
       const title = cell.replace('-', ' ')
 
       return `<button
-        class="align-cell ${active ? 'active' : ''}"
+        class="pp-align-cell ${active ? 'active' : ''}"
         data-align="${cell}"
         title="${escapeHtml(title)}"
       ></button>`
     }).join('')
   }).join('')
 
-  return `<div class="align-grid">${cells}</div>`
+  return `<div class="pp-align-grid">${cells}</div>`
 }
 
 /**
@@ -137,7 +124,7 @@ export function createAlignmentHandler(
   onAlign: (position: AlignPosition) => void
 ): EventHandlerMap {
   return {
-    '.align-cell': {
+    '.pp-align-cell': {
       click: (e: Event, target: HTMLElement) => {
         const position = target.getAttribute('data-align') as AlignPosition
         if (position) {

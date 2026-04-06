@@ -63,4 +63,17 @@ export {
 } from './utils'
 
 // Sections
-export { LayoutSection, createLayoutSection } from './sections'
+export {
+  LayoutSection, createLayoutSection,
+  SizingSection, createSizingSection,
+  SpacingSection, createSpacingSection, parseSpacingValue, buildSpacingValue,
+  ColorSection, createColorSection,
+  BorderSection, createBorderSection,
+  TypographySection, createTypographySection,
+  IconSection, createIconSection,
+  VisualSection, createVisualSection,
+  BehaviorSection, createBehaviorSection,
+  InteractionsSection, createInteractionsSection,
+  EventsSection, createEventsSection,
+  ActionsSection, createActionsSection
+} from './sections'

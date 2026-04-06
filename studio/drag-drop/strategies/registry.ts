@@ -48,20 +48,25 @@ export class StrategyRegistry implements IStrategyRegistry {
 /**
  * Create a Webflow-style registry
  *
- * No absolute positioning, no 9-zone system.
- * Just: insert between siblings OR insert inside container.
+ * Supports:
+ * - Flex layout: insert between siblings
+ * - Positioned (stacked) containers: absolute x/y positioning
+ * - Empty containers: insert as child
  */
 export function createWebflowRegistry(): StrategyRegistry {
   const { FlexWithChildrenStrategy } = require('./flex-with-children')
   const { SimpleInsideStrategy } = require('./simple-inside')
   const { NonContainerStrategy } = require('./non-container')
+  const { AbsolutePositionStrategy } = require('./absolute-position')
 
   const registry = new StrategyRegistry()
 
   // Order matters:
-  // 1. FlexWithChildren - containers with children (insert between siblings)
-  // 2. SimpleInside - empty containers (insert as child)
-  // 3. NonContainer - leaf elements (insert before/after as sibling)
+  // 1. AbsolutePosition - positioned containers (stacked) - absolute x/y
+  // 2. FlexWithChildren - flex containers with children (insert between siblings)
+  // 3. SimpleInside - empty flex containers (insert as child)
+  // 4. NonContainer - leaf elements (insert before/after as sibling)
+  registry.register(new AbsolutePositionStrategy())
   registry.register(new FlexWithChildrenStrategy())
   registry.register(new SimpleInsideStrategy())
   registry.register(new NonContainerStrategy())

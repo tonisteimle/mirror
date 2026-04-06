@@ -5,7 +5,7 @@
  */
 
 import { vi } from 'vitest'
-import type { PropertyPanel } from '../../../studio/panels/property-panel'
+import type { PropertyPanel } from '../../../studio/panels'
 import type { MockPropertyExtractor, MockCodeModifier, MockSelectionProvider } from '../mocks/property-panel-mocks'
 
 // ============================================

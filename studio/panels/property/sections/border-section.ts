@@ -9,16 +9,16 @@
 
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
-import { escapeHtml } from '../utils'
+import { escapeHtml, resolveColorToken, validateInput } from '../utils'
 
 /**
  * Expand icons
  */
 const EXPAND_ICONS = {
-  collapsed: `<svg class="icon icon-collapsed" viewBox="0 0 14 14">
+  collapsed: `<svg class="pp-icon icon-collapsed" viewBox="0 0 14 14">
     <path d="M4 6l3 3 3-3"/>
   </svg>`,
-  expanded: `<svg class="icon icon-expanded" viewBox="0 0 14 14">
+  expanded: `<svg class="pp-icon icon-expanded" viewBox="0 0 14 14">
     <path d="M4 8l3-3 3 3"/>
   </svg>`
 }
@@ -26,7 +26,7 @@ const EXPAND_ICONS = {
 /**
  * Circle icon for full radius
  */
-const CIRCLE_ICON = `<svg class="icon" viewBox="0 0 14 14">
+const CIRCLE_ICON = `<svg class="pp-icon" viewBox="0 0 14 14">
   <circle cx="7" cy="7" r="5"/>
 </svg>`
 
@@ -61,7 +61,7 @@ export class BorderSection extends BaseSection {
 
     // Border color display
     const borderColorIsToken = borderColor.startsWith('$')
-    const borderColorSwatch = borderColorIsToken ? this.resolveTokenValue(borderColor, data) : borderColor
+    const borderColorSwatch = borderColorIsToken ? resolveColorToken(borderColor, data) : borderColor
 
     // Get radius tokens
     const radiusTokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.rad')) || []
@@ -88,7 +88,10 @@ export class BorderSection extends BaseSection {
       'input[data-prop="radius"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
-          this.deps.onPropertyChange('radius', input.value, 'input')
+          const result = validateInput(input, 'radius')
+          if (result.valid) {
+            this.deps.onPropertyChange('radius', input.value, 'input')
+          }
         }
       },
       // Corner radius input change
@@ -97,10 +100,13 @@ export class BorderSection extends BaseSection {
           const input = target as HTMLInputElement
           const corner = input.getAttribute('data-radius-corner')
           if (corner) {
-            this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
-              corner,
-              value: input.value
-            }), 'input')
+            const result = validateInput(input, 'radius')
+            if (result.valid) {
+              this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
+                corner,
+                value: input.value
+              }), 'input')
+            }
           }
         }
       },
@@ -163,38 +169,38 @@ export class BorderSection extends BaseSection {
         ? (radiusValue === token.tokenRef)
         : (radiusValue === token.value)
       const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${escapeHtml(token.value)}" data-token-ref="${escapeHtml(token.tokenRef)}" title="${escapeHtml(title)}">${escapeHtml(token.label)}</button>`
+      return `<button class="pp-token-btn ${isActive ? 'active' : ''}" data-radius="${escapeHtml(token.value)}" data-token-ref="${escapeHtml(token.tokenRef)}" title="${escapeHtml(title)}">${escapeHtml(token.label)}</button>`
     }).join('')
 
     // Full radius button (999)
     const fullRadiusActive = radiusValue === '999'
-    const fullRadiusBtn = `<button class="token-btn ${fullRadiusActive ? 'active' : ''}" data-radius="999" title="Full: 999">${CIRCLE_ICON}</button>`
+    const fullRadiusBtn = `<button class="pp-token-btn ${fullRadiusActive ? 'active' : ''}" data-radius="999" title="Full: 999">${CIRCLE_ICON}</button>`
 
     return `
-      <div class="section">
-        <div class="section-label">
+      <div class="pp-section">
+        <div class="pp-section-label">
           <span>Radius</span>
-          <button class="section-expand-btn" data-expand="radius" title="Toggle corner details">
+          <button class="pp-section-expand-btn" data-expand="radius" title="Toggle corner details">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
-        <div class="section-content" data-expand-container="radius">
+        <div class="pp-section-content" data-expand-container="radius">
           <!-- Collapsed: Global Radius -->
-          <div class="prop-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius">
-            <span class="prop-label">All</span>
-            <div class="prop-content">
-              <div class="token-group">
+          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius">
+            <span class="pp-row-label">All</span>
+            <div class="pp-row-content">
+              <div class="pp-token-group">
                 ${tokenButtons}
                 ${fullRadiusBtn}
               </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
             </div>
           </div>
 
           <!-- Expanded: Corner Radii (4 corners) -->
-          <div class="prop-row expanded-row" data-expand-group="radius">
-            <div class="corner-radius-grid">
+          <div class="pp-row expanded-row" data-expand-group="radius">
+            <div class="pp-corner-radius-grid">
               ${this.renderCornerInput('tl', 'Top Left', radiusValue)}
               ${this.renderCornerInput('tr', 'Top Right', radiusValue)}
               ${this.renderCornerInput('bl', 'Bottom Left', radiusValue)}
@@ -208,9 +214,9 @@ export class BorderSection extends BaseSection {
 
   private renderCornerInput(corner: string, title: string, value: string): string {
     return `
-      <div class="corner-input">
-        <span class="corner-label" title="${title}">${corner.toUpperCase()}</span>
-        <input type="text" class="prop-input" autocomplete="off" value="${escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
+      <div class="pp-corner-input">
+        <span class="pp-corner-label" title="${title}">${corner.toUpperCase()}</span>
+        <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
       </div>
     `
   }
@@ -225,7 +231,7 @@ export class BorderSection extends BaseSection {
     const borderWidths = ['0', '1', '2']
     const widthToggles = borderWidths.map(w => {
       const isActive = borderWidth === w
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
+      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
     }).join('')
 
     // Color trigger
@@ -236,20 +242,20 @@ export class BorderSection extends BaseSection {
     `
 
     return `
-      <div class="section">
-        <div class="section-label">
+      <div class="pp-section">
+        <div class="pp-section-label">
           <span>Border</span>
-          <button class="section-expand-btn" data-expand="border" title="Toggle side details">
+          <button class="pp-section-expand-btn" data-expand="border" title="Toggle side details">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
-        <div class="section-content" data-expand-container="border">
+        <div class="pp-section-content" data-expand-container="border">
           <!-- Collapsed: Global Border -->
-          <div class="prop-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="border">
-            <span class="prop-label">All</span>
-            <div class="prop-content">
-              <div class="toggle-group">
+          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="border">
+            <span class="pp-row-label">All</span>
+            <div class="pp-row-content">
+              <div class="pp-toggle-group">
                 ${widthToggles}
               </div>
               ${colorTrigger}
@@ -276,14 +282,14 @@ export class BorderSection extends BaseSection {
     const borderWidths = ['0', '1', '2']
     const widthToggles = borderWidths.map(w => {
       const isActive = borderWidth === w
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" data-border-side="${side}" title="${w}px">${w}</button>`
+      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" data-border-side="${side}" title="${w}px">${w}</button>`
     }).join('')
 
     return `
-      <div class="prop-row expanded-row side-detail" data-expand-group="border">
-        <span class="prop-label">${label}</span>
-        <div class="prop-content">
-          <div class="toggle-group">
+      <div class="pp-row expanded-row side-detail" data-expand-group="border">
+        <span class="pp-row-label">${label}</span>
+        <div class="pp-row-content">
+          <div class="pp-toggle-group">
             ${widthToggles}
           </div>
           <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-${side}" data-border-width="${borderWidth}" data-current-value="${escapeHtml(borderColor)}">
@@ -297,12 +303,6 @@ export class BorderSection extends BaseSection {
   // ============================================
   // Private Helper Methods
   // ============================================
-
-  private resolveTokenValue(tokenRef: string, data: SectionData): string {
-    const colorTokens = data.colorTokens || []
-    const token = colorTokens.find(t => `$${t.name}` === tokenRef)
-    return token?.value || ''
-  }
 
   private handleExpandClick(groupName: string): void {
     if (this.container) {

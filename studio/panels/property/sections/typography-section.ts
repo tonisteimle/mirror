@@ -86,9 +86,9 @@ export class TypographySection extends BaseSection {
     const fontSizeTokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.fs')) || []
 
     return `
-      <div class="section">
-        <div class="section-label">Typography</div>
-        <div class="section-content">
+      <div class="pp-section">
+        <div class="pp-section-label">Typography</div>
+        <div class="pp-section-content">
           ${this.renderFontRow(fontValue)}
           ${this.renderSizeRow(fontSizeValue, fontSizeTokens)}
           ${this.renderWeightRow(weightValue)}
@@ -162,9 +162,9 @@ export class TypographySection extends BaseSection {
     ).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Font</span>
-        <div class="prop-content">
+      <div class="pp-row">
+        <span class="pp-row-label">Font</span>
+        <div class="pp-row-content">
           <select class="pp-font-input" data-prop="font">
             ${options}
           </select>
@@ -176,14 +176,14 @@ export class TypographySection extends BaseSection {
   private renderSizeRow(fontSizeValue: string, tokens: SpacingToken[]): string {
     const tokenButtons = tokens.map(token => {
       const isActive = fontSizeValue === token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${escapeHtml(token.value)}" title="${escapeHtml(token.value)}px">${escapeHtml(token.name)}</button>`
+      return `<button class="pp-token-btn ${isActive ? 'active' : ''}" data-font-size="${escapeHtml(token.value)}" title="${escapeHtml(token.value)}px">${escapeHtml(token.name)}</button>`
     }).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Size</span>
-        <div class="prop-content">
-          ${tokenButtons ? `<div class="token-group">${tokenButtons}</div>` : ''}
+      <div class="pp-row">
+        <span class="pp-row-label">Size</span>
+        <div class="pp-row-content">
+          ${tokenButtons ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
           <input type="text" class="pp-fontsize-input" value="${escapeHtml(fontSizeValue)}" data-prop="font-size" placeholder="14" autocomplete="off">
         </div>
       </div>
@@ -196,9 +196,9 @@ export class TypographySection extends BaseSection {
     ).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Weight</span>
-        <div class="prop-content">
+      <div class="pp-row">
+        <span class="pp-row-label">Weight</span>
+        <div class="pp-row-content">
           <select class="pp-weight-input" data-prop="weight">
             ${options}
           </select>
@@ -215,8 +215,8 @@ export class TypographySection extends BaseSection {
     const alignToggles = TEXT_ALIGNS.map(align => {
       const isActive = textAlignValue === align
       const iconPath = ALIGN_ICONS[align] || ''
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-text-align="${align}" title="${align.charAt(0).toUpperCase() + align.slice(1)}">
-        <svg class="icon" viewBox="0 0 14 14" fill="none">${iconPath}</svg>
+      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-text-align="${align}" title="${align.charAt(0).toUpperCase() + align.slice(1)}">
+        <svg class="pp-icon" viewBox="0 0 14 14" fill="none">${iconPath}</svg>
       </button>`
     }).join('')
 
@@ -225,19 +225,19 @@ export class TypographySection extends BaseSection {
       const prop = props.find(p => p.name === style)
       const isActive = prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
       const iconPath = STYLE_ICONS[style]
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-text-style="${style}" title="${style.charAt(0).toUpperCase() + style.slice(1)}">
-        <svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>
+      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-text-style="${style}" title="${style.charAt(0).toUpperCase() + style.slice(1)}">
+        <svg class="pp-icon" viewBox="0 0 14 14">${iconPath}</svg>
       </button>`
     }).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Align</span>
-        <div class="prop-content">
-          <div class="toggle-group">
+      <div class="pp-row">
+        <span class="pp-row-label">Align</span>
+        <div class="pp-row-content">
+          <div class="pp-toggle-group">
             ${alignToggles}
           </div>
-          <div class="toggle-group">
+          <div class="pp-toggle-group">
             ${styleToggles}
           </div>
         </div>

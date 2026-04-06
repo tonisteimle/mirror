@@ -10,22 +10,26 @@
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
 import { spacingTokensToOptions } from '../components'
-import { escapeHtml } from '../utils'
+import { escapeHtml, validateSpacingValue, applyValidationStyle } from '../utils'
 
 /**
  * Expand icons
  */
 const EXPAND_ICONS = {
-  collapsed: `<svg class="icon icon-collapsed" viewBox="0 0 14 14">
+  collapsed: `<svg class="pp-icon icon-collapsed" viewBox="0 0 14 14">
     <path d="M4 6l3 3 3-3"/>
   </svg>`,
-  expanded: `<svg class="icon icon-expanded" viewBox="0 0 14 14">
+  expanded: `<svg class="pp-icon icon-expanded" viewBox="0 0 14 14">
     <path d="M4 8l3-3 3 3"/>
   </svg>`
 }
 
 /**
- * Parse spacing value (1, 2, or 4 values) into T, R, B, L
+ * Parse spacing value (1, 2, 3, or 4 values) into T, R, B, L
+ * - 1 value: all sides
+ * - 2 values: vertical, horizontal
+ * - 3 values: top, horizontal, bottom
+ * - 4 values: top, right, bottom, left
  */
 function parseSpacingValue(value: string): { t: string; r: string; b: string; l: string } {
   const parts = value.split(/\s+/).filter(Boolean)
@@ -36,6 +40,11 @@ function parseSpacingValue(value: string): { t: string; r: string; b: string; l:
   } else if (parts.length === 2) {
     t = b = parts[0]
     r = l = parts[1]
+  } else if (parts.length === 3) {
+    // CSS 3-value shorthand: top, horizontal (left+right), bottom
+    t = parts[0]
+    r = l = parts[1]
+    b = parts[2]
   } else if (parts.length === 4) {
     t = parts[0]
     r = parts[1]
@@ -122,7 +131,11 @@ export class SpacingSection extends BaseSection {
           const input = target as HTMLInputElement
           const dir = input.getAttribute('data-pad-dir')
           if (dir) {
-            this.handlePadInputChange(input.value, dir)
+            const result = validateSpacingValue(input.value)
+            applyValidationStyle(input, result)
+            if (result.valid) {
+              this.handlePadInputChange(input.value, dir)
+            }
           }
         }
       },
@@ -175,15 +188,15 @@ export class SpacingSection extends BaseSection {
     const hasTokens = tokenOptions.length > 0
 
     return `
-      <div class="section">
-        <div class="section-label">
+      <div class="pp-section">
+        <div class="pp-section-label">
           <span>Padding</span>
-          <button class="section-expand-btn" data-expand="spacing" title="Toggle detail view">
+          <button class="pp-section-expand-btn" data-expand="spacing" title="Toggle detail view">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
-        <div class="section-content" data-expand-container="spacing">
+        <div class="pp-section-content" data-expand-container="spacing">
           ${this.renderSpacingRow('Horizontal', hPad, 'h', 'pad', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
           ${this.renderSpacingRow('Vertical', vPad, 'v', 'pad', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
           ${this.renderSpacingRow('Top', tPad, 't', 'pad', false, tokenOptions, hasTokens, 'expanded-row')}
@@ -205,15 +218,15 @@ export class SpacingSection extends BaseSection {
     const hasTokens = tokenOptions.length > 0
 
     return `
-      <div class="section">
-        <div class="section-label">
+      <div class="pp-section">
+        <div class="pp-section-label">
           <span>Margin</span>
-          <button class="section-expand-btn" data-expand="margin" title="Toggle detail view">
+          <button class="pp-section-expand-btn" data-expand="margin" title="Toggle detail view">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
-        <div class="section-content" data-expand-container="margin">
+        <div class="pp-section-content" data-expand-container="margin">
           ${this.renderSpacingRow('Horizontal', hMargin, 'h', 'margin', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
           ${this.renderSpacingRow('Vertical', vMargin, 'v', 'margin', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
           ${this.renderSpacingRow('Top', tMargin, 't', 'margin', false, tokenOptions, hasTokens, 'expanded-row')}
@@ -242,11 +255,11 @@ export class SpacingSection extends BaseSection {
     const tokenButtons = hasTokens ? this.renderTokenButtons(value, tokens, dataAttrPrefix, dir) : ''
 
     return `
-      <div class="prop-row ${rowClass}${isOverride ? ' override' : ''}" data-expand-group="${type === 'pad' ? 'spacing' : 'margin'}">
-        <span class="prop-label">${escapeHtml(label)}</span>
-        <div class="prop-content">
-          ${tokenButtons ? `<div class="token-group">${tokenButtons}</div>` : ''}
-          <input type="text" class="prop-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
+      <div class="pp-row ${rowClass}${isOverride ? ' override' : ''}" data-expand-group="${type === 'pad' ? 'spacing' : 'margin'}">
+        <span class="pp-row-label">${escapeHtml(label)}</span>
+        <div class="pp-row-content">
+          ${tokenButtons ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
+          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
         </div>
       </div>
     `
@@ -267,7 +280,7 @@ export class SpacingSection extends BaseSection {
       const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
 
       return `<button
-        class="token-btn ${isActive ? 'active' : ''}"
+        class="pp-token-btn ${isActive ? 'active' : ''}"
         data-${dataAttrPrefix}-token="${escapeHtml(token.value)}"
         ${token.tokenRef ? `data-token-ref="${escapeHtml(token.tokenRef)}"` : ''}
         data-${dataAttrPrefix}-dir="${dir}"

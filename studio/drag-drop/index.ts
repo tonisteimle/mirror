@@ -1,8 +1,9 @@
 /**
- * Drag & Drop Module - Webflow Style
+ * Drag & Drop Module
  *
- * Simple drag-drop system: insert between siblings or inside containers.
- * No absolute positioning, no 9-zone system.
+ * Drag-drop system supporting:
+ * - Flex layout: insert between siblings or inside containers
+ * - Positioned (stacked) containers: absolute x/y positioning
  */
 
 // Types
@@ -30,6 +31,7 @@ export {
   FlexWithChildrenStrategy,
   NonContainerStrategy,
   SimpleInsideStrategy,
+  AbsolutePositionStrategy,
   StrategyRegistry,
   createWebflowRegistry,
 } from './strategies'

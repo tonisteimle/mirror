@@ -6,6 +6,7 @@
  */
 
 import type { EventHandlerMap, SpacingToken } from '../types'
+import { escapeHtml } from '../utils'
 
 /**
  * Token option for the token group
@@ -41,20 +42,6 @@ export interface TokenInputConfig {
   showInput?: boolean
   /** Input width class */
   inputClass?: string
-}
-
-/**
- * Escape HTML characters in a string
- */
-function escapeHtml(str: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }
-  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
@@ -94,7 +81,7 @@ export function renderTokenInput(config: TokenInputConfig): string {
     const tokenRefAttr = token.tokenRef ? `data-token-ref="${escapeHtml(token.tokenRef)}"` : ''
 
     return `<button
-      class="token-btn ${active ? 'active' : ''}"
+      class="pp-token-btn ${active ? 'active' : ''}"
       data-${dataAttrPrefix}-token="${escapeHtml(token.value)}"
       ${tokenRefAttr}
       title="${escapeHtml(title)}"
@@ -110,7 +97,7 @@ export function renderTokenInput(config: TokenInputConfig): string {
   const inputHtml = showInput ? `
     <input
       type="text"
-      class="prop-input ${inputClass}"
+      class="pp-input ${inputClass}"
       autocomplete="off"
       value="${escapeHtml(value)}"
       data-prop="${property}"
@@ -121,7 +108,7 @@ export function renderTokenInput(config: TokenInputConfig): string {
 
   // Combine token group and input
   return `
-    ${tokens.length > 0 ? `<div class="token-group">${tokenButtons}</div>` : ''}
+    ${tokens.length > 0 ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
     ${inputHtml}
   `
 }
@@ -169,16 +156,32 @@ export function createTokenClickHandler(
 }
 
 /**
+ * Debounced input handler with cleanup support
+ */
+export interface DebouncedInputHandler {
+  handlers: EventHandlerMap
+  cleanup: () => void
+}
+
+/**
  * Create standard input change handler with debounce
+ * Returns handlers and a cleanup function to prevent memory leaks
  */
 export function createInputChangeHandler(
   selector: string,
   onChange: (property: string, value: string) => void,
   debounceMs: number = 300
-): EventHandlerMap {
+): DebouncedInputHandler {
   let debounceTimer: number | undefined
 
-  return {
+  const cleanup = () => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+      debounceTimer = undefined
+    }
+  }
+
+  const handlers: EventHandlerMap = {
     [selector]: {
       input: (e: Event, target: HTMLElement) => {
         const input = target as HTMLInputElement
@@ -188,9 +191,7 @@ export function createInputChangeHandler(
         if (!property) return
 
         // Clear existing timer
-        if (debounceTimer) {
-          clearTimeout(debounceTimer)
-        }
+        cleanup()
 
         // Set new timer
         debounceTimer = window.setTimeout(() => {
@@ -199,4 +200,6 @@ export function createInputChangeHandler(
       }
     }
   }
+
+  return { handlers, cleanup }
 }

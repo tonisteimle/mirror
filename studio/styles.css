@@ -1293,20 +1293,20 @@
     }
 
     /* Show expanded chevron (down) by default, hide collapsed chevron (right) */
-    .component-palette-section-title .section-toggle .icon-collapsed {
+    .component-palette-section-title .section-toggle .pp-icon-collapsed {
       display: none;
     }
 
-    .component-palette-section-title .section-toggle .icon-expanded {
+    .component-palette-section-title .section-toggle .pp-icon-expanded {
       display: block;
     }
 
     /* When collapsed: show right chevron, hide down chevron */
-    .component-palette-section.collapsed .section-toggle .icon-collapsed {
+    .component-palette-section.collapsed .section-toggle .pp-icon-collapsed {
       display: block;
     }
 
-    .component-palette-section.collapsed .section-toggle .icon-expanded {
+    .component-palette-section.collapsed .section-toggle .pp-icon-expanded {
       display: none;
     }
 
@@ -3534,17 +3534,17 @@
     /* ============================================
        SECTIONS (from prototype)
        ============================================ */
-    .pp-content .section,
+    .pp-content .pp-section,
     .pp-content .pp-section {
       margin-bottom: 16px;
     }
 
-    .pp-content .section:last-child,
+    .pp-content .pp-section:last-child,
     .pp-content .pp-section:last-child {
       margin-bottom: 0;
     }
 
-    .pp-content .section-label,
+    .pp-content .pp-section-label,
     .pp-content .pp-label {
       display: flex;
       align-items: center;
@@ -3559,7 +3559,7 @@
     }
 
     /* Section expand/collapse button */
-    .pp-content .section-expand-btn {
+    .pp-content .pp-section-expand-btn {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3574,12 +3574,12 @@
       transition: opacity 0.15s, background 0.15s;
     }
 
-    .pp-content .section-expand-btn:hover {
+    .pp-content .pp-section-expand-btn:hover {
       color: var(--text-secondary);
       background: var(--bg-hover);
     }
 
-    .pp-content .section-expand-btn .icon {
+    .pp-content .pp-section-expand-btn .icon {
       width: var(--size-icon-xs);
       height: var(--size-icon-xs);
       fill: none;
@@ -3590,24 +3590,24 @@
     }
 
     /* Collapsed state: show collapsed icon, hide expanded icon */
-    .pp-content .section-expand-btn .icon-collapsed {
+    .pp-content .pp-section-expand-btn .pp-icon-collapsed {
       display: block;
     }
 
-    .pp-content .section-expand-btn .icon-expanded {
+    .pp-content .pp-section-expand-btn .pp-icon-expanded {
       display: none;
     }
 
     /* Expanded state: hide collapsed icon, show expanded icon */
-    .pp-content .section.expanded .section-expand-btn .icon-collapsed {
+    .pp-content .pp-section.expanded .pp-section-expand-btn .pp-icon-collapsed {
       display: none;
     }
 
-    .pp-content .section.expanded .section-expand-btn .icon-expanded {
+    .pp-content .pp-section.expanded .pp-section-expand-btn .pp-icon-expanded {
       display: block;
     }
 
-    .pp-content .section-content {
+    .pp-content .pp-section-content {
       display: flex;
       flex-direction: column;
       gap: var(--space-3);
@@ -3616,7 +3616,7 @@
     /* ============================================
        PROPERTY ROW (from prototype)
        ============================================ */
-    .pp-content .prop-row,
+    .pp-content .pp-row,
     .pp-content .pp-prop-row {
       display: flex;
       align-items: center;
@@ -3624,7 +3624,7 @@
       gap: var(--space-4);
     }
 
-    .pp-content .prop-label,
+    .pp-content .pp-row-label,
     .pp-content .pp-prop-label {
       width: var(--label-width);
       flex-shrink: 0;
@@ -3634,7 +3634,7 @@
 
     /* Override styling removed - labels stay consistent */
 
-    .pp-content .prop-content,
+    .pp-content .pp-row-content,
     .pp-content .pp-prop-content {
       flex: 1;
       display: flex;
@@ -3645,7 +3645,7 @@
     /* ============================================
        TOGGLE GROUP (from prototype)
        ============================================ */
-    .pp-content .toggle-group,
+    .pp-content .pp-toggle-group,
     .pp-content .pp-toggle-group {
       display: flex;
       gap: var(--pp-gap);
@@ -3654,7 +3654,7 @@
       padding: var(--pp-group-pad);
     }
 
-    .pp-content .toggle-btn,
+    .pp-content .pp-toggle-btn,
     .pp-content .pp-toggle-btn {
       width: var(--pp-unit);
       height: var(--size-icon-2xl);
@@ -3671,13 +3671,13 @@
       justify-content: center;
     }
 
-    .pp-content .toggle-btn:hover,
+    .pp-content .pp-toggle-btn:hover,
     .pp-content .pp-toggle-btn:hover {
       color: var(--text-secondary);
       background: var(--bg-button-hover);
     }
 
-    .pp-content .toggle-btn.active,
+    .pp-content .pp-toggle-btn.active,
     .pp-content .pp-toggle-btn.active {
       background: var(--bg-input);
       color: var(--color-light);
@@ -3692,13 +3692,13 @@
     }
 
     /* Single toggle button (not in a group) */
-    .pp-content .toggle-btn.single {
+    .pp-content .pp-toggle-btn.single {
       background: var(--bg-input);
       border-radius: var(--radius-md);
       padding: 0 var(--pp-group-pad);
     }
 
-    .pp-content .toggle-btn.single.active {
+    .pp-content .pp-toggle-btn.single.active {
       box-shadow: var(--focus-ring);
       color: var(--color-primary);
     }
@@ -3706,7 +3706,7 @@
     /* ============================================
        TOKEN GROUP (from prototype)
        ============================================ */
-    .pp-content .token-group,
+    .pp-content .pp-token-group,
     .pp-content .pp-token-group {
       display: flex;
       gap: var(--pp-gap);
@@ -3715,7 +3715,7 @@
       padding: var(--pp-group-pad);
     }
 
-    .pp-content .token-btn,
+    .pp-content .pp-token-btn,
     .pp-content .pp-token-btn {
       width: var(--pp-unit);
       height: var(--size-icon-2xl);
@@ -3733,13 +3733,13 @@
       text-transform: var(--text-uppercase);
     }
 
-    .pp-content .token-btn:hover,
+    .pp-content .pp-token-btn:hover,
     .pp-content .pp-token-btn:hover {
       color: var(--text-secondary);
       background: var(--bg-button-hover);
     }
 
-    .pp-content .token-btn.active,
+    .pp-content .pp-token-btn.active,
     .pp-content .pp-token-btn.active {
       background: var(--bg-input);
       color: var(--color-light);
@@ -3757,7 +3757,7 @@
       padding: var(--space-2) 0;
     }
 
-    .pp-content .align-grid {
+    .pp-content .pp-align-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: var(--space-1);
@@ -3769,7 +3769,7 @@
       box-sizing: border-box;
     }
 
-    .pp-content .align-cell {
+    .pp-content .pp-align-cell {
       width: 100%;
       height: 100%;
       border: none;
@@ -3780,7 +3780,7 @@
       transition: all 0.12s;
     }
 
-    .pp-content .align-cell::after {
+    .pp-content .pp-align-cell::after {
       content: '';
       position: absolute;
       top: 50%;
@@ -3793,23 +3793,23 @@
       transition: all 0.12s;
     }
 
-    .pp-content .align-cell:hover::after {
+    .pp-content .pp-align-cell:hover::after {
       background: var(--bg-cell-hover);
     }
 
-    .pp-content .align-cell.active {
+    .pp-content .pp-align-cell.active {
       background: var(--bg-input);
       box-shadow: var(--focus-ring-sm);
     }
 
-    .pp-content .align-cell.active::after {
+    .pp-content .pp-align-cell.active::after {
       background: var(--color-primary);
     }
 
     /* ============================================
        INPUT (from prototype)
        ============================================ */
-    .pp-content .prop-input,
+    .pp-content .pp-input,
     .pp-content .pp-v2-input,
     .pp-content input.prop-input,
     .pp-content input.pp-v2-input,
@@ -3831,20 +3831,20 @@
       line-height: var(--leading-normal);
     }
 
-    .pp-content .prop-input:focus,
+    .pp-content .pp-input:focus,
     .pp-content .pp-v2-input:focus {
       outline: none;
       border-color: var(--color-primary);
       color: var(--text-primary);
     }
 
-    .pp-content .prop-input::placeholder,
+    .pp-content .pp-input::placeholder,
     .pp-content .pp-v2-input::placeholder {
       color: var(--text-disabled);
     }
 
     /* Wide input for text fields (behavior section) */
-    .pp-content .prop-input.wide,
+    .pp-content .pp-input.wide,
     .pp-content input[data-behavior-input] {
       width: auto;
       flex: 1;
@@ -3852,14 +3852,14 @@
     }
 
     /* Input with value: show in light gray */
-    .pp-content .prop-input:not(:placeholder-shown),
+    .pp-content .pp-input:not(:placeholder-shown),
     .pp-content .pp-v2-input:not(:placeholder-shown),
     .pp-content input[type="text"]:not(:placeholder-shown) {
       color: var(--text-primary);
     }
 
     /* Invalid input state */
-    .pp-content .prop-input.invalid,
+    .pp-content .pp-input.invalid,
     .pp-content .pp-v2-input.invalid,
     .pp-content input[type="text"].invalid {
       border: 1px solid var(--color-error);
@@ -3867,7 +3867,7 @@
       color: var(--color-error-light);
     }
 
-    .pp-content .prop-input.invalid:focus,
+    .pp-content .pp-input.invalid:focus,
     .pp-content .pp-v2-input.invalid:focus,
     .pp-content input[type="text"].invalid:focus {
       border-color: var(--color-error);
@@ -4099,7 +4099,7 @@
     /* ============================================
        EXPAND BUTTON (from prototype)
        ============================================ */
-    .pp-content .expand-btn {
+    .pp-content .pp-expand-btn {
       width: var(--pp-unit);
       height: var(--size-icon-2xl);
       background: transparent;
@@ -4114,22 +4114,22 @@
       justify-content: center;
     }
 
-    .pp-content .expand-btn:hover {
+    .pp-content .pp-expand-btn:hover {
       opacity: 1;
       background: transparent;
     }
 
-    .pp-content .expand-btn.expanded {
+    .pp-content .pp-expand-btn.expanded {
       transform: rotate(180deg);
     }
 
-    .pp-content .expand-btn svg {
+    .pp-content .pp-expand-btn svg {
       width: var(--size-icon-sm);
       height: var(--size-icon-sm);
     }
 
     /* Collapsed rows (shown by default, hidden when expanded) */
-    .pp-content .collapsed-row {
+    .pp-content .pp-collapsed-row {
       display: flex;
     }
 
@@ -4138,7 +4138,7 @@
     }
 
     /* Expanded rows (hidden by default, shown when expanded) */
-    .pp-content .expanded-row {
+    .pp-content .pp-expanded-row {
       display: none;
     }
 
@@ -4173,7 +4173,7 @@
     }
 
     /* Corner radius grid (2x2 layout for TL, TR, BL, BR) */
-    .pp-content .corner-radius-grid {
+    .pp-content .pp-corner-radius-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: var(--space-3);
@@ -4181,13 +4181,13 @@
       padding: var(--space-2) 0;
     }
 
-    .pp-content .corner-input {
+    .pp-content .pp-corner-input {
       display: flex;
       align-items: center;
       gap: var(--space-3);
     }
 
-    .pp-content .corner-label {
+    .pp-content .pp-corner-label {
       font-size: 10px;
       color: var(--text-muted);
       width: var(--size-icon-lg);
@@ -4195,7 +4195,7 @@
       flex-shrink: 0;
     }
 
-    .pp-content .corner-input .prop-input {
+    .pp-content .pp-corner-input .prop-input {
       flex: 1;
       min-width: 0;
     }

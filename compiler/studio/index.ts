@@ -59,7 +59,7 @@ export {
   createPropertyPanel,
   type OnCodeChangeCallback,
   type PropertyPanelOptions,
-} from '../../studio/panels/property-panel'
+} from '../../studio/panels'
 
 export { PROPERTY_ICON_PATHS } from './icons'
 

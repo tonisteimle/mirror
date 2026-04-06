@@ -9,7 +9,7 @@
 
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, ExtractedProperty } from '../types'
-import { escapeHtml } from '../utils'
+import { escapeHtml, resolveColorToken } from '../utils'
 
 /**
  * ColorSection class
@@ -42,13 +42,13 @@ export class ColorSection extends BaseSection {
     const colIsToken = colValue.startsWith('$')
 
     // Get resolved color for swatch display (resolve tokens to actual color)
-    const bgSwatchColor = bgIsToken ? this.resolveTokenValue(bgValue, data) : bgValue
-    const colSwatchColor = colIsToken ? this.resolveTokenValue(colValue, data) : colValue
+    const bgSwatchColor = bgIsToken ? resolveColorToken(bgValue, data) : bgValue
+    const colSwatchColor = colIsToken ? resolveColorToken(colValue, data) : colValue
 
     return `
-      <div class="section">
-        <div class="section-label">Color</div>
-        <div class="section-content">
+      <div class="pp-section">
+        <div class="pp-section-label">Color</div>
+        <div class="pp-section-content">
           ${this.renderColorRow('Background', 'bg', bgValue, bgDisplay, bgSwatchColor, bgIsToken, bgIsOverride)}
           ${this.renderColorRow('Text', 'color', colValue, colDisplay, colSwatchColor, colIsToken, colIsOverride)}
         </div>
@@ -90,9 +90,9 @@ export class ColorSection extends BaseSection {
     isOverride: boolean
   ): string {
     return `
-      <div class="prop-row${isOverride ? ' override' : ''}">
-        <span class="prop-label">${escapeHtml(label)}</span>
-        <div class="prop-content">
+      <div class="pp-row${isOverride ? ' override' : ''}">
+        <span class="pp-row-label">${escapeHtml(label)}</span>
+        <div class="pp-row-content">
           <div class="pp-color-trigger" data-color-prop="${property}" data-current-value="${escapeHtml(value)}">
             <div class="pp-color-swatch${value ? '' : ' empty'}" style="${swatchColor ? `background: ${escapeHtml(swatchColor)}` : ''}"></div>
             <span class="pp-color-value${isToken ? ' token' : ''}">${escapeHtml(displayValue)}</span>
@@ -102,24 +102,6 @@ export class ColorSection extends BaseSection {
     `
   }
 
-  // ============================================
-  // Private Helper Methods
-  // ============================================
-
-  /**
-   * Resolve a token value to its actual color
-   * For now, just return the token name - the main PropertyPanel handles actual resolution
-   */
-  private resolveTokenValue(tokenRef: string, data: SectionData): string {
-    // Look up in color tokens if available
-    const colorTokens = data.colorTokens || []
-    const token = colorTokens.find(t => `$${t.name}` === tokenRef)
-    if (token) {
-      return token.value
-    }
-    // Return empty string if not found - the main panel will resolve it
-    return ''
-  }
 }
 
 /**

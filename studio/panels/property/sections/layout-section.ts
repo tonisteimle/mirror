@@ -17,7 +17,7 @@ import {
   parseAlignmentState,
   spacingTokensToOptions
 } from '../components'
-import { escapeHtml, classNames } from '../utils'
+import { escapeHtml, classNames, validateInput } from '../utils'
 import { LAYOUT_ICONS, getLayoutIcon } from '../../../icons'
 
 /**
@@ -61,7 +61,7 @@ export class LayoutSection extends BaseSection {
 
     // Get wrap state
     const wrapProp = props.find(p => p.name === 'wrap')
-    const wrapActive = wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false))
+    const wrapActive = !!(wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false)))
 
     // Get gap tokens
     const gapTokens = data.spacingTokens || []
@@ -76,9 +76,9 @@ export class LayoutSection extends BaseSection {
     const alignRow = alignmentCat ? this.renderAlignmentRow(alignmentCat) : ''
 
     return `
-      <div class="section">
-        <div class="section-label">Layout</div>
-        <div class="section-content">
+      <div class="pp-section">
+        <div class="pp-section-label">Layout</div>
+        <div class="pp-section-content">
           ${modeRow}
           ${gapRow}
           ${wrapRow}
@@ -91,7 +91,7 @@ export class LayoutSection extends BaseSection {
   getHandlers(): EventHandlerMap {
     return {
       // Layout mode toggle
-      '.toggle-btn[data-layout]': {
+      '.pp-toggle-btn[data-layout]': {
         click: (e: Event, target: HTMLElement) => {
           const layout = target.getAttribute('data-layout')
           if (layout) {
@@ -113,7 +113,10 @@ export class LayoutSection extends BaseSection {
       'input[data-prop="gap"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
-          this.deps.onPropertyChange('gap', input.value, 'input')
+          const result = validateInput(input, 'gap')
+          if (result.valid) {
+            this.deps.onPropertyChange('gap', input.value, 'input')
+          }
         }
       },
       // Wrap toggle
@@ -129,7 +132,7 @@ export class LayoutSection extends BaseSection {
         }
       },
       // Alignment grid
-      '.align-cell': {
+      '.pp-align-cell': {
         click: (e: Event, target: HTMLElement) => {
           const align = target.getAttribute('data-align')
           if (align) {
@@ -151,17 +154,17 @@ export class LayoutSection extends BaseSection {
       const title = mode.charAt(0).toUpperCase() + mode.slice(1)
 
       return `<button
-        class="toggle-btn ${isActive ? 'active' : ''}"
+        class="pp-toggle-btn ${isActive ? 'active' : ''}"
         data-layout="${mode}"
         title="${title}"
       >${icon}</button>`
     }).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Mode</span>
-        <div class="prop-content">
-          <div class="toggle-group">${buttons}</div>
+      <div class="pp-row">
+        <span class="pp-row-label">Mode</span>
+        <div class="pp-row-content">
+          <div class="pp-toggle-group">${buttons}</div>
         </div>
       </div>
     `
@@ -176,7 +179,7 @@ export class LayoutSection extends BaseSection {
       const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
 
       return `<button
-        class="token-btn ${active ? 'active' : ''}"
+        class="pp-token-btn ${active ? 'active' : ''}"
         data-gap-token="${escapeHtml(token.value)}"
         ${token.tokenRef ? `data-token-ref="${escapeHtml(token.tokenRef)}"` : ''}
         title="${escapeHtml(title)}"
@@ -184,13 +187,13 @@ export class LayoutSection extends BaseSection {
     }).join('')
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Gap</span>
-        <div class="prop-content">
-          ${tokens.length > 0 ? `<div class="token-group">${tokenButtons}</div>` : ''}
+      <div class="pp-row">
+        <span class="pp-row-label">Gap</span>
+        <div class="pp-row-content">
+          ${tokens.length > 0 ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
           <input
             type="text"
-            class="prop-input"
+            class="pp-input"
             autocomplete="off"
             value="${escapeHtml(value)}"
             data-prop="gap"
@@ -202,7 +205,7 @@ export class LayoutSection extends BaseSection {
   }
 
   private renderWrapRow(wrapActive: boolean): string {
-    const wrapIcon = `<svg class="icon" viewBox="0 0 14 14">
+    const wrapIcon = `<svg class="pp-icon" viewBox="0 0 14 14">
       <rect x="1" y="3" width="2" height="2" fill="currentColor"/>
       <rect x="6" y="3" width="2" height="2" fill="currentColor"/>
       <rect x="11" y="3" width="2" height="2" fill="currentColor"/>
@@ -211,11 +214,11 @@ export class LayoutSection extends BaseSection {
     </svg>`
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Wrap</span>
-        <div class="prop-content">
+      <div class="pp-row">
+        <span class="pp-row-label">Wrap</span>
+        <div class="pp-row-content">
           <button
-            class="toggle-btn single ${wrapActive ? 'active' : ''}"
+            class="pp-toggle-btn single ${wrapActive ? 'active' : ''}"
             data-wrap="${wrapActive ? 'off' : 'on'}"
             title="${wrapActive ? 'Disable wrap' : 'Enable wrap'}"
           >${wrapIcon}</button>
@@ -228,9 +231,9 @@ export class LayoutSection extends BaseSection {
     const alignProps = alignmentCat.properties
 
     // Helper to check if a property is active
-    const isAlignActive = (name: string) => {
+    const isAlignActive = (name: string): boolean => {
       const prop = alignProps.find(p => p.name === name)
-      return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
+      return !!(prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)))
     }
 
     // Parse alignment state
@@ -240,9 +243,9 @@ export class LayoutSection extends BaseSection {
     const gridHtml = renderAlignGrid(state)
 
     return `
-      <div class="prop-row">
-        <span class="prop-label">Align</span>
-        <div class="prop-content">
+      <div class="pp-row">
+        <span class="pp-row-label">Align</span>
+        <div class="pp-row-content">
           ${gridHtml}
         </div>
       </div>

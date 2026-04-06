@@ -11,6 +11,7 @@ export type { DropStrategy, ChildRect, StrategyRegistry as IStrategyRegistry } f
 export { FlexWithChildrenStrategy } from './flex-with-children'
 export { NonContainerStrategy } from './non-container'
 export { SimpleInsideStrategy } from './simple-inside'
+export { AbsolutePositionStrategy } from './absolute-position'
 
 // Registry
 export { StrategyRegistry, createWebflowRegistry } from './registry'

@@ -11,7 +11,7 @@ import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResp
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
-import { PropertyPanel, createPropertyPanel } from './panels/property-panel'
+import { PropertyPanel, createPropertyPanel } from './panels'
 import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
 import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'

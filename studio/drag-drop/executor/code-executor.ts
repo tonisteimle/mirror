@@ -1,11 +1,10 @@
 /**
- * Code Executor - Webflow Style
+ * Code Executor
  *
  * Bridges the drag-drop system to the CodeModifier.
  * Translates DropResults into actual code modifications.
  *
- * Supports: before, after, inside placements.
- * No absolute positioning.
+ * Supports: before, after, inside, absolute placements.
  */
 
 import type {
@@ -263,7 +262,13 @@ export class CodeExecutor implements ICodeExecutor {
     }
 
     // Fallback to property-based insertion
-    const properties = source.properties || ''
+    let properties = source.properties || ''
+
+    // For absolute positioning, add x/y properties
+    if (result.placement === 'absolute' && result.position) {
+      const posProps = `x ${result.position.x}, y ${result.position.y}`
+      properties = properties ? `${properties}, ${posProps}` : posProps
+    }
 
     switch (result.placement) {
       case 'before':
@@ -283,6 +288,14 @@ export class CodeExecutor implements ICodeExecutor {
           properties,
           textContent: source.textContent,
           position: result.insertionIndex ?? 'last',
+        })
+
+      case 'absolute':
+        // For absolute positioning, insert inside the positioned container
+        return modifier.addChild(result.target.nodeId, componentName, {
+          properties,
+          textContent: source.textContent,
+          position: 'last',
         })
 
       default:
@@ -317,6 +330,18 @@ export class CodeExecutor implements ICodeExecutor {
           result.target.nodeId,
           'inside',
           result.insertionIndex
+        )
+
+      case 'absolute':
+        // For absolute positioning, move into container
+        // Note: Setting x/y properties after move is not supported yet because
+        // the SourceMap becomes stale after moveNode(). The element will be
+        // moved into the container, but x/y must be set via property panel.
+        // TODO: Recompile after move to get updated SourceMap, then set x/y
+        return modifier.moveNode(
+          source.nodeId,
+          result.target.nodeId,
+          'inside'
         )
 
       default:

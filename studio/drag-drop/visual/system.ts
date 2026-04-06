@@ -1,8 +1,10 @@
 /**
- * Visual System - Webflow Style
+ * Visual System
  *
- * Simple visual feedback: just the insertion line.
- * No ghost, no snap guides, no zone overlay.
+ * Visual feedback for drag & drop:
+ * - Insertion line (blue) for flex layouts
+ * - Ghost indicator (purple) for absolute positioning
+ * - Parent outline for container highlighting
  */
 
 import type { VisualHint } from '../types'
@@ -13,12 +15,15 @@ export class VisualSystem implements IVisualSystem {
   private container: HTMLElement
   private indicatorElement: HTMLElement | null = null
   private parentOutlineElement: HTMLElement | null = null
+  private ghostElement: HTMLElement | null = null
 
   // Test API state tracking
   private _indicatorVisible = false
   private _indicatorRect: { x: number; y: number; width: number; height: number } | null = null
   private _parentOutlineVisible = false
   private _parentOutlineRect: { x: number; y: number; width: number; height: number } | null = null
+  private _ghostVisible = false
+  private _ghostRect: { x: number; y: number; width: number; height: number } | null = null
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -29,7 +34,15 @@ export class VisualSystem implements IVisualSystem {
   // ==========================================================================
 
   showIndicator(hint: VisualHint): void {
+    // Ghost type is handled separately
+    if (hint.type === 'ghost') {
+      this.hideIndicator()
+      this.showGhostIndicator(hint)
+      return
+    }
+
     this.hideIndicator()
+    this.hideGhostIndicator()
 
     const indicator = document.createElement('div')
     indicator.id = VISUAL_IDS.indicator
@@ -58,6 +71,61 @@ export class VisualSystem implements IVisualSystem {
     // Track state for Test API
     this._indicatorVisible = true
     this._indicatorRect = { ...hint.rect }
+  }
+
+  /**
+   * Show ghost indicator for absolute positioning
+   */
+  private showGhostIndicator(hint: VisualHint): void {
+    this.hideGhostIndicator()
+
+    const ghost = document.createElement('div')
+    ghost.id = VISUAL_IDS.ghost
+    ghost.className = 'drop-ghost'
+
+    // Use ghostSize if available, otherwise use rect dimensions
+    const width = hint.ghostSize?.width ?? hint.rect.width
+    const height = hint.ghostSize?.height ?? hint.rect.height
+
+    Object.assign(ghost.style, {
+      position: 'fixed',
+      left: `${hint.rect.x}px`,
+      top: `${hint.rect.y}px`,
+      width: `${width}px`,
+      height: `${height}px`,
+      backgroundColor: 'rgba(139, 92, 246, 0.3)', // Purple for absolute mode
+      border: '2px dashed #8b5cf6',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
+    })
+
+    document.body.appendChild(ghost)
+    this.ghostElement = ghost
+
+    // Track state for Test API
+    this._ghostVisible = true
+    this._ghostRect = {
+      x: hint.rect.x,
+      y: hint.rect.y,
+      width,
+      height,
+    }
+  }
+
+  /**
+   * Hide ghost indicator
+   */
+  private hideGhostIndicator(): void {
+    if (this.ghostElement) {
+      this.ghostElement.remove()
+      this.ghostElement = null
+    }
+
+    // Track state for Test API
+    this._ghostVisible = false
+    this._ghostRect = null
   }
 
   hideIndicator(): void {
@@ -133,6 +201,7 @@ export class VisualSystem implements IVisualSystem {
   clear(): void {
     this.hideIndicator()
     this.hideParentOutline()
+    this.hideGhostIndicator()
   }
 
   dispose(): void {
@@ -152,12 +221,16 @@ export class VisualSystem implements IVisualSystem {
     indicatorRect: { x: number; y: number; width: number; height: number } | null
     parentOutlineVisible: boolean
     parentOutlineRect: { x: number; y: number; width: number; height: number } | null
+    ghostVisible: boolean
+    ghostRect: { x: number; y: number; width: number; height: number } | null
   } {
     return {
       indicatorVisible: this._indicatorVisible,
       indicatorRect: this._indicatorRect ? { ...this._indicatorRect } : null,
       parentOutlineVisible: this._parentOutlineVisible,
       parentOutlineRect: this._parentOutlineRect ? { ...this._parentOutlineRect } : null,
+      ghostVisible: this._ghostVisible,
+      ghostRect: this._ghostRect ? { ...this._ghostRect } : null,
     }
   }
 }
