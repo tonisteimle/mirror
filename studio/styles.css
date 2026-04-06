@@ -4932,10 +4932,6 @@
       color: var(--text-disabled);
     }
 
-    .pp-color-input.token {
-      color: var(--color-warning);
-    }
-
     /* Color Trigger - clickable swatch that opens color picker */
     .pp-color-trigger {
       display: flex;
@@ -4981,10 +4977,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .pp-color-trigger .pp-color-value.token {
-      color: var(--color-warning);
     }
 
     /* Compact color trigger (for inline use, e.g., border colors) */
