@@ -286,7 +286,7 @@
     .activity-bar {
       display: flex;
       flex-direction: column;
-      padding: var(--space-4) 0;
+      padding: 0;
       gap: var(--space-2);
     }
 
