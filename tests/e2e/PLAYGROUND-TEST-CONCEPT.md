@@ -308,6 +308,79 @@ expect(colorsMatch(buttonBg, COLORS.buttonOpen)).toBe(true)
 expect(buttonState).toBe('open')
 ```
 
+### State-Only Komponenten (Wichtig!)
+
+Wenn eine Komponente **keinen Base-Content** hat (alles in States definiert), verhält sie sich anders:
+
+```mirror
+// Alle Inhalte sind in States definiert
+StatusBtn: pad 12 24, rad 6, col white, toggle()
+  todo:
+    bg #333
+    Icon "circle", ic white, is 14
+  doing:
+    bg #f59e0b
+    Icon "clock", ic white, is 14
+  done:
+    bg #10b981
+    Icon "check", ic white, is 14
+```
+
+**Verhalten:**
+1. **Initial:** `data-state="default"` mit **leerem Inhalt** (keine Children)
+2. **Erster Klick:** Wechselt zu `todo` (erster definierter State)
+3. **Weitere Klicks:** Cyclet durch `todo → doing → done → todo`
+
+**Wichtig für Tests:**
+- Initial state ist "default", NICHT der erste Custom State
+- Nach dem ersten Klick wird "default" übersprungen
+- Der Cycle ist: `default → todo → doing → done → todo → ...`
+
+```typescript
+// Test für state-only Komponente
+test('initial state is default (empty)', async ({ page }) => {
+  const state = await getElementState(page, BUTTON_SELECTOR)
+  expect(state).toBe('default')
+
+  const childCount = await getWrapperChildCount(page)
+  expect(childCount).toBe(0) // Keine Children im default state
+})
+
+test('first click activates first defined state', async ({ page }) => {
+  await clickShadowElement(page, BUTTON_SELECTOR)
+
+  const state = await getElementState(page, BUTTON_SELECTOR)
+  expect(state).toBe('todo') // Nicht "default"!
+})
+```
+
+### Content Variants (Figma-Style States)
+
+Wenn ein State komplett andere Kinder hat (nicht nur andere Styles), spricht man von "Content Variants":
+
+```mirror
+ExpandBtn: pad 12, bg #333, col white, rad 6, hor, gap 8, toggle()
+  "Mehr zeigen"
+  Icon "chevron-down", ic white, is 16
+  open:
+    "Weniger zeigen"
+    Icon "chevron-up", ic white, is 16
+```
+
+**Wichtig für Tests:**
+- Der Content wird **ersetzt**, nicht versteckt
+- Im State können die DOM-Attribute anders sein (z.B. fehlendes `data-mirror-name`)
+- Selektoren müssen robust sein
+
+```typescript
+// FALSCH - funktioniert nicht im open state
+const textSpan = wrapper?.querySelector('span[data-mirror-name="Text"]')
+
+// RICHTIG - funktioniert in allen states
+const firstSpan = wrapper?.querySelector('span')
+return firstSpan?.textContent?.trim()
+```
+
 ---
 
 ## Test-Matrix

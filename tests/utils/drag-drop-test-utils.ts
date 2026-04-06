@@ -6,7 +6,7 @@
  */
 
 import type { DragDropSystem } from '../../studio/drag-drop'
-import type { DragSource, DropResult, Point, Rect } from '../../studio/drag-drop/types'
+import type { DragSource, DropResult, Point, Rect, Size } from '../../studio/drag-drop/types'
 
 /**
  * Test helper class for Drag & Drop operations.
@@ -224,6 +224,233 @@ export class DragDropTestHelper {
         `Expected placement "${expected.placement}", got "${result.placement}"`
       )
     }
+  }
+
+  // ============================================
+  // Absolute Positioning Operations
+  // ============================================
+
+  /**
+   * Calculate absolute drop position at a specific cursor location.
+   * Returns the calculated position within a positioned (stacked) container.
+   *
+   * @example
+   * const result = helper.calculateAbsoluteDropAt('container-1', 250, 180)
+   * expect(result?.position?.x).toBe(100)  // relative to container
+   * expect(result?.position?.y).toBe(30)
+   */
+  calculateAbsoluteDropAt(
+    containerId: string,
+    cursorX: number,
+    cursorY: number
+  ): DropResult | null {
+    const result = this.calculateDropAt(cursorX, cursorY)
+
+    if (!result) return null
+
+    // Verify it's an absolute placement on the expected container
+    if (result.placement !== 'absolute' || result.target.nodeId !== containerId) {
+      return null
+    }
+
+    return result
+  }
+
+  /**
+   * Insert a component at absolute position in a positioned container.
+   *
+   * @example
+   * helper.insertAtAbsolutePosition({
+   *   componentName: 'Frame',
+   *   containerId: 'stacked-container',
+   *   position: { x: 100, y: 50 },
+   *   ghostSize: { width: 80, height: 40 }
+   * })
+   */
+  insertAtAbsolutePosition(params: {
+    componentName: string
+    containerId: string
+    position: Point
+    properties?: string
+    textContent?: string
+    ghostSize?: Size
+  }): { success: boolean; error?: string } {
+    const { componentName, containerId, position, properties, textContent, ghostSize } = params
+
+    // Find the container element
+    const containerElement = document.querySelector(`[data-mirror-id="${containerId}"]`)
+    if (!containerElement) {
+      return { success: false, error: `Container "${containerId}" not found` }
+    }
+
+    // Calculate the cursor position from the container-relative position
+    const containerRect = containerElement.getBoundingClientRect()
+    const defaultSize = ghostSize ?? { width: 100, height: 40 }
+
+    // Convert from container-relative back to cursor position (center of ghost)
+    const cursorX = containerRect.left + position.x + defaultSize.width / 2
+    const cursorY = containerRect.top + position.y + defaultSize.height / 2
+
+    // Use simulateDragTo to calculate the drop result
+    const result = this.calculateDropAt(cursorX, cursorY)
+
+    if (!result || result.placement !== 'absolute') {
+      return { success: false, error: 'Could not calculate absolute drop position' }
+    }
+
+    // Create the source and execute
+    const source: DragSource = {
+      type: 'palette',
+      componentName,
+      properties,
+      textContent,
+      size: ghostSize,
+    }
+
+    return this.system.simulateDrop({
+      source,
+      targetNodeId: containerId,
+      placement: 'inside', // absolute drops use 'inside' internally
+    })
+  }
+
+  // ============================================
+  // Ghost Indicator Assertions
+  // ============================================
+
+  /**
+   * Check if the ghost indicator is currently visible.
+   */
+  isGhostVisible(): boolean {
+    return this.system.getVisualState().ghostVisible
+  }
+
+  /**
+   * Get the current ghost indicator position/size.
+   */
+  getGhostRect(): Rect | null {
+    return this.system.getVisualState().ghostRect
+  }
+
+  /**
+   * Assert that the ghost indicator is visible/hidden.
+   * @throws Error if assertion fails
+   */
+  assertGhostVisible(expected: boolean): void {
+    const state = this.system.getVisualState()
+    if (state.ghostVisible !== expected) {
+      throw new Error(
+        `Expected ghost to be ${expected ? 'visible' : 'hidden'}, but it was ${state.ghostVisible ? 'visible' : 'hidden'}`
+      )
+    }
+  }
+
+  /**
+   * Assert that the ghost indicator is at the expected position.
+   * @param x Expected x coordinate
+   * @param y Expected y coordinate
+   * @param tolerance Allowed deviation in pixels (default: 1)
+   * @throws Error if assertion fails
+   */
+  assertGhostPosition(x: number, y: number, tolerance: number = 1): void {
+    const state = this.system.getVisualState()
+
+    if (!state.ghostVisible || !state.ghostRect) {
+      throw new Error('Expected ghost to be visible, but it was hidden')
+    }
+
+    const rect = state.ghostRect
+    const dx = Math.abs(rect.x - x)
+    const dy = Math.abs(rect.y - y)
+
+    if (dx > tolerance || dy > tolerance) {
+      throw new Error(
+        `Expected ghost at (${x}, ${y}), but found (${rect.x}, ${rect.y}) (tolerance: ${tolerance})`
+      )
+    }
+  }
+
+  /**
+   * Assert that the ghost indicator has the expected size.
+   * @param width Expected width
+   * @param height Expected height
+   * @param tolerance Allowed deviation in pixels (default: 1)
+   * @throws Error if assertion fails
+   */
+  assertGhostSize(width: number, height: number, tolerance: number = 1): void {
+    const state = this.system.getVisualState()
+
+    if (!state.ghostVisible || !state.ghostRect) {
+      throw new Error('Expected ghost to be visible, but it was hidden')
+    }
+
+    const rect = state.ghostRect
+    const dw = Math.abs(rect.width - width)
+    const dh = Math.abs(rect.height - height)
+
+    if (dw > tolerance || dh > tolerance) {
+      throw new Error(
+        `Expected ghost size (${width}, ${height}), but found (${rect.width}, ${rect.height}) (tolerance: ${tolerance})`
+      )
+    }
+  }
+
+  // ============================================
+  // Positioned Container Helpers
+  // ============================================
+
+  /**
+   * Create a positioned (stacked) container element in the DOM for testing.
+   * Returns the container element.
+   *
+   * @example
+   * const container = helper.createPositionedContainer('stacked-1', {
+   *   x: 100, y: 100, width: 400, height: 300
+   * })
+   */
+  createPositionedContainer(
+    id: string,
+    rect: Rect,
+    parent?: HTMLElement
+  ): HTMLElement {
+    const container = document.createElement('div')
+    container.setAttribute('data-mirror-id', id)
+    container.style.position = 'relative'
+    container.style.left = `${rect.x}px`
+    container.style.top = `${rect.y}px`
+    container.style.width = `${rect.width}px`
+    container.style.height = `${rect.height}px`
+
+    // Add data attribute to indicate positioned layout
+    container.setAttribute('data-layout', 'stacked')
+
+    const targetParent = parent ?? document.body
+    targetParent.appendChild(container)
+
+    return container
+  }
+
+  /**
+   * Add a positioned child element to a container.
+   *
+   * @example
+   * helper.addPositionedChild(container, 'child-1', { x: 50, y: 30, width: 100, height: 40 })
+   */
+  addPositionedChild(
+    container: HTMLElement,
+    id: string,
+    rect: Rect
+  ): HTMLElement {
+    const child = document.createElement('div')
+    child.setAttribute('data-mirror-id', id)
+    child.style.position = 'absolute'
+    child.style.left = `${rect.x}px`
+    child.style.top = `${rect.y}px`
+    child.style.width = `${rect.width}px`
+    child.style.height = `${rect.height}px`
+
+    container.appendChild(child)
+    return child
   }
 }
 

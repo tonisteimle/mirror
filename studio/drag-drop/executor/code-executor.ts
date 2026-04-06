@@ -333,15 +333,16 @@ export class CodeExecutor implements ICodeExecutor {
         )
 
       case 'absolute':
-        // For absolute positioning, move into container
-        // Note: Setting x/y properties after move is not supported yet because
-        // the SourceMap becomes stale after moveNode(). The element will be
-        // moved into the container, but x/y must be set via property panel.
-        // TODO: Recompile after move to get updated SourceMap, then set x/y
+        // For absolute positioning, move into container with x/y properties
+        const positionProps = result.position
+          ? `x ${result.position.x}, y ${result.position.y}`
+          : undefined
         return modifier.moveNode(
           source.nodeId,
           result.target.nodeId,
-          'inside'
+          'inside',
+          undefined,
+          positionProps ? { properties: positionProps } : undefined
         )
 
       default:

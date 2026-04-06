@@ -35,11 +35,24 @@ export class EventsSection extends BaseSection {
     const eventRows = events.map((event, index) => this.renderEventRow(event, index)).join('')
     const hasEvents = events.length > 0
 
+    const emptyState = `
+      <div class="pp-events-empty-state">
+        <div class="pp-events-empty-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <span class="pp-events-empty-title">No events yet</span>
+        <span class="pp-events-empty-hint">Add interactions like onclick, onhover, or keyboard events</span>
+      </div>
+    `
+
     return `
       <div class="pp-section">
         <div class="pp-label-with-action">
           <span class="pp-label">Events</span>
-          <button class="pp-add-event-btn" title="Add event">
+          <button class="pp-add-event-btn" title="Add event handler (onclick, onhover, etc.)">
             <svg viewBox="0 0 14 14" width="12" height="12">
               ${ICONS.add}
             </svg>
@@ -47,7 +60,7 @@ export class EventsSection extends BaseSection {
           </button>
         </div>
         <div class="pp-events-list ${hasEvents ? '' : 'empty'}">
-          ${hasEvents ? eventRows : '<span class="pp-events-empty">No events defined</span>'}
+          ${hasEvents ? eventRows : emptyState}
         </div>
       </div>
     `

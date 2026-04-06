@@ -11,7 +11,8 @@
 
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
-import { escapeHtml } from '../utils'
+import { escapeHtml, validateInput } from '../utils'
+import { makeScrubable, type ScrubInstance } from '../utils/scrub'
 
 /**
  * Font options
@@ -31,6 +32,15 @@ const WEIGHTS = [
   { value: '700', label: '700 · Bold' },
   { value: '800', label: '800 · Extra Bold' },
   { value: '900', label: '900 · Black' },
+]
+
+/**
+ * Quick weight toggles for common weights
+ */
+const QUICK_WEIGHTS = [
+  { value: '400', label: 'Reg', title: 'Regular (400)' },
+  { value: '500', label: 'Med', title: 'Medium (500)' },
+  { value: '700', label: 'Bold', title: 'Bold (700)' },
 ]
 
 /**
@@ -60,6 +70,8 @@ const STYLE_ICONS: Record<string, string> = {
  * TypographySection class
  */
 export class TypographySection extends BaseSection {
+  private scrubInstances: ScrubInstance[] = []
+
   constructor(deps: SectionDependencies) {
     super({ label: 'Typography' }, deps)
   }
@@ -120,7 +132,10 @@ export class TypographySection extends BaseSection {
       'input[data-prop="font-size"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
-          this.deps.onPropertyChange('font-size', input.value, 'input')
+          const result = validateInput(input, 'fs')
+          if (result.valid) {
+            this.deps.onPropertyChange('font-size', input.value, 'input')
+          }
         }
       },
       // Weight select change
@@ -128,6 +143,15 @@ export class TypographySection extends BaseSection {
         change: (e: Event, target: HTMLElement) => {
           const select = target as HTMLSelectElement
           this.deps.onPropertyChange('weight', select.value, 'input')
+        }
+      },
+      // Quick weight toggle
+      '[data-quick-weight]': {
+        click: (e: Event, target: HTMLElement) => {
+          const weight = target.getAttribute('data-quick-weight')
+          if (weight) {
+            this.deps.onPropertyChange('weight', weight, 'toggle')
+          }
         }
       },
       // Text align toggle
@@ -180,7 +204,7 @@ export class TypographySection extends BaseSection {
     }).join('')
 
     return `
-      <div class="pp-row">
+      <div class="pp-row" data-scrub="font-size">
         <span class="pp-row-label">Size</span>
         <div class="pp-row-content">
           ${tokenButtons ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
@@ -191,6 +215,13 @@ export class TypographySection extends BaseSection {
   }
 
   private renderWeightRow(weightValue: string): string {
+    // Quick toggle buttons for common weights
+    const quickButtons = QUICK_WEIGHTS.map(w => {
+      const isActive = weightValue === w.value
+      return `<button class="pp-token-btn ${isActive ? 'active' : ''}" data-quick-weight="${w.value}" title="${w.title}" tabindex="0">${w.label}</button>`
+    }).join('')
+
+    // Full dropdown for all weights
     const options = WEIGHTS.map(w =>
       `<option value="${w.value}" ${weightValue === w.value ? 'selected' : ''}>${w.label}</option>`
     ).join('')
@@ -199,7 +230,8 @@ export class TypographySection extends BaseSection {
       <div class="pp-row">
         <span class="pp-row-label">Weight</span>
         <div class="pp-row-content">
-          <select class="pp-weight-input" data-prop="weight">
+          <div class="pp-token-group">${quickButtons}</div>
+          <select class="pp-weight-select" data-prop="weight" title="All weights">
             ${options}
           </select>
         </div>
@@ -243,6 +275,56 @@ export class TypographySection extends BaseSection {
         </div>
       </div>
     `
+  }
+
+  /**
+   * Called after the section is mounted
+   */
+  afterMount(): void {
+    if (this.container) {
+      this.setupScrubbing()
+    }
+  }
+
+  /**
+   * Clean up scrub instances before re-render
+   */
+  private cleanupScrubbing(): void {
+    this.scrubInstances.forEach(instance => instance.destroy())
+    this.scrubInstances = []
+  }
+
+  /**
+   * Set up scrubbing on all scrubbable labels
+   */
+  private setupScrubbing(): void {
+    this.cleanupScrubbing()
+
+    if (!this.container) return
+
+    // Find all rows with data-scrub attribute
+    const rows = this.container.querySelectorAll('[data-scrub]')
+
+    rows.forEach(row => {
+      const label = row.querySelector('.pp-row-label') as HTMLElement
+      const input = row.querySelector('input[type="text"]') as HTMLInputElement
+      const property = row.getAttribute('data-scrub')
+
+      if (!label || !input || !property) return
+
+      const instance = makeScrubable({
+        label,
+        input,
+        min: 1,  // font-size min 1
+        step: 1,
+        allowDecimals: false,
+        onChange: (value) => {
+          this.deps.onPropertyChange(property, String(value), 'input')
+        }
+      })
+
+      this.scrubInstances.push(instance)
+    })
   }
 }
 

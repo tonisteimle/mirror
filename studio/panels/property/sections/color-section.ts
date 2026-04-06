@@ -12,6 +12,14 @@ import type { SectionData, EventHandlerMap, ExtractedProperty } from '../types'
 import { escapeHtml, resolveColorToken } from '../utils'
 
 /**
+ * Edit icon SVG
+ */
+const EDIT_ICON = `<svg class="pp-color-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+</svg>`
+
+/**
  * ColorSection class
  */
 export class ColorSection extends BaseSection {
@@ -89,13 +97,23 @@ export class ColorSection extends BaseSection {
     isToken: boolean,
     isOverride: boolean
   ): string {
+    const tooltip = value ? `Click to edit ${label.toLowerCase()} color` : `Click to set ${label.toLowerCase()} color`
+
+    // Build row classes
+    const rowClasses = [
+      'pp-row',
+      isOverride ? 'override' : '',
+      isToken ? 'uses-token' : ''
+    ].filter(Boolean).join(' ')
+
     return `
-      <div class="pp-row${isOverride ? ' override' : ''}">
+      <div class="${rowClasses}">
         <span class="pp-row-label">${escapeHtml(label)}</span>
         <div class="pp-row-content">
-          <div class="pp-color-trigger" data-color-prop="${property}" data-current-value="${escapeHtml(value)}">
+          <div class="pp-color-trigger" data-color-prop="${property}" data-current-value="${escapeHtml(value)}" title="${tooltip}">
             <div class="pp-color-swatch${value ? '' : ' empty'}" style="${swatchColor ? `background: ${escapeHtml(swatchColor)}` : ''}"></div>
             <span class="pp-color-value${isToken ? ' token' : ''}">${escapeHtml(displayValue)}</span>
+            ${EDIT_ICON}
           </div>
         </div>
       </div>

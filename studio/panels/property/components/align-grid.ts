@@ -30,6 +30,21 @@ const CELL_POSITIONS = [
 ] as const
 
 /**
+ * Human-readable labels for alignment positions
+ */
+const ALIGN_LABELS: Record<string, string> = {
+  'top-left': 'Top Left',
+  'top-center': 'Top Center',
+  'top-right': 'Top Right',
+  'middle-left': 'Middle Left',
+  'middle-center': 'Center',
+  'middle-right': 'Middle Right',
+  'bottom-left': 'Bottom Left',
+  'bottom-center': 'Bottom Center',
+  'bottom-right': 'Bottom Right'
+}
+
+/**
  * Map alignment position to DSL property
  */
 export const ALIGN_TO_PROPERTY: Record<AlignPosition, string[]> = {
@@ -80,12 +95,14 @@ export function renderAlignGrid(state: AlignmentState): string {
     return row.map((cell, hIdx) => {
       const hName = horizontalNames[hIdx]
       const active = isCellActive(vName, hName, state)
-      const title = cell.replace('-', ' ')
+      const label = ALIGN_LABELS[cell] || cell
 
       return `<button
         class="pp-align-cell ${active ? 'active' : ''}"
         data-align="${cell}"
-        title="${escapeHtml(title)}"
+        title="Align: ${escapeHtml(label)}"
+        aria-label="${escapeHtml(label)}"
+        tabindex="0"
       ></button>`
     }).join('')
   }).join('')
@@ -118,7 +135,7 @@ export function parseAlignmentState(
 }
 
 /**
- * Create alignment grid click handler
+ * Create alignment grid click handler with keyboard navigation
  */
 export function createAlignmentHandler(
   onAlign: (position: AlignPosition) => void
@@ -129,6 +146,52 @@ export function createAlignmentHandler(
         const position = target.getAttribute('data-align') as AlignPosition
         if (position) {
           onAlign(position)
+        }
+      },
+      keydown: (e: Event, target: HTMLElement) => {
+        const key = (e as KeyboardEvent).key
+
+        // Handle Enter/Space - activate the cell
+        if (key === 'Enter' || key === ' ') {
+          e.preventDefault()
+          target.click()
+          return
+        }
+
+        // Handle arrow keys - navigate the 3x3 grid
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+          e.preventDefault()
+          const grid = target.closest('.pp-align-grid')
+          if (!grid) return
+
+          const cells = Array.from(grid.querySelectorAll('.pp-align-cell')) as HTMLElement[]
+          const currentIndex = cells.indexOf(target)
+          if (currentIndex === -1) return
+
+          // Grid is 3x3: indices 0-2 = row 0, 3-5 = row 1, 6-8 = row 2
+          const row = Math.floor(currentIndex / 3)
+          const col = currentIndex % 3
+
+          let newRow = row
+          let newCol = col
+
+          switch (key) {
+            case 'ArrowUp':
+              newRow = row > 0 ? row - 1 : 2
+              break
+            case 'ArrowDown':
+              newRow = row < 2 ? row + 1 : 0
+              break
+            case 'ArrowLeft':
+              newCol = col > 0 ? col - 1 : 2
+              break
+            case 'ArrowRight':
+              newCol = col < 2 ? col + 1 : 0
+              break
+          }
+
+          const newIndex = newRow * 3 + newCol
+          cells[newIndex]?.focus()
         }
       }
     }

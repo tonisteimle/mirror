@@ -1,15 +1,17 @@
 /**
  * SizingSection - Width, Height, and Min/Max Constraints
  *
- * Handles:
- * - Width/Height with hug/full mode toggles
- * - Min/Max width/height constraints (expandable)
- * - Position x/y when in absolute container (future)
+ * COMPACT LAYOUT:
+ * - Width/Height side by side in 2-column grid
+ * - Min/Max in 2-column grid with icons
+ * - Position x/y when in absolute container
  */
 
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory } from '../types'
-import { escapeHtml, validateInput } from '../utils'
+import { escapeHtml, validateInput, PROP_ICONS } from '../utils'
+import { toggleExpanded, applyExpandedState } from '../utils/expand-state'
+import { makeScrubable, type ScrubInstance } from '../utils/scrub'
 
 /**
  * Size mode icons
@@ -36,6 +38,8 @@ const SIZE_ICONS = {
  * SizingSection class
  */
 export class SizingSection extends BaseSection {
+  private scrubInstances: ScrubInstance[] = []
+
   constructor(deps: SectionDependencies) {
     super({ label: 'Size' }, deps)
   }
@@ -81,8 +85,7 @@ export class SizingSection extends BaseSection {
         <div class="pp-section-label">Size</div>
         <div class="pp-section-content">
           ${xyRow}
-          ${this.renderWidthRow(widthValue, widthIsHug, widthIsFull)}
-          ${this.renderHeightRow(heightValue, heightIsHug, heightIsFull)}
+          ${this.renderSizeGrid(widthValue, heightValue, widthIsHug, widthIsFull, heightIsHug, heightIsFull)}
         </div>
         ${this.renderMinMaxSection(minWidthValue, maxWidthValue, minHeightValue, maxHeightValue, hasMinMax)}
       </div>
@@ -152,39 +155,46 @@ export class SizingSection extends BaseSection {
   // Private Render Methods
   // ============================================
 
-  private renderWidthRow(value: string, isHug: boolean, isFull: boolean): string {
+  /**
+   * Render Width and Height side-by-side in 2-column grid
+   */
+  private renderSizeGrid(
+    widthValue: string,
+    heightValue: string,
+    widthIsHug: boolean,
+    widthIsFull: boolean,
+    heightIsHug: boolean,
+    heightIsFull: boolean
+  ): string {
     return `
-      <div class="pp-row">
-        <span class="pp-row-label">Width</span>
-        <div class="pp-row-content">
+      <div class="pp-row-grid">
+        <div class="pp-cell" data-scrub="width" data-scrub-min="0">
+          <span class="pp-cell-label" title="Width">${PROP_ICONS.width}</span>
           <div class="pp-toggle-group">
-            <button class="pp-toggle-btn ${isHug ? 'active' : ''}" data-size-mode="width-hug" title="Hug Content">
+            <button class="pp-toggle-btn ${widthIsHug ? 'active' : ''}" data-size-mode="width-hug" title="Hug Content">
               ${SIZE_ICONS.widthHug}
             </button>
-            <button class="pp-toggle-btn ${isFull ? 'active' : ''}" data-size-mode="width-full" title="Fill Container">
+            <button class="pp-toggle-btn ${widthIsFull ? 'active' : ''}" data-size-mode="width-full" title="Fill Container">
               ${SIZE_ICONS.widthFull}
             </button>
           </div>
-          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" data-prop="width" placeholder="auto">
+          <div class="pp-cell-input">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(widthValue)}" data-prop="width" placeholder="auto">
+          </div>
         </div>
-      </div>
-    `
-  }
-
-  private renderHeightRow(value: string, isHug: boolean, isFull: boolean): string {
-    return `
-      <div class="pp-row">
-        <span class="pp-row-label">Height</span>
-        <div class="pp-row-content">
+        <div class="pp-cell" data-scrub="height" data-scrub-min="0">
+          <span class="pp-cell-label" title="Height">${PROP_ICONS.height}</span>
           <div class="pp-toggle-group">
-            <button class="pp-toggle-btn ${isHug ? 'active' : ''}" data-size-mode="height-hug" title="Hug Content">
+            <button class="pp-toggle-btn ${heightIsHug ? 'active' : ''}" data-size-mode="height-hug" title="Hug Content">
               ${SIZE_ICONS.heightHug}
             </button>
-            <button class="pp-toggle-btn ${isFull ? 'active' : ''}" data-size-mode="height-full" title="Fill Container">
+            <button class="pp-toggle-btn ${heightIsFull ? 'active' : ''}" data-size-mode="height-full" title="Fill Container">
               ${SIZE_ICONS.heightFull}
             </button>
           </div>
-          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" data-prop="height" placeholder="auto">
+          <div class="pp-cell-input">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
+          </div>
         </div>
       </div>
     `
@@ -197,16 +207,18 @@ export class SizingSection extends BaseSection {
     const yValue = yProp?.value || ''
 
     return `
-      <div class="pp-row">
-        <span class="pp-row-label">X</span>
-        <div class="pp-row-content">
-          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(xValue)}" data-prop="x" placeholder="0">
+      <div class="pp-row-grid">
+        <div class="pp-cell" data-scrub="x">
+          <span class="pp-cell-label" title="X Position">${PROP_ICONS.posX}</span>
+          <div class="pp-cell-input">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(xValue)}" data-prop="x" placeholder="0">
+          </div>
         </div>
-      </div>
-      <div class="pp-row">
-        <span class="pp-row-label">Y</span>
-        <div class="pp-row-content">
-          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(yValue)}" data-prop="y" placeholder="0">
+        <div class="pp-cell" data-scrub="y">
+          <span class="pp-cell-label" title="Y Position">${PROP_ICONS.posY}</span>
+          <div class="pp-cell-input">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(yValue)}" data-prop="y" placeholder="0">
+          </div>
         </div>
       </div>
     `
@@ -218,33 +230,38 @@ export class SizingSection extends BaseSection {
         <div class="pp-row collapsed-row" data-expand-group="size-minmax">
           <span class="pp-row-label">Min/Max</span>
           <div class="pp-row-content">
-            <button class="pp-expand-btn" data-expand="size-minmax" title="Min/Max Constraints">
+            <button class="pp-expand-btn" data-expand="size-minmax" title="Show min/max width and height constraints">
               ${SIZE_ICONS.expand}
             </button>
           </div>
         </div>
-        <div class="pp-row expanded-row" data-expand-group="size-minmax">
-          <span class="pp-row-label">Min W</span>
-          <div class="pp-row-content">
-            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(minW)}" data-prop="minw" placeholder="none">
+        <!-- Expanded: Min/Max in 2-column grid -->
+        <div class="pp-row-grid expanded-row" data-expand-group="size-minmax">
+          <div class="pp-cell" data-scrub="minw" data-scrub-min="0">
+            <span class="pp-cell-label" title="Min Width">${PROP_ICONS.minWidth}</span>
+            <div class="pp-cell-input">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(minW)}" data-prop="minw" placeholder="none">
+            </div>
+          </div>
+          <div class="pp-cell" data-scrub="maxw" data-scrub-min="0">
+            <span class="pp-cell-label" title="Max Width">${PROP_ICONS.maxWidth}</span>
+            <div class="pp-cell-input">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(maxW)}" data-prop="maxw" placeholder="none">
+            </div>
           </div>
         </div>
-        <div class="pp-row expanded-row" data-expand-group="size-minmax">
-          <span class="pp-row-label">Max W</span>
-          <div class="pp-row-content">
-            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(maxW)}" data-prop="maxw" placeholder="none">
+        <div class="pp-row-grid expanded-row" data-expand-group="size-minmax">
+          <div class="pp-cell" data-scrub="minh" data-scrub-min="0">
+            <span class="pp-cell-label" title="Min Height">${PROP_ICONS.minHeight}</span>
+            <div class="pp-cell-input">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(minH)}" data-prop="minh" placeholder="none">
+            </div>
           </div>
-        </div>
-        <div class="pp-row expanded-row" data-expand-group="size-minmax">
-          <span class="pp-row-label">Min H</span>
-          <div class="pp-row-content">
-            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(minH)}" data-prop="minh" placeholder="none">
-          </div>
-        </div>
-        <div class="pp-row expanded-row" data-expand-group="size-minmax">
-          <span class="pp-row-label">Max H</span>
-          <div class="pp-row-content">
-            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(maxH)}" data-prop="maxh" placeholder="none">
+          <div class="pp-cell" data-scrub="maxh" data-scrub-min="0">
+            <span class="pp-cell-label" title="Max Height">${PROP_ICONS.maxHeight}</span>
+            <div class="pp-cell-input">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(maxH)}" data-prop="maxh" placeholder="none">
+            </div>
           </div>
         </div>
       </div>
@@ -276,18 +293,81 @@ export class SizingSection extends BaseSection {
   }
 
   private handleExpandClick(): void {
-    // Toggle expand state on the container
     if (this.container) {
+      const sectionKey = 'sizing-minmax'
+      const isExpanded = toggleExpanded(sectionKey)
+
       const minmaxSection = this.container.querySelector('[data-expand-container="size-minmax"]')
       if (minmaxSection) {
-        minmaxSection.classList.toggle('expanded')
-        // Also toggle on parent .section for CSS purposes
-        const section = minmaxSection.closest('.section')
+        minmaxSection.classList.toggle('expanded', isExpanded)
+        // Also toggle on parent .pp-section for CSS purposes
+        const section = minmaxSection.closest('.pp-section')
         if (section) {
-          section.classList.toggle('expanded')
+          section.classList.toggle('expanded', isExpanded)
         }
       }
     }
+  }
+
+  /**
+   * Called after the section is mounted to restore persisted expand states
+   */
+  afterMount(): void {
+    if (this.container) {
+      applyExpandedState(this.container, 'sizing-minmax', '[data-expand-container="size-minmax"]')
+      this.setupScrubbing()
+    }
+  }
+
+  /**
+   * Clean up scrub instances before re-render
+   */
+  private cleanupScrubbing(): void {
+    this.scrubInstances.forEach(instance => instance.destroy())
+    this.scrubInstances = []
+  }
+
+  /**
+   * Set up scrubbing on all scrubbable labels
+   */
+  private setupScrubbing(): void {
+    this.cleanupScrubbing()
+
+    if (!this.container) return
+
+    // Find all elements with data-scrub attribute (rows or cells)
+    const scrubElements = this.container.querySelectorAll('[data-scrub]')
+
+    scrubElements.forEach(element => {
+      // Support both old .pp-row-label and new .pp-cell-label
+      const label = element.querySelector('.pp-cell-label, .pp-row-label') as HTMLElement
+      const input = element.querySelector('input[type="text"]') as HTMLInputElement
+      const property = element.getAttribute('data-scrub')
+
+      if (!label || !input || !property) return
+
+      // Get min/max from data attributes
+      const min = element.hasAttribute('data-scrub-min')
+        ? parseFloat(element.getAttribute('data-scrub-min')!)
+        : 0 // Default min 0 for sizes
+      const max = element.hasAttribute('data-scrub-max')
+        ? parseFloat(element.getAttribute('data-scrub-max')!)
+        : undefined
+
+      const instance = makeScrubable({
+        label,
+        input,
+        min,
+        max,
+        step: 1,
+        allowDecimals: false,
+        onChange: (value) => {
+          this.deps.onPropertyChange(property, String(value), 'input')
+        }
+      })
+
+      this.scrubInstances.push(instance)
+    })
   }
 }
 

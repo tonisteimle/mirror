@@ -68,6 +68,7 @@ export abstract class BaseSection {
     this.data = data
     if (this.container) {
       this.container.innerHTML = this.render(data)
+      this.afterMount()
     }
   }
 
@@ -78,7 +79,16 @@ export abstract class BaseSection {
     this.container = container
     if (this.data) {
       container.innerHTML = this.render(this.data)
+      this.afterMount()
     }
+  }
+
+  /**
+   * Called after the section is mounted/rendered
+   * Override to restore persisted state (e.g., expanded sections)
+   */
+  afterMount(): void {
+    // Override in subclasses if needed
   }
 
   /**

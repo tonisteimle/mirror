@@ -1,16 +1,19 @@
 /**
  * SpacingSection - Padding and Margin
  *
- * Handles:
- * - Padding with horizontal/vertical (collapsed) or T/R/B/L (expanded) modes
- * - Margin with same modes
+ * COMPACT LAYOUT:
+ * - Padding H/V in 2-column grid with icons (collapsed)
+ * - T/R/B/L in 2x2 grid (expanded)
+ * - Same for Margin
  * - Token presets for both
  */
 
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
 import { spacingTokensToOptions } from '../components'
-import { escapeHtml, validateSpacingValue, applyValidationStyle } from '../utils'
+import { escapeHtml, validateSpacingValue, applyValidationStyle, PROP_ICONS } from '../utils'
+import { toggleExpanded, applyExpandedState } from '../utils/expand-state'
+import { makeScrubable, type ScrubInstance } from '../utils/scrub'
 
 /**
  * Expand icons
@@ -77,6 +80,8 @@ function buildSpacingValue(t: string, r: string, b: string, l: string): string {
  * SpacingSection class
  */
 export class SpacingSection extends BaseSection {
+  private scrubInstances: ScrubInstance[] = []
+
   constructor(deps: SectionDependencies) {
     super({ label: 'Spacing' }, deps)
   }
@@ -123,6 +128,9 @@ export class SpacingSection extends BaseSection {
           if (value && dir) {
             this.handlePadTokenClick(value, dir)
           }
+        },
+        keydown: (e: Event, target: HTMLElement) => {
+          this.handleTokenKeydown(e as KeyboardEvent, target, 'pad')
         }
       },
       // Padding input change
@@ -148,6 +156,9 @@ export class SpacingSection extends BaseSection {
           if (value && dir) {
             this.handleMarginTokenClick(value, dir)
           }
+        },
+        keydown: (e: Event, target: HTMLElement) => {
+          this.handleTokenKeydown(e as KeyboardEvent, target, 'margin')
         }
       },
       // Margin input change
@@ -156,7 +167,11 @@ export class SpacingSection extends BaseSection {
           const input = target as HTMLInputElement
           const dir = input.getAttribute('data-margin-dir')
           if (dir) {
-            this.handleMarginInputChange(input.value, dir)
+            const result = validateSpacingValue(input.value)
+            applyValidationStyle(input, result)
+            if (result.valid) {
+              this.handleMarginInputChange(input.value, dir)
+            }
           }
         }
       },
@@ -191,18 +206,26 @@ export class SpacingSection extends BaseSection {
       <div class="pp-section">
         <div class="pp-section-label">
           <span>Padding</span>
-          <button class="pp-section-expand-btn" data-expand="spacing" title="Toggle detail view">
+          <button class="pp-section-expand-btn" data-expand="spacing" title="Show individual values (Top, Right, Bottom, Left)">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
         <div class="pp-section-content" data-expand-container="spacing">
-          ${this.renderSpacingRow('Horizontal', hPad, 'h', 'pad', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
-          ${this.renderSpacingRow('Vertical', vPad, 'v', 'pad', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
-          ${this.renderSpacingRow('Top', tPad, 't', 'pad', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Right', rPad, 'r', 'pad', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Bottom', bPad, 'b', 'pad', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Left', lPad, 'l', 'pad', false, tokenOptions, hasTokens, 'expanded-row')}
+          <!-- Collapsed: H/V in 2-column grid -->
+          <div class="pp-row-grid collapsed-row" data-expand-group="spacing">
+            ${this.renderSpacingCell(PROP_ICONS.paddingH, 'Horizontal', hPad, 'h', 'pad', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.paddingV, 'Vertical', vPad, 'v', 'pad', tokenOptions, hasTokens)}
+          </div>
+          <!-- Expanded: T/R/B/L in 2x2 grid -->
+          <div class="pp-row-grid expanded-row" data-expand-group="spacing">
+            ${this.renderSpacingCell(PROP_ICONS.paddingTop, 'Top', tPad, 't', 'pad', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.paddingRight, 'Right', rPad, 'r', 'pad', tokenOptions, hasTokens)}
+          </div>
+          <div class="pp-row-grid expanded-row" data-expand-group="spacing">
+            ${this.renderSpacingCell(PROP_ICONS.paddingBottom, 'Bottom', bPad, 'b', 'pad', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.paddingLeft, 'Left', lPad, 'l', 'pad', tokenOptions, hasTokens)}
+          </div>
         </div>
       </div>
     `
@@ -221,23 +244,75 @@ export class SpacingSection extends BaseSection {
       <div class="pp-section">
         <div class="pp-section-label">
           <span>Margin</span>
-          <button class="pp-section-expand-btn" data-expand="margin" title="Toggle detail view">
+          <button class="pp-section-expand-btn" data-expand="margin" title="Show individual values (Top, Right, Bottom, Left)">
             ${EXPAND_ICONS.collapsed}
             ${EXPAND_ICONS.expanded}
           </button>
         </div>
         <div class="pp-section-content" data-expand-container="margin">
-          ${this.renderSpacingRow('Horizontal', hMargin, 'h', 'margin', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
-          ${this.renderSpacingRow('Vertical', vMargin, 'v', 'margin', isOverride, tokenOptions, hasTokens, 'collapsed-row')}
-          ${this.renderSpacingRow('Top', tMargin, 't', 'margin', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Right', rMargin, 'r', 'margin', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Bottom', bMargin, 'b', 'margin', false, tokenOptions, hasTokens, 'expanded-row')}
-          ${this.renderSpacingRow('Left', lMargin, 'l', 'margin', false, tokenOptions, hasTokens, 'expanded-row')}
+          <!-- Collapsed: H/V in 2-column grid -->
+          <div class="pp-row-grid collapsed-row" data-expand-group="margin">
+            ${this.renderSpacingCell(PROP_ICONS.marginH, 'Horizontal', hMargin, 'h', 'margin', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.marginV, 'Vertical', vMargin, 'v', 'margin', tokenOptions, hasTokens)}
+          </div>
+          <!-- Expanded: T/R/B/L in 2x2 grid -->
+          <div class="pp-row-grid expanded-row" data-expand-group="margin">
+            ${this.renderSpacingCell(PROP_ICONS.marginTop, 'Top', tMargin, 't', 'margin', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.marginRight, 'Right', rMargin, 'r', 'margin', tokenOptions, hasTokens)}
+          </div>
+          <div class="pp-row-grid expanded-row" data-expand-group="margin">
+            ${this.renderSpacingCell(PROP_ICONS.marginBottom, 'Bottom', bMargin, 'b', 'margin', tokenOptions, hasTokens)}
+            ${this.renderSpacingCell(PROP_ICONS.marginLeft, 'Left', lMargin, 'l', 'margin', tokenOptions, hasTokens)}
+          </div>
         </div>
       </div>
     `
   }
 
+  /**
+   * Render a compact spacing cell for grid layout
+   */
+  private renderSpacingCell(
+    icon: string,
+    title: string,
+    value: string,
+    dir: string,
+    type: 'pad' | 'margin',
+    tokens: Array<{ label: string; value: string; tokenRef?: string }>,
+    hasTokens: boolean
+  ): string {
+    const dataAttrPrefix = type === 'pad' ? 'pad' : 'margin'
+    const dirAttr = type === 'pad' ? 'data-pad-dir' : 'data-margin-dir'
+
+    // Render token buttons
+    const tokenButtons = hasTokens ? this.renderTokenButtons(value, tokens, dataAttrPrefix, dir) : ''
+
+    // Check if value matches any token
+    const isTokenRef = value.startsWith('$')
+    const matchesToken = tokens.some(t => isTokenRef ? value === t.tokenRef : value === t.value)
+    const shouldMuteTokens = hasTokens && value && !matchesToken && !isTokenRef
+
+    // Build input with optional token group
+    const inputHtml = hasTokens
+      ? `<div class="pp-token-input-group${shouldMuteTokens ? ' input-modified' : ''}">
+          <div class="pp-token-group">${tokenButtons}</div>
+          <div class="pp-cell-input">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
+          </div>
+        </div>`
+      : `<div class="pp-cell-input">
+          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
+        </div>`
+
+    return `
+      <div class="pp-cell${isTokenRef ? ' uses-token' : ''}" data-scrub="${type}-${dir}">
+        <span class="pp-cell-label" title="${title}">${icon}</span>
+        ${inputHtml}
+      </div>
+    `
+  }
+
+  // Keep old renderSpacingRow for backwards compatibility if needed
   private renderSpacingRow(
     label: string,
     value: string,
@@ -251,15 +326,42 @@ export class SpacingSection extends BaseSection {
     const dataAttrPrefix = type === 'pad' ? 'pad' : 'margin'
     const dirAttr = type === 'pad' ? 'data-pad-dir' : 'data-margin-dir'
 
-    // Render token buttons
+    // Render token buttons with muted state detection
     const tokenButtons = hasTokens ? this.renderTokenButtons(value, tokens, dataAttrPrefix, dir) : ''
 
+    // Check if value matches any token (for muting non-matching tokens)
+    const isTokenRef = value.startsWith('$')
+    const matchesToken = tokens.some(t => isTokenRef ? value === t.tokenRef : value === t.value)
+    const shouldMuteTokens = hasTokens && value && !matchesToken && !isTokenRef
+
+    // Use grouped layout when tokens are present - wrap input for error hints
+    const inputContent = hasTokens
+      ? `<div class="pp-token-input-group${shouldMuteTokens ? ' input-modified' : ''}">
+          <div class="pp-token-group">${tokenButtons}</div>
+          <div class="pp-input-wrapper">
+            <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0" data-tokens-available="true">
+          </div>
+        </div>`
+      : `<div class="pp-input-wrapper">
+          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
+        </div>`
+
+    // Build row classes
+    const rowClasses = [
+      'pp-row',
+      rowClass,
+      isOverride ? 'override' : '',
+      isTokenRef ? 'uses-token' : ''
+    ].filter(Boolean).join(' ')
+
+    // Build data attributes - include scrub for numeric adjustment
+    const scrubAttr = `data-scrub="${type}-${dir}"`
+
     return `
-      <div class="pp-row ${rowClass}${isOverride ? ' override' : ''}" data-expand-group="${type === 'pad' ? 'spacing' : 'margin'}">
+      <div class="${rowClasses}" data-expand-group="${type === 'pad' ? 'spacing' : 'margin'}" ${scrubAttr}>
         <span class="pp-row-label">${escapeHtml(label)}</span>
         <div class="pp-row-content">
-          ${tokenButtons ? `<div class="pp-token-group">${tokenButtons}</div>` : ''}
-          <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" ${dirAttr}="${dir}" placeholder="0">
+          ${inputContent}
         </div>
       </div>
     `
@@ -285,6 +387,7 @@ export class SpacingSection extends BaseSection {
         ${token.tokenRef ? `data-token-ref="${escapeHtml(token.tokenRef)}"` : ''}
         data-${dataAttrPrefix}-dir="${dir}"
         title="${escapeHtml(title)}"
+        tabindex="0"
       >${escapeHtml(token.label)}</button>`
     }).join('')
   }
@@ -314,18 +417,112 @@ export class SpacingSection extends BaseSection {
     this.deps.onPropertyChange('__MARGIN_INPUT__', JSON.stringify({ value, dir }), 'input')
   }
 
+  private handleTokenKeydown(e: KeyboardEvent, target: HTMLElement, type: 'pad' | 'margin'): void {
+    const key = e.key
+
+    // Handle Enter/Space - activate the token
+    if (key === 'Enter' || key === ' ') {
+      e.preventDefault()
+      target.click()
+      return
+    }
+
+    // Handle ArrowLeft/ArrowRight - navigate between tokens
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      e.preventDefault()
+      const tokenGroup = target.closest('.pp-token-group')
+      if (!tokenGroup) return
+
+      const tokens = Array.from(tokenGroup.querySelectorAll('.pp-token-btn')) as HTMLElement[]
+      const currentIndex = tokens.indexOf(target)
+      if (currentIndex === -1) return
+
+      let nextIndex: number
+      if (key === 'ArrowLeft') {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : tokens.length - 1
+      } else {
+        nextIndex = currentIndex < tokens.length - 1 ? currentIndex + 1 : 0
+      }
+
+      tokens[nextIndex]?.focus()
+    }
+  }
+
   private handleExpandClick(groupName: string): void {
     if (this.container) {
+      const sectionKey = `spacing-${groupName}`
+      const isExpanded = toggleExpanded(sectionKey)
+
       const container = this.container.querySelector(`[data-expand-container="${groupName}"]`)
       if (container) {
-        container.classList.toggle('expanded')
-        // Also toggle on parent .section for CSS purposes
-        const section = container.closest('.section')
+        container.classList.toggle('expanded', isExpanded)
+        // Also toggle on parent .pp-section for CSS purposes
+        const section = container.closest('.pp-section')
         if (section) {
-          section.classList.toggle('expanded')
+          section.classList.toggle('expanded', isExpanded)
         }
       }
     }
+  }
+
+  /**
+   * Called after the section is mounted to restore persisted expand states
+   */
+  afterMount(): void {
+    if (this.container) {
+      applyExpandedState(this.container, 'spacing-spacing', '[data-expand-container="spacing"]')
+      applyExpandedState(this.container, 'spacing-margin', '[data-expand-container="margin"]')
+      this.setupScrubbing()
+    }
+  }
+
+  /**
+   * Clean up scrub instances before re-render
+   */
+  private cleanupScrubbing(): void {
+    this.scrubInstances.forEach(instance => instance.destroy())
+    this.scrubInstances = []
+  }
+
+  /**
+   * Set up scrubbing on all scrubbable labels
+   */
+  private setupScrubbing(): void {
+    this.cleanupScrubbing()
+
+    if (!this.container) return
+
+    // Find all elements with data-scrub attribute (rows or cells)
+    const scrubElements = this.container.querySelectorAll('[data-scrub]')
+
+    scrubElements.forEach(element => {
+      // Support both old .pp-row-label and new .pp-cell-label
+      const label = element.querySelector('.pp-cell-label, .pp-row-label') as HTMLElement
+      const input = element.querySelector('input[type="text"]') as HTMLInputElement
+      const scrubData = element.getAttribute('data-scrub')
+
+      if (!label || !input || !scrubData) return
+
+      // Parse scrub data: "pad-h", "margin-v", etc.
+      const [type, dir] = scrubData.split('-')
+
+      const instance = makeScrubable({
+        label,
+        input,
+        min: 0,
+        step: 1,
+        allowDecimals: false,
+        onChange: (value) => {
+          if (type === 'pad') {
+            this.handlePadInputChange(String(value), dir)
+          } else if (type === 'margin') {
+            this.handleMarginInputChange(String(value), dir)
+          }
+        }
+      })
+
+      this.scrubInstances.push(instance)
+    })
   }
 }
 

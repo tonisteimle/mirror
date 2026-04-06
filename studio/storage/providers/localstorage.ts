@@ -19,19 +19,20 @@ const STORAGE_KEY = 'mirror-files'
 // =============================================================================
 
 const DEFAULT_PROJECT: Record<string, string> = {
-  // Note: No "App" wrapper needed - it's added automatically by the compiler
-  'index.mir': `Title "Welcome to Mirror"
-Muted "Edit this code to get started"
+  // App is the root container (defined in components.com) with canvas background and spacing
+  'index.mir': `App
+  Title "Welcome to Mirror"
+  Muted "Edit this code to get started"
 
-Card
-  Muted "Your first component"
-  Button "Click Me"
+  Card
+    Muted "Your first component"
+    Button "Click Me"
 
-// Zag Select Component
-Select placeholder "Choose an option..."
-  Item "Option 1"
-  Item "Option 2"
-  Item "Option 3"`,
+  // Zag Select Component
+  Select placeholder "Choose an option..."
+    Item "Option 1"
+    Item "Option 2"
+    Item "Option 3"`,
 
   'tokens.tok': `// Theme Tokens
 
@@ -72,7 +73,7 @@ $l.rad: 12`,
 
   'components.com': `// Component Definitions
 
-App: bg $canvas, pad $l, gap $l
+App: w full, h full, bg $canvas, pad $l, gap $l
 
 Title: fs $xl, weight bold, col $text
 

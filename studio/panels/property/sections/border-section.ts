@@ -10,6 +10,8 @@
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
 import { escapeHtml, resolveColorToken, validateInput } from '../utils'
+import { toggleExpanded, applyExpandedState } from '../utils/expand-state'
+import { makeScrubable, type ScrubInstance } from '../utils/scrub'
 
 /**
  * Expand icons
@@ -34,6 +36,8 @@ const CIRCLE_ICON = `<svg class="pp-icon" viewBox="0 0 14 14">
  * BorderSection class
  */
 export class BorderSection extends BaseSection {
+  private scrubInstances: ScrubInstance[] = []
+
   constructor(deps: SectionDependencies) {
     super({ label: 'Border' }, deps)
   }
@@ -187,7 +191,7 @@ export class BorderSection extends BaseSection {
         </div>
         <div class="pp-section-content" data-expand-container="radius">
           <!-- Collapsed: Global Radius -->
-          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius">
+          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius" data-scrub="radius">
             <span class="pp-row-label">All</span>
             <div class="pp-row-content">
               <div class="pp-token-group">
@@ -214,7 +218,7 @@ export class BorderSection extends BaseSection {
 
   private renderCornerInput(corner: string, title: string, value: string): string {
     return `
-      <div class="pp-corner-input">
+      <div class="pp-corner-input" data-scrub="radius-${corner}">
         <span class="pp-corner-label" title="${title}">${corner.toUpperCase()}</span>
         <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
       </div>
@@ -306,15 +310,79 @@ export class BorderSection extends BaseSection {
 
   private handleExpandClick(groupName: string): void {
     if (this.container) {
+      const sectionKey = `border-${groupName}`
+      const isExpanded = toggleExpanded(sectionKey)
+
       const container = this.container.querySelector(`[data-expand-container="${groupName}"]`)
       if (container) {
-        container.classList.toggle('expanded')
-        const section = container.closest('.section')
+        container.classList.toggle('expanded', isExpanded)
+        const section = container.closest('.pp-section')
         if (section) {
-          section.classList.toggle('expanded')
+          section.classList.toggle('expanded', isExpanded)
         }
       }
     }
+  }
+
+  /**
+   * Called after the section is mounted to restore persisted expand states
+   */
+  afterMount(): void {
+    if (this.container) {
+      applyExpandedState(this.container, 'border-radius', '[data-expand-container="radius"]')
+      applyExpandedState(this.container, 'border-border', '[data-expand-container="border"]')
+      this.setupScrubbing()
+    }
+  }
+
+  /**
+   * Clean up scrub instances before re-render
+   */
+  private cleanupScrubbing(): void {
+    this.scrubInstances.forEach(instance => instance.destroy())
+    this.scrubInstances = []
+  }
+
+  /**
+   * Set up scrubbing on all scrubbable labels
+   */
+  private setupScrubbing(): void {
+    this.cleanupScrubbing()
+
+    if (!this.container) return
+
+    // Find all rows with data-scrub attribute
+    const rows = this.container.querySelectorAll('[data-scrub]')
+
+    rows.forEach(row => {
+      const label = row.querySelector('.pp-row-label, .pp-corner-label') as HTMLElement
+      const input = row.querySelector('input[type="text"]') as HTMLInputElement
+      const property = row.getAttribute('data-scrub')
+
+      if (!label || !input || !property) return
+
+      const instance = makeScrubable({
+        label,
+        input,
+        min: 0,
+        step: 1,
+        allowDecimals: false,
+        onChange: (value) => {
+          // Handle corner radius separately
+          if (property.startsWith('radius-')) {
+            const corner = property.replace('radius-', '')
+            this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
+              corner,
+              value: String(value)
+            }), 'input')
+          } else {
+            this.deps.onPropertyChange(property, String(value), 'input')
+          }
+        }
+      })
+
+      this.scrubInstances.push(instance)
+    })
   }
 }
 

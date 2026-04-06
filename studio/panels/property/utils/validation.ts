@@ -51,16 +51,69 @@ export function validateWithRule(value: string, rule: ValidationRule): Validatio
 }
 
 /**
- * Apply validation styling to an input
+ * Apply validation styling to an input with error hint
  */
 export function applyValidationStyle(input: HTMLInputElement, result: ValidationResult): void {
   if (result.valid) {
-    input.classList.remove('invalid')
+    input.classList.remove('invalid', 'shake')
     input.removeAttribute('title')
+    // Remove error hint if exists
+    removeErrorHint(input)
   } else {
+    const wasValid = !input.classList.contains('invalid')
     input.classList.add('invalid')
     if (result.message) {
       input.setAttribute('title', result.message)
+      // Show error hint
+      showErrorHint(input, result.message)
+    }
+    // Shake animation on first invalid
+    if (wasValid) {
+      input.classList.add('shake')
+      setTimeout(() => input.classList.remove('shake'), 400)
+    }
+  }
+}
+
+/**
+ * Show error hint below input
+ */
+function showErrorHint(input: HTMLInputElement, message: string): void {
+  // Find or create wrapper
+  let wrapper = input.parentElement
+  if (!wrapper?.classList.contains('pp-input-wrapper')) {
+    // Wrap the input if not already wrapped
+    wrapper = input.parentElement
+    if (wrapper) {
+      const existingHint = wrapper.querySelector('.pp-error-hint')
+      if (existingHint) {
+        existingHint.textContent = message
+        return
+      }
+    }
+    // Create hint as sibling (fallback)
+    return
+  }
+
+  // Find or create error hint
+  let hint = wrapper.querySelector('.pp-error-hint') as HTMLElement
+  if (!hint) {
+    hint = document.createElement('span')
+    hint.className = 'pp-error-hint'
+    wrapper.appendChild(hint)
+  }
+  hint.textContent = message
+}
+
+/**
+ * Remove error hint from input
+ */
+function removeErrorHint(input: HTMLInputElement): void {
+  const wrapper = input.parentElement
+  if (wrapper?.classList.contains('pp-input-wrapper')) {
+    const hint = wrapper.querySelector('.pp-error-hint')
+    if (hint) {
+      hint.remove()
     }
   }
 }

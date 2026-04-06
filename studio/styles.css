@@ -82,13 +82,14 @@
       --bg-panel: #141414;          /* All panel backgrounds */
       --bg-elevated: #1e1e1e;       /* Floating elements (dropdowns, popovers) */
       --bg-input: #222222;          /* Inputs, toggles, interactive elements */
-      --bg-hover: #27272a;          /* Hover state */
+      --bg-hover: #303035;          /* Hover state - improved contrast */
+      --pp-bg-hover: #353539;       /* Property Panel specific hover */
       --bg-active: #3f3f46;         /* Active/pressed state */
 
       /* Text Colors - Consolidated */
       --text-primary: #e4e4e7;      /* Main text */
       --text-secondary: #a1a1aa;    /* Secondary text */
-      --text-muted: #71717a;        /* Muted/dim text */
+      --text-muted: #8a8a94;        /* Muted/dim text - improved contrast ~4.8:1 */
       --text-disabled: #52525b;     /* Disabled text */
       --text-placeholder: #555;     /* Placeholder text */
       --text-inverse: #ffffff;      /* Text on dark backgrounds */
@@ -201,17 +202,17 @@
       --size-icon-md: 16px;
       --size-icon-lg: 18px;
       --size-icon-xl: 20px;
-      --size-icon-2xl: 24px;
+      --size-icon-2xl: 20px;  /* Reduced for compact PP */
 
       /* Layout - Control Heights */
-      --input-height: 30px;
+      --input-height: 26px;  /* was 30px, compact */
       --panel-header-height: 36px;
       --activity-bar-item: 40px;
 
       /* Layout - Legacy (to be migrated) */
-      --spacing-unit: 28px;
+      --spacing-unit: 22px;  /* Reduced for compact PP */
       --spacing-gap: var(--space-1);
-      --label-width: 64px;
+      --label-width: 52px;  /* Reduced for compact PP */
 
       /* Transitions */
       --transition-fast: 0.1s ease;
@@ -370,7 +371,7 @@
     }
 
     .property-panel {
-      flex: 0 0 320px;
+      flex: 0 0 360px;  /* was 320px, widened for grid layout */
     }
 
     .sidebar-header {
@@ -1924,7 +1925,6 @@
       flex: 1;
       overflow: auto;
       background: var(--color-black) !important;
-      padding: var(--space-2);
     }
 
     #preview .mirror-root {
@@ -3369,11 +3369,11 @@
        Input-Felder haben dieselbe Breite wie --pp-group-2
        ========================================= */
     :root {
-      /* Basis-Einheiten */
-      --pp-unit: 28px;              /* Breite eines Toggle-Buttons */
-      --pp-gap: var(--space-2);                /* Abstand zwischen Toggles in Gruppe */
-      --pp-group-pad: 3px;          /* Padding innerhalb Toggle-Gruppen */
-      --pp-row-gap: var(--space-1);            /* Abstand zwischen Rows */
+      /* Basis-Einheiten - COMPACT */
+      --pp-unit: 22px;              /* Breite eines Toggle-Buttons (was 28px) */
+      --pp-gap: var(--space-1);     /* Abstand zwischen Toggles in Gruppe (was space-2) */
+      --pp-group-pad: 2px;          /* Padding innerhalb Toggle-Gruppen (was 3px) */
+      --pp-row-gap: 2px;            /* Abstand zwischen Rows (was space-1/4px) */
 
       /* Berechnete Größen (Konsistenz!) */
       --pp-group-2: calc(var(--pp-unit) * 2 + var(--pp-gap) + var(--pp-group-pad) * 2);
@@ -3384,7 +3384,20 @@
       /* Legacy (für Kompatibilität) */
       --unit: var(--pp-unit);
       --gap: var(--pp-row-gap);
-      --label-width: 64px;
+      --label-width: 52px;  /* was 64px */
+    }
+
+    /* Success Feedback Animation */
+    @keyframes ppSuccessPulse {
+      0% { box-shadow: 0 0 0 0 var(--color-success-muted); }
+      50% { box-shadow: 0 0 0 3px var(--color-success-muted); }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+
+    .pp-input.success,
+    .pp-token-btn.success,
+    .pp-toggle-btn.success {
+      animation: ppSuccessPulse 0.4s ease-out;
     }
 
     .property-panel {
@@ -3532,11 +3545,11 @@
     }
 
     /* ============================================
-       SECTIONS (from prototype)
+       SECTIONS (from prototype) - COMPACT
        ============================================ */
     .pp-content .pp-section,
     .pp-content .pp-section {
-      margin-bottom: 16px;
+      margin-bottom: 8px;  /* was 16px */
     }
 
     .pp-content .pp-section:last-child,
@@ -3549,39 +3562,69 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: var(--font-xs);
+      font-size: 10px;  /* was var(--font-xs) = 11px */
       font-weight: var(--weight-semibold);
       color: var(--text-primary);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
-      margin-bottom: 10px;
-      padding: 0;
+      margin-bottom: 6px;  /* was 10px */
+      padding: 2px 0;
+      cursor: pointer;
+      user-select: none;
+      border-radius: var(--radius-sm);
     }
 
-    /* Section expand/collapse button */
+    .pp-content .pp-section-label:hover {
+      color: var(--color-primary);
+    }
+
+    /* Collapse indicator for section labels */
+    .pp-content .pp-section-label::before {
+      content: "";
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid currentColor;
+      margin-right: 6px;
+      transition: transform 0.15s;
+      opacity: 0.6;
+    }
+
+    .pp-content .pp-section.collapsed .pp-section-label::before {
+      transform: rotate(-90deg);
+    }
+
+    /* Section expand/collapse button - larger hit area for better UX */
     .pp-content .pp-section-expand-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: var(--size-icon-lg);
-      height: var(--size-icon-lg);
-      padding: 0;
-      background: transparent;
-      border: none;
+      width: 28px;
+      height: 28px;
+      padding: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
       border-radius: var(--radius-sm);
-      color: var(--text-muted);
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: opacity 0.15s, background 0.15s;
+      transition: all 0.15s;
     }
 
     .pp-content .pp-section-expand-btn:hover {
-      color: var(--text-secondary);
+      color: var(--text-primary);
       background: var(--bg-hover);
+      border-color: var(--border-subtle);
+    }
+
+    .pp-content .pp-section-expand-btn:active {
+      background: var(--bg-active);
     }
 
     .pp-content .pp-section-expand-btn .icon {
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
+      width: 14px;
+      height: 14px;
       fill: none;
       stroke: currentColor;
       stroke-width: 2;
@@ -3614,6 +3657,59 @@
     }
 
     /* ============================================
+       COLLAPSIBLE SECTIONS
+       ============================================ */
+
+    /* Clickable section header for collapse */
+    .pp-content .pp-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 0;
+      margin-bottom: 6px;
+    }
+
+    .pp-content .pp-section-header:hover {
+      color: var(--text-primary);
+    }
+
+    .pp-content .pp-section-header .pp-collapse-icon {
+      width: 12px;
+      height: 12px;
+      transition: transform 0.15s;
+      color: var(--text-muted);
+    }
+
+    .pp-content .pp-section-header .pp-collapse-icon svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* Collapsed state */
+    .pp-content .pp-section.collapsed .pp-collapse-icon {
+      transform: rotate(-90deg);
+    }
+
+    .pp-content .pp-section.collapsed .pp-section-content {
+      display: none;
+    }
+
+    .pp-content .pp-section.collapsed .pp-minmax-section {
+      display: none;
+    }
+
+    /* Hide empty sections */
+    .pp-content .pp-section:empty,
+    .pp-content .pp-section-content:empty {
+      display: none;
+    }
+
+    /* ============================================
        PROPERTY ROW (from prototype)
        ============================================ */
     .pp-content .pp-row,
@@ -3632,7 +3728,107 @@
       color: var(--text-secondary);
     }
 
-    /* Override styling removed - labels stay consistent */
+    /* ============================================
+       SCRUBBING - Drag-to-adjust on labels
+       ============================================ */
+    .pp-content .pp-scrubbable {
+      position: relative;
+      cursor: ew-resize;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .pp-content .pp-scrubbable:hover {
+      color: var(--color-primary);
+    }
+
+    .pp-content .pp-scrubbable::after {
+      content: '↔';
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      font-size: 9px;
+      color: var(--text-disabled);
+      transition: opacity 0.15s;
+      pointer-events: none;
+    }
+
+    .pp-content .pp-row:hover .pp-scrubbable::after {
+      opacity: 0.5;
+    }
+
+    .pp-content .pp-scrubbing {
+      color: var(--color-primary) !important;
+    }
+
+    .pp-content .pp-scrubbing::after {
+      opacity: 1 !important;
+      color: var(--color-primary);
+    }
+
+    .pp-content .pp-scrub-target {
+      box-shadow: 0 0 0 2px var(--color-primary);
+      border-radius: var(--radius-md);
+    }
+
+    /* Override indicator - left border like Figma */
+    .pp-content .pp-row.override {
+      position: relative;
+      padding-left: 8px;
+    }
+
+    .pp-content .pp-row.override::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--color-override);
+      border-radius: 1px;
+    }
+
+    .pp-content .pp-row.override .pp-row-label {
+      color: var(--color-override);
+    }
+
+    /* Token value indicator - uses design tokens */
+    .pp-content .pp-row.uses-token {
+      position: relative;
+      padding-left: 8px;
+    }
+
+    .pp-content .pp-row.uses-token::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--color-primary);
+      border-radius: 1px;
+      opacity: 0.6;
+    }
+
+    .pp-content .pp-row.uses-token .pp-row-label {
+      color: var(--color-primary);
+    }
+
+    /* Override takes precedence over token indicator */
+    .pp-content .pp-row.override.uses-token::before {
+      background: var(--color-override);
+    }
+
+    .pp-content .pp-row.override.uses-token .pp-row-label {
+      color: var(--color-override);
+    }
+
+    /* Token value badge in inputs */
+    .pp-content .pp-input.has-token {
+      color: var(--color-primary);
+    }
 
     .pp-content .pp-row-content,
     .pp-content .pp-prop-content {
@@ -3746,6 +3942,46 @@
       box-shadow: var(--focus-ring);
     }
 
+    .pp-content .pp-token-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary);
+      z-index: 1;
+    }
+
+    .pp-content .pp-token-btn:focus:not(:focus-visible) {
+      box-shadow: none;
+    }
+
+    .pp-content .pp-token-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary);
+      z-index: 1;
+    }
+
+    /* ============================================
+       TOKEN + INPUT GROUPED (visually connected)
+       ============================================ */
+    .pp-content .pp-token-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .pp-content .pp-token-input-group .pp-token-group {
+      border-radius: var(--radius-md) 0 0 var(--radius-md);
+      border-right: 1px solid var(--border-default);
+      background: transparent;
+    }
+
+    .pp-content .pp-token-input-group .pp-input {
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      border: none;
+      background: transparent;
+    }
+
 
     /* ============================================
        ALIGNMENT GRID (integrated in Layout)
@@ -3786,24 +4022,47 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 4px;
-      height: 4px;
-      background: var(--border-subtle);
-      border-radius: 1px;
+      width: 6px;
+      height: 6px;
+      background: var(--text-disabled);
+      border-radius: 50%;
       transition: all 0.12s;
     }
 
+    .pp-content .pp-align-cell:hover {
+      background: var(--bg-hover);
+    }
+
     .pp-content .pp-align-cell:hover::after {
-      background: var(--bg-cell-hover);
+      background: var(--text-secondary);
+      transform: translate(-50%, -50%) scale(1.2);
     }
 
     .pp-content .pp-align-cell.active {
-      background: var(--bg-input);
+      background: var(--primary-15);
       box-shadow: var(--focus-ring-sm);
     }
 
     .pp-content .pp-align-cell.active::after {
       background: var(--color-primary);
+      width: 8px;
+      height: 8px;
+    }
+
+    .pp-content .pp-align-cell:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary);
+      z-index: 1;
+    }
+
+    .pp-content .pp-align-cell:focus:not(:focus-visible) {
+      box-shadow: none;
+    }
+
+    .pp-content .pp-align-cell:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary);
+      z-index: 1;
     }
 
     /* ============================================
@@ -3872,6 +4131,90 @@
     .pp-content input[type="text"].invalid:focus {
       border-color: var(--color-error);
       box-shadow: 0 0 0 1px var(--color-error), 0 0 4px var(--error-10);
+    }
+
+    /* Invalid input shake animation */
+    @keyframes ppInvalidShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-3px); }
+      40% { transform: translateX(3px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
+    }
+
+    .pp-content .pp-input.shake {
+      animation: ppInvalidShake 0.4s ease-out;
+    }
+
+    /* Error hint tooltip */
+    .pp-content .pp-input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+    }
+
+    .pp-content .pp-input-wrapper .pp-input {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    /* Input next to toggle group should take remaining space */
+    .pp-content .pp-row-content > .pp-toggle-group + .pp-input-wrapper,
+    .pp-content .pp-row-content > .pp-token-group + .pp-input-wrapper {
+      flex: 1;
+    }
+
+    .pp-content .pp-error-hint {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 2px;
+      padding: 4px 8px;
+      background: var(--color-error-dark);
+      border: 1px solid var(--color-error);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-xs);
+      color: var(--color-error-light);
+      z-index: 10;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .pp-content .pp-input-wrapper:has(.pp-input.invalid:focus) .pp-error-hint,
+    .pp-content .pp-input-wrapper:has(.pp-input.invalid:hover) .pp-error-hint {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Token muted state - when input overrides token value */
+    .pp-content .pp-token-btn.muted {
+      opacity: 0.4;
+      color: var(--text-disabled);
+    }
+
+    .pp-content .pp-token-btn.muted:hover {
+      opacity: 0.7;
+    }
+
+    /* When input has custom value, mute all non-active tokens */
+    .pp-content .pp-token-input-group.input-modified .pp-token-btn:not(.active) {
+      opacity: 0.35;
+      color: var(--text-disabled);
+    }
+
+    .pp-content .pp-token-input-group.input-modified .pp-token-btn:not(.active):hover {
+      opacity: 0.6;
+      color: var(--text-muted);
+    }
+
+    /* Visual indicator that custom value is used */
+    .pp-content .pp-token-input-group.input-modified .pp-input {
+      color: var(--color-warning);
     }
 
     /* ============================================
@@ -4091,6 +4434,28 @@
       box-shadow: var(--focus-ring);
     }
 
+    /* Weight select - narrower since we have quick buttons */
+    .pp-content .pp-weight-select {
+      width: 56px;
+      height: var(--input-height);
+      padding: 0 20px 0 8px;
+      background: var(--bg-input);
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: var(--font-sm);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+    }
+
+    .pp-content .pp-weight-select:focus {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
     /* Hide token group in typography if empty */
     .pp-content .token-group:empty {
       display: none;
@@ -4198,6 +4563,59 @@
     .pp-content .pp-corner-input .prop-input {
       flex: 1;
       min-width: 0;
+    }
+
+    /* ============================================
+       GRID LAYOUT - 2-Column Rows
+       ============================================ */
+    .pp-content .pp-row-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--pp-row-gap);
+    }
+
+    .pp-content .pp-row-grid .pp-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .pp-content .pp-cell-label {
+      width: 16px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pp-content .pp-cell-label svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .pp-content .pp-cell-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pp-content .pp-cell-input .pp-input,
+    .pp-content .pp-cell-input input {
+      width: 100%;
+    }
+
+    /* Compact toggle group for grid cells */
+    .pp-content .pp-cell .pp-toggle-group {
+      padding: 1px;
+    }
+
+    .pp-content .pp-cell .pp-toggle-btn {
+      width: 20px;
+      height: 18px;
     }
 
     /* ============================================
@@ -4990,7 +5408,28 @@
     }
 
     .pp-color-trigger:hover {
-      background: var(--bg-button-hover);
+      background: var(--bg-hover);
+      border-color: var(--border-subtle);
+    }
+
+    .pp-color-trigger:hover .pp-color-swatch {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Edit icon appears on hover */
+    .pp-color-trigger .pp-color-edit-icon {
+      width: 14px;
+      height: 14px;
+      margin-left: auto;
+      color: var(--text-disabled);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .pp-color-trigger:hover .pp-color-edit-icon {
+      opacity: 1;
+      color: var(--text-muted);
     }
 
     .pp-color-trigger .pp-color-swatch {
@@ -5473,6 +5912,32 @@
       background: var(--bg-panel);
       border-radius: var(--radius-md);
       padding: var(--space-4);
+    }
+
+    .pp-events-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .pp-events-empty-icon {
+      color: var(--text-disabled);
+      opacity: 0.5;
+    }
+
+    .pp-events-empty-title {
+      color: var(--text-muted);
+      font-size: var(--font-sm);
+      font-weight: 500;
+    }
+
+    .pp-events-empty-hint {
+      color: var(--text-disabled);
+      font-size: 11px;
+      text-align: center;
+      line-height: 1.4;
     }
 
     .pp-events-empty {

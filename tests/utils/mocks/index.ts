@@ -20,6 +20,29 @@ export {
   type MockPreview,
 } from './sync-mocks'
 
+// Drag-Drop mocks
+export {
+  createRect,
+  createInternalRect,
+  createMockDropTarget,
+  createMockFlexTarget,
+  createMockPaletteSource,
+  createMockCanvasSource,
+  createMockElement,
+  createPositionedContainer,
+  createMockSourceMap as createMockDragDropSourceMap,
+  createMockCodeModifier as createMockDragDropCodeModifier,
+  createMockCodeExecutorDeps,
+  createMockCodeExecutor,
+  createMockAbsoluteDropResult,
+  createMockFlexDropResult,
+  createMockVisualState,
+  type MockHTMLElement,
+  type MockSourceMap as DragDropMockSourceMap,
+  type MockCodeModifier as DragDropMockCodeModifier,
+  type MockCodeExecutorDeps,
+} from './drag-drop-mocks'
+
 // Property Panel mocks
 export {
   createMockPropertyExtractor,

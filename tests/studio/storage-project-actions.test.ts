@@ -244,6 +244,17 @@ describe('Default Project Template', () => {
     expect(indexContent).toMatch(/Title|Text|Frame|Button|Card/)
   })
 
+  it('should use App as root element in index.mir', async () => {
+    const { newProject } = await getProjectActions()
+    await newProject()
+
+    const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
+    const indexContent = stored['index.mir']
+
+    // index.mir should start with App as root container
+    expect(indexContent.trim()).toMatch(/^App\b/)
+  })
+
   it('should have token definitions in tokens.tok', async () => {
     const { newProject } = await getProjectActions()
     await newProject()

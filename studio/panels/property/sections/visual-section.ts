@@ -13,6 +13,7 @@
 import { BaseSection, type SectionDependencies } from '../base/section'
 import type { SectionData, EventHandlerMap, PropertyCategory } from '../types'
 import { escapeHtml } from '../utils'
+import { makeScrubable, type ScrubInstance } from '../utils/scrub'
 
 /**
  * Shadow presets
@@ -45,6 +46,8 @@ const ICONS = {
  * VisualSection class
  */
 export class VisualSection extends BaseSection {
+  private scrubInstances: ScrubInstance[] = []
+
   constructor(deps: SectionDependencies) {
     super({ label: 'Visual' }, deps)
   }
@@ -187,7 +190,7 @@ export class VisualSection extends BaseSection {
     }).join('')
 
     return `
-      <div class="pp-row">
+      <div class="pp-row" data-scrub="opacity" data-scrub-min="0" data-scrub-max="1" data-scrub-step="0.01" data-scrub-decimals="true">
         <span class="pp-row-label">Opacity</span>
         <div class="pp-row-content">
           <div class="pp-token-group">
@@ -219,7 +222,7 @@ export class VisualSection extends BaseSection {
 
   private renderZIndexRow(zIndexValue: string): string {
     return `
-      <div class="pp-row">
+      <div class="pp-row" data-scrub="z">
         <span class="pp-row-label">Z-Index</span>
         <div class="pp-row-content">
           <input type="text" class="pp-input" value="${escapeHtml(zIndexValue)}" data-prop="z" placeholder="0" autocomplete="off">
@@ -274,6 +277,69 @@ export class VisualSection extends BaseSection {
         </div>
       </div>
     `
+  }
+
+  /**
+   * Called after the section is mounted
+   */
+  afterMount(): void {
+    if (this.container) {
+      this.setupScrubbing()
+    }
+  }
+
+  /**
+   * Clean up scrub instances before re-render
+   */
+  private cleanupScrubbing(): void {
+    this.scrubInstances.forEach(instance => instance.destroy())
+    this.scrubInstances = []
+  }
+
+  /**
+   * Set up scrubbing on all scrubbable labels
+   */
+  private setupScrubbing(): void {
+    this.cleanupScrubbing()
+
+    if (!this.container) return
+
+    // Find all rows with data-scrub attribute
+    const rows = this.container.querySelectorAll('[data-scrub]')
+
+    rows.forEach(row => {
+      const label = row.querySelector('.pp-row-label') as HTMLElement
+      const input = row.querySelector('input[type="text"]') as HTMLInputElement
+      const property = row.getAttribute('data-scrub')
+
+      if (!label || !input || !property) return
+
+      // Get config from data attributes
+      const min = row.hasAttribute('data-scrub-min')
+        ? parseFloat(row.getAttribute('data-scrub-min')!)
+        : undefined
+      const max = row.hasAttribute('data-scrub-max')
+        ? parseFloat(row.getAttribute('data-scrub-max')!)
+        : undefined
+      const step = row.hasAttribute('data-scrub-step')
+        ? parseFloat(row.getAttribute('data-scrub-step')!)
+        : 1
+      const allowDecimals = row.getAttribute('data-scrub-decimals') === 'true'
+
+      const instance = makeScrubable({
+        label,
+        input,
+        min,
+        max,
+        step,
+        allowDecimals,
+        onChange: (value) => {
+          this.deps.onPropertyChange(property, String(value), 'input')
+        }
+      })
+
+      this.scrubInstances.push(instance)
+    })
   }
 }
 

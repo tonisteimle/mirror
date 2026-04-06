@@ -759,12 +759,14 @@ export class CodeModifier {
   /**
    * Move a node to a new location relative to another node
    * @param insertionIndex - For 'inside' placement: position among siblings (0 = first)
+   * @param options - Optional: properties to add to the moved element
    */
   moveNode(
     sourceNodeId: string,
     targetId: string,
     placement: 'before' | 'after' | 'inside',
-    insertionIndex?: number
+    insertionIndex?: number,
+    options?: { properties?: string }
   ): ModificationResult {
     const sourceMapping = this.sourceMap.getNodeById(sourceNodeId)
     if (!sourceMapping) {
@@ -807,7 +809,18 @@ export class CodeModifier {
     }
 
     // Re-indent the source block
-    const reindentedBlock = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
+    let reindentedBlock = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
+
+    // If properties are specified, add them to the first line of the block
+    if (options?.properties) {
+      const blockLines = reindentedBlock.split('\n')
+      if (blockLines.length > 0) {
+        const firstLine = blockLines[0].trimEnd()
+        // Add properties with comma separator
+        blockLines[0] = firstLine + ', ' + options.properties
+        reindentedBlock = blockLines.join('\n')
+      }
+    }
 
     // Calculate positions - we need to handle this carefully
     // Strategy: Remove first, then insert at adjusted position

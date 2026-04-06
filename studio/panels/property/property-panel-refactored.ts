@@ -16,7 +16,7 @@ import { parseSpacingValue, buildSpacingValue } from './sections/spacing-section
 import { showColorPickerForProperty } from '../../pickers/color'
 import { getAlignmentChanges, parseAlignmentState } from './components/align-grid'
 import type { AlignPosition } from './types'
-import { escapeHtml } from './utils'
+import { escapeHtml, isExpanded as isSectionExpanded, setExpanded as setSectionExpanded, toggleExpanded as toggleSectionExpanded } from './utils'
 
 // Import all sections
 import {
@@ -348,6 +348,28 @@ export class PropertyPanel {
 
     // Setup event delegation
     this.setupEventDelegation()
+
+    // Apply persisted section collapse states
+    this.applySectionCollapseStates()
+
+    // Attach sections to their containers and call afterMount
+    this.attachSections()
+  }
+
+  /**
+   * Attach sections to their DOM containers and call afterMount
+   * This enables features like scrubbing that need DOM references
+   */
+  private attachSections(): void {
+    for (const [name, entry] of this.sections) {
+      const containerEl = this.container.querySelector(`[data-section="${name}"]`) as HTMLElement
+      if (containerEl) {
+        // Set container reference on the section
+        // The section's data was already set during render()
+        ;(entry.section as any).container = containerEl
+        entry.section.afterMount()
+      }
+    }
   }
 
   private renderHeader(element: ExtractedElement): string {
@@ -499,7 +521,32 @@ export class PropertyPanel {
     if (!entry) return ''
 
     const html = entry.section.render(data)
-    return html ? `<div data-section="${sectionName}">${html}</div>` : ''
+    if (!html) return ''
+
+    // Check if section should be collapsed (from persisted state)
+    const sectionKey = `section-${sectionName}`
+    const isCollapsed = !isSectionExpanded(sectionKey)
+
+    return `<div data-section="${sectionName}" class="${isCollapsed ? 'section-collapsed' : ''}">${html}</div>`
+  }
+
+  /**
+   * Add collapsed class to persisted collapsed sections after rendering
+   */
+  private applySectionCollapseStates(): void {
+    const sections = this.container.querySelectorAll('[data-section]')
+    sections.forEach(sectionWrapper => {
+      const sectionName = sectionWrapper.getAttribute('data-section')
+      if (!sectionName) return
+
+      const sectionKey = `section-${sectionName}`
+      const isCollapsed = !isSectionExpanded(sectionKey)
+
+      const sectionEl = sectionWrapper.querySelector('.pp-section')
+      if (sectionEl && isCollapsed) {
+        sectionEl.classList.add('collapsed')
+      }
+    })
   }
 
   // ============================================
@@ -519,6 +566,27 @@ export class PropertyPanel {
         const handlers = entry.section.getHandlers()
         delegator.registerHandlers(handlers)
       }
+
+      // Register section collapse handler for clickable section labels
+      delegator.registerHandlers({
+        '.pp-section-label': {
+          click: (e: Event, target: HTMLElement) => {
+            // Only handle if not clicking on the expand button
+            const expandBtn = (e.target as HTMLElement).closest('.pp-section-expand-btn')
+            if (expandBtn) return
+
+            // Find the section wrapper to get the section name
+            const sectionWrapper = target.closest('[data-section]')
+            if (sectionWrapper) {
+              const sectionName = sectionWrapper.getAttribute('data-section')
+              if (sectionName) {
+                this.handlePropertyChange('__SECTION_COLLAPSE__', sectionName)
+              }
+            }
+          }
+        }
+      })
+
       // Only assign after successful registration
       this.eventDelegator = delegator
     } catch (error) {
@@ -625,7 +693,22 @@ export class PropertyPanel {
     '__INTERACTION__': (v) => this.handleInteractionChange(v),
     '__ADD_EVENT__': () => this.handleAddEvent(),
     '__EDIT_EVENT__': (v) => this.handleEditEvent(parseInt(v, 10) || 0),
-    '__DELETE_EVENT__': (v) => this.handleDeleteEvent(parseInt(v, 10) || 0)
+    '__DELETE_EVENT__': (v) => this.handleDeleteEvent(parseInt(v, 10) || 0),
+    '__SECTION_COLLAPSE__': (v) => this.handleSectionCollapse(v)
+  }
+
+  /**
+   * Handle section collapse toggle
+   */
+  private handleSectionCollapse(sectionName: string): void {
+    const sectionKey = `section-${sectionName}`
+    const isNowCollapsed = toggleSectionExpanded(sectionKey)
+
+    // Find and toggle the section element
+    const sectionEl = this.container.querySelector(`[data-section="${sectionName}"] .pp-section`) as HTMLElement
+    if (sectionEl) {
+      sectionEl.classList.toggle('collapsed', !isNowCollapsed)
+    }
   }
 
   /**
@@ -994,7 +1077,16 @@ export class PropertyPanel {
       this.showErrorFeedback(result.error || 'Unknown error', context)
       return
     }
+    this.showSuccessFeedback()
     this.onCodeChange(result)
+  }
+
+  private showSuccessFeedback(): void {
+    const activeElement = document.activeElement
+    if (activeElement && this.container.contains(activeElement)) {
+      activeElement.classList.add('success')
+      setTimeout(() => activeElement.classList.remove('success'), 400)
+    }
   }
 
   private showErrorFeedback(error: string, context?: string): void {

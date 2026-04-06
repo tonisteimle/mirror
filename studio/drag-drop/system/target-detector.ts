@@ -75,7 +75,7 @@ export function detectTarget(
   }
 
   const style = window.getComputedStyle(element)
-  const layoutType = detectLayoutType(style)
+  const layoutType = detectLayoutType(element, style)
   const direction = detectDirection(style)
   const hasChildren = hasValidChildren(element, nodeIdAttr)
   const isPositioned = layoutType === 'positioned'
@@ -181,10 +181,35 @@ export function getSiblingRects(
 }
 
 /**
- * Detect layout type from computed style
+ * Detect layout type from element (checks both CSS and data attributes)
  */
-function detectLayoutType(style: CSSStyleDeclaration): LayoutType {
-  // Check display property first - this determines if it's a container
+function detectLayoutType(element: HTMLElement, style: CSSStyleDeclaration): LayoutType {
+  // Check for explicit data-layout attribute first (highest priority)
+  // This is set by Mirror's IR transformation for stacked/positioned containers
+  const layout = element.dataset?.layout
+  if (layout === 'absolute' || layout === 'stacked' || layout === 'pos' || layout === 'positioned') {
+    return 'positioned'
+  }
+
+  // Check for position:relative with layout hints (Mirror-specific)
+  const position = style.position
+  if (position === 'relative') {
+    // Legacy data-layout values that indicate absolute positioning context
+    if (layout === 'abs' || layout === 'relative') {
+      return 'positioned'
+    }
+    // Legacy data-mirror-abs attribute
+    if (element.dataset?.mirrorAbsolute === 'true' || element.dataset?.mirrorAbs === 'true') {
+      return 'positioned'
+    }
+    // Check for ZStack-like components
+    const name = element.dataset?.mirrorName
+    if (name === 'ZStack' || name === 'Canvas' || name === 'Artboard') {
+      return 'positioned'
+    }
+  }
+
+  // Check display property for flex/grid containers
   const display = style.display
   if (display === 'flex' || display === 'inline-flex') {
     return 'flex'
@@ -192,9 +217,6 @@ function detectLayoutType(style: CSSStyleDeclaration): LayoutType {
   if (display === 'grid' || display === 'inline-grid') {
     return 'flex' // Treat grid as flex for insertion purposes
   }
-
-  // Note: position:relative alone does NOT make something a flex container
-  // It just establishes a positioning context for absolute children
 
   return 'none'
 }
