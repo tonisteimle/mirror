@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -18,6 +18,8 @@
       <h1>Was ist Mirror?</h1>
       <p class="subtitle">Die Sprache für AI-unterstütztes UI-Design</p>
     </header>
+
+    <p class="intro">Mirror ist eine DSL für <strong>AI-unterstütztes UI-Design</strong>. AI generiert Code, du verfeinerst ihn – ohne Framework-Wissen, ohne Build-Tools. Dieses Kapitel zeigt dir, was Mirror ist und warum es existiert.</p>
 
 
     <!-- ============================================================ -->
@@ -41,23 +43,27 @@
     <section>
       <h2>Lesbar wie ein Dokument</h2>
       <p>Mirror verwendet kurze, eindeutige Abkürzungen:</p>
-      <div class="code-block">
-        <pre><span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">gap</span> 12, <span class="syn-property">pad</span> 16, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">rad</span> 8
-  <span class="syn-component">Icon</span> <span class="syn-string">"user"</span>, ic #2563eb, is 24
-  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
-    <span class="syn-component">Text</span> <span class="syn-string">"Max Mustermann"</span>, <span class="syn-property">col</span> white, <span class="syn-property">fs</span> 14, <span class="syn-property">weight</span> 500
-    <span class="syn-component">Text</span> <span class="syn-string">"Designer"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12</pre>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, pad 16, bg #1a1a1a, rad 8
+  Icon "user", ic #2563eb, is 24
+  Frame gap 2
+    Text "Max Mustermann", col white, fs 14, weight 500
+    Text "Designer", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
       </div>
 
-      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li><code>hor</code> – horizontal</li>
-        <li><code>gap</code> – Abstand zwischen Kindern</li>
-        <li><code>pad</code> – Padding</li>
-        <li><code>bg</code> – Hintergrund</li>
-        <li><code>rad</code> – Radius</li>
-        <li><code>col</code> – Farbe</li>
-        <li><code>fs</code> – Schriftgröße</li>
-      </ul>
+      <table class="ref-table">
+        <tr><th>Property</th><th>Bedeutung</th></tr>
+        <tr><td><code>hor</code></td><td>horizontal</td></tr>
+        <tr><td><code>gap</code></td><td>Abstand zwischen Kindern</td></tr>
+        <tr><td><code>pad</code></td><td>Padding</td></tr>
+        <tr><td><code>bg</code></td><td>Hintergrund</td></tr>
+        <tr><td><code>rad</code></td><td>Radius</td></tr>
+        <tr><td><code>col</code></td><td>Farbe</td></tr>
+        <tr><td><code>fs</code></td><td>Schriftgröße</td></tr>
+      </table>
       <p>Die Abkürzungen sind der Anfang des Wortes. Nach wenigen Minuten liest sich Mirror-Code wie eine Beschreibung des UIs.</p>
     </section>
 
@@ -86,18 +92,18 @@
     <section>
       <h2>Von Element zu Komponente: Ein Zeichen</h2>
       <p>Du hast einen Button gebaut und willst ihn wiederverwenden? Füge einen Namen mit Doppelpunkt hinzu:</p>
-      <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Vorher: Ein einzelner Button</span>
-<span class="syn-component">Button</span> <span class="syn-string">"Speichern"</span>, <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12 24, <span class="syn-property">rad</span> 6</pre>
-      </div>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Komponente definieren: Name mit :
+PrimaryBtn as Button: bg #2563eb, col white, pad 12 24, rad 6
 
-      <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Nachher: Eine wiederverwendbare Komponente</span>
-<span class="syn-component">PrimaryBtn</span> as Button: <span class="syn-property">bg</span> #2563eb, <span class="syn-property">col</span> white, <span class="syn-property">pad</span> 12 24, <span class="syn-property">rad</span> 6
-
-<span class="syn-component">PrimaryBtn</span> <span class="syn-string">"Speichern"</span>
-<span class="syn-component">PrimaryBtn</span> <span class="syn-string">"Senden"</span>
-<span class="syn-component">PrimaryBtn</span> <span class="syn-string">"Weiter"</span></pre>
+// Verwenden: Name ohne :
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  PrimaryBtn "Senden"
+  PrimaryBtn "Weiter"</textarea>
+        </div>
+        <div class="playground-preview"></div>
       </div>
 
       <p>Keine separate Datei. Kein Import. Kein Export. Die Definition ist dort, wo du sie brauchst.</p>
@@ -233,6 +239,25 @@ Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
     </section>
 
 
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Element mit Properties</td><td><code>Button "Text", bg #2563eb, pad 12</code></td></tr>
+        <tr><td>Hierarchie</td><td>2 Leerzeichen Einrückung</td></tr>
+        <tr><td>Komponente definieren</td><td><code>Btn:</code> (mit Doppelpunkt)</td></tr>
+        <tr><td>Komponente verwenden</td><td><code>Btn "Text"</code> (ohne Doppelpunkt)</td></tr>
+        <tr><td>Token definieren</td><td><code>$primary.bg: #2563eb</code></td></tr>
+        <tr><td>Token verwenden</td><td><code>bg $primary</code></td></tr>
+        <tr><td>State definieren</td><td><code>on:</code> oder <code>hover:</code></td></tr>
+        <tr><td>State wechseln</td><td><code>toggle()</code></td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Mirror ist lesbar wie ein Dokument. AI generiert Code, du verfeinerst ihn – ohne Framework-Wissen.</p>
+    </div>
+
+
     <nav>
       <span class="prev"></span>
       <a class="index" href="index.html">Übersicht</a>
@@ -241,7 +266,7 @@ Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
 
   </main>
 
-  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="../../dist/browser/index.global.js"></script>
   <script src="tutorial.js"></script>
 </body>
 </html>

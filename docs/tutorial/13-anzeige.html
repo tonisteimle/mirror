@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -27,8 +27,69 @@
     <!-- ============================================================ -->
 
     <section>
-      <h2>Tabellen – Grundsyntax</h2>
-      <p>Eine Table braucht eine Datenquelle und einen <code>Row:</code> Slot:</p>
+      <h2>Tabellen – Überblick</h2>
+      <p>Mirror bietet zwei Arten von Tabellen:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Statische Tabellen</strong> – Feste Inhalte, direkt im Code definiert</li>
+        <li><strong>Datengebundene Tabellen</strong> – Dynamische Inhalte aus Datenobjekten</li>
+      </ul>
+      <p>Beginne mit statischen Tabellen für einfache Anwendungsfälle. Für dynamische Daten, Filterung und Sortierung verwende datengebundene Tabellen.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Statische Tabellen</h2>
+      <p>Die einfachste Art, eine Tabelle zu erstellen – ohne Datenbindung. Jede <code>Row</code> enthält die Zell-Inhalte als Strings oder Zahlen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table
+  Row "Name", "Alter", "Stadt"
+  Row "Max", "25", "Berlin"
+  Row "Anna", "30", "München"
+  Row "Tom", "28", "Hamburg"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das ist alles. Keine Datenquelle, kein Template – nur <code>Table</code> und <code>Row</code> mit den Werten.</p>
+
+      <h3>Mit Header</h3>
+      <p>Die erste Zeile kann als Header markiert werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table
+  Header:
+    Row "Produkt", "Preis", "Lager"
+  Row "T-Shirt", "29€", "150"
+  Row "Hoodie", "59€", "45"
+  Row "Cap", "19€", "200"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Styling</h3>
+      <p>Table, Header und Row können gestylt werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table bg #111, pad 16, rad 12, w full
+  Header: bg #1a1a1a
+    Row "Name", "Rolle", "Status"
+  Row "Anna", "Designer", "Aktiv"
+  Row "Max", "Developer", "Aktiv"
+  Row "Tom", "Manager", "Urlaub"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note"><strong>Wann statisch?</strong> Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Datengebundene Tabellen</h2>
+      <p>Für dynamische Daten verwendest du <code>Table $daten</code> mit einem <code>Row:</code> Template:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>tasks:
@@ -52,7 +113,7 @@ Table $tasks, gap 4, w full
 
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
         <li><code>Table $tasks</code> – Die Datenquelle (Datenobjekt mit Einträgen)</li>
-        <li><code>Row:</code> – Template für jede Zeile</li>
+        <li><code>Row:</code> – Template für jede Zeile (mit Doppelpunkt!)</li>
         <li><code>row.title</code> – Zugriff auf Felder des aktuellen Eintrags</li>
       </ul>
       <p class="note"><strong>Hinweis:</strong> Daten werden im Entry-Format definiert: <code>name:</code> gefolgt von eingerückten <code>key: value</code> Paaren. Bei der Verwendung mit <code>$name</code> iteriert die Runtime automatisch über alle Einträge.</p>
@@ -1481,19 +1542,37 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
     <div class="summary">
       <h2>Zusammenfassung</h2>
 
-      <h3>Tabellen</h3>
+      <h3>Statische Tabellen</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
+        <tr><td><code>Table</code></td><td>Tabellen-Container</td></tr>
+        <tr><td><code>Row "A", "B", "C"</code></td><td>Zeile mit festen Werten</td></tr>
+        <tr><td><code>Header:</code></td><td>Kopfzeile (optional)</td></tr>
+      </table>
+
+      <h3>Datengebundene Tabellen</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Beschreibung</th></tr>
         <tr><td><code>Table $data</code></td><td>Datenquelle (Datenobjekt)</td></tr>
         <tr><td><code>Header:</code></td><td>Kopfzeile (optional)</td></tr>
-        <tr><td><code>Row:</code></td><td>Zeilentemplate</td></tr>
+        <tr><td><code>Row:</code></td><td>Zeilentemplate (mit Doppelpunkt)</td></tr>
         <tr><td><code>row.field</code></td><td>Feld des aktuellen Eintrags</td></tr>
         <tr><td><code>Input value row.field</code></td><td>Editierbares Feld</td></tr>
-        <tr><td><code>where bedingung</code></td><td>Filtern (<code>done == false</code>)</td></tr>
+      </table>
+
+      <h3>Filtern & Sortieren</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
+        <tr><td><code>where bedingung</code></td><td>Filtern (<code>row.done == false</code>)</td></tr>
         <tr><td><code>by feld</code></td><td>Sortieren aufsteigend</td></tr>
         <tr><td><code>by feld desc</code></td><td>Sortieren absteigend</td></tr>
         <tr><td><code>grouped by feld</code></td><td>Nach Feld gruppieren</td></tr>
-        <tr><td><code>Group:</code></td><td>Custom Gruppen-Header (mit <code>group.key</code>, <code>group.count</code>)</td></tr>
+        <tr><td><code>Group:</code></td><td>Custom Gruppen-Header (<code>group.key</code>, <code>group.count</code>)</td></tr>
+      </table>
+
+      <h3>Interaktive Features</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
         <tr><td><code>stickyHeader</code></td><td>Header bleibt beim Scrollen fixiert</td></tr>
         <tr><td><code>pageSize N</code></td><td>Pagination mit N Einträgen pro Seite</td></tr>
         <tr><td><code>Paginator:</code></td><td>Custom Paginator-Style</td></tr>
@@ -1541,7 +1620,7 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
 
   </main>
 
-  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="../../dist/browser/index.global.js"></script>
   <script src="tutorial.js"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -27,33 +27,28 @@
       <h2>Syntax: Funktionen als Properties</h2>
       <p>Funktionen werden direkt als Properties geschrieben – genau wie <code>bg</code> oder <code>pad</code>. Der Unterschied: Sie lösen Aktionen aus statt Styles zu setzen.</p>
 
-      <div class="code-block">
-        <pre><span class="syn-comment">// Kurzschreibweise (empfohlen)</span>
-<span class="syn-component">Button</span> <span class="syn-string">"Klick"</span>, toggle()
-<span class="syn-component">Button</span> <span class="syn-string">"Zeigen"</span>, show(Menu)
-<span class="syn-component">Button</span> <span class="syn-string">"Mehrere"</span>, toggle(), show(Panel)</pre>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Kurzschreibweise – Klick ist Default
+Btn: Button pad 10 20, rad 6, bg #333, col white, toggle()
+  on:
+    bg #2563eb
+
+Btn "An/Aus"</textarea>
+        </div>
+        <div class="playground-preview"></div>
       </div>
 
       <p>Wenn du eine Funktion als Property schreibst, wird sie automatisch bei <strong>Klick</strong> ausgeführt. Das ist der häufigste Fall – deshalb ist Klick der Default.</p>
 
-      <h3>Explizite Event-Syntax</h3>
-      <p>Manchmal brauchst du andere Events als Klick. Dafür gibt es die explizite Syntax mit <code>onclick:</code>, <code>onhover:</code>, etc.:</p>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>Button "X", toggle()</code></td><td>Funktion bei Klick (Kurzform)</td></tr>
+        <tr><td><code>Button "X", show(Menu)</code></td><td>Element zeigen bei Klick</td></tr>
+        <tr><td><code>Button "X", toggle(), show(Panel)</code></td><td>Mehrere Funktionen</td></tr>
+      </table>
 
-      <div class="code-block">
-        <pre><span class="syn-comment">// Explizit: Event + Funktion</span>
-<span class="syn-component">Button</span> <span class="syn-string">"Klick"</span>
-  <span class="syn-keyword">onclick:</span> toggle()
-
-<span class="syn-comment">// Bei Hover</span>
-<span class="syn-component">Frame</span> <span class="syn-property">pad</span> 16
-  <span class="syn-keyword">onhover:</span> show(Tooltip)
-
-<span class="syn-comment">// Bei Fokus (z.B. Tab-Navigation)</span>
-<span class="syn-component">Input</span>
-  <span class="syn-keyword">onfocus:</span> show(Suggestions)</pre>
-      </div>
-
-      <p class="note"><strong>Faustregel:</strong> Kurzschreibweise für Klick-Events (99% der Fälle). Explizite Syntax nur für andere Events wie <code>onhover:</code>, <code>onfocus:</code>, <code>onenter:</code>.</p>
+      <p class="note"><strong>Faustregel:</strong> Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (<code>onenter</code>, <code>onescape</code>) – siehe <a href="06-states.html">States</a>.</p>
 
     </section>
 
@@ -433,7 +428,7 @@ Text ($projects.website.Fortschritt() * 100).toFixed(0) + <span class="syn-strin
 
   </main>
 
-  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="../../dist/browser/index.global.js"></script>
   <script src="tutorial.js"></script>
 </body>
 </html>

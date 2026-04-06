@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
   <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
@@ -25,7 +25,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Das Konzept: States</h2>
-      <p>Ein <strong>State</strong> beschreibt, wie ein Element in einem bestimmten Zustand aussieht:</p>
+      <p>Ein <strong>State</strong> beschreibt, wie ein Element in einem bestimmten Zustand aussieht. Eine <strong>Funktion</strong> löst den Wechsel aus:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
@@ -37,87 +37,112 @@ Btn "Klick mich"</textarea>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Button startet grau (<code>bg #333</code>). Bei Klick wird er blau (<code>bg #2563eb</code>). Nochmal klicken – wieder grau.</p>
-      <p>Was passiert hier?</p>
-      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li><code>on:</code> definiert einen <strong>State</strong> – das Aussehen im aktivierten Zustand</li>
-        <li><code>toggle()</code> ist eine <strong>Funktion</strong> – sie wechselt bei Klick zwischen Base und <code>on</code></li>
-      </ul>
-      <p><strong>Base</strong> ist der Normalzustand – die Styles direkt am Element (hier: <code>bg #333</code>). States wie <code>on:</code> überschreiben diese Styles, wenn sie aktiv sind.</p>
+      <p>Der Button startet grau. Bei Klick wird er blau. Nochmal klicken – wieder grau.</p>
+
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>on:</code></td><td>State – definiert das Aussehen</td></tr>
-        <tr><td><code>toggle()</code></td><td>Funktion – wechselt den State</td></tr>
+        <tr><td><code>on:</code></td><td><strong>State</strong> – definiert das Aussehen</td></tr>
+        <tr><td><code>toggle()</code></td><td><strong>Funktion</strong> – wechselt den State bei Klick</td></tr>
       </table>
+
+      <p><strong>Base</strong> ist der Normalzustand – die Styles direkt am Element (<code>bg #333</code>). Der State <code>on:</code> überschreibt diese Styles, wenn er aktiv ist.</p>
 
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>System-States: hover, focus, active</h2>
-      <p>Manche States werden automatisch vom Browser ausgelöst – du musst keinen Trigger definieren. Der Browser weiß selbst, wann die Maus über einem Element ist:</p>
+      <h2>System-States: hover, focus, active, disabled</h2>
+      <p>Manche States werden automatisch vom Browser ausgelöst – du brauchst keine Funktion:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
-    bg #2563eb
-    scale 1.02
+    bg #444
+  active:
+    bg #222
+    scale 0.98
 
-Btn "Hover mich"</textarea>
+Btn "Hover und Klick mich"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der <code>hover:</code> State definiert nur das Aussehen. Der Browser kümmert sich darum, wann dieser State aktiv wird (Maus drüber) und wann nicht (Maus weg).</p>
-      <p class="note"><strong>System-States:</strong> <code>hover:</code> (Maus darüber), <code>focus:</code> (Tastatur-Fokus), <code>active:</code> (während Klick gedrückt). Diese brauchen keinen Event-Trigger.</p>
+      <table class="ref-table">
+        <tr><th>System-State</th><th>Wann aktiv?</th></tr>
+        <tr><td><code>hover:</code></td><td>Maus ist über dem Element</td></tr>
+        <tr><td><code>focus:</code></td><td>Element hat Tastatur-Fokus</td></tr>
+        <tr><td><code>active:</code></td><td>Während Mausklick gedrückt</td></tr>
+        <tr><td><code>disabled:</code></td><td>Element ist deaktiviert</td></tr>
+      </table>
+
+      <h3>Focus und Disabled</h3>
+      <p>Besonders wichtig für Formulare:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 200
+  focus:
+    boc #2563eb
+  disabled:
+    opacity 0.5
+    cursor not-allowed
+
+Frame gap 8
+  Input placeholder "Klick mich", Field
+  Input placeholder "Deaktiviert", Field, disabled</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Custom States und toggle()</h2>
-      <p>Für eigene Interaktionen definierst du <strong>Custom States</strong>. Anders als System-States werden diese nicht automatisch ausgelöst – du brauchst eine Funktion die sie auslöst:</p>
+      <h2>Custom States</h2>
+      <p>Für eigene Interaktionen definierst du <strong>Custom States</strong>. Anders als System-States brauchst du eine Funktion, die sie auslöst:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
-  on:
-    bg #2563eb
-
-Btn "An/Aus"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Hier passieren zwei Dinge:</p>
-      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li><code>on:</code> definiert einen State namens "on" mit blauem Hintergrund</li>
-        <li><code>toggle()</code> wechselt bei Klick zwischen Base und dem State</li>
-      </ul>
-      <p><strong>Base</strong> ist der Normalzustand – die Styles, die du direkt am Element definierst (hier: <code>bg #333</code>). Du brauchst keinen extra "off" State.</p>
-      <p class="note"><strong>Kurzschreibweise:</strong> Funktionen als Properties werden automatisch zu onclick-Events. <code>toggle()</code> ist dasselbe wie <code>onclick: toggle()</code>. Du kannst auch mehrere Aktionen kombinieren: <code>toggle(), show(Menu)</code>.</p>
-
-      <h3>Im State starten</h3>
-      <p>Manchmal soll ein Element bereits im aktivierten State starten. Dafür gibst du den State-Namen bei der Instanz an:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>FavBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle()
-  Icon "heart", ic #888, is 16
+          <textarea>FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, gap 8, toggle()
+  Icon "heart", ic #666, is 16
   "Merken"
+  hover:
+    bg #252525
   on:
     bg #2563eb
+    col white
     Icon "heart", ic white, is 16, fill
     "Gemerkt"
 
-Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
+Frame hor, gap 8
   FavBtn
   FavBtn on</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der zweite Button startet im <code>on</code> State. Beide Buttons sind unabhängig voneinander – jeder toggelt für sich. Für "nur einer aktiv" siehe <code>exclusive()</code> weiter unten.</p>
+      <p>Dieses Beispiel kombiniert System-State (<code>hover:</code>) mit Custom State (<code>on:</code>):</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>hover:</code> – Browser aktiviert bei Maus-Hover (kein Trigger nötig)</li>
+        <li><code>on:</code> – <code>toggle()</code> aktiviert bei Klick</li>
+        <li><code>FavBtn on</code> – Instanz startet im aktivierten State</li>
+      </ul>
+
+      <h3>State-Namen sind frei wählbar</h3>
+      <p>Du kannst jeden Namen verwenden – <code>on</code>, <code>open</code>, <code>active</code>, <code>selected</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Toggle: w 44, h 24, rad 99, bg #333, pad 2, cursor pointer, toggle()
+  Frame w 20, h 20, rad 99, bg #666
+  active:
+    bg #2563eb
+    Frame w 20, h 20, rad 99, bg white, margin 0 0 0 20
+
+Toggle</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
     </section>
 
 
@@ -259,81 +284,74 @@ Panel</textarea>
 
     <!-- ============================================================ -->
     <section>
-      <h2>Weitere Events</h2>
-      <p>Klick ist der Default – du schreibst einfach die Funktion. Für andere Events wie Tastatureingaben gibt es Shorthands:</p>
-      <h3>Tastatur: onenter, onescape</h3>
-      <p>Mit <code>onenter</code> oder <code>onescape</code> reagierst du auf Tastatureingaben:</p>
+      <h2>Andere Events</h2>
+      <p>Klick ist der Default. Für andere Events gibt es Shorthands:</p>
+
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>SearchStatus: col #888, fs 13
-  "Tippe und drücke Enter..."
-  searching:
-    col #2563eb
-    "Suche läuft..."
+          <textarea>Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 220
+  focus:
+    boc #2563eb
 
-SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
-  Icon "search", ic #666, is 16
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, fs 13, name SearchInput, onenter toggle()
-    searching:
-      bg #252525
-
-Frame gap 8, bg #0a0a0a, pad 16, rad 8
-  SearchBox
-  SearchStatus
-    SearchInput.searching:
-      searching</textarea>
+Frame gap 8
+  Input placeholder "Enter drücken...", Field, onenter toggle()
+    on:
+      boc #10b981
+      bg #10b98122
+  Input placeholder "Escape drücken...", Field, onescape toggle()
+    on:
+      boc #ef4444
+      bg #ef444422</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <h3>Keyboard-Shorthands</h3>
-      <p>Für häufige Tasten gibt es Kurzformen:</p>
-      <table class="ref-table">
-        <tr><th>Shorthand</th><th>Beschreibung</th></tr>
-        <tr><td><code>onenter</code></td><td>Enter/Return-Taste</td></tr>
-        <tr><td><code>onescape</code></td><td>Escape-Taste</td></tr>
-        <tr><td><code>onspace</code></td><td>Leertaste</td></tr>
-      </table>
-
-      <p>Für andere Tasten verwendest du <code>onkeydown</code>:</p>
       <table class="ref-table">
         <tr><th>Event</th><th>Beschreibung</th></tr>
-        <tr><td><code>onkeydown arrow-up</code></td><td>Pfeiltaste hoch</td></tr>
-        <tr><td><code>onkeydown arrow-down</code></td><td>Pfeiltaste runter</td></tr>
+        <tr><td><code>toggle()</code></td><td>Bei Klick (Default)</td></tr>
+        <tr><td><code>onenter toggle()</code></td><td>Bei Enter-Taste</td></tr>
+        <tr><td><code>onescape toggle()</code></td><td>Bei Escape-Taste</td></tr>
+        <tr><td><code>onspace toggle()</code></td><td>Bei Leertaste</td></tr>
+        <tr><td><code>onkeydown arrow-up</code></td><td>Bei Pfeiltaste hoch</td></tr>
       </table>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover:
-    bg #444
-
-Frame gap 8, bg #0a0a0a, pad 16, rad 8
-  Btn "Enter drücken", onenter toggle()
-    on:
-      bg #2563eb
-  Btn "Escape drücken", onescape toggle()
-    on:
-      bg #ef4444</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
 
     </section>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
-      <p>States definieren das Aussehen, Funktionen definieren Aktionen.</p>
+      <p><strong>States</strong> definieren das Aussehen, <strong>Funktionen</strong> lösen den Wechsel aus.</p>
+
+      <h3>System-States (automatisch)</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Wann aktiv?</th></tr>
+        <tr><td><code>hover:</code></td><td>Maus über Element</td></tr>
+        <tr><td><code>focus:</code></td><td>Tastatur-Fokus</td></tr>
+        <tr><td><code>active:</code></td><td>Während Klick</td></tr>
+        <tr><td><code>disabled:</code></td><td>Element deaktiviert</td></tr>
+      </table>
+
+      <h3>Custom States (manuell)</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>hover:</code></td><td>System-State (automatisch bei Maus-Hover)</td></tr>
-        <tr><td><code>on:</code></td><td>Custom State (visueller Block)</td></tr>
-        <tr><td><code>toggle()</code></td><td>Bei Klick State wechseln</td></tr>
-        <tr><td><code>exclusive()</code></td><td>Nur dieser aktiv (Geschwister aus)</td></tr>
-        <tr><td><code>onenter search()</code></td><td>Bei Enter-Taste</td></tr>
-        <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State "on"</td></tr>
+        <tr><td><code>on:</code></td><td>Custom State definieren (Name frei wählbar)</td></tr>
+        <tr><td><code>toggle()</code></td><td>State bei Klick wechseln</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Nur einer aktiv (Geschwister aus)</td></tr>
+        <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State</td></tr>
+      </table>
+
+      <h3>Cross-Element</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
         <tr><td><code>name MenuBtn</code></td><td>Element benennen</td></tr>
-        <tr><td><code>MenuBtn.open:</code></td><td>Styles wenn MenuBtn in "open"</td></tr>
+        <tr><td><code>MenuBtn.open:</code></td><td>Reagieren wenn MenuBtn in "open"</td></tr>
+      </table>
+
+      <h3>Events</h3>
+      <table class="ref-table">
+        <tr><th>Event</th><th>Beschreibung</th></tr>
+        <tr><td><code>toggle()</code></td><td>Bei Klick (Default)</td></tr>
+        <tr><td><code>onenter fn()</code></td><td>Bei Enter-Taste</td></tr>
+        <tr><td><code>onescape fn()</code></td><td>Bei Escape-Taste</td></tr>
       </table>
 
     </div>
@@ -347,7 +365,7 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8
 
   </main>
 
-  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="../../dist/browser/index.global.js"></script>
   <script src="tutorial.js"></script>
 </body>
 </html>

@@ -81,7 +81,7 @@ function initializePlaygrounds() {
         // Inject mirror-defaults.css into Shadow DOM
         const link = document.createElement('link')
         link.rel = 'stylesheet'
-        link.href = '../../../assets/mirror-defaults.css'
+        link.href = '../../assets/mirror-defaults.css'
         shadow.appendChild(link)
 
         const code = MirrorLang.compile(textarea.value)
