@@ -10,6 +10,7 @@
 | **05-styling.html** | 13 | 47 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
+| **10-eingabe.html** | 30 | 92 | ✅ Fertig |
 | **11-navigation.html** | 20 | 84 | ✅ Fertig |
 
 ### Noch zu testen
@@ -18,7 +19,8 @@
 - 01-elemente.html
 - 02-komponenten.html
 - 03-tokens.html
-- 08-daten.html bis 10-eingabe.html
+- 08-daten.html
+- 09-seiten.html
 - 12-overlays.html (Dialog, Tooltip, Popover)
 - 13-anzeige.html
 
@@ -128,7 +130,20 @@ playground-styling-effects.spec.ts    - Effekte: shadow, opacity, cursor (Playgr
 playground-styling-patterns.spec.ts   - Patterns: Button Varianten, Card Styles (Playground 11-12)
 ```
 
-### 11-navigation.html (~85 Tests)
+### 10-eingabe.html (92 Tests)
+
+```
+playground-input-controls.spec.ts     - Checkbox, Switch, RadioGroup (Playground 0-4)
+playground-input-sliders.spec.ts      - Slider, RangeSlider, NumberInput, AngleSlider (Playground 5-8, 17)
+playground-input-text.spec.ts         - PinInput, PasswordInput, TagsInput, Editable (Playground 9-12)
+playground-input-selection.spec.ts    - RatingGroup, SegmentedControl, ToggleGroup (Playground 13-16)
+playground-input-form.spec.ts         - Form (Playground 18-19)
+playground-input-dropdowns.spec.ts    - Select, Combobox, Listbox (Playground 20-22)
+playground-input-menus.spec.ts        - Menu, ContextMenu, NestedMenu, NavigationMenu (Playground 23-26)
+playground-input-datetime.spec.ts     - DatePicker, Timer, DateInput (Playground 27-29)
+```
+
+### 11-navigation.html (84 Tests)
 
 ```
 playground-nav-tabs.spec.ts           - Tabs (Playground 0-1)
@@ -157,6 +172,9 @@ npx playwright test tests/e2e/playground-fn-*.spec.ts
 # Nur Navigation
 npx playwright test tests/e2e/playground-nav-*.spec.ts
 
+# Nur Eingabe (Form Controls)
+npx playwright test tests/e2e/playground-input-*.spec.ts
+
 # Nur Layout
 npx playwright test tests/e2e/playground-layout-*.spec.ts
 
@@ -173,5 +191,6 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 1. **Grundlagen (00-03)** - Intro, Elemente, Komponenten, Tokens
 2. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
-3. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
-4. **Eingabe (10-eingabe.html)** - Form Controls, Selection
+3. **Seiten (09-seiten.html)** - Tabs, Pages, Multi-File
+4. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
+5. **Anzeige (13-anzeige.html)** - Avatar, Progress, Carousel, etc.
