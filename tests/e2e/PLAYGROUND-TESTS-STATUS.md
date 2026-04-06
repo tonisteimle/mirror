@@ -7,6 +7,7 @@
 | Datei | Playgrounds | Tests | Status |
 |-------|-------------|-------|--------|
 | **04-layout.html** | 10 | 35 | ✅ Fertig |
+| **05-styling.html** | 13 | 47 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
 | **11-navigation.html** | 20 | 84 | ✅ Fertig |
@@ -17,7 +18,6 @@
 - 01-elemente.html
 - 02-komponenten.html
 - 03-tokens.html
-- 05-styling.html
 - 08-daten.html bis 10-eingabe.html
 - 12-overlays.html (Dialog, Tooltip, Popover)
 - 13-anzeige.html
@@ -118,6 +118,16 @@ playground-layout-grid.spec.ts        - Grid: grid 12, explicit placement, compo
 playground-layout-stacked.spec.ts     - Stacked: positioning, badge pattern (Playground 8-9)
 ```
 
+### 05-styling.html (47 Tests)
+
+```
+playground-styling-colors.spec.ts     - Farben: hex, rgba, benannte, gradients (Playground 0-2)
+playground-styling-borders.spec.ts    - Borders: bor, boc, rad (Playground 3-4)
+playground-styling-typography.spec.ts - Typografie: fs, weight, font, styles (Playground 5-7)
+playground-styling-effects.spec.ts    - Effekte: shadow, opacity, cursor (Playground 8-10)
+playground-styling-patterns.spec.ts   - Patterns: Button Varianten, Card Styles (Playground 11-12)
+```
+
 ### 11-navigation.html (~85 Tests)
 
 ```
@@ -150,6 +160,9 @@ npx playwright test tests/e2e/playground-nav-*.spec.ts
 # Nur Layout
 npx playwright test tests/e2e/playground-layout-*.spec.ts
 
+# Nur Styling
+npx playwright test tests/e2e/playground-styling-*.spec.ts
+
 # Mit neuen Screenshots
 npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 ```
@@ -158,7 +171,7 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 ## Nächste Schritte
 
-1. **Styling (05-styling.html)** - Farben, Gradients, Borders, Typografie, Effekte
-2. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
-3. **Grundlagen (01-03)** - Elemente, Komponenten, Tokens
+1. **Grundlagen (00-03)** - Intro, Elemente, Komponenten, Tokens
+2. **Daten (08-daten.html)** - Variablen, Datenobjekte, Conditionals
+3. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
 4. **Eingabe (10-eingabe.html)** - Form Controls, Selection
