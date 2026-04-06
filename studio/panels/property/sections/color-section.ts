@@ -18,7 +18,7 @@ export class ColorSection extends BaseSection {
     this.data = data
 
     // Get color values from allProperties
-    const allProps = data.currentElement ? (data as any).allProperties || [] : []
+    const allProps = data.allProperties || []
     const bgProp = allProps.find((p: { name: string }) => p.name === 'background' || p.name === 'bg')
     const colProp = allProps.find((p: { name: string }) => p.name === 'color' || p.name === 'col' || p.name === 'c')
     const bgValue = bgProp?.value || ''
