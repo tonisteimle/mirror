@@ -5543,6 +5543,22 @@
       background: rgba(239, 68, 68, 0.1);
     }
 
+    /* Multi-action indicator */
+    .pp-event-row.has-multiple-actions .pp-event-edit {
+      opacity: 0.5;
+      cursor: help;
+    }
+
+    .pp-event-multi-badge {
+      font-size: 10px;
+      font-weight: var(--weight-medium);
+      color: var(--color-warning);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 1px 4px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+
     /* ============================================
        ACTION PICKER
        ============================================ */

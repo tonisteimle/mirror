@@ -453,8 +453,10 @@ export class PropertyPanel {
     const spacingCat = categories.find(c => c.name === 'spacing')
     const borderCat = categories.find(c => c.name === 'border')
     const typographyCat = categories.find(c => c.name === 'typography')
+    const iconCat = categories.find(c => c.name === 'icon')
+    const visualCat = categories.find(c => c.name === 'visual')
 
-    const specialCats = ['layout', 'alignment', 'position', 'sizing', 'spacing', 'border', 'typography', 'visual', 'hover', 'behavior']
+    const specialCats = ['layout', 'alignment', 'position', 'sizing', 'spacing', 'border', 'typography', 'icon', 'visual', 'hover', 'behavior']
     const behaviorCat = categories.find(c => c.name === 'behavior')
     const otherCats = categories.filter(c => !specialCats.includes(c.name))
 
@@ -491,6 +493,16 @@ export class PropertyPanel {
     // Render typography section
     if (typographyCat) {
       result += this.renderTypographySection(typographyCat)
+    }
+
+    // Render icon section (only for Icon elements)
+    if (iconCat && iconCat.properties.length > 0) {
+      result += this.renderIconSection(iconCat)
+    }
+
+    // Render visual section (shadow, opacity, cursor, overflow, visibility)
+    if (visualCat && visualCat.properties.length > 0) {
+      result += this.renderVisualSection(visualCat)
     }
 
     return result
@@ -689,6 +701,20 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const widthValue = widthProp?.value || ''
     const heightValue = heightProp?.value || ''
 
+    // Find min/max values
+    const minWidthProp = props.find(p => p.name === 'min-width' || p.name === 'minw')
+    const maxWidthProp = props.find(p => p.name === 'max-width' || p.name === 'maxw')
+    const minHeightProp = props.find(p => p.name === 'min-height' || p.name === 'minh')
+    const maxHeightProp = props.find(p => p.name === 'max-height' || p.name === 'maxh')
+
+    const minWidthValue = minWidthProp?.value || ''
+    const maxWidthValue = maxWidthProp?.value || ''
+    const minHeightValue = minHeightProp?.value || ''
+    const maxHeightValue = maxHeightProp?.value || ''
+
+    // Check if any min/max is set (for expansion state)
+    const hasMinMax = minWidthValue || maxWidthValue || minHeightValue || maxHeightValue
+
     // Check for hug/full values
     const widthIsHug = widthValue === 'hug'
     const widthIsFull = widthValue === 'full'
@@ -736,6 +762,42 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
                 </button>
               </div>
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
+            </div>
+          </div>
+        </div>
+        <div class="section-content minmax-section${hasMinMax ? ' expanded' : ''}" data-expand-container="size-minmax">
+          <div class="prop-row collapsed-row" data-expand-group="size-minmax">
+            <span class="prop-label">Min/Max</span>
+            <div class="prop-content">
+              <button class="expand-btn" data-expand="size-minmax" title="Min/Max Constraints">
+                <svg class="icon" viewBox="0 0 14 14">
+                  <path d="M4 6l3 3 3-3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="size-minmax">
+            <span class="prop-label">Min W</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(minWidthValue)}" data-prop="minw" placeholder="none">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="size-minmax">
+            <span class="prop-label">Max W</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(maxWidthValue)}" data-prop="maxw" placeholder="none">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="size-minmax">
+            <span class="prop-label">Min H</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(minHeightValue)}" data-prop="minh" placeholder="none">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="size-minmax">
+            <span class="prop-label">Max H</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(maxHeightValue)}" data-prop="maxh" placeholder="none">
             </div>
           </div>
         </div>
@@ -834,6 +896,13 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
    */
   private getGapTokens(): SpacingToken[] {
     return this.getSpacingTokens('gap')
+  }
+
+  /**
+   * Get margin tokens
+   */
+  private getMarginTokens(): SpacingToken[] {
+    return this.getSpacingTokens('m')
   }
 
   /**
@@ -1296,9 +1365,35 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
     const vPad = tPad, hPad = rPad
 
+    // Find margin values
+    const marginProp = props.find(p => p.name === 'margin' || p.name === 'm')
+    const marginValue = marginProp?.value || ''
+    const marginIsOverride = marginProp?.source === 'instance'
+
+    // Parse margin value to get T, R, B, L
+    const marginParts = marginValue.split(/\s+/).filter(Boolean)
+    let tMargin = '', rMargin = '', bMargin = '', lMargin = ''
+    if (marginParts.length === 1) {
+      tMargin = rMargin = bMargin = lMargin = marginParts[0]
+    } else if (marginParts.length === 2) {
+      tMargin = bMargin = marginParts[0]
+      rMargin = lMargin = marginParts[1]
+    } else if (marginParts.length === 4) {
+      tMargin = marginParts[0]
+      rMargin = marginParts[1]
+      bMargin = marginParts[2]
+      lMargin = marginParts[3]
+    }
+
+    const vMargin = tMargin, hMargin = rMargin
+
     // Get dynamic tokens from source - NO FALLBACKS!
     const dynamicTokens = this.getPaddingTokens()
     const tokensToUse = dynamicTokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+
+    // Get margin tokens
+    const marginTokensRaw = this.getMarginTokens()
+    const marginTokens = marginTokensRaw.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
 
     // Render token buttons for padding (returns empty string if no tokens)
     const hasTokens = tokensToUse.length > 0
@@ -1317,8 +1412,23 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       }).join('')
     }
 
+    // Render token buttons for margin
+    const hasMarginTokens = marginTokens.length > 0
+    const renderMarginTokens = (activeValue: string, direction: string) => {
+      if (!hasMarginTokens) return ''
+
+      const isTokenRef = activeValue.startsWith('$')
+
+      return marginTokens.map(token => {
+        const isActive = isTokenRef
+          ? (activeValue === token.tokenRef)
+          : (activeValue === token.value)
+        return `<button class="token-btn ${isActive ? 'active' : ''}" data-margin-token="${token.value}" data-token-ref="${token.tokenRef}" data-margin-dir="${direction}" title="${token.tokenRef}: ${token.value}">${token.label}</button>`
+      }).join('')
+    }
+
     // Helper to render token group only if tokens exist
-    const tokenGroup = (content: string) => hasTokens ? `<div class="token-group">${content}</div>` : ''
+    const tokenGroup = (content: string) => content ? `<div class="token-group">${content}</div>` : ''
 
     return `
       <div class="section">
@@ -1374,6 +1484,64 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
             <div class="prop-content">
               ${tokenGroup(renderPadTokens(lPad, 'l'))}
               <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(lPad)}" data-pad-dir="l" placeholder="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          <span>Margin</span>
+          <button class="section-expand-btn" data-expand="margin" title="Toggle detail view">
+            <svg class="icon icon-collapsed" viewBox="0 0 14 14">
+              <path d="M4 6l3 3 3-3"/>
+            </svg>
+            <svg class="icon icon-expanded" viewBox="0 0 14 14">
+              <path d="M4 8l3-3 3 3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content" data-expand-container="margin">
+          <div class="prop-row collapsed-row${marginIsOverride ? ' override' : ''}" data-expand-group="margin">
+            <span class="prop-label">Horizontal</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(hMargin, 'h'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(hMargin)}" data-margin-dir="h" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row collapsed-row${marginIsOverride ? ' override' : ''}" data-expand-group="margin">
+            <span class="prop-label">Vertical</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(vMargin, 'v'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(vMargin)}" data-margin-dir="v" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="margin">
+            <span class="prop-label">Top</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(tMargin, 't'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(tMargin)}" data-margin-dir="t" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="margin">
+            <span class="prop-label">Right</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(rMargin, 'r'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(rMargin)}" data-margin-dir="r" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="margin">
+            <span class="prop-label">Bottom</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(bMargin, 'b'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(bMargin)}" data-margin-dir="b" placeholder="0">
+            </div>
+          </div>
+          <div class="prop-row expanded-row" data-expand-group="margin">
+            <span class="prop-label">Left</span>
+            <div class="prop-content">
+              ${tokenGroup(renderMarginTokens(lMargin, 'l'))}
+              <input type="text" class="prop-input" autocomplete="off" value="${this.escapeHtml(lMargin)}" data-margin-dir="l" placeholder="0">
             </div>
           </div>
         </div>
@@ -1679,8 +1847,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const styleIcons = {
       italic: '<path d="M6 3h4M4 11h4M8 3L6 11"/>',
       underline: '<path d="M4 3v5a3 3 0 006 0V3M3 12h8"/>',
+      truncate: '<path d="M2 7h6M10 7h.5M12 7h.5"/>',
     }
-    const styleToggles = ['italic', 'underline'].map(style => {
+    const styleToggles = ['italic', 'underline', 'truncate'].map(style => {
       const prop = props.find(p => p.name === style)
       const isActive = prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
       const iconPath = styleIcons[style as keyof typeof styleIcons]
@@ -1862,12 +2031,20 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         return a.isFunctionCall ? `${a.name}()` : a.name
       }).join(', ')
 
+      // Multiple actions: show indicator and modify edit button
+      const hasMultipleActions = event.actions.length > 1
+      const multiActionClass = hasMultipleActions ? ' has-multiple-actions' : ''
+      const editTitle = hasMultipleActions
+        ? 'Multiple actions - delete and recreate to modify'
+        : 'Edit'
+
       return `
-        <div class="pp-event-row" data-event-index="${index}">
+        <div class="pp-event-row${multiActionClass}" data-event-index="${index}">
           <span class="pp-event-name">${this.escapeHtml(eventName)}</span>
           <span class="pp-event-arrow">→</span>
           <span class="pp-event-action">${this.escapeHtml(actionsStr)}</span>
-          <button class="pp-event-edit" data-event-index="${index}" title="Edit">
+          ${hasMultipleActions ? '<span class="pp-event-multi-badge" title="Multiple actions">×' + event.actions.length + '</span>' : ''}
+          <button class="pp-event-edit" data-event-index="${index}" title="${editTitle}">
             <svg viewBox="0 0 14 14" width="12" height="12">
               <path d="M10.5 1.5L12.5 3.5L4.5 11.5L1.5 12.5L2.5 9.5L10.5 1.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
             </svg>
@@ -1912,7 +2089,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   private readonly OPACITY_PRESETS = ['0', '0.25', '0.5', '0.75', '1'] as const
 
   /**
-   * Render visual section with shadow, opacity, and visibility toggles
+   * Render visual section with shadow, opacity, cursor, overflow, and visibility
    */
   private renderVisualSection(category: PropertyCategory): string {
     const props = category.properties
@@ -1928,13 +2105,22 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const cursorValue = cursorProp?.value || ''
     const zIndexValue = zIndexProp?.value || ''
 
+    // Find overflow/scroll properties
+    const scrollProp = props.find(p => p.name === 'scroll' || p.name === 'scroll-ver')
+    const scrollHorProp = props.find(p => p.name === 'scroll-hor')
+    const clipProp = props.find(p => p.name === 'clip')
+
+    const isScrollActive = scrollProp && (scrollProp.value === 'true' || (scrollProp.value === '' && scrollProp.hasValue !== false))
+    const isScrollHorActive = scrollHorProp && (scrollHorProp.value === 'true' || (scrollHorProp.value === '' && scrollHorProp.hasValue !== false))
+    const isClipActive = clipProp && (clipProp.value === 'true' || (clipProp.value === '' && clipProp.hasValue !== false))
+
     // Render shadow toggles
     const shadowToggles = this.SHADOW_PRESETS.map(shadow => {
       const active = shadowValue === shadow || (shadow === 'none' && !shadowValue)
       const iconPath = PROPERTY_ICON_PATHS[`shadow-${shadow}`]
       return `
-        <button class="pp-shadow-toggle ${active ? 'active' : ''}" data-shadow="${shadow}" title="${shadow}">
-          ${iconPath ? `<svg viewBox="0 0 14 14" width="14" height="14">${iconPath}</svg>` : shadow}
+        <button class="toggle-btn ${active ? 'active' : ''}" data-shadow="${shadow}" title="${shadow}">
+          ${iconPath ? `<svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>` : shadow}
         </button>
       `
     }).join('')
@@ -1942,7 +2128,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     // Render opacity presets
     const opacityPresets = this.OPACITY_PRESETS.map(val => {
       const active = opacityValue === val
-      return `<button class="pp-opacity-preset ${active ? 'active' : ''}" data-opacity="${val}">${val}</button>`
+      return `<button class="token-btn ${active ? 'active' : ''}" data-opacity="${val}">${val}</button>`
     }).join('')
 
     // Render visibility toggles (hidden, visible, disabled)
@@ -1951,8 +2137,8 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       const isActive = propObj && (propObj.value === 'true' || (propObj.value === '' && propObj.hasValue !== false))
       const iconPath = PROPERTY_ICON_PATHS[prop]
       return `
-        <button class="pp-visibility-toggle ${isActive ? 'active' : ''}" data-visibility="${prop}" title="${prop}">
-          ${iconPath ? `<svg viewBox="0 0 14 14" width="14" height="14">${iconPath}</svg>` : prop}
+        <button class="toggle-btn ${isActive ? 'active' : ''}" data-visibility="${prop}" title="${prop}">
+          ${iconPath ? `<svg class="icon" viewBox="0 0 14 14">${iconPath}</svg>` : prop}
         </button>
       `
     }).join('')
@@ -1961,35 +2147,142 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const cursorOptions = ['default', 'pointer', 'text', 'move', 'not-allowed', 'grab']
 
     return `
-      <div class="pp-section">
-        <div class="pp-label">Visual</div>
-        <div class="pp-visual-row">
-          <span class="pp-visual-label">Shadow</span>
-          <div class="pp-shadow-group">
-            ${shadowToggles}
+      <div class="section">
+        <div class="section-label">Visual</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Shadow</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${shadowToggles}
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Opacity</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${opacityPresets}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(opacityValue)}" data-prop="opacity" placeholder="1" autocomplete="off">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Cursor</span>
+            <div class="prop-content">
+              <select class="prop-select" data-prop="cursor">
+                <option value="" ${!cursorValue ? 'selected' : ''}>-</option>
+                ${cursorOptions.map(opt => `<option value="${opt}" ${opt === cursorValue ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Z-Index</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="${this.escapeHtml(zIndexValue)}" data-prop="z" placeholder="0" autocomplete="off">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Overflow</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${isScrollActive ? 'active' : ''}" data-overflow="scroll" title="Scroll vertical">
+                  <svg class="icon" viewBox="0 0 14 14"><path d="M7 2v10M4 5l3-3 3 3M4 9l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                </button>
+                <button class="toggle-btn ${isScrollHorActive ? 'active' : ''}" data-overflow="scroll-hor" title="Scroll horizontal">
+                  <svg class="icon" viewBox="0 0 14 14"><path d="M2 7h10M5 4l-3 3 3 3M9 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                </button>
+                <button class="toggle-btn ${isClipActive ? 'active' : ''}" data-overflow="clip" title="Clip overflow">
+                  <svg class="icon" viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 9l4-4M9 9l-4-4" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Visibility</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                ${visibilityToggles}
+              </div>
+            </div>
           </div>
         </div>
-        <div class="pp-visual-row">
-          <span class="pp-visual-label">Opacity</span>
-          <div class="pp-opacity-group">
-            ${opacityPresets}
+      </div>
+    `
+  }
+
+  /**
+   * Icon size presets
+   */
+  private readonly ICON_SIZE_PRESETS = ['14', '16', '18', '20', '24', '32'] as const
+
+  /**
+   * Render icon section (for Icon elements only)
+   */
+  private renderIconSection(category: PropertyCategory): string {
+    const props = category.properties
+
+    // Find icon properties
+    const sizeProp = props.find(p => p.name === 'icon-size' || p.name === 'is')
+    const colorProp = props.find(p => p.name === 'icon-color' || p.name === 'ic')
+    const weightProp = props.find(p => p.name === 'icon-weight' || p.name === 'iw')
+    const fillProp = props.find(p => p.name === 'fill')
+
+    const sizeValue = sizeProp?.value || ''
+    const colorValue = colorProp?.value || ''
+    const weightValue = weightProp?.value || ''
+    const fillActive = fillProp && (fillProp.value === 'true' || (fillProp.value === '' && fillProp.hasValue !== false))
+
+    // Color display
+    const colorIsToken = colorValue.startsWith('$')
+    const colorDisplay = colorValue || 'none'
+    const colorSwatch = colorIsToken ? this.resolveTokenValue(colorValue) : colorValue
+
+    // Size presets
+    const sizePresets = this.ICON_SIZE_PRESETS.map(size => {
+      const isActive = sizeValue === size
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-icon-size="${size}">${size}</button>`
+    }).join('')
+
+    return `
+      <div class="section">
+        <div class="section-label">Icon</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Size</span>
+            <div class="prop-content">
+              <div class="token-group">
+                ${sizePresets}
+              </div>
+              <input type="text" class="prop-input" value="${this.escapeHtml(sizeValue)}" data-prop="is" placeholder="24" autocomplete="off">
+            </div>
           </div>
-          <input type="text" class="pp-opacity-input" value="${this.escapeHtml(opacityValue)}" data-prop="opacity" placeholder="1" autocomplete="off">
-        </div>
-        <div class="pp-visual-row">
-          <span class="pp-visual-label">Cursor</span>
-          <select class="pp-cursor-select" data-prop="cursor">
-            <option value="" ${!cursorValue ? 'selected' : ''}>-</option>
-            ${cursorOptions.map(opt => `<option value="${opt}" ${opt === cursorValue ? 'selected' : ''}>${opt}</option>`).join('')}
-          </select>
-        </div>
-        <div class="pp-visual-row">
-          <span class="pp-visual-label">Z-Index</span>
-          <input type="text" class="pp-zindex-input" value="${this.escapeHtml(zIndexValue)}" data-prop="z" placeholder="0" autocomplete="off">
-        </div>
-        <div class="pp-visual-row">
-          <div class="pp-visibility-group">
-            ${visibilityToggles}
+          <div class="prop-row">
+            <span class="prop-label">Color</span>
+            <div class="prop-content">
+              <div class="pp-color-trigger" data-color-prop="ic" data-current-value="${this.escapeHtml(colorValue)}">
+                <div class="pp-color-swatch${colorValue ? '' : ' empty'}" style="${colorSwatch ? `background: ${this.escapeHtml(colorSwatch)}` : ''}"></div>
+                <span class="pp-color-value${colorIsToken ? ' token' : ''}">${this.escapeHtml(colorDisplay)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Weight</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" value="${this.escapeHtml(weightValue)}" data-prop="iw" placeholder="1.5" autocomplete="off">
+            </div>
+          </div>
+          <div class="prop-row">
+            <span class="prop-label">Fill</span>
+            <div class="prop-content">
+              <div class="toggle-group">
+                <button class="toggle-btn ${fillActive ? 'active' : ''}" data-icon-fill="toggle" title="Fill icon">
+                  <svg class="icon" viewBox="0 0 14 14">
+                    <circle cx="7" cy="7" r="5" fill="${fillActive ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2442,6 +2735,30 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       token.addEventListener('click', (e) => this.handlePadTokenBtnClick(e))
     })
 
+    // Margin inputs
+    const marginInputs = this.container.querySelectorAll('.prop-input[data-margin-dir]')
+    marginInputs.forEach(input => {
+      input.addEventListener('input', (e) => this.handleMarginInputChange(e))
+    })
+
+    // Margin token buttons
+    const marginTokenBtns = this.container.querySelectorAll('.token-btn[data-margin-token]')
+    marginTokenBtns.forEach(token => {
+      token.addEventListener('click', (e) => this.handleMarginTokenBtnClick(e))
+    })
+
+    // Icon size buttons
+    const iconSizeBtns = this.container.querySelectorAll('.token-btn[data-icon-size]')
+    iconSizeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleIconSizeClick(e))
+    })
+
+    // Icon fill toggle
+    const iconFillToggle = this.container.querySelector('[data-icon-fill]')
+    if (iconFillToggle) {
+      iconFillToggle.addEventListener('click', (e) => this.handleIconFillToggle(e))
+    }
+
     // Expand/collapse buttons (prototype uses .expand-btn[data-expand] and .section-expand-btn)
     const prototypeExpandBtns = this.container.querySelectorAll('.expand-btn[data-expand], .section-expand-btn[data-expand]')
     prototypeExpandBtns.forEach(btn => {
@@ -2571,19 +2888,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     })
 
     // Shadow toggles
-    const shadowToggles = this.container.querySelectorAll('.pp-shadow-toggle')
+    const shadowToggles = this.container.querySelectorAll('[data-shadow]')
     shadowToggles.forEach(toggle => {
       toggle.addEventListener('click', (e) => this.handleShadowToggle(e))
     })
 
     // Opacity presets
-    const opacityPresets = this.container.querySelectorAll('.pp-opacity-preset')
+    const opacityPresets = this.container.querySelectorAll('[data-opacity]')
     opacityPresets.forEach(preset => {
       preset.addEventListener('click', (e) => this.handleOpacityPreset(e))
     })
 
+    // Overflow toggles (scroll, scroll-hor, clip)
+    const overflowToggles = this.container.querySelectorAll('[data-overflow]')
+    overflowToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => this.handleOverflowToggle(e))
+    })
+
     // Visibility toggles
-    const visibilityToggles = this.container.querySelectorAll('.pp-visibility-toggle')
+    const visibilityToggles = this.container.querySelectorAll('[data-visibility]')
     visibilityToggles.forEach(toggle => {
       toggle.addEventListener('click', (e) => this.handleVisibilityToggle(e))
     })
@@ -3188,6 +3511,171 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const nodeId = this.currentElement.templateId || this.currentElement.nodeId
     const result = this.codeModifier.updateProperty(nodeId, 'pad', padValue)
     this.onCodeChange(result)
+  }
+
+  /**
+   * Handle margin input change
+   */
+  private handleMarginInputChange(e: Event): void {
+    const input = e.target as HTMLInputElement
+    if (!input || !this.currentElement) return
+
+    const dir = input.dataset.marginDir
+    if (!dir) return
+
+    const value = input.value.trim()
+
+    // Validate numeric input
+    if (!this.validatePropertyValue('margin', value, input)) {
+      return
+    }
+
+    this.debounce('margin', () => {
+      this.updateMarginFromInputs()
+    })
+  }
+
+  /**
+   * Handle margin token button click
+   */
+  private handleMarginTokenBtnClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.token-btn[data-margin-token]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    // Use token reference if available, otherwise use numeric value
+    const tokenRef = btn.dataset.tokenRef
+    const value = tokenRef || btn.dataset.marginToken
+    const dir = btn.dataset.marginDir
+    if (!value || !dir) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get current margin values
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const marginProp = props?.allProperties.find((p: {name: string}) => p.name === 'margin' || p.name === 'm')
+    const currentValue = marginProp?.value || ''
+    const marginParts = currentValue.split(/\s+/).filter(Boolean)
+
+    let tMargin = '', rMargin = '', bMargin = '', lMargin = ''
+    if (marginParts.length === 1) {
+      tMargin = rMargin = bMargin = lMargin = marginParts[0]
+    } else if (marginParts.length === 2) {
+      tMargin = bMargin = marginParts[0]
+      rMargin = lMargin = marginParts[1]
+    } else if (marginParts.length === 4) {
+      tMargin = marginParts[0]; rMargin = marginParts[1]; bMargin = marginParts[2]; lMargin = marginParts[3]
+    }
+
+    // Update based on direction
+    if (dir === 'h') { rMargin = lMargin = value }
+    else if (dir === 'v') { tMargin = bMargin = value }
+    else if (dir === 't') { tMargin = value }
+    else if (dir === 'r') { rMargin = value }
+    else if (dir === 'b') { bMargin = value }
+    else if (dir === 'l') { lMargin = value }
+
+    // Build new margin value
+    let newMarginValue: string
+    if (tMargin === rMargin && rMargin === bMargin && bMargin === lMargin) {
+      newMarginValue = tMargin || '0'
+    } else if (tMargin === bMargin && rMargin === lMargin) {
+      newMarginValue = `${tMargin || '0'} ${rMargin || '0'}`
+    } else {
+      newMarginValue = `${tMargin || '0'} ${rMargin || '0'} ${bMargin || '0'} ${lMargin || '0'}`
+    }
+
+    const result = this.codeModifier.updateProperty(nodeId, 'm', newMarginValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Update margin from current input values
+   */
+  private updateMarginFromInputs(): void {
+    if (!this.currentElement) return
+
+    const marginGroup = this.container.querySelector('[data-expand-container="margin"]') as HTMLElement
+    const isExpanded = marginGroup?.classList.contains('expanded')
+
+    // Helper to get input value
+    const getInput = (dir: string) => {
+      return this.container.querySelector(`.prop-input[data-margin-dir="${dir}"]`) as HTMLInputElement
+    }
+
+    // Helper to get value from input (supports token refs)
+    const getMarginValue = (input: HTMLInputElement | null): string => {
+      if (!input) return '0'
+      const tokenRef = input.dataset.tokenRef
+      if (tokenRef && input.readOnly) {
+        return tokenRef
+      }
+      return input.value || '0'
+    }
+
+    let marginValue: string
+
+    if (isExpanded) {
+      // Get T, R, B, L values
+      const t = getMarginValue(getInput('t'))
+      const r = getMarginValue(getInput('r'))
+      const b = getMarginValue(getInput('b'))
+      const l = getMarginValue(getInput('l'))
+
+      // Simplify if possible
+      if (t === b && r === l && t === r) {
+        marginValue = t
+      } else if (t === b && r === l) {
+        marginValue = `${t} ${r}`
+      } else {
+        marginValue = `${t} ${r} ${b} ${l}`
+      }
+    } else {
+      // Get V and H values
+      const v = getMarginValue(getInput('v'))
+      const h = getMarginValue(getInput('h'))
+
+      marginValue = v === h ? v : `${v} ${h}`
+    }
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'm', marginValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle icon size button click
+   */
+  private handleIconSizeClick(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.token-btn[data-icon-size]') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const size = btn.dataset.iconSize
+    if (!size) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const result = this.codeModifier.updateProperty(nodeId, 'is', size)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle icon fill toggle
+   */
+  private handleIconFillToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('[data-icon-fill]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the fill property
+      const result = this.codeModifier.removeProperty(nodeId, 'fill')
+      this.onCodeChange(result)
+    } else {
+      // Add the fill property (standalone boolean)
+      const result = this.codeModifier.updateProperty(nodeId, 'fill', 'true')
+      this.onCodeChange(result)
+    }
   }
 
   /**
@@ -4121,7 +4609,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
    * Handle shadow toggle click
    */
   private handleShadowToggle(e: Event): void {
-    const toggle = (e.target as HTMLElement).closest('.pp-shadow-toggle') as HTMLElement
+    const toggle = (e.target as HTMLElement).closest('[data-shadow]') as HTMLElement
     if (!toggle || !this.currentElement) return
 
     const shadow = toggle.dataset.shadow
@@ -4144,7 +4632,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
    * Handle opacity preset click
    */
   private handleOpacityPreset(e: Event): void {
-    const preset = (e.target as HTMLElement).closest('.pp-opacity-preset') as HTMLElement
+    const preset = (e.target as HTMLElement).closest('[data-opacity]') as HTMLElement
     if (!preset || !this.currentElement) return
 
     const opacity = preset.dataset.opacity
@@ -4159,7 +4647,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
    * Handle visibility toggle click (hidden, visible, disabled)
    */
   private handleVisibilityToggle(e: Event): void {
-    const toggle = (e.target as HTMLElement).closest('.pp-visibility-toggle') as HTMLElement
+    const toggle = (e.target as HTMLElement).closest('[data-visibility]') as HTMLElement
     if (!toggle || !this.currentElement) return
 
     const visibility = toggle.dataset.visibility
@@ -4175,6 +4663,30 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     } else {
       // Add the property
       const result = this.codeModifier.updateProperty(nodeId, visibility, 'true')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle overflow toggle click (scroll, scroll-hor, clip)
+   */
+  private handleOverflowToggle(e: Event): void {
+    const toggle = (e.target as HTMLElement).closest('[data-overflow]') as HTMLElement
+    if (!toggle || !this.currentElement) return
+
+    const overflow = toggle.dataset.overflow
+    if (!overflow) return
+
+    const isActive = toggle.classList.contains('active')
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (isActive) {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, overflow)
+      this.onCodeChange(result)
+    } else {
+      // Add the property (standalone boolean)
+      const result = this.codeModifier.updateProperty(nodeId, overflow, 'true')
       this.onCodeChange(result)
     }
   }
@@ -4545,15 +5057,25 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const event = this.currentElement.events[eventIndex]
     if (!event) return
 
+    // Check for multiple actions - warn user and prevent data loss
+    if (event.actions.length > 1) {
+      const actionNames = event.actions.map(a => a.target ? `${a.name}(${a.target})` : `${a.name}()`).join(', ')
+      this.showErrorFeedback(
+        `Event has multiple actions (${actionNames}). Delete and recreate to modify.`,
+        'event'
+      )
+      return
+    }
+
     const nodeId = this.currentElement.templateId || this.currentElement.nodeId
 
-    // Get the first action for initial values
-    const firstAction = event.actions[0]
+    // Get the action for initial values (guaranteed single action at this point)
+    const singleAction = event.actions[0]
     const initialValue = {
       event: event.name,
       key: event.key,
-      action: firstAction?.name || 'toggle',
-      target: firstAction?.target,
+      action: singleAction?.name || 'toggle',
+      target: singleAction?.target,
     }
 
     // Get named elements for target selection
@@ -4629,10 +5151,24 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
    * like show(Menu), navigate(View), etc.
    */
   private getNamedElementsInScope(): string[] {
-    // For now, return an empty array - this could be enhanced
-    // to query the AST for named elements (elements with `name` property)
-    // TODO: Implement proper scope analysis to find named elements
-    return []
+    // Query the SourceMap for all nodes that have an instanceName
+    // These are elements defined with `name ElementName` property
+    try {
+      const sourceMap = this.codeModifier.getSourceMap()
+      const allNodes = sourceMap.getAllNodes()
+
+      // Filter for nodes with instanceName, excluding the current element
+      const currentId = this.currentElement?.id
+      const namedElements = allNodes
+        .filter(node => node.instanceName && node.id !== currentId)
+        .map(node => node.instanceName as string)
+
+      // Remove duplicates and sort alphabetically
+      return [...new Set(namedElements)].sort()
+    } catch (error) {
+      console.error('Error getting named elements:', error)
+      return []
+    }
   }
 
   /**
