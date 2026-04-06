@@ -4,7 +4,7 @@
  * Re-exports all panel modules.
  */
 
-// Property Panel (Refactored modular version)
+// Property Panel
 export {
   PropertyPanel,
   createPropertyPanel,
@@ -12,7 +12,7 @@ export {
   type SelectionProvider,
   type OnCodeChangeCallback,
   type GetAllSourceCallback,
-} from './property/property-panel-refactored'
+} from './property-panel'
 
 // Re-export ExtractedElement from compiler
 export type { ExtractedElement } from '../../compiler/studio/property-extractor'

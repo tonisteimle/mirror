@@ -9,7 +9,7 @@
 | **04-layout.html** | 10 | 35 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
-| **11-navigation.html** | 20 | ~85 | 🔄 In Arbeit |
+| **11-navigation.html** | 20 | 84 | ✅ Fertig |
 
 ### Noch zu testen
 
