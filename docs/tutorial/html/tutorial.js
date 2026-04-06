@@ -128,9 +128,11 @@ function initializePlaygrounds() {
  * The navigation structure is defined here and injected into the DOM.
  */
 
-// Format: "num-dateiname: Titel"
+// Tutorial Navigation Structure
+// Die Sprache (00-09) + Komponenten-Bibliothek (10-13)
 const tutorialNavigation = [
-  { num: '00', file: '00-intro.html', title: 'Intro' },
+  // Die Sprache
+  { num: '00', file: '00-intro.html', title: 'Intro', section: 'Sprache' },
   { num: '01', file: '01-elemente.html', title: 'Elemente' },
   { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
   { num: '03', file: '03-tokens.html', title: 'Tokens' },
@@ -138,20 +140,13 @@ const tutorialNavigation = [
   { num: '05', file: '05-styling.html', title: 'Styling' },
   { num: '06', file: '06-states.html', title: 'States' },
   { num: '07', file: '07-functions.html', title: 'Functions' },
-  { num: '08', file: '08-navigation.html', title: 'Navigation' },
-  { num: '09', file: '09-overlays.html', title: 'Overlays' },
-  { num: '10', file: '10-variablen.html', title: 'Variablen' },
-  { num: '11', file: '11-content.html', title: 'Content' },
-  { num: '12', file: '12-tabellen.html', title: 'Tabellen' },
-  { num: '13', file: '13-bedingungen.html', title: 'Bedingungen' },
-  { num: '14', file: '14-pages.html', title: 'Seiten' },
-  // Zag Components
-  { num: '16', file: '16-form-controls.html', title: 'Form Controls' },
-  { num: '17', file: '17-selection.html', title: 'Selection & Menus' },
-  { num: '18', file: '18-datetime.html', title: 'Date & Time' },
-  { num: '19', file: '19-media.html', title: 'Media & Files' },
-  { num: '20', file: '20-feedback.html', title: 'Feedback & Status' },
-  { num: '21', file: '21-utility.html', title: 'Utility' },
+  { num: '08', file: '08-daten.html', title: 'Daten' },
+  { num: '09', file: '09-seiten.html', title: 'Seiten' },
+  // Komponenten-Bibliothek
+  { num: '10', file: '10-eingabe.html', title: 'Eingabe', section: 'Komponenten' },
+  { num: '11', file: '11-navigation.html', title: 'Navigation' },
+  { num: '12', file: '12-overlays.html', title: 'Overlays' },
+  { num: '13', file: '13-anzeige.html', title: 'Anzeige' },
 ]
 
 function createTutorialSidebar() {
