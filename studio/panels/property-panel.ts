@@ -369,37 +369,61 @@ export class PropertyPanel {
 
     let result = ''
 
-    // Render behavior section FIRST (for Zag components)
-    if (behaviorCat && behaviorCat.properties.length > 0) {
-      result += this.renderBehaviorSection(behaviorCat)
-    }
+    // Use sections if available, fall back to legacy render methods
+    if (this.sections) {
+      // Render behavior section FIRST (for Zag components)
+      if (behaviorCat && behaviorCat.properties.length > 0) {
+        result += this.sections.behavior.render(this.buildSectionData(behaviorCat, categories))
+      }
 
-    // Render layout section (includes alignment and position/absolute)
-    if (layoutCat) {
-      result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
-    }
+      // Render layout section (includes alignment)
+      if (layoutCat) {
+        result += this.sections.layout.render(this.buildSectionData(layoutCat, categories))
+      }
 
-    // Render sizing section (includes x/y when absolute is active)
-    if (sizingCat) {
-      result += this.renderSizingSection(sizingCat, positionCat)
-    }
+      // Render sizing section
+      if (sizingCat) {
+        result += this.sections.sizing.render(this.buildSectionData(sizingCat, categories))
+      }
 
-    // Render spacing section
-    if (spacingCat) {
-      result += this.renderSpacingSection(spacingCat)
-    }
+      // Render spacing section
+      if (spacingCat) {
+        result += this.sections.spacing.render(this.buildSectionData(spacingCat, categories))
+      }
 
-    // Render border section
-    if (borderCat) {
-      result += this.renderRadiusAndBorderSections(borderCat)
-    }
+      // Render border section
+      if (borderCat) {
+        result += this.sections.border.render(this.buildSectionData(borderCat, categories))
+      }
 
-    // Render color section
-    result += this.renderColorSection()
+      // Render color section
+      result += this.sections.color.render(this.buildSectionData(undefined, categories))
 
-    // Render typography section
-    if (typographyCat) {
-      result += this.renderTypographySection(typographyCat)
+      // Render typography section
+      if (typographyCat) {
+        result += this.sections.typography.render(this.buildSectionData(typographyCat, categories))
+      }
+    } else {
+      // Legacy fallback (should not happen normally)
+      if (behaviorCat && behaviorCat.properties.length > 0) {
+        result += this.renderBehaviorSection(behaviorCat)
+      }
+      if (layoutCat) {
+        result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
+      }
+      if (sizingCat) {
+        result += this.renderSizingSection(sizingCat, positionCat)
+      }
+      if (spacingCat) {
+        result += this.renderSpacingSection(spacingCat)
+      }
+      if (borderCat) {
+        result += this.renderRadiusAndBorderSections(borderCat)
+      }
+      result += this.renderColorSection()
+      if (typographyCat) {
+        result += this.renderTypographySection(typographyCat)
+      }
     }
 
     return result
