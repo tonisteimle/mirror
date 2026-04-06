@@ -33,12 +33,10 @@ test.describe('Playground 21: Basic Tour', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    // Tour may show step content
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -66,7 +64,6 @@ test.describe('Playground 22: Compact Tour', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
@@ -98,7 +95,6 @@ test.describe('Playground 23: Tour with Progress', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)

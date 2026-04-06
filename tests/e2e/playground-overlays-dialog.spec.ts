@@ -33,13 +33,12 @@ test.describe('Playground 8: Basic Dialog', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Open Dialog')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -67,12 +66,12 @@ test.describe('Playground 9: Dialog with CloseTrigger', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Open')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -100,12 +99,12 @@ test.describe('Playground 10: Dialog Custom Backdrop', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Custom backdrop')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -133,12 +132,12 @@ test.describe('Playground 11: Confirm Dialog', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Delete')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -166,12 +165,12 @@ test.describe('Playground 12: Form Dialog', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Create')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 

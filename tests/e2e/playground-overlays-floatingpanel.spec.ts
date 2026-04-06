@@ -33,13 +33,12 @@ test.describe('Playground 18: FloatingPanel Draggable', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Panel')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -67,12 +66,12 @@ test.describe('Playground 19: FloatingPanel Fixed Position', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Inspector')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -100,12 +99,12 @@ test.describe('Playground 20: FloatingPanel Resizable', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Notes')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 

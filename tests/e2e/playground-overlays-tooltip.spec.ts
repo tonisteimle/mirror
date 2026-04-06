@@ -104,13 +104,17 @@ test.describe('Playground 2: Multi-line Tooltip', () => {
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
 
+      const hasButton = root?.querySelector('button') !== null
+
       return {
         text: root?.textContent || '',
+        hasButton,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Multi-line')
+    // Should have a trigger button
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 

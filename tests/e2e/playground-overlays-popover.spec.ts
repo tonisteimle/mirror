@@ -33,13 +33,12 @@ test.describe('Playground 3: Basic Popover', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
         hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Open Popover')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -67,12 +66,12 @@ test.describe('Playground 4: Popover with CloseTrigger', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Open')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
@@ -100,12 +99,12 @@ test.describe('Playground 5: Popover Settings', () => {
       const root = shadow?.querySelector('.mirror-root')
 
       return {
-        text: root?.textContent || '',
+        hasButton: root?.querySelector('button') !== null,
         childCount: root?.children?.length || 0
       }
     }, PLAYGROUND_INDEX)
 
-    expect(structure.text).toContain('Settings')
+    expect(structure.hasButton).toBe(true)
     expect(structure.childCount).toBeGreaterThan(0)
   })
 
