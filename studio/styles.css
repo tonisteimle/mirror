@@ -1826,7 +1826,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px;
+      padding: 0 6px 0 12px;
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border-default);
       font-size: var(--font-base);
@@ -7778,4 +7778,76 @@ select.tomselected,
 
 .inline-prompt-message {
   flex: 1;
+}
+
+/* ============================================
+   RENAME UI - IDE-style Symbol Rename (F2)
+   ============================================ */
+
+.rename-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  background: transparent;
+}
+
+.rename-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.rename-label {
+  font-size: var(--font-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.rename-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-input);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-base);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.rename-input:focus {
+  box-shadow: 0 0 0 2px var(--primary-30);
+}
+
+.rename-input-error {
+  border-color: var(--color-error);
+}
+
+.rename-input-error:focus {
+  box-shadow: 0 0 0 2px var(--error-10);
+}
+
+.rename-error {
+  font-size: var(--font-xs);
+  color: var(--color-error);
+  padding: var(--space-1) 0;
+}
+
+.rename-info {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
