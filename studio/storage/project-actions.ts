@@ -17,10 +17,10 @@ import { isTauri } from './providers'
 const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `App
   Title "Welcome to Mirror"
-  Muted "Edit this code to get started"
+  TextMuted "Edit this code to get started"
 
   Card
-    Muted "Your first component"
+    TextMuted "Your first component"
     Button "Click Me"
 
   // Zag Select Component
@@ -72,7 +72,7 @@ App: w full, h full, bg $canvas, pad $l, gap $l
 
 Title: fs $xl, weight bold, col $text
 
-Muted: fs $m, col $muted
+TextMuted: fs $m, col $muted
 
 Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
   hover bg #2563eb

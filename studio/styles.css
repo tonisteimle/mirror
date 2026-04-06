@@ -223,6 +223,8 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-subtle) transparent;
     }
 
     body {
@@ -231,6 +233,30 @@
       color: var(--text-primary);
       height: 100vh;
       overflow: hidden;
+    }
+
+    /* Global Scrollbar Styling (WebKit) */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-strong);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: transparent;
     }
 
     .container {
