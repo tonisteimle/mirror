@@ -369,61 +369,25 @@ export class PropertyPanel {
 
     let result = ''
 
-    // Use sections if available, fall back to legacy render methods
-    if (this.sections) {
-      // Render behavior section FIRST (for Zag components)
-      if (behaviorCat && behaviorCat.properties.length > 0) {
-        result += this.sections.behavior.render(this.buildSectionData(behaviorCat, categories))
-      }
-
-      // Render layout section (includes alignment)
-      if (layoutCat) {
-        result += this.sections.layout.render(this.buildSectionData(layoutCat, categories))
-      }
-
-      // Render sizing section
-      if (sizingCat) {
-        result += this.sections.sizing.render(this.buildSectionData(sizingCat, categories))
-      }
-
-      // Render spacing section
-      if (spacingCat) {
-        result += this.sections.spacing.render(this.buildSectionData(spacingCat, categories))
-      }
-
-      // Render border section
-      if (borderCat) {
-        result += this.sections.border.render(this.buildSectionData(borderCat, categories))
-      }
-
-      // Render color section
-      result += this.sections.color.render(this.buildSectionData(undefined, categories))
-
-      // Render typography section
-      if (typographyCat) {
-        result += this.sections.typography.render(this.buildSectionData(typographyCat, categories))
-      }
-    } else {
-      // Legacy fallback (should not happen normally)
-      if (behaviorCat && behaviorCat.properties.length > 0) {
-        result += this.renderBehaviorSection(behaviorCat)
-      }
-      if (layoutCat) {
-        result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
-      }
-      if (sizingCat) {
-        result += this.renderSizingSection(sizingCat, positionCat)
-      }
-      if (spacingCat) {
-        result += this.renderSpacingSection(spacingCat)
-      }
-      if (borderCat) {
-        result += this.renderRadiusAndBorderSections(borderCat)
-      }
-      result += this.renderColorSection()
-      if (typographyCat) {
-        result += this.renderTypographySection(typographyCat)
-      }
+    // Render sections in order
+    if (behaviorCat && behaviorCat.properties.length > 0) {
+      result += this.renderBehaviorSection(behaviorCat)
+    }
+    if (layoutCat) {
+      result += this.renderLayoutToggleGroup(layoutCat, alignmentCat, positionCat)
+    }
+    if (sizingCat) {
+      result += this.renderSizingSection(sizingCat, positionCat)
+    }
+    if (spacingCat) {
+      result += this.renderSpacingSection(spacingCat)
+    }
+    if (borderCat) {
+      result += this.renderRadiusAndBorderSections(borderCat)
+    }
+    result += this.renderColorSection()
+    if (typographyCat) {
+      result += this.renderTypographySection(typographyCat)
     }
 
     return result
@@ -2854,9 +2818,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       padValue = v === h ? v : `${v} ${h}`
     }
 
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
-    const result = this.codeModifier.updateProperty(nodeId, 'pad', padValue)
-    this.onCodeChange(result)
+    this.updateProperty('pad', padValue)
   }
 
   /**
@@ -3013,9 +2975,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         const font = preset.dataset.font
         if (font && fontInput) {
           fontInput.value = font
-          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
-          const result = this.codeModifier.updateProperty(nodeId, 'font', font)
-          this.onCodeChange(result)
+          this.updateProperty('font', font)
         }
         dropdown.remove()
       }
@@ -3075,9 +3035,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         const size = preset.dataset.fontsize
         if (size && fontsizeInput) {
           fontsizeInput.value = size
-          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
-          const result = this.codeModifier.updateProperty(nodeId, 'font-size', size)
-          this.onCodeChange(result)
+          this.updateProperty('font-size', size)
         }
         dropdown.remove()
       }
@@ -3137,9 +3095,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
         const weight = preset.dataset.weight
         if (weight && weightInput) {
           weightInput.value = weight
-          const nodeId = this.currentElement!.templateId || this.currentElement!.nodeId
-          const result = this.codeModifier.updateProperty(nodeId, 'weight', weight)
-          this.onCodeChange(result)
+          this.updateProperty('weight', weight)
         }
         dropdown.remove()
       }
@@ -3409,15 +3365,9 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const isActive = button.classList.contains('active')
     button.classList.toggle('active')
 
-    // Use template ID for template instances
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
-
     if (isActive) {
-      // Remove the property
-      const result = this.codeModifier.removeProperty(nodeId, propName)
-      this.onCodeChange(result)
+      this.removeProperty(propName)
     } else {
-      // Add the property
       this.updateProperty(propName, 'true')
     }
   }
@@ -3443,12 +3393,8 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const width = preset.dataset.borderWidth
     if (width === undefined) return
 
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
-
     if (width === '0') {
-      // Remove border
-      const result = this.codeModifier.removeProperty(nodeId, 'bor')
-      this.onCodeChange(result)
+      this.removeProperty('bor')
     } else {
       // Get current style and color
       const colorInput = this.container.querySelector('.pp-color-input[data-prop="border-color"]') as HTMLInputElement
@@ -3461,8 +3407,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       // Build border value
       const borderValue = style === 'solid' ? `${width} ${color}` : `${width} ${style} ${color}`
 
-      const result = this.codeModifier.updateProperty(nodeId, 'bor', borderValue)
-      this.onCodeChange(result)
+      this.updateProperty('bor', borderValue)
     }
   }
 
@@ -3486,9 +3431,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     // Build new border value
     const borderValue = style === 'solid' ? `${width} ${color}` : `${width} ${style} ${color}`
 
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
-    const result = this.codeModifier.updateProperty(nodeId, 'bor', borderValue)
-    this.onCodeChange(result)
+    this.updateProperty('bor', borderValue)
   }
 
   /**
@@ -3530,9 +3473,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     }
     const propName = propMap[dir] || 'bor'
 
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
-    const result = this.codeModifier.updateProperty(nodeId, propName, borderValue)
-    this.onCodeChange(result)
+    this.updateProperty(propName, borderValue)
   }
 
   /**
@@ -4028,21 +3969,45 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     }
   }
 
+  // ============================================================================
+  // CENTRAL PROPERTY UPDATE API
+  // All property modifications should go through these methods for consistency
+  // ============================================================================
+
   /**
-   * Update a property value
+   * Get the effective node ID for modifications
+   * Uses template ID for template instances (changes apply to template, not instance)
    */
-  private updateProperty(propName: string, value: string): void {
-    if (!this.currentElement) return
+  private getEffectiveNodeId(): string | null {
+    if (!this.currentElement) return null
+    return this.currentElement.templateId || this.currentElement.nodeId
+  }
 
-    // Use template ID for template instances (changes apply to template, not instance)
-    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+  /**
+   * Update a property value (central method)
+   */
+  private updateProperty(propName: string, value: string, nodeId?: string): void {
+    const effectiveNodeId = nodeId || this.getEffectiveNodeId()
+    if (!effectiveNodeId) {
+      console.warn('[PropertyPanel] updateProperty: No element selected')
+      return
+    }
 
-    const result = this.codeModifier.updateProperty(
-      nodeId,
-      propName,
-      value
-    )
+    const result = this.codeModifier.updateProperty(effectiveNodeId, propName, value)
+    this.handleModificationResult(result, propName)
+  }
 
+  /**
+   * Remove a property (central method)
+   */
+  private removeProperty(propName: string, nodeId?: string): void {
+    const effectiveNodeId = nodeId || this.getEffectiveNodeId()
+    if (!effectiveNodeId) {
+      console.warn('[PropertyPanel] removeProperty: No element selected')
+      return
+    }
+
+    const result = this.codeModifier.removeProperty(effectiveNodeId, propName)
     this.handleModificationResult(result, propName)
   }
 
