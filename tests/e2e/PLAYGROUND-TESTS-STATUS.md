@@ -6,8 +6,10 @@
 
 | Datei | Playgrounds | Tests | Status |
 |-------|-------------|-------|--------|
+| **04-layout.html** | 10 | 35 | ✅ Fertig |
 | **06-states.html** | 11 | 91 | ✅ Fertig |
 | **07-functions.html** | 4 | 29 | ✅ Fertig |
+| **11-navigation.html** | 20 | ~85 | 🔄 In Arbeit |
 
 ### Noch zu testen
 
@@ -15,11 +17,10 @@
 - 01-elemente.html
 - 02-komponenten.html
 - 03-tokens.html
-- 04-layout.html
 - 05-styling.html
-- 08-daten.html bis 13-anzeige.html
-- 11-navigation.html (Tabs, Accordion, Collapsible)
+- 08-daten.html bis 10-eingabe.html
 - 12-overlays.html (Dialog, Tooltip, Popover)
+- 13-anzeige.html
 
 ---
 
@@ -109,6 +110,26 @@ playground-fn-menu.spec.ts            - Dropdown Menu Pattern
 playground-fn-combined.spec.ts        - Kombinierte Funktionen
 ```
 
+### 04-layout.html (35 Tests)
+
+```
+playground-layout-flex.spec.ts        - Flex: hor/ver, sizing, centering, 9 positions, wrap (Playground 0-4)
+playground-layout-grid.spec.ts        - Grid: grid 12, explicit placement, component (Playground 5-7)
+playground-layout-stacked.spec.ts     - Stacked: positioning, badge pattern (Playground 8-9)
+```
+
+### 11-navigation.html (~85 Tests)
+
+```
+playground-nav-tabs.spec.ts           - Tabs (Playground 0-1)
+playground-nav-accordion.spec.ts      - Accordion (Playground 2-4)
+playground-nav-collapsible.spec.ts    - Collapsible (Playground 5-6)
+playground-nav-sidenav.spec.ts        - SideNav (Playground 7-10)
+playground-nav-steps.spec.ts          - Steps (Playground 11-13)
+playground-nav-pagination.spec.ts     - Pagination (Playground 14-16)
+playground-nav-treeview.spec.ts       - TreeView (Playground 17-19)
+```
+
 ---
 
 ## Ausführung
@@ -123,6 +144,12 @@ npx playwright test tests/e2e/playground-*toggle*.spec.ts tests/e2e/playground-*
 # Nur Functions
 npx playwright test tests/e2e/playground-fn-*.spec.ts
 
+# Nur Navigation
+npx playwright test tests/e2e/playground-nav-*.spec.ts
+
+# Nur Layout
+npx playwright test tests/e2e/playground-layout-*.spec.ts
+
 # Mit neuen Screenshots
 npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 ```
@@ -131,7 +158,7 @@ npx playwright test tests/e2e/playground-*.spec.ts --update-snapshots
 
 ## Nächste Schritte
 
-1. **Navigation (11-navigation.html)** - Tabs, Accordion, Collapsible, SideNav
+1. **Styling (05-styling.html)** - Farben, Gradients, Borders, Typografie, Effekte
 2. **Overlays (12-overlays.html)** - Dialog, Tooltip, Popover, HoverCard
-3. **Layout (04-layout.html)** - Flex, Grid, Stacked
-4. **Grundlagen (01-03)** - Elemente, Komponenten, Tokens
+3. **Grundlagen (01-03)** - Elemente, Komponenten, Tokens
+4. **Eingabe (10-eingabe.html)** - Form Controls, Selection
