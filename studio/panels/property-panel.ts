@@ -38,20 +38,6 @@ import type {
   PropertyPanelOptions
 } from './property/types'
 
-// Import section classes
-import {
-  SpacingSection,
-  BorderSection,
-  ColorSection,
-  TypographySection,
-  LayoutSection,
-  SizingSection,
-  BehaviorSection,
-  VisualSection,
-  type SectionDependencies,
-  type SectionData
-} from './property/sections'
-
 // Re-export types for backwards compatibility
 export type { SelectionProvider, OnCodeChangeCallback, GetAllSourceCallback, PropertyPanelOptions }
 
@@ -214,6 +200,212 @@ export class PropertyPanel {
       default:
         console.warn('Unknown special property:', propName)
     }
+  }
+
+  /**
+   * Handle padding change from section
+   */
+  private handlePaddingChange(value: string, dir: string): void {
+    if (!this.currentElement) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const padProp = props?.allProperties.find((p: {name: string}) => p.name === 'padding' || p.name === 'pad' || p.name === 'p')
+    const currentValue = padProp?.value || ''
+    const padParts = currentValue.split(/\s+/).filter(Boolean)
+
+    let tPad = '', rPad = '', bPad = '', lPad = ''
+    if (padParts.length === 1) {
+      tPad = rPad = bPad = lPad = padParts[0]
+    } else if (padParts.length === 2) {
+      tPad = bPad = padParts[0]
+      rPad = lPad = padParts[1]
+    } else if (padParts.length === 4) {
+      tPad = padParts[0]; rPad = padParts[1]; bPad = padParts[2]; lPad = padParts[3]
+    }
+
+    if (dir === 'h') { rPad = lPad = value }
+    else if (dir === 'v') { tPad = bPad = value }
+    else if (dir === 't') { tPad = value }
+    else if (dir === 'r') { rPad = value }
+    else if (dir === 'b') { bPad = value }
+    else if (dir === 'l') { lPad = value }
+
+    let newPadValue: string
+    if (tPad === rPad && rPad === bPad && bPad === lPad) {
+      newPadValue = tPad || '0'
+    } else if (tPad === bPad && rPad === lPad) {
+      newPadValue = `${tPad || '0'} ${rPad || '0'}`
+    } else {
+      newPadValue = `${tPad || '0'} ${rPad || '0'} ${bPad || '0'} ${lPad || '0'}`
+    }
+
+    const result = this.codeModifier.updateProperty(nodeId, 'pad', newPadValue)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle radius corner change from section
+   */
+  private handleRadiusCornerChange(corner: string, value: string): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    // For now, just update the full radius - corner-specific will need more complex handling
+    const result = this.codeModifier.updateProperty(nodeId, 'rad', value)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle border width change from section
+   */
+  private handleBorderWidthChange(width: string): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get current border value
+    const props = this.propertyExtractor?.getProperties(nodeId)
+    const borderProp = props?.allProperties.find((p: {name: string}) => p.name === 'border' || p.name === 'bor')
+    const currentBorder = borderProp?.value || ''
+    const parts = currentBorder.split(/\s+/).filter(Boolean)
+
+    // Keep color if exists, update width
+    const color = parts.find(p => p.startsWith('#') || p.startsWith('$')) || ''
+    const newBorder = color ? `${width} ${color}` : width
+
+    const result = this.codeModifier.updateProperty(nodeId, 'bor', newBorder)
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle border color picker open from section
+   */
+  private handleBorderColorPickerOpen(property: string, currentValue: string, borderWidth: string): void {
+    // Emit event to open color picker
+    events.emit('colorPicker:open', {
+      property,
+      currentValue,
+      isBorderColor: true,
+      borderWidth
+    })
+  }
+
+  /**
+   * Handle color picker open from section
+   */
+  private handleColorPickerOpen(property: string, currentValue: string): void {
+    // Emit event to open color picker
+    events.emit('colorPicker:open', {
+      property,
+      currentValue,
+      isBorderColor: false
+    })
+  }
+
+  /**
+   * Handle layout mode change from section
+   */
+  private handleLayoutModeChange(mode: string): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Clear other layout modes and set the new one
+    const layoutProps = ['hor', 'ver', 'horizontal', 'vertical', 'grid', 'stacked']
+    for (const prop of layoutProps) {
+      this.codeModifier.removeProperty(nodeId, prop)
+    }
+
+    // Set the new mode
+    const propName = mode === 'horizontal' ? 'hor' : mode === 'vertical' ? 'ver' : mode
+    const result = this.codeModifier.updateProperty(nodeId, propName, '')
+    this.onCodeChange(result)
+  }
+
+  /**
+   * Handle alignment change from section
+   */
+  private handleAlignmentChange(align: string): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Parse alignment (e.g., "top-left", "middle-center")
+    const [v, h] = align.split('-')
+
+    // Clear existing alignment props
+    const alignProps = ['center', 'top', 'bottom', 'left', 'right', 'ver-center', 'hor-center', 'tl', 'tc', 'tr', 'cl', 'cr', 'bl', 'bc', 'br']
+    for (const prop of alignProps) {
+      this.codeModifier.removeProperty(nodeId, prop)
+    }
+
+    // Set new alignment
+    if (v === 'middle' && h === 'center') {
+      const result = this.codeModifier.updateProperty(nodeId, 'center', '')
+      this.onCodeChange(result)
+    } else {
+      // Set vertical and horizontal separately
+      if (v === 'top') this.codeModifier.updateProperty(nodeId, 'top', '')
+      else if (v === 'bottom') this.codeModifier.updateProperty(nodeId, 'bottom', '')
+      else if (v === 'middle') this.codeModifier.updateProperty(nodeId, 'ver-center', '')
+
+      if (h === 'left') this.codeModifier.updateProperty(nodeId, 'left', '')
+      else if (h === 'right') this.codeModifier.updateProperty(nodeId, 'right', '')
+      else if (h === 'center') this.codeModifier.updateProperty(nodeId, 'hor-center', '')
+
+      this.onCodeChange({ success: true, newSource: '' })
+    }
+  }
+
+  /**
+   * Handle toggle property from section
+   */
+  private handleToggleProperty(propName: string, currentValue: boolean): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    if (currentValue) {
+      // Remove the property
+      const result = this.codeModifier.removeProperty(nodeId, propName)
+      this.onCodeChange(result)
+    } else {
+      // Add the property
+      const result = this.codeModifier.updateProperty(nodeId, propName, '')
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Handle property input from section
+   */
+  private handlePropertyInput(propName: string, value: string, source: string): void {
+    if (!this.currentElement) return
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Debounce for input changes
+    if (source === 'input') {
+      this.debouncedPropertyChange(propName, value)
+    } else {
+      const result = this.codeModifier.updateProperty(nodeId, propName, value)
+      this.onCodeChange(result)
+    }
+  }
+
+  /**
+   * Debounced property change
+   */
+  private debouncedPropertyChange(propName: string, value: string): void {
+    const timerId = this.debounceTimers.get(propName)
+    if (timerId) {
+      window.clearTimeout(timerId)
+    }
+
+    const newTimerId = window.setTimeout(() => {
+      if (!this.currentElement) return
+      const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+      const result = this.codeModifier.updateProperty(nodeId, propName, value)
+      this.onCodeChange(result)
+      this.debounceTimers.delete(propName)
+    }, this.options.debounceTime)
+
+    this.debounceTimers.set(propName, newTimerId)
   }
 
   /**
