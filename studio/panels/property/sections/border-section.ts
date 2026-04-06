@@ -1,36 +1,18 @@
 /**
  * BorderSection - Radius and Border
  *
- * Handles:
- * - Border radius with token presets and per-corner expansion
- * - Border width with toggles
- * - Border color with color picker trigger
+ * Simple readable layout with text labels.
  */
 
 import { BaseSection, type SectionDependencies } from '../base/section'
-import type { SectionData, EventHandlerMap, PropertyCategory, SpacingToken } from '../types'
+import type { SectionData, EventHandlerMap, SpacingToken } from '../types'
 import { escapeHtml, resolveColorToken, validateInput } from '../utils'
-import { toggleExpanded, applyExpandedState } from '../utils/expand-state'
 import { makeScrubable, type ScrubInstance } from '../utils/scrub'
-
-/**
- * Expand icons
- */
-const EXPAND_ICONS = {
-  collapsed: `<svg class="pp-icon icon-collapsed" viewBox="0 0 14 14">
-    <path d="M4 6l3 3 3-3"/>
-  </svg>`,
-  expanded: `<svg class="pp-icon icon-expanded" viewBox="0 0 14 14">
-    <path d="M4 8l3-3 3 3"/>
-  </svg>`
-}
 
 /**
  * Circle icon for full radius
  */
-const CIRCLE_ICON = `<svg class="pp-icon" viewBox="0 0 14 14">
-  <circle cx="7" cy="7" r="5"/>
-</svg>`
+const CIRCLE_ICON = `<svg class="pp-icon" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5"/></svg>`
 
 /**
  * BorderSection class
@@ -52,16 +34,13 @@ export class BorderSection extends BaseSection {
     // Get radius value
     const radiusProp = props.find(p => p.name === 'radius' || p.name === 'rad')
     const radiusValue = radiusProp?.value || ''
-    const radiusIsOverride = radiusProp?.source === 'instance'
 
     // Get border value and extract width and color
     const borderProp = props.find(p => p.name === 'border' || p.name === 'bor')
     const borderValue = borderProp?.value || ''
     const borderParts = borderValue.split(/\s+/).filter(Boolean)
     const borderWidth = borderParts[0] || '0'
-    // Color is the second part (or look for # or $)
     const borderColor = borderParts.find(p => p.startsWith('#') || p.startsWith('$')) || ''
-    const borderIsOverride = borderProp?.source === 'instance'
 
     // Border color display
     const borderColorIsToken = borderColor.startsWith('$')
@@ -71,97 +50,12 @@ export class BorderSection extends BaseSection {
     const radiusTokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.rad')) || []
 
     return `
-      ${this.renderRadiusSection(radiusValue, radiusIsOverride, radiusTokens)}
-      ${this.renderBorderSection(borderWidth, borderColor, borderColorSwatch, borderIsOverride)}
+      ${this.renderRadiusSection(radiusValue, radiusTokens)}
+      ${this.renderBorderSection(borderWidth, borderColor, borderColorSwatch)}
     `
   }
 
-  getHandlers(): EventHandlerMap {
-    return {
-      // Radius token click
-      '[data-radius]': {
-        click: (e: Event, target: HTMLElement) => {
-          const tokenRef = target.getAttribute('data-token-ref')
-          const value = tokenRef || target.getAttribute('data-radius')
-          if (value) {
-            this.deps.onPropertyChange('radius', value, 'token')
-          }
-        }
-      },
-      // Radius input change
-      'input[data-prop="radius"]': {
-        input: (e: Event, target: HTMLElement) => {
-          const input = target as HTMLInputElement
-          const result = validateInput(input, 'radius')
-          if (result.valid) {
-            this.deps.onPropertyChange('radius', input.value, 'input')
-          }
-        }
-      },
-      // Corner radius input change
-      'input[data-radius-corner]': {
-        input: (e: Event, target: HTMLElement) => {
-          const input = target as HTMLInputElement
-          const corner = input.getAttribute('data-radius-corner')
-          if (corner) {
-            const result = validateInput(input, 'radius')
-            if (result.valid) {
-              this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
-                corner,
-                value: input.value
-              }), 'input')
-            }
-          }
-        }
-      },
-      // Border width toggle
-      '[data-border-width]': {
-        click: (e: Event, target: HTMLElement) => {
-          const width = target.getAttribute('data-border-width')
-          if (width) {
-            this.deps.onPropertyChange('__BORDER_WIDTH__', width, 'toggle')
-          }
-        }
-      },
-      // Border color trigger
-      '[data-border-color-prop]': {
-        click: (e: Event, target: HTMLElement) => {
-          const prop = target.getAttribute('data-border-color-prop')
-          const currentValue = target.getAttribute('data-current-value') || ''
-          const borderWidth = target.getAttribute('data-border-width') || '1'
-          if (prop) {
-            this.deps.onPropertyChange('__BORDER_COLOR_PICKER__', JSON.stringify({
-              property: prop,
-              currentValue,
-              borderWidth,
-              trigger: target
-            }), 'toggle')
-          }
-        }
-      },
-      // Expand buttons
-      '[data-expand="radius"]': {
-        click: (e: Event) => {
-          this.handleExpandClick('radius')
-        }
-      },
-      '[data-expand="border"]': {
-        click: (e: Event) => {
-          this.handleExpandClick('border')
-        }
-      }
-    }
-  }
-
-  // ============================================
-  // Private Render Methods
-  // ============================================
-
-  private renderRadiusSection(
-    radiusValue: string,
-    isOverride: boolean,
-    tokens: SpacingToken[]
-  ): string {
+  private renderRadiusSection(radiusValue: string, tokens: SpacingToken[]): string {
     const isTokenRef = radiusValue.startsWith('$')
 
     // Build token buttons including 0 preset
@@ -182,16 +76,9 @@ export class BorderSection extends BaseSection {
 
     return `
       <div class="pp-section">
-        <div class="pp-section-label">
-          <span>Radius</span>
-          <button class="pp-section-expand-btn" data-expand="radius" title="Toggle corner details">
-            ${EXPAND_ICONS.collapsed}
-            ${EXPAND_ICONS.expanded}
-          </button>
-        </div>
-        <div class="pp-section-content" data-expand-container="radius">
-          <!-- Collapsed: Global Radius -->
-          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius" data-scrub="radius">
+        <div class="pp-section-label">Radius</div>
+        <div class="pp-section-content">
+          <div class="pp-row" data-scrub="radius">
             <span class="pp-row-label">All</span>
             <div class="pp-row-content">
               <div class="pp-token-group">
@@ -201,14 +88,28 @@ export class BorderSection extends BaseSection {
               <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
             </div>
           </div>
-
-          <!-- Expanded: Corner Radii (4 corners) -->
-          <div class="pp-row expanded-row" data-expand-group="radius">
-            <div class="pp-corner-radius-grid">
-              ${this.renderCornerInput('tl', 'Top Left', radiusValue)}
-              ${this.renderCornerInput('tr', 'Top Right', radiusValue)}
-              ${this.renderCornerInput('bl', 'Bottom Left', radiusValue)}
-              ${this.renderCornerInput('br', 'Bottom Right', radiusValue)}
+          <div class="pp-row" data-scrub="radius-tl">
+            <span class="pp-row-label">Top Left</span>
+            <div class="pp-row-content">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-radius-corner="tl" placeholder="0">
+            </div>
+          </div>
+          <div class="pp-row" data-scrub="radius-tr">
+            <span class="pp-row-label">Top Right</span>
+            <div class="pp-row-content">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-radius-corner="tr" placeholder="0">
+            </div>
+          </div>
+          <div class="pp-row" data-scrub="radius-bl">
+            <span class="pp-row-label">Bottom Left</span>
+            <div class="pp-row-content">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-radius-corner="bl" placeholder="0">
+            </div>
+          </div>
+          <div class="pp-row" data-scrub="radius-br">
+            <span class="pp-row-label">Bottom Right</span>
+            <div class="pp-row-content">
+              <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(radiusValue)}" data-radius-corner="br" placeholder="0">
             </div>
           </div>
         </div>
@@ -216,21 +117,7 @@ export class BorderSection extends BaseSection {
     `
   }
 
-  private renderCornerInput(corner: string, title: string, value: string): string {
-    return `
-      <div class="pp-corner-input" data-scrub="radius-${corner}">
-        <span class="pp-corner-label" title="${title}">${corner.toUpperCase()}</span>
-        <input type="text" class="pp-input" autocomplete="off" value="${escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
-      </div>
-    `
-  }
-
-  private renderBorderSection(
-    borderWidth: string,
-    borderColor: string,
-    borderColorSwatch: string,
-    isOverride: boolean
-  ): string {
+  private renderBorderSection(borderWidth: string, borderColor: string, borderColorSwatch: string): string {
     // Border width toggles
     const borderWidths = ['0', '1', '2']
     const widthToggles = borderWidths.map(w => {
@@ -240,122 +127,112 @@ export class BorderSection extends BaseSection {
 
     // Color trigger
     const colorTrigger = `
-      <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor" data-border-width="${borderWidth}" data-current-value="${escapeHtml(borderColor)}">
+      <div class="pp-color-trigger" data-border-color-prop="bor" data-border-width="${borderWidth}" data-current-value="${escapeHtml(borderColor)}">
         <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${escapeHtml(borderColorSwatch)}` : ''}"></div>
       </div>
     `
 
     return `
       <div class="pp-section">
-        <div class="pp-section-label">
-          <span>Border</span>
-          <button class="pp-section-expand-btn" data-expand="border" title="Toggle side details">
-            ${EXPAND_ICONS.collapsed}
-            ${EXPAND_ICONS.expanded}
-          </button>
-        </div>
-        <div class="pp-section-content" data-expand-container="border">
-          <!-- Collapsed: Global Border -->
-          <div class="pp-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="border">
-            <span class="pp-row-label">All</span>
+        <div class="pp-section-label">Border</div>
+        <div class="pp-section-content">
+          <div class="pp-row">
+            <span class="pp-row-label">Width</span>
             <div class="pp-row-content">
               <div class="pp-toggle-group">
                 ${widthToggles}
               </div>
+            </div>
+          </div>
+          <div class="pp-row">
+            <span class="pp-row-label">Color</span>
+            <div class="pp-row-content">
               ${colorTrigger}
             </div>
           </div>
-
-          <!-- Expanded: Side Borders -->
-          ${this.renderSideBorderRow('Top', 't', borderWidth, borderColor, borderColorSwatch)}
-          ${this.renderSideBorderRow('Right', 'r', borderWidth, borderColor, borderColorSwatch)}
-          ${this.renderSideBorderRow('Bottom', 'b', borderWidth, borderColor, borderColorSwatch)}
-          ${this.renderSideBorderRow('Left', 'l', borderWidth, borderColor, borderColorSwatch)}
         </div>
       </div>
     `
   }
 
-  private renderSideBorderRow(
-    label: string,
-    side: string,
-    borderWidth: string,
-    borderColor: string,
-    borderColorSwatch: string
-  ): string {
-    const borderWidths = ['0', '1', '2']
-    const widthToggles = borderWidths.map(w => {
-      const isActive = borderWidth === w
-      return `<button class="pp-toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" data-border-side="${side}" title="${w}px">${w}</button>`
-    }).join('')
-
-    return `
-      <div class="pp-row expanded-row side-detail" data-expand-group="border">
-        <span class="pp-row-label">${label}</span>
-        <div class="pp-row-content">
-          <div class="pp-toggle-group">
-            ${widthToggles}
-          </div>
-          <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor-${side}" data-border-width="${borderWidth}" data-current-value="${escapeHtml(borderColor)}">
-            <div class="pp-color-swatch${borderColor ? '' : ' empty'}" style="${borderColorSwatch ? `background: ${escapeHtml(borderColorSwatch)}` : ''}"></div>
-          </div>
-        </div>
-      </div>
-    `
-  }
-
-  // ============================================
-  // Private Helper Methods
-  // ============================================
-
-  private handleExpandClick(groupName: string): void {
-    if (this.container) {
-      const sectionKey = `border-${groupName}`
-      const isExpanded = toggleExpanded(sectionKey)
-
-      const container = this.container.querySelector(`[data-expand-container="${groupName}"]`)
-      if (container) {
-        container.classList.toggle('expanded', isExpanded)
-        const section = container.closest('.pp-section')
-        if (section) {
-          section.classList.toggle('expanded', isExpanded)
+  getHandlers(): EventHandlerMap {
+    return {
+      '[data-radius]': {
+        click: (e: Event, target: HTMLElement) => {
+          const tokenRef = target.getAttribute('data-token-ref')
+          const value = tokenRef || target.getAttribute('data-radius')
+          if (value) {
+            this.deps.onPropertyChange('radius', value, 'token')
+          }
+        }
+      },
+      'input[data-prop="radius"]': {
+        input: (e: Event, target: HTMLElement) => {
+          const input = target as HTMLInputElement
+          const result = validateInput(input, 'radius')
+          if (result.valid) {
+            this.deps.onPropertyChange('radius', input.value, 'input')
+          }
+        }
+      },
+      'input[data-radius-corner]': {
+        input: (e: Event, target: HTMLElement) => {
+          const input = target as HTMLInputElement
+          const corner = input.getAttribute('data-radius-corner')
+          if (corner) {
+            const result = validateInput(input, 'radius')
+            if (result.valid) {
+              this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
+                corner,
+                value: input.value
+              }), 'input')
+            }
+          }
+        }
+      },
+      '[data-border-width]': {
+        click: (e: Event, target: HTMLElement) => {
+          const width = target.getAttribute('data-border-width')
+          if (width) {
+            this.deps.onPropertyChange('__BORDER_WIDTH__', width, 'toggle')
+          }
+        }
+      },
+      '[data-border-color-prop]': {
+        click: (e: Event, target: HTMLElement) => {
+          const prop = target.getAttribute('data-border-color-prop')
+          const currentValue = target.getAttribute('data-current-value') || ''
+          const borderWidth = target.getAttribute('data-border-width') || '1'
+          if (prop) {
+            this.deps.onPropertyChange('__BORDER_COLOR_PICKER__', JSON.stringify({
+              property: prop,
+              currentValue,
+              borderWidth
+            }), 'toggle')
+          }
         }
       }
     }
   }
 
-  /**
-   * Called after the section is mounted to restore persisted expand states
-   */
   afterMount(): void {
     if (this.container) {
-      applyExpandedState(this.container, 'border-radius', '[data-expand-container="radius"]')
-      applyExpandedState(this.container, 'border-border', '[data-expand-container="border"]')
       this.setupScrubbing()
     }
   }
 
-  /**
-   * Clean up scrub instances before re-render
-   */
   private cleanupScrubbing(): void {
     this.scrubInstances.forEach(instance => instance.destroy())
     this.scrubInstances = []
   }
 
-  /**
-   * Set up scrubbing on all scrubbable labels
-   */
   private setupScrubbing(): void {
     this.cleanupScrubbing()
-
     if (!this.container) return
 
-    // Find all rows with data-scrub attribute
     const rows = this.container.querySelectorAll('[data-scrub]')
-
     rows.forEach(row => {
-      const label = row.querySelector('.pp-row-label, .pp-corner-label') as HTMLElement
+      const label = row.querySelector('.pp-row-label') as HTMLElement
       const input = row.querySelector('input[type="text"]') as HTMLInputElement
       const property = row.getAttribute('data-scrub')
 
@@ -368,7 +245,6 @@ export class BorderSection extends BaseSection {
         step: 1,
         allowDecimals: false,
         onChange: (value) => {
-          // Handle corner radius separately
           if (property.startsWith('radius-')) {
             const corner = property.replace('radius-', '')
             this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({
@@ -386,9 +262,6 @@ export class BorderSection extends BaseSection {
   }
 }
 
-/**
- * Factory function
- */
 export function createBorderSection(deps: SectionDependencies): BorderSection {
   return new BorderSection(deps)
 }

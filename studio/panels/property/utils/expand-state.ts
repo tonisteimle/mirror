@@ -31,10 +31,11 @@ function saveExpandedStates(states: Record<string, boolean>): void {
 
 /**
  * Check if a section is expanded
+ * Default: sections are expanded (true) unless explicitly collapsed
  */
 export function isExpanded(sectionKey: string): boolean {
   const states = getExpandedStates()
-  return states[sectionKey] ?? false
+  return states[sectionKey] ?? true
 }
 
 /**

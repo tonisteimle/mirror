@@ -3370,9 +3370,9 @@
        ========================================= */
     :root {
       /* Basis-Einheiten - COMPACT */
-      --pp-unit: 22px;              /* Breite eines Toggle-Buttons (was 28px) */
-      --pp-gap: var(--space-1);     /* Abstand zwischen Toggles in Gruppe (was space-2) */
-      --pp-group-pad: 2px;          /* Padding innerhalb Toggle-Gruppen (was 3px) */
+      --pp-unit: 20px;              /* Breite eines Toggle-Buttons (compact grid) */
+      --pp-gap: 1px;                /* Abstand zwischen Toggles in Gruppe (minimal) */
+      --pp-group-pad: 1px;          /* Padding innerhalb Toggle-Gruppen (minimal) */
       --pp-row-gap: 2px;            /* Abstand zwischen Rows (was space-1/4px) */
 
       /* Berechnete Größen (Konsistenz!) */
@@ -3545,11 +3545,11 @@
     }
 
     /* ============================================
-       SECTIONS (from prototype) - COMPACT
+       SECTIONS - ULTRA COMPACT GRID
        ============================================ */
     .pp-content .pp-section,
     .pp-content .pp-section {
-      margin-bottom: 8px;  /* was 16px */
+      margin-bottom: 12px;
     }
 
     .pp-content .pp-section:last-child,
@@ -3559,41 +3559,17 @@
 
     .pp-content .pp-section-label,
     .pp-content .pp-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 10px;  /* was var(--font-xs) = 11px */
+      display: block;
+      font-size: 9px;
       font-weight: var(--weight-semibold);
-      color: var(--text-primary);
+      color: var(--text-muted);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
-      margin-bottom: 6px;  /* was 10px */
-      padding: 2px 0;
-      cursor: pointer;
+      margin-bottom: 4px;
+      padding: 0;
       user-select: none;
-      border-radius: var(--radius-sm);
-    }
-
-    .pp-content .pp-section-label:hover {
-      color: var(--color-primary);
-    }
-
-    /* Collapse indicator for section labels */
-    .pp-content .pp-section-label::before {
-      content: "";
-      display: inline-block;
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 5px solid currentColor;
-      margin-right: 6px;
-      transition: transform 0.15s;
-      opacity: 0.6;
-    }
-
-    .pp-content .pp-section.collapsed .pp-section-label::before {
-      transform: rotate(-90deg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 4px;
     }
 
     /* Section expand/collapse button - larger hit area for better UX */
@@ -3651,9 +3627,10 @@
     }
 
     .pp-content .pp-section-content {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 0;
+      align-items: stretch;
     }
 
     /* ============================================
@@ -3710,22 +3687,40 @@
     }
 
     /* ============================================
-       PROPERTY ROW (from prototype)
+       PROPERTY ROW - EXCEL-STYLE GRID
        ============================================ */
     .pp-content .pp-row,
     .pp-content .pp-prop-row {
-      display: flex;
-      align-items: center;
-      height: var(--input-height);
-      gap: var(--space-4);
+      display: contents;  /* Row dissolves into parent grid */
     }
 
     .pp-content .pp-row-label,
     .pp-content .pp-prop-label {
-      width: var(--label-width);
-      flex-shrink: 0;
-      font-size: var(--font-sm);
+      font-size: var(--font-xs);
       color: var(--text-secondary);
+      padding: 6px 8px 6px 0;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+    }
+
+    .pp-content .pp-row-content,
+    .pp-content .pp-prop-content {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      min-height: 28px;
+    }
+
+    /* Last row in section - no border */
+    .pp-content .pp-section-content > .pp-row:last-child .pp-row-label,
+    .pp-content .pp-section-content > .pp-row:last-child .pp-row-content,
+    .pp-content .pp-section-content > :last-child .pp-row-label,
+    .pp-content .pp-section-content > :last-child .pp-row-content {
+      border-bottom: none;
     }
 
     /* ============================================
@@ -3830,14 +3825,6 @@
       color: var(--color-primary);
     }
 
-    .pp-content .pp-row-content,
-    .pp-content .pp-prop-content {
-      flex: 1;
-      display: flex;
-      gap: var(--pp-row-gap);
-      align-items: center;
-    }
-
     /* ============================================
        TOGGLE GROUP (from prototype)
        ============================================ */
@@ -3846,20 +3833,20 @@
       display: flex;
       gap: var(--pp-gap);
       background: var(--bg-input);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       padding: var(--pp-group-pad);
     }
 
     .pp-content .pp-toggle-btn,
     .pp-content .pp-toggle-btn {
       width: var(--pp-unit);
-      height: var(--size-icon-2xl);
+      height: 18px;
       border: none;
       background: transparent;
       color: var(--text-secondary);
-      font-size: var(--font-xs);
+      font-size: 10px;
       font-weight: var(--weight-semibold);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
       cursor: pointer;
       transition: all 0.12s;
       display: flex;
@@ -3907,20 +3894,20 @@
       display: flex;
       gap: var(--pp-gap);
       background: var(--bg-input);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       padding: var(--pp-group-pad);
     }
 
     .pp-content .pp-token-btn,
     .pp-content .pp-token-btn {
       width: var(--pp-unit);
-      height: var(--size-icon-2xl);
+      height: 18px;
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: var(--font-xs);
+      font-size: 10px;
       font-weight: var(--weight-semibold);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
       cursor: pointer;
       transition: all 0.12s;
       display: flex;
@@ -4073,15 +4060,16 @@
     .pp-content input.prop-input,
     .pp-content input.pp-v2-input,
     .pp-content input[type="text"] {
-      width: var(--pp-input-width);
-      height: var(--input-height) !important;
-      min-height: var(--input-height) !important;
-      max-height: var(--input-height) !important;
+      flex: 1;
+      min-width: 40px;
+      height: 22px !important;
+      min-height: 22px !important;
+      max-height: 22px !important;
       box-sizing: border-box !important;
       background: var(--bg-input);
       border: none;
-      border-radius: var(--radius-md);
-      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      padding: 0 6px;
       margin: 0;
       color: var(--text-muted);
       font-size: var(--font-xs);
@@ -4503,13 +4491,19 @@
     }
 
     /* Expanded rows (hidden by default, shown when expanded) */
-    .pp-content .pp-expanded-row {
+    .pp-content .pp-expanded-row,
+    .pp-content .expanded-row {
       display: none;
     }
 
     .pp-content [data-expand-container].expanded .expanded-row {
       display: flex;
       height: auto; /* Override fixed 30px height from .prop-row */
+    }
+
+    /* Grid rows need display: grid when expanded */
+    .pp-content [data-expand-container].expanded .pp-row-grid.expanded-row {
+      display: grid;
     }
 
     /* Border section side grouping */
