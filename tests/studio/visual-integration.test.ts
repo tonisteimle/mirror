@@ -508,4 +508,43 @@ App = Box w full, h full, pos
     expect(code).toContain('x 150')
     expect(code).toContain('y 150')
   })
+
+  it('Drop Button (with template) in pos-Container adds x/y coordinates', () => {
+    const env = createTestEnvironment(`
+App = Box w full, h full, pos
+  Canvas = Box x 100, y 100, w 500, h 400, pos
+`)
+
+    const canvas = env.getContainer('Canvas')
+    expect(canvas!.isPositioned).toBe(true)
+
+    // Simulate dropping a Button (which has a template)
+    const dropResult = env.simulatePaletteDrag({
+      componentName: 'Button',
+      componentId: 'Button', // This triggers template lookup
+      to: { x: 250, y: 200 },
+      textContent: 'Click me',
+    })
+
+    console.log('Drop result for Button in pos container:', dropResult)
+
+    expect(dropResult.placement).toBe('absolute')
+    expect(dropResult.absolutePosition).toBeDefined()
+
+    // Position relativ zum Container: 250-100=150, 200-100=100
+    expect(dropResult.absolutePosition!.x).toBe(150)
+    expect(dropResult.absolutePosition!.y).toBe(100)
+
+    // Apply and check code
+    const success = env.applyDrop(dropResult)
+    expect(success).toBe(true)
+
+    const code = env.getCode()
+    console.log('Code after Button drop:', code)
+
+    // Should have x/y coordinates
+    expect(code).toContain('Button')
+    expect(code).toContain('x 150')
+    expect(code).toContain('y 100')
+  })
 })
