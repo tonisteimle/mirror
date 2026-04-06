@@ -986,10 +986,11 @@ class IRTransformer {
       // Include children if present (custom content like Icon, Text)
       if (item.children && item.children.length > 0) {
         irItem.children = item.children.map((child: any) => this.transformChild(child))
-      } else if (irItem.value) {
-        // No children but has value → load content from file
+      } else if (item.value) {
+        // No children but has EXPLICIT value → load content from file
         // e.g., Tab "Home", value "home" → loads home.mirror
-        irItem.loadFromFile = irItem.value
+        // Only when value was explicitly set, not derived from label
+        irItem.loadFromFile = item.value
       }
       return irItem
     }

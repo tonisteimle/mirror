@@ -121,6 +121,8 @@ function transformItem(item: ZagItem, context: ZagCompileContext): IRItem {
   // Use label as value if value not provided
   const value = item.value ?? item.label ?? generateItemValue(context)
   const label = item.label ?? item.value ?? value
+  // Track if value was explicitly set (not derived from label)
+  const hasExplicitValue = item.value !== undefined
 
   const children = item.children
     ? transformChildren(item.children as (Instance | Text)[], context)
@@ -129,6 +131,7 @@ function transformItem(item: ZagItem, context: ZagCompileContext): IRItem {
   return {
     value,
     label,
+    hasExplicitValue,
     disabled: item.disabled,
     children,
     sourcePosition: item.sourcePosition,

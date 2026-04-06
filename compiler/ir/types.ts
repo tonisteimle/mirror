@@ -359,6 +359,8 @@ export interface IRItem {
   value: string
   /** Display label for the item */
   label: string
+  /** Whether the value was explicitly set (not derived from label) */
+  hasExplicitValue?: boolean
   /** Whether the item is disabled */
   disabled?: boolean
   /** Layout properties for the item (ver, hor, gap, pad, spread, etc.) */
